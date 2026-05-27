@@ -43,6 +43,8 @@ packages/**/test/
 packages/**/integration_test/
 packages/**/test_driver/
 packages/**/pubspec.lock
+packages/**/.gradle/
+packages/**/target/
 # Symbolication related
 app.*.symbols
 
