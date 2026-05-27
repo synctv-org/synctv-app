@@ -6237,6 +6237,29 @@ final $typed_data.Uint8List getPublicSettingsResponseDescriptor = $convert.base6
     '5nEi4KE2N1c3RvbV9wdWJsaXNoX2hvc3QYDiABKAlSEWN1c3RvbVB1Ymxpc2hIb3N0EjYKF2Vt'
     'YWlsX3doaXRlbGlzdF9lbmFibGVkGA8gASgIUhVlbWFpbFdoaXRlbGlzdEVuYWJsZWQ=');
 
+@$core.Deprecated('Use getServerInfoRequestDescriptor instead')
+const GetServerInfoRequest$json = {
+  '1': 'GetServerInfoRequest',
+};
+
+/// Descriptor for `GetServerInfoRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getServerInfoRequestDescriptor =
+    $convert.base64Decode('ChRHZXRTZXJ2ZXJJbmZvUmVxdWVzdA==');
+
+@$core.Deprecated('Use getServerInfoResponseDescriptor instead')
+const GetServerInfoResponse$json = {
+  '1': 'GetServerInfoResponse',
+  '2': [
+    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '10': 'serverId'},
+    {'1': 'server_name', '3': 2, '4': 1, '5': 9, '10': 'serverName'},
+  ],
+};
+
+/// Descriptor for `GetServerInfoResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getServerInfoResponseDescriptor = $convert.base64Decode(
+    'ChVHZXRTZXJ2ZXJJbmZvUmVzcG9uc2USGwoJc2VydmVyX2lkGAEgASgJUghzZXJ2ZXJJZBIfCg'
+    'tzZXJ2ZXJfbmFtZRgCIAEoCVIKc2VydmVyTmFtZQ==');
+
 @$core.Deprecated('Use sendVerificationEmailRequestDescriptor instead')
 const SendVerificationEmailRequest$json = {
   '1': 'SendVerificationEmailRequest',

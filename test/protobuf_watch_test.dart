@@ -17,6 +17,7 @@ import 'package:synctv_app/services/bilibili_geetest_service.dart';
 import 'package:synctv_app/services/oauth2_callback_config.dart';
 import 'package:synctv_app/services/oauth2_callback_parser.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
+import 'package:synctv_app/services/room_invite_service.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_auth_service.dart';
 import 'package:synctv_app/services/synctv_public_room_service.dart';
@@ -5471,6 +5472,131 @@ void main() {
       expect(settings.customPublishHost, 'rtmp://publish.example.test/app');
     } finally {
       await requests.cancel();
+      await server.close(force: true);
+    }
+  });
+
+  test('public server info endpoint maps protobuf response', () async {
+    Uri? requestedUri;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession(),
+      httpClient: MockClient((request) async {
+        requestedUri = request.url;
+        return http.Response(
+          jsonEncode({
+            'server_id': 'srv_prod',
+            'server_name': 'SyncTV Prod',
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+
+    final response = await api.publicService.getServerInfo(
+      client.GetServerInfoRequest(),
+    );
+
+    expect(requestedUri, isNotNull);
+    expect(requestedUri!.path, '/api/public/server-info');
+    expect(response.serverId, 'srv_prod');
+    expect(response.serverName, 'SyncTV Prod');
+  });
+
+  test('server profiles merge endpoints for one server id', () async {
+    SharedPreferences.setMockInitialValues({});
+    final session = SyncTvSession();
+    final store = SyncTvSessionStore(session);
+
+    await store.load();
+    await store.addOrUpdateServer(
+      serverId: 'srv_same',
+      name: 'Main',
+      endpoint: 'https://one.example.test',
+    );
+    await store.addOrUpdateServer(
+      serverId: 'srv_same',
+      name: 'Main',
+      endpoint: 'https://two.example.test/',
+    );
+
+    expect(store.servers, hasLength(1));
+    expect(store.activeServerId, 'srv_same');
+    expect(store.activeServer!.endpoints, [
+      'https://one.example.test',
+      'https://two.example.test',
+    ]);
+    expect(store.baseUrl, 'https://two.example.test');
+  });
+
+  test('server sessions are isolated when switching servers', () async {
+    SharedPreferences.setMockInitialValues({});
+    final session = SyncTvSession();
+    final store = SyncTvSessionStore(session);
+
+    await store.load();
+    await store.addOrUpdateServer(
+      serverId: 'srv_a',
+      name: 'A',
+      endpoint: 'https://a.example.test',
+    );
+    session.accessToken = 'token-a';
+    session.refreshToken = 'refresh-a';
+    await store.persistTokens();
+
+    await store.addOrUpdateServer(
+      serverId: 'srv_b',
+      name: 'B',
+      endpoint: 'https://b.example.test',
+    );
+    expect(session.accessToken, isNull);
+    session.accessToken = 'token-b';
+    await store.persistTokens();
+
+    await store.activateServer('srv_a');
+    expect(store.baseUrl, 'https://a.example.test');
+    expect(session.accessToken, 'token-a');
+    expect(session.refreshToken, 'refresh-a');
+
+    await store.activateServer('srv_b');
+    expect(store.baseUrl, 'https://b.example.test');
+    expect(session.accessToken, 'token-b');
+    expect(session.refreshToken, isNull);
+  });
+
+  test('room invite links carry server identity and room id', () async {
+    SharedPreferences.setMockInitialValues({});
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      expect(request.uri.path, '/api/public/server-info');
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType.json
+        ..write(jsonEncode({
+          'server_id': 'srv_share',
+          'server_name': 'Share',
+        }));
+      await request.response.close();
+    });
+
+    try {
+      await WatchTogetherService.init();
+      await WatchTogetherService.addServer(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      final link = RoomInviteService.createInviteLink(
+        WRoom(roomId: 'room_123', roomName: 'Room', creatorId: 'usr_1'),
+      );
+      final parsed = RoomInviteService.parse(link);
+
+      expect(Uri.parse(link).path, '/rooms/join');
+      expect(parsed.roomId, 'room_123');
+      expect(parsed.serverId, 'srv_share');
+      expect(RoomInviteService.parse('room_plain').roomId, 'room_plain');
+    } finally {
+      await subscription.cancel();
       await server.close(force: true);
     }
   });

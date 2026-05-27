@@ -19,6 +19,9 @@ class SyncTvRuntimeService {
   SyncTvApiClient get api => _api;
   Stream<void> get onAuthError => _authErrorController.stream;
   String get baseUrl => sessionStore.baseUrl;
+  List<SyncTvServerProfile> get servers =>
+      List.unmodifiable(sessionStore.servers);
+  SyncTvServerProfile? get activeServer => sessionStore.activeServer;
   String? get guestRoomId => sessionStore.guestRoomId;
   bool get isGuestSession => sessionStore.isGuestSession;
 
@@ -30,6 +33,41 @@ class SyncTvRuntimeService {
   Future<void> setBaseUrl(String url) async {
     _api.baseUrl = url;
     await sessionStore.setBaseUrl(_api.baseUrl);
+  }
+
+  Future<SyncTvServerProfile> addServer(String url) async {
+    final probe = _createClient(url);
+    final info =
+        await probe.publicService.getServerInfo(client.GetServerInfoRequest());
+    final serverId = info.serverId.trim();
+    if (serverId.isEmpty) {
+      throw SyncTvApiException(
+        '服务器未返回 server_id',
+        statusCode: 500,
+      );
+    }
+    final profile = await sessionStore.addOrUpdateServer(
+      serverId: serverId,
+      name: info.serverName,
+      endpoint: probe.baseUrl,
+    );
+    _api.baseUrl = sessionStore.baseUrl;
+    return profile;
+  }
+
+  Future<void> activateServer(String serverId) async {
+    await sessionStore.activateServer(serverId);
+    _api.baseUrl = sessionStore.baseUrl;
+  }
+
+  Future<void> activateServerEndpoint(String serverId, String endpoint) async {
+    await sessionStore.activateServerEndpoint(serverId, endpoint);
+    _api.baseUrl = sessionStore.baseUrl;
+  }
+
+  Future<void> removeServer(String serverId) async {
+    await sessionStore.removeServer(serverId);
+    _api.baseUrl = sessionStore.baseUrl;
   }
 
   Future<String?> getToken() async => session.accessToken;

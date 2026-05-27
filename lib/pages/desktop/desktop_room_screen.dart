@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:flutter/services.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
@@ -14,6 +13,7 @@ import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/pages/mobile/room_settings_page.dart';
 import 'package:synctv_app/widgets/add_movie_dialog.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
+import 'package:synctv_app/widgets/room_invite_actions.dart';
 import 'package:synctv_app/widgets/chat_input_area.dart';
 import 'package:synctv_app/managers/webrtc_manager.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
@@ -989,12 +989,9 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
         backgroundColor: theme.appBarTheme.backgroundColor,
         actions: [
           IconButton(
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: widget.room.roomId));
-              MessageUtils.showInfo(context, '房间ID已复制');
-            },
-            icon: const Icon(Icons.copy),
-            tooltip: '复制房间ID',
+            onPressed: () => copyRoomInviteLink(context, widget.room),
+            icon: const Icon(Icons.ios_share_rounded),
+            tooltip: '复制邀请链接',
           ),
           if (_currentStatus?.movie != null)
             IconButton(

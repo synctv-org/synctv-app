@@ -17391,6 +17391,113 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   void clearWebauthnSignupNeedReview() => $_clearField(23);
 }
 
+class GetServerInfoRequest extends $pb.GeneratedMessage {
+  factory GetServerInfoRequest() => create();
+
+  GetServerInfoRequest._();
+
+  factory GetServerInfoRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetServerInfoRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetServerInfoRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetServerInfoRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetServerInfoRequest copyWith(void Function(GetServerInfoRequest) updates) =>
+      super.copyWith((message) => updates(message as GetServerInfoRequest))
+          as GetServerInfoRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetServerInfoRequest create() => GetServerInfoRequest._();
+  @$core.override
+  GetServerInfoRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetServerInfoRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetServerInfoRequest>(create);
+  static GetServerInfoRequest? _defaultInstance;
+}
+
+class GetServerInfoResponse extends $pb.GeneratedMessage {
+  factory GetServerInfoResponse({
+    $core.String? serverId,
+    $core.String? serverName,
+  }) {
+    final result = create();
+    if (serverId != null) result.serverId = serverId;
+    if (serverName != null) result.serverName = serverName;
+    return result;
+  }
+
+  GetServerInfoResponse._();
+
+  factory GetServerInfoResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetServerInfoResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetServerInfoResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'serverId')
+    ..aOS(2, _omitFieldNames ? '' : 'serverName')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetServerInfoResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetServerInfoResponse copyWith(
+          void Function(GetServerInfoResponse) updates) =>
+      super.copyWith((message) => updates(message as GetServerInfoResponse))
+          as GetServerInfoResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetServerInfoResponse create() => GetServerInfoResponse._();
+  @$core.override
+  GetServerInfoResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetServerInfoResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetServerInfoResponse>(create);
+  static GetServerInfoResponse? _defaultInstance;
+
+  /// Stable logical server identity. The server automatically initializes it
+  /// in runtime settings storage; clients only read it.
+  @$pb.TagNumber(1)
+  $core.String get serverId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set serverId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasServerId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearServerId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get serverName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set serverName($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasServerName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearServerName() => $_clearField(2);
+}
+
 class SendVerificationEmailRequest extends $pb.GeneratedMessage {
   factory SendVerificationEmailRequest({
     $core.String? email,

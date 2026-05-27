@@ -129,12 +129,14 @@ service RoomService {
 
 // ==================== Public Service ====================
 // Authentication: None (public access)
-// HTTP routes: public room discovery uses /api/rooms/*, public settings uses /api/public/settings.
+// HTTP routes: public room discovery uses /api/rooms/*, public settings uses /api/public/settings,
+// server identity uses /api/public/server-info.
 service PublicService {
     rpc CheckRoom(CheckRoomRequest) returns (CheckRoomResponse);
     rpc ListRooms(ListRoomsRequest) returns (ListRoomsResponse);
     rpc GetHotRooms(GetHotRoomsRequest) returns (GetHotRoomsResponse);
     rpc GetPublicSettings(GetPublicSettingsRequest) returns (GetPublicSettingsResponse);
+    rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
 }
 
 // ==================== Email Service ====================
@@ -2364,6 +2366,17 @@ message GetPublicSettingsResponse {
 
     // Email settings
     bool email_whitelist_enabled = 15;
+}
+
+// ==================== Public Server Info ====================
+
+message GetServerInfoRequest {}
+
+message GetServerInfoResponse {
+    // Stable logical server identity. The server automatically initializes it
+    // in runtime settings storage; clients only read it.
+    string server_id = 1;
+    string server_name = 2;
 }
 
 // ==================== Email Verification ====================

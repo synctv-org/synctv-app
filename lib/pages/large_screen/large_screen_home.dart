@@ -7,9 +7,11 @@ import 'package:synctv_app/pages/account_center_page.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 
-import 'package:synctv_app/widgets/huawei_login_panel.dart';
+import 'package:synctv_app/widgets/auth_panel.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
+import 'package:synctv_app/widgets/room_invite_flow.dart';
+import 'package:synctv_app/widgets/server_settings_dialog.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'dart:math';
@@ -80,9 +82,10 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
     if (token == null) {
       if (mounted) {
         setState(() {
+          _isLoggedIn = false;
           _isLoading = false;
         });
-        _showLoginDialog();
+        _loadRooms(silent: false);
       }
     } else {
       setState(() {
@@ -94,7 +97,14 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
   }
 
   Future<void> _loadRooms({bool silent = false}) async {
-    if (!_isLoggedIn) return;
+    if (!_isLoggedIn && _roomFeed == _RoomFeed.mine) {
+      setState(() {
+        _rooms = const [];
+        _roomsTotal = 0;
+        _isLoading = false;
+      });
+      return;
+    }
 
     if (!silent) {
       setState(() {
@@ -164,6 +174,10 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
       _roomsTotal <= 0 ? 1 : ((_roomsTotal - 1) ~/ _roomPageSize) + 1;
 
   void _setRoomFeed(_RoomFeed feed) {
+    if (!_isLoggedIn && feed == _RoomFeed.mine) {
+      _showLoginDialog();
+      return;
+    }
     if (_roomFeed == feed) return;
     setState(() {
       _roomFeed = feed;
@@ -184,28 +198,25 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
     _loadRooms(silent: false);
   }
 
-  void _showLoginDialog() {
-    ChatUtils.showStyledDialog<bool>(
+  Future<bool> _showLoginDialog({String? guestRoomId}) async {
+    final result = await showModalBottomSheet<bool>(
       context: context,
-      title: '登录/注册',
-      icon: Icon(Icons.login, color: Theme.of(context).primaryColor),
-      content: const _LoginDialog(),
-      actions: [],
-    ).then((result) {
-      if (result == true) {
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AuthPanel(initialGuestRoomId: guestRoomId),
+    );
+    if (result == true) {
+      if (mounted) {
         setState(() {
           _isLoggedIn = true;
         });
         _loadRooms(silent: false);
         _fetchUserInfo();
-      } else {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
       }
-    });
+      return true;
+    }
+    if (mounted) setState(() => _isLoading = false);
+    return false;
   }
 
   void _showCreateRoomDialog() {
@@ -220,32 +231,24 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
     );
   }
 
-  void _showServerSettingsDialog() {
-    final controller =
-        TextEditingController(text: WatchTogetherService.baseUrl);
+  void _showJoinRoomDialog() {
+    final idController = TextEditingController();
 
     ChatUtils.showStyledDialog(
       context: context,
-      title: '服务器设置',
-      icon: Icon(Icons.dns_rounded, color: Theme.of(context).primaryColor),
+      title: '加入房间',
+      icon: Icon(Icons.login_rounded, color: Theme.of(context).primaryColor),
       content: SizedBox(
         width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ChatUtils.createFormField(
-              context: context,
-              label: '服务器地址',
-              controller: controller,
-              hintText: '例如: https://tv.test.com',
-              prefixIcon: Icons.link,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '修改后可能需要重新登录',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            ),
-          ],
+        child: ChatUtils.createFormField(
+          context: context,
+          label: '房间ID或邀请链接',
+          controller: idController,
+          hintText: '请输入房间ID或粘贴邀请链接',
+          prefixIcon: Icons.login_rounded,
+          onSubmitted: (_) async {
+            await _joinRoomById(idController.text);
+          },
         ),
       ),
       actions: [
@@ -254,23 +257,50 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
         ChatUtils.createConfirmButton(
           context,
           () async {
-            if (controller.text.isEmpty) {
-              MessageUtils.showWarning(context, '请输入服务器地址');
-              return;
-            }
-            await WatchTogetherService.setBaseUrl(controller.text);
-            if (mounted) {
-              Navigator.pop(context);
-              MessageUtils.showSuccess(context, '服务器地址已更新');
-              if (_isLoggedIn) {
-                _loadRooms(silent: false);
-              }
-            }
+            await _joinRoomById(idController.text);
           },
-          text: '保存',
+          text: '加入',
         ),
       ],
     );
+  }
+
+  Future<void> _joinRoomById(String value) async {
+    if (value.trim().isEmpty) {
+      MessageUtils.showWarning(context, '请输入房间ID');
+      return;
+    }
+    try {
+      final id = await parseInviteOrShowError(context: context, value: value);
+      if (id == null || id.isEmpty) return;
+      final check = await WatchTogetherService.checkRoom(id);
+      if (!check.exists) {
+        if (mounted) MessageUtils.showWarning(context, '房间不存在');
+        return;
+      }
+      if (!check.isAvailable) {
+        if (mounted) MessageUtils.showWarning(context, '房间暂不可用');
+        return;
+      }
+      if (!_isLoggedIn) {
+        final authenticated = await _showLoginDialog(guestRoomId: id);
+        if (!authenticated || !mounted) return;
+      }
+      final room = await WatchTogetherService.getRoomInfo(id);
+      if (!mounted) return;
+      Navigator.pop(context);
+      _handleJoinRoom(room);
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '查找房间失败: $e');
+    }
+  }
+
+  void _showServerSettingsDialog() {
+    showServerSettingsDialog(context: context).then((changed) {
+      if (!mounted || changed != true) return;
+      setState(() {});
+      if (_isLoggedIn) _loadRooms(silent: false);
+    });
   }
 
   void _showAccountCenter() {
@@ -302,6 +332,11 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
 
   Future<void> _handleJoinRoom(WRoom room) async {
     String password = '';
+
+    if (!_isLoggedIn) {
+      final authenticated = await _showLoginDialog(guestRoomId: room.roomId);
+      if (!authenticated || !mounted) return;
+    }
 
     if (room.needPassword) {
       final passwordController = TextEditingController();
@@ -499,6 +534,18 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: _showJoinRoomDialog,
+                  icon: const Icon(Icons.login_rounded),
+                  label: const Text('加入房间'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ],
             ),
           ),
@@ -507,53 +554,12 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : !_isLoggedIn
-                    ? _buildLoginRequired(isDark)
-                    : Column(
-                        children: [
-                          _buildRoomControls(theme),
-                          Expanded(child: _buildRoomGrid()),
-                        ],
-                      ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoginRequired(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              width: 120,
-              height: 120,
-              color: Colors.transparent,
-              child: Image.asset('assets/icon/robot_3.png'),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            '请登录以开始观看',
-            style: TextStyle(
-              fontSize: 24,
-              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: _showLoginDialog,
-            icon: const Icon(Icons.login),
-            label: const Text('登录'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFCF0A2C),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              textStyle: const TextStyle(fontSize: 18),
-            ),
+                : Column(
+                    children: [
+                      _buildRoomControls(theme),
+                      Expanded(child: _buildRoomGrid()),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -623,9 +629,8 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
           if (supportsPaging) ...[
             IconButton.filledTonal(
               tooltip: '上一页',
-              onPressed: _roomPage <= 1
-                  ? null
-                  : () => _goRoomPage(_roomPage - 1),
+              onPressed:
+                  _roomPage <= 1 ? null : () => _goRoomPage(_roomPage - 1),
               icon: const Icon(Icons.chevron_left_rounded),
             ),
             IconButton.filledTonal(
@@ -689,63 +694,6 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
       onTap: () => _handleJoinRoom(room),
       showScaleAnimation: true,
     );
-  }
-}
-
-class _LoginDialog extends StatefulWidget {
-  const _LoginDialog();
-
-  @override
-  State<_LoginDialog> createState() => _LoginDialogState();
-}
-
-class _LoginDialogState extends State<_LoginDialog> {
-  bool _sheetOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _showHuaweiLoginPanel());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 400,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ChatUtils.createConfirmButton(
-              context,
-              _showHuaweiLoginPanel,
-              text: '打开新版登录',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showHuaweiLoginPanel() {
-    if (_sheetOpen) return;
-    _sheetOpen = true;
-    showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const HuaweiLoginPanel(),
-    ).then((result) {
-      _sheetOpen = false;
-      if (result == true) {
-        if (mounted) {
-          Navigator.pop(context, true);
-        }
-      }
-    });
   }
 }
 

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
@@ -14,6 +14,7 @@ import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/pages/mobile/room_settings_page.dart';
 import 'package:synctv_app/widgets/add_movie_dialog.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
+import 'package:synctv_app/widgets/room_invite_actions.dart';
 import 'package:synctv_app/widgets/chat_input_area.dart';
 import 'package:synctv_app/managers/webrtc_manager.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
@@ -1254,11 +1255,7 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                       GestureDetector(
-                        onTap: () {
-                          Clipboard.setData(
-                              ClipboardData(text: widget.room.roomId));
-                          MessageUtils.showInfo(context, '房间ID已复制');
-                        },
+                        onTap: () => copyRoomInviteLink(context, widget.room),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

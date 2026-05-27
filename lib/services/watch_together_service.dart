@@ -12,6 +12,7 @@ import 'package:synctv_app/services/oauth2_callback_parser.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_domain_services.dart';
 import 'package:synctv_app/services/synctv_runtime_service.dart';
+import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -29,6 +30,8 @@ export 'package:synctv_app/models/room_media_models.dart';
 
 class WatchTogetherService {
   static String get baseUrl => _runtime.baseUrl;
+  static List<SyncTvServerProfile> get servers => _runtime.servers;
+  static SyncTvServerProfile? get activeServer => _runtime.activeServer;
   static String resolveResourceUrl(String url) =>
       _runtime.resolveResourceUrl(url);
   static String? get guestRoomId => _runtime.guestRoomId;
@@ -54,6 +57,25 @@ class WatchTogetherService {
 
   static Future<void> setBaseUrl(String url) async {
     await _runtime.setBaseUrl(url);
+  }
+
+  static Future<SyncTvServerProfile> addServer(String url) async {
+    return _runtime.addServer(url);
+  }
+
+  static Future<void> activateServer(String serverId) async {
+    await _runtime.activateServer(serverId);
+  }
+
+  static Future<void> activateServerEndpoint(
+    String serverId,
+    String endpoint,
+  ) async {
+    await _runtime.activateServerEndpoint(serverId, endpoint);
+  }
+
+  static Future<void> removeServer(String serverId) async {
+    await _runtime.removeServer(serverId);
   }
 
   static Future<String?> getToken() => _runtime.getToken();

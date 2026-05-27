@@ -10,12 +10,14 @@ import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
+import 'package:synctv_app/widgets/room_invite_flow.dart';
+import 'package:synctv_app/widgets/server_settings_dialog.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 
-import 'package:synctv_app/widgets/huawei_login_panel.dart';
+import 'package:synctv_app/widgets/auth_panel.dart';
 import 'dart:math';
 
 enum _RoomFeed { public, mine, hot }
@@ -79,9 +81,10 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
     if (token == null) {
       if (mounted) {
         setState(() {
+          _isLoggedIn = false;
           _isLoading = false;
         });
-        _showLoginDialog();
+        _loadRooms(silent: false);
       }
     } else {
       setState(() {
@@ -93,7 +96,14 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   }
 
   Future<void> _loadRooms({bool silent = false}) async {
-    if (!_isLoggedIn) return;
+    if (!_isLoggedIn && _roomFeed == _RoomFeed.mine) {
+      setState(() {
+        _rooms = const [];
+        _roomsTotal = 0;
+        _isLoading = false;
+      });
+      return;
+    }
 
     if (!silent) {
       setState(() {
@@ -157,6 +167,10 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
       _roomsTotal <= 0 ? 1 : ((_roomsTotal - 1) ~/ _roomPageSize) + 1;
 
   void _setRoomFeed(_RoomFeed feed) {
+    if (!_isLoggedIn && feed == _RoomFeed.mine) {
+      _showLoginDialog();
+      return;
+    }
     if (_roomFeed == feed) return;
     setState(() {
       _roomFeed = feed;
@@ -177,28 +191,25 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
     _loadRooms(silent: false);
   }
 
-  void _showLoginDialog() {
-    ChatUtils.showStyledDialog<bool>(
+  Future<bool> _showLoginDialog({String? guestRoomId}) async {
+    final result = await showModalBottomSheet<bool>(
       context: context,
-      title: '登录/注册',
-      icon: Icon(Icons.login, color: Theme.of(context).primaryColor),
-      content: const _LoginDialog(),
-      actions: [],
-    ).then((result) {
-      if (result == true) {
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AuthPanel(initialGuestRoomId: guestRoomId),
+    );
+    if (result == true) {
+      if (mounted) {
         setState(() {
           _isLoggedIn = true;
         });
         _loadRooms(silent: false);
         _fetchUserInfo();
-      } else {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
       }
-    });
+      return true;
+    }
+    if (mounted) setState(() => _isLoading = false);
+    return false;
   }
 
   void _showCreateRoomDialog() {
@@ -224,9 +235,9 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
         width: 300,
         child: ChatUtils.createFormField(
           context: context,
-          label: '房间ID',
+          label: '房间ID或邀请链接',
           controller: idController,
-          hintText: '请输入房间ID',
+          hintText: '请输入房间ID或粘贴邀请链接',
           prefixIcon: Icons.login_rounded,
         ),
       ),
@@ -241,12 +252,13 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   }
 
   Future<void> _joinRoomById(String value) async {
-    final id = value.trim();
-    if (id.isEmpty) {
+    if (value.trim().isEmpty) {
       MessageUtils.showWarning(context, '请输入房间ID');
       return;
     }
     try {
+      final id = await parseInviteOrShowError(context: context, value: value);
+      if (id == null || id.isEmpty) return;
       final check = await WatchTogetherService.checkRoom(id);
       if (!check.exists) {
         if (mounted) MessageUtils.showWarning(context, '房间不存在');
@@ -255,6 +267,10 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
       if (!check.isAvailable) {
         if (mounted) MessageUtils.showWarning(context, '房间暂不可用');
         return;
+      }
+      if (!_isLoggedIn) {
+        final authenticated = await _showLoginDialog(guestRoomId: id);
+        if (!authenticated || !mounted) return;
       }
       final room = await WatchTogetherService.getRoomInfo(id);
       if (!mounted) return;
@@ -310,53 +326,11 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   }
 
   void _showServerSettingsDialog() {
-    final controller =
-        TextEditingController(text: WatchTogetherService.baseUrl);
-
-    ChatUtils.showStyledDialog(
-      context: context,
-      title: '服务器设置',
-      icon: Icon(Icons.dns_rounded, color: Theme.of(context).primaryColor),
-      content: SizedBox(
-        width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ChatUtils.createFormField(
-              context: context,
-              label: '服务器地址',
-              controller: controller,
-              hintText: '例如: https://tv.test.com',
-              prefixIcon: Icons.link,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '修改后可能需要重新登录',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(context, () async {
-          if (controller.text.isEmpty) {
-            MessageUtils.showWarning(context, '请输入服务器地址');
-            return;
-          }
-          await WatchTogetherService.setBaseUrl(controller.text);
-          if (mounted) {
-            Navigator.pop(context);
-            MessageUtils.showSuccess(context, '服务器地址已更新');
-            if (_isLoggedIn) {
-              _loadRooms(silent: false);
-            }
-          }
-        }, text: '保存'),
-      ],
-    );
+    showServerSettingsDialog(context: context).then((changed) {
+      if (!mounted || changed != true) return;
+      setState(() {});
+      if (_isLoggedIn) _loadRooms(silent: false);
+    });
   }
 
   Future<void> _handleLogout() async {
@@ -390,6 +364,11 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
 
   Future<void> _handleJoinRoom(WRoom room) async {
     String password = '';
+
+    if (!_isLoggedIn) {
+      final authenticated = await _showLoginDialog(guestRoomId: room.roomId);
+      if (!authenticated || !mounted) return;
+    }
 
     if (room.needPassword) {
       final passwordController = TextEditingController();
@@ -667,43 +646,12 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : !_isLoggedIn
-              ? _buildLoginRequired(isDark)
-              : Column(
-                  children: [
-                    _buildRoomControls(theme),
-                    Expanded(child: _buildRoomGrid()),
-                  ],
-                ),
-    );
-  }
-
-  Widget _buildLoginRequired(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.lock_outline, size: 64, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(
-            '请先登录以查看房间列表',
-            style: TextStyle(
-              fontSize: 18,
-              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+          : Column(
+              children: [
+                _buildRoomControls(theme),
+                Expanded(child: _buildRoomGrid()),
+              ],
             ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _showLoginDialog,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFCF0A2C),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            ),
-            child: const Text('立即登录'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -775,9 +723,8 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
           if (supportsPaging) ...[
             IconButton(
               tooltip: '上一页',
-              onPressed: _roomPage <= 1
-                  ? null
-                  : () => _goRoomPage(_roomPage - 1),
+              onPressed:
+                  _roomPage <= 1 ? null : () => _goRoomPage(_roomPage - 1),
               icon: const Icon(Icons.chevron_left_rounded),
             ),
             IconButton(
@@ -848,63 +795,6 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
           ? () => _handleDeleteRoom(room)
           : null,
     );
-  }
-}
-
-class _LoginDialog extends StatefulWidget {
-  const _LoginDialog();
-
-  @override
-  State<_LoginDialog> createState() => _LoginDialogState();
-}
-
-class _LoginDialogState extends State<_LoginDialog> {
-  bool _sheetOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _showHuaweiLoginPanel());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 300,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ChatUtils.createConfirmButton(
-              context,
-              _showHuaweiLoginPanel,
-              text: '打开新版登录',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showHuaweiLoginPanel() {
-    if (_sheetOpen) return;
-    _sheetOpen = true;
-    showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const HuaweiLoginPanel(),
-    ).then((result) {
-      _sheetOpen = false;
-      if (result == true) {
-        if (mounted) {
-          Navigator.pop(context, true);
-        }
-      }
-    });
   }
 }
 

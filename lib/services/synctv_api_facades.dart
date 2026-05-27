@@ -1007,6 +1007,17 @@ class SyncTvPublicApi {
       auth: false,
     );
   }
+
+  Future<client.GetServerInfoResponse> getServerInfo(
+    client.GetServerInfoRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/public/server-info',
+      client.GetServerInfoResponse.create,
+      auth: false,
+    );
+  }
 }
 
 class SyncTvEmailApi {

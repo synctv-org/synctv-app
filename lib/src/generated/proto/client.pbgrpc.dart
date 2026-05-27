@@ -2402,7 +2402,8 @@ abstract class RoomServiceBase extends $grpc.Service {
 
 /// ==================== Public Service ====================
 /// Authentication: None (public access)
-/// HTTP routes: public room discovery uses /api/rooms/*, public settings uses /api/public/settings.
+/// HTTP routes: public room discovery uses /api/rooms/*, public settings uses /api/public/settings,
+/// server identity uses /api/public/server-info.
 @$pb.GrpcServiceName('synctv.client.PublicService')
 class PublicServiceClient extends $grpc.Client {
   /// The hostname for this service.
@@ -2443,6 +2444,13 @@ class PublicServiceClient extends $grpc.Client {
     return $createUnaryCall(_$getPublicSettings, request, options: options);
   }
 
+  $grpc.ResponseFuture<$0.GetServerInfoResponse> getServerInfo(
+    $0.GetServerInfoRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$getServerInfo, request, options: options);
+  }
+
   // method descriptors
 
   static final _$checkRoom =
@@ -2465,6 +2473,11 @@ class PublicServiceClient extends $grpc.Client {
       '/synctv.client.PublicService/GetPublicSettings',
       ($0.GetPublicSettingsRequest value) => value.writeToBuffer(),
       $0.GetPublicSettingsResponse.fromBuffer);
+  static final _$getServerInfo =
+      $grpc.ClientMethod<$0.GetServerInfoRequest, $0.GetServerInfoResponse>(
+          '/synctv.client.PublicService/GetServerInfo',
+          ($0.GetServerInfoRequest value) => value.writeToBuffer(),
+          $0.GetServerInfoResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('synctv.client.PublicService')
@@ -2504,6 +2517,15 @@ abstract class PublicServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.GetPublicSettingsRequest.fromBuffer(value),
         ($0.GetPublicSettingsResponse value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.GetServerInfoRequest, $0.GetServerInfoResponse>(
+            'GetServerInfo',
+            getServerInfo_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.GetServerInfoRequest.fromBuffer(value),
+            ($0.GetServerInfoResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.CheckRoomResponse> checkRoom_Pre($grpc.ServiceCall $call,
@@ -2538,6 +2560,15 @@ abstract class PublicServiceBase extends $grpc.Service {
 
   $async.Future<$0.GetPublicSettingsResponse> getPublicSettings(
       $grpc.ServiceCall call, $0.GetPublicSettingsRequest request);
+
+  $async.Future<$0.GetServerInfoResponse> getServerInfo_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.GetServerInfoRequest> $request) async {
+    return getServerInfo($call, await $request);
+  }
+
+  $async.Future<$0.GetServerInfoResponse> getServerInfo(
+      $grpc.ServiceCall call, $0.GetServerInfoRequest request);
 }
 
 /// ==================== Email Service ====================

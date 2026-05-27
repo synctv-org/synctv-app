@@ -132,6 +132,8 @@ class SyncTvApiClient {
 
   String get baseUrl => _baseUri.toString();
 
+  static String normalizeBaseUrl(String input) => _normalizeBaseUri(input).toString();
+
   set baseUrl(String value) {
     _baseUri = _normalizeBaseUri(value);
   }

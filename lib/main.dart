@@ -10,12 +10,14 @@ import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/theme/app_theme.dart';
 import 'package:video_player_media_kit/video_player_media_kit.dart';
-import 'package:synctv_app/widgets/huawei_login_panel.dart';
+import 'package:synctv_app/widgets/auth_panel.dart';
 import 'package:synctv_app/services/smart_grip_service.dart';
 import 'package:synctv_app/pages/mobile/admin_settings_page.dart';
 import 'package:synctv_app/pages/account_center_page.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
+import 'package:synctv_app/widgets/room_invite_flow.dart';
+import 'package:synctv_app/widgets/server_settings_dialog.dart';
 import 'package:synctv_app/pages/splash_page.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -173,9 +175,10 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     if (token == null) {
       if (mounted) {
         setState(() {
+          _isLoggedIn = false;
           _isLoading = false;
         });
-        _showLoginDialog();
+        _loadRooms(silent: false);
       }
     } else {
       setState(() {
@@ -189,7 +192,14 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   }
 
   Future<void> _loadRooms({bool silent = false}) async {
-    if (!_isLoggedIn) return;
+    if (!_isLoggedIn && _roomFeed == _RoomFeed.mine) {
+      setState(() {
+        _rooms = const [];
+        _roomsTotal = 0;
+        _isLoading = false;
+      });
+      return;
+    }
 
     if (!silent) {
       setState(() {
@@ -253,6 +263,10 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
       _roomsTotal <= 0 ? 1 : ((_roomsTotal - 1) ~/ _roomPageSize) + 1;
 
   void _setRoomFeed(_RoomFeed feed) {
+    if (!_isLoggedIn && feed == _RoomFeed.mine) {
+      _showLoginDialog();
+      return;
+    }
     if (_roomFeed == feed) return;
     setState(() {
       _roomFeed = feed;
@@ -273,17 +287,20 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     _loadRooms(silent: false);
   }
 
-  void _showLoginDialog() {
-    showModalBottomSheet<bool>(
+  Future<bool> _showLoginDialog({String? guestRoomId}) async {
+    final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const HuaweiLoginPanel(),
-    ).then((result) {
-      if (result == true) {
+      builder: (context) => AuthPanel(initialGuestRoomId: guestRoomId),
+    );
+    if (result == true) {
+      if (mounted) {
         _handleLoginSuccess();
       }
-    });
+      return true;
+    }
+    return false;
   }
 
   void _handleLoginSuccess() {
@@ -344,14 +361,12 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
             index: _currentIndex,
             children: [
               // Tab 0: 影厅 (Rooms)
-              _isLoggedIn
-                  ? RefreshIndicator(
-                      onRefresh: () async {
-                        await _loadRooms(silent: true);
-                      },
-                      child: _buildScrollView(isDark),
-                    )
-                  : _buildScrollView(isDark),
+              RefreshIndicator(
+                onRefresh: () async {
+                  await _loadRooms(silent: true);
+                },
+                child: _buildScrollView(isDark),
+              ),
 
               // Tab 1: 我的 (Profile)
               _buildProfileTab(theme, isDark),
@@ -603,21 +618,13 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
 
   Widget _buildScrollView(bool isDark) {
     return CustomScrollView(
-      physics: _isLoggedIn
-          ? const AlwaysScrollableScrollPhysics()
-          : const NeverScrollableScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         _buildAppBar(),
-        if (_isLoggedIn)
-          SliverToBoxAdapter(child: _buildRoomControls(Theme.of(context))),
+        SliverToBoxAdapter(child: _buildRoomControls(Theme.of(context))),
         if (_isLoading)
           const SliverFillRemaining(
             child: Center(child: CircularProgressIndicator()),
-          )
-        else if (!_isLoggedIn)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: _buildLoginRequired(isDark),
           )
         else if (_rooms.isEmpty)
           SliverFillRemaining(
@@ -635,51 +642,6 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildLoginRequired(bool isDark) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                width: 80,
-                height: 80,
-                color: Colors.transparent,
-                child: Image.asset('assets/icon/robot_3.png'),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '请先登录以使用功能',
-              style: TextStyle(
-                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _showLoginDialog,
-              icon: const Icon(Icons.login),
-              label: const Text('立即登录'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5D5FEF),
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -848,7 +810,7 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(
-                hintText: '输入ID加入',
+                hintText: 'ID或邀请链接',
                 hintStyle: TextStyle(
                   color: textColor,
                   fontSize: 11,
@@ -924,54 +886,11 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   }
 
   void _showServerSettingsDialog() {
-    final controller =
-        TextEditingController(text: WatchTogetherService.baseUrl);
-
-    ChatUtils.showStyledDialog(
-      context: context,
-      title: '服务器设置',
-      icon: const Icon(Icons.dns_outlined, color: Colors.purple),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ChatUtils.createFormField(
-            context: context,
-            label: '服务器地址',
-            controller: controller,
-            hintText: '例如: https://tv.test.com',
-            prefixIcon: Icons.link_rounded,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '修改后可能需要重新登录',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-          ),
-        ],
-      ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(
-          context,
-          () async {
-            if (controller.text.isEmpty) {
-              MessageUtils.showWarning(context, '请输入服务器地址');
-              return;
-            }
-            await WatchTogetherService.setBaseUrl(controller.text);
-            if (mounted) {
-              Navigator.pop(context);
-              MessageUtils.showSuccess(context, '服务器地址已更新');
-              if (_isLoggedIn) {
-                _loadRooms(silent: false);
-              }
-            }
-          },
-          text: '保存',
-        ),
-      ],
-    );
+    showServerSettingsDialog(context: context).then((changed) {
+      if (!mounted || changed != true) return;
+      setState(() {});
+      if (_isLoggedIn) _loadRooms(silent: false);
+    });
   }
 
   void _handleLogout() {
@@ -1006,12 +925,13 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   }
 
   Future<void> _joinRoomById(String value) async {
-    final id = value.trim();
-    if (id.isEmpty) {
+    if (value.trim().isEmpty) {
       MessageUtils.showWarning(context, '请输入房间ID');
       return;
     }
     try {
+      final id = await parseInviteOrShowError(context: context, value: value);
+      if (id == null || id.isEmpty) return;
       final check = await WatchTogetherService.checkRoom(id);
       if (!check.exists) {
         if (mounted) MessageUtils.showWarning(context, '房间不存在');
@@ -1020,6 +940,10 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
       if (!check.isAvailable) {
         if (mounted) MessageUtils.showWarning(context, '房间暂不可用');
         return;
+      }
+      if (!_isLoggedIn) {
+        final authenticated = await _showLoginDialog(guestRoomId: id);
+        if (!authenticated || !mounted) return;
       }
       final room = await WatchTogetherService.getRoomInfo(id);
       _joinRoomController.clear();
@@ -1031,6 +955,11 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
 
   Future<void> _handleJoinRoom(WRoom room) async {
     String password = '';
+
+    if (!_isLoggedIn) {
+      final authenticated = await _showLoginDialog(guestRoomId: room.roomId);
+      if (!authenticated || !mounted) return;
+    }
 
     if (room.needPassword) {
       final passwordController = TextEditingController();
