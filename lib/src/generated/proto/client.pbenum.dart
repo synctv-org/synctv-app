@@ -1,0 +1,674 @@
+// This is a generated file - do not edit.
+//
+// Generated from proto/client.proto.
+
+// @dart = 3.3
+
+// ignore_for_file: annotate_overrides, camel_case_types, comment_references
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+
+import 'dart:core' as $core;
+
+import 'package:protobuf/protobuf.dart' as $pb;
+
+class ResourceAvailability extends $pb.ProtobufEnum {
+  static const ResourceAvailability RESOURCE_AVAILABILITY_UNSPECIFIED =
+      ResourceAvailability._(
+          0, _omitEnumNames ? '' : 'RESOURCE_AVAILABILITY_UNSPECIFIED');
+  static const ResourceAvailability RESOURCE_AVAILABILITY_AVAILABLE =
+      ResourceAvailability._(
+          1, _omitEnumNames ? '' : 'RESOURCE_AVAILABILITY_AVAILABLE');
+  static const ResourceAvailability RESOURCE_AVAILABILITY_CREATOR_INACTIVE =
+      ResourceAvailability._(
+          2, _omitEnumNames ? '' : 'RESOURCE_AVAILABILITY_CREATOR_INACTIVE');
+
+  static const $core.List<ResourceAvailability> values = <ResourceAvailability>[
+    RESOURCE_AVAILABILITY_UNSPECIFIED,
+    RESOURCE_AVAILABILITY_AVAILABLE,
+    RESOURCE_AVAILABILITY_CREATOR_INACTIVE,
+  ];
+
+  static final $core.List<ResourceAvailability?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static ResourceAvailability? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ResourceAvailability._(super.value, super.name);
+}
+
+class ResourceAvailabilityFilter extends $pb.ProtobufEnum {
+  static const ResourceAvailabilityFilter RESOURCE_AVAILABILITY_FILTER_ALL =
+      ResourceAvailabilityFilter._(
+          0, _omitEnumNames ? '' : 'RESOURCE_AVAILABILITY_FILTER_ALL');
+  static const ResourceAvailabilityFilter
+      RESOURCE_AVAILABILITY_FILTER_AVAILABLE = ResourceAvailabilityFilter._(
+          1, _omitEnumNames ? '' : 'RESOURCE_AVAILABILITY_FILTER_AVAILABLE');
+  static const ResourceAvailabilityFilter
+      RESOURCE_AVAILABILITY_FILTER_UNAVAILABLE = ResourceAvailabilityFilter._(
+          2, _omitEnumNames ? '' : 'RESOURCE_AVAILABILITY_FILTER_UNAVAILABLE');
+
+  static const $core.List<ResourceAvailabilityFilter> values =
+      <ResourceAvailabilityFilter>[
+    RESOURCE_AVAILABILITY_FILTER_ALL,
+    RESOURCE_AVAILABILITY_FILTER_AVAILABLE,
+    RESOURCE_AVAILABILITY_FILTER_UNAVAILABLE,
+  ];
+
+  static final $core.List<ResourceAvailabilityFilter?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static ResourceAvailabilityFilter? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ResourceAvailabilityFilter._(super.value, super.name);
+}
+
+class MfaMethod extends $pb.ProtobufEnum {
+  static const MfaMethod MFA_METHOD_UNSPECIFIED =
+      MfaMethod._(0, _omitEnumNames ? '' : 'MFA_METHOD_UNSPECIFIED');
+  static const MfaMethod MFA_METHOD_PASSWORD =
+      MfaMethod._(1, _omitEnumNames ? '' : 'MFA_METHOD_PASSWORD');
+  static const MfaMethod MFA_METHOD_WEBAUTHN =
+      MfaMethod._(2, _omitEnumNames ? '' : 'MFA_METHOD_WEBAUTHN');
+  static const MfaMethod MFA_METHOD_EMAIL =
+      MfaMethod._(3, _omitEnumNames ? '' : 'MFA_METHOD_EMAIL');
+
+  static const $core.List<MfaMethod> values = <MfaMethod>[
+    MFA_METHOD_UNSPECIFIED,
+    MFA_METHOD_PASSWORD,
+    MFA_METHOD_WEBAUTHN,
+    MFA_METHOD_EMAIL,
+  ];
+
+  static final $core.List<MfaMethod?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static MfaMethod? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const MfaMethod._(super.value, super.name);
+}
+
+/// Start changing the current user's password credential via OPAQUE. This is an
+/// authenticated endpoint; successful finish stores the updated account
+/// credential as OPAQUE material.
+class OpaquePasswordUpdateVerificationMethod extends $pb.ProtobufEnum {
+  static const OpaquePasswordUpdateVerificationMethod
+      OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_UNSPECIFIED =
+      OpaquePasswordUpdateVerificationMethod._(
+          0,
+          _omitEnumNames
+              ? ''
+              : 'OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_UNSPECIFIED');
+  static const OpaquePasswordUpdateVerificationMethod
+      OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD =
+      OpaquePasswordUpdateVerificationMethod._(
+          1,
+          _omitEnumNames
+              ? ''
+              : 'OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD');
+  static const OpaquePasswordUpdateVerificationMethod
+      OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_EMAIL_TOKEN =
+      OpaquePasswordUpdateVerificationMethod._(
+          2,
+          _omitEnumNames
+              ? ''
+              : 'OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_EMAIL_TOKEN');
+  static const OpaquePasswordUpdateVerificationMethod
+      OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_PASSKEY =
+      OpaquePasswordUpdateVerificationMethod._(
+          3,
+          _omitEnumNames
+              ? ''
+              : 'OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_PASSKEY');
+
+  static const $core.List<OpaquePasswordUpdateVerificationMethod> values =
+      <OpaquePasswordUpdateVerificationMethod>[
+    OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_UNSPECIFIED,
+    OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD,
+    OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_EMAIL_TOKEN,
+    OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_PASSKEY,
+  ];
+
+  static final $core.List<OpaquePasswordUpdateVerificationMethod?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static OpaquePasswordUpdateVerificationMethod? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const OpaquePasswordUpdateVerificationMethod._(super.value, super.name);
+}
+
+class SortDirection extends $pb.ProtobufEnum {
+  static const SortDirection SORT_DIRECTION_UNSPECIFIED =
+      SortDirection._(0, _omitEnumNames ? '' : 'SORT_DIRECTION_UNSPECIFIED');
+  static const SortDirection SORT_DIRECTION_ASC =
+      SortDirection._(1, _omitEnumNames ? '' : 'SORT_DIRECTION_ASC');
+  static const SortDirection SORT_DIRECTION_DESC =
+      SortDirection._(2, _omitEnumNames ? '' : 'SORT_DIRECTION_DESC');
+
+  static const $core.List<SortDirection> values = <SortDirection>[
+    SORT_DIRECTION_UNSPECIFIED,
+    SORT_DIRECTION_ASC,
+    SORT_DIRECTION_DESC,
+  ];
+
+  static final $core.List<SortDirection?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static SortDirection? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const SortDirection._(super.value, super.name);
+}
+
+class RoomStreamListSortBy extends $pb.ProtobufEnum {
+  static const RoomStreamListSortBy ROOM_STREAM_LIST_SORT_BY_UNSPECIFIED =
+      RoomStreamListSortBy._(
+          0, _omitEnumNames ? '' : 'ROOM_STREAM_LIST_SORT_BY_UNSPECIFIED');
+  static const RoomStreamListSortBy ROOM_STREAM_LIST_SORT_BY_MEDIA_ID =
+      RoomStreamListSortBy._(
+          1, _omitEnumNames ? '' : 'ROOM_STREAM_LIST_SORT_BY_MEDIA_ID');
+
+  static const $core.List<RoomStreamListSortBy> values = <RoomStreamListSortBy>[
+    ROOM_STREAM_LIST_SORT_BY_UNSPECIFIED,
+    ROOM_STREAM_LIST_SORT_BY_MEDIA_ID,
+  ];
+
+  static final $core.List<RoomStreamListSortBy?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 1);
+  static RoomStreamListSortBy? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RoomStreamListSortBy._(super.value, super.name);
+}
+
+class RoomMemberListSortBy extends $pb.ProtobufEnum {
+  static const RoomMemberListSortBy ROOM_MEMBER_LIST_SORT_BY_UNSPECIFIED =
+      RoomMemberListSortBy._(
+          0, _omitEnumNames ? '' : 'ROOM_MEMBER_LIST_SORT_BY_UNSPECIFIED');
+  static const RoomMemberListSortBy ROOM_MEMBER_LIST_SORT_BY_JOINED_AT =
+      RoomMemberListSortBy._(
+          1, _omitEnumNames ? '' : 'ROOM_MEMBER_LIST_SORT_BY_JOINED_AT');
+  static const RoomMemberListSortBy ROOM_MEMBER_LIST_SORT_BY_USERNAME =
+      RoomMemberListSortBy._(
+          2, _omitEnumNames ? '' : 'ROOM_MEMBER_LIST_SORT_BY_USERNAME');
+  static const RoomMemberListSortBy ROOM_MEMBER_LIST_SORT_BY_ROLE =
+      RoomMemberListSortBy._(
+          3, _omitEnumNames ? '' : 'ROOM_MEMBER_LIST_SORT_BY_ROLE');
+
+  static const $core.List<RoomMemberListSortBy> values = <RoomMemberListSortBy>[
+    ROOM_MEMBER_LIST_SORT_BY_UNSPECIFIED,
+    ROOM_MEMBER_LIST_SORT_BY_JOINED_AT,
+    ROOM_MEMBER_LIST_SORT_BY_USERNAME,
+    ROOM_MEMBER_LIST_SORT_BY_ROLE,
+  ];
+
+  static final $core.List<RoomMemberListSortBy?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static RoomMemberListSortBy? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RoomMemberListSortBy._(super.value, super.name);
+}
+
+class RoomListSortBy extends $pb.ProtobufEnum {
+  static const RoomListSortBy ROOM_LIST_SORT_BY_UNSPECIFIED = RoomListSortBy._(
+      0, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_UNSPECIFIED');
+  static const RoomListSortBy ROOM_LIST_SORT_BY_CREATED_AT =
+      RoomListSortBy._(1, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_CREATED_AT');
+  static const RoomListSortBy ROOM_LIST_SORT_BY_UPDATED_AT =
+      RoomListSortBy._(2, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_UPDATED_AT');
+  static const RoomListSortBy ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT =
+      RoomListSortBy._(
+          3, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT');
+  static const RoomListSortBy ROOM_LIST_SORT_BY_NAME =
+      RoomListSortBy._(4, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_NAME');
+
+  static const $core.List<RoomListSortBy> values = <RoomListSortBy>[
+    ROOM_LIST_SORT_BY_UNSPECIFIED,
+    ROOM_LIST_SORT_BY_CREATED_AT,
+    ROOM_LIST_SORT_BY_UPDATED_AT,
+    ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+    ROOM_LIST_SORT_BY_NAME,
+  ];
+
+  static final $core.List<RoomListSortBy?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static RoomListSortBy? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RoomListSortBy._(super.value, super.name);
+}
+
+class PlaylistListSortBy extends $pb.ProtobufEnum {
+  static const PlaylistListSortBy PLAYLIST_LIST_SORT_BY_UNSPECIFIED =
+      PlaylistListSortBy._(
+          0, _omitEnumNames ? '' : 'PLAYLIST_LIST_SORT_BY_UNSPECIFIED');
+  static const PlaylistListSortBy PLAYLIST_LIST_SORT_BY_POSITION =
+      PlaylistListSortBy._(
+          1, _omitEnumNames ? '' : 'PLAYLIST_LIST_SORT_BY_POSITION');
+  static const PlaylistListSortBy PLAYLIST_LIST_SORT_BY_NAME =
+      PlaylistListSortBy._(
+          2, _omitEnumNames ? '' : 'PLAYLIST_LIST_SORT_BY_NAME');
+  static const PlaylistListSortBy PLAYLIST_LIST_SORT_BY_CREATED_AT =
+      PlaylistListSortBy._(
+          3, _omitEnumNames ? '' : 'PLAYLIST_LIST_SORT_BY_CREATED_AT');
+  static const PlaylistListSortBy PLAYLIST_LIST_SORT_BY_UPDATED_AT =
+      PlaylistListSortBy._(
+          4, _omitEnumNames ? '' : 'PLAYLIST_LIST_SORT_BY_UPDATED_AT');
+
+  static const $core.List<PlaylistListSortBy> values = <PlaylistListSortBy>[
+    PLAYLIST_LIST_SORT_BY_UNSPECIFIED,
+    PLAYLIST_LIST_SORT_BY_POSITION,
+    PLAYLIST_LIST_SORT_BY_NAME,
+    PLAYLIST_LIST_SORT_BY_CREATED_AT,
+    PLAYLIST_LIST_SORT_BY_UPDATED_AT,
+  ];
+
+  static final $core.List<PlaylistListSortBy?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static PlaylistListSortBy? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaylistListSortBy._(super.value, super.name);
+}
+
+class MediaListSortBy extends $pb.ProtobufEnum {
+  static const MediaListSortBy MEDIA_LIST_SORT_BY_UNSPECIFIED =
+      MediaListSortBy._(
+          0, _omitEnumNames ? '' : 'MEDIA_LIST_SORT_BY_UNSPECIFIED');
+  static const MediaListSortBy MEDIA_LIST_SORT_BY_POSITION =
+      MediaListSortBy._(1, _omitEnumNames ? '' : 'MEDIA_LIST_SORT_BY_POSITION');
+  static const MediaListSortBy MEDIA_LIST_SORT_BY_NAME =
+      MediaListSortBy._(2, _omitEnumNames ? '' : 'MEDIA_LIST_SORT_BY_NAME');
+  static const MediaListSortBy MEDIA_LIST_SORT_BY_ADDED_AT =
+      MediaListSortBy._(3, _omitEnumNames ? '' : 'MEDIA_LIST_SORT_BY_ADDED_AT');
+  static const MediaListSortBy MEDIA_LIST_SORT_BY_UPDATED_AT =
+      MediaListSortBy._(
+          4, _omitEnumNames ? '' : 'MEDIA_LIST_SORT_BY_UPDATED_AT');
+  static const MediaListSortBy MEDIA_LIST_SORT_BY_SOURCE_PROVIDER =
+      MediaListSortBy._(
+          5, _omitEnumNames ? '' : 'MEDIA_LIST_SORT_BY_SOURCE_PROVIDER');
+  static const MediaListSortBy MEDIA_LIST_SORT_BY_PROVIDER_INSTANCE_NAME =
+      MediaListSortBy._(
+          6, _omitEnumNames ? '' : 'MEDIA_LIST_SORT_BY_PROVIDER_INSTANCE_NAME');
+
+  static const $core.List<MediaListSortBy> values = <MediaListSortBy>[
+    MEDIA_LIST_SORT_BY_UNSPECIFIED,
+    MEDIA_LIST_SORT_BY_POSITION,
+    MEDIA_LIST_SORT_BY_NAME,
+    MEDIA_LIST_SORT_BY_ADDED_AT,
+    MEDIA_LIST_SORT_BY_UPDATED_AT,
+    MEDIA_LIST_SORT_BY_SOURCE_PROVIDER,
+    MEDIA_LIST_SORT_BY_PROVIDER_INSTANCE_NAME,
+  ];
+
+  static final $core.List<MediaListSortBy?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 6);
+  static MediaListSortBy? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const MediaListSortBy._(super.value, super.name);
+}
+
+class MyRoomListSortBy extends $pb.ProtobufEnum {
+  static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_UNSPECIFIED =
+      MyRoomListSortBy._(
+          0, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_UNSPECIFIED');
+  static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_JOINED_AT =
+      MyRoomListSortBy._(
+          1, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_JOINED_AT');
+  static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_CREATED_AT =
+      MyRoomListSortBy._(
+          2, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_CREATED_AT');
+  static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_UPDATED_AT =
+      MyRoomListSortBy._(
+          3, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_UPDATED_AT');
+  static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT =
+      MyRoomListSortBy._(
+          4, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT');
+  static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_NAME =
+      MyRoomListSortBy._(5, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_NAME');
+
+  static const $core.List<MyRoomListSortBy> values = <MyRoomListSortBy>[
+    MY_ROOM_LIST_SORT_BY_UNSPECIFIED,
+    MY_ROOM_LIST_SORT_BY_JOINED_AT,
+    MY_ROOM_LIST_SORT_BY_CREATED_AT,
+    MY_ROOM_LIST_SORT_BY_UPDATED_AT,
+    MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+    MY_ROOM_LIST_SORT_BY_NAME,
+  ];
+
+  static final $core.List<MyRoomListSortBy?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
+  static MyRoomListSortBy? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const MyRoomListSortBy._(super.value, super.name);
+}
+
+class MyRoomRelation extends $pb.ProtobufEnum {
+  static const MyRoomRelation MY_ROOM_RELATION_UNSPECIFIED =
+      MyRoomRelation._(0, _omitEnumNames ? '' : 'MY_ROOM_RELATION_UNSPECIFIED');
+  static const MyRoomRelation MY_ROOM_RELATION_ALL =
+      MyRoomRelation._(1, _omitEnumNames ? '' : 'MY_ROOM_RELATION_ALL');
+  static const MyRoomRelation MY_ROOM_RELATION_CREATED =
+      MyRoomRelation._(2, _omitEnumNames ? '' : 'MY_ROOM_RELATION_CREATED');
+  static const MyRoomRelation MY_ROOM_RELATION_PARTICIPATING = MyRoomRelation._(
+      3, _omitEnumNames ? '' : 'MY_ROOM_RELATION_PARTICIPATING');
+
+  static const $core.List<MyRoomRelation> values = <MyRoomRelation>[
+    MY_ROOM_RELATION_UNSPECIFIED,
+    MY_ROOM_RELATION_ALL,
+    MY_ROOM_RELATION_CREATED,
+    MY_ROOM_RELATION_PARTICIPATING,
+  ];
+
+  static final $core.List<MyRoomRelation?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static MyRoomRelation? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const MyRoomRelation._(super.value, super.name);
+}
+
+class NotificationListSortBy extends $pb.ProtobufEnum {
+  static const NotificationListSortBy NOTIFICATION_LIST_SORT_BY_UNSPECIFIED =
+      NotificationListSortBy._(
+          0, _omitEnumNames ? '' : 'NOTIFICATION_LIST_SORT_BY_UNSPECIFIED');
+  static const NotificationListSortBy NOTIFICATION_LIST_SORT_BY_CREATED_AT =
+      NotificationListSortBy._(
+          1, _omitEnumNames ? '' : 'NOTIFICATION_LIST_SORT_BY_CREATED_AT');
+  static const NotificationListSortBy NOTIFICATION_LIST_SORT_BY_UPDATED_AT =
+      NotificationListSortBy._(
+          2, _omitEnumNames ? '' : 'NOTIFICATION_LIST_SORT_BY_UPDATED_AT');
+  static const NotificationListSortBy NOTIFICATION_LIST_SORT_BY_TITLE =
+      NotificationListSortBy._(
+          3, _omitEnumNames ? '' : 'NOTIFICATION_LIST_SORT_BY_TITLE');
+
+  static const $core.List<NotificationListSortBy> values =
+      <NotificationListSortBy>[
+    NOTIFICATION_LIST_SORT_BY_UNSPECIFIED,
+    NOTIFICATION_LIST_SORT_BY_CREATED_AT,
+    NOTIFICATION_LIST_SORT_BY_UPDATED_AT,
+    NOTIFICATION_LIST_SORT_BY_TITLE,
+  ];
+
+  static final $core.List<NotificationListSortBy?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static NotificationListSortBy? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const NotificationListSortBy._(super.value, super.name);
+}
+
+class ItemType extends $pb.ProtobufEnum {
+  static const ItemType ITEM_TYPE_UNSPECIFIED =
+      ItemType._(0, _omitEnumNames ? '' : 'ITEM_TYPE_UNSPECIFIED');
+  static const ItemType ITEM_TYPE_PLAYLIST =
+      ItemType._(1, _omitEnumNames ? '' : 'ITEM_TYPE_PLAYLIST');
+  static const ItemType ITEM_TYPE_MEDIA =
+      ItemType._(2, _omitEnumNames ? '' : 'ITEM_TYPE_MEDIA');
+
+  static const $core.List<ItemType> values = <ItemType>[
+    ITEM_TYPE_UNSPECIFIED,
+    ITEM_TYPE_PLAYLIST,
+    ITEM_TYPE_MEDIA,
+  ];
+
+  static final $core.List<ItemType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static ItemType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ItemType._(super.value, super.name);
+}
+
+class PlaybackUpdateType extends $pb.ProtobufEnum {
+  static const PlaybackUpdateType PLAYBACK_UPDATE_TYPE_UNSPECIFIED =
+      PlaybackUpdateType._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_UPDATE_TYPE_UNSPECIFIED');
+  static const PlaybackUpdateType PLAYBACK_UPDATE_TYPE_PLAY =
+      PlaybackUpdateType._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_UPDATE_TYPE_PLAY');
+  static const PlaybackUpdateType PLAYBACK_UPDATE_TYPE_PAUSE =
+      PlaybackUpdateType._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_UPDATE_TYPE_PAUSE');
+  static const PlaybackUpdateType PLAYBACK_UPDATE_TYPE_SEEK =
+      PlaybackUpdateType._(
+          3, _omitEnumNames ? '' : 'PLAYBACK_UPDATE_TYPE_SEEK');
+  static const PlaybackUpdateType PLAYBACK_UPDATE_TYPE_SPEED =
+      PlaybackUpdateType._(
+          4, _omitEnumNames ? '' : 'PLAYBACK_UPDATE_TYPE_SPEED');
+
+  static const $core.List<PlaybackUpdateType> values = <PlaybackUpdateType>[
+    PLAYBACK_UPDATE_TYPE_UNSPECIFIED,
+    PLAYBACK_UPDATE_TYPE_PLAY,
+    PLAYBACK_UPDATE_TYPE_PAUSE,
+    PLAYBACK_UPDATE_TYPE_SEEK,
+    PLAYBACK_UPDATE_TYPE_SPEED,
+  ];
+
+  static final $core.List<PlaybackUpdateType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static PlaybackUpdateType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackUpdateType._(super.value, super.name);
+}
+
+class PlaybackDeliveryPreference extends $pb.ProtobufEnum {
+  static const PlaybackDeliveryPreference
+      PLAYBACK_DELIVERY_PREFERENCE_UNSPECIFIED = PlaybackDeliveryPreference._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_DELIVERY_PREFERENCE_UNSPECIFIED');
+  static const PlaybackDeliveryPreference PLAYBACK_DELIVERY_PREFERENCE_AUTO =
+      PlaybackDeliveryPreference._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_DELIVERY_PREFERENCE_AUTO');
+  static const PlaybackDeliveryPreference
+      PLAYBACK_DELIVERY_PREFERENCE_DIRECT_PLAY = PlaybackDeliveryPreference._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_DELIVERY_PREFERENCE_DIRECT_PLAY');
+  static const PlaybackDeliveryPreference
+      PLAYBACK_DELIVERY_PREFERENCE_TRANSCODE = PlaybackDeliveryPreference._(
+          3, _omitEnumNames ? '' : 'PLAYBACK_DELIVERY_PREFERENCE_TRANSCODE');
+
+  static const $core.List<PlaybackDeliveryPreference> values =
+      <PlaybackDeliveryPreference>[
+    PLAYBACK_DELIVERY_PREFERENCE_UNSPECIFIED,
+    PLAYBACK_DELIVERY_PREFERENCE_AUTO,
+    PLAYBACK_DELIVERY_PREFERENCE_DIRECT_PLAY,
+    PLAYBACK_DELIVERY_PREFERENCE_TRANSCODE,
+  ];
+
+  static final $core.List<PlaybackDeliveryPreference?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static PlaybackDeliveryPreference? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackDeliveryPreference._(super.value, super.name);
+}
+
+class PlaybackSubtitlePreference extends $pb.ProtobufEnum {
+  static const PlaybackSubtitlePreference
+      PLAYBACK_SUBTITLE_PREFERENCE_UNSPECIFIED = PlaybackSubtitlePreference._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_SUBTITLE_PREFERENCE_UNSPECIFIED');
+  static const PlaybackSubtitlePreference
+      PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL = PlaybackSubtitlePreference._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL');
+  static const PlaybackSubtitlePreference
+      PLAYBACK_SUBTITLE_PREFERENCE_EMBEDDED_OR_EXTERNAL =
+      PlaybackSubtitlePreference._(
+          2,
+          _omitEnumNames
+              ? ''
+              : 'PLAYBACK_SUBTITLE_PREFERENCE_EMBEDDED_OR_EXTERNAL');
+  static const PlaybackSubtitlePreference PLAYBACK_SUBTITLE_PREFERENCE_NONE =
+      PlaybackSubtitlePreference._(
+          3, _omitEnumNames ? '' : 'PLAYBACK_SUBTITLE_PREFERENCE_NONE');
+
+  static const $core.List<PlaybackSubtitlePreference> values =
+      <PlaybackSubtitlePreference>[
+    PLAYBACK_SUBTITLE_PREFERENCE_UNSPECIFIED,
+    PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL,
+    PLAYBACK_SUBTITLE_PREFERENCE_EMBEDDED_OR_EXTERNAL,
+    PLAYBACK_SUBTITLE_PREFERENCE_NONE,
+  ];
+
+  static final $core.List<PlaybackSubtitlePreference?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static PlaybackSubtitlePreference? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackSubtitlePreference._(super.value, super.name);
+}
+
+class PlaybackVideoCodec extends $pb.ProtobufEnum {
+  static const PlaybackVideoCodec PLAYBACK_VIDEO_CODEC_UNSPECIFIED =
+      PlaybackVideoCodec._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_VIDEO_CODEC_UNSPECIFIED');
+  static const PlaybackVideoCodec PLAYBACK_VIDEO_CODEC_H264 =
+      PlaybackVideoCodec._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_VIDEO_CODEC_H264');
+  static const PlaybackVideoCodec PLAYBACK_VIDEO_CODEC_HEVC =
+      PlaybackVideoCodec._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_VIDEO_CODEC_HEVC');
+  static const PlaybackVideoCodec PLAYBACK_VIDEO_CODEC_VP9 =
+      PlaybackVideoCodec._(3, _omitEnumNames ? '' : 'PLAYBACK_VIDEO_CODEC_VP9');
+  static const PlaybackVideoCodec PLAYBACK_VIDEO_CODEC_AV1 =
+      PlaybackVideoCodec._(4, _omitEnumNames ? '' : 'PLAYBACK_VIDEO_CODEC_AV1');
+
+  static const $core.List<PlaybackVideoCodec> values = <PlaybackVideoCodec>[
+    PLAYBACK_VIDEO_CODEC_UNSPECIFIED,
+    PLAYBACK_VIDEO_CODEC_H264,
+    PLAYBACK_VIDEO_CODEC_HEVC,
+    PLAYBACK_VIDEO_CODEC_VP9,
+    PLAYBACK_VIDEO_CODEC_AV1,
+  ];
+
+  static final $core.List<PlaybackVideoCodec?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static PlaybackVideoCodec? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackVideoCodec._(super.value, super.name);
+}
+
+class PlaybackContainer extends $pb.ProtobufEnum {
+  static const PlaybackContainer PLAYBACK_CONTAINER_UNSPECIFIED =
+      PlaybackContainer._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_CONTAINER_UNSPECIFIED');
+  static const PlaybackContainer PLAYBACK_CONTAINER_MP4 =
+      PlaybackContainer._(1, _omitEnumNames ? '' : 'PLAYBACK_CONTAINER_MP4');
+  static const PlaybackContainer PLAYBACK_CONTAINER_MKV =
+      PlaybackContainer._(2, _omitEnumNames ? '' : 'PLAYBACK_CONTAINER_MKV');
+  static const PlaybackContainer PLAYBACK_CONTAINER_WEBM =
+      PlaybackContainer._(3, _omitEnumNames ? '' : 'PLAYBACK_CONTAINER_WEBM');
+
+  static const $core.List<PlaybackContainer> values = <PlaybackContainer>[
+    PLAYBACK_CONTAINER_UNSPECIFIED,
+    PLAYBACK_CONTAINER_MP4,
+    PLAYBACK_CONTAINER_MKV,
+    PLAYBACK_CONTAINER_WEBM,
+  ];
+
+  static final $core.List<PlaybackContainer?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static PlaybackContainer? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackContainer._(super.value, super.name);
+}
+
+class PlaybackAudioCapability extends $pb.ProtobufEnum {
+  static const PlaybackAudioCapability PLAYBACK_AUDIO_CAPABILITY_UNSPECIFIED =
+      PlaybackAudioCapability._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CAPABILITY_UNSPECIFIED');
+  static const PlaybackAudioCapability PLAYBACK_AUDIO_CAPABILITY_STEREO =
+      PlaybackAudioCapability._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CAPABILITY_STEREO');
+  static const PlaybackAudioCapability PLAYBACK_AUDIO_CAPABILITY_SURROUND =
+      PlaybackAudioCapability._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CAPABILITY_SURROUND');
+  static const PlaybackAudioCapability
+      PLAYBACK_AUDIO_CAPABILITY_LOSSLESS_SURROUND = PlaybackAudioCapability._(3,
+          _omitEnumNames ? '' : 'PLAYBACK_AUDIO_CAPABILITY_LOSSLESS_SURROUND');
+
+  static const $core.List<PlaybackAudioCapability> values =
+      <PlaybackAudioCapability>[
+    PLAYBACK_AUDIO_CAPABILITY_UNSPECIFIED,
+    PLAYBACK_AUDIO_CAPABILITY_STEREO,
+    PLAYBACK_AUDIO_CAPABILITY_SURROUND,
+    PLAYBACK_AUDIO_CAPABILITY_LOSSLESS_SURROUND,
+  ];
+
+  static final $core.List<PlaybackAudioCapability?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static PlaybackAudioCapability? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackAudioCapability._(super.value, super.name);
+}
+
+class ResourceDeliveryMode extends $pb.ProtobufEnum {
+  static const ResourceDeliveryMode RESOURCE_DELIVERY_MODE_UNSPECIFIED =
+      ResourceDeliveryMode._(
+          0, _omitEnumNames ? '' : 'RESOURCE_DELIVERY_MODE_UNSPECIFIED');
+  static const ResourceDeliveryMode RESOURCE_DELIVERY_MODE_NOTIFY_ONLY =
+      ResourceDeliveryMode._(
+          1, _omitEnumNames ? '' : 'RESOURCE_DELIVERY_MODE_NOTIFY_ONLY');
+  static const ResourceDeliveryMode RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT =
+      ResourceDeliveryMode._(
+          2, _omitEnumNames ? '' : 'RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT');
+
+  static const $core.List<ResourceDeliveryMode> values = <ResourceDeliveryMode>[
+    RESOURCE_DELIVERY_MODE_UNSPECIFIED,
+    RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
+    RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
+  ];
+
+  static final $core.List<ResourceDeliveryMode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static ResourceDeliveryMode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ResourceDeliveryMode._(super.value, super.name);
+}
+
+class NotificationType extends $pb.ProtobufEnum {
+  static const NotificationType NOTIFICATION_TYPE_UNSPECIFIED =
+      NotificationType._(
+          0, _omitEnumNames ? '' : 'NOTIFICATION_TYPE_UNSPECIFIED');
+  static const NotificationType NOTIFICATION_TYPE_ROOM_INVITATION =
+      NotificationType._(
+          1, _omitEnumNames ? '' : 'NOTIFICATION_TYPE_ROOM_INVITATION');
+  static const NotificationType NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT =
+      NotificationType._(
+          2, _omitEnumNames ? '' : 'NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT');
+  static const NotificationType NOTIFICATION_TYPE_ROOM_EVENT =
+      NotificationType._(
+          3, _omitEnumNames ? '' : 'NOTIFICATION_TYPE_ROOM_EVENT');
+  static const NotificationType NOTIFICATION_TYPE_PASSWORD_RESET =
+      NotificationType._(
+          4, _omitEnumNames ? '' : 'NOTIFICATION_TYPE_PASSWORD_RESET');
+  static const NotificationType NOTIFICATION_TYPE_EMAIL_VERIFICATION =
+      NotificationType._(
+          5, _omitEnumNames ? '' : 'NOTIFICATION_TYPE_EMAIL_VERIFICATION');
+
+  static const $core.List<NotificationType> values = <NotificationType>[
+    NOTIFICATION_TYPE_UNSPECIFIED,
+    NOTIFICATION_TYPE_ROOM_INVITATION,
+    NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
+    NOTIFICATION_TYPE_ROOM_EVENT,
+    NOTIFICATION_TYPE_PASSWORD_RESET,
+    NOTIFICATION_TYPE_EMAIL_VERIFICATION,
+  ];
+
+  static final $core.List<NotificationType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
+  static NotificationType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const NotificationType._(super.value, super.name);
+}
+
+const $core.bool _omitEnumNames =
+    $core.bool.fromEnvironment('protobuf.omit_enum_names');

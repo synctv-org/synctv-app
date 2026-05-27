@@ -1,0 +1,53 @@
+PODS:
+  - flutter_volume_controller (0.0.1):
+    - FlutterMacOS
+  - flutter_webrtc (1.2.0):
+    - FlutterMacOS
+    - WebRTC-SDK (= 137.7151.12)
+  - FlutterMacOS (1.0.0)
+  - media_kit_libs_macos_video (1.0.4):
+    - FlutterMacOS
+  - media_kit_video (0.0.1):
+    - FlutterMacOS
+  - ua_client_hints (1.7.0):
+    - FlutterMacOS
+  - WebRTC-SDK (137.7151.12)
+
+DEPENDENCIES:
+  - flutter_volume_controller (from `Flutter/ephemeral/.symlinks/plugins/flutter_volume_controller/macos`)
+  - flutter_webrtc (from `Flutter/ephemeral/.symlinks/plugins/flutter_webrtc/macos`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - media_kit_libs_macos_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos`)
+  - media_kit_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos`)
+  - ua_client_hints (from `Flutter/ephemeral/.symlinks/plugins/ua_client_hints/macos`)
+
+SPEC REPOS:
+  trunk:
+    - WebRTC-SDK
+
+EXTERNAL SOURCES:
+  flutter_volume_controller:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_volume_controller/macos
+  flutter_webrtc:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_webrtc/macos
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  media_kit_libs_macos_video:
+    :path: Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos
+  media_kit_video:
+    :path: Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos
+  ua_client_hints:
+    :path: Flutter/ephemeral/.symlinks/plugins/ua_client_hints/macos
+
+SPEC CHECKSUMS:
+  flutter_volume_controller: ae08bf0838e4901f299781c3ab5056dfab0c2f74
+  flutter_webrtc: 7cda18a9cd917db2f8bfcde8011804f6018a12df
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  media_kit_libs_macos_video: 85a23e549b5f480e72cae3e5634b5514bc692f65
+  media_kit_video: fa6564e3799a0a28bff39442334817088b7ca758
+  ua_client_hints: bb84da85d9d5d605d40598b3c1ae3bfd2598e201
+  WebRTC-SDK: 1762e2de812354d27a8407d1b2c532064ec39fce
+
+PODFILE CHECKSUM: bac2186806ea901d391c664c7bfc8ccce0ee7cb7
+
+COCOAPODS: 1.16.2

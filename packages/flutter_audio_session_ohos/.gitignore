@@ -1,0 +1,21 @@
+.DS_Store
+.dart_tool/
+
+.packages
+.pub/
+
+build/
+
+pubspec.lock
+Podfile.lock
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+gradlew
+gradlew.bat
+.build/
+**/.cxx/

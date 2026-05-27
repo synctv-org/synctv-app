@@ -1,0 +1,287 @@
+import 'dart:convert';
+
+import 'package:fixnum/fixnum.dart';
+
+import 'package:synctv_app/models/account_models.dart';
+import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/services/synctv_api_client.dart';
+import 'package:synctv_app/services/synctv_session_store.dart';
+import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
+    as common_enum;
+
+class SyncTvAccountDomainService {
+  SyncTvAccountDomainService({
+    required SyncTvApiClient api,
+    required SyncTvSessionStore sessionStore,
+  })  : _api = api,
+        _sessionStore = sessionStore;
+
+  final SyncTvApiClient _api;
+  final SyncTvSessionStore _sessionStore;
+
+  Future<WUser> getMe() async {
+    if (_api.session.isGuest) {
+      return WUser(
+        id: _sessionStore.guestRoomId ?? 'guest',
+        username: _sessionStore.guestDisplayName ?? 'Guest',
+        role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST.value,
+      );
+    }
+    final response = await _api.user.getProfile(client.GetProfileRequest());
+    return _api.mapUser(response.user);
+  }
+
+  Future<WUser> updateUsername(String username) async {
+    await _api.user.setUsername(client.SetUsernameRequest(
+      newUsername: username,
+    ));
+    return getMe();
+  }
+
+  Future<AccountPreferences> getAccountPreferences() async {
+    final response = await _api.user.getUserPreferences(
+      client.GetUserPreferencesRequest(),
+    );
+    return accountPreferencesFromProto(
+      response.preferences,
+      response.authFactors,
+    );
+  }
+
+  Future<AccountPreferences> updateAccountPreferences({
+    bool? twoFactorEnabled,
+    NotificationPreferences? notifications,
+  }) async {
+    final request = client.UpdateUserPreferencesRequest();
+    if (twoFactorEnabled != null) {
+      request.twoFactorEnabled = twoFactorEnabled;
+    }
+    final notificationPreferences = notifications?.toProto();
+    if (notificationPreferences != null) {
+      request.notifications = notificationPreferences;
+    }
+    final response = await _api.user.updateUserPreferences(request);
+    return accountPreferencesFromProto(
+      response.preferences,
+      response.authFactors,
+    );
+  }
+
+  Future<List<PasskeyCredentialInfo>> listPasskeys() async {
+    final response = await _api.user.listPasskeys(client.ListPasskeysRequest());
+    return response.credentials.map(passkeyFromProto).toList(growable: false);
+  }
+
+  Future<void> deletePasskey(String credentialId) async {
+    await _api.user.deletePasskey(
+      client.DeletePasskeyRequest(credentialId: credentialId),
+    );
+  }
+
+  Future<OpaquePasswordUpdateStart> startOpaquePasswordUpdate({
+    List<int> credentialRequest = const [],
+    required List<int> registrationRequest,
+    required int verificationMethod,
+    String emailToken = '',
+  }) async {
+    final response = await _api.user.startOpaquePasswordUpdate(
+      client.StartOpaquePasswordUpdateRequest(
+        credentialRequest: credentialRequest,
+        registrationRequest: registrationRequest,
+        verificationMethod: _opaquePasswordUpdateVerificationMethodFromValue(
+            verificationMethod),
+        emailToken: emailToken,
+      ),
+    );
+    return OpaquePasswordUpdateStart(
+      sessionId: response.sessionId,
+      credentialResponse: response.credentialResponse,
+      registrationResponse: response.registrationResponse,
+      passkeySessionId: response.passkeySessionId,
+      passkeyOptions: response.passkeyOptions,
+    );
+  }
+
+  Future<WUser> finishOpaquePasswordUpdate({
+    required String sessionId,
+    List<int> credentialFinalization = const [],
+    required List<int> registrationUpload,
+    String passkeySessionId = '',
+    Object? passkeyCredential,
+  }) async {
+    final response = await _api.user.finishOpaquePasswordUpdate(
+      client.FinishOpaquePasswordUpdateRequest(
+        sessionId: sessionId,
+        credentialFinalization: credentialFinalization,
+        registrationUpload: registrationUpload,
+        passkeySessionId: passkeySessionId,
+        passkeyCredential: _api.encodeJsonBytes(passkeyCredential),
+      ),
+    );
+    return _api.mapUser(response.user);
+  }
+
+  Future<PasskeyChallengeStart> startPasskeyBind({String name = ''}) async {
+    final response = await _api.user.startPasskeyBind(
+      client.StartPasskeyBindRequest(name: name),
+    );
+    return PasskeyChallengeStart(
+      sessionId: response.sessionId,
+      options: response.options,
+    );
+  }
+
+  Future<PasskeyCredentialInfo> finishPasskeyBind({
+    required String sessionId,
+    required Object credential,
+  }) async {
+    final response = await _api.user.finishPasskeyBind(
+      client.FinishPasskeyBindRequest(
+        sessionId: sessionId,
+        credential: _api.encodeJsonBytes(credential),
+      ),
+    );
+    return passkeyFromProto(response.credential);
+  }
+
+  client_enum.OpaquePasswordUpdateVerificationMethod
+      _opaquePasswordUpdateVerificationMethodFromValue(int value) {
+    return client_enum.OpaquePasswordUpdateVerificationMethod.valueOf(value) ??
+        client_enum.OpaquePasswordUpdateVerificationMethod
+            .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_UNSPECIFIED;
+  }
+}
+
+class SyncTvNotificationDomainService {
+  SyncTvNotificationDomainService(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<UserNotificationsPage> listNotifications({
+    int page = 1,
+    int pageSize = 20,
+    bool? isRead,
+    client_enum.NotificationType? notificationType,
+    String search = '',
+    client_enum.NotificationListSortBy sortBy =
+        client_enum.NotificationListSortBy.NOTIFICATION_LIST_SORT_BY_CREATED_AT,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_DESC,
+  }) async {
+    final request = client.ListNotificationsRequest(
+      page: page,
+      pageSize: pageSize,
+      search: search,
+      sortBy: sortBy,
+      sortDirection: sortDirection,
+    );
+    if (isRead != null) request.isRead = isRead;
+    if (notificationType != null) request.notificationType = notificationType;
+
+    final response = await _api.notifications.listNotifications(request);
+    return UserNotificationsPage(
+      notifications: response.notifications
+          .map(notificationFromProto)
+          .toList(growable: false),
+      total: response.total,
+      unreadCount: response.unreadCount,
+    );
+  }
+
+  Future<UserNotificationItem> getNotification(int notificationId) async {
+    final response = await _api.notifications.getNotification(
+      client.GetNotificationRequest(notificationId: Int64(notificationId)),
+    );
+    return notificationFromProto(response.notification);
+  }
+
+  Future<void> markNotificationAsRead(UserNotificationItem item) async {
+    if (item.numericId <= 0) return;
+    await markNotificationsAsRead([item.numericId]);
+  }
+
+  Future<void> markNotificationsAsRead(List<int> notificationIds) async {
+    final ids = notificationIds
+        .where((id) => id > 0)
+        .map(Int64.new)
+        .toList(growable: false);
+    if (ids.isEmpty) return;
+    await _api.notifications.markAsRead(
+      client.MarkAsReadRequest(notificationIds: ids),
+    );
+  }
+
+  Future<void> markAllNotificationsAsRead() async {
+    await _api.notifications.markAllAsRead(client.MarkAllAsReadRequest());
+  }
+
+  Future<void> deleteNotification(UserNotificationItem item) async {
+    if (item.numericId <= 0) return;
+    await _api.notifications.deleteNotification(
+      client.DeleteNotificationRequest(
+        notificationId: Int64(item.numericId),
+      ),
+    );
+  }
+
+  Future<void> deleteAllReadNotifications() async {
+    await _api.notifications.deleteAllRead(client.DeleteAllReadRequest());
+  }
+}
+
+UserNotificationItem notificationFromProto(
+  client.NotificationProto notification,
+) {
+  return UserNotificationItem(
+    numericId: int.tryParse(notification.id) ?? 0,
+    id: notification.id,
+    type: notification.notificationType.value,
+    title: notification.title,
+    content: notification.content,
+    data: decodeJsonBytes(notification.data),
+    isRead: notification.isRead,
+    createdAt: notification.createdAt.toInt(),
+    updatedAt: notification.updatedAt.toInt(),
+  );
+}
+
+PasskeyCredentialInfo passkeyFromProto(client.PasskeyCredential credential) {
+  return PasskeyCredentialInfo(
+    credentialId: credential.credentialId,
+    name: credential.name,
+    signCount: credential.signCount.toInt(),
+    createdAt: credential.createdAt.toInt(),
+    updatedAt: credential.updatedAt.toInt(),
+    lastUsedAt: credential.lastUsedAt.toInt(),
+  );
+}
+
+AccountPreferences accountPreferencesFromProto(
+  client.UserPreferences preferences,
+  client.UserAuthFactors authFactors,
+) {
+  return AccountPreferences(
+    twoFactorEnabled: preferences.twoFactorEnabled,
+    canUsePassword: authFactors.password,
+    canUsePasskey: authFactors.webauthn,
+    canUseEmail: authFactors.email,
+    eligibleFactorCount: authFactors.eligibleCount,
+    notifications: NotificationPreferences.fromProto(
+      preferences.notifications,
+    ),
+    settings: decodeJsonBytes(preferences.settings),
+  );
+}
+
+Map<String, dynamic> decodeJsonBytes(List<int> bytes) {
+  if (bytes.isEmpty) return <String, dynamic>{};
+  try {
+    final decoded = jsonDecode(utf8.decode(bytes));
+    return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
+  } catch (_) {
+    return <String, dynamic>{};
+  }
+}

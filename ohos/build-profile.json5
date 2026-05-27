@@ -1,0 +1,52 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "storeFile": "C:/MacOS/code-kaifa/HongmengOS-cer/huawei.p12",
+          "storePassword": "0000001982D4EFAF06C06B3CDD31E8C9A04EB57CAC48ED2E2E900E5E28FA3CA09631EE83DB074B8B4D",
+          "keyAlias": "huawei",
+          "keyPassword": "000000194BBEE1A484D471B5C58215D99C3AB2A1D7A74ED04D3F111C78BB3DA838659208BD797BA182",
+          "signAlg": "SHA256withECDSA",
+          "profile": "C:/MacOS/code-kaifa/HongmengOS-cer/huaweiRelease.p7b",
+          "certpath": "C:/MacOS/code-kaifa/HongmengOS-cer/huawei.cer"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS",
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "profile"
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

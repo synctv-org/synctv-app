@@ -1,0 +1,142 @@
+// Bilibili Provider Client API
+//
+// This is the client-facing gRPC API for Bilibili provider
+//
+// SECURITY: This service transmits Bilibili session cookies during login only.
+// After login, credentials are stored server-side as the user's single global
+// Bilibili binding.
+// Deployments MUST use TLS for all connections to this service.
+
+syntax = "proto3";
+
+package synctv.provider.bilibili;
+
+// Parse video URL request
+message ParseRequest {
+  string url = 1;
+  string instance_name = 2; // Optional provider instance name
+}
+
+// Parse video URL response
+message ParseResponse {
+  string title = 1;
+  repeated string actors = 2;
+  repeated VideoInfo videos = 3;
+}
+
+// Video information
+message VideoInfo {
+  string bvid = 1;
+  int64 cid = 2;
+  int64 epid = 3;
+  string name = 4;
+  string cover = 5;
+  bool is_live = 6;
+}
+
+// QR code login request
+message LoginQRRequest {
+  string instance_name = 1; // Optional provider instance name
+}
+
+// QR code response
+message QRCodeResponse {
+  string url = 1;
+  string key = 2;
+}
+
+// Check QR status request
+message CheckQRRequest {
+  string key = 1;
+  string instance_name = 2; // Optional provider instance name
+}
+
+// QR login status enum
+// Wire values mirror synctv-media-providers QRCodeStatus.
+enum QRLoginStatus {
+  QR_LOGIN_STATUS_UNSPECIFIED = 0;
+  QR_LOGIN_STATUS_EXPIRED = 1;
+  QR_LOGIN_STATUS_NOT_SCANNED = 2;
+  QR_LOGIN_STATUS_SCANNED = 3;
+  QR_LOGIN_STATUS_SUCCESS = 4;
+}
+
+// QR status response
+message QRStatusResponse {
+  QRLoginStatus status = 1;
+}
+
+// Start SMS login request
+message StartSMSLoginRequest {
+  string instance_name = 1; // Optional provider instance name
+}
+
+// Start SMS login response
+message StartSMSLoginResponse {
+  string session_id = 1;
+  string gt = 2;
+  string challenge = 3;
+  int64 expires_at = 4; // Unix epoch timestamp
+}
+
+// Send SMS request
+message SendSMSRequest {
+  string session_id = 1;
+  string phone = 2;
+  string validate = 3; // Geetest validate result produced by the frontend captcha widget
+}
+
+// Send SMS response
+message SendSMSResponse {
+  int64 expires_at = 1; // Unix epoch timestamp
+}
+
+// Login with SMS request
+message LoginSMSRequest {
+  string session_id = 1;
+  string code = 2;
+}
+
+// Login with SMS response
+message LoginSMSResponse {}
+
+// User info request
+message UserInfoRequest {
+  string instance_name = 1; // Optional provider instance name
+}
+
+// User info response
+message UserInfoResponse {
+  bool is_login = 1;
+  string username = 2;
+  string face = 3;
+  bool is_vip = 4;
+}
+
+// Logout request
+message LogoutRequest {
+  string instance_name = 1; // Optional provider instance name
+}
+
+// Logout response
+message LogoutResponse {
+  string message = 1;
+}
+
+// Get binds request
+message GetBindsRequest {
+  string instance_name = 1; // Optional provider instance name
+}
+
+// Get binds response
+message GetBindsResponse {
+  repeated BindInfo binds = 1;
+}
+
+// Saved credential information
+message BindInfo {
+  string id = 1;
+  string server_id = 2;
+  int64 created_at = 3; // Unix epoch timestamp
+  string provider_instance_name = 4; // Empty when the credential is not instance-scoped
+}
