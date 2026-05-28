@@ -41,7 +41,8 @@ import 'package:synctv_app/src/generated/proto/providers/emby.pb.dart' as emby;
 import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
 
 void main() {
-  test('public settings derive user-facing policy hints from protobuf fields',
+  test(
+      'public settings derive user-facing auth policy hints from protobuf fields',
       () {
     const settings = PublicSettingsInfo(
       allowRoomCreation: true,
@@ -49,7 +50,6 @@ void main() {
       maxMembersPerRoom: 12,
       disableCreateRoom: false,
       createRoomNeedReview: true,
-      roomTtl: 7200,
       roomPasswordPolicy: 'required',
       enablePasswordSignup: true,
       passwordSignupNeedReview: true,
@@ -65,12 +65,6 @@ void main() {
       customPublishHost: 'rtmp://publish.example.test/app',
     );
 
-    expect(settings.roomCreationPolicyHints, [
-      '每个用户最多 3 个房间',
-      '每个房间最多 12 名成员',
-      '房间空闲 2 小时 后自动清理',
-      '创建房间必须设置密码',
-    ]);
     expect(settings.authPolicyHints, [
       '密码注册需要管理员审核',
       '邮箱注册需要管理员审核',
@@ -4947,21 +4941,36 @@ void main() {
     expect(jsonDecode(requests[4].body), <String, dynamic>{});
   });
 
-  test('grpc room message stream requires an access token before dialing', () {
+  test('room websocket uri uses ticket and json transport', () async {
+    final requests = <http.Request>[];
     final api = SyncTvApiClient(
-      baseUrl: 'http://127.0.0.1:1/api',
-      session: SyncTvSession(),
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        expect(request.url.path, '/api/tickets');
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'ticket': 'ws_ticket',
+            'expires_in_secs': '30',
+          }),
+          200,
+        );
+      }),
     );
 
-    expect(
-      () => api.messageStream(
-          'room_1', const Stream<client.ClientMessage>.empty()),
-      throwsA(
-        isA<SyncTvApiException>()
-            .having((error) => error.statusCode, 'statusCode', 401)
-            .having((error) => error.message, 'message', '缺少访问令牌'),
-      ),
+    final ticket = await api.room.createWebSocketTicket(
+      client.CreateWebSocketTicketRequest(),
     );
+    final uri = api.roomWebSocketUri('room_1', ticket: ticket.ticket);
+
+    expect(requests.single.method, 'POST');
+    expect(uri.scheme, 'wss');
+    expect(uri.path, '/ws/rooms/room_1');
+    expect(uri.queryParameters, {
+      'ticket': 'ws_ticket',
+      'format': 'json',
+    });
   });
 
   test('admin review endpoints use current protobuf query and body contracts',
@@ -5394,7 +5403,6 @@ void main() {
             'max_members_per_room': 64,
             'disable_create_room': false,
             'create_room_need_review': true,
-            'room_ttl': 3600,
             'room_password_policy': 'optional',
             'enable_password_signup': true,
             'password_signup_need_review': false,
@@ -5443,7 +5451,6 @@ void main() {
           'max_members_per_room': 12,
           'disable_create_room': false,
           'create_room_need_review': false,
-          'room_ttl': 7200,
           'room_password_policy': 'optional',
           'enable_password_signup': true,
           'password_signup_need_review': false,
@@ -5646,7 +5653,6 @@ void main() {
     expect(jsonDecode(capturedRequest!.body), {
       'name': 'Review Room',
       'password': roomCredential,
-      'settings': <String, dynamic>{},
     });
     expect(room.roomId, 'room_pending');
     expect(room.status, common.RoomStatus.ROOM_STATUS_UNSPECIFIED.value);
@@ -6101,20 +6107,20 @@ void main() {
     expect(bodies[0], {
       'username': 'alice',
       'email': 'alice@example.test',
-      'registration_request': [1, 2, 3],
+      'registration_request': base64Encode([1, 2, 3]),
     });
     expect(bodies[1], {
       'session_id': 'reg_session',
-      'registration_upload': [4, 5, 6],
+      'registration_upload': base64Encode([4, 5, 6]),
     });
     expect(bodies[2], {
       'username': 'alice',
       'email': '',
-      'credential_request': [7, 8, 9],
+      'credential_request': base64Encode([7, 8, 9]),
     });
     expect(bodies[3], {
       'session_id': 'login_session',
-      'credential_finalization': [10, 11, 12],
+      'credential_finalization': base64Encode([10, 11, 12]),
     });
     for (final body in bodies) {
       expect(body.containsKey('password'), isFalse);
@@ -6139,7 +6145,7 @@ void main() {
                 'credential_response': base64Encode([9, 8, 7]),
                 'registration_response': base64Encode([6, 5, 4]),
                 'passkey_session_id': 'passkey_session',
-                'passkey_options': base64Encode([3, 2, 1]),
+                'passkey_options': {'challenge': 'opaque-update-passkey'},
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -6228,8 +6234,8 @@ void main() {
         .map((request) => jsonDecode(request.body) as Map<String, dynamic>)
         .toList();
     expect(bodies[0], {
-      'credential_request': [1, 2, 3],
-      'registration_request': [4, 5, 6],
+      'credential_request': base64Encode([1, 2, 3]),
+      'registration_request': base64Encode([4, 5, 6]),
       'verification_method': client_enum
           .OpaquePasswordUpdateVerificationMethod
           .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD
@@ -6238,8 +6244,8 @@ void main() {
     });
     expect(bodies[1], {
       'session_id': 'update_session',
-      'credential_finalization': [7, 8, 9],
-      'registration_upload': [10, 11, 12],
+      'credential_finalization': base64Encode([7, 8, 9]),
+      'registration_upload': base64Encode([10, 11, 12]),
       'passkey_session_id': '',
     });
     expect(bodies[1].containsKey('passkey_credential'), isFalse);
@@ -6247,11 +6253,11 @@ void main() {
     expect(bodies[3], {
       'email': 'alice@example.test',
       'token': emailResetToken,
-      'registration_request': [13, 14, 15],
+      'registration_request': base64Encode([13, 14, 15]),
     });
     expect(bodies[4], {
       'session_id': 'reset_session',
-      'registration_upload': [16, 17, 18],
+      'registration_upload': base64Encode([16, 17, 18]),
     });
     for (final body in bodies) {
       expect(body.containsKey('password'), isFalse);

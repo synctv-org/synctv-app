@@ -31,15 +31,31 @@ String _providerInstanceLabel(String instanceName) {
   return instanceName.isEmpty ? '本地实例' : instanceName;
 }
 
+class _RoomSettingsSection {
+  final String label;
+  final IconData icon;
+  final Widget Function(ThemeData theme, bool isDark) builder;
+
+  const _RoomSettingsSection({
+    required this.label,
+    required this.icon,
+    required this.builder,
+  });
+}
+
 class RoomSettingsPage extends StatefulWidget {
   final String roomId;
   final String roomName;
+  final String creatorId;
+  final String currentUserId;
   final WRoomSettings currentSettings;
 
   const RoomSettingsPage({
     super.key,
     required this.roomId,
     required this.roomName,
+    this.creatorId = '',
+    this.currentUserId = '',
     required this.currentSettings,
   });
 
@@ -120,12 +136,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _mediaProviderInstancesLoading = false;
   bool _chatLoading = false;
   bool _iceLoading = false;
+  late String _currentUserId;
+
+  bool get _canLeaveRoom =>
+      _currentUserId.isNotEmpty &&
+      (widget.creatorId.isEmpty || _currentUserId != widget.creatorId);
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
     _settings = widget.currentSettings;
+    _currentUserId = widget.currentUserId;
     _passwordController = TextEditingController();
     _maxMembersController = TextEditingController();
     _streamSearchController = TextEditingController();
@@ -140,6 +162,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _loadMediaLibrary();
     _loadChatHistory();
     _loadIceServers();
+    _loadCurrentUserIfNeeded();
     _startResourceWatches();
   }
 
@@ -175,6 +198,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _startMediaWatch();
   }
 
+  Future<void> _loadCurrentUserIfNeeded() async {
+    if (_currentUserId.isNotEmpty) return;
+    try {
+      final user = await WatchTogetherService.getMe();
+      if (!mounted) return;
+      setState(() => _currentUserId = user.id);
+    } catch (e) {
+      debugPrint('Load room settings current user failed: $e');
+    }
+  }
+
   void _startSettingsWatch() {
     _settingsWatchSubscription?.cancel();
     _settingsWatchSubscription = WatchTogetherService.watchRoomSettings(
@@ -182,7 +216,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       version: _settingsWatchVersion,
     ).listen(
       _handleSettingsWatchEvent,
-      onError: (error) => _scheduleWatchReconnect(_startSettingsWatch),
+      onError: (error) => _scheduleWatchReconnect(error, _startSettingsWatch),
       cancelOnError: true,
     );
   }
@@ -194,7 +228,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       version: _membersWatchVersion,
     ).listen(
       _handleMembersWatchEvent,
-      onError: (error) => _scheduleWatchReconnect(_startMembersWatch),
+      onError: (error) => _scheduleWatchReconnect(error, _startMembersWatch),
       cancelOnError: true,
     );
   }
@@ -214,13 +248,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       availability: _mediaAvailability,
     ).listen(
       _handleMediaWatchEvent,
-      onError: (error) => _scheduleWatchReconnect(_startMediaWatch),
+      onError: (error) => _scheduleWatchReconnect(error, _startMediaWatch),
       cancelOnError: true,
     );
   }
 
-  void _scheduleWatchReconnect(VoidCallback reconnect) {
-    Future.delayed(const Duration(seconds: 2), () {
+  void _scheduleWatchReconnect(Object error, VoidCallback reconnect) {
+    final delay = WatchTogetherService.resourceWatchReconnectDelay(error);
+    if (delay == null) {
+      debugPrint(
+          'Room settings watch stopped after non-retryable error: $error');
+      return;
+    }
+    Future.delayed(delay, () {
       if (!mounted) return;
       reconnect();
     });
@@ -639,6 +679,49 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     return ((_membersTotal + _membersPageSize - 1) ~/ _membersPageSize)
         .clamp(1, 1 << 31);
   }
+
+  List<_RoomSettingsSection> get _sections => [
+        _RoomSettingsSection(
+          label: '设置',
+          icon: Icons.tune_rounded,
+          builder: _buildSettingsTab,
+        ),
+        _RoomSettingsSection(
+          label: '成员',
+          icon: Icons.group_rounded,
+          builder: _buildMembersTab,
+        ),
+        _RoomSettingsSection(
+          label: '媒体',
+          icon: Icons.video_library_rounded,
+          builder: _buildMediaTab,
+        ),
+        _RoomSettingsSection(
+          label: '实时',
+          icon: Icons.sensors_rounded,
+          builder: _buildRealtimeTab,
+        ),
+        _RoomSettingsSection(
+          label: '聊天',
+          icon: Icons.forum_rounded,
+          builder: _buildChatHistoryTab,
+        ),
+        _RoomSettingsSection(
+          label: '网络',
+          icon: Icons.hub_rounded,
+          builder: _buildNetworkTab,
+        ),
+        _RoomSettingsSection(
+          label: '推流',
+          icon: Icons.podcasts_rounded,
+          builder: _buildStreamsTab,
+        ),
+        _RoomSettingsSection(
+          label: '审核',
+          icon: Icons.fact_check_rounded,
+          builder: _buildReviewsTab,
+        ),
+      ];
 
   String get _currentPlaylistId =>
       _mediaPlaylistStack.isEmpty ? '' : _mediaPlaylistStack.last;
@@ -2057,6 +2140,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ],
         ),
+        _buildSectionHeader('房间操作', theme),
+        _buildRoomActions(theme, isDark),
       ],
     );
   }
@@ -2579,8 +2664,63 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Widget _buildRealtimeTab(ThemeData theme, bool isDark) {
     return RefreshIndicator(
       onRefresh: () async {
-        await Future.wait([_loadChatHistory(), _loadIceServers()]);
+        _settingsWatchVersion = '';
+        _membersWatchVersion = '';
+        _mediaWatchVersion = '';
+        _startResourceWatches();
+        await Future.wait([
+          _refreshSettingsFromServer(),
+          _loadMembers(),
+          _loadMediaLibrary(),
+        ]);
       },
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 32, top: 12),
+        children: [
+          _buildToolbar(
+            title: '实时同步',
+            count: 3,
+            loading: _membersLoading || _mediaLoading || _isSaving,
+            onRefresh: () {
+              _settingsWatchVersion = '';
+              _membersWatchVersion = '';
+              _mediaWatchVersion = '';
+              _startResourceWatches();
+            },
+            theme: theme,
+          ),
+          _buildRealtimeStatusTile(
+            theme,
+            isDark,
+            icon: Icons.tune_rounded,
+            title: '房间设置',
+            version: _settingsWatchVersion,
+            subtitle: _isSaving ? '正在保存设置' : '监听设置变更',
+          ),
+          _buildRealtimeStatusTile(
+            theme,
+            isDark,
+            icon: Icons.group_rounded,
+            title: '成员列表',
+            version: _membersWatchVersion,
+            subtitle: _membersLoading ? '正在刷新成员' : '监听成员变更',
+          ),
+          _buildRealtimeStatusTile(
+            theme,
+            isDark,
+            icon: Icons.video_library_rounded,
+            title: '媒体列表',
+            version: _mediaWatchVersion,
+            subtitle: _mediaLoading ? '正在刷新媒体' : '监听媒体变更',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatHistoryTab(ThemeData theme, bool isDark) {
+    return RefreshIndicator(
+      onRefresh: _loadChatHistory,
       child: ListView(
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
@@ -2606,7 +2746,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ..._chatMessages.map(
               (message) => _buildChatMessageTile(message, theme, isDark),
             ),
-          const SizedBox(height: 14),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNetworkTab(ThemeData theme, bool isDark) {
+    return RefreshIndicator(
+      onRefresh: _loadIceServers,
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 32, top: 12),
+        children: [
           _buildToolbar(
             title: 'ICE 服务器',
             count: _iceServers.length,
@@ -2866,8 +3016,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ..._members.map(
               (member) => _buildMemberTile(member, theme, isDark),
             ),
-          const SizedBox(height: 10),
-          _buildDangerActions(theme, isDark),
         ],
       ),
     );
@@ -3298,6 +3446,57 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
+  Widget _buildRealtimeStatusTile(
+    ThemeData theme,
+    bool isDark, {
+    required IconData icon,
+    required String title,
+    required String version,
+    required String subtitle,
+  }) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  version.isEmpty
+                      ? '$subtitle · 尚未收到版本'
+                      : '$subtitle · v$version',
+                  style: TextStyle(color: theme.hintColor, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            version.isEmpty
+                ? Icons.sync_problem_rounded
+                : Icons.check_circle_rounded,
+            color: version.isEmpty ? Colors.orange : Colors.green,
+          ),
+        ],
+      ),
+    );
+  }
+
   String _mediaSubtitle(WMovie entry) {
     if (entry.id.startsWith('pl_')) {
       final mode = entry.metadata['is_dynamic'] == true ? '动态播放列表' : '播放列表';
@@ -3425,40 +3624,47 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
-  Widget _buildDangerActions(ThemeData theme, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
+  Widget _buildRoomActions(ThemeData theme, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Material(
         color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.restart_alt),
-            title: const Text('重置房间设置'),
-            onTap: _resetSettings,
-          ),
-          _buildDivider(theme),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('退出房间'),
-            onTap: _leaveRoom,
-          ),
-          _buildDivider(theme),
-          ListTile(
-            leading: Icon(Icons.delete_forever_rounded,
-                color: theme.colorScheme.error),
-            title: Text(
-              '删除房间',
-              style: TextStyle(color: theme.colorScheme.error),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.restart_alt),
+              title: const Text('重置房间设置'),
+              subtitle: const Text('恢复服务端默认房间策略'),
+              onTap: _resetSettings,
             ),
-            onTap: _deleteRoom,
-          ),
-        ],
+            if (_canLeaveRoom) ...[
+              _buildDivider(theme),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('退出房间'),
+                subtitle: const Text('退出后需要重新加入才能访问成员内容'),
+                onTap: _leaveRoom,
+              ),
+            ],
+            _buildDivider(theme),
+            ListTile(
+              leading: Icon(Icons.delete_forever_rounded,
+                  color: theme.colorScheme.error),
+              title: Text(
+                '删除房间',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+              onTap: _deleteRoom,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3524,7 +3730,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           elevation: 0,
-          backgroundColor: Colors.transparent,
+          backgroundColor:
+              isDark ? const Color(0xFF121214) : const Color(0xFFF6F7FB),
           centerTitle: true,
           systemOverlayStyle: systemUiOverlayStyle,
           actions: [
@@ -3552,35 +3759,178 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 ),
               ),
           ],
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: const [
-              Tab(text: '设置'),
-              Tab(text: '成员'),
-              Tab(text: '媒体'),
-              Tab(text: '实时'),
-              Tab(text: '推流'),
-              Tab(text: '审核'),
-            ],
-          ),
         ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildSettingsTab(theme, isDark),
-            _buildMembersTab(theme, isDark),
-            _buildMediaTab(theme, isDark),
-            _buildRealtimeTab(theme, isDark),
-            _buildStreamsTab(theme, isDark),
-            _buildReviewsTab(theme, isDark),
-          ],
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final useRail = constraints.maxWidth >= 900;
+            if (!useRail) {
+              return Column(
+                children: [
+                  _buildTopTabs(theme),
+                  Expanded(child: _buildTabView(theme, isDark)),
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                _buildSideNavigation(theme, isDark),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: theme.dividerColor.withValues(alpha: 0.55),
+                ),
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF151518)
+                          : const Color(0xFFF3F5F8),
+                    ),
+                    child: _buildTabView(theme, isDark),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _buildTabView(ThemeData theme, bool isDark) {
+    return TabBarView(
+      controller: _tabController,
+      children: _sections
+          .map((section) => section.builder(theme, isDark))
+          .toList(growable: false),
+    );
+  }
+
+  Widget _buildTopTabs(ThemeData theme) {
+    return Material(
+      color: theme.colorScheme.surface.withValues(alpha: 0.92),
+      child: TabBar(
+        controller: _tabController,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        indicatorSize: TabBarIndicatorSize.label,
+        tabs: _sections
+            .map((section) => Tab(
+                  icon: Icon(section.icon),
+                  text: section.label,
+                ))
+            .toList(growable: false),
+      ),
+    );
+  }
+
+  Widget _buildSideNavigation(ThemeData theme, bool isDark) {
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) {
+        return SizedBox(
+          width: 224,
+          child: Material(
+            color: isDark ? const Color(0xFF101012) : Colors.white,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
+                      child: Text(
+                        '房间管理',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.68),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: _sections.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 4),
+                        itemBuilder: (context, index) {
+                          final section = _sections[index];
+                          return _RoomSettingsNavTile(
+                            icon: section.icon,
+                            label: section.label,
+                            selected: _tabController.index == index,
+                            onTap: () => setState(() {
+                              _tabController.animateTo(index);
+                            }),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
 enum _MemberAction { role, permissions, transfer, kick }
+
+class _RoomSettingsNavTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _RoomSettingsNavTile({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final foreground =
+        selected ? theme.colorScheme.primary : theme.colorScheme.onSurface;
+    return Material(
+      color: selected
+          ? theme.colorScheme.primary.withValues(alpha: 0.10)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: foreground),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: foreground,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 enum _PermissionOverrideMode { inherit, allow, deny }
 

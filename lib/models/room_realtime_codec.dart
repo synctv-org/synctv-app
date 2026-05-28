@@ -5,6 +5,12 @@ import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/playback_client_profile.dart';
 import 'package:synctv_app/models/room_media_models.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/src/generated/proto/common.pb.dart' as common;
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
+    as common_enum;
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
+import 'package:synctv_app/models/watch_together_models.dart';
 
 enum RoomRealtimeMessageKind {
   unknown,
@@ -14,8 +20,10 @@ enum RoomRealtimeMessageKind {
   checkStatus,
   expired,
   current,
+  roomSettings,
   movies,
   viewerCount,
+  memberEvent,
   sync,
   myStatus,
   webrtcOffer,
@@ -106,6 +114,10 @@ class RoomRealtimeMessage {
     this.senderUsername = '',
     this.timestampMillis = 0,
     this.status,
+    this.playbackStatus,
+    this.roomSettings,
+    this.mediaLibrary,
+    this.members,
     this.error,
     this.webRtc,
   });
@@ -117,6 +129,10 @@ class RoomRealtimeMessage {
   final String senderUsername;
   final int timestampMillis;
   final RoomRealtimePlaybackStatus? status;
+  final WPlaybackStatus? playbackStatus;
+  final WRoomSettings? roomSettings;
+  final RoomMediaLibraryPage? mediaLibrary;
+  final List<WUser>? members;
   final RoomRealtimeError? error;
   final RoomRealtimeWebRtcSignal? webRtc;
 }
@@ -258,6 +274,18 @@ class RoomRealtimeCodec {
 
   static List<List<int>> encodeInitialObservations() {
     return [
+      ...encodePlaybackObservations(),
+      _observe(
+        'room_settings',
+        roomSettings: client.ObserveRoomSettings(),
+      ),
+      encodePlaylistObservation(),
+      encodeRoomMembersObservation(),
+    ];
+  }
+
+  static List<List<int>> encodePlaybackObservations() {
+    return [
       _observe(
         'playback_state',
         playbackState: client.ObservePlaybackState(),
@@ -268,23 +296,38 @@ class RoomRealtimeCodec {
           playbackClientProfile: defaultPlaybackClientProfile(),
         ),
       ),
-      _observe(
-        'room_settings',
-        roomSettings: client.ObserveRoomSettings(),
-      ),
-      _observe(
-        'playlist_items',
-        playlistItems: client.ObservePlaylistItems(
-          request: client.ListPlaylistItemsRequest(page: 1, pageSize: 100),
-        ),
-      ),
-      _observe(
-        'room_members',
-        roomMembers: client.ObserveRoomMembers(
-          request: client.GetRoomMembersRequest(page: 1, pageSize: 100),
-        ),
-      ),
     ];
+  }
+
+  static List<int> encodePlaylistObservation({
+    String playlistId = '',
+    String? target,
+    int page = 1,
+    int pageSize = 100,
+  }) {
+    return _observe(
+      'playlist_items',
+      playlistItems: client.ObservePlaylistItems(
+        request: client.ListPlaylistItemsRequest(
+          playlistId: playlistId,
+          target: _decodeTarget(target) ?? const [],
+          page: page,
+          pageSize: pageSize,
+        ),
+      ),
+    );
+  }
+
+  static List<int> encodeRoomMembersObservation({
+    int page = 1,
+    int pageSize = 100,
+  }) {
+    return _observe(
+      'room_members',
+      roomMembers: client.ObserveRoomMembers(
+        request: client.GetRoomMembersRequest(page: page, pageSize: pageSize),
+      ),
+    );
   }
 
   static List<int> _observe(
@@ -356,6 +399,15 @@ class RoomRealtimeCodec {
     return encodeWebRTC(messageKind, payload);
   }
 
+  static List<int>? _decodeTarget(String? value) {
+    if (value == null || value.isEmpty) return null;
+    try {
+      return base64Url.decode(value);
+    } catch (_) {
+      return utf8.encode(value);
+    }
+  }
+
   static RoomRealtimeMessage decode(Uint8List data) {
     final message = client.ServerMessage.fromBuffer(data);
     switch (message.whichMessage()) {
@@ -374,8 +426,11 @@ class RoomRealtimeCodec {
       case client.ServerMessage_Message.playingChanged:
         return const RoomRealtimeMessage(kind: RoomRealtimeMessageKind.current);
       case client.ServerMessage_Message.playbackSnapshot:
-        return const RoomRealtimeMessage(kind: RoomRealtimeMessageKind.current);
+        return _playbackSnapshot(message.playbackSnapshot.snapshot);
+      case client.ServerMessage_Message.roomSettings:
+        return _roomSettings(message.roomSettings);
       case client.ServerMessage_Message.playlistItems:
+        return _playlistItems(message.playlistItems.snapshot);
       case client.ServerMessage_Message.mediaAdded:
       case client.ServerMessage_Message.mediaUpdated:
       case client.ServerMessage_Message.mediaRemoved:
@@ -388,10 +443,11 @@ class RoomRealtimeCodec {
       case client.ServerMessage_Message.userJoined:
       case client.ServerMessage_Message.userLeft:
       case client.ServerMessage_Message.permissionChanged:
-      case client.ServerMessage_Message.roomMembers:
         return const RoomRealtimeMessage(
-          kind: RoomRealtimeMessageKind.viewerCount,
+          kind: RoomRealtimeMessageKind.memberEvent,
         );
+      case client.ServerMessage_Message.roomMembers:
+        return _roomMembers(message.roomMembers.snapshot);
       case client.ServerMessage_Message.heartbeatAck:
         return RoomRealtimeMessage(
           kind: RoomRealtimeMessageKind.checkStatus,
@@ -469,13 +525,51 @@ class RoomRealtimeCodec {
   }
 
   static RoomRealtimeMessage _playbackState(client.PlaybackState state) {
+    final playbackStatus = _playbackStatusFromState(state);
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.status,
       status: RoomRealtimePlaybackStatus(
-        isPlaying: state.isPlaying,
-        currentTime: state.position,
-        playbackRate: state.speed == 0 ? 1.0 : state.speed,
+        isPlaying: playbackStatus.isPlaying,
+        currentTime: playbackStatus.currentTime,
+        playbackRate: playbackStatus.playbackRate,
       ),
+      playbackStatus: playbackStatus,
+    );
+  }
+
+  static RoomRealtimeMessage _playbackSnapshot(
+    client.PlaybackSnapshot snapshot,
+  ) {
+    return RoomRealtimeMessage(
+      kind: RoomRealtimeMessageKind.current,
+      playbackStatus: _playbackStatusFromSnapshot(snapshot),
+    );
+  }
+
+  static RoomRealtimeMessage _playlistItems(
+    client.ListPlaylistItemsResponse response,
+  ) {
+    return RoomRealtimeMessage(
+      kind: RoomRealtimeMessageKind.movies,
+      mediaLibrary: _mediaLibraryPageFromProto(response),
+    );
+  }
+
+  static RoomRealtimeMessage _roomSettings(
+    client.RoomSettingsChanged changed,
+  ) {
+    return RoomRealtimeMessage(
+      kind: RoomRealtimeMessageKind.roomSettings,
+      roomSettings: WRoomSettings.fromJson(_decodeJsonBytes(changed.settings)),
+    );
+  }
+
+  static RoomRealtimeMessage _roomMembers(
+    client.GetRoomMembersResponse response,
+  ) {
+    return RoomRealtimeMessage(
+      kind: RoomRealtimeMessageKind.viewerCount,
+      members: response.members.map(_memberFromProto).toList(growable: false),
     );
   }
 
@@ -486,18 +580,226 @@ class RoomRealtimeCodec {
       case client.ResourceChanged_Payload.playbackState:
         return _playbackState(changed.playbackState);
       case client.ResourceChanged_Payload.playbackSnapshot:
-        return const RoomRealtimeMessage(kind: RoomRealtimeMessageKind.current);
+        return _playbackSnapshot(changed.playbackSnapshot);
+      case client.ResourceChanged_Payload.roomSettings:
+        return _roomSettings(changed.roomSettings);
       case client.ResourceChanged_Payload.playlistItems:
-        return const RoomRealtimeMessage(kind: RoomRealtimeMessageKind.movies);
+        return _playlistItems(changed.playlistItems);
       case client.ResourceChanged_Payload.roomMembers:
-        return const RoomRealtimeMessage(
-          kind: RoomRealtimeMessageKind.viewerCount,
+        return _roomMembers(changed.roomMembers);
+      case client.ResourceChanged_Payload.changedOnly:
+        return RoomRealtimeMessage(
+          kind: RoomRealtimeMessageKind.error,
+          error: RoomRealtimeError(
+            message: '服务端未推送资源快照: ${changed.observeId}',
+            code: 0,
+            detail:
+                'ResourceChanged used changed_only while the client requested PUSH_SNAPSHOT.',
+          ),
         );
       default:
-        return const RoomRealtimeMessage(
-          kind: RoomRealtimeMessageKind.checkStatus,
+        return RoomRealtimeMessage(
+          kind: RoomRealtimeMessageKind.error,
+          error: RoomRealtimeError(
+            message: '服务端推送了空资源变更: ${changed.observeId}',
+            code: 0,
+            detail: 'ResourceChanged has no payload.',
+          ),
         );
     }
+  }
+
+  static WPlaybackStatus _playbackStatusFromState(
+    client.PlaybackState state,
+  ) {
+    final encodedTarget =
+        state.target.isEmpty ? '' : base64Url.encode(state.target);
+    final movie = state.playingMediaId.isEmpty &&
+            state.playingPlaylistId.isEmpty
+        ? null
+        : WMovie(
+            id: encodedTarget.isNotEmpty
+                ? encodedTarget
+                : state.playingMediaId.isNotEmpty
+                    ? state.playingMediaId
+                    : state.playingPlaylistId,
+            name: '',
+            url: '',
+            subPath: encodedTarget.isEmpty ? null : encodedTarget,
+            parentId: encodedTarget.isEmpty ? null : state.playingPlaylistId,
+          );
+    return WPlaybackStatus(
+      movie: movie,
+      isPlaying: state.isPlaying,
+      currentTime: state.position,
+      playbackRate: state.speed == 0 ? 1.0 : state.speed,
+    );
+  }
+
+  static WPlaybackStatus _playbackStatusFromSnapshot(
+    client.PlaybackSnapshot snapshot,
+  ) {
+    client.PlaybackInfo? info;
+    if (snapshot.playbackInfos.containsKey(snapshot.defaultMode)) {
+      info = snapshot.playbackInfos[snapshot.defaultMode];
+    } else if (snapshot.playbackInfos.isNotEmpty) {
+      info = snapshot.playbackInfos.values.first;
+    }
+    final playbackUrl = info != null && info.urls.isNotEmpty
+        ? info.urls[
+            info.defaultUrlIndex >= 0 && info.defaultUrlIndex < info.urls.length
+                ? info.defaultUrlIndex
+                : 0]
+        : null;
+    final movie = snapshot.mediaId.isEmpty && snapshot.playlistId.isEmpty
+        ? null
+        : WMovie(
+            id: snapshot.mediaId.isNotEmpty
+                ? snapshot.mediaId
+                : snapshot.playlistId,
+            name: snapshot.name,
+            url: playbackUrl?.url ?? '',
+            headers: playbackUrl == null
+                ? const {}
+                : Map<String, String>.from(playbackUrl.headers),
+            type: info?.format ?? '',
+            metadata: {
+              'snapshot_version': snapshot.version,
+              'default_mode': snapshot.defaultMode,
+              'playback_metadata': Map<String, String>.from(
+                snapshot.metadata,
+              ),
+            },
+          );
+    return WPlaybackStatus(movie: movie);
+  }
+
+  static RoomMediaLibraryPage _mediaLibraryPageFromProto(
+    client.ListPlaylistItemsResponse response,
+  ) {
+    final parentId = response.currentPath.isEmpty
+        ? ''
+        : response.currentPath.last.playlistId;
+    return RoomMediaLibraryPage(
+      playlists: response.playlists.map(_playlistFromProto).toList(),
+      media: response.media.map(_mediaFromProto).toList(),
+      dynamicItems: response.dynamicItems
+          .map((item) => _dynamicItemFromProto(item, playlistId: parentId))
+          .toList(),
+      currentPath: response.currentPath.map(_browsePathFromProto).toList(),
+      total: response.total,
+      folderCount: response.folderCount,
+      fileCount: response.fileCount,
+      version: response.version,
+    );
+  }
+
+  static PlaylistBrowsePathInfo _browsePathFromProto(
+    client.PlaylistBrowsePathNode node,
+  ) {
+    return PlaylistBrowsePathInfo(
+      playlistId: node.playlistId,
+      name: node.name,
+      target: base64Url.encode(node.target),
+    );
+  }
+
+  static WMovie _mediaFromProto(client.Media media) {
+    final metadata = _decodeJsonBytes(media.metadata);
+    final sourceConfig = _decodeJsonBytes(media.sourceConfig);
+    return WMovie(
+      id: media.id,
+      name: media.name,
+      url: (metadata['url'] ?? sourceConfig['url'] ?? '').toString(),
+      creator: media.creatorId,
+      roomId: media.roomId,
+      position: media.position,
+      addedAt: media.addedAt.toInt(),
+      availability: media.availability.value,
+      version: media.version.toInt(),
+      type: media.sourceProvider,
+      headers: _stringMap(metadata['headers']),
+      proxy: metadata['proxy'] == true,
+      live: media.sourceProvider == 'rtmp' ||
+          (media.sourceProvider == 'bilibili' &&
+              sourceConfig['type'] == 'live') ||
+          metadata['is_live'] == true,
+      sourceProvider: media.sourceProvider,
+      providerInstanceName: media.providerInstanceName,
+      sourceConfig: sourceConfig,
+      metadata: metadata,
+    );
+  }
+
+  static WMovie _playlistFromProto(client.Playlist playlist) {
+    return WMovie(
+      id: playlist.id,
+      name: playlist.name,
+      url: '',
+      isFolder: true,
+      roomId: playlist.roomId,
+      parentId: playlist.parentId.isEmpty ? null : playlist.parentId,
+      position: playlist.position,
+      createdAt: playlist.createdAt.toInt(),
+      updatedAt: playlist.updatedAt.toInt(),
+      itemCount: playlist.itemCount,
+      availability: playlist.availability.value,
+      version: playlist.version.toInt(),
+      type: playlist.isDynamic ? playlist.sourceProvider : 'playlist',
+      sourceProvider: playlist.sourceProvider,
+      providerInstanceName: playlist.providerInstanceName,
+      sourceConfig: _decodeJsonBytes(playlist.sourceConfig),
+      metadata: {'is_dynamic': playlist.isDynamic},
+    );
+  }
+
+  static WMovie _dynamicItemFromProto(
+    client.PlaylistItem item, {
+    required String playlistId,
+  }) {
+    final target = Uint8List.fromList(item.target);
+    final encodedTarget = base64Url.encode(target);
+    return WMovie(
+      id: encodedTarget,
+      name: item.name,
+      url: '',
+      isFolder: item.itemType == client_enum.ItemType.ITEM_TYPE_PLAYLIST,
+      parentId: playlistId,
+      subPath: encodedTarget,
+      metadata: {
+        'target': target,
+        'target_json': _decodeJsonBytes(item.target),
+        'thumbnail': item.hasThumbnail() ? item.thumbnail : '',
+        'size': item.hasSize() ? item.size.toInt() : null,
+      },
+    );
+  }
+
+  static WUser _memberFromProto(common.RoomMember member) {
+    return WUser(
+      id: member.userId,
+      username: member.username,
+      role: member.role.value,
+      createdAt: member.joinedAt.toInt(),
+      status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
+      onlineCount: member.isOnline ? 1 : 0,
+    );
+  }
+
+  static Map<String, dynamic> _decodeJsonBytes(List<int> bytes) {
+    if (bytes.isEmpty) return <String, dynamic>{};
+    try {
+      final decoded = jsonDecode(utf8.decode(bytes));
+      return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
+    } catch (_) {
+      return <String, dynamic>{};
+    }
+  }
+
+  static Map<String, String> _stringMap(dynamic value) {
+    if (value is! Map) return const {};
+    return value
+        .map((key, value) => MapEntry(key.toString(), value.toString()));
   }
 
   static RoomRealtimeMessage _webrtc(

@@ -62,21 +62,13 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 5;
 
+  StreamSubscription? _realtimeSubscription;
   StreamSubscription? _authErrorSubscription;
-  StreamSubscription<RoomResourceWatchEvent<WPlaybackStatus>>?
-      _playbackStateSubscription;
-  StreamSubscription<RoomResourceWatchEvent<WPlaybackStatus>>?
-      _playbackSnapshotSubscription;
-  StreamSubscription<RoomResourceWatchEvent<RoomMediaLibraryPage>>?
-      _playlistSubscription;
-  StreamSubscription<RoomResourceWatchEvent<List<WUser>>>? _membersSubscription;
-  String _playbackStateWatchVersion = '';
-  String _playbackSnapshotWatchVersion = '';
-  String _playlistWatchVersion = '';
-  String _membersWatchVersion = '';
 
   // WebRTC
   WebRTCManager? _webrtcManager;
+  bool _isVideoLoading = false;
+  String? _videoError;
 
   // Danmaku Stream
   final DanmakuController _danmakuController = DanmakuController();
@@ -129,244 +121,13 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
 
   Future<void> _joinRoom() async {
     _connectRealtime();
-    _startPlaybackWatches();
-    _syncState();
 
     Future.wait([
-      _fetchMembers(),
-      _fetchMovies(),
       _loadChatHistory(),
     ]).catchError((e) {
       debugPrint('Large screen background data fetch error: $e');
       return <void>[];
     });
-    _startRoomResourceWatches();
-  }
-
-  void _startPlaybackWatches() {
-    _startPlaybackStateWatch();
-    _startPlaybackSnapshotWatch();
-  }
-
-  void _startRoomResourceWatches() {
-    _startPlaylistWatch();
-    _startMembersWatch();
-  }
-
-  void _startPlaybackStateWatch() {
-    _playbackStateSubscription?.cancel();
-    _playbackStateSubscription = WatchTogetherService.watchPlaybackState(
-      widget.room.roomId,
-      version: _playbackStateWatchVersion,
-    ).listen(
-      _handlePlaybackStateWatchEvent,
-      onError: (error) => _scheduleResourceWatchReconnect(
-        _startPlaybackStateWatch,
-      ),
-      cancelOnError: true,
-    );
-  }
-
-  void _startPlaybackSnapshotWatch() {
-    _playbackSnapshotSubscription?.cancel();
-    final currentMovie = _currentStatus?.movie;
-    _playbackSnapshotSubscription = WatchTogetherService.watchPlaybackSnapshot(
-      widget.room.roomId,
-      version: _playbackSnapshotWatchVersion,
-      mediaId: currentMovie?.playbackWatchMediaId ?? '',
-      playlistId: currentMovie?.playbackWatchPlaylistId ?? '',
-      target: currentMovie?.playbackWatchTarget,
-    ).listen(
-      _handlePlaybackSnapshotWatchEvent,
-      onError: (error) => _scheduleResourceWatchReconnect(
-        _startPlaybackSnapshotWatch,
-      ),
-      cancelOnError: true,
-    );
-  }
-
-  void _startPlaylistWatch() {
-    _playlistSubscription?.cancel();
-    final parentFolder = _folderStack.isNotEmpty ? _folderStack.last : null;
-    _playlistSubscription = WatchTogetherService.watchPlaylistItems(
-      widget.room.roomId,
-      version: _playlistWatchVersion,
-      playlistId: parentFolder?.playbackWatchPlaylistId ?? '',
-      target: parentFolder?.playbackWatchTarget,
-      page: 1,
-      pageSize: _pageSize,
-    ).listen(
-      _handlePlaylistWatchEvent,
-      onError: (error) => _scheduleResourceWatchReconnect(_startPlaylistWatch),
-      cancelOnError: true,
-    );
-  }
-
-  void _startMembersWatch() {
-    _membersSubscription?.cancel();
-    _membersSubscription = WatchTogetherService.watchRoomUsers(
-      widget.room.roomId,
-      version: _membersWatchVersion,
-    ).listen(
-      _handleMembersWatchEvent,
-      onError: (error) => _scheduleResourceWatchReconnect(_startMembersWatch),
-      cancelOnError: true,
-    );
-  }
-
-  void _scheduleResourceWatchReconnect(VoidCallback reconnect) {
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      reconnect();
-    });
-  }
-
-  void _handlePlaylistWatchEvent(
-    RoomResourceWatchEvent<RoomMediaLibraryPage> event,
-  ) {
-    if (!mounted) return;
-    if (event.version.isNotEmpty) _playlistWatchVersion = event.version;
-    switch (event.kind) {
-      case RoomResourceWatchKind.observed:
-        if (event.changed) _fetchMovies();
-        break;
-      case RoomResourceWatchKind.changed:
-        final snapshot = event.snapshot;
-        if (snapshot == null) {
-          _fetchMovies();
-          return;
-        }
-        setState(() {
-          _movies = snapshot.entries;
-          _currentPage = 1;
-          _hasMoreMovies = snapshot.total > _movies.length;
-          _isLoadingMovies = false;
-        });
-        break;
-      case RoomResourceWatchKind.error:
-        MessageUtils.showError(
-          context,
-          event.errorMessage.isEmpty ? '播放列表监听失败' : event.errorMessage,
-        );
-        break;
-    }
-  }
-
-  void _handleMembersWatchEvent(
-    RoomResourceWatchEvent<List<WUser>> event,
-  ) {
-    if (!mounted) return;
-    if (event.version.isNotEmpty) _membersWatchVersion = event.version;
-    switch (event.kind) {
-      case RoomResourceWatchKind.observed:
-        if (event.changed) _fetchMembers();
-        break;
-      case RoomResourceWatchKind.changed:
-        final snapshot = event.snapshot;
-        if (snapshot == null) {
-          _fetchMembers();
-          return;
-        }
-        _sortMembers(snapshot);
-        setState(() => _members = snapshot);
-        break;
-      case RoomResourceWatchKind.error:
-        MessageUtils.showError(
-          context,
-          event.errorMessage.isEmpty ? '成员监听失败' : event.errorMessage,
-        );
-        break;
-    }
-  }
-
-  void _handlePlaybackStateWatchEvent(
-    RoomResourceWatchEvent<WPlaybackStatus> event,
-  ) {
-    if (!mounted) return;
-    if (event.version.isNotEmpty) _playbackStateWatchVersion = event.version;
-    switch (event.kind) {
-      case RoomResourceWatchKind.observed:
-        if (event.changed) _syncState();
-        break;
-      case RoomResourceWatchKind.changed:
-        final snapshot = event.snapshot;
-        if (snapshot == null) {
-          _syncState();
-          return;
-        }
-        final current = _currentStatus;
-        final stateMovie = snapshot.movie;
-        final currentMovie = current?.movie;
-        final mergedMovie = stateMovie == null
-            ? currentMovie
-            : currentMovie != null &&
-                    currentMovie.hasSamePlaybackIdentity(stateMovie)
-                ? currentMovie
-                : stateMovie;
-        _applyPlaybackStatus(
-          WPlaybackStatus(
-            movie: mergedMovie,
-            isPlaying: snapshot.isPlaying,
-            currentTime: snapshot.currentTime,
-            playbackRate: snapshot.playbackRate,
-          ),
-        );
-        break;
-      case RoomResourceWatchKind.error:
-        MessageUtils.showError(
-          context,
-          event.errorMessage.isEmpty ? '播放状态监听失败' : event.errorMessage,
-        );
-        break;
-    }
-  }
-
-  void _handlePlaybackSnapshotWatchEvent(
-    RoomResourceWatchEvent<WPlaybackStatus> event,
-  ) {
-    if (!mounted) return;
-    if (event.version.isNotEmpty) _playbackSnapshotWatchVersion = event.version;
-    switch (event.kind) {
-      case RoomResourceWatchKind.observed:
-        if (event.changed) _syncState();
-        break;
-      case RoomResourceWatchKind.changed:
-        final snapshot = event.snapshot;
-        if (snapshot == null) {
-          _syncState();
-          return;
-        }
-        final current = _currentStatus;
-        _applyPlaybackStatus(
-          WPlaybackStatus(
-            movie: snapshot.movie?.withPlaybackIdentityFrom(current?.movie),
-            isPlaying: current?.isPlaying ?? false,
-            currentTime: current?.currentTime ?? 0,
-            playbackRate: current?.playbackRate ?? 1.0,
-          ),
-        );
-        _playbackSnapshotWatchVersion =
-            snapshot.movie?.metadata['snapshot_version']?.toString() ??
-                _playbackSnapshotWatchVersion;
-        break;
-      case RoomResourceWatchKind.error:
-        MessageUtils.showError(
-          context,
-          event.errorMessage.isEmpty ? '播放资源监听失败' : event.errorMessage,
-        );
-        break;
-    }
-  }
-
-  Future<void> _fetchMembers() async {
-    try {
-      final members =
-          await WatchTogetherService.getRoomMembers(widget.room.roomId);
-      _sortMembers(members);
-      if (mounted) setState(() => _members = members);
-    } catch (e) {
-      debugPrint('Fetch members error: $e');
-    }
   }
 
   Future<void> _loadChatHistory() async {
@@ -402,33 +163,6 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
       if (!aAdmin && bAdmin) return 1;
       return 0;
     });
-  }
-
-  Future<void> _fetchMovies() async {
-    try {
-      _currentPage = 1;
-      _hasMoreMovies = true;
-      final parentFolder = _folderStack.isNotEmpty ? _folderStack.last : null;
-      final result = await WatchTogetherService.listMediaLibrary(
-          widget.room.roomId,
-          playlistId: parentFolder?.playbackWatchPlaylistId ?? '',
-          target: parentFolder?.playbackWatchTarget,
-          page: 1,
-          pageSize: _pageSize);
-      final movies = result.entries;
-      final total = result.total;
-
-      if (mounted) {
-        setState(() {
-          _movies = movies;
-          _isLoadingMovies = false;
-          _hasMoreMovies = _movies.length < total;
-        });
-        if (_movieScrollController.hasClients) _movieScrollController.jumpTo(0);
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoadingMovies = false);
-    }
   }
 
   Future<List<IceServerInfo>> _loadWebRtcIceServers() {
@@ -479,11 +213,14 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
   Future<void> _connectRealtime() async {
     _reconnectTimer?.cancel();
     try {
-      _channel = RoomRealtimeConnection.connect(widget.room.roomId);
-      for (final bytes in RoomRealtimeCodec.encodeInitialObservations()) {
-        _channel!.sink.add(bytes);
-      }
-      _channel!.stream.listen((data) {
+      await _realtimeSubscription?.cancel();
+      _realtimeSubscription = null;
+      await _channel?.sink.close();
+      _channel = RoomRealtimeConnection.connect(
+        widget.room.roomId,
+        initialMessages: RoomRealtimeCodec.encodeInitialObservations(),
+      );
+      _realtimeSubscription = _channel!.stream.listen((data) {
         _reconnectAttempts = 0;
         try {
           final message = RoomRealtimeCodec.decode(data);
@@ -538,19 +275,115 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
     } else if (type == RoomRealtimeMessageKind.sync ||
         type == RoomRealtimeMessageKind.status ||
         type == RoomRealtimeMessageKind.checkStatus) {
-      final status = message.status;
-      if (status != null) {
-        _performSync(
-          status.isPlaying,
-          status.currentTime,
-          status.playbackRate,
+      final playbackStatus = message.playbackStatus;
+      if (playbackStatus != null) {
+        _applyPlaybackStatus(
+          _mergePlaybackStatus(playbackStatus, incomingHasTiming: true),
+        );
+      } else if (message.status != null) {
+        final status = message.status!;
+        _applyPlaybackStatus(
+          WPlaybackStatus(
+            movie: _currentStatus?.movie,
+            isPlaying: status.isPlaying,
+            currentTime: status.currentTime,
+            playbackRate: status.playbackRate,
+          ),
         );
       }
     } else if (type == RoomRealtimeMessageKind.current) {
-      _syncState();
+      final playbackStatus = message.playbackStatus;
+      if (playbackStatus == null) {
+        _reportInvalidRealtimePayload('播放资源');
+      } else {
+        _applyPlaybackStatus(
+          _mergePlaybackStatus(playbackStatus, incomingHasTiming: false),
+        );
+      }
+    } else if (type == RoomRealtimeMessageKind.roomSettings) {
+      return;
+    } else if (type == RoomRealtimeMessageKind.memberEvent) {
+      return;
     } else if (type == RoomRealtimeMessageKind.movies) {
-      _fetchMovies();
+      final mediaLibrary = message.mediaLibrary;
+      if (mediaLibrary == null) {
+        _reportInvalidRealtimePayload('播放列表');
+      } else {
+        _applyMediaLibrary(mediaLibrary);
+      }
+    } else if (type == RoomRealtimeMessageKind.viewerCount) {
+      final members = message.members;
+      if (members == null) {
+        _reportInvalidRealtimePayload('成员列表');
+      } else {
+        _applyMembers(members);
+      }
+    } else if (type == RoomRealtimeMessageKind.error) {
+      final errorMsg = message.error?.message ?? '';
+      if (errorMsg.isNotEmpty && mounted) {
+        MessageUtils.showError(context, '错误: $errorMsg');
+      }
     }
+  }
+
+  WPlaybackStatus _mergePlaybackStatus(
+    WPlaybackStatus incoming, {
+    required bool incomingHasTiming,
+  }) {
+    final current = _currentStatus;
+    final incomingMovie = incoming.movie;
+    final currentMovie = current?.movie;
+    final hasSameMovie = currentMovie != null &&
+        incomingMovie != null &&
+        currentMovie.hasSamePlaybackIdentity(incomingMovie);
+    final mergedMovie = incomingMovie == null
+        ? incomingHasTiming
+            ? null
+            : currentMovie
+        : incomingMovie.url.isEmpty &&
+                currentMovie != null &&
+                currentMovie.url.isNotEmpty &&
+                hasSameMovie
+            ? currentMovie
+            : hasSameMovie
+                ? incomingMovie.url.isEmpty
+                    ? currentMovie
+                    : incomingMovie.withPlaybackIdentityFrom(currentMovie)
+                : incomingMovie;
+    return WPlaybackStatus(
+      movie: mergedMovie,
+      isPlaying: incomingHasTiming
+          ? incoming.isPlaying
+          : current?.isPlaying ?? incoming.isPlaying,
+      currentTime: incomingHasTiming
+          ? incoming.currentTime
+          : current?.currentTime ?? incoming.currentTime,
+      playbackRate: incomingHasTiming
+          ? incoming.playbackRate
+          : current?.playbackRate ?? incoming.playbackRate,
+    );
+  }
+
+  void _applyMediaLibrary(RoomMediaLibraryPage mediaLibrary) {
+    if (!mounted) return;
+    setState(() {
+      _movies = mediaLibrary.entries;
+      _currentPage = 1;
+      _hasMoreMovies = mediaLibrary.total > _movies.length;
+      _isLoadingMovies = false;
+    });
+  }
+
+  void _applyMembers(List<WUser> members) {
+    if (!mounted) return;
+    _sortMembers(members);
+    setState(() => _members = members);
+  }
+
+  void _reportInvalidRealtimePayload(String resourceName) {
+    final message = '服务端未推送$resourceName快照';
+    debugPrint(message);
+    if (mounted) MessageUtils.showError(context, message);
   }
 
   Future<void> _performSync(
@@ -566,19 +399,22 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
         await _videoPlayerController!.setPlaybackSpeed(playbackRate);
         _lastRate = playbackRate;
       }
-      if (!isPlaying && _videoPlayerController!.value.isPlaying) {
+      final currentPos =
+          _videoPlayerController!.value.position.inMilliseconds / 1000.0;
+      final targetTime = _boundedPlaybackTime(currentTime);
+      final shouldStopAtEnd = _isPlaybackTimePastDuration(currentTime);
+      final targetIsPlaying = shouldStopAtEnd ? false : isPlaying;
+      if (!targetIsPlaying && _videoPlayerController!.value.isPlaying) {
         await _videoPlayerController!.pause();
         _lastPlaying = false;
       }
-      final currentPos =
-          _videoPlayerController!.value.position.inMilliseconds / 1000.0;
-      if ((currentPos - currentTime).abs() > 2.0) {
+      if ((currentPos - targetTime).abs() > 2.0) {
         // Looser sync for TV
         await _videoPlayerController!
-            .seekTo(Duration(milliseconds: (currentTime * 1000).toInt()));
-        _lastPosition = currentTime;
+            .seekTo(Duration(milliseconds: (targetTime * 1000).toInt()));
+        _lastPosition = targetTime;
       }
-      if (isPlaying && !_videoPlayerController!.value.isPlaying) {
+      if (targetIsPlaying && !_videoPlayerController!.value.isPlaying) {
         await _videoPlayerController!.play();
         _lastPlaying = true;
       }
@@ -591,6 +427,23 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
     }
   }
 
+  double _boundedPlaybackTime(double currentTime) {
+    if (!currentTime.isFinite || currentTime < 0) return 0;
+    final duration = _videoPlayerController?.value.duration;
+    if (duration == null || duration <= Duration.zero) return currentTime;
+    final durationSeconds = duration.inMilliseconds / 1000.0;
+    if (durationSeconds <= 0) return currentTime;
+    final maxPlayable = durationSeconds > 0.25 ? durationSeconds - 0.25 : 0.0;
+    return currentTime.clamp(0.0, maxPlayable).toDouble();
+  }
+
+  bool _isPlaybackTimePastDuration(double sourceTime) {
+    final duration = _videoPlayerController?.value.duration;
+    if (duration == null || duration <= Duration.zero) return false;
+    final durationSeconds = duration.inMilliseconds / 1000.0;
+    return durationSeconds > 0 && sourceTime > durationSeconds;
+  }
+
   void _videoListener() {
     if (_isSyncing ||
         _videoPlayerController == null ||
@@ -599,7 +452,8 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
     }
     final value = _videoPlayerController!.value;
     final isPlaying = value.isPlaying;
-    final position = value.position.inMilliseconds / 1000.0;
+    final position =
+        _boundedPlaybackTime(value.position.inMilliseconds / 1000.0);
     final rate = value.playbackSpeed;
     final now = DateTime.now();
     final previousSampleAt = _lastPlaybackSampleAt;
@@ -652,7 +506,8 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
           _sendPlaybackUpdate(
               PlaybackControlAction.seek,
               currentValue.isPlaying,
-              currentValue.position.inMilliseconds / 1000.0,
+              _boundedPlaybackTime(
+                  currentValue.position.inMilliseconds / 1000.0),
               currentValue.playbackSpeed);
         }
       });
@@ -673,39 +528,27 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
     double position,
     double rate,
   ) {
-    var sentRealtime = false;
-    if (_channel != null) {
-      try {
-        final bytes = RoomRealtimeCodec.encodePlaybackUpdate(
+    try {
+      final safePosition = _boundedPlaybackTime(position);
+      _channel?.sink.add(
+        RoomRealtimeCodec.encodePlaybackUpdate(
           action,
           isPlaying: isPlaying,
-          position: position,
+          position: safePosition,
           playbackRate: rate,
-        );
-        _channel!.sink.add(bytes);
-        sentRealtime = true;
-      } catch (e) {
-        debugPrint('Send playback update error: $e');
-      }
-    }
-    if (!sentRealtime) {
-      WatchTogetherService.updatePlayback(
-        widget.room.roomId,
-        action: action,
-        isPlaying: isPlaying,
-        position: position,
-        speed: rate,
-      ).catchError((error) {
-        debugPrint('Fallback playback update error: $error');
-      });
+        ),
+      );
+    } catch (e) {
+      debugPrint('Realtime playback update error: $e');
+      if (mounted) MessageUtils.showError(context, '播放状态更新失败');
     }
   }
 
   void _sendPlaybackProgress(bool isPlaying, double position) {
     if (_channel != null) {
       try {
-        final bytes =
-            RoomRealtimeCodec.encodePlaybackProgress(isPlaying, position);
+        final bytes = RoomRealtimeCodec.encodePlaybackProgress(
+            isPlaying, _boundedPlaybackTime(position));
         _channel!.sink.add(bytes);
       } catch (e) {
         debugPrint('Send playback progress error: $e');
@@ -713,13 +556,13 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
     }
   }
 
-  Future<void> _syncState() async {
+  void _requestPlaybackSnapshot() {
     try {
-      final status =
-          await WatchTogetherService.getCurrentMovie(widget.room.roomId);
-      await _applyPlaybackStatus(status);
+      for (final bytes in RoomRealtimeCodec.encodePlaybackObservations()) {
+        _channel?.sink.add(bytes);
+      }
     } catch (e) {
-      debugPrint('Sync state error: $e');
+      debugPrint('Request playback snapshot error: $e');
     }
   }
 
@@ -729,12 +572,15 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
     final nextMovieId = status.movie?.id;
     if (oldMovieId != nextMovieId) {
       _danmakuController.clear();
-      _playbackSnapshotWatchVersion =
-          status.movie?.metadata['snapshot_version']?.toString() ?? '';
-      _startPlaybackSnapshotWatch();
     }
 
-    setState(() => _currentStatus = status);
+    setState(() {
+      _currentStatus = status;
+      if (status.movie == null || status.movie!.url.isEmpty) {
+        _isVideoLoading = false;
+        _videoError = null;
+      }
+    });
 
     if (status.movie != null && status.movie!.url.isNotEmpty) {
       final newUrl = WatchTogetherService.resolveResourceUrl(status.movie!.url);
@@ -771,18 +617,28 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
         streamDanmakuUrl: streamUrl,
         controller: _videoPlayerController,
       );
-    } else if (_videoPlayerController != null) {
-      _disposeVideoController();
-      if (mounted) setState(() {});
+    } else {
+      if (_videoPlayerController != null) {
+        _disposeVideoController();
+        if (mounted) setState(() {});
+      }
     }
   }
 
   Future<void> _initVideo(String url, {Map<String, String>? headers}) async {
     if (url.isEmpty) return;
     _warnPlaybackCredentialHeaders(headers ?? const {});
+    if (mounted) {
+      setState(() {
+        _isVideoLoading = true;
+        _videoError = null;
+      });
+    }
 
-    final newController = VideoPlayerController.networkUrl(Uri.parse(url),
-        httpHeaders: headers ?? {});
+    final newController = VideoPlayerController.networkUrl(
+      Uri.parse(url),
+      httpHeaders: headers ?? {},
+    );
     try {
       await newController.initialize();
       if (!mounted) {
@@ -792,10 +648,44 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
       _disposeVideoController();
       _videoPlayerController = newController;
       _videoPlayerController!.addListener(_videoListener);
-      if (mounted) setState(() {});
-    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isVideoLoading = false;
+          _videoError = null;
+        });
+      }
+    } catch (e) {
       newController.dispose();
+      if (mounted) {
+        setState(() {
+          _isVideoLoading = false;
+          _videoError = '视频加载失败';
+        });
+        MessageUtils.showError(context, '视频加载失败');
+      }
     }
+  }
+
+  Widget _buildVideoPlaceholder() {
+    final hasPlayback = _currentStatus?.movie?.url.isNotEmpty == true;
+    final icon = _videoError != null
+        ? Icons.error_outline_rounded
+        : hasPlayback
+            ? Icons.hourglass_top_rounded
+            : Icons.ondemand_video_rounded;
+    final message =
+        _videoError ?? (_isVideoLoading || hasPlayback ? '正在加载视频' : '等待播放');
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: Colors.white54, size: 80),
+        const SizedBox(height: 16),
+        Text(
+          message,
+          style: const TextStyle(color: Colors.white54, fontSize: 24),
+        ),
+      ],
+    );
   }
 
   void _warnPlaybackCredentialHeaders(Map<String, String> headers) {
@@ -819,12 +709,10 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
   @override
   void dispose() {
     _authErrorSubscription?.cancel();
-    _playbackStateSubscription?.cancel();
-    _playbackSnapshotSubscription?.cancel();
-    _playlistSubscription?.cancel();
-    _membersSubscription?.cancel();
+    _realtimeSubscription?.cancel();
     _disposeVideoController();
     _syncTimer?.cancel();
+    _reconnectTimer?.cancel();
     _channel?.sink.close();
     _chatScrollController.dispose();
     _movieScrollController.dispose();
@@ -852,9 +740,7 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
       _folderNameStack.add(folder.name);
       _isLoadingMovies = true;
     });
-    _playlistWatchVersion = '';
-    _startPlaylistWatch();
-    _fetchMovies();
+    _observeCurrentPlaylist();
   }
 
   void _exitFolder() {
@@ -864,16 +750,57 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
       _folderNameStack.removeLast();
       _isLoadingMovies = true;
     });
-    _playlistWatchVersion = '';
-    _startPlaylistWatch();
-    _fetchMovies();
+    _observeCurrentPlaylist();
+  }
+
+  void _observeCurrentPlaylist() {
+    final parentFolder = _folderStack.isNotEmpty ? _folderStack.last : null;
+    try {
+      _channel?.sink.add(
+        RoomRealtimeCodec.encodePlaylistObservation(
+          playlistId: parentFolder?.playbackWatchPlaylistId ?? '',
+          target: parentFolder?.playbackWatchTarget,
+          page: 1,
+          pageSize: _pageSize,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Observe playlist error: $e');
+      if (mounted) MessageUtils.showError(context, '播放列表订阅失败');
+    }
+  }
+
+  void _handleSync() {
+    if (_channel == null) return;
+    _requestPlaybackSnapshot();
+    if (mounted) {
+      MessageUtils.showInfo(
+        context,
+        '已请求同步',
+        duration: const Duration(seconds: 1),
+      );
+    }
   }
 
   Future<void> _switchMovie(WMovie movie) async {
     try {
-      await WatchTogetherService.switchMovie(widget.room.roomId, movie.id,
+      final switched = await WatchTogetherService.switchMovie(
+          widget.room.roomId, movie.id,
           subPath: movie.subPath, playlistId: movie.parentId);
-      await _syncState();
+      _sendPlaybackUpdate(PlaybackControlAction.play, true, 0, 1);
+      if (switched.movie != null) {
+        await _applyPlaybackStatus(
+          WPlaybackStatus(
+            movie: movie.hasSamePlaybackIdentity(switched.movie!)
+                ? movie
+                : switched.movie,
+            isPlaying: true,
+            currentTime: 0,
+            playbackRate: 1,
+          ),
+        );
+      }
+      _requestPlaybackSnapshot();
     } catch (e) {
       debugPrint('Switch movie error: $e');
     }
@@ -934,9 +861,10 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
                             title: _currentStatus?.movie?.name ?? '未知影片',
                             danmakuController: _danmakuController,
                             subtitles: _currentStatus?.movie?.subtitles,
-                            onSync: _syncState,
+                            onSync: _handleSync,
                             onToggleFullScreen: null,
                             showCastButton: false, // Hide Cast button on TV
+                            interactionMode: VideoPlayerInteractionMode.desktop,
                             extraBottomWidget: IconButton(
                               icon: const Icon(Icons.menu, color: Colors.white),
                               onPressed: () {
@@ -947,16 +875,7 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
                               tooltip: '菜单',
                             ),
                           )
-                        : const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.tv, color: Colors.white24, size: 80),
-                              SizedBox(height: 16),
-                              Text('等待播放...',
-                                  style: TextStyle(
-                                      color: Colors.white54, fontSize: 24)),
-                            ],
-                          ),
+                        : _buildVideoPlaceholder(),
                   ),
                 ),
 

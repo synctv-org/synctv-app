@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:math';
-import 'dart:ui';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/pages/mobile/watch_together_room_screen.dart';
@@ -16,7 +15,7 @@ import 'package:synctv_app/pages/mobile/admin_settings_page.dart';
 import 'package:synctv_app/pages/account_center_page.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
-import 'package:synctv_app/widgets/room_invite_flow.dart';
+import 'package:synctv_app/widgets/join_room_dialog.dart';
 import 'package:synctv_app/widgets/server_settings_dialog.dart';
 import 'package:synctv_app/pages/splash_page.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
@@ -39,9 +38,9 @@ void main(List<String> args) async {
   try {
     VideoPlayerMediaKit.ensureInitialized(
       android: true,
-      iOS: true,
+      iOS: false,
       windows: true,
-      macOS: true,
+      macOS: false,
       linux: true,
     );
   } catch (e) {
@@ -61,52 +60,74 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.dark,
       builder: (context, child) {
         final mediaQueryData = MediaQuery.of(context);
-        var newMediaQueryData = mediaQueryData;
-        Widget newChild = child!;
-        if (mediaQueryData.size.width < 600 && mediaQueryData.size.width > 0) {
-          const double targetWidth = 414.0;
-          if (mediaQueryData.size.width < targetWidth) {
-            final double scale = mediaQueryData.size.width / targetWidth;
-            newMediaQueryData = mediaQueryData.copyWith(
-              size: Size(targetWidth, mediaQueryData.size.height / scale),
-              devicePixelRatio: mediaQueryData.devicePixelRatio * scale,
-              padding: mediaQueryData.padding / scale,
-              viewPadding: mediaQueryData.viewPadding / scale,
-              viewInsets: mediaQueryData.viewInsets / scale,
-              systemGestureInsets: mediaQueryData.systemGestureInsets / scale,
-              textScaler: mediaQueryData.textScaler
-                  .clamp(minScaleFactor: 0.8, maxScaleFactor: 1.0),
-            );
+        final newMediaQueryData = mediaQueryData.copyWith(
+          textScaler: mediaQueryData.textScaler
+              .clamp(minScaleFactor: 0.8, maxScaleFactor: 1.1),
+        );
 
-            newChild = FittedBox(
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              child: SizedBox(
-                width: targetWidth,
-                height: mediaQueryData.size.height / scale,
-                child: newChild,
-              ),
-            );
-          } else {
-            newMediaQueryData = mediaQueryData.copyWith(
-              textScaler: mediaQueryData.textScaler
-                  .clamp(minScaleFactor: 0.8, maxScaleFactor: 1.0),
-            );
-          }
-        } else {
-          newMediaQueryData = mediaQueryData.copyWith(
-            textScaler: mediaQueryData.textScaler
-                .clamp(minScaleFactor: 0.8, maxScaleFactor: 1.0),
-          );
-        }
-
-        return MediaQuery(
-          data: newMediaQueryData,
-          child: newChild,
+        return _GlobalTextEditingShortcuts(
+          child: MediaQuery(
+            data: newMediaQueryData,
+            child: child!,
+          ),
         );
       },
       // home: const LargeScreenHome(),
       home: const SplashPage(),
+    );
+  }
+}
+
+class _PasteIntoFocusedTextIntent extends Intent {
+  const _PasteIntoFocusedTextIntent();
+}
+
+class _GlobalTextEditingShortcuts extends StatelessWidget {
+  const _GlobalTextEditingShortcuts({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Shortcuts(
+      shortcuts: const <ShortcutActivator, Intent>{
+        SingleActivator(LogicalKeyboardKey.keyV, meta: true):
+            _PasteIntoFocusedTextIntent(),
+        SingleActivator(LogicalKeyboardKey.keyV, control: true):
+            _PasteIntoFocusedTextIntent(),
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
+          _PasteIntoFocusedTextIntent:
+              CallbackAction<_PasteIntoFocusedTextIntent>(
+            onInvoke: (_) {
+              _pasteIntoFocusedEditable();
+              return null;
+            },
+          ),
+        },
+        child: child,
+      ),
+    );
+  }
+
+  static Future<void> _pasteIntoFocusedEditable() async {
+    final focusContext = FocusManager.instance.primaryFocus?.context;
+    final editable = focusContext?.findAncestorStateOfType<EditableTextState>();
+    if (editable == null) return;
+
+    final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = clipboard?.text;
+    if (text == null || text.isEmpty) return;
+
+    final value = editable.textEditingValue;
+    final selection = value.selection;
+    final replacementRange = selection.isValid
+        ? selection
+        : TextSelection.collapsed(offset: value.text.length);
+    editable.userUpdateTextEditingValue(
+      value.replaced(replacementRange, text),
+      SelectionChangedCause.keyboard,
     );
   }
 }
@@ -120,7 +141,7 @@ class WatchTogetherHomeScreen extends StatefulWidget {
 }
 
 class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
-  int _currentIndex = 0; // 0 for "影厅" (Rooms), 1 for "我的" (Profile)
+  int _currentIndex = 0;
   bool _isLoading = true;
   List<WRoom> _rooms = [];
   int _roomsTotal = 0;
@@ -131,7 +152,6 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   WUser? _currentUser;
   StreamSubscription? _authErrorSubscription;
 
-  final TextEditingController _joinRoomController = TextEditingController();
   final TextEditingController _roomSearchController = TextEditingController();
 
   @override
@@ -139,9 +159,9 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     super.initState();
     _authErrorSubscription = WatchTogetherService.onAuthError.listen((_) {
       if (mounted) {
-        WatchTogetherService.logout();
         setState(() {
           _isLoggedIn = false;
+          _currentUser = null;
         });
         _showLoginDialog();
       }
@@ -152,7 +172,6 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   @override
   void dispose() {
     _authErrorSubscription?.cancel();
-    _joinRoomController.dispose();
     _roomSearchController.dispose();
     super.dispose();
   }
@@ -171,8 +190,8 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   }
 
   Future<void> _checkLoginAndLoadData() async {
-    final token = await WatchTogetherService.getToken();
-    if (token == null) {
+    final hasSession = WatchTogetherService.hasRecoverableSession;
+    if (!hasSession) {
       if (mounted) {
         setState(() {
           _isLoggedIn = false;
@@ -337,13 +356,22 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   void _showAccountCenter() {
     final user = _currentUser;
     if (user == null) return;
-    Navigator.push(
+    Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => AccountCenterPage(initialUser: user),
       ),
-    ).then((_) {
-      _fetchUserInfo();
+    ).then((accountClosed) {
+      if (accountClosed == true) {
+        setState(() {
+          _isLoggedIn = false;
+          _currentUser = null;
+          _rooms = [];
+          _roomsTotal = 0;
+        });
+      } else {
+        _fetchUserInfo();
+      }
     });
   }
 
@@ -384,185 +412,98 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     final isAdmin =
         _currentUser?.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
             _currentUser?.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
+    final actions = <Widget>[
+      if (!_isLoggedIn)
+        _buildProfileOption(
+          icon: Icons.login_rounded,
+          title: '登录账号',
+          subtitle: '同步账号、创建房间和管理成员',
+          onTap: _showLoginDialog,
+          theme: theme,
+        ),
+      if (_isLoggedIn) ...[
+        _buildProfileOption(
+          icon: Icons.account_circle_outlined,
+          title: '账号中心',
+          subtitle: '资料、安全和多因素认证',
+          onTap: _showAccountCenter,
+          theme: theme,
+        ),
+        _buildProfileOption(
+          icon: Icons.add_box_outlined,
+          title: '创建房间',
+          subtitle: '创建新的同步观影空间',
+          onTap: _showCreateRoomDialog,
+          theme: theme,
+        ),
+      ],
+      _buildProfileOption(
+        icon: Icons.dns_outlined,
+        title: '服务器设置',
+        subtitle: '切换服务器、添加地址和查看连接状态',
+        onTap: _showServerSettingsDialog,
+        theme: theme,
+      ),
+      if (isAdmin)
+        _buildProfileOption(
+          icon: Icons.admin_panel_settings_outlined,
+          title: '管理员设置',
+          subtitle: '进入独立系统管理页面',
+          onTap: _showAdminSettingsPage,
+          theme: theme,
+        ),
+      if (_isLoggedIn)
+        _buildProfileOption(
+          icon: Icons.logout_rounded,
+          title: '退出登录',
+          subtitle: '仅退出当前服务器账号',
+          onTap: _handleLogout,
+          theme: theme,
+          danger: true,
+        ),
+    ];
 
     return CustomScrollView(
       slivers: [
         SliverAppBar(
-          expandedHeight: 120,
+          expandedHeight: 88,
           pinned: true,
           elevation: 0,
           backgroundColor:
               isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FC),
           flexibleSpace: FlexibleSpaceBar(
-            titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+            titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
             title: Text(
               '我的',
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            background: Container(
+            background: ColoredBox(
               color: isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FC),
-              child: Stack(
-                children: [
-                  Positioned(
-                    right: -40,
-                    top: -40,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFF5D5FEF).withValues(alpha: 0.03),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 112),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_isLoggedIn && _currentUser != null) ...[
-                  // User Info Card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey.shade900 : Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: theme.primaryColor.withValues(alpha: 0.1),
-                          ),
-                          child: Center(
-                            child: Text(
-                              _currentUser!.username.isNotEmpty
-                                  ? _currentUser!.username[0].toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: theme.primaryColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _currentUser!.username,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Role: ${_currentUser!.role}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                _buildProfileIdentityPanel(theme),
+                const SizedBox(height: 12),
+                Material(
+                  color: theme.colorScheme.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(
+                      color: theme.dividerColor.withValues(alpha: 0.7),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                ],
-
-                // Action List
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey.shade900 : Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      if (!_isLoggedIn)
-                        _buildProfileOption(
-                          icon: Icons.login_rounded,
-                          title: '登录账号',
-                          onTap: _showLoginDialog,
-                          theme: theme,
-                        ),
-                      if (_isLoggedIn)
-                        _buildProfileOption(
-                          icon: Icons.account_circle_outlined,
-                          title: '账号中心',
-                          onTap: _showAccountCenter,
-                          theme: theme,
-                          iconColor: const Color(0xFF5D5FEF),
-                        ),
-                      if (_isLoggedIn)
-                        _buildProfileOption(
-                          icon: Icons.add_box_outlined,
-                          title: '创建房间',
-                          onTap: _showCreateRoomDialog,
-                          theme: theme,
-                          iconColor: const Color(0xFF5D5FEF),
-                        ),
-                      _buildProfileOption(
-                        icon: Icons.dns_outlined,
-                        title: '服务器设置',
-                        onTap: _showServerSettingsDialog,
-                        theme: theme,
-                        iconColor: Colors.purple,
-                      ),
-                      if (isAdmin)
-                        _buildProfileOption(
-                          icon: Icons.admin_panel_settings,
-                          title: '管理员设置',
-                          onTap: _showAdminSettingsPage,
-                          theme: theme,
-                          iconColor: Colors.orange,
-                        ),
-                      if (_isLoggedIn)
-                        _buildProfileOption(
-                          icon: Icons.logout,
-                          title: '退出登录',
-                          onTap: _handleLogout,
-                          theme: theme,
-                          iconColor: Colors.red,
-                          isLast: true,
-                        ),
-                    ],
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(children: actions),
                 ),
-                const SizedBox(height: 120), // Padding for bottom nav bar
               ],
             ),
           ),
@@ -571,49 +512,153 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     );
   }
 
+  Widget _buildProfileIdentityPanel(ThemeData theme) {
+    final user = _currentUser;
+    final signedIn = _isLoggedIn && user != null;
+    final title = signedIn ? user.username : '未登录';
+    final subtitle = signedIn
+        ? '${_roleLabel(user.role)} · ${WatchTogetherService.activeServer?.name ?? '当前服务器'}'
+        : '可以先浏览公开房间，登录后可创建和管理房间';
+
+    return Material(
+      color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.7)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: signedIn
+                  ? Text(
+                      _profileInitial(user.username),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: theme.colorScheme.primary,
+                      ),
+                    )
+                  : Icon(
+                      Icons.person_outline_rounded,
+                      color: theme.colorScheme.primary,
+                    ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildProfileOption({
     required IconData icon,
     required String title,
+    required String subtitle,
     required VoidCallback onTap,
     required ThemeData theme,
-    Color? iconColor,
-    bool isLast = false,
+    bool danger = false,
   }) {
+    final foreground =
+        danger ? theme.colorScheme.error : theme.colorScheme.primary;
+
     return InkWell(
       onTap: onTap,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Row(
-              children: [
-                Icon(icon, color: iconColor ?? theme.iconTheme.color, size: 24),
-                const SizedBox(width: 16),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color:
-                        isLast && iconColor == Colors.red ? Colors.red : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: foreground.withValues(alpha: danger ? 0.08 : 0.10),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: foreground, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: danger ? theme.colorScheme.error : null,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Icon(Icons.chevron_right,
-                    color: Colors.grey.shade400, size: 20),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.58),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (!isLast)
-            Divider(
-              height: 1,
-              indent: 60,
-              endIndent: 20,
-              color: theme.dividerColor.withValues(alpha: 0.05),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.34),
+              size: 20,
             ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  String _profileInitial(String username) {
+    final trimmed = username.trim();
+    if (trimmed.isEmpty) return '?';
+    return trimmed.characters.first.toUpperCase();
+  }
+
+  String _roleLabel(int role) {
+    if (role == common_enum.UserRole.USER_ROLE_ROOT.value) return 'Root';
+    if (role == common_enum.UserRole.USER_ROLE_ADMIN.value) return '管理员';
+    if (role == common_enum.UserRole.USER_ROLE_USER.value) return '用户';
+    return '角色 $role';
   }
 
   Widget _buildScrollView(bool isDark) {
@@ -633,10 +678,13 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
           )
         else
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 116),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 104),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
-                (context, index) => _buildRoomCard(_rooms[index], index),
+                (context, index) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildRoomCard(_rooms[index], index),
+                ),
                 childCount: _rooms.length,
               ),
             ),
@@ -646,36 +694,46 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   }
 
   Widget _buildEmptyRooms(bool isDark) {
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                width: 80,
-                height: 80,
-                color: Colors.transparent,
-                child: Image.asset('assets/icon/robot_3.png'),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.meeting_room_outlined,
+                color: theme.colorScheme.primary,
+                size: 32,
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无房间，快去创建一个吧！',
-              style: TextStyle(
-                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+              '暂无房间',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _roomFeed == _RoomFeed.mine ? '加入或创建房间后会出现在这里' : '当前筛选下没有可显示的房间',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
+            FilledButton.tonalIcon(
               onPressed: () => _loadRooms(silent: false),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5D5FEF),
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('刷新列表'),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('刷新'),
             ),
           ],
         ),
@@ -687,145 +745,105 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     final supportsPaging = _roomFeed != _RoomFeed.hot;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SegmentedButton<_RoomFeed>(
-            style: ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              textStyle: WidgetStateProperty.all(theme.textTheme.labelMedium),
-            ),
-            segments: const [
-              ButtonSegment(
-                value: _RoomFeed.public,
-                icon: Icon(Icons.public_rounded),
-                label: Text('公开'),
-              ),
-              ButtonSegment(
-                value: _RoomFeed.mine,
-                icon: Icon(Icons.video_library_rounded),
-                label: Text('我的'),
-              ),
-              ButtonSegment(
-                value: _RoomFeed.hot,
-                icon: Icon(Icons.local_fire_department_rounded),
-                label: Text('热门'),
-              ),
-            ],
-            selected: {_roomFeed},
-            onSelectionChanged: (value) => _setRoomFeed(value.first),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _roomSearchController,
-            enabled: _roomFeed != _RoomFeed.hot,
-            decoration: InputDecoration(
-              isDense: true,
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _roomSearchController.text.isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: '清空',
-                      icon: const Icon(Icons.clear_rounded),
-                      onPressed: () {
-                        _roomSearchController.clear();
-                        _applyRoomSearch('');
-                      },
-                    ),
-              hintText: _roomFeed == _RoomFeed.hot ? '热门房间不支持搜索' : '搜索房间',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            onSubmitted: _applyRoomSearch,
-          ),
-          const SizedBox(height: 10),
-          Row(
+      child: Material(
+        color: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.7)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  supportsPaging
-                      ? '共 $_roomsTotal 个 · 第 $_roomPage / $_roomPageCount 页'
-                      : '显示 ${_rooms.length} 个热门房间',
-                  style: theme.textTheme.bodySmall,
+              SegmentedButton<_RoomFeed>(
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  textStyle:
+                      WidgetStateProperty.all(theme.textTheme.labelMedium),
                 ),
+                segments: const [
+                  ButtonSegment(
+                    value: _RoomFeed.public,
+                    icon: Icon(Icons.public_rounded),
+                    label: Text('公开'),
+                  ),
+                  ButtonSegment(
+                    value: _RoomFeed.mine,
+                    icon: Icon(Icons.video_library_rounded),
+                    label: Text('我的'),
+                  ),
+                  ButtonSegment(
+                    value: _RoomFeed.hot,
+                    icon: Icon(Icons.local_fire_department_rounded),
+                    label: Text('热门'),
+                  ),
+                ],
+                selected: {_roomFeed},
+                onSelectionChanged: (value) => _setRoomFeed(value.first),
               ),
-              IconButton.filledTonal(
-                tooltip: '刷新',
-                onPressed: () => _loadRooms(silent: false),
-                icon: const Icon(Icons.refresh_rounded),
-              ),
-              if (supportsPaging) ...[
-                const SizedBox(width: 8),
-                IconButton(
-                  tooltip: '上一页',
-                  onPressed:
-                      _roomPage <= 1 ? null : () => _goRoomPage(_roomPage - 1),
-                  icon: const Icon(Icons.chevron_left_rounded),
-                ),
-                IconButton(
-                  tooltip: '下一页',
-                  onPressed: _roomPage >= _roomPageCount
+              const SizedBox(height: 10),
+              TextField(
+                controller: _roomSearchController,
+                enabled: _roomFeed != _RoomFeed.hot,
+                decoration: InputDecoration(
+                  isDense: true,
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _roomSearchController.text.isEmpty
                       ? null
-                      : () => _goRoomPage(_roomPage + 1),
-                  icon: const Icon(Icons.chevron_right_rounded),
+                      : IconButton(
+                          tooltip: '清空',
+                          icon: const Icon(Icons.clear_rounded),
+                          onPressed: () {
+                            _roomSearchController.clear();
+                            _applyRoomSearch('');
+                          },
+                        ),
+                  hintText: _roomFeed == _RoomFeed.hot ? '热门房间不支持搜索' : '搜索房间',
                 ),
-              ],
+                onSubmitted: _applyRoomSearch,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      supportsPaging
+                          ? '共 $_roomsTotal 个 · 第 $_roomPage / $_roomPageCount 页'
+                          : '显示 ${_rooms.length} 个热门房间',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                      ),
+                    ),
+                  ),
+                  IconButton.filledTonal(
+                    tooltip: '刷新',
+                    onPressed: () => _loadRooms(silent: false),
+                    icon: const Icon(Icons.refresh_rounded),
+                  ),
+                  if (supportsPaging) ...[
+                    const SizedBox(width: 6),
+                    IconButton(
+                      tooltip: '上一页',
+                      onPressed: _roomPage <= 1
+                          ? null
+                          : () => _goRoomPage(_roomPage - 1),
+                      icon: const Icon(Icons.chevron_left_rounded),
+                    ),
+                    IconButton(
+                      tooltip: '下一页',
+                      onPressed: _roomPage >= _roomPageCount
+                          ? null
+                          : () => _goRoomPage(_roomPage + 1),
+                      icon: const Icon(Icons.chevron_right_rounded),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildJoinRoomCapsule(ThemeData theme, bool isDark) {
-    final capsuleColor = isDark
-        ? Colors.white.withValues(alpha: 0.1)
-        : Colors.black.withValues(alpha: 0.05);
-    final textColor = isDark ? Colors.white70 : Colors.black54;
-
-    return Container(
-      height: 28,
-      width: 110,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: capsuleColor,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.search_rounded,
-            size: 14,
-            color: textColor,
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: TextField(
-              controller: _joinRoomController,
-              textInputAction: TextInputAction.go,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-              decoration: InputDecoration(
-                hintText: 'ID或邀请链接',
-                hintStyle: TextStyle(
-                  color: textColor,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-              onSubmitted: (value) async {
-                await _joinRoomById(value);
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -835,52 +853,55 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return SliverAppBar(
-      expandedHeight: 120,
+      expandedHeight: 96,
       pinned: true,
       elevation: 0,
       backgroundColor:
           isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FC),
       automaticallyImplyLeading: false,
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+        titlePadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         title: Row(
           children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.live_tv_rounded,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 10),
             Text(
               '看搭子',
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black,
-                fontSize: 32, // Magnified as requested
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white : const Color(0xFF111827),
               ),
             ),
             const Spacer(),
-            if (_isLoggedIn)
-              Padding(
-                padding: const EdgeInsets.only(right: 20),
-                child: _buildJoinRoomCapsule(theme, isDark),
-              ),
-          ],
-        ),
-        background: Container(
-          color: isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FC),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -40,
-                top: -40,
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF5D5FEF).withValues(alpha: 0.03),
-                  ),
-                ),
+            IconButton.filledTonal(
+              tooltip: '服务器设置',
+              onPressed: _showServerSettingsDialog,
+              icon: const Icon(Icons.dns_rounded),
+            ),
+            if (_isLoggedIn) ...[
+              const SizedBox(width: 8),
+              IconButton.filled(
+                tooltip: '创建房间',
+                onPressed: _showCreateRoomDialog,
+                icon: const Icon(Icons.add_rounded),
               ),
             ],
-          ),
+          ],
         ),
+        background: ColoredBox(
+            color: isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FC)),
       ),
     );
   }
@@ -888,8 +909,14 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   void _showServerSettingsDialog() {
     showServerSettingsDialog(context: context).then((changed) {
       if (!mounted || changed != true) return;
-      setState(() {});
-      if (_isLoggedIn) _loadRooms(silent: false);
+      final hasSession = WatchTogetherService.hasRecoverableSession;
+      setState(() {
+        _isLoggedIn = hasSession;
+        if (!hasSession) _currentUser = null;
+        _roomPage = 1;
+      });
+      _loadRooms(silent: false);
+      if (hasSession) _fetchUserInfo();
     });
   }
 
@@ -924,35 +951,6 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     });
   }
 
-  Future<void> _joinRoomById(String value) async {
-    if (value.trim().isEmpty) {
-      MessageUtils.showWarning(context, '请输入房间ID');
-      return;
-    }
-    try {
-      final id = await parseInviteOrShowError(context: context, value: value);
-      if (id == null || id.isEmpty) return;
-      final check = await WatchTogetherService.checkRoom(id);
-      if (!check.exists) {
-        if (mounted) MessageUtils.showWarning(context, '房间不存在');
-        return;
-      }
-      if (!check.isAvailable) {
-        if (mounted) MessageUtils.showWarning(context, '房间暂不可用');
-        return;
-      }
-      if (!_isLoggedIn) {
-        final authenticated = await _showLoginDialog(guestRoomId: id);
-        if (!authenticated || !mounted) return;
-      }
-      final room = await WatchTogetherService.getRoomInfo(id);
-      _joinRoomController.clear();
-      if (mounted) _handleJoinRoom(room);
-    } catch (e) {
-      if (mounted) MessageUtils.showError(context, '查找房间失败: $e');
-    }
-  }
-
   Future<void> _handleJoinRoom(WRoom room) async {
     String password = '';
 
@@ -962,28 +960,9 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     }
 
     if (room.needPassword) {
-      final passwordController = TextEditingController();
-      final result = await ChatUtils.showStyledDialog<String>(
+      final result = await showRoomPasswordDialog(
         context: context,
-        title: '输入房间密码',
-        icon: const Icon(Icons.lock, color: Color(0xFFCF0A2C)),
-        content: ChatUtils.createFormField(
-          context: context,
-          label: '密码',
-          controller: passwordController,
-          hintText: '请输入房间密码',
-          prefixIcon: Icons.key_rounded,
-          obscureText: true,
-        ),
-        actions: [
-          ChatUtils.createCancelButton(context),
-          const SizedBox(width: 8),
-          ChatUtils.createConfirmButton(
-            context,
-            () => Navigator.pop(context, passwordController.text),
-            text: '确定',
-          ),
-        ],
+        roomName: room.roomName,
       );
 
       if (result == null) return;
@@ -994,30 +973,9 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
       password = result;
     }
 
-    OverlayEntry? overlayEntry;
-
     try {
-      // 1. Immediately show the opaque transition overlay
-      overlayEntry = OverlayEntry(
-        builder: (context) => _TheaterTransitionEasterEgg(
-          room: room,
-          onComplete: () {
-            overlayEntry?.remove();
-          },
-        ),
-      );
-
-      if (mounted) {
-        Overlay.of(context).insert(overlayEntry);
-      }
-
-      // Briefly yield to ensure the overlay renders before any heavy work
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      // 2. Join the room in the background
       await WatchTogetherService.joinRoom(room.roomId, password);
 
-      // 3. Navigate silently underneath the overlay
       if (mounted) {
         Navigator.push(
           context,
@@ -1027,7 +985,6 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
         );
       }
     } catch (e) {
-      overlayEntry?.remove();
       if (mounted) MessageUtils.showError(context, '加入房间失败: $e');
     }
   }
@@ -1083,91 +1040,45 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
 
   Widget _buildBottomNavigationBar(ThemeData theme, bool isDark) {
     return Positioned(
-      bottom: 32, // Lifted slightly for a more floating look
+      bottom: 16,
       left: 0,
       right: 0,
       child: SafeArea(
-        child: Center(
-          child: Container(
-            height: 64, // Fixed height for the capsule
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(32),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 30,
-                  offset: const Offset(0, 10),
+        minimum: const EdgeInsets.symmetric(horizontal: 16),
+        child: Material(
+          color: theme.colorScheme.surface,
+          elevation: 6,
+          shadowColor: Colors.black.withValues(alpha: isDark ? 0.42 : 0.12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.7)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildNavItem(
+                    icon: Icons.movie_filter_rounded,
+                    label: '影厅',
+                    index: 0,
+                    isSelected: _currentIndex == 0,
+                    theme: theme,
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _buildNavItem(
+                    icon: Icons.person_rounded,
+                    label: '我的',
+                    index: 1,
+                    isSelected: _currentIndex == 1,
+                    theme: theme,
+                    isDark: isDark,
+                  ),
                 ),
               ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(32),
-              child: BackdropFilter(
-                filter:
-                    ImageFilter.blur(sigmaX: 20, sigmaY: 20), // Stronger blur
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.4)
-                        : Colors.white
-                            .withValues(alpha: 0.6), // More transparent
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.1)
-                          : Colors.black.withValues(alpha: 0.05),
-                      width: 1,
-                    ),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Animated sliding background block
-                      AnimatedPositioned(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOutBack, // Spring-like physics
-                        left: _currentIndex *
-                            96.0, // Width of one item (80) + padding (16)
-                        child: Container(
-                          width: 80,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.15)
-                                : Colors.black.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                      ),
-                      // Navigation items
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildNavItem(
-                            icon: Icons.movie_filter_rounded,
-                            label: '影厅',
-                            index: 0,
-                            isSelected: _currentIndex == 0,
-                            theme: theme,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(width: 16),
-                          _buildNavItem(
-                            icon: Icons.person_rounded,
-                            label: '我的',
-                            index: 1,
-                            isSelected: _currentIndex == 1,
-                            theme: theme,
-                            isDark: isDark,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
           ),
         ),
@@ -1184,381 +1095,43 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     required bool isDark,
   }) {
     final color = isSelected
-        ? (isDark ? Colors.white : Colors.black)
-        : (isDark ? Colors.white54 : Colors.black54);
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface.withValues(alpha: 0.62);
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 80, // Fixed width for each item to match sliding block
-        height: 48,
-        alignment: Alignment.center,
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 200),
-          style: TextStyle(
-            color: color,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            fontSize: isSelected ? 14 : 13,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: isSelected ? 20 : 18, color: color),
-              const SizedBox(width: 6),
-              Text(label),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class TicketClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    Path path = Path();
-    double cutoutRadius = 8.0;
-    double cutoutPosition =
-        size.width * 0.28; // Position for the theater icon section
-
-    path.lineTo(cutoutPosition - cutoutRadius, 0);
-    path.arcToPoint(
-      Offset(cutoutPosition + cutoutRadius, 0),
-      radius: Radius.circular(cutoutRadius),
-      clockwise: false,
-    );
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width, size.height);
-    path.lineTo(cutoutPosition + cutoutRadius, size.height);
-    path.arcToPoint(
-      Offset(cutoutPosition - cutoutRadius, size.height),
-      radius: Radius.circular(cutoutRadius),
-      clockwise: false,
-    );
-    path.lineTo(0, size.height);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-
-class DashLinePainter extends CustomPainter {
-  final Color color;
-  DashLinePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    double dashHeight = 5, dashSpace = 3, startY = 0;
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1;
-    while (startY < size.height) {
-      canvas.drawLine(Offset(0, startY), Offset(0, startY + dashHeight), paint);
-      startY += dashHeight + dashSpace;
-    }
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
-}
-
-class _TheaterTransitionEasterEgg extends StatefulWidget {
-  final WRoom room;
-  final VoidCallback onComplete;
-
-  const _TheaterTransitionEasterEgg(
-      {required this.room, required this.onComplete});
-
-  @override
-  State<_TheaterTransitionEasterEgg> createState() =>
-      _TheaterTransitionEasterEggState();
-}
-
-class _TheaterTransitionEasterEggState
-    extends State<_TheaterTransitionEasterEgg>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _doorSwing;
-  late Animation<double> _doorGlow;
-  late Animation<double> _cameraZoom;
-  late Animation<double> _overlayOpacity;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration:
-          const Duration(milliseconds: 3800), // Slower, majestic transition
-    );
-
-    _doorSwing = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.1, 0.6, curve: Curves.easeInOutCubic)),
-    );
-
-    _doorGlow = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.2, 0.5, curve: Curves.easeIn)),
-    );
-
-    _cameraZoom = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.6, 0.95, curve: Curves.easeInQuint)),
-    );
-
-    _overlayOpacity = TweenSequence([
-      TweenSequenceItem(tween: Tween<double>(begin: 1, end: 1), weight: 90),
-      TweenSequenceItem(
-          tween: Tween<double>(begin: 1, end: 0)
-              .chain(CurveTween(curve: Curves.easeOut)),
-          weight: 10),
-    ]).animate(_controller);
-
-    _controller.forward().then((_) {
-      if (mounted) widget.onComplete();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Widget _buildDoorPanel(bool isLeft) {
-    return Container(
-      width: 140, // Half of 280
-      height: 400,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A0505),
-        border: Border(
-          left:
-              BorderSide(color: const Color(0xFF0A0000), width: isLeft ? 6 : 2),
-          right:
-              BorderSide(color: const Color(0xFF0A0000), width: isLeft ? 2 : 6),
-          top: const BorderSide(color: Color(0xFF0A0000), width: 6),
-          bottom: const BorderSide(color: Color(0xFF0A0000), width: 6),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.8),
-            blurRadius: 20,
-            spreadRadius: 2,
-            offset: Offset(isLeft ? -5 : 5, 0),
-          )
-        ],
-      ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Column(
-              children: [
-                Expanded(flex: 3, child: _doorSoftPanel()),
-                const SizedBox(height: 16),
-                Expanded(flex: 4, child: _doorSoftPanel()),
-                const SizedBox(height: 16),
-                Expanded(flex: 2, child: _doorSoftPanel()),
-              ],
-            ),
-          ),
-          Positioned(
-            right: isLeft ? 15 : null,
-            left: isLeft ? null : 15,
-            top: 180,
-            child: Container(
-              width: 12,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFE5C07B),
-                    Color(0xFFD4AF37),
-                    Color(0xFF997A00)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(6),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black54,
-                      blurRadius: 4,
-                      offset: Offset(2, 2))
+    return Material(
+      color: isSelected
+          ? theme.colorScheme.primary.withValues(alpha: 0.10)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          height: 46,
+          child: Center(
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                color: color,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                fontSize: isSelected ? 14 : 13,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: isSelected ? 20 : 18, color: color),
+                  const SizedBox(width: 6),
+                  Text(label),
                 ],
               ),
             ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _doorSoftPanel() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFF140303),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: const Color(0xFF250606), width: 2),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: const TextStyle(decoration: TextDecoration.none),
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          final swingLeft = _doorSwing.value * (pi * 0.45);
-          final swingRight = -_doorSwing.value * (pi * 0.45);
-
-          return Opacity(
-            opacity: _overlayOpacity.value,
-            child: IgnorePointer(
-              child: Scaffold(
-                backgroundColor: Colors.black,
-                body: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Moving Camera Zoom
-                    Transform.scale(
-                      scale: 1.0 + (_cameraZoom.value * 5.0),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        clipBehavior: Clip.none,
-                        children: [
-                          // Glowing Screen Behind Door
-                          Container(
-                            width: 280,
-                            height: 400,
-                            decoration: BoxDecoration(
-                              gradient: RadialGradient(
-                                colors: [
-                                  Colors.white,
-                                  const Color(0xFF00B4D8)
-                                      .withValues(alpha: 0.8),
-                                  Colors.black,
-                                ],
-                                radius: 0.8 + (_doorGlow.value * 0.5),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF00B4D8)
-                                      .withValues(alpha: _doorGlow.value * 0.8),
-                                  blurRadius: 80 * _doorGlow.value,
-                                  spreadRadius: 20 * _doorGlow.value,
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Doors
-                          SizedBox(
-                            width: 280,
-                            height: 400,
-                            child: Row(
-                              children: [
-                                Transform(
-                                  alignment: Alignment.centerLeft,
-                                  transform: Matrix4.identity()
-                                    ..setEntry(3, 2, 0.0015)
-                                    ..rotateY(swingLeft),
-                                  child: _buildDoorPanel(true),
-                                ),
-                                Transform(
-                                  alignment: Alignment.centerRight,
-                                  transform: Matrix4.identity()
-                                    ..setEntry(3, 2, 0.0015)
-                                    ..rotateY(swingRight),
-                                  child: _buildDoorPanel(false),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Door Frame
-                          IgnorePointer(
-                            child: Container(
-                              width: 320,
-                              height: 440,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: const Color(0xFF050000), width: 20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.9),
-                                    blurRadius: 40,
-                                    spreadRadius: 10,
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // Sign above door
-                          Positioned(
-                            top: -60,
-                            child: Opacity(
-                              opacity: 1.0 - _cameraZoom.value,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0A0000),
-                                  border: Border.all(
-                                      color: const Color(0xFF330000), width: 2),
-                                  borderRadius: BorderRadius.circular(6),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.redAccent.withValues(
-                                          alpha: _doorGlow.value * 0.4),
-                                      blurRadius: 20,
-                                      spreadRadius: 2,
-                                    )
-                                  ],
-                                ),
-                                child: Text(
-                                  widget.room.roomName.toUpperCase(),
-                                  style: TextStyle(
-                                    color: Color.lerp(
-                                        Colors.red.shade900,
-                                        const Color(0xFFFF5555),
-                                        _doorGlow.value),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 4,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

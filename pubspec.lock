@@ -293,38 +293,6 @@ packages:
       relative: true
     source: path
     version: "1.3.1"
-  google_cloud:
-    dependency: transitive
-    description:
-      name: google_cloud
-      sha256: b385e20726ef5315d302c5933bfb728103116c5be2d3d17094b01a82da538c1f
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.0"
-  google_identity_services_web:
-    dependency: transitive
-    description:
-      name: google_identity_services_web
-      sha256: "5d187c46dc59e02646e10fe82665fc3884a9b71bc1c90c2b8b749316d33ee454"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.3+1"
-  googleapis_auth:
-    dependency: transitive
-    description:
-      name: googleapis_auth
-      sha256: "2a8895c3885197f96bb2fd91ee0ae77b53ff3874c7b1f1eadb6566248e880958"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.3.1"
-  grpc:
-    dependency: "direct main"
-    description:
-      name: grpc
-      sha256: "86be3a7d39ad865b214a7370021ac80e68939238b507730de6d97fc662cb2723"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.1.0"
   gtk:
     dependency: transitive
     description:
@@ -357,14 +325,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.6.0"
-  http2:
-    dependency: transitive
-    description:
-      name: http2
-      sha256: "382d3aefc5bd6dc68c6b892d7664f29b5beb3251611ae946a98d35158a82bbfa"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.3.1"
   http_parser:
     dependency: transitive
     description:

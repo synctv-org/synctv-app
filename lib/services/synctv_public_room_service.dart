@@ -32,7 +32,6 @@ class SyncTvPublicRoomDomainService {
       maxMembersPerRoom: settings.maxMembersPerRoom.toInt(),
       disableCreateRoom: settings.disableCreateRoom,
       createRoomNeedReview: settings.createRoomNeedReview,
-      roomTtl: settings.roomTtl.toInt(),
       roomPasswordPolicy: settings.roomPasswordPolicy,
       enablePasswordSignup: settings.enablePasswordSignup,
       passwordSignupNeedReview: settings.passwordSignupNeedReview,
@@ -154,17 +153,22 @@ class SyncTvPublicRoomDomainService {
     );
   }
 
-  Future<WRoom> createRoom(String name, {String? password}) async {
+  Future<WRoom> createRoom(
+    String name, {
+    String? password,
+    String? description,
+  }) async {
     if (_api.session.isGuest) {
       throw AuthException('访客 token 只能访问对应房间，不能创建房间。');
     }
-    final response = await _api.user.createRoom(
-      client.CreateRoomRequest(
-        name: name,
-        password: password ?? '',
-        settings: _api.encodeJsonBytes(const <String, dynamic>{}),
-      ),
-    );
+    final request = client.CreateRoomRequest(name: name);
+    if (password != null && password.isNotEmpty) {
+      request.password = password;
+    }
+    if (description != null && description.trim().isNotEmpty) {
+      request.description = description.trim();
+    }
+    final response = await _api.user.createRoom(request);
     return _api.mapRoom(response.room);
   }
 

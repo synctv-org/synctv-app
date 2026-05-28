@@ -136,6 +136,9 @@ class SyncTvSessionStore {
 
     baseUrl = activeServer?.activeEndpoint ?? defaultBaseUrl;
     _loadSessionFromPrefs(prefs);
+    if (_removePendingServersCoveredByIdentifiedServers()) {
+      await _persistServers(prefs);
+    }
   }
 
   Future<SyncTvServerProfile> addOrUpdateServer({
@@ -188,7 +191,10 @@ class SyncTvSessionStore {
       activeServerId = profile.serverId;
       baseUrl = profile.activeEndpoint;
       _loadProfileSession(profile);
-      _removeEmptyPendingServers(exceptServerId: profile.serverId);
+      _removeSupersededPendingServers(
+        exceptServerId: profile.serverId,
+        promotedEndpoint: normalizedEndpoint,
+      );
     }
 
     final prefs = await SharedPreferences.getInstance();
@@ -287,6 +293,15 @@ class SyncTvSessionStore {
     await persistTokens();
   }
 
+  Future<void> clearSessionAndPersist() async {
+    session.accessToken = null;
+    session.refreshToken = null;
+    session.isGuest = false;
+    guestRoomId = null;
+    guestDisplayName = null;
+    await persistTokens();
+  }
+
   Future<void> activateGuest({
     required String accessToken,
     required String roomId,
@@ -346,27 +361,43 @@ class SyncTvSessionStore {
 
   void _loadSessionFromPrefs(SharedPreferences prefs) {
     final current = activeServer;
+    if (current != null && current.sessionData.hasCredentials) {
+      _loadProfileSession(current);
+      return;
+    }
+
     if (current != null && !_isFallbackServerId(current.serverId)) {
       _loadProfileSession(current);
       return;
     }
 
+    _loadLegacySessionFromPrefs(prefs);
+  }
+
+  void _loadLegacySessionFromPrefs(SharedPreferences prefs) {
     final guestToken = prefs.getString(guestTokenKey);
+    final legacyAccessToken =
+        prefs.getString(tokenKey) ?? prefs.getString('synctv_access_token');
+    final legacyRefreshToken = prefs.getString(refreshTokenKey);
+
     if (guestToken != null && guestToken.isNotEmpty) {
       session.accessToken = guestToken;
       session.refreshToken = null;
       session.isGuest = true;
       guestRoomId = prefs.getString(guestRoomKey);
       guestDisplayName = prefs.getString(guestDisplayNameKey);
-      return;
+    } else {
+      session.accessToken = legacyAccessToken;
+      session.refreshToken = legacyRefreshToken;
+      session.isGuest = false;
+      guestRoomId = null;
+      guestDisplayName = null;
     }
 
-    session.accessToken =
-        prefs.getString(tokenKey) ?? prefs.getString('synctv_access_token');
-    session.refreshToken = prefs.getString(refreshTokenKey);
-    session.isGuest = false;
-    guestRoomId = null;
-    guestDisplayName = null;
+    if ((session.accessToken?.isNotEmpty ?? false) ||
+        (session.refreshToken?.isNotEmpty ?? false)) {
+      _captureSessionToActiveServer();
+    }
   }
 
   void _loadProfileSession(SyncTvServerProfile profile) {
@@ -401,11 +432,83 @@ class SyncTvSessionStore {
 
   bool _isFallbackServerId(String serverId) => serverId.startsWith('pending_');
 
-  void _removeEmptyPendingServers({required String exceptServerId}) {
+  void _removeSupersededPendingServers({
+    required String exceptServerId,
+    required String promotedEndpoint,
+  }) {
     servers = servers.where((server) {
       if (server.serverId == exceptServerId || !server.isPending) return true;
+      if (server.activeEndpoint == promotedEndpoint ||
+          server.endpoints.contains(promotedEndpoint)) {
+        return false;
+      }
       return server.sessionData.hasCredentials;
     }).toList();
+  }
+
+  bool _removePendingServersCoveredByIdentifiedServers() {
+    final identifiedByEndpoint = <String, SyncTvServerProfile>{};
+    for (final server in servers) {
+      if (server.isPending) continue;
+      for (final endpoint in server.endpoints) {
+        identifiedByEndpoint[endpoint] = server;
+      }
+      identifiedByEndpoint[server.activeEndpoint] = server;
+    }
+
+    if (identifiedByEndpoint.isEmpty) return false;
+
+    var changed = false;
+    final nextServers = <SyncTvServerProfile>[];
+    for (final server in servers) {
+      if (!server.isPending) {
+        nextServers.add(server);
+        continue;
+      }
+
+      final identified = identifiedByEndpoint[server.activeEndpoint] ??
+          server.endpoints
+              .map((endpoint) => identifiedByEndpoint[endpoint])
+              .whereType<SyncTvServerProfile>()
+              .firstOrNull;
+      if (identified == null) {
+        nextServers.add(server);
+        continue;
+      }
+
+      changed = true;
+      final identifiedIndex = servers.indexWhere(
+        (candidate) => candidate.serverId == identified.serverId,
+      );
+      if (identifiedIndex >= 0 &&
+          !identified.sessionData.hasCredentials &&
+          server.sessionData.hasCredentials) {
+        final updated = identified.copyWith(sessionData: server.sessionData);
+        servers[identifiedIndex] = updated;
+        _serverSessions[updated.serverId] = server.sessionData;
+        identifiedByEndpoint[updated.activeEndpoint] = updated;
+        for (final endpoint in updated.endpoints) {
+          identifiedByEndpoint[endpoint] = updated;
+        }
+        if (activeServerId == server.serverId ||
+            activeServerId == updated.serverId) {
+          activeServerId = updated.serverId;
+          baseUrl = updated.activeEndpoint;
+          _loadProfileSession(updated);
+        }
+      } else if (activeServerId == server.serverId) {
+        activeServerId = identified.serverId;
+        baseUrl = identified.activeEndpoint;
+        _loadProfileSession(identified);
+      }
+    }
+
+    if (!changed) return false;
+
+    servers = nextServers
+        .map((server) => identifiedByEndpoint[server.activeEndpoint] ?? server)
+        .toList();
+    return true;
   }
 
   final Map<String, SyncTvServerSessionData> _serverSessions = {};

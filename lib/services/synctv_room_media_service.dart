@@ -548,7 +548,7 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
-  Future<void> switchMovie(
+  Future<WPlaybackStatus> switchMovie(
     String roomId,
     String movieId, {
     String? subPath,
@@ -556,7 +556,7 @@ class SyncTvRoomMediaDomainService {
   }) async {
     if (movieId.isEmpty) {
       await _api.room.stopPlayback(roomId, client.StopPlaybackRequest());
-      return;
+      return WPlaybackStatus();
     }
     final target = _decodeTarget(subPath);
     final dynamicPlaylistId = playlistId ?? '';
@@ -572,9 +572,17 @@ class SyncTvRoomMediaDomainService {
         target: target ?? const [],
       ),
     );
+    final localMovie = WMovie(
+      id: target == null ? movieId : base64Url.encode(target),
+      name: '',
+      url: '',
+      subPath: target == null ? null : base64Url.encode(target),
+      parentId: target == null ? null : dynamicPlaylistId,
+    );
+    return WPlaybackStatus(movie: localMovie);
   }
 
-  Future<void> updatePlayback(
+  Future<WPlaybackStatus> updatePlayback(
     String roomId, {
     PlaybackControlAction? action,
     required bool isPlaying,
@@ -582,7 +590,7 @@ class SyncTvRoomMediaDomainService {
     double speed = 1.0,
     int? version,
   }) async {
-    await _api.room.updatePlayback(
+    final response = await _api.room.updatePlayback(
       roomId,
       client.UpdatePlaybackRequest(
         type: _playbackUpdateType(action, isPlaying, position),
@@ -592,6 +600,7 @@ class SyncTvRoomMediaDomainService {
         version: version == null ? null : Int64(version),
       ),
     );
+    return _api.mapPlayback(response);
   }
 
   Future<String> _addMedia(

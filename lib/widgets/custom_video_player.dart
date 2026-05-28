@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -247,6 +248,7 @@ class CustomVideoPlayer extends StatefulWidget {
   final IconData? exitFullScreenIcon;
   final bool showCastButton;
   final Widget? extraBottomWidget;
+  final VideoPlayerInteractionMode interactionMode;
 
   const CustomVideoPlayer({
     super.key,
@@ -262,19 +264,30 @@ class CustomVideoPlayer extends StatefulWidget {
     this.exitFullScreenIcon,
     this.showCastButton = true,
     this.extraBottomWidget,
+    this.interactionMode = VideoPlayerInteractionMode.mobile,
   });
 
   @override
   State<CustomVideoPlayer> createState() => _CustomVideoPlayerState();
 }
 
+enum VideoPlayerInteractionMode {
+  mobile,
+  desktop,
+}
+
 class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     with SingleTickerProviderStateMixin {
+  static const String _volumePrefKey = 'synctv.player.volume';
+  static const String _lastAudibleVolumePrefKey =
+      'synctv.player.last_audible_volume';
+
   bool _showControls = true;
   Timer? _hideTimer;
   bool _isDragging = false;
   bool _isVerticalDragging = false;
   bool _showDanmaku = true;
+  double _lastAudibleVolume = 1.0;
 
   // Gesture State
   double? _dragStartVolume;
@@ -305,6 +318,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   StreamSubscription? _dlnaDevicesSubscription;
   StreamSubscription? _dlnaPositionSubscription;
 
+  bool get _isDesktopMode =>
+      widget.interactionMode == VideoPlayerInteractionMode.desktop;
+
   @override
   void initState() {
     super.initState();
@@ -321,6 +337,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     }
     widget.controller.addListener(_videoListener);
     widget.danmakuController?.addListener(_onDanmakuUpdate);
+    _restorePersistedVolume();
     _startHideTimer();
     _loadSubtitles();
   }
@@ -335,6 +352,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (widget.controller != oldWidget.controller) {
       oldWidget.controller.removeListener(_videoListener);
       widget.controller.addListener(_videoListener);
+      _restorePersistedVolume();
     }
 
     if (widget.danmakuController != oldWidget.danmakuController) {
@@ -379,6 +397,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _videoListener() {
     if (mounted) {
+      _rememberAudibleVolume();
       setState(() {});
       if (_subtitleItems.isNotEmpty) {
         final position =
@@ -814,10 +833,32 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void _startHideTimer() {
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(seconds: 4), () {
-      if (mounted && widget.controller.value.isPlaying && !_isDragging) {
+      if (mounted &&
+          widget.controller.value.isPlaying &&
+          !_isDragging &&
+          !_isDesktopMode) {
         setState(() {
           _showControls = false;
         });
+      }
+    });
+  }
+
+  void _showDesktopControls() {
+    if (!_isDesktopMode) return;
+    _hideTimer?.cancel();
+    if (mounted && !_showControls) {
+      setState(() => _showControls = true);
+    }
+  }
+
+  void _handleDesktopPointerExit(PointerExitEvent event) {
+    if (!_isDesktopMode) return;
+    if (!widget.controller.value.isPlaying) return;
+    _hideTimer?.cancel();
+    _hideTimer = Timer(const Duration(milliseconds: 900), () {
+      if (mounted && widget.controller.value.isPlaying && !_isSliderDragging) {
+        setState(() => _showControls = false);
       }
     });
   }
@@ -829,7 +870,86 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (_showControls) _startHideTimer();
   }
 
+  Future<void> _togglePlayPause() async {
+    if (_isCasting) {
+      if (_dlnaIsPlaying) {
+        await _currentDlnaDevice?.pause();
+      } else {
+        await _currentDlnaDevice?.play();
+      }
+      if (mounted) {
+        setState(() {
+          _dlnaIsPlaying = !_dlnaIsPlaying;
+          _showControls = true;
+        });
+      }
+      return;
+    }
+
+    if (widget.controller.value.isPlaying) {
+      await widget.controller.pause();
+    } else {
+      await widget.controller.play();
+    }
+    if (mounted) {
+      setState(() => _showControls = true);
+    }
+    _startHideTimer();
+  }
+
+  Future<void> _seekRelative(Duration offset) async {
+    if (_isCasting) return;
+    final value = widget.controller.value;
+    final duration = value.duration;
+    if (duration <= Duration.zero) return;
+    final target = value.position + offset;
+    final clamped = target < Duration.zero
+        ? Duration.zero
+        : target > duration
+            ? duration
+            : target;
+    await widget.controller.seekTo(clamped);
+    _showDesktopControls();
+  }
+
+  KeyEventResult _handleDesktopKeyEvent(FocusNode node, KeyEvent event) {
+    if (!_isDesktopMode || event is! KeyDownEvent) {
+      return KeyEventResult.ignored;
+    }
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.keyK) {
+      _togglePlayPause();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowLeft) {
+      _seekRelative(const Duration(seconds: -5));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowRight) {
+      _seekRelative(const Duration(seconds: 5));
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowUp) {
+      _setPlayerVolume(widget.controller.value.volume + 0.05);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowDown) {
+      _setPlayerVolume(widget.controller.value.volume - 0.05);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyM) {
+      _toggleMute();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.keyF && widget.onToggleFullScreen != null) {
+      widget.onToggleFullScreen?.call();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   void _onHorizontalDragStart(DragStartDetails details) {
+    if (_isDesktopMode) return;
     if (_isCasting) return;
     _isDragging = true;
     _dragStartPosition = widget.controller.value.position;
@@ -842,6 +962,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    if (_isDesktopMode) return;
     if (_isCasting) return;
     if (_dragStartPosition == null) return;
 
@@ -861,6 +982,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   void _onHorizontalDragEnd(DragEndDetails details) {
+    if (_isDesktopMode) return;
     if (_isCasting) return;
     _isDragging = false;
     if (_dragStartPosition != null) {
@@ -873,6 +995,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   void _onVerticalDragStart(DragStartDetails details) async {
+    if (_isDesktopMode) return;
     if (_isCasting) return;
     _isVerticalDragging = true;
     final width = MediaQuery.of(context).size.width;
@@ -902,6 +1025,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         }
       }
       if (!_isVerticalDragging) return;
+      await widget.controller.setVolume(_dragStartVolume!.clamp(0.0, 1.0));
       setState(() {
         _dragIcon = Icons.volume_up;
         _dragLabel = '音量';
@@ -911,6 +1035,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   void _onVerticalDragUpdate(DragUpdateDetails details) async {
+    if (_isDesktopMode) return;
     if (_isCasting || !_isVerticalDragging) return;
     final delta = details.primaryDelta! / -200; // Up is negative, so invert
 
@@ -938,9 +1063,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         try {
           await FlutterVolumeController.setVolume(newVal);
         } catch (e) {
-          await widget.controller.setVolume(newVal);
+          // System volume is unavailable on some desktop targets.
         }
+        await widget.controller.setVolume(newVal);
       }
+      unawaited(_persistVolume(newVal));
 
       if (!_isVerticalDragging) return;
       _dragStartVolume = newVal;
@@ -991,6 +1118,199 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
     }
     return "$twoDigitMinutes:$twoDigitSeconds";
+  }
+
+  void _rememberAudibleVolume() {
+    final volume = widget.controller.value.volume;
+    if (volume.isFinite && volume > 0.01) {
+      _lastAudibleVolume = volume.clamp(0.0, 1.0).toDouble();
+    }
+  }
+
+  Future<void> _restorePersistedVolume() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final volume = prefs.getDouble(_volumePrefKey);
+      final audible = prefs.getDouble(_lastAudibleVolumePrefKey);
+      if (audible != null && audible.isFinite && audible > 0.01) {
+        _lastAudibleVolume = audible.clamp(0.0, 1.0).toDouble();
+      }
+      if (volume != null && volume.isFinite) {
+        await widget.controller.setVolume(volume.clamp(0.0, 1.0).toDouble());
+      } else {
+        _rememberAudibleVolume();
+      }
+      if (mounted) setState(() {});
+    } catch (e) {
+      debugPrint('Restore player volume failed: $e');
+      _rememberAudibleVolume();
+    }
+  }
+
+  Future<void> _persistVolume(double volume) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_volumePrefKey, volume.clamp(0.0, 1.0).toDouble());
+      if (_lastAudibleVolume > 0.01) {
+        await prefs.setDouble(
+          _lastAudibleVolumePrefKey,
+          _lastAudibleVolume.clamp(0.0, 1.0).toDouble(),
+        );
+      }
+    } catch (e) {
+      debugPrint('Persist player volume failed: $e');
+    }
+  }
+
+  IconData _volumeIcon(double volume) {
+    if (volume <= 0.01) return Icons.volume_off_rounded;
+    if (volume < 0.5) return Icons.volume_down_rounded;
+    return Icons.volume_up_rounded;
+  }
+
+  Future<void> _setPlayerVolume(double volume) async {
+    final nextVolume = volume.clamp(0.0, 1.0);
+    if (nextVolume > 0.01) _lastAudibleVolume = nextVolume;
+    await widget.controller.setVolume(nextVolume);
+    unawaited(_persistVolume(nextVolume));
+    _startHideTimer();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _toggleMute() async {
+    final currentVolume = widget.controller.value.volume;
+    if (currentVolume > 0.01) {
+      _lastAudibleVolume = currentVolume.clamp(0.0, 1.0).toDouble();
+      await _setPlayerVolume(0);
+    } else {
+      await _setPlayerVolume(_lastAudibleVolume <= 0.01
+          ? 1.0
+          : _lastAudibleVolume.clamp(0.0, 1.0).toDouble());
+    }
+  }
+
+  Widget _buildInlineVolumeControl(
+    VideoPlayerValue videoValue, {
+    required double sliderWidth,
+    required double iconSize,
+    required bool compact,
+  }) {
+    final buttonWidth = iconSize + (compact ? 4 : 8);
+    final gap = compact ? 4.0 : 8.0;
+    return SizedBox(
+      width: buttonWidth + gap + sliderWidth,
+      height: 40,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: videoValue.volume <= 0.01 ? '取消静音' : '静音',
+            icon: Icon(
+              _volumeIcon(videoValue.volume),
+              color: Colors.white,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: BoxConstraints.tightFor(
+              width: buttonWidth,
+              height: 40,
+            ),
+            iconSize: iconSize,
+            onPressed: _toggleMute,
+          ),
+          SizedBox(width: gap),
+          SizedBox(
+            width: sliderWidth,
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: compact ? 2.5 : 3,
+                activeTrackColor: const Color(0xFF5D5FEF),
+                inactiveTrackColor: Colors.white24,
+                thumbColor: Colors.white,
+                thumbShape: RoundSliderThumbShape(
+                  enabledThumbRadius: compact ? 5 : 6,
+                ),
+                overlayShape: RoundSliderOverlayShape(
+                  overlayRadius: compact ? 12 : 14,
+                ),
+              ),
+              child: Slider(
+                value: videoValue.volume.clamp(0.0, 1.0).toDouble(),
+                min: 0,
+                max: 1,
+                onChanged: _setPlayerVolume,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showVolumePanel() {
+    _startHideTimer();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF15151F),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setPanelState) {
+          final volume = widget.controller.value.volume.clamp(0.0, 1.0);
+          return SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: volume <= 0.01 ? '取消静音' : '静音',
+                    icon: Icon(_volumeIcon(volume.toDouble()),
+                        color: Colors.white),
+                    onPressed: () async {
+                      await _toggleMute();
+                      setPanelState(() {});
+                    },
+                  ),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: const Color(0xFF5D5FEF),
+                        inactiveTrackColor: Colors.white24,
+                        thumbColor: Colors.white,
+                        overlayShape:
+                            const RoundSliderOverlayShape(overlayRadius: 18),
+                      ),
+                      child: Slider(
+                        value: volume.toDouble(),
+                        min: 0,
+                        max: 1,
+                        onChanged: (value) async {
+                          await _setPlayerVolume(value);
+                          setPanelState(() {});
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 44,
+                    child: Text(
+                      '${(volume * 100).round()}%',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void _showDlnaMenu() {
@@ -1414,618 +1734,671 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTap: _toggleControls,
-        onDoubleTap: () {
-          if (_isCasting) {
-            if (_dlnaIsPlaying) {
-              _currentDlnaDevice?.pause();
-            } else {
-              _currentDlnaDevice?.play();
-            }
-            setState(() {
-              _dlnaIsPlaying = !_dlnaIsPlaying;
-            });
-          } else {
-            videoValue.isPlaying
-                ? widget.controller.pause()
-                : widget.controller.play();
-          }
-        },
-        onHorizontalDragStart: _onHorizontalDragStart,
-        onHorizontalDragUpdate: _onHorizontalDragUpdate,
-        onHorizontalDragEnd: _onHorizontalDragEnd,
-        onVerticalDragStart: _onVerticalDragStart,
-        onVerticalDragUpdate: _onVerticalDragUpdate,
-        onVerticalDragEnd: _onVerticalDragEnd,
-        onVerticalDragCancel: _onVerticalDragCancel,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            if (_isCasting)
-              Container(
-                color: Colors.black,
-                width: double.infinity,
-                height: double.infinity,
-                child: Stack(
-                  children: [
-                    // Top Right Switch Button
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: SafeArea(
-                        child: TextButton.icon(
-                          icon: const Icon(Icons.swap_horiz,
-                              color: Colors.white70, size: 18),
-                          label: const Text('切换设备',
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 13)),
-                          onPressed: _showDlnaMenu,
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.black26,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Center(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.cast_connected,
-                                color: Colors.white54, size: 48),
-                            const SizedBox(height: 16),
-                            const Text(
-                              '正在投屏中',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 24),
-                              child: Text(
-                                _currentDlnaDevice?.info.friendlyName ?? '未知设备',
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 14),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            // Control Button
-                            TextButton.icon(
-                              onPressed: _showDlnaControlPanel,
-                              icon: const Icon(Icons.tune,
-                                  color: Colors.white, size: 20),
-                              label: const Text('遥控器',
+      body: Focus(
+        autofocus: _isDesktopMode,
+        onKeyEvent: _handleDesktopKeyEvent,
+        child: MouseRegion(
+          onHover: (_) => _showDesktopControls(),
+          onExit: _handleDesktopPointerExit,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _isDesktopMode ? _togglePlayPause : _toggleControls,
+            onDoubleTap: _isDesktopMode ? null : _togglePlayPause,
+            onHorizontalDragStart:
+                _isDesktopMode ? null : _onHorizontalDragStart,
+            onHorizontalDragUpdate:
+                _isDesktopMode ? null : _onHorizontalDragUpdate,
+            onHorizontalDragEnd: _isDesktopMode ? null : _onHorizontalDragEnd,
+            onVerticalDragStart: _isDesktopMode ? null : _onVerticalDragStart,
+            onVerticalDragUpdate: _isDesktopMode ? null : _onVerticalDragUpdate,
+            onVerticalDragEnd: _isDesktopMode ? null : _onVerticalDragEnd,
+            onVerticalDragCancel: _isDesktopMode ? null : _onVerticalDragCancel,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (_isCasting)
+                  Container(
+                    color: Colors.black,
+                    width: double.infinity,
+                    height: double.infinity,
+                    child: Stack(
+                      children: [
+                        // Top Right Switch Button
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: SafeArea(
+                            child: TextButton.icon(
+                              icon: const Icon(Icons.swap_horiz,
+                                  color: Colors.white70, size: 18),
+                              label: const Text('切换设备',
                                   style: TextStyle(
-                                      color: Colors.white, fontSize: 14)),
+                                      color: Colors.white70, fontSize: 13)),
+                              onPressed: _showDlnaMenu,
                               style: TextButton.styleFrom(
-                                backgroundColor: Colors.white10,
+                                backgroundColor: Colors.black26,
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20)),
+                                    horizontal: 12, vertical: 8),
                                 minimumSize: Size.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20)),
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Center(
-                child: AspectRatio(
-                  aspectRatio: videoValue.aspectRatio > 0
-                      ? videoValue.aspectRatio
-                      : 16 / 9,
-                  child: VideoPlayer(widget.controller),
-                ),
-              ),
-            Positioned.fill(
-              child: DanmakuOverlay(
-                videoController: widget.controller,
-                danmakuList: widget.danmakuController?.items ?? [],
-                isEnabled: _showDanmaku,
-              ),
-            ),
-            if (_currentSubtitle.isNotEmpty)
-              Positioned(
-                bottom: widget.isFullScreen ? 40 : 10,
-                left: 16,
-                right: 16,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  // Transparent background as requested
-                  color: Colors.transparent,
-                  child: Text(
-                    _currentSubtitle,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: widget.isFullScreen ? 24 : 14,
-                      shadows: const [
-                        Shadow(
-                          offset: Offset(0, 1),
-                          blurRadius: 3.0,
-                          color: Colors.black,
-                        ),
-                        Shadow(
-                          offset: Offset(0, -1),
-                          blurRadius: 3.0,
-                          color: Colors.black,
-                        ),
-                        Shadow(
-                          offset: Offset(1, 0),
-                          blurRadius: 3.0,
-                          color: Colors.black,
-                        ),
-                        Shadow(
-                          offset: Offset(-1, 0),
-                          blurRadius: 3.0,
-                          color: Colors.black,
+                        Center(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.cast_connected,
+                                    color: Colors.white54, size: 48),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  '正在投屏中',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24),
+                                  child: Text(
+                                    _currentDlnaDevice?.info.friendlyName ??
+                                        '未知设备',
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 14),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                // Control Button
+                                TextButton.icon(
+                                  onPressed: _showDlnaControlPanel,
+                                  icon: const Icon(Icons.tune,
+                                      color: Colors.white, size: 20),
+                                  label: const Text('遥控器',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 14)),
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.white10,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(20)),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    textAlign: TextAlign.center,
+                  )
+                else
+                  Center(
+                    child: AspectRatio(
+                      aspectRatio: videoValue.aspectRatio > 0
+                          ? videoValue.aspectRatio
+                          : 16 / 9,
+                      child: VideoPlayer(widget.controller),
+                    ),
+                  ),
+                Positioned.fill(
+                  child: DanmakuOverlay(
+                    videoController: widget.controller,
+                    danmakuList: widget.danmakuController?.items ?? [],
+                    isEnabled: _showDanmaku,
                   ),
                 ),
-              ),
-            if (_dragLabel.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(_dragIcon, color: Colors.white, size: 32),
-                    const SizedBox(height: 8),
-                    Text(
-                      _dragLabel,
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            if (!_isCasting)
-              IgnorePointer(
-                ignoring: !_showControls,
-                child: AnimatedOpacity(
-                  opacity: _showControls ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Stack(
-                    children: [
-                      // Top Bar
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          padding: EdgeInsets.only(
-                            top: MediaQuery.of(context).padding.top + 8,
-                            bottom: 8,
-                            left: 16,
-                            right: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: widget.isFullScreen
-                                ? const LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.black87,
-                                      Colors.transparent
-                                    ],
-                                  )
-                                : null,
-                            color: null,
-                          ),
-                          child: Row(
-                            children: [
-                              if (widget.isFullScreen)
-                                BackButton(
-                                    color: Colors.white,
-                                    onPressed: widget.onToggleFullScreen),
-                              Expanded(
-                                child: Text(
-                                  widget.title,
-                                  style: const TextStyle(
-                                      color: Colors.white, fontSize: 16),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              if (widget.onSync != null &&
-                                  !widget.isFullScreen) ...[
-                                TextButton(
-                                  onPressed: widget.onSync,
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    minimumSize: const Size(48, 32),
-                                    tapTargetSize: MaterialTapTargetSize.padded,
-                                  ),
-                                  child: const Text('同步',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16)),
-                                ),
-                              ],
-                              if (widget.showCastButton)
-                                IconButton(
-                                  icon: Icon(
-                                    _isCasting
-                                        ? Icons.cast_connected
-                                        : Icons.cast,
-                                    color: _isCasting
-                                        ? const Color(0xFF5D5FEF)
-                                        : Colors.white,
-                                  ),
-                                  onPressed: _showDlnaMenu,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Bottom Bar
-                      Positioned(
-                        bottom: widget.isFullScreen ? 24 : 0, // 全屏模式下抬高 24 像素
-                        left: 0,
-                        right: 0,
-                        child: SafeArea(
-                          top: false,
-                          bottom:
-                              false, // 无论是全屏还是非全屏，都禁用 SafeArea 的底部填充，完全由 Positioned 控制
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 16),
-                            decoration: BoxDecoration(
-                              gradient: widget.isFullScreen
-                                  ? const LinearGradient(
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                      colors: [
-                                        Colors.black87,
-                                        Colors.transparent
-                                      ],
-                                    )
-                                  : null,
-                              color: null,
+                if (_currentSubtitle.isNotEmpty)
+                  Positioned(
+                    bottom: widget.isFullScreen ? 40 : 10,
+                    left: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      // Transparent background as requested
+                      color: Colors.transparent,
+                      child: Text(
+                        _currentSubtitle,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: widget.isFullScreen ? 24 : 14,
+                          shadows: const [
+                            Shadow(
+                              offset: Offset(0, 1),
+                              blurRadius: 3.0,
+                              color: Colors.black,
                             ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        videoValue.isPlaying
-                                            ? widget.controller.pause()
-                                            : widget.controller.play();
-                                      },
-                                      child: Icon(
-                                        videoValue.isPlaying
-                                            ? Icons.pause_rounded
-                                            : Icons.play_arrow_rounded,
+                            Shadow(
+                              offset: Offset(0, -1),
+                              blurRadius: 3.0,
+                              color: Colors.black,
+                            ),
+                            Shadow(
+                              offset: Offset(1, 0),
+                              blurRadius: 3.0,
+                              color: Colors.black,
+                            ),
+                            Shadow(
+                              offset: Offset(-1, 0),
+                              blurRadius: 3.0,
+                              color: Colors.black,
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                if (_dragLabel.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_dragIcon, color: Colors.white, size: 32),
+                        const SizedBox(height: 8),
+                        Text(
+                          _dragLabel,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (!_isCasting)
+                  IgnorePointer(
+                    ignoring: !_showControls,
+                    child: AnimatedOpacity(
+                      opacity: _showControls ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Stack(
+                        children: [
+                          // Top Bar
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              padding: EdgeInsets.only(
+                                top: MediaQuery.of(context).padding.top + 8,
+                                bottom: 8,
+                                left: 16,
+                                right: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: widget.isFullScreen
+                                    ? const LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.black87,
+                                          Colors.transparent
+                                        ],
+                                      )
+                                    : null,
+                                color: null,
+                              ),
+                              child: Row(
+                                children: [
+                                  if (widget.isFullScreen)
+                                    BackButton(
                                         color: Colors.white,
-                                        size: 32,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _formatDuration(videoValue.position),
+                                        onPressed: widget.onToggleFullScreen),
+                                  Expanded(
+                                    child: Text(
+                                      widget.title,
                                       style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
+                                          color: Colors.white, fontSize: 16),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    Expanded(
-                                      child: GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onHorizontalDragStart: (details) {
-                                          _startHideTimer();
-                                          final RenderBox box = context
-                                              .findRenderObject() as RenderBox;
-                                          final double relativePosition =
-                                              details.localPosition.dx /
-                                                  box.size.width;
-                                          final double value =
-                                              (relativePosition *
-                                                      videoValue.duration
-                                                          .inMilliseconds
-                                                          .toDouble())
-                                                  .clamp(
-                                                      0,
-                                                      videoValue.duration
-                                                          .inMilliseconds
-                                                          .toDouble());
-                                          setState(() {
-                                            _isSliderDragging = true;
-                                            _sliderDragValue = value;
-                                          });
-                                        },
-                                        onHorizontalDragUpdate: (details) {
-                                          _startHideTimer();
-                                          final RenderBox box = context
-                                              .findRenderObject() as RenderBox;
-                                          final double relativePosition =
-                                              details.localPosition.dx /
-                                                  box.size.width;
-                                          final double value =
-                                              (relativePosition *
-                                                      videoValue.duration
-                                                          .inMilliseconds
-                                                          .toDouble())
-                                                  .clamp(
-                                                      0,
-                                                      videoValue.duration
-                                                          .inMilliseconds
-                                                          .toDouble());
-                                          setState(() {
-                                            _sliderDragValue = value;
-                                          });
-                                        },
-                                        onHorizontalDragEnd: (details) {
-                                          _startHideTimer();
-                                          final target = Duration(
-                                              milliseconds:
-                                                  _sliderDragValue.toInt());
-                                          widget.controller
-                                              .seekTo(target)
-                                              .then((_) {
-                                            setState(() {
-                                              _isSliderDragging = false;
-                                            });
-                                          });
-                                        },
-                                        onTapDown: (details) {
-                                          _startHideTimer();
-                                          final RenderBox box = context
-                                              .findRenderObject() as RenderBox;
-                                          final double relativePosition =
-                                              details.localPosition.dx /
-                                                  box.size.width;
-                                          final double value =
-                                              (relativePosition *
-                                                      videoValue.duration
-                                                          .inMilliseconds
-                                                          .toDouble())
-                                                  .clamp(
-                                                      0,
-                                                      videoValue.duration
-                                                          .inMilliseconds
-                                                          .toDouble());
-                                          setState(() {
-                                            _isSliderDragging = true;
-                                            _sliderDragValue = value;
-                                          });
-                                        },
-                                        onTapUp: (details) {
-                                          _startHideTimer();
-                                          final target = Duration(
-                                              milliseconds:
-                                                  _sliderDragValue.toInt());
-                                          widget.controller
-                                              .seekTo(target)
-                                              .then((_) {
-                                            setState(() {
-                                              _isSliderDragging = false;
-                                            });
-                                          });
-                                        },
-                                        onTapCancel: () {
-                                          if (_isSliderDragging) {
-                                            final target = Duration(
-                                                milliseconds:
-                                                    _sliderDragValue.toInt());
-                                            widget.controller
-                                                .seekTo(target)
-                                                .then((_) {
+                                  ),
+                                  if (widget.onSync != null &&
+                                      !widget.isFullScreen) ...[
+                                    TextButton(
+                                      onPressed: widget.onSync,
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        minimumSize: const Size(48, 32),
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.padded,
+                                      ),
+                                      child: const Text('同步',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16)),
+                                    ),
+                                  ],
+                                  if (widget.showCastButton)
+                                    IconButton(
+                                      icon: Icon(
+                                        _isCasting
+                                            ? Icons.cast_connected
+                                            : Icons.cast,
+                                        color: _isCasting
+                                            ? const Color(0xFF5D5FEF)
+                                            : Colors.white,
+                                      ),
+                                      onPressed: _showDlnaMenu,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          // Bottom Bar
+                          Positioned(
+                            bottom:
+                                widget.isFullScreen ? 24 : 0, // 全屏模式下抬高 24 像素
+                            left: 0,
+                            right: 0,
+                            child: SafeArea(
+                              top: false,
+                              bottom:
+                                  false, // 无论是全屏还是非全屏，都禁用 SafeArea 的底部填充，完全由 Positioned 控制
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 16),
+                                decoration: BoxDecoration(
+                                  gradient: widget.isFullScreen
+                                      ? const LinearGradient(
+                                          begin: Alignment.bottomCenter,
+                                          end: Alignment.topCenter,
+                                          colors: [
+                                            Colors.black87,
+                                            Colors.transparent
+                                          ],
+                                        )
+                                      : null,
+                                  color: null,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            videoValue.isPlaying
+                                                ? widget.controller.pause()
+                                                : widget.controller.play();
+                                          },
+                                          child: Icon(
+                                            videoValue.isPlaying
+                                                ? Icons.pause_rounded
+                                                : Icons.play_arrow_rounded,
+                                            color: Colors.white,
+                                            size: 32,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          _formatDuration(videoValue.position),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12),
+                                        ),
+                                        Expanded(
+                                          child: GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onHorizontalDragStart: (details) {
+                                              _startHideTimer();
+                                              final RenderBox box =
+                                                  context.findRenderObject()
+                                                      as RenderBox;
+                                              final double relativePosition =
+                                                  details.localPosition.dx /
+                                                      box.size.width;
+                                              final double value =
+                                                  (relativePosition *
+                                                          videoValue.duration
+                                                              .inMilliseconds
+                                                              .toDouble())
+                                                      .clamp(
+                                                          0,
+                                                          videoValue.duration
+                                                              .inMilliseconds
+                                                              .toDouble());
                                               setState(() {
-                                                _isSliderDragging = false;
+                                                _isSliderDragging = true;
+                                                _sliderDragValue = value;
                                               });
-                                            });
-                                          }
-                                        },
-                                        child: Container(
-                                          height: 40, // 增加整体触摸区域高度
-                                          alignment: Alignment.center,
-                                          child: SliderTheme(
-                                            data: SliderTheme.of(context)
-                                                .copyWith(
-                                              thumbShape: RoundSliderThumbShape(
-                                                enabledThumbRadius:
-                                                    _isSliderDragging
-                                                        ? (widget.isFullScreen
-                                                            ? 8
-                                                            : 10)
-                                                        : (widget.isFullScreen
-                                                            ? 6
-                                                            : 8),
-                                              ),
-                                              trackHeight: _isSliderDragging
-                                                  ? (widget.isFullScreen
-                                                      ? 4
-                                                      : 6)
-                                                  : (widget.isFullScreen
-                                                      ? 2
-                                                      : 4),
-                                              overlayShape:
-                                                  const RoundSliderOverlayShape(
-                                                      overlayRadius: 24),
-                                              activeTrackColor:
-                                                  const Color(0xFF5D5FEF),
-                                              inactiveTrackColor:
-                                                  Colors.white24,
-                                              thumbColor: Colors.white,
-                                              trackShape:
-                                                  const RectangularSliderTrackShape(), // 确保轨道充满可用宽度
-                                            ),
-                                            child: IgnorePointer(
-                                              // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
-                                              child: Slider(
-                                                value: (_isSliderDragging
-                                                        ? _sliderDragValue
-                                                        : videoValue.position
-                                                            .inMilliseconds
-                                                            .toDouble())
-                                                    .clamp(
-                                                        0,
-                                                        videoValue.duration
-                                                                    .inMilliseconds
-                                                                    .toDouble() >
-                                                                0
-                                                            ? videoValue
-                                                                .duration
+                                            },
+                                            onHorizontalDragUpdate: (details) {
+                                              _startHideTimer();
+                                              final RenderBox box =
+                                                  context.findRenderObject()
+                                                      as RenderBox;
+                                              final double relativePosition =
+                                                  details.localPosition.dx /
+                                                      box.size.width;
+                                              final double value =
+                                                  (relativePosition *
+                                                          videoValue.duration
+                                                              .inMilliseconds
+                                                              .toDouble())
+                                                      .clamp(
+                                                          0,
+                                                          videoValue.duration
+                                                              .inMilliseconds
+                                                              .toDouble());
+                                              setState(() {
+                                                _sliderDragValue = value;
+                                              });
+                                            },
+                                            onHorizontalDragEnd: (details) {
+                                              _startHideTimer();
+                                              final target = Duration(
+                                                  milliseconds:
+                                                      _sliderDragValue.toInt());
+                                              widget.controller
+                                                  .seekTo(target)
+                                                  .then((_) {
+                                                setState(() {
+                                                  _isSliderDragging = false;
+                                                });
+                                              });
+                                            },
+                                            onTapDown: (details) {
+                                              _startHideTimer();
+                                              final RenderBox box =
+                                                  context.findRenderObject()
+                                                      as RenderBox;
+                                              final double relativePosition =
+                                                  details.localPosition.dx /
+                                                      box.size.width;
+                                              final double value =
+                                                  (relativePosition *
+                                                          videoValue.duration
+                                                              .inMilliseconds
+                                                              .toDouble())
+                                                      .clamp(
+                                                          0,
+                                                          videoValue.duration
+                                                              .inMilliseconds
+                                                              .toDouble());
+                                              setState(() {
+                                                _isSliderDragging = true;
+                                                _sliderDragValue = value;
+                                              });
+                                            },
+                                            onTapUp: (details) {
+                                              _startHideTimer();
+                                              final target = Duration(
+                                                  milliseconds:
+                                                      _sliderDragValue.toInt());
+                                              widget.controller
+                                                  .seekTo(target)
+                                                  .then((_) {
+                                                setState(() {
+                                                  _isSliderDragging = false;
+                                                });
+                                              });
+                                            },
+                                            onTapCancel: () {
+                                              if (_isSliderDragging) {
+                                                final target = Duration(
+                                                    milliseconds:
+                                                        _sliderDragValue
+                                                            .toInt());
+                                                widget.controller
+                                                    .seekTo(target)
+                                                    .then((_) {
+                                                  setState(() {
+                                                    _isSliderDragging = false;
+                                                  });
+                                                });
+                                              }
+                                            },
+                                            child: Container(
+                                              height: 40, // 增加整体触摸区域高度
+                                              alignment: Alignment.center,
+                                              child: SliderTheme(
+                                                data: SliderTheme.of(context)
+                                                    .copyWith(
+                                                  thumbShape:
+                                                      RoundSliderThumbShape(
+                                                    enabledThumbRadius:
+                                                        _isSliderDragging
+                                                            ? (widget
+                                                                    .isFullScreen
+                                                                ? 8
+                                                                : 10)
+                                                            : (widget
+                                                                    .isFullScreen
+                                                                ? 6
+                                                                : 8),
+                                                  ),
+                                                  trackHeight: _isSliderDragging
+                                                      ? (widget.isFullScreen
+                                                          ? 4
+                                                          : 6)
+                                                      : (widget.isFullScreen
+                                                          ? 2
+                                                          : 4),
+                                                  overlayShape:
+                                                      const RoundSliderOverlayShape(
+                                                          overlayRadius: 24),
+                                                  activeTrackColor:
+                                                      const Color(0xFF5D5FEF),
+                                                  inactiveTrackColor:
+                                                      Colors.white24,
+                                                  thumbColor: Colors.white,
+                                                  trackShape:
+                                                      const RectangularSliderTrackShape(), // 确保轨道充满可用宽度
+                                                ),
+                                                child: IgnorePointer(
+                                                  // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
+                                                  child: Slider(
+                                                    value: (_isSliderDragging
+                                                            ? _sliderDragValue
+                                                            : videoValue
+                                                                .position
                                                                 .inMilliseconds
-                                                                .toDouble()
-                                                            : 1.0),
-                                                min: 0,
-                                                max: videoValue.duration
+                                                                .toDouble())
+                                                        .clamp(
+                                                            0,
+                                                            videoValue.duration
+                                                                        .inMilliseconds
+                                                                        .toDouble() >
+                                                                    0
+                                                                ? videoValue
+                                                                    .duration
+                                                                    .inMilliseconds
+                                                                    .toDouble()
+                                                                : 1.0),
+                                                    min: 0,
+                                                    max: videoValue.duration
+                                                                .inMilliseconds
+                                                                .toDouble() >
+                                                            0
+                                                        ? videoValue.duration
                                                             .inMilliseconds
-                                                            .toDouble() >
-                                                        0
-                                                    ? videoValue
-                                                        .duration.inMilliseconds
-                                                        .toDouble()
-                                                    : 1.0,
-                                                onChanged:
-                                                    (value) {}, // 忽略，由外层接管
+                                                            .toDouble()
+                                                        : 1.0,
+                                                    onChanged:
+                                                        (value) {}, // 忽略，由外层接管
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                    Text(
-                                      _formatDuration(videoValue.duration),
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    ),
-                                    SizedBox(
-                                        width: widget.isFullScreen ? 8 : 4),
-                                    if (widget.subtitles != null &&
-                                        widget.subtitles!.isNotEmpty)
-                                      IconButton(
-                                        icon: const Icon(
-                                            Icons.closed_caption_rounded,
-                                            color: Colors.white),
-                                        onPressed: _showSubtitleMenu,
-                                        padding: widget.isFullScreen
-                                            ? const EdgeInsets.all(8)
-                                            : EdgeInsets.zero,
-                                        constraints: widget.isFullScreen
-                                            ? null
-                                            : const BoxConstraints(),
-                                        iconSize: widget.isFullScreen ? 24 : 20,
-                                      ),
-                                    SizedBox(
-                                        width: widget.isFullScreen ? 0 : 4),
-                                    // Danmaku Toggle
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.comment_rounded,
-                                        color: _showDanmaku
-                                            ? const Color(0xFF5D5FEF)
-                                            : Colors.white,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _showDanmaku = !_showDanmaku;
-                                        });
-                                      },
-                                      padding: widget.isFullScreen
-                                          ? const EdgeInsets.all(8)
-                                          : EdgeInsets.zero,
-                                      constraints: widget.isFullScreen
-                                          ? null
-                                          : const BoxConstraints(),
-                                      iconSize: widget.isFullScreen ? 24 : 20,
-                                    ),
-                                    if (widget.extraBottomWidget != null) ...[
-                                      SizedBox(
-                                          width: widget.isFullScreen ? 0 : 4),
-                                      widget.extraBottomWidget!,
-                                    ],
-                                    // Send Danmaku Button (Fullscreen only)
-                                    if (widget.isFullScreen &&
-                                        widget.onSendDanmaku != null)
-                                      IconButton(
-                                        icon: const Icon(Icons.send_rounded,
-                                            color: Colors.white),
-                                        onPressed: _showDanmakuInput,
-                                        tooltip: '发送弹幕',
-                                      ),
-                                    if (widget.onSync != null &&
-                                        widget.isFullScreen) ...[
-                                      const SizedBox(width: 0),
-                                      TextButton(
-                                        onPressed: widget.onSync,
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12),
-                                          minimumSize: const Size(0, 40),
-                                          tapTargetSize:
-                                              MaterialTapTargetSize.shrinkWrap,
+                                        Text(
+                                          _formatDuration(videoValue.duration),
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12),
                                         ),
-                                        child: const Text('同步',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18)),
-                                      ),
-                                    ],
-                                    if (widget.onToggleFullScreen != null) ...[
-                                      SizedBox(
-                                          width: widget.isFullScreen ? 0 : 4),
-                                      IconButton(
-                                        icon: Icon(
-                                          widget.isFullScreen
-                                              ? (widget.exitFullScreenIcon ??
-                                                  Icons.fullscreen_exit)
-                                              : (widget.fullScreenIcon ??
-                                                  Icons.fullscreen),
-                                          color: Colors.white,
+                                        SizedBox(
+                                            width: widget.isFullScreen ? 8 : 6),
+                                        if (widget.isFullScreen ||
+                                            Platform.isMacOS ||
+                                            Platform.isWindows ||
+                                            Platform.isLinux ||
+                                            MediaQuery.of(context).size.width >=
+                                                720)
+                                          _buildInlineVolumeControl(
+                                            videoValue,
+                                            sliderWidth:
+                                                widget.isFullScreen ? 96 : 76,
+                                            iconSize:
+                                                widget.isFullScreen ? 24 : 20,
+                                            compact: !widget.isFullScreen,
+                                          )
+                                        else ...[
+                                          IconButton(
+                                            tooltip: videoValue.volume <= 0.01
+                                                ? '取消静音'
+                                                : '音量',
+                                            icon: Icon(
+                                              _volumeIcon(videoValue.volume),
+                                              color: Colors.white,
+                                            ),
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            iconSize: 20,
+                                            onPressed: _showVolumePanel,
+                                          ),
+                                          const SizedBox(width: 4),
+                                        ],
+                                        if (widget.subtitles != null &&
+                                            widget.subtitles!.isNotEmpty)
+                                          IconButton(
+                                            icon: const Icon(
+                                                Icons.closed_caption_rounded,
+                                                color: Colors.white),
+                                            onPressed: _showSubtitleMenu,
+                                            padding: widget.isFullScreen
+                                                ? const EdgeInsets.all(8)
+                                                : EdgeInsets.zero,
+                                            constraints: widget.isFullScreen
+                                                ? null
+                                                : const BoxConstraints(),
+                                            iconSize:
+                                                widget.isFullScreen ? 24 : 20,
+                                          ),
+                                        SizedBox(
+                                            width: widget.isFullScreen ? 0 : 4),
+                                        // Danmaku Toggle
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.comment_rounded,
+                                            color: _showDanmaku
+                                                ? const Color(0xFF5D5FEF)
+                                                : Colors.white,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _showDanmaku = !_showDanmaku;
+                                            });
+                                          },
+                                          padding: widget.isFullScreen
+                                              ? const EdgeInsets.all(8)
+                                              : EdgeInsets.zero,
+                                          constraints: widget.isFullScreen
+                                              ? null
+                                              : const BoxConstraints(),
+                                          iconSize:
+                                              widget.isFullScreen ? 24 : 20,
                                         ),
-                                        onPressed: widget.onToggleFullScreen,
-                                        padding: widget.isFullScreen
-                                            ? const EdgeInsets.all(8)
-                                            : EdgeInsets.zero,
-                                        constraints: widget.isFullScreen
-                                            ? null
-                                            : const BoxConstraints(),
-                                        iconSize: widget.isFullScreen ? 24 : 20,
-                                      ),
-                                    ],
+                                        if (widget.extraBottomWidget !=
+                                            null) ...[
+                                          SizedBox(
+                                              width:
+                                                  widget.isFullScreen ? 0 : 4),
+                                          widget.extraBottomWidget!,
+                                        ],
+                                        // Send Danmaku Button (Fullscreen only)
+                                        if (widget.isFullScreen &&
+                                            widget.onSendDanmaku != null)
+                                          IconButton(
+                                            icon: const Icon(Icons.send_rounded,
+                                                color: Colors.white),
+                                            onPressed: _showDanmakuInput,
+                                            tooltip: '发送弹幕',
+                                          ),
+                                        if (widget.onSync != null &&
+                                            widget.isFullScreen) ...[
+                                          const SizedBox(width: 0),
+                                          TextButton(
+                                            onPressed: widget.onSync,
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: Colors.white,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 12),
+                                              minimumSize: const Size(0, 40),
+                                              tapTargetSize:
+                                                  MaterialTapTargetSize
+                                                      .shrinkWrap,
+                                            ),
+                                            child: const Text('同步',
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 18)),
+                                          ),
+                                        ],
+                                        if (widget.onToggleFullScreen !=
+                                            null) ...[
+                                          SizedBox(
+                                              width:
+                                                  widget.isFullScreen ? 0 : 4),
+                                          IconButton(
+                                            icon: Icon(
+                                              widget.isFullScreen
+                                                  ? (widget
+                                                          .exitFullScreenIcon ??
+                                                      Icons.fullscreen_exit)
+                                                  : (widget.fullScreenIcon ??
+                                                      Icons.fullscreen),
+                                              color: Colors.white,
+                                            ),
+                                            onPressed:
+                                                widget.onToggleFullScreen,
+                                            padding: widget.isFullScreen
+                                                ? const EdgeInsets.all(8)
+                                                : EdgeInsets.zero,
+                                            constraints: widget.isFullScreen
+                                                ? null
+                                                : const BoxConstraints(),
+                                            iconSize:
+                                                widget.isFullScreen ? 24 : 20,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );

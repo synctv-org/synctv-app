@@ -10,6 +10,7 @@ import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
+import 'package:synctv_app/widgets/join_room_dialog.dart';
 import 'package:synctv_app/widgets/room_invite_flow.dart';
 import 'package:synctv_app/widgets/server_settings_dialog.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -18,7 +19,6 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 
 import 'package:synctv_app/widgets/auth_panel.dart';
-import 'dart:math';
 
 enum _RoomFeed { public, mine, hot }
 
@@ -46,9 +46,9 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
     super.initState();
     _authErrorSubscription = WatchTogetherService.onAuthError.listen((_) {
       if (mounted) {
-        WatchTogetherService.logout();
         setState(() {
           _isLoggedIn = false;
+          _currentUser = null;
         });
         _showLoginDialog();
       }
@@ -77,8 +77,8 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   }
 
   Future<void> _checkLoginAndLoadData() async {
-    final token = await WatchTogetherService.getToken();
-    if (token == null) {
+    final hasSession = WatchTogetherService.hasRecoverableSession;
+    if (!hasSession) {
       if (mounted) {
         setState(() {
           _isLoggedIn = false;
@@ -225,29 +225,9 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   }
 
   void _showJoinRoomDialog() {
-    final idController = TextEditingController();
-
-    ChatUtils.showStyledDialog(
+    showJoinRoomDialog(
       context: context,
-      title: '加入房间',
-      icon: Icon(Icons.login_rounded, color: Theme.of(context).primaryColor),
-      content: SizedBox(
-        width: 300,
-        child: ChatUtils.createFormField(
-          context: context,
-          label: '房间ID或邀请链接',
-          controller: idController,
-          hintText: '请输入房间ID或粘贴邀请链接',
-          prefixIcon: Icons.login_rounded,
-        ),
-      ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(context, () async {
-          await _joinRoomById(idController.text);
-        }, text: '加入'),
-      ],
+      onSubmitted: _joinRoomById,
     );
   }
 
@@ -281,18 +261,12 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
     }
   }
 
-  void _showAdminSettingsDialog() {
-    ChatUtils.showStyledDialog(
-      context: context,
-      title: '管理员设置',
-      icon: Icon(Icons.admin_panel_settings,
-          color: Theme.of(context).primaryColor),
-      content: const SizedBox(
-        width: 600,
-        height: 500,
-        child: AdminSettingsPage(),
+  void _showAdminSettingsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminSettingsPage(),
       ),
-      actions: [],
     ).then((_) {
       _loadRooms(silent: true);
     });
@@ -301,16 +275,11 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   void _showAccountCenter() {
     final user = _currentUser;
     if (user == null) return;
-    ChatUtils.showStyledDialog(
-      context: context,
-      title: '账号中心',
-      icon: Icon(Icons.account_circle, color: Theme.of(context).primaryColor),
-      content: SizedBox(
-        width: 760,
-        height: 620,
-        child: AccountCenterPage(initialUser: user),
+    Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AccountCenterPage(initialUser: user),
       ),
-      actions: [],
     ).then((accountClosed) {
       if (accountClosed == true) {
         setState(() {
@@ -328,8 +297,14 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   void _showServerSettingsDialog() {
     showServerSettingsDialog(context: context).then((changed) {
       if (!mounted || changed != true) return;
-      setState(() {});
-      if (_isLoggedIn) _loadRooms(silent: false);
+      final hasSession = WatchTogetherService.hasRecoverableSession;
+      setState(() {
+        _isLoggedIn = hasSession;
+        if (!hasSession) _currentUser = null;
+        _roomPage = 1;
+      });
+      _loadRooms(silent: false);
+      if (hasSession) _fetchUserInfo();
     });
   }
 
@@ -371,31 +346,9 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
     }
 
     if (room.needPassword) {
-      final passwordController = TextEditingController();
-      final result = await ChatUtils.showStyledDialog<String>(
+      final result = await showRoomPasswordDialog(
         context: context,
-        title: '输入房间密码',
-        icon: const Icon(Icons.lock, color: Color(0xFFCF0A2C)),
-        content: SizedBox(
-          width: 300,
-          child: ChatUtils.createFormField(
-            context: context,
-            label: '密码',
-            controller: passwordController,
-            hintText: '请输入房间密码',
-            prefixIcon: Icons.key_rounded,
-            obscureText: true,
-          ),
-        ),
-        actions: [
-          ChatUtils.createCancelButton(context),
-          const SizedBox(width: 8),
-          ChatUtils.createConfirmButton(
-            context,
-            () => Navigator.pop(context, passwordController.text),
-            text: '确定',
-          ),
-        ],
+        roomName: room.roomName,
       );
 
       if (result == null) return;
@@ -406,33 +359,12 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
       password = result;
     }
 
-    OverlayEntry? overlayEntry;
-
     try {
-      // 1. Immediately show the opaque transition overlay
-      overlayEntry = OverlayEntry(
-        builder: (context) => _TheaterTransitionEasterEgg(
-          room: room,
-          onComplete: () {
-            overlayEntry?.remove();
-          },
-        ),
-      );
-
-      if (mounted) {
-        Overlay.of(context).insert(overlayEntry);
-      }
-
-      // Briefly yield to ensure the overlay renders before any heavy work
-      await Future.delayed(const Duration(milliseconds: 50));
-
       await WatchTogetherService.joinRoom(room.roomId, password);
-      // First let the background navigate
       if (mounted) {
         _navigateToRoom(room);
       }
     } catch (e) {
-      overlayEntry?.remove();
       if (mounted) MessageUtils.showError(context, '加入房间失败: $e');
     }
   }
@@ -485,296 +417,369 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          decoration: BoxDecoration(
-            color: theme.appBarTheme.backgroundColor,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-              ),
-            ],
-          ),
+        preferredSize: const Size.fromHeight(72),
+        child: Material(
+          color: theme.appBarTheme.backgroundColor,
+          elevation: 0,
           child: Row(
             children: [
-              GestureDetector(
-                onLongPress: _showServerSettingsDialog,
-                child: Text(
-                  '看搭子',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              if (_isLoggedIn) ...[
-                TextButton.icon(
-                  onPressed: _showCreateRoomDialog,
-                  icon: const Icon(Icons.add),
-                  label: const Text('创建房间'),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                TextButton.icon(
-                  onPressed: _showJoinRoomDialog,
-                  icon: const Icon(Icons.login),
-                  label: const Text('加入房间'),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                PopupMenuButton<String>(
-                  offset: const Offset(0, 50),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: theme.hoverColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: const Color(0xFF5D5FEF),
-                          child: Text(
-                            _currentUser?.username.isNotEmpty == true
-                                ? _currentUser!.username[0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 14),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _currentUser?.username ?? 'User',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.arrow_drop_down),
-                      ],
-                    ),
-                  ),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'account',
-                      child: Row(
-                        children: [
-                          Icon(Icons.account_circle, size: 18),
-                          SizedBox(width: 8),
-                          Text('账号中心'),
-                        ],
-                      ),
-                    ),
-                    if (isAdmin)
-                      const PopupMenuItem(
-                        value: 'admin',
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onLongPress: _showServerSettingsDialog,
                         child: Row(
                           children: [
-                            Icon(Icons.admin_panel_settings, size: 18),
-                            SizedBox(width: 8),
-                            Text('管理员设置'),
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary
+                                    .withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.live_tv_rounded,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              '看搭子',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF111827),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    const PopupMenuItem(
-                      value: 'server',
-                      child: Row(
-                        children: [
-                          Icon(Icons.dns, size: 18),
-                          SizedBox(width: 8),
-                          Text('服务器设置'),
-                        ],
+                      const Spacer(),
+                      IconButton.filledTonal(
+                        tooltip: '服务器设置',
+                        onPressed: _showServerSettingsDialog,
+                        icon: const Icon(Icons.dns_rounded),
                       ),
-                    ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem(
-                      value: 'logout',
-                      child: Row(
-                        children: [
-                          Icon(Icons.logout, color: Colors.red, size: 18),
-                          SizedBox(width: 8),
-                          Text('退出登录', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'account':
-                        _showAccountCenter();
-                        break;
-                      case 'admin':
-                        _showAdminSettingsDialog();
-                        break;
-                      case 'server':
-                        _showServerSettingsDialog();
-                        break;
-                      case 'logout':
-                        _handleLogout();
-                        break;
-                    }
-                  },
-                ),
-              ] else
-                ElevatedButton.icon(
-                  onPressed: _showLoginDialog,
-                  icon: const Icon(Icons.login),
-                  label: const Text('登录'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFCF0A2C),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 16),
+                      const SizedBox(width: 12),
+                      if (_isLoggedIn) ...[
+                        OutlinedButton.icon(
+                          onPressed: _showJoinRoomDialog,
+                          icon: const Icon(Icons.login_rounded, size: 18),
+                          label: const Text('加入房间'),
+                        ),
+                        const SizedBox(width: 10),
+                        FilledButton.icon(
+                          onPressed: _showCreateRoomDialog,
+                          icon: const Icon(Icons.add_rounded, size: 18),
+                          label: const Text('创建房间'),
+                        ),
+                        const SizedBox(width: 12),
+                        _buildAccountMenu(theme, isAdmin, isDark),
+                      ] else
+                        FilledButton.icon(
+                          onPressed: _showLoginDialog,
+                          icon: const Icon(Icons.login_rounded, size: 18),
+                          label: const Text('登录'),
+                        ),
+                    ],
                   ),
                 ),
+              ),
             ],
           ),
         ),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
+                children: [
+                  _buildRoomControls(theme),
+                  const SizedBox(height: 14),
+                  Expanded(child: _buildRoomGrid()),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildAccountMenu(ThemeData theme, bool isAdmin, bool isDark) {
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 46),
+      tooltip: '账号菜单',
+      child: Material(
+        color: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.7)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 15,
+                backgroundColor: theme.colorScheme.primary,
+                child: Text(
+                  _currentUser?.username.isNotEmpty == true
+                      ? _currentUser!.username[0].toUpperCase()
+                      : '?',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 140),
+                child: Text(
+                  _currentUser?.username ?? 'User',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF111827),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.expand_more_rounded, size: 18),
+            ],
+          ),
+        ),
+      ),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'account',
+          child: Row(
+            children: [
+              Icon(Icons.account_circle_rounded, size: 18),
+              SizedBox(width: 8),
+              Text('账号中心'),
+            ],
+          ),
+        ),
+        if (isAdmin)
+          const PopupMenuItem(
+            value: 'admin',
+            child: Row(
               children: [
-                _buildRoomControls(theme),
-                Expanded(child: _buildRoomGrid()),
+                Icon(Icons.admin_panel_settings_rounded, size: 18),
+                SizedBox(width: 8),
+                Text('管理员设置'),
               ],
             ),
+          ),
+        const PopupMenuItem(
+          value: 'server',
+          child: Row(
+            children: [
+              Icon(Icons.dns_rounded, size: 18),
+              SizedBox(width: 8),
+              Text('服务器设置'),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              Icon(Icons.logout_rounded, color: Colors.red, size: 18),
+              SizedBox(width: 8),
+              Text('退出登录', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
+      ],
+      onSelected: (value) {
+        switch (value) {
+          case 'account':
+            _showAccountCenter();
+            break;
+          case 'admin':
+            _showAdminSettingsPage();
+            break;
+          case 'server':
+            _showServerSettingsDialog();
+            break;
+          case 'logout':
+            _handleLogout();
+            break;
+        }
+      },
     );
   }
 
   Widget _buildRoomControls(ThemeData theme) {
     final supportsPaging = _roomFeed != _RoomFeed.hot;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 24, 32, 0),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SegmentedButton<_RoomFeed>(
-            segments: const [
-              ButtonSegment(
-                value: _RoomFeed.public,
-                icon: Icon(Icons.public_rounded),
-                label: Text('公开'),
+    final summary = supportsPaging
+        ? '共 $_roomsTotal 个房间 · 第 $_roomPage / $_roomPageCount 页'
+        : '显示 ${_rooms.length} 个热门房间';
+
+    return Material(
+      color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.7)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SegmentedButton<_RoomFeed>(
+                    segments: const [
+                      ButtonSegment(
+                        value: _RoomFeed.public,
+                        icon: Icon(Icons.public_rounded),
+                        label: Text('公开'),
+                      ),
+                      ButtonSegment(
+                        value: _RoomFeed.mine,
+                        icon: Icon(Icons.video_library_rounded),
+                        label: Text('我的'),
+                      ),
+                      ButtonSegment(
+                        value: _RoomFeed.hot,
+                        icon: Icon(Icons.local_fire_department_rounded),
+                        label: Text('热门'),
+                      ),
+                    ],
+                    selected: {_roomFeed},
+                    onSelectionChanged: (value) => _setRoomFeed(value.first),
+                  ),
+                  SizedBox(
+                    width: 320,
+                    child: TextField(
+                      controller: _roomSearchController,
+                      enabled: _roomFeed != _RoomFeed.hot,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon: _roomSearchController.text.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: '清空',
+                                icon: const Icon(Icons.clear_rounded),
+                                onPressed: () {
+                                  _roomSearchController.clear();
+                                  _applyRoomSearch('');
+                                },
+                              ),
+                        hintText:
+                            _roomFeed == _RoomFeed.hot ? '热门房间不支持搜索' : '搜索房间',
+                      ),
+                      onSubmitted: _applyRoomSearch,
+                    ),
+                  ),
+                ],
               ),
-              ButtonSegment(
-                value: _RoomFeed.mine,
-                icon: Icon(Icons.video_library_rounded),
-                label: Text('我的'),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              summary,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
               ),
-              ButtonSegment(
-                value: _RoomFeed.hot,
-                icon: Icon(Icons.local_fire_department_rounded),
-                label: Text('热门'),
+            ),
+            const SizedBox(width: 8),
+            IconButton.filledTonal(
+              tooltip: '刷新',
+              onPressed: () => _loadRooms(silent: false),
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+            if (supportsPaging) ...[
+              IconButton(
+                tooltip: '上一页',
+                onPressed:
+                    _roomPage <= 1 ? null : () => _goRoomPage(_roomPage - 1),
+                icon: const Icon(Icons.chevron_left_rounded),
+              ),
+              IconButton(
+                tooltip: '下一页',
+                onPressed: _roomPage >= _roomPageCount
+                    ? null
+                    : () => _goRoomPage(_roomPage + 1),
+                icon: const Icon(Icons.chevron_right_rounded),
               ),
             ],
-            selected: {_roomFeed},
-            onSelectionChanged: (value) => _setRoomFeed(value.first),
-          ),
-          SizedBox(
-            width: 280,
-            child: TextField(
-              controller: _roomSearchController,
-              enabled: _roomFeed != _RoomFeed.hot,
-              decoration: InputDecoration(
-                isDense: true,
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _roomSearchController.text.isEmpty
-                    ? null
-                    : IconButton(
-                        tooltip: '清空',
-                        icon: const Icon(Icons.clear_rounded),
-                        onPressed: () {
-                          _roomSearchController.clear();
-                          _applyRoomSearch('');
-                        },
-                      ),
-                hintText: _roomFeed == _RoomFeed.hot ? '热门房间不支持搜索' : '搜索房间',
-                border: const OutlineInputBorder(),
-              ),
-              onSubmitted: _applyRoomSearch,
-            ),
-          ),
-          IconButton.filledTonal(
-            tooltip: '刷新',
-            onPressed: () => _loadRooms(silent: false),
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-          Text(
-            supportsPaging
-                ? '共 $_roomsTotal 个 · 第 $_roomPage / $_roomPageCount 页'
-                : '显示 ${_rooms.length} 个热门房间',
-            style: theme.textTheme.bodyMedium,
-          ),
-          if (supportsPaging) ...[
-            IconButton(
-              tooltip: '上一页',
-              onPressed:
-                  _roomPage <= 1 ? null : () => _goRoomPage(_roomPage - 1),
-              icon: const Icon(Icons.chevron_left_rounded),
-            ),
-            IconButton(
-              tooltip: '下一页',
-              onPressed: _roomPage >= _roomPageCount
-                  ? null
-                  : () => _goRoomPage(_roomPage + 1),
-              icon: const Icon(Icons.chevron_right_rounded),
-            ),
           ],
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildRoomGrid() {
-    if (_rooms.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.inbox_outlined, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            const Text(
-              '暂无房间',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => _loadRooms(silent: false),
-              child: const Text('刷新'),
-            ),
-          ],
-        ),
-      );
-    }
-    return RefreshIndicator(
-      onRefresh: () async => await _loadRooms(silent: true),
-      child: GridView.builder(
-        padding: const EdgeInsets.all(32),
-        physics: const AlwaysScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 350,
-          childAspectRatio: 1.1,
-          crossAxisSpacing: 24,
-          mainAxisSpacing: 24,
-        ),
-        itemCount: _rooms.length,
-        itemBuilder: (context, index) => _buildRoomCard(_rooms[index], index),
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.7)),
       ),
+      clipBehavior: Clip.antiAlias,
+      child: _rooms.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.meeting_room_outlined,
+                    size: 56,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    '暂无房间',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _roomFeed == _RoomFeed.mine
+                        ? '加入或创建房间后会出现在这里'
+                        : '当前筛选下没有可显示的房间',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.58),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.tonalIcon(
+                    onPressed: () => _loadRooms(silent: false),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('刷新'),
+                  ),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: () async => await _loadRooms(silent: true),
+              child: GridView.builder(
+                padding: const EdgeInsets.all(16),
+                physics: const AlwaysScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 380,
+                  childAspectRatio: 1.35,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: _rooms.length,
+                itemBuilder: (context, index) =>
+                    _buildRoomCard(_rooms[index], index),
+              ),
+            ),
     );
   }
 
@@ -794,299 +799,6 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
       onLongPress: _currentUser != null && _currentUser!.id == room.creatorId
           ? () => _handleDeleteRoom(room)
           : null,
-    );
-  }
-}
-
-class _TheaterTransitionEasterEgg extends StatefulWidget {
-  final WRoom room;
-  final VoidCallback onComplete;
-
-  const _TheaterTransitionEasterEgg(
-      {required this.room, required this.onComplete});
-
-  @override
-  State<_TheaterTransitionEasterEgg> createState() =>
-      _TheaterTransitionEasterEggState();
-}
-
-class _TheaterTransitionEasterEggState
-    extends State<_TheaterTransitionEasterEgg>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _doorSwing;
-  late Animation<double> _doorGlow;
-  late Animation<double> _cameraZoom;
-  late Animation<double> _overlayOpacity;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration:
-          const Duration(milliseconds: 3800), // Slower, majestic transition
-    );
-
-    _doorSwing = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.1, 0.6, curve: Curves.easeInOutCubic)),
-    );
-
-    _doorGlow = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.2, 0.5, curve: Curves.easeIn)),
-    );
-
-    _cameraZoom = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.6, 0.95, curve: Curves.easeInQuint)),
-    );
-
-    _overlayOpacity = TweenSequence([
-      TweenSequenceItem(tween: Tween<double>(begin: 1, end: 1), weight: 90),
-      TweenSequenceItem(
-          tween: Tween<double>(begin: 1, end: 0)
-              .chain(CurveTween(curve: Curves.easeOut)),
-          weight: 10),
-    ]).animate(_controller);
-
-    _controller.forward().then((_) {
-      if (mounted) widget.onComplete();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Widget _buildDoorPanel(bool isLeft) {
-    return Container(
-      width: 140, // Half of 280
-      height: 400,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A0505),
-        border: Border(
-          left:
-              BorderSide(color: const Color(0xFF0A0000), width: isLeft ? 6 : 2),
-          right:
-              BorderSide(color: const Color(0xFF0A0000), width: isLeft ? 2 : 6),
-          top: const BorderSide(color: Color(0xFF0A0000), width: 6),
-          bottom: const BorderSide(color: Color(0xFF0A0000), width: 6),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.8),
-            blurRadius: 20,
-            spreadRadius: 2,
-            offset: Offset(isLeft ? -5 : 5, 0),
-          )
-        ],
-      ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Column(
-              children: [
-                Expanded(flex: 3, child: _doorSoftPanel()),
-                const SizedBox(height: 16),
-                Expanded(flex: 4, child: _doorSoftPanel()),
-                const SizedBox(height: 16),
-                Expanded(flex: 2, child: _doorSoftPanel()),
-              ],
-            ),
-          ),
-          Positioned(
-            right: isLeft ? 15 : null,
-            left: isLeft ? null : 15,
-            top: 180,
-            child: Container(
-              width: 12,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFE5C07B),
-                    Color(0xFFD4AF37),
-                    Color(0xFF997A00)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(6),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black54,
-                      blurRadius: 4,
-                      offset: Offset(2, 2))
-                ],
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _doorSoftPanel() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFF140303),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: const Color(0xFF250606), width: 2),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: const TextStyle(decoration: TextDecoration.none),
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          final swingLeft = _doorSwing.value * (pi * 0.45);
-          final swingRight = -_doorSwing.value * (pi * 0.45);
-
-          return Opacity(
-            opacity: _overlayOpacity.value,
-            child: IgnorePointer(
-              child: Scaffold(
-                backgroundColor: Colors.black,
-                body: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Moving Camera Zoom
-                    Transform.scale(
-                      scale: 1.0 + (_cameraZoom.value * 5.0),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        clipBehavior: Clip.none,
-                        children: [
-                          // Glowing Screen Behind Door
-                          Container(
-                            width: 280,
-                            height: 400,
-                            decoration: BoxDecoration(
-                              gradient: RadialGradient(
-                                colors: [
-                                  Colors.white,
-                                  const Color(0xFF00B4D8)
-                                      .withValues(alpha: 0.8),
-                                  Colors.black,
-                                ],
-                                radius: 0.8 + (_doorGlow.value * 0.5),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF00B4D8)
-                                      .withValues(alpha: _doorGlow.value * 0.8),
-                                  blurRadius: 80 * _doorGlow.value,
-                                  spreadRadius: 20 * _doorGlow.value,
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Doors
-                          SizedBox(
-                            width: 280,
-                            height: 400,
-                            child: Row(
-                              children: [
-                                Transform(
-                                  alignment: Alignment.centerLeft,
-                                  transform: Matrix4.identity()
-                                    ..setEntry(3, 2, 0.0015)
-                                    ..rotateY(swingLeft),
-                                  child: _buildDoorPanel(true),
-                                ),
-                                Transform(
-                                  alignment: Alignment.centerRight,
-                                  transform: Matrix4.identity()
-                                    ..setEntry(3, 2, 0.0015)
-                                    ..rotateY(swingRight),
-                                  child: _buildDoorPanel(false),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Door Frame
-                          IgnorePointer(
-                            child: Container(
-                              width: 320,
-                              height: 440,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: const Color(0xFF050000), width: 20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.9),
-                                    blurRadius: 40,
-                                    spreadRadius: 10,
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // Sign above door
-                          Positioned(
-                            top: -60,
-                            child: Opacity(
-                              opacity: 1.0 - _cameraZoom.value,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0A0000),
-                                  border: Border.all(
-                                      color: const Color(0xFF330000), width: 2),
-                                  borderRadius: BorderRadius.circular(6),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.redAccent.withValues(
-                                          alpha: _doorGlow.value * 0.4),
-                                      blurRadius: 20,
-                                      spreadRadius: 2,
-                                    )
-                                  ],
-                                ),
-                                child: Text(
-                                  widget.room.roomName.toUpperCase(),
-                                  style: TextStyle(
-                                    color: Color.lerp(
-                                        Colors.red.shade900,
-                                        const Color(0xFFFF5555),
-                                        _doorGlow.value),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 4,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

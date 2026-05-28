@@ -40,7 +40,6 @@ dependencies:
     path: packages/video_player/video_player_ohos
   protobuf: ^6.0.0
   fixnum: ^1.1.1
-  grpc: ^5.0.0
   http: ^1.6.0
   shared_preferences: ^2.2.2
   shared_preferences_ohos:

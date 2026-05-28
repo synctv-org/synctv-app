@@ -3,15 +3,12 @@ import 'dart:convert';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
-import 'package:grpc/grpc.dart' as grpc;
 import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:protobuf/protobuf.dart' as pb;
 
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
-import 'package:synctv_app/src/generated/proto/client.pbgrpc.dart'
-    as client_grpc;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pb.dart' as common;
@@ -74,6 +71,7 @@ class SyncTvApiClient {
   final AuthErrorSink? onAuthError;
   final TokenRefreshSink? onTokenRefresh;
   Uri _baseUri;
+  Future<bool>? _refreshInFlight;
 
   late final SyncTvAuthApi auth = SyncTvAuthApi._(this);
   late final SyncTvUserApi user = SyncTvUserApi._(this);
@@ -132,7 +130,8 @@ class SyncTvApiClient {
 
   String get baseUrl => _baseUri.toString();
 
-  static String normalizeBaseUrl(String input) => _normalizeBaseUri(input).toString();
+  static String normalizeBaseUrl(String input) =>
+      _normalizeBaseUri(input).toString();
 
   set baseUrl(String value) {
     _baseUri = _normalizeBaseUri(value);
@@ -269,6 +268,21 @@ class SyncTvApiClient {
   }
 
   Future<bool> _tryRefreshToken() async {
+    final inFlight = _refreshInFlight;
+    if (inFlight != null) return inFlight;
+
+    final refresh = _refreshTokenOnce();
+    _refreshInFlight = refresh;
+    try {
+      return await refresh;
+    } finally {
+      if (identical(_refreshInFlight, refresh)) {
+        _refreshInFlight = null;
+      }
+    }
+  }
+
+  Future<bool> _refreshTokenOnce() async {
     try {
       final refreshToken = session.refreshToken;
       if (refreshToken == null || refreshToken.isEmpty) {
@@ -283,6 +297,8 @@ class SyncTvApiClient {
       return false;
     }
   }
+
+  Future<bool> refreshAccessTokenIfPossible() => _tryRefreshToken();
 
   Future<T> _sendWithoutRefresh<T extends GeneratedMessage>(
     String method,
@@ -319,6 +335,24 @@ class SyncTvApiClient {
     return _stripNulls(_protoFieldJson(message));
   }
 
+  Object? protoJson(GeneratedMessage message) {
+    return _normalizeProtoJson(_messageJson(message), message);
+  }
+
+  T decodeProtoJson<T extends GeneratedMessage>(
+    Object? decoded,
+    T Function() create,
+  ) {
+    final message = create();
+    message.mergeFromProto3Json(
+      _normalizeProtoJson(decoded, message),
+      supportNamesWithUnderscores: true,
+      permissiveEnums: true,
+      ignoreUnknownFields: true,
+    );
+    return message;
+  }
+
   Map<String, String?> _messageQuery(GeneratedMessage message) {
     return _messageJson(message).map(
       (key, value) => MapEntry(key, _queryValue(value)),
@@ -345,8 +379,8 @@ class SyncTvApiClient {
     if (value is pb.ProtobufEnum) return value.value;
     if (value is Int64) return value.toString();
     if (value is List<int>) {
-      if (value.isEmpty) return jsonBytes ? <dynamic>[] : value;
-      if (!jsonBytes) return value;
+      if (!jsonBytes) return base64Encode(value);
+      if (value.isEmpty) return null;
       return jsonDecode(utf8.decode(value));
     }
     if (value is Iterable) {
@@ -386,6 +420,7 @@ class SyncTvApiClient {
       result[key] = _normalizeFieldJson(
         result[key],
         fieldPath: fieldPath,
+        isBytes: pb.PbFieldType.isBytes(field.type),
         subBuilder: field.subBuilder,
       );
     }
@@ -395,10 +430,17 @@ class SyncTvApiClient {
   dynamic _normalizeFieldJson(
     Object? value, {
     required String fieldPath,
+    required bool isBytes,
     required GeneratedMessage Function()? subBuilder,
   }) {
+    if (_jsonBytesFields.contains(fieldPath) && value == null) {
+      return '';
+    }
     if (_jsonBytesFields.contains(fieldPath) && value is! String) {
       return base64Encode(utf8.encode(jsonEncode(value)));
+    }
+    if (isBytes && value is List) {
+      return base64Encode(value.cast<int>());
     }
     if (subBuilder == null) return value;
     if (value is List) {
@@ -723,56 +765,16 @@ class SyncTvApiClient {
     };
   }
 
-  grpc.ClientChannel _createGrpcChannel() {
-    return grpc.ClientChannel(
-      _baseUri.host,
-      port: _baseUri.hasPort
-          ? _baseUri.port
-          : (_baseUri.scheme == 'https' ? 443 : 80),
-      options: grpc.ChannelOptions(
-        credentials: _baseUri.scheme == 'https'
-            ? const grpc.ChannelCredentials.secure()
-            : const grpc.ChannelCredentials.insecure(),
-      ),
-    );
-  }
-
-  Stream<client.ServerMessage> messageStream(
-    String roomId,
-    Stream<client.ClientMessage> messages, {
-    grpc.ClientChannel? channel,
-    Duration? timeout,
-  }) {
-    final token = session.accessToken;
-    if (token == null || token.isEmpty) {
-      throw SyncTvApiException('缺少访问令牌', statusCode: 401);
-    }
-    final effectiveChannel = channel ?? _createGrpcChannel();
-    final ownsChannel = channel == null;
-    final grpcClient = client_grpc.RoomServiceClient(effectiveChannel);
-    final response = grpcClient.messageStream(
-      messages,
-      options: grpc.CallOptions(
-        timeout: timeout,
-        metadata: {
-          'authorization': 'Bearer $token',
-          'x-room-id': roomId,
-        },
-      ),
-    );
-    if (!ownsChannel) return response;
-    return response.transform(
-      StreamTransformer.fromHandlers(
-        handleDone: (sink) {
-          sink.close();
-          unawaited(effectiveChannel.shutdown());
-        },
-        handleError: (error, stackTrace, sink) {
-          sink.addError(error, stackTrace);
-          sink.close();
-          unawaited(effectiveChannel.shutdown());
-        },
-      ),
+  Uri roomWebSocketUri(String roomId, {required String ticket}) {
+    final wsScheme = _baseUri.scheme == 'https' ? 'wss' : 'ws';
+    final encodedRoomId = Uri.encodeComponent(roomId);
+    return _baseUri.replace(
+      scheme: wsScheme,
+      path: '/ws/rooms/$encodedRoomId',
+      queryParameters: {
+        'ticket': ticket,
+        'format': 'json',
+      },
     );
   }
 
@@ -805,6 +807,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       role: member.role.value,
       createdAt: member.joinedAt.toInt(),
       status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
+      onlineCount: member.isOnline ? 1 : 0,
     );
   }
 
@@ -871,7 +874,11 @@ extension SyncTvModelMapping on SyncTvApiClient {
     );
   }
 
-  WRoom mapMyRoom(client.MyRoom myRoom) => mapRoom(myRoom.room);
+  WRoom mapMyRoom(client.MyRoom myRoom) => mapRoom(myRoom.room).copyWith(
+        myPermissions: myRoom.permissions.toInt(),
+        myRole: myRoom.role.value,
+        myRelation: myRoom.relation.value,
+      );
 
   WMovie mapMedia(client.Media media) {
     final metadata = _decodeJsonBytes(media.metadata);

@@ -1,4 +1,5 @@
-import 'dart:ui';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/models/account_models.dart';
@@ -12,6 +13,18 @@ import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
     as provider_common_enum;
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
+
+class _AdminSection {
+  final String label;
+  final IconData icon;
+  final Widget page;
+
+  const _AdminSection({
+    required this.label,
+    required this.icon,
+    required this.page,
+  });
+}
 
 const Map<String, String> _providerTypeLabels = {
   'alist': 'Alist',
@@ -46,11 +59,53 @@ class AdminSettingsPage extends StatefulWidget {
 class _AdminSettingsPageState extends State<AdminSettingsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  static const List<_AdminSection> _sections = [
+    _AdminSection(
+      label: '总览',
+      icon: Icons.dashboard_rounded,
+      page: AdminOverviewTab(),
+    ),
+    _AdminSection(
+      label: '房间',
+      icon: Icons.meeting_room_rounded,
+      page: RoomManagementTab(),
+    ),
+    _AdminSection(
+      label: '用户',
+      icon: Icons.people_alt_rounded,
+      page: UserManagementTab(),
+    ),
+    _AdminSection(
+      label: '审核',
+      icon: Icons.fact_check_rounded,
+      page: AdminReviewTab(),
+    ),
+    _AdminSection(
+      label: 'Provider',
+      icon: Icons.hub_rounded,
+      page: AdminProviderTab(),
+    ),
+    _AdminSection(
+      label: '推流',
+      icon: Icons.podcasts_rounded,
+      page: AdminStreamsTab(),
+    ),
+    _AdminSection(
+      label: '封禁',
+      icon: Icons.gavel_rounded,
+      page: AdminBanRecordsTab(),
+    ),
+    _AdminSection(
+      label: '设置',
+      icon: Icons.tune_rounded,
+      page: AdminSettingsGroupsTab(),
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 8, vsync: this);
+    _tabController = TabController(length: _sections.length, vsync: this);
   }
 
   @override
@@ -76,59 +131,208 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
           title: const Text('管理员设置',
               style: TextStyle(fontWeight: FontWeight.bold)),
           elevation: 0,
-          backgroundColor: Colors.transparent,
+          backgroundColor:
+              isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FC),
           centerTitle: true,
           systemOverlayStyle: systemUiOverlayStyle,
         ),
-        body: Column(
-          children: [
-            _buildTopTabs(theme, isDark),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: const [
-                  AdminOverviewTab(),
-                  RoomManagementTab(),
-                  UserManagementTab(),
-                  AdminReviewTab(),
-                  AdminProviderTab(),
-                  AdminStreamsTab(),
-                  AdminBanRecordsTab(),
-                  AdminSettingsGroupsTab(),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final useRail = constraints.maxWidth >= 920;
+            if (!useRail) {
+              return Column(
+                children: [
+                  _buildTopTabs(theme, isDark),
+                  Expanded(child: _buildTabView()),
                 ],
-              ),
-            ),
-          ],
+              );
+            }
+
+            return Row(
+              children: [
+                _buildSideNavigation(theme, isDark),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: theme.dividerColor.withValues(alpha: 0.55),
+                ),
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF151518)
+                          : const Color(0xFFF3F5F8),
+                    ),
+                    child: _buildTabView(),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
+  Widget _buildTabView() {
+    return TabBarView(
+      controller: _tabController,
+      children: _sections.map((section) => section.page).toList(),
+    );
+  }
+
+  Widget _buildSideNavigation(ThemeData theme, bool isDark) {
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) {
+        return SizedBox(
+          width: 232,
+          child: Material(
+            color: isDark ? const Color(0xFF101012) : Colors.white,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
+                      child: Text(
+                        '系统管理',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.68),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: _sections.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 4),
+                        itemBuilder: (context, index) {
+                          final section = _sections[index];
+                          final selected = _tabController.index == index;
+                          return _SettingsNavTile(
+                            icon: section.icon,
+                            label: section.label,
+                            selected: selected,
+                            onTap: () => setState(() {
+                              _tabController.animateTo(index);
+                            }),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildTopTabs(ThemeData theme, bool isDark) {
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: Material(
-          color: isDark
-              ? Colors.black.withValues(alpha: 0.18)
-              : Colors.white.withValues(alpha: 0.72),
+    return Material(
+      color: theme.colorScheme.surface,
+      elevation: 0,
+      child: SafeArea(
+        bottom: false,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: theme.dividerColor.withValues(alpha: 0.65),
+              ),
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
             tabAlignment: TabAlignment.start,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            dividerColor: Colors.transparent,
+            indicator: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(8),
+            ),
             labelColor: theme.colorScheme.primary,
-            unselectedLabelColor: theme.hintColor,
-            indicatorSize: TabBarIndicatorSize.label,
-            tabs: const [
-              Tab(icon: Icon(Icons.dashboard_rounded), text: '总览'),
-              Tab(icon: Icon(Icons.meeting_room_rounded), text: '房间'),
-              Tab(icon: Icon(Icons.people_alt_rounded), text: '用户'),
-              Tab(icon: Icon(Icons.fact_check_rounded), text: '审核'),
-              Tab(icon: Icon(Icons.hub_rounded), text: 'Provider'),
-              Tab(icon: Icon(Icons.podcasts_rounded), text: '流'),
-              Tab(icon: Icon(Icons.gavel_rounded), text: '封禁'),
-              Tab(icon: Icon(Icons.tune_rounded), text: '设置'),
+            unselectedLabelColor:
+                theme.colorScheme.onSurface.withValues(alpha: 0.62),
+            labelStyle: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+            unselectedLabelStyle: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+            tabs: _sections
+                .map((section) => Tab(
+                      height: 42,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(section.icon, size: 18),
+                            const SizedBox(width: 6),
+                            Text(section.label),
+                          ],
+                        ),
+                      ),
+                    ))
+                .toList(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsNavTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SettingsNavTile({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final foreground =
+        selected ? theme.colorScheme.primary : theme.colorScheme.onSurface;
+    return Material(
+      color: selected
+          ? theme.colorScheme.primary.withValues(alpha: 0.10)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: foreground),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: foreground,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -5080,6 +5284,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
   bool _isLoadingGroup = false;
   List<AdminSettingsGroup> _groups = const [];
   String? _selectedGroup;
+  final Set<String> _savingSettings = <String>{};
 
   @override
   void initState() {
@@ -5134,42 +5339,13 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     }
   }
 
-  Future<void> _editSetting(
+  Future<void> _updateSetting(
     AdminSettingsGroup group,
     String key,
-    dynamic value,
+    dynamic nextValue,
   ) async {
-    dynamic nextValue;
-    if (value is bool) {
-      nextValue = !value;
-    } else {
-      final controller = TextEditingController(text: value?.toString() ?? '');
-      final raw = await ChatUtils.showStyledDialog<String>(
-        context: context,
-        title: key,
-        icon: const Icon(Icons.tune_rounded, color: Color(0xFF5D5FEF)),
-        content: ChatUtils.createFormField(
-          context: context,
-          label: '值',
-          controller: controller,
-          hintText: '输入新值',
-          prefixIcon: Icons.edit_rounded,
-          keyboardType:
-              value is num ? TextInputType.number : TextInputType.text,
-        ),
-        actions: [
-          ChatUtils.createCancelButton(context),
-          const SizedBox(width: 8),
-          ChatUtils.createConfirmButton(
-            context,
-            () => Navigator.pop(context, controller.text.trim()),
-            text: '保存',
-          ),
-        ],
-      );
-      if (raw == null) return;
-      nextValue = _parseSettingValue(raw, value);
-    }
+    final settingId = '${group.name}.$key';
+    setState(() => _savingSettings.add(settingId));
 
     try {
       final updated = await WatchTogetherService.adminUpdateSettingInGroup(
@@ -5183,12 +5359,125 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
           for (final item in _groups)
             item.name == updated.name ? updated : item,
         ];
+        _savingSettings.remove(settingId);
       });
       MessageUtils.showSuccess(context, '设置已更新');
     } catch (e) {
       if (!mounted) return;
+      setState(() => _savingSettings.remove(settingId));
       MessageUtils.showError(context, '更新设置失败: $e');
     }
+  }
+
+  Future<void> _editSetting(
+    AdminSettingsGroup group,
+    String key,
+    dynamic value,
+  ) async {
+    final descriptor = _settingDescriptor(group.name, key, value);
+    final normalizedValue = _normalizedSettingValue(group.name, key, value);
+
+    if (normalizedValue is bool) {
+      final confirmed = await _confirmRiskIfNeeded(descriptor);
+      if (!confirmed) return;
+      await _updateSetting(group, key, !normalizedValue);
+      return;
+    }
+
+    final nextValue = await showModalBottomSheet<dynamic>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _SettingEditorSheet(
+        descriptor: descriptor,
+        groupName: group.name,
+        settingKey: key,
+        value: normalizedValue,
+      ),
+    );
+    if (nextValue == null) return;
+
+    final confirmed = await _confirmRiskIfNeeded(descriptor);
+    if (!confirmed) return;
+    await _updateSetting(group, key, nextValue);
+  }
+
+  Future<void> _editOAuth2Provider(
+    AdminSettingsGroup group,
+    Map<String, dynamic> providers,
+    String? name,
+  ) async {
+    final current = name == null
+        ? <String, dynamic>{}
+        : Map<String, dynamic>.from(providers[name] as Map? ?? const {});
+    final result = await showModalBottomSheet<_OAuth2ProviderEditResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _OAuth2ProviderEditorSheet(
+        initialName: name,
+        initialValue: current,
+        existingNames: providers.keys.toSet(),
+      ),
+    );
+    if (result == null) return;
+
+    final descriptor = _settingDescriptor('oauth2', 'providers', providers);
+    final confirmed = await _confirmRiskIfNeeded(descriptor);
+    if (!confirmed) return;
+
+    final next = Map<String, dynamic>.from(providers);
+    if (name != null && name != result.name) next.remove(name);
+    next[result.name] = result.value;
+    await _updateSetting(group, 'providers', next);
+  }
+
+  Future<void> _deleteOAuth2Provider(
+    AdminSettingsGroup group,
+    Map<String, dynamic> providers,
+    String name,
+  ) async {
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: '删除登录提供方',
+      icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFE5484D)),
+      content: Text('确认删除 OAuth2 登录提供方 "$name"？删除后用户不能再通过该入口登录。'),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '删除',
+        ),
+      ],
+    );
+    if (confirmed != true) return;
+    final next = Map<String, dynamic>.from(providers)..remove(name);
+    await _updateSetting(group, 'providers', next);
+  }
+
+  Future<bool> _confirmRiskIfNeeded(_SettingDescriptor descriptor) async {
+    final warning = descriptor.warning;
+    if (warning == null || warning.isEmpty) return true;
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: '确认修改',
+      icon: const Icon(Icons.warning_amber_rounded, color: Color(0xFFE09F3E)),
+      content: Text(warning),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '确认修改',
+        ),
+      ],
+    );
+    return confirmed == true;
   }
 
   Future<void> _sendTestEmail() async {
@@ -5241,50 +5530,113 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
         ? <MapEntry<String, dynamic>>[]
         : (selected.settings.entries.toList()
           ..sort((a, b) => a.key.compareTo(b.key)));
+    final useTwoPane = MediaQuery.sizeOf(context).width >= 860;
+
+    final isOAuth2Group = selected?.name == 'oauth2' &&
+        selected!.settings.containsKey('providers');
+    final oauth2Providers = isOAuth2Group
+        ? _oauth2ProvidersFromValue(
+            _normalizedSettingValue(
+              selected.name,
+              'providers',
+              selected.settings['providers'],
+            ),
+          )
+        : <String, dynamic>{};
+
+    final settingsList = selected == null || entries.isEmpty
+        ? Center(child: Text('暂无设置', style: TextStyle(color: theme.hintColor)))
+        : isOAuth2Group
+            ? ListView(
+                padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
+                children: [
+                  _SettingsGroupHeader(
+                    groupName: selected.name,
+                    entryCount: oauth2Providers.length,
+                    isLoading: _isLoadingGroup,
+                    action: FilledButton.icon(
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('添加登录提供方'),
+                      onPressed: _savingSettings.contains('oauth2.providers')
+                          ? null
+                          : () => _editOAuth2Provider(
+                              selected, oauth2Providers, null),
+                    ),
+                    onRefresh:
+                        _isLoadingGroup ? null : () => _refreshSelectedGroup(),
+                  ),
+                  _OAuth2ProvidersList(
+                    providers: oauth2Providers,
+                    saving: _savingSettings.contains('oauth2.providers'),
+                    onEdit: (name) =>
+                        _editOAuth2Provider(selected, oauth2Providers, name),
+                    onDelete: (name) =>
+                        _deleteOAuth2Provider(selected, oauth2Providers, name),
+                  ),
+                ],
+              )
+            : ListView.builder(
+                padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
+                itemCount: entries.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return _SettingsGroupHeader(
+                      groupName: selected.name,
+                      entryCount: entries.length,
+                      isLoading: _isLoadingGroup,
+                      onRefresh: _isLoadingGroup
+                          ? null
+                          : () => _refreshSelectedGroup(),
+                    );
+                  }
+                  final entry = entries[index - 1];
+                  final normalized = _normalizedSettingValue(
+                      selected.name, entry.key, entry.value);
+                  final descriptor =
+                      _settingDescriptor(selected.name, entry.key, normalized);
+                  final settingId = '${selected.name}.${entry.key}';
+                  return _AdminPanelCard(
+                    isDark: isDark,
+                    child: _SettingTile(
+                      descriptor: descriptor,
+                      value: normalized,
+                      saving: _savingSettings.contains(settingId),
+                      onEdit: () =>
+                          _editSetting(selected, entry.key, normalized),
+                    ),
+                  );
+                },
+              );
 
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
           child: Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: _selectedGroup,
-                  decoration: const InputDecoration(
-                    labelText: '设置组',
-                    prefixIcon: Icon(Icons.folder_outlined),
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  items: [
-                    for (final group in _groups)
-                      DropdownMenuItem(
-                        value: group.name,
-                        child: Text(group.name),
+                child: useTwoPane
+                    ? Text(
+                        '运行时设置',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      )
+                    : _SettingsGroupDropdown(
+                        groups: _groups,
+                        selectedGroup: _selectedGroup,
+                        enabled: !_isLoadingGroup,
+                        onChanged: _selectGroup,
                       ),
-                  ],
-                  onChanged: _isLoadingGroup ? null : _selectGroup,
-                ),
               ),
               const SizedBox(width: 12),
-              IconButton(
+              IconButton.filledTonal(
                 tooltip: '发送测试邮件',
                 icon: const Icon(Icons.outgoing_mail),
                 onPressed: _sendTestEmail,
               ),
-              IconButton(
-                tooltip: '刷新当前组',
-                icon: _isLoadingGroup
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh_rounded),
-                onPressed:
-                    _isLoadingGroup ? null : () => _refreshSelectedGroup(),
-              ),
-              IconButton(
+              const SizedBox(width: 8),
+              IconButton.filledTonal(
                 tooltip: '刷新全部',
                 icon: const Icon(Icons.sync_rounded),
                 onPressed:
@@ -5294,57 +5646,2299 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
           ),
         ),
         Expanded(
-          child: selected == null || entries.isEmpty
-              ? Center(
-                  child: Text('暂无设置', style: TextStyle(color: theme.hintColor)))
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  itemCount: entries.length,
-                  itemBuilder: (context, index) {
-                    final entry = entries[index];
-                    return _AdminPanelCard(
-                      isDark: isDark,
-                      child: ListTile(
-                        title: Text(entry.key),
-                        subtitle: Text(_settingValueLabel(entry.value)),
-                        trailing: entry.value is bool
-                            ? Switch(
-                                value: entry.value == true,
-                                onChanged: (_) => _editSetting(
-                                  selected,
-                                  entry.key,
-                                  entry.value,
-                                ),
-                              )
-                            : IconButton(
-                                tooltip: '编辑',
-                                icon: const Icon(Icons.edit_outlined),
-                                onPressed: () => _editSetting(
-                                  selected,
-                                  entry.key,
-                                  entry.value,
-                                ),
+          child: useTwoPane
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 280,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 8, 24),
+                        children: [
+                          for (final group in _groups)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _SettingsGroupButton(
+                                groupName: group.name,
+                                selected: group.name == _selectedGroup,
+                                count: group.settings.length,
+                                onTap: _isLoadingGroup
+                                    ? null
+                                    : () => _selectGroup(group.name),
                               ),
+                            ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                    Expanded(child: settingsList),
+                  ],
+                )
+              : settingsList,
         ),
       ],
     );
   }
 
-  dynamic _parseSettingValue(String raw, dynamic currentValue) {
-    if (currentValue is int) return int.tryParse(raw) ?? currentValue;
-    if (currentValue is double) return double.tryParse(raw) ?? currentValue;
-    if (currentValue is num) return num.tryParse(raw) ?? currentValue;
-    return raw;
+  dynamic _normalizedSettingValue(String group, String key, dynamic value) {
+    final descriptor = _settingDescriptor(group, key, value);
+    if (value is String) {
+      switch (descriptor.kind) {
+        case _SettingEditorKind.oauth2Providers:
+        case _SettingEditorKind.iceServers:
+        case _SettingEditorKind.stringList:
+        case _SettingEditorKind.permissionList:
+        case _SettingEditorKind.map:
+        case _SettingEditorKind.list:
+          try {
+            return jsonDecode(value);
+          } catch (_) {
+            if (descriptor.kind == _SettingEditorKind.stringList) {
+              return value
+                  .split(RegExp(r'[\n,]'))
+                  .map((item) => item.trim())
+                  .where((item) => item.isNotEmpty)
+                  .toList();
+            }
+          }
+          break;
+        case _SettingEditorKind.boolean:
+        case _SettingEditorKind.enumChoice:
+        case _SettingEditorKind.number:
+        case _SettingEditorKind.text:
+          break;
+      }
+    }
+    return value;
+  }
+}
+
+enum _SettingEditorKind {
+  boolean,
+  number,
+  text,
+  enumChoice,
+  stringList,
+  permissionList,
+  oauth2Providers,
+  iceServers,
+  map,
+  list,
+}
+
+class _SettingDescriptor {
+  final String group;
+  final String key;
+  final String title;
+  final String description;
+  final IconData icon;
+  final _SettingEditorKind kind;
+  final List<_SettingChoice> choices;
+  final String? warning;
+  final bool secret;
+
+  const _SettingDescriptor({
+    required this.group,
+    required this.key,
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.kind,
+    this.choices = const [],
+    this.warning,
+    this.secret = false,
+  });
+}
+
+class _SettingChoice {
+  final String value;
+  final String label;
+  final String description;
+
+  const _SettingChoice(this.value, this.label, this.description);
+}
+
+const Map<String, String> _settingsGroupLabels = {
+  'server': '服务',
+  'room': '房间',
+  'user': '用户',
+  'oauth2': 'OAuth2',
+  'proxy': '代理',
+  'rtmp': '推流',
+  'email': '邮件',
+  'webrtc': 'WebRTC',
+  'chat': '聊天',
+  'cors': '跨域',
+  'permissions': '权限',
+};
+
+const List<_SettingChoice> _roomPasswordChoices = [
+  _SettingChoice('optional', '可选', '创建房间时可自行决定是否设置密码'),
+  _SettingChoice('required', '必须', '所有新房间都必须设置密码'),
+  _SettingChoice('forbidden', '禁用', '不允许新房间设置密码'),
+];
+
+const List<String> _oauth2ProviderTypes = ['github', 'google', 'logto', 'oidc'];
+
+const Map<String, String> _oauth2ProviderTypeLabels = {
+  'github': 'GitHub',
+  'google': 'Google',
+  'logto': 'Logto',
+  'oidc': 'OIDC',
+};
+
+const List<String> _knownPermissions = [
+  'chat',
+  'create_media_resource',
+  'view_media_resources',
+  'view_member_list',
+  'view_chat_history',
+  'use_webrtc',
+  'delete_media_resource_any',
+  'reorder_media_resources',
+  'clear_media_resources',
+  'live_control',
+  'play_control',
+  'change_current_media',
+  'change_playback_rate',
+  'approve_member',
+  'kick_member',
+  'set_member_permissions',
+  'add_member',
+  'set_room_settings',
+  'delete_chat',
+  'delete_room',
+];
+
+const Map<String, String> _permissionLabels = {
+  'chat': '发送聊天',
+  'create_media_resource': '添加媒体',
+  'view_media_resources': '查看媒体',
+  'view_member_list': '查看成员',
+  'view_chat_history': '查看聊天历史',
+  'use_webrtc': '使用 WebRTC',
+  'delete_media_resource_any': '删除任意媒体',
+  'reorder_media_resources': '调整播放列表',
+  'clear_media_resources': '清空播放列表',
+  'live_control': '直播控制',
+  'play_control': '播放控制',
+  'change_current_media': '切换影片',
+  'change_playback_rate': '调整倍速',
+  'approve_member': '审批成员',
+  'kick_member': '踢出成员',
+  'set_member_permissions': '设置成员权限',
+  'add_member': '添加成员',
+  'set_room_settings': '修改房间设置',
+  'delete_chat': '删除聊天',
+  'delete_room': '删除房间',
+};
+
+_SettingDescriptor _settingDescriptor(
+  String group,
+  String key,
+  dynamic value,
+) {
+  final id = '$group.$key';
+  final known = <String, _SettingDescriptor>{
+    'server.allow_room_creation': const _SettingDescriptor(
+      group: 'server',
+      key: 'allow_room_creation',
+      title: '允许创建房间',
+      description: '控制普通用户是否可以创建新房间。',
+      icon: Icons.add_home_work_outlined,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'server.max_rooms_per_user': const _SettingDescriptor(
+      group: 'server',
+      key: 'max_rooms_per_user',
+      title: '每个用户最多房间数',
+      description: '限制单个用户可拥有的房间数量。',
+      icon: Icons.meeting_room_outlined,
+      kind: _SettingEditorKind.number,
+    ),
+    'server.max_members_per_room': const _SettingDescriptor(
+      group: 'server',
+      key: 'max_members_per_room',
+      title: '每个房间最多成员数',
+      description: '限制单个房间的成员上限。',
+      icon: Icons.groups_2_outlined,
+      kind: _SettingEditorKind.number,
+    ),
+    'server.max_chat_messages': const _SettingDescriptor(
+      group: 'server',
+      key: 'max_chat_messages',
+      title: '房间聊天快照条数',
+      description: '服务端保留并推送给客户端的聊天消息上限，0 表示不限制。',
+      icon: Icons.forum_outlined,
+      kind: _SettingEditorKind.number,
+    ),
+    'room.disable_create_room': const _SettingDescriptor(
+      group: 'room',
+      key: 'disable_create_room',
+      title: '关闭创建房间',
+      description: '打开后用户不能创建新房间，适合维护或封闭运营。',
+      icon: Icons.block_outlined,
+      kind: _SettingEditorKind.boolean,
+      warning: '关闭创建房间会立刻影响所有用户的新建房间入口。',
+    ),
+    'room.create_room_need_review': const _SettingDescriptor(
+      group: 'room',
+      key: 'create_room_need_review',
+      title: '创建房间需要审核',
+      description: '打开后新建房间进入审核流程，通过后才可正常使用。',
+      icon: Icons.fact_check_outlined,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'room.password_policy': const _SettingDescriptor(
+      group: 'room',
+      key: 'password_policy',
+      title: '房间密码策略',
+      description: '统一约束新房间是否必须或禁止设置密码。',
+      icon: Icons.password_rounded,
+      kind: _SettingEditorKind.enumChoice,
+      choices: _roomPasswordChoices,
+    ),
+    'user.enable_password_signup': const _SettingDescriptor(
+      group: 'user',
+      key: 'enable_password_signup',
+      title: '允许密码注册',
+      description: '用户可以使用用户名和密码注册账号。',
+      icon: Icons.person_add_alt_1_outlined,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'user.password_signup_need_review': const _SettingDescriptor(
+      group: 'user',
+      key: 'password_signup_need_review',
+      title: '密码注册需要审核',
+      description: '新账号注册后需要管理员审核。',
+      icon: Icons.how_to_reg_outlined,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'user.enable_email_signup': const _SettingDescriptor(
+      group: 'user',
+      key: 'enable_email_signup',
+      title: '允许邮箱注册',
+      description: '用户可以通过邮箱验证码注册账号。',
+      icon: Icons.alternate_email_rounded,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'user.email_signup_need_review': const _SettingDescriptor(
+      group: 'user',
+      key: 'email_signup_need_review',
+      title: '邮箱注册需要审核',
+      description: '邮箱注册完成后仍需管理员审核。',
+      icon: Icons.mark_email_read_outlined,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'user.enable_webauthn_signup': const _SettingDescriptor(
+      group: 'user',
+      key: 'enable_webauthn_signup',
+      title: '允许 Passkey 注册',
+      description: '用户可以使用系统 Passkey 能力创建账号。',
+      icon: Icons.fingerprint_rounded,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'user.webauthn_signup_need_review': const _SettingDescriptor(
+      group: 'user',
+      key: 'webauthn_signup_need_review',
+      title: 'Passkey 注册需要审核',
+      description: 'Passkey 注册后需要管理员审核。',
+      icon: Icons.verified_user_outlined,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'user.enable_guest': const _SettingDescriptor(
+      group: 'user',
+      key: 'enable_guest',
+      title: '允许游客',
+      description: '未登录用户可以以游客身份进入允许游客的房间。',
+      icon: Icons.person_outline_rounded,
+      kind: _SettingEditorKind.boolean,
+      warning: '允许游客会降低房间访问门槛，请确认公开房间和默认权限配置符合预期。',
+    ),
+    'oauth2.providers': const _SettingDescriptor(
+      group: 'oauth2',
+      key: 'providers',
+      title: '第三方登录',
+      description: '管理 OAuth2/OIDC 登录提供方实例、注册策略和回调配置。',
+      icon: Icons.account_tree_outlined,
+      kind: _SettingEditorKind.oauth2Providers,
+      warning: 'OAuth2 配置会影响登录入口。错误的回调地址、密钥或端点会导致第三方登录不可用。',
+    ),
+    'proxy.movie_proxy': const _SettingDescriptor(
+      group: 'proxy',
+      key: 'movie_proxy',
+      title: '影片代理',
+      description: '允许服务端代理影片资源请求。',
+      icon: Icons.movie_filter_outlined,
+      kind: _SettingEditorKind.boolean,
+      warning: '代理能力可能把用户配置的认证信息发送给目标媒体站点，并随播放资源发布给房间成员。仅在信任成员和媒体来源时启用。',
+    ),
+    'proxy.live_proxy': const _SettingDescriptor(
+      group: 'proxy',
+      key: 'live_proxy',
+      title: '直播代理',
+      description: '允许服务端代理直播流请求。',
+      icon: Icons.live_tv_outlined,
+      kind: _SettingEditorKind.boolean,
+      warning: '直播代理可能转发敏感请求头或 Cookie，并通过播放信息暴露给房间成员。请确认来源可信。',
+    ),
+    'rtmp.custom_publish_host': const _SettingDescriptor(
+      group: 'rtmp',
+      key: 'custom_publish_host',
+      title: '推流发布地址',
+      description: '覆盖对外展示的 RTMP 发布主机，留空使用服务端默认地址。',
+      icon: Icons.podcasts_outlined,
+      kind: _SettingEditorKind.text,
+    ),
+    'rtmp.ts_disguised_as_png': const _SettingDescriptor(
+      group: 'rtmp',
+      key: 'ts_disguised_as_png',
+      title: 'TS 分片伪装为 PNG',
+      description: '将 HLS TS 分片以 PNG 后缀暴露，用于部分网络环境兼容。',
+      icon: Icons.image_outlined,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'email.whitelist_enabled': const _SettingDescriptor(
+      group: 'email',
+      key: 'whitelist_enabled',
+      title: '启用邮箱白名单',
+      description: '限制邮箱注册只能使用指定域名或邮箱。',
+      icon: Icons.mark_email_unread_outlined,
+      kind: _SettingEditorKind.boolean,
+    ),
+    'email.whitelist': const _SettingDescriptor(
+      group: 'email',
+      key: 'whitelist',
+      title: '邮箱白名单',
+      description: '每行一个邮箱或域名。域名可使用 example.com 或 @example.com。',
+      icon: Icons.playlist_add_check_rounded,
+      kind: _SettingEditorKind.stringList,
+    ),
+    'webrtc.external_ice_servers': const _SettingDescriptor(
+      group: 'webrtc',
+      key: 'external_ice_servers',
+      title: '外部 ICE 服务器',
+      description: '向客户端下发的 STUN/TURN 服务器列表。',
+      icon: Icons.settings_input_antenna_rounded,
+      kind: _SettingEditorKind.iceServers,
+      warning: 'TURN 用户名和凭据会下发给客户端。请使用最小权限、可轮换的账号。',
+    ),
+    'chat.max_messages_per_room': const _SettingDescriptor(
+      group: 'chat',
+      key: 'max_messages_per_room',
+      title: '每个房间保留聊天数',
+      description: '聊天消息按房间保留的数量上限，0 表示不限制。',
+      icon: Icons.chat_bubble_outline_rounded,
+      kind: _SettingEditorKind.number,
+    ),
+    'chat.message_retention_days': const _SettingDescriptor(
+      group: 'chat',
+      key: 'message_retention_days',
+      title: '聊天保留天数',
+      description: '聊天消息的最长保留时间。',
+      icon: Icons.history_toggle_off_rounded,
+      kind: _SettingEditorKind.number,
+    ),
+    'cors.allowed_origins': const _SettingDescriptor(
+      group: 'cors',
+      key: 'allowed_origins',
+      title: '允许跨域来源',
+      description: '允许访问代理接口的 Web Origin 列表，原生客户端通常不需要配置。',
+      icon: Icons.public_rounded,
+      kind: _SettingEditorKind.stringList,
+      warning: '跨域来源配置过宽会扩大浏览器侧访问面。只添加明确可信的 https Origin。',
+    ),
+    'permissions.admin_default': const _SettingDescriptor(
+      group: 'permissions',
+      key: 'admin_default',
+      title: '管理员默认权限',
+      description: '房间管理员的默认权限集合。',
+      icon: Icons.admin_panel_settings_outlined,
+      kind: _SettingEditorKind.permissionList,
+    ),
+    'permissions.member_default': const _SettingDescriptor(
+      group: 'permissions',
+      key: 'member_default',
+      title: '成员默认权限',
+      description: '普通成员加入房间后的默认权限集合。',
+      icon: Icons.group_outlined,
+      kind: _SettingEditorKind.permissionList,
+    ),
+    'permissions.guest_default': const _SettingDescriptor(
+      group: 'permissions',
+      key: 'guest_default',
+      title: '游客默认权限',
+      description: '游客进入房间后的默认权限集合。后端会拒绝不安全权限。',
+      icon: Icons.person_pin_circle_outlined,
+      kind: _SettingEditorKind.permissionList,
+      warning: '游客权限会影响未登录用户。请只授予查看和低风险操作权限。',
+    ),
+  };
+  final descriptor = known[id];
+  if (descriptor != null) return descriptor;
+
+  final kind = switch (value) {
+    bool _ => _SettingEditorKind.boolean,
+    int _ || double _ || num _ => _SettingEditorKind.number,
+    Map _ => _SettingEditorKind.map,
+    List _ => _SettingEditorKind.list,
+    _ => _SettingEditorKind.text,
+  };
+  return _SettingDescriptor(
+    group: group,
+    key: key,
+    title: _humanizeSettingKey(key),
+    description: '${_settingsGroupLabel(group)} 运行时配置。',
+    icon: Icons.tune_rounded,
+    kind: kind,
+    secret: _isSecretKey(key),
+  );
+}
+
+String _settingsGroupLabel(String group) =>
+    _settingsGroupLabels[group] ?? group;
+
+String _humanizeSettingKey(String key) {
+  return key
+      .replaceAll('_', ' ')
+      .split(' ')
+      .where((part) => part.isNotEmpty)
+      .map((part) => part[0].toUpperCase() + part.substring(1))
+      .join(' ');
+}
+
+bool _isSecretKey(String key) {
+  final lower = key.toLowerCase();
+  return lower.contains('secret') ||
+      lower.contains('password') ||
+      lower.contains('credential') ||
+      lower.contains('token') ||
+      lower.contains('key');
+}
+
+String _settingSummary(dynamic value, _SettingDescriptor descriptor) {
+  if (value == null) return '未设置';
+  switch (descriptor.kind) {
+    case _SettingEditorKind.boolean:
+      return value == true ? '已开启' : '已关闭';
+    case _SettingEditorKind.oauth2Providers:
+      final map = value is Map ? value : const {};
+      if (map.isEmpty) return '未配置第三方登录';
+      final enabled = map.values.where((entry) {
+        if (entry is! Map) return false;
+        return (entry['config'] is Map) &&
+            (entry['config']['client_id'] ?? '').toString().isNotEmpty;
+      }).length;
+      return '${map.length} 个实例，$enabled 个已填写 Client ID';
+    case _SettingEditorKind.iceServers:
+      final list = value is List ? value : const [];
+      return list.isEmpty ? '未配置 ICE 服务器' : '${list.length} 个 ICE 服务器';
+    case _SettingEditorKind.stringList:
+    case _SettingEditorKind.permissionList:
+    case _SettingEditorKind.list:
+      final list = _valueAsStringList(value);
+      return list.isEmpty ? '空列表' : list.join('、');
+    case _SettingEditorKind.enumChoice:
+      return descriptor.choices
+          .firstWhere(
+            (choice) => choice.value == value.toString(),
+            orElse: () =>
+                _SettingChoice(value.toString(), value.toString(), ''),
+          )
+          .label;
+    case _SettingEditorKind.map:
+      final map = value is Map ? value : const {};
+      return map.isEmpty ? '空对象' : '${map.length} 项配置';
+    case _SettingEditorKind.number:
+    case _SettingEditorKind.text:
+      if (descriptor.secret && value.toString().isNotEmpty) return '已设置';
+      return value.toString().isEmpty ? '未设置' : value.toString();
+  }
+}
+
+List<String> _valueAsStringList(dynamic value) {
+  if (value is List) {
+    return value
+        .map((item) => item.toString())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return <String>[];
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is List) {
+        return decoded.map((item) => item.toString()).toList();
+      }
+    } catch (_) {}
+    return trimmed
+        .split(RegExp(r'[\n,]'))
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+  return <String>[];
+}
+
+class _SettingsGroupDropdown extends StatelessWidget {
+  final List<AdminSettingsGroup> groups;
+  final String? selectedGroup;
+  final bool enabled;
+  final ValueChanged<String?> onChanged;
+
+  const _SettingsGroupDropdown({
+    required this.groups,
+    required this.selectedGroup,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      initialValue: selectedGroup,
+      decoration: const InputDecoration(
+        labelText: '设置组',
+        prefixIcon: Icon(Icons.folder_outlined),
+        border: OutlineInputBorder(),
+        isDense: true,
+      ),
+      items: [
+        for (final group in groups)
+          DropdownMenuItem(
+            value: group.name,
+            child: Text(_settingsGroupLabel(group.name)),
+          ),
+      ],
+      onChanged: enabled ? onChanged : null,
+    );
+  }
+}
+
+class _SettingsGroupButton extends StatelessWidget {
+  final String groupName;
+  final bool selected;
+  final int count;
+  final VoidCallback? onTap;
+
+  const _SettingsGroupButton({
+    required this.groupName,
+    required this.selected,
+    required this.count,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+    return Material(
+      color: selected
+          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.7)
+          : theme.colorScheme.surface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Icon(Icons.folder_outlined, color: color),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _settingsGroupLabel(groupName),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: color,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+                ),
+              ),
+              Text(
+                count.toString(),
+                style: theme.textTheme.labelMedium?.copyWith(color: color),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsGroupHeader extends StatelessWidget {
+  final String groupName;
+  final int entryCount;
+  final bool isLoading;
+  final Widget? action;
+  final VoidCallback? onRefresh;
+
+  const _SettingsGroupHeader({
+    required this.groupName,
+    required this.entryCount,
+    required this.isLoading,
+    this.action,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _settingsGroupLabel(groupName),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$entryCount 项可配置设置',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (action != null) ...[
+            const SizedBox(width: 12),
+            action!,
+          ],
+          const SizedBox(width: 8),
+          IconButton.filledTonal(
+            tooltip: '刷新当前组',
+            icon: isLoading
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh_rounded),
+            onPressed: onRefresh,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingTile extends StatelessWidget {
+  final _SettingDescriptor descriptor;
+  final dynamic value;
+  final bool saving;
+  final VoidCallback onEdit;
+
+  const _SettingTile({
+    required this.descriptor,
+    required this.value,
+    required this.saving,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isBool =
+        descriptor.kind == _SettingEditorKind.boolean && value is bool;
+    return Padding(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.65),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(descriptor.icon, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  descriptor.title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  descriptor.description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _settingSummary(value, descriptor),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                if (descriptor.warning != null) ...[
+                  const SizedBox(height: 10),
+                  _InlineWarning(text: descriptor.warning!),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          if (saving)
+            const SizedBox.square(
+              dimension: 22,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          else if (isBool)
+            Switch(value: value == true, onChanged: (_) => onEdit())
+          else
+            IconButton.filledTonal(
+              tooltip: '编辑',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: onEdit,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineWarning extends StatelessWidget {
+  final String text;
+
+  const _InlineWarning({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3CD),
+        borderRadius: BorderRadius.circular(10),
+        border:
+            Border.all(color: const Color(0xFFE0A800).withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.warning_amber_rounded,
+              size: 18, color: Colors.amber.shade900),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: const Color(0xFF6B4E00)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingEditorSheet extends StatefulWidget {
+  final _SettingDescriptor descriptor;
+  final String groupName;
+  final String settingKey;
+  final dynamic value;
+
+  const _SettingEditorSheet({
+    required this.descriptor,
+    required this.groupName,
+    required this.settingKey,
+    required this.value,
+  });
+
+  @override
+  State<_SettingEditorSheet> createState() => _SettingEditorSheetState();
+}
+
+class _SettingEditorSheetState extends State<_SettingEditorSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late dynamic _value;
+  final Map<String, TextEditingController> _controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _value = _deepCopySettingValue(widget.value);
   }
 
-  String _settingValueLabel(dynamic value) {
-    if (value is bool) return value ? 'true' : 'false';
-    if (value == null) return 'null';
-    return value.toString();
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  TextEditingController _controller(String id, [String initial = '']) {
+    return _controllers.putIfAbsent(
+        id, () => TextEditingController(text: initial));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottom),
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760, maxHeight: 760),
+          child: Material(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            clipBehavior: Clip.antiAlias,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 12, 10),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer
+                                .withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(widget.descriptor.icon,
+                              color: theme.colorScheme.primary),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.descriptor.title,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.descriptor.description,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: '关闭',
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (widget.descriptor.warning != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                      child: _InlineWarning(text: widget.descriptor.warning!),
+                    ),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                      child: _buildEditor(),
+                    ),
+                  ),
+                  SafeArea(
+                    top: false,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                              color:
+                                  theme.dividerColor.withValues(alpha: 0.45)),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('取消'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton.icon(
+                              icon: const Icon(Icons.check_rounded),
+                              label: const Text('保存'),
+                              onPressed: _save,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditor() {
+    switch (widget.descriptor.kind) {
+      case _SettingEditorKind.number:
+        return _NumberSettingEditor(
+          controller: _controller('number', _value?.toString() ?? ''),
+        );
+      case _SettingEditorKind.text:
+        return _TextSettingEditor(
+          controller: _controller('text', _value?.toString() ?? ''),
+          secret: widget.descriptor.secret,
+        );
+      case _SettingEditorKind.enumChoice:
+        return _EnumSettingEditor(
+          choices: widget.descriptor.choices,
+          value: _value?.toString() ?? '',
+          onChanged: (value) => setState(() => _value = value),
+        );
+      case _SettingEditorKind.stringList:
+        return _StringListSettingEditor(
+          values: _valueAsStringList(_value),
+          label: '条目',
+          hintText: _stringListHint(widget.groupName, widget.settingKey),
+          onChanged: (values) => setState(() => _value = values),
+        );
+      case _SettingEditorKind.permissionList:
+        return _PermissionListSettingEditor(
+          values: _valueAsStringList(_value).toSet(),
+          onChanged: (values) =>
+              setState(() => _value = values.toList()..sort()),
+        );
+      case _SettingEditorKind.oauth2Providers:
+        return _OAuth2ProvidersEditor(
+          providers: _oauth2ProvidersFromValue(_value),
+          onChanged: (providers) => setState(() => _value = providers),
+        );
+      case _SettingEditorKind.iceServers:
+        return _IceServersEditor(
+          servers: _iceServersFromValue(_value),
+          onChanged: (servers) => setState(() => _value = servers),
+        );
+      case _SettingEditorKind.map:
+        return _StructuredValueEditor(
+          value: _value is Map
+              ? Map<String, dynamic>.from(_value)
+              : <String, dynamic>{},
+          onChanged: (value) => setState(() => _value = value),
+        );
+      case _SettingEditorKind.list:
+        return _StringListSettingEditor(
+          values: _valueAsStringList(_value),
+          label: '条目',
+          hintText: '输入条目',
+          onChanged: (values) => setState(() => _value = values),
+        );
+      case _SettingEditorKind.boolean:
+        return SwitchListTile(
+          value: _value == true,
+          onChanged: (value) => setState(() => _value = value),
+          title: Text(widget.descriptor.title),
+          subtitle: Text(widget.descriptor.description),
+        );
+    }
+  }
+
+  void _save() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    dynamic result = _value;
+    switch (widget.descriptor.kind) {
+      case _SettingEditorKind.number:
+        final raw = _controller('number').text.trim();
+        result = num.tryParse(raw);
+        if (result == null) return;
+        if (!raw.contains('.') && result is num) result = result.toInt();
+        break;
+      case _SettingEditorKind.text:
+        result = _controller('text').text.trim();
+        break;
+      case _SettingEditorKind.stringList:
+        if (widget.groupName == 'email' && widget.settingKey == 'whitelist') {
+          result = _valueAsStringList(_value).join('\n');
+        } else {
+          result = _valueAsStringList(_value);
+        }
+        break;
+      case _SettingEditorKind.oauth2Providers:
+      case _SettingEditorKind.iceServers:
+      case _SettingEditorKind.permissionList:
+      case _SettingEditorKind.map:
+      case _SettingEditorKind.list:
+      case _SettingEditorKind.enumChoice:
+      case _SettingEditorKind.boolean:
+        result = _value;
+        break;
+    }
+    Navigator.pop(context, result);
+  }
+
+  String _stringListHint(String group, String key) {
+    if (group == 'cors') return 'https://app.example.com';
+    if (group == 'email') return '@example.com';
+    return '输入条目';
+  }
+}
+
+dynamic _deepCopySettingValue(dynamic value) {
+  if (value is Map || value is List) return jsonDecode(jsonEncode(value));
+  return value;
+}
+
+class _NumberSettingEditor extends StatelessWidget {
+  final TextEditingController controller;
+
+  const _NumberSettingEditor({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: const InputDecoration(
+        labelText: '数值',
+        prefixIcon: Icon(Icons.pin_outlined),
+        border: OutlineInputBorder(),
+      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) return '请输入数值';
+        return num.tryParse(value.trim()) == null ? '请输入有效数值' : null;
+      },
+    );
+  }
+}
+
+class _TextSettingEditor extends StatefulWidget {
+  final TextEditingController controller;
+  final bool secret;
+
+  const _TextSettingEditor({
+    required this.controller,
+    required this.secret,
+  });
+
+  @override
+  State<_TextSettingEditor> createState() => _TextSettingEditorState();
+}
+
+class _TextSettingEditorState extends State<_TextSettingEditor> {
+  bool _obscure = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: widget.controller,
+      obscureText: widget.secret && _obscure,
+      minLines: widget.secret ? 1 : null,
+      maxLines: widget.secret ? 1 : 4,
+      decoration: InputDecoration(
+        labelText: '内容',
+        prefixIcon: const Icon(Icons.edit_outlined),
+        border: const OutlineInputBorder(),
+        suffixIcon: widget.secret
+            ? IconButton(
+                tooltip: _obscure ? '显示' : '隐藏',
+                icon: Icon(_obscure
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+class _EnumSettingEditor extends StatelessWidget {
+  final List<_SettingChoice> choices;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  const _EnumSettingEditor({
+    required this.choices,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (final choice in choices)
+          Card(
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              onTap: () => onChanged(choice.value),
+              leading: Icon(
+                value == choice.value
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_unchecked_rounded,
+              ),
+              title: Text(choice.label),
+              subtitle: Text(choice.description),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _StringListSettingEditor extends StatefulWidget {
+  final List<String> values;
+  final String label;
+  final String hintText;
+  final ValueChanged<List<String>> onChanged;
+
+  const _StringListSettingEditor({
+    required this.values,
+    required this.label,
+    required this.hintText,
+    required this.onChanged,
+  });
+
+  @override
+  State<_StringListSettingEditor> createState() =>
+      _StringListSettingEditorState();
+}
+
+class _StringListSettingEditorState extends State<_StringListSettingEditor> {
+  late List<TextEditingController> _controllers;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = [
+      for (final value in widget.values) TextEditingController(text: value),
+    ];
+    if (_controllers.isEmpty) _controllers.add(TextEditingController());
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _emit() {
+    widget.onChanged(
+      _controllers
+          .map((controller) => controller.text.trim())
+          .where((value) => value.isNotEmpty)
+          .toList(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var index = 0; index < _controllers.length; index++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _controllers[index],
+                    decoration: InputDecoration(
+                      labelText: '${widget.label} ${index + 1}',
+                      hintText: widget.hintText,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (_) => _emit(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  tooltip: '删除',
+                  icon: const Icon(Icons.remove_rounded),
+                  onPressed: _controllers.length == 1
+                      ? null
+                      : () {
+                          setState(() {
+                            _controllers.removeAt(index).dispose();
+                          });
+                          _emit();
+                        },
+                ),
+              ],
+            ),
+          ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('添加'),
+            onPressed: () {
+              setState(() => _controllers.add(TextEditingController()));
+              _emit();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PermissionListSettingEditor extends StatelessWidget {
+  final Set<String> values;
+  final ValueChanged<Set<String>> onChanged;
+
+  const _PermissionListSettingEditor({
+    required this.values,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final permission in _knownPermissions)
+          FilterChip(
+            label: Text(_permissionLabels[permission] ?? permission),
+            selected: values.contains(permission),
+            onSelected: (selected) {
+              final next = {...values};
+              if (selected) {
+                next.add(permission);
+              } else {
+                next.remove(permission);
+              }
+              onChanged(next);
+            },
+          ),
+      ],
+    );
+  }
+}
+
+Map<String, dynamic> _oauth2ProvidersFromValue(dynamic value) {
+  if (value is Map) return Map<String, dynamic>.from(value);
+  if (value is String && value.trim().isNotEmpty) {
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+  }
+  return <String, dynamic>{};
+}
+
+List<Map<String, dynamic>> _iceServersFromValue(dynamic value) {
+  if (value is List) {
+    return value
+        .whereType<Map>()
+        .map((entry) => Map<String, dynamic>.from(entry))
+        .toList();
+  }
+  if (value is String && value.trim().isNotEmpty) {
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is List) return _iceServersFromValue(decoded);
+    } catch (_) {}
+  }
+  return <Map<String, dynamic>>[];
+}
+
+class _OAuth2ProvidersEditor extends StatelessWidget {
+  final Map<String, dynamic> providers;
+  final ValueChanged<Map<String, dynamic>> onChanged;
+
+  const _OAuth2ProvidersEditor({
+    required this.providers,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = providers.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (entries.isEmpty)
+          const _EmptySettingsNotice(
+            icon: Icons.account_tree_outlined,
+            title: '还没有第三方登录实例',
+            message: '添加 GitHub、Google、Logto 或通用 OIDC 实例后，登录页会自动展示对应入口。',
+          )
+        else
+          for (final entry in entries)
+            _OAuth2ProviderCard(
+              name: entry.key,
+              value: entry.value is Map
+                  ? Map<String, dynamic>.from(entry.value)
+                  : <String, dynamic>{},
+              onEdit: () => _editProvider(context, entry.key),
+              onDelete: () {
+                final next = Map<String, dynamic>.from(providers)
+                  ..remove(entry.key);
+                onChanged(next);
+              },
+            ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.icon(
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('添加登录提供方'),
+            onPressed: () => _editProvider(context, null),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _editProvider(BuildContext context, String? name) async {
+    final current = name == null
+        ? <String, dynamic>{}
+        : Map<String, dynamic>.from(providers[name] as Map? ?? const {});
+    final result = await showModalBottomSheet<_OAuth2ProviderEditResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _OAuth2ProviderEditorSheet(
+        initialName: name,
+        initialValue: current,
+        existingNames: providers.keys.toSet(),
+      ),
+    );
+    if (result == null) return;
+    final next = Map<String, dynamic>.from(providers);
+    if (name != null && name != result.name) next.remove(name);
+    next[result.name] = result.value;
+    onChanged(next);
+  }
+}
+
+class _OAuth2ProvidersList extends StatelessWidget {
+  final Map<String, dynamic> providers;
+  final bool saving;
+  final ValueChanged<String> onEdit;
+  final ValueChanged<String> onDelete;
+
+  const _OAuth2ProvidersList({
+    required this.providers,
+    required this.saving,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = providers.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (saving)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: LinearProgressIndicator(),
+          ),
+        if (entries.isEmpty)
+          const _EmptySettingsNotice(
+            icon: Icons.account_tree_outlined,
+            title: '还没有第三方登录实例',
+            message: '点击右上角添加 GitHub、Google、Logto 或通用 OIDC 登录入口。',
+          )
+        else
+          for (final entry in entries)
+            _OAuth2ProviderCard(
+              name: entry.key,
+              value: entry.value is Map
+                  ? Map<String, dynamic>.from(entry.value)
+                  : <String, dynamic>{},
+              onEdit: saving ? null : () => onEdit(entry.key),
+              onDelete: saving ? null : () => onDelete(entry.key),
+            ),
+      ],
+    );
+  }
+}
+
+class _OAuth2ProviderCard extends StatelessWidget {
+  final String name;
+  final Map<String, dynamic> value;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+
+  const _OAuth2ProviderCard({
+    required this.name,
+    required this.value,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final providerType = (value['type'] ?? '').toString();
+    final config = value['config'] is Map
+        ? Map<String, dynamic>.from(value['config'])
+        : const {};
+    final hasClientId = (config['client_id'] ?? '').toString().isNotEmpty;
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.55)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.login_rounded, color: theme.colorScheme.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${_oauth2ProviderTypeLabels[providerType] ?? providerType} · ${hasClientId ? '已配置客户端' : '未填写 Client ID'}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _StatusChip(
+                        label:
+                            value['enable_signup'] == true ? '允许注册' : '仅登录绑定',
+                        icon: value['enable_signup'] == true
+                            ? Icons.person_add_alt_1_outlined
+                            : Icons.login_rounded,
+                      ),
+                      if (value['signup_need_review'] == true)
+                        const _StatusChip(
+                            label: '注册需审核', icon: Icons.fact_check_outlined),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: '编辑',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: onEdit,
+            ),
+            IconButton(
+              tooltip: '删除',
+              icon: const Icon(Icons.delete_outline_rounded),
+              onPressed: onDelete,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _StatusChip({required this.label, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: theme.colorScheme.onSecondaryContainer),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSecondaryContainer,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OAuth2ProviderEditResult {
+  final String name;
+  final Map<String, dynamic> value;
+
+  const _OAuth2ProviderEditResult(this.name, this.value);
+}
+
+class _OAuth2ProviderEditorSheet extends StatefulWidget {
+  final String? initialName;
+  final Map<String, dynamic> initialValue;
+  final Set<String> existingNames;
+
+  const _OAuth2ProviderEditorSheet({
+    required this.initialName,
+    required this.initialValue,
+    required this.existingNames,
+  });
+
+  @override
+  State<_OAuth2ProviderEditorSheet> createState() =>
+      _OAuth2ProviderEditorSheetState();
+}
+
+class _OAuth2ProviderEditorSheetState
+    extends State<_OAuth2ProviderEditorSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _name;
+  late final TextEditingController _clientId;
+  late final TextEditingController _clientSecret;
+  late final TextEditingController _redirectUrl;
+  late final TextEditingController _endpoint;
+  late final TextEditingController _issuer;
+  late final TextEditingController _authUrl;
+  late final TextEditingController _tokenUrl;
+  late final TextEditingController _userinfoUrl;
+  late final TextEditingController _jwksUrl;
+  late String _type;
+  late bool _enableSignup;
+  late bool _signupNeedReview;
+  bool _showSecret = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final config = widget.initialValue['config'] is Map
+        ? Map<String, dynamic>.from(widget.initialValue['config'])
+        : <String, dynamic>{};
+    _type = (widget.initialValue['type'] ?? 'github').toString();
+    if (!_oauth2ProviderTypes.contains(_type)) _type = 'oidc';
+    _enableSignup = widget.initialValue['enable_signup'] == true;
+    _signupNeedReview = widget.initialValue['signup_need_review'] == true;
+    _name = TextEditingController(text: widget.initialName ?? _type);
+    _clientId =
+        TextEditingController(text: (config['client_id'] ?? '').toString());
+    _clientSecret =
+        TextEditingController(text: (config['client_secret'] ?? '').toString());
+    _redirectUrl =
+        TextEditingController(text: (config['redirect_url'] ?? '').toString());
+    _endpoint =
+        TextEditingController(text: (config['endpoint'] ?? '').toString());
+    _issuer = TextEditingController(text: (config['issuer'] ?? '').toString());
+    _authUrl =
+        TextEditingController(text: (config['auth_url'] ?? '').toString());
+    _tokenUrl =
+        TextEditingController(text: (config['token_url'] ?? '').toString());
+    _userinfoUrl =
+        TextEditingController(text: (config['userinfo_url'] ?? '').toString());
+    _jwksUrl =
+        TextEditingController(text: (config['jwks_url'] ?? '').toString());
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _clientId.dispose();
+    _clientSecret.dispose();
+    _redirectUrl.dispose();
+    _endpoint.dispose();
+    _issuer.dispose();
+    _authUrl.dispose();
+    _tokenUrl.dispose();
+    _userinfoUrl.dispose();
+    _jwksUrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottom),
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720, maxHeight: 760),
+          child: Material(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            clipBehavior: Clip.antiAlias,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 12, 10),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.login_rounded),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            widget.initialName == null ? '添加第三方登录' : '编辑第三方登录',
+                            style: theme.textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: '关闭',
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _name,
+                            decoration: const InputDecoration(
+                              labelText: '实例名称',
+                              helperText: '只能使用字母、数字、下划线和连字符',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.badge_outlined),
+                            ),
+                            validator: _validateProviderName,
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue: _type,
+                            decoration: const InputDecoration(
+                              labelText: '提供方类型',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.account_tree_outlined),
+                            ),
+                            items: [
+                              for (final type in _oauth2ProviderTypes)
+                                DropdownMenuItem(
+                                  value: type,
+                                  child: Text(
+                                      _oauth2ProviderTypeLabels[type] ?? type),
+                                ),
+                            ],
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setState(() {
+                                _type = value;
+                                if (widget.initialName == null &&
+                                    (_name.text.trim().isEmpty ||
+                                        _oauth2ProviderTypes
+                                            .contains(_name.text.trim()))) {
+                                  _name.text = value;
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _oauthTextField(
+                              _clientId, 'Client ID', Icons.key_outlined,
+                              required: true),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _clientSecret,
+                            obscureText: !_showSecret,
+                            decoration: InputDecoration(
+                              labelText: 'Client Secret',
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.password_outlined),
+                              suffixIcon: IconButton(
+                                tooltip: _showSecret ? '隐藏' : '显示',
+                                icon: Icon(_showSecret
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined),
+                                onPressed: () =>
+                                    setState(() => _showSecret = !_showSecret),
+                              ),
+                            ),
+                            validator: (value) =>
+                                (value == null || value.trim().isEmpty)
+                                    ? '请输入 Client Secret'
+                                    : null,
+                          ),
+                          const SizedBox(height: 12),
+                          _oauthTextField(
+                            _redirectUrl,
+                            '回调地址',
+                            Icons.link_rounded,
+                            required: true,
+                            hintText: 'https://example.com/api/oauth2/callback',
+                            validator: _validateHttpUrl,
+                          ),
+                          if (_type == 'logto') ...[
+                            const SizedBox(height: 12),
+                            _oauthTextField(
+                              _endpoint,
+                              'Logto Endpoint',
+                              Icons.hub_outlined,
+                              required: true,
+                              hintText: 'https://auth.example.com',
+                              validator: _validateHttpUrl,
+                            ),
+                          ],
+                          if (_type == 'oidc') ...[
+                            const SizedBox(height: 12),
+                            _oauthTextField(
+                              _issuer,
+                              'Issuer',
+                              Icons.verified_outlined,
+                              required: true,
+                              hintText: 'https://issuer.example.com',
+                              validator: _validateHttpUrl,
+                            ),
+                            const SizedBox(height: 12),
+                            _oauthTextField(
+                                _authUrl, '授权端点', Icons.open_in_browser_rounded,
+                                hintText: '留空使用 OIDC Discovery',
+                                validator: _validateOptionalHttpUrl),
+                            const SizedBox(height: 12),
+                            _oauthTextField(
+                                _tokenUrl, 'Token 端点', Icons.token_outlined,
+                                hintText: '留空使用 OIDC Discovery',
+                                validator: _validateOptionalHttpUrl),
+                            const SizedBox(height: 12),
+                            _oauthTextField(_userinfoUrl, 'UserInfo 端点',
+                                Icons.person_search_outlined,
+                                hintText: '留空使用 OIDC Discovery',
+                                validator: _validateOptionalHttpUrl),
+                            const SizedBox(height: 12),
+                            _oauthTextField(
+                                _jwksUrl, 'JWKS 端点', Icons.security_rounded,
+                                hintText: '留空使用 OIDC Discovery',
+                                validator: _validateOptionalHttpUrl),
+                          ],
+                          const SizedBox(height: 8),
+                          SwitchListTile(
+                            value: _enableSignup,
+                            onChanged: (value) =>
+                                setState(() => _enableSignup = value),
+                            title: const Text('允许用此提供方注册'),
+                            subtitle: const Text('关闭后只允许绑定过的用户登录。'),
+                          ),
+                          SwitchListTile(
+                            value: _signupNeedReview,
+                            onChanged: _enableSignup
+                                ? (value) =>
+                                    setState(() => _signupNeedReview = value)
+                                : null,
+                            title: const Text('注册后需要审核'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('取消'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton.icon(
+                              icon: const Icon(Icons.check_rounded),
+                              label: const Text('保存实例'),
+                              onPressed: _save,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  TextFormField _oauthTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    bool required = false,
+    String? hintText,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        border: const OutlineInputBorder(),
+        prefixIcon: Icon(icon),
+      ),
+      validator: validator ??
+          (required
+              ? (value) =>
+                  (value == null || value.trim().isEmpty) ? '请输入 $label' : null
+              : null),
+    );
+  }
+
+  String? _validateProviderName(String? value) {
+    final name = value?.trim() ?? '';
+    if (name.isEmpty) return '请输入实例名称';
+    if (name.length > 64) return '实例名称不能超过 64 个字符';
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(name)) return '只能使用字母、数字、下划线和连字符';
+    if (name != widget.initialName && widget.existingNames.contains(name)) {
+      return '实例名称已存在';
+    }
+    return null;
+  }
+
+  String? _validateHttpUrl(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return '请输入 URL';
+    final uri = Uri.tryParse(raw);
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) return '请输入有效 URL';
+    if (uri.scheme != 'http' && uri.scheme != 'https') {
+      return '只允许 http 或 https 地址';
+    }
+    return null;
+  }
+
+  String? _validateOptionalHttpUrl(String? value) {
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) return null;
+    return _validateHttpUrl(raw);
+  }
+
+  void _save() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final config = <String, dynamic>{
+      'client_id': _clientId.text.trim(),
+      'client_secret': _clientSecret.text,
+      'redirect_url': _redirectUrl.text.trim(),
+    };
+    if (_type == 'logto') {
+      config['endpoint'] = _endpoint.text.trim();
+    }
+    if (_type == 'oidc') {
+      config['issuer'] = _issuer.text.trim();
+      for (final entry in {
+        'auth_url': _authUrl.text.trim(),
+        'token_url': _tokenUrl.text.trim(),
+        'userinfo_url': _userinfoUrl.text.trim(),
+        'jwks_url': _jwksUrl.text.trim(),
+      }.entries) {
+        if (entry.value.isNotEmpty) config[entry.key] = entry.value;
+      }
+    }
+    Navigator.pop(
+      context,
+      _OAuth2ProviderEditResult(
+        _name.text.trim(),
+        {
+          'type': _type,
+          'enable_signup': _enableSignup,
+          'signup_need_review': _enableSignup && _signupNeedReview,
+          'config': config,
+        },
+      ),
+    );
+  }
+}
+
+class _IceServersEditor extends StatelessWidget {
+  final List<Map<String, dynamic>> servers;
+  final ValueChanged<List<Map<String, dynamic>>> onChanged;
+
+  const _IceServersEditor({
+    required this.servers,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (servers.isEmpty)
+          const _EmptySettingsNotice(
+            icon: Icons.settings_input_antenna_rounded,
+            title: '未配置 ICE 服务器',
+            message: '添加 STUN 或 TURN 服务器后，客户端会优先使用这里的连接配置。',
+          )
+        else
+          for (var index = 0; index < servers.length; index++)
+            _IceServerCard(
+              index: index,
+              value: servers[index],
+              onChanged: (value) {
+                final next = [...servers];
+                next[index] = value;
+                onChanged(next);
+              },
+              onDelete: () {
+                final next = [...servers]..removeAt(index);
+                onChanged(next);
+              },
+            ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.icon(
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('添加 ICE 服务器'),
+            onPressed: () {
+              onChanged([
+                ...servers,
+                {
+                  'urls': ['stun:stun.l.google.com:19302'],
+                },
+              ]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IceServerCard extends StatefulWidget {
+  final int index;
+  final Map<String, dynamic> value;
+  final ValueChanged<Map<String, dynamic>> onChanged;
+  final VoidCallback onDelete;
+
+  const _IceServerCard({
+    required this.index,
+    required this.value,
+    required this.onChanged,
+    required this.onDelete,
+  });
+
+  @override
+  State<_IceServerCard> createState() => _IceServerCardState();
+}
+
+class _IceServerCardState extends State<_IceServerCard> {
+  late final TextEditingController _urls;
+  late final TextEditingController _username;
+  late final TextEditingController _credential;
+  bool _showCredential = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final urls = widget.value['urls'];
+    _urls = TextEditingController(
+      text: urls is List ? urls.map((item) => item.toString()).join('\n') : '',
+    );
+    _username = TextEditingController(
+        text: (widget.value['username'] ?? '').toString());
+    _credential = TextEditingController(
+        text: (widget.value['credential'] ?? '').toString());
+  }
+
+  @override
+  void dispose() {
+    _urls.dispose();
+    _username.dispose();
+    _credential.dispose();
+    super.dispose();
+  }
+
+  void _emit() {
+    final next = <String, dynamic>{
+      'urls': _urls.text
+          .split(RegExp(r'[\n,]'))
+          .map((url) => url.trim())
+          .where((url) => url.isNotEmpty)
+          .toList(),
+    };
+    if (_username.text.trim().isNotEmpty) {
+      next['username'] = _username.text.trim();
+    }
+    if (_credential.text.isNotEmpty) next['credential'] = _credential.text;
+    widget.onChanged(next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.55)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'ICE 服务器 ${widget.index + 1}',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                IconButton(
+                  tooltip: '删除',
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  onPressed: widget.onDelete,
+                ),
+              ],
+            ),
+            TextFormField(
+              controller: _urls,
+              minLines: 1,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'URL',
+                helperText: '每行一个，例如 stun:host:3478 或 turns:host:5349',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.link_rounded),
+              ),
+              onChanged: (_) => _emit(),
+              validator: (value) {
+                final urls = value
+                        ?.split(RegExp(r'[\n,]'))
+                        .map((url) => url.trim())
+                        .where((url) => url.isNotEmpty)
+                        .toList() ??
+                    const [];
+                if (urls.isEmpty) return '至少填写一个 URL';
+                final invalid = urls.where((url) => !(url.startsWith('stun:') ||
+                    url.startsWith('turn:') ||
+                    url.startsWith('turns:')));
+                return invalid.isNotEmpty ? '只支持 stun:/turn:/turns: URL' : null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _username,
+              decoration: const InputDecoration(
+                labelText: '用户名',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person_outline_rounded),
+              ),
+              onChanged: (_) => _emit(),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _credential,
+              obscureText: !_showCredential,
+              decoration: InputDecoration(
+                labelText: '凭据',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.password_outlined),
+                suffixIcon: IconButton(
+                  tooltip: _showCredential ? '隐藏' : '显示',
+                  icon: Icon(
+                    _showCredential
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  onPressed: () =>
+                      setState(() => _showCredential = !_showCredential),
+                ),
+              ),
+              onChanged: (_) => _emit(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StructuredValueEditor extends StatelessWidget {
+  final Map<String, dynamic> value;
+  final ValueChanged<Map<String, dynamic>> onChanged;
+
+  const _StructuredValueEditor({
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = value.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return Column(
+      children: [
+        for (final entry in entries)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _DynamicValueField(
+              name: entry.key,
+              value: entry.value,
+              onChanged: (nextValue) {
+                final next = Map<String, dynamic>.from(value);
+                next[entry.key] = nextValue;
+                onChanged(next);
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _DynamicValueField extends StatefulWidget {
+  final String name;
+  final dynamic value;
+  final ValueChanged<dynamic> onChanged;
+
+  const _DynamicValueField({
+    required this.name,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  State<_DynamicValueField> createState() => _DynamicValueFieldState();
+}
+
+class _DynamicValueFieldState extends State<_DynamicValueField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value?.toString() ?? '');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final value = widget.value;
+    if (value is bool) {
+      return SwitchListTile(
+        value: value,
+        onChanged: widget.onChanged,
+        title: Text(_humanizeSettingKey(widget.name)),
+      );
+    }
+    return TextFormField(
+      controller: _controller,
+      obscureText: _isSecretKey(widget.name),
+      keyboardType: value is num ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: _humanizeSettingKey(widget.name),
+        border: const OutlineInputBorder(),
+      ),
+      onChanged: (raw) {
+        if (value is int) {
+          widget.onChanged(int.tryParse(raw) ?? value);
+        } else if (value is double || value is num) {
+          widget.onChanged(num.tryParse(raw) ?? value);
+        } else {
+          widget.onChanged(raw);
+        }
+      },
+    );
+  }
+}
+
+class _EmptySettingsNotice extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+
+  const _EmptySettingsNotice({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.55)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 32, color: theme.colorScheme.primary),
+          const SizedBox(height: 10),
+          Text(title,
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

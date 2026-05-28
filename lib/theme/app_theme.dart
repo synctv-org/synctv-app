@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color _seedColor = Color(0xFF5D5FEF);
+  static const Color _seedColor = Color(0xFF2563EB);
+  static const Color _lightScaffold = Color(0xFFF4F6FA);
+  static const Color _lightSurface = Color(0xFFFFFFFF);
+  static const Color _darkScaffold = Color(0xFF101114);
+  static const Color _darkSurface = Color(0xFF181A20);
 
   static final ThemeData light = ThemeData(
     useMaterial3: true,
@@ -9,39 +13,63 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: _seedColor,
       brightness: Brightness.light,
-      primary: Colors.black, // Enforce strict Black in Light Mode
+      primary: _seedColor,
       onPrimary: Colors.white,
-	      surface: Colors.white,
+      surface: _lightSurface,
+      onSurface: const Color(0xFF111827),
+      surfaceContainerHighest: const Color(0xFFE7ECF3),
     ),
-    scaffoldBackgroundColor: Colors.white,
+    scaffoldBackgroundColor: _lightScaffold,
     cardTheme: const CardThemeData(
-      color: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      elevation: 2,
-    ),
-    dialogTheme: const DialogThemeData(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-    ),
-    bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
+      color: _lightSurface,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
-      iconTheme: IconThemeData(color: Colors.black),
-      titleTextStyle: TextStyle(
-        color: Colors.black,
-        fontSize: 20,
-        fontWeight: FontWeight.w500,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.all(Radius.circular(8)),
       ),
     ),
-    // Ensure text is black on white
+    dialogTheme: const DialogThemeData(
+      backgroundColor: _lightSurface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: _lightSurface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: _lightScaffold,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      iconTheme: IconThemeData(color: Color(0xFF111827)),
+      titleTextStyle: TextStyle(
+        color: Color(0xFF111827),
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFD7DEE8)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFD7DEE8)),
+      ),
+    ),
+    dividerTheme: const DividerThemeData(color: Color(0xFFE2E8F0)),
     textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: Colors.black),
-      bodyMedium: TextStyle(color: Colors.black),
+      bodyLarge: TextStyle(color: Color(0xFF111827)),
+      bodyMedium: TextStyle(color: Color(0xFF111827)),
     ),
   );
 
@@ -51,54 +79,66 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: _seedColor,
       brightness: Brightness.dark,
-	      surface: Colors.black,
-	      onSurface: Colors.white,
+      primary: const Color(0xFF7AA2FF),
+      surface: _darkSurface,
+      onSurface: const Color(0xFFF8FAFC),
+      surfaceContainerHighest: const Color(0xFF242833),
     ),
-    scaffoldBackgroundColor: Colors.black,
+    scaffoldBackgroundColor: _darkScaffold,
     cardTheme: const CardThemeData(
-      color: Colors.black,
+      color: _darkSurface,
       surfaceTintColor: Colors.transparent,
-      elevation: 2,
-      // Add a subtle border or different handling since it's black-on-black
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.white24, width: 1),
-        borderRadius: BorderRadius.all(Radius.circular(12)),
+        side: BorderSide(color: Color(0xFF2B303B), width: 1),
+        borderRadius: BorderRadius.all(Radius.circular(8)),
       ),
     ),
     dialogTheme: const DialogThemeData(
-      backgroundColor: Colors.black,
+      backgroundColor: _darkSurface,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.white24, width: 1),
-        borderRadius: BorderRadius.all(Radius.circular(28)),
+        side: BorderSide(color: Color(0xFF2B303B), width: 1),
+        borderRadius: BorderRadius.all(Radius.circular(8)),
       ),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: Colors.black,
+      backgroundColor: _darkSurface,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: Colors.white24, width: 1),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        side: BorderSide(color: Color(0xFF2B303B), width: 1),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
       ),
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.black,
+      backgroundColor: _darkScaffold,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(color: Color(0xFFF8FAFC)),
       titleTextStyle: TextStyle(
-        color: Colors.white,
+        color: Color(0xFFF8FAFC),
         fontSize: 20,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w700,
       ),
     ),
-    // Ensure text is white on black
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: _darkSurface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFF343A46)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFF343A46)),
+      ),
+    ),
     textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: Colors.white),
-      bodyMedium: TextStyle(color: Colors.white),
+      bodyLarge: TextStyle(color: Color(0xFFF8FAFC)),
+      bodyMedium: TextStyle(color: Color(0xFFF8FAFC)),
     ),
     dividerTheme: const DividerThemeData(
-      color: Colors.white24,
+      color: Color(0xFF2B303B),
     ),
   );
 }

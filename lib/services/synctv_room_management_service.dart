@@ -429,6 +429,7 @@ WUser roomMemberToUser(AdminRoomMember member) {
     role: member.role,
     createdAt: member.joinedAt,
     status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
+    onlineCount: member.isOnline ? 1 : 0,
   );
 }
 

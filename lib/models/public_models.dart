@@ -6,7 +6,6 @@ class PublicSettingsInfo {
   final int maxMembersPerRoom;
   final bool disableCreateRoom;
   final bool createRoomNeedReview;
-  final int roomTtl;
   final String roomPasswordPolicy;
   final bool enablePasswordSignup;
   final bool passwordSignupNeedReview;
@@ -27,7 +26,6 @@ class PublicSettingsInfo {
     required this.maxMembersPerRoom,
     required this.disableCreateRoom,
     required this.createRoomNeedReview,
-    required this.roomTtl,
     required this.roomPasswordPolicy,
     required this.enablePasswordSignup,
     required this.passwordSignupNeedReview,
@@ -42,26 +40,6 @@ class PublicSettingsInfo {
     required this.tsDisguisedAsPng,
     required this.customPublishHost,
   });
-
-  List<String> get roomCreationPolicyHints {
-    final hints = <String>[];
-    if (maxRoomsPerUser > 0) {
-      hints.add('每个用户最多 $maxRoomsPerUser 个房间');
-    }
-    if (maxMembersPerRoom > 0) {
-      hints.add('每个房间最多 $maxMembersPerRoom 名成员');
-    }
-    if (roomTtl > 0) {
-      hints.add('房间空闲 ${_formatDuration(roomTtl)} 后自动清理');
-    }
-    final normalizedPolicy = roomPasswordPolicy.toLowerCase();
-    if (normalizedPolicy == 'required') {
-      hints.add('创建房间必须设置密码');
-    } else if (normalizedPolicy == 'forbidden') {
-      hints.add('新房间必须保持公开');
-    }
-    return List.unmodifiable(hints);
-  }
 
   List<String> get authPolicyHints {
     final hints = <String>[];
@@ -81,19 +59,6 @@ class PublicSettingsInfo {
       hints.add('访客访问未启用');
     }
     return List.unmodifiable(hints);
-  }
-
-  static String _formatDuration(int seconds) {
-    if (seconds % 86400 == 0) {
-      return '${seconds ~/ 86400} 天';
-    }
-    if (seconds % 3600 == 0) {
-      return '${seconds ~/ 3600} 小时';
-    }
-    if (seconds % 60 == 0) {
-      return '${seconds ~/ 60} 分钟';
-    }
-    return '$seconds 秒';
   }
 }
 

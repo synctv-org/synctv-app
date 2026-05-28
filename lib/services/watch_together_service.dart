@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/admin_models.dart';
@@ -32,6 +32,7 @@ class WatchTogetherService {
   static String get baseUrl => _runtime.baseUrl;
   static List<SyncTvServerProfile> get servers => _runtime.servers;
   static SyncTvServerProfile? get activeServer => _runtime.activeServer;
+  static bool get hasRecoverableSession => _runtime.hasRecoverableSession;
   static String resolveResourceUrl(String url) =>
       _runtime.resolveResourceUrl(url);
   static String? get guestRoomId => _runtime.guestRoomId;
@@ -79,6 +80,18 @@ class WatchTogetherService {
   }
 
   static Future<String?> getToken() => _runtime.getToken();
+
+  static Future<Uri> createRoomWebSocketUri(String roomId) {
+    return _runtime.createRoomWebSocketUri(roomId);
+  }
+
+  static String encodeRealtimeMessageJson(client.ClientMessage message) {
+    return jsonEncode(_runtime.encodeRealtimeJson(message));
+  }
+
+  static client.ServerMessage decodeRealtimeMessageJson(String json) {
+    return _runtime.decodeRealtimeJson(jsonDecode(json));
+  }
 
   static Future<void> logout() async {
     await _runtime.logout();
@@ -264,37 +277,6 @@ class WatchTogetherService {
       code: code,
       state: state,
     );
-  }
-
-  static Stream<client.ServerMessage> connectRoomMessageStream(
-    String roomId,
-    Stream<client.ClientMessage> messages, {
-    Duration? timeout,
-  }) {
-    return _runtime.connectRoomMessageStream(
-      roomId,
-      messages,
-      timeout: timeout,
-    );
-  }
-
-  static Stream<RoomRealtimeMessage> connectRoomRealtimeStream(
-    String roomId,
-    Stream<List<int>> outgoing, {
-    Duration? timeout,
-  }) {
-    final messages = outgoing
-        .where((bytes) => bytes.isNotEmpty)
-        .map(client.ClientMessage.fromBuffer);
-    return connectRoomMessageStream(
-      roomId,
-      messages,
-      timeout: timeout,
-    ).map((message) {
-      return RoomRealtimeCodec.decode(Uint8List.fromList(
-        message.writeToBuffer(),
-      ));
-    });
   }
 
   static Future<WUser> getMe() async {
@@ -528,8 +510,16 @@ class WatchTogetherService {
     return _domains.publicRooms.checkRoom(roomId);
   }
 
-  static Future<WRoom> createRoom(String name, {String? password}) async {
-    return _domains.publicRooms.createRoom(name, password: password);
+  static Future<WRoom> createRoom(
+    String name, {
+    String? password,
+    String? description,
+  }) async {
+    return _domains.publicRooms.createRoom(
+      name,
+      password: password,
+      description: description,
+    );
   }
 
   static Future<void> deleteRoom(String roomId) async {
@@ -949,13 +939,13 @@ class WatchTogetherService {
     await _domains.roomMedia.clearMovies(roomId, parentId: parentId);
   }
 
-  static Future<void> switchMovie(
+  static Future<WPlaybackStatus> switchMovie(
     String roomId,
     String movieId, {
     String? subPath,
     String? playlistId,
   }) async {
-    await _domains.roomMedia.switchMovie(
+    return _domains.roomMedia.switchMovie(
       roomId,
       movieId,
       subPath: subPath,
@@ -963,7 +953,36 @@ class WatchTogetherService {
     );
   }
 
-  static Future<void> updatePlayback(
+  static Future<WPlaybackStatus> switchMovieAndPlay(
+    String roomId,
+    String movieId, {
+    String? subPath,
+    String? playlistId,
+  }) async {
+    final switched = await switchMovie(
+      roomId,
+      movieId,
+      subPath: subPath,
+      playlistId: playlistId,
+    );
+    final playback = await updatePlayback(
+      roomId,
+      action: PlaybackControlAction.play,
+      isPlaying: true,
+      position: 0,
+      speed: 1,
+    );
+    return playback.movie == null && switched.movie != null
+        ? WPlaybackStatus(
+            movie: switched.movie,
+            isPlaying: true,
+            currentTime: 0,
+            playbackRate: playback.playbackRate,
+          )
+        : playback;
+  }
+
+  static Future<WPlaybackStatus> updatePlayback(
     String roomId, {
     PlaybackControlAction? action,
     required bool isPlaying,
@@ -971,7 +990,7 @@ class WatchTogetherService {
     double speed = 1.0,
     int? version,
   }) async {
-    await _domains.roomMedia.updatePlayback(
+    return _domains.roomMedia.updatePlayback(
       roomId,
       action: action,
       isPlaying: isPlaying,
@@ -979,6 +998,20 @@ class WatchTogetherService {
       speed: speed,
       version: version,
     );
+  }
+
+  static Duration? resourceWatchReconnectDelay(Object error) {
+    if (error is SyncTvApiException) {
+      if (error.statusCode == 401 ||
+          error.statusCode == 403 ||
+          error.statusCode == 404) {
+        return null;
+      }
+      if (error.statusCode == 429) return const Duration(seconds: 30);
+      if (error.statusCode >= 400 && error.statusCode < 500) return null;
+      return const Duration(seconds: 10);
+    }
+    return const Duration(seconds: 5);
   }
 
   static Future<AlistLoginInfo> loginAList(

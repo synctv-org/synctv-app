@@ -2344,7 +2344,6 @@ message GetPublicSettingsResponse {
     // Room settings
     bool disable_create_room = 5;
     bool create_room_need_review = 6;
-    int64 room_ttl = 7;
     string room_password_policy = 8;
 
     // User settings

@@ -3,15 +3,43 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synctv_app/models/account_models.dart';
+import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/pages/desktop/desktop_room_screen.dart';
+import 'package:synctv_app/pages/large_screen/large_screen_room.dart';
+import 'package:synctv_app/pages/mobile/watch_together_room_screen.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/services/opaque_authenticator_service.dart';
 import 'package:synctv_app/services/passkey_authenticator_service.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
+    as common_enum;
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+class _AccountSection {
+  final String label;
+  final IconData icon;
+
+  const _AccountSection({
+    required this.label,
+    required this.icon,
+  });
+}
+
+class _AccountModuleInfo {
+  final String label;
+  final String impact;
+  final IconData icon;
+
+  const _AccountModuleInfo({
+    required this.label,
+    required this.impact,
+    required this.icon,
+  });
+}
 
 class AccountCenterPage extends StatefulWidget {
   final WUser initialUser;
@@ -25,14 +53,62 @@ class AccountCenterPage extends StatefulWidget {
 class _AccountCenterPageState extends State<AccountCenterPage>
     with SingleTickerProviderStateMixin {
   static const int _notificationPageSize = 50;
+  static const int _roomsPageSize = 24;
+  static const List<_AccountSection> _sections = [
+    _AccountSection(label: '概览', icon: Icons.space_dashboard_outlined),
+    _AccountSection(label: '资料', icon: Icons.person_outline_rounded),
+    _AccountSection(label: '房间', icon: Icons.meeting_room_outlined),
+    _AccountSection(label: '安全', icon: Icons.security_rounded),
+    _AccountSection(label: '通知', icon: Icons.notifications_none_rounded),
+    _AccountSection(label: '绑定', icon: Icons.link_rounded),
+  ];
+  static const Map<String, _AccountModuleInfo> _moduleInfo = {
+    '账号偏好': _AccountModuleInfo(
+      label: '账号偏好',
+      impact: '多因素认证状态、通知偏好和安全能力判断不可用。',
+      icon: Icons.tune_rounded,
+    ),
+    '通知': _AccountModuleInfo(
+      label: '通知中心',
+      impact: '未读数量、通知列表、标记已读和删除通知不可用。',
+      icon: Icons.notifications_none_rounded,
+    ),
+    '房间': _AccountModuleInfo(
+      label: '我的房间',
+      impact: '账号中心内的房间列表、房间搜索和房间管理不可用。',
+      icon: Icons.meeting_room_outlined,
+    ),
+    'OAuth2 Provider': _AccountModuleInfo(
+      label: 'OAuth2 可绑定账号',
+      impact: '无法展示可绑定的第三方登录 Provider。',
+      icon: Icons.add_link_rounded,
+    ),
+    'OAuth2 绑定': _AccountModuleInfo(
+      label: 'OAuth2 已绑定账号',
+      impact: '无法查看或解除已经绑定的第三方登录账号。',
+      icon: Icons.link_rounded,
+    ),
+    'Passkey': _AccountModuleInfo(
+      label: 'Passkey 凭据',
+      impact: '无法查看、绑定或删除服务器上的 Passkey 凭据。',
+      icon: Icons.fingerprint_rounded,
+    ),
+    '本机 Passkey': _AccountModuleInfo(
+      label: '本机 Passkey 能力',
+      impact: '无法确认当前设备是否支持创建 Passkey。',
+      icon: Icons.devices_rounded,
+    ),
+  };
 
   late TabController _tabController;
   late WUser _user;
   AccountPreferences? _preferences;
   UserNotificationsPage? _notifications;
+  RoomsPage? _myRooms;
   List<OAuth2ProviderOption> _availableOAuth2 = const [];
   List<OAuth2LinkedAccount> _linkedOAuth2 = const [];
   List<PasskeyCredentialInfo> _passkeys = const [];
+  Map<String, String> _loadErrors = const {};
   bool _loading = true;
   bool _savingPreferences = false;
   bool _bindingPasskey = false;
@@ -47,16 +123,23 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       client_enum.SortDirection.SORT_DIRECTION_DESC;
   int _notificationPage = 1;
   bool _loadingNotifications = false;
+  int _roomsPage = 1;
+  bool _loadingRooms = false;
+  client_enum.MyRoomRelation _roomRelationFilter =
+      client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL;
+  client_enum.MyRoomListSortBy _roomSortBy =
+      client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT;
   final Set<int> _selectedNotificationIds = <int>{};
   final TextEditingController _notificationSearchController =
       TextEditingController();
+  final TextEditingController _roomSearchController = TextEditingController();
   late final OpaqueAuthenticatorService _opaqueAuthenticator;
 
   @override
   void initState() {
     super.initState();
     _user = widget.initialUser;
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: _sections.length, vsync: this);
     _opaqueAuthenticator = OpaqueAuthenticatorService();
     _load();
   }
@@ -65,39 +148,93 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   void dispose() {
     _tabController.dispose();
     _notificationSearchController.dispose();
+    _roomSearchController.dispose();
     super.dispose();
   }
 
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      final errors = <String, String>{};
+      final user = await WatchTogetherService.getMe();
       final results = await Future.wait<dynamic>([
-        WatchTogetherService.getMe(),
-        WatchTogetherService.getAccountPreferences(),
-        WatchTogetherService.listNotifications(
-          page: _notificationPage,
-          pageSize: _notificationPageSize,
+        _loadOptional(
+          errors,
+          '账号偏好',
+          WatchTogetherService.getAccountPreferences,
         ),
-        WatchTogetherService.listOAuth2Providers(),
-        WatchTogetherService.getLinkedOAuth2Accounts(),
-        WatchTogetherService.listPasskeys(),
-        PasskeyAuthenticatorService.isSupported().catchError((_) => false),
+        _loadOptional(
+          errors,
+          '通知',
+          () => WatchTogetherService.listNotifications(
+            page: _notificationPage,
+            pageSize: _notificationPageSize,
+          ),
+        ),
+        _loadOptional(
+          errors,
+          '房间',
+          () => WatchTogetherService.getMyRoomsPage(
+            page: _roomsPage,
+            pageSize: _roomsPageSize,
+            relation: _roomRelationFilter,
+            sortBy: _roomSortBy,
+          ),
+        ),
+        _loadOptional(
+          errors,
+          'OAuth2 Provider',
+          WatchTogetherService.listOAuth2Providers,
+        ),
+        _loadOptional(
+          errors,
+          'OAuth2 绑定',
+          WatchTogetherService.getLinkedOAuth2Accounts,
+        ),
+        _loadOptional(
+          errors,
+          'Passkey',
+          WatchTogetherService.listPasskeys,
+        ),
+        _loadOptional(
+          errors,
+          '本机 Passkey',
+          PasskeyAuthenticatorService.isSupported,
+        ),
       ]);
       if (!mounted) return;
       setState(() {
-        _user = results[0] as WUser;
-        _preferences = results[1] as AccountPreferences;
-        _notifications = results[2] as UserNotificationsPage;
-        _availableOAuth2 = results[3] as List<OAuth2ProviderOption>;
-        _linkedOAuth2 = results[4] as List<OAuth2LinkedAccount>;
-        _passkeys = results[5] as List<PasskeyCredentialInfo>;
-        _passkeyAvailable = results[6] as bool;
+        _user = user;
+        _preferences = results[0] as AccountPreferences?;
+        _notifications = results[1] as UserNotificationsPage?;
+        _myRooms = results[2] as RoomsPage?;
+        _availableOAuth2 =
+            results[3] as List<OAuth2ProviderOption>? ?? const [];
+        _linkedOAuth2 = results[4] as List<OAuth2LinkedAccount>? ?? const [];
+        _passkeys = results[5] as List<PasskeyCredentialInfo>? ?? const [];
+        _passkeyAvailable = results[6] as bool? ?? false;
+        _loadErrors = Map.unmodifiable(errors);
         _loading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
       MessageUtils.showError(context, '加载账号信息失败: $e');
+    }
+  }
+
+  Future<T?> _loadOptional<T>(
+    Map<String, String> errors,
+    String label,
+    Future<T> Function() load,
+  ) async {
+    try {
+      return await load();
+    } catch (e, stackTrace) {
+      debugPrint('Account center optional load failed [$label]: $e');
+      debugPrint('$stackTrace');
+      errors[label] = e.toString();
+      return null;
     }
   }
 
@@ -508,6 +645,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _notifications = notifications;
         _notificationPage = actualPage;
         _loadingNotifications = false;
+        _clearLoadError('通知');
         final visibleIds = notifications.notifications
             .map((item) => item.numericId)
             .where((id) => id > 0)
@@ -516,7 +654,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loadingNotifications = false);
+      setState(() {
+        _loadingNotifications = false;
+        _setLoadError('通知', e);
+      });
       MessageUtils.showError(context, '加载通知失败: $e');
     }
   }
@@ -579,6 +720,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         if (!mounted) return;
         setState(() {
           _linkedOAuth2 = linked;
+          _clearLoadError('OAuth2 绑定');
           _bindProvider = null;
         });
         MessageUtils.showSuccess(context, 'OAuth2 账号已绑定');
@@ -595,10 +737,137 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       await WatchTogetherService.unlinkOAuth2Account(account);
       final linked = await WatchTogetherService.getLinkedOAuth2Accounts();
       if (!mounted) return;
-      setState(() => _linkedOAuth2 = linked);
+      setState(() {
+        _linkedOAuth2 = linked;
+        _clearLoadError('OAuth2 绑定');
+      });
       MessageUtils.showSuccess(context, '已解除绑定');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '解绑失败: $e');
+    }
+  }
+
+  Future<void> _reloadRooms({int? page}) async {
+    var targetPage = page ?? _roomsPage;
+    if (targetPage < 1) targetPage = 1;
+    setState(() => _loadingRooms = true);
+    try {
+      var rooms = await _fetchRoomsPage(targetPage);
+      var actualPage = targetPage;
+      final maxPage = _roomsMaxPage(rooms.total);
+      if (targetPage > maxPage) {
+        actualPage = maxPage;
+        rooms = await _fetchRoomsPage(actualPage);
+      }
+      if (!mounted) return;
+      setState(() {
+        _myRooms = rooms;
+        _roomsPage = actualPage;
+        _loadingRooms = false;
+        _clearLoadError('房间');
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadingRooms = false;
+        _setLoadError('房间', e);
+      });
+      MessageUtils.showError(context, '加载我的房间失败: $e');
+    }
+  }
+
+  String? _loadError(String label) => _loadErrors[label];
+
+  void _setLoadError(String label, Object error) {
+    _loadErrors = Map.unmodifiable({
+      ..._loadErrors,
+      label: error.toString(),
+    });
+  }
+
+  void _clearLoadError(String label) {
+    if (!_loadErrors.containsKey(label)) return;
+    final next = Map<String, String>.from(_loadErrors)..remove(label);
+    _loadErrors = Map.unmodifiable(next);
+  }
+
+  Future<RoomsPage> _fetchRoomsPage(int page) {
+    return WatchTogetherService.getMyRoomsPage(
+      page: page,
+      pageSize: _roomsPageSize,
+      search: _roomSearchController.text.trim(),
+      relation: _roomRelationFilter,
+      sortBy: _roomSortBy,
+      sortDirection: client_enum.SortDirection.SORT_DIRECTION_DESC,
+    );
+  }
+
+  Future<void> _reloadRoomsFromFirstPage() {
+    return _reloadRooms(page: 1);
+  }
+
+  int _roomsMaxPage(int total) {
+    if (total <= 0) return 1;
+    return ((total + _roomsPageSize - 1) / _roomsPageSize).ceil();
+  }
+
+  Future<void> _openRoom(WRoom room) async {
+    try {
+      final latest = await WatchTogetherService.getRoomInfo(room.roomId);
+      if (!mounted) return;
+      final width = MediaQuery.sizeOf(context).width;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) {
+            if (width >= 1100) return DesktopRoomScreen(room: latest);
+            if (width >= 700) return LargeScreenRoom(room: latest);
+            return WatchTogetherRoomScreen(room: latest);
+          },
+        ),
+      );
+      if (mounted) await _reloadRooms();
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '打开房间失败: $e');
+    }
+  }
+
+  Future<void> _leaveOrDeleteRoom(WRoom room) async {
+    final isOwner = _isMyCreatedRoom(room);
+    final actionText = isOwner ? '删除房间' : '退出房间';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(actionText),
+        content: Text(
+          isOwner
+              ? '这会永久删除「${room.roomName}」及其房间数据，所有成员都会失去访问权限。'
+              : '确定退出「${room.roomName}」吗？退出后需要重新加入才能访问。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(actionText),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      if (isOwner) {
+        await WatchTogetherService.deleteRoom(room.roomId);
+      } else {
+        await WatchTogetherService.leaveRoom(room.roomId);
+      }
+      await _reloadRooms();
+      if (mounted) MessageUtils.showSuccess(context, '$actionText 已完成');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '$actionText 失败: $e');
     }
   }
 
@@ -661,9 +930,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor:
+          isDark ? const Color(0xFF121212) : const Color(0xFFF4F6FA),
       appBar: AppBar(
-        title: const Text('账号中心'),
+        title: const Text(
+          '账号中心',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        centerTitle: false,
         actions: [
           IconButton(
             onPressed: _load,
@@ -671,27 +947,308 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             tooltip: '刷新',
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: '资料'),
-            Tab(text: '安全'),
-            Tab(text: '通知'),
-            Tab(text: '绑定'),
-          ],
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final useRail = constraints.maxWidth >= 900;
+          final content = _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildTabView(theme);
+
+          if (!useRail) {
+            return Column(
+              children: [
+                _buildTopTabs(theme),
+                Expanded(child: content),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              _buildSideNavigation(theme),
+              VerticalDivider(
+                width: 1,
+                thickness: 1,
+                color: theme.dividerColor.withValues(alpha: 0.55),
+              ),
+              Expanded(child: content),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTabView(ThemeData theme) {
+    return TabBarView(
+      controller: _tabController,
+      children: [
+        _buildOverviewTab(theme),
+        _buildProfileTab(theme),
+        _buildRoomsTab(theme),
+        _buildSecurityTab(theme),
+        _buildNotificationsTab(theme),
+        _buildBindingsTab(theme),
+      ],
+    );
+  }
+
+  Widget _buildSideNavigation(ThemeData theme) {
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) {
+        return SizedBox(
+          width: 232,
+          child: Material(
+            color: theme.colorScheme.surface,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _user.username.isEmpty ? '当前账号' : _user.username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _user.email ?? '未绑定邮箱',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.58),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: _sections.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 4),
+                        itemBuilder: (context, index) {
+                          final section = _sections[index];
+                          final selected = _tabController.index == index;
+                          return _AccountNavTile(
+                            icon: section.icon,
+                            label: section.label,
+                            selected: selected,
+                            onTap: () => setState(() {
+                              _tabController.animateTo(index);
+                            }),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTopTabs(ThemeData theme) {
+    return Material(
+      color: theme.colorScheme.surface,
+      child: SafeArea(
+        bottom: false,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: theme.dividerColor.withValues(alpha: 0.65),
+              ),
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+          child: TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            dividerColor: Colors.transparent,
+            indicator: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            labelColor: theme.colorScheme.primary,
+            unselectedLabelColor:
+                theme.colorScheme.onSurface.withValues(alpha: 0.62),
+            labelStyle: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+            tabs: _sections
+                .map((section) => Tab(
+                      height: 42,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(section.icon, size: 18),
+                            const SizedBox(width: 6),
+                            Text(section.label),
+                          ],
+                        ),
+                      ),
+                    ))
+                .toList(),
+          ),
         ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildProfileTab(theme),
-                _buildSecurityTab(theme),
-                _buildNotificationsTab(theme),
-                _buildBindingsTab(theme),
-              ],
+    );
+  }
+
+  Widget _responsiveList({
+    required List<Widget> children,
+    EdgeInsets padding = const EdgeInsets.all(16),
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth >= 1180
+            ? 1040.0
+            : constraints.maxWidth >= 760
+                ? 860.0
+                : double.infinity;
+        return ListView(
+          padding: padding,
+          children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: children,
+                ),
+              ),
             ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildOverviewTab(ThemeData theme) {
+    final preferences = _preferences;
+    final rooms = _myRooms;
+    final unread = _notifications?.unreadCount ?? 0;
+    final roomCount = rooms?.total ?? 0;
+    final activeFactors = preferences == null
+        ? 0
+        : [
+            preferences.canUsePassword,
+            preferences.canUseEmail,
+            preferences.canUsePasskey,
+          ].where((value) => value).length;
+
+    return _responsiveList(
+      children: [
+        _AccountHero(
+          user: _user,
+          roleLabel: _userRoleLabel(_user.role),
+          statusLabel: _userStatusLabel(_user.status),
+          activeServerName: WatchTogetherService.activeServer?.name ?? '当前服务器',
+          createdAtLabel: _formatTimestamp(_user.createdAt),
+        ),
+        if (_loadErrors.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _LoadErrorSummary(
+            errors: _loadErrors,
+            moduleInfo: _moduleInfo,
+            onRetry: _load,
+          ),
+        ],
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 820 ? 4 : 2;
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: columns,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: columns == 4 ? 1.75 : 1.95,
+              children: [
+                _MetricTile(
+                  icon: Icons.meeting_room_outlined,
+                  label: '我的房间',
+                  value: '$roomCount',
+                  tone: theme.colorScheme.primary,
+                ),
+                _MetricTile(
+                  icon: Icons.notifications_none_rounded,
+                  label: '未读通知',
+                  value: '$unread',
+                  tone: const Color(0xFF0F766E),
+                ),
+                _MetricTile(
+                  icon: Icons.security_rounded,
+                  label: '登录因素',
+                  value: '$activeFactors',
+                  tone: const Color(0xFFB45309),
+                ),
+                _MetricTile(
+                  icon: _user.emailVerified
+                      ? Icons.mark_email_read_rounded
+                      : Icons.mark_email_unread_outlined,
+                  label: '邮箱状态',
+                  value: _user.emailVerified ? '已验证' : '待验证',
+                  tone: _user.emailVerified
+                      ? const Color(0xFF15803D)
+                      : const Color(0xFFB91C1C),
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 840;
+            final panels = [
+              _buildQuickProfilePanel(theme),
+              _buildQuickSecurityPanel(theme),
+              _buildRecentRoomsPanel(theme),
+            ];
+            if (!wide) {
+              return Column(
+                children: [
+                  for (final panel in panels) ...[
+                    panel,
+                    if (panel != panels.last) const SizedBox(height: 12),
+                  ],
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: panels[0]),
+                const SizedBox(width: 12),
+                Expanded(child: panels[1]),
+                const SizedBox(width: 12),
+                Expanded(child: panels[2]),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -699,110 +1256,460 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final preferences = _preferences;
     final notifications =
         preferences?.notifications ?? NotificationPreferences.defaults();
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return _responsiveList(
       children: [
+        const _SectionHeader(
+          title: '个人资料',
+          subtitle: '管理这个服务器上的公开身份和账号状态',
+          icon: Icons.person_outline_rounded,
+        ),
+        const SizedBox(height: 12),
         _Section(
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: CircleAvatar(
-              radius: 26,
-              child: Text(
-                _user.username.isEmpty ? '?' : _user.username[0].toUpperCase(),
-              ),
-            ),
-            title: Text(
-              _user.username,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            subtitle: Text(
-              [
-                _user.email ?? '未绑定邮箱',
-                if (_user.email != null) _user.emailVerified ? '已验证' : '未验证',
-              ].join(' · '),
-            ),
-            trailing: IconButton(
-              onPressed: _rename,
-              icon: const Icon(Icons.edit_rounded),
-              tooltip: '修改用户名',
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= 620;
+              final avatar = _ProfileAvatar(username: _user.username, size: 68);
+              final details = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _user.username,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _StatusPill(
+                        icon: Icons.admin_panel_settings_outlined,
+                        label: _userRoleLabel(_user.role),
+                      ),
+                      _StatusPill(
+                        icon: _user.emailVerified
+                            ? Icons.verified_rounded
+                            : Icons.warning_amber_rounded,
+                        label: _user.emailVerified ? '邮箱已验证' : '邮箱未验证',
+                      ),
+                      if (_user.isBanned)
+                        const _StatusPill(
+                          icon: Icons.block_rounded,
+                          label: '已封禁',
+                          danger: true,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _user.email ?? '未绑定邮箱',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              );
+              final action = FilledButton.icon(
+                onPressed: _rename,
+                icon: const Icon(Icons.edit_rounded),
+                label: const Text('修改用户名'),
+              );
+              if (!wide) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        avatar,
+                        const SizedBox(width: 14),
+                        Expanded(child: details),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(width: double.infinity, child: action),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  avatar,
+                  const SizedBox(width: 18),
+                  Expanded(child: details),
+                  const SizedBox(width: 16),
+                  action,
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        _Section(
+          title: '账号信息',
+          child: _InfoGrid(
+            entries: [
+              _InfoEntry('用户 ID', _user.id),
+              _InfoEntry('账号状态', _userStatusLabel(_user.status)),
+              _InfoEntry('创建时间', _formatTimestamp(_user.createdAt)),
+              _InfoEntry('更新时间', _formatTimestamp(_user.updatedAt)),
+              _InfoEntry('在线连接', '${_user.onlineCount}'),
+              if (_user.isBanned) _InfoEntry('封禁原因', _user.bannedReason),
+            ],
           ),
         ),
         const SizedBox(height: 12),
         if (preferences != null)
           _Section(
-            child: Column(
-              children: [
-                _PreferenceSwitch(
-                  title: '房间邀请站内通知',
-                  value: notifications.roomInvitationInApp,
-                  onChanged: _savingPreferences
-                      ? null
-                      : (value) => _updateNotifications(
-                            notifications.copyWith(roomInvitationInApp: value),
+            title: '通知偏好',
+            subtitle: '按场景控制站内通知和邮件通知',
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final twoColumns = constraints.maxWidth >= 720;
+                final items = [
+                  _PreferenceSwitch(
+                    title: '房间邀请站内通知',
+                    value: notifications.roomInvitationInApp,
+                    onChanged: _savingPreferences
+                        ? null
+                        : (value) => _updateNotifications(
+                              notifications.copyWith(
+                                roomInvitationInApp: value,
+                              ),
+                            ),
+                  ),
+                  _PreferenceSwitch(
+                    title: '房间事件站内通知',
+                    value: notifications.roomEventInApp,
+                    onChanged: _savingPreferences
+                        ? null
+                        : (value) => _updateNotifications(
+                              notifications.copyWith(roomEventInApp: value),
+                            ),
+                  ),
+                  _PreferenceSwitch(
+                    title: '系统公告站内通知',
+                    value: notifications.systemAnnouncementInApp,
+                    onChanged: _savingPreferences
+                        ? null
+                        : (value) => _updateNotifications(
+                              notifications.copyWith(
+                                systemAnnouncementInApp: value,
+                              ),
+                            ),
+                  ),
+                  _PreferenceSwitch(
+                    title: '房间邀请邮件通知',
+                    value: notifications.roomInvitationEmail,
+                    onChanged: _savingPreferences
+                        ? null
+                        : (value) => _updateNotifications(
+                              notifications.copyWith(
+                                roomInvitationEmail: value,
+                              ),
+                            ),
+                  ),
+                  _PreferenceSwitch(
+                    title: '房间事件邮件通知',
+                    value: notifications.roomEventEmail,
+                    onChanged: _savingPreferences
+                        ? null
+                        : (value) => _updateNotifications(
+                              notifications.copyWith(roomEventEmail: value),
+                            ),
+                  ),
+                  _PreferenceSwitch(
+                    title: '系统公告邮件通知',
+                    value: notifications.systemAnnouncementEmail,
+                    onChanged: _savingPreferences
+                        ? null
+                        : (value) => _updateNotifications(
+                              notifications.copyWith(
+                                systemAnnouncementEmail: value,
+                              ),
+                            ),
+                  ),
+                ];
+                if (!twoColumns) return Column(children: items);
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 4,
+                  children: [
+                    for (final item in items)
+                      SizedBox(
+                        width: (constraints.maxWidth - 12) / 2,
+                        child: item,
+                      ),
+                  ],
+                );
+              },
+            ),
+          )
+        else if (_loadError('账号偏好') != null)
+          _LoadErrorBanner(
+            title: '通知偏好不可用',
+            moduleInfo: _moduleInfo['账号偏好'],
+            message: _loadError('账号偏好')!,
+            onRetry: _load,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildRoomsTab(ThemeData theme) {
+    final page = _myRooms;
+    final loadError = _loadError('房间');
+    final rooms = page?.rooms ?? const <WRoom>[];
+    final total = page?.total ?? 0;
+    final maxPage = _roomsMaxPage(total);
+    final pageStart = total == 0 ? 0 : ((_roomsPage - 1) * _roomsPageSize) + 1;
+    final pageEnd =
+        total == 0 ? 0 : (_roomsPage * _roomsPageSize).clamp(0, total);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1040),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: _SectionHeader(
+                          title: '我的房间',
+                          subtitle: '管理你创建、加入或被授权的同步观影空间',
+                          icon: Icons.meeting_room_outlined,
+                          dense: true,
+                        ),
+                      ),
+                      if (_loadingRooms)
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final wide = constraints.maxWidth >= 760;
+                      final search = TextField(
+                        controller: _roomSearchController,
+                        textInputAction: TextInputAction.search,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          suffixIcon: _roomSearchController.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  onPressed: () {
+                                    _roomSearchController.clear();
+                                    _reloadRoomsFromFirstPage();
+                                  },
+                                  icon: const Icon(Icons.close_rounded),
+                                  tooltip: '清除搜索',
+                                ),
+                          hintText: '搜索房间名称或描述',
+                          border: const OutlineInputBorder(),
+                        ),
+                        onSubmitted: (_) => _reloadRoomsFromFirstPage(),
+                      );
+                      final filters = Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          _RelationChip(
+                            label: '全部',
+                            value:
+                                client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL,
+                            groupValue: _roomRelationFilter,
+                            onSelected: _setRoomRelationFilter,
                           ),
-                ),
-                _PreferenceSwitch(
-                  title: '房间事件站内通知',
-                  value: notifications.roomEventInApp,
-                  onChanged: _savingPreferences
-                      ? null
-                      : (value) => _updateNotifications(
-                            notifications.copyWith(roomEventInApp: value),
+                          _RelationChip(
+                            label: '我创建的',
+                            value: client_enum
+                                .MyRoomRelation.MY_ROOM_RELATION_CREATED,
+                            groupValue: _roomRelationFilter,
+                            onSelected: _setRoomRelationFilter,
                           ),
-                ),
-                _PreferenceSwitch(
-                  title: '系统公告站内通知',
-                  value: notifications.systemAnnouncementInApp,
-                  onChanged: _savingPreferences
-                      ? null
-                      : (value) => _updateNotifications(
-                            notifications.copyWith(
-                                systemAnnouncementInApp: value),
+                          _RelationChip(
+                            label: '我加入的',
+                            value: client_enum
+                                .MyRoomRelation.MY_ROOM_RELATION_PARTICIPATING,
+                            groupValue: _roomRelationFilter,
+                            onSelected: _setRoomRelationFilter,
                           ),
-                ),
-                _PreferenceSwitch(
-                  title: '房间邀请邮件通知',
-                  value: notifications.roomInvitationEmail,
-                  onChanged: _savingPreferences
-                      ? null
-                      : (value) => _updateNotifications(
-                            notifications.copyWith(roomInvitationEmail: value),
+                          DropdownButtonHideUnderline(
+                            child: DropdownButton<client_enum.MyRoomListSortBy>(
+                              value: _roomSortBy,
+                              borderRadius: BorderRadius.circular(8),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: client_enum.MyRoomListSortBy
+                                      .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+                                  child: Text('最近活跃'),
+                                ),
+                                DropdownMenuItem(
+                                  value: client_enum.MyRoomListSortBy
+                                      .MY_ROOM_LIST_SORT_BY_UPDATED_AT,
+                                  child: Text('更新时间'),
+                                ),
+                                DropdownMenuItem(
+                                  value: client_enum.MyRoomListSortBy
+                                      .MY_ROOM_LIST_SORT_BY_CREATED_AT,
+                                  child: Text('创建时间'),
+                                ),
+                                DropdownMenuItem(
+                                  value: client_enum.MyRoomListSortBy
+                                      .MY_ROOM_LIST_SORT_BY_NAME,
+                                  child: Text('名称'),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value == null) return;
+                                setState(() => _roomSortBy = value);
+                                _reloadRoomsFromFirstPage();
+                              },
+                            ),
                           ),
-                ),
-                _PreferenceSwitch(
-                  title: '房间事件邮件通知',
-                  value: notifications.roomEventEmail,
-                  onChanged: _savingPreferences
-                      ? null
-                      : (value) => _updateNotifications(
-                            notifications.copyWith(roomEventEmail: value),
+                          IconButton(
+                            onPressed: _reloadRooms,
+                            icon: const Icon(Icons.refresh_rounded),
+                            tooltip: '刷新房间',
                           ),
-                ),
-                _PreferenceSwitch(
-                  title: '系统公告邮件通知',
-                  value: notifications.systemAnnouncementEmail,
-                  onChanged: _savingPreferences
-                      ? null
-                      : (value) => _updateNotifications(
-                            notifications.copyWith(
-                                systemAnnouncementEmail: value),
-                          ),
-                ),
-              ],
+                        ],
+                      );
+                      if (!wide) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            search,
+                            const SizedBox(height: 10),
+                            filters,
+                          ],
+                        );
+                      }
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: search),
+                          const SizedBox(width: 12),
+                          Flexible(child: filters),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Text(
+                        '第 $_roomsPage / $maxPage 页 · $pageStart-$pageEnd / $total',
+                        style: TextStyle(color: theme.hintColor),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: _loadingRooms || _roomsPage <= 1
+                            ? null
+                            : () => _reloadRooms(page: _roomsPage - 1),
+                        icon: const Icon(Icons.chevron_left_rounded),
+                        tooltip: '上一页',
+                      ),
+                      IconButton(
+                        onPressed: _loadingRooms || _roomsPage >= maxPage
+                            ? null
+                            : () => _reloadRooms(page: _roomsPage + 1),
+                        icon: const Icon(Icons.chevron_right_rounded),
+                        tooltip: '下一页',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
+        ),
+        Expanded(
+          child: loadError != null && page == null
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: _LoadErrorBanner(
+                      title: '我的房间暂时不可用',
+                      moduleInfo: _moduleInfo['房间'],
+                      message: loadError,
+                      onRetry: _reloadRooms,
+                    ),
+                  ),
+                )
+              : rooms.isEmpty
+                  ? const Center(child: Text('没有匹配的房间'))
+                  : RefreshIndicator(
+                      onRefresh: _reloadRooms,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final maxWidth = constraints.maxWidth >= 1180
+                              ? 1040.0
+                              : constraints.maxWidth >= 760
+                                  ? 900.0
+                                  : double.infinity;
+                          return ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+                            itemCount: rooms.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final room = rooms[index];
+                              return Center(
+                                child: ConstrainedBox(
+                                  constraints:
+                                      BoxConstraints(maxWidth: maxWidth),
+                                  child: _RoomManagementTile(
+                                    room: room,
+                                    roleLabel: _roomRoleLabel(room.myRole),
+                                    relationLabel:
+                                        _roomRelationLabel(room.myRelation),
+                                    updatedAtLabel:
+                                        _formatTimestamp(room.updatedAt),
+                                    isOwner: _isMyCreatedRoom(room),
+                                    onOpen: () => _openRoom(room),
+                                    onLeaveOrDelete: () =>
+                                        _leaveOrDeleteRoom(room),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+        ),
       ],
     );
   }
 
   Widget _buildSecurityTab(ThemeData theme) {
     final preferences = _preferences;
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    final preferencesError = _loadError('账号偏好');
+    final passkeyErrorKey =
+        _loadError('Passkey') != null ? 'Passkey' : '本机 Passkey';
+    final passkeyError = _loadError(passkeyErrorKey);
+    return _responsiveList(
       children: [
+        const _SectionHeader(
+          title: '账号安全',
+          subtitle: '管理登录因素、邮箱验证、Passkey 和高风险账号操作',
+          icon: Icons.security_rounded,
+        ),
+        const SizedBox(height: 12),
         if (preferences != null)
           _Section(
+            title: '登录保护',
+            subtitle: '多因素认证会在密码之外要求额外验证因素',
             child: Column(
               children: [
                 SwitchListTile(
@@ -864,26 +1771,18 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
               ],
             ),
+          )
+        else if (preferencesError != null)
+          _LoadErrorBanner(
+            title: '登录保护信息不可用',
+            moduleInfo: _moduleInfo['账号偏好'],
+            message: preferencesError,
+            onRetry: _load,
           ),
         const SizedBox(height: 12),
         _Section(
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(
-              Icons.person_off_rounded,
-              color: Colors.red,
-            ),
-            title: const Text('关闭账户'),
-            subtitle: const Text('永久关闭当前账户，并清除本机登录状态'),
-            trailing: FilledButton.tonalIcon(
-              onPressed: _closeAccount,
-              icon: const Icon(Icons.person_remove_rounded),
-              label: const Text('关闭'),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        _Section(
+          title: 'Passkey',
+          subtitle: '使用系统凭据管理器完成无密码或多因素验证',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -920,7 +1819,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ],
               ),
               const SizedBox(height: 8),
-              if (_passkeys.isEmpty)
+              if (passkeyError != null)
+                _InlineModuleError(
+                  moduleInfo: _moduleInfo[passkeyErrorKey],
+                  message: passkeyError,
+                  onRetry: _load,
+                )
+              else if (_passkeys.isEmpty)
                 Text('暂无 Passkey', style: TextStyle(color: theme.hintColor))
               else
                 for (final credential in _passkeys)
@@ -947,12 +1852,33 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        _Section(
+          title: '危险操作',
+          subtitle: '这些操作会影响账号可用性或永久删除数据',
+          danger: true,
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(
+              Icons.person_off_rounded,
+              color: Colors.red,
+            ),
+            title: const Text('关闭账户'),
+            subtitle: const Text('永久关闭当前账户，并清除本机登录状态'),
+            trailing: FilledButton.tonalIcon(
+              onPressed: _closeAccount,
+              icon: const Icon(Icons.person_remove_rounded),
+              label: const Text('关闭'),
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildNotificationsTab(ThemeData theme) {
     final page = _notifications;
+    final loadError = _loadError('通知');
     final items = page?.notifications ?? const <UserNotificationItem>[];
     final unreadSelectableIds = items
         .where((item) => !item.isRead && item.numericId > 0)
@@ -1203,113 +2129,128 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           ),
         ),
         Expanded(
-          child: items.isEmpty
-              ? const Center(child: Text('暂无通知'))
-              : RefreshIndicator(
-                  onRefresh: _reloadNotifications,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      final selected =
-                          _selectedNotificationIds.contains(item.numericId);
-                      final selectable = item.numericId > 0;
-                      return _Section(
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          selected: selected,
-                          onTap: selected
-                              ? () {
-                                  if (!selectable) return;
-                                  setState(() {
-                                    _selectedNotificationIds
-                                        .remove(item.numericId);
-                                  });
-                                }
-                              : () => _openNotification(item),
-                          onLongPress: selectable
-                              ? () => setState(() {
-                                    if (selected) {
-                                      _selectedNotificationIds
-                                          .remove(item.numericId);
-                                    } else {
-                                      _selectedNotificationIds
-                                          .add(item.numericId);
-                                    }
-                                  })
-                              : null,
-                          leading: Checkbox(
-                            value: selected,
-                            onChanged: selectable
-                                ? (value) => setState(() {
-                                      if (value == true) {
-                                        _selectedNotificationIds
-                                            .add(item.numericId);
-                                      } else {
+          child: loadError != null && page == null
+              ? Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: _LoadErrorBanner(
+                      title: '通知暂时不可用',
+                      moduleInfo: _moduleInfo['通知'],
+                      message: loadError,
+                      onRetry: _reloadNotifications,
+                    ),
+                  ),
+                )
+              : items.isEmpty
+                  ? const Center(child: Text('暂无通知'))
+                  : RefreshIndicator(
+                      onRefresh: _reloadNotifications,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        itemCount: items.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          final selected =
+                              _selectedNotificationIds.contains(item.numericId);
+                          final selectable = item.numericId > 0;
+                          return _Section(
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              selected: selected,
+                              onTap: selected
+                                  ? () {
+                                      if (!selectable) return;
+                                      setState(() {
                                         _selectedNotificationIds
                                             .remove(item.numericId);
-                                      }
-                                    })
-                                : null,
-                          ),
-                          title: Text(
-                            item.title.isEmpty
-                                ? _notificationType(item.type)
-                                : item.title,
-                            style: TextStyle(
-                              fontWeight: item.isRead
-                                  ? FontWeight.w500
-                                  : FontWeight.w700,
-                            ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (item.content.isNotEmpty) Text(item.content),
-                              const SizedBox(height: 4),
-                              Text(
-                                _formatTimestamp(item.createdAt),
+                                      });
+                                    }
+                                  : () => _openNotification(item),
+                              onLongPress: selectable
+                                  ? () => setState(() {
+                                        if (selected) {
+                                          _selectedNotificationIds
+                                              .remove(item.numericId);
+                                        } else {
+                                          _selectedNotificationIds
+                                              .add(item.numericId);
+                                        }
+                                      })
+                                  : null,
+                              leading: Checkbox(
+                                value: selected,
+                                onChanged: selectable
+                                    ? (value) => setState(() {
+                                          if (value == true) {
+                                            _selectedNotificationIds
+                                                .add(item.numericId);
+                                          } else {
+                                            _selectedNotificationIds
+                                                .remove(item.numericId);
+                                          }
+                                        })
+                                    : null,
+                              ),
+                              title: Text(
+                                item.title.isEmpty
+                                    ? _notificationType(item.type)
+                                    : item.title,
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  color: theme.hintColor,
+                                  fontWeight: item.isRead
+                                      ? FontWeight.w500
+                                      : FontWeight.w700,
                                 ),
                               ),
-                            ],
-                          ),
-                          trailing: Wrap(
-                            spacing: 2,
-                            children: [
-                              IconButton(
-                                onPressed: selected
-                                    ? null
-                                    : () => _openNotification(item),
-                                icon: const Icon(Icons.open_in_new_rounded),
-                                tooltip: '查看详情',
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (item.content.isNotEmpty)
+                                    Text(item.content),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _formatTimestamp(item.createdAt),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.hintColor,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              if (!item.isRead)
-                                IconButton(
-                                  onPressed:
-                                      selected ? null : () => _markRead(item),
-                                  icon:
-                                      const Icon(Icons.mark_email_read_rounded),
-                                  tooltip: '标记已读',
-                                ),
-                              IconButton(
-                                onPressed: selected
-                                    ? null
-                                    : () => _deleteNotification(item),
-                                icon: const Icon(Icons.delete_outline_rounded),
-                                tooltip: '删除',
+                              trailing: Wrap(
+                                spacing: 2,
+                                children: [
+                                  IconButton(
+                                    onPressed: selected
+                                        ? null
+                                        : () => _openNotification(item),
+                                    icon: const Icon(Icons.open_in_new_rounded),
+                                    tooltip: '查看详情',
+                                  ),
+                                  if (!item.isRead)
+                                    IconButton(
+                                      onPressed: selected
+                                          ? null
+                                          : () => _markRead(item),
+                                      icon: const Icon(
+                                          Icons.mark_email_read_rounded),
+                                      tooltip: '标记已读',
+                                    ),
+                                  IconButton(
+                                    onPressed: selected
+                                        ? null
+                                        : () => _deleteNotification(item),
+                                    icon: const Icon(
+                                        Icons.delete_outline_rounded),
+                                    tooltip: '删除',
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
         ),
       ],
     );
@@ -1318,6 +2259,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Widget _buildBindingsTab(ThemeData theme) {
     final bindableProviders = oauth2BindableProviders(_availableOAuth2);
     final oauth2Available = OAuth2DeepLinkService.canCreateSession;
+    final linkedError = _loadError('OAuth2 绑定');
+    final providersError = _loadError('OAuth2 Provider');
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -1330,7 +2273,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 style: TextStyle(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
-              if (_linkedOAuth2.isEmpty)
+              if (linkedError != null)
+                _InlineModuleError(
+                  moduleInfo: _moduleInfo['OAuth2 绑定'],
+                  message: linkedError,
+                  onRetry: _load,
+                )
+              else if (_linkedOAuth2.isEmpty)
                 Text('暂无绑定', style: TextStyle(color: theme.hintColor))
               else
                 for (final account in _linkedOAuth2)
@@ -1368,7 +2317,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               const Text('绑定新账号',
                   style: TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              if (bindableProviders.isEmpty)
+              if (providersError != null)
+                _InlineModuleError(
+                  moduleInfo: _moduleInfo['OAuth2 Provider'],
+                  message: providersError,
+                  onRetry: _load,
+                )
+              else if (bindableProviders.isEmpty)
                 Text('没有可绑定的 OAuth2 Provider',
                     style: TextStyle(color: theme.hintColor))
               else
@@ -1429,6 +2384,148 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         ),
       ],
     );
+  }
+
+  Widget _buildQuickProfilePanel(ThemeData theme) {
+    return _Section(
+      title: '资料',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _InfoRow(label: '用户名', value: _user.username),
+          _InfoRow(label: '邮箱', value: _user.email ?? '未绑定'),
+          _InfoRow(label: '角色', value: _userRoleLabel(_user.role)),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _tabController.animateTo(1),
+              icon: const Icon(Icons.person_outline_rounded),
+              label: const Text('查看资料'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickSecurityPanel(ThemeData theme) {
+    final preferences = _preferences;
+    return _Section(
+      title: '安全',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _InfoRow(
+            label: '多因素认证',
+            value: preferences?.twoFactorEnabled == true ? '已启用' : '未启用',
+          ),
+          _InfoRow(
+            label: '可用因素',
+            value: preferences == null
+                ? '-'
+                : _factorLabels(preferences).join('、'),
+          ),
+          _InfoRow(label: 'Passkey', value: '${_passkeys.length} 个'),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _tabController.animateTo(3),
+              icon: const Icon(Icons.security_rounded),
+              label: const Text('管理安全'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentRoomsPanel(ThemeData theme) {
+    final rooms = (_myRooms?.rooms ?? const <WRoom>[]).take(3).toList();
+    return _Section(
+      title: '最近房间',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (rooms.isEmpty)
+            Text('暂无房间', style: TextStyle(color: theme.hintColor))
+          else
+            for (final room in rooms)
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.meeting_room_outlined),
+                title: Text(
+                  room.roomName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(_roomRoleLabel(room.myRole)),
+                onTap: () => _openRoom(room),
+              ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _tabController.animateTo(2),
+              icon: const Icon(Icons.meeting_room_outlined),
+              label: const Text('管理房间'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _setRoomRelationFilter(client_enum.MyRoomRelation relation) {
+    setState(() => _roomRelationFilter = relation);
+    _reloadRoomsFromFirstPage();
+  }
+
+  bool _isMyCreatedRoom(WRoom room) {
+    return room.myRelation ==
+            client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED.value ||
+        room.myRole ==
+            common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value ||
+        room.creatorId == _user.id;
+  }
+
+  String _userRoleLabel(int role) {
+    return switch (role) {
+      1 => 'Root',
+      2 => '管理员',
+      3 => '用户',
+      _ => '用户',
+    };
+  }
+
+  String _userStatusLabel(int status) {
+    return switch (status) {
+      1 => '正常',
+      2 => '待审核',
+      3 => '已封禁',
+      4 => '已关闭',
+      _ => '正常',
+    };
+  }
+
+  String _roomRoleLabel(int role) {
+    return switch (role) {
+      1 => '创建者',
+      2 => '房间管理员',
+      3 => '成员',
+      4 => '访客',
+      _ => '成员',
+    };
+  }
+
+  String _roomRelationLabel(int relation) {
+    return switch (relation) {
+      2 => '我创建的',
+      3 => '我加入的',
+      _ => '我的房间',
+    };
   }
 
   List<String> _factorLabels(AccountPreferences preferences) {
@@ -1954,23 +3051,870 @@ class _NotificationDetailSheet extends StatelessWidget {
   }
 }
 
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool dense;
+
+  const _SectionHeader({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    this.dense = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: dense ? 36 : 42,
+          height: dense ? 36 : 42,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon,
+              color: theme.colorScheme.primary, size: dense ? 20 : 22),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: (dense
+                        ? theme.textTheme.titleMedium
+                        : theme.textTheme.titleLarge)
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _Section extends StatelessWidget {
+  final String? title;
+  final String? subtitle;
+  final bool danger;
   final Widget child;
 
-  const _Section({required this.child});
+  const _Section({
+    this.title,
+    this.subtitle,
+    this.danger = false,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white,
+    final hasHeader = title != null || subtitle != null;
+    return Material(
+      color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
+        side: BorderSide(
+          color: danger
+              ? Colors.red.withValues(alpha: 0.38)
+              : theme.dividerColor.withValues(alpha: 0.55),
+        ),
       ),
-      child: child,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: hasHeader
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (title != null)
+                    Text(
+                      title!,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: danger ? Colors.red.shade700 : null,
+                      ),
+                    ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  child,
+                ],
+              )
+            : child,
+      ),
+    );
+  }
+}
+
+class _LoadErrorSummary extends StatelessWidget {
+  final Map<String, String> errors;
+  final Map<String, _AccountModuleInfo> moduleInfo;
+  final VoidCallback onRetry;
+
+  const _LoadErrorSummary({
+    required this.errors,
+    required this.moduleInfo,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Section(
+      danger: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '部分账号模块暂时不可用',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('全部重试'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          for (final entry in errors.entries) ...[
+            _ModuleErrorRow(
+              info: moduleInfo[entry.key],
+              fallbackLabel: entry.key,
+              message: entry.value,
+            ),
+            if (entry.key != errors.keys.last) const Divider(height: 16),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadErrorBanner extends StatelessWidget {
+  final String title;
+  final _AccountModuleInfo? moduleInfo;
+  final String message;
+  final VoidCallback onRetry;
+
+  const _LoadErrorBanner({
+    required this.title,
+    this.moduleInfo,
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Section(
+      danger: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                moduleInfo?.icon ?? Icons.warning_amber_rounded,
+                color: Colors.red,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  moduleInfo == null ? title : '$title：${moduleInfo!.label}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('重试'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (moduleInfo != null) ...[
+            Text(
+              moduleInfo!.impact,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
+          Text(
+            message,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModuleErrorRow extends StatelessWidget {
+  final _AccountModuleInfo? info;
+  final String fallbackLabel;
+  final String message;
+
+  const _ModuleErrorRow({
+    required this.info,
+    required this.fallbackLabel,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final module = info;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          module?.icon ?? Icons.error_outline_rounded,
+          color: Colors.red,
+          size: 20,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                module?.label ?? fallbackLabel,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                module?.impact ?? '此模块当前无法加载。',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                message,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InlineModuleError extends StatelessWidget {
+  final _AccountModuleInfo? moduleInfo;
+  final String message;
+  final VoidCallback onRetry;
+
+  const _InlineModuleError({
+    this.moduleInfo,
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.26)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            moduleInfo?.icon ?? Icons.error_outline_rounded,
+            color: Colors.red,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  moduleInfo?.label ?? '模块不可用',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (moduleInfo != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    moduleInfo!.impact,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.70),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 3),
+                Text(
+                  message,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          TextButton(
+            onPressed: onRetry,
+            child: const Text('重试'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  final String username;
+  final double size;
+
+  const _ProfileAvatar({required this.username, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        username.isEmpty ? '?' : username.characters.first.toUpperCase(),
+        style: theme.textTheme.headlineSmall?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool danger;
+
+  const _StatusPill({
+    required this.icon,
+    required this.label,
+    this.danger = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = danger ? Colors.red : theme.colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AccountNavTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _AccountNavTile({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final foreground =
+        selected ? theme.colorScheme.primary : theme.colorScheme.onSurface;
+    return Material(
+      color: selected
+          ? theme.colorScheme.primary.withValues(alpha: 0.10)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: foreground),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: foreground,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountHero extends StatelessWidget {
+  final WUser user;
+  final String roleLabel;
+  final String statusLabel;
+  final String activeServerName;
+  final String createdAtLabel;
+
+  const _AccountHero({
+    required this.user,
+    required this.roleLabel,
+    required this.statusLabel,
+    required this.activeServerName,
+    required this.createdAtLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Material(
+      color: isDark ? const Color(0xFF1C1C1F) : Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.55)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 680;
+            final identity = Row(
+              children: [
+                _ProfileAvatar(username: user.username, size: wide ? 76 : 60),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.username.isEmpty ? '当前账号' : user.username,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        user.email ?? '未绑定邮箱',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.66),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+            final metadata = Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _StatusPill(
+                  icon: Icons.dns_outlined,
+                  label: activeServerName,
+                ),
+                _StatusPill(
+                  icon: Icons.admin_panel_settings_outlined,
+                  label: roleLabel,
+                ),
+                _StatusPill(
+                  icon: Icons.circle_outlined,
+                  label: statusLabel,
+                ),
+                _StatusPill(
+                  icon: Icons.calendar_month_outlined,
+                  label: createdAtLabel,
+                ),
+              ],
+            );
+            if (!wide) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  identity,
+                  const SizedBox(height: 14),
+                  metadata,
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: identity),
+                const SizedBox(width: 18),
+                Flexible(child: metadata),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color tone;
+
+  const _MetricTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.tone,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Section(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: tone, size: 22),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoEntry {
+  final String label;
+  final String value;
+
+  const _InfoEntry(this.label, this.value);
+}
+
+class _InfoGrid extends StatelessWidget {
+  final List<_InfoEntry> entries;
+
+  const _InfoGrid({required this.entries});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 760 ? 3 : 1;
+        final width = columns == 1
+            ? constraints.maxWidth
+            : (constraints.maxWidth - (columns - 1) * 12) / columns;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (final entry in entries)
+              SizedBox(
+                width: width,
+                child: _InfoRow(label: entry.label, value: entry.value),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+            ),
+          ),
+          const SizedBox(height: 3),
+          SelectableText(
+            value.isEmpty ? '-' : value,
+            maxLines: 2,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RelationChip extends StatelessWidget {
+  final String label;
+  final client_enum.MyRoomRelation value;
+  final client_enum.MyRoomRelation groupValue;
+  final ValueChanged<client_enum.MyRoomRelation> onSelected;
+
+  const _RelationChip({
+    required this.label,
+    required this.value,
+    required this.groupValue,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      label: Text(label),
+      selected: value == groupValue,
+      onSelected: (_) => onSelected(value),
+      showCheckmark: false,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
+}
+
+class _RoomManagementTile extends StatelessWidget {
+  final WRoom room;
+  final String roleLabel;
+  final String relationLabel;
+  final String updatedAtLabel;
+  final bool isOwner;
+  final VoidCallback onOpen;
+  final VoidCallback onLeaveOrDelete;
+
+  const _RoomManagementTile({
+    required this.room,
+    required this.roleLabel,
+    required this.relationLabel,
+    required this.updatedAtLabel,
+    required this.isOwner,
+    required this.onOpen,
+    required this.onLeaveOrDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Section(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 720;
+          final title = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                room.roomName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                room.description.isEmpty ? room.roomId : room.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                ),
+              ),
+            ],
+          );
+          final chips = Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _StatusPill(icon: Icons.badge_outlined, label: roleLabel),
+              _StatusPill(icon: Icons.group_outlined, label: relationLabel),
+              if (room.needPassword)
+                const _StatusPill(
+                    icon: Icons.lock_outline_rounded, label: '密码'),
+              if (room.needVerify)
+                const _StatusPill(
+                  icon: Icons.fact_check_outlined,
+                  label: '审核',
+                ),
+              if (room.isBanned)
+                const _StatusPill(
+                  icon: Icons.block_rounded,
+                  label: '已封禁',
+                  danger: true,
+                ),
+            ],
+          );
+          final meta = Text(
+            '成员 ${room.memberCount} · 更新 $updatedAtLabel',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+            ),
+          );
+          final actions = Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: onOpen,
+                icon: const Icon(Icons.open_in_new_rounded),
+                label: const Text('打开'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onLeaveOrDelete,
+                icon: Icon(
+                  isOwner ? Icons.delete_outline_rounded : Icons.logout_rounded,
+                ),
+                label: Text(isOwner ? '删除' : '退出'),
+              ),
+            ],
+          );
+          if (!wide) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                title,
+                const SizedBox(height: 10),
+                chips,
+                const SizedBox(height: 10),
+                meta,
+                const SizedBox(height: 12),
+                actions,
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    title,
+                    const SizedBox(height: 10),
+                    chips,
+                    const SizedBox(height: 10),
+                    meta,
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              actions,
+            ],
+          );
+        },
+      ),
     );
   }
 }

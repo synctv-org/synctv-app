@@ -83,95 +83,118 @@ Future<bool?> showServerSettingsDialog({
     }
   }
 
-  return ChatUtils.showStyledDialog<bool>(
+  return showModalBottomSheet<bool>(
     context: context,
-    title: '服务器',
-    icon: Icon(Icons.dns_rounded, color: Theme.of(context).primaryColor),
-    content: StatefulBuilder(
+    isScrollControlled: true,
+    showDragHandle: true,
+    constraints: const BoxConstraints(maxWidth: 720),
+    builder: (context) => StatefulBuilder(
       builder: (context, setDialogState) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
         final servers = WatchTogetherService.servers;
         final activeServer = WatchTogetherService.activeServer;
 
-        return SizedBox(
-          width: 400,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ChatUtils.createFormField(
-                  context: context,
-                  label: '服务器地址',
-                  controller: controller,
-                  hintText: '例如: https://tv.example.com',
-                  prefixIcon: Icons.link_rounded,
-                  onSubmitted: (_) => busy ? null : addServer(setDialogState),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '添加地址后会自动识别服务器，不需要填写回调地址、Code 或 server_id。',
-                        style: TextStyle(
-                          color: isDark
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                          fontSize: 12,
-                          height: 1.35,
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              0,
+              20,
+              20 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.dns_rounded, color: theme.colorScheme.primary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          '服务器',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    FilledButton.icon(
-                      onPressed: busy ? null : () => addServer(setDialogState),
-                      icon: busy
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.add_link_rounded, size: 18),
-                      label: const Text('添加'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  '已保存服务器',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, changed),
+                        child: const Text('完成'),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 10),
-                if (servers.isEmpty)
-                  _EmptyServerState(isDark: isDark)
-                else
-                  ...servers.map(
-                    (profile) => _ServerProfileTile(
-                      profile: profile,
-                      active: profile.serverId == activeServer?.serverId,
-                      canRemove: servers.length > 1 && !busy,
-                      busy: busy,
-                      onActivate: () => activateServer(setDialogState, profile),
-                      onRemove: () => removeServer(setDialogState, profile),
+                  const SizedBox(height: 16),
+                  ChatUtils.createFormField(
+                    context: context,
+                    label: '服务器地址',
+                    controller: controller,
+                    hintText: '例如: https://tv.example.com',
+                    prefixIcon: Icons.link_rounded,
+                    onSubmitted: (_) => busy ? null : addServer(setDialogState),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '添加地址后会自动识别服务器，不需要填写回调地址、Code 或 server_id。',
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade600,
+                            fontSize: 12,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      FilledButton.icon(
+                        onPressed:
+                            busy ? null : () => addServer(setDialogState),
+                        icon: busy
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.add_link_rounded, size: 18),
+                        label: const Text('添加'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    '已保存服务器',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-              ],
+                  const SizedBox(height: 10),
+                  if (servers.isEmpty)
+                    _EmptyServerState(isDark: isDark)
+                  else
+                    ...servers.map(
+                      (profile) => _ServerProfileTile(
+                        profile: profile,
+                        active: profile.serverId == activeServer?.serverId,
+                        canRemove: servers.length > 1 && !busy,
+                        busy: busy,
+                        onActivate: () =>
+                            activateServer(setDialogState, profile),
+                        onRemove: () => removeServer(setDialogState, profile),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         );
       },
     ),
-    actions: [
-      ChatUtils.createConfirmButton(
-        context,
-        () => Navigator.pop(context, changed),
-        text: '完成',
-      ),
-    ],
   ).whenComplete(controller.dispose);
 }
 

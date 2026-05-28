@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
@@ -18,10 +19,11 @@ class AuthPanel extends StatefulWidget {
   State<AuthPanel> createState() => _AuthPanelState();
 }
 
+enum _LoginMethod { password, emailCode, passkey }
+
 class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   final _loginIdentifierController = TextEditingController();
   final _loginPasswordController = TextEditingController();
-  final _emailLoginController = TextEditingController();
   final _emailTokenController = TextEditingController();
   final _registerUsernameController = TextEditingController();
   final _registerEmailController = TextEditingController();
@@ -41,6 +43,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   bool _mfaEmailRequested = false;
   bool _passkeyAvailable = false;
   bool _agreedToTerms = false;
+  bool _loginIdentifierConfirmed = false;
+  bool _showOAuthProviders = false;
+  _LoginMethod _loginMethod = _LoginMethod.password;
   String? _oauthProvider;
   int _oauthAttempt = 0;
 
@@ -58,7 +63,6 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     _tabController.dispose();
     _loginIdentifierController.dispose();
     _loginPasswordController.dispose();
-    _emailLoginController.dispose();
     _emailTokenController.dispose();
     _registerUsernameController.dispose();
     _registerEmailController.dispose();
@@ -141,7 +145,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _requestEmailToken() async {
     if (!_ensureTermsAccepted()) return;
-    final email = _emailLoginController.text.trim();
+    final email = _loginIdentifierController.text.trim();
     if (email.isEmpty) {
       MessageUtils.showWarning(context, '请输入邮箱');
       return;
@@ -156,7 +160,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _submitEmailLogin() async {
     if (!_ensureTermsAccepted()) return;
-    final email = _emailLoginController.text.trim();
+    final email = _loginIdentifierController.text.trim();
     final token = _emailTokenController.text.trim();
     if (email.isEmpty || token.isEmpty) {
       MessageUtils.showWarning(context, '请输入邮箱和验证码');
@@ -358,6 +362,24 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     );
   }
 
+  Future<void> _pasteIntoController(TextEditingController controller) async {
+    final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = clipboard?.text;
+    if (text == null || text.isEmpty) return;
+
+    final value = controller.value;
+    final selection = value.selection;
+    final start = selection.isValid ? selection.start : value.text.length;
+    final end = selection.isValid ? selection.end : value.text.length;
+    final nextText = value.text.replaceRange(start, end, text);
+    final offset = start + text.length;
+    controller.value = value.copyWith(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: offset),
+      composing: TextRange.empty,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -469,91 +491,108 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   Widget _buildLoginTab(ThemeData theme) {
+    final identifier = _loginIdentifierController.text.trim();
+    final availableMethods = _availableLoginMethods(identifier);
+    final selectedMethod = availableMethods.contains(_loginMethod)
+        ? _loginMethod
+        : availableMethods.first;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildOAuth2Buttons(theme),
         _buildTextField(
           controller: _loginIdentifierController,
           label: '邮箱或用户名',
           icon: Icons.alternate_email_rounded,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: 12),
-        _buildTextField(
-          controller: _loginPasswordController,
-          label: '密码',
-          icon: Icons.lock_outline_rounded,
-          obscureText: true,
-          onSubmitted: (_) => _submitPasswordLogin(),
+          textInputAction: TextInputAction.done,
+          onChanged: (_) {
+            setState(() {
+              _loginIdentifierConfirmed = false;
+              _emailTokenRequested = false;
+              _emailTokenController.clear();
+            });
+          },
+          onSubmitted: (_) => _confirmLoginIdentifier(),
         ),
         const SizedBox(height: 14),
-        FilledButton.icon(
-          onPressed: _loading ? null : _submitPasswordLogin,
-          icon: const Icon(Icons.login_rounded),
-          label: const Text('登录'),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            if (_passkeyAvailable)
+        if (!_loginIdentifierConfirmed) ...[
+          FilledButton.icon(
+            onPressed: _loading ? null : _confirmLoginIdentifier,
+            icon: const Icon(Icons.arrow_forward_rounded),
+            label: const Text('继续'),
+          ),
+          if (_oauth2Providers.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildOAuth2Entry(theme),
+          ],
+        ] else ...[
+          Row(
+            children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _loading ? null : _submitPasskeyLogin,
-                  icon: const Icon(Icons.fingerprint_rounded),
-                  label: const Text('Passkey'),
+                child: Text(
+                  identifier,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-            if (_passkeyAvailable) const SizedBox(width: 8),
-            Expanded(
-              child: TextButton.icon(
-                onPressed: _loading ? null : _resetPassword,
-                icon: const Icon(Icons.lock_reset_rounded),
-                label: const Text('忘记密码'),
+              TextButton.icon(
+                onPressed: _loading
+                    ? null
+                    : () => setState(() {
+                          _loginIdentifierConfirmed = false;
+                          _loginPasswordController.clear();
+                          _emailTokenController.clear();
+                          _emailTokenRequested = false;
+                        }),
+                icon: const Icon(Icons.edit_rounded, size: 18),
+                label: const Text('修改'),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (availableMethods.length > 1) ...[
+            SegmentedButton<_LoginMethod>(
+              segments: [
+                if (availableMethods.contains(_LoginMethod.password))
+                  const ButtonSegment(
+                    value: _LoginMethod.password,
+                    icon: Icon(Icons.lock_outline_rounded),
+                    label: Text('密码'),
+                  ),
+                if (availableMethods.contains(_LoginMethod.emailCode))
+                  const ButtonSegment(
+                    value: _LoginMethod.emailCode,
+                    icon: Icon(Icons.mark_email_read_outlined),
+                    label: Text('验证码'),
+                  ),
+                if (availableMethods.contains(_LoginMethod.passkey))
+                  const ButtonSegment(
+                    value: _LoginMethod.passkey,
+                    icon: Icon(Icons.fingerprint_rounded),
+                    label: Text('Passkey'),
+                  ),
+              ],
+              selected: {selectedMethod},
+              onSelectionChanged: _loading
+                  ? null
+                  : (value) => setState(() => _loginMethod = value.first),
             ),
+          ] else
+            _SectionLabel(
+              icon: _loginMethodIcon(selectedMethod),
+              label: _loginMethodLabel(selectedMethod),
+              color: theme.colorScheme.primary,
+            ),
+          const SizedBox(height: 14),
+          _buildSelectedLoginMethod(selectedMethod),
+          if (_oauth2Providers.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _buildOAuth2Entry(theme),
           ],
-        ),
-        const SizedBox(height: 18),
-        _SectionLabel(
-          icon: Icons.mark_email_read_outlined,
-          label: '邮箱验证码登录',
-          color: theme.colorScheme.primary,
-        ),
-        const SizedBox(height: 10),
-        _buildTextField(
-          controller: _emailLoginController,
-          label: '邮箱',
-          icon: Icons.mail_outline_rounded,
-          keyboardType: TextInputType.emailAddress,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _emailTokenController,
-                label: _emailTokenRequested ? '验证码' : '先获取验证码',
-                icon: Icons.pin_outlined,
-                enabled: _settings?.enableEmailSignup == true && !_loading,
-              ),
-            ),
-            const SizedBox(width: 8),
-            OutlinedButton(
-              onPressed: _settings?.enableEmailSignup == true && !_loading
-                  ? _requestEmailToken
-                  : null,
-              child: const Text('发送'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton(
-          onPressed: _settings?.enableEmailSignup == true && !_loading
-              ? _submitEmailLogin
-              : null,
-          child: const Text('邮箱登录'),
-        ),
+        ],
         if (_oauthProvider != null) ...[
           const SizedBox(height: 16),
           Row(
@@ -570,6 +609,125 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         ],
       ],
     );
+  }
+
+  void _confirmLoginIdentifier() {
+    final identifier = _loginIdentifierController.text.trim();
+    if (identifier.isEmpty) {
+      MessageUtils.showWarning(context, '请输入邮箱或用户名');
+      return;
+    }
+    final methods = _availableLoginMethods(identifier);
+    setState(() {
+      _loginIdentifierConfirmed = true;
+      _loginMethod = methods.first;
+    });
+  }
+
+  List<_LoginMethod> _availableLoginMethods(String identifier) {
+    final isEmail = identifier.trim().contains('@');
+    final methods = <_LoginMethod>[_LoginMethod.password];
+    if (isEmail && _settings?.enableEmailSignup == true) {
+      methods.add(_LoginMethod.emailCode);
+    }
+    if (_passkeyAvailable) {
+      methods.add(_LoginMethod.passkey);
+    }
+    return methods;
+  }
+
+  Widget _buildSelectedLoginMethod(_LoginMethod method) {
+    switch (method) {
+      case _LoginMethod.password:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildTextField(
+              controller: _loginPasswordController,
+              label: '密码',
+              icon: Icons.lock_outline_rounded,
+              obscureText: true,
+              onSubmitted: (_) => _submitPasswordLogin(),
+            ),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: _loading ? null : _submitPasswordLogin,
+              icon: const Icon(Icons.login_rounded),
+              label: const Text('登录'),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _loading ? null : _resetPassword,
+                icon: const Icon(Icons.lock_reset_rounded, size: 18),
+                label: const Text('忘记密码'),
+              ),
+            ),
+          ],
+        );
+      case _LoginMethod.emailCode:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: _emailTokenController,
+                    label: _emailTokenRequested ? '验证码' : '先获取验证码',
+                    icon: Icons.pin_outlined,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: _loading ? null : _requestEmailToken,
+                  child: const Text('发送'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: _loading ? null : _submitEmailLogin,
+              icon: const Icon(Icons.mark_email_read_outlined),
+              label: const Text('验证码登录'),
+            ),
+          ],
+        );
+      case _LoginMethod.passkey:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FilledButton.icon(
+              onPressed: _loading ? null : _submitPasskeyLogin,
+              icon: const Icon(Icons.fingerprint_rounded),
+              label: const Text('使用 Passkey 登录'),
+            ),
+          ],
+        );
+    }
+  }
+
+  String _loginMethodLabel(_LoginMethod method) {
+    switch (method) {
+      case _LoginMethod.password:
+        return '密码登录';
+      case _LoginMethod.emailCode:
+        return '邮箱验证码登录';
+      case _LoginMethod.passkey:
+        return 'Passkey 登录';
+    }
+  }
+
+  IconData _loginMethodIcon(_LoginMethod method) {
+    switch (method) {
+      case _LoginMethod.password:
+        return Icons.lock_outline_rounded;
+      case _LoginMethod.emailCode:
+        return Icons.mark_email_read_outlined;
+      case _LoginMethod.passkey:
+        return Icons.fingerprint_rounded;
+    }
   }
 
   Widget _buildRegisterTab(ThemeData theme) {
@@ -721,6 +879,35 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildOAuth2Entry(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextButton.icon(
+          onPressed: _loading
+              ? null
+              : () =>
+                  setState(() => _showOAuthProviders = !_showOAuthProviders),
+          icon: Icon(
+            _showOAuthProviders
+                ? Icons.expand_less_rounded
+                : Icons.expand_more_rounded,
+          ),
+          label: const Text('第三方登录'),
+        ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: _buildOAuth2Buttons(theme),
+          crossFadeState: _showOAuthProviders
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 160),
+          sizeCurve: Curves.easeOut,
+        ),
+      ],
+    );
+  }
+
   Widget _buildOAuth2Buttons(ThemeData theme) {
     if (_oauth2Providers.isEmpty) return const SizedBox.shrink();
     final oauth2Available = OAuth2DeepLinkService.canCreateSession;
@@ -747,23 +934,6 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: Divider(color: theme.dividerColor)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Text(
-                '或',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            Expanded(child: Divider(color: theme.dividerColor)),
-          ],
-        ),
-        const SizedBox(height: 12),
       ],
     );
   }
@@ -825,18 +995,30 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     bool enabled = true,
     TextInputType? keyboardType,
     TextInputAction? textInputAction,
+    ValueChanged<String>? onChanged,
     ValueChanged<String>? onSubmitted,
   }) {
     return TextField(
       controller: controller,
       enabled: enabled && !_loading,
       obscureText: obscureText,
+      enableInteractiveSelection: true,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
+      onChanged: onChanged,
       onSubmitted: onSubmitted,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
+        suffixIcon: obscureText
+            ? IconButton(
+                tooltip: '粘贴',
+                icon: const Icon(Icons.content_paste_rounded),
+                onPressed: enabled && !_loading
+                    ? () => _pasteIntoController(controller)
+                    : null,
+              )
+            : null,
         border: const OutlineInputBorder(),
         isDense: true,
       ),
@@ -1001,6 +1183,24 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
     Navigator.pop(context, (email: email, token: token, password: password));
   }
 
+  Future<void> _pasteIntoController(TextEditingController controller) async {
+    final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = clipboard?.text;
+    if (text == null || text.isEmpty) return;
+
+    final value = controller.value;
+    final selection = value.selection;
+    final start = selection.isValid ? selection.start : value.text.length;
+    final end = selection.isValid ? selection.end : value.text.length;
+    final nextText = value.text.replaceRange(start, end, text);
+    final offset = start + text.length;
+    controller.value = value.copyWith(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: offset),
+      composing: TextRange.empty,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -1051,10 +1251,16 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
+              enableInteractiveSelection: true,
+              decoration: InputDecoration(
                 labelText: '新密码',
-                prefixIcon: Icon(Icons.lock_reset_rounded),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.lock_reset_rounded),
+                suffixIcon: IconButton(
+                  tooltip: '粘贴',
+                  icon: const Icon(Icons.content_paste_rounded),
+                  onPressed: () => _pasteIntoController(_passwordController),
+                ),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
             ),
@@ -1062,11 +1268,17 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
             TextField(
               controller: _confirmController,
               obscureText: true,
+              enableInteractiveSelection: true,
               onSubmitted: (_) => _submit(),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: '确认新密码',
-                prefixIcon: Icon(Icons.check_circle_outline_rounded),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.check_circle_outline_rounded),
+                suffixIcon: IconButton(
+                  tooltip: '粘贴',
+                  icon: const Icon(Icons.content_paste_rounded),
+                  onPressed: () => _pasteIntoController(_confirmController),
+                ),
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
             ),

@@ -50,6 +50,9 @@ class WRoom {
   final bool needVerify;
   final bool guestCanPause;
   final bool guestCanAdd;
+  final int myPermissions;
+  final int myRole;
+  final int myRelation;
 
   WRoom({
     required this.roomId,
@@ -71,6 +74,9 @@ class WRoom {
     this.needVerify = false,
     this.guestCanPause = true,
     this.guestCanAdd = true,
+    this.myPermissions = 0,
+    this.myRole = 0,
+    this.myRelation = 0,
   });
 
   WRoom copyWith({
@@ -93,6 +99,9 @@ class WRoom {
     bool? needVerify,
     bool? guestCanPause,
     bool? guestCanAdd,
+    int? myPermissions,
+    int? myRole,
+    int? myRelation,
   }) {
     return WRoom(
       roomId: roomId ?? this.roomId,
@@ -114,6 +123,9 @@ class WRoom {
       needVerify: needVerify ?? this.needVerify,
       guestCanPause: guestCanPause ?? this.guestCanPause,
       guestCanAdd: guestCanAdd ?? this.guestCanAdd,
+      myPermissions: myPermissions ?? this.myPermissions,
+      myRole: myRole ?? this.myRole,
+      myRelation: myRelation ?? this.myRelation,
     );
   }
 }
@@ -191,9 +203,19 @@ class WMovie {
   String? get playbackWatchTarget => hasPlaybackTarget ? subPath : null;
 
   bool hasSamePlaybackIdentity(WMovie other) {
-    return playbackWatchMediaId == other.playbackWatchMediaId &&
-        playbackWatchPlaylistId == other.playbackWatchPlaylistId &&
-        playbackWatchTarget == other.playbackWatchTarget;
+    final mediaId = playbackWatchMediaId;
+    final otherMediaId = other.playbackWatchMediaId;
+    if (mediaId.isNotEmpty || otherMediaId.isNotEmpty) {
+      return mediaId.isNotEmpty && mediaId == otherMediaId;
+    }
+
+    final playlistId = playbackWatchPlaylistId;
+    final otherPlaylistId = other.playbackWatchPlaylistId;
+    if (playlistId.isEmpty || playlistId != otherPlaylistId) return false;
+
+    final target = playbackWatchTarget ?? '';
+    final otherTarget = other.playbackWatchTarget ?? '';
+    return target.isEmpty || otherTarget.isEmpty || target == otherTarget;
   }
 
   WMovie copyWith({

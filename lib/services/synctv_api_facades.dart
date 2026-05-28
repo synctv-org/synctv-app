@@ -618,20 +618,6 @@ class SyncTvRoomApi {
     );
   }
 
-  Stream<client.ServerMessage> messageStream(
-    String roomId,
-    Stream<client.ClientMessage> messages, {
-    grpc.ClientChannel? channel,
-    Duration? timeout,
-  }) {
-    return _api.messageStream(
-      roomId,
-      messages,
-      channel: channel,
-      timeout: timeout,
-    );
-  }
-
   Stream<client.WatchPlaybackStateEvent> watchPlaybackState(
     String roomId,
     client.WatchPlaybackStateRequest request,

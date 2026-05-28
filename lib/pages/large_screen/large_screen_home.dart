@@ -5,16 +5,15 @@ import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/pages/large_screen/large_screen_room.dart';
 import 'package:synctv_app/pages/account_center_page.dart';
 import 'package:synctv_app/utils/message_utils.dart';
-import 'package:synctv_app/utils/chat_utils.dart';
 
 import 'package:synctv_app/widgets/auth_panel.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
+import 'package:synctv_app/widgets/join_room_dialog.dart';
 import 'package:synctv_app/widgets/room_invite_flow.dart';
 import 'package:synctv_app/widgets/server_settings_dialog.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
-import 'dart:math';
 
 enum _RoomFeed { public, mine, hot }
 
@@ -45,9 +44,9 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
 
     _authErrorSubscription = WatchTogetherService.onAuthError.listen((_) {
       if (mounted) {
-        WatchTogetherService.logout();
         setState(() {
           _isLoggedIn = false;
+          _currentUser = null;
         });
         _showLoginDialog();
       }
@@ -78,8 +77,8 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
   }
 
   Future<void> _checkLoginAndLoadData() async {
-    final token = await WatchTogetherService.getToken();
-    if (token == null) {
+    final hasSession = WatchTogetherService.hasRecoverableSession;
+    if (!hasSession) {
       if (mounted) {
         setState(() {
           _isLoggedIn = false;
@@ -232,36 +231,9 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
   }
 
   void _showJoinRoomDialog() {
-    final idController = TextEditingController();
-
-    ChatUtils.showStyledDialog(
+    showJoinRoomDialog(
       context: context,
-      title: '加入房间',
-      icon: Icon(Icons.login_rounded, color: Theme.of(context).primaryColor),
-      content: SizedBox(
-        width: 400,
-        child: ChatUtils.createFormField(
-          context: context,
-          label: '房间ID或邀请链接',
-          controller: idController,
-          hintText: '请输入房间ID或粘贴邀请链接',
-          prefixIcon: Icons.login_rounded,
-          onSubmitted: (_) async {
-            await _joinRoomById(idController.text);
-          },
-        ),
-      ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(
-          context,
-          () async {
-            await _joinRoomById(idController.text);
-          },
-          text: '加入',
-        ),
-      ],
+      onSubmitted: _joinRoomById,
     );
   }
 
@@ -298,24 +270,25 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
   void _showServerSettingsDialog() {
     showServerSettingsDialog(context: context).then((changed) {
       if (!mounted || changed != true) return;
-      setState(() {});
-      if (_isLoggedIn) _loadRooms(silent: false);
+      final hasSession = WatchTogetherService.hasRecoverableSession;
+      setState(() {
+        _isLoggedIn = hasSession;
+        if (!hasSession) _currentUser = null;
+        _roomPage = 1;
+      });
+      _loadRooms(silent: false);
+      if (hasSession) _fetchUserInfo();
     });
   }
 
   void _showAccountCenter() {
     final user = _currentUser;
     if (user == null) return;
-    ChatUtils.showStyledDialog(
-      context: context,
-      title: '账号中心',
-      icon: Icon(Icons.account_circle, color: Theme.of(context).primaryColor),
-      content: SizedBox(
-        width: 760,
-        height: 620,
-        child: AccountCenterPage(initialUser: user),
+    Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AccountCenterPage(initialUser: user),
       ),
-      actions: [],
     ).then((accountClosed) {
       if (accountClosed == true) {
         setState(() {
@@ -339,28 +312,9 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
     }
 
     if (room.needPassword) {
-      final passwordController = TextEditingController();
-      final result = await ChatUtils.showStyledDialog<String>(
+      final result = await showRoomPasswordDialog(
         context: context,
-        title: '输入房间密码',
-        icon: const Icon(Icons.lock, color: Color(0xFFCF0A2C)),
-        content: ChatUtils.createFormField(
-          context: context,
-          label: '密码',
-          controller: passwordController,
-          hintText: '请输入房间密码',
-          prefixIcon: Icons.key_rounded,
-          obscureText: true,
-        ),
-        actions: [
-          ChatUtils.createCancelButton(context),
-          const SizedBox(width: 8),
-          ChatUtils.createConfirmButton(
-            context,
-            () => Navigator.pop(context, passwordController.text),
-            text: '确定',
-          ),
-        ],
+        roomName: room.roomName,
       );
 
       if (result == null) return;
@@ -371,28 +325,8 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
       password = result;
     }
 
-    OverlayEntry? overlayEntry;
-
     try {
-      // 1. Immediately show the opaque transition overlay
-      overlayEntry = OverlayEntry(
-        builder: (context) => _TheaterTransitionEasterEgg(
-          room: room,
-          onComplete: () {
-            overlayEntry?.remove();
-          },
-        ),
-      );
-
-      if (mounted) {
-        Overlay.of(context).insert(overlayEntry);
-      }
-
-      // Briefly yield to ensure the overlay renders before any heavy work
-      await Future.delayed(const Duration(milliseconds: 50));
-
       await WatchTogetherService.joinRoom(room.roomId, password);
-      // Large screen might have specific navigation
       if (mounted) {
         _navigateToRoom(room);
       }
@@ -693,299 +627,6 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
       createdAt: room.createdAt,
       onTap: () => _handleJoinRoom(room),
       showScaleAnimation: true,
-    );
-  }
-}
-
-class _TheaterTransitionEasterEgg extends StatefulWidget {
-  final WRoom room;
-  final VoidCallback onComplete;
-
-  const _TheaterTransitionEasterEgg(
-      {required this.room, required this.onComplete});
-
-  @override
-  State<_TheaterTransitionEasterEgg> createState() =>
-      _TheaterTransitionEasterEggState();
-}
-
-class _TheaterTransitionEasterEggState
-    extends State<_TheaterTransitionEasterEgg>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _doorSwing;
-  late Animation<double> _doorGlow;
-  late Animation<double> _cameraZoom;
-  late Animation<double> _overlayOpacity;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration:
-          const Duration(milliseconds: 3800), // Slower, majestic transition
-    );
-
-    _doorSwing = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.1, 0.6, curve: Curves.easeInOutCubic)),
-    );
-
-    _doorGlow = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.2, 0.5, curve: Curves.easeIn)),
-    );
-
-    _cameraZoom = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.6, 0.95, curve: Curves.easeInQuint)),
-    );
-
-    _overlayOpacity = TweenSequence([
-      TweenSequenceItem(tween: Tween<double>(begin: 1, end: 1), weight: 90),
-      TweenSequenceItem(
-          tween: Tween<double>(begin: 1, end: 0)
-              .chain(CurveTween(curve: Curves.easeOut)),
-          weight: 10),
-    ]).animate(_controller);
-
-    _controller.forward().then((_) {
-      if (mounted) widget.onComplete();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Widget _buildDoorPanel(bool isLeft) {
-    return Container(
-      width: 140, // Half of 280
-      height: 400,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A0505),
-        border: Border(
-          left:
-              BorderSide(color: const Color(0xFF0A0000), width: isLeft ? 6 : 2),
-          right:
-              BorderSide(color: const Color(0xFF0A0000), width: isLeft ? 2 : 6),
-          top: const BorderSide(color: Color(0xFF0A0000), width: 6),
-          bottom: const BorderSide(color: Color(0xFF0A0000), width: 6),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.8),
-            blurRadius: 20,
-            spreadRadius: 2,
-            offset: Offset(isLeft ? -5 : 5, 0),
-          )
-        ],
-      ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: Column(
-              children: [
-                Expanded(flex: 3, child: _doorSoftPanel()),
-                const SizedBox(height: 16),
-                Expanded(flex: 4, child: _doorSoftPanel()),
-                const SizedBox(height: 16),
-                Expanded(flex: 2, child: _doorSoftPanel()),
-              ],
-            ),
-          ),
-          Positioned(
-            right: isLeft ? 15 : null,
-            left: isLeft ? null : 15,
-            top: 180,
-            child: Container(
-              width: 12,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFE5C07B),
-                    Color(0xFFD4AF37),
-                    Color(0xFF997A00)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(6),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Colors.black54,
-                      blurRadius: 4,
-                      offset: Offset(2, 2))
-                ],
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _doorSoftPanel() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFF140303),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: const Color(0xFF250606), width: 2),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: const TextStyle(decoration: TextDecoration.none),
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          final swingLeft = _doorSwing.value * (pi * 0.45);
-          final swingRight = -_doorSwing.value * (pi * 0.45);
-
-          return Opacity(
-            opacity: _overlayOpacity.value,
-            child: IgnorePointer(
-              child: Scaffold(
-                backgroundColor: Colors.black,
-                body: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Moving Camera Zoom
-                    Transform.scale(
-                      scale: 1.0 + (_cameraZoom.value * 5.0),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        clipBehavior: Clip.none,
-                        children: [
-                          // Glowing Screen Behind Door
-                          Container(
-                            width: 280,
-                            height: 400,
-                            decoration: BoxDecoration(
-                              gradient: RadialGradient(
-                                colors: [
-                                  Colors.white,
-                                  const Color(0xFF00B4D8)
-                                      .withValues(alpha: 0.8),
-                                  Colors.black,
-                                ],
-                                radius: 0.8 + (_doorGlow.value * 0.5),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF00B4D8)
-                                      .withValues(alpha: _doorGlow.value * 0.8),
-                                  blurRadius: 80 * _doorGlow.value,
-                                  spreadRadius: 20 * _doorGlow.value,
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Doors
-                          SizedBox(
-                            width: 280,
-                            height: 400,
-                            child: Row(
-                              children: [
-                                Transform(
-                                  alignment: Alignment.centerLeft,
-                                  transform: Matrix4.identity()
-                                    ..setEntry(3, 2, 0.0015)
-                                    ..rotateY(swingLeft),
-                                  child: _buildDoorPanel(true),
-                                ),
-                                Transform(
-                                  alignment: Alignment.centerRight,
-                                  transform: Matrix4.identity()
-                                    ..setEntry(3, 2, 0.0015)
-                                    ..rotateY(swingRight),
-                                  child: _buildDoorPanel(false),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Door Frame
-                          IgnorePointer(
-                            child: Container(
-                              width: 320,
-                              height: 440,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: const Color(0xFF050000), width: 20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.9),
-                                    blurRadius: 40,
-                                    spreadRadius: 10,
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // Sign above door
-                          Positioned(
-                            top: -60,
-                            child: Opacity(
-                              opacity: 1.0 - _cameraZoom.value,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0A0000),
-                                  border: Border.all(
-                                      color: const Color(0xFF330000), width: 2),
-                                  borderRadius: BorderRadius.circular(6),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.redAccent.withValues(
-                                          alpha: _doorGlow.value * 0.4),
-                                      blurRadius: 20,
-                                      spreadRadius: 2,
-                                    )
-                                  ],
-                                ),
-                                child: Text(
-                                  widget.room.roomName.toUpperCase(),
-                                  style: TextStyle(
-                                    color: Color.lerp(
-                                        Colors.red.shade900,
-                                        const Color(0xFFFF5555),
-                                        _doorGlow.value),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 4,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

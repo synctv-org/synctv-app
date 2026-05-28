@@ -17114,7 +17114,6 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? maxMembersPerRoom,
     $core.bool? disableCreateRoom,
     $core.bool? createRoomNeedReview,
-    $fixnum.Int64? roomTtl,
     $core.String? roomPasswordPolicy,
     $core.bool? enablePasswordSignup,
     $core.bool? movieProxy,
@@ -17136,7 +17135,6 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     if (disableCreateRoom != null) result.disableCreateRoom = disableCreateRoom;
     if (createRoomNeedReview != null)
       result.createRoomNeedReview = createRoomNeedReview;
-    if (roomTtl != null) result.roomTtl = roomTtl;
     if (roomPasswordPolicy != null)
       result.roomPasswordPolicy = roomPasswordPolicy;
     if (enablePasswordSignup != null)
@@ -17178,7 +17176,6 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     ..aInt64(4, _omitFieldNames ? '' : 'maxMembersPerRoom')
     ..aOB(5, _omitFieldNames ? '' : 'disableCreateRoom')
     ..aOB(6, _omitFieldNames ? '' : 'createRoomNeedReview')
-    ..aInt64(7, _omitFieldNames ? '' : 'roomTtl')
     ..aOS(8, _omitFieldNames ? '' : 'roomPasswordPolicy')
     ..aOB(10, _omitFieldNames ? '' : 'enablePasswordSignup')
     ..aOB(11, _omitFieldNames ? '' : 'movieProxy')
@@ -17260,133 +17257,124 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   void clearCreateRoomNeedReview() => $_clearField(6);
 
-  @$pb.TagNumber(7)
-  $fixnum.Int64 get roomTtl => $_getI64(5);
-  @$pb.TagNumber(7)
-  set roomTtl($fixnum.Int64 value) => $_setInt64(5, value);
-  @$pb.TagNumber(7)
-  $core.bool hasRoomTtl() => $_has(5);
-  @$pb.TagNumber(7)
-  void clearRoomTtl() => $_clearField(7);
-
   @$pb.TagNumber(8)
-  $core.String get roomPasswordPolicy => $_getSZ(6);
+  $core.String get roomPasswordPolicy => $_getSZ(5);
   @$pb.TagNumber(8)
-  set roomPasswordPolicy($core.String value) => $_setString(6, value);
+  set roomPasswordPolicy($core.String value) => $_setString(5, value);
   @$pb.TagNumber(8)
-  $core.bool hasRoomPasswordPolicy() => $_has(6);
+  $core.bool hasRoomPasswordPolicy() => $_has(5);
   @$pb.TagNumber(8)
   void clearRoomPasswordPolicy() => $_clearField(8);
 
   /// User settings
   @$pb.TagNumber(10)
-  $core.bool get enablePasswordSignup => $_getBF(7);
+  $core.bool get enablePasswordSignup => $_getBF(6);
   @$pb.TagNumber(10)
-  set enablePasswordSignup($core.bool value) => $_setBool(7, value);
+  set enablePasswordSignup($core.bool value) => $_setBool(6, value);
   @$pb.TagNumber(10)
-  $core.bool hasEnablePasswordSignup() => $_has(7);
+  $core.bool hasEnablePasswordSignup() => $_has(6);
   @$pb.TagNumber(10)
   void clearEnablePasswordSignup() => $_clearField(10);
 
   /// Proxy settings
   @$pb.TagNumber(11)
-  $core.bool get movieProxy => $_getBF(8);
+  $core.bool get movieProxy => $_getBF(7);
   @$pb.TagNumber(11)
-  set movieProxy($core.bool value) => $_setBool(8, value);
+  set movieProxy($core.bool value) => $_setBool(7, value);
   @$pb.TagNumber(11)
-  $core.bool hasMovieProxy() => $_has(8);
+  $core.bool hasMovieProxy() => $_has(7);
   @$pb.TagNumber(11)
   void clearMovieProxy() => $_clearField(11);
 
   @$pb.TagNumber(12)
-  $core.bool get liveProxy => $_getBF(9);
+  $core.bool get liveProxy => $_getBF(8);
   @$pb.TagNumber(12)
-  set liveProxy($core.bool value) => $_setBool(9, value);
+  set liveProxy($core.bool value) => $_setBool(8, value);
   @$pb.TagNumber(12)
-  $core.bool hasLiveProxy() => $_has(9);
+  $core.bool hasLiveProxy() => $_has(8);
   @$pb.TagNumber(12)
   void clearLiveProxy() => $_clearField(12);
 
   /// RTMP settings
   @$pb.TagNumber(13)
-  $core.bool get tsDisguisedAsPng => $_getBF(10);
+  $core.bool get tsDisguisedAsPng => $_getBF(9);
   @$pb.TagNumber(13)
-  set tsDisguisedAsPng($core.bool value) => $_setBool(10, value);
+  set tsDisguisedAsPng($core.bool value) => $_setBool(9, value);
   @$pb.TagNumber(13)
-  $core.bool hasTsDisguisedAsPng() => $_has(10);
+  $core.bool hasTsDisguisedAsPng() => $_has(9);
   @$pb.TagNumber(13)
   void clearTsDisguisedAsPng() => $_clearField(13);
 
   @$pb.TagNumber(14)
-  $core.String get customPublishHost => $_getSZ(11);
+  $core.String get customPublishHost => $_getSZ(10);
   @$pb.TagNumber(14)
-  set customPublishHost($core.String value) => $_setString(11, value);
+  set customPublishHost($core.String value) => $_setString(10, value);
   @$pb.TagNumber(14)
-  $core.bool hasCustomPublishHost() => $_has(11);
+  $core.bool hasCustomPublishHost() => $_has(10);
   @$pb.TagNumber(14)
   void clearCustomPublishHost() => $_clearField(14);
 
   /// Email settings
   @$pb.TagNumber(15)
-  $core.bool get emailWhitelistEnabled => $_getBF(12);
+  $core.bool get emailWhitelistEnabled => $_getBF(11);
   @$pb.TagNumber(15)
-  set emailWhitelistEnabled($core.bool value) => $_setBool(12, value);
+  set emailWhitelistEnabled($core.bool value) => $_setBool(11, value);
   @$pb.TagNumber(15)
-  $core.bool hasEmailWhitelistEnabled() => $_has(12);
+  $core.bool hasEmailWhitelistEnabled() => $_has(11);
   @$pb.TagNumber(15)
   void clearEmailWhitelistEnabled() => $_clearField(15);
 
   @$pb.TagNumber(16)
-  $core.bool get passwordSignupNeedReview => $_getBF(13);
+  $core.bool get passwordSignupNeedReview => $_getBF(12);
   @$pb.TagNumber(16)
-  set passwordSignupNeedReview($core.bool value) => $_setBool(13, value);
+  set passwordSignupNeedReview($core.bool value) => $_setBool(12, value);
   @$pb.TagNumber(16)
-  $core.bool hasPasswordSignupNeedReview() => $_has(13);
+  $core.bool hasPasswordSignupNeedReview() => $_has(12);
   @$pb.TagNumber(16)
   void clearPasswordSignupNeedReview() => $_clearField(16);
 
   @$pb.TagNumber(17)
-  $core.bool get enableEmailSignup => $_getBF(14);
+  $core.bool get enableEmailSignup => $_getBF(13);
   @$pb.TagNumber(17)
-  set enableEmailSignup($core.bool value) => $_setBool(14, value);
+  set enableEmailSignup($core.bool value) => $_setBool(13, value);
   @$pb.TagNumber(17)
-  $core.bool hasEnableEmailSignup() => $_has(14);
+  $core.bool hasEnableEmailSignup() => $_has(13);
   @$pb.TagNumber(17)
   void clearEnableEmailSignup() => $_clearField(17);
 
   @$pb.TagNumber(18)
-  $core.bool get enableGuest => $_getBF(15);
+  $core.bool get enableGuest => $_getBF(14);
   @$pb.TagNumber(18)
-  set enableGuest($core.bool value) => $_setBool(15, value);
+  set enableGuest($core.bool value) => $_setBool(14, value);
   @$pb.TagNumber(18)
-  $core.bool hasEnableGuest() => $_has(15);
+  $core.bool hasEnableGuest() => $_has(14);
   @$pb.TagNumber(18)
   void clearEnableGuest() => $_clearField(18);
 
   @$pb.TagNumber(19)
-  $core.bool get emailSignupNeedReview => $_getBF(16);
+  $core.bool get emailSignupNeedReview => $_getBF(15);
   @$pb.TagNumber(19)
-  set emailSignupNeedReview($core.bool value) => $_setBool(16, value);
+  set emailSignupNeedReview($core.bool value) => $_setBool(15, value);
   @$pb.TagNumber(19)
-  $core.bool hasEmailSignupNeedReview() => $_has(16);
+  $core.bool hasEmailSignupNeedReview() => $_has(15);
   @$pb.TagNumber(19)
   void clearEmailSignupNeedReview() => $_clearField(19);
 
   @$pb.TagNumber(22)
-  $core.bool get enableWebauthnSignup => $_getBF(17);
+  $core.bool get enableWebauthnSignup => $_getBF(16);
   @$pb.TagNumber(22)
-  set enableWebauthnSignup($core.bool value) => $_setBool(17, value);
+  set enableWebauthnSignup($core.bool value) => $_setBool(16, value);
   @$pb.TagNumber(22)
-  $core.bool hasEnableWebauthnSignup() => $_has(17);
+  $core.bool hasEnableWebauthnSignup() => $_has(16);
   @$pb.TagNumber(22)
   void clearEnableWebauthnSignup() => $_clearField(22);
 
   @$pb.TagNumber(23)
-  $core.bool get webauthnSignupNeedReview => $_getBF(18);
+  $core.bool get webauthnSignupNeedReview => $_getBF(17);
   @$pb.TagNumber(23)
-  set webauthnSignupNeedReview($core.bool value) => $_setBool(18, value);
+  set webauthnSignupNeedReview($core.bool value) => $_setBool(17, value);
   @$pb.TagNumber(23)
-  $core.bool hasWebauthnSignupNeedReview() => $_has(18);
+  $core.bool hasWebauthnSignupNeedReview() => $_has(17);
   @$pb.TagNumber(23)
   void clearWebauthnSignupNeedReview() => $_clearField(23);
 }

@@ -6140,7 +6140,6 @@ const GetPublicSettingsResponse$json = {
       '5': 8,
       '10': 'createRoomNeedReview'
     },
-    {'1': 'room_ttl', '3': 7, '4': 1, '5': 3, '10': 'roomTtl'},
     {
       '1': 'room_password_policy',
       '3': 8,
@@ -6223,19 +6222,19 @@ final $typed_data.Uint8List getPublicSettingsResponseDescriptor = $convert.base6
     'hSEWFsbG93Um9vbUNyZWF0aW9uEisKEm1heF9yb29tc19wZXJfdXNlchgDIAEoA1IPbWF4Um9v'
     'bXNQZXJVc2VyEi8KFG1heF9tZW1iZXJzX3Blcl9yb29tGAQgASgDUhFtYXhNZW1iZXJzUGVyUm'
     '9vbRIuChNkaXNhYmxlX2NyZWF0ZV9yb29tGAUgASgIUhFkaXNhYmxlQ3JlYXRlUm9vbRI1Chdj'
-    'cmVhdGVfcm9vbV9uZWVkX3JldmlldxgGIAEoCFIUY3JlYXRlUm9vbU5lZWRSZXZpZXcSGQoIcm'
-    '9vbV90dGwYByABKANSB3Jvb21UdGwSMAoUcm9vbV9wYXNzd29yZF9wb2xpY3kYCCABKAlSEnJv'
-    'b21QYXNzd29yZFBvbGljeRI0ChZlbmFibGVfcGFzc3dvcmRfc2lnbnVwGAogASgIUhRlbmFibG'
-    'VQYXNzd29yZFNpZ251cBI9ChtwYXNzd29yZF9zaWdudXBfbmVlZF9yZXZpZXcYECABKAhSGHBh'
-    'c3N3b3JkU2lnbnVwTmVlZFJldmlldxIuChNlbmFibGVfZW1haWxfc2lnbnVwGBEgASgIUhFlbm'
-    'FibGVFbWFpbFNpZ251cBIhCgxlbmFibGVfZ3Vlc3QYEiABKAhSC2VuYWJsZUd1ZXN0EjcKGGVt'
-    'YWlsX3NpZ251cF9uZWVkX3JldmlldxgTIAEoCFIVZW1haWxTaWdudXBOZWVkUmV2aWV3EjQKFm'
-    'VuYWJsZV93ZWJhdXRobl9zaWdudXAYFiABKAhSFGVuYWJsZVdlYmF1dGhuU2lnbnVwEj0KG3dl'
-    'YmF1dGhuX3NpZ251cF9uZWVkX3JldmlldxgXIAEoCFIYd2ViYXV0aG5TaWdudXBOZWVkUmV2aW'
-    'V3Eh8KC21vdmllX3Byb3h5GAsgASgIUgptb3ZpZVByb3h5Eh0KCmxpdmVfcHJveHkYDCABKAhS'
-    'CWxpdmVQcm94eRItChN0c19kaXNndWlzZWRfYXNfcG5nGA0gASgIUhB0c0Rpc2d1aXNlZEFzUG'
-    '5nEi4KE2N1c3RvbV9wdWJsaXNoX2hvc3QYDiABKAlSEWN1c3RvbVB1Ymxpc2hIb3N0EjYKF2Vt'
-    'YWlsX3doaXRlbGlzdF9lbmFibGVkGA8gASgIUhVlbWFpbFdoaXRlbGlzdEVuYWJsZWQ=');
+    'cmVhdGVfcm9vbV9uZWVkX3JldmlldxgGIAEoCFIUY3JlYXRlUm9vbU5lZWRSZXZpZXcSMAoUcm'
+    '9vbV9wYXNzd29yZF9wb2xpY3kYCCABKAlSEnJvb21QYXNzd29yZFBvbGljeRI0ChZlbmFibGVf'
+    'cGFzc3dvcmRfc2lnbnVwGAogASgIUhRlbmFibGVQYXNzd29yZFNpZ251cBI9ChtwYXNzd29yZF'
+    '9zaWdudXBfbmVlZF9yZXZpZXcYECABKAhSGHBhc3N3b3JkU2lnbnVwTmVlZFJldmlldxIuChNl'
+    'bmFibGVfZW1haWxfc2lnbnVwGBEgASgIUhFlbmFibGVFbWFpbFNpZ251cBIhCgxlbmFibGVfZ3'
+    'Vlc3QYEiABKAhSC2VuYWJsZUd1ZXN0EjcKGGVtYWlsX3NpZ251cF9uZWVkX3JldmlldxgTIAEo'
+    'CFIVZW1haWxTaWdudXBOZWVkUmV2aWV3EjQKFmVuYWJsZV93ZWJhdXRobl9zaWdudXAYFiABKA'
+    'hSFGVuYWJsZVdlYmF1dGhuU2lnbnVwEj0KG3dlYmF1dGhuX3NpZ251cF9uZWVkX3JldmlldxgX'
+    'IAEoCFIYd2ViYXV0aG5TaWdudXBOZWVkUmV2aWV3Eh8KC21vdmllX3Byb3h5GAsgASgIUgptb3'
+    'ZpZVByb3h5Eh0KCmxpdmVfcHJveHkYDCABKAhSCWxpdmVQcm94eRItChN0c19kaXNndWlzZWRf'
+    'YXNfcG5nGA0gASgIUhB0c0Rpc2d1aXNlZEFzUG5nEi4KE2N1c3RvbV9wdWJsaXNoX2hvc3QYDi'
+    'ABKAlSEWN1c3RvbVB1Ymxpc2hIb3N0EjYKF2VtYWlsX3doaXRlbGlzdF9lbmFibGVkGA8gASgI'
+    'UhVlbWFpbFdoaXRlbGlzdEVuYWJsZWQ=');
 
 @$core.Deprecated('Use getServerInfoRequestDescriptor instead')
 const GetServerInfoRequest$json = {
