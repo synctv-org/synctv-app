@@ -103,17 +103,31 @@ class BilibiliQrLoginInfo {
 }
 
 class BilibiliSmsLoginInfo {
-  final String sessionId;
+  final String sessionToken;
   final String gt;
   final String challenge;
   final int expiresAt;
 
   const BilibiliSmsLoginInfo({
-    required this.sessionId,
+    required this.sessionToken,
     required this.gt,
     required this.challenge,
     required this.expiresAt,
   });
+
+  BilibiliSmsLoginInfo copyWith({
+    String? sessionToken,
+    String? gt,
+    String? challenge,
+    int? expiresAt,
+  }) {
+    return BilibiliSmsLoginInfo(
+      sessionToken: sessionToken ?? this.sessionToken,
+      gt: gt ?? this.gt,
+      challenge: challenge ?? this.challenge,
+      expiresAt: expiresAt ?? this.expiresAt,
+    );
+  }
 }
 
 class BilibiliVideoItemInfo {

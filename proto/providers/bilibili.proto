@@ -73,7 +73,7 @@ message StartSMSLoginRequest {
 
 // Start SMS login response
 message StartSMSLoginResponse {
-  string session_id = 1;
+  string session_token = 1;
   string gt = 2;
   string challenge = 3;
   int64 expires_at = 4; // Unix epoch timestamp
@@ -81,19 +81,20 @@ message StartSMSLoginResponse {
 
 // Send SMS request
 message SendSMSRequest {
-  string session_id = 1;
+  string session_token = 1;
   string phone = 2;
   string validate = 3; // Geetest validate result produced by the frontend captcha widget
 }
 
 // Send SMS response
 message SendSMSResponse {
-  int64 expires_at = 1; // Unix epoch timestamp
+  string session_token = 1;
+  int64 expires_at = 2; // Unix epoch timestamp
 }
 
 // Login with SMS request
 message LoginSMSRequest {
-  string session_id = 1;
+  string session_token = 1;
   string code = 2;
 }
 

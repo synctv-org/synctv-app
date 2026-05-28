@@ -4598,7 +4598,7 @@ void main() {
         if (request.url.path.endsWith('/login/sms/start')) {
           return http.Response(
             jsonEncode({
-              'session_id': 'sms_session',
+              'session_token': 'sms_session_1',
               'gt': 'gt_value',
               'challenge': 'challenge_value',
               'expires_at': 1710000300,
@@ -4610,7 +4610,8 @@ void main() {
         if (request.url.path.endsWith('/login/sms/send')) {
           return http.Response(
             jsonEncode({
-              'expires_at': 1710000300,
+              'session_token': 'sms_session_2',
+              'expires_at': 1710000360,
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -4635,38 +4636,39 @@ void main() {
     );
     final smsSend = await api.bilibiliProvider.sendSMS(
       bilibili.SendSMSRequest(
-        sessionId: 'sms_session',
+        sessionToken: 'sms_session_1',
         phone: '13800138000',
         validate: 'geetest_validate',
       ),
     );
     await api.bilibiliProvider.loginSMS(
       bilibili.LoginSMSRequest(
-        sessionId: 'sms_session',
+        sessionToken: 'sms_session_2',
         code: '123456',
       ),
     );
 
     expect(qr.url, 'https://passport.bilibili.com/qr');
     expect(qr.key, 'qr_key');
-    expect(smsStart.sessionId, 'sms_session');
+    expect(smsStart.sessionToken, 'sms_session_1');
     expect(smsStart.gt, 'gt_value');
     expect(smsStart.challenge, 'challenge_value');
     expect(smsStart.expiresAt.toInt(), 1710000300);
-    expect(smsSend.expiresAt.toInt(), 1710000300);
+    expect(smsSend.sessionToken, 'sms_session_2');
+    expect(smsSend.expiresAt.toInt(), 1710000360);
     expect(requests[0].url.path, '/api/providers/bilibili/login/qr/generate');
     expect(jsonDecode(requests[0].body), {'instance_name': 'main'});
     expect(requests[1].url.path, '/api/providers/bilibili/login/sms/start');
     expect(jsonDecode(requests[1].body), {'instance_name': 'main'});
     expect(requests[2].url.path, '/api/providers/bilibili/login/sms/send');
     expect(jsonDecode(requests[2].body), {
-      'session_id': 'sms_session',
+      'session_token': 'sms_session_1',
       'phone': '13800138000',
       'validate': 'geetest_validate',
     });
     expect(requests[3].url.path, '/api/providers/bilibili/login/sms/login');
     expect(jsonDecode(requests[3].body), {
-      'session_id': 'sms_session',
+      'session_token': 'sms_session_2',
       'code': '123456',
     });
   });

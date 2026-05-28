@@ -1088,24 +1088,24 @@ class WatchTogetherService {
     );
   }
 
-  static Future<int> sendBilibiliSms({
-    required String sessionId,
+  static Future<BilibiliSmsLoginInfo> sendBilibiliSms({
+    required BilibiliSmsLoginInfo session,
     required String phone,
     required String validate,
   }) async {
     return _domains.providers.sendBilibiliSms(
-      sessionId: sessionId,
+      session: session,
       phone: phone,
       validate: validate,
     );
   }
 
   static Future<void> loginBilibiliSms({
-    required String sessionId,
+    required String sessionToken,
     required String code,
   }) async {
     await _domains.providers.loginBilibiliSms(
-      sessionId: sessionId,
+      sessionToken: sessionToken,
       code: code,
     );
   }

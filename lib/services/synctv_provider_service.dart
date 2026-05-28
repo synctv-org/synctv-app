@@ -104,35 +104,38 @@ class SyncTvProviderDomainService {
       bilibili.StartSMSLoginRequest(instanceName: instanceName),
     );
     return BilibiliSmsLoginInfo(
-      sessionId: response.sessionId,
+      sessionToken: response.sessionToken,
       gt: response.gt,
       challenge: response.challenge,
       expiresAt: response.expiresAt.toInt(),
     );
   }
 
-  Future<int> sendBilibiliSms({
-    required String sessionId,
+  Future<BilibiliSmsLoginInfo> sendBilibiliSms({
+    required BilibiliSmsLoginInfo session,
     required String phone,
     required String validate,
   }) async {
     final response = await _api.bilibiliProvider.sendSMS(
       bilibili.SendSMSRequest(
-        sessionId: sessionId,
+        sessionToken: session.sessionToken,
         phone: phone,
         validate: validate,
       ),
     );
-    return response.expiresAt.toInt();
+    return session.copyWith(
+      sessionToken: response.sessionToken,
+      expiresAt: response.expiresAt.toInt(),
+    );
   }
 
   Future<void> loginBilibiliSms({
-    required String sessionId,
+    required String sessionToken,
     required String code,
   }) async {
     await _api.bilibiliProvider.loginSMS(
       bilibili.LoginSMSRequest(
-        sessionId: sessionId,
+        sessionToken: sessionToken,
         code: code,
       ),
     );

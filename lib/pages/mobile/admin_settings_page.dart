@@ -3885,46 +3885,93 @@ class _ProviderTypeSelector extends StatelessWidget {
     required this.selectedProviders,
     required this.options,
     required this.onChanged,
+    this.hasError = false,
   });
 
   final Set<String> selectedProviders;
   final List<String> options;
   final void Function(String provider, bool selected) onChanged;
+  final bool hasError;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Provider 类型',
-          prefixIcon: Icon(Icons.category_outlined),
-          border: OutlineInputBorder(),
-          isDense: true,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: hasError
+              ? theme.colorScheme.error
+              : theme.colorScheme.outlineVariant.withValues(alpha: 0.72),
         ),
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final provider in options)
-              FilterChip(
-                label: Text(_providerTypeLabel(provider)),
-                selected: selectedProviders.contains(provider),
-                onSelected: (selected) => onChanged(provider, selected),
-                showCheckmark: true,
-                visualDensity: VisualDensity.compact,
-              ),
-            if (options.isEmpty)
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.category_outlined,
+                  size: 18,
+                  color: hasError
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.primary),
+              const SizedBox(width: 8),
               Text(
-                '暂无可选类型',
-                style: TextStyle(color: theme.hintColor),
+                'Provider 类型',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: hasError ? theme.colorScheme.error : null,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final provider in options)
+                FilterChip(
+                  label: Text(_providerTypeLabel(provider)),
+                  avatar: Icon(_providerTypeIcon(provider), size: 16),
+                  selected: selectedProviders.contains(provider),
+                  onSelected: (selected) => onChanged(provider, selected),
+                  showCheckmark: true,
+                  visualDensity: VisualDensity.compact,
+                ),
+              if (options.isEmpty)
+                Text(
+                  '暂无可选类型',
+                  style: TextStyle(color: theme.hintColor),
+                ),
+            ],
+          ),
+          if (hasError) ...[
+            const SizedBox(height: 8),
+            Text(
+              '至少选择一个 Provider 类型',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
+}
+
+IconData _providerTypeIcon(String provider) {
+  return switch (provider) {
+    'alist' => Icons.folder_copy_outlined,
+    'emby' => Icons.movie_filter_outlined,
+    'bilibili' => Icons.live_tv_outlined,
+    'rtmp' => Icons.podcasts_outlined,
+    _ => Icons.extension_outlined,
+  };
 }
 
 class AdminProviderTab extends StatefulWidget {
@@ -3993,221 +4040,49 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
   }
 
   Future<void> _editInstance([AdminProviderInstance? instance]) async {
-    final name = TextEditingController(text: instance?.name ?? '');
-    final endpoint = TextEditingController(text: instance?.endpoint ?? '');
-    final comment = TextEditingController(text: instance?.comment ?? '');
-    final timeout = TextEditingController(
-      text: (instance?.timeoutSeconds ?? 30).toString(),
-    );
-    final selectedProviders = <String>{
-      ...?instance?.providers,
-      if (instance == null && _providerType.isNotEmpty) _providerType,
-    };
-    final jwtSecret = TextEditingController();
-    final customCa = TextEditingController();
-    bool tls = instance?.tls ?? true;
-    bool insecureTls = instance?.insecureTls ?? false;
-    bool clearComment = false;
-    bool clearJwtSecret = false;
-    bool clearCustomCa = false;
     final editing = instance != null;
-
-    final confirmed = await ChatUtils.showStyledDialog<bool>(
+    final result = await showDialog<_ProviderInstanceEditResult>(
       context: context,
-      title: editing ? '编辑 Provider' : '新增 Provider',
-      icon: const Icon(Icons.hub_rounded, color: Color(0xFF5D5FEF)),
-      content: StatefulBuilder(
-        builder: (context, setDialogState) {
-          return SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ChatUtils.createFormField(
-                  context: context,
-                  label: '名称',
-                  controller: name,
-                  hintText: 'provider_main',
-                  prefixIcon: Icons.badge_outlined,
-                  enabled: !editing,
-                ),
-                const SizedBox(height: 12),
-                ChatUtils.createFormField(
-                  context: context,
-                  label: 'Endpoint',
-                  controller: endpoint,
-                  hintText: 'https://provider.example.com',
-                  prefixIcon: Icons.link_rounded,
-                ),
-                const SizedBox(height: 12),
-                _ProviderTypeSelector(
-                  selectedProviders: selectedProviders,
-                  options: _providerTypeOptions(
-                    selectedFilter: _providerType,
-                    selectedProviders: selectedProviders,
-                  ),
-                  onChanged: (provider, selected) => setDialogState(() {
-                    if (selected) {
-                      selectedProviders.add(provider);
-                    } else {
-                      selectedProviders.remove(provider);
-                    }
-                  }),
-                ),
-                const SizedBox(height: 12),
-                ChatUtils.createFormField(
-                  context: context,
-                  label: '备注',
-                  controller: comment,
-                  hintText: '可选',
-                  prefixIcon: Icons.notes_rounded,
-                  enabled: !clearComment,
-                ),
-                if (editing)
-                  CheckboxListTile(
-                    value: clearComment,
-                    onChanged: (value) => setDialogState(() {
-                      clearComment = value ?? false;
-                      if (clearComment) comment.clear();
-                    }),
-                    title: const Text('清除备注'),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                const SizedBox(height: 12),
-                ChatUtils.createFormField(
-                  context: context,
-                  label: '超时秒数',
-                  controller: timeout,
-                  hintText: '30',
-                  prefixIcon: Icons.timer_outlined,
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 12),
-                ChatUtils.createFormField(
-                  context: context,
-                  label: 'JWT Secret',
-                  controller: jwtSecret,
-                  hintText: editing ? '留空不修改' : '可选',
-                  prefixIcon: Icons.key_rounded,
-                  enabled: !clearJwtSecret,
-                ),
-                if (editing)
-                  CheckboxListTile(
-                    value: clearJwtSecret,
-                    onChanged: (value) => setDialogState(() {
-                      clearJwtSecret = value ?? false;
-                      if (clearJwtSecret) jwtSecret.clear();
-                    }),
-                    title: const Text('清除 JWT Secret'),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                const SizedBox(height: 12),
-                ChatUtils.createFormField(
-                  context: context,
-                  label: 'Custom CA',
-                  controller: customCa,
-                  hintText: editing ? 'PEM 内容，留空不修改' : 'PEM 内容，可选',
-                  prefixIcon: Icons.verified_user_outlined,
-                  maxLines: 5,
-                  enabled: !clearCustomCa,
-                ),
-                if (editing)
-                  CheckboxListTile(
-                    value: clearCustomCa,
-                    onChanged: (value) => setDialogState(() {
-                      clearCustomCa = value ?? false;
-                      if (clearCustomCa) customCa.clear();
-                    }),
-                    title: const Text('清除 Custom CA'),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                SwitchListTile(
-                  value: tls,
-                  onChanged: (value) => setDialogState(() => tls = value),
-                  title: const Text('TLS'),
-                ),
-                SwitchListTile(
-                  value: insecureTls,
-                  onChanged: (value) =>
-                      setDialogState(() => insecureTls = value),
-                  title: const Text('允许不安全 TLS'),
-                ),
-              ],
-            ),
-          );
-        },
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (context) => _ProviderInstanceEditorDialog(
+        instance: instance,
+        selectedFilter: _providerType,
       ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: editing ? '保存' : '创建',
-        ),
-      ],
     );
-    if (confirmed != true) return;
+    if (result == null) return;
     if (!mounted) return;
 
-    final trimmedName = name.text.trim();
-    final trimmedEndpoint = endpoint.text.trim();
-    final trimmedComment = comment.text.trim();
-    final parsedTimeout = int.tryParse(timeout.text.trim());
-    final providerList = selectedProviders.toList(growable: false)..sort();
-    if (!editing && trimmedName.isEmpty) {
-      MessageUtils.showError(context, '名称不能为空');
-      return;
-    }
-    if (trimmedEndpoint.isEmpty) {
-      MessageUtils.showError(context, 'Endpoint 不能为空');
-      return;
-    }
-    if (providerList.isEmpty) {
-      MessageUtils.showError(context, '至少需要填写一个 Provider 类型');
-      return;
-    }
-    if (parsedTimeout == null || parsedTimeout <= 0) {
-      MessageUtils.showError(context, '超时秒数必须是大于 0 的整数');
-      return;
-    }
     try {
       if (editing) {
         await WatchTogetherService.adminUpdateProviderInstance(
           name: instance.name,
-          endpoint: trimmedEndpoint,
-          comment: clearComment ? null : trimmedComment,
-          timeoutSeconds: parsedTimeout,
-          tls: tls,
-          insecureTls: insecureTls,
-          providers: providerList,
-          jwtSecret: clearJwtSecret || jwtSecret.text.trim().isEmpty
+          endpoint: result.endpoint,
+          comment: result.clearComment ? null : result.comment,
+          timeoutSeconds: result.timeoutSeconds,
+          tls: result.tls,
+          insecureTls: result.insecureTls,
+          providers: result.providers,
+          jwtSecret: result.clearJwtSecret || result.jwtSecret.isEmpty
               ? null
-              : jwtSecret.text.trim(),
-          customCa: clearCustomCa || customCa.text.trim().isEmpty
+              : result.jwtSecret,
+          customCa: result.clearCustomCa || result.customCa.isEmpty
               ? null
-              : customCa.text.trim(),
-          clearComment: clearComment,
-          clearJwtSecret: clearJwtSecret,
-          clearCustomCa: clearCustomCa,
+              : result.customCa,
+          clearComment: result.clearComment,
+          clearJwtSecret: result.clearJwtSecret,
+          clearCustomCa: result.clearCustomCa,
         );
       } else {
         await WatchTogetherService.adminAddProviderInstance(
-          name: trimmedName,
-          endpoint: trimmedEndpoint,
-          providers: providerList,
-          comment: trimmedComment,
-          timeoutSeconds: parsedTimeout,
-          tls: tls,
-          insecureTls: insecureTls,
-          jwtSecret:
-              jwtSecret.text.trim().isEmpty ? null : jwtSecret.text.trim(),
-          customCa: customCa.text.trim().isEmpty ? null : customCa.text.trim(),
+          name: result.name,
+          endpoint: result.endpoint,
+          providers: result.providers,
+          comment: result.comment,
+          timeoutSeconds: result.timeoutSeconds,
+          tls: result.tls,
+          insecureTls: result.insecureTls,
+          jwtSecret: result.jwtSecret.isEmpty ? null : result.jwtSecret,
+          customCa: result.customCa.isEmpty ? null : result.customCa,
         );
       }
       if (!mounted) return;
@@ -4732,6 +4607,645 @@ class _ProviderMetaChip extends StatelessWidget {
                 color: theme.colorScheme.onSurface,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProviderInstanceEditResult {
+  final String name;
+  final String endpoint;
+  final String comment;
+  final int timeoutSeconds;
+  final List<String> providers;
+  final bool tls;
+  final bool insecureTls;
+  final String jwtSecret;
+  final String customCa;
+  final bool clearComment;
+  final bool clearJwtSecret;
+  final bool clearCustomCa;
+
+  const _ProviderInstanceEditResult({
+    required this.name,
+    required this.endpoint,
+    required this.comment,
+    required this.timeoutSeconds,
+    required this.providers,
+    required this.tls,
+    required this.insecureTls,
+    required this.jwtSecret,
+    required this.customCa,
+    required this.clearComment,
+    required this.clearJwtSecret,
+    required this.clearCustomCa,
+  });
+}
+
+class _ProviderInstanceEditorDialog extends StatefulWidget {
+  final AdminProviderInstance? instance;
+  final String selectedFilter;
+
+  const _ProviderInstanceEditorDialog({
+    required this.instance,
+    required this.selectedFilter,
+  });
+
+  @override
+  State<_ProviderInstanceEditorDialog> createState() =>
+      _ProviderInstanceEditorDialogState();
+}
+
+class _ProviderInstanceEditorDialogState
+    extends State<_ProviderInstanceEditorDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _endpointController;
+  late final TextEditingController _commentController;
+  late final TextEditingController _timeoutController;
+  late final TextEditingController _jwtSecretController;
+  late final TextEditingController _customCaController;
+  late final Set<String> _selectedProviders;
+  late bool _tls;
+  late bool _insecureTls;
+  bool _clearComment = false;
+  bool _clearJwtSecret = false;
+  bool _clearCustomCa = false;
+  bool _showJwtSecret = false;
+  bool _submitted = false;
+
+  bool get _editing => widget.instance != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final instance = widget.instance;
+    _nameController = TextEditingController(text: instance?.name ?? '');
+    _endpointController = TextEditingController(text: instance?.endpoint ?? '');
+    _commentController = TextEditingController(text: instance?.comment ?? '');
+    _timeoutController = TextEditingController(
+      text: (instance?.timeoutSeconds ?? 30).toString(),
+    );
+    _jwtSecretController = TextEditingController();
+    _customCaController = TextEditingController();
+    _selectedProviders = <String>{
+      ...?instance?.providers,
+      if (instance == null && widget.selectedFilter.isNotEmpty)
+        widget.selectedFilter,
+    };
+    _tls = instance?.tls ?? true;
+    _insecureTls = instance?.insecureTls ?? false;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _endpointController.dispose();
+    _commentController.dispose();
+    _timeoutController.dispose();
+    _jwtSecretController.dispose();
+    _customCaController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    setState(() => _submitted = true);
+    final name = _nameController.text.trim();
+    final endpoint = _endpointController.text.trim();
+    final timeout = int.tryParse(_timeoutController.text.trim());
+    final providers = _selectedProviders.toList(growable: false)..sort();
+    if (!_editing && name.isEmpty) return;
+    if (endpoint.isEmpty) return;
+    if (providers.isEmpty) return;
+    if (timeout == null || timeout <= 0) return;
+    Navigator.pop(
+      context,
+      _ProviderInstanceEditResult(
+        name: name,
+        endpoint: endpoint,
+        comment: _commentController.text.trim(),
+        timeoutSeconds: timeout,
+        providers: providers,
+        tls: _tls,
+        insecureTls: _insecureTls,
+        jwtSecret: _jwtSecretController.text.trim(),
+        customCa: _customCaController.text.trim(),
+        clearComment: _clearComment,
+        clearJwtSecret: _clearJwtSecret,
+        clearCustomCa: _clearCustomCa,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isCompact = MediaQuery.sizeOf(context).width < 720;
+    final title = _editing ? '编辑 Provider 实例' : '新增 Provider 实例';
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 860, maxHeight: 760),
+        child: Column(
+          children: [
+            _ProviderEditorHeader(
+              title: title,
+              subtitle: _editing ? widget.instance!.name : '配置外部媒体 Provider 节点',
+              editing: _editing,
+              onClose: () => Navigator.pop(context),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  isCompact ? 18 : 24,
+                  22,
+                  isCompact ? 18 : 24,
+                  24,
+                ),
+                child: isCompact
+                    ? Column(
+                        children: _editorSections(theme, compact: true),
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 6,
+                            child: Column(
+                              children: _primarySections(theme),
+                            ),
+                          ),
+                          const SizedBox(width: 18),
+                          Expanded(
+                            flex: 5,
+                            child: Column(
+                              children: _secondarySections(theme),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            _ProviderEditorFooter(
+              editing: _editing,
+              onCancel: () => Navigator.pop(context),
+              onSubmit: _submit,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _editorSections(ThemeData theme, {required bool compact}) => [
+        ..._primarySections(theme),
+        ..._secondarySections(theme),
+      ];
+
+  List<Widget> _primarySections(ThemeData theme) => [
+        _ProviderEditorSection(
+          icon: Icons.badge_outlined,
+          title: '基础信息',
+          children: [
+            TextField(
+              controller: _nameController,
+              enabled: !_editing,
+              decoration: InputDecoration(
+                labelText: '实例名称',
+                hintText: 'provider_main',
+                prefixIcon: const Icon(Icons.badge_outlined),
+                border: const OutlineInputBorder(),
+                errorText: _submitted &&
+                        !_editing &&
+                        _nameController.text.trim().isEmpty
+                    ? '请输入实例名称'
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _endpointController,
+              keyboardType: TextInputType.url,
+              decoration: InputDecoration(
+                labelText: 'Endpoint',
+                hintText: 'https://provider.example.com',
+                prefixIcon: const Icon(Icons.link_rounded),
+                border: const OutlineInputBorder(),
+                errorText: _submitted && _endpointController.text.trim().isEmpty
+                    ? '请输入 Endpoint'
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _timeoutController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: '请求超时',
+                suffixText: '秒',
+                prefixIcon: const Icon(Icons.timer_outlined),
+                border: const OutlineInputBorder(),
+                errorText: _submitted &&
+                        ((int.tryParse(_timeoutController.text.trim()) ?? 0) <=
+                            0)
+                    ? '请输入大于 0 的整数'
+                    : null,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _ProviderEditorSection(
+          icon: Icons.category_outlined,
+          title: '能力类型',
+          description: '一个实例可以同时承载多个 Provider 类型。',
+          children: [
+            _ProviderTypeSelector(
+              selectedProviders: _selectedProviders,
+              options: _providerTypeOptions(
+                selectedFilter: widget.selectedFilter,
+                selectedProviders: _selectedProviders,
+              ),
+              hasError: _submitted && _selectedProviders.isEmpty,
+              onChanged: (provider, selected) => setState(() {
+                if (selected) {
+                  _selectedProviders.add(provider);
+                } else {
+                  _selectedProviders.remove(provider);
+                }
+              }),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ];
+
+  List<Widget> _secondarySections(ThemeData theme) => [
+        _ProviderEditorSection(
+          icon: Icons.security_rounded,
+          title: '连接安全',
+          description: '不安全 TLS 只应用于受控内网或测试环境。',
+          children: [
+            _ProviderOptionSwitch(
+              icon: Icons.verified_user_outlined,
+              title: '启用 TLS',
+              subtitle: _tls ? '使用 HTTPS/TLS 连接 Provider' : '使用非 TLS 连接',
+              value: _tls,
+              onChanged: (value) => setState(() {
+                _tls = value;
+                if (!_tls) _insecureTls = false;
+              }),
+            ),
+            const SizedBox(height: 10),
+            _ProviderOptionSwitch(
+              icon: Icons.warning_amber_rounded,
+              title: '允许不安全 TLS',
+              subtitle: '跳过证书校验，可能被中间人攻击',
+              value: _insecureTls,
+              enabled: _tls,
+              danger: true,
+              onChanged: (value) => setState(() => _insecureTls = value),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _jwtSecretController,
+              enabled: !_clearJwtSecret,
+              obscureText: !_showJwtSecret,
+              decoration: InputDecoration(
+                labelText: 'JWT Secret',
+                hintText: _editing ? '留空则不修改' : '可选',
+                prefixIcon: const Icon(Icons.key_rounded),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  tooltip: _showJwtSecret ? '隐藏' : '显示',
+                  icon: Icon(_showJwtSecret
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined),
+                  onPressed: () =>
+                      setState(() => _showJwtSecret = !_showJwtSecret),
+                ),
+              ),
+            ),
+            if (_editing)
+              CheckboxListTile(
+                value: _clearJwtSecret,
+                onChanged: (value) => setState(() {
+                  _clearJwtSecret = value ?? false;
+                  if (_clearJwtSecret) _jwtSecretController.clear();
+                }),
+                title: const Text('清除 JWT Secret'),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _customCaController,
+              enabled: !_clearCustomCa,
+              minLines: 4,
+              maxLines: 7,
+              decoration: InputDecoration(
+                labelText: 'Custom CA',
+                hintText: _editing ? 'PEM 内容，留空则不修改' : 'PEM 内容，可选',
+                prefixIcon: const Icon(Icons.verified_outlined),
+                alignLabelWithHint: true,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            if (_editing)
+              CheckboxListTile(
+                value: _clearCustomCa,
+                onChanged: (value) => setState(() {
+                  _clearCustomCa = value ?? false;
+                  if (_clearCustomCa) _customCaController.clear();
+                }),
+                title: const Text('清除 Custom CA'),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _ProviderEditorSection(
+          icon: Icons.notes_rounded,
+          title: '备注',
+          children: [
+            TextField(
+              controller: _commentController,
+              enabled: !_clearComment,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: '备注',
+                hintText: '可选，用于标记部署位置、用途或维护信息',
+                prefixIcon: Icon(Icons.notes_rounded),
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(),
+              ),
+            ),
+            if (_editing)
+              CheckboxListTile(
+                value: _clearComment,
+                onChanged: (value) => setState(() {
+                  _clearComment = value ?? false;
+                  if (_clearComment) _commentController.clear();
+                }),
+                title: const Text('清除备注'),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+          ],
+        ),
+      ];
+}
+
+class _ProviderEditorHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool editing;
+  final VoidCallback onClose;
+
+  const _ProviderEditorHeader({
+    required this.title,
+    required this.subtitle,
+    required this.editing,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
+      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.42),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.hub_rounded, color: theme.colorScheme.onPrimary),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _ProviderMetaChip(
+            label: editing ? '编辑' : '新增',
+            icon: editing ? Icons.edit_outlined : Icons.add_rounded,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: '关闭',
+            icon: const Icon(Icons.close_rounded),
+            onPressed: onClose,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProviderEditorSection extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? description;
+  final List<Widget> children;
+
+  const _ProviderEditorSection({
+    required this.icon,
+    required this.title,
+    this.description,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (description != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              description!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _ProviderOptionSwitch extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final bool enabled;
+  final bool danger;
+  final ValueChanged<bool> onChanged;
+
+  const _ProviderOptionSwitch({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    this.enabled = true,
+    this.danger = false,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = danger ? theme.colorScheme.error : theme.colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: danger && value ? 0.09 : 0.04),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: enabled ? color : theme.disabledColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: enabled ? null : theme.disabledColor,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: enabled
+                        ? theme.colorScheme.onSurfaceVariant
+                        : theme.disabledColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: enabled && value,
+            onChanged: enabled ? onChanged : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProviderEditorFooter extends StatelessWidget {
+  final bool editing;
+  final VoidCallback onCancel;
+  final VoidCallback onSubmit;
+
+  const _ProviderEditorFooter({
+    required this.editing,
+    required this.onCancel,
+    required this.onSubmit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.55)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              editing ? '仅提交已填写或明确清除的敏感字段' : '创建后可在列表中启停、重连或编辑',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          OutlinedButton(
+            onPressed: onCancel,
+            child: const Text('取消'),
+          ),
+          const SizedBox(width: 10),
+          FilledButton.icon(
+            onPressed: onSubmit,
+            icon: Icon(editing ? Icons.save_outlined : Icons.add_rounded),
+            label: Text(editing ? '保存' : '创建'),
           ),
         ],
       ),
@@ -5384,11 +5898,8 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
       return;
     }
 
-    final nextValue = await showModalBottomSheet<dynamic>(
+    final nextValue = await showDialog<dynamic>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => _SettingEditorSheet(
         descriptor: descriptor,
         groupName: group.name,
@@ -5411,11 +5922,8 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     final current = name == null
         ? <String, dynamic>{}
         : Map<String, dynamic>.from(providers[name] as Map? ?? const {});
-    final result = await showModalBottomSheet<_OAuth2ProviderEditResult>(
+    final result = await showDialog<_OAuth2ProviderEditResult>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => _OAuth2ProviderEditorSheet(
         initialName: name,
         initialValue: current,
@@ -5584,6 +6092,13 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
                       groupName: selected.name,
                       entryCount: entries.length,
                       isLoading: _isLoadingGroup,
+                      action: selected.name == 'email'
+                          ? FilledButton.tonalIcon(
+                              icon: const Icon(Icons.outgoing_mail),
+                              label: const Text('发送测试邮件'),
+                              onPressed: _sendTestEmail,
+                            )
+                          : null,
                       onRefresh: _isLoadingGroup
                           ? null
                           : () => _refreshSelectedGroup(),
@@ -5630,12 +6145,6 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
                       ),
               ),
               const SizedBox(width: 12),
-              IconButton.filledTonal(
-                tooltip: '发送测试邮件',
-                icon: const Icon(Icons.outgoing_mail),
-                onPressed: _sendTestEmail,
-              ),
-              const SizedBox(width: 8),
               IconButton.filledTonal(
                 tooltip: '刷新全部',
                 icon: const Icon(Icons.sync_rounded),
@@ -5733,6 +6242,7 @@ class _SettingDescriptor {
   final IconData icon;
   final _SettingEditorKind kind;
   final List<_SettingChoice> choices;
+  final List<String>? permissions;
   final String? warning;
   final bool secret;
 
@@ -5744,6 +6254,7 @@ class _SettingDescriptor {
     required this.icon,
     required this.kind,
     this.choices = const [],
+    this.permissions,
     this.warning,
     this.secret = false,
   });
@@ -5807,6 +6318,12 @@ const List<String> _knownPermissions = [
   'set_room_settings',
   'delete_chat',
   'delete_room',
+];
+
+const List<String> _guestPermissions = [
+  'view_member_list',
+  'view_chat_history',
+  'use_webrtc',
 ];
 
 const Map<String, String> _permissionLabels = {
@@ -5997,6 +6514,82 @@ _SettingDescriptor _settingDescriptor(
       icon: Icons.image_outlined,
       kind: _SettingEditorKind.boolean,
     ),
+    'email.enabled': const _SettingDescriptor(
+      group: 'email',
+      key: 'enabled',
+      title: '启用邮件服务',
+      description: '打开后服务端可以发送验证邮件、密码重置邮件、MFA 邮件和通知邮件。',
+      icon: Icons.outgoing_mail,
+      kind: _SettingEditorKind.boolean,
+      warning: '启用前请确认 SMTP 主机、发件地址和认证信息正确，否则邮件登录、找回密码和通知会不可用。',
+    ),
+    'email.smtp_host': const _SettingDescriptor(
+      group: 'email',
+      key: 'smtp_host',
+      title: 'SMTP 主机',
+      description: '邮件服务器地址。留空表示不配置发信能力。',
+      icon: Icons.dns_outlined,
+      kind: _SettingEditorKind.text,
+    ),
+    'email.smtp_port': const _SettingDescriptor(
+      group: 'email',
+      key: 'smtp_port',
+      title: 'SMTP 端口',
+      description: '常用端口为 587、465 或 25。',
+      icon: Icons.numbers_rounded,
+      kind: _SettingEditorKind.number,
+    ),
+    'email.smtp_username': const _SettingDescriptor(
+      group: 'email',
+      key: 'smtp_username',
+      title: 'SMTP 用户名',
+      description: 'SMTP 登录用户名，通常是发件邮箱或服务商生成的账号。',
+      icon: Icons.person_outline_rounded,
+      kind: _SettingEditorKind.text,
+    ),
+    'email.smtp_password': const _SettingDescriptor(
+      group: 'email',
+      key: 'smtp_password',
+      title: 'SMTP 密码',
+      description: 'SMTP 登录密码或服务商生成的应用专用密码。',
+      icon: Icons.password_rounded,
+      kind: _SettingEditorKind.text,
+      secret: true,
+      warning: 'SMTP 密码属于敏感凭据。保存前请确认当前环境和管理员账号可信。',
+    ),
+    'email.use_tls': const _SettingDescriptor(
+      group: 'email',
+      key: 'use_tls',
+      title: '使用 TLS',
+      description: '启用 SMTP TLS/STARTTLS。除本地调试外通常应保持开启。',
+      icon: Icons.enhanced_encryption_outlined,
+      kind: _SettingEditorKind.boolean,
+      warning: '关闭 TLS 可能导致邮件认证信息明文传输，只应在受控内网或调试环境使用。',
+    ),
+    'email.from_address': const _SettingDescriptor(
+      group: 'email',
+      key: 'from_address',
+      title: '发件邮箱',
+      description: '邮件 From 地址。配置 SMTP 时必须是合法邮箱地址。',
+      icon: Icons.alternate_email_rounded,
+      kind: _SettingEditorKind.text,
+    ),
+    'email.from_email': const _SettingDescriptor(
+      group: 'email',
+      key: 'from_email',
+      title: '发件邮箱',
+      description: '邮件 From 地址。配置 SMTP 时必须是合法邮箱地址。',
+      icon: Icons.alternate_email_rounded,
+      kind: _SettingEditorKind.text,
+    ),
+    'email.from_name': const _SettingDescriptor(
+      group: 'email',
+      key: 'from_name',
+      title: '发件人显示名',
+      description: '用户收到邮件时看到的发件人名称。',
+      icon: Icons.badge_outlined,
+      kind: _SettingEditorKind.text,
+    ),
     'email.whitelist_enabled': const _SettingDescriptor(
       group: 'email',
       key: 'whitelist_enabled',
@@ -6067,9 +6660,10 @@ _SettingDescriptor _settingDescriptor(
       group: 'permissions',
       key: 'guest_default',
       title: '游客默认权限',
-      description: '游客进入房间后的默认权限集合。后端会拒绝不安全权限。',
+      description: '游客进入房间后的默认权限集合，仅包含服务端定义的游客可用权限。',
       icon: Icons.person_pin_circle_outlined,
       kind: _SettingEditorKind.permissionList,
+      permissions: _guestPermissions,
       warning: '游客权限会影响未登录用户。请只授予查看和低风险操作权限。',
     ),
   };
@@ -6451,6 +7045,128 @@ class _InlineWarning extends StatelessWidget {
   }
 }
 
+class _SettingsDialogHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onClose;
+
+  const _SettingsDialogHeader({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 20, 14, 16),
+      decoration: BoxDecoration(
+        color:
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
+          ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.78),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: '关闭',
+            icon: const Icon(Icons.close_rounded),
+            onPressed: onClose,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsDialogActions extends StatelessWidget {
+  final String confirmLabel;
+  final VoidCallback onCancel;
+  final VoidCallback onConfirm;
+
+  const _SettingsDialogActions({
+    required this.confirmLabel,
+    required this.onCancel,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(22, 14, 22, 18),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onCancel,
+                child: const Text('取消'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton.icon(
+                icon: const Icon(Icons.check_rounded),
+                label: Text(confirmLabel),
+                onPressed: onConfirm,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SettingEditorSheet extends StatefulWidget {
   final _SettingDescriptor descriptor;
   final String groupName;
@@ -6494,112 +7210,41 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottom),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760, maxHeight: 760),
-          child: Material(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            clipBehavior: Clip.antiAlias,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 12, 10),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer
-                                .withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(widget.descriptor.icon,
-                              color: theme.colorScheme.primary),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.descriptor.title,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                widget.descriptor.description,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: '关闭',
-                          icon: const Icon(Icons.close_rounded),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.descriptor.warning != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                      child: _InlineWarning(text: widget.descriptor.warning!),
-                    ),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                      child: _buildEditor(),
-                    ),
-                  ),
-                  SafeArea(
-                    top: false,
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(
-                              color:
-                                  theme.dividerColor.withValues(alpha: 0.45)),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('取消'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton.icon(
-                              icon: const Icon(Icons.check_rounded),
-                              label: const Text('保存'),
-                              onPressed: _save,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+    return Dialog(
+      insetPadding: EdgeInsets.fromLTRB(16, 24, 16, 24 + bottom),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 780, maxHeight: 760),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SettingsDialogHeader(
+                icon: widget.descriptor.icon,
+                title: widget.descriptor.title,
+                subtitle: widget.descriptor.description,
+                onClose: () => Navigator.pop(context),
               ),
-            ),
+              if (widget.descriptor.warning != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 14),
+                  child: _InlineWarning(text: widget.descriptor.warning!),
+                ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(22, 4, 22, 22),
+                  child: _buildEditor(),
+                ),
+              ),
+              _SettingsDialogActions(
+                confirmLabel: '保存',
+                onCancel: () => Navigator.pop(context),
+                onConfirm: _save,
+              ),
+            ],
           ),
         ),
       ),
@@ -6633,6 +7278,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
       case _SettingEditorKind.permissionList:
         return _PermissionListSettingEditor(
           values: _valueAsStringList(_value).toSet(),
+          permissions: widget.descriptor.permissions ?? _knownPermissions,
           onChanged: (values) =>
               setState(() => _value = values.toList()..sort()),
         );
@@ -6915,10 +7561,12 @@ class _StringListSettingEditorState extends State<_StringListSettingEditor> {
 
 class _PermissionListSettingEditor extends StatelessWidget {
   final Set<String> values;
+  final List<String> permissions;
   final ValueChanged<Set<String>> onChanged;
 
   const _PermissionListSettingEditor({
     required this.values,
+    required this.permissions,
     required this.onChanged,
   });
 
@@ -6928,7 +7576,7 @@ class _PermissionListSettingEditor extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        for (final permission in _knownPermissions)
+        for (final permission in permissions)
           FilterChip(
             label: Text(_permissionLabels[permission] ?? permission),
             selected: values.contains(permission),
@@ -7027,11 +7675,8 @@ class _OAuth2ProvidersEditor extends StatelessWidget {
     final current = name == null
         ? <String, dynamic>{}
         : Map<String, dynamic>.from(providers[name] as Map? ?? const {});
-    final result = await showModalBottomSheet<_OAuth2ProviderEditResult>(
+    final result = await showDialog<_OAuth2ProviderEditResult>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => _OAuth2ProviderEditorSheet(
         initialName: name,
         initialValue: current,
@@ -7300,211 +7945,185 @@ class _OAuth2ProviderEditorSheetState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottom),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720, maxHeight: 760),
-          child: Material(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            clipBehavior: Clip.antiAlias,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 12, 10),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.login_rounded),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            widget.initialName == null ? '添加第三方登录' : '编辑第三方登录',
-                            style: theme.textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
+    return Dialog(
+      insetPadding: EdgeInsets.fromLTRB(16, 24, 16, 24 + bottom),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 740, maxHeight: 760),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _SettingsDialogHeader(
+                icon: Icons.login_rounded,
+                title: widget.initialName == null ? '添加第三方登录' : '编辑第三方登录',
+                subtitle: '配置 OAuth2/OIDC 登录实例、回调地址和注册策略。',
+                onClose: () => Navigator.pop(context),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _name,
+                        decoration: const InputDecoration(
+                          labelText: '实例名称',
+                          helperText: '只能使用字母、数字、下划线和连字符',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.badge_outlined),
+                        ),
+                        validator: _validateProviderName,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: _type,
+                        decoration: const InputDecoration(
+                          labelText: '提供方类型',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.account_tree_outlined),
+                        ),
+                        items: [
+                          for (final type in _oauth2ProviderTypes)
+                            DropdownMenuItem(
+                              value: type,
+                              child:
+                                  Text(_oauth2ProviderTypeLabels[type] ?? type),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            _type = value;
+                            if (widget.initialName == null &&
+                                (_name.text.trim().isEmpty ||
+                                    _oauth2ProviderTypes
+                                        .contains(_name.text.trim()))) {
+                              _name.text = value;
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _oauthTextField(
+                        _clientId,
+                        'Client ID',
+                        Icons.key_outlined,
+                        required: true,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _clientSecret,
+                        obscureText: !_showSecret,
+                        decoration: InputDecoration(
+                          labelText: 'Client Secret',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.password_outlined),
+                          suffixIcon: IconButton(
+                            tooltip: _showSecret ? '隐藏' : '显示',
+                            icon: Icon(_showSecret
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined),
+                            onPressed: () =>
+                                setState(() => _showSecret = !_showSecret),
                           ),
                         ),
-                        IconButton(
-                          tooltip: '关闭',
-                          icon: const Icon(Icons.close_rounded),
-                          onPressed: () => Navigator.pop(context),
+                        validator: (value) =>
+                            (value == null || value.trim().isEmpty)
+                                ? '请输入 Client Secret'
+                                : null,
+                      ),
+                      const SizedBox(height: 12),
+                      _oauthTextField(
+                        _redirectUrl,
+                        '回调地址',
+                        Icons.link_rounded,
+                        required: true,
+                        hintText: 'https://example.com/api/oauth2/callback',
+                        validator: _validateHttpUrl,
+                      ),
+                      if (_type == 'logto') ...[
+                        const SizedBox(height: 12),
+                        _oauthTextField(
+                          _endpoint,
+                          'Logto Endpoint',
+                          Icons.hub_outlined,
+                          required: true,
+                          hintText: 'https://auth.example.com',
+                          validator: _validateHttpUrl,
                         ),
                       ],
-                    ),
-                  ),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _name,
-                            decoration: const InputDecoration(
-                              labelText: '实例名称',
-                              helperText: '只能使用字母、数字、下划线和连字符',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.badge_outlined),
-                            ),
-                            validator: _validateProviderName,
-                          ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            initialValue: _type,
-                            decoration: const InputDecoration(
-                              labelText: '提供方类型',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.account_tree_outlined),
-                            ),
-                            items: [
-                              for (final type in _oauth2ProviderTypes)
-                                DropdownMenuItem(
-                                  value: type,
-                                  child: Text(
-                                      _oauth2ProviderTypeLabels[type] ?? type),
-                                ),
-                            ],
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() {
-                                _type = value;
-                                if (widget.initialName == null &&
-                                    (_name.text.trim().isEmpty ||
-                                        _oauth2ProviderTypes
-                                            .contains(_name.text.trim()))) {
-                                  _name.text = value;
-                                }
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          _oauthTextField(
-                              _clientId, 'Client ID', Icons.key_outlined,
-                              required: true),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _clientSecret,
-                            obscureText: !_showSecret,
-                            decoration: InputDecoration(
-                              labelText: 'Client Secret',
-                              border: const OutlineInputBorder(),
-                              prefixIcon: const Icon(Icons.password_outlined),
-                              suffixIcon: IconButton(
-                                tooltip: _showSecret ? '隐藏' : '显示',
-                                icon: Icon(_showSecret
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined),
-                                onPressed: () =>
-                                    setState(() => _showSecret = !_showSecret),
-                              ),
-                            ),
-                            validator: (value) =>
-                                (value == null || value.trim().isEmpty)
-                                    ? '请输入 Client Secret'
-                                    : null,
-                          ),
-                          const SizedBox(height: 12),
-                          _oauthTextField(
-                            _redirectUrl,
-                            '回调地址',
-                            Icons.link_rounded,
-                            required: true,
-                            hintText: 'https://example.com/api/oauth2/callback',
-                            validator: _validateHttpUrl,
-                          ),
-                          if (_type == 'logto') ...[
-                            const SizedBox(height: 12),
-                            _oauthTextField(
-                              _endpoint,
-                              'Logto Endpoint',
-                              Icons.hub_outlined,
-                              required: true,
-                              hintText: 'https://auth.example.com',
-                              validator: _validateHttpUrl,
-                            ),
-                          ],
-                          if (_type == 'oidc') ...[
-                            const SizedBox(height: 12),
-                            _oauthTextField(
-                              _issuer,
-                              'Issuer',
-                              Icons.verified_outlined,
-                              required: true,
-                              hintText: 'https://issuer.example.com',
-                              validator: _validateHttpUrl,
-                            ),
-                            const SizedBox(height: 12),
-                            _oauthTextField(
-                                _authUrl, '授权端点', Icons.open_in_browser_rounded,
-                                hintText: '留空使用 OIDC Discovery',
-                                validator: _validateOptionalHttpUrl),
-                            const SizedBox(height: 12),
-                            _oauthTextField(
-                                _tokenUrl, 'Token 端点', Icons.token_outlined,
-                                hintText: '留空使用 OIDC Discovery',
-                                validator: _validateOptionalHttpUrl),
-                            const SizedBox(height: 12),
-                            _oauthTextField(_userinfoUrl, 'UserInfo 端点',
-                                Icons.person_search_outlined,
-                                hintText: '留空使用 OIDC Discovery',
-                                validator: _validateOptionalHttpUrl),
-                            const SizedBox(height: 12),
-                            _oauthTextField(
-                                _jwksUrl, 'JWKS 端点', Icons.security_rounded,
-                                hintText: '留空使用 OIDC Discovery',
-                                validator: _validateOptionalHttpUrl),
-                          ],
-                          const SizedBox(height: 8),
-                          SwitchListTile(
-                            value: _enableSignup,
-                            onChanged: (value) =>
-                                setState(() => _enableSignup = value),
-                            title: const Text('允许用此提供方注册'),
-                            subtitle: const Text('关闭后只允许绑定过的用户登录。'),
-                          ),
-                          SwitchListTile(
-                            value: _signupNeedReview,
-                            onChanged: _enableSignup
-                                ? (value) =>
-                                    setState(() => _signupNeedReview = value)
-                                : null,
-                            title: const Text('注册后需要审核'),
-                          ),
-                        ],
+                      if (_type == 'oidc') ...[
+                        const SizedBox(height: 12),
+                        _oauthTextField(
+                          _issuer,
+                          'Issuer',
+                          Icons.verified_outlined,
+                          required: true,
+                          hintText: 'https://issuer.example.com',
+                          validator: _validateHttpUrl,
+                        ),
+                        const SizedBox(height: 12),
+                        _oauthTextField(
+                          _authUrl,
+                          '授权端点',
+                          Icons.open_in_browser_rounded,
+                          hintText: '留空使用 OIDC Discovery',
+                          validator: _validateOptionalHttpUrl,
+                        ),
+                        const SizedBox(height: 12),
+                        _oauthTextField(
+                          _tokenUrl,
+                          'Token 端点',
+                          Icons.token_outlined,
+                          hintText: '留空使用 OIDC Discovery',
+                          validator: _validateOptionalHttpUrl,
+                        ),
+                        const SizedBox(height: 12),
+                        _oauthTextField(
+                          _userinfoUrl,
+                          'UserInfo 端点',
+                          Icons.person_search_outlined,
+                          hintText: '留空使用 OIDC Discovery',
+                          validator: _validateOptionalHttpUrl,
+                        ),
+                        const SizedBox(height: 12),
+                        _oauthTextField(
+                          _jwksUrl,
+                          'JWKS 端点',
+                          Icons.security_rounded,
+                          hintText: '留空使用 OIDC Discovery',
+                          validator: _validateOptionalHttpUrl,
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      SwitchListTile(
+                        value: _enableSignup,
+                        onChanged: (value) =>
+                            setState(() => _enableSignup = value),
+                        title: const Text('允许用此提供方注册'),
+                        subtitle: const Text('关闭后只允许绑定过的用户登录。'),
                       ),
-                    ),
-                  ),
-                  SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('取消'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton.icon(
-                              icon: const Icon(Icons.check_rounded),
-                              label: const Text('保存实例'),
-                              onPressed: _save,
-                            ),
-                          ),
-                        ],
+                      SwitchListTile(
+                        value: _signupNeedReview,
+                        onChanged: _enableSignup
+                            ? (value) =>
+                                setState(() => _signupNeedReview = value)
+                            : null,
+                        title: const Text('注册后需要审核'),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+              _SettingsDialogActions(
+                confirmLabel: '保存实例',
+                onCancel: () => Navigator.pop(context),
+                onConfirm: _save,
+              ),
+            ],
           ),
         ),
       ),

@@ -142,7 +142,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
                   id: bind.id,
                   serverId: bind.serverId,
                   instanceName: bind.providerInstanceName,
-                  title: 'Bilibili 账号',
+                  title: 'Bilibili 已绑定',
                   subtitle: bind.id,
                 ),
               )
@@ -220,7 +220,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     if (kind == _ProviderKind.bilibili) {
       ChatUtils.showStyledDialog(
         context: context,
-        title: '登录 Bilibili',
+        title: '绑定 Bilibili',
         icon: const Icon(Icons.tv_rounded, color: Color(0xFFFB7299)),
         iconColor: const Color(0xFFFB7299),
         content: _BilibiliLoginDialog(
@@ -447,7 +447,16 @@ class _ProviderBindList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    if (provider.kind == _ProviderKind.bilibili) {
+      final item = items.firstOrNull;
+      return _BilibiliSingleBindView(
+        provider: provider,
+        item: item,
+        onBind: onAdd,
+        onInfo: item == null ? null : () => onInfo(item),
+        onUnbind: item == null ? null : () => onUnbind(item),
+      );
+    }
 
     return Column(
       children: [
@@ -464,17 +473,17 @@ class _ProviderBindList extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        '暂无绑定的 ${provider.label} 账号',
+                        provider.kind == _ProviderKind.bilibili
+                            ? '尚未绑定 Bilibili'
+                            : '暂无绑定的 ${provider.label} 账号',
                         style: TextStyle(color: theme.hintColor),
                       ),
                     ],
                   ),
                 )
-              : ListView.separated(
+              : ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   itemCount: items.length,
-                  separatorBuilder: (context, index) =>
-                      const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final item = items[index];
                     final serverId =
@@ -482,39 +491,69 @@ class _ProviderBindList extends StatelessWidget {
                     final title = _itemTitle(item, serverId);
                     final instanceLabel =
                         _providerInstanceLabel(item.instanceName);
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 4,
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: provider.color.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: theme.colorScheme.outlineVariant
+                              .withValues(alpha: 0.72),
                         ),
-                        child: Icon(provider.icon, color: provider.color),
                       ),
-                      title: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        '$instanceLabel · ID: $serverId',
-                        style: TextStyle(fontSize: 10, color: theme.hintColor),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Row(
                         children: [
-                          IconButton(
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: provider.color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(provider.icon, color: provider.color),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 6,
+                                  children: [
+                                    _ProviderTinyChip(
+                                      icon: Icons.account_tree_rounded,
+                                      label: instanceLabel,
+                                      color: provider.color,
+                                    ),
+                                    _ProviderTinyChip(
+                                      icon: Icons.tag_rounded,
+                                      label: serverId,
+                                      color: theme.colorScheme.secondary,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton.filledTonal(
                             icon: const Icon(Icons.info_outline, size: 20),
                             onPressed: () => onInfo(item),
                             tooltip: '详情',
-                            color: theme.primaryColor,
                           ),
-                          IconButton(
+                          const SizedBox(width: 4),
+                          IconButton.filledTonal(
                             icon: const Icon(Icons.link_off_rounded, size: 20),
                             onPressed: () => onUnbind(item),
                             tooltip: '解绑',
@@ -528,35 +567,16 @@ class _ProviderBindList extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.only(top: 16),
-          child: Center(
-            child: Material(
-              color: provider.color.withValues(alpha: isDark ? 0.18 : 0.12),
-              borderRadius: BorderRadius.circular(8),
-              child: InkWell(
-                onTap: onAdd,
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add_rounded, color: provider.color, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        '添加 ${provider.label} 账号',
-                        style: TextStyle(
-                          color: isDark ? Colors.white : provider.color,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          child: SizedBox(
+            width: double.infinity,
+            child: FilledButton.tonalIcon(
+              onPressed: onAdd,
+              icon: Icon(provider.kind == _ProviderKind.bilibili
+                  ? Icons.link_rounded
+                  : Icons.add_rounded),
+              label: Text(provider.kind == _ProviderKind.bilibili
+                  ? '绑定 Bilibili'
+                  : '添加 ${provider.label} 账号'),
             ),
           ),
         ),
@@ -568,6 +588,188 @@ class _ProviderBindList extends StatelessWidget {
     if (item.title.isNotEmpty) return item.title;
     if (item.subtitle.isNotEmpty) return item.subtitle;
     return '${provider.label} 账号 $serverId';
+  }
+}
+
+class _BilibiliSingleBindView extends StatelessWidget {
+  final _ProviderSpec provider;
+  final _ProviderBindItem? item;
+  final VoidCallback onBind;
+  final VoidCallback? onInfo;
+  final VoidCallback? onUnbind;
+
+  const _BilibiliSingleBindView({
+    required this.provider,
+    required this.item,
+    required this.onBind,
+    required this.onInfo,
+    required this.onUnbind,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bound = item != null;
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: provider.color.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16),
+                border:
+                    Border.all(color: provider.color.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: provider.color.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(provider.icon, color: provider.color),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              bound ? 'Bilibili 已绑定' : '绑定 Bilibili',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              bound
+                                  ? '当前账号已完成 Bilibili 绑定，可继续查看状态或重新绑定。'
+                                  : '绑定后可解析 Bilibili 视频、番剧和直播资源。',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (bound) ...[
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _ProviderTinyChip(
+                          icon: Icons.account_tree_rounded,
+                          label: _providerInstanceLabel(item!.instanceName),
+                          color: provider.color,
+                        ),
+                        if (item!.serverId.isNotEmpty)
+                          _ProviderTinyChip(
+                            icon: Icons.tag_rounded,
+                            label: item!.serverId,
+                            color: theme.colorScheme.secondary,
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            if (bound) ...[
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onInfo,
+                  icon: const Icon(Icons.info_outline_rounded),
+                  label: const Text('查看状态'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onBind,
+                  icon: const Icon(Icons.sync_rounded),
+                  label: const Text('重新绑定'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.tonalIcon(
+                  onPressed: onUnbind,
+                  icon: const Icon(Icons.link_off_rounded),
+                  label: const Text('解绑'),
+                ),
+              ),
+            ] else
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onBind,
+                  icon: const Icon(Icons.link_rounded),
+                  label: const Text('绑定 Bilibili'),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ProviderTinyChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _ProviderTinyChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 4),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 180),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -691,142 +893,153 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final providerColor = _isAlist ? Colors.amber : Colors.green;
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (_isAlist)
-            Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Row(
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    size: 16,
-                    color: Colors.amber,
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '仅支持 AList 3.25.0 及以上版本',
-                      style: TextStyle(fontSize: 12, color: Colors.amber),
-                    ),
-                  ),
-                ],
-              ),
+            const _ProviderNotice(
+              icon: Icons.warning_amber_rounded,
+              text: '仅支持 AList 3.25.0 及以上版本',
+              color: Colors.amber,
             ),
-          _ProviderInstanceSelector(
-            instanceNames: _instanceNames,
-            selected: _instanceName,
-            loading: _loadingInstances,
-            onChanged: (value) => setState(() => _instanceName = value),
+          _ProviderFormSection(
+            icon: Icons.hub_outlined,
+            title: '连接目标',
+            color: providerColor,
+            children: [
+              _ProviderInstanceSelector(
+                instanceNames: _instanceNames,
+                selected: _instanceName,
+                loading: _loadingInstances,
+                onChanged: (value) => setState(() => _instanceName = value),
+              ),
+              const SizedBox(height: 14),
+              ChatUtils.createFormField(
+                context: context,
+                label: '$_label 地址',
+                controller: _hostController,
+                hintText: 'https://example.com',
+                prefixIcon: Icons.link_rounded,
+              ),
+            ],
           ),
           const SizedBox(height: 16),
-          ChatUtils.createFormField(
-            context: context,
-            label: '$_label 地址',
-            controller: _hostController,
-            hintText: 'https://example.com',
-            prefixIcon: Icons.link_rounded,
-          ),
-          const SizedBox(height: 16),
-          ChatUtils.createFormField(
-            context: context,
-            label: '用户名',
-            controller: _usernameController,
-            prefixIcon: Icons.person_outline_rounded,
-          ),
-          const SizedBox(height: 16),
-          if (_isAlist) ...[
-            SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(
-                  value: false,
-                  icon: Icon(Icons.lock_outline_rounded),
-                  label: Text('密码'),
+          _ProviderFormSection(
+            icon: Icons.person_outline_rounded,
+            title: '登录凭据',
+            color: providerColor,
+            children: [
+              ChatUtils.createFormField(
+                context: context,
+                label: '用户名',
+                controller: _usernameController,
+                prefixIcon: Icons.person_outline_rounded,
+              ),
+              const SizedBox(height: 14),
+              if (_isAlist) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(
+                        value: false,
+                        icon: Icon(Icons.lock_outline_rounded),
+                        label: Text('密码'),
+                      ),
+                      ButtonSegment(
+                        value: true,
+                        icon: Icon(Icons.tag_rounded),
+                        label: Text('哈希'),
+                      ),
+                    ],
+                    selected: {_useHashedPassword},
+                    onSelectionChanged: (selected) => setState(() {
+                      _useHashedPassword = selected.single;
+                      _passwordController.clear();
+                      _secretController.clear();
+                    }),
+                  ),
                 ),
-                ButtonSegment(
-                  value: true,
-                  icon: Icon(Icons.tag_rounded),
-                  label: Text('哈希'),
+                const SizedBox(height: 14),
+              ],
+              if (_isEmby) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(
+                        value: false,
+                        icon: Icon(Icons.lock_outline_rounded),
+                        label: Text('密码'),
+                      ),
+                      ButtonSegment(
+                        value: true,
+                        icon: Icon(Icons.key_rounded),
+                        label: Text('API Key'),
+                      ),
+                    ],
+                    selected: {_useApiKey},
+                    onSelectionChanged: (selected) =>
+                        setState(() => _useApiKey = selected.single),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+              if (_isAlist && _useHashedPassword)
+                ChatUtils.createFormField(
+                  context: context,
+                  label: '已哈希密码',
+                  controller: _secretController,
+                  hintText: 'AList hashed_password',
+                  prefixIcon: Icons.tag_rounded,
+                  obscureText: true,
+                )
+              else if (_useApiKey)
+                ChatUtils.createFormField(
+                  context: context,
+                  label: 'API Key',
+                  controller: _secretController,
+                  prefixIcon: Icons.key_rounded,
+                  obscureText: true,
+                )
+              else
+                ChatUtils.createFormField(
+                  context: context,
+                  label: '密码',
+                  controller: _passwordController,
+                  prefixIcon: Icons.lock_outline_rounded,
+                  obscureText: true,
+                ),
+            ],
+          ),
+          if (_isAlist) ...[
+            const SizedBox(height: 16),
+            _ProviderFormSection(
+              icon: Icons.shield_outlined,
+              title: '双因素验证',
+              color: theme.colorScheme.secondary,
+              children: [
+                ChatUtils.createFormField(
+                  context: context,
+                  label: '一次性验证码',
+                  controller: _otpCodeController,
+                  hintText: '启用 2FA 时填写',
+                  prefixIcon: Icons.pin_outlined,
+                ),
+                const SizedBox(height: 14),
+                ChatUtils.createFormField(
+                  context: context,
+                  label: 'TOTP Secret',
+                  controller: _otpSecretController,
+                  hintText: '可选，用于后续自动刷新',
+                  prefixIcon: Icons.shield_outlined,
+                  obscureText: true,
                 ),
               ],
-              selected: {_useHashedPassword},
-              onSelectionChanged: (selected) => setState(() {
-                _useHashedPassword = selected.single;
-                _passwordController.clear();
-                _secretController.clear();
-              }),
-            ),
-            const SizedBox(height: 16),
-          ],
-          if (_isEmby) ...[
-            SegmentedButton<bool>(
-              segments: const [
-                ButtonSegment(
-                  value: false,
-                  icon: Icon(Icons.lock_outline_rounded),
-                  label: Text('密码'),
-                ),
-                ButtonSegment(
-                  value: true,
-                  icon: Icon(Icons.key_rounded),
-                  label: Text('API Key'),
-                ),
-              ],
-              selected: {_useApiKey},
-              onSelectionChanged: (selected) =>
-                  setState(() => _useApiKey = selected.single),
-            ),
-            const SizedBox(height: 16),
-          ],
-          if (_isAlist && _useHashedPassword)
-            ChatUtils.createFormField(
-              context: context,
-              label: '已哈希密码',
-              controller: _secretController,
-              hintText: 'AList hashed_password',
-              prefixIcon: Icons.tag_rounded,
-              obscureText: true,
-            )
-          else if (_useApiKey)
-            ChatUtils.createFormField(
-              context: context,
-              label: 'API Key',
-              controller: _secretController,
-              prefixIcon: Icons.key_rounded,
-              obscureText: true,
-            )
-          else
-            ChatUtils.createFormField(
-              context: context,
-              label: '密码',
-              controller: _passwordController,
-              prefixIcon: Icons.lock_outline_rounded,
-              obscureText: true,
-            ),
-          if (_isAlist) ...[
-            const SizedBox(height: 16),
-            ChatUtils.createFormField(
-              context: context,
-              label: '一次性验证码',
-              controller: _otpCodeController,
-              hintText: '启用 2FA 时填写',
-              prefixIcon: Icons.pin_outlined,
-            ),
-            const SizedBox(height: 16),
-            ChatUtils.createFormField(
-              context: context,
-              label: 'TOTP Secret',
-              controller: _otpSecretController,
-              hintText: '可选，用于后续自动刷新',
-              prefixIcon: Icons.shield_outlined,
-              obscureText: true,
             ),
           ],
           const SizedBox(height: 24),
@@ -835,6 +1048,95 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
             onSubmit: _submit,
             submitText: '登录',
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProviderNotice extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  const _ProviderNotice({
+    required this.icon,
+    required this.text,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProviderFormSection extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Color color;
+  final List<Widget> children;
+
+  const _ProviderFormSection({
+    required this.icon,
+    required this.title,
+    required this.color,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...children,
         ],
       ),
     );
@@ -854,13 +1156,16 @@ class _BilibiliLoginDialog extends StatefulWidget {
   State<_BilibiliLoginDialog> createState() => _BilibiliLoginDialogState();
 }
 
-class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog> {
+class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
+    with SingleTickerProviderStateMixin {
   Timer? _pollTimer;
+  late final TabController _loginTabController;
   String _url = '';
   String _key = '';
-  String _statusText = '正在创建登录链接...';
-  bool _isLoading = true;
+  String _statusText = '切换到扫码页后生成登录二维码';
+  bool _isLoading = false;
   bool _isExpired = false;
+  bool _qrStarted = false;
   List<String> _instanceNames = const [''];
   String _instanceName = '';
   bool _loadingInstances = true;
@@ -868,13 +1173,25 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog> {
   @override
   void initState() {
     super.initState();
+    _loginTabController = TabController(length: 2, vsync: this);
+    _loginTabController.addListener(_handleLoginTabChanged);
     _loadInstances();
   }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _loginTabController
+      ..removeListener(_handleLoginTabChanged)
+      ..dispose();
     super.dispose();
+  }
+
+  void _handleLoginTabChanged() {
+    if (_loginTabController.indexIsChanging) return;
+    if (_loginTabController.index == 0 && !_qrStarted && !_loadingInstances) {
+      _startLogin();
+    }
   }
 
   Future<void> _loadInstances() async {
@@ -886,7 +1203,9 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog> {
         _instanceName = _instanceNames.first;
         _loadingInstances = false;
       });
-      await _startLogin();
+      if (_loginTabController.index == 0 && !_qrStarted) {
+        await _startLogin();
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -900,6 +1219,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog> {
   Future<void> _startLogin() async {
     _pollTimer?.cancel();
     setState(() {
+      _qrStarted = true;
       _url = '';
       _key = '';
       _statusText = '正在创建登录链接...';
@@ -919,7 +1239,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog> {
         _isLoading = false;
       });
       _pollTimer = Timer.periodic(
-        const Duration(seconds: 2),
+        const Duration(seconds: 5),
         (_) => _checkStatus(),
       );
       await _checkStatus();
@@ -960,8 +1280,21 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog> {
           setState(() => _statusText = '等待 Bilibili 返回登录状态');
       }
     } catch (e) {
-      if (mounted) setState(() => _statusText = '检查登录状态失败: $e');
+      if (!mounted) return;
+      if (_isRateLimitError(e)) {
+        _pollTimer?.cancel();
+        setState(() => _statusText = 'Bilibili 登录状态检查过于频繁，请稍后重新生成登录链接');
+        return;
+      }
+      setState(() => _statusText = '检查登录状态失败: $e');
     }
+  }
+
+  bool _isRateLimitError(Object error) {
+    final text = error.toString().toLowerCase();
+    return text.contains('429') ||
+        text.contains('too many requests') ||
+        text.contains('rate limit');
   }
 
   Future<void> _openLoginUrl() async {
@@ -989,54 +1322,75 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog> {
             selected: _instanceName,
             loading: _loadingInstances,
             onChanged: (value) {
+              if (value == _instanceName) return;
               setState(() {
                 _instanceName = value;
+                _qrStarted = false;
+                _url = '';
+                _key = '';
+                _isExpired = false;
+                _isLoading = false;
+                _statusText = '切换到扫码页后生成登录二维码';
               });
-              _startLogin();
+              _pollTimer?.cancel();
+              if (_loginTabController.index == 0) _startLogin();
             },
           ),
           const SizedBox(height: 16),
-          DefaultTabController(
-            length: 2,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white.withValues(alpha: 0.06)
-                        : Colors.black.withValues(alpha: 0.04),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const TabBar(
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    tabs: [
-                      Tab(icon: Icon(Icons.qr_code_2_rounded), text: '扫码'),
-                      Tab(icon: Icon(Icons.sms_rounded), text: '验证码'),
-                    ],
-                  ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.black.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 430,
-                  child: TabBarView(
-                    children: [
-                      _buildQrLogin(Theme.of(context)),
-                      _BilibiliSmsLoginPanel(
-                        key: ValueKey(_instanceName),
-                        instanceName: _instanceName,
-                        onSuccess: () {
-                          MessageUtils.showSuccess(context, '绑定成功');
-                          widget.onSuccess();
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ],
-                  ),
+                child: TabBar(
+                  controller: _loginTabController,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  tabs: const [
+                    Tab(
+                      height: 48,
+                      icon: Icon(Icons.qr_code_2_rounded),
+                      text: '扫码',
+                    ),
+                    Tab(
+                      height: 48,
+                      icon: Icon(Icons.sms_rounded),
+                      text: '验证码',
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 430,
+                child: TabBarView(
+                  controller: _loginTabController,
+                  children: [
+                    _buildQrLogin(Theme.of(context)),
+                    AnimatedBuilder(
+                      animation: _loginTabController,
+                      builder: (context, _) {
+                        return _BilibiliSmsLoginPanel(
+                          key: ValueKey(_instanceName),
+                          instanceName: _instanceName,
+                          active: _loginTabController.index == 1,
+                          onSuccess: () {
+                            MessageUtils.showSuccess(context, '绑定成功');
+                            widget.onSuccess();
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1163,11 +1517,13 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog> {
 
 class _BilibiliSmsLoginPanel extends StatefulWidget {
   final String instanceName;
+  final bool active;
   final VoidCallback onSuccess;
 
   const _BilibiliSmsLoginPanel({
     super.key,
     required this.instanceName,
+    required this.active,
     required this.onSuccess,
   });
 
@@ -1179,8 +1535,8 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
   BilibiliSmsLoginInfo? _session;
-  String _statusText = '正在准备安全验证...';
-  bool _starting = true;
+  String _statusText = '切换到验证码页后准备安全验证';
+  bool _starting = false;
   bool _sending = false;
   bool _loggingIn = false;
   bool _smsSent = false;
@@ -1190,7 +1546,27 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
   @override
   void initState() {
     super.initState();
-    _startSession();
+    if (widget.active) _startSession();
+  }
+
+  @override
+  void didUpdateWidget(covariant _BilibiliSmsLoginPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.instanceName != widget.instanceName) {
+      setState(() {
+        _smsSent = false;
+        _session = null;
+        _statusText = widget.active ? '正在准备安全验证...' : '切换到验证码页后准备安全验证';
+        _starting = widget.active;
+        _sending = false;
+        _loggingIn = false;
+      });
+      if (widget.active) _startSession();
+      return;
+    }
+    if (!oldWidget.active && widget.active && _session == null && !_starting) {
+      _startSession();
+    }
   }
 
   @override
@@ -1251,22 +1627,30 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
         gt: session.gt,
         challenge: session.challenge,
       );
-      await WatchTogetherService.sendBilibiliSms(
-        sessionId: session.sessionId,
+      final nextSession = await WatchTogetherService.sendBilibiliSms(
+        session: session,
         phone: phone,
         validate: result.validate,
       );
       if (!mounted) return;
       setState(() {
+        _session = nextSession;
         _sending = false;
         _smsSent = true;
         _statusText = '短信验证码已发送';
       });
     } catch (e) {
       if (!mounted) return;
+      final expired = _isExpiredSessionError(e);
       setState(() {
         _sending = false;
-        _statusText = '短信发送失败: $e';
+        if (expired) {
+          _session = null;
+          _smsSent = false;
+          _statusText = '验证会话已失效，请重新开始短信登录';
+        } else {
+          _statusText = '短信发送失败: $e';
+        }
       });
     }
   }
@@ -1285,22 +1669,36 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
 
     setState(() {
       _loggingIn = true;
-      _statusText = '正在绑定 Bilibili 账号...';
+      _statusText = '正在完成 Bilibili 绑定...';
     });
     try {
       await WatchTogetherService.loginBilibiliSms(
-        sessionId: session.sessionId,
+        sessionToken: session.sessionToken,
         code: code,
       );
       if (!mounted) return;
       widget.onSuccess();
     } catch (e) {
       if (!mounted) return;
+      final expired = _isExpiredSessionError(e);
       setState(() {
         _loggingIn = false;
-        _statusText = '绑定失败: $e';
+        if (expired) {
+          _session = null;
+          _smsSent = false;
+          _statusText = '登录会话已失效，请重新验证后发送短信';
+        } else {
+          _statusText = '绑定失败: $e';
+        }
       });
     }
+  }
+
+  bool _isExpiredSessionError(Object error) {
+    final text = error.toString().toLowerCase();
+    return text.contains('invalid or expired') ||
+        text.contains('expired') ||
+        text.contains('session');
   }
 
   @override

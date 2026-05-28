@@ -581,13 +581,13 @@ class StartSMSLoginRequest extends $pb.GeneratedMessage {
 /// Start SMS login response
 class StartSMSLoginResponse extends $pb.GeneratedMessage {
   factory StartSMSLoginResponse({
-    $core.String? sessionId,
+    $core.String? sessionToken,
     $core.String? gt,
     $core.String? challenge,
     $fixnum.Int64? expiresAt,
   }) {
     final result = create();
-    if (sessionId != null) result.sessionId = sessionId;
+    if (sessionToken != null) result.sessionToken = sessionToken;
     if (gt != null) result.gt = gt;
     if (challenge != null) result.challenge = challenge;
     if (expiresAt != null) result.expiresAt = expiresAt;
@@ -608,7 +608,7 @@ class StartSMSLoginResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..aOS(1, _omitFieldNames ? '' : 'sessionToken')
     ..aOS(2, _omitFieldNames ? '' : 'gt')
     ..aOS(3, _omitFieldNames ? '' : 'challenge')
     ..aInt64(4, _omitFieldNames ? '' : 'expiresAt')
@@ -635,13 +635,13 @@ class StartSMSLoginResponse extends $pb.GeneratedMessage {
   static StartSMSLoginResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get sessionId => $_getSZ(0);
+  $core.String get sessionToken => $_getSZ(0);
   @$pb.TagNumber(1)
-  set sessionId($core.String value) => $_setString(0, value);
+  set sessionToken($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasSessionId() => $_has(0);
+  $core.bool hasSessionToken() => $_has(0);
   @$pb.TagNumber(1)
-  void clearSessionId() => $_clearField(1);
+  void clearSessionToken() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get gt => $_getSZ(1);
@@ -674,12 +674,12 @@ class StartSMSLoginResponse extends $pb.GeneratedMessage {
 /// Send SMS request
 class SendSMSRequest extends $pb.GeneratedMessage {
   factory SendSMSRequest({
-    $core.String? sessionId,
+    $core.String? sessionToken,
     $core.String? phone,
     $core.String? validate,
   }) {
     final result = create();
-    if (sessionId != null) result.sessionId = sessionId;
+    if (sessionToken != null) result.sessionToken = sessionToken;
     if (phone != null) result.phone = phone;
     if (validate != null) result.validate = validate;
     return result;
@@ -699,7 +699,7 @@ class SendSMSRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..aOS(1, _omitFieldNames ? '' : 'sessionToken')
     ..aOS(2, _omitFieldNames ? '' : 'phone')
     ..aOS(3, _omitFieldNames ? '' : 'validate')
     ..hasRequiredFields = false;
@@ -724,13 +724,13 @@ class SendSMSRequest extends $pb.GeneratedMessage {
   static SendSMSRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get sessionId => $_getSZ(0);
+  $core.String get sessionToken => $_getSZ(0);
   @$pb.TagNumber(1)
-  set sessionId($core.String value) => $_setString(0, value);
+  set sessionToken($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasSessionId() => $_has(0);
+  $core.bool hasSessionToken() => $_has(0);
   @$pb.TagNumber(1)
-  void clearSessionId() => $_clearField(1);
+  void clearSessionToken() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get phone => $_getSZ(1);
@@ -754,9 +754,11 @@ class SendSMSRequest extends $pb.GeneratedMessage {
 /// Send SMS response
 class SendSMSResponse extends $pb.GeneratedMessage {
   factory SendSMSResponse({
+    $core.String? sessionToken,
     $fixnum.Int64? expiresAt,
   }) {
     final result = create();
+    if (sessionToken != null) result.sessionToken = sessionToken;
     if (expiresAt != null) result.expiresAt = expiresAt;
     return result;
   }
@@ -775,7 +777,8 @@ class SendSMSResponse extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'expiresAt')
+    ..aOS(1, _omitFieldNames ? '' : 'sessionToken')
+    ..aInt64(2, _omitFieldNames ? '' : 'expiresAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -798,23 +801,32 @@ class SendSMSResponse extends $pb.GeneratedMessage {
   static SendSMSResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $fixnum.Int64 get expiresAt => $_getI64(0);
+  $core.String get sessionToken => $_getSZ(0);
   @$pb.TagNumber(1)
-  set expiresAt($fixnum.Int64 value) => $_setInt64(0, value);
+  set sessionToken($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasExpiresAt() => $_has(0);
+  $core.bool hasSessionToken() => $_has(0);
   @$pb.TagNumber(1)
-  void clearExpiresAt() => $_clearField(1);
+  void clearSessionToken() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get expiresAt => $_getI64(1);
+  @$pb.TagNumber(2)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasExpiresAt() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearExpiresAt() => $_clearField(2);
 }
 
 /// Login with SMS request
 class LoginSMSRequest extends $pb.GeneratedMessage {
   factory LoginSMSRequest({
-    $core.String? sessionId,
+    $core.String? sessionToken,
     $core.String? code,
   }) {
     final result = create();
-    if (sessionId != null) result.sessionId = sessionId;
+    if (sessionToken != null) result.sessionToken = sessionToken;
     if (code != null) result.code = code;
     return result;
   }
@@ -833,7 +845,7 @@ class LoginSMSRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..aOS(1, _omitFieldNames ? '' : 'sessionToken')
     ..aOS(2, _omitFieldNames ? '' : 'code')
     ..hasRequiredFields = false;
 
@@ -857,13 +869,13 @@ class LoginSMSRequest extends $pb.GeneratedMessage {
   static LoginSMSRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get sessionId => $_getSZ(0);
+  $core.String get sessionToken => $_getSZ(0);
   @$pb.TagNumber(1)
-  set sessionId($core.String value) => $_setString(0, value);
+  set sessionToken($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasSessionId() => $_has(0);
+  $core.bool hasSessionToken() => $_has(0);
   @$pb.TagNumber(1)
-  void clearSessionId() => $_clearField(1);
+  void clearSessionToken() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.String get code => $_getSZ(1);

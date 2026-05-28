@@ -16,7 +16,9 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/widgets/platform_binding_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class _AccountSection {
@@ -240,30 +242,29 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _rename() async {
     final controller = TextEditingController(text: _user.username);
-    final next = await showDialog<String>(
+    final next = await ChatUtils.showStyledDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('修改用户名'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: '用户名',
-            prefixIcon: Icon(Icons.badge_outlined),
-          ),
+      title: '修改用户名',
+      icon: const Icon(Icons.badge_outlined),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: const InputDecoration(
+          labelText: '用户名',
+          prefixIcon: Icon(Icons.badge_outlined),
+          border: OutlineInputBorder(),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('保存'),
-          ),
-        ],
+        onSubmitted: (_) => Navigator.pop(context, controller.text.trim()),
       ),
-    );
+      actions: [
+        ChatUtils.createCancelButton(context),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, controller.text.trim()),
+          text: '保存',
+        ),
+      ],
+    ).whenComplete(controller.dispose);
     if (next == null || next.isEmpty || next == _user.username) return;
 
     try {
@@ -329,30 +330,29 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       return;
     }
     final controller = TextEditingController();
-    final token = await showDialog<String>(
+    final token = await ChatUtils.showStyledDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认邮箱'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: '$email 验证码',
-            prefixIcon: const Icon(Icons.mark_email_read_outlined),
-          ),
+      title: '确认邮箱',
+      icon: const Icon(Icons.mark_email_read_outlined),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: InputDecoration(
+          labelText: '$email 验证码',
+          prefixIcon: const Icon(Icons.mark_email_read_outlined),
+          border: const OutlineInputBorder(),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('确认'),
-          ),
-        ],
+        onSubmitted: (_) => Navigator.pop(context, controller.text.trim()),
       ),
-    );
+      actions: [
+        ChatUtils.createCancelButton(context),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, controller.text.trim()),
+          text: '确认',
+        ),
+      ],
+    ).whenComplete(controller.dispose);
     if (token == null || token.isEmpty) return;
     try {
       final user = await WatchTogetherService.confirmEmail(
@@ -444,23 +444,24 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _deletePasskey(PasskeyCredentialInfo credential) async {
-    final confirmed = await showDialog<bool>(
+    final label =
+        credential.name.isEmpty ? credential.credentialId : credential.name;
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('删除 Passkey'),
-        content: Text(
-            '确定删除 ${credential.name.isEmpty ? credential.credentialId : credential.name} 吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('删除'),
-          ),
-        ],
+      title: '删除 Passkey',
+      icon: const Icon(Icons.fingerprint_rounded),
+      iconColor: Theme.of(context).colorScheme.error,
+      content: Text(
+        '确定删除「$label」吗？删除后这台设备将不能继续使用该 Passkey 登录。',
       ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        FilledButton.tonalIcon(
+          onPressed: () => Navigator.pop(context, true),
+          icon: const Icon(Icons.delete_outline_rounded),
+          label: const Text('删除'),
+        ),
+      ],
     );
     if (confirmed != true) return;
     try {
@@ -480,32 +481,30 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _bindPasskey() async {
     final controller = TextEditingController();
-    final name = await showDialog<String>(
+    final name = await ChatUtils.showStyledDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('绑定 Passkey'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: '名称',
-            hintText: '例如 MacBook、手机',
-            prefixIcon: Icon(Icons.fingerprint_rounded),
-          ),
+      title: '绑定 Passkey',
+      icon: const Icon(Icons.fingerprint_rounded),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: const InputDecoration(
+          labelText: '设备名称',
+          hintText: '例如 MacBook、手机',
+          prefixIcon: Icon(Icons.devices_rounded),
+          border: OutlineInputBorder(),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('继续'),
-          ),
-        ],
+        onSubmitted: (_) => Navigator.pop(context, controller.text.trim()),
       ),
-    );
-    controller.dispose();
+      actions: [
+        ChatUtils.createCancelButton(context),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, controller.text.trim()),
+          text: '继续',
+        ),
+      ],
+    ).whenComplete(controller.dispose);
     if (name == null) return;
 
     setState(() => _bindingPasskey = true);
@@ -518,14 +517,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         sessionId: start.sessionId,
         credential: credential,
       );
-      final results = await Future.wait<dynamic>([
-        WatchTogetherService.listPasskeys(),
-        WatchTogetherService.getAccountPreferences(),
-      ]);
+      if (!mounted) return;
+      final passkeys = await WatchTogetherService.listPasskeys();
+      final preferences = await WatchTogetherService.getAccountPreferences();
       if (!mounted) return;
       setState(() {
-        _passkeys = results[0] as List<PasskeyCredentialInfo>;
-        _preferences = results[1] as AccountPreferences;
+        _passkeys = passkeys;
+        _preferences = preferences;
       });
       MessageUtils.showSuccess(context, 'Passkey 已绑定');
     } catch (e) {
@@ -835,26 +833,26 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _leaveOrDeleteRoom(WRoom room) async {
     final isOwner = _isMyCreatedRoom(room);
     final actionText = isOwner ? '删除房间' : '退出房间';
-    final confirmed = await showDialog<bool>(
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(actionText),
-        content: Text(
-          isOwner
-              ? '这会永久删除「${room.roomName}」及其房间数据，所有成员都会失去访问权限。'
-              : '确定退出「${room.roomName}」吗？退出后需要重新加入才能访问。',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(actionText),
-          ),
-        ],
+      title: actionText,
+      icon: Icon(isOwner ? Icons.delete_forever_rounded : Icons.logout),
+      iconColor: isOwner
+          ? Theme.of(context).colorScheme.error
+          : Theme.of(context).colorScheme.primary,
+      content: Text(
+        isOwner
+            ? '这会永久删除「${room.roomName}」及其房间数据，所有成员都会失去访问权限。'
+            : '确定退出「${room.roomName}」吗？退出后需要重新加入才能访问。',
       ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        FilledButton.tonalIcon(
+          onPressed: () => Navigator.pop(context, true),
+          icon: Icon(isOwner ? Icons.delete_outline : Icons.logout),
+          label: Text(actionText),
+        ),
+      ],
     );
     if (confirmed != true) return;
 
@@ -874,40 +872,46 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _closeAccount() async {
     const confirmationText = '关闭账户';
     final controller = TextEditingController();
-    final confirmed = await showDialog<bool>(
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('关闭账户'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('此操作会永久关闭当前账户及相关个人数据。'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: '输入 关闭账户 确认',
-                prefixIcon: Icon(Icons.warning_amber_rounded),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+      title: '关闭账户',
+      icon: const Icon(Icons.warning_amber_rounded),
+      iconColor: Theme.of(context).colorScheme.error,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '此操作会永久关闭当前账户及相关个人数据。',
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.pop(
+          const SizedBox(height: 12),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: '输入 关闭账户 确认',
+              prefixIcon: Icon(Icons.warning_amber_rounded),
+              border: OutlineInputBorder(),
+            ),
+            onSubmitted: (_) => Navigator.pop(
               context,
               controller.text.trim() == confirmationText,
             ),
-            child: const Text('关闭账户'),
           ),
         ],
       ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        FilledButton.tonalIcon(
+          onPressed: () => Navigator.pop(
+            context,
+            controller.text.trim() == confirmationText,
+          ),
+          icon: const Icon(Icons.delete_forever_rounded),
+          label: const Text('关闭账户'),
+        ),
+      ],
     );
     controller.dispose();
     if (confirmed != true) {
@@ -2265,6 +2269,66 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       padding: const EdgeInsets.all(16),
       children: [
         _Section(
+          title: '媒体源账号',
+          subtitle: '绑定个人媒体库账号后，可在添加影片时直接浏览 AList、Emby 和 Bilibili 资源。',
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 640;
+              final cards = [
+                _MediaProviderBindCard(
+                  label: 'AList',
+                  description: '个人网盘与目录资源',
+                  icon: Icons.cloud_circle_rounded,
+                  color: Colors.amber,
+                  onTap: () => PlatformBindingDialog.show(
+                    context,
+                    initialIndex: 0,
+                  ),
+                ),
+                _MediaProviderBindCard(
+                  label: 'Emby',
+                  description: '个人媒体库与影视资源',
+                  icon: Icons.video_library_rounded,
+                  color: Colors.green,
+                  onTap: () => PlatformBindingDialog.show(
+                    context,
+                    initialIndex: 1,
+                  ),
+                ),
+                _MediaProviderBindCard(
+                  label: 'Bilibili',
+                  description: 'Bilibili 账号与收藏资源',
+                  icon: Icons.tv_rounded,
+                  color: const Color(0xFFFB7299),
+                  onTap: () => PlatformBindingDialog.show(
+                    context,
+                    initialIndex: 2,
+                  ),
+                ),
+              ];
+              if (compact) {
+                return Column(
+                  children: [
+                    for (final card in cards) ...[
+                      card,
+                      if (card != cards.last) const SizedBox(height: 10),
+                    ],
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  for (final card in cards) ...[
+                    Expanded(child: card),
+                    if (card != cards.last) const SizedBox(width: 10),
+                  ],
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        _Section(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -3340,6 +3404,76 @@ class _ModuleErrorRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _MediaProviderBindCard extends StatelessWidget {
+  final String label;
+  final String description;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _MediaProviderBindCard({
+    required this.label,
+    required this.description,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: color.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.arrow_forward_rounded, color: color),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

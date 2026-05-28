@@ -283,77 +283,46 @@ class ChatUtils {
     Color? iconColor,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final accent = iconColor ?? theme.colorScheme.primary;
 
     return showDialog<T>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.6),
+      barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (context) {
         return Dialog(
           insetPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
           ),
-          elevation: 16,
-          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.all(24),
+          backgroundColor: theme.colorScheme.surface,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 520,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.86,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: (iconColor ??
-                                (isDark
-                                    ? Colors.blue.shade300
-                                    : theme.primaryColor))
-                            .withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        icon.icon,
-                        color: iconColor ??
-                            (isDark
-                                ? Colors.blue.shade300
-                                : theme.primaryColor),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.5,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                  ],
+                _DialogHeaderBar(
+                  title: title,
+                  icon: icon.icon ?? Icons.info_outline_rounded,
+                  color: accent,
+                  onClose: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(height: 24),
-                Flexible(child: content),
-                const SizedBox(height: 32),
-                StreamBuilder<SmartGripStatus>(
-                  stream: SmartGripService().onStatusChanged,
-                  initialData: SmartGripService().currentStatus,
-                  builder: (context, snapshot) {
-                    final isLeftHand =
-                        snapshot.data == SmartGripStatus.leftHand;
-                    return Row(
-                      mainAxisAlignment: isLeftHand
-                          ? MainAxisAlignment.start
-                          : MainAxisAlignment.end,
-                      children:
-                          isLeftHand ? actions.reversed.toList() : actions,
-                    );
-                  },
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: content,
+                    ),
+                  ),
+                ),
+                _DialogActionBar(
+                  actions: actions,
+                  topBorder: true,
                 ),
               ],
             ),
@@ -365,28 +334,9 @@ class ChatUtils {
 
   /// 创建标准取消按钮
   static Widget createCancelButton(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () {
-          Navigator.pop(context);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            '取消',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
-            ),
-          ),
-        ),
-      ),
+    return OutlinedButton(
+      onPressed: () => Navigator.pop(context),
+      child: const Text('取消'),
     );
   }
 
@@ -396,26 +346,9 @@ class ChatUtils {
     VoidCallback onTap, {
     String text = '确定',
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: isDark ? Colors.blue.shade700 : Colors.blue.shade600,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ),
+    return FilledButton(
+      onPressed: onTap,
+      child: Text(text),
     );
   }
 
@@ -1042,179 +975,59 @@ class ChatUtils {
     bool isLoading = false,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final accent = iconColor ?? theme.colorScheme.primary;
 
     return showDialog<T>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.6),
+      barrierColor: Colors.black.withValues(alpha: 0.55),
       barrierDismissible: !isLoading,
       builder: (context) {
         return Dialog(
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
           ),
-          elevation: 16,
-          backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          child: Container(
+          backgroundColor: theme.colorScheme.surface,
+          child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: 500,
-              maxHeight: MediaQuery.of(context).size.height * 0.8,
+              maxWidth: 620,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.86,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 标题区域
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: (iconColor ??
-                                  (isDark
-                                      ? Colors.blue.shade300
-                                      : theme.primaryColor))
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          icon.icon,
-                          color: iconColor ??
-                              (isDark
-                                  ? Colors.blue.shade300
-                                  : theme.primaryColor),
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.5,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                      if (!isLoading)
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () => Navigator.of(context).pop(),
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.05)
-                                    : Colors.black.withValues(alpha: 0.05),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.close,
-                                size: 16,
-                                color: isDark
-                                    ? Colors.grey.shade400
-                                    : Colors.grey.shade600,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                _DialogHeaderBar(
+                  title: title,
+                  icon: icon.icon ?? Icons.tune_rounded,
+                  color: accent,
+                  onClose: isLoading ? null : () => Navigator.of(context).pop(),
                 ),
-
-                // 表单内容区域
                 Flexible(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: formFields,
                     ),
                   ),
                 ),
-
-                // 按钮区域
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: StreamBuilder<SmartGripStatus>(
-                      stream: SmartGripService().onStatusChanged,
-                      initialData: SmartGripService().currentStatus,
-                      builder: (context, snapshot) {
-                        final isLeftHand =
-                            snapshot.data == SmartGripStatus.leftHand;
-
-                        final cancelButton = isLoading
-                            ? const SizedBox.shrink()
-                            : createCancelButton(context);
-                        final saveButton = Material(
-                          color: isLoading
-                              ? (isDark
-                                  ? Colors.grey.shade700
-                                  : Colors.grey.shade300)
-                              : (isDark
-                                  ? Colors.blue.shade700
-                                  : Colors.blue.shade600),
-                          borderRadius: BorderRadius.circular(8),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(8),
-                            onTap: isLoading ? null : onSave,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              child: isLoading
-                                  ? const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        SizedBox(
-                                          width: 14,
-                                          height: 14,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          '处理中...',
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w500,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : Text(
-                                      saveButtonText,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                        );
-
-                        final actions = [
-                          cancelButton,
-                          const SizedBox(width: 8),
-                          saveButton
-                        ];
-
-                        return Row(
-                          mainAxisAlignment: isLeftHand
-                              ? MainAxisAlignment.start
-                              : MainAxisAlignment.end,
-                          children:
-                              isLeftHand ? actions.reversed.toList() : actions,
-                        );
-                      }),
+                _DialogActionBar(
+                  topBorder: true,
+                  actions: [
+                    if (!isLoading) createCancelButton(context),
+                    FilledButton.icon(
+                      onPressed: isLoading ? null : onSave,
+                      icon: isLoading
+                          ? const SizedBox.square(
+                              dimension: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check_rounded),
+                      label: Text(isLoading ? '处理中' : saveButtonText),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1473,6 +1286,104 @@ class ChatUtils {
           }
         }),
       ],
+    );
+  }
+}
+
+class _DialogHeaderBar extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onClose;
+
+  const _DialogHeaderBar({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
+      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.38),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: '关闭',
+            icon: const Icon(Icons.close_rounded),
+            onPressed: onClose,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DialogActionBar extends StatelessWidget {
+  final List<Widget> actions;
+  final bool topBorder;
+
+  const _DialogActionBar({
+    required this.actions,
+    this.topBorder = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
+      decoration: BoxDecoration(
+        border: topBorder
+            ? Border(
+                top: BorderSide(
+                  color: theme.dividerColor.withValues(alpha: 0.55),
+                ),
+              )
+            : null,
+      ),
+      child: StreamBuilder<SmartGripStatus>(
+        stream: SmartGripService().onStatusChanged,
+        initialData: SmartGripService().currentStatus,
+        builder: (context, snapshot) {
+          final ordered = snapshot.data == SmartGripStatus.leftHand
+              ? actions.reversed.toList(growable: false)
+              : actions;
+          return Align(
+            alignment: snapshot.data == SmartGripStatus.leftHand
+                ? Alignment.centerLeft
+                : Alignment.centerRight,
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: ordered,
+            ),
+          );
+        },
+      ),
     );
   }
 }

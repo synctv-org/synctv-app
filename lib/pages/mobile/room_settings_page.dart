@@ -9,6 +9,7 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/ios_style_switch.dart';
 
@@ -1478,32 +1479,28 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<String?> _showRejectReasonDialog() {
     final controller = TextEditingController();
-    return showDialog<String>(
+    return ChatUtils.showStyledDialog<String>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('拒绝申请'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: '原因',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: const Text('拒绝'),
-            ),
-          ],
-        );
-      },
+      title: '拒绝申请',
+      icon: const Icon(Icons.block_rounded),
+      iconColor: Theme.of(context).colorScheme.error,
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        maxLines: 3,
+        decoration: const InputDecoration(
+          labelText: '原因',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        FilledButton.tonalIcon(
+          onPressed: () => Navigator.pop(context, controller.text.trim()),
+          icon: const Icon(Icons.block_rounded),
+          label: const Text('拒绝'),
+        ),
+      ],
     ).whenComplete(controller.dispose);
   }
 
@@ -1513,31 +1510,27 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     String initialValue = '',
   }) {
     final controller = TextEditingController(text: initialValue);
-    return showDialog<String>(
+    return ChatUtils.showStyledDialog<String>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: label,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: const Text('保存'),
-            ),
-          ],
-        );
-      },
+      title: title,
+      icon: const Icon(Icons.edit_outlined),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        onSubmitted: (_) => Navigator.pop(context, controller.text.trim()),
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, controller.text.trim()),
+          text: '保存',
+        ),
+      ],
     ).whenComplete(controller.dispose);
   }
 
@@ -1545,85 +1538,30 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final userIdController = TextEditingController();
     var role = 3;
     var notify = true;
-    return showDialog<_MemberEditResult>(
+    return ChatUtils.showStyledDialog<_MemberEditResult>(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('添加成员'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: userIdController,
-                    autofocus: true,
-                    decoration: const InputDecoration(
-                      labelText: '用户 ID',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
-                    initialValue: role,
-                    decoration: const InputDecoration(
-                      labelText: '角色',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 2, child: Text('管理员')),
-                      DropdownMenuItem(value: 3, child: Text('成员')),
-                      DropdownMenuItem(value: 4, child: Text('访客')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) setDialogState(() => role = value);
-                    },
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('发送通知'),
-                    value: notify,
-                    onChanged: (value) => setDialogState(() => notify = value),
-                  ),
-                ],
+      title: '添加成员',
+      icon: const Icon(Icons.person_add_alt_1_rounded),
+      content: StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: userIdController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: '用户 ID',
+                  prefixIcon: Icon(Icons.person_outline_rounded),
+                  border: OutlineInputBorder(),
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('取消'),
-                ),
-                FilledButton(
-                  onPressed: () {
-                    final userId = userIdController.text.trim();
-                    if (userId.isEmpty) return;
-                    Navigator.pop(
-                      context,
-                      _MemberEditResult(userId, role, notify),
-                    );
-                  },
-                  child: const Text('添加'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    ).whenComplete(userIdController.dispose);
-  }
-
-  Future<int?> _showMemberRoleDialog(int currentRole) {
-    var role = currentRole == 1 ? 3 : currentRole;
-    return showDialog<int>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('修改角色'),
-              content: DropdownButtonFormField<int>(
+              const SizedBox(height: 16),
+              DropdownButtonFormField<int>(
                 initialValue: role,
                 decoration: const InputDecoration(
                   labelText: '角色',
+                  prefixIcon: Icon(Icons.admin_panel_settings_outlined),
                   border: OutlineInputBorder(),
                 ),
                 items: const [
@@ -1635,20 +1573,69 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   if (value != null) setDialogState(() => role = value);
                 },
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('取消'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context, role),
-                  child: const Text('保存'),
-                ),
-              ],
+              const SizedBox(height: 12),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('发送通知'),
+                value: notify,
+                onChanged: (value) => setDialogState(() => notify = value),
+              ),
+            ],
+          );
+        },
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        ChatUtils.createConfirmButton(
+          context,
+          () {
+            final userId = userIdController.text.trim();
+            if (userId.isEmpty) return;
+            Navigator.pop(
+              context,
+              _MemberEditResult(userId, role, notify),
             );
           },
-        );
-      },
+          text: '添加',
+        ),
+      ],
+    ).whenComplete(userIdController.dispose);
+  }
+
+  Future<int?> _showMemberRoleDialog(int currentRole) {
+    var role = currentRole == 1 ? 3 : currentRole;
+    return ChatUtils.showStyledDialog<int>(
+      context: context,
+      title: '修改角色',
+      icon: const Icon(Icons.admin_panel_settings_outlined),
+      content: StatefulBuilder(
+        builder: (context, setDialogState) {
+          return DropdownButtonFormField<int>(
+            initialValue: role,
+            decoration: const InputDecoration(
+              labelText: '角色',
+              prefixIcon: Icon(Icons.admin_panel_settings_outlined),
+              border: OutlineInputBorder(),
+            ),
+            items: const [
+              DropdownMenuItem(value: 2, child: Text('管理员')),
+              DropdownMenuItem(value: 3, child: Text('成员')),
+              DropdownMenuItem(value: 4, child: Text('访客')),
+            ],
+            onChanged: (value) {
+              if (value != null) setDialogState(() => role = value);
+            },
+          );
+        },
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, role),
+          text: '保存',
+        ),
+      ],
     );
   }
 
@@ -1784,24 +1771,24 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     required String content,
     required String action,
   }) async {
-    final confirmed = await showDialog<bool>(
+    final destructive =
+        action.contains('删除') || action.contains('移出') || action.contains('拒绝');
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(action),
-            ),
-          ],
-        );
-      },
+      title: title,
+      icon: Icon(
+        destructive ? Icons.warning_amber_rounded : Icons.help_outline_rounded,
+      ),
+      iconColor: destructive ? Theme.of(context).colorScheme.error : null,
+      content: Text(content),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        FilledButton.tonalIcon(
+          onPressed: () => Navigator.pop(context, true),
+          icon: Icon(destructive ? Icons.warning_amber_rounded : Icons.check),
+          label: Text(action),
+        ),
+      ],
     );
     return confirmed == true;
   }

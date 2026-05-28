@@ -166,7 +166,7 @@ final $typed_data.Uint8List startSMSLoginRequestDescriptor = $convert.base64Deco
 const StartSMSLoginResponse$json = {
   '1': 'StartSMSLoginResponse',
   '2': [
-    {'1': 'session_id', '3': 1, '4': 1, '5': 9, '10': 'sessionId'},
+    {'1': 'session_token', '3': 1, '4': 1, '5': 9, '10': 'sessionToken'},
     {'1': 'gt', '3': 2, '4': 1, '5': 9, '10': 'gt'},
     {'1': 'challenge', '3': 3, '4': 1, '5': 9, '10': 'challenge'},
     {'1': 'expires_at', '3': 4, '4': 1, '5': 3, '10': 'expiresAt'},
@@ -175,15 +175,15 @@ const StartSMSLoginResponse$json = {
 
 /// Descriptor for `StartSMSLoginResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List startSMSLoginResponseDescriptor = $convert.base64Decode(
-    'ChVTdGFydFNNU0xvZ2luUmVzcG9uc2USHQoKc2Vzc2lvbl9pZBgBIAEoCVIJc2Vzc2lvbklkEg'
-    '4KAmd0GAIgASgJUgJndBIcCgljaGFsbGVuZ2UYAyABKAlSCWNoYWxsZW5nZRIdCgpleHBpcmVz'
-    'X2F0GAQgASgDUglleHBpcmVzQXQ=');
+    'ChVTdGFydFNNU0xvZ2luUmVzcG9uc2USIwoNc2Vzc2lvbl90b2tlbhgBIAEoCVIMc2Vzc2lvbl'
+    'Rva2VuEg4KAmd0GAIgASgJUgJndBIcCgljaGFsbGVuZ2UYAyABKAlSCWNoYWxsZW5nZRIdCgpl'
+    'eHBpcmVzX2F0GAQgASgDUglleHBpcmVzQXQ=');
 
 @$core.Deprecated('Use sendSMSRequestDescriptor instead')
 const SendSMSRequest$json = {
   '1': 'SendSMSRequest',
   '2': [
-    {'1': 'session_id', '3': 1, '4': 1, '5': 9, '10': 'sessionId'},
+    {'1': 'session_token', '3': 1, '4': 1, '5': 9, '10': 'sessionToken'},
     {'1': 'phone', '3': 2, '4': 1, '5': 9, '10': 'phone'},
     {'1': 'validate', '3': 3, '4': 1, '5': 9, '10': 'validate'},
   ],
@@ -191,34 +191,36 @@ const SendSMSRequest$json = {
 
 /// Descriptor for `SendSMSRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List sendSMSRequestDescriptor = $convert.base64Decode(
-    'Cg5TZW5kU01TUmVxdWVzdBIdCgpzZXNzaW9uX2lkGAEgASgJUglzZXNzaW9uSWQSFAoFcGhvbm'
-    'UYAiABKAlSBXBob25lEhoKCHZhbGlkYXRlGAMgASgJUgh2YWxpZGF0ZQ==');
+    'Cg5TZW5kU01TUmVxdWVzdBIjCg1zZXNzaW9uX3Rva2VuGAEgASgJUgxzZXNzaW9uVG9rZW4SFA'
+    'oFcGhvbmUYAiABKAlSBXBob25lEhoKCHZhbGlkYXRlGAMgASgJUgh2YWxpZGF0ZQ==');
 
 @$core.Deprecated('Use sendSMSResponseDescriptor instead')
 const SendSMSResponse$json = {
   '1': 'SendSMSResponse',
   '2': [
-    {'1': 'expires_at', '3': 1, '4': 1, '5': 3, '10': 'expiresAt'},
+    {'1': 'session_token', '3': 1, '4': 1, '5': 9, '10': 'sessionToken'},
+    {'1': 'expires_at', '3': 2, '4': 1, '5': 3, '10': 'expiresAt'},
   ],
 };
 
 /// Descriptor for `SendSMSResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List sendSMSResponseDescriptor = $convert.base64Decode(
-    'Cg9TZW5kU01TUmVzcG9uc2USHQoKZXhwaXJlc19hdBgBIAEoA1IJZXhwaXJlc0F0');
+    'Cg9TZW5kU01TUmVzcG9uc2USIwoNc2Vzc2lvbl90b2tlbhgBIAEoCVIMc2Vzc2lvblRva2VuEh'
+    '0KCmV4cGlyZXNfYXQYAiABKANSCWV4cGlyZXNBdA==');
 
 @$core.Deprecated('Use loginSMSRequestDescriptor instead')
 const LoginSMSRequest$json = {
   '1': 'LoginSMSRequest',
   '2': [
-    {'1': 'session_id', '3': 1, '4': 1, '5': 9, '10': 'sessionId'},
+    {'1': 'session_token', '3': 1, '4': 1, '5': 9, '10': 'sessionToken'},
     {'1': 'code', '3': 2, '4': 1, '5': 9, '10': 'code'},
   ],
 };
 
 /// Descriptor for `LoginSMSRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List loginSMSRequestDescriptor = $convert.base64Decode(
-    'Cg9Mb2dpblNNU1JlcXVlc3QSHQoKc2Vzc2lvbl9pZBgBIAEoCVIJc2Vzc2lvbklkEhIKBGNvZG'
-    'UYAiABKAlSBGNvZGU=');
+    'Cg9Mb2dpblNNU1JlcXVlc3QSIwoNc2Vzc2lvbl90b2tlbhgBIAEoCVIMc2Vzc2lvblRva2VuEh'
+    'IKBGNvZGUYAiABKAlSBGNvZGU=');
 
 @$core.Deprecated('Use loginSMSResponseDescriptor instead')
 const LoginSMSResponse$json = {
