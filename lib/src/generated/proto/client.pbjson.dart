@@ -403,7 +403,7 @@ const NotificationType$json = {
     {'1': 'NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT', '2': 2},
     {'1': 'NOTIFICATION_TYPE_ROOM_EVENT', '2': 3},
     {'1': 'NOTIFICATION_TYPE_PASSWORD_RESET', '2': 4},
-    {'1': 'NOTIFICATION_TYPE_EMAIL_VERIFICATION', '2': 5},
+    {'1': 'NOTIFICATION_TYPE_EMAIL_BIND', '2': 5},
   ],
 };
 
@@ -412,8 +412,8 @@ final $typed_data.Uint8List notificationTypeDescriptor = $convert.base64Decode(
     'ChBOb3RpZmljYXRpb25UeXBlEiEKHU5PVElGSUNBVElPTl9UWVBFX1VOU1BFQ0lGSUVEEAASJQ'
     'ohTk9USUZJQ0FUSU9OX1RZUEVfUk9PTV9JTlZJVEFUSU9OEAESKQolTk9USUZJQ0FUSU9OX1RZ'
     'UEVfU1lTVEVNX0FOTk9VTkNFTUVOVBACEiAKHE5PVElGSUNBVElPTl9UWVBFX1JPT01fRVZFTl'
-    'QQAxIkCiBOT1RJRklDQVRJT05fVFlQRV9QQVNTV09SRF9SRVNFVBAEEigKJE5PVElGSUNBVElP'
-    'Tl9UWVBFX0VNQUlMX1ZFUklGSUNBVElPThAF');
+    'QQAxIkCiBOT1RJRklDQVRJT05fVFlQRV9QQVNTV09SRF9SRVNFVBAEEiAKHE5PVElGSUNBVElP'
+    'Tl9UWVBFX0VNQUlMX0JJTkQQBQ==');
 
 @$core.Deprecated('Use userDescriptor instead')
 const User$json = {
@@ -439,8 +439,7 @@ const User$json = {
       '10': 'status'
     },
     {'1': 'created_at', '3': 6, '4': 1, '5': 3, '10': 'createdAt'},
-    {'1': 'email_verified', '3': 7, '4': 1, '5': 8, '10': 'emailVerified'},
-    {'1': 'is_banned', '3': 8, '4': 1, '5': 8, '10': 'isBanned'},
+    {'1': 'is_banned', '3': 7, '4': 1, '5': 8, '10': 'isBanned'},
   ],
 };
 
@@ -449,8 +448,8 @@ final $typed_data.Uint8List userDescriptor = $convert.base64Decode(
     'CgRVc2VyEg4KAmlkGAEgASgJUgJpZBIaCgh1c2VybmFtZRgCIAEoCVIIdXNlcm5hbWUSFAoFZW'
     '1haWwYAyABKAlSBWVtYWlsEisKBHJvbGUYBCABKA4yFy5zeW5jdHYuY29tbW9uLlVzZXJSb2xl'
     'UgRyb2xlEjEKBnN0YXR1cxgFIAEoDjIZLnN5bmN0di5jb21tb24uVXNlclN0YXR1c1IGc3RhdH'
-    'VzEh0KCmNyZWF0ZWRfYXQYBiABKANSCWNyZWF0ZWRBdBIlCg5lbWFpbF92ZXJpZmllZBgHIAEo'
-    'CFINZW1haWxWZXJpZmllZBIbCglpc19iYW5uZWQYCCABKAhSCGlzQmFubmVk');
+    'VzEh0KCmNyZWF0ZWRfYXQYBiABKANSCWNyZWF0ZWRBdBIbCglpc19iYW5uZWQYByABKAhSCGlz'
+    'QmFubmVk');
 
 @$core.Deprecated('Use userPublicViewDescriptor instead')
 const UserPublicView$json = {
@@ -5843,6 +5842,35 @@ final $typed_data.Uint8List confirmEmailBindResponseDescriptor =
         'ChhDb25maXJtRW1haWxCaW5kUmVzcG9uc2USJwoEdXNlchgBIAEoCzITLnN5bmN0di5jbGllbn'
         'QuVXNlclIEdXNlcg==');
 
+@$core.Deprecated('Use unbindEmailRequestDescriptor instead')
+const UnbindEmailRequest$json = {
+  '1': 'UnbindEmailRequest',
+};
+
+/// Descriptor for `UnbindEmailRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List unbindEmailRequestDescriptor =
+    $convert.base64Decode('ChJVbmJpbmRFbWFpbFJlcXVlc3Q=');
+
+@$core.Deprecated('Use unbindEmailResponseDescriptor instead')
+const UnbindEmailResponse$json = {
+  '1': 'UnbindEmailResponse',
+  '2': [
+    {
+      '1': 'user',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.User',
+      '10': 'user'
+    },
+  ],
+};
+
+/// Descriptor for `UnbindEmailResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List unbindEmailResponseDescriptor = $convert.base64Decode(
+    'ChNVbmJpbmRFbWFpbFJlc3BvbnNlEicKBHVzZXIYASABKAsyEy5zeW5jdHYuY2xpZW50LlVzZX'
+    'JSBHVzZXI=');
+
 @$core.Deprecated('Use listMyRoomsRequestDescriptor instead')
 const ListMyRoomsRequest$json = {
   '1': 'ListMyRoomsRequest',
@@ -6241,6 +6269,8 @@ const GetPublicSettingsResponse$json = {
       '5': 8,
       '10': 'emailSignupNeedReview'
     },
+    {'1': 'enable_email', '3': 24, '4': 1, '5': 8, '10': 'enableEmail'},
+    {'1': 'enable_webauthn', '3': 25, '4': 1, '5': 8, '10': 'enableWebauthn'},
     {
       '1': 'enable_webauthn_signup',
       '3': 22,
@@ -6278,6 +6308,13 @@ const GetPublicSettingsResponse$json = {
       '5': 8,
       '10': 'emailWhitelistEnabled'
     },
+    {
+      '1': 'email_whitelist_domains',
+      '3': 26,
+      '4': 3,
+      '5': 9,
+      '10': 'emailWhitelistDomains'
+    },
   ],
 };
 
@@ -6293,13 +6330,15 @@ final $typed_data.Uint8List getPublicSettingsResponseDescriptor = $convert.base6
     '9zaWdudXBfbmVlZF9yZXZpZXcYECABKAhSGHBhc3N3b3JkU2lnbnVwTmVlZFJldmlldxIuChNl'
     'bmFibGVfZW1haWxfc2lnbnVwGBEgASgIUhFlbmFibGVFbWFpbFNpZ251cBIhCgxlbmFibGVfZ3'
     'Vlc3QYEiABKAhSC2VuYWJsZUd1ZXN0EjcKGGVtYWlsX3NpZ251cF9uZWVkX3JldmlldxgTIAEo'
-    'CFIVZW1haWxTaWdudXBOZWVkUmV2aWV3EjQKFmVuYWJsZV93ZWJhdXRobl9zaWdudXAYFiABKA'
-    'hSFGVuYWJsZVdlYmF1dGhuU2lnbnVwEj0KG3dlYmF1dGhuX3NpZ251cF9uZWVkX3JldmlldxgX'
-    'IAEoCFIYd2ViYXV0aG5TaWdudXBOZWVkUmV2aWV3Eh8KC21vdmllX3Byb3h5GAsgASgIUgptb3'
-    'ZpZVByb3h5Eh0KCmxpdmVfcHJveHkYDCABKAhSCWxpdmVQcm94eRItChN0c19kaXNndWlzZWRf'
-    'YXNfcG5nGA0gASgIUhB0c0Rpc2d1aXNlZEFzUG5nEi4KE2N1c3RvbV9wdWJsaXNoX2hvc3QYDi'
-    'ABKAlSEWN1c3RvbVB1Ymxpc2hIb3N0EjYKF2VtYWlsX3doaXRlbGlzdF9lbmFibGVkGA8gASgI'
-    'UhVlbWFpbFdoaXRlbGlzdEVuYWJsZWQ=');
+    'CFIVZW1haWxTaWdudXBOZWVkUmV2aWV3EiEKDGVuYWJsZV9lbWFpbBgYIAEoCFILZW5hYmxlRW'
+    '1haWwSJwoPZW5hYmxlX3dlYmF1dGhuGBkgASgIUg5lbmFibGVXZWJhdXRobhI0ChZlbmFibGVf'
+    'd2ViYXV0aG5fc2lnbnVwGBYgASgIUhRlbmFibGVXZWJhdXRoblNpZ251cBI9Cht3ZWJhdXRobl'
+    '9zaWdudXBfbmVlZF9yZXZpZXcYFyABKAhSGHdlYmF1dGhuU2lnbnVwTmVlZFJldmlldxIfCgtt'
+    'b3ZpZV9wcm94eRgLIAEoCFIKbW92aWVQcm94eRIdCgpsaXZlX3Byb3h5GAwgASgIUglsaXZlUH'
+    'JveHkSLQoTdHNfZGlzZ3Vpc2VkX2FzX3BuZxgNIAEoCFIQdHNEaXNndWlzZWRBc1BuZxIuChNj'
+    'dXN0b21fcHVibGlzaF9ob3N0GA4gASgJUhFjdXN0b21QdWJsaXNoSG9zdBI2ChdlbWFpbF93aG'
+    'l0ZWxpc3RfZW5hYmxlZBgPIAEoCFIVZW1haWxXaGl0ZWxpc3RFbmFibGVkEjYKF2VtYWlsX3do'
+    'aXRlbGlzdF9kb21haW5zGBogAygJUhVlbWFpbFdoaXRlbGlzdERvbWFpbnM=');
 
 @$core.Deprecated('Use getServerInfoRequestDescriptor instead')
 const GetServerInfoRequest$json = {
@@ -6323,61 +6362,6 @@ const GetServerInfoResponse$json = {
 final $typed_data.Uint8List getServerInfoResponseDescriptor = $convert.base64Decode(
     'ChVHZXRTZXJ2ZXJJbmZvUmVzcG9uc2USGwoJc2VydmVyX2lkGAEgASgJUghzZXJ2ZXJJZBIfCg'
     'tzZXJ2ZXJfbmFtZRgCIAEoCVIKc2VydmVyTmFtZQ==');
-
-@$core.Deprecated('Use sendVerificationEmailRequestDescriptor instead')
-const SendVerificationEmailRequest$json = {
-  '1': 'SendVerificationEmailRequest',
-  '2': [
-    {'1': 'email', '3': 1, '4': 1, '5': 9, '10': 'email'},
-  ],
-};
-
-/// Descriptor for `SendVerificationEmailRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List sendVerificationEmailRequestDescriptor =
-    $convert.base64Decode(
-        'ChxTZW5kVmVyaWZpY2F0aW9uRW1haWxSZXF1ZXN0EhQKBWVtYWlsGAEgASgJUgVlbWFpbA==');
-
-@$core.Deprecated('Use sendVerificationEmailResponseDescriptor instead')
-const SendVerificationEmailResponse$json = {
-  '1': 'SendVerificationEmailResponse',
-  '2': [
-    {'1': 'message', '3': 1, '4': 1, '5': 9, '10': 'message'},
-  ],
-};
-
-/// Descriptor for `SendVerificationEmailResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List sendVerificationEmailResponseDescriptor =
-    $convert.base64Decode(
-        'Ch1TZW5kVmVyaWZpY2F0aW9uRW1haWxSZXNwb25zZRIYCgdtZXNzYWdlGAEgASgJUgdtZXNzYW'
-        'dl');
-
-@$core.Deprecated('Use confirmEmailRequestDescriptor instead')
-const ConfirmEmailRequest$json = {
-  '1': 'ConfirmEmailRequest',
-  '2': [
-    {'1': 'email', '3': 1, '4': 1, '5': 9, '10': 'email'},
-    {'1': 'token', '3': 2, '4': 1, '5': 9, '10': 'token'},
-  ],
-};
-
-/// Descriptor for `ConfirmEmailRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List confirmEmailRequestDescriptor = $convert.base64Decode(
-    'ChNDb25maXJtRW1haWxSZXF1ZXN0EhQKBWVtYWlsGAEgASgJUgVlbWFpbBIUCgV0b2tlbhgCIA'
-    'EoCVIFdG9rZW4=');
-
-@$core.Deprecated('Use confirmEmailResponseDescriptor instead')
-const ConfirmEmailResponse$json = {
-  '1': 'ConfirmEmailResponse',
-  '2': [
-    {'1': 'message', '3': 1, '4': 1, '5': 9, '10': 'message'},
-    {'1': 'user_id', '3': 2, '4': 1, '5': 9, '10': 'userId'},
-  ],
-};
-
-/// Descriptor for `ConfirmEmailResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List confirmEmailResponseDescriptor = $convert.base64Decode(
-    'ChRDb25maXJtRW1haWxSZXNwb25zZRIYCgdtZXNzYWdlGAEgASgJUgdtZXNzYWdlEhcKB3VzZX'
-    'JfaWQYAiABKAlSBnVzZXJJZA==');
 
 @$core.Deprecated('Use requestPasswordResetRequestDescriptor instead')
 const RequestPasswordResetRequest$json = {
@@ -7601,6 +7585,11 @@ const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
       '3': '.synctv.client.ConfirmEmailBindResponse'
     },
     {
+      '1': 'UnbindEmail',
+      '2': '.synctv.client.UnbindEmailRequest',
+      '3': '.synctv.client.UnbindEmailResponse'
+    },
+    {
       '1': 'StartOpaquePasswordUpdate',
       '2': '.synctv.client.StartOpaquePasswordUpdateRequest',
       '3': '.synctv.client.StartOpaquePasswordUpdateResponse'
@@ -7682,6 +7671,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.StartEmailBindResponse': StartEmailBindResponse$json,
   '.synctv.client.ConfirmEmailBindRequest': ConfirmEmailBindRequest$json,
   '.synctv.client.ConfirmEmailBindResponse': ConfirmEmailBindResponse$json,
+  '.synctv.client.UnbindEmailRequest': UnbindEmailRequest$json,
+  '.synctv.client.UnbindEmailResponse': UnbindEmailResponse$json,
   '.synctv.client.StartOpaquePasswordUpdateRequest':
       StartOpaquePasswordUpdateRequest$json,
   '.synctv.client.StartOpaquePasswordUpdateResponse':
@@ -7735,30 +7726,31 @@ final $typed_data.Uint8List userServiceDescriptor = $convert.base64Decode(
     'N0di5jbGllbnQuU3RhcnRFbWFpbEJpbmRSZXF1ZXN0GiUuc3luY3R2LmNsaWVudC5TdGFydEVt'
     'YWlsQmluZFJlc3BvbnNlEmMKEENvbmZpcm1FbWFpbEJpbmQSJi5zeW5jdHYuY2xpZW50LkNvbm'
     'Zpcm1FbWFpbEJpbmRSZXF1ZXN0Gicuc3luY3R2LmNsaWVudC5Db25maXJtRW1haWxCaW5kUmVz'
-    'cG9uc2USfgoZU3RhcnRPcGFxdWVQYXNzd29yZFVwZGF0ZRIvLnN5bmN0di5jbGllbnQuU3Rhcn'
-    'RPcGFxdWVQYXNzd29yZFVwZGF0ZVJlcXVlc3QaMC5zeW5jdHYuY2xpZW50LlN0YXJ0T3BhcXVl'
-    'UGFzc3dvcmRVcGRhdGVSZXNwb25zZRKBAQoaRmluaXNoT3BhcXVlUGFzc3dvcmRVcGRhdGUSMC'
-    '5zeW5jdHYuY2xpZW50LkZpbmlzaE9wYXF1ZVBhc3N3b3JkVXBkYXRlUmVxdWVzdBoxLnN5bmN0'
-    'di5jbGllbnQuRmluaXNoT3BhcXVlUGFzc3dvcmRVcGRhdGVSZXNwb25zZRJjChBTdGFydFBhc3'
-    'NrZXlCaW5kEiYuc3luY3R2LmNsaWVudC5TdGFydFBhc3NrZXlCaW5kUmVxdWVzdBonLnN5bmN0'
-    'di5jbGllbnQuU3RhcnRQYXNza2V5QmluZFJlc3BvbnNlEmYKEUZpbmlzaFBhc3NrZXlCaW5kEi'
-    'cuc3luY3R2LmNsaWVudC5GaW5pc2hQYXNza2V5QmluZFJlcXVlc3QaKC5zeW5jdHYuY2xpZW50'
-    'LlBhc3NrZXlDcmVkZW50aWFsUmVzcG9uc2USVwoMTGlzdFBhc3NrZXlzEiIuc3luY3R2LmNsaW'
-    'VudC5MaXN0UGFzc2tleXNSZXF1ZXN0GiMuc3luY3R2LmNsaWVudC5MaXN0UGFzc2tleXNSZXNw'
-    'b25zZRJaCg1EZWxldGVQYXNza2V5EiMuc3luY3R2LmNsaWVudC5EZWxldGVQYXNza2V5UmVxdW'
-    'VzdBokLnN5bmN0di5jbGllbnQuRGVsZXRlUGFzc2tleVJlc3BvbnNlEmkKEkdldFVzZXJQcmVm'
-    'ZXJlbmNlcxIoLnN5bmN0di5jbGllbnQuR2V0VXNlclByZWZlcmVuY2VzUmVxdWVzdBopLnN5bm'
-    'N0di5jbGllbnQuR2V0VXNlclByZWZlcmVuY2VzUmVzcG9uc2UScgoVVXBkYXRlVXNlclByZWZl'
-    'cmVuY2VzEisuc3luY3R2LmNsaWVudC5VcGRhdGVVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0Giwuc3'
-    'luY3R2LmNsaWVudC5VcGRhdGVVc2VyUHJlZmVyZW5jZXNSZXNwb25zZRJXCgxDbG9zZUFjY291'
-    'bnQSIi5zeW5jdHYuY2xpZW50LkNsb3NlQWNjb3VudFJlcXVlc3QaIy5zeW5jdHYuY2xpZW50Lk'
-    'Nsb3NlQWNjb3VudFJlc3BvbnNlElEKCkNyZWF0ZVJvb20SIC5zeW5jdHYuY2xpZW50LkNyZWF0'
-    'ZVJvb21SZXF1ZXN0GiEuc3luY3R2LmNsaWVudC5DcmVhdGVSb29tUmVzcG9uc2USSAoHR2V0Um'
-    '9vbRIdLnN5bmN0di5jbGllbnQuR2V0Um9vbVJlcXVlc3QaHi5zeW5jdHYuY2xpZW50LkdldFJv'
-    'b21SZXNwb25zZRJLCghKb2luUm9vbRIeLnN5bmN0di5jbGllbnQuSm9pblJvb21SZXF1ZXN0Gh'
-    '8uc3luY3R2LmNsaWVudC5Kb2luUm9vbVJlc3BvbnNlElQKC0xpc3RNeVJvb21zEiEuc3luY3R2'
-    'LmNsaWVudC5MaXN0TXlSb29tc1JlcXVlc3QaIi5zeW5jdHYuY2xpZW50Lkxpc3RNeVJvb21zUm'
-    'VzcG9uc2U=');
+    'cG9uc2USVAoLVW5iaW5kRW1haWwSIS5zeW5jdHYuY2xpZW50LlVuYmluZEVtYWlsUmVxdWVzdB'
+    'oiLnN5bmN0di5jbGllbnQuVW5iaW5kRW1haWxSZXNwb25zZRJ+ChlTdGFydE9wYXF1ZVBhc3N3'
+    'b3JkVXBkYXRlEi8uc3luY3R2LmNsaWVudC5TdGFydE9wYXF1ZVBhc3N3b3JkVXBkYXRlUmVxdW'
+    'VzdBowLnN5bmN0di5jbGllbnQuU3RhcnRPcGFxdWVQYXNzd29yZFVwZGF0ZVJlc3BvbnNlEoEB'
+    'ChpGaW5pc2hPcGFxdWVQYXNzd29yZFVwZGF0ZRIwLnN5bmN0di5jbGllbnQuRmluaXNoT3BhcX'
+    'VlUGFzc3dvcmRVcGRhdGVSZXF1ZXN0GjEuc3luY3R2LmNsaWVudC5GaW5pc2hPcGFxdWVQYXNz'
+    'd29yZFVwZGF0ZVJlc3BvbnNlEmMKEFN0YXJ0UGFzc2tleUJpbmQSJi5zeW5jdHYuY2xpZW50Ll'
+    'N0YXJ0UGFzc2tleUJpbmRSZXF1ZXN0Gicuc3luY3R2LmNsaWVudC5TdGFydFBhc3NrZXlCaW5k'
+    'UmVzcG9uc2USZgoRRmluaXNoUGFzc2tleUJpbmQSJy5zeW5jdHYuY2xpZW50LkZpbmlzaFBhc3'
+    'NrZXlCaW5kUmVxdWVzdBooLnN5bmN0di5jbGllbnQuUGFzc2tleUNyZWRlbnRpYWxSZXNwb25z'
+    'ZRJXCgxMaXN0UGFzc2tleXMSIi5zeW5jdHYuY2xpZW50Lkxpc3RQYXNza2V5c1JlcXVlc3QaIy'
+    '5zeW5jdHYuY2xpZW50Lkxpc3RQYXNza2V5c1Jlc3BvbnNlEloKDURlbGV0ZVBhc3NrZXkSIy5z'
+    'eW5jdHYuY2xpZW50LkRlbGV0ZVBhc3NrZXlSZXF1ZXN0GiQuc3luY3R2LmNsaWVudC5EZWxldG'
+    'VQYXNza2V5UmVzcG9uc2USaQoSR2V0VXNlclByZWZlcmVuY2VzEiguc3luY3R2LmNsaWVudC5H'
+    'ZXRVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0Gikuc3luY3R2LmNsaWVudC5HZXRVc2VyUHJlZmVyZW'
+    '5jZXNSZXNwb25zZRJyChVVcGRhdGVVc2VyUHJlZmVyZW5jZXMSKy5zeW5jdHYuY2xpZW50LlVw'
+    'ZGF0ZVVzZXJQcmVmZXJlbmNlc1JlcXVlc3QaLC5zeW5jdHYuY2xpZW50LlVwZGF0ZVVzZXJQcm'
+    'VmZXJlbmNlc1Jlc3BvbnNlElcKDENsb3NlQWNjb3VudBIiLnN5bmN0di5jbGllbnQuQ2xvc2VB'
+    'Y2NvdW50UmVxdWVzdBojLnN5bmN0di5jbGllbnQuQ2xvc2VBY2NvdW50UmVzcG9uc2USUQoKQ3'
+    'JlYXRlUm9vbRIgLnN5bmN0di5jbGllbnQuQ3JlYXRlUm9vbVJlcXVlc3QaIS5zeW5jdHYuY2xp'
+    'ZW50LkNyZWF0ZVJvb21SZXNwb25zZRJICgdHZXRSb29tEh0uc3luY3R2LmNsaWVudC5HZXRSb2'
+    '9tUmVxdWVzdBoeLnN5bmN0di5jbGllbnQuR2V0Um9vbVJlc3BvbnNlEksKCEpvaW5Sb29tEh4u'
+    'c3luY3R2LmNsaWVudC5Kb2luUm9vbVJlcXVlc3QaHy5zeW5jdHYuY2xpZW50LkpvaW5Sb29tUm'
+    'VzcG9uc2USVAoLTGlzdE15Um9vbXMSIS5zeW5jdHYuY2xpZW50Lkxpc3RNeVJvb21zUmVxdWVz'
+    'dBoiLnN5bmN0di5jbGllbnQuTGlzdE15Um9vbXNSZXNwb25zZQ==');
 
 const $core.Map<$core.String, $core.dynamic> RoomServiceBase$json = {
   '1': 'RoomService',
@@ -8318,16 +8310,6 @@ const $core.Map<$core.String, $core.dynamic> EmailServiceBase$json = {
   '1': 'EmailService',
   '2': [
     {
-      '1': 'SendVerificationEmail',
-      '2': '.synctv.client.SendVerificationEmailRequest',
-      '3': '.synctv.client.SendVerificationEmailResponse'
-    },
-    {
-      '1': 'ConfirmEmail',
-      '2': '.synctv.client.ConfirmEmailRequest',
-      '3': '.synctv.client.ConfirmEmailResponse'
-    },
-    {
       '1': 'RequestPasswordReset',
       '2': '.synctv.client.RequestPasswordResetRequest',
       '3': '.synctv.client.RequestPasswordResetResponse'
@@ -8348,12 +8330,6 @@ const $core.Map<$core.String, $core.dynamic> EmailServiceBase$json = {
 @$core.Deprecated('Use emailServiceDescriptor instead')
 const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
     EmailServiceBase$messageJson = {
-  '.synctv.client.SendVerificationEmailRequest':
-      SendVerificationEmailRequest$json,
-  '.synctv.client.SendVerificationEmailResponse':
-      SendVerificationEmailResponse$json,
-  '.synctv.client.ConfirmEmailRequest': ConfirmEmailRequest$json,
-  '.synctv.client.ConfirmEmailResponse': ConfirmEmailResponse$json,
   '.synctv.client.RequestPasswordResetRequest':
       RequestPasswordResetRequest$json,
   '.synctv.client.RequestPasswordResetResponse':
@@ -8370,17 +8346,13 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
 
 /// Descriptor for `EmailService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
 final $typed_data.Uint8List emailServiceDescriptor = $convert.base64Decode(
-    'CgxFbWFpbFNlcnZpY2UScgoVU2VuZFZlcmlmaWNhdGlvbkVtYWlsEisuc3luY3R2LmNsaWVudC'
-    '5TZW5kVmVyaWZpY2F0aW9uRW1haWxSZXF1ZXN0Giwuc3luY3R2LmNsaWVudC5TZW5kVmVyaWZp'
-    'Y2F0aW9uRW1haWxSZXNwb25zZRJXCgxDb25maXJtRW1haWwSIi5zeW5jdHYuY2xpZW50LkNvbm'
-    'Zpcm1FbWFpbFJlcXVlc3QaIy5zeW5jdHYuY2xpZW50LkNvbmZpcm1FbWFpbFJlc3BvbnNlEm8K'
-    'FFJlcXVlc3RQYXNzd29yZFJlc2V0Eiouc3luY3R2LmNsaWVudC5SZXF1ZXN0UGFzc3dvcmRSZX'
-    'NldFJlcXVlc3QaKy5zeW5jdHYuY2xpZW50LlJlcXVlc3RQYXNzd29yZFJlc2V0UmVzcG9uc2US'
-    'ewoYU3RhcnRPcGFxdWVQYXNzd29yZFJlc2V0Ei4uc3luY3R2LmNsaWVudC5TdGFydE9wYXF1ZV'
-    'Bhc3N3b3JkUmVzZXRSZXF1ZXN0Gi8uc3luY3R2LmNsaWVudC5TdGFydE9wYXF1ZVBhc3N3b3Jk'
-    'UmVzZXRSZXNwb25zZRJ5ChlGaW5pc2hPcGFxdWVQYXNzd29yZFJlc2V0Ei8uc3luY3R2LmNsaW'
-    'VudC5GaW5pc2hPcGFxdWVQYXNzd29yZFJlc2V0UmVxdWVzdBorLnN5bmN0di5jbGllbnQuQ29u'
-    'ZmlybVBhc3N3b3JkUmVzZXRSZXNwb25zZQ==');
+    'CgxFbWFpbFNlcnZpY2USbwoUUmVxdWVzdFBhc3N3b3JkUmVzZXQSKi5zeW5jdHYuY2xpZW50Ll'
+    'JlcXVlc3RQYXNzd29yZFJlc2V0UmVxdWVzdBorLnN5bmN0di5jbGllbnQuUmVxdWVzdFBhc3N3'
+    'b3JkUmVzZXRSZXNwb25zZRJ7ChhTdGFydE9wYXF1ZVBhc3N3b3JkUmVzZXQSLi5zeW5jdHYuY2'
+    'xpZW50LlN0YXJ0T3BhcXVlUGFzc3dvcmRSZXNldFJlcXVlc3QaLy5zeW5jdHYuY2xpZW50LlN0'
+    'YXJ0T3BhcXVlUGFzc3dvcmRSZXNldFJlc3BvbnNlEnkKGUZpbmlzaE9wYXF1ZVBhc3N3b3JkUm'
+    'VzZXQSLy5zeW5jdHYuY2xpZW50LkZpbmlzaE9wYXF1ZVBhc3N3b3JkUmVzZXRSZXF1ZXN0Gisu'
+    'c3luY3R2LmNsaWVudC5Db25maXJtUGFzc3dvcmRSZXNldFJlc3BvbnNl');
 
 const $core.Map<$core.String, $core.dynamic> NotificationServiceBase$json = {
   '1': 'NotificationService',

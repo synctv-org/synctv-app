@@ -649,9 +649,9 @@ class NotificationType extends $pb.ProtobufEnum {
   static const NotificationType NOTIFICATION_TYPE_PASSWORD_RESET =
       NotificationType._(
           4, _omitEnumNames ? '' : 'NOTIFICATION_TYPE_PASSWORD_RESET');
-  static const NotificationType NOTIFICATION_TYPE_EMAIL_VERIFICATION =
+  static const NotificationType NOTIFICATION_TYPE_EMAIL_BIND =
       NotificationType._(
-          5, _omitEnumNames ? '' : 'NOTIFICATION_TYPE_EMAIL_VERIFICATION');
+          5, _omitEnumNames ? '' : 'NOTIFICATION_TYPE_EMAIL_BIND');
 
   static const $core.List<NotificationType> values = <NotificationType>[
     NOTIFICATION_TYPE_UNSPECIFIED,
@@ -659,7 +659,7 @@ class NotificationType extends $pb.ProtobufEnum {
     NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
     NOTIFICATION_TYPE_ROOM_EVENT,
     NOTIFICATION_TYPE_PASSWORD_RESET,
-    NOTIFICATION_TYPE_EMAIL_VERIFICATION,
+    NOTIFICATION_TYPE_EMAIL_BIND,
   ];
 
   static final $core.List<NotificationType?> _byValue =

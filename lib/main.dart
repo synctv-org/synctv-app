@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/pages/mobile/watch_together_room_screen.dart';
@@ -19,6 +18,7 @@ import 'package:synctv_app/widgets/join_room_dialog.dart';
 import 'package:synctv_app/widgets/server_settings_dialog.dart';
 import 'package:synctv_app/pages/splash_page.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
+import 'package:synctv_app/services/native_text_editing_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
@@ -33,6 +33,7 @@ void main(List<String> args) async {
   }
   await WatchTogetherService.init();
   await OAuth2DeepLinkService.initialize();
+  NativeTextEditingService.initialize();
   SmartGripService().init();
 
   try {
@@ -65,69 +66,13 @@ class MyApp extends StatelessWidget {
               .clamp(minScaleFactor: 0.8, maxScaleFactor: 1.1),
         );
 
-        return _GlobalTextEditingShortcuts(
-          child: MediaQuery(
-            data: newMediaQueryData,
-            child: child!,
-          ),
+        return MediaQuery(
+          data: newMediaQueryData,
+          child: child!,
         );
       },
       // home: const LargeScreenHome(),
       home: const SplashPage(),
-    );
-  }
-}
-
-class _PasteIntoFocusedTextIntent extends Intent {
-  const _PasteIntoFocusedTextIntent();
-}
-
-class _GlobalTextEditingShortcuts extends StatelessWidget {
-  const _GlobalTextEditingShortcuts({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Shortcuts(
-      shortcuts: const <ShortcutActivator, Intent>{
-        SingleActivator(LogicalKeyboardKey.keyV, meta: true):
-            _PasteIntoFocusedTextIntent(),
-        SingleActivator(LogicalKeyboardKey.keyV, control: true):
-            _PasteIntoFocusedTextIntent(),
-      },
-      child: Actions(
-        actions: <Type, Action<Intent>>{
-          _PasteIntoFocusedTextIntent:
-              CallbackAction<_PasteIntoFocusedTextIntent>(
-            onInvoke: (_) {
-              _pasteIntoFocusedEditable();
-              return null;
-            },
-          ),
-        },
-        child: child,
-      ),
-    );
-  }
-
-  static Future<void> _pasteIntoFocusedEditable() async {
-    final focusContext = FocusManager.instance.primaryFocus?.context;
-    final editable = focusContext?.findAncestorStateOfType<EditableTextState>();
-    if (editable == null) return;
-
-    final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
-    final text = clipboard?.text;
-    if (text == null || text.isEmpty) return;
-
-    final value = editable.textEditingValue;
-    final selection = value.selection;
-    final replacementRange = selection.isValid
-        ? selection
-        : TextSelection.collapsed(offset: value.text.length);
-    editable.userUpdateTextEditingValue(
-      value.replaced(replacementRange, text),
-      SelectionChangedCause.keyboard,
     );
   }
 }
@@ -516,8 +461,9 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
     final user = _currentUser;
     final signedIn = _isLoggedIn && user != null;
     final title = signedIn ? user.username : '未登录';
+    final serverName = WatchTogetherService.activeServer?.name ?? '未连接服务器';
     final subtitle = signedIn
-        ? '${_roleLabel(user.role)} · ${WatchTogetherService.activeServer?.name ?? '当前服务器'}'
+        ? '${_roleLabel(user.role)} · $serverName'
         : '可以先浏览公开房间，登录后可创建和管理房间';
 
     return Material(

@@ -195,7 +195,7 @@ class AdminReviewItem {
   final String oauth2ProviderUserId;
   final String oauth2ProviderUsername;
   final String oauth2AvatarUrl;
-  final bool oauth2EmailVerified;
+  final bool oauth2EmailTrusted;
   final String webauthnCredentialId;
   final String webauthnCredentialName;
 
@@ -218,7 +218,7 @@ class AdminReviewItem {
     this.oauth2ProviderUserId = '',
     this.oauth2ProviderUsername = '',
     this.oauth2AvatarUrl = '',
-    this.oauth2EmailVerified = false,
+    this.oauth2EmailTrusted = false,
     this.webauthnCredentialId = '',
     this.webauthnCredentialName = '',
   });

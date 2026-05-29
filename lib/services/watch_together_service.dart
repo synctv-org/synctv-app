@@ -228,17 +228,6 @@ class WatchTogetherService {
     );
   }
 
-  static Future<void> sendVerificationEmail(String email) async {
-    await _domains.auth.sendVerificationEmail(email);
-  }
-
-  static Future<WUser> confirmEmail({
-    required String email,
-    required String token,
-  }) async {
-    return _domains.auth.confirmEmail(email: email, token: token);
-  }
-
   static Future<PublicSettingsInfo> getPublicSettings() async {
     return _domains.publicRooms.getPublicSettings();
   }
@@ -296,6 +285,10 @@ class WatchTogetherService {
     required String token,
   }) async {
     return _domains.account.confirmEmailBind(email: email, token: token);
+  }
+
+  static Future<WUser> unbindEmail() async {
+    return _domains.account.unbindEmail();
   }
 
   static Future<AccountPreferences> getAccountPreferences() async {

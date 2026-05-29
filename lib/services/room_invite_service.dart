@@ -1,4 +1,5 @@
 import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 
@@ -19,13 +20,13 @@ class RoomInviteService {
 
   static String createInviteLink(WRoom room) {
     final activeServer = WatchTogetherService.activeServer;
-    final endpoint =
-        activeServer?.activeEndpoint ?? WatchTogetherService.baseUrl;
-    final uri = Uri.parse(endpoint);
+    if (activeServer == null) {
+      throw SyncTvApiException('请先添加并连接服务器', statusCode: 400);
+    }
+    final uri = Uri.parse(activeServer.activeEndpoint);
     final query = <String, String>{
       'room_id': room.roomId,
-      if (activeServer != null && !activeServer.isPending)
-        'server_id': activeServer.serverId,
+      if (!activeServer.isPending) 'server_id': activeServer.serverId,
     };
     return uri.replace(path: linkPath, queryParameters: query).toString();
   }

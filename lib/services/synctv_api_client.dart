@@ -795,7 +795,6 @@ extension SyncTvModelMapping on SyncTvApiClient {
       role: user.role.value,
       status: user.status.value,
       createdAt: user.createdAt.toInt(),
-      emailVerified: user.emailVerified,
       isBanned: user.isBanned,
     );
   }

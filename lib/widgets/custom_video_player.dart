@@ -1553,12 +1553,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      clipBehavior: Clip.none,
+      useSafeArea: false,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          clipBehavior: Clip.antiAlias,
           decoration: const BoxDecoration(
             color: Color(0xFF1E1E2C),
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),

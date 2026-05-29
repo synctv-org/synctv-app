@@ -199,23 +199,6 @@ class SyncTvAuthDomainService {
     return _loginResponseToAuthResult(response);
   }
 
-  Future<void> sendVerificationEmail(String email) async {
-    await _api.emailService.sendVerificationEmail(
-      client.SendVerificationEmailRequest(email: email),
-    );
-  }
-
-  Future<WUser> confirmEmail({
-    required String email,
-    required String token,
-  }) async {
-    await _api.emailService.confirmEmail(
-      client.ConfirmEmailRequest(email: email, token: token),
-    );
-    final profile = await _api.user.getProfile(client.GetProfileRequest());
-    return _api.mapUser(profile.user);
-  }
-
   Future<String> requestPasswordReset(String email) async {
     final response = await _api.emailService.requestPasswordReset(
       client.RequestPasswordResetRequest(email: email),

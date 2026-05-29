@@ -58,6 +58,11 @@ class SyncTvAccountDomainService {
     return _api.mapUser(response.user);
   }
 
+  Future<WUser> unbindEmail() async {
+    final response = await _api.user.unbindEmail(client.UnbindEmailRequest());
+    return _api.mapUser(response.user);
+  }
+
   Future<AccountPreferences> getAccountPreferences() async {
     final response = await _api.user.getUserPreferences(
       client.GetUserPreferencesRequest(),

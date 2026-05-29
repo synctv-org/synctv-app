@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/models/realtime_event_log.dart';
+import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/services/realtime_event_log_preferences.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -12,6 +16,7 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/ios_style_switch.dart';
+import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 
 const Map<String, String> _mediaSourceLabels = {
   '': '全部来源',
@@ -20,6 +25,15 @@ const Map<String, String> _mediaSourceLabels = {
   'alist': 'Alist',
   'emby': 'Emby',
   'rtmp': 'RTMP',
+};
+
+const String _settingsObserveId = 'manage_room_settings';
+const String _membersObserveId = 'manage_room_members';
+const String _mediaObserveId = 'manage_playlist_items';
+const Set<String> _managementObserveIds = {
+  _settingsObserveId,
+  _membersObserveId,
+  _mediaObserveId,
 };
 
 const Set<String> _mediaSourcesWithProviderInstances = {
@@ -44,12 +58,82 @@ class _RoomSettingsSection {
   });
 }
 
+class _RealtimeWatchStats {
+  int observed = 0;
+  int changed = 0;
+  int errors = 0;
+  DateTime? lastSeenAt;
+  String lastKind = '等待';
+  String lastError = '';
+
+  int get total => observed + changed + errors;
+
+  void reset() {
+    observed = 0;
+    changed = 0;
+    errors = 0;
+    lastSeenAt = null;
+    lastKind = '等待';
+    lastError = '';
+  }
+
+  void record<T>(RoomResourceWatchEvent<T> event) {
+    lastSeenAt = DateTime.now();
+    switch (event.kind) {
+      case RoomResourceWatchKind.observed:
+        observed += 1;
+        lastKind = event.changed ? '已观测，有变更' : '已观测，无变更';
+        lastError = '';
+        break;
+      case RoomResourceWatchKind.changed:
+        changed += 1;
+        lastKind = '已推送快照';
+        lastError = '';
+        break;
+      case RoomResourceWatchKind.error:
+        errors += 1;
+        lastKind = '异常';
+        lastError = event.errorMessage;
+        break;
+    }
+  }
+}
+
+class _RealtimeResourceDebugInfo {
+  final String key;
+  final String title;
+  final IconData icon;
+  final String observeId;
+  final String version;
+  final bool loading;
+  final int localCount;
+  final String summary;
+  final Map<String, Object?> details;
+  final _RealtimeWatchStats stats;
+
+  const _RealtimeResourceDebugInfo({
+    required this.key,
+    required this.title,
+    required this.icon,
+    required this.observeId,
+    required this.version,
+    required this.loading,
+    required this.localCount,
+    required this.summary,
+    required this.details,
+    required this.stats,
+  });
+}
+
+enum _RealtimeDiagnosticsPane { overview, resources, events }
+
 class RoomSettingsPage extends StatefulWidget {
   final String roomId;
   final String roomName;
   final String creatorId;
   final String currentUserId;
   final WRoomSettings currentSettings;
+  final RoomRealtimeSession realtime;
 
   const RoomSettingsPage({
     super.key,
@@ -58,6 +142,7 @@ class RoomSettingsPage extends StatefulWidget {
     this.creatorId = '',
     this.currentUserId = '',
     required this.currentSettings,
+    required this.realtime,
   });
 
   @override
@@ -80,15 +165,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   final List<AdminRoomMember> _members = [];
   final List<RoomChatMessageInfo> _chatMessages = [];
   final List<IceServerInfo> _iceServers = [];
+  final List<RealtimeEventLogEntry> _realtimeEvents = [];
   final List<String> _mediaPlaylistStack = [];
   final List<String> _mediaTargetStack = [];
-  StreamSubscription<RoomResourceWatchEvent<WRoomSettings>>?
-      _settingsWatchSubscription;
-  StreamSubscription<RoomResourceWatchEvent<List<AdminRoomMember>>>?
-      _membersWatchSubscription;
-  StreamSubscription<RoomResourceWatchEvent<RoomMediaLibraryPage>>?
-      _mediaWatchSubscription;
+  StreamSubscription<RoomRealtimeMessage>? _realtimeMessageSubscription;
+  StreamSubscription<RealtimeEventLogEntry>? _realtimeEventSubscription;
+  StreamSubscription<void>? _realtimeReconnectSubscription;
   RoomMediaLibraryPage? _mediaPage;
+  final _RealtimeWatchStats _settingsWatchStats = _RealtimeWatchStats();
+  final _RealtimeWatchStats _membersWatchStats = _RealtimeWatchStats();
+  final _RealtimeWatchStats _mediaWatchStats = _RealtimeWatchStats();
   String _chatCursor = '';
   String _settingsWatchVersion = '';
   String _membersWatchVersion = '';
@@ -120,6 +206,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       client_enum.SortDirection.SORT_DIRECTION_DESC;
   common_enum.ReviewStatus _reviewStatusFilter =
       common_enum.ReviewStatus.REVIEW_STATUS_PENDING;
+  _RealtimeDiagnosticsPane _realtimePane = _RealtimeDiagnosticsPane.overview;
 
   bool _updatePassword = false;
   bool _allowGuestJoin = false;
@@ -155,6 +242,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _memberSearchController = TextEditingController();
     _reviewUserController = TextEditingController();
     _mediaSearchController = TextEditingController();
+    RealtimeEventLogPreferences.maxEntries.addListener(
+      _handleRealtimeLogMaxEntriesChanged,
+    );
+    RealtimeEventLogPreferences.load().then((_) {
+      if (mounted) _handleRealtimeLogMaxEntriesChanged();
+    });
     _applySettings(_settings);
     _loadStreams();
     _loadReviews();
@@ -164,14 +257,29 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _loadChatHistory();
     _loadIceServers();
     _loadCurrentUserIfNeeded();
+    _realtimeMessageSubscription =
+        widget.realtime.messages.listen(_handleRealtimeMessage);
+    _realtimeEventSubscription =
+        widget.realtime.events.listen(_handleRealtimeEvent);
+    _realtimeReconnectSubscription = widget.realtime.reconnects.listen((_) {
+      if (!mounted) return;
+      _startResourceWatches();
+    });
     _startResourceWatches();
   }
 
   @override
   void dispose() {
-    _settingsWatchSubscription?.cancel();
-    _membersWatchSubscription?.cancel();
-    _mediaWatchSubscription?.cancel();
+    RealtimeEventLogPreferences.maxEntries.removeListener(
+      _handleRealtimeLogMaxEntriesChanged,
+    );
+    _sendRealtime(
+        RoomRealtimeCodec.encodeUnobserveResource(_settingsObserveId));
+    _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_membersObserveId));
+    _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_mediaObserveId));
+    _realtimeMessageSubscription?.cancel();
+    _realtimeEventSubscription?.cancel();
+    _realtimeReconnectSubscription?.cancel();
     _tabController.dispose();
     _passwordController.dispose();
     _maxMembersController.dispose();
@@ -211,75 +319,182 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   void _startSettingsWatch() {
-    _settingsWatchSubscription?.cancel();
-    _settingsWatchSubscription = WatchTogetherService.watchRoomSettings(
-      widget.roomId,
-      version: _settingsWatchVersion,
-    ).listen(
-      _handleSettingsWatchEvent,
-      onError: (error) => _scheduleWatchReconnect(error, _startSettingsWatch),
-      cancelOnError: true,
+    _sendRealtime(
+      RoomRealtimeCodec.encodeRoomSettingsObservation(
+        observeId: _settingsObserveId,
+        version: _settingsWatchVersion,
+      ),
     );
   }
 
   void _startMembersWatch() {
-    _membersWatchSubscription?.cancel();
-    _membersWatchSubscription = WatchTogetherService.watchRoomMembers(
-      widget.roomId,
-      version: _membersWatchVersion,
-    ).listen(
-      _handleMembersWatchEvent,
-      onError: (error) => _scheduleWatchReconnect(error, _startMembersWatch),
-      cancelOnError: true,
+    _sendRealtime(
+      RoomRealtimeCodec.encodeRoomMembersObservation(
+        observeId: _membersObserveId,
+        version: _membersWatchVersion,
+        page: _membersPage,
+        pageSize: _membersPageSize,
+        search: _memberSearchController.text.trim(),
+        role: _memberRoleFilter,
+        sortBy: _memberSortBy,
+        sortDirection: _memberSortDirection,
+      ),
     );
+  }
+
+  void _refreshMembersRealtimeQuery() {
+    _membersWatchVersion = '';
+    _startMembersWatch();
   }
 
   void _startMediaWatch() {
-    _mediaWatchSubscription?.cancel();
-    _mediaWatchSubscription = WatchTogetherService.watchPlaylistItems(
-      widget.roomId,
-      version: _mediaWatchVersion,
-      playlistId: _currentPlaylistId,
-      target: _mediaTarget,
-      search: _mediaSearchController.text.trim(),
-      sourceProvider: _mediaSourceProvider,
-      providerInstanceName: _mediaProviderInstanceName,
-      sortBy: _mediaSortBy,
-      sortDirection: _mediaSortDirection,
-      availability: _mediaAvailability,
-    ).listen(
-      _handleMediaWatchEvent,
-      onError: (error) => _scheduleWatchReconnect(error, _startMediaWatch),
-      cancelOnError: true,
+    _sendRealtime(
+      RoomRealtimeCodec.encodePlaylistObservation(
+        observeId: _mediaObserveId,
+        version: _mediaWatchVersion,
+        playlistId: _currentPlaylistId,
+        target: _mediaTarget,
+        page: 1,
+        pageSize: 100,
+        search: _mediaSearchController.text.trim(),
+        sourceProvider: _mediaSourceProvider,
+        providerInstanceName: _mediaProviderInstanceName,
+        sortBy: _mediaSortBy,
+        sortDirection: _mediaSortDirection,
+        availability: _mediaAvailability,
+      ),
     );
   }
 
-  void _scheduleWatchReconnect(Object error, VoidCallback reconnect) {
-    final delay = WatchTogetherService.resourceWatchReconnectDelay(error);
-    if (delay == null) {
-      debugPrint(
-          'Room settings watch stopped after non-retryable error: $error');
+  void _sendRealtime(List<int> bytes) {
+    if (bytes.isEmpty) return;
+    widget.realtime.send(bytes);
+  }
+
+  void _handleRealtimeEvent(RealtimeEventLogEntry entry) {
+    final payload = entry.payload;
+    final observeId =
+        payload is Map ? payload['observe_id']?.toString() ?? '' : '';
+    if (!_managementObserveIds.contains(observeId)) return;
+    _appendRealtimeEvent(entry);
+  }
+
+  void _handleRealtimeMessage(RoomRealtimeMessage message) {
+    switch (message.resourceObserveId) {
+      case _settingsObserveId:
+        _handleRealtimeSettingsMessage(message);
+        break;
+      case _membersObserveId:
+        _handleRealtimeMembersMessage(message);
+        break;
+      case _mediaObserveId:
+        _handleRealtimeMediaMessage(message);
+        break;
+    }
+  }
+
+  void _handleRealtimeSettingsMessage(RoomRealtimeMessage message) {
+    if (message.kind == RoomRealtimeMessageKind.checkStatus) {
+      _handleSettingsWatchEvent(
+        RoomResourceWatchEvent<WRoomSettings>.observed(
+          version: message.resourceVersion,
+          changed: message.resourceChanged,
+        ),
+      );
       return;
     }
-    Future.delayed(delay, () {
-      if (!mounted) return;
-      reconnect();
-    });
+    if (message.kind == RoomRealtimeMessageKind.roomSettings) {
+      _handleSettingsWatchEvent(
+        RoomResourceWatchEvent<WRoomSettings>.changed(
+          version: message.resourceVersion,
+          snapshot: message.roomSettings,
+        ),
+      );
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.error) {
+      _handleSettingsWatchEvent(
+        RoomResourceWatchEvent<WRoomSettings>.error(
+          message: message.error?.message ?? '',
+          code: message.error?.code ?? 0,
+        ),
+      );
+    }
+  }
+
+  void _handleRealtimeMembersMessage(RoomRealtimeMessage message) {
+    if (message.kind == RoomRealtimeMessageKind.checkStatus) {
+      _handleMembersWatchEvent(
+        RoomResourceWatchEvent<List<AdminRoomMember>>.observed(
+          version: message.resourceVersion,
+          changed: message.resourceChanged,
+        ),
+      );
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.viewerCount) {
+      _handleMembersWatchEvent(
+        RoomResourceWatchEvent<List<AdminRoomMember>>.changed(
+          version: message.resourceVersion,
+          snapshot: message.adminMembers,
+        ),
+        total: message.resourceTotal,
+      );
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.error) {
+      _handleMembersWatchEvent(
+        RoomResourceWatchEvent<List<AdminRoomMember>>.error(
+          message: message.error?.message ?? '',
+          code: message.error?.code ?? 0,
+        ),
+      );
+    }
+  }
+
+  void _handleRealtimeMediaMessage(RoomRealtimeMessage message) {
+    if (message.kind == RoomRealtimeMessageKind.checkStatus) {
+      _handleMediaWatchEvent(
+        RoomResourceWatchEvent<RoomMediaLibraryPage>.observed(
+          version: message.resourceVersion,
+          changed: message.resourceChanged,
+        ),
+      );
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.movies) {
+      _handleMediaWatchEvent(
+        RoomResourceWatchEvent<RoomMediaLibraryPage>.changed(
+          version: message.resourceVersion,
+          snapshot: message.mediaLibrary,
+        ),
+      );
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.error) {
+      _handleMediaWatchEvent(
+        RoomResourceWatchEvent<RoomMediaLibraryPage>.error(
+          message: message.error?.message ?? '',
+          code: message.error?.code ?? 0,
+        ),
+      );
+    }
   }
 
   void _handleSettingsWatchEvent(
     RoomResourceWatchEvent<WRoomSettings> event,
   ) {
     if (!mounted) return;
+    _settingsWatchStats.record(event);
     if (event.version.isNotEmpty) _settingsWatchVersion = event.version;
     switch (event.kind) {
       case RoomResourceWatchKind.observed:
-        if (event.changed) _refreshSettingsFromServer();
+        setState(() {});
         break;
       case RoomResourceWatchKind.changed:
         final snapshot = event.snapshot;
         if (snapshot == null) {
-          _refreshSettingsFromServer();
+          MessageUtils.showError(context, '房间设置快照为空');
           return;
         }
         setState(() {
@@ -297,24 +512,27 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   void _handleMembersWatchEvent(
-    RoomResourceWatchEvent<List<AdminRoomMember>> event,
-  ) {
+    RoomResourceWatchEvent<List<AdminRoomMember>> event, {
+    int? total,
+  }) {
     if (!mounted) return;
+    _membersWatchStats.record(event);
     if (event.version.isNotEmpty) _membersWatchVersion = event.version;
     switch (event.kind) {
       case RoomResourceWatchKind.observed:
-        if (event.changed) _loadMembers();
+        setState(() {});
         break;
       case RoomResourceWatchKind.changed:
         final snapshot = event.snapshot;
         if (snapshot == null) {
-          _loadMembers();
+          MessageUtils.showError(context, '成员列表快照为空');
           return;
         }
         setState(() {
           _members
             ..clear()
             ..addAll(snapshot);
+          _membersTotal = total ?? snapshot.length;
         });
         break;
       case RoomResourceWatchKind.error:
@@ -330,15 +548,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     RoomResourceWatchEvent<RoomMediaLibraryPage> event,
   ) {
     if (!mounted) return;
+    _mediaWatchStats.record(event);
     if (event.version.isNotEmpty) _mediaWatchVersion = event.version;
     switch (event.kind) {
       case RoomResourceWatchKind.observed:
-        if (event.changed) _loadMediaLibrary();
+        setState(() {});
         break;
       case RoomResourceWatchKind.changed:
         final snapshot = event.snapshot;
         if (snapshot == null) {
-          _loadMediaLibrary();
+          MessageUtils.showError(context, '媒体列表快照为空');
           return;
         }
         setState(() => _mediaPage = snapshot);
@@ -352,18 +571,23 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _refreshSettingsFromServer() async {
-    try {
-      final settings = await WatchTogetherService.getRoomSettings(
-        widget.roomId,
-      );
-      if (!mounted) return;
-      setState(() {
-        _settings = settings;
-        _applySettings(settings);
-      });
-    } catch (e) {
-      if (mounted) MessageUtils.showError(context, '刷新房间设置失败: $e');
+  void _appendRealtimeEvent(RealtimeEventLogEntry entry) {
+    if (!mounted) return;
+    setState(() {
+      _realtimeEvents.add(entry);
+      _trimRealtimeEvents();
+    });
+  }
+
+  void _handleRealtimeLogMaxEntriesChanged() {
+    if (!mounted) return;
+    setState(_trimRealtimeEvents);
+  }
+
+  void _trimRealtimeEvents() {
+    final maxEntries = RealtimeEventLogPreferences.maxEntries.value;
+    if (_realtimeEvents.length > maxEntries) {
+      _realtimeEvents.removeRange(0, _realtimeEvents.length - maxEntries);
     }
   }
 
@@ -554,6 +778,30 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _mediaWatchVersion = '';
     _startMediaWatch();
     await _loadMediaLibrary(refresh: refresh);
+  }
+
+  void _resetRealtimeDiagnostics() {
+    setState(() {
+      _settingsWatchVersion = '';
+      _membersWatchVersion = '';
+      _mediaWatchVersion = '';
+      _settingsWatchStats.reset();
+      _membersWatchStats.reset();
+      _mediaWatchStats.reset();
+      _realtimeEvents.clear();
+    });
+    _startResourceWatches();
+  }
+
+  Future<void> _refreshRealtimeDiagnostics() async {
+    _resetRealtimeDiagnostics();
+  }
+
+  Future<void> _copyRealtimeDiagnostics() async {
+    final payload = _realtimeDebugPayload();
+    const encoder = JsonEncoder.withIndent('  ');
+    await Clipboard.setData(ClipboardData(text: encoder.convert(payload)));
+    if (mounted) MessageUtils.showSuccess(context, '实时诊断数据已复制');
   }
 
   Future<void> _loadMediaProviderInstances() async {
@@ -2649,56 +2897,593 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildRealtimeTab(ThemeData theme, bool isDark) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        _settingsWatchVersion = '';
-        _membersWatchVersion = '';
-        _mediaWatchVersion = '';
-        _startResourceWatches();
-        await Future.wait([
-          _refreshSettingsFromServer(),
-          _loadMembers(),
-          _loadMediaLibrary(),
-        ]);
-      },
-      child: ListView(
-        padding: const EdgeInsets.only(bottom: 32, top: 12),
-        children: [
-          _buildToolbar(
-            title: '实时同步',
-            count: 3,
-            loading: _membersLoading || _mediaLoading || _isSaving,
-            onRefresh: () {
-              _settingsWatchVersion = '';
-              _membersWatchVersion = '';
-              _mediaWatchVersion = '';
-              _startResourceWatches();
+    final resources = _realtimeResources();
+    final loading = _membersLoading || _mediaLoading || _isSaving;
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        _buildToolbar(
+          title: '实时诊断',
+          count: resources.length,
+          loading: loading,
+          onRefresh: _refreshRealtimeDiagnostics,
+          theme: theme,
+          action: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton.outlined(
+                tooltip: '复制诊断数据',
+                onPressed: _copyRealtimeDiagnostics,
+                icon: const Icon(Icons.copy_all_rounded),
+              ),
+              const SizedBox(width: 6),
+              IconButton.outlined(
+                tooltip: '重置监听',
+                onPressed: loading ? null : _resetRealtimeDiagnostics,
+                icon: const Icon(Icons.restart_alt_rounded),
+              ),
+            ],
+          ),
+        ),
+        _buildRealtimePaneSelector(theme),
+        Expanded(
+          child: _buildRealtimePaneBody(resources, theme, isDark),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRealtimePaneSelector(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 430;
+          return SizedBox(
+            width: compact ? double.infinity : null,
+            child: SegmentedButton<_RealtimeDiagnosticsPane>(
+              showSelectedIcon: false,
+              selected: {_realtimePane},
+              style: ButtonStyle(
+                visualDensity: compact ? VisualDensity.compact : null,
+                textStyle: WidgetStatePropertyAll(
+                  theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              segments: const [
+                ButtonSegment(
+                  value: _RealtimeDiagnosticsPane.overview,
+                  icon: Icon(Icons.dashboard_rounded),
+                  label: Text('概览'),
+                ),
+                ButtonSegment(
+                  value: _RealtimeDiagnosticsPane.resources,
+                  icon: Icon(Icons.storage_rounded),
+                  label: Text('资源'),
+                ),
+                ButtonSegment(
+                  value: _RealtimeDiagnosticsPane.events,
+                  icon: Icon(Icons.receipt_long_rounded),
+                  label: Text('事件'),
+                ),
+              ],
+              onSelectionChanged: (selection) {
+                setState(() => _realtimePane = selection.single);
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRealtimePaneBody(
+    List<_RealtimeResourceDebugInfo> resources,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    switch (_realtimePane) {
+      case _RealtimeDiagnosticsPane.overview:
+        return RefreshIndicator(
+          onRefresh: _refreshRealtimeDiagnostics,
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 32),
+            children: [
+              _buildRealtimeOverview(resources, theme, isDark),
+              _buildRealtimeSnapshot(resources, theme, isDark),
+            ],
+          ),
+        );
+      case _RealtimeDiagnosticsPane.resources:
+        return RefreshIndicator(
+          onRefresh: _refreshRealtimeDiagnostics,
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 32),
+            children: [
+              _buildRealtimeDetails(resources, theme, isDark),
+            ],
+          ),
+        );
+      case _RealtimeDiagnosticsPane.events:
+        return _buildRoomSettingsRealtimeEvents(theme);
+    }
+  }
+
+  Widget _buildRoomSettingsRealtimeEvents(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: theme.dividerColor.withValues(alpha: 0.55),
+          ),
+        ),
+        child: RealtimeEventLogView(
+          events: _realtimeEvents,
+          padding: const EdgeInsets.all(12),
+          onClear: () => setState(_realtimeEvents.clear),
+          onMaxEntriesChanged: (_) => setState(_trimRealtimeEvents),
+          emptyText: '监听请求和资源事件会显示在这里',
+        ),
+      ),
+    );
+  }
+
+  List<_RealtimeResourceDebugInfo> _realtimeResources() {
+    final mediaPage = _mediaPage;
+    final onlineMembers = _members.where((member) => member.isOnline).length;
+    final mediaEntries = mediaPage?.entries.length ?? 0;
+    return [
+      _RealtimeResourceDebugInfo(
+        key: 'settings',
+        title: '房间设置',
+        icon: Icons.tune_rounded,
+        observeId: 'room_settings',
+        version: _settingsWatchVersion,
+        loading: _isSaving,
+        localCount: 1,
+        summary: _isSaving ? '正在保存设置' : '监听设置变更',
+        stats: _settingsWatchStats,
+        details: {
+          'require_password': _settings.requirePassword,
+          'allow_guest_join': _settings.allowGuestJoin,
+          'allow_auto_join': _settings.allowAutoJoin,
+          'require_approval': _settings.requireApproval,
+          'chat_enabled': _settings.chatEnabled,
+          'danmaku_enabled': _settings.danmakuEnabled,
+          'max_members': _settings.maxMembers,
+          'member_permissions': _settings.effectiveMemberPermissions,
+          'guest_permissions': _settings.effectiveGuestPermissions,
+        },
+      ),
+      _RealtimeResourceDebugInfo(
+        key: 'members',
+        title: '成员列表',
+        icon: Icons.group_rounded,
+        observeId: 'room_members',
+        version: _membersWatchVersion,
+        loading: _membersLoading,
+        localCount: _members.length,
+        summary: _membersLoading
+            ? '正在刷新成员'
+            : '$onlineMembers 在线 / $_membersTotal 总数',
+        stats: _membersWatchStats,
+        details: {
+          'page_count': _members.length,
+          'total': _membersTotal,
+          'online': onlineMembers,
+          'page': _membersPage,
+          'page_size': _membersPageSize,
+          'role_filter': _memberRoleFilter?.name ?? '',
+          'sort_by': _memberSortBy.name,
+          'sort_direction': _memberSortDirection.name,
+          'search': _memberSearchController.text.trim(),
+        },
+      ),
+      _RealtimeResourceDebugInfo(
+        key: 'media',
+        title: '媒体列表',
+        icon: Icons.video_library_rounded,
+        observeId: 'playlist_items',
+        version: _mediaWatchVersion,
+        loading: _mediaLoading,
+        localCount: mediaEntries,
+        summary: mediaPage == null
+            ? '等待媒体快照'
+            : '${mediaPage.folderCount} 目录 / ${mediaPage.fileCount} 媒体',
+        stats: _mediaWatchStats,
+        details: {
+          'entries': mediaEntries,
+          'total': mediaPage?.total ?? 0,
+          'folder_count': mediaPage?.folderCount ?? 0,
+          'file_count': mediaPage?.fileCount ?? 0,
+          'playlist_id': _currentPlaylistId,
+          'target': _mediaTarget,
+          'source_provider': _mediaSourceProvider,
+          'provider_instance_name': _mediaProviderInstanceName,
+          'availability': _mediaAvailability.name,
+          'sort_by': _mediaSortBy.name,
+          'sort_direction': _mediaSortDirection.name,
+          'search': _mediaSearchController.text.trim(),
+        },
+      ),
+    ];
+  }
+
+  Map<String, Object?> _realtimeDebugPayload() {
+    return {
+      'room_id': widget.roomId,
+      'room_name': widget.roomName,
+      'captured_at': DateTime.now().toIso8601String(),
+      'events': _realtimeEvents.map((event) => event.toJson()).toList(),
+      'resources': [
+        for (final resource in _realtimeResources())
+          {
+            'key': resource.key,
+            'title': resource.title,
+            'observe_id': resource.observeId,
+            'version': resource.version,
+            'loading': resource.loading,
+            'local_count': resource.localCount,
+            'summary': resource.summary,
+            'stats': {
+              'observed': resource.stats.observed,
+              'changed': resource.stats.changed,
+              'errors': resource.stats.errors,
+              'last_kind': resource.stats.lastKind,
+              'last_seen_at': resource.stats.lastSeenAt?.toIso8601String(),
+              'last_error': resource.stats.lastError,
             },
-            theme: theme,
+            'details': resource.details,
+          },
+      ],
+    };
+  }
+
+  Widget _buildRealtimeOverview(
+    List<_RealtimeResourceDebugInfo> resources,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final watched = resources.where((item) => item.version.isNotEmpty).length;
+    final eventCount = _realtimeEvents.length;
+    final outgoingCount =
+        _realtimeEvents.where((event) => event.direction == 'out').length;
+    final incomingCount = eventCount - outgoingCount;
+    final errorCount =
+        resources.fold<int>(0, (total, item) => total + item.stats.errors);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 620;
+          final cards = [
+            _buildRealtimeMetricCard(
+              theme,
+              isDark,
+              icon: Icons.sensors_rounded,
+              label: '监听资源',
+              value: '$watched/${resources.length}',
+              tone: watched == resources.length ? Colors.green : Colors.orange,
+            ),
+            _buildRealtimeMetricCard(
+              theme,
+              isDark,
+              icon: Icons.swap_vert_rounded,
+              label: '事件',
+              value: eventCount.toString(),
+              tone: theme.colorScheme.primary,
+            ),
+            _buildRealtimeMetricCard(
+              theme,
+              isDark,
+              icon: Icons.compare_arrows_rounded,
+              label: '发出 / 收到',
+              value: '$outgoingCount / $incomingCount',
+              tone: Colors.blueAccent,
+            ),
+            _buildRealtimeMetricCard(
+              theme,
+              isDark,
+              icon: Icons.error_outline_rounded,
+              label: '异常',
+              value: errorCount.toString(),
+              tone: errorCount == 0 ? Colors.green : Colors.redAccent,
+            ),
+          ];
+          if (compact) {
+            return Column(
+              children: [
+                for (var i = 0; i < cards.length; i++) ...[
+                  cards[i],
+                  if (i != cards.length - 1) const SizedBox(height: 8),
+                ],
+              ],
+            );
+          }
+          return Row(
+            children: [
+              for (var i = 0; i < cards.length; i++) ...[
+                Expanded(child: cards[i]),
+                if (i != cards.length - 1) const SizedBox(width: 10),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRealtimeMetricCard(
+    ThemeData theme,
+    bool isDark, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color tone,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 78),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: tone.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: tone, size: 21),
           ),
-          _buildRealtimeStatusTile(
-            theme,
-            isDark,
-            icon: Icons.tune_rounded,
-            title: '房间设置',
-            version: _settingsWatchVersion,
-            subtitle: _isSaving ? '正在保存设置' : '监听设置变更',
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: theme.hintColor, fontSize: 12),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
           ),
-          _buildRealtimeStatusTile(
-            theme,
-            isDark,
-            icon: Icons.group_rounded,
-            title: '成员列表',
-            version: _membersWatchVersion,
-            subtitle: _membersLoading ? '正在刷新成员' : '监听成员变更',
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRealtimeSnapshot(
+    List<_RealtimeResourceDebugInfo> resources,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
           ),
-          _buildRealtimeStatusTile(
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.data_object_rounded,
+                    color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '运行快照',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildDebugLine(theme, '房间', widget.roomName),
+            _buildDebugLine(theme, '房间 ID', widget.roomId),
+            _buildDebugLine(
+              theme,
+              '当前目录',
+              _mediaScopeLabel(_mediaPage),
+            ),
+            _buildDebugLine(
+              theme,
+              '监听状态',
+              resources
+                  .map((item) =>
+                      '${item.observeId}:${item.version.isEmpty ? 'pending' : item.version}')
+                  .join('  '),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRealtimeDetails(
+    List<_RealtimeResourceDebugInfo> resources,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final columns = width >= 1120 ? 3 : (width >= 720 ? 2 : 1);
+          const spacing = 10.0;
+          final itemWidth = (width - spacing * (columns - 1)) / columns;
+          return Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (final resource in resources)
+                SizedBox(
+                  width: itemWidth,
+                  child: _buildRealtimeResourceCard(
+                    resource,
+                    theme,
+                    isDark,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRealtimeResourceCard(
+    _RealtimeResourceDebugInfo resource,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final ready = resource.version.isNotEmpty;
+    final tone = resource.stats.errors > 0
+        ? Colors.redAccent
+        : ready
+            ? Colors.green
+            : Colors.orange;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(resource.icon, color: tone, size: 21),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      resource.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      resource.observeId,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: theme.hintColor, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              if (resource.loading)
+                const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Icon(
+                  ready ? Icons.check_circle_rounded : Icons.pending_rounded,
+                  color: tone,
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _buildDebugLine(
+              theme, '版本', resource.version.isEmpty ? '等待' : resource.version),
+          _buildDebugLine(theme, '本地条目', resource.localCount.toString()),
+          _buildDebugLine(theme, '状态', resource.summary),
+          _buildDebugLine(theme, '最近事件', resource.stats.lastKind),
+          _buildDebugLine(
             theme,
-            isDark,
-            icon: Icons.video_library_rounded,
-            title: '媒体列表',
-            version: _mediaWatchVersion,
-            subtitle: _mediaLoading ? '正在刷新媒体' : '监听媒体变更',
+            '事件计数',
+            'observed ${resource.stats.observed} / changed ${resource.stats.changed} / errors ${resource.stats.errors}',
+          ),
+          _buildDebugLine(
+            theme,
+            '最后时间',
+            _formatDateTime(resource.stats.lastSeenAt),
+          ),
+          if (resource.stats.lastError.isNotEmpty)
+            _buildDebugLine(theme, '错误', resource.stats.lastError),
+          const Divider(height: 20),
+          ...resource.details.entries.map(
+            (entry) => _buildDebugLine(
+              theme,
+              entry.key,
+              _debugValue(entry.value),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDebugLine(ThemeData theme, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 104,
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: theme.hintColor, fontSize: 12),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SelectableText(
+              value.isEmpty ? '-' : value,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -2837,6 +3622,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             onPressed: () {
                               _memberSearchController.clear();
                               setState(() => _membersPage = 1);
+                              _refreshMembersRealtimeQuery();
                               _loadMembers();
                             },
                             icon: const Icon(Icons.close_rounded),
@@ -2847,6 +3633,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   ),
                   onSubmitted: (_) {
                     setState(() => _membersPage = 1);
+                    _refreshMembersRealtimeQuery();
                     _loadMembers();
                   },
                 ),
@@ -2893,6 +3680,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             _memberRoleFilter = value;
                             _membersPage = 1;
                           });
+                          _refreshMembersRealtimeQuery();
                           _loadMembers();
                         },
                       ),
@@ -2930,6 +3718,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             _memberSortBy = value;
                             _membersPage = 1;
                           });
+                          _refreshMembersRealtimeQuery();
                           _loadMembers();
                         },
                       ),
@@ -2944,6 +3733,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                               : client_enum.SortDirection.SORT_DIRECTION_ASC;
                           _membersPage = 1;
                         });
+                        _refreshMembersRealtimeQuery();
                         _loadMembers();
                       },
                       icon: Icon(
@@ -2981,6 +3771,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ? null
                       : () {
                           setState(() => _membersPage -= 1);
+                          _refreshMembersRealtimeQuery();
                           _loadMembers();
                         },
                 ),
@@ -2991,6 +3782,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ? null
                       : () {
                           setState(() => _membersPage += 1);
+                          _refreshMembersRealtimeQuery();
                           _loadMembers();
                         },
                 ),
@@ -3017,17 +3809,43 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     Widget? action,
   }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 8, 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '$title · $count',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-          ),
-          if (action != null) action,
-          IconButton(
+      padding: const EdgeInsets.fromLTRB(12, 0, 8, 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 430;
+          final titleWidget = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  count.toString(),
+                  style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          );
+          final refresh = IconButton(
             tooltip: '刷新',
             onPressed: loading ? null : onRefresh,
             icon: loading
@@ -3037,8 +3855,35 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.refresh),
-          ),
-        ],
+          );
+          final actions = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (action != null) action,
+              refresh,
+            ],
+          );
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                titleWidget,
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: actions,
+                ),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: titleWidget),
+              actions,
+            ],
+          );
+        },
       ),
     );
   }
@@ -3433,57 +4278,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
-  Widget _buildRealtimeStatusTile(
-    ThemeData theme,
-    bool isDark, {
-    required IconData icon,
-    required String title,
-    required String version,
-    required String subtitle,
-  }) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  version.isEmpty
-                      ? '$subtitle · 尚未收到版本'
-                      : '$subtitle · v$version',
-                  style: TextStyle(color: theme.hintColor, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            version.isEmpty
-                ? Icons.sync_problem_rounded
-                : Icons.check_circle_rounded,
-            color: version.isEmpty ? Colors.orange : Colors.green,
-          ),
-        ],
-      ),
-    );
-  }
-
   String _mediaSubtitle(WMovie entry) {
     if (entry.id.startsWith('pl_')) {
       final mode = entry.metadata['is_dynamic'] == true ? '动态播放列表' : '播放列表';
@@ -3699,6 +4493,21 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         '${time.minute.toString().padLeft(2, '0')}';
   }
 
+  String _formatDateTime(DateTime? value) {
+    if (value == null) return '等待事件';
+    return '${value.hour.toString().padLeft(2, '0')}:'
+        '${value.minute.toString().padLeft(2, '0')}:'
+        '${value.second.toString().padLeft(2, '0')}';
+  }
+
+  String _debugValue(Object? value) {
+    if (value == null) return '';
+    if (value is String) return value;
+    if (value is Iterable) return value.join(', ');
+    if (value is Map) return const JsonEncoder.withIndent('  ').convert(value);
+    return value.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -3795,18 +4604,30 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildTopTabs(ThemeData theme) {
+    final compact = MediaQuery.sizeOf(context).width < 430;
     return Material(
       color: theme.colorScheme.surface.withValues(alpha: 0.92),
       child: TabBar(
         controller: _tabController,
         isScrollable: true,
         tabAlignment: TabAlignment.start,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 12),
+        labelPadding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16),
         indicatorSize: TabBarIndicatorSize.label,
         tabs: _sections
             .map((section) => Tab(
-                  icon: Icon(section.icon),
-                  text: section.label,
+                  height: compact ? 44 : 64,
+                  icon: compact ? null : Icon(section.icon),
+                  child: compact
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(section.icon, size: 18),
+                            const SizedBox(width: 6),
+                            Text(section.label),
+                          ],
+                        )
+                      : Text(section.label),
                 ))
             .toList(growable: false),
       ),

@@ -7,7 +7,7 @@ import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 class SyncTvRuntimeService {
   SyncTvRuntimeService() : session = SyncTvSession() {
     sessionStore = SyncTvSessionStore(session);
-    _api = _createClient(SyncTvSessionStore.defaultBaseUrl);
+    _api = _createClient(SyncTvSessionStore.initialClientBaseUrl);
   }
 
   final SyncTvSession session;

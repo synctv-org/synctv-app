@@ -1005,7 +1005,7 @@ class SyncTvAdminDomainService {
         'Issuer ${review.oauth2ProviderIssuer}',
       if (review.oauth2AvatarUrl.isNotEmpty) '头像 ${review.oauth2AvatarUrl}',
       if (review.oauth2Provider.isNotEmpty)
-        'OAuth2 邮箱${review.oauth2EmailVerified ? '已验证' : '未验证'}',
+        'OAuth2 邮箱${review.oauth2EmailTrusted ? '可信' : '未信任'}',
       if (review.webauthnCredentialName.isNotEmpty)
         'Passkey ${review.webauthnCredentialName}',
       if (review.webauthnCredentialId.isNotEmpty)
@@ -1030,7 +1030,7 @@ class SyncTvAdminDomainService {
       oauth2ProviderUserId: review.oauth2ProviderUserId,
       oauth2ProviderUsername: review.oauth2ProviderUsername,
       oauth2AvatarUrl: review.oauth2AvatarUrl,
-      oauth2EmailVerified: review.oauth2EmailVerified,
+      oauth2EmailTrusted: review.oauth2EmailTrusted,
       webauthnCredentialId: review.webauthnCredentialId,
       webauthnCredentialName: review.webauthnCredentialName,
     );

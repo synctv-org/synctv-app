@@ -283,6 +283,17 @@ class SyncTvUserApi {
     );
   }
 
+  Future<client.UnbindEmailResponse> unbindEmail(
+    client.UnbindEmailRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/user/email/unbind',
+      client.UnbindEmailResponse.create,
+      body: request,
+    );
+  }
+
   Future<client.StartOpaquePasswordUpdateResponse> startOpaquePasswordUpdate(
     client.StartOpaquePasswordUpdateRequest request,
   ) {
@@ -1032,30 +1043,6 @@ class SyncTvEmailApi {
   SyncTvEmailApi._(this._api);
 
   final SyncTvApiClient _api;
-
-  Future<client.SendVerificationEmailResponse> sendVerificationEmail(
-    client.SendVerificationEmailRequest request,
-  ) {
-    return _api._send(
-      'POST',
-      '/api/email/verify/send',
-      client.SendVerificationEmailResponse.create,
-      auth: false,
-      body: request,
-    );
-  }
-
-  Future<client.ConfirmEmailResponse> confirmEmail(
-    client.ConfirmEmailRequest request,
-  ) {
-    return _api._send(
-      'POST',
-      '/api/email/verify/confirm',
-      client.ConfirmEmailResponse.create,
-      auth: _api.session.hasAccessToken,
-      body: request,
-    );
-  }
 
   Future<client.RequestPasswordResetResponse> requestPasswordReset(
     client.RequestPasswordResetRequest request,

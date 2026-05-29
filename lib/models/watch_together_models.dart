@@ -7,7 +7,6 @@ class WUser {
   final int updatedAt;
   final int status;
   final int onlineCount;
-  final bool emailVerified;
   final bool isBanned;
   final int bannedAt;
   final String bannedBy;
@@ -22,7 +21,6 @@ class WUser {
     this.updatedAt = 0,
     this.status = 0,
     this.onlineCount = 0,
-    this.emailVerified = false,
     this.isBanned = false,
     this.bannedAt = 0,
     this.bannedBy = '',
@@ -30,8 +28,6 @@ class WUser {
   });
 
   bool get hasEmail => email != null && email!.trim().isNotEmpty;
-
-  bool get hasVerifiedEmail => hasEmail && emailVerified;
 }
 
 class WRoom {

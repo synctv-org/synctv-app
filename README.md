@@ -72,8 +72,8 @@ SyncTV 是一款跨平台的视频同步观看应用，允许用户创建或加�
 
 ### 2. 获取代码
 ```bash
-git clone https://github.com/TOM88812/SyncTV_APP.git
-cd synctv_app
+git clone https://github.com/synctv-org/synctv-app.git
+cd synctv-app
 ```
 
 ### 3. 更新 protobuf 生成代码

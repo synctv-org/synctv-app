@@ -29,6 +29,8 @@ class RoomRealtimeConnection {
   static RoomRealtimeConnection connect(
     String roomId, {
     Iterable<List<int>> initialMessages = const [],
+    void Function(List<int> bytes)? onOutgoing,
+    void Function(Uint8List bytes)? onIncoming,
   }) {
     late final WebSocket socket;
     StreamSubscription<List<int>>? outgoingSubscription;
@@ -46,7 +48,9 @@ class RoomRealtimeConnection {
             final message = WatchTogetherService.decodeRealtimeMessageJson(
               frame,
             );
-            incoming.add(Uint8List.fromList(message.writeToBuffer()));
+            final bytes = Uint8List.fromList(message.writeToBuffer());
+            onIncoming?.call(bytes);
+            incoming.add(bytes);
           } catch (error, stackTrace) {
             incoming.addError(error, stackTrace);
           }
@@ -54,9 +58,9 @@ class RoomRealtimeConnection {
         onError: incoming.addError,
         onDone: incoming.close,
       );
-      outgoingSubscription = outgoing.stream
-          .where((bytes) => bytes.isNotEmpty)
-          .listen((bytes) {
+      outgoingSubscription =
+          outgoing.stream.where((bytes) => bytes.isNotEmpty).listen((bytes) {
+        onOutgoing?.call(bytes);
         final message = client.ClientMessage.fromBuffer(bytes);
         socket.add(WatchTogetherService.encodeRealtimeMessageJson(message));
       });

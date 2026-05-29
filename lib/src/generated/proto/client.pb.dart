@@ -33,7 +33,6 @@ class User extends $pb.GeneratedMessage {
     $0.UserRole? role,
     $0.UserStatus? status,
     $fixnum.Int64? createdAt,
-    $core.bool? emailVerified,
     $core.bool? isBanned,
   }) {
     final result = create();
@@ -43,7 +42,6 @@ class User extends $pb.GeneratedMessage {
     if (role != null) result.role = role;
     if (status != null) result.status = status;
     if (createdAt != null) result.createdAt = createdAt;
-    if (emailVerified != null) result.emailVerified = emailVerified;
     if (isBanned != null) result.isBanned = isBanned;
     return result;
   }
@@ -69,8 +67,7 @@ class User extends $pb.GeneratedMessage {
     ..aE<$0.UserStatus>(5, _omitFieldNames ? '' : 'status',
         enumValues: $0.UserStatus.values)
     ..aInt64(6, _omitFieldNames ? '' : 'createdAt')
-    ..aOB(7, _omitFieldNames ? '' : 'emailVerified')
-    ..aOB(8, _omitFieldNames ? '' : 'isBanned')
+    ..aOB(7, _omitFieldNames ? '' : 'isBanned')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -146,22 +143,13 @@ class User extends $pb.GeneratedMessage {
   void clearCreatedAt() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $core.bool get emailVerified => $_getBF(6);
+  $core.bool get isBanned => $_getBF(6);
   @$pb.TagNumber(7)
-  set emailVerified($core.bool value) => $_setBool(6, value);
+  set isBanned($core.bool value) => $_setBool(6, value);
   @$pb.TagNumber(7)
-  $core.bool hasEmailVerified() => $_has(6);
+  $core.bool hasIsBanned() => $_has(6);
   @$pb.TagNumber(7)
-  void clearEmailVerified() => $_clearField(7);
-
-  @$pb.TagNumber(8)
-  $core.bool get isBanned => $_getBF(7);
-  @$pb.TagNumber(8)
-  set isBanned($core.bool value) => $_setBool(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasIsBanned() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearIsBanned() => $_clearField(8);
+  void clearIsBanned() => $_clearField(7);
 }
 
 /// Public user view - safe to return in any context (room member lists, chat, etc.).
@@ -16350,6 +16338,100 @@ class ConfirmEmailBindResponse extends $pb.GeneratedMessage {
   User ensureUser() => $_ensure(0);
 }
 
+class UnbindEmailRequest extends $pb.GeneratedMessage {
+  factory UnbindEmailRequest() => create();
+
+  UnbindEmailRequest._();
+
+  factory UnbindEmailRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UnbindEmailRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UnbindEmailRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnbindEmailRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnbindEmailRequest copyWith(void Function(UnbindEmailRequest) updates) =>
+      super.copyWith((message) => updates(message as UnbindEmailRequest))
+          as UnbindEmailRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UnbindEmailRequest create() => UnbindEmailRequest._();
+  @$core.override
+  UnbindEmailRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UnbindEmailRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UnbindEmailRequest>(create);
+  static UnbindEmailRequest? _defaultInstance;
+}
+
+class UnbindEmailResponse extends $pb.GeneratedMessage {
+  factory UnbindEmailResponse({
+    User? user,
+  }) {
+    final result = create();
+    if (user != null) result.user = user;
+    return result;
+  }
+
+  UnbindEmailResponse._();
+
+  factory UnbindEmailResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UnbindEmailResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UnbindEmailResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<User>(1, _omitFieldNames ? '' : 'user', subBuilder: User.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnbindEmailResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnbindEmailResponse copyWith(void Function(UnbindEmailResponse) updates) =>
+      super.copyWith((message) => updates(message as UnbindEmailResponse))
+          as UnbindEmailResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UnbindEmailResponse create() => UnbindEmailResponse._();
+  @$core.override
+  UnbindEmailResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UnbindEmailResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UnbindEmailResponse>(create);
+  static UnbindEmailResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  User get user => $_getN(0);
+  @$pb.TagNumber(1)
+  set user(User value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUser() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUser() => $_clearField(1);
+  @$pb.TagNumber(1)
+  User ensureUser() => $_ensure(0);
+}
+
 class ListMyRoomsRequest extends $pb.GeneratedMessage {
   factory ListMyRoomsRequest({
     $core.int? page,
@@ -17362,6 +17444,9 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     $core.bool? emailSignupNeedReview,
     $core.bool? enableWebauthnSignup,
     $core.bool? webauthnSignupNeedReview,
+    $core.bool? enableEmail,
+    $core.bool? enableWebauthn,
+    $core.Iterable<$core.String>? emailWhitelistDomains,
   }) {
     final result = create();
     if (allowRoomCreation != null) result.allowRoomCreation = allowRoomCreation;
@@ -17390,6 +17475,10 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
       result.enableWebauthnSignup = enableWebauthnSignup;
     if (webauthnSignupNeedReview != null)
       result.webauthnSignupNeedReview = webauthnSignupNeedReview;
+    if (enableEmail != null) result.enableEmail = enableEmail;
+    if (enableWebauthn != null) result.enableWebauthn = enableWebauthn;
+    if (emailWhitelistDomains != null)
+      result.emailWhitelistDomains.addAll(emailWhitelistDomains);
     return result;
   }
 
@@ -17424,6 +17513,9 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     ..aOB(19, _omitFieldNames ? '' : 'emailSignupNeedReview')
     ..aOB(22, _omitFieldNames ? '' : 'enableWebauthnSignup')
     ..aOB(23, _omitFieldNames ? '' : 'webauthnSignupNeedReview')
+    ..aOB(24, _omitFieldNames ? '' : 'enableEmail')
+    ..aOB(25, _omitFieldNames ? '' : 'enableWebauthn')
+    ..pPS(26, _omitFieldNames ? '' : 'emailWhitelistDomains')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -17612,6 +17704,27 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   $core.bool hasWebauthnSignupNeedReview() => $_has(17);
   @$pb.TagNumber(23)
   void clearWebauthnSignupNeedReview() => $_clearField(23);
+
+  @$pb.TagNumber(24)
+  $core.bool get enableEmail => $_getBF(18);
+  @$pb.TagNumber(24)
+  set enableEmail($core.bool value) => $_setBool(18, value);
+  @$pb.TagNumber(24)
+  $core.bool hasEnableEmail() => $_has(18);
+  @$pb.TagNumber(24)
+  void clearEnableEmail() => $_clearField(24);
+
+  @$pb.TagNumber(25)
+  $core.bool get enableWebauthn => $_getBF(19);
+  @$pb.TagNumber(25)
+  set enableWebauthn($core.bool value) => $_setBool(19, value);
+  @$pb.TagNumber(25)
+  $core.bool hasEnableWebauthn() => $_has(19);
+  @$pb.TagNumber(25)
+  void clearEnableWebauthn() => $_clearField(25);
+
+  @$pb.TagNumber(26)
+  $pb.PbList<$core.String> get emailWhitelistDomains => $_getList(20);
 }
 
 class GetServerInfoRequest extends $pb.GeneratedMessage {
@@ -17719,252 +17832,6 @@ class GetServerInfoResponse extends $pb.GeneratedMessage {
   $core.bool hasServerName() => $_has(1);
   @$pb.TagNumber(2)
   void clearServerName() => $_clearField(2);
-}
-
-class SendVerificationEmailRequest extends $pb.GeneratedMessage {
-  factory SendVerificationEmailRequest({
-    $core.String? email,
-  }) {
-    final result = create();
-    if (email != null) result.email = email;
-    return result;
-  }
-
-  SendVerificationEmailRequest._();
-
-  factory SendVerificationEmailRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory SendVerificationEmailRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'SendVerificationEmailRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'email')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SendVerificationEmailRequest clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SendVerificationEmailRequest copyWith(
-          void Function(SendVerificationEmailRequest) updates) =>
-      super.copyWith(
-              (message) => updates(message as SendVerificationEmailRequest))
-          as SendVerificationEmailRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static SendVerificationEmailRequest create() =>
-      SendVerificationEmailRequest._();
-  @$core.override
-  SendVerificationEmailRequest createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static SendVerificationEmailRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<SendVerificationEmailRequest>(create);
-  static SendVerificationEmailRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get email => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set email($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasEmail() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearEmail() => $_clearField(1);
-}
-
-class SendVerificationEmailResponse extends $pb.GeneratedMessage {
-  factory SendVerificationEmailResponse({
-    $core.String? message,
-  }) {
-    final result = create();
-    if (message != null) result.message = message;
-    return result;
-  }
-
-  SendVerificationEmailResponse._();
-
-  factory SendVerificationEmailResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory SendVerificationEmailResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'SendVerificationEmailResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'message')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SendVerificationEmailResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SendVerificationEmailResponse copyWith(
-          void Function(SendVerificationEmailResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as SendVerificationEmailResponse))
-          as SendVerificationEmailResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static SendVerificationEmailResponse create() =>
-      SendVerificationEmailResponse._();
-  @$core.override
-  SendVerificationEmailResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static SendVerificationEmailResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<SendVerificationEmailResponse>(create);
-  static SendVerificationEmailResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get message => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set message($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasMessage() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMessage() => $_clearField(1);
-}
-
-class ConfirmEmailRequest extends $pb.GeneratedMessage {
-  factory ConfirmEmailRequest({
-    $core.String? email,
-    $core.String? token,
-  }) {
-    final result = create();
-    if (email != null) result.email = email;
-    if (token != null) result.token = token;
-    return result;
-  }
-
-  ConfirmEmailRequest._();
-
-  factory ConfirmEmailRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ConfirmEmailRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ConfirmEmailRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'email')
-    ..aOS(2, _omitFieldNames ? '' : 'token')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ConfirmEmailRequest clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ConfirmEmailRequest copyWith(void Function(ConfirmEmailRequest) updates) =>
-      super.copyWith((message) => updates(message as ConfirmEmailRequest))
-          as ConfirmEmailRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ConfirmEmailRequest create() => ConfirmEmailRequest._();
-  @$core.override
-  ConfirmEmailRequest createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ConfirmEmailRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ConfirmEmailRequest>(create);
-  static ConfirmEmailRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get email => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set email($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasEmail() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearEmail() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get token => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set token($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasToken() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearToken() => $_clearField(2);
-}
-
-class ConfirmEmailResponse extends $pb.GeneratedMessage {
-  factory ConfirmEmailResponse({
-    $core.String? message,
-    $core.String? userId,
-  }) {
-    final result = create();
-    if (message != null) result.message = message;
-    if (userId != null) result.userId = userId;
-    return result;
-  }
-
-  ConfirmEmailResponse._();
-
-  factory ConfirmEmailResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ConfirmEmailResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ConfirmEmailResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'message')
-    ..aOS(2, _omitFieldNames ? '' : 'userId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ConfirmEmailResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ConfirmEmailResponse copyWith(void Function(ConfirmEmailResponse) updates) =>
-      super.copyWith((message) => updates(message as ConfirmEmailResponse))
-          as ConfirmEmailResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ConfirmEmailResponse create() => ConfirmEmailResponse._();
-  @$core.override
-  ConfirmEmailResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ConfirmEmailResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ConfirmEmailResponse>(create);
-  static ConfirmEmailResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get message => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set message($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasMessage() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMessage() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get userId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set userId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasUserId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearUserId() => $_clearField(2);
 }
 
 class RequestPasswordResetRequest extends $pb.GeneratedMessage {
@@ -21354,6 +21221,10 @@ class UserServiceApi {
           $pb.ClientContext? ctx, ConfirmEmailBindRequest request) =>
       _client.invoke<ConfirmEmailBindResponse>(ctx, 'UserService',
           'ConfirmEmailBind', request, ConfirmEmailBindResponse());
+  $async.Future<UnbindEmailResponse> unbindEmail(
+          $pb.ClientContext? ctx, UnbindEmailRequest request) =>
+      _client.invoke<UnbindEmailResponse>(
+          ctx, 'UserService', 'UnbindEmail', request, UnbindEmailResponse());
   $async.Future<StartOpaquePasswordUpdateResponse> startOpaquePasswordUpdate(
           $pb.ClientContext? ctx, StartOpaquePasswordUpdateRequest request) =>
       _client.invoke<StartOpaquePasswordUpdateResponse>(
@@ -21669,16 +21540,6 @@ class EmailServiceApi {
   final $pb.RpcClient _client;
 
   EmailServiceApi(this._client);
-
-  /// Email verification
-  $async.Future<SendVerificationEmailResponse> sendVerificationEmail(
-          $pb.ClientContext? ctx, SendVerificationEmailRequest request) =>
-      _client.invoke<SendVerificationEmailResponse>(ctx, 'EmailService',
-          'SendVerificationEmail', request, SendVerificationEmailResponse());
-  $async.Future<ConfirmEmailResponse> confirmEmail(
-          $pb.ClientContext? ctx, ConfirmEmailRequest request) =>
-      _client.invoke<ConfirmEmailResponse>(
-          ctx, 'EmailService', 'ConfirmEmail', request, ConfirmEmailResponse());
 
   /// Password reset
   $async.Future<RequestPasswordResetResponse> requestPasswordReset(

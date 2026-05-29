@@ -25,6 +25,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   final _loginIdentifierController = TextEditingController();
   final _loginPasswordController = TextEditingController();
   final _emailTokenController = TextEditingController();
+  final _registerIdentifierController = TextEditingController();
   final _registerUsernameController = TextEditingController();
   final _registerEmailController = TextEditingController();
   final _registerPasswordController = TextEditingController();
@@ -44,6 +45,8 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   bool _passkeyAvailable = false;
   bool _agreedToTerms = false;
   bool _loginIdentifierConfirmed = false;
+  bool _registerIdentifierConfirmed = false;
+  bool _registerIncludeEmail = false;
   bool _showOAuthProviders = false;
   _LoginMethod _loginMethod = _LoginMethod.password;
   String? _oauthProvider;
@@ -53,6 +56,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_handleTabChanged);
     _opaqueAuthenticator = OpaqueAuthenticatorService();
     _guestRoomController.text = widget.initialGuestRoomId ?? '';
     _loadOptions();
@@ -60,10 +64,12 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     _loginIdentifierController.dispose();
     _loginPasswordController.dispose();
     _emailTokenController.dispose();
+    _registerIdentifierController.dispose();
     _registerUsernameController.dispose();
     _registerEmailController.dispose();
     _registerPasswordController.dispose();
@@ -71,6 +77,10 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     _guestRoomController.dispose();
     _mfaTokenController.dispose();
     super.dispose();
+  }
+
+  void _handleTabChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadOptions() async {
@@ -197,10 +207,25 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _submitPasswordRegistration() async {
     if (!_ensureTermsAccepted()) return;
+    final input = _registerIdentifierController.text.trim();
+    if (!_registerIdentifierConfirmed || input.isEmpty) {
+      MessageUtils.showWarning(context, '请先输入用户名或邮箱');
+      return;
+    }
+    final registerByEmail = input.contains('@');
+    final username =
+        registerByEmail ? _registerUsernameController.text.trim() : input;
+    final email = registerByEmail
+        ? input
+        : (_registerIncludeEmail ? _registerEmailController.text.trim() : '');
+    if (username.isEmpty) {
+      MessageUtils.showWarning(context, '请输入用户名');
+      return;
+    }
     await _withLoading(() async {
       final result = await _opaqueAuthenticator.register(
-        username: _registerUsernameController.text,
-        email: _registerEmailController.text,
+        username: username,
+        email: email,
         password: _registerPasswordController.text,
       );
       _finishAuth(result);
@@ -209,7 +234,17 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _submitPasskeyRegistration() async {
     if (!_ensureTermsAccepted()) return;
-    final username = _registerUsernameController.text.trim();
+    final input = _registerIdentifierController.text.trim();
+    if (!_registerIdentifierConfirmed || input.isEmpty) {
+      MessageUtils.showWarning(context, '请先输入用户名或邮箱');
+      return;
+    }
+    final registerByEmail = input.contains('@');
+    final username =
+        registerByEmail ? _registerUsernameController.text.trim() : input;
+    final email = registerByEmail
+        ? input
+        : (_registerIncludeEmail ? _registerEmailController.text.trim() : '');
     if (username.isEmpty) {
       MessageUtils.showWarning(context, '请输入用户名');
       return;
@@ -217,7 +252,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     await _withLoading(() async {
       final start = await WatchTogetherService.startPasskeyRegistration(
         username: username,
-        email: _registerEmailController.text.trim(),
+        email: email,
         name: _passkeyNameController.text.trim(),
       );
       final credential =
@@ -384,110 +419,162 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final width = MediaQuery.sizeOf(context).width;
-    final panelWidth = width >= 720 ? 520.0 : width;
+    final media = MediaQuery.of(context);
+    final size = media.size;
+    final keyboardInset = media.viewInsets.bottom;
+    final isDesktopSheet = size.width >= 720;
+    final panelWidth = isDesktopSheet ? 520.0 : size.width;
+    final maxPanelHeight = (size.height - keyboardInset - 24)
+        .clamp(360.0, isDesktopSheet ? 680.0 : size.height * 0.92)
+        .toDouble();
+    final panelRadius = isDesktopSheet
+        ? BorderRadius.circular(20)
+        : const BorderRadius.vertical(top: Radius.circular(20));
 
-    return SafeArea(
-      top: false,
-      child: Container(
-        width: panelWidth,
-        constraints: const BoxConstraints(maxHeight: 720),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 12, 8),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      'assets/icon/robot_3.png',
-                      width: 44,
-                      height: 44,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '连接看搭子',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.fromLTRB(
+        isDesktopSheet ? 16 : 0,
+        isDesktopSheet ? 16 : 0,
+        isDesktopSheet ? 16 : 0,
+        keyboardInset + (isDesktopSheet ? 16 : 0),
+      ),
+      child: SafeArea(
+        top: isDesktopSheet,
+        child: Align(
+          alignment: isDesktopSheet ? Alignment.center : Alignment.bottomCenter,
+          child: Container(
+            width: panelWidth,
+            constraints: BoxConstraints(maxHeight: maxPanelHeight),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: panelRadius,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.10),
+                  blurRadius: 28,
+                  offset: const Offset(0, -8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.asset(
+                          'assets/icon/robot_3.png',
+                          width: 38,
+                          height: 38,
                         ),
-                        Text(
-                          WatchTogetherService.activeServer?.name ??
-                              WatchTogetherService.baseUrl,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '连接看搭子',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              WatchTogetherService.activeServer?.name ??
+                                  '未连接服务器',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: '关闭',
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_loadingOptions)
+                  const LinearProgressIndicator(minHeight: 2),
+                if (_mfaChallenge == null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: theme.dividerColor.withValues(alpha: 0.45),
+                      tabs: const [
+                        Tab(icon: Icon(Icons.login_rounded), text: '登录'),
+                        Tab(
+                          icon: Icon(Icons.person_add_alt_1_rounded),
+                          text: '注册',
+                        ),
+                        Tab(
+                          icon: Icon(Icons.meeting_room_outlined),
+                          text: '访客',
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    tooltip: '关闭',
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    switchInCurve: Curves.easeOut,
+                    switchOutCurve: Curves.easeOut,
+                    child: _mfaChallenge == null
+                        ? _PanelScroll(
+                            key: ValueKey('tab-${_tabController.index}'),
+                            child: _buildCurrentTab(theme),
+                          )
+                        : _PanelScroll(
+                            key: const ValueKey('mfa'),
+                            child: _buildMfaPanel(theme),
+                          ),
                   ),
-                ],
-              ),
+                ),
+                if (_loading)
+                  const LinearProgressIndicator(minHeight: 2)
+                else
+                  const SizedBox(height: 2),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 14),
+                  child: _AgreementRow(
+                    agreed: _agreedToTerms,
+                    isDark: isDark,
+                    onChanged: (value) =>
+                        setState(() => _agreedToTerms = value),
+                    onOpenAgreement: _showUserAgreement,
+                  ),
+                ),
+              ],
             ),
-            if (_loadingOptions) const LinearProgressIndicator(minHeight: 2),
-            if (_mfaChallenge == null)
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(icon: Icon(Icons.login_rounded), text: '登录'),
-                  Tab(icon: Icon(Icons.person_add_alt_1_rounded), text: '注册'),
-                  Tab(icon: Icon(Icons.meeting_room_outlined), text: '访客'),
-                ],
-              ),
-            Flexible(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                child: _mfaChallenge == null
-                    ? TabBarView(
-                        key: const ValueKey('tabs'),
-                        controller: _tabController,
-                        children: [
-                          _PanelScroll(child: _buildLoginTab(theme)),
-                          _PanelScroll(child: _buildRegisterTab(theme)),
-                          _PanelScroll(child: _buildGuestTab(theme)),
-                        ],
-                      )
-                    : _PanelScroll(
-                        key: const ValueKey('mfa'),
-                        child: _buildMfaPanel(theme),
-                      ),
-              ),
-            ),
-            if (_loading)
-              const LinearProgressIndicator(minHeight: 2)
-            else
-              const SizedBox(height: 2),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
-              child: _AgreementRow(
-                agreed: _agreedToTerms,
-                isDark: isDark,
-                onChanged: (value) => setState(() => _agreedToTerms = value),
-                onOpenAgreement: _showUserAgreement,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _buildCurrentTab(ThemeData theme) {
+    switch (_tabController.index) {
+      case 1:
+        return _buildRegisterTab(theme);
+      case 2:
+        return _buildGuestTab(theme);
+      default:
+        return _buildLoginTab(theme);
+    }
   }
 
   Widget _buildLoginTab(ThemeData theme) {
@@ -526,33 +613,6 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             _buildOAuth2Entry(theme),
           ],
         ] else ...[
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  identifier,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: _loading
-                    ? null
-                    : () => setState(() {
-                          _loginIdentifierConfirmed = false;
-                          _loginPasswordController.clear();
-                          _emailTokenController.clear();
-                          _emailTokenRequested = false;
-                        }),
-                icon: const Icon(Icons.edit_rounded, size: 18),
-                label: const Text('修改'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           if (availableMethods.length > 1) ...[
             SegmentedButton<_LoginMethod>(
               segments: [
@@ -624,13 +684,38 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     });
   }
 
+  void _confirmRegisterIdentifier() {
+    final identifier = _registerIdentifierController.text.trim();
+    if (identifier.isEmpty) {
+      MessageUtils.showWarning(context, '请输入用户名或邮箱');
+      return;
+    }
+    final emailSignupEnabled =
+        _settings?.enableEmail == true && _settings?.enableEmailSignup == true;
+    if (identifier.contains('@') && !emailSignupEnabled) {
+      MessageUtils.showWarning(context, '当前服务器未开放邮箱注册');
+      return;
+    }
+    setState(() {
+      _registerIdentifierConfirmed = true;
+      _registerIncludeEmail = identifier.contains('@');
+      if (identifier.contains('@')) {
+        _registerEmailController.text = identifier;
+      } else {
+        _registerUsernameController.text = '';
+      }
+      _registerPasswordController.clear();
+      _passkeyNameController.clear();
+    });
+  }
+
   List<_LoginMethod> _availableLoginMethods(String identifier) {
     final isEmail = identifier.trim().contains('@');
     final methods = <_LoginMethod>[_LoginMethod.password];
-    if (isEmail && _settings?.enableEmailSignup == true) {
+    if (isEmail && _settings?.enableEmail == true) {
       methods.add(_LoginMethod.emailCode);
     }
-    if (_passkeyAvailable) {
+    if (_passkeyAvailable && _settings?.enableWebauthn == true) {
       methods.add(_LoginMethod.passkey);
     }
     return methods;
@@ -730,61 +815,176 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     }
   }
 
+  Widget _buildEmailWhitelistSelector(TextEditingController controller) {
+    final settings = _settings;
+    if (settings == null ||
+        !settings.emailWhitelistEnabled ||
+        settings.emailWhitelistDomains.isEmpty ||
+        !controller.text.contains('@')) {
+      return const SizedBox.shrink();
+    }
+
+    final currentDomain =
+        controller.text.split('@').skip(1).join('@').trim().toLowerCase();
+    final domains = settings.emailWhitelistDomains
+        .where((domain) =>
+            currentDomain.isEmpty || domain.startsWith(currentDomain))
+        .take(8)
+        .toList(growable: false);
+    if (domains.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final domain in domains)
+            InputChip(
+              avatar: const Icon(Icons.alternate_email_rounded, size: 16),
+              label: Text('@$domain'),
+              onPressed: _loading
+                  ? null
+                  : () {
+                      final local = controller.text.split('@').first;
+                      controller.text = '$local@$domain';
+                      controller.selection = TextSelection.collapsed(
+                        offset: controller.text.length,
+                      );
+                      setState(() {});
+                    },
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRegisterTab(ThemeData theme) {
     final passwordSignupEnabled = _settings?.enablePasswordSignup == true;
-    final passkeySignupEnabled =
-        _passkeyAvailable && _settings?.enableWebauthnSignup == true;
+    final emailSignupEnabled =
+        _settings?.enableEmail == true && _settings?.enableEmailSignup == true;
+    final passkeySignupEnabled = _passkeyAvailable &&
+        _settings?.enableWebauthn == true &&
+        _settings?.enableWebauthnSignup == true;
+    final identifier = _registerIdentifierController.text.trim();
+    final registerByEmail = identifier.contains('@');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildPolicyHints(theme),
         _buildTextField(
-          controller: _registerUsernameController,
-          label: '用户名',
+          controller: _registerIdentifierController,
+          label: emailSignupEnabled ? '用户名或邮箱' : '用户名',
           icon: Icons.person_outline_rounded,
-          textInputAction: TextInputAction.next,
+          keyboardType: emailSignupEnabled ? TextInputType.emailAddress : null,
+          textInputAction: TextInputAction.done,
+          enabled: !_registerIdentifierConfirmed,
+          onChanged: (_) {
+            setState(() {
+              _registerIdentifierConfirmed = false;
+              _registerIncludeEmail = false;
+              _registerEmailController.clear();
+            });
+          },
+          onSubmitted: (_) => _confirmRegisterIdentifier(),
         ),
-        const SizedBox(height: 12),
-        _buildTextField(
-          controller: _registerEmailController,
-          label: '邮箱',
-          icon: Icons.mail_outline_rounded,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: 12),
-        _buildTextField(
-          controller: _registerPasswordController,
-          label: '密码',
-          icon: Icons.lock_outline_rounded,
-          obscureText: true,
-        ),
+        if (emailSignupEnabled)
+          _buildEmailWhitelistSelector(_registerIdentifierController),
         const SizedBox(height: 14),
-        FilledButton.icon(
-          onPressed: passwordSignupEnabled && !_loading
-              ? _submitPasswordRegistration
-              : null,
-          icon: const Icon(Icons.person_add_alt_1_rounded),
-          label: Text(passwordSignupEnabled ? '创建账号' : '服务器未开放密码注册'),
-        ),
-        if (passkeySignupEnabled) ...[
-          const SizedBox(height: 18),
-          _SectionLabel(
-            icon: Icons.fingerprint_rounded,
-            label: 'Passkey 注册',
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(height: 10),
-          _buildTextField(
-            controller: _passkeyNameController,
-            label: '设备名称，例如 MacBook 或手机',
-            icon: Icons.devices_rounded,
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _loading ? null : _submitPasskeyRegistration,
-            icon: const Icon(Icons.fingerprint_rounded),
-            label: const Text('创建 Passkey 账号'),
+        if (!_registerIdentifierConfirmed)
+          FilledButton.icon(
+            onPressed: _loading ? null : _confirmRegisterIdentifier,
+            icon: const Icon(Icons.arrow_forward_rounded),
+            label: const Text('继续'),
+          )
+        else ...[
+          if (registerByEmail) ...[
+            _buildTextField(
+              controller: _registerUsernameController,
+              label: '用户名',
+              icon: Icons.person_outline_rounded,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+          ] else if (emailSignupEnabled) ...[
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _registerIncludeEmail,
+              onChanged: _loading
+                  ? null
+                  : (value) => setState(
+                        () => _registerIncludeEmail = value ?? false,
+                      ),
+              controlAffinity: ListTileControlAffinity.leading,
+              title: const Text('同时填写邮箱'),
+              subtitle: const Text('邮箱会随注册请求提交，后续可在账号中心确认绑定。'),
+            ),
+            if (_registerIncludeEmail) ...[
+              const SizedBox(height: 8),
+              _buildTextField(
+                controller: _registerEmailController,
+                label: '邮箱',
+                icon: Icons.mail_outline_rounded,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
+              ),
+              _buildEmailWhitelistSelector(_registerEmailController),
+              const SizedBox(height: 12),
+            ],
+          ],
+          if (passwordSignupEnabled) ...[
+            _buildTextField(
+              controller: _registerPasswordController,
+              label: '密码',
+              icon: Icons.lock_outline_rounded,
+              obscureText: true,
+            ),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: _loading ? null : _submitPasswordRegistration,
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              label: const Text('创建账号'),
+            ),
+          ] else
+            FilledButton.icon(
+              onPressed: null,
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              label: const Text('服务器未开放密码注册'),
+            ),
+          if (passkeySignupEnabled) ...[
+            const SizedBox(height: 18),
+            _SectionLabel(
+              icon: Icons.fingerprint_rounded,
+              label: 'Passkey 注册',
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 10),
+            _buildTextField(
+              controller: _passkeyNameController,
+              label: '设备名称，例如 MacBook 或手机',
+              icon: Icons.devices_rounded,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _loading ? null : _submitPasskeyRegistration,
+              icon: const Icon(Icons.fingerprint_rounded),
+              label: const Text('创建 Passkey 账号'),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: _loading
+                  ? null
+                  : () => setState(() {
+                        _registerIdentifierConfirmed = false;
+                        _registerIncludeEmail = false;
+                      }),
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('修改'),
+            ),
           ),
         ],
       ],
@@ -867,7 +1067,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               : null,
           child: const Text('完成验证'),
         ),
-        if (challenge.supportsPasskey && _passkeyAvailable) ...[
+        if (challenge.supportsPasskey &&
+            _passkeyAvailable &&
+            _settings?.enableWebauthn == true) ...[
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: _loading ? null : _submitMfaPasskey,
@@ -1033,9 +1235,10 @@ class _PanelScroll extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-      child: child,
+    return ListView(
+      shrinkWrap: true,
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+      children: [child],
     );
   }
 }

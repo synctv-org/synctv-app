@@ -3,7 +3,9 @@ import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/playback_client_profile.dart';
+import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/room_media_models.dart';
+import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/common.pb.dart' as common;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
@@ -118,8 +120,13 @@ class RoomRealtimeMessage {
     this.roomSettings,
     this.mediaLibrary,
     this.members,
+    this.adminMembers,
     this.error,
     this.webRtc,
+    this.resourceObserveId = '',
+    this.resourceVersion = '',
+    this.resourceChanged = false,
+    this.resourceTotal = 0,
   });
 
   final RoomRealtimeMessageKind kind;
@@ -133,8 +140,27 @@ class RoomRealtimeMessage {
   final WRoomSettings? roomSettings;
   final RoomMediaLibraryPage? mediaLibrary;
   final List<WUser>? members;
+  final List<AdminRoomMember>? adminMembers;
   final RoomRealtimeError? error;
   final RoomRealtimeWebRtcSignal? webRtc;
+  final String resourceObserveId;
+  final String resourceVersion;
+  final bool resourceChanged;
+  final int resourceTotal;
+}
+
+class RoomRealtimeSession {
+  const RoomRealtimeSession({
+    required this.send,
+    required this.messages,
+    required this.events,
+    required this.reconnects,
+  });
+
+  final void Function(List<int> bytes) send;
+  final Stream<RoomRealtimeMessage> messages;
+  final Stream<RealtimeEventLogEntry> events;
+  final Stream<void> reconnects;
 }
 
 class RoomRealtimeChatEntry {
@@ -220,10 +246,218 @@ extension RoomRealtimeChatEntries on List<RoomRealtimeChatEntry> {
 }
 
 class RoomRealtimeCodec {
+  static RealtimeEventLogEntry describeOutgoing(List<int> data) {
+    try {
+      final message = client.ClientMessage.fromBuffer(data);
+      final kind = realtimeEnumName(message.whichMessage());
+      return RealtimeEventLogEntry.outgoing(
+        label: kind,
+        detail: _clientMessageDetail(message),
+        byteLength: data.length,
+        payload: _clientMessagePayload(message),
+      );
+    } catch (error) {
+      return RealtimeEventLogEntry.outgoing(
+        label: 'decode_error',
+        detail: error.toString(),
+        byteLength: data.length,
+      );
+    }
+  }
+
+  static RealtimeEventLogEntry describeIncoming(Uint8List data) {
+    try {
+      final message = client.ServerMessage.fromBuffer(data);
+      final kind = realtimeEnumName(message.whichMessage());
+      return RealtimeEventLogEntry.incoming(
+        label: kind,
+        detail: _serverMessageDetail(message),
+        byteLength: data.length,
+        payload: _serverMessagePayload(message),
+      );
+    } catch (error) {
+      return RealtimeEventLogEntry.incoming(
+        label: 'decode_error',
+        detail: error.toString(),
+        byteLength: data.length,
+      );
+    }
+  }
+
   static List<int> encodeChat(String content) {
     return client.ClientMessage(
       chat: client.ChatMessageSend(content: content),
     ).writeToBuffer();
+  }
+
+  static String _clientMessageDetail(client.ClientMessage message) {
+    switch (message.whichMessage()) {
+      case client.ClientMessage_Message.chat:
+        return message.chat.content;
+      case client.ClientMessage_Message.playbackUpdate:
+        final update = message.playbackUpdate;
+        return [
+          realtimeEnumName(update.type),
+          'pos=${update.position.toStringAsFixed(2)}',
+          'playing=${update.playing}',
+          'speed=${update.speed.toStringAsFixed(2)}',
+        ].join(' ');
+      case client.ClientMessage_Message.playbackProgress:
+        final progress = message.playbackProgress;
+        return 'pos=${progress.position.toStringAsFixed(2)} playing=${progress.isPlaying}';
+      case client.ClientMessage_Message.observeResource:
+        final observe = message.observeResource;
+        return '${observe.observeId} ${realtimeEnumName(observe.whichResource())} v${observe.version}';
+      case client.ClientMessage_Message.unobserveResource:
+        return message.unobserveResource.observeId;
+      case client.ClientMessage_Message.heartbeat:
+        return 'ts=${message.heartbeat.timestamp}';
+      case client.ClientMessage_Message.webrtcOffer:
+      case client.ClientMessage_Message.webrtcAnswer:
+      case client.ClientMessage_Message.webrtcIceCandidate:
+      case client.ClientMessage_Message.webrtcJoin:
+      case client.ClientMessage_Message.webrtcLeave:
+        return 'webrtc';
+      default:
+        return '';
+    }
+  }
+
+  static Map<String, Object?> _clientMessagePayload(
+    client.ClientMessage message,
+  ) {
+    switch (message.whichMessage()) {
+      case client.ClientMessage_Message.chat:
+        return {'content': message.chat.content};
+      case client.ClientMessage_Message.playbackUpdate:
+        final update = message.playbackUpdate;
+        return {
+          'type': realtimeEnumName(update.type),
+          'position': update.position,
+          'playing': update.playing,
+          'speed': update.speed,
+          'version': update.version.toInt(),
+        };
+      case client.ClientMessage_Message.playbackProgress:
+        return {
+          'position': message.playbackProgress.position,
+          'is_playing': message.playbackProgress.isPlaying,
+        };
+      case client.ClientMessage_Message.observeResource:
+        return {
+          'observe_id': message.observeResource.observeId,
+          'version': message.observeResource.version,
+          'type': realtimeEnumName(message.observeResource.whichResource()),
+        };
+      case client.ClientMessage_Message.unobserveResource:
+        return {'observe_id': message.unobserveResource.observeId};
+      case client.ClientMessage_Message.heartbeat:
+        return {'timestamp': message.heartbeat.timestamp.toInt()};
+      default:
+        return {'kind': realtimeEnumName(message.whichMessage())};
+    }
+  }
+
+  static String _serverMessageDetail(client.ServerMessage message) {
+    switch (message.whichMessage()) {
+      case client.ServerMessage_Message.chat:
+        return '${message.chat.username}: ${message.chat.content}';
+      case client.ServerMessage_Message.playbackState:
+        final state = message.playbackState.state;
+        return 'pos=${state.position.toStringAsFixed(2)} playing=${state.isPlaying}';
+      case client.ServerMessage_Message.playbackSnapshot:
+        final state = message.playbackSnapshot.snapshot;
+        return '${state.name} pos=${state.position.toStringAsFixed(2)}';
+      case client.ServerMessage_Message.resourceChanged:
+        return '${message.resourceChanged.observeId} v${message.resourceChanged.version}';
+      case client.ServerMessage_Message.resourceObserved:
+        return '${message.resourceObserved.observeId} v${message.resourceObserved.version}';
+      case client.ServerMessage_Message.resourceObserveError:
+        return '${message.resourceObserveError.observeId}: ${message.resourceObserveError.error.message}';
+      case client.ServerMessage_Message.error:
+        return message.error.message;
+      case client.ServerMessage_Message.heartbeatAck:
+        return 'ts=${message.heartbeatAck.timestamp}';
+      default:
+        return realtimeEnumName(message.whichMessage());
+    }
+  }
+
+  static Map<String, Object?> _serverMessagePayload(
+    client.ServerMessage message,
+  ) {
+    switch (message.whichMessage()) {
+      case client.ServerMessage_Message.chat:
+        return {
+          'id': message.chat.id,
+          'user_id': message.chat.userId,
+          'username': message.chat.username,
+          'content': message.chat.content,
+          'timestamp': message.chat.timestamp.toInt(),
+        };
+      case client.ServerMessage_Message.playbackState:
+        return _playbackStatePayload(message.playbackState.state);
+      case client.ServerMessage_Message.playbackSnapshot:
+        return _playbackSnapshotPayload(message.playbackSnapshot.snapshot);
+      case client.ServerMessage_Message.resourceChanged:
+        return {
+          'observe_id': message.resourceChanged.observeId,
+          'version': message.resourceChanged.version,
+          'payload': realtimeEnumName(message.resourceChanged.whichPayload()),
+        };
+      case client.ServerMessage_Message.resourceObserved:
+        return {
+          'observe_id': message.resourceObserved.observeId,
+          'version': message.resourceObserved.version,
+          'changed': message.resourceObserved.changed,
+        };
+      case client.ServerMessage_Message.resourceObserveError:
+        return {
+          'observe_id': message.resourceObserveError.observeId,
+          'code': message.resourceObserveError.error.code,
+          'message': message.resourceObserveError.error.message,
+          'detail': message.resourceObserveError.error.detail,
+        };
+      case client.ServerMessage_Message.error:
+        return {
+          'code': message.error.code,
+          'message': message.error.message,
+          'detail': message.error.detail,
+        };
+      case client.ServerMessage_Message.heartbeatAck:
+        return {'timestamp': message.heartbeatAck.timestamp.toInt()};
+      default:
+        return {'kind': realtimeEnumName(message.whichMessage())};
+    }
+  }
+
+  static Map<String, Object?> _playbackStatePayload(
+    client.PlaybackState state,
+  ) {
+    return {
+      'playing_media_id': state.playingMediaId,
+      'playing_playlist_id': state.playingPlaylistId,
+      'position': state.position,
+      'playing': state.isPlaying,
+      'speed': state.speed,
+      'version': state.version.toInt(),
+    };
+  }
+
+  static Map<String, Object?> _playbackSnapshotPayload(
+    client.PlaybackSnapshot snapshot,
+  ) {
+    return {
+      'media_id': snapshot.mediaId,
+      'playlist_id': snapshot.playlistId,
+      'room_id': snapshot.roomId,
+      'name': snapshot.name,
+      'position': snapshot.position,
+      'default_mode': snapshot.defaultMode,
+      'playback_infos': snapshot.playbackInfos.length,
+      'version': snapshot.version,
+      'expires_at': snapshot.expiresAt.toInt(),
+    };
   }
 
   static List<int> encodePlaybackUpdate(
@@ -275,10 +509,7 @@ class RoomRealtimeCodec {
   static List<List<int>> encodeInitialObservations() {
     return [
       ...encodePlaybackObservations(),
-      _observe(
-        'room_settings',
-        roomSettings: client.ObserveRoomSettings(),
-      ),
+      encodeRoomSettingsObservation(),
       encodePlaylistObservation(),
       encodeRoomMembersObservation(),
     ];
@@ -300,38 +531,90 @@ class RoomRealtimeCodec {
   }
 
   static List<int> encodePlaylistObservation({
+    String observeId = 'playlist_items',
+    String version = '',
     String playlistId = '',
     String? target,
     int page = 1,
     int pageSize = 100,
+    String search = '',
+    String sourceProvider = '',
+    String providerInstanceName = '',
+    client_enum.MediaListSortBy sortBy =
+        client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_ASC,
+    client_enum.ResourceAvailabilityFilter availability =
+        client_enum.ResourceAvailabilityFilter.RESOURCE_AVAILABILITY_FILTER_ALL,
   }) {
     return _observe(
-      'playlist_items',
+      observeId,
+      version: version,
       playlistItems: client.ObservePlaylistItems(
         request: client.ListPlaylistItemsRequest(
           playlistId: playlistId,
           target: _decodeTarget(target) ?? const [],
           page: page,
           pageSize: pageSize,
+          search: search,
+          sourceProvider: sourceProvider,
+          providerInstanceName: providerInstanceName,
+          sortBy: sortBy,
+          sortDirection: sortDirection,
+          availability: availability,
         ),
       ),
     );
   }
 
   static List<int> encodeRoomMembersObservation({
+    String observeId = 'room_members',
+    String version = '',
     int page = 1,
     int pageSize = 100,
+    String search = '',
+    common_enum.RoomMemberRole? role,
+    client_enum.RoomMemberListSortBy sortBy =
+        client_enum.RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_JOINED_AT,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_DESC,
   }) {
     return _observe(
-      'room_members',
+      observeId,
+      version: version,
       roomMembers: client.ObserveRoomMembers(
-        request: client.GetRoomMembersRequest(page: page, pageSize: pageSize),
+        request: client.GetRoomMembersRequest(
+          page: page,
+          pageSize: pageSize,
+          search: search,
+          role: role,
+          sortBy: sortBy,
+          sortDirection: sortDirection,
+        ),
       ),
     );
   }
 
+  static List<int> encodeRoomSettingsObservation({
+    String observeId = 'room_settings',
+    String version = '',
+  }) {
+    return _observe(
+      observeId,
+      version: version,
+      roomSettings: client.ObserveRoomSettings(),
+    );
+  }
+
+  static List<int> encodeUnobserveResource(String observeId) {
+    return client.ClientMessage(
+      unobserveResource: client.UnobserveResource(observeId: observeId),
+    ).writeToBuffer();
+  }
+
   static List<int> _observe(
     String observeId, {
+    String version = '',
     client.ObservePlaybackState? playbackState,
     client.ObservePlaybackSnapshot? playbackSnapshot,
     client.ObserveRoomSettings? roomSettings,
@@ -341,6 +624,7 @@ class RoomRealtimeCodec {
     return client.ClientMessage(
       observeResource: client.ObserveResource(
         observeId: observeId,
+        version: version,
         deliveryMode:
             client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
         playbackState: playbackState,
@@ -507,12 +791,16 @@ class RoomRealtimeCodec {
       case client.ServerMessage_Message.resourceChanged:
         return _resourceChanged(message.resourceChanged);
       case client.ServerMessage_Message.resourceObserved:
-        return const RoomRealtimeMessage(
+        return RoomRealtimeMessage(
           kind: RoomRealtimeMessageKind.checkStatus,
+          resourceObserveId: message.resourceObserved.observeId,
+          resourceVersion: message.resourceObserved.version,
+          resourceChanged: message.resourceObserved.changed,
         );
       case client.ServerMessage_Message.resourceObserveError:
         return RoomRealtimeMessage(
           kind: RoomRealtimeMessageKind.error,
+          resourceObserveId: message.resourceObserveError.observeId,
           error: RoomRealtimeError(
             message: message.resourceObserveError.error.message,
             code: message.resourceObserveError.error.code,
@@ -547,29 +835,44 @@ class RoomRealtimeCodec {
   }
 
   static RoomRealtimeMessage _playlistItems(
-    client.ListPlaylistItemsResponse response,
-  ) {
+    client.ListPlaylistItemsResponse response, {
+    String observeId = '',
+    String version = '',
+  }) {
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.movies,
       mediaLibrary: _mediaLibraryPageFromProto(response),
+      resourceObserveId: observeId,
+      resourceVersion: version,
     );
   }
 
   static RoomRealtimeMessage _roomSettings(
-    client.RoomSettingsChanged changed,
-  ) {
+    client.RoomSettingsChanged changed, {
+    String observeId = '',
+    String version = '',
+  }) {
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.roomSettings,
       roomSettings: WRoomSettings.fromJson(_decodeJsonBytes(changed.settings)),
+      resourceObserveId: observeId,
+      resourceVersion: version,
     );
   }
 
   static RoomRealtimeMessage _roomMembers(
-    client.GetRoomMembersResponse response,
-  ) {
+    client.GetRoomMembersResponse response, {
+    String observeId = '',
+    String version = '',
+  }) {
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.viewerCount,
       members: response.members.map(_memberFromProto).toList(growable: false),
+      adminMembers:
+          response.members.map(_adminMemberFromProto).toList(growable: false),
+      resourceObserveId: observeId,
+      resourceVersion: version,
+      resourceTotal: response.total,
     );
   }
 
@@ -582,11 +885,23 @@ class RoomRealtimeCodec {
       case client.ResourceChanged_Payload.playbackSnapshot:
         return _playbackSnapshot(changed.playbackSnapshot);
       case client.ResourceChanged_Payload.roomSettings:
-        return _roomSettings(changed.roomSettings);
+        return _roomSettings(
+          changed.roomSettings,
+          observeId: changed.observeId,
+          version: changed.version,
+        );
       case client.ResourceChanged_Payload.playlistItems:
-        return _playlistItems(changed.playlistItems);
+        return _playlistItems(
+          changed.playlistItems,
+          observeId: changed.observeId,
+          version: changed.version,
+        );
       case client.ResourceChanged_Payload.roomMembers:
-        return _roomMembers(changed.roomMembers);
+        return _roomMembers(
+          changed.roomMembers,
+          observeId: changed.observeId,
+          version: changed.version,
+        );
       case client.ResourceChanged_Payload.changedOnly:
         return RoomRealtimeMessage(
           kind: RoomRealtimeMessageKind.error,
@@ -783,6 +1098,22 @@ class RoomRealtimeCodec {
       createdAt: member.joinedAt.toInt(),
       status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
       onlineCount: member.isOnline ? 1 : 0,
+    );
+  }
+
+  static AdminRoomMember _adminMemberFromProto(common.RoomMember member) {
+    return AdminRoomMember(
+      roomId: member.roomId,
+      userId: member.userId,
+      username: member.username,
+      role: member.role.value,
+      permissions: member.permissions.toInt(),
+      addedPermissions: member.addedPermissions.toInt(),
+      removedPermissions: member.removedPermissions.toInt(),
+      adminAddedPermissions: member.adminAddedPermissions.toInt(),
+      adminRemovedPermissions: member.adminRemovedPermissions.toInt(),
+      joinedAt: member.joinedAt.toInt(),
+      isOnline: member.isOnline,
     );
   }
 

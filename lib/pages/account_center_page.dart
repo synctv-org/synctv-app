@@ -47,13 +47,11 @@ class _EmailStatusView {
   final IconData icon;
   final String label;
   final Color tone;
-  final bool canVerify;
 
   const _EmailStatusView({
     required this.icon,
     required this.label,
     required this.tone,
-    required this.canVerify,
   });
 }
 
@@ -114,6 +112,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       impact: '无法确认当前设备是否支持创建 Passkey。',
       icon: Icons.devices_rounded,
     ),
+    '公开设置': _AccountModuleInfo(
+      label: '服务器公开设置',
+      impact: '无法判断邮箱和 Passkey 当前是否启用。',
+      icon: Icons.tune_rounded,
+    ),
   };
 
   late TabController _tabController;
@@ -121,6 +124,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   AccountPreferences? _preferences;
   UserNotificationsPage? _notifications;
   RoomsPage? _myRooms;
+  PublicSettingsInfo? _publicSettings;
   List<OAuth2ProviderOption> _availableOAuth2 = const [];
   List<OAuth2LinkedAccount> _linkedOAuth2 = const [];
   List<PasskeyCredentialInfo> _passkeys = const [];
@@ -151,28 +155,24 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   final TextEditingController _roomSearchController = TextEditingController();
   late final OpaqueAuthenticatorService _opaqueAuthenticator;
 
+  bool get _passkeyEnabled =>
+      _publicSettings?.enableWebauthn == true && _passkeyAvailable;
+
+  bool get _emailFeatureEnabled => _publicSettings?.enableEmail == true;
+  bool get _showEmailBindingControls => _user.hasEmail || _emailFeatureEnabled;
+
   _EmailStatusView _emailStatusView(ThemeData theme) {
     if (!_user.hasEmail) {
       return _EmailStatusView(
         icon: Icons.alternate_email_rounded,
         label: '未绑定',
         tone: theme.colorScheme.onSurface.withValues(alpha: 0.58),
-        canVerify: false,
-      );
-    }
-    if (_user.emailVerified) {
-      return const _EmailStatusView(
-        icon: Icons.mark_email_read_rounded,
-        label: '已验证',
-        tone: Color(0xFF15803D),
-        canVerify: false,
       );
     }
     return const _EmailStatusView(
-      icon: Icons.mark_email_unread_outlined,
-      label: '待验证',
-      tone: Color(0xFFB45309),
-      canVerify: true,
+      icon: Icons.mark_email_read_rounded,
+      label: '已绑定',
+      tone: Color(0xFF15803D),
     );
   }
 
@@ -198,6 +198,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     try {
       final errors = <String, String>{};
       final user = await WatchTogetherService.getMe();
+      final publicSettings = await _loadOptional(
+        errors,
+        '公开设置',
+        WatchTogetherService.getPublicSettings,
+      );
+      final serverPasskeyEnabled = publicSettings?.enableWebauthn == true;
       final results = await Future.wait<dynamic>([
         _loadOptional(
           errors,
@@ -232,20 +238,27 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           'OAuth2 绑定',
           WatchTogetherService.getLinkedOAuth2Accounts,
         ),
-        _loadOptional(
-          errors,
-          'Passkey',
-          WatchTogetherService.listPasskeys,
-        ),
-        _loadOptional(
-          errors,
-          '本机 Passkey',
-          PasskeyAuthenticatorService.isSupported,
-        ),
+        if (serverPasskeyEnabled)
+          _loadOptional(
+            errors,
+            'Passkey',
+            WatchTogetherService.listPasskeys,
+          )
+        else
+          Future<List<PasskeyCredentialInfo>?>.value(const []),
+        if (serverPasskeyEnabled)
+          _loadOptional(
+            errors,
+            '本机 Passkey',
+            PasskeyAuthenticatorService.isSupported,
+          )
+        else
+          Future<bool?>.value(false),
       ]);
       if (!mounted) return;
       setState(() {
         _user = user;
+        _publicSettings = publicSettings;
         _preferences = results[0] as AccountPreferences?;
         _notifications = results[1] as UserNotificationsPage?;
         _myRooms = results[2] as RoomsPage?;
@@ -348,80 +361,67 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
   }
 
-  Future<void> _sendVerificationEmail() async {
-    final email = _user.email;
-    if (email == null || email.isEmpty) {
-      MessageUtils.showWarning(context, '当前账号没有邮箱');
-      return;
-    }
+  Future<void> _unbindEmail() async {
+    if (!_user.hasEmail) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.link_off_rounded),
+        title: const Text('解绑邮箱'),
+        content: const Text('解绑后将无法继续使用这个邮箱接收验证码、邮件通知或密码重置邮件。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('解绑'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     try {
-      await WatchTogetherService.sendVerificationEmail(email);
-      if (mounted) MessageUtils.showSuccess(context, '验证邮件已发送');
+      final user = await WatchTogetherService.unbindEmail();
+      final preferences = await WatchTogetherService.getAccountPreferences();
+      if (!mounted) return;
+      setState(() {
+        _user = user;
+        _preferences = preferences;
+        if (_notificationTypeFilter ==
+            client_enum.NotificationType.NOTIFICATION_TYPE_EMAIL_BIND) {
+          _notificationTypeFilter = null;
+        }
+      });
+      MessageUtils.showSuccess(context, '邮箱已解绑');
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '发送验证邮件失败: $e');
+      if (mounted) MessageUtils.showError(context, '解绑邮箱失败: $e');
     }
   }
 
   Future<void> _bindEmail() async {
+    if (!_emailFeatureEnabled) return;
     final user = await showDialog<WUser>(
       context: context,
-      builder: (context) => _EmailBindDialog(currentEmail: _user.email),
+      builder: (context) => const _EmailBindDialog(),
     );
     if (user == null || !mounted) return;
-    setState(() => _user = user);
+    final preferences = await WatchTogetherService.getAccountPreferences();
+    if (!mounted) return;
+    setState(() {
+      _user = user;
+      _preferences = preferences;
+    });
     MessageUtils.showSuccess(context, '邮箱已绑定');
-  }
-
-  Future<void> _confirmEmail() async {
-    final email = _user.email;
-    if (email == null || email.isEmpty) {
-      MessageUtils.showWarning(context, '当前账号没有邮箱');
-      return;
-    }
-    final controller = TextEditingController();
-    final token = await ChatUtils.showStyledDialog<String>(
-      context: context,
-      title: '确认邮箱',
-      icon: const Icon(Icons.mark_email_read_outlined),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: InputDecoration(
-          labelText: '$email 验证码',
-          prefixIcon: const Icon(Icons.mark_email_read_outlined),
-          border: const OutlineInputBorder(),
-        ),
-        onSubmitted: (_) => Navigator.pop(context, controller.text.trim()),
-      ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        ChatUtils.createConfirmButton(
-          context,
-          () => Navigator.pop(context, controller.text.trim()),
-          text: '确认',
-        ),
-      ],
-    ).whenComplete(controller.dispose);
-    if (token == null || token.isEmpty) return;
-    try {
-      final user = await WatchTogetherService.confirmEmail(
-        email: email,
-        token: token,
-      );
-      if (!mounted) return;
-      setState(() => _user = user);
-      MessageUtils.showSuccess(context, '邮箱已验证');
-    } catch (e) {
-      if (mounted) MessageUtils.showError(context, '邮箱验证失败: $e');
-    }
   }
 
   Future<void> _changePassword() async {
     final preferences = _preferences;
     final canUseCurrentPassword = preferences?.canUsePassword == true;
-    final canUseEmail = preferences?.canUseEmail == true;
-    final canUsePasskey =
-        preferences?.canUsePasskey == true && _passkeyAvailable;
+    final canUseEmail = preferences?.canUseEmail == true && _user.hasEmail;
+    final canUsePasskey = preferences?.canUsePasskey == true && _passkeyEnabled;
     if (!canUseCurrentPassword && !canUseEmail && !canUsePasskey) {
       MessageUtils.showWarning(context, '当前账号没有可用的密码验证方式');
       return;
@@ -1076,15 +1076,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            _user.email ?? '未绑定邮箱',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.58),
+                          if (_user.hasEmail)
+                            Text(
+                              _user.email!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.58),
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
@@ -1206,8 +1207,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         ? 0
         : [
             preferences.canUsePassword,
-            preferences.canUseEmail,
-            preferences.canUsePasskey,
+            preferences.canUseEmail && _user.hasEmail,
+            preferences.canUsePasskey && _passkeyEnabled,
           ].where((value) => value).length;
 
     return _responsiveList(
@@ -1216,7 +1217,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           user: _user,
           roleLabel: _userRoleLabel(_user.role),
           statusLabel: _userStatusLabel(_user.status),
-          activeServerName: WatchTogetherService.activeServer?.name ?? '当前服务器',
+          activeServerName: WatchTogetherService.activeServer?.name ?? '未连接服务器',
           createdAtLabel: _formatTimestamp(_user.createdAt),
         ),
         if (_loadErrors.isNotEmpty) ...[
@@ -1230,7 +1231,38 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         const SizedBox(height: 12),
         LayoutBuilder(
           builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 820 ? 4 : 2;
+            final tiles = [
+              _MetricTile(
+                icon: Icons.meeting_room_outlined,
+                label: '我的房间',
+                value: '$roomCount',
+                tone: theme.colorScheme.primary,
+              ),
+              _MetricTile(
+                icon: Icons.notifications_none_rounded,
+                label: '未读通知',
+                value: '$unread',
+                tone: const Color(0xFF0F766E),
+              ),
+              _MetricTile(
+                icon: Icons.security_rounded,
+                label: '登录因素',
+                value: '$activeFactors',
+                tone: const Color(0xFFB45309),
+              ),
+              if (_showEmailBindingControls)
+                _MetricTile(
+                  icon: emailStatus.icon,
+                  label: '邮箱状态',
+                  value: emailStatus.label,
+                  tone: emailStatus.tone,
+                ),
+            ];
+            final columns = constraints.maxWidth >= 820
+                ? tiles.length.clamp(1, 4)
+                : tiles.length == 1
+                    ? 1
+                    : 2;
             return GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -1238,32 +1270,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               childAspectRatio: columns == 4 ? 1.75 : 1.95,
-              children: [
-                _MetricTile(
-                  icon: Icons.meeting_room_outlined,
-                  label: '我的房间',
-                  value: '$roomCount',
-                  tone: theme.colorScheme.primary,
-                ),
-                _MetricTile(
-                  icon: Icons.notifications_none_rounded,
-                  label: '未读通知',
-                  value: '$unread',
-                  tone: const Color(0xFF0F766E),
-                ),
-                _MetricTile(
-                  icon: Icons.security_rounded,
-                  label: '登录因素',
-                  value: '$activeFactors',
-                  tone: const Color(0xFFB45309),
-                ),
-                _MetricTile(
-                  icon: emailStatus.icon,
-                  label: '邮箱状态',
-                  value: emailStatus.label,
-                  tone: emailStatus.tone,
-                ),
-              ],
+              children: tiles,
             );
           },
         ),
@@ -1338,11 +1345,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         icon: Icons.admin_panel_settings_outlined,
                         label: _userRoleLabel(_user.role),
                       ),
-                      _StatusPill(
-                        icon: emailStatus.icon,
-                        label: '邮箱${emailStatus.label}',
-                        color: emailStatus.tone,
-                      ),
+                      if (_showEmailBindingControls)
+                        _StatusPill(
+                          icon: emailStatus.icon,
+                          label: '邮箱${emailStatus.label}',
+                          color: emailStatus.tone,
+                        ),
                       if (_user.isBanned)
                         const _StatusPill(
                           icon: Icons.block_rounded,
@@ -1351,13 +1359,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _user.email ?? '未绑定邮箱',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  if (_showEmailBindingControls) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _user.hasEmail ? _user.email! : '未绑定邮箱',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               );
               final action = FilledButton.icon(
@@ -1447,37 +1458,40 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                               ),
                             ),
                   ),
-                  _PreferenceSwitch(
-                    title: '房间邀请邮件通知',
-                    value: notifications.roomInvitationEmail,
-                    onChanged: _savingPreferences
-                        ? null
-                        : (value) => _updateNotifications(
-                              notifications.copyWith(
-                                roomInvitationEmail: value,
+                  if (_user.hasEmail && _emailFeatureEnabled)
+                    _PreferenceSwitch(
+                      title: '房间邀请邮件通知',
+                      value: notifications.roomInvitationEmail,
+                      onChanged: _savingPreferences
+                          ? null
+                          : (value) => _updateNotifications(
+                                notifications.copyWith(
+                                  roomInvitationEmail: value,
+                                ),
                               ),
-                            ),
-                  ),
-                  _PreferenceSwitch(
-                    title: '房间事件邮件通知',
-                    value: notifications.roomEventEmail,
-                    onChanged: _savingPreferences
-                        ? null
-                        : (value) => _updateNotifications(
-                              notifications.copyWith(roomEventEmail: value),
-                            ),
-                  ),
-                  _PreferenceSwitch(
-                    title: '系统公告邮件通知',
-                    value: notifications.systemAnnouncementEmail,
-                    onChanged: _savingPreferences
-                        ? null
-                        : (value) => _updateNotifications(
-                              notifications.copyWith(
-                                systemAnnouncementEmail: value,
+                    ),
+                  if (_user.hasEmail && _emailFeatureEnabled)
+                    _PreferenceSwitch(
+                      title: '房间事件邮件通知',
+                      value: notifications.roomEventEmail,
+                      onChanged: _savingPreferences
+                          ? null
+                          : (value) => _updateNotifications(
+                                notifications.copyWith(roomEventEmail: value),
                               ),
-                            ),
-                  ),
+                    ),
+                  if (_user.hasEmail && _emailFeatureEnabled)
+                    _PreferenceSwitch(
+                      title: '系统公告邮件通知',
+                      value: notifications.systemAnnouncementEmail,
+                      onChanged: _savingPreferences
+                          ? null
+                          : (value) => _updateNotifications(
+                                notifications.copyWith(
+                                  systemAnnouncementEmail: value,
+                                ),
+                              ),
+                    ),
                 ];
                 if (!twoColumns) return Column(children: items);
                 return Wrap(
@@ -1753,7 +1767,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       children: [
         const _SectionHeader(
           title: '账号安全',
-          subtitle: '管理登录因素、邮箱验证、Passkey 和高风险账号操作',
+          subtitle: '管理登录因素、设备凭据和高风险账号操作',
           icon: Icons.security_rounded,
         ),
         const SizedBox(height: 12),
@@ -1774,40 +1788,28 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     '可用因素：${_factorLabels(preferences).join('、')}',
                   ),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(emailStatus.icon, color: emailStatus.tone),
-                  title: const Text('邮箱验证'),
-                  subtitle: Text(_user.email ?? '当前账号没有邮箱'),
-                  trailing: !_user.hasEmail
-                      ? FilledButton(
-                          onPressed: _bindEmail,
-                          child: const Text('绑定邮箱'),
-                        )
-                      : _user.emailVerified
-                          ? OutlinedButton(
-                              onPressed: _bindEmail,
-                              child: const Text('更换邮箱'),
-                            )
-                          : Wrap(
-                              spacing: 8,
-                              children: [
-                                OutlinedButton(
-                                  onPressed: _sendVerificationEmail,
-                                  child: const Text('发送'),
-                                ),
-                                FilledButton(
-                                  onPressed: _confirmEmail,
-                                  child: const Text('确认'),
-                                ),
-                                TextButton(
-                                  onPressed: _bindEmail,
-                                  child: const Text('更换'),
-                                ),
-                              ],
-                            ),
-                ),
+                if (_showEmailBindingControls) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(emailStatus.icon, color: emailStatus.tone),
+                    title: const Text('邮箱'),
+                    subtitle: Text(
+                      _user.hasEmail ? _user.email! : '绑定邮箱后可接收验证码、通知和密码重置邮件',
+                    ),
+                    trailing: _user.hasEmail
+                        ? OutlinedButton.icon(
+                            onPressed: _unbindEmail,
+                            icon: const Icon(Icons.link_off_rounded),
+                            label: const Text('解绑'),
+                          )
+                        : FilledButton.tonalIcon(
+                            onPressed: _emailFeatureEnabled ? _bindEmail : null,
+                            icon: const Icon(Icons.add_link_rounded),
+                            label: const Text('绑定'),
+                          ),
+                  ),
+                ],
                 const Divider(height: 1),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -1817,10 +1819,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   trailing: Wrap(
                     spacing: 8,
                     children: [
-                      OutlinedButton(
-                        onPressed: _resetPasswordByEmail,
-                        child: const Text('邮件重置'),
-                      ),
+                      if (_user.hasEmail && _emailFeatureEnabled)
+                        OutlinedButton(
+                          onPressed: _resetPasswordByEmail,
+                          child: const Text('邮件重置'),
+                        ),
                       FilledButton(
                         onPressed: _changePassword,
                         child: const Text('修改'),
@@ -1839,79 +1842,83 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             onRetry: _load,
           ),
         const SizedBox(height: 12),
-        _Section(
-          title: 'Passkey',
-          subtitle: '使用系统凭据管理器完成无密码或多因素验证',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    'Passkey',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const Spacer(),
-                  FilledButton.tonalIcon(
-                    onPressed: _passkeyAvailable && !_bindingPasskey
-                        ? _bindPasskey
-                        : null,
-                    icon: _bindingPasskey
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.add_rounded),
-                    label: const Text('绑定'),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: () async {
-                      final passkeys =
-                          await WatchTogetherService.listPasskeys();
-                      if (mounted) setState(() => _passkeys = passkeys);
-                    },
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('刷新'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (passkeyError != null)
-                _InlineModuleError(
-                  moduleInfo: _moduleInfo[passkeyErrorKey],
-                  message: passkeyError,
-                  onRetry: _load,
-                )
-              else if (_passkeys.isEmpty)
-                Text('暂无 Passkey', style: TextStyle(color: theme.hintColor))
-              else
-                for (final credential in _passkeys)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.fingerprint_rounded),
-                    title: Text(
-                      credential.name.isEmpty ? '未命名 Passkey' : credential.name,
+        if (_publicSettings?.enableWebauthn == true) ...[
+          _Section(
+            title: 'Passkey',
+            subtitle: '使用系统凭据管理器完成无密码或多因素验证',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Passkey',
+                      style: TextStyle(fontWeight: FontWeight.w700),
                     ),
-                    subtitle: Text(
-                      [
-                        _shortCredentialId(credential.credentialId),
-                        '创建 ${_formatTimestamp(credential.createdAt)}',
-                        if (credential.lastUsedAt > 0)
-                          '最近使用 ${_formatTimestamp(credential.lastUsedAt)}',
-                      ].join(' · '),
+                    const Spacer(),
+                    FilledButton.tonalIcon(
+                      onPressed: _passkeyAvailable && !_bindingPasskey
+                          ? _bindPasskey
+                          : null,
+                      icon: _bindingPasskey
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.add_rounded),
+                      label: const Text('绑定'),
                     ),
-                    trailing: IconButton(
-                      onPressed: () => _deletePasskey(credential),
-                      icon: const Icon(Icons.delete_outline_rounded),
-                      tooltip: '删除 Passkey',
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () async {
+                        final passkeys =
+                            await WatchTogetherService.listPasskeys();
+                        if (mounted) setState(() => _passkeys = passkeys);
+                      },
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('刷新'),
                     ),
-                  ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (passkeyError != null)
+                  _InlineModuleError(
+                    moduleInfo: _moduleInfo[passkeyErrorKey],
+                    message: passkeyError,
+                    onRetry: _load,
+                  )
+                else if (_passkeys.isEmpty)
+                  Text('暂无 Passkey', style: TextStyle(color: theme.hintColor))
+                else
+                  for (final credential in _passkeys)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.fingerprint_rounded),
+                      title: Text(
+                        credential.name.isEmpty
+                            ? '未命名 Passkey'
+                            : credential.name,
+                      ),
+                      subtitle: Text(
+                        [
+                          _shortCredentialId(credential.credentialId),
+                          '创建 ${_formatTimestamp(credential.createdAt)}',
+                          if (credential.lastUsedAt > 0)
+                            '最近使用 ${_formatTimestamp(credential.lastUsedAt)}',
+                        ].join(' · '),
+                      ),
+                      trailing: IconButton(
+                        onPressed: () => _deletePasskey(credential),
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        tooltip: '删除 Passkey',
+                      ),
+                    ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
+          const SizedBox(height: 12),
+        ],
         _Section(
           title: '危险操作',
           subtitle: '这些操作会影响账号可用性或永久删除数据',
@@ -2065,36 +2072,37 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       value: _notificationTypeFilter,
                       borderRadius: BorderRadius.circular(8),
                       hint: const Text('通知类型'),
-                      items: const [
-                        DropdownMenuItem(
+                      items: [
+                        const DropdownMenuItem<client_enum.NotificationType?>(
                           value: null,
                           child: Text('全部类型'),
                         ),
-                        DropdownMenuItem(
+                        const DropdownMenuItem(
                           value: client_enum.NotificationType
                               .NOTIFICATION_TYPE_ROOM_INVITATION,
                           child: Text('房间邀请'),
                         ),
-                        DropdownMenuItem(
+                        const DropdownMenuItem(
                           value: client_enum.NotificationType
                               .NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
                           child: Text('系统公告'),
                         ),
-                        DropdownMenuItem(
+                        const DropdownMenuItem(
                           value: client_enum
                               .NotificationType.NOTIFICATION_TYPE_ROOM_EVENT,
                           child: Text('房间事件'),
                         ),
-                        DropdownMenuItem(
+                        const DropdownMenuItem(
                           value: client_enum.NotificationType
                               .NOTIFICATION_TYPE_PASSWORD_RESET,
                           child: Text('密码重置'),
                         ),
-                        DropdownMenuItem(
-                          value: client_enum.NotificationType
-                              .NOTIFICATION_TYPE_EMAIL_VERIFICATION,
-                          child: Text('邮箱验证'),
-                        ),
+                        if (_showEmailBindingControls)
+                          const DropdownMenuItem(
+                            value: client_enum
+                                .NotificationType.NOTIFICATION_TYPE_EMAIL_BIND,
+                            child: Text('邮箱绑定'),
+                          ),
                       ],
                       onChanged: (value) {
                         setState(() => _notificationTypeFilter = value);
@@ -2320,6 +2328,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final oauth2Available = OAuth2DeepLinkService.canCreateSession;
     final linkedError = _loadError('OAuth2 绑定');
     final providersError = _loadError('OAuth2 Provider');
+    final showLinkedOAuth2 = linkedError != null || _linkedOAuth2.isNotEmpty;
+    final showBindableOAuth2 =
+        providersError != null || bindableProviders.isNotEmpty;
+    final showOAuth2Bindings = showLinkedOAuth2 || showBindableOAuth2;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -2382,125 +2394,125 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             },
           ),
         ),
-        const SizedBox(height: 12),
-        _Section(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '已绑定 OAuth2',
-                style: TextStyle(fontWeight: FontWeight.w700),
+        if (showOAuth2Bindings) ...[
+          const SizedBox(height: 12),
+          if (showLinkedOAuth2) ...[
+            _Section(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '已绑定 OAuth2',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  if (linkedError != null)
+                    _InlineModuleError(
+                      moduleInfo: _moduleInfo['OAuth2 绑定'],
+                      message: linkedError,
+                      onRetry: _load,
+                    )
+                  else
+                    for (final account in _linkedOAuth2)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.link_rounded),
+                        title: Text(
+                          '${account.providerType} / ${account.providerInstanceName}',
+                        ),
+                        subtitle: Text(
+                          [
+                            if (account.providerUsername.isNotEmpty)
+                              account.providerUsername,
+                            if (account.providerUserId.isNotEmpty)
+                              account.providerUserId,
+                            if (account.providerIssuer.isNotEmpty)
+                              account.providerIssuer,
+                            _formatTimestamp(account.linkedAt),
+                          ].join(' · '),
+                        ),
+                        trailing: IconButton(
+                          onPressed: () => _unlinkOAuth2(account),
+                          icon: const Icon(Icons.link_off_rounded),
+                          tooltip: '解绑',
+                        ),
+                      ),
+                ],
               ),
-              const SizedBox(height: 8),
-              if (linkedError != null)
-                _InlineModuleError(
-                  moduleInfo: _moduleInfo['OAuth2 绑定'],
-                  message: linkedError,
-                  onRetry: _load,
-                )
-              else if (_linkedOAuth2.isEmpty)
-                Text('暂无绑定', style: TextStyle(color: theme.hintColor))
-              else
-                for (final account in _linkedOAuth2)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.link_rounded),
-                    title: Text(
-                      '${account.providerType} / ${account.providerInstanceName}',
+            ),
+            if (showBindableOAuth2) const SizedBox(height: 12),
+          ],
+          if (showBindableOAuth2)
+            _Section(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('绑定新账号',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  if (providersError != null)
+                    _InlineModuleError(
+                      moduleInfo: _moduleInfo['OAuth2 Provider'],
+                      message: providersError,
+                      onRetry: _load,
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final provider in bindableProviders)
+                          OutlinedButton.icon(
+                            onPressed: oauth2Available
+                                ? () => _startOAuth2Bind(provider)
+                                : null,
+                            icon: const Icon(Icons.open_in_new_rounded),
+                            label: Text('${provider.type} (${provider.name})'),
+                          ),
+                      ],
                     ),
-                    subtitle: Text(
-                      [
-                        if (account.providerUsername.isNotEmpty)
-                          account.providerUsername,
-                        if (account.providerUserId.isNotEmpty)
-                          account.providerUserId,
-                        if (account.providerIssuer.isNotEmpty)
-                          account.providerIssuer,
-                        _formatTimestamp(account.linkedAt),
-                      ].join(' · '),
+                  if (!oauth2Available) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      '当前构建未配置 OAuth2 App Link，无法在本设备完成授权回跳。',
+                      style: TextStyle(color: theme.hintColor),
                     ),
-                    trailing: IconButton(
-                      onPressed: () => _unlinkOAuth2(account),
-                      icon: const Icon(Icons.link_off_rounded),
-                      tooltip: '解绑',
-                    ),
-                  ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        _Section(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('绑定新账号',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              if (providersError != null)
-                _InlineModuleError(
-                  moduleInfo: _moduleInfo['OAuth2 Provider'],
-                  message: providersError,
-                  onRetry: _load,
-                )
-              else if (bindableProviders.isEmpty)
-                Text('没有可绑定的 OAuth2 Provider',
-                    style: TextStyle(color: theme.hintColor))
-              else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final provider in bindableProviders)
-                      OutlinedButton.icon(
-                        onPressed: oauth2Available
-                            ? () => _startOAuth2Bind(provider)
-                            : null,
-                        icon: const Icon(Icons.open_in_new_rounded),
-                        label: Text('${provider.type} (${provider.name})'),
-                      ),
                   ],
-                ),
-              if (!oauth2Available) ...[
-                const SizedBox(height: 10),
-                Text(
-                  '当前构建未配置 OAuth2 App Link，无法在本设备完成授权回跳。',
-                  style: TextStyle(color: theme.hintColor),
-                ),
-              ],
-              if (_bindProvider != null) ...[
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                  if (_bindProvider != null) ...[
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '等待 $_bindProvider 授权回跳',
+                            style: TextStyle(color: theme.hintColor),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '等待 $_bindProvider 授权回跳',
-                        style: TextStyle(color: theme.hintColor),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () => setState(() {
+                          _bindProvider = null;
+                          _bindAttempt++;
+                        }),
+                        icon: const Icon(Icons.close_rounded),
+                        label: const Text('取消绑定'),
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => setState(() {
-                      _bindProvider = null;
-                      _bindAttempt++;
-                    }),
-                    icon: const Icon(Icons.close_rounded),
-                    label: const Text('取消绑定'),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
+                ],
+              ),
+            ),
+        ],
       ],
     );
   }
@@ -2512,7 +2524,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _InfoRow(label: '用户名', value: _user.username),
-          _InfoRow(label: '邮箱', value: _user.email ?? '未绑定'),
+          if (_user.hasEmail) _InfoRow(label: '邮箱', value: _user.email!),
           _InfoRow(label: '角色', value: _userRoleLabel(_user.role)),
           const SizedBox(height: 12),
           SizedBox(
@@ -2545,7 +2557,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ? '-'
                 : _factorLabels(preferences).join('、'),
           ),
-          _InfoRow(label: 'Passkey', value: '${_passkeys.length} 个'),
+          if (_publicSettings?.enableWebauthn == true)
+            _InfoRow(label: 'Passkey', value: '${_passkeys.length} 个'),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -2650,8 +2663,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   List<String> _factorLabels(AccountPreferences preferences) {
     final labels = <String>[];
     if (preferences.canUsePassword) labels.add('密码');
-    if (preferences.canUsePasskey) labels.add('Passkey');
-    if (preferences.canUseEmail) labels.add('邮箱');
+    if (preferences.canUsePasskey && _passkeyEnabled) labels.add('Passkey');
+    if (preferences.canUseEmail && _user.hasEmail) labels.add('邮箱');
     if (labels.isEmpty) labels.add('无');
     return labels;
   }
@@ -2662,7 +2675,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       2 => '系统公告',
       3 => '房间事件',
       4 => '密码重置',
-      5 => '邮箱验证',
+      5 => '邮箱绑定',
       _ => '通知',
     };
   }
@@ -3025,9 +3038,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
 }
 
 class _EmailBindDialog extends StatefulWidget {
-  final String? currentEmail;
-
-  const _EmailBindDialog({this.currentEmail});
+  const _EmailBindDialog();
 
   @override
   State<_EmailBindDialog> createState() => _EmailBindDialogState();
@@ -3036,17 +3047,9 @@ class _EmailBindDialog extends StatefulWidget {
 class _EmailBindDialogState extends State<_EmailBindDialog> {
   final _emailController = TextEditingController();
   final _tokenController = TextEditingController();
-  bool _sending = false;
-  bool _confirming = false;
-  String? _pendingEmail;
-  String? _maskedEmail;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _emailController.text = widget.currentEmail ?? '';
-  }
+  String _maskedEmail = '';
+  bool _requesting = false;
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -3055,43 +3058,27 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
     super.dispose();
   }
 
-  Future<void> _send() async {
+  Future<void> _requestToken() async {
     final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      setState(() => _error = '请输入邮箱');
-      return;
-    }
-    setState(() {
-      _sending = true;
-      _error = null;
-    });
+    if (email.isEmpty || _requesting) return;
+    setState(() => _requesting = true);
     try {
       final maskedEmail = await WatchTogetherService.startEmailBind(email);
       if (!mounted) return;
-      setState(() {
-        _pendingEmail = email;
-        _maskedEmail = maskedEmail;
-        _tokenController.clear();
-      });
-      MessageUtils.showSuccess(context, '验证码已发送');
+      setState(() => _maskedEmail = maskedEmail);
+      MessageUtils.showSuccess(context, '绑定确认邮件已发送');
     } catch (e) {
-      if (mounted) setState(() => _error = '发送验证码失败: $e');
+      if (mounted) MessageUtils.showError(context, '发送绑定邮件失败: $e');
     } finally {
-      if (mounted) setState(() => _sending = false);
+      if (mounted) setState(() => _requesting = false);
     }
   }
 
-  Future<void> _confirm() async {
-    final email = _pendingEmail ?? _emailController.text.trim();
+  Future<void> _submit() async {
+    final email = _emailController.text.trim();
     final token = _tokenController.text.trim();
-    if (email.isEmpty || token.isEmpty) {
-      setState(() => _error = '请输入邮箱和验证码');
-      return;
-    }
-    setState(() {
-      _confirming = true;
-      _error = null;
-    });
+    if (email.isEmpty || token.isEmpty || _submitting) return;
+    setState(() => _submitting = true);
     try {
       final user = await WatchTogetherService.confirmEmailBind(
         email: email,
@@ -3099,90 +3086,86 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
       );
       if (mounted) Navigator.pop(context, user);
     } catch (e) {
-      if (mounted) setState(() => _error = '绑定邮箱失败: $e');
+      if (mounted) MessageUtils.showError(context, '绑定邮箱失败: $e');
     } finally {
-      if (mounted) setState(() => _confirming = false);
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final busy = _sending || _confirming;
-    final hasPending = _pendingEmail != null;
     return AlertDialog(
-      icon: const Icon(Icons.alternate_email_rounded),
-      title: Text(widget.currentEmail == null ? '绑定邮箱' : '更换邮箱'),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+      title: const Text('绑定邮箱'),
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _emailController,
-              enabled: !busy,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: '邮箱',
-                prefixIcon: Icon(Icons.email_outlined),
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: (_) => _send(),
-            ),
-            const SizedBox(height: 12),
-            if (hasPending) ...[
-              Text(
-                '验证码已发送至 ${_maskedEmail ?? _pendingEmail}',
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _tokenController,
-                enabled: !busy,
-                autofocus: true,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: '验证码',
-                  prefixIcon: Icon(Icons.mark_email_read_outlined),
-                  border: OutlineInputBorder(),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _emailController,
+                    autofocus: true,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: '邮箱',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                  ),
                 ),
-                onSubmitted: (_) => _confirm(),
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: OutlinedButton(
+                    onPressed: _requesting ? null : _requestToken,
+                    child: _requesting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('发送'),
+                  ),
+                ),
+              ],
+            ),
+            if (_maskedEmail.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '已发送至 $_maskedEmail',
+                  style: TextStyle(color: Theme.of(context).hintColor),
+                ),
               ),
             ],
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _error!,
-                style: TextStyle(color: theme.colorScheme.error),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _tokenController,
+              decoration: const InputDecoration(
+                labelText: '绑定验证码',
+                prefixIcon: Icon(Icons.mark_email_read_outlined),
               ),
-            ],
+              onSubmitted: (_) => _submit(),
+            ),
           ],
         ),
       ),
       actions: [
         TextButton(
-          onPressed: busy ? null : () => Navigator.pop(context),
+          onPressed: _submitting ? null : () => Navigator.pop(context),
           child: const Text('取消'),
         ),
-        OutlinedButton(
-          onPressed: busy ? null : _send,
-          child: _sending
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(hasPending ? '重新发送' : '发送验证码'),
-        ),
         FilledButton(
-          onPressed: busy || !hasPending ? null : _confirm,
-          child: _confirming
-              ? const SizedBox.square(
-                  dimension: 18,
+          onPressed: _submitting ? null : _submit,
+          child: _submitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('完成绑定'),
+              : const Text('绑定'),
         ),
       ],
     );
@@ -3937,16 +3920,18 @@ class _AccountHero extends StatelessWidget {
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        user.email ?? '未绑定邮箱',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.66),
+                      if (user.hasEmail) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          user.email!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.66),
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

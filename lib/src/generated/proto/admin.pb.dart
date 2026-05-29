@@ -481,7 +481,7 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     $core.String? oauth2ProviderUserId,
     $core.String? oauth2ProviderUsername,
     $core.String? oauth2AvatarUrl,
-    $core.bool? oauth2EmailVerified,
+    $core.bool? oauth2EmailTrusted,
     $core.String? oauth2ProviderInstanceName,
     $core.String? oauth2ProviderIssuer,
     $core.String? webauthnCredentialId,
@@ -503,8 +503,8 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     if (oauth2ProviderUsername != null)
       result.oauth2ProviderUsername = oauth2ProviderUsername;
     if (oauth2AvatarUrl != null) result.oauth2AvatarUrl = oauth2AvatarUrl;
-    if (oauth2EmailVerified != null)
-      result.oauth2EmailVerified = oauth2EmailVerified;
+    if (oauth2EmailTrusted != null)
+      result.oauth2EmailTrusted = oauth2EmailTrusted;
     if (oauth2ProviderInstanceName != null)
       result.oauth2ProviderInstanceName = oauth2ProviderInstanceName;
     if (oauth2ProviderIssuer != null)
@@ -543,7 +543,7 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     ..aOS(11, _omitFieldNames ? '' : 'oauth2ProviderUserId')
     ..aOS(12, _omitFieldNames ? '' : 'oauth2ProviderUsername')
     ..aOS(13, _omitFieldNames ? '' : 'oauth2AvatarUrl')
-    ..aOB(14, _omitFieldNames ? '' : 'oauth2EmailVerified')
+    ..aOB(14, _omitFieldNames ? '' : 'oauth2EmailTrusted')
     ..aOS(15, _omitFieldNames ? '' : 'oauth2ProviderInstanceName')
     ..aOS(16, _omitFieldNames ? '' : 'oauth2ProviderIssuer')
     ..aOS(17, _omitFieldNames ? '' : 'webauthnCredentialId')
@@ -688,13 +688,13 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
   void clearOauth2AvatarUrl() => $_clearField(13);
 
   @$pb.TagNumber(14)
-  $core.bool get oauth2EmailVerified => $_getBF(13);
+  $core.bool get oauth2EmailTrusted => $_getBF(13);
   @$pb.TagNumber(14)
-  set oauth2EmailVerified($core.bool value) => $_setBool(13, value);
+  set oauth2EmailTrusted($core.bool value) => $_setBool(13, value);
   @$pb.TagNumber(14)
-  $core.bool hasOauth2EmailVerified() => $_has(13);
+  $core.bool hasOauth2EmailTrusted() => $_has(13);
   @$pb.TagNumber(14)
-  void clearOauth2EmailVerified() => $_clearField(14);
+  void clearOauth2EmailTrusted() => $_clearField(14);
 
   @$pb.TagNumber(15)
   $core.String get oauth2ProviderInstanceName => $_getSZ(14);

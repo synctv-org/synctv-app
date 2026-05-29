@@ -198,11 +198,22 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
   }
 
   Future<bool> _showLoginDialog({String? guestRoomId}) async {
-    final result = await showModalBottomSheet<bool>(
+    final result = await showGeneralDialog<bool>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => AuthPanel(initialGuestRoomId: guestRoomId),
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black.withValues(alpha: 0.48),
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (context, _, __) => Material(
+        type: MaterialType.transparency,
+        child: AuthPanel(initialGuestRoomId: guestRoomId),
+      ),
+      transitionBuilder: (context, animation, _, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
+        );
+      },
     );
     if (result == true) {
       if (mounted) {

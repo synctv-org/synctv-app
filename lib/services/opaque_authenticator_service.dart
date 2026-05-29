@@ -47,10 +47,8 @@ class OpaqueAuthenticatorService {
   }) async {
     final normalizedUsername = username.trim();
     final normalizedEmail = email.trim();
-    if (normalizedUsername.isEmpty ||
-        normalizedEmail.isEmpty ||
-        password.isEmpty) {
-      throw const FormatException('请输入用户名、邮箱和密码');
+    if (normalizedUsername.isEmpty || password.isEmpty) {
+      throw const FormatException('请输入用户名和密码');
     }
 
     final start = _client.startRegistration(password);

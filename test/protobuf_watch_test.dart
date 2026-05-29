@@ -54,13 +54,16 @@ void main() {
       enablePasswordSignup: true,
       passwordSignupNeedReview: true,
       enableEmailSignup: true,
+      enableEmail: true,
       enableGuest: false,
       emailSignupNeedReview: true,
+      enableWebauthn: true,
       enableWebauthnSignup: true,
       webauthnSignupNeedReview: true,
       movieProxy: false,
       liveProxy: true,
       emailWhitelistEnabled: true,
+      emailWhitelistDomains: ['example.com'],
       tsDisguisedAsPng: true,
       customPublishHost: 'rtmp://publish.example.test/app',
     );
@@ -2979,6 +2982,42 @@ void main() {
     expect(session.accessToken, isNull);
   });
 
+  test('email unbind uses protobuf command endpoint', () async {
+    Uri? requestedUri;
+    String? requestMethod;
+    String? requestBody;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requestedUri = request.url;
+        requestMethod = request.method;
+        requestBody = request.body;
+        return http.Response(
+          jsonEncode({
+            'user': {
+              'id': 'usr_1',
+              'username': 'alice',
+              'email': '',
+            },
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+
+    final response = await api.user.unbindEmail(client.UnbindEmailRequest());
+
+    expect(response.user.id, 'usr_1');
+    expect(response.user.email, isEmpty);
+    expect(requestMethod, 'POST');
+    expect(requestedUri, isNotNull);
+    expect(requestedUri!.path, '/api/user/email/unbind');
+    expect(requestedUri!.queryParameters, isEmpty);
+    expect(jsonDecode(requestBody!), <String, dynamic>{});
+  });
+
   test('admin test email uses protobuf request body only', () async {
     Uri? requestedUri;
     String? requestMethod;
@@ -5138,7 +5177,7 @@ void main() {
               'oauth2_provider_user_id': 'sub-123',
               'oauth2_provider_username': 'alice-oidc',
               'oauth2_avatar_url': 'https://issuer.example.test/a.png',
-              'oauth2_email_verified': true,
+              'oauth2_email_trusted': true,
               'oauth2_provider_instance_name': 'logto-main',
               'oauth2_provider_issuer': 'https://issuer.example.test',
             }
@@ -5164,11 +5203,11 @@ void main() {
       expect(review.oauth2ProviderUsername, 'alice-oidc');
       expect(review.oauth2ProviderIssuer, 'https://issuer.example.test');
       expect(review.oauth2AvatarUrl, 'https://issuer.example.test/a.png');
-      expect(review.oauth2EmailVerified, isTrue);
+      expect(review.oauth2EmailTrusted, isTrue);
       expect(review.details, contains('注册方式 OAuth2'));
       expect(review.details, contains('实例 logto-main'));
       expect(review.details, contains('Provider ID sub-123'));
-      expect(review.details, contains('OAuth2 邮箱已验证'));
+      expect(review.details, contains('OAuth2 邮箱可信'));
     } finally {
       await requests.cancel();
       await server.close(force: true);
@@ -5409,8 +5448,10 @@ void main() {
             'enable_password_signup': true,
             'password_signup_need_review': false,
             'enable_email_signup': true,
+            'enable_email': true,
             'enable_guest': false,
             'email_signup_need_review': true,
+            'enable_webauthn': true,
             'enable_webauthn_signup': true,
             'webauthn_signup_need_review': false,
             'movie_proxy': true,
@@ -5418,6 +5459,7 @@ void main() {
             'ts_disguised_as_png': true,
             'custom_publish_host': 'rtmp://publish.example.test/live',
             'email_whitelist_enabled': true,
+            'email_whitelist_domains': ['example.com', 'corp.test'],
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -5437,6 +5479,9 @@ void main() {
     expect(settings.tsDisguisedAsPng, isTrue);
     expect(settings.customPublishHost, 'rtmp://publish.example.test/live');
     expect(settings.emailWhitelistEnabled, isTrue);
+    expect(settings.enableEmail, isTrue);
+    expect(settings.enableWebauthn, isTrue);
+    expect(settings.emailWhitelistDomains, ['example.com', 'corp.test']);
   });
 
   test('public settings domain maps RTMP publishing options', () async {
@@ -5457,8 +5502,10 @@ void main() {
           'enable_password_signup': true,
           'password_signup_need_review': false,
           'enable_email_signup': true,
+          'enable_email': true,
           'enable_guest': true,
           'email_signup_need_review': false,
+          'enable_webauthn': false,
           'enable_webauthn_signup': true,
           'webauthn_signup_need_review': true,
           'movie_proxy': false,
@@ -5466,6 +5513,7 @@ void main() {
           'ts_disguised_as_png': true,
           'custom_publish_host': 'rtmp://publish.example.test/app',
           'email_whitelist_enabled': false,
+          'email_whitelist_domains': [],
         }));
       await request.response.close();
     });
@@ -5479,6 +5527,8 @@ void main() {
       expect(settings.liveProxy, isTrue);
       expect(settings.tsDisguisedAsPng, isTrue);
       expect(settings.customPublishHost, 'rtmp://publish.example.test/app');
+      expect(settings.enableEmail, isTrue);
+      expect(settings.enableWebauthn, isFalse);
     } finally {
       await requests.cancel();
       await server.close(force: true);

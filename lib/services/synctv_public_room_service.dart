@@ -36,13 +36,17 @@ class SyncTvPublicRoomDomainService {
       enablePasswordSignup: settings.enablePasswordSignup,
       passwordSignupNeedReview: settings.passwordSignupNeedReview,
       enableEmailSignup: settings.enableEmailSignup,
+      enableEmail: settings.enableEmail,
       enableGuest: settings.enableGuest,
       emailSignupNeedReview: settings.emailSignupNeedReview,
+      enableWebauthn: settings.enableWebauthn,
       enableWebauthnSignup: settings.enableWebauthnSignup,
       webauthnSignupNeedReview: settings.webauthnSignupNeedReview,
       movieProxy: settings.movieProxy,
       liveProxy: settings.liveProxy,
       emailWhitelistEnabled: settings.emailWhitelistEnabled,
+      emailWhitelistDomains:
+          settings.emailWhitelistDomains.toList(growable: false),
       tsDisguisedAsPng: settings.tsDisguisedAsPng,
       customPublishHost: settings.customPublishHost,
     );

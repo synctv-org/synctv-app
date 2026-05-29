@@ -73,7 +73,7 @@ message StartSMSLoginRequest {
 
 // Start SMS login response
 message StartSMSLoginResponse {
-  string session_token = 1;
+  string session_token = 1; // Signed SMS login session token.
   string gt = 2;
   string challenge = 3;
   int64 expires_at = 4; // Unix epoch timestamp
@@ -81,20 +81,20 @@ message StartSMSLoginResponse {
 
 // Send SMS request
 message SendSMSRequest {
-  string session_token = 1;
+  string session_token = 1; // Signed session token returned by StartSMSLoginResponse.
   string phone = 2;
   string validate = 3; // Geetest validate result produced by the frontend captcha widget
 }
 
 // Send SMS response
 message SendSMSResponse {
-  string session_token = 1;
+  string session_token = 1; // Updated signed session token for LoginSMSRequest.
   int64 expires_at = 2; // Unix epoch timestamp
 }
 
 // Login with SMS request
 message LoginSMSRequest {
-  string session_token = 1;
+  string session_token = 1; // Signed session token returned by SendSMSResponse.
   string code = 2;
 }
 

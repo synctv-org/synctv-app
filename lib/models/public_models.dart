@@ -10,13 +10,16 @@ class PublicSettingsInfo {
   final bool enablePasswordSignup;
   final bool passwordSignupNeedReview;
   final bool enableEmailSignup;
+  final bool enableEmail;
   final bool enableGuest;
   final bool emailSignupNeedReview;
+  final bool enableWebauthn;
   final bool enableWebauthnSignup;
   final bool webauthnSignupNeedReview;
   final bool movieProxy;
   final bool liveProxy;
   final bool emailWhitelistEnabled;
+  final List<String> emailWhitelistDomains;
   final bool tsDisguisedAsPng;
   final String customPublishHost;
 
@@ -30,13 +33,16 @@ class PublicSettingsInfo {
     required this.enablePasswordSignup,
     required this.passwordSignupNeedReview,
     required this.enableEmailSignup,
+    required this.enableEmail,
     required this.enableGuest,
     required this.emailSignupNeedReview,
+    required this.enableWebauthn,
     required this.enableWebauthnSignup,
     required this.webauthnSignupNeedReview,
     required this.movieProxy,
     required this.liveProxy,
     required this.emailWhitelistEnabled,
+    required this.emailWhitelistDomains,
     required this.tsDisguisedAsPng,
     required this.customPublishHost,
   });

@@ -22,6 +22,11 @@ class SyncTvServerProfile {
   final SyncTvServerSessionData sessionData;
 
   bool get isPending => serverId.startsWith('pending_');
+  bool get isDefault {
+    final endpoint = SyncTvSessionStore.defaultBaseUrl;
+    return endpoint.isNotEmpty &&
+        (activeEndpoint == endpoint || endpoints.contains(endpoint));
+  }
 
   SyncTvServerProfile copyWith({
     String? name,
@@ -58,15 +63,15 @@ class SyncTvServerProfile {
         if (lastSeenAt != null) 'last_seen_at': lastSeenAt!.toIso8601String(),
       };
 
-  static SyncTvServerProfile fromJson(Map<String, dynamic> json) {
+  static SyncTvServerProfile? fromJson(Map<String, dynamic> json) {
     final endpoints = (json['endpoints'] as List? ?? const [])
         .map((entry) => entry.toString())
         .where((entry) => entry.trim().isNotEmpty)
         .toList();
-    final activeEndpoint = (json['active_endpoint'] as String?) ??
-        (endpoints.isNotEmpty
-            ? endpoints.first
-            : SyncTvSessionStore.defaultBaseUrl);
+    final rawActiveEndpoint = json['active_endpoint']?.toString().trim() ?? '';
+    if (endpoints.isEmpty && rawActiveEndpoint.isEmpty) return null;
+    final activeEndpoint =
+        rawActiveEndpoint.isNotEmpty ? rawActiveEndpoint : endpoints.first;
     return SyncTvServerProfile(
       serverId: json['server_id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
@@ -99,16 +104,28 @@ class SyncTvSessionStore {
   static const String guestRoomKey = 'synctv_guest_room_id';
   static const String guestDisplayNameKey = 'synctv_guest_display_name';
   static const String baseUrlKey = 'synctv_base_url';
-  static const String defaultBaseUrl = String.fromEnvironment(
+  static const String configuredDefaultBaseUrl = String.fromEnvironment(
     'SYNCTV_DEFAULT_SERVER_URL',
-    defaultValue: 'http://127.0.0.1:8080',
+    defaultValue: '',
   );
+  static const String fallbackClientBaseUrl = 'http://127.0.0.1:8080';
   static const String serversKey = 'synctv_servers_v1';
   static const String activeServerKey = 'synctv_active_server_id_v1';
 
+  static String get defaultBaseUrl {
+    final value = configuredDefaultBaseUrl.trim();
+    if (value.isEmpty) return '';
+    return SyncTvApiClient.normalizeBaseUrl(value);
+  }
+
+  static bool get hasDefaultBaseUrl => defaultBaseUrl.isNotEmpty;
+
+  static String get initialClientBaseUrl =>
+      hasDefaultBaseUrl ? defaultBaseUrl : fallbackClientBaseUrl;
+
   final SyncTvSession session;
 
-  String baseUrl = defaultBaseUrl;
+  String baseUrl = initialClientBaseUrl;
   String? guestRoomId;
   String? guestDisplayName;
   List<SyncTvServerProfile> servers = [];
@@ -122,19 +139,24 @@ class SyncTvSessionStore {
     servers = _decodeServers(prefs.getString(serversKey));
     activeServerId = prefs.getString(activeServerKey);
 
-    final legacyBaseUrl = prefs.getString(baseUrlKey);
     if (servers.isEmpty) {
-      final endpoint = legacyBaseUrl ?? defaultBaseUrl;
-      final fallback = _fallbackProfile(endpoint);
-      servers = [fallback];
-      activeServerId = fallback.serverId;
-      await _persistServers(prefs);
+      final endpoint = defaultBaseUrl;
+      if (endpoint.isNotEmpty) {
+        final fallback = _fallbackProfile(endpoint);
+        servers = [fallback];
+        activeServerId = fallback.serverId;
+        await _persistServers(prefs);
+      } else {
+        activeServerId = null;
+        await _persistServers(prefs);
+        await prefs.remove(baseUrlKey);
+      }
     } else if (_serverById(activeServerId) == null) {
       activeServerId = servers.first.serverId;
       await prefs.setString(activeServerKey, activeServerId!);
     }
 
-    baseUrl = activeServer?.activeEndpoint ?? defaultBaseUrl;
+    baseUrl = activeServer?.activeEndpoint ?? initialClientBaseUrl;
     _loadSessionFromPrefs(prefs);
     if (_removePendingServersCoveredByIdentifiedServers()) {
       await _persistServers(prefs);
@@ -204,7 +226,17 @@ class SyncTvSessionStore {
   }
 
   Future<void> setBaseUrl(String normalizedBaseUrl) async {
-    final endpoint = SyncTvApiClient.normalizeBaseUrl(normalizedBaseUrl);
+    final rawEndpoint = normalizedBaseUrl.trim();
+    if (rawEndpoint.isEmpty) {
+      activeServerId = null;
+      baseUrl = initialClientBaseUrl;
+      _clearInMemorySession();
+      final prefs = await SharedPreferences.getInstance();
+      await _persistServers(prefs);
+      await persistTokens();
+      return;
+    }
+    final endpoint = SyncTvApiClient.normalizeBaseUrl(rawEndpoint);
     baseUrl = endpoint;
     final current = activeServer;
     if (current == null) {
@@ -262,12 +294,18 @@ class SyncTvSessionStore {
 
   Future<void> removeServer(String serverId) async {
     final index = servers.indexWhere((server) => server.serverId == serverId);
-    if (index < 0 || servers.length == 1) return;
+    if (index < 0) return;
+    if (servers[index].isDefault) return;
     servers.removeAt(index);
     if (activeServerId == serverId) {
-      activeServerId = servers.first.serverId;
-      baseUrl = servers.first.activeEndpoint;
-      _loadProfileSession(servers.first);
+      final nextServer = servers.firstOrNull;
+      activeServerId = nextServer?.serverId;
+      baseUrl = nextServer?.activeEndpoint ?? initialClientBaseUrl;
+      if (nextServer == null) {
+        _clearInMemorySession();
+      } else {
+        _loadProfileSession(nextServer);
+      }
     }
     final prefs = await SharedPreferences.getInstance();
     await _persistServers(prefs);
@@ -278,7 +316,11 @@ class SyncTvSessionStore {
     _captureSessionToActiveServer();
     final prefs = await SharedPreferences.getInstance();
     await _persistServers(prefs);
-    await prefs.setString(baseUrlKey, baseUrl);
+    if (activeServer == null) {
+      await prefs.remove(baseUrlKey);
+    } else {
+      await prefs.setString(baseUrlKey, baseUrl);
+    }
 
     await prefs.remove(tokenKey);
     await prefs.remove(refreshTokenKey);
@@ -345,7 +387,11 @@ class SyncTvSessionStore {
         .map((entry) => SyncTvServerProfile.fromJson(
               entry.map((key, value) => MapEntry(key.toString(), value)),
             ))
-        .where((server) => server.serverId.isNotEmpty)
+        .whereType<SyncTvServerProfile>()
+        .where((server) =>
+            server.serverId.isNotEmpty &&
+            server.activeEndpoint.trim().isNotEmpty &&
+            server.endpoints.isNotEmpty)
         .toList();
   }
 
@@ -356,17 +402,23 @@ class SyncTvSessionStore {
     );
     if (activeServerId != null) {
       await prefs.setString(activeServerKey, activeServerId!);
+    } else {
+      await prefs.remove(activeServerKey);
     }
   }
 
   void _loadSessionFromPrefs(SharedPreferences prefs) {
     final current = activeServer;
-    if (current != null && current.sessionData.hasCredentials) {
+    if (current == null) {
+      _clearInMemorySession();
+      return;
+    }
+    if (current.sessionData.hasCredentials) {
       _loadProfileSession(current);
       return;
     }
 
-    if (current != null && !_isFallbackServerId(current.serverId)) {
+    if (!_isFallbackServerId(current.serverId)) {
       _loadProfileSession(current);
       return;
     }
@@ -398,6 +450,14 @@ class SyncTvSessionStore {
         (session.refreshToken?.isNotEmpty ?? false)) {
       _captureSessionToActiveServer();
     }
+  }
+
+  void _clearInMemorySession() {
+    session.accessToken = null;
+    session.refreshToken = null;
+    session.isGuest = false;
+    guestRoomId = null;
+    guestDisplayName = null;
   }
 
   void _loadProfileSession(SyncTvServerProfile profile) {

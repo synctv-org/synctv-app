@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
+import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
+import 'package:synctv_app/services/realtime_event_log_preferences.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/services/room_realtime_connection.dart';
 import 'package:synctv_app/utils/message_utils.dart';
@@ -14,6 +17,7 @@ import 'package:synctv_app/pages/mobile/room_settings_page.dart';
 import 'package:synctv_app/widgets/add_movie_dialog.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
 import 'package:synctv_app/widgets/room_invite_actions.dart';
+import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 import 'package:synctv_app/widgets/chat_input_area.dart';
 import 'package:synctv_app/managers/webrtc_manager.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
@@ -36,6 +40,13 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   final List<RoomRealtimeChatEntry> _messages = [];
+  final List<RealtimeEventLogEntry> _realtimeEvents = [];
+  final StreamController<RoomRealtimeMessage> _realtimeMessageBus =
+      StreamController<RoomRealtimeMessage>.broadcast();
+  final StreamController<RealtimeEventLogEntry> _realtimeEventBus =
+      StreamController<RealtimeEventLogEntry>.broadcast();
+  final StreamController<void> _realtimeReconnectBus =
+      StreamController<void>.broadcast();
   Timer? _syncTimer;
   WPlaybackStatus? _currentStatus;
   RoomRealtimeConnection? _channel;
@@ -84,6 +95,9 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
   final Set<String> _selectedMovieIds = {};
 
   bool get _isHarmony => Platform.operatingSystem.toLowerCase() == 'ohos';
+  bool get _showRealtimeDebugTab => kDebugMode;
+  int get _roomTabCount =>
+      (_isHarmony ? 2 : 3) + (_showRealtimeDebugTab ? 1 : 0);
   bool get _canManageRoom {
     final user = _currentUser;
     if (user == null) return false;
@@ -110,7 +124,13 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
         Navigator.of(context).pop();
       }
     });
-    _tabController = TabController(length: _isHarmony ? 2 : 3, vsync: this);
+    _tabController = TabController(length: _roomTabCount, vsync: this);
+    RealtimeEventLogPreferences.maxEntries.addListener(
+      _handleRealtimeLogMaxEntriesChanged,
+    );
+    RealtimeEventLogPreferences.load().then((_) {
+      if (mounted) _handleRealtimeLogMaxEntriesChanged();
+    });
 
     // Initialize WebRTC Manager
     _webrtcManager = WebRTCManager(
@@ -258,13 +278,21 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
       _channel = RoomRealtimeConnection.connect(
         widget.room.roomId,
         initialMessages: RoomRealtimeCodec.encodeInitialObservations(),
+        onOutgoing: _recordRealtimeOutgoing,
+        onIncoming: _recordRealtimeIncoming,
       );
+      if (!_realtimeReconnectBus.isClosed) {
+        _realtimeReconnectBus.add(null);
+      }
 
       _realtimeSubscription = _channel!.stream.listen(
         (data) {
           _reconnectAttempts = 0;
           try {
             final message = RoomRealtimeCodec.decode(data);
+            if (!_realtimeMessageBus.isClosed) {
+              _realtimeMessageBus.add(message);
+            }
             _handleRealtimeMessage(message);
           } catch (e) {
             debugPrint('Proto decode error: $e');
@@ -282,6 +310,44 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
     } catch (e) {
       debugPrint('Realtime stream connection error: $e');
       _scheduleReconnect();
+    }
+  }
+
+  void _recordRealtimeIncoming(Uint8List bytes) {
+    final entry = RoomRealtimeCodec.describeIncoming(bytes);
+    if (!_realtimeEventBus.isClosed) _realtimeEventBus.add(entry);
+    if (!_showRealtimeDebugTab || !mounted) return;
+    _appendRealtimeEvent(entry);
+  }
+
+  void _recordRealtimeOutgoing(List<int> bytes) {
+    final entry = RoomRealtimeCodec.describeOutgoing(bytes);
+    if (!_realtimeEventBus.isClosed) _realtimeEventBus.add(entry);
+    if (!_showRealtimeDebugTab || !mounted) return;
+    _appendRealtimeEvent(entry);
+  }
+
+  void _sendRealtimeMessage(List<int> bytes) {
+    if (bytes.isEmpty) return;
+    _channel?.sink.add(bytes);
+  }
+
+  void _appendRealtimeEvent(RealtimeEventLogEntry entry) {
+    setState(() {
+      _realtimeEvents.add(entry);
+      _trimRealtimeEvents();
+    });
+  }
+
+  void _handleRealtimeLogMaxEntriesChanged() {
+    if (!mounted) return;
+    setState(_trimRealtimeEvents);
+  }
+
+  void _trimRealtimeEvents() {
+    final maxEntries = RealtimeEventLogPreferences.maxEntries.value;
+    if (_realtimeEvents.length > maxEntries) {
+      _realtimeEvents.removeRange(0, _realtimeEvents.length - maxEntries);
     }
   }
 
@@ -362,10 +428,12 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
         );
       }
     } else if (type == RoomRealtimeMessageKind.roomSettings) {
+      if (!_isPrimaryResourceMessage(message, 'room_settings')) return;
       return;
     } else if (type == RoomRealtimeMessageKind.memberEvent) {
       return;
     } else if (type == RoomRealtimeMessageKind.movies) {
+      if (!_isPrimaryResourceMessage(message, 'playlist_items')) return;
       final mediaLibrary = message.mediaLibrary;
       if (mediaLibrary == null) {
         _reportInvalidRealtimePayload('播放列表');
@@ -373,6 +441,7 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
         _applyMediaLibrary(mediaLibrary);
       }
     } else if (type == RoomRealtimeMessageKind.viewerCount) {
+      if (!_isPrimaryResourceMessage(message, 'room_members')) return;
       final members = message.members;
       if (members == null) {
         _reportInvalidRealtimePayload('成员列表');
@@ -380,6 +449,10 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
         _applyMembers(members);
       }
     } else if (type == RoomRealtimeMessageKind.error) {
+      if (message.resourceObserveId.isNotEmpty &&
+          !_isPrimaryObserveId(message.resourceObserveId)) {
+        return;
+      }
       final errorMsg = message.error?.message ?? '';
       if (errorMsg.isNotEmpty && mounted) {
         MessageUtils.showError(context, '错误: $errorMsg');
@@ -411,6 +484,22 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
         }
       }
     }
+  }
+
+  bool _isPrimaryResourceMessage(
+    RoomRealtimeMessage message,
+    String observeId,
+  ) {
+    return message.resourceObserveId.isEmpty ||
+        message.resourceObserveId == observeId;
+  }
+
+  bool _isPrimaryObserveId(String observeId) {
+    return observeId == 'room_settings' ||
+        observeId == 'playlist_items' ||
+        observeId == 'room_members' ||
+        observeId == 'playback_state' ||
+        observeId == 'playback_snapshot';
   }
 
   WPlaybackStatus _mergePlaybackStatus(
@@ -811,6 +900,9 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
 
   @override
   void dispose() {
+    RealtimeEventLogPreferences.maxEntries.removeListener(
+      _handleRealtimeLogMaxEntriesChanged,
+    );
     _authErrorSubscription?.cancel();
     _realtimeSubscription?.cancel();
     _tabController.dispose();
@@ -823,6 +915,9 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
     _movieScrollController.dispose();
     _webrtcManager?.dispose();
     _danmakuController.dispose();
+    _realtimeMessageBus.close();
+    _realtimeEventBus.close();
+    _realtimeReconnectBus.close();
     super.dispose();
   }
 
@@ -963,11 +1058,13 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
                   ? [
                       _buildPlaylistTab(),
                       _buildMembersTab(),
+                      if (_showRealtimeDebugTab) _buildRealtimeEventsTab(),
                     ]
                   : [
                       _buildChatTab(),
                       _buildPlaylistTab(),
                       _buildMembersTab(),
+                      if (_showRealtimeDebugTab) _buildRealtimeEventsTab(),
                     ],
             ),
           ),
@@ -1036,6 +1133,17 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
   }
 
   Widget _buildTabBar(ThemeData theme) {
+    final harmonyTabs = [
+      const Tab(text: '列表'),
+      const Tab(text: '成员'),
+      if (_showRealtimeDebugTab) const Tab(text: '实时'),
+    ];
+    final tabs = [
+      const Tab(text: '聊天'),
+      const Tab(text: '列表'),
+      const Tab(text: '成员'),
+      if (_showRealtimeDebugTab) const Tab(text: '实时'),
+    ];
     return Material(
       color: theme.colorScheme.surface,
       child: TabBar(
@@ -1044,17 +1152,17 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
         unselectedLabelColor: theme.hintColor,
         indicatorColor: theme.colorScheme.primary,
         dividerColor: theme.dividerColor.withValues(alpha: 0.6),
-        tabs: _isHarmony
-            ? const [
-                Tab(text: '列表'),
-                Tab(text: '成员'),
-              ]
-            : const [
-                Tab(text: '聊天'),
-                Tab(text: '列表'),
-                Tab(text: '成员'),
-              ],
+        tabs: _isHarmony ? harmonyTabs : tabs,
       ),
+    );
+  }
+
+  Widget _buildRealtimeEventsTab() {
+    return RealtimeEventLogView(
+      events: _realtimeEvents,
+      onClear: () => setState(_realtimeEvents.clear),
+      onMaxEntriesChanged: (_) => setState(_trimRealtimeEvents),
+      emptyText: '实时事件会在收发 WebSocket 消息后显示',
     );
   }
 
@@ -1756,6 +1864,12 @@ class _DesktopRoomScreenState extends State<DesktopRoomScreen>
               creatorId: widget.room.creatorId,
               currentUserId: _currentUser?.id ?? '',
               currentSettings: settings,
+              realtime: RoomRealtimeSession(
+                send: _sendRealtimeMessage,
+                messages: _realtimeMessageBus.stream,
+                events: _realtimeEventBus.stream,
+                reconnects: _realtimeReconnectBus.stream,
+              ),
             ),
           ),
         );

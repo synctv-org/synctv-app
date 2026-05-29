@@ -92,9 +92,9 @@ BEGIN
             VALUE "CompanyName", "com.sync.app" "\0"
             VALUE "FileDescription", "看搭子" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "synctv_app" "\0"
+            VALUE "InternalName", "synctv-app" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.sync.app. All rights reserved." "\0"
-            VALUE "OriginalFilename", "synctv_app.exe" "\0"
+            VALUE "OriginalFilename", "synctv-app.exe" "\0"
             VALUE "ProductName", "看搭子" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END

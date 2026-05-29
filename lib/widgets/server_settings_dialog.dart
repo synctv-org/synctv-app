@@ -181,7 +181,7 @@ Future<bool?> showServerSettingsDialog({
                       (profile) => _ServerProfileTile(
                         profile: profile,
                         active: profile.serverId == activeServer?.serverId,
-                        canRemove: servers.length > 1 && !busy,
+                        canRemove: !busy && !profile.isDefault,
                         busy: busy,
                         onActivate: () =>
                             activateServer(setDialogState, profile),
@@ -213,7 +213,7 @@ class _EmptyServerState extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        '还没有保存的服务器。',
+        '还没有保存的服务器。添加服务器后即可登录和浏览公开房间。',
         style: TextStyle(
           color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
         ),
@@ -276,13 +276,26 @@ class _ServerProfileTile extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  profile.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        profile.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    if (profile.isDefault) ...[
+                      const SizedBox(width: 8),
+                      _ServerBadge(
+                        label: '默认',
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
+                  ],
                 ),
               ),
               if (!active)
@@ -292,7 +305,11 @@ class _ServerProfileTile extends StatelessWidget {
                   icon: const Icon(Icons.login_rounded, size: 20),
                 ),
               IconButton(
-                tooltip: canRemove ? '移除' : '至少保留一个服务器',
+                tooltip: profile.isDefault
+                    ? '默认服务器不可移除'
+                    : canRemove
+                        ? '移除'
+                        : '正在处理',
                 onPressed: canRemove ? onRemove : null,
                 icon: const Icon(Icons.delete_outline_rounded, size: 20),
               ),
@@ -316,6 +333,35 @@ class _ServerProfileTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ServerBadge extends StatelessWidget {
+  const _ServerBadge({
+    required this.label,
+    required this.color,
+  });
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }

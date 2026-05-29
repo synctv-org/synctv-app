@@ -273,11 +273,11 @@ const UserRegistrationReview$json = {
       '10': 'oauth2AvatarUrl'
     },
     {
-      '1': 'oauth2_email_verified',
+      '1': 'oauth2_email_trusted',
       '3': 14,
       '4': 1,
       '5': 8,
-      '10': 'oauth2EmailVerified'
+      '10': 'oauth2EmailTrusted'
     },
     {
       '1': 'oauth2_provider_instance_name',
@@ -321,12 +321,12 @@ final $typed_data.Uint8List userRegistrationReviewDescriptor = $convert.base64De
     'Ml9wcm92aWRlchgKIAEoCVIOb2F1dGgyUHJvdmlkZXISNQoXb2F1dGgyX3Byb3ZpZGVyX3VzZX'
     'JfaWQYCyABKAlSFG9hdXRoMlByb3ZpZGVyVXNlcklkEjgKGG9hdXRoMl9wcm92aWRlcl91c2Vy'
     'bmFtZRgMIAEoCVIWb2F1dGgyUHJvdmlkZXJVc2VybmFtZRIqChFvYXV0aDJfYXZhdGFyX3VybB'
-    'gNIAEoCVIPb2F1dGgyQXZhdGFyVXJsEjIKFW9hdXRoMl9lbWFpbF92ZXJpZmllZBgOIAEoCFIT'
-    'b2F1dGgyRW1haWxWZXJpZmllZBJBCh1vYXV0aDJfcHJvdmlkZXJfaW5zdGFuY2VfbmFtZRgPIA'
-    'EoCVIab2F1dGgyUHJvdmlkZXJJbnN0YW5jZU5hbWUSNAoWb2F1dGgyX3Byb3ZpZGVyX2lzc3Vl'
-    'chgQIAEoCVIUb2F1dGgyUHJvdmlkZXJJc3N1ZXISNAoWd2ViYXV0aG5fY3JlZGVudGlhbF9pZB'
-    'gRIAEoCVIUd2ViYXV0aG5DcmVkZW50aWFsSWQSOAoYd2ViYXV0aG5fY3JlZGVudGlhbF9uYW1l'
-    'GBIgASgJUhZ3ZWJhdXRobkNyZWRlbnRpYWxOYW1l');
+    'gNIAEoCVIPb2F1dGgyQXZhdGFyVXJsEjAKFG9hdXRoMl9lbWFpbF90cnVzdGVkGA4gASgIUhJv'
+    'YXV0aDJFbWFpbFRydXN0ZWQSQQodb2F1dGgyX3Byb3ZpZGVyX2luc3RhbmNlX25hbWUYDyABKA'
+    'lSGm9hdXRoMlByb3ZpZGVySW5zdGFuY2VOYW1lEjQKFm9hdXRoMl9wcm92aWRlcl9pc3N1ZXIY'
+    'ECABKAlSFG9hdXRoMlByb3ZpZGVySXNzdWVyEjQKFndlYmF1dGhuX2NyZWRlbnRpYWxfaWQYES'
+    'ABKAlSFHdlYmF1dGhuQ3JlZGVudGlhbElkEjgKGHdlYmF1dGhuX2NyZWRlbnRpYWxfbmFtZRgS'
+    'IAEoCVIWd2ViYXV0aG5DcmVkZW50aWFsTmFtZQ==');
 
 @$core.Deprecated('Use roomCreationReviewDescriptor instead')
 const RoomCreationReview$json = {

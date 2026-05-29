@@ -40,6 +40,7 @@ service UserService {
     rpc SetUsername(SetUsernameRequest) returns (SetUsernameResponse);
     rpc StartEmailBind(StartEmailBindRequest) returns (StartEmailBindResponse);
     rpc ConfirmEmailBind(ConfirmEmailBindRequest) returns (ConfirmEmailBindResponse);
+    rpc UnbindEmail(UnbindEmailRequest) returns (UnbindEmailResponse);
     rpc StartOpaquePasswordUpdate(StartOpaquePasswordUpdateRequest) returns (StartOpaquePasswordUpdateResponse);
     rpc FinishOpaquePasswordUpdate(FinishOpaquePasswordUpdateRequest) returns (FinishOpaquePasswordUpdateResponse);
     rpc StartPasskeyBind(StartPasskeyBindRequest) returns (StartPasskeyBindResponse);
@@ -145,10 +146,6 @@ service PublicService {
 // Authentication: None for sending codes, JWT for confirmation
 // Routes: /api/email/*
 service EmailService {
-    // Email verification
-    rpc SendVerificationEmail(SendVerificationEmailRequest) returns (SendVerificationEmailResponse);
-    rpc ConfirmEmail(ConfirmEmailRequest) returns (ConfirmEmailResponse);
-
     // Password reset
     rpc RequestPasswordReset(RequestPasswordResetRequest) returns (RequestPasswordResetResponse);
     rpc StartOpaquePasswordReset(StartOpaquePasswordResetRequest) returns (StartOpaquePasswordResetResponse);
@@ -178,8 +175,7 @@ message User {
     synctv.common.UserRole role = 4;     // Global RBAC role
     synctv.common.UserStatus status = 5; // Account status
     int64 created_at = 6;
-    bool email_verified = 7; // Whether email has been verified
-    bool is_banned = 8;
+    bool is_banned = 7;
 }
 
 // Public user view - safe to return in any context (room member lists, chat, etc.).
@@ -2231,6 +2227,12 @@ message ConfirmEmailBindResponse {
     User user = 1;
 }
 
+message UnbindEmailRequest {}
+
+message UnbindEmailResponse {
+    User user = 1;
+}
+
 message ListMyRoomsRequest {
     option (buf.validate.message).cel = {
         id: "list_my_rooms.page"
@@ -2382,6 +2384,8 @@ message GetPublicSettingsResponse {
     bool enable_email_signup = 17;
     bool enable_guest = 18;
     bool email_signup_need_review = 19;
+    bool enable_email = 24;
+    bool enable_webauthn = 25;
     bool enable_webauthn_signup = 22;
     bool webauthn_signup_need_review = 23;
 
@@ -2395,6 +2399,7 @@ message GetPublicSettingsResponse {
 
     // Email settings
     bool email_whitelist_enabled = 15;
+    repeated string email_whitelist_domains = 26;
 }
 
 // ==================== Public Server Info ====================
@@ -2406,26 +2411,6 @@ message GetServerInfoResponse {
     // in runtime settings storage; clients only read it.
     string server_id = 1;
     string server_name = 2;
-}
-
-// ==================== Email Verification ====================
-
-message SendVerificationEmailRequest {
-    string email = 1; // Validation: required, max 254 chars, email format
-}
-
-message SendVerificationEmailResponse {
-    string message = 1;
-}
-
-message ConfirmEmailRequest {
-    string email = 1;
-    string token = 2;  // Verification code from email
-}
-
-message ConfirmEmailResponse {
-    string message = 1;
-    string user_id = 2;
 }
 
 // ==================== Password Reset ====================
@@ -2659,7 +2644,7 @@ enum NotificationType {
     NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT = 2;
     NOTIFICATION_TYPE_ROOM_EVENT = 3;
     NOTIFICATION_TYPE_PASSWORD_RESET = 4;
-    NOTIFICATION_TYPE_EMAIL_VERIFICATION = 5;
+    NOTIFICATION_TYPE_EMAIL_BIND = 5;
 }
 
 message NotificationProto {
