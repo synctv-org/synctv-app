@@ -10,12 +10,13 @@
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
 // ignore_for_file: non_constant_identifier_names, prefer_relative_imports
 
+import 'dart:async' as $async;
 import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'common.pbenum.dart' as $1;
+import 'common.pbenum.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -1238,8 +1239,8 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
     $core.String? username,
     $core.String? email,
     $core.String? avatar,
-    $1.UserRole? role,
-    $1.UserStatus? status,
+    $0.UserRole? role,
+    $0.UserStatus? status,
     $fixnum.Int64? createdAt,
   }) {
     final result = create();
@@ -1270,10 +1271,10 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'username')
     ..aOS(3, _omitFieldNames ? '' : 'email')
     ..aOS(4, _omitFieldNames ? '' : 'avatar')
-    ..aE<$1.UserRole>(5, _omitFieldNames ? '' : 'role',
-        enumValues: $1.UserRole.values)
-    ..aE<$1.UserStatus>(6, _omitFieldNames ? '' : 'status',
-        enumValues: $1.UserStatus.values)
+    ..aE<$0.UserRole>(5, _omitFieldNames ? '' : 'role',
+        enumValues: $0.UserRole.values)
+    ..aE<$0.UserStatus>(6, _omitFieldNames ? '' : 'status',
+        enumValues: $0.UserStatus.values)
     ..aInt64(7, _omitFieldNames ? '' : 'createdAt')
     ..hasRequiredFields = false;
 
@@ -1338,9 +1339,9 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
 
   /// User role
   @$pb.TagNumber(5)
-  $1.UserRole get role => $_getN(4);
+  $0.UserRole get role => $_getN(4);
   @$pb.TagNumber(5)
-  set role($1.UserRole value) => $_setField(5, value);
+  set role($0.UserRole value) => $_setField(5, value);
   @$pb.TagNumber(5)
   $core.bool hasRole() => $_has(4);
   @$pb.TagNumber(5)
@@ -1348,9 +1349,9 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
 
   /// Account status
   @$pb.TagNumber(6)
-  $1.UserStatus get status => $_getN(5);
+  $0.UserStatus get status => $_getN(5);
   @$pb.TagNumber(6)
-  set status($1.UserStatus value) => $_setField(6, value);
+  set status($0.UserStatus value) => $_setField(6, value);
   @$pb.TagNumber(6)
   $core.bool hasStatus() => $_has(5);
   @$pb.TagNumber(6)
@@ -1366,6 +1367,81 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
   $core.bool hasCreatedAt() => $_has(6);
   @$pb.TagNumber(7)
   void clearCreatedAt() => $_clearField(7);
+}
+
+/// ==================== OAuth2 Service ====================
+/// OAuth2/OIDC authentication service
+///
+/// Frontend-driven flow:
+/// 1. Frontend calls GetAuthorizationUrl to get the OAuth2 provider's auth URL
+/// 2. Frontend redirects user to the auth URL
+/// 3. User authorizes on the OAuth2 provider (e.g., GitHub)
+/// 4. Provider redirects to frontend URL with code and state parameters
+/// 5. Frontend extracts code and state from URL
+/// 6. Frontend calls ExchangeAuthorizationCode with code and state
+/// 7. Backend validates state, exchanges code for user info, creates/logs in user
+/// 8. Backend returns JWT token to frontend
+///
+/// Authentication:
+/// - GetAuthorizationUrl: None (public)
+/// - ExchangeAuthorizationCode: None for login flow; bind flow requires JWT matching OAuth2 state user
+/// - GetAuthorizationUrlForBind: JWT Authorization header (user_id)
+/// - ListAvailableProviders: None (public)
+/// - UnlinkProvider, GetLinkedProviders: JWT Authorization header (user_id)
+///
+/// Routes: /api/oauth2/*
+class OAuth2ServiceApi {
+  final $pb.RpcClient _client;
+
+  OAuth2ServiceApi(this._client);
+
+  /// Get authorization URL for OAuth2 login flow
+  /// Returns the URL to redirect the user to for authorization
+  $async.Future<GetAuthorizationUrlResponse> getAuthorizationUrl(
+          $pb.ClientContext? ctx, GetAuthorizationUrlRequest request) =>
+      _client.invoke<GetAuthorizationUrlResponse>(ctx, 'OAuth2Service',
+          'GetAuthorizationUrl', request, GetAuthorizationUrlResponse());
+
+  /// Get authorization URL for binding OAuth2 provider to existing user account
+  /// Requires authentication
+  $async.Future<GetAuthorizationUrlForBindResponse> getAuthorizationUrlForBind(
+          $pb.ClientContext? ctx, GetAuthorizationUrlForBindRequest request) =>
+      _client.invoke<GetAuthorizationUrlForBindResponse>(
+          ctx,
+          'OAuth2Service',
+          'GetAuthorizationUrlForBind',
+          request,
+          GetAuthorizationUrlForBindResponse());
+
+  /// Exchange authorization code for JWT token or complete a bind flow.
+  /// Public for login flow. Bind flow requires authentication and the token's
+  /// user ID must match the user stored in the OAuth2 state.
+  $async.Future<ExchangeAuthorizationCodeResponse> exchangeAuthorizationCode(
+          $pb.ClientContext? ctx, ExchangeAuthorizationCodeRequest request) =>
+      _client.invoke<ExchangeAuthorizationCodeResponse>(
+          ctx,
+          'OAuth2Service',
+          'ExchangeAuthorizationCode',
+          request,
+          ExchangeAuthorizationCodeResponse());
+
+  /// List all available OAuth2 provider instances
+  $async.Future<ListAvailableProvidersResponse> listAvailableProviders(
+          $pb.ClientContext? ctx, ListAvailableProvidersRequest request) =>
+      _client.invoke<ListAvailableProvidersResponse>(ctx, 'OAuth2Service',
+          'ListAvailableProviders', request, ListAvailableProvidersResponse());
+
+  /// Unlink OAuth2 provider from user account (requires authentication)
+  $async.Future<UnlinkProviderResponse> unlinkProvider(
+          $pb.ClientContext? ctx, UnlinkProviderRequest request) =>
+      _client.invoke<UnlinkProviderResponse>(ctx, 'OAuth2Service',
+          'UnlinkProvider', request, UnlinkProviderResponse());
+
+  /// Get linked OAuth2 providers for authenticated user
+  $async.Future<GetLinkedProvidersResponse> getLinkedProviders(
+          $pb.ClientContext? ctx, GetLinkedProvidersRequest request) =>
+      _client.invoke<GetLinkedProvidersResponse>(ctx, 'OAuth2Service',
+          'GetLinkedProviders', request, GetLinkedProvidersResponse());
 }
 
 const $core.bool _omitFieldNames =

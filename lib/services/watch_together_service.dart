@@ -287,6 +287,17 @@ class WatchTogetherService {
     return _domains.account.updateUsername(username);
   }
 
+  static Future<String> startEmailBind(String email) async {
+    return _domains.account.startEmailBind(email);
+  }
+
+  static Future<WUser> confirmEmailBind({
+    required String email,
+    required String token,
+  }) async {
+    return _domains.account.confirmEmailBind(email: email, token: token);
+  }
+
   static Future<AccountPreferences> getAccountPreferences() async {
     return _domains.account.getAccountPreferences();
   }

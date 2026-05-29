@@ -261,6 +261,28 @@ class SyncTvUserApi {
     );
   }
 
+  Future<client.StartEmailBindResponse> startEmailBind(
+    client.StartEmailBindRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/user/email/bind/start',
+      client.StartEmailBindResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.ConfirmEmailBindResponse> confirmEmailBind(
+    client.ConfirmEmailBindRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/user/email/bind/confirm',
+      client.ConfirmEmailBindResponse.create,
+      body: request,
+    );
+  }
+
   Future<client.StartOpaquePasswordUpdateResponse> startOpaquePasswordUpdate(
     client.StartOpaquePasswordUpdateRequest request,
   ) {

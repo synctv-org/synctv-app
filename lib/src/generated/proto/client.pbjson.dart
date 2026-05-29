@@ -15,6 +15,8 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+import 'common.pbjson.dart' as $0;
+
 @$core.Deprecated('Use resourceAvailabilityDescriptor instead')
 const ResourceAvailability$json = {
   '1': 'ResourceAvailability',
@@ -5778,6 +5780,69 @@ final $typed_data.Uint8List setUsernameResponseDescriptor = $convert.base64Decod
     'ChNTZXRVc2VybmFtZVJlc3BvbnNlEicKBHVzZXIYASABKAsyEy5zeW5jdHYuY2xpZW50LlVzZX'
     'JSBHVzZXI=');
 
+@$core.Deprecated('Use startEmailBindRequestDescriptor instead')
+const StartEmailBindRequest$json = {
+  '1': 'StartEmailBindRequest',
+  '2': [
+    {'1': 'email', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'email'},
+  ],
+};
+
+/// Descriptor for `StartEmailBindRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List startEmailBindRequestDescriptor = $convert.base64Decode(
+    'ChVTdGFydEVtYWlsQmluZFJlcXVlc3QSIgoFZW1haWwYASABKAlCDLpICXIHEAMY/gFgAVIFZW'
+    '1haWw=');
+
+@$core.Deprecated('Use startEmailBindResponseDescriptor instead')
+const StartEmailBindResponse$json = {
+  '1': 'StartEmailBindResponse',
+  '2': [
+    {'1': 'masked_email', '3': 1, '4': 1, '5': 9, '10': 'maskedEmail'},
+  ],
+};
+
+/// Descriptor for `StartEmailBindResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List startEmailBindResponseDescriptor =
+    $convert.base64Decode(
+        'ChZTdGFydEVtYWlsQmluZFJlc3BvbnNlEiEKDG1hc2tlZF9lbWFpbBgBIAEoCVILbWFza2VkRW'
+        '1haWw=');
+
+@$core.Deprecated('Use confirmEmailBindRequestDescriptor instead')
+const ConfirmEmailBindRequest$json = {
+  '1': 'ConfirmEmailBindRequest',
+  '2': [
+    {'1': 'email', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'email'},
+    {'1': 'token', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'token'},
+  ],
+};
+
+/// Descriptor for `ConfirmEmailBindRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List confirmEmailBindRequestDescriptor =
+    $convert.base64Decode(
+        'ChdDb25maXJtRW1haWxCaW5kUmVxdWVzdBIiCgVlbWFpbBgBIAEoCUIMukgJcgcQAxj+AWABUg'
+        'VlbWFpbBIgCgV0b2tlbhgCIAEoCUIKukgHcgUQARj/AVIFdG9rZW4=');
+
+@$core.Deprecated('Use confirmEmailBindResponseDescriptor instead')
+const ConfirmEmailBindResponse$json = {
+  '1': 'ConfirmEmailBindResponse',
+  '2': [
+    {
+      '1': 'user',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.User',
+      '10': 'user'
+    },
+  ],
+};
+
+/// Descriptor for `ConfirmEmailBindResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List confirmEmailBindResponseDescriptor =
+    $convert.base64Decode(
+        'ChhDb25maXJtRW1haWxCaW5kUmVzcG9uc2USJwoEdXNlchgBIAEoCzITLnN5bmN0di5jbGllbn'
+        'QuVXNlclIEdXNlcg==');
+
 @$core.Deprecated('Use listMyRoomsRequestDescriptor instead')
 const ListMyRoomsRequest$json = {
   '1': 'ListMyRoomsRequest',
@@ -7346,3 +7411,1041 @@ const DeleteAllReadResponse$json = {
 /// Descriptor for `DeleteAllReadResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List deleteAllReadResponseDescriptor =
     $convert.base64Decode('ChVEZWxldGVBbGxSZWFkUmVzcG9uc2U=');
+
+const $core.Map<$core.String, $core.dynamic> AuthServiceBase$json = {
+  '1': 'AuthService',
+  '2': [
+    {
+      '1': 'ConfirmEmailLogin',
+      '2': '.synctv.client.ConfirmEmailLoginRequest',
+      '3': '.synctv.client.LoginResponse'
+    },
+    {
+      '1': 'CreateGuestToken',
+      '2': '.synctv.client.CreateGuestTokenRequest',
+      '3': '.synctv.client.CreateGuestTokenResponse'
+    },
+    {
+      '1': 'StartOpaqueRegistration',
+      '2': '.synctv.client.StartOpaqueRegistrationRequest',
+      '3': '.synctv.client.StartOpaqueRegistrationResponse'
+    },
+    {
+      '1': 'FinishOpaqueRegistration',
+      '2': '.synctv.client.FinishOpaqueRegistrationRequest',
+      '3': '.synctv.client.RegisterResponse'
+    },
+    {
+      '1': 'StartOpaqueLogin',
+      '2': '.synctv.client.StartOpaqueLoginRequest',
+      '3': '.synctv.client.StartOpaqueLoginResponse'
+    },
+    {
+      '1': 'FinishOpaqueLogin',
+      '2': '.synctv.client.FinishOpaqueLoginRequest',
+      '3': '.synctv.client.LoginResponse'
+    },
+    {
+      '1': 'StartPasskeyRegistration',
+      '2': '.synctv.client.StartPasskeyRegistrationRequest',
+      '3': '.synctv.client.StartPasskeyRegistrationResponse'
+    },
+    {
+      '1': 'FinishPasskeyRegistration',
+      '2': '.synctv.client.FinishPasskeyRegistrationRequest',
+      '3': '.synctv.client.RegisterResponse'
+    },
+    {
+      '1': 'StartPasskeyLogin',
+      '2': '.synctv.client.StartPasskeyLoginRequest',
+      '3': '.synctv.client.StartPasskeyLoginResponse'
+    },
+    {
+      '1': 'FinishPasskeyLogin',
+      '2': '.synctv.client.FinishPasskeyLoginRequest',
+      '3': '.synctv.client.LoginResponse'
+    },
+    {
+      '1': 'RequestEmailLogin',
+      '2': '.synctv.client.RequestEmailLoginRequest',
+      '3': '.synctv.client.RequestEmailLoginResponse'
+    },
+    {
+      '1': 'RequestMfaEmailCode',
+      '2': '.synctv.client.RequestMfaEmailCodeRequest',
+      '3': '.synctv.client.RequestMfaEmailCodeResponse'
+    },
+    {
+      '1': 'VerifyMfaEmailCode',
+      '2': '.synctv.client.VerifyMfaEmailCodeRequest',
+      '3': '.synctv.client.LoginResponse'
+    },
+    {
+      '1': 'StartMfaPasskey',
+      '2': '.synctv.client.StartMfaPasskeyRequest',
+      '3': '.synctv.client.StartMfaPasskeyResponse'
+    },
+    {
+      '1': 'FinishMfaPasskey',
+      '2': '.synctv.client.FinishMfaPasskeyRequest',
+      '3': '.synctv.client.LoginResponse'
+    },
+    {
+      '1': 'RefreshToken',
+      '2': '.synctv.client.RefreshTokenRequest',
+      '3': '.synctv.client.RefreshTokenResponse'
+    },
+  ],
+};
+
+@$core.Deprecated('Use authServiceDescriptor instead')
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    AuthServiceBase$messageJson = {
+  '.synctv.client.ConfirmEmailLoginRequest': ConfirmEmailLoginRequest$json,
+  '.synctv.client.LoginResponse': LoginResponse$json,
+  '.synctv.client.User': User$json,
+  '.synctv.client.MfaChallenge': MfaChallenge$json,
+  '.synctv.client.CreateGuestTokenRequest': CreateGuestTokenRequest$json,
+  '.synctv.client.CreateGuestTokenResponse': CreateGuestTokenResponse$json,
+  '.synctv.client.StartOpaqueRegistrationRequest':
+      StartOpaqueRegistrationRequest$json,
+  '.synctv.client.StartOpaqueRegistrationResponse':
+      StartOpaqueRegistrationResponse$json,
+  '.synctv.client.FinishOpaqueRegistrationRequest':
+      FinishOpaqueRegistrationRequest$json,
+  '.synctv.client.RegisterResponse': RegisterResponse$json,
+  '.synctv.client.StartOpaqueLoginRequest': StartOpaqueLoginRequest$json,
+  '.synctv.client.StartOpaqueLoginResponse': StartOpaqueLoginResponse$json,
+  '.synctv.client.FinishOpaqueLoginRequest': FinishOpaqueLoginRequest$json,
+  '.synctv.client.StartPasskeyRegistrationRequest':
+      StartPasskeyRegistrationRequest$json,
+  '.synctv.client.StartPasskeyRegistrationResponse':
+      StartPasskeyRegistrationResponse$json,
+  '.synctv.client.FinishPasskeyRegistrationRequest':
+      FinishPasskeyRegistrationRequest$json,
+  '.synctv.client.StartPasskeyLoginRequest': StartPasskeyLoginRequest$json,
+  '.synctv.client.StartPasskeyLoginResponse': StartPasskeyLoginResponse$json,
+  '.synctv.client.FinishPasskeyLoginRequest': FinishPasskeyLoginRequest$json,
+  '.synctv.client.RequestEmailLoginRequest': RequestEmailLoginRequest$json,
+  '.synctv.client.RequestEmailLoginResponse': RequestEmailLoginResponse$json,
+  '.synctv.client.RequestMfaEmailCodeRequest': RequestMfaEmailCodeRequest$json,
+  '.synctv.client.RequestMfaEmailCodeResponse':
+      RequestMfaEmailCodeResponse$json,
+  '.synctv.client.VerifyMfaEmailCodeRequest': VerifyMfaEmailCodeRequest$json,
+  '.synctv.client.StartMfaPasskeyRequest': StartMfaPasskeyRequest$json,
+  '.synctv.client.StartMfaPasskeyResponse': StartMfaPasskeyResponse$json,
+  '.synctv.client.FinishMfaPasskeyRequest': FinishMfaPasskeyRequest$json,
+  '.synctv.client.RefreshTokenRequest': RefreshTokenRequest$json,
+  '.synctv.client.RefreshTokenResponse': RefreshTokenResponse$json,
+};
+
+/// Descriptor for `AuthService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
+final $typed_data.Uint8List authServiceDescriptor = $convert.base64Decode(
+    'CgtBdXRoU2VydmljZRJaChFDb25maXJtRW1haWxMb2dpbhInLnN5bmN0di5jbGllbnQuQ29uZm'
+    'lybUVtYWlsTG9naW5SZXF1ZXN0Ghwuc3luY3R2LmNsaWVudC5Mb2dpblJlc3BvbnNlEmMKEENy'
+    'ZWF0ZUd1ZXN0VG9rZW4SJi5zeW5jdHYuY2xpZW50LkNyZWF0ZUd1ZXN0VG9rZW5SZXF1ZXN0Gi'
+    'cuc3luY3R2LmNsaWVudC5DcmVhdGVHdWVzdFRva2VuUmVzcG9uc2USeAoXU3RhcnRPcGFxdWVS'
+    'ZWdpc3RyYXRpb24SLS5zeW5jdHYuY2xpZW50LlN0YXJ0T3BhcXVlUmVnaXN0cmF0aW9uUmVxdW'
+    'VzdBouLnN5bmN0di5jbGllbnQuU3RhcnRPcGFxdWVSZWdpc3RyYXRpb25SZXNwb25zZRJrChhG'
+    'aW5pc2hPcGFxdWVSZWdpc3RyYXRpb24SLi5zeW5jdHYuY2xpZW50LkZpbmlzaE9wYXF1ZVJlZ2'
+    'lzdHJhdGlvblJlcXVlc3QaHy5zeW5jdHYuY2xpZW50LlJlZ2lzdGVyUmVzcG9uc2USYwoQU3Rh'
+    'cnRPcGFxdWVMb2dpbhImLnN5bmN0di5jbGllbnQuU3RhcnRPcGFxdWVMb2dpblJlcXVlc3QaJy'
+    '5zeW5jdHYuY2xpZW50LlN0YXJ0T3BhcXVlTG9naW5SZXNwb25zZRJaChFGaW5pc2hPcGFxdWVM'
+    'b2dpbhInLnN5bmN0di5jbGllbnQuRmluaXNoT3BhcXVlTG9naW5SZXF1ZXN0Ghwuc3luY3R2Lm'
+    'NsaWVudC5Mb2dpblJlc3BvbnNlEnsKGFN0YXJ0UGFzc2tleVJlZ2lzdHJhdGlvbhIuLnN5bmN0'
+    'di5jbGllbnQuU3RhcnRQYXNza2V5UmVnaXN0cmF0aW9uUmVxdWVzdBovLnN5bmN0di5jbGllbn'
+    'QuU3RhcnRQYXNza2V5UmVnaXN0cmF0aW9uUmVzcG9uc2USbQoZRmluaXNoUGFzc2tleVJlZ2lz'
+    'dHJhdGlvbhIvLnN5bmN0di5jbGllbnQuRmluaXNoUGFzc2tleVJlZ2lzdHJhdGlvblJlcXVlc3'
+    'QaHy5zeW5jdHYuY2xpZW50LlJlZ2lzdGVyUmVzcG9uc2USZgoRU3RhcnRQYXNza2V5TG9naW4S'
+    'Jy5zeW5jdHYuY2xpZW50LlN0YXJ0UGFzc2tleUxvZ2luUmVxdWVzdBooLnN5bmN0di5jbGllbn'
+    'QuU3RhcnRQYXNza2V5TG9naW5SZXNwb25zZRJcChJGaW5pc2hQYXNza2V5TG9naW4SKC5zeW5j'
+    'dHYuY2xpZW50LkZpbmlzaFBhc3NrZXlMb2dpblJlcXVlc3QaHC5zeW5jdHYuY2xpZW50LkxvZ2'
+    'luUmVzcG9uc2USZgoRUmVxdWVzdEVtYWlsTG9naW4SJy5zeW5jdHYuY2xpZW50LlJlcXVlc3RF'
+    'bWFpbExvZ2luUmVxdWVzdBooLnN5bmN0di5jbGllbnQuUmVxdWVzdEVtYWlsTG9naW5SZXNwb2'
+    '5zZRJsChNSZXF1ZXN0TWZhRW1haWxDb2RlEikuc3luY3R2LmNsaWVudC5SZXF1ZXN0TWZhRW1h'
+    'aWxDb2RlUmVxdWVzdBoqLnN5bmN0di5jbGllbnQuUmVxdWVzdE1mYUVtYWlsQ29kZVJlc3Bvbn'
+    'NlElwKElZlcmlmeU1mYUVtYWlsQ29kZRIoLnN5bmN0di5jbGllbnQuVmVyaWZ5TWZhRW1haWxD'
+    'b2RlUmVxdWVzdBocLnN5bmN0di5jbGllbnQuTG9naW5SZXNwb25zZRJgCg9TdGFydE1mYVBhc3'
+    'NrZXkSJS5zeW5jdHYuY2xpZW50LlN0YXJ0TWZhUGFzc2tleVJlcXVlc3QaJi5zeW5jdHYuY2xp'
+    'ZW50LlN0YXJ0TWZhUGFzc2tleVJlc3BvbnNlElgKEEZpbmlzaE1mYVBhc3NrZXkSJi5zeW5jdH'
+    'YuY2xpZW50LkZpbmlzaE1mYVBhc3NrZXlSZXF1ZXN0Ghwuc3luY3R2LmNsaWVudC5Mb2dpblJl'
+    'c3BvbnNlElcKDFJlZnJlc2hUb2tlbhIiLnN5bmN0di5jbGllbnQuUmVmcmVzaFRva2VuUmVxdW'
+    'VzdBojLnN5bmN0di5jbGllbnQuUmVmcmVzaFRva2VuUmVzcG9uc2U=');
+
+const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
+  '1': 'UserService',
+  '2': [
+    {
+      '1': 'Logout',
+      '2': '.synctv.client.LogoutRequest',
+      '3': '.synctv.client.LogoutResponse'
+    },
+    {
+      '1': 'GetProfile',
+      '2': '.synctv.client.GetProfileRequest',
+      '3': '.synctv.client.GetProfileResponse'
+    },
+    {
+      '1': 'SetUsername',
+      '2': '.synctv.client.SetUsernameRequest',
+      '3': '.synctv.client.SetUsernameResponse'
+    },
+    {
+      '1': 'StartEmailBind',
+      '2': '.synctv.client.StartEmailBindRequest',
+      '3': '.synctv.client.StartEmailBindResponse'
+    },
+    {
+      '1': 'ConfirmEmailBind',
+      '2': '.synctv.client.ConfirmEmailBindRequest',
+      '3': '.synctv.client.ConfirmEmailBindResponse'
+    },
+    {
+      '1': 'StartOpaquePasswordUpdate',
+      '2': '.synctv.client.StartOpaquePasswordUpdateRequest',
+      '3': '.synctv.client.StartOpaquePasswordUpdateResponse'
+    },
+    {
+      '1': 'FinishOpaquePasswordUpdate',
+      '2': '.synctv.client.FinishOpaquePasswordUpdateRequest',
+      '3': '.synctv.client.FinishOpaquePasswordUpdateResponse'
+    },
+    {
+      '1': 'StartPasskeyBind',
+      '2': '.synctv.client.StartPasskeyBindRequest',
+      '3': '.synctv.client.StartPasskeyBindResponse'
+    },
+    {
+      '1': 'FinishPasskeyBind',
+      '2': '.synctv.client.FinishPasskeyBindRequest',
+      '3': '.synctv.client.PasskeyCredentialResponse'
+    },
+    {
+      '1': 'ListPasskeys',
+      '2': '.synctv.client.ListPasskeysRequest',
+      '3': '.synctv.client.ListPasskeysResponse'
+    },
+    {
+      '1': 'DeletePasskey',
+      '2': '.synctv.client.DeletePasskeyRequest',
+      '3': '.synctv.client.DeletePasskeyResponse'
+    },
+    {
+      '1': 'GetUserPreferences',
+      '2': '.synctv.client.GetUserPreferencesRequest',
+      '3': '.synctv.client.GetUserPreferencesResponse'
+    },
+    {
+      '1': 'UpdateUserPreferences',
+      '2': '.synctv.client.UpdateUserPreferencesRequest',
+      '3': '.synctv.client.UpdateUserPreferencesResponse'
+    },
+    {
+      '1': 'CloseAccount',
+      '2': '.synctv.client.CloseAccountRequest',
+      '3': '.synctv.client.CloseAccountResponse'
+    },
+    {
+      '1': 'CreateRoom',
+      '2': '.synctv.client.CreateRoomRequest',
+      '3': '.synctv.client.CreateRoomResponse'
+    },
+    {
+      '1': 'GetRoom',
+      '2': '.synctv.client.GetRoomRequest',
+      '3': '.synctv.client.GetRoomResponse'
+    },
+    {
+      '1': 'JoinRoom',
+      '2': '.synctv.client.JoinRoomRequest',
+      '3': '.synctv.client.JoinRoomResponse'
+    },
+    {
+      '1': 'ListMyRooms',
+      '2': '.synctv.client.ListMyRoomsRequest',
+      '3': '.synctv.client.ListMyRoomsResponse'
+    },
+  ],
+};
+
+@$core.Deprecated('Use userServiceDescriptor instead')
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    UserServiceBase$messageJson = {
+  '.synctv.client.LogoutRequest': LogoutRequest$json,
+  '.synctv.client.LogoutResponse': LogoutResponse$json,
+  '.synctv.client.GetProfileRequest': GetProfileRequest$json,
+  '.synctv.client.GetProfileResponse': GetProfileResponse$json,
+  '.synctv.client.User': User$json,
+  '.synctv.client.SetUsernameRequest': SetUsernameRequest$json,
+  '.synctv.client.SetUsernameResponse': SetUsernameResponse$json,
+  '.synctv.client.StartEmailBindRequest': StartEmailBindRequest$json,
+  '.synctv.client.StartEmailBindResponse': StartEmailBindResponse$json,
+  '.synctv.client.ConfirmEmailBindRequest': ConfirmEmailBindRequest$json,
+  '.synctv.client.ConfirmEmailBindResponse': ConfirmEmailBindResponse$json,
+  '.synctv.client.StartOpaquePasswordUpdateRequest':
+      StartOpaquePasswordUpdateRequest$json,
+  '.synctv.client.StartOpaquePasswordUpdateResponse':
+      StartOpaquePasswordUpdateResponse$json,
+  '.synctv.client.FinishOpaquePasswordUpdateRequest':
+      FinishOpaquePasswordUpdateRequest$json,
+  '.synctv.client.FinishOpaquePasswordUpdateResponse':
+      FinishOpaquePasswordUpdateResponse$json,
+  '.synctv.client.StartPasskeyBindRequest': StartPasskeyBindRequest$json,
+  '.synctv.client.StartPasskeyBindResponse': StartPasskeyBindResponse$json,
+  '.synctv.client.FinishPasskeyBindRequest': FinishPasskeyBindRequest$json,
+  '.synctv.client.PasskeyCredentialResponse': PasskeyCredentialResponse$json,
+  '.synctv.client.PasskeyCredential': PasskeyCredential$json,
+  '.synctv.client.ListPasskeysRequest': ListPasskeysRequest$json,
+  '.synctv.client.ListPasskeysResponse': ListPasskeysResponse$json,
+  '.synctv.client.DeletePasskeyRequest': DeletePasskeyRequest$json,
+  '.synctv.client.DeletePasskeyResponse': DeletePasskeyResponse$json,
+  '.synctv.client.GetUserPreferencesRequest': GetUserPreferencesRequest$json,
+  '.synctv.client.GetUserPreferencesResponse': GetUserPreferencesResponse$json,
+  '.synctv.client.UserPreferences': UserPreferences$json,
+  '.synctv.client.UserNotificationPreferences':
+      UserNotificationPreferences$json,
+  '.synctv.client.UserAuthFactors': UserAuthFactors$json,
+  '.synctv.client.UpdateUserPreferencesRequest':
+      UpdateUserPreferencesRequest$json,
+  '.synctv.client.UpdateUserPreferencesResponse':
+      UpdateUserPreferencesResponse$json,
+  '.synctv.client.CloseAccountRequest': CloseAccountRequest$json,
+  '.synctv.client.CloseAccountResponse': CloseAccountResponse$json,
+  '.synctv.client.CreateRoomRequest': CreateRoomRequest$json,
+  '.synctv.client.CreateRoomResponse': CreateRoomResponse$json,
+  '.synctv.client.Room': Room$json,
+  '.synctv.client.GetRoomRequest': GetRoomRequest$json,
+  '.synctv.client.GetRoomResponse': GetRoomResponse$json,
+  '.synctv.client.PlaybackState': PlaybackState$json,
+  '.synctv.client.JoinRoomRequest': JoinRoomRequest$json,
+  '.synctv.client.JoinRoomResponse': JoinRoomResponse$json,
+  '.synctv.common.RoomMember': $0.RoomMember$json,
+  '.synctv.client.ListMyRoomsRequest': ListMyRoomsRequest$json,
+  '.synctv.client.ListMyRoomsResponse': ListMyRoomsResponse$json,
+  '.synctv.client.MyRoom': MyRoom$json,
+};
+
+/// Descriptor for `UserService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
+final $typed_data.Uint8List userServiceDescriptor = $convert.base64Decode(
+    'CgtVc2VyU2VydmljZRJFCgZMb2dvdXQSHC5zeW5jdHYuY2xpZW50LkxvZ291dFJlcXVlc3QaHS'
+    '5zeW5jdHYuY2xpZW50LkxvZ291dFJlc3BvbnNlElEKCkdldFByb2ZpbGUSIC5zeW5jdHYuY2xp'
+    'ZW50LkdldFByb2ZpbGVSZXF1ZXN0GiEuc3luY3R2LmNsaWVudC5HZXRQcm9maWxlUmVzcG9uc2'
+    'USVAoLU2V0VXNlcm5hbWUSIS5zeW5jdHYuY2xpZW50LlNldFVzZXJuYW1lUmVxdWVzdBoiLnN5'
+    'bmN0di5jbGllbnQuU2V0VXNlcm5hbWVSZXNwb25zZRJdCg5TdGFydEVtYWlsQmluZBIkLnN5bm'
+    'N0di5jbGllbnQuU3RhcnRFbWFpbEJpbmRSZXF1ZXN0GiUuc3luY3R2LmNsaWVudC5TdGFydEVt'
+    'YWlsQmluZFJlc3BvbnNlEmMKEENvbmZpcm1FbWFpbEJpbmQSJi5zeW5jdHYuY2xpZW50LkNvbm'
+    'Zpcm1FbWFpbEJpbmRSZXF1ZXN0Gicuc3luY3R2LmNsaWVudC5Db25maXJtRW1haWxCaW5kUmVz'
+    'cG9uc2USfgoZU3RhcnRPcGFxdWVQYXNzd29yZFVwZGF0ZRIvLnN5bmN0di5jbGllbnQuU3Rhcn'
+    'RPcGFxdWVQYXNzd29yZFVwZGF0ZVJlcXVlc3QaMC5zeW5jdHYuY2xpZW50LlN0YXJ0T3BhcXVl'
+    'UGFzc3dvcmRVcGRhdGVSZXNwb25zZRKBAQoaRmluaXNoT3BhcXVlUGFzc3dvcmRVcGRhdGUSMC'
+    '5zeW5jdHYuY2xpZW50LkZpbmlzaE9wYXF1ZVBhc3N3b3JkVXBkYXRlUmVxdWVzdBoxLnN5bmN0'
+    'di5jbGllbnQuRmluaXNoT3BhcXVlUGFzc3dvcmRVcGRhdGVSZXNwb25zZRJjChBTdGFydFBhc3'
+    'NrZXlCaW5kEiYuc3luY3R2LmNsaWVudC5TdGFydFBhc3NrZXlCaW5kUmVxdWVzdBonLnN5bmN0'
+    'di5jbGllbnQuU3RhcnRQYXNza2V5QmluZFJlc3BvbnNlEmYKEUZpbmlzaFBhc3NrZXlCaW5kEi'
+    'cuc3luY3R2LmNsaWVudC5GaW5pc2hQYXNza2V5QmluZFJlcXVlc3QaKC5zeW5jdHYuY2xpZW50'
+    'LlBhc3NrZXlDcmVkZW50aWFsUmVzcG9uc2USVwoMTGlzdFBhc3NrZXlzEiIuc3luY3R2LmNsaW'
+    'VudC5MaXN0UGFzc2tleXNSZXF1ZXN0GiMuc3luY3R2LmNsaWVudC5MaXN0UGFzc2tleXNSZXNw'
+    'b25zZRJaCg1EZWxldGVQYXNza2V5EiMuc3luY3R2LmNsaWVudC5EZWxldGVQYXNza2V5UmVxdW'
+    'VzdBokLnN5bmN0di5jbGllbnQuRGVsZXRlUGFzc2tleVJlc3BvbnNlEmkKEkdldFVzZXJQcmVm'
+    'ZXJlbmNlcxIoLnN5bmN0di5jbGllbnQuR2V0VXNlclByZWZlcmVuY2VzUmVxdWVzdBopLnN5bm'
+    'N0di5jbGllbnQuR2V0VXNlclByZWZlcmVuY2VzUmVzcG9uc2UScgoVVXBkYXRlVXNlclByZWZl'
+    'cmVuY2VzEisuc3luY3R2LmNsaWVudC5VcGRhdGVVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0Giwuc3'
+    'luY3R2LmNsaWVudC5VcGRhdGVVc2VyUHJlZmVyZW5jZXNSZXNwb25zZRJXCgxDbG9zZUFjY291'
+    'bnQSIi5zeW5jdHYuY2xpZW50LkNsb3NlQWNjb3VudFJlcXVlc3QaIy5zeW5jdHYuY2xpZW50Lk'
+    'Nsb3NlQWNjb3VudFJlc3BvbnNlElEKCkNyZWF0ZVJvb20SIC5zeW5jdHYuY2xpZW50LkNyZWF0'
+    'ZVJvb21SZXF1ZXN0GiEuc3luY3R2LmNsaWVudC5DcmVhdGVSb29tUmVzcG9uc2USSAoHR2V0Um'
+    '9vbRIdLnN5bmN0di5jbGllbnQuR2V0Um9vbVJlcXVlc3QaHi5zeW5jdHYuY2xpZW50LkdldFJv'
+    'b21SZXNwb25zZRJLCghKb2luUm9vbRIeLnN5bmN0di5jbGllbnQuSm9pblJvb21SZXF1ZXN0Gh'
+    '8uc3luY3R2LmNsaWVudC5Kb2luUm9vbVJlc3BvbnNlElQKC0xpc3RNeVJvb21zEiEuc3luY3R2'
+    'LmNsaWVudC5MaXN0TXlSb29tc1JlcXVlc3QaIi5zeW5jdHYuY2xpZW50Lkxpc3RNeVJvb21zUm'
+    'VzcG9uc2U=');
+
+const $core.Map<$core.String, $core.dynamic> RoomServiceBase$json = {
+  '1': 'RoomService',
+  '2': [
+    {
+      '1': 'GetRoomSettings',
+      '2': '.synctv.client.GetRoomSettingsRequest',
+      '3': '.synctv.client.GetRoomSettingsResponse'
+    },
+    {
+      '1': 'UpdateRoomSettings',
+      '2': '.synctv.client.UpdateRoomSettingsRequest',
+      '3': '.synctv.client.UpdateRoomSettingsResponse'
+    },
+    {
+      '1': 'ResetRoomSettings',
+      '2': '.synctv.client.ResetRoomSettingsRequest',
+      '3': '.synctv.client.ResetRoomSettingsResponse'
+    },
+    {
+      '1': 'TransferRoomOwnership',
+      '2': '.synctv.client.TransferRoomOwnershipRequest',
+      '3': '.synctv.client.TransferRoomOwnershipResponse'
+    },
+    {
+      '1': 'LeaveRoom',
+      '2': '.synctv.client.LeaveRoomRequest',
+      '3': '.synctv.client.LeaveRoomResponse'
+    },
+    {
+      '1': 'DeleteRoom',
+      '2': '.synctv.client.DeleteRoomRequest',
+      '3': '.synctv.client.DeleteRoomResponse'
+    },
+    {
+      '1': 'SetRoomPassword',
+      '2': '.synctv.client.SetRoomPasswordRequest',
+      '3': '.synctv.client.SetRoomPasswordResponse'
+    },
+    {
+      '1': 'GetRoomMembers',
+      '2': '.synctv.client.GetRoomMembersRequest',
+      '3': '.synctv.client.GetRoomMembersResponse'
+    },
+    {
+      '1': 'ListRoomStreams',
+      '2': '.synctv.client.ListRoomStreamsRequest',
+      '3': '.synctv.client.ListRoomStreamsResponse'
+    },
+    {
+      '1': 'GetRoomStreamInfo',
+      '2': '.synctv.client.GetRoomStreamInfoRequest',
+      '3': '.synctv.client.GetRoomStreamInfoResponse'
+    },
+    {
+      '1': 'KickRoomStream',
+      '2': '.synctv.client.KickRoomStreamRequest',
+      '3': '.synctv.client.KickRoomStreamResponse'
+    },
+    {
+      '1': 'AddMember',
+      '2': '.synctv.client.AddMemberRequest',
+      '3': '.synctv.client.AddMemberResponse'
+    },
+    {
+      '1': 'ListRoomJoinReviews',
+      '2': '.synctv.client.ListRoomJoinReviewsRequest',
+      '3': '.synctv.client.ListRoomJoinReviewsResponse'
+    },
+    {
+      '1': 'ApproveRoomJoinReview',
+      '2': '.synctv.client.ApproveRoomJoinReviewRequest',
+      '3': '.synctv.client.ApproveRoomJoinReviewResponse'
+    },
+    {
+      '1': 'RejectRoomJoinReview',
+      '2': '.synctv.client.RejectRoomJoinReviewRequest',
+      '3': '.synctv.client.RejectRoomJoinReviewResponse'
+    },
+    {
+      '1': 'UpdateMemberPermissions',
+      '2': '.synctv.client.UpdateMemberPermissionsRequest',
+      '3': '.synctv.client.UpdateMemberPermissionsResponse'
+    },
+    {
+      '1': 'KickMember',
+      '2': '.synctv.client.KickMemberRequest',
+      '3': '.synctv.client.KickMemberResponse'
+    },
+    {
+      '1': 'CreateWebSocketTicket',
+      '2': '.synctv.client.CreateWebSocketTicketRequest',
+      '3': '.synctv.client.CreateWebSocketTicketResponse'
+    },
+    {
+      '1': 'MessageStream',
+      '2': '.synctv.client.ClientMessage',
+      '3': '.synctv.client.ServerMessage',
+      '5': true,
+      '6': true
+    },
+    {
+      '1': 'WatchPlaybackState',
+      '2': '.synctv.client.WatchPlaybackStateRequest',
+      '3': '.synctv.client.WatchPlaybackStateEvent',
+      '6': true
+    },
+    {
+      '1': 'WatchPlaybackSnapshot',
+      '2': '.synctv.client.WatchPlaybackSnapshotRequest',
+      '3': '.synctv.client.WatchPlaybackSnapshotEvent',
+      '6': true
+    },
+    {
+      '1': 'WatchRoomSettings',
+      '2': '.synctv.client.WatchRoomSettingsRequest',
+      '3': '.synctv.client.WatchRoomSettingsEvent',
+      '6': true
+    },
+    {
+      '1': 'WatchPlaylistItems',
+      '2': '.synctv.client.WatchPlaylistItemsRequest',
+      '3': '.synctv.client.WatchPlaylistItemsEvent',
+      '6': true
+    },
+    {
+      '1': 'WatchRoomMembers',
+      '2': '.synctv.client.WatchRoomMembersRequest',
+      '3': '.synctv.client.WatchRoomMembersEvent',
+      '6': true
+    },
+    {
+      '1': 'GetChatHistory',
+      '2': '.synctv.client.GetChatHistoryRequest',
+      '3': '.synctv.client.GetChatHistoryResponse'
+    },
+    {
+      '1': 'GetIceServers',
+      '2': '.synctv.client.GetIceServersRequest',
+      '3': '.synctv.client.GetIceServersResponse'
+    },
+    {
+      '1': 'CreatePlaylist',
+      '2': '.synctv.client.CreatePlaylistRequest',
+      '3': '.synctv.client.CreatePlaylistResponse'
+    },
+    {
+      '1': 'GetPlaylist',
+      '2': '.synctv.client.GetPlaylistRequest',
+      '3': '.synctv.client.GetPlaylistResponse'
+    },
+    {
+      '1': 'UpdatePlaylist',
+      '2': '.synctv.client.UpdatePlaylistRequest',
+      '3': '.synctv.client.UpdatePlaylistResponse'
+    },
+    {
+      '1': 'MovePlaylist',
+      '2': '.synctv.client.MovePlaylistRequest',
+      '3': '.synctv.client.MovePlaylistResponse'
+    },
+    {
+      '1': 'DeletePlaylist',
+      '2': '.synctv.client.DeletePlaylistRequest',
+      '3': '.synctv.client.DeletePlaylistResponse'
+    },
+    {
+      '1': 'ListPlaylists',
+      '2': '.synctv.client.ListPlaylistsRequest',
+      '3': '.synctv.client.ListPlaylistsResponse'
+    },
+    {
+      '1': 'AddMedia',
+      '2': '.synctv.client.AddMediaRequest',
+      '3': '.synctv.client.AddMediaResponse'
+    },
+    {
+      '1': 'GetMedia',
+      '2': '.synctv.client.GetMediaRequest',
+      '3': '.synctv.client.Media'
+    },
+    {
+      '1': 'DeleteMedia',
+      '2': '.synctv.client.DeleteMediaRequest',
+      '3': '.synctv.client.DeleteMediaResponse'
+    },
+    {
+      '1': 'DeleteEntries',
+      '2': '.synctv.client.DeleteEntriesRequest',
+      '3': '.synctv.client.DeleteEntriesResponse'
+    },
+    {
+      '1': 'EditMedia',
+      '2': '.synctv.client.EditMediaRequest',
+      '3': '.synctv.client.EditMediaResponse'
+    },
+    {
+      '1': 'ListPlaylistItems',
+      '2': '.synctv.client.ListPlaylistItemsRequest',
+      '3': '.synctv.client.ListPlaylistItemsResponse'
+    },
+    {
+      '1': 'MoveMedia',
+      '2': '.synctv.client.MoveMediaRequest',
+      '3': '.synctv.client.MoveMediaResponse'
+    },
+    {
+      '1': 'ClearPlaylist',
+      '2': '.synctv.client.ClearPlaylistRequest',
+      '3': '.synctv.client.ClearPlaylistResponse'
+    },
+    {
+      '1': 'AddMediaBatch',
+      '2': '.synctv.client.AddMediaBatchRequest',
+      '3': '.synctv.client.AddMediaBatchResponse'
+    },
+    {
+      '1': 'StartPlayback',
+      '2': '.synctv.client.StartPlaybackRequest',
+      '3': '.synctv.client.StartPlaybackResponse'
+    },
+    {
+      '1': 'StopPlayback',
+      '2': '.synctv.client.StopPlaybackRequest',
+      '3': '.synctv.client.StopPlaybackResponse'
+    },
+    {
+      '1': 'GetPlayback',
+      '2': '.synctv.client.GetPlaybackRequest',
+      '3': '.synctv.client.GetPlaybackResponse'
+    },
+    {
+      '1': 'UpdatePlayback',
+      '2': '.synctv.client.UpdatePlaybackRequest',
+      '3': '.synctv.client.GetPlaybackResponse'
+    },
+  ],
+};
+
+@$core.Deprecated('Use roomServiceDescriptor instead')
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    RoomServiceBase$messageJson = {
+  '.synctv.client.GetRoomSettingsRequest': GetRoomSettingsRequest$json,
+  '.synctv.client.GetRoomSettingsResponse': GetRoomSettingsResponse$json,
+  '.synctv.client.UpdateRoomSettingsRequest': UpdateRoomSettingsRequest$json,
+  '.synctv.client.UpdateRoomSettingsResponse': UpdateRoomSettingsResponse$json,
+  '.synctv.client.Room': Room$json,
+  '.synctv.client.ResetRoomSettingsRequest': ResetRoomSettingsRequest$json,
+  '.synctv.client.ResetRoomSettingsResponse': ResetRoomSettingsResponse$json,
+  '.synctv.client.TransferRoomOwnershipRequest':
+      TransferRoomOwnershipRequest$json,
+  '.synctv.client.TransferRoomOwnershipResponse':
+      TransferRoomOwnershipResponse$json,
+  '.synctv.client.LeaveRoomRequest': LeaveRoomRequest$json,
+  '.synctv.client.LeaveRoomResponse': LeaveRoomResponse$json,
+  '.synctv.client.DeleteRoomRequest': DeleteRoomRequest$json,
+  '.synctv.client.DeleteRoomResponse': DeleteRoomResponse$json,
+  '.synctv.client.SetRoomPasswordRequest': SetRoomPasswordRequest$json,
+  '.synctv.client.SetRoomPasswordResponse': SetRoomPasswordResponse$json,
+  '.synctv.client.GetRoomMembersRequest': GetRoomMembersRequest$json,
+  '.synctv.client.GetRoomMembersResponse': GetRoomMembersResponse$json,
+  '.synctv.common.RoomMember': $0.RoomMember$json,
+  '.synctv.client.ListRoomStreamsRequest': ListRoomStreamsRequest$json,
+  '.synctv.client.ListRoomStreamsResponse': ListRoomStreamsResponse$json,
+  '.synctv.client.StreamEntry': StreamEntry$json,
+  '.synctv.client.GetRoomStreamInfoRequest': GetRoomStreamInfoRequest$json,
+  '.synctv.client.GetRoomStreamInfoResponse': GetRoomStreamInfoResponse$json,
+  '.synctv.client.RoomStreamPublisherInfo': RoomStreamPublisherInfo$json,
+  '.synctv.client.KickRoomStreamRequest': KickRoomStreamRequest$json,
+  '.synctv.client.KickRoomStreamResponse': KickRoomStreamResponse$json,
+  '.synctv.client.AddMemberRequest': AddMemberRequest$json,
+  '.synctv.client.AddMemberResponse': AddMemberResponse$json,
+  '.synctv.client.ListRoomJoinReviewsRequest': ListRoomJoinReviewsRequest$json,
+  '.synctv.client.ListRoomJoinReviewsResponse':
+      ListRoomJoinReviewsResponse$json,
+  '.synctv.client.RoomJoinReview': RoomJoinReview$json,
+  '.synctv.client.ApproveRoomJoinReviewRequest':
+      ApproveRoomJoinReviewRequest$json,
+  '.synctv.client.ApproveRoomJoinReviewResponse':
+      ApproveRoomJoinReviewResponse$json,
+  '.synctv.client.RejectRoomJoinReviewRequest':
+      RejectRoomJoinReviewRequest$json,
+  '.synctv.client.RejectRoomJoinReviewResponse':
+      RejectRoomJoinReviewResponse$json,
+  '.synctv.client.UpdateMemberPermissionsRequest':
+      UpdateMemberPermissionsRequest$json,
+  '.synctv.client.UpdateMemberPermissionsResponse':
+      UpdateMemberPermissionsResponse$json,
+  '.synctv.client.KickMemberRequest': KickMemberRequest$json,
+  '.synctv.client.KickMemberResponse': KickMemberResponse$json,
+  '.synctv.client.CreateWebSocketTicketRequest':
+      CreateWebSocketTicketRequest$json,
+  '.synctv.client.CreateWebSocketTicketResponse':
+      CreateWebSocketTicketResponse$json,
+  '.synctv.client.ClientMessage': ClientMessage$json,
+  '.synctv.client.ChatMessageSend': ChatMessageSend$json,
+  '.synctv.client.HeartbeatMessage': HeartbeatMessage$json,
+  '.synctv.client.PlaybackProgressReport': PlaybackProgressReport$json,
+  '.synctv.client.UpdatePlaybackRequest': UpdatePlaybackRequest$json,
+  '.synctv.client.ObserveResource': ObserveResource$json,
+  '.synctv.client.ObservePlaybackState': ObservePlaybackState$json,
+  '.synctv.client.ObservePlaybackSnapshot': ObservePlaybackSnapshot$json,
+  '.synctv.client.PlaybackClientProfile': PlaybackClientProfile$json,
+  '.synctv.client.ObserveRoomSettings': ObserveRoomSettings$json,
+  '.synctv.client.ObservePlaylistItems': ObservePlaylistItems$json,
+  '.synctv.client.ListPlaylistItemsRequest': ListPlaylistItemsRequest$json,
+  '.synctv.client.ObserveRoomMembers': ObserveRoomMembers$json,
+  '.synctv.client.UnobserveResource': UnobserveResource$json,
+  '.synctv.client.WebRTCOffer': WebRTCOffer$json,
+  '.synctv.client.WebRTCAnswer': WebRTCAnswer$json,
+  '.synctv.client.WebRTCIceCandidate': WebRTCIceCandidate$json,
+  '.synctv.client.WebRTCJoin': WebRTCJoin$json,
+  '.synctv.client.WebRTCLeave': WebRTCLeave$json,
+  '.synctv.client.ServerMessage': ServerMessage$json,
+  '.synctv.client.ChatMessageReceive': ChatMessageReceive$json,
+  '.synctv.client.PlaybackStateChanged': PlaybackStateChanged$json,
+  '.synctv.client.PlaybackState': PlaybackState$json,
+  '.synctv.client.UserJoinedRoom': UserJoinedRoom$json,
+  '.synctv.client.UserLeftRoom': UserLeftRoom$json,
+  '.synctv.client.RoomSettingsChanged': RoomSettingsChanged$json,
+  '.synctv.client.HeartbeatAck': HeartbeatAck$json,
+  '.synctv.client.ErrorMessage': ErrorMessage$json,
+  '.synctv.client.MediaAdded': MediaAdded$json,
+  '.synctv.client.MediaRemoved': MediaRemoved$json,
+  '.synctv.client.MediaRemovedBatch': MediaRemovedBatch$json,
+  '.synctv.client.PermissionChanged': PermissionChanged$json,
+  '.synctv.client.PlaylistCreated': PlaylistCreated$json,
+  '.synctv.client.Playlist': Playlist$json,
+  '.synctv.client.PlaylistUpdated': PlaylistUpdated$json,
+  '.synctv.client.PlaylistDeleted': PlaylistDeleted$json,
+  '.synctv.client.PlaylistReordered': PlaylistReordered$json,
+  '.synctv.client.PlayingChanged': PlayingChanged$json,
+  '.synctv.client.Media': Media$json,
+  '.synctv.client.UserNotification': UserNotification$json,
+  '.synctv.client.MediaUpdated': MediaUpdated$json,
+  '.synctv.client.PlaybackSnapshotChanged': PlaybackSnapshotChanged$json,
+  '.synctv.client.PlaybackSnapshot': PlaybackSnapshot$json,
+  '.synctv.client.PlaybackSnapshot.PlaybackInfosEntry':
+      PlaybackSnapshot_PlaybackInfosEntry$json,
+  '.synctv.client.PlaybackInfo': PlaybackInfo$json,
+  '.synctv.client.PlaybackUrl': PlaybackUrl$json,
+  '.synctv.client.PlaybackUrl.HeadersEntry': PlaybackUrl_HeadersEntry$json,
+  '.synctv.client.PlaybackUrlMetadata': PlaybackUrlMetadata$json,
+  '.synctv.client.PlaybackUrlMetadata.ExtraEntry':
+      PlaybackUrlMetadata_ExtraEntry$json,
+  '.synctv.client.Subtitle': Subtitle$json,
+  '.synctv.client.SubtitleUrl': SubtitleUrl$json,
+  '.synctv.client.SubtitleUrl.HeadersEntry': SubtitleUrl_HeadersEntry$json,
+  '.synctv.client.Danmaku': Danmaku$json,
+  '.synctv.client.Danmaku.HeadersEntry': Danmaku_HeadersEntry$json,
+  '.synctv.client.PlaybackSnapshot.MetadataEntry':
+      PlaybackSnapshot_MetadataEntry$json,
+  '.synctv.client.PlaylistItemsChanged': PlaylistItemsChanged$json,
+  '.synctv.client.ListPlaylistItemsResponse': ListPlaylistItemsResponse$json,
+  '.synctv.client.PlaylistItem': PlaylistItem$json,
+  '.synctv.client.PlaylistBrowsePathNode': PlaylistBrowsePathNode$json,
+  '.synctv.client.RoomMembersChanged': RoomMembersChanged$json,
+  '.synctv.client.ResourceObserved': ResourceObserved$json,
+  '.synctv.client.ResourceChanged': ResourceChanged$json,
+  '.synctv.client.ResourceChangedOnly': ResourceChangedOnly$json,
+  '.synctv.client.ResourceObserveError': ResourceObserveError$json,
+  '.synctv.client.WatchPlaybackStateRequest': WatchPlaybackStateRequest$json,
+  '.synctv.client.WatchOptions': WatchOptions$json,
+  '.synctv.client.WatchPlaybackStateEvent': WatchPlaybackStateEvent$json,
+  '.synctv.client.WatchPlaybackSnapshotRequest':
+      WatchPlaybackSnapshotRequest$json,
+  '.synctv.client.WatchPlaybackSnapshotEvent': WatchPlaybackSnapshotEvent$json,
+  '.synctv.client.WatchRoomSettingsRequest': WatchRoomSettingsRequest$json,
+  '.synctv.client.WatchRoomSettingsEvent': WatchRoomSettingsEvent$json,
+  '.synctv.client.WatchPlaylistItemsRequest': WatchPlaylistItemsRequest$json,
+  '.synctv.client.WatchPlaylistItemsEvent': WatchPlaylistItemsEvent$json,
+  '.synctv.client.WatchRoomMembersRequest': WatchRoomMembersRequest$json,
+  '.synctv.client.WatchRoomMembersEvent': WatchRoomMembersEvent$json,
+  '.synctv.client.GetChatHistoryRequest': GetChatHistoryRequest$json,
+  '.synctv.client.GetChatHistoryResponse': GetChatHistoryResponse$json,
+  '.synctv.client.GetIceServersRequest': GetIceServersRequest$json,
+  '.synctv.client.GetIceServersResponse': GetIceServersResponse$json,
+  '.synctv.client.IceServer': IceServer$json,
+  '.synctv.client.WebRtcStatus': WebRtcStatus$json,
+  '.synctv.client.CreatePlaylistRequest': CreatePlaylistRequest$json,
+  '.synctv.client.CreatePlaylistResponse': CreatePlaylistResponse$json,
+  '.synctv.client.GetPlaylistRequest': GetPlaylistRequest$json,
+  '.synctv.client.GetPlaylistResponse': GetPlaylistResponse$json,
+  '.synctv.client.UpdatePlaylistRequest': UpdatePlaylistRequest$json,
+  '.synctv.client.UpdatePlaylistResponse': UpdatePlaylistResponse$json,
+  '.synctv.client.MovePlaylistRequest': MovePlaylistRequest$json,
+  '.synctv.client.MovePlaylistResponse': MovePlaylistResponse$json,
+  '.synctv.client.DeletePlaylistRequest': DeletePlaylistRequest$json,
+  '.synctv.client.DeletePlaylistResponse': DeletePlaylistResponse$json,
+  '.synctv.client.ListPlaylistsRequest': ListPlaylistsRequest$json,
+  '.synctv.client.ListPlaylistsResponse': ListPlaylistsResponse$json,
+  '.synctv.client.AddMediaRequest': AddMediaRequest$json,
+  '.synctv.client.AddMediaResponse': AddMediaResponse$json,
+  '.synctv.client.GetMediaRequest': GetMediaRequest$json,
+  '.synctv.client.DeleteMediaRequest': DeleteMediaRequest$json,
+  '.synctv.client.DeleteMediaResponse': DeleteMediaResponse$json,
+  '.synctv.client.DeleteEntriesRequest': DeleteEntriesRequest$json,
+  '.synctv.client.DeleteEntriesResponse': DeleteEntriesResponse$json,
+  '.synctv.client.EditMediaRequest': EditMediaRequest$json,
+  '.synctv.client.EditMediaResponse': EditMediaResponse$json,
+  '.synctv.client.MoveMediaRequest': MoveMediaRequest$json,
+  '.synctv.client.MoveMediaResponse': MoveMediaResponse$json,
+  '.synctv.client.ClearPlaylistRequest': ClearPlaylistRequest$json,
+  '.synctv.client.ClearPlaylistResponse': ClearPlaylistResponse$json,
+  '.synctv.client.AddMediaBatchRequest': AddMediaBatchRequest$json,
+  '.synctv.client.AddMediaBatchResponse': AddMediaBatchResponse$json,
+  '.synctv.client.StartPlaybackRequest': StartPlaybackRequest$json,
+  '.synctv.client.StartPlaybackResponse': StartPlaybackResponse$json,
+  '.synctv.client.StopPlaybackRequest': StopPlaybackRequest$json,
+  '.synctv.client.StopPlaybackResponse': StopPlaybackResponse$json,
+  '.synctv.client.GetPlaybackRequest': GetPlaybackRequest$json,
+  '.synctv.client.GetPlaybackResponse': GetPlaybackResponse$json,
+};
+
+/// Descriptor for `RoomService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
+final $typed_data.Uint8List roomServiceDescriptor = $convert.base64Decode(
+    'CgtSb29tU2VydmljZRJgCg9HZXRSb29tU2V0dGluZ3MSJS5zeW5jdHYuY2xpZW50LkdldFJvb2'
+    '1TZXR0aW5nc1JlcXVlc3QaJi5zeW5jdHYuY2xpZW50LkdldFJvb21TZXR0aW5nc1Jlc3BvbnNl'
+    'EmkKElVwZGF0ZVJvb21TZXR0aW5ncxIoLnN5bmN0di5jbGllbnQuVXBkYXRlUm9vbVNldHRpbm'
+    'dzUmVxdWVzdBopLnN5bmN0di5jbGllbnQuVXBkYXRlUm9vbVNldHRpbmdzUmVzcG9uc2USZgoR'
+    'UmVzZXRSb29tU2V0dGluZ3MSJy5zeW5jdHYuY2xpZW50LlJlc2V0Um9vbVNldHRpbmdzUmVxdW'
+    'VzdBooLnN5bmN0di5jbGllbnQuUmVzZXRSb29tU2V0dGluZ3NSZXNwb25zZRJyChVUcmFuc2Zl'
+    'clJvb21Pd25lcnNoaXASKy5zeW5jdHYuY2xpZW50LlRyYW5zZmVyUm9vbU93bmVyc2hpcFJlcX'
+    'Vlc3QaLC5zeW5jdHYuY2xpZW50LlRyYW5zZmVyUm9vbU93bmVyc2hpcFJlc3BvbnNlEk4KCUxl'
+    'YXZlUm9vbRIfLnN5bmN0di5jbGllbnQuTGVhdmVSb29tUmVxdWVzdBogLnN5bmN0di5jbGllbn'
+    'QuTGVhdmVSb29tUmVzcG9uc2USUQoKRGVsZXRlUm9vbRIgLnN5bmN0di5jbGllbnQuRGVsZXRl'
+    'Um9vbVJlcXVlc3QaIS5zeW5jdHYuY2xpZW50LkRlbGV0ZVJvb21SZXNwb25zZRJgCg9TZXRSb2'
+    '9tUGFzc3dvcmQSJS5zeW5jdHYuY2xpZW50LlNldFJvb21QYXNzd29yZFJlcXVlc3QaJi5zeW5j'
+    'dHYuY2xpZW50LlNldFJvb21QYXNzd29yZFJlc3BvbnNlEl0KDkdldFJvb21NZW1iZXJzEiQuc3'
+    'luY3R2LmNsaWVudC5HZXRSb29tTWVtYmVyc1JlcXVlc3QaJS5zeW5jdHYuY2xpZW50LkdldFJv'
+    'b21NZW1iZXJzUmVzcG9uc2USYAoPTGlzdFJvb21TdHJlYW1zEiUuc3luY3R2LmNsaWVudC5MaX'
+    'N0Um9vbVN0cmVhbXNSZXF1ZXN0GiYuc3luY3R2LmNsaWVudC5MaXN0Um9vbVN0cmVhbXNSZXNw'
+    'b25zZRJmChFHZXRSb29tU3RyZWFtSW5mbxInLnN5bmN0di5jbGllbnQuR2V0Um9vbVN0cmVhbU'
+    'luZm9SZXF1ZXN0Giguc3luY3R2LmNsaWVudC5HZXRSb29tU3RyZWFtSW5mb1Jlc3BvbnNlEl0K'
+    'DktpY2tSb29tU3RyZWFtEiQuc3luY3R2LmNsaWVudC5LaWNrUm9vbVN0cmVhbVJlcXVlc3QaJS'
+    '5zeW5jdHYuY2xpZW50LktpY2tSb29tU3RyZWFtUmVzcG9uc2USTgoJQWRkTWVtYmVyEh8uc3lu'
+    'Y3R2LmNsaWVudC5BZGRNZW1iZXJSZXF1ZXN0GiAuc3luY3R2LmNsaWVudC5BZGRNZW1iZXJSZX'
+    'Nwb25zZRJsChNMaXN0Um9vbUpvaW5SZXZpZXdzEikuc3luY3R2LmNsaWVudC5MaXN0Um9vbUpv'
+    'aW5SZXZpZXdzUmVxdWVzdBoqLnN5bmN0di5jbGllbnQuTGlzdFJvb21Kb2luUmV2aWV3c1Jlc3'
+    'BvbnNlEnIKFUFwcHJvdmVSb29tSm9pblJldmlldxIrLnN5bmN0di5jbGllbnQuQXBwcm92ZVJv'
+    'b21Kb2luUmV2aWV3UmVxdWVzdBosLnN5bmN0di5jbGllbnQuQXBwcm92ZVJvb21Kb2luUmV2aW'
+    'V3UmVzcG9uc2USbwoUUmVqZWN0Um9vbUpvaW5SZXZpZXcSKi5zeW5jdHYuY2xpZW50LlJlamVj'
+    'dFJvb21Kb2luUmV2aWV3UmVxdWVzdBorLnN5bmN0di5jbGllbnQuUmVqZWN0Um9vbUpvaW5SZX'
+    'ZpZXdSZXNwb25zZRJ4ChdVcGRhdGVNZW1iZXJQZXJtaXNzaW9ucxItLnN5bmN0di5jbGllbnQu'
+    'VXBkYXRlTWVtYmVyUGVybWlzc2lvbnNSZXF1ZXN0Gi4uc3luY3R2LmNsaWVudC5VcGRhdGVNZW'
+    '1iZXJQZXJtaXNzaW9uc1Jlc3BvbnNlElEKCktpY2tNZW1iZXISIC5zeW5jdHYuY2xpZW50Lktp'
+    'Y2tNZW1iZXJSZXF1ZXN0GiEuc3luY3R2LmNsaWVudC5LaWNrTWVtYmVyUmVzcG9uc2UScgoVQ3'
+    'JlYXRlV2ViU29ja2V0VGlja2V0Eisuc3luY3R2LmNsaWVudC5DcmVhdGVXZWJTb2NrZXRUaWNr'
+    'ZXRSZXF1ZXN0Giwuc3luY3R2LmNsaWVudC5DcmVhdGVXZWJTb2NrZXRUaWNrZXRSZXNwb25zZR'
+    'JPCg1NZXNzYWdlU3RyZWFtEhwuc3luY3R2LmNsaWVudC5DbGllbnRNZXNzYWdlGhwuc3luY3R2'
+    'LmNsaWVudC5TZXJ2ZXJNZXNzYWdlKAEwARJoChJXYXRjaFBsYXliYWNrU3RhdGUSKC5zeW5jdH'
+    'YuY2xpZW50LldhdGNoUGxheWJhY2tTdGF0ZVJlcXVlc3QaJi5zeW5jdHYuY2xpZW50LldhdGNo'
+    'UGxheWJhY2tTdGF0ZUV2ZW50MAEScQoVV2F0Y2hQbGF5YmFja1NuYXBzaG90Eisuc3luY3R2Lm'
+    'NsaWVudC5XYXRjaFBsYXliYWNrU25hcHNob3RSZXF1ZXN0Gikuc3luY3R2LmNsaWVudC5XYXRj'
+    'aFBsYXliYWNrU25hcHNob3RFdmVudDABEmUKEVdhdGNoUm9vbVNldHRpbmdzEicuc3luY3R2Lm'
+    'NsaWVudC5XYXRjaFJvb21TZXR0aW5nc1JlcXVlc3QaJS5zeW5jdHYuY2xpZW50LldhdGNoUm9v'
+    'bVNldHRpbmdzRXZlbnQwARJoChJXYXRjaFBsYXlsaXN0SXRlbXMSKC5zeW5jdHYuY2xpZW50Ll'
+    'dhdGNoUGxheWxpc3RJdGVtc1JlcXVlc3QaJi5zeW5jdHYuY2xpZW50LldhdGNoUGxheWxpc3RJ'
+    'dGVtc0V2ZW50MAESYgoQV2F0Y2hSb29tTWVtYmVycxImLnN5bmN0di5jbGllbnQuV2F0Y2hSb2'
+    '9tTWVtYmVyc1JlcXVlc3QaJC5zeW5jdHYuY2xpZW50LldhdGNoUm9vbU1lbWJlcnNFdmVudDAB'
+    'El0KDkdldENoYXRIaXN0b3J5EiQuc3luY3R2LmNsaWVudC5HZXRDaGF0SGlzdG9yeVJlcXVlc3'
+    'QaJS5zeW5jdHYuY2xpZW50LkdldENoYXRIaXN0b3J5UmVzcG9uc2USWgoNR2V0SWNlU2VydmVy'
+    'cxIjLnN5bmN0di5jbGllbnQuR2V0SWNlU2VydmVyc1JlcXVlc3QaJC5zeW5jdHYuY2xpZW50Lk'
+    'dldEljZVNlcnZlcnNSZXNwb25zZRJdCg5DcmVhdGVQbGF5bGlzdBIkLnN5bmN0di5jbGllbnQu'
+    'Q3JlYXRlUGxheWxpc3RSZXF1ZXN0GiUuc3luY3R2LmNsaWVudC5DcmVhdGVQbGF5bGlzdFJlc3'
+    'BvbnNlElQKC0dldFBsYXlsaXN0EiEuc3luY3R2LmNsaWVudC5HZXRQbGF5bGlzdFJlcXVlc3Qa'
+    'Ii5zeW5jdHYuY2xpZW50LkdldFBsYXlsaXN0UmVzcG9uc2USXQoOVXBkYXRlUGxheWxpc3QSJC'
+    '5zeW5jdHYuY2xpZW50LlVwZGF0ZVBsYXlsaXN0UmVxdWVzdBolLnN5bmN0di5jbGllbnQuVXBk'
+    'YXRlUGxheWxpc3RSZXNwb25zZRJXCgxNb3ZlUGxheWxpc3QSIi5zeW5jdHYuY2xpZW50Lk1vdm'
+    'VQbGF5bGlzdFJlcXVlc3QaIy5zeW5jdHYuY2xpZW50Lk1vdmVQbGF5bGlzdFJlc3BvbnNlEl0K'
+    'DkRlbGV0ZVBsYXlsaXN0EiQuc3luY3R2LmNsaWVudC5EZWxldGVQbGF5bGlzdFJlcXVlc3QaJS'
+    '5zeW5jdHYuY2xpZW50LkRlbGV0ZVBsYXlsaXN0UmVzcG9uc2USWgoNTGlzdFBsYXlsaXN0cxIj'
+    'LnN5bmN0di5jbGllbnQuTGlzdFBsYXlsaXN0c1JlcXVlc3QaJC5zeW5jdHYuY2xpZW50Lkxpc3'
+    'RQbGF5bGlzdHNSZXNwb25zZRJLCghBZGRNZWRpYRIeLnN5bmN0di5jbGllbnQuQWRkTWVkaWFS'
+    'ZXF1ZXN0Gh8uc3luY3R2LmNsaWVudC5BZGRNZWRpYVJlc3BvbnNlEkAKCEdldE1lZGlhEh4uc3'
+    'luY3R2LmNsaWVudC5HZXRNZWRpYVJlcXVlc3QaFC5zeW5jdHYuY2xpZW50Lk1lZGlhElQKC0Rl'
+    'bGV0ZU1lZGlhEiEuc3luY3R2LmNsaWVudC5EZWxldGVNZWRpYVJlcXVlc3QaIi5zeW5jdHYuY2'
+    'xpZW50LkRlbGV0ZU1lZGlhUmVzcG9uc2USWgoNRGVsZXRlRW50cmllcxIjLnN5bmN0di5jbGll'
+    'bnQuRGVsZXRlRW50cmllc1JlcXVlc3QaJC5zeW5jdHYuY2xpZW50LkRlbGV0ZUVudHJpZXNSZX'
+    'Nwb25zZRJOCglFZGl0TWVkaWESHy5zeW5jdHYuY2xpZW50LkVkaXRNZWRpYVJlcXVlc3QaIC5z'
+    'eW5jdHYuY2xpZW50LkVkaXRNZWRpYVJlc3BvbnNlEmYKEUxpc3RQbGF5bGlzdEl0ZW1zEicuc3'
+    'luY3R2LmNsaWVudC5MaXN0UGxheWxpc3RJdGVtc1JlcXVlc3QaKC5zeW5jdHYuY2xpZW50Lkxp'
+    'c3RQbGF5bGlzdEl0ZW1zUmVzcG9uc2USTgoJTW92ZU1lZGlhEh8uc3luY3R2LmNsaWVudC5Nb3'
+    'ZlTWVkaWFSZXF1ZXN0GiAuc3luY3R2LmNsaWVudC5Nb3ZlTWVkaWFSZXNwb25zZRJaCg1DbGVh'
+    'clBsYXlsaXN0EiMuc3luY3R2LmNsaWVudC5DbGVhclBsYXlsaXN0UmVxdWVzdBokLnN5bmN0di'
+    '5jbGllbnQuQ2xlYXJQbGF5bGlzdFJlc3BvbnNlEloKDUFkZE1lZGlhQmF0Y2gSIy5zeW5jdHYu'
+    'Y2xpZW50LkFkZE1lZGlhQmF0Y2hSZXF1ZXN0GiQuc3luY3R2LmNsaWVudC5BZGRNZWRpYUJhdG'
+    'NoUmVzcG9uc2USWgoNU3RhcnRQbGF5YmFjaxIjLnN5bmN0di5jbGllbnQuU3RhcnRQbGF5YmFj'
+    'a1JlcXVlc3QaJC5zeW5jdHYuY2xpZW50LlN0YXJ0UGxheWJhY2tSZXNwb25zZRJXCgxTdG9wUG'
+    'xheWJhY2sSIi5zeW5jdHYuY2xpZW50LlN0b3BQbGF5YmFja1JlcXVlc3QaIy5zeW5jdHYuY2xp'
+    'ZW50LlN0b3BQbGF5YmFja1Jlc3BvbnNlElQKC0dldFBsYXliYWNrEiEuc3luY3R2LmNsaWVudC'
+    '5HZXRQbGF5YmFja1JlcXVlc3QaIi5zeW5jdHYuY2xpZW50LkdldFBsYXliYWNrUmVzcG9uc2US'
+    'WgoOVXBkYXRlUGxheWJhY2sSJC5zeW5jdHYuY2xpZW50LlVwZGF0ZVBsYXliYWNrUmVxdWVzdB'
+    'oiLnN5bmN0di5jbGllbnQuR2V0UGxheWJhY2tSZXNwb25zZQ==');
+
+const $core.Map<$core.String, $core.dynamic> PublicServiceBase$json = {
+  '1': 'PublicService',
+  '2': [
+    {
+      '1': 'CheckRoom',
+      '2': '.synctv.client.CheckRoomRequest',
+      '3': '.synctv.client.CheckRoomResponse'
+    },
+    {
+      '1': 'ListRooms',
+      '2': '.synctv.client.ListRoomsRequest',
+      '3': '.synctv.client.ListRoomsResponse'
+    },
+    {
+      '1': 'GetHotRooms',
+      '2': '.synctv.client.GetHotRoomsRequest',
+      '3': '.synctv.client.GetHotRoomsResponse'
+    },
+    {
+      '1': 'GetPublicSettings',
+      '2': '.synctv.client.GetPublicSettingsRequest',
+      '3': '.synctv.client.GetPublicSettingsResponse'
+    },
+    {
+      '1': 'GetServerInfo',
+      '2': '.synctv.client.GetServerInfoRequest',
+      '3': '.synctv.client.GetServerInfoResponse'
+    },
+  ],
+};
+
+@$core.Deprecated('Use publicServiceDescriptor instead')
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    PublicServiceBase$messageJson = {
+  '.synctv.client.CheckRoomRequest': CheckRoomRequest$json,
+  '.synctv.client.CheckRoomResponse': CheckRoomResponse$json,
+  '.synctv.client.ListRoomsRequest': ListRoomsRequest$json,
+  '.synctv.client.ListRoomsResponse': ListRoomsResponse$json,
+  '.synctv.client.Room': Room$json,
+  '.synctv.client.GetHotRoomsRequest': GetHotRoomsRequest$json,
+  '.synctv.client.GetHotRoomsResponse': GetHotRoomsResponse$json,
+  '.synctv.client.RoomWithStats': RoomWithStats$json,
+  '.synctv.client.GetPublicSettingsRequest': GetPublicSettingsRequest$json,
+  '.synctv.client.GetPublicSettingsResponse': GetPublicSettingsResponse$json,
+  '.synctv.client.GetServerInfoRequest': GetServerInfoRequest$json,
+  '.synctv.client.GetServerInfoResponse': GetServerInfoResponse$json,
+};
+
+/// Descriptor for `PublicService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
+final $typed_data.Uint8List publicServiceDescriptor = $convert.base64Decode(
+    'Cg1QdWJsaWNTZXJ2aWNlEk4KCUNoZWNrUm9vbRIfLnN5bmN0di5jbGllbnQuQ2hlY2tSb29tUm'
+    'VxdWVzdBogLnN5bmN0di5jbGllbnQuQ2hlY2tSb29tUmVzcG9uc2USTgoJTGlzdFJvb21zEh8u'
+    'c3luY3R2LmNsaWVudC5MaXN0Um9vbXNSZXF1ZXN0GiAuc3luY3R2LmNsaWVudC5MaXN0Um9vbX'
+    'NSZXNwb25zZRJUCgtHZXRIb3RSb29tcxIhLnN5bmN0di5jbGllbnQuR2V0SG90Um9vbXNSZXF1'
+    'ZXN0GiIuc3luY3R2LmNsaWVudC5HZXRIb3RSb29tc1Jlc3BvbnNlEmYKEUdldFB1YmxpY1NldH'
+    'RpbmdzEicuc3luY3R2LmNsaWVudC5HZXRQdWJsaWNTZXR0aW5nc1JlcXVlc3QaKC5zeW5jdHYu'
+    'Y2xpZW50LkdldFB1YmxpY1NldHRpbmdzUmVzcG9uc2USWgoNR2V0U2VydmVySW5mbxIjLnN5bm'
+    'N0di5jbGllbnQuR2V0U2VydmVySW5mb1JlcXVlc3QaJC5zeW5jdHYuY2xpZW50LkdldFNlcnZl'
+    'ckluZm9SZXNwb25zZQ==');
+
+const $core.Map<$core.String, $core.dynamic> EmailServiceBase$json = {
+  '1': 'EmailService',
+  '2': [
+    {
+      '1': 'SendVerificationEmail',
+      '2': '.synctv.client.SendVerificationEmailRequest',
+      '3': '.synctv.client.SendVerificationEmailResponse'
+    },
+    {
+      '1': 'ConfirmEmail',
+      '2': '.synctv.client.ConfirmEmailRequest',
+      '3': '.synctv.client.ConfirmEmailResponse'
+    },
+    {
+      '1': 'RequestPasswordReset',
+      '2': '.synctv.client.RequestPasswordResetRequest',
+      '3': '.synctv.client.RequestPasswordResetResponse'
+    },
+    {
+      '1': 'StartOpaquePasswordReset',
+      '2': '.synctv.client.StartOpaquePasswordResetRequest',
+      '3': '.synctv.client.StartOpaquePasswordResetResponse'
+    },
+    {
+      '1': 'FinishOpaquePasswordReset',
+      '2': '.synctv.client.FinishOpaquePasswordResetRequest',
+      '3': '.synctv.client.ConfirmPasswordResetResponse'
+    },
+  ],
+};
+
+@$core.Deprecated('Use emailServiceDescriptor instead')
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    EmailServiceBase$messageJson = {
+  '.synctv.client.SendVerificationEmailRequest':
+      SendVerificationEmailRequest$json,
+  '.synctv.client.SendVerificationEmailResponse':
+      SendVerificationEmailResponse$json,
+  '.synctv.client.ConfirmEmailRequest': ConfirmEmailRequest$json,
+  '.synctv.client.ConfirmEmailResponse': ConfirmEmailResponse$json,
+  '.synctv.client.RequestPasswordResetRequest':
+      RequestPasswordResetRequest$json,
+  '.synctv.client.RequestPasswordResetResponse':
+      RequestPasswordResetResponse$json,
+  '.synctv.client.StartOpaquePasswordResetRequest':
+      StartOpaquePasswordResetRequest$json,
+  '.synctv.client.StartOpaquePasswordResetResponse':
+      StartOpaquePasswordResetResponse$json,
+  '.synctv.client.FinishOpaquePasswordResetRequest':
+      FinishOpaquePasswordResetRequest$json,
+  '.synctv.client.ConfirmPasswordResetResponse':
+      ConfirmPasswordResetResponse$json,
+};
+
+/// Descriptor for `EmailService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
+final $typed_data.Uint8List emailServiceDescriptor = $convert.base64Decode(
+    'CgxFbWFpbFNlcnZpY2UScgoVU2VuZFZlcmlmaWNhdGlvbkVtYWlsEisuc3luY3R2LmNsaWVudC'
+    '5TZW5kVmVyaWZpY2F0aW9uRW1haWxSZXF1ZXN0Giwuc3luY3R2LmNsaWVudC5TZW5kVmVyaWZp'
+    'Y2F0aW9uRW1haWxSZXNwb25zZRJXCgxDb25maXJtRW1haWwSIi5zeW5jdHYuY2xpZW50LkNvbm'
+    'Zpcm1FbWFpbFJlcXVlc3QaIy5zeW5jdHYuY2xpZW50LkNvbmZpcm1FbWFpbFJlc3BvbnNlEm8K'
+    'FFJlcXVlc3RQYXNzd29yZFJlc2V0Eiouc3luY3R2LmNsaWVudC5SZXF1ZXN0UGFzc3dvcmRSZX'
+    'NldFJlcXVlc3QaKy5zeW5jdHYuY2xpZW50LlJlcXVlc3RQYXNzd29yZFJlc2V0UmVzcG9uc2US'
+    'ewoYU3RhcnRPcGFxdWVQYXNzd29yZFJlc2V0Ei4uc3luY3R2LmNsaWVudC5TdGFydE9wYXF1ZV'
+    'Bhc3N3b3JkUmVzZXRSZXF1ZXN0Gi8uc3luY3R2LmNsaWVudC5TdGFydE9wYXF1ZVBhc3N3b3Jk'
+    'UmVzZXRSZXNwb25zZRJ5ChlGaW5pc2hPcGFxdWVQYXNzd29yZFJlc2V0Ei8uc3luY3R2LmNsaW'
+    'VudC5GaW5pc2hPcGFxdWVQYXNzd29yZFJlc2V0UmVxdWVzdBorLnN5bmN0di5jbGllbnQuQ29u'
+    'ZmlybVBhc3N3b3JkUmVzZXRSZXNwb25zZQ==');
+
+const $core.Map<$core.String, $core.dynamic> NotificationServiceBase$json = {
+  '1': 'NotificationService',
+  '2': [
+    {
+      '1': 'ListNotifications',
+      '2': '.synctv.client.ListNotificationsRequest',
+      '3': '.synctv.client.ListNotificationsResponse'
+    },
+    {
+      '1': 'GetNotification',
+      '2': '.synctv.client.GetNotificationRequest',
+      '3': '.synctv.client.GetNotificationResponse'
+    },
+    {
+      '1': 'MarkAsRead',
+      '2': '.synctv.client.MarkAsReadRequest',
+      '3': '.synctv.client.MarkAsReadResponse'
+    },
+    {
+      '1': 'MarkAllAsRead',
+      '2': '.synctv.client.MarkAllAsReadRequest',
+      '3': '.synctv.client.MarkAllAsReadResponse'
+    },
+    {
+      '1': 'DeleteNotification',
+      '2': '.synctv.client.DeleteNotificationRequest',
+      '3': '.synctv.client.DeleteNotificationResponse'
+    },
+    {
+      '1': 'DeleteAllRead',
+      '2': '.synctv.client.DeleteAllReadRequest',
+      '3': '.synctv.client.DeleteAllReadResponse'
+    },
+  ],
+};
+
+@$core.Deprecated('Use notificationServiceDescriptor instead')
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    NotificationServiceBase$messageJson = {
+  '.synctv.client.ListNotificationsRequest': ListNotificationsRequest$json,
+  '.synctv.client.ListNotificationsResponse': ListNotificationsResponse$json,
+  '.synctv.client.NotificationProto': NotificationProto$json,
+  '.synctv.client.GetNotificationRequest': GetNotificationRequest$json,
+  '.synctv.client.GetNotificationResponse': GetNotificationResponse$json,
+  '.synctv.client.MarkAsReadRequest': MarkAsReadRequest$json,
+  '.synctv.client.MarkAsReadResponse': MarkAsReadResponse$json,
+  '.synctv.client.MarkAllAsReadRequest': MarkAllAsReadRequest$json,
+  '.synctv.client.MarkAllAsReadResponse': MarkAllAsReadResponse$json,
+  '.synctv.client.DeleteNotificationRequest': DeleteNotificationRequest$json,
+  '.synctv.client.DeleteNotificationResponse': DeleteNotificationResponse$json,
+  '.synctv.client.DeleteAllReadRequest': DeleteAllReadRequest$json,
+  '.synctv.client.DeleteAllReadResponse': DeleteAllReadResponse$json,
+};
+
+/// Descriptor for `NotificationService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
+final $typed_data.Uint8List notificationServiceDescriptor = $convert.base64Decode(
+    'ChNOb3RpZmljYXRpb25TZXJ2aWNlEmYKEUxpc3ROb3RpZmljYXRpb25zEicuc3luY3R2LmNsaW'
+    'VudC5MaXN0Tm90aWZpY2F0aW9uc1JlcXVlc3QaKC5zeW5jdHYuY2xpZW50Lkxpc3ROb3RpZmlj'
+    'YXRpb25zUmVzcG9uc2USYAoPR2V0Tm90aWZpY2F0aW9uEiUuc3luY3R2LmNsaWVudC5HZXROb3'
+    'RpZmljYXRpb25SZXF1ZXN0GiYuc3luY3R2LmNsaWVudC5HZXROb3RpZmljYXRpb25SZXNwb25z'
+    'ZRJRCgpNYXJrQXNSZWFkEiAuc3luY3R2LmNsaWVudC5NYXJrQXNSZWFkUmVxdWVzdBohLnN5bm'
+    'N0di5jbGllbnQuTWFya0FzUmVhZFJlc3BvbnNlEloKDU1hcmtBbGxBc1JlYWQSIy5zeW5jdHYu'
+    'Y2xpZW50Lk1hcmtBbGxBc1JlYWRSZXF1ZXN0GiQuc3luY3R2LmNsaWVudC5NYXJrQWxsQXNSZW'
+    'FkUmVzcG9uc2USaQoSRGVsZXRlTm90aWZpY2F0aW9uEiguc3luY3R2LmNsaWVudC5EZWxldGVO'
+    'b3RpZmljYXRpb25SZXF1ZXN0Gikuc3luY3R2LmNsaWVudC5EZWxldGVOb3RpZmljYXRpb25SZX'
+    'Nwb25zZRJaCg1EZWxldGVBbGxSZWFkEiMuc3luY3R2LmNsaWVudC5EZWxldGVBbGxSZWFkUmVx'
+    'dWVzdBokLnN5bmN0di5jbGllbnQuRGVsZXRlQWxsUmVhZFJlc3BvbnNl');

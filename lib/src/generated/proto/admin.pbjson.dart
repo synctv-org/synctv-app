@@ -15,6 +15,9 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+import 'client.pbjson.dart' as $0;
+import 'common.pbjson.dart' as $1;
+
 @$core.Deprecated('Use banTargetTypeDescriptor instead')
 const BanTargetType$json = {
   '1': 'BanTargetType',
@@ -2727,3 +2730,480 @@ final $typed_data.Uint8List batchDeleteRoomsResponseDescriptor = $convert.base64
     'ChhCYXRjaERlbGV0ZVJvb21zUmVzcG9uc2USNwoHcmVzdWx0cxgBIAMoCzIdLnN5bmN0di5hZG'
     '1pbi5CYXRjaFJlc3VsdEl0ZW1SB3Jlc3VsdHMSHAoJc3VjY2VlZGVkGAIgASgFUglzdWNjZWVk'
     'ZWQSFgoGZmFpbGVkGAMgASgFUgZmYWlsZWQ=');
+
+const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
+  '1': 'AdminService',
+  '2': [
+    {
+      '1': 'GetSettings',
+      '2': '.synctv.admin.GetSettingsRequest',
+      '3': '.synctv.admin.GetSettingsResponse'
+    },
+    {
+      '1': 'GetSettingsGroup',
+      '2': '.synctv.admin.GetSettingsGroupRequest',
+      '3': '.synctv.admin.GetSettingsGroupResponse'
+    },
+    {
+      '1': 'UpdateSettings',
+      '2': '.synctv.admin.UpdateSettingsRequest',
+      '3': '.synctv.admin.UpdateSettingsResponse'
+    },
+    {
+      '1': 'SendTestEmail',
+      '2': '.synctv.admin.SendTestEmailRequest',
+      '3': '.synctv.admin.SendTestEmailResponse'
+    },
+    {
+      '1': 'CreateUser',
+      '2': '.synctv.admin.CreateUserRequest',
+      '3': '.synctv.admin.CreateUserResponse'
+    },
+    {
+      '1': 'DeleteUser',
+      '2': '.synctv.admin.DeleteUserRequest',
+      '3': '.synctv.admin.DeleteUserResponse'
+    },
+    {
+      '1': 'ListUsers',
+      '2': '.synctv.admin.ListUsersRequest',
+      '3': '.synctv.admin.ListUsersResponse'
+    },
+    {
+      '1': 'GetUser',
+      '2': '.synctv.admin.GetUserRequest',
+      '3': '.synctv.admin.GetUserResponse'
+    },
+    {
+      '1': 'GetUserPreferences',
+      '2': '.synctv.admin.GetUserPreferencesRequest',
+      '3': '.synctv.admin.GetUserPreferencesResponse'
+    },
+    {
+      '1': 'UpdateUserPreferences',
+      '2': '.synctv.admin.UpdateUserPreferencesRequest',
+      '3': '.synctv.admin.UpdateUserPreferencesResponse'
+    },
+    {
+      '1': 'UpdateUserPassword',
+      '2': '.synctv.admin.UpdateUserPasswordRequest',
+      '3': '.synctv.admin.UpdateUserPasswordResponse'
+    },
+    {
+      '1': 'UpdateUserUsername',
+      '2': '.synctv.admin.UpdateUserUsernameRequest',
+      '3': '.synctv.admin.UpdateUserUsernameResponse'
+    },
+    {
+      '1': 'UpdateUserRole',
+      '2': '.synctv.admin.UpdateUserRoleRequest',
+      '3': '.synctv.admin.UpdateUserRoleResponse'
+    },
+    {
+      '1': 'BanUser',
+      '2': '.synctv.admin.BanUserRequest',
+      '3': '.synctv.admin.BanUserResponse'
+    },
+    {
+      '1': 'UnbanUser',
+      '2': '.synctv.admin.UnbanUserRequest',
+      '3': '.synctv.admin.UnbanUserResponse'
+    },
+    {
+      '1': 'GetUserRooms',
+      '2': '.synctv.admin.GetUserRoomsRequest',
+      '3': '.synctv.admin.GetUserRoomsResponse'
+    },
+    {
+      '1': 'BatchBanUsers',
+      '2': '.synctv.admin.BatchBanUsersRequest',
+      '3': '.synctv.admin.BatchBanUsersResponse'
+    },
+    {
+      '1': 'BatchDeleteUsers',
+      '2': '.synctv.admin.BatchDeleteUsersRequest',
+      '3': '.synctv.admin.BatchDeleteUsersResponse'
+    },
+    {
+      '1': 'BatchBanRooms',
+      '2': '.synctv.admin.BatchBanRoomsRequest',
+      '3': '.synctv.admin.BatchBanRoomsResponse'
+    },
+    {
+      '1': 'BatchDeleteRooms',
+      '2': '.synctv.admin.BatchDeleteRoomsRequest',
+      '3': '.synctv.admin.BatchDeleteRoomsResponse'
+    },
+    {
+      '1': 'ListRooms',
+      '2': '.synctv.admin.ListRoomsRequest',
+      '3': '.synctv.admin.ListRoomsResponse'
+    },
+    {
+      '1': 'GetRoom',
+      '2': '.synctv.admin.GetRoomRequest',
+      '3': '.synctv.admin.GetRoomResponse'
+    },
+    {
+      '1': 'GetRoomSettings',
+      '2': '.synctv.admin.GetRoomSettingsRequest',
+      '3': '.synctv.admin.GetRoomSettingsResponse'
+    },
+    {
+      '1': 'UpdateRoomSettings',
+      '2': '.synctv.admin.UpdateRoomSettingsRequest',
+      '3': '.synctv.admin.UpdateRoomSettingsResponse'
+    },
+    {
+      '1': 'ResetRoomSettings',
+      '2': '.synctv.admin.ResetRoomSettingsRequest',
+      '3': '.synctv.admin.ResetRoomSettingsResponse'
+    },
+    {
+      '1': 'UpdateRoomPassword',
+      '2': '.synctv.admin.UpdateRoomPasswordRequest',
+      '3': '.synctv.admin.UpdateRoomPasswordResponse'
+    },
+    {
+      '1': 'DeleteRoom',
+      '2': '.synctv.admin.DeleteRoomRequest',
+      '3': '.synctv.admin.DeleteRoomResponse'
+    },
+    {
+      '1': 'BanRoom',
+      '2': '.synctv.admin.BanRoomRequest',
+      '3': '.synctv.admin.BanRoomResponse'
+    },
+    {
+      '1': 'UnbanRoom',
+      '2': '.synctv.admin.UnbanRoomRequest',
+      '3': '.synctv.admin.UnbanRoomResponse'
+    },
+    {
+      '1': 'GetRoomMembers',
+      '2': '.synctv.admin.GetRoomMembersRequest',
+      '3': '.synctv.admin.GetRoomMembersResponse'
+    },
+    {
+      '1': 'AddMember',
+      '2': '.synctv.admin.AddMemberRequest',
+      '3': '.synctv.admin.AddMemberResponse'
+    },
+    {
+      '1': 'UpdateMemberPermissions',
+      '2': '.synctv.admin.UpdateMemberPermissionsRequest',
+      '3': '.synctv.admin.UpdateMemberPermissionsResponse'
+    },
+    {
+      '1': 'KickMember',
+      '2': '.synctv.admin.KickMemberRequest',
+      '3': '.synctv.admin.KickMemberResponse'
+    },
+    {
+      '1': 'AddAdmin',
+      '2': '.synctv.admin.AddAdminRequest',
+      '3': '.synctv.admin.AddAdminResponse'
+    },
+    {
+      '1': 'RemoveAdmin',
+      '2': '.synctv.admin.RemoveAdminRequest',
+      '3': '.synctv.admin.RemoveAdminResponse'
+    },
+    {
+      '1': 'ListAdmins',
+      '2': '.synctv.admin.ListAdminsRequest',
+      '3': '.synctv.admin.ListAdminsResponse'
+    },
+    {
+      '1': 'GetSystemStats',
+      '2': '.synctv.admin.GetSystemStatsRequest',
+      '3': '.synctv.admin.GetSystemStatsResponse'
+    },
+    {
+      '1': 'ListActiveStreams',
+      '2': '.synctv.admin.ListActiveStreamsRequest',
+      '3': '.synctv.admin.ListActiveStreamsResponse'
+    },
+    {
+      '1': 'KickStream',
+      '2': '.synctv.admin.KickStreamRequest',
+      '3': '.synctv.admin.KickStreamResponse'
+    },
+    {
+      '1': 'ListUserRegistrationReviews',
+      '2': '.synctv.admin.ListUserRegistrationReviewsRequest',
+      '3': '.synctv.admin.ListUserRegistrationReviewsResponse'
+    },
+    {
+      '1': 'ApproveUserRegistrationReview',
+      '2': '.synctv.admin.ApproveUserRegistrationReviewRequest',
+      '3': '.synctv.admin.ApproveUserRegistrationReviewResponse'
+    },
+    {
+      '1': 'RejectUserRegistrationReview',
+      '2': '.synctv.admin.RejectUserRegistrationReviewRequest',
+      '3': '.synctv.admin.RejectUserRegistrationReviewResponse'
+    },
+    {
+      '1': 'ListRoomCreationReviews',
+      '2': '.synctv.admin.ListRoomCreationReviewsRequest',
+      '3': '.synctv.admin.ListRoomCreationReviewsResponse'
+    },
+    {
+      '1': 'ApproveRoomCreationReview',
+      '2': '.synctv.admin.ApproveRoomCreationReviewRequest',
+      '3': '.synctv.admin.ApproveRoomCreationReviewResponse'
+    },
+    {
+      '1': 'RejectRoomCreationReview',
+      '2': '.synctv.admin.RejectRoomCreationReviewRequest',
+      '3': '.synctv.admin.RejectRoomCreationReviewResponse'
+    },
+    {
+      '1': 'ListRoomJoinReviews',
+      '2': '.synctv.admin.ListRoomJoinReviewsRequest',
+      '3': '.synctv.admin.ListRoomJoinReviewsResponse'
+    },
+    {
+      '1': 'ApproveRoomJoinReview',
+      '2': '.synctv.admin.ApproveRoomJoinReviewRequest',
+      '3': '.synctv.admin.ApproveRoomJoinReviewResponse'
+    },
+    {
+      '1': 'RejectRoomJoinReview',
+      '2': '.synctv.admin.RejectRoomJoinReviewRequest',
+      '3': '.synctv.admin.RejectRoomJoinReviewResponse'
+    },
+    {
+      '1': 'ListBanRecords',
+      '2': '.synctv.admin.ListBanRecordsRequest',
+      '3': '.synctv.admin.ListBanRecordsResponse'
+    },
+  ],
+};
+
+@$core.Deprecated('Use adminServiceDescriptor instead')
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    AdminServiceBase$messageJson = {
+  '.synctv.admin.GetSettingsRequest': GetSettingsRequest$json,
+  '.synctv.admin.GetSettingsResponse': GetSettingsResponse$json,
+  '.synctv.admin.SettingsGroup': SettingsGroup$json,
+  '.synctv.admin.GetSettingsGroupRequest': GetSettingsGroupRequest$json,
+  '.synctv.admin.GetSettingsGroupResponse': GetSettingsGroupResponse$json,
+  '.synctv.admin.UpdateSettingsRequest': UpdateSettingsRequest$json,
+  '.synctv.admin.UpdateSettingsRequest.SettingsEntry':
+      UpdateSettingsRequest_SettingsEntry$json,
+  '.synctv.admin.UpdateSettingsResponse': UpdateSettingsResponse$json,
+  '.synctv.admin.SendTestEmailRequest': SendTestEmailRequest$json,
+  '.synctv.admin.SendTestEmailResponse': SendTestEmailResponse$json,
+  '.synctv.admin.CreateUserRequest': CreateUserRequest$json,
+  '.synctv.admin.CreateUserResponse': CreateUserResponse$json,
+  '.synctv.admin.AdminUser': AdminUser$json,
+  '.synctv.admin.DeleteUserRequest': DeleteUserRequest$json,
+  '.synctv.admin.DeleteUserResponse': DeleteUserResponse$json,
+  '.synctv.admin.ListUsersRequest': ListUsersRequest$json,
+  '.synctv.admin.ListUsersResponse': ListUsersResponse$json,
+  '.synctv.admin.GetUserRequest': GetUserRequest$json,
+  '.synctv.admin.GetUserResponse': GetUserResponse$json,
+  '.synctv.admin.GetUserPreferencesRequest': GetUserPreferencesRequest$json,
+  '.synctv.admin.GetUserPreferencesResponse': GetUserPreferencesResponse$json,
+  '.synctv.client.UserPreferences': $0.UserPreferences$json,
+  '.synctv.client.UserNotificationPreferences':
+      $0.UserNotificationPreferences$json,
+  '.synctv.client.UserAuthFactors': $0.UserAuthFactors$json,
+  '.synctv.admin.UpdateUserPreferencesRequest':
+      UpdateUserPreferencesRequest$json,
+  '.synctv.admin.UpdateUserPreferencesResponse':
+      UpdateUserPreferencesResponse$json,
+  '.synctv.admin.UpdateUserPasswordRequest': UpdateUserPasswordRequest$json,
+  '.synctv.admin.UpdateUserPasswordResponse': UpdateUserPasswordResponse$json,
+  '.synctv.admin.UpdateUserUsernameRequest': UpdateUserUsernameRequest$json,
+  '.synctv.admin.UpdateUserUsernameResponse': UpdateUserUsernameResponse$json,
+  '.synctv.admin.UpdateUserRoleRequest': UpdateUserRoleRequest$json,
+  '.synctv.admin.UpdateUserRoleResponse': UpdateUserRoleResponse$json,
+  '.synctv.admin.BanUserRequest': BanUserRequest$json,
+  '.synctv.admin.BanUserResponse': BanUserResponse$json,
+  '.synctv.admin.UnbanUserRequest': UnbanUserRequest$json,
+  '.synctv.admin.UnbanUserResponse': UnbanUserResponse$json,
+  '.synctv.admin.GetUserRoomsRequest': GetUserRoomsRequest$json,
+  '.synctv.admin.GetUserRoomsResponse': GetUserRoomsResponse$json,
+  '.synctv.admin.AdminRoom': AdminRoom$json,
+  '.synctv.admin.BatchBanUsersRequest': BatchBanUsersRequest$json,
+  '.synctv.admin.BatchBanUsersResponse': BatchBanUsersResponse$json,
+  '.synctv.admin.BatchResultItem': BatchResultItem$json,
+  '.synctv.admin.BatchDeleteUsersRequest': BatchDeleteUsersRequest$json,
+  '.synctv.admin.BatchDeleteUsersResponse': BatchDeleteUsersResponse$json,
+  '.synctv.admin.BatchBanRoomsRequest': BatchBanRoomsRequest$json,
+  '.synctv.admin.BatchBanRoomsResponse': BatchBanRoomsResponse$json,
+  '.synctv.admin.BatchDeleteRoomsRequest': BatchDeleteRoomsRequest$json,
+  '.synctv.admin.BatchDeleteRoomsResponse': BatchDeleteRoomsResponse$json,
+  '.synctv.admin.ListRoomsRequest': ListRoomsRequest$json,
+  '.synctv.admin.ListRoomsResponse': ListRoomsResponse$json,
+  '.synctv.admin.GetRoomRequest': GetRoomRequest$json,
+  '.synctv.admin.GetRoomResponse': GetRoomResponse$json,
+  '.synctv.admin.GetRoomSettingsRequest': GetRoomSettingsRequest$json,
+  '.synctv.admin.GetRoomSettingsResponse': GetRoomSettingsResponse$json,
+  '.synctv.admin.UpdateRoomSettingsRequest': UpdateRoomSettingsRequest$json,
+  '.synctv.admin.UpdateRoomSettingsResponse': UpdateRoomSettingsResponse$json,
+  '.synctv.admin.ResetRoomSettingsRequest': ResetRoomSettingsRequest$json,
+  '.synctv.admin.ResetRoomSettingsResponse': ResetRoomSettingsResponse$json,
+  '.synctv.admin.UpdateRoomPasswordRequest': UpdateRoomPasswordRequest$json,
+  '.synctv.admin.UpdateRoomPasswordResponse': UpdateRoomPasswordResponse$json,
+  '.synctv.admin.DeleteRoomRequest': DeleteRoomRequest$json,
+  '.synctv.admin.DeleteRoomResponse': DeleteRoomResponse$json,
+  '.synctv.admin.BanRoomRequest': BanRoomRequest$json,
+  '.synctv.admin.BanRoomResponse': BanRoomResponse$json,
+  '.synctv.admin.UnbanRoomRequest': UnbanRoomRequest$json,
+  '.synctv.admin.UnbanRoomResponse': UnbanRoomResponse$json,
+  '.synctv.admin.GetRoomMembersRequest': GetRoomMembersRequest$json,
+  '.synctv.admin.GetRoomMembersResponse': GetRoomMembersResponse$json,
+  '.synctv.common.RoomMember': $1.RoomMember$json,
+  '.synctv.admin.AddMemberRequest': AddMemberRequest$json,
+  '.synctv.admin.AddMemberResponse': AddMemberResponse$json,
+  '.synctv.admin.UpdateMemberPermissionsRequest':
+      UpdateMemberPermissionsRequest$json,
+  '.synctv.admin.UpdateMemberPermissionsResponse':
+      UpdateMemberPermissionsResponse$json,
+  '.synctv.admin.KickMemberRequest': KickMemberRequest$json,
+  '.synctv.admin.KickMemberResponse': KickMemberResponse$json,
+  '.synctv.admin.AddAdminRequest': AddAdminRequest$json,
+  '.synctv.admin.AddAdminResponse': AddAdminResponse$json,
+  '.synctv.admin.RemoveAdminRequest': RemoveAdminRequest$json,
+  '.synctv.admin.RemoveAdminResponse': RemoveAdminResponse$json,
+  '.synctv.admin.ListAdminsRequest': ListAdminsRequest$json,
+  '.synctv.admin.ListAdminsResponse': ListAdminsResponse$json,
+  '.synctv.admin.GetSystemStatsRequest': GetSystemStatsRequest$json,
+  '.synctv.admin.GetSystemStatsResponse': GetSystemStatsResponse$json,
+  '.synctv.admin.ListActiveStreamsRequest': ListActiveStreamsRequest$json,
+  '.synctv.admin.ListActiveStreamsResponse': ListActiveStreamsResponse$json,
+  '.synctv.admin.ActiveStreamInfo': ActiveStreamInfo$json,
+  '.synctv.admin.KickStreamRequest': KickStreamRequest$json,
+  '.synctv.admin.KickStreamResponse': KickStreamResponse$json,
+  '.synctv.admin.ListUserRegistrationReviewsRequest':
+      ListUserRegistrationReviewsRequest$json,
+  '.synctv.admin.ListUserRegistrationReviewsResponse':
+      ListUserRegistrationReviewsResponse$json,
+  '.synctv.admin.UserRegistrationReview': UserRegistrationReview$json,
+  '.synctv.admin.ApproveUserRegistrationReviewRequest':
+      ApproveUserRegistrationReviewRequest$json,
+  '.synctv.admin.ApproveUserRegistrationReviewResponse':
+      ApproveUserRegistrationReviewResponse$json,
+  '.synctv.admin.RejectUserRegistrationReviewRequest':
+      RejectUserRegistrationReviewRequest$json,
+  '.synctv.admin.RejectUserRegistrationReviewResponse':
+      RejectUserRegistrationReviewResponse$json,
+  '.synctv.admin.ListRoomCreationReviewsRequest':
+      ListRoomCreationReviewsRequest$json,
+  '.synctv.admin.ListRoomCreationReviewsResponse':
+      ListRoomCreationReviewsResponse$json,
+  '.synctv.admin.RoomCreationReview': RoomCreationReview$json,
+  '.synctv.admin.ApproveRoomCreationReviewRequest':
+      ApproveRoomCreationReviewRequest$json,
+  '.synctv.admin.ApproveRoomCreationReviewResponse':
+      ApproveRoomCreationReviewResponse$json,
+  '.synctv.admin.RejectRoomCreationReviewRequest':
+      RejectRoomCreationReviewRequest$json,
+  '.synctv.admin.RejectRoomCreationReviewResponse':
+      RejectRoomCreationReviewResponse$json,
+  '.synctv.admin.ListRoomJoinReviewsRequest': ListRoomJoinReviewsRequest$json,
+  '.synctv.admin.ListRoomJoinReviewsResponse': ListRoomJoinReviewsResponse$json,
+  '.synctv.admin.RoomJoinReview': RoomJoinReview$json,
+  '.synctv.admin.ApproveRoomJoinReviewRequest':
+      ApproveRoomJoinReviewRequest$json,
+  '.synctv.admin.ApproveRoomJoinReviewResponse':
+      ApproveRoomJoinReviewResponse$json,
+  '.synctv.admin.RejectRoomJoinReviewRequest': RejectRoomJoinReviewRequest$json,
+  '.synctv.admin.RejectRoomJoinReviewResponse':
+      RejectRoomJoinReviewResponse$json,
+  '.synctv.admin.ListBanRecordsRequest': ListBanRecordsRequest$json,
+  '.synctv.admin.ListBanRecordsResponse': ListBanRecordsResponse$json,
+  '.synctv.admin.BanRecord': BanRecord$json,
+};
+
+/// Descriptor for `AdminService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
+final $typed_data.Uint8List adminServiceDescriptor = $convert.base64Decode(
+    'CgxBZG1pblNlcnZpY2USUgoLR2V0U2V0dGluZ3MSIC5zeW5jdHYuYWRtaW4uR2V0U2V0dGluZ3'
+    'NSZXF1ZXN0GiEuc3luY3R2LmFkbWluLkdldFNldHRpbmdzUmVzcG9uc2USYQoQR2V0U2V0dGlu'
+    'Z3NHcm91cBIlLnN5bmN0di5hZG1pbi5HZXRTZXR0aW5nc0dyb3VwUmVxdWVzdBomLnN5bmN0di'
+    '5hZG1pbi5HZXRTZXR0aW5nc0dyb3VwUmVzcG9uc2USWwoOVXBkYXRlU2V0dGluZ3MSIy5zeW5j'
+    'dHYuYWRtaW4uVXBkYXRlU2V0dGluZ3NSZXF1ZXN0GiQuc3luY3R2LmFkbWluLlVwZGF0ZVNldH'
+    'RpbmdzUmVzcG9uc2USWAoNU2VuZFRlc3RFbWFpbBIiLnN5bmN0di5hZG1pbi5TZW5kVGVzdEVt'
+    'YWlsUmVxdWVzdBojLnN5bmN0di5hZG1pbi5TZW5kVGVzdEVtYWlsUmVzcG9uc2USTwoKQ3JlYX'
+    'RlVXNlchIfLnN5bmN0di5hZG1pbi5DcmVhdGVVc2VyUmVxdWVzdBogLnN5bmN0di5hZG1pbi5D'
+    'cmVhdGVVc2VyUmVzcG9uc2USTwoKRGVsZXRlVXNlchIfLnN5bmN0di5hZG1pbi5EZWxldGVVc2'
+    'VyUmVxdWVzdBogLnN5bmN0di5hZG1pbi5EZWxldGVVc2VyUmVzcG9uc2USTAoJTGlzdFVzZXJz'
+    'Eh4uc3luY3R2LmFkbWluLkxpc3RVc2Vyc1JlcXVlc3QaHy5zeW5jdHYuYWRtaW4uTGlzdFVzZX'
+    'JzUmVzcG9uc2USRgoHR2V0VXNlchIcLnN5bmN0di5hZG1pbi5HZXRVc2VyUmVxdWVzdBodLnN5'
+    'bmN0di5hZG1pbi5HZXRVc2VyUmVzcG9uc2USZwoSR2V0VXNlclByZWZlcmVuY2VzEicuc3luY3'
+    'R2LmFkbWluLkdldFVzZXJQcmVmZXJlbmNlc1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uR2V0VXNl'
+    'clByZWZlcmVuY2VzUmVzcG9uc2UScAoVVXBkYXRlVXNlclByZWZlcmVuY2VzEiouc3luY3R2Lm'
+    'FkbWluLlVwZGF0ZVVzZXJQcmVmZXJlbmNlc1JlcXVlc3QaKy5zeW5jdHYuYWRtaW4uVXBkYXRl'
+    'VXNlclByZWZlcmVuY2VzUmVzcG9uc2USZwoSVXBkYXRlVXNlclBhc3N3b3JkEicuc3luY3R2Lm'
+    'FkbWluLlVwZGF0ZVVzZXJQYXNzd29yZFJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlVXNl'
+    'clBhc3N3b3JkUmVzcG9uc2USZwoSVXBkYXRlVXNlclVzZXJuYW1lEicuc3luY3R2LmFkbWluLl'
+    'VwZGF0ZVVzZXJVc2VybmFtZVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlVXNlclVzZXJu'
+    'YW1lUmVzcG9uc2USWwoOVXBkYXRlVXNlclJvbGUSIy5zeW5jdHYuYWRtaW4uVXBkYXRlVXNlcl'
+    'JvbGVSZXF1ZXN0GiQuc3luY3R2LmFkbWluLlVwZGF0ZVVzZXJSb2xlUmVzcG9uc2USRgoHQmFu'
+    'VXNlchIcLnN5bmN0di5hZG1pbi5CYW5Vc2VyUmVxdWVzdBodLnN5bmN0di5hZG1pbi5CYW5Vc2'
+    'VyUmVzcG9uc2USTAoJVW5iYW5Vc2VyEh4uc3luY3R2LmFkbWluLlVuYmFuVXNlclJlcXVlc3Qa'
+    'Hy5zeW5jdHYuYWRtaW4uVW5iYW5Vc2VyUmVzcG9uc2USVQoMR2V0VXNlclJvb21zEiEuc3luY3'
+    'R2LmFkbWluLkdldFVzZXJSb29tc1JlcXVlc3QaIi5zeW5jdHYuYWRtaW4uR2V0VXNlclJvb21z'
+    'UmVzcG9uc2USWAoNQmF0Y2hCYW5Vc2VycxIiLnN5bmN0di5hZG1pbi5CYXRjaEJhblVzZXJzUm'
+    'VxdWVzdBojLnN5bmN0di5hZG1pbi5CYXRjaEJhblVzZXJzUmVzcG9uc2USYQoQQmF0Y2hEZWxl'
+    'dGVVc2VycxIlLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVVzZXJzUmVxdWVzdBomLnN5bmN0di'
+    '5hZG1pbi5CYXRjaERlbGV0ZVVzZXJzUmVzcG9uc2USWAoNQmF0Y2hCYW5Sb29tcxIiLnN5bmN0'
+    'di5hZG1pbi5CYXRjaEJhblJvb21zUmVxdWVzdBojLnN5bmN0di5hZG1pbi5CYXRjaEJhblJvb2'
+    '1zUmVzcG9uc2USYQoQQmF0Y2hEZWxldGVSb29tcxIlLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0'
+    'ZVJvb21zUmVxdWVzdBomLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVJvb21zUmVzcG9uc2USTA'
+    'oJTGlzdFJvb21zEh4uc3luY3R2LmFkbWluLkxpc3RSb29tc1JlcXVlc3QaHy5zeW5jdHYuYWRt'
+    'aW4uTGlzdFJvb21zUmVzcG9uc2USRgoHR2V0Um9vbRIcLnN5bmN0di5hZG1pbi5HZXRSb29tUm'
+    'VxdWVzdBodLnN5bmN0di5hZG1pbi5HZXRSb29tUmVzcG9uc2USXgoPR2V0Um9vbVNldHRpbmdz'
+    'EiQuc3luY3R2LmFkbWluLkdldFJvb21TZXR0aW5nc1JlcXVlc3QaJS5zeW5jdHYuYWRtaW4uR2'
+    'V0Um9vbVNldHRpbmdzUmVzcG9uc2USZwoSVXBkYXRlUm9vbVNldHRpbmdzEicuc3luY3R2LmFk'
+    'bWluLlVwZGF0ZVJvb21TZXR0aW5nc1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbV'
+    'NldHRpbmdzUmVzcG9uc2USZAoRUmVzZXRSb29tU2V0dGluZ3MSJi5zeW5jdHYuYWRtaW4uUmVz'
+    'ZXRSb29tU2V0dGluZ3NSZXF1ZXN0Gicuc3luY3R2LmFkbWluLlJlc2V0Um9vbVNldHRpbmdzUm'
+    'VzcG9uc2USZwoSVXBkYXRlUm9vbVBhc3N3b3JkEicuc3luY3R2LmFkbWluLlVwZGF0ZVJvb21Q'
+    'YXNzd29yZFJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVBhc3N3b3JkUmVzcG9uc2'
+    'USTwoKRGVsZXRlUm9vbRIfLnN5bmN0di5hZG1pbi5EZWxldGVSb29tUmVxdWVzdBogLnN5bmN0'
+    'di5hZG1pbi5EZWxldGVSb29tUmVzcG9uc2USRgoHQmFuUm9vbRIcLnN5bmN0di5hZG1pbi5CYW'
+    '5Sb29tUmVxdWVzdBodLnN5bmN0di5hZG1pbi5CYW5Sb29tUmVzcG9uc2USTAoJVW5iYW5Sb29t'
+    'Eh4uc3luY3R2LmFkbWluLlVuYmFuUm9vbVJlcXVlc3QaHy5zeW5jdHYuYWRtaW4uVW5iYW5Sb2'
+    '9tUmVzcG9uc2USWwoOR2V0Um9vbU1lbWJlcnMSIy5zeW5jdHYuYWRtaW4uR2V0Um9vbU1lbWJl'
+    'cnNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkdldFJvb21NZW1iZXJzUmVzcG9uc2USTAoJQWRkTW'
+    'VtYmVyEh4uc3luY3R2LmFkbWluLkFkZE1lbWJlclJlcXVlc3QaHy5zeW5jdHYuYWRtaW4uQWRk'
+    'TWVtYmVyUmVzcG9uc2USdgoXVXBkYXRlTWVtYmVyUGVybWlzc2lvbnMSLC5zeW5jdHYuYWRtaW'
+    '4uVXBkYXRlTWVtYmVyUGVybWlzc2lvbnNSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLlVwZGF0ZU1l'
+    'bWJlclBlcm1pc3Npb25zUmVzcG9uc2USTwoKS2lja01lbWJlchIfLnN5bmN0di5hZG1pbi5LaW'
+    'NrTWVtYmVyUmVxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUmVzcG9uc2USSQoIQWRk'
+    'QWRtaW4SHS5zeW5jdHYuYWRtaW4uQWRkQWRtaW5SZXF1ZXN0Gh4uc3luY3R2LmFkbWluLkFkZE'
+    'FkbWluUmVzcG9uc2USUgoLUmVtb3ZlQWRtaW4SIC5zeW5jdHYuYWRtaW4uUmVtb3ZlQWRtaW5S'
+    'ZXF1ZXN0GiEuc3luY3R2LmFkbWluLlJlbW92ZUFkbWluUmVzcG9uc2USTwoKTGlzdEFkbWlucx'
+    'IfLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5zUmVxdWVzdBogLnN5bmN0di5hZG1pbi5MaXN0QWRt'
+    'aW5zUmVzcG9uc2USWwoOR2V0U3lzdGVtU3RhdHMSIy5zeW5jdHYuYWRtaW4uR2V0U3lzdGVtU3'
+    'RhdHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkdldFN5c3RlbVN0YXRzUmVzcG9uc2USZAoRTGlz'
+    'dEFjdGl2ZVN0cmVhbXMSJi5zeW5jdHYuYWRtaW4uTGlzdEFjdGl2ZVN0cmVhbXNSZXF1ZXN0Gi'
+    'cuc3luY3R2LmFkbWluLkxpc3RBY3RpdmVTdHJlYW1zUmVzcG9uc2USTwoKS2lja1N0cmVhbRIf'
+    'LnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUmVxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrU3RyZW'
+    'FtUmVzcG9uc2USggEKG0xpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3cxIwLnN5bmN0di5hZG1p'
+    'bi5MaXN0VXNlclJlZ2lzdHJhdGlvblJldmlld3NSZXF1ZXN0GjEuc3luY3R2LmFkbWluLkxpc3'
+    'RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3c1Jlc3BvbnNlEogBCh1BcHByb3ZlVXNlclJlZ2lzdHJh'
+    'dGlvblJldmlldxIyLnN5bmN0di5hZG1pbi5BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmlld1'
+    'JlcXVlc3QaMy5zeW5jdHYuYWRtaW4uQXBwcm92ZVVzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXNw'
+    'b25zZRKFAQocUmVqZWN0VXNlclJlZ2lzdHJhdGlvblJldmlldxIxLnN5bmN0di5hZG1pbi5SZW'
+    'plY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVxdWVzdBoyLnN5bmN0di5hZG1pbi5SZWplY3RV'
+    'c2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVzcG9uc2USdgoXTGlzdFJvb21DcmVhdGlvblJldmlld3'
+    'MSLC5zeW5jdHYuYWRtaW4uTGlzdFJvb21DcmVhdGlvblJldmlld3NSZXF1ZXN0Gi0uc3luY3R2'
+    'LmFkbWluLkxpc3RSb29tQ3JlYXRpb25SZXZpZXdzUmVzcG9uc2USfAoZQXBwcm92ZVJvb21Dcm'
+    'VhdGlvblJldmlldxIuLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVx'
+    'dWVzdBovLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USeQ'
+    'oYUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3Ei0uc3luY3R2LmFkbWluLlJlamVjdFJvb21DcmVh'
+    'dGlvblJldmlld1JlcXVlc3QaLi5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUNyZWF0aW9uUmV2aW'
+    'V3UmVzcG9uc2USagoTTGlzdFJvb21Kb2luUmV2aWV3cxIoLnN5bmN0di5hZG1pbi5MaXN0Um9v'
+    'bUpvaW5SZXZpZXdzUmVxdWVzdBopLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZpZXdzUm'
+    'VzcG9uc2UScAoVQXBwcm92ZVJvb21Kb2luUmV2aWV3Eiouc3luY3R2LmFkbWluLkFwcHJvdmVS'
+    'b29tSm9pblJldmlld1JlcXVlc3QaKy5zeW5jdHYuYWRtaW4uQXBwcm92ZVJvb21Kb2luUmV2aW'
+    'V3UmVzcG9uc2USbQoUUmVqZWN0Um9vbUpvaW5SZXZpZXcSKS5zeW5jdHYuYWRtaW4uUmVqZWN0'
+    'Um9vbUpvaW5SZXZpZXdSZXF1ZXN0Giouc3luY3R2LmFkbWluLlJlamVjdFJvb21Kb2luUmV2aW'
+    'V3UmVzcG9uc2USWwoOTGlzdEJhblJlY29yZHMSIy5zeW5jdHYuYWRtaW4uTGlzdEJhblJlY29y'
+    'ZHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkxpc3RCYW5SZWNvcmRzUmVzcG9uc2U=');

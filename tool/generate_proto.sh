@@ -35,7 +35,9 @@ rm -rf "$OUT_DIR/proto"
 mkdir -p "$OUT_DIR"
 
 protoc \
-  --dart_out=grpc:"$OUT_DIR" \
+  --dart_out="$OUT_DIR" \
   -I"$PROTO_ROOT" \
   -I"$PROTO_ROOT/proto" \
   "${PROTO_FILES[@]}"
+
+find "$OUT_DIR/proto" -type f \( -name '*.pbgrpc.dart' -o -name '*.pbserver.dart' \) -delete

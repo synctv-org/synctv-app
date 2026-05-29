@@ -394,3 +394,82 @@ final $typed_data.Uint8List oAuth2UserInfoDescriptor = $convert.base64Decode(
     'YXRhchIrCgRyb2xlGAUgASgOMhcuc3luY3R2LmNvbW1vbi5Vc2VyUm9sZVIEcm9sZRIxCgZzdG'
     'F0dXMYBiABKA4yGS5zeW5jdHYuY29tbW9uLlVzZXJTdGF0dXNSBnN0YXR1cxIdCgpjcmVhdGVk'
     'X2F0GAcgASgDUgljcmVhdGVkQXQ=');
+
+const $core.Map<$core.String, $core.dynamic> OAuth2ServiceBase$json = {
+  '1': 'OAuth2Service',
+  '2': [
+    {
+      '1': 'GetAuthorizationUrl',
+      '2': '.synctv.client.GetAuthorizationUrlRequest',
+      '3': '.synctv.client.GetAuthorizationUrlResponse'
+    },
+    {
+      '1': 'GetAuthorizationUrlForBind',
+      '2': '.synctv.client.GetAuthorizationUrlForBindRequest',
+      '3': '.synctv.client.GetAuthorizationUrlForBindResponse'
+    },
+    {
+      '1': 'ExchangeAuthorizationCode',
+      '2': '.synctv.client.ExchangeAuthorizationCodeRequest',
+      '3': '.synctv.client.ExchangeAuthorizationCodeResponse'
+    },
+    {
+      '1': 'ListAvailableProviders',
+      '2': '.synctv.client.ListAvailableProvidersRequest',
+      '3': '.synctv.client.ListAvailableProvidersResponse'
+    },
+    {
+      '1': 'UnlinkProvider',
+      '2': '.synctv.client.UnlinkProviderRequest',
+      '3': '.synctv.client.UnlinkProviderResponse'
+    },
+    {
+      '1': 'GetLinkedProviders',
+      '2': '.synctv.client.GetLinkedProvidersRequest',
+      '3': '.synctv.client.GetLinkedProvidersResponse'
+    },
+  ],
+};
+
+@$core.Deprecated('Use oAuth2ServiceDescriptor instead')
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    OAuth2ServiceBase$messageJson = {
+  '.synctv.client.GetAuthorizationUrlRequest': GetAuthorizationUrlRequest$json,
+  '.synctv.client.GetAuthorizationUrlResponse':
+      GetAuthorizationUrlResponse$json,
+  '.synctv.client.GetAuthorizationUrlForBindRequest':
+      GetAuthorizationUrlForBindRequest$json,
+  '.synctv.client.GetAuthorizationUrlForBindResponse':
+      GetAuthorizationUrlForBindResponse$json,
+  '.synctv.client.ExchangeAuthorizationCodeRequest':
+      ExchangeAuthorizationCodeRequest$json,
+  '.synctv.client.ExchangeAuthorizationCodeResponse':
+      ExchangeAuthorizationCodeResponse$json,
+  '.synctv.client.OAuth2UserInfo': OAuth2UserInfo$json,
+  '.synctv.client.ListAvailableProvidersRequest':
+      ListAvailableProvidersRequest$json,
+  '.synctv.client.ListAvailableProvidersResponse':
+      ListAvailableProvidersResponse$json,
+  '.synctv.client.OAuth2ProviderInstance': OAuth2ProviderInstance$json,
+  '.synctv.client.UnlinkProviderRequest': UnlinkProviderRequest$json,
+  '.synctv.client.UnlinkProviderResponse': UnlinkProviderResponse$json,
+  '.synctv.client.GetLinkedProvidersRequest': GetLinkedProvidersRequest$json,
+  '.synctv.client.GetLinkedProvidersResponse': GetLinkedProvidersResponse$json,
+  '.synctv.client.LinkedProvider': LinkedProvider$json,
+};
+
+/// Descriptor for `OAuth2Service`. Decode as a `google.protobuf.ServiceDescriptorProto`.
+final $typed_data.Uint8List oAuth2ServiceDescriptor = $convert.base64Decode(
+    'Cg1PQXV0aDJTZXJ2aWNlEmwKE0dldEF1dGhvcml6YXRpb25VcmwSKS5zeW5jdHYuY2xpZW50Lk'
+    'dldEF1dGhvcml6YXRpb25VcmxSZXF1ZXN0Giouc3luY3R2LmNsaWVudC5HZXRBdXRob3JpemF0'
+    'aW9uVXJsUmVzcG9uc2USgQEKGkdldEF1dGhvcml6YXRpb25VcmxGb3JCaW5kEjAuc3luY3R2Lm'
+    'NsaWVudC5HZXRBdXRob3JpemF0aW9uVXJsRm9yQmluZFJlcXVlc3QaMS5zeW5jdHYuY2xpZW50'
+    'LkdldEF1dGhvcml6YXRpb25VcmxGb3JCaW5kUmVzcG9uc2USfgoZRXhjaGFuZ2VBdXRob3Jpem'
+    'F0aW9uQ29kZRIvLnN5bmN0di5jbGllbnQuRXhjaGFuZ2VBdXRob3JpemF0aW9uQ29kZVJlcXVl'
+    'c3QaMC5zeW5jdHYuY2xpZW50LkV4Y2hhbmdlQXV0aG9yaXphdGlvbkNvZGVSZXNwb25zZRJ1Ch'
+    'ZMaXN0QXZhaWxhYmxlUHJvdmlkZXJzEiwuc3luY3R2LmNsaWVudC5MaXN0QXZhaWxhYmxlUHJv'
+    'dmlkZXJzUmVxdWVzdBotLnN5bmN0di5jbGllbnQuTGlzdEF2YWlsYWJsZVByb3ZpZGVyc1Jlc3'
+    'BvbnNlEl0KDlVubGlua1Byb3ZpZGVyEiQuc3luY3R2LmNsaWVudC5VbmxpbmtQcm92aWRlclJl'
+    'cXVlc3QaJS5zeW5jdHYuY2xpZW50LlVubGlua1Byb3ZpZGVyUmVzcG9uc2USaQoSR2V0TGlua2'
+    'VkUHJvdmlkZXJzEiguc3luY3R2LmNsaWVudC5HZXRMaW5rZWRQcm92aWRlcnNSZXF1ZXN0Giku'
+    'c3luY3R2LmNsaWVudC5HZXRMaW5rZWRQcm92aWRlcnNSZXNwb25zZQ==');

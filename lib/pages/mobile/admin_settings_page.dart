@@ -6566,14 +6566,6 @@ _SettingDescriptor _settingDescriptor(
       kind: _SettingEditorKind.boolean,
       warning: '关闭 TLS 可能导致邮件认证信息明文传输，只应在受控内网或调试环境使用。',
     ),
-    'email.from_address': const _SettingDescriptor(
-      group: 'email',
-      key: 'from_address',
-      title: '发件邮箱',
-      description: '邮件 From 地址。配置 SMTP 时必须是合法邮箱地址。',
-      icon: Icons.alternate_email_rounded,
-      kind: _SettingEditorKind.text,
-    ),
     'email.from_email': const _SettingDescriptor(
       group: 'email',
       key: 'from_email',

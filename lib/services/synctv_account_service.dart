@@ -41,6 +41,23 @@ class SyncTvAccountDomainService {
     return getMe();
   }
 
+  Future<String> startEmailBind(String email) async {
+    final response = await _api.user.startEmailBind(
+      client.StartEmailBindRequest(email: email),
+    );
+    return response.maskedEmail;
+  }
+
+  Future<WUser> confirmEmailBind({
+    required String email,
+    required String token,
+  }) async {
+    final response = await _api.user.confirmEmailBind(
+      client.ConfirmEmailBindRequest(email: email, token: token),
+    );
+    return _api.mapUser(response.user);
+  }
+
   Future<AccountPreferences> getAccountPreferences() async {
     final response = await _api.user.getUserPreferences(
       client.GetUserPreferencesRequest(),

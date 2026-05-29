@@ -43,6 +43,20 @@ class _AccountModuleInfo {
   });
 }
 
+class _EmailStatusView {
+  final IconData icon;
+  final String label;
+  final Color tone;
+  final bool canVerify;
+
+  const _EmailStatusView({
+    required this.icon,
+    required this.label,
+    required this.tone,
+    required this.canVerify,
+  });
+}
+
 class AccountCenterPage extends StatefulWidget {
   final WUser initialUser;
 
@@ -136,6 +150,31 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       TextEditingController();
   final TextEditingController _roomSearchController = TextEditingController();
   late final OpaqueAuthenticatorService _opaqueAuthenticator;
+
+  _EmailStatusView _emailStatusView(ThemeData theme) {
+    if (!_user.hasEmail) {
+      return _EmailStatusView(
+        icon: Icons.alternate_email_rounded,
+        label: '未绑定',
+        tone: theme.colorScheme.onSurface.withValues(alpha: 0.58),
+        canVerify: false,
+      );
+    }
+    if (_user.emailVerified) {
+      return const _EmailStatusView(
+        icon: Icons.mark_email_read_rounded,
+        label: '已验证',
+        tone: Color(0xFF15803D),
+        canVerify: false,
+      );
+    }
+    return const _EmailStatusView(
+      icon: Icons.mark_email_unread_outlined,
+      label: '待验证',
+      tone: Color(0xFFB45309),
+      canVerify: true,
+    );
+  }
 
   @override
   void initState() {
@@ -321,6 +360,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '发送验证邮件失败: $e');
     }
+  }
+
+  Future<void> _bindEmail() async {
+    final user = await showDialog<WUser>(
+      context: context,
+      builder: (context) => _EmailBindDialog(currentEmail: _user.email),
+    );
+    if (user == null || !mounted) return;
+    setState(() => _user = user);
+    MessageUtils.showSuccess(context, '邮箱已绑定');
   }
 
   Future<void> _confirmEmail() async {
@@ -1150,6 +1199,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Widget _buildOverviewTab(ThemeData theme) {
     final preferences = _preferences;
     final rooms = _myRooms;
+    final emailStatus = _emailStatusView(theme);
     final unread = _notifications?.unreadCount ?? 0;
     final roomCount = rooms?.total ?? 0;
     final activeFactors = preferences == null
@@ -1208,14 +1258,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   tone: const Color(0xFFB45309),
                 ),
                 _MetricTile(
-                  icon: _user.emailVerified
-                      ? Icons.mark_email_read_rounded
-                      : Icons.mark_email_unread_outlined,
+                  icon: emailStatus.icon,
                   label: '邮箱状态',
-                  value: _user.emailVerified ? '已验证' : '待验证',
-                  tone: _user.emailVerified
-                      ? const Color(0xFF15803D)
-                      : const Color(0xFFB91C1C),
+                  value: emailStatus.label,
+                  tone: emailStatus.tone,
                 ),
               ],
             );
@@ -1258,6 +1304,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Widget _buildProfileTab(ThemeData theme) {
     final preferences = _preferences;
+    final emailStatus = _emailStatusView(theme);
     final notifications =
         preferences?.notifications ?? NotificationPreferences.defaults();
     return _responsiveList(
@@ -1292,10 +1339,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         label: _userRoleLabel(_user.role),
                       ),
                       _StatusPill(
-                        icon: _user.emailVerified
-                            ? Icons.verified_rounded
-                            : Icons.warning_amber_rounded,
-                        label: _user.emailVerified ? '邮箱已验证' : '邮箱未验证',
+                        icon: emailStatus.icon,
+                        label: '邮箱${emailStatus.label}',
+                        color: emailStatus.tone,
                       ),
                       if (_user.isBanned)
                         const _StatusPill(
@@ -1698,6 +1744,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Widget _buildSecurityTab(ThemeData theme) {
     final preferences = _preferences;
+    final emailStatus = _emailStatusView(theme);
     final preferencesError = _loadError('账号偏好');
     final passkeyErrorKey =
         _loadError('Passkey') != null ? 'Passkey' : '本机 Passkey';
@@ -1730,28 +1777,36 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 const Divider(height: 1),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    _user.emailVerified
-                        ? Icons.mark_email_read_rounded
-                        : Icons.mark_email_unread_outlined,
-                  ),
+                  leading: Icon(emailStatus.icon, color: emailStatus.tone),
                   title: const Text('邮箱验证'),
                   subtitle: Text(_user.email ?? '当前账号没有邮箱'),
-                  trailing: _user.emailVerified
-                      ? const Chip(label: Text('已验证'))
-                      : Wrap(
-                          spacing: 8,
-                          children: [
-                            OutlinedButton(
-                              onPressed: _sendVerificationEmail,
-                              child: const Text('发送'),
+                  trailing: !_user.hasEmail
+                      ? FilledButton(
+                          onPressed: _bindEmail,
+                          child: const Text('绑定邮箱'),
+                        )
+                      : _user.emailVerified
+                          ? OutlinedButton(
+                              onPressed: _bindEmail,
+                              child: const Text('更换邮箱'),
+                            )
+                          : Wrap(
+                              spacing: 8,
+                              children: [
+                                OutlinedButton(
+                                  onPressed: _sendVerificationEmail,
+                                  child: const Text('发送'),
+                                ),
+                                FilledButton(
+                                  onPressed: _confirmEmail,
+                                  child: const Text('确认'),
+                                ),
+                                TextButton(
+                                  onPressed: _bindEmail,
+                                  child: const Text('更换'),
+                                ),
+                              ],
                             ),
-                            FilledButton(
-                              onPressed: _confirmEmail,
-                              child: const Text('确认'),
-                            ),
-                          ],
-                        ),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -2969,6 +3024,171 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
   }
 }
 
+class _EmailBindDialog extends StatefulWidget {
+  final String? currentEmail;
+
+  const _EmailBindDialog({this.currentEmail});
+
+  @override
+  State<_EmailBindDialog> createState() => _EmailBindDialogState();
+}
+
+class _EmailBindDialogState extends State<_EmailBindDialog> {
+  final _emailController = TextEditingController();
+  final _tokenController = TextEditingController();
+  bool _sending = false;
+  bool _confirming = false;
+  String? _pendingEmail;
+  String? _maskedEmail;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.text = widget.currentEmail ?? '';
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _tokenController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() => _error = '请输入邮箱');
+      return;
+    }
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      final maskedEmail = await WatchTogetherService.startEmailBind(email);
+      if (!mounted) return;
+      setState(() {
+        _pendingEmail = email;
+        _maskedEmail = maskedEmail;
+        _tokenController.clear();
+      });
+      MessageUtils.showSuccess(context, '验证码已发送');
+    } catch (e) {
+      if (mounted) setState(() => _error = '发送验证码失败: $e');
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _confirm() async {
+    final email = _pendingEmail ?? _emailController.text.trim();
+    final token = _tokenController.text.trim();
+    if (email.isEmpty || token.isEmpty) {
+      setState(() => _error = '请输入邮箱和验证码');
+      return;
+    }
+    setState(() {
+      _confirming = true;
+      _error = null;
+    });
+    try {
+      final user = await WatchTogetherService.confirmEmailBind(
+        email: email,
+        token: token,
+      );
+      if (mounted) Navigator.pop(context, user);
+    } catch (e) {
+      if (mounted) setState(() => _error = '绑定邮箱失败: $e');
+    } finally {
+      if (mounted) setState(() => _confirming = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final busy = _sending || _confirming;
+    final hasPending = _pendingEmail != null;
+    return AlertDialog(
+      icon: const Icon(Icons.alternate_email_rounded),
+      title: Text(widget.currentEmail == null ? '绑定邮箱' : '更换邮箱'),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _emailController,
+              enabled: !busy,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: '邮箱',
+                prefixIcon: Icon(Icons.email_outlined),
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (_) => _send(),
+            ),
+            const SizedBox(height: 12),
+            if (hasPending) ...[
+              Text(
+                '验证码已发送至 ${_maskedEmail ?? _pendingEmail}',
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _tokenController,
+                enabled: !busy,
+                autofocus: true,
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: '验证码',
+                  prefixIcon: Icon(Icons.mark_email_read_outlined),
+                  border: OutlineInputBorder(),
+                ),
+                onSubmitted: (_) => _confirm(),
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _error!,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: busy ? null : () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+        OutlinedButton(
+          onPressed: busy ? null : _send,
+          child: _sending
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(hasPending ? '重新发送' : '发送验证码'),
+        ),
+        FilledButton(
+          onPressed: busy || !hasPending ? null : _confirm,
+          child: _confirming
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('完成绑定'),
+        ),
+      ],
+    );
+  }
+}
+
 class _NotificationDetailSheet extends StatelessWidget {
   final UserNotificationItem notification;
   final String typeLabel;
@@ -3581,17 +3801,20 @@ class _StatusPill extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool danger;
+  final Color? color;
 
   const _StatusPill({
     required this.icon,
     required this.label,
     this.danger = false,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = danger ? Colors.red : theme.colorScheme.primary;
+    final color =
+        this.color ?? (danger ? Colors.red : theme.colorScheme.primary);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(

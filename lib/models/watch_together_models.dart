@@ -28,6 +28,10 @@ class WUser {
     this.bannedBy = '',
     this.bannedReason = '',
   });
+
+  bool get hasEmail => email != null && email!.trim().isNotEmpty;
+
+  bool get hasVerifiedEmail => hasEmail && emailVerified;
 }
 
 class WRoom {
