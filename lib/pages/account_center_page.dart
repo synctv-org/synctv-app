@@ -17,6 +17,7 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/utils/chat_utils.dart';
+import 'package:synctv_app/utils/local_image_picker.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/platform_binding_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -131,6 +132,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Map<String, String> _loadErrors = const {};
   bool _loading = true;
   bool _savingPreferences = false;
+  bool _updatingAvatar = false;
   bool _bindingPasskey = false;
   bool _passkeyAvailable = false;
   String? _bindProvider;
@@ -182,7 +184,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     _user = widget.initialUser;
     _tabController = TabController(length: _sections.length, vsync: this);
     _opaqueAuthenticator = OpaqueAuthenticatorService();
-    _load();
+    _load(refresh: false);
   }
 
   @override
@@ -193,22 +195,22 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     super.dispose();
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool refresh = false}) async {
     setState(() => _loading = true);
     try {
       final errors = <String, String>{};
-      final user = await WatchTogetherService.getMe();
+      final user = await WatchTogetherService.getMe(refresh: refresh);
       final publicSettings = await _loadOptional(
         errors,
         '公开设置',
-        WatchTogetherService.getPublicSettings,
+        () => WatchTogetherService.getPublicSettings(refresh: refresh),
       );
       final serverPasskeyEnabled = publicSettings?.enableWebauthn == true;
       final results = await Future.wait<dynamic>([
         _loadOptional(
           errors,
           '账号偏好',
-          WatchTogetherService.getAccountPreferences,
+          () => WatchTogetherService.getAccountPreferences(refresh: refresh),
         ),
         _loadOptional(
           errors,
@@ -216,6 +218,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           () => WatchTogetherService.listNotifications(
             page: _notificationPage,
             pageSize: _notificationPageSize,
+            refresh: refresh,
           ),
         ),
         _loadOptional(
@@ -242,7 +245,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           _loadOptional(
             errors,
             'Passkey',
-            WatchTogetherService.listPasskeys,
+            () => WatchTogetherService.listPasskeys(refresh: refresh),
           )
         else
           Future<List<PasskeyCredentialInfo>?>.value(const []),
@@ -293,30 +296,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _rename() async {
-    final controller = TextEditingController(text: _user.username);
-    final next = await ChatUtils.showStyledDialog<String>(
+    final next = await showDialog<String>(
       context: context,
-      title: '修改用户名',
-      icon: const Icon(Icons.badge_outlined),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: const InputDecoration(
-          labelText: '用户名',
-          prefixIcon: Icon(Icons.badge_outlined),
-          border: OutlineInputBorder(),
-        ),
-        onSubmitted: (_) => Navigator.pop(context, controller.text.trim()),
+      builder: (_) => _SingleTextInputDialog(
+        title: '修改用户名',
+        subtitle: '设置这个服务器上的公开用户名',
+        icon: Icons.badge_outlined,
+        label: '用户名',
+        initialValue: _user.username,
+        primaryLabel: '保存',
       ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        ChatUtils.createConfirmButton(
-          context,
-          () => Navigator.pop(context, controller.text.trim()),
-          text: '保存',
-        ),
-      ],
-    ).whenComplete(controller.dispose);
+    );
     if (next == null || next.isEmpty || next == _user.username) return;
 
     try {
@@ -326,6 +316,38 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       MessageUtils.showSuccess(context, '用户名已更新');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '更新用户名失败: $e');
+    }
+  }
+
+  Future<void> _updateAvatar() async {
+    if (_updatingAvatar) return;
+    try {
+      final image = await pickLocalImageUpload();
+      if (image == null || !mounted) return;
+      setState(() => _updatingAvatar = true);
+      final user = await WatchTogetherService.updateUserAvatar(image.upload);
+      if (!mounted) return;
+      setState(() => _user = user);
+      MessageUtils.showSuccess(context, '头像已更新');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '更新头像失败: $e');
+    } finally {
+      if (mounted) setState(() => _updatingAvatar = false);
+    }
+  }
+
+  Future<void> _clearAvatar() async {
+    if (_updatingAvatar || _user.avatarUrl.isEmpty) return;
+    try {
+      setState(() => _updatingAvatar = true);
+      final user = await WatchTogetherService.clearUserAvatar();
+      if (!mounted) return;
+      setState(() => _user = user);
+      MessageUtils.showSuccess(context, '头像已移除');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '移除头像失败: $e');
+    } finally {
+      if (mounted) setState(() => _updatingAvatar = false);
     }
   }
 
@@ -385,7 +407,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
     try {
       final user = await WatchTogetherService.unbindEmail();
-      final preferences = await WatchTogetherService.getAccountPreferences();
+      final preferences =
+          await WatchTogetherService.getAccountPreferences(refresh: true);
       if (!mounted) return;
       setState(() {
         _user = user;
@@ -515,8 +538,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     if (confirmed != true) return;
     try {
       await WatchTogetherService.deletePasskey(credential.credentialId);
-      final passkeys = await WatchTogetherService.listPasskeys();
-      final preferences = await WatchTogetherService.getAccountPreferences();
+      final passkeys = await WatchTogetherService.listPasskeys(refresh: true);
+      final preferences =
+          await WatchTogetherService.getAccountPreferences(refresh: true);
       if (!mounted) return;
       setState(() {
         _passkeys = passkeys;
@@ -529,31 +553,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _bindPasskey() async {
-    final controller = TextEditingController();
-    final name = await ChatUtils.showStyledDialog<String>(
+    final name = await showDialog<String>(
       context: context,
-      title: '绑定 Passkey',
-      icon: const Icon(Icons.fingerprint_rounded),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: const InputDecoration(
-          labelText: '设备名称',
-          hintText: '例如 MacBook、手机',
-          prefixIcon: Icon(Icons.devices_rounded),
-          border: OutlineInputBorder(),
-        ),
-        onSubmitted: (_) => Navigator.pop(context, controller.text.trim()),
+      builder: (_) => const _SingleTextInputDialog(
+        title: '绑定 Passkey',
+        subtitle: '为当前设备创建一个可识别的名称',
+        icon: Icons.fingerprint_rounded,
+        label: '设备名称',
+        hintText: '例如 MacBook、手机',
+        primaryLabel: '继续',
       ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        ChatUtils.createConfirmButton(
-          context,
-          () => Navigator.pop(context, controller.text.trim()),
-          text: '继续',
-        ),
-      ],
-    ).whenComplete(controller.dispose);
+    );
     if (name == null) return;
 
     setState(() => _bindingPasskey = true);
@@ -585,7 +595,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _markAllRead() async {
     try {
       await WatchTogetherService.markAllNotificationsAsRead();
-      await _reloadNotifications();
+        await _reloadNotifications(refresh: true);
       if (mounted) MessageUtils.showSuccess(context, '已全部标记为已读');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '操作失败: $e');
@@ -600,7 +610,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       await WatchTogetherService.markNotificationsAsRead(ids);
       if (!mounted) return;
       setState(() => _selectedNotificationIds.clear());
-      await _reloadNotifications();
+      await _reloadNotifications(refresh: true);
       if (mounted) MessageUtils.showSuccess(context, '已标记所选通知');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '标记失败: $e');
@@ -610,7 +620,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _deleteAllRead() async {
     try {
       await WatchTogetherService.deleteAllReadNotifications();
-      await _reloadNotifications();
+      await _reloadNotifications(refresh: true);
       if (mounted) MessageUtils.showSuccess(context, '已删除已读通知');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '删除失败: $e');
@@ -623,7 +633,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       if (mounted) {
         setState(() => _selectedNotificationIds.remove(item.numericId));
       }
-      await _reloadNotifications();
+      await _reloadNotifications(refresh: true);
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '标记失败: $e');
     }
@@ -635,7 +645,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       if (mounted) {
         setState(() => _selectedNotificationIds.remove(item.numericId));
       }
-      await _reloadNotifications();
+      await _reloadNotifications(refresh: true);
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '删除失败: $e');
     }
@@ -675,17 +685,26 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
   }
 
-  Future<void> _reloadNotifications({int? page}) async {
+  Future<void> _reloadNotifications({
+    int? page,
+    bool refresh = true,
+  }) async {
     var targetPage = page ?? _notificationPage;
     if (targetPage < 1) targetPage = 1;
     setState(() => _loadingNotifications = true);
     try {
-      var notifications = await _fetchNotificationsPage(targetPage);
+      var notifications = await _fetchNotificationsPage(
+        targetPage,
+        refresh: refresh,
+      );
       var actualPage = targetPage;
       final maxPage = _notificationMaxPage(notifications.total);
       if (targetPage > maxPage) {
         actualPage = maxPage;
-        notifications = await _fetchNotificationsPage(actualPage);
+        notifications = await _fetchNotificationsPage(
+          actualPage,
+          refresh: refresh,
+        );
       }
       if (!mounted) return;
       setState(() {
@@ -709,7 +728,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
   }
 
-  Future<UserNotificationsPage> _fetchNotificationsPage(int page) {
+  Future<UserNotificationsPage> _fetchNotificationsPage(
+    int page, {
+    bool refresh = false,
+  }) {
     return WatchTogetherService.listNotifications(
       page: page,
       pageSize: _notificationPageSize,
@@ -718,6 +740,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       search: _notificationSearchController.text.trim(),
       sortBy: _notificationSortBy,
       sortDirection: _notificationSortDirection,
+      refresh: refresh,
     );
   }
 
@@ -794,17 +817,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
   }
 
-  Future<void> _reloadRooms({int? page}) async {
+  Future<void> _reloadRooms({int? page, bool refresh = true}) async {
     var targetPage = page ?? _roomsPage;
     if (targetPage < 1) targetPage = 1;
     setState(() => _loadingRooms = true);
     try {
-      var rooms = await _fetchRoomsPage(targetPage);
+      var rooms = await _fetchRoomsPage(targetPage, refresh: refresh);
       var actualPage = targetPage;
       final maxPage = _roomsMaxPage(rooms.total);
       if (targetPage > maxPage) {
         actualPage = maxPage;
-        rooms = await _fetchRoomsPage(actualPage);
+        rooms = await _fetchRoomsPage(actualPage, refresh: refresh);
       }
       if (!mounted) return;
       setState(() {
@@ -838,7 +861,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     _loadErrors = Map.unmodifiable(next);
   }
 
-  Future<RoomsPage> _fetchRoomsPage(int page) {
+  Future<RoomsPage> _fetchRoomsPage(int page, {bool refresh = false}) {
     return WatchTogetherService.getMyRoomsPage(
       page: page,
       pageSize: _roomsPageSize,
@@ -846,6 +869,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       relation: _roomRelationFilter,
       sortBy: _roomSortBy,
       sortDirection: client_enum.SortDirection.SORT_DIRECTION_DESC,
+      refresh: refresh,
     );
   }
 
@@ -962,7 +986,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         ),
       ],
     );
-    controller.dispose();
+    _disposeTextControllersAfterDialog([controller]);
     if (confirmed != true) {
       if (confirmed == false && mounted) {
         MessageUtils.showWarning(context, '确认文本不匹配');
@@ -980,6 +1004,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
   }
 
+  void _disposeTextControllersAfterDialog(
+    List<TextEditingController> controllers,
+  ) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final controller in controllers) {
+        controller.dispose();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -995,7 +1029,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         centerTitle: false,
         actions: [
           IconButton(
-            onPressed: _load,
+            onPressed: () => _load(refresh: true),
             icon: const Icon(Icons.refresh_rounded),
             tooltip: '刷新',
           ),
@@ -1225,7 +1259,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           _LoadErrorSummary(
             errors: _loadErrors,
             moduleInfo: _moduleInfo,
-            onRetry: _load,
+            onRetry: () => _load(refresh: true),
           ),
         ],
         const SizedBox(height: 12),
@@ -1326,7 +1360,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           child: LayoutBuilder(
             builder: (context, constraints) {
               final wide = constraints.maxWidth >= 620;
-              final avatar = _ProfileAvatar(username: _user.username, size: 68);
+              final avatar = _EditableProfileAvatar(
+                username: _user.username,
+                avatarUrl: _user.avatarUrl,
+                size: 68,
+                updating: _updatingAvatar,
+                onPick: _updateAvatar,
+                onClear: _user.avatarUrl.isEmpty ? null : _clearAvatar,
+              );
               final details = Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1513,7 +1554,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             title: '通知偏好不可用',
             moduleInfo: _moduleInfo['账号偏好'],
             message: _loadError('账号偏好')!,
-            onRetry: _load,
+            onRetry: () => _load(refresh: true),
           ),
       ],
     );
@@ -1839,7 +1880,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             title: '登录保护信息不可用',
             moduleInfo: _moduleInfo['账号偏好'],
             message: preferencesError,
-            onRetry: _load,
+            onRetry: () => _load(refresh: true),
           ),
         const SizedBox(height: 12),
         if (_publicSettings?.enableWebauthn == true) ...[
@@ -1886,7 +1927,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   _InlineModuleError(
                     moduleInfo: _moduleInfo[passkeyErrorKey],
                     message: passkeyError,
-                    onRetry: _load,
+                    onRetry: () => _load(refresh: true),
                   )
                 else if (_passkeys.isEmpty)
                   Text('暂无 Passkey', style: TextStyle(color: theme.hintColor))
@@ -2410,7 +2451,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     _InlineModuleError(
                       moduleInfo: _moduleInfo['OAuth2 绑定'],
                       message: linkedError,
-                      onRetry: _load,
+                      onRetry: () => _load(refresh: true),
                     )
                   else
                     for (final account in _linkedOAuth2)
@@ -2454,7 +2495,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     _InlineModuleError(
                       moduleInfo: _moduleInfo['OAuth2 Provider'],
                       message: providersError,
-                      onRetry: _load,
+                      onRetry: () => _load(refresh: true),
                     )
                   else
                     Wrap(
@@ -2819,75 +2860,89 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
           label: Text('Passkey'),
         ),
     ];
-    return AlertDialog(
-      title: const Text('修改密码'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SegmentedButton<_PasswordUpdateMethod>(
-              segments: methods,
-              selected: {_method},
-              onSelectionChanged: (selected) {
-                setState(() => _method = selected.single);
-              },
+    final methodDescriptions = {
+      _PasswordUpdateMethod.currentPassword: '使用当前密码验证身份',
+      _PasswordUpdateMethod.emailToken: '使用邮箱收到的验证码验证身份',
+      _PasswordUpdateMethod.passkey: '调用系统 Passkey 完成身份验证',
+    };
+    return _AccountActionDialog(
+      icon: Icons.lock_reset_rounded,
+      title: '修改密码',
+      subtitle: '选择一种可用的验证方式，然后设置新的登录密码。',
+      maxWidth: 560,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _DialogFieldGroup(
+            title: '验证方式',
+            subtitle: methodDescriptions[_method] ?? '',
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SegmentedButton<_PasswordUpdateMethod>(
+                segments: methods,
+                selected: {_method},
+                onSelectionChanged: (selected) {
+                  setState(() => _method = selected.single);
+                },
+              ),
             ),
-            const SizedBox(height: 16),
-            if (_method == _PasswordUpdateMethod.currentPassword)
-              TextField(
-                controller: _currentPasswordController,
+          ),
+          const SizedBox(height: 16),
+          _DialogFieldGroup(
+            title: '身份验证',
+            children: [
+              if (_method == _PasswordUpdateMethod.currentPassword)
+                _DialogTextField(
+                  controller: _currentPasswordController,
+                  obscureText: true,
+                  autofocus: true,
+                  label: '当前密码',
+                  icon: Icons.lock_outline_rounded,
+                  textInputAction: TextInputAction.next,
+                ),
+              if (_method == _PasswordUpdateMethod.emailToken)
+                _DialogTextField(
+                  controller: _emailTokenController,
+                  autofocus: true,
+                  label: '邮箱验证码',
+                  icon: Icons.mark_email_read_outlined,
+                  textInputAction: TextInputAction.next,
+                ),
+              if (_method == _PasswordUpdateMethod.passkey)
+                const _DialogNotice(
+                  icon: Icons.fingerprint_rounded,
+                  title: 'Passkey 验证',
+                  message: '保存后会弹出系统验证窗口，验证通过后写入新密码。',
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _DialogFieldGroup(
+            title: '新密码',
+            children: [
+              _DialogTextField(
+                controller: _newPasswordController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: '当前密码',
-                  prefixIcon: Icon(Icons.lock_outline_rounded),
-                ),
+                label: '新密码',
+                icon: Icons.lock_reset_rounded,
+                textInputAction: TextInputAction.next,
               ),
-            if (_method == _PasswordUpdateMethod.emailToken)
-              TextField(
-                controller: _emailTokenController,
-                decoration: const InputDecoration(
-                  labelText: '邮箱验证码',
-                  prefixIcon: Icon(Icons.mark_email_read_outlined),
-                ),
+              const SizedBox(height: 12),
+              _DialogTextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                label: '确认新密码',
+                icon: Icons.check_circle_outline_rounded,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
               ),
-            if (_method == _PasswordUpdateMethod.passkey)
-              const ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.fingerprint_rounded),
-                title: Text('继续后将调用系统 Passkey 验证'),
-              ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _newPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '新密码',
-                prefixIcon: Icon(Icons.lock_reset_rounded),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '确认新密码',
-                prefixIcon: Icon(Icons.check_circle_outline_rounded),
-              ),
-              onSubmitted: (_) => _submit(),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submit,
-          child: const Text('保存'),
-        ),
-      ],
+      primaryLabel: '保存密码',
+      onPrimary: _submit,
     );
   }
 }
@@ -2954,85 +3009,96 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('邮件重置密码'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: '邮箱',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    child: Text(
-                      widget.email,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: OutlinedButton(
-                    onPressed: _requesting ? null : _requestResetEmail,
-                    child: _requesting
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('发送'),
-                  ),
-                ),
-              ],
+    return _AccountActionDialog(
+      icon: Icons.mark_email_read_rounded,
+      title: '邮件重置密码',
+      subtitle: '向当前绑定邮箱发送一次性验证码，用验证码完成密码重置。',
+      maxWidth: 560,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _DialogFieldGroup(
+            title: '接收邮箱',
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 420;
+                final emailField = _DialogReadOnlyField(
+                  label: '邮箱',
+                  value: widget.email,
+                  icon: Icons.email_outlined,
+                );
+                final sendButton = OutlinedButton.icon(
+                  onPressed: _requesting ? null : _requestResetEmail,
+                  icon: _requesting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_rounded),
+                  label: const Text('发送验证码'),
+                );
+                if (compact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      emailField,
+                      const SizedBox(height: 10),
+                      sendButton,
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: emailField),
+                    const SizedBox(width: 10),
+                    SizedBox(height: 48, child: sendButton),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _tokenController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: '重置验证码',
-                prefixIcon: Icon(Icons.mark_email_read_outlined),
+          ),
+          const SizedBox(height: 16),
+          _DialogFieldGroup(
+            title: '验证码',
+            children: [
+              _DialogTextField(
+                controller: _tokenController,
+                autofocus: true,
+                label: '重置验证码',
+                icon: Icons.mark_email_read_outlined,
+                textInputAction: TextInputAction.next,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _newPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '新密码',
-                prefixIcon: Icon(Icons.lock_reset_rounded),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _DialogFieldGroup(
+            title: '新密码',
+            children: [
+              _DialogTextField(
+                controller: _newPasswordController,
+                obscureText: true,
+                label: '新密码',
+                icon: Icons.lock_reset_rounded,
+                textInputAction: TextInputAction.next,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '确认新密码',
-                prefixIcon: Icon(Icons.check_circle_outline_rounded),
+              const SizedBox(height: 12),
+              _DialogTextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                label: '确认新密码',
+                icon: Icons.check_circle_outline_rounded,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
               ),
-              onSubmitted: (_) => _submit(),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submit,
-          child: const Text('重置'),
-        ),
-      ],
+      primaryLabel: '重置密码',
+      onPrimary: _submit,
     );
   }
 }
@@ -3094,80 +3160,86 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('绑定邮箱'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _emailController,
-                    autofocus: true,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: '邮箱',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: OutlinedButton(
-                    onPressed: _requesting ? null : _requestToken,
-                    child: _requesting
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('发送'),
-                  ),
-                ),
-              ],
+    return _AccountActionDialog(
+      icon: Icons.alternate_email_rounded,
+      title: '绑定邮箱',
+      subtitle: '邮箱绑定成功后可用于登录、找回密码和接收账号通知。',
+      maxWidth: 560,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _DialogFieldGroup(
+            title: '邮箱地址',
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 420;
+                final emailField = _DialogTextField(
+                  controller: _emailController,
+                  autofocus: true,
+                  keyboardType: TextInputType.emailAddress,
+                  label: '邮箱',
+                  icon: Icons.email_outlined,
+                  textInputAction: TextInputAction.next,
+                );
+                final sendButton = OutlinedButton.icon(
+                  onPressed: _requesting ? null : _requestToken,
+                  icon: _requesting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_rounded),
+                  label: const Text('发送验证码'),
+                );
+                if (compact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      emailField,
+                      const SizedBox(height: 10),
+                      sendButton,
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: emailField),
+                    const SizedBox(width: 10),
+                    SizedBox(height: 48, child: sendButton),
+                  ],
+                );
+              },
             ),
-            if (_maskedEmail.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '已发送至 $_maskedEmail',
-                  style: TextStyle(color: Theme.of(context).hintColor),
-                ),
-              ),
-            ],
+          ),
+          if (_maskedEmail.isNotEmpty) ...[
             const SizedBox(height: 12),
-            TextField(
-              controller: _tokenController,
-              decoration: const InputDecoration(
-                labelText: '绑定验证码',
-                prefixIcon: Icon(Icons.mark_email_read_outlined),
-              ),
-              onSubmitted: (_) => _submit(),
+            _DialogNotice(
+              icon: Icons.mark_email_read_rounded,
+              title: '确认邮件已发送',
+              message: '验证码已发送至 $_maskedEmail。',
             ),
           ],
-        ),
+          const SizedBox(height: 16),
+          _DialogFieldGroup(
+            title: '确认绑定',
+            children: [
+              _DialogTextField(
+                controller: _tokenController,
+                label: '绑定验证码',
+                icon: Icons.mark_email_read_outlined,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
+              ),
+            ],
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.pop(context),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: _submitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('绑定'),
-        ),
-      ],
+      primaryLabel: '绑定邮箱',
+      primaryLoading: _submitting,
+      onPrimary: _submitting ? null : _submit,
     );
   }
 }
@@ -3313,6 +3385,391 @@ class _NotificationDetailSheet extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AccountActionDialog extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget content;
+  final String primaryLabel;
+  final VoidCallback? onPrimary;
+  final bool primaryLoading;
+  final double maxWidth;
+
+  const _AccountActionDialog({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.content,
+    required this.primaryLabel,
+    required this.onPrimary,
+    this.primaryLoading = false,
+    this.maxWidth = 520,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final size = MediaQuery.sizeOf(context);
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: maxWidth,
+          maxHeight: size.height * 0.88,
+        ),
+        child: Material(
+          color: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.72),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 12, 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, color: theme.colorScheme.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            subtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.62),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: '关闭',
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+                  child: content,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.42),
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.colorScheme.outlineVariant
+                          .withValues(alpha: 0.6),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Spacer(),
+                    TextButton(
+                      onPressed:
+                          primaryLoading ? null : () => Navigator.pop(context),
+                      child: const Text('取消'),
+                    ),
+                    const SizedBox(width: 10),
+                    FilledButton.icon(
+                      onPressed: onPrimary,
+                      icon: primaryLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check_rounded),
+                      label: Text(primaryLabel),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SingleTextInputDialog extends StatefulWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String label;
+  final String hintText;
+  final String initialValue;
+  final String primaryLabel;
+
+  const _SingleTextInputDialog({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.label,
+    required this.primaryLabel,
+    this.hintText = '',
+    this.initialValue = '',
+  });
+
+  @override
+  State<_SingleTextInputDialog> createState() => _SingleTextInputDialogState();
+}
+
+class _SingleTextInputDialogState extends State<_SingleTextInputDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() => Navigator.pop(context, _controller.text.trim());
+
+  @override
+  Widget build(BuildContext context) {
+    return _AccountActionDialog(
+      icon: widget.icon,
+      title: widget.title,
+      subtitle: widget.subtitle,
+      primaryLabel: widget.primaryLabel,
+      onPrimary: _submit,
+      content: _DialogTextField(
+        controller: _controller,
+        label: widget.label,
+        hintText: widget.hintText,
+        icon: widget.icon,
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+      ),
+    );
+  }
+}
+
+class _DialogFieldGroup extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final Widget? child;
+  final List<Widget>? children;
+
+  const _DialogFieldGroup({
+    required this.title,
+    this.subtitle,
+    this.child,
+    this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final body = child ??
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children ?? const [],
+        );
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color:
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.36),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.68),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (subtitle != null && subtitle!.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Text(
+              subtitle!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          body,
+        ],
+      ),
+    );
+  }
+}
+
+class _DialogTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String hintText;
+  final IconData icon;
+  final bool obscureText;
+  final bool autofocus;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
+
+  const _DialogTextField({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    this.hintText = '',
+    this.obscureText = false,
+    this.autofocus = false,
+    this.keyboardType,
+    this.textInputAction,
+    this.onSubmitted,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      autofocus: autofocus,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      onSubmitted: onSubmitted,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText.isEmpty ? null : hintText,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+}
+
+class _DialogReadOnlyField extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _DialogReadOnlyField({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Text(
+        value,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+class _DialogNotice extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+
+  const _DialogNotice({
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: theme.colorScheme.primary, size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  message,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -3754,27 +4211,132 @@ class _InlineModuleError extends StatelessWidget {
 
 class _ProfileAvatar extends StatelessWidget {
   final String username;
+  final String avatarUrl;
   final double size;
 
-  const _ProfileAvatar({required this.username, required this.size});
+  const _ProfileAvatar({
+    required this.username,
+    required this.size,
+    this.avatarUrl = '',
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
+    final imageUrl = WatchTogetherService.resolveResourceUrl(avatarUrl);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: size,
+        height: size,
         color: theme.colorScheme.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
+        alignment: Alignment.center,
+        child: imageUrl.isEmpty
+            ? Text(
+                username.isEmpty
+                    ? '?'
+                    : username.characters.first.toUpperCase(),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w900,
+                ),
+              )
+            : Image.network(
+                imageUrl,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Text(
+                  username.isEmpty
+                      ? '?'
+                      : username.characters.first.toUpperCase(),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
       ),
-      alignment: Alignment.center,
-      child: Text(
-        username.isEmpty ? '?' : username.characters.first.toUpperCase(),
-        style: theme.textTheme.headlineSmall?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.w900,
-        ),
+    );
+  }
+}
+
+class _EditableProfileAvatar extends StatelessWidget {
+  const _EditableProfileAvatar({
+    required this.username,
+    required this.avatarUrl,
+    required this.size,
+    required this.updating,
+    required this.onPick,
+    this.onClear,
+  });
+
+  final String username;
+  final String avatarUrl;
+  final double size;
+  final bool updating;
+  final VoidCallback onPick;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SizedBox(
+      width: size,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            children: [
+              _ProfileAvatar(
+                username: username,
+                avatarUrl: avatarUrl,
+                size: size,
+              ),
+              Positioned.fill(
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.0),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: updating ? null : onPick,
+                    child: Align(
+                      alignment: Alignment.bottomRight,
+                      child: Container(
+                        margin: const EdgeInsets.all(4),
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: updating
+                            ? const Padding(
+                                padding: EdgeInsets.all(6),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.photo_camera_outlined,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (onClear != null) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: updating ? null : onClear,
+              child: const Text('移除'),
+            ),
+          ],
+        ],
       ),
     );
   }

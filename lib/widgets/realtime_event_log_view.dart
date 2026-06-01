@@ -96,7 +96,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
             },
           ) ??
           RealtimeEventLogPreferences.maxEntries.value;
-      controller.dispose();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.dispose();
+      });
     }
 
     await RealtimeEventLogPreferences.setMaxEntries(nextValue);

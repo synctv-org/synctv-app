@@ -27,7 +27,7 @@ class _AdminSection {
 }
 
 const Map<String, String> _providerTypeLabels = {
-  'alist': 'Alist',
+  'alist': 'AList',
   'emby': 'Emby',
   'bilibili': 'Bilibili',
   'rtmp': 'RTMP',
@@ -236,57 +236,128 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
   }
 
   Widget _buildTopTabs(ThemeData theme, bool isDark) {
-    return Material(
-      color: theme.colorScheme.surface,
-      elevation: 0,
-      child: SafeArea(
-        bottom: false,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: theme.dividerColor.withValues(alpha: 0.65),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 640;
+        return Material(
+          color: theme.colorScheme.surface,
+          elevation: 0,
+          child: SafeArea(
+            bottom: false,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: theme.dividerColor.withValues(alpha: 0.65),
+                  ),
+                ),
               ),
+              padding: compact
+                  ? const EdgeInsets.fromLTRB(10, 6, 10, 8)
+                  : const EdgeInsets.fromLTRB(8, 6, 8, 8),
+              child: compact
+                  ? _buildCompactTopTabs(theme)
+                  : TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      dividerColor: Colors.transparent,
+                      indicator: BoxDecoration(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      labelColor: theme.colorScheme.primary,
+                      unselectedLabelColor:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                      labelStyle: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      unselectedLabelStyle: theme.textTheme.labelMedium
+                          ?.copyWith(fontWeight: FontWeight.w500),
+                      tabs: _sections
+                          .map((section) => Tab(
+                                height: 42,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(section.icon, size: 18),
+                                      const SizedBox(width: 6),
+                                      Text(section.label),
+                                    ],
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                    ),
             ),
           ),
-          padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-          child: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            dividerColor: Colors.transparent,
-            indicator: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.10),
+        );
+      },
+    );
+  }
+
+  Widget _buildCompactTopTabs(ThemeData theme) {
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,
+            mainAxisExtent: 42,
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
+          ),
+          itemCount: _sections.length,
+          itemBuilder: (context, index) {
+            final section = _sections[index];
+            final selected = _tabController.index == index;
+            final foreground = selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.68);
+            return Material(
+              color: selected
+                  ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                  : theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.42),
               borderRadius: BorderRadius.circular(8),
-            ),
-            labelColor: theme.colorScheme.primary,
-            unselectedLabelColor:
-                theme.colorScheme.onSurface.withValues(alpha: 0.62),
-            labelStyle: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-            unselectedLabelStyle: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-            tabs: _sections
-                .map((section) => Tab(
-                      height: 42,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(section.icon, size: 18),
-                            const SizedBox(width: 6),
-                            Text(section.label),
-                          ],
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => setState(() => _tabController.animateTo(index)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(section.icon, size: 16, color: foreground),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          section.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: foreground,
+                            fontWeight:
+                                selected ? FontWeight.w800 : FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ))
-                .toList(),
-          ),
-        ),
-      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -351,6 +422,7 @@ class AdminOverviewTab extends StatefulWidget {
 class _AdminOverviewTabState extends State<AdminOverviewTab> {
   AdminSystemStats? _stats;
   List<WUser> _admins = const [];
+  String _currentUserId = '';
   int _adminTotal = 0;
   int _adminPage = 1;
   int _adminPageSize = 20;
@@ -382,12 +454,15 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
           sortBy: _adminSortBy,
           sortDirection: _adminSortDirection,
         ),
+        WatchTogetherService.getMe(),
       ]);
       if (!mounted) return;
       final adminsPage = results[1] as AdminsPage;
+      final currentUser = results[2] as WUser;
       setState(() {
         _stats = results[0] as AdminSystemStats;
         _admins = adminsPage.admins;
+        _currentUserId = currentUser.id;
         _adminTotal = adminsPage.total;
         _isLoading = false;
       });
@@ -422,6 +497,9 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
         ),
       ],
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
     if (confirmed != true) return;
     try {
       await WatchTogetherService.adminAddAdmin(controller.text.trim());
@@ -623,20 +701,31 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
                   )
                 else
                   for (final admin in _admins)
-                    ListTile(
-                      leading: CircleAvatar(
-                        child: Text(admin.username.isEmpty
-                            ? '?'
-                            : admin.username.characters.first.toUpperCase()),
-                      ),
-                      title: Text(admin.username),
-                      subtitle: Text(admin.id),
-                      trailing: IconButton(
-                        tooltip: '移除管理员',
-                        icon: const Icon(Icons.remove_circle_outline),
-                        color: Colors.redAccent,
-                        onPressed: () => _removeAdmin(admin),
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final removeDisabledReason =
+                            _adminRemoveDisabledReason(admin);
+                        return ListTile(
+                          leading: CircleAvatar(
+                            child: Text(admin.username.isEmpty
+                                ? '?'
+                                : admin.username.characters.first
+                                    .toUpperCase()),
+                          ),
+                          title: Text(admin.username),
+                          subtitle: Text(admin.id),
+                          trailing: IconButton(
+                            tooltip: removeDisabledReason ?? '移除管理员',
+                            icon: const Icon(Icons.remove_circle_outline),
+                            color: removeDisabledReason == null
+                                ? Colors.redAccent
+                                : theme.disabledColor,
+                            onPressed: removeDisabledReason == null
+                                ? () => _removeAdmin(admin)
+                                : null,
+                          ),
+                        );
+                      },
                     ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -673,6 +762,16 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
         ],
       ),
     );
+  }
+
+  String? _adminRemoveDisabledReason(WUser admin) {
+    if (_currentUserId.isNotEmpty && admin.id == _currentUserId) {
+      return '不能移除当前登录账号的管理员权限';
+    }
+    if (_adminTotal <= 1) {
+      return '至少保留一个管理员账号';
+    }
+    return null;
   }
 }
 
@@ -794,7 +893,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       context: context,
       title: '删除房间',
       icon: const Icon(Icons.delete_forever, color: Colors.red),
-      content: Text('确定要删除房间 "${room.roomName}" 吗？此操作不可撤销。'),
+      content: _destructiveDialogContent(
+        '将永久删除房间 "${room.roomName}"。',
+        const [
+          '所有成员会立即失去访问权限。',
+          '房间设置、成员关系、播放列表、聊天记录和实时状态会同步清除。',
+          '正在观看的成员会收到房间数据变更并退出当前协作流程。',
+        ],
+      ),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
@@ -881,7 +987,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       context: context,
       title: '批量删除房间',
       icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
-      content: Text('确定删除 ${_selectedRoomIds.length} 个房间吗？此操作不可撤销。'),
+      content: _destructiveDialogContent(
+        '将永久删除 ${_selectedRoomIds.length} 个房间。',
+        const [
+          '相关成员会立即失去访问权限。',
+          '房间设置、成员关系、播放列表、聊天记录和实时状态会同步清除。',
+          '批量操作完成后只能通过备份恢复数据。',
+        ],
+      ),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
@@ -921,6 +1034,45 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         .map((item) => '${item.id}: ${item.error}')
         .join('\n');
     MessageUtils.showWarning(context, '$message\n$detail');
+  }
+
+  Widget _destructiveDialogContent(String title, List<String> impacts) {
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...impacts.map(
+          (impact) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 16,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    impact,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _showRoomDetails(WRoom room) async {
@@ -2310,7 +2462,14 @@ class _UserManagementTabState extends State<UserManagementTab> {
       context: context,
       title: '删除用户',
       icon: const Icon(Icons.warning, color: Colors.red),
-      content: Text('确定要删除用户 "${user.username}" 吗？此操作不可撤销。'),
+      content: _destructiveDialogContent(
+        '将永久删除用户 "${user.username}"。',
+        const [
+          '该用户的登录会话、第三方绑定和个人资料会被清除。',
+          '该用户创建或参与的房间关系、聊天记录归属和权限状态会受到影响。',
+          '在线客户端会立即失去当前账号访问能力。',
+        ],
+      ),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
@@ -2483,7 +2642,14 @@ class _UserManagementTabState extends State<UserManagementTab> {
       context: context,
       title: '批量删除用户',
       icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
-      content: Text('确定删除 ${_selectedUserIds.length} 个用户吗？此操作不可撤销。'),
+      content: _destructiveDialogContent(
+        '将永久删除 ${_selectedUserIds.length} 个用户。',
+        const [
+          '相关用户的登录会话、第三方绑定和个人资料会被清除。',
+          '这些用户关联的房间关系、聊天记录归属和权限状态会受到影响。',
+          '批量操作完成后只能通过备份恢复数据。',
+        ],
+      ),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
@@ -2523,6 +2689,45 @@ class _UserManagementTabState extends State<UserManagementTab> {
         .map((item) => '${item.id}: ${item.error}')
         .join('\n');
     MessageUtils.showWarning(context, '$message\n$detail');
+  }
+
+  Widget _destructiveDialogContent(String title, List<String> impacts) {
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...impacts.map(
+          (impact) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 16,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    impact,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _showUserDetails(WUser user) async {
@@ -5803,13 +6008,17 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    _loadSettings(refresh: false);
   }
 
-  Future<void> _loadSettings({bool silent = false}) async {
+  Future<void> _loadSettings({
+    bool silent = false,
+    bool refresh = false,
+  }) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final groups = await WatchTogetherService.adminGetAllSettings();
+      final groups =
+          await WatchTogetherService.adminGetAllSettings(refresh: refresh);
       if (!mounted) return;
       setState(() {
         _groups = groups;
@@ -5830,15 +6039,21 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
       _selectedGroup = groupName;
       _isLoadingGroup = true;
     });
-    await _refreshSelectedGroup(silent: true);
+    await _refreshSelectedGroup(silent: true, refresh: false);
   }
 
-  Future<void> _refreshSelectedGroup({bool silent = false}) async {
+  Future<void> _refreshSelectedGroup({
+    bool silent = false,
+    bool refresh = true,
+  }) async {
     final groupName = _selectedGroup;
     if (groupName == null) return;
     if (!silent) setState(() => _isLoadingGroup = true);
     try {
-      final group = await WatchTogetherService.adminGetSettingsGroup(groupName);
+      final group = await WatchTogetherService.adminGetSettingsGroup(
+        groupName,
+        refresh: refresh,
+      );
       if (!mounted) return;
       setState(() {
         _groups = [
@@ -6070,8 +6285,9 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
                           : () => _editOAuth2Provider(
                               selected, oauth2Providers, null),
                     ),
-                    onRefresh:
-                        _isLoadingGroup ? null : () => _refreshSelectedGroup(),
+                    onRefresh: _isLoadingGroup
+                        ? null
+                        : () => _refreshSelectedGroup(refresh: true),
                   ),
                   _OAuth2ProvidersList(
                     providers: oauth2Providers,
@@ -6101,7 +6317,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
                           : null,
                       onRefresh: _isLoadingGroup
                           ? null
-                          : () => _refreshSelectedGroup(),
+                          : () => _refreshSelectedGroup(refresh: true),
                     );
                   }
                   final entry = entries[index - 1];
@@ -6148,8 +6364,9 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
               IconButton.filledTonal(
                 tooltip: '刷新全部',
                 icon: const Icon(Icons.sync_rounded),
-                onPressed:
-                    _isLoadingGroup ? null : () => _loadSettings(silent: true),
+                onPressed: _isLoadingGroup
+                    ? null
+                    : () => _loadSettings(silent: true, refresh: true),
               ),
             ],
           ),
@@ -6518,10 +6735,10 @@ _SettingDescriptor _settingDescriptor(
       group: 'email',
       key: 'enabled',
       title: '启用邮件服务',
-      description: '打开后服务端可以发送验证邮件、密码重置邮件、MFA 邮件和通知邮件。',
+      description: '打开后服务端可以发送邮箱绑定、密码重置、MFA 和通知邮件。',
       icon: Icons.outgoing_mail,
       kind: _SettingEditorKind.boolean,
-      warning: '启用前请确认 SMTP 主机、发件地址和认证信息正确，否则邮件登录、找回密码和通知会不可用。',
+      warning: '启用前请确认 SMTP 主机、发件地址和认证信息正确，否则邮件登录、邮箱绑定、找回密码和通知会不可用。',
     ),
     'email.smtp_host': const _SettingDescriptor(
       group: 'email',

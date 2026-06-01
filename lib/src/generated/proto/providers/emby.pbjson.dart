@@ -107,6 +107,7 @@ const MediaItem$json = {
     {'1': 'series_id', '3': 6, '4': 1, '5': 9, '10': 'seriesId'},
     {'1': 'season_name', '3': 7, '4': 1, '5': 9, '10': 'seasonName'},
     {'1': 'thumbnail', '3': 8, '4': 1, '5': 9, '10': 'thumbnail'},
+    {'1': 'description', '3': 9, '4': 1, '5': 9, '10': 'description'},
   ],
 };
 
@@ -115,7 +116,8 @@ final $typed_data.Uint8List mediaItemDescriptor = $convert.base64Decode(
     'CglNZWRpYUl0ZW0SDgoCaWQYASABKAlSAmlkEhIKBG5hbWUYAiABKAlSBG5hbWUSEgoEdHlwZR'
     'gDIAEoCVIEdHlwZRIbCglwYXJlbnRfaWQYBCABKAlSCHBhcmVudElkEh8KC3Nlcmllc19uYW1l'
     'GAUgASgJUgpzZXJpZXNOYW1lEhsKCXNlcmllc19pZBgGIAEoCVIIc2VyaWVzSWQSHwoLc2Vhc2'
-    '9uX25hbWUYByABKAlSCnNlYXNvbk5hbWUSHAoJdGh1bWJuYWlsGAggASgJUgl0aHVtYm5haWw=');
+    '9uX25hbWUYByABKAlSCnNlYXNvbk5hbWUSHAoJdGh1bWJuYWlsGAggASgJUgl0aHVtYm5haWwS'
+    'IAoLZGVzY3JpcHRpb24YCSABKAlSC2Rlc2NyaXB0aW9u');
 
 @$core.Deprecated('Use getMeRequestDescriptor instead')
 const GetMeRequest$json = {

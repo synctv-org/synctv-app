@@ -5,6 +5,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
+import 'package:synctv_app/services/synctv_memory_cache.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -16,13 +17,16 @@ class SyncTvAccountDomainService {
   SyncTvAccountDomainService({
     required SyncTvApiClient api,
     required SyncTvSessionStore sessionStore,
+    SyncTvMemoryCache? cache,
   })  : _api = api,
-        _sessionStore = sessionStore;
+        _sessionStore = sessionStore,
+        _cache = cache ?? SyncTvMemoryCache();
 
   final SyncTvApiClient _api;
   final SyncTvSessionStore _sessionStore;
+  final SyncTvMemoryCache _cache;
 
-  Future<WUser> getMe() async {
+  Future<WUser> getMe({bool refresh = false}) async {
     if (_api.session.isGuest) {
       return WUser(
         id: _sessionStore.guestRoomId ?? 'guest',
@@ -30,6 +34,15 @@ class SyncTvAccountDomainService {
         role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST.value,
       );
     }
+    return _cache.get<WUser>(
+      'account:me',
+      ttl: const Duration(minutes: 2),
+      refresh: refresh,
+      loader: _fetchMe,
+    );
+  }
+
+  Future<WUser> _fetchMe() async {
     final response = await _api.user.getProfile(client.GetProfileRequest());
     return _api.mapUser(response.user);
   }
@@ -38,7 +51,9 @@ class SyncTvAccountDomainService {
     await _api.user.setUsername(client.SetUsernameRequest(
       newUsername: username,
     ));
-    return getMe();
+    final user = await _fetchMe();
+    _cache.put('account:me', user, ttl: const Duration(minutes: 2));
+    return user;
   }
 
   Future<String> startEmailBind(String email) async {
@@ -55,15 +70,30 @@ class SyncTvAccountDomainService {
     final response = await _api.user.confirmEmailBind(
       client.ConfirmEmailBindRequest(email: email, token: token),
     );
-    return _api.mapUser(response.user);
+    final user = _api.mapUser(response.user);
+    _cache.put('account:me', user, ttl: const Duration(minutes: 2));
+    _cache.invalidate('account:preferences');
+    return user;
   }
 
   Future<WUser> unbindEmail() async {
     final response = await _api.user.unbindEmail(client.UnbindEmailRequest());
-    return _api.mapUser(response.user);
+    final user = _api.mapUser(response.user);
+    _cache.put('account:me', user, ttl: const Duration(minutes: 2));
+    _cache.invalidate('account:preferences');
+    return user;
   }
 
-  Future<AccountPreferences> getAccountPreferences() async {
+  Future<AccountPreferences> getAccountPreferences({bool refresh = false}) {
+    return _cache.get<AccountPreferences>(
+      'account:preferences',
+      ttl: const Duration(minutes: 2),
+      refresh: refresh,
+      loader: _fetchAccountPreferences,
+    );
+  }
+
+  Future<AccountPreferences> _fetchAccountPreferences() async {
     final response = await _api.user.getUserPreferences(
       client.GetUserPreferencesRequest(),
     );
@@ -86,13 +116,30 @@ class SyncTvAccountDomainService {
       request.notifications = notificationPreferences;
     }
     final response = await _api.user.updateUserPreferences(request);
-    return accountPreferencesFromProto(
+    final preferences = accountPreferencesFromProto(
       response.preferences,
       response.authFactors,
     );
+    _cache.put(
+      'account:preferences',
+      preferences,
+      ttl: const Duration(minutes: 2),
+    );
+    return preferences;
   }
 
-  Future<List<PasskeyCredentialInfo>> listPasskeys() async {
+  Future<List<PasskeyCredentialInfo>> listPasskeys({
+    bool refresh = false,
+  }) async {
+    return _cache.get<List<PasskeyCredentialInfo>>(
+      'account:passkeys',
+      ttl: const Duration(minutes: 2),
+      refresh: refresh,
+      loader: _fetchPasskeys,
+    );
+  }
+
+  Future<List<PasskeyCredentialInfo>> _fetchPasskeys() async {
     final response = await _api.user.listPasskeys(client.ListPasskeysRequest());
     return response.credentials.map(passkeyFromProto).toList(growable: false);
   }
@@ -101,6 +148,8 @@ class SyncTvAccountDomainService {
     await _api.user.deletePasskey(
       client.DeletePasskeyRequest(credentialId: credentialId),
     );
+    _cache.invalidate('account:passkeys');
+    _cache.invalidate('account:preferences');
   }
 
   Future<OpaquePasswordUpdateStart> startOpaquePasswordUpdate({
@@ -166,7 +215,10 @@ class SyncTvAccountDomainService {
         credential: _api.encodeJsonBytes(credential),
       ),
     );
-    return passkeyFromProto(response.credential);
+    final passkey = passkeyFromProto(response.credential);
+    _cache.invalidate('account:passkeys');
+    _cache.invalidate('account:preferences');
+    return passkey;
   }
 
   client_enum.OpaquePasswordUpdateVerificationMethod
@@ -178,11 +230,51 @@ class SyncTvAccountDomainService {
 }
 
 class SyncTvNotificationDomainService {
-  SyncTvNotificationDomainService(this._api);
+  SyncTvNotificationDomainService(this._api, {SyncTvMemoryCache? cache})
+      : _cache = cache ?? SyncTvMemoryCache();
 
   final SyncTvApiClient _api;
+  final SyncTvMemoryCache _cache;
 
   Future<UserNotificationsPage> listNotifications({
+    int page = 1,
+    int pageSize = 20,
+    bool? isRead,
+    client_enum.NotificationType? notificationType,
+    String search = '',
+    client_enum.NotificationListSortBy sortBy =
+        client_enum.NotificationListSortBy.NOTIFICATION_LIST_SORT_BY_CREATED_AT,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_DESC,
+    bool refresh = false,
+  }) async {
+    final key = [
+      'account:notifications',
+      page,
+      pageSize,
+      isRead,
+      notificationType?.value,
+      search,
+      sortBy.value,
+      sortDirection.value,
+    ].join('|');
+    return _cache.get<UserNotificationsPage>(
+      key,
+      ttl: const Duration(seconds: 45),
+      refresh: refresh,
+      loader: () => _fetchNotifications(
+        page: page,
+        pageSize: pageSize,
+        isRead: isRead,
+        notificationType: notificationType,
+        search: search,
+        sortBy: sortBy,
+        sortDirection: sortDirection,
+      ),
+    );
+  }
+
+  Future<UserNotificationsPage> _fetchNotifications({
     int page = 1,
     int pageSize = 20,
     bool? isRead,
@@ -234,10 +326,12 @@ class SyncTvNotificationDomainService {
     await _api.notifications.markAsRead(
       client.MarkAsReadRequest(notificationIds: ids),
     );
+    _cache.invalidatePrefix('account:notifications');
   }
 
   Future<void> markAllNotificationsAsRead() async {
     await _api.notifications.markAllAsRead(client.MarkAllAsReadRequest());
+    _cache.invalidatePrefix('account:notifications');
   }
 
   Future<void> deleteNotification(UserNotificationItem item) async {
@@ -247,10 +341,12 @@ class SyncTvNotificationDomainService {
         notificationId: Int64(item.numericId),
       ),
     );
+    _cache.invalidatePrefix('account:notifications');
   }
 
   Future<void> deleteAllReadNotifications() async {
     await _api.notifications.deleteAllRead(client.DeleteAllReadRequest());
+    _cache.invalidatePrefix('account:notifications');
   }
 }
 

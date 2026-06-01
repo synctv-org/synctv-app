@@ -250,6 +250,39 @@ class SyncTvUserApi {
     );
   }
 
+  Future<client.CreateUserAvatarUploadSessionResponse>
+      createUserAvatarUploadSession(
+    client.CreateUserAvatarUploadSessionRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/user/avatar/upload-session',
+      client.CreateUserAvatarUploadSessionResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.GetProfileResponse> updateUserAvatar(
+    client.UpdateUserAvatarRequest request,
+  ) {
+    return _api._send(
+      'PUT',
+      '/api/user/avatar',
+      client.GetProfileResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.GetProfileResponse> clearUserAvatar(
+    client.ClearUserAvatarRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/user/avatar',
+      client.GetProfileResponse.create,
+    );
+  }
+
   Future<client.SetUsernameResponse> setUsername(
     client.SetUsernameRequest request,
   ) {
@@ -722,6 +755,20 @@ class SyncTvRoomApi {
     );
   }
 
+  Stream<client.WatchChatEventsEvent> watchChatEvents(
+    String roomId,
+    client.WatchChatEventsRequest request,
+  ) {
+    return _api._watchSse(
+      '/api/rooms/$roomId/watch/chat-events',
+      client.WatchChatEventsEvent.create,
+      query: {
+        ..._api._watchOptionsQuery(request.options),
+        ..._api._messageQuery(request.chatEvents),
+      },
+    );
+  }
+
   Future<client.GetChatHistoryResponse> getChatHistory(
     String roomId,
     client.GetChatHistoryRequest request,
@@ -731,6 +778,115 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/chat/history',
       client.GetChatHistoryResponse.create,
       query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.ChatMessageEventResponse> sendChatMessage(
+    String roomId,
+    client.SendChatMessageRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/chat/messages',
+      client.ChatMessageEventResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.GetChatMessageResponse> getChatMessage(
+    String roomId,
+    client.GetChatMessageRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/chat/messages/${request.messageId}',
+      client.GetChatMessageResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.GetChatMessageContextResponse> getChatMessageContext(
+    String roomId,
+    client.GetChatMessageContextRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/chat/messages/${request.messageId}/context',
+      client.GetChatMessageContextResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.GetChatPlaybackMessagesResponse> getChatPlaybackMessages(
+    String roomId,
+    client.GetChatPlaybackMessagesRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/chat/playback-messages',
+      client.GetChatPlaybackMessagesResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.ChatMessageEventResponse> editChatMessage(
+    String roomId,
+    client.EditChatMessageRequest request,
+  ) {
+    return _api._send(
+      'PATCH',
+      '/api/rooms/$roomId/chat/messages/${request.messageId}',
+      client.ChatMessageEventResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.ChatMessageEventResponse> deleteChatMessage(
+    String roomId,
+    client.DeleteChatMessageRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/rooms/$roomId/chat/messages/${request.messageId}',
+      client.ChatMessageEventResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.ChatReadStateResponse> markChatRead(
+    String roomId,
+    client.MarkChatReadRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/chat/read-state',
+      client.ChatReadStateResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.ChatReadStateResponse> getChatReadState(
+    String roomId,
+    client.GetChatReadStateRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/chat/read-state',
+      client.ChatReadStateResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.CreateChatImageUploadSessionResponse>
+      createChatImageUploadSession(
+    String roomId,
+    client.CreateChatImageUploadSessionRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/chat/images/upload-session',
+      client.CreateChatImageUploadSessionResponse.create,
+      body: request,
     );
   }
 
@@ -757,6 +913,42 @@ class SyncTvRoomApi {
     );
   }
 
+  Future<client.CreateRoomCoverUploadSessionResponse>
+      createRoomCoverUploadSession(
+    String roomId,
+    client.CreateRoomCoverUploadSessionRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/cover/upload-session',
+      client.CreateRoomCoverUploadSessionResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.GetRoomResponse> updateRoomCover(
+    String roomId,
+    client.UpdateRoomCoverRequest request,
+  ) {
+    return _api._send(
+      'PUT',
+      '/api/rooms/$roomId/cover',
+      client.GetRoomResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.GetRoomResponse> clearRoomCover(
+    String roomId,
+    client.ClearRoomCoverRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/rooms/$roomId/cover',
+      client.GetRoomResponse.create,
+    );
+  }
+
   Future<client.GetPlaylistResponse> getPlaylist(
     String roomId,
     client.GetPlaylistRequest request,
@@ -777,6 +969,42 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/playlists/${request.playlistId}',
       client.UpdatePlaylistResponse.create,
       body: request,
+    );
+  }
+
+  Future<client.CreatePlaylistCoverUploadSessionResponse>
+      createPlaylistCoverUploadSession(
+    String roomId,
+    client.CreatePlaylistCoverUploadSessionRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/playlists/${request.playlistId}/cover/upload-session',
+      client.CreatePlaylistCoverUploadSessionResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.UpdatePlaylistResponse> updatePlaylistCover(
+    String roomId,
+    client.UpdatePlaylistCoverRequest request,
+  ) {
+    return _api._send(
+      'PUT',
+      '/api/rooms/$roomId/playlists/${request.playlistId}/cover',
+      client.UpdatePlaylistResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.UpdatePlaylistResponse> clearPlaylistCover(
+    String roomId,
+    client.ClearPlaylistCoverRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/rooms/$roomId/playlists/${request.playlistId}/cover',
+      client.UpdatePlaylistResponse.create,
     );
   }
 
@@ -873,6 +1101,42 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/media/${request.mediaId}',
       client.EditMediaResponse.create,
       body: request,
+    );
+  }
+
+  Future<client.CreateVideoCoverUploadSessionResponse>
+      createVideoCoverUploadSession(
+    String roomId,
+    client.CreateVideoCoverUploadSessionRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/media/${request.mediaId}/cover/upload-session',
+      client.CreateVideoCoverUploadSessionResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.EditMediaResponse> updateVideoCover(
+    String roomId,
+    client.UpdateVideoCoverRequest request,
+  ) {
+    return _api._send(
+      'PUT',
+      '/api/rooms/$roomId/media/${request.mediaId}/cover',
+      client.EditMediaResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.EditMediaResponse> clearVideoCover(
+    String roomId,
+    client.ClearVideoCoverRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/rooms/$roomId/media/${request.mediaId}/cover',
+      client.EditMediaResponse.create,
     );
   }
 

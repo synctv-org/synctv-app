@@ -7,6 +7,7 @@ import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/services/synctv_account_service.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
+import 'package:synctv_app/services/synctv_memory_cache.dart';
 import 'package:synctv_app/services/synctv_room_management_service.dart';
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
@@ -18,9 +19,11 @@ import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
     as provider_common_enum;
 
 class SyncTvAdminDomainService {
-  SyncTvAdminDomainService(this._api);
+  SyncTvAdminDomainService(this._api, {SyncTvMemoryCache? cache})
+      : _cache = cache ?? SyncTvMemoryCache();
 
   final SyncTvApiClient _api;
+  final SyncTvMemoryCache _cache;
   final Map<String, Map<String, dynamic>> _settingsCache = {};
 
   Future<AdminUsersPage> listUsersPage({
@@ -174,7 +177,18 @@ class SyncTvAdminDomainService {
     );
   }
 
-  Future<List<AdminSettingsGroup>> getAllSettings() async {
+  Future<List<AdminSettingsGroup>> getAllSettings({
+    bool refresh = false,
+  }) async {
+    return _cache.get<List<AdminSettingsGroup>>(
+      'admin:settings:all',
+      ttl: const Duration(minutes: 2),
+      refresh: refresh,
+      loader: _fetchAllSettings,
+    );
+  }
+
+  Future<List<AdminSettingsGroup>> _fetchAllSettings() async {
     final response = await _api.adminService.getSettings(
       admin.GetSettingsRequest(),
     );
@@ -185,7 +199,19 @@ class SyncTvAdminDomainService {
     return groups;
   }
 
-  Future<AdminSettingsGroup> getSettingsGroup(String group) async {
+  Future<AdminSettingsGroup> getSettingsGroup(
+    String group, {
+    bool refresh = false,
+  }) async {
+    return _cache.get<AdminSettingsGroup>(
+      'admin:settings:group:$group',
+      ttl: const Duration(minutes: 2),
+      refresh: refresh,
+      loader: () => _fetchSettingsGroup(group),
+    );
+  }
+
+  Future<AdminSettingsGroup> _fetchSettingsGroup(String group) async {
     final response = await _api.adminService.getSettingsGroup(
       admin.GetSettingsGroupRequest(group: group),
     );
@@ -310,7 +336,19 @@ class SyncTvAdminDomainService {
     return _api.mapAdminRoom(response.room);
   }
 
-  Future<WRoomSettings> getRoomSettings(String roomId) async {
+  Future<WRoomSettings> getRoomSettings(
+    String roomId, {
+    bool refresh = false,
+  }) async {
+    return _cache.get<WRoomSettings>(
+      'admin:room:$roomId:settings',
+      ttl: const Duration(minutes: 2),
+      refresh: refresh,
+      loader: () => _fetchRoomSettings(roomId),
+    );
+  }
+
+  Future<WRoomSettings> _fetchRoomSettings(String roomId) async {
     final response = await _api.adminService.getRoomSettings(
       admin.GetRoomSettingsRequest(roomId: roomId),
     );
@@ -327,12 +365,18 @@ class SyncTvAdminDomainService {
         settings: _api.encodeJsonBytes(settings.toJson()),
       ),
     );
+    _cache.put(
+      'admin:room:$roomId:settings',
+      settings,
+      ttl: const Duration(minutes: 2),
+    );
   }
 
   Future<void> resetRoomSettings(String roomId) async {
     await _api.adminService.resetRoomSettings(
       admin.ResetRoomSettingsRequest(roomId: roomId),
     );
+    _cache.invalidate('admin:room:$roomId:settings');
   }
 
   Future<void> updateRoomPassword(String roomId, String password) async {
@@ -354,6 +398,19 @@ class SyncTvAdminDomainService {
     );
     final updated = _settingsGroupFromProto(response.group);
     _settingsCache[updated.name] = Map<String, dynamic>.from(updated.settings);
+    _cache.put(
+      'admin:settings:group:${updated.name}',
+      updated,
+      ttl: const Duration(minutes: 2),
+    );
+    _cache.invalidate('admin:settings:all');
+    if (updated.name == 'user' ||
+        updated.name == 'room' ||
+        updated.name == 'proxy' ||
+        updated.name == 'rtmp' ||
+        updated.name == 'email') {
+      _cache.invalidate('public:settings');
+    }
     return updated;
   }
 

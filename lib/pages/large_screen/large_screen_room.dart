@@ -10,6 +10,7 @@ import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/services/room_realtime_connection.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/utils/playback_error_messages.dart';
 import 'package:synctv_app/widgets/add_movie_dialog.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
 import 'package:synctv_app/managers/webrtc_manager.dart';
@@ -32,6 +33,7 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
   final ScrollController _movieScrollController = ScrollController();
   final List<RoomRealtimeChatEntry> _messages = [];
   Timer? _syncTimer;
+  String _lastChatEventId = '';
   WPlaybackStatus? _currentStatus;
   RoomRealtimeConnection? _channel;
   List<WUser> _members = [];
@@ -151,6 +153,23 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
     }
   }
 
+  Future<void> _loadCurrentPlayback() async {
+    try {
+      final status = await WatchTogetherService.getCurrentMovie(
+        widget.room.roomId,
+      );
+      if (!mounted) return;
+      await _applyPlaybackStatus(
+        _mergePlaybackStatus(
+          status,
+          incomingHasTiming: status.movie?.url.isEmpty != true,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Load current playback error: $e');
+    }
+  }
+
   void _sortMembers(List<WUser> members) {
     members.sort((a, b) {
       if (a.id == widget.room.creatorId) return -1;
@@ -218,8 +237,11 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
       await _channel?.sink.close();
       _channel = RoomRealtimeConnection.connect(
         widget.room.roomId,
-        initialMessages: RoomRealtimeCodec.encodeInitialObservations(),
+        initialMessages: RoomRealtimeCodec.encodeInitialObservations(
+          afterChatEventId: _lastChatEventId,
+        ),
       );
+      unawaited(_loadCurrentPlayback());
       _realtimeSubscription = _channel!.stream.listen((data) {
         _reconnectAttempts = 0;
         try {
@@ -249,8 +271,12 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
       final content = message.chatContent;
       final username =
           message.senderUsername.isEmpty ? 'Unknown' : message.senderUsername;
+      if (message.chatEventId.isNotEmpty) {
+        _lastChatEventId = message.chatEventId;
+      }
 
-      if (_videoPlayerController?.value.isInitialized == true) {
+      if (message.isChatCreated &&
+          _videoPlayerController?.value.isInitialized == true) {
         final danmaku = DanmakuItem(
           text: '$username: $content',
           startTime: _videoPlayerController!.value.position,
@@ -265,8 +291,9 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
 
       if (mounted) {
         setState(() {
-          _messages.appendUnique(
+          _messages.applyRealtimeEvent(
             RoomRealtimeChatEntry.fromMessage(message),
+            eventKind: message.chatEventKind,
             maxEntries: 50,
           );
         });
@@ -388,43 +415,53 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
 
   Future<void> _performSync(
       bool isPlaying, double currentTime, double playbackRate) async {
-    if (_videoPlayerController == null ||
-        !_videoPlayerController!.value.isInitialized) {
+    final controller = _videoPlayerController;
+    if (controller == null || !controller.value.isInitialized) {
       return;
     }
     _isSyncing = true;
     try {
-      if ((_videoPlayerController!.value.playbackSpeed - playbackRate).abs() >
-          0.1) {
-        await _videoPlayerController!.setPlaybackSpeed(playbackRate);
+      if ((controller.value.playbackSpeed - playbackRate).abs() > 0.1) {
+        await controller.setPlaybackSpeed(playbackRate);
+        if (!mounted || !identical(_videoPlayerController, controller)) return;
         _lastRate = playbackRate;
       }
-      final currentPos =
-          _videoPlayerController!.value.position.inMilliseconds / 1000.0;
+      final currentPos = controller.value.position.inMilliseconds / 1000.0;
       final targetTime = _boundedPlaybackTime(currentTime);
       final shouldStopAtEnd = _isPlaybackTimePastDuration(currentTime);
       final targetIsPlaying = shouldStopAtEnd ? false : isPlaying;
-      if (!targetIsPlaying && _videoPlayerController!.value.isPlaying) {
-        await _videoPlayerController!.pause();
+      if (!targetIsPlaying && controller.value.isPlaying) {
+        await controller.pause();
+        if (!mounted || !identical(_videoPlayerController, controller)) return;
         _lastPlaying = false;
       }
       if ((currentPos - targetTime).abs() > 2.0) {
         // Looser sync for TV
-        await _videoPlayerController!
+        await controller
             .seekTo(Duration(milliseconds: (targetTime * 1000).toInt()));
+        if (!mounted || !identical(_videoPlayerController, controller)) return;
         _lastPosition = targetTime;
       }
-      if (targetIsPlaying && !_videoPlayerController!.value.isPlaying) {
-        await _videoPlayerController!.play();
+      if (targetIsPlaying && controller.value.isPlaying == false) {
+        await controller.play();
+        if (!mounted || !identical(_videoPlayerController, controller)) return;
         _lastPlaying = true;
       }
     } catch (e) {
-      debugPrint('Sync execution error: $e');
+      if (!_isDisposedVideoControllerError(e)) {
+        debugPrint('Sync execution error: $e');
+      }
     } finally {
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (mounted) _isSyncing = false;
       });
     }
+  }
+
+  bool _isDisposedVideoControllerError(Object error) {
+    return error
+        .toString()
+        .contains('VideoPlayerController was used after being disposed');
   }
 
   double _boundedPlaybackTime(double currentTime) {
@@ -657,11 +694,12 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
     } catch (e) {
       newController.dispose();
       if (mounted) {
+        final message = playbackLoadErrorMessage(e);
         setState(() {
           _isVideoLoading = false;
-          _videoError = '视频加载失败';
+          _videoError = message;
         });
-        MessageUtils.showError(context, '视频加载失败');
+        MessageUtils.showError(context, message);
       }
     }
   }
@@ -787,7 +825,6 @@ class _LargeScreenRoomState extends State<LargeScreenRoom> {
       final switched = await WatchTogetherService.switchMovie(
           widget.room.roomId, movie.id,
           subPath: movie.subPath, playlistId: movie.parentId);
-      _sendPlaybackUpdate(PlaybackControlAction.play, true, 0, 1);
       if (switched.movie != null) {
         await _applyPlaybackStatus(
           WPlaybackStatus(

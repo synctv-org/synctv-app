@@ -251,6 +251,7 @@ class SyncTvRoomMediaDomainService {
     String sourceProvider = '',
     Map<String, dynamic> sourceConfig = const {},
     String providerInstanceName = '',
+    String description = '',
   }) async {
     final response = await _api.room.createPlaylist(
       roomId,
@@ -264,6 +265,7 @@ class SyncTvRoomMediaDomainService {
           sourceConfig: sourceConfig,
         ),
         providerInstanceName: providerInstanceName,
+        description: description,
       ),
     );
     return _api.mapPlaylist(response.playlist);
@@ -273,10 +275,15 @@ class SyncTvRoomMediaDomainService {
     String roomId,
     String playlistId, {
     required String name,
+    String? description,
   }) async {
     final response = await _api.room.updatePlaylist(
       roomId,
-      client.UpdatePlaylistRequest(playlistId: playlistId, name: name),
+      client.UpdatePlaylistRequest(
+        playlistId: playlistId,
+        name: name,
+        description: description ?? '',
+      ),
     );
     return _api.mapPlaylist(response.playlist);
   }
@@ -313,10 +320,15 @@ class SyncTvRoomMediaDomainService {
     String roomId,
     String mediaId, {
     required String name,
+    String? description,
   }) async {
     final response = await _api.room.editMedia(
       roomId,
-      client.EditMediaRequest(mediaId: mediaId, name: name),
+      client.EditMediaRequest(
+        mediaId: mediaId,
+        name: name,
+        description: description ?? '',
+      ),
     );
     return _api.mapMedia(response.media);
   }
@@ -364,6 +376,153 @@ class SyncTvRoomMediaDomainService {
     return ChatHistoryPage(
       messages: response.messages.map(_chatMessageFromProto).toList(),
       nextCursor: response.nextCursor,
+    );
+  }
+
+  Future<RoomChatMessageInfo> sendChatMessage(
+    String roomId, {
+    String content = '',
+    List<StoredImageInfo> images = const [],
+  }) async {
+    final response = await _api.room.sendChatMessage(
+      roomId,
+      client.SendChatMessageRequest(
+        content: content,
+        clientMessageId: 'msg_${DateTime.now().microsecondsSinceEpoch}',
+        images: images.map(chatImageFromStoredImage),
+      ),
+    );
+    return _chatMessageFromProto(response.event.message);
+  }
+
+  Future<RoomChatMessageInfo> editChatMessage(
+    String roomId,
+    String messageId, {
+    required String content,
+    required int expectedVersion,
+  }) async {
+    final response = await _api.room.editChatMessage(
+      roomId,
+      client.EditChatMessageRequest(
+        messageId: messageId,
+        content: content,
+        expectedVersion: Int64(expectedVersion),
+        clientOperationId: 'edit_${DateTime.now().microsecondsSinceEpoch}',
+      ),
+    );
+    return _chatMessageFromProto(response.event.message);
+  }
+
+  Future<RoomChatMessageInfo> deleteChatMessage(
+    String roomId,
+    String messageId, {
+    required int expectedVersion,
+    String reason = '',
+  }) async {
+    final response = await _api.room.deleteChatMessage(
+      roomId,
+      client.DeleteChatMessageRequest(
+        messageId: messageId,
+        expectedVersion: Int64(expectedVersion),
+        reason: reason,
+        clientOperationId: 'delete_${DateTime.now().microsecondsSinceEpoch}',
+      ),
+    );
+    return _chatMessageFromProto(response.event.message);
+  }
+
+  Future<ChatMessageContextInfo> getChatMessageContext(
+    String roomId,
+    String messageId, {
+    int beforeLimit = 20,
+    int afterLimit = 20,
+    bool includeDeleted = false,
+  }) async {
+    final response = await _api.room.getChatMessageContext(
+      roomId,
+      client.GetChatMessageContextRequest(
+        messageId: messageId,
+        beforeLimit: beforeLimit,
+        afterLimit: afterLimit,
+        includeDeleted: includeDeleted,
+      ),
+    );
+    return ChatMessageContextInfo(
+      before: response.before.map(_chatMessageFromProto).toList(),
+      message: _chatMessageFromProto(response.message),
+      after: response.after.map(_chatMessageFromProto).toList(),
+    );
+  }
+
+  Future<List<RoomChatMessageInfo>> getChatPlaybackMessages(
+    String roomId, {
+    String playbackMediaId = '',
+    String playbackPlaylistId = '',
+    List<int> playbackTarget = const [],
+    double positionSeconds = 0,
+    double beforeSeconds = 30,
+    double afterSeconds = 30,
+    int limit = 50,
+    bool includeDeleted = false,
+  }) async {
+    final response = await _api.room.getChatPlaybackMessages(
+      roomId,
+      client.GetChatPlaybackMessagesRequest(
+        playbackMediaId: playbackMediaId,
+        playbackPlaylistId: playbackPlaylistId,
+        playbackTarget: playbackTarget,
+        positionSeconds: positionSeconds,
+        beforeSeconds: beforeSeconds,
+        afterSeconds: afterSeconds,
+        limit: limit,
+        includeDeleted: includeDeleted,
+      ),
+    );
+    return response.messages.map(_chatMessageFromProto).toList();
+  }
+
+  Future<ChatReadStateInfo> markChatRead(
+    String roomId,
+    String messageId,
+  ) async {
+    final response = await _api.room.markChatRead(
+      roomId,
+      client.MarkChatReadRequest(messageId: messageId),
+    );
+    return _chatReadStateFromProto(response);
+  }
+
+  Future<ChatReadStateInfo> getChatReadState(String roomId) async {
+    final response = await _api.room.getChatReadState(
+      roomId,
+      client.GetChatReadStateRequest(),
+    );
+    return _chatReadStateFromProto(response);
+  }
+
+  StoredImageInfo storedImageFromChatImage(client.ChatImage image) {
+    return StoredImageInfo(
+      id: image.id,
+      storageBackend: image.storageBackend,
+      objectKey: image.objectKey,
+      url: _api.resolveResourceUrl(image.url),
+      mimeType: image.mimeType,
+      sizeBytes: image.sizeBytes.toInt(),
+      width: image.width,
+      height: image.height,
+    );
+  }
+
+  client.ChatImage chatImageFromStoredImage(StoredImageInfo image) {
+    return client.ChatImage(
+      id: image.id,
+      storageBackend: image.storageBackend,
+      objectKey: image.objectKey,
+      url: image.url,
+      mimeType: image.mimeType,
+      sizeBytes: Int64(image.sizeBytes),
+      width: image.width,
+      height: image.height,
     );
   }
 
@@ -501,8 +660,9 @@ class SyncTvRoomMediaDomainService {
     return _api.room.addMediaBatch(
       roomId,
       client.AddMediaBatchRequest(
-        items: items.map(
-          (item) => client.AddMediaRequest(
+        items: items.map((item) {
+          final description = item['description']?.toString().trim() ?? '';
+          final request = client.AddMediaRequest(
             playlistId: item['playlist_id']?.toString().isEmpty ?? true
                 ? null
                 : item['playlist_id']?.toString(),
@@ -513,8 +673,12 @@ class SyncTvRoomMediaDomainService {
               item['source_config'] ?? const {},
             ),
             name: item['name']?.toString() ?? '',
-          ),
-        ),
+          );
+          if (description.isNotEmpty) {
+            request.description = description;
+          }
+          return request;
+        }),
       ),
     );
   }
@@ -579,7 +743,12 @@ class SyncTvRoomMediaDomainService {
       subPath: target == null ? null : base64Url.encode(target),
       parentId: target == null ? null : dynamicPlaylistId,
     );
-    return WPlaybackStatus(movie: localMovie);
+    return WPlaybackStatus(
+      movie: localMovie,
+      isPlaying: true,
+      currentTime: 0,
+      playbackRate: 1,
+    );
   }
 
   Future<WPlaybackStatus> updatePlayback(
@@ -716,8 +885,28 @@ class SyncTvRoomMediaDomainService {
       username: message.username,
       content: message.content,
       timestamp: message.timestamp.toInt(),
-      position: message.hasPosition() ? message.position : null,
-      color: message.hasColor() ? message.color : null,
+      displayPosition: message.displayPosition,
+      displayColor: message.displayColor,
+      version: message.version.toInt(),
+      editedAt: message.editedAt.toInt(),
+      deletedAt: message.deletedAt.toInt(),
+      status: message.status.value,
+      images: message.images.map(storedImageFromChatImage).toList(),
+    );
+  }
+
+  ChatReadStateInfo _chatReadStateFromProto(
+    client.ChatReadStateResponse response,
+  ) {
+    final state = response.state;
+    return ChatReadStateInfo(
+      roomId: state.roomId,
+      userId: state.userId,
+      lastReadMessageId: state.lastReadMessageId,
+      lastReadEventId: state.lastReadEventId,
+      lastReadEventSequence: state.lastReadEventSequence.toInt(),
+      updatedAt: state.updatedAt.toInt(),
+      unreadCount: response.unreadCount.toInt(),
     );
   }
 

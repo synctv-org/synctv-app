@@ -39,7 +39,9 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   bool _isLoggedIn = false;
   WUser? _currentUser;
   StreamSubscription? _authErrorSubscription;
+  final Set<String> _joiningRoomIds = <String>{};
   final TextEditingController _roomSearchController = TextEditingController();
+  bool _modalOpen = false;
 
   @override
   void initState() {
@@ -50,7 +52,9 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
           _isLoggedIn = false;
           _currentUser = null;
         });
-        _showLoginDialog();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _showLoginDialog();
+        });
       }
     });
     _checkLoginAndLoadData();
@@ -96,6 +100,16 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   }
 
   Future<void> _loadRooms({bool silent = false}) async {
+    if (WatchTogetherService.activeServer == null) {
+      if (mounted) {
+        setState(() {
+          _rooms = const [];
+          _roomsTotal = 0;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
     if (!_isLoggedIn && _roomFeed == _RoomFeed.mine) {
       setState(() {
         _rooms = const [];
@@ -192,23 +206,21 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   }
 
   Future<bool> _showLoginDialog({String? guestRoomId}) async {
-    final result = await showGeneralDialog<bool>(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.black.withValues(alpha: 0.48),
-      transitionDuration: const Duration(milliseconds: 180),
-      pageBuilder: (context, _, __) => Material(
-        type: MaterialType.transparency,
-        child: AuthPanel(initialGuestRoomId: guestRoomId),
-      ),
-      transitionBuilder: (context, animation, _, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          child: child,
-        );
-      },
-    );
+    if (_modalOpen) return false;
+    _modalOpen = true;
+    final bool? result;
+    try {
+      result = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        barrierColor: Colors.black.withValues(alpha: 0.48),
+        builder: (context) => AuthPanel(initialGuestRoomId: guestRoomId),
+      );
+    } finally {
+      _modalOpen = false;
+    }
     if (result == true) {
       if (mounted) {
         setState(() {
@@ -224,22 +236,38 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   }
 
   void _showCreateRoomDialog() {
-    showCreateRoomDialog(
-      context: context,
-      width: 300,
-      onCreated: (room) async {
-        if (mounted) {
-          _handleJoinRoom(room);
-        }
-      },
-    );
+    if (_modalOpen) return;
+    _modalOpen = true;
+    () async {
+      try {
+        await showCreateRoomDialog(
+          context: context,
+          width: 300,
+          onCreated: (room) async {
+            if (mounted) {
+              _handleJoinRoom(room);
+            }
+          },
+        );
+      } finally {
+        _modalOpen = false;
+      }
+    }();
   }
 
   void _showJoinRoomDialog() {
-    showJoinRoomDialog(
-      context: context,
-      onSubmitted: _joinRoomById,
-    );
+    if (_modalOpen) return;
+    _modalOpen = true;
+    () async {
+      try {
+        await showJoinRoomDialog(
+          context: context,
+          onSubmitted: _joinRoomById,
+        );
+      } finally {
+        _modalOpen = false;
+      }
+    }();
   }
 
   Future<void> _joinRoomById(String value) async {
@@ -306,17 +334,24 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   }
 
   void _showServerSettingsDialog() {
-    showServerSettingsDialog(context: context).then((changed) {
-      if (!mounted || changed != true) return;
-      final hasSession = WatchTogetherService.hasRecoverableSession;
-      setState(() {
-        _isLoggedIn = hasSession;
-        if (!hasSession) _currentUser = null;
-        _roomPage = 1;
-      });
-      _loadRooms(silent: false);
-      if (hasSession) _fetchUserInfo();
-    });
+    if (_modalOpen) return;
+    _modalOpen = true;
+    () async {
+      try {
+        final changed = await showServerSettingsDialog(context: context);
+        if (!mounted || changed != true) return;
+        final hasSession = WatchTogetherService.hasRecoverableSession;
+        setState(() {
+          _isLoggedIn = hasSession;
+          if (!hasSession) _currentUser = null;
+          _roomPage = 1;
+        });
+        _loadRooms(silent: false);
+        if (hasSession) _fetchUserInfo();
+      } finally {
+        _modalOpen = false;
+      }
+    }();
   }
 
   Future<void> _handleLogout() async {
@@ -342,49 +377,60 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
           _currentUser = null;
           _rooms = [];
           _roomsTotal = 0;
+          _roomFeed = _RoomFeed.public;
+          _roomPage = 1;
         });
         MessageUtils.showSuccess(context, '已退出登录');
+        _loadRooms(silent: false);
       }
     }
   }
 
   Future<void> _handleJoinRoom(WRoom room) async {
+    if (_joiningRoomIds.contains(room.roomId)) return;
+    _joiningRoomIds.add(room.roomId);
     String password = '';
 
-    if (!_isLoggedIn) {
-      final authenticated = await _showLoginDialog(guestRoomId: room.roomId);
-      if (!authenticated || !mounted) return;
-    }
-
-    if (room.needPassword) {
-      final result = await showRoomPasswordDialog(
-        context: context,
-        roomName: room.roomName,
-      );
-
-      if (result == null) return;
-      if (result.isEmpty) {
-        if (mounted) MessageUtils.showWarning(context, '请输入密码');
-        return;
-      }
-      password = result;
-    }
-
     try {
+      if (!_isLoggedIn) {
+        final authenticated = await _showLoginDialog(guestRoomId: room.roomId);
+        if (!authenticated || !mounted) return;
+      }
+
+      if (room.needPassword) {
+        final result = await showRoomPasswordDialog(
+          context: context,
+          roomName: room.roomName,
+        );
+
+        if (result == null) return;
+        if (result.isEmpty) {
+          if (mounted) MessageUtils.showWarning(context, '请输入密码');
+          return;
+        }
+        password = result;
+      }
+
       await WatchTogetherService.joinRoom(room.roomId, password);
       if (mounted) {
         _navigateToRoom(room);
       }
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '加入房间失败: $e');
+    } finally {
+      _joiningRoomIds.remove(room.roomId);
     }
   }
 
   void _navigateToRoom(WRoom room) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => DesktopRoomScreen(room: room),
+      PageRouteBuilder(
+        opaque: true,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            DesktopRoomScreen(room: room),
       ),
     );
   }
@@ -432,76 +478,115 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
         child: Material(
           color: theme.appBarTheme.backgroundColor,
           elevation: 0,
-          child: Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onLongPress: _showServerSettingsDialog,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.live_tv_rounded,
-                                color: theme.colorScheme.primary,
-                              ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 760;
+              final extraCompact = constraints.maxWidth < 560;
+              final horizontalPadding = compact ? 16.0 : 28.0;
+              return Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: horizontalPadding),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onLongPress: _showServerSettingsDialog,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.live_tv_rounded,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                                if (!extraCompact) ...[
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    '看搭子',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      color: isDark
+                                          ? Colors.white
+                                          : const Color(0xFF111827),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            Text(
-                              '看搭子',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF111827),
-                              ),
+                          ),
+                          const Spacer(),
+                          if (!_isLoggedIn && compact)
+                            FilledButton.tonalIcon(
+                              onPressed: _showServerSettingsDialog,
+                              icon: const Icon(Icons.dns_rounded, size: 18),
+                              label: const Text('服务器'),
+                            )
+                          else
+                            IconButton.filledTonal(
+                              tooltip: '服务器设置',
+                              onPressed: _showServerSettingsDialog,
+                              icon: const Icon(Icons.dns_rounded),
                             ),
-                          ],
-                        ),
+                          SizedBox(width: compact ? 8 : 12),
+                          if (_isLoggedIn) ...[
+                            if (compact)
+                              IconButton.filledTonal(
+                                tooltip: '加入房间',
+                                onPressed: _showJoinRoomDialog,
+                                icon: const Icon(Icons.login_rounded),
+                              )
+                            else
+                              OutlinedButton.icon(
+                                onPressed: _showJoinRoomDialog,
+                                icon: const Icon(Icons.login_rounded, size: 18),
+                                label: const Text('加入房间'),
+                              ),
+                            SizedBox(width: compact ? 8 : 10),
+                            if (compact)
+                              IconButton.filled(
+                                tooltip: '创建房间',
+                                onPressed: _showCreateRoomDialog,
+                                icon: const Icon(Icons.add_rounded),
+                              )
+                            else
+                              FilledButton.icon(
+                                onPressed: _showCreateRoomDialog,
+                                icon: const Icon(Icons.add_rounded, size: 18),
+                                label: const Text('创建房间'),
+                              ),
+                            SizedBox(width: compact ? 8 : 12),
+                            compact
+                                ? _buildCompactAccountMenu(theme, isAdmin)
+                                : _buildAccountMenu(theme, isAdmin, isDark),
+                          ] else if (compact)
+                            FilledButton.icon(
+                              onPressed: _showLoginDialog,
+                              icon: const Icon(Icons.login_rounded, size: 18),
+                              label: const Text('登录'),
+                            )
+                          else
+                            FilledButton.icon(
+                              onPressed: _showLoginDialog,
+                              icon: const Icon(Icons.login_rounded, size: 18),
+                              label: const Text('登录'),
+                            ),
+                        ],
                       ),
-                      const Spacer(),
-                      IconButton.filledTonal(
-                        tooltip: '服务器设置',
-                        onPressed: _showServerSettingsDialog,
-                        icon: const Icon(Icons.dns_rounded),
-                      ),
-                      const SizedBox(width: 12),
-                      if (_isLoggedIn) ...[
-                        OutlinedButton.icon(
-                          onPressed: _showJoinRoomDialog,
-                          icon: const Icon(Icons.login_rounded, size: 18),
-                          label: const Text('加入房间'),
-                        ),
-                        const SizedBox(width: 10),
-                        FilledButton.icon(
-                          onPressed: _showCreateRoomDialog,
-                          icon: const Icon(Icons.add_rounded, size: 18),
-                          label: const Text('创建房间'),
-                        ),
-                        const SizedBox(width: 12),
-                        _buildAccountMenu(theme, isAdmin, isDark),
-                      ] else
-                        FilledButton.icon(
-                          onPressed: _showLoginDialog,
-                          icon: const Icon(Icons.login_rounded, size: 18),
-                          label: const Text('登录'),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -517,6 +602,83 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildCompactAccountMenu(ThemeData theme, bool isAdmin) {
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 46),
+      tooltip: '账号菜单',
+      child: CircleAvatar(
+        radius: 18,
+        backgroundColor: theme.colorScheme.primary,
+        child: Text(
+          _currentUser?.username.isNotEmpty == true
+              ? _currentUser!.username[0].toUpperCase()
+              : '?',
+          style: const TextStyle(color: Colors.white, fontSize: 13),
+        ),
+      ),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'account',
+          child: Row(
+            children: [
+              Icon(Icons.account_circle_rounded, size: 18),
+              SizedBox(width: 8),
+              Text('账号中心'),
+            ],
+          ),
+        ),
+        if (isAdmin)
+          const PopupMenuItem(
+            value: 'admin',
+            child: Row(
+              children: [
+                Icon(Icons.admin_panel_settings_rounded, size: 18),
+                SizedBox(width: 8),
+                Text('管理员设置'),
+              ],
+            ),
+          ),
+        const PopupMenuItem(
+          value: 'server',
+          child: Row(
+            children: [
+              Icon(Icons.dns_rounded, size: 18),
+              SizedBox(width: 8),
+              Text('服务器设置'),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              Icon(Icons.logout_rounded, color: Colors.red, size: 18),
+              SizedBox(width: 8),
+              Text('退出登录', style: TextStyle(color: Colors.red)),
+            ],
+          ),
+        ),
+      ],
+      onSelected: (value) {
+        switch (value) {
+          case 'account':
+            _showAccountCenter();
+            break;
+          case 'admin':
+            _showAdminSettingsPage();
+            break;
+          case 'server':
+            _showServerSettingsDialog();
+            break;
+          case 'logout':
+            _handleLogout();
+            break;
+        }
+      },
     );
   }
 
@@ -732,6 +894,7 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
 
   Widget _buildRoomGrid() {
     final theme = Theme.of(context);
+    final hasServer = WatchTogetherService.activeServer != null;
     return Material(
       color: theme.colorScheme.surface,
       shape: RoundedRectangleBorder(
@@ -745,22 +908,24 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.meeting_room_outlined,
+                    hasServer ? Icons.meeting_room_outlined : Icons.dns_rounded,
                     size: 56,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    '暂无房间',
+                    hasServer ? '暂无房间' : '添加服务器后开始使用',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _roomFeed == _RoomFeed.mine
-                        ? '加入或创建房间后会出现在这里'
-                        : '当前筛选下没有可显示的房间',
+                    hasServer
+                        ? (_roomFeed == _RoomFeed.mine
+                            ? '加入或创建房间后会出现在这里'
+                            : '当前筛选下没有可显示的房间')
+                        : '输入服务器地址即可浏览公开房间、登录账号和加入观影房间。',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color:
                           theme.colorScheme.onSurface.withValues(alpha: 0.58),
@@ -768,9 +933,12 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
                   ),
                   const SizedBox(height: 20),
                   FilledButton.tonalIcon(
-                    onPressed: () => _loadRooms(silent: false),
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('刷新'),
+                    onPressed: hasServer
+                        ? () => _loadRooms(silent: false)
+                        : _showServerSettingsDialog,
+                    icon: Icon(
+                        hasServer ? Icons.refresh_rounded : Icons.add_link),
+                    label: Text(hasServer ? '刷新' : '添加服务器'),
                   ),
                 ],
               ),

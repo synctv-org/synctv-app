@@ -11,6 +11,7 @@ import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/services/oauth2_callback_parser.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_domain_services.dart';
+import 'package:synctv_app/services/synctv_file_upload_service.dart';
 import 'package:synctv_app/services/synctv_runtime_service.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
@@ -27,6 +28,7 @@ import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
 export 'package:synctv_app/models/admin_models.dart';
 export 'package:synctv_app/models/provider_models.dart';
 export 'package:synctv_app/models/room_media_models.dart';
+export 'package:synctv_app/services/synctv_file_upload_service.dart';
 
 class WatchTogetherService {
   static String get baseUrl => _runtime.baseUrl;
@@ -58,6 +60,7 @@ class WatchTogetherService {
 
   static Future<void> setBaseUrl(String url) async {
     await _runtime.setBaseUrl(url);
+    _domains.cache.clear();
   }
 
   static Future<SyncTvServerProfile> addServer(String url) async {
@@ -66,6 +69,7 @@ class WatchTogetherService {
 
   static Future<void> activateServer(String serverId) async {
     await _runtime.activateServer(serverId);
+    _domains.cache.clear();
   }
 
   static Future<void> activateServerEndpoint(
@@ -73,6 +77,7 @@ class WatchTogetherService {
     String endpoint,
   ) async {
     await _runtime.activateServerEndpoint(serverId, endpoint);
+    _domains.cache.clear();
   }
 
   static Future<void> removeServer(String serverId) async {
@@ -95,10 +100,12 @@ class WatchTogetherService {
 
   static Future<void> logout() async {
     await _runtime.logout();
+    _domains.cache.clear();
   }
 
   static Future<void> closeAccount() async {
     await _runtime.closeAccount();
+    _domains.cache.clear();
   }
 
   static Future<AuthResult> confirmEmailLoginResult(
@@ -228,8 +235,10 @@ class WatchTogetherService {
     );
   }
 
-  static Future<PublicSettingsInfo> getPublicSettings() async {
-    return _domains.publicRooms.getPublicSettings();
+  static Future<PublicSettingsInfo> getPublicSettings({
+    bool refresh = false,
+  }) async {
+    return _domains.publicRooms.getPublicSettings(refresh: refresh);
   }
 
   static Future<WUser> createGuestToken(String roomId) async {
@@ -237,7 +246,11 @@ class WatchTogetherService {
   }
 
   static Future<List<OAuth2ProviderOption>> listOAuth2Providers() async {
-    return _domains.auth.listOAuth2Providers();
+    return _domains.cache.get<List<OAuth2ProviderOption>>(
+      'account:oauth2:providers',
+      ttl: const Duration(minutes: 5),
+      loader: _domains.auth.listOAuth2Providers,
+    );
   }
 
   static Future<OAuth2AuthorizationStart> startOAuth2Login(
@@ -268,12 +281,34 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WUser> getMe() async {
-    return _domains.account.getMe();
+  static Future<WUser> getMe({bool refresh = false}) async {
+    return _domains.account.getMe(refresh: refresh);
   }
 
   static Future<WUser> updateUsername(String username) async {
     return _domains.account.updateUsername(username);
+  }
+
+  static Future<WUser> updateUserAvatar(LocalImageUpload upload) async {
+    final user = await _domains.fileUploads.updateUserAvatar(upload);
+    final mapped = _api.mapUser(user);
+    _domains.cache.put(
+      'account:me',
+      mapped,
+      ttl: const Duration(minutes: 2),
+    );
+    return mapped;
+  }
+
+  static Future<WUser> clearUserAvatar() async {
+    final user = await _domains.fileUploads.clearUserAvatar();
+    final mapped = _api.mapUser(user);
+    _domains.cache.put(
+      'account:me',
+      mapped,
+      ttl: const Duration(minutes: 2),
+    );
+    return mapped;
   }
 
   static Future<String> startEmailBind(String email) async {
@@ -291,8 +326,10 @@ class WatchTogetherService {
     return _domains.account.unbindEmail();
   }
 
-  static Future<AccountPreferences> getAccountPreferences() async {
-    return _domains.account.getAccountPreferences();
+  static Future<AccountPreferences> getAccountPreferences({
+    bool refresh = false,
+  }) async {
+    return _domains.account.getAccountPreferences(refresh: refresh);
   }
 
   static Future<AccountPreferences> updateAccountPreferences({
@@ -315,6 +352,7 @@ class WatchTogetherService {
         client_enum.NotificationListSortBy.NOTIFICATION_LIST_SORT_BY_CREATED_AT,
     client_enum.SortDirection sortDirection =
         client_enum.SortDirection.SORT_DIRECTION_DESC,
+    bool refresh = false,
   }) async {
     return _domains.notifications.listNotifications(
       page: page,
@@ -324,6 +362,7 @@ class WatchTogetherService {
       search: search,
       sortBy: sortBy,
       sortDirection: sortDirection,
+      refresh: refresh,
     );
   }
 
@@ -352,8 +391,10 @@ class WatchTogetherService {
     await _domains.notifications.deleteAllReadNotifications();
   }
 
-  static Future<List<PasskeyCredentialInfo>> listPasskeys() async {
-    return _domains.account.listPasskeys();
+  static Future<List<PasskeyCredentialInfo>> listPasskeys({
+    bool refresh = false,
+  }) async {
+    return _domains.account.listPasskeys(refresh: refresh);
   }
 
   static Future<void> deletePasskey(String credentialId) async {
@@ -433,7 +474,11 @@ class WatchTogetherService {
   }
 
   static Future<List<OAuth2LinkedAccount>> getLinkedOAuth2Accounts() async {
-    return _domains.auth.getLinkedOAuth2Accounts();
+    return _domains.cache.get<List<OAuth2LinkedAccount>>(
+      'account:oauth2:linked',
+      ttl: const Duration(minutes: 2),
+      loader: _domains.auth.getLinkedOAuth2Accounts,
+    );
   }
 
   static Future<OAuth2AuthorizationStart> startOAuth2Bind(
@@ -456,10 +501,12 @@ class WatchTogetherService {
       code: code,
       state: state,
     );
+    _domains.cache.invalidate('account:oauth2:linked');
   }
 
   static Future<void> unlinkOAuth2Account(OAuth2LinkedAccount account) async {
     await _domains.auth.unlinkOAuth2Account(account);
+    _domains.cache.invalidate('account:oauth2:linked');
   }
 
   static Future<RoomsPage> getRoomsPage({
@@ -493,16 +540,33 @@ class WatchTogetherService {
         client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
     client_enum.SortDirection sortDirection =
         client_enum.SortDirection.SORT_DIRECTION_DESC,
+    bool refresh = false,
   }) async {
-    return _domains.publicRooms.getMyRoomsPage(
-      page: page,
-      pageSize: pageSize,
-      search: search,
-      status: status,
-      isBanned: isBanned,
-      relation: relation,
-      sortBy: sortBy,
-      sortDirection: sortDirection,
+    final key = [
+      'account:rooms',
+      page,
+      pageSize,
+      search ?? '',
+      status.value,
+      isBanned,
+      relation.value,
+      sortBy.value,
+      sortDirection.value,
+    ].join('|');
+    return _domains.cache.get<RoomsPage>(
+      key,
+      ttl: const Duration(seconds: 45),
+      refresh: refresh,
+      loader: () => _domains.publicRooms.getMyRoomsPage(
+        page: page,
+        pageSize: pageSize,
+        search: search,
+        status: status,
+        isBanned: isBanned,
+        relation: relation,
+        sortBy: sortBy,
+        sortDirection: sortDirection,
+      ),
     );
   }
 
@@ -519,19 +583,23 @@ class WatchTogetherService {
     String? password,
     String? description,
   }) async {
-    return _domains.publicRooms.createRoom(
+    final room = await _domains.publicRooms.createRoom(
       name,
       password: password,
       description: description,
     );
+    _domains.cache.invalidatePrefix('account:rooms');
+    return room;
   }
 
   static Future<void> deleteRoom(String roomId) async {
     await _domains.publicRooms.deleteRoom(roomId);
+    _domains.cache.invalidatePrefix('account:rooms');
   }
 
   static Future<void> joinRoom(String roomId, String password) async {
     await _domains.publicRooms.joinRoom(roomId, password);
+    _domains.cache.invalidatePrefix('account:rooms');
   }
 
   static Future<WRoom> getRoomInfo(String roomId) async {
@@ -724,6 +792,7 @@ class WatchTogetherService {
     String sourceProvider = '',
     Map<String, dynamic> sourceConfig = const {},
     String providerInstanceName = '',
+    String description = '',
   }) async {
     return _domains.roomMedia.createPlaylist(
       roomId,
@@ -732,6 +801,7 @@ class WatchTogetherService {
       sourceProvider: sourceProvider,
       sourceConfig: sourceConfig,
       providerInstanceName: providerInstanceName,
+      description: description,
     );
   }
 
@@ -739,12 +809,46 @@ class WatchTogetherService {
     String roomId,
     String playlistId, {
     required String name,
+    String? description,
   }) async {
     return _domains.roomMedia.updatePlaylist(
       roomId,
       playlistId,
       name: name,
+      description: description,
     );
+  }
+
+  static Future<WRoom> updateRoomCover(
+    String roomId,
+    LocalImageUpload upload,
+  ) async {
+    final room = await _domains.fileUploads.updateRoomCover(roomId, upload);
+    return _api.mapRoom(room);
+  }
+
+  static Future<WRoom> clearRoomCover(String roomId) async {
+    final room = await _domains.fileUploads.clearRoomCover(roomId);
+    return _api.mapRoom(room);
+  }
+
+  static Future<WMovie> updatePlaylistCover(
+    String roomId,
+    String playlistId,
+    LocalImageUpload upload,
+  ) async {
+    final playlist = await _domains.fileUploads
+        .updatePlaylistCover(roomId, playlistId, upload);
+    return _api.mapPlaylist(playlist);
+  }
+
+  static Future<WMovie> clearPlaylistCover(
+    String roomId,
+    String playlistId,
+  ) async {
+    final playlist =
+        await _domains.fileUploads.clearPlaylistCover(roomId, playlistId);
+    return _api.mapPlaylist(playlist);
   }
 
   static Future<WMovie> movePlaylist(
@@ -773,8 +877,29 @@ class WatchTogetherService {
     String roomId,
     String mediaId, {
     required String name,
+    String? description,
   }) async {
-    return _domains.roomMedia.editMedia(roomId, mediaId, name: name);
+    return _domains.roomMedia.editMedia(
+      roomId,
+      mediaId,
+      name: name,
+      description: description,
+    );
+  }
+
+  static Future<WMovie> updateVideoCover(
+    String roomId,
+    String mediaId,
+    LocalImageUpload upload,
+  ) async {
+    final media =
+        await _domains.fileUploads.updateVideoCover(roomId, mediaId, upload);
+    return _api.mapMedia(media);
+  }
+
+  static Future<WMovie> clearVideoCover(String roomId, String mediaId) async {
+    final media = await _domains.fileUploads.clearVideoCover(roomId, mediaId);
+    return _api.mapMedia(media);
   }
 
   static Future<WMovie> getMedia(String roomId, String mediaId) async {
@@ -815,6 +940,105 @@ class WatchTogetherService {
       limit: limit,
       cursor: cursor,
     );
+  }
+
+  static Future<StoredImageInfo> uploadChatImage(
+    String roomId,
+    LocalImageUpload upload,
+  ) async {
+    final image = await _domains.fileUploads.uploadChatImage(roomId, upload);
+    return _domains.roomMedia.storedImageFromChatImage(image);
+  }
+
+  static Future<RoomChatMessageInfo> sendChatMessage(
+    String roomId, {
+    String content = '',
+    List<StoredImageInfo> images = const [],
+  }) async {
+    return _domains.roomMedia.sendChatMessage(
+      roomId,
+      content: content,
+      images: images,
+    );
+  }
+
+  static Future<RoomChatMessageInfo> editChatMessage(
+    String roomId,
+    String messageId, {
+    required String content,
+    required int expectedVersion,
+  }) {
+    return _domains.roomMedia.editChatMessage(
+      roomId,
+      messageId,
+      content: content,
+      expectedVersion: expectedVersion,
+    );
+  }
+
+  static Future<RoomChatMessageInfo> deleteChatMessage(
+    String roomId,
+    String messageId, {
+    required int expectedVersion,
+    String reason = '',
+  }) {
+    return _domains.roomMedia.deleteChatMessage(
+      roomId,
+      messageId,
+      expectedVersion: expectedVersion,
+      reason: reason,
+    );
+  }
+
+  static Future<ChatMessageContextInfo> getChatMessageContext(
+    String roomId,
+    String messageId, {
+    int beforeLimit = 20,
+    int afterLimit = 20,
+    bool includeDeleted = false,
+  }) {
+    return _domains.roomMedia.getChatMessageContext(
+      roomId,
+      messageId,
+      beforeLimit: beforeLimit,
+      afterLimit: afterLimit,
+      includeDeleted: includeDeleted,
+    );
+  }
+
+  static Future<List<RoomChatMessageInfo>> getChatPlaybackMessages(
+    String roomId, {
+    String playbackMediaId = '',
+    String playbackPlaylistId = '',
+    List<int> playbackTarget = const [],
+    double positionSeconds = 0,
+    double beforeSeconds = 30,
+    double afterSeconds = 30,
+    int limit = 50,
+    bool includeDeleted = false,
+  }) {
+    return _domains.roomMedia.getChatPlaybackMessages(
+      roomId,
+      playbackMediaId: playbackMediaId,
+      playbackPlaylistId: playbackPlaylistId,
+      playbackTarget: playbackTarget,
+      positionSeconds: positionSeconds,
+      beforeSeconds: beforeSeconds,
+      afterSeconds: afterSeconds,
+      limit: limit,
+      includeDeleted: includeDeleted,
+    );
+  }
+
+  static Future<ChatReadStateInfo> markChatRead(
+    String roomId,
+    String messageId,
+  ) {
+    return _domains.roomMedia.markChatRead(roomId, messageId);
+  }
+
+  static Future<ChatReadStateInfo> getChatReadState(String roomId) {
+    return _domains.roomMedia.getChatReadState(roomId);
   }
 
   static Future<String> addDirectUrlMedia(
@@ -1021,8 +1245,7 @@ class WatchTogetherService {
   static Future<AlistLoginInfo> loginAList(
     String host,
     String username,
-    String password, {
-    String hashedPassword = '',
+    String hashedPassword, {
     String otpCode = '',
     String otpSecret = '',
     String instanceName = '',
@@ -1030,8 +1253,7 @@ class WatchTogetherService {
     return _domains.providers.loginAList(
       host,
       username,
-      password,
-      hashedPassword: hashedPassword,
+      hashedPassword,
       otpCode: otpCode,
       otpSecret: otpSecret,
       instanceName: instanceName,
@@ -1232,8 +1454,11 @@ class WatchTogetherService {
     return _domains.roomManagement.updateRoomPassword(roomId, password);
   }
 
-  static Future<WRoomSettings> getRoomSettings(String roomId) async {
-    return _domains.roomManagement.getRoomSettings(roomId);
+  static Future<WRoomSettings> getRoomSettings(
+    String roomId, {
+    bool refresh = false,
+  }) async {
+    return _domains.roomManagement.getRoomSettings(roomId, refresh: refresh);
   }
 
   static Future<void> updateRoomSettings(
@@ -1491,12 +1716,17 @@ class WatchTogetherService {
     return _domains.admin.setAdmin(userId, isAdmin);
   }
 
-  static Future<List<AdminSettingsGroup>> adminGetAllSettings() {
-    return _domains.admin.getAllSettings();
+  static Future<List<AdminSettingsGroup>> adminGetAllSettings({
+    bool refresh = false,
+  }) {
+    return _domains.admin.getAllSettings(refresh: refresh);
   }
 
-  static Future<AdminSettingsGroup> adminGetSettingsGroup(String group) {
-    return _domains.admin.getSettingsGroup(group);
+  static Future<AdminSettingsGroup> adminGetSettingsGroup(
+    String group, {
+    bool refresh = false,
+  }) {
+    return _domains.admin.getSettingsGroup(group, refresh: refresh);
   }
 
   static Future<void> adminBanUser(
@@ -1572,8 +1802,11 @@ class WatchTogetherService {
     return _domains.admin.getRoom(roomId);
   }
 
-  static Future<WRoomSettings> adminGetRoomSettings(String roomId) {
-    return _domains.admin.getRoomSettings(roomId);
+  static Future<WRoomSettings> adminGetRoomSettings(
+    String roomId, {
+    bool refresh = false,
+  }) {
+    return _domains.admin.getRoomSettings(roomId, refresh: refresh);
   }
 
   static Future<void> adminUpdateRoomSettings(

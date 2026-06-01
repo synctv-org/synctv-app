@@ -13,7 +13,9 @@ import 'package:synctv_app/services/realtime_event_log_preferences.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/services/room_realtime_connection.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/utils/local_image_picker.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
+import 'package:synctv_app/utils/playback_error_messages.dart';
 import 'package:synctv_app/pages/mobile/room_settings_page.dart';
 import 'package:synctv_app/widgets/add_movie_dialog.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
@@ -44,12 +46,15 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
   final ScrollController _chatScrollController = ScrollController();
   final List<RoomRealtimeChatEntry> _messages = [];
   final List<RealtimeEventLogEntry> _realtimeEvents = [];
+  PickedLocalImage? _selectedChatImage;
+  bool _sendingChatMessage = false;
   final StreamController<RoomRealtimeMessage> _realtimeMessageBus =
       StreamController<RoomRealtimeMessage>.broadcast();
   final StreamController<RealtimeEventLogEntry> _realtimeEventBus =
       StreamController<RealtimeEventLogEntry>.broadcast();
   final StreamController<void> _realtimeReconnectBus =
       StreamController<void>.broadcast();
+  String _lastChatEventId = '';
   Timer? _syncTimer;
   WPlaybackStatus? _currentStatus;
   RoomRealtimeConnection? _channel;
@@ -207,6 +212,23 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
     }
   }
 
+  Future<void> _loadCurrentPlayback() async {
+    try {
+      final status = await WatchTogetherService.getCurrentMovie(
+        widget.room.roomId,
+      );
+      if (!mounted) return;
+      await _applyPlaybackStatus(
+        _mergePlaybackStatus(
+          status,
+          incomingHasTiming: status.movie?.url.isEmpty != true,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Load current playback error: $e');
+    }
+  }
+
   void _sortMembers(List<WUser> members) {
     members.sort((a, b) {
       if (a.id == widget.room.creatorId) return -1;
@@ -284,13 +306,16 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
       await _channel?.sink.close();
       _channel = RoomRealtimeConnection.connect(
         widget.room.roomId,
-        initialMessages: RoomRealtimeCodec.encodeInitialObservations(),
+        initialMessages: RoomRealtimeCodec.encodeInitialObservations(
+          afterChatEventId: _lastChatEventId,
+        ),
         onOutgoing: _recordRealtimeOutgoing,
         onIncoming: _recordRealtimeIncoming,
       );
       if (!_realtimeReconnectBus.isClosed) {
         _realtimeReconnectBus.add(null);
       }
+      unawaited(_loadCurrentPlayback());
 
       _realtimeSubscription = _channel!.stream.listen(
         (data) {
@@ -381,10 +406,14 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
 
     if (type == RoomRealtimeMessageKind.chat) {
       final content = message.chatContent;
-      final username =
-          message.senderUsername.isEmpty ? 'Unknown' : message.senderUsername;
+      final chatEntry = _chatEntryFromRealtimeMessage(message);
+      final username = chatEntry.username;
+      if (message.chatEventId.isNotEmpty) {
+        _lastChatEventId = message.chatEventId;
+      }
 
-      if (_videoPlayerController != null &&
+      if (message.isChatCreated &&
+          _videoPlayerController != null &&
           _videoPlayerController!.value.isInitialized) {
         final currentPos = _videoPlayerController!.value.position;
         final danmaku = DanmakuItem(
@@ -399,8 +428,9 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
 
       if (mounted) {
         setState(() {
-          _messages.appendUnique(
-            RoomRealtimeChatEntry.fromMessage(message),
+          _messages.applyRealtimeEvent(
+            chatEntry,
+            eventKind: message.chatEventKind,
             maxEntries: 100,
           );
         });
@@ -443,7 +473,11 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
       if (!_isPrimaryResourceMessage(message, 'playlist_items')) return;
       final mediaLibrary = message.mediaLibrary;
       if (mediaLibrary == null) {
-        _reportInvalidRealtimePayload('播放列表');
+        if (message.resourceObserveId.isEmpty) {
+          _observeCurrentPlaylist();
+        } else {
+          _reportInvalidRealtimePayload('播放列表');
+        }
       } else {
         _applyMediaLibrary(mediaLibrary);
       }
@@ -491,6 +525,32 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
         }
       }
     }
+  }
+
+  RoomRealtimeChatEntry _chatEntryFromRealtimeMessage(
+    RoomRealtimeMessage message,
+  ) {
+    final currentUser = _currentUser;
+    final isCurrentUserMessage = currentUser != null &&
+        message.senderUserId.isNotEmpty &&
+        message.senderUserId == currentUser.id;
+    final username = message.senderUsername.isNotEmpty
+        ? message.senderUsername
+        : isCurrentUserMessage
+            ? currentUser.username
+            : 'Unknown';
+    return RoomRealtimeChatEntry(
+      id: message.chatId,
+      userId: message.senderUserId,
+      username: username,
+      content: message.chatContent,
+      images: message.images,
+      timestampMillis: message.timestampMillis == 0
+          ? DateTime.now().millisecondsSinceEpoch
+          : message.timestampMillis,
+      isDeleted: message.isChatDeleted,
+      isEdited: message.isChatEdited,
+    );
   }
 
   bool _isPrimaryResourceMessage(
@@ -575,46 +635,56 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
 
   Future<void> _performSync(
       bool isPlaying, double currentTime, double playbackRate) async {
-    if (_videoPlayerController == null ||
-        !_videoPlayerController!.value.isInitialized) {
+    final controller = _videoPlayerController;
+    if (controller == null || !controller.value.isInitialized) {
       return;
     }
 
     _isSyncing = true;
 
     try {
-      if ((_videoPlayerController!.value.playbackSpeed - playbackRate).abs() >
-          0.1) {
-        await _videoPlayerController!.setPlaybackSpeed(playbackRate);
+      if ((controller.value.playbackSpeed - playbackRate).abs() > 0.1) {
+        await controller.setPlaybackSpeed(playbackRate);
+        if (!mounted || !identical(_videoPlayerController, controller)) return;
         _lastRate = playbackRate;
       }
 
-      final currentPos =
-          _videoPlayerController!.value.position.inMilliseconds / 1000.0;
+      final currentPos = controller.value.position.inMilliseconds / 1000.0;
       final targetTime = _boundedPlaybackTime(currentTime);
       final shouldStopAtEnd = _isPlaybackTimePastDuration(currentTime);
       final targetIsPlaying = shouldStopAtEnd ? false : isPlaying;
-      if (!targetIsPlaying && _videoPlayerController!.value.isPlaying) {
-        await _videoPlayerController!.pause();
+      if (!targetIsPlaying && controller.value.isPlaying) {
+        await controller.pause();
+        if (!mounted || !identical(_videoPlayerController, controller)) return;
         _lastPlaying = false;
       }
       if ((currentPos - targetTime).abs() > 1.0) {
-        await _videoPlayerController!
+        await controller
             .seekTo(Duration(milliseconds: (targetTime * 1000).toInt()));
+        if (!mounted || !identical(_videoPlayerController, controller)) return;
         _lastPosition = targetTime;
       }
 
-      if (targetIsPlaying && !_videoPlayerController!.value.isPlaying) {
-        await _videoPlayerController!.play();
+      if (targetIsPlaying && controller.value.isPlaying == false) {
+        await controller.play();
+        if (!mounted || !identical(_videoPlayerController, controller)) return;
         _lastPlaying = true;
       }
     } catch (e) {
-      debugPrint('Sync execution error: $e');
+      if (!_isDisposedVideoControllerError(e)) {
+        debugPrint('Sync execution error: $e');
+      }
     } finally {
       Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted) _isSyncing = false;
       });
     }
+  }
+
+  bool _isDisposedVideoControllerError(Object error) {
+    return error
+        .toString()
+        .contains('VideoPlayerController was used after being disposed');
   }
 
   double _boundedPlaybackTime(double currentTime) {
@@ -856,11 +926,12 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
     } catch (e) {
       newController.dispose();
       if (mounted) {
+        final message = playbackLoadErrorMessage(e);
         setState(() {
           _isVideoLoading = false;
-          _videoError = '视频加载失败';
+          _videoError = message;
         });
-        MessageUtils.showError(context, '视频加载失败');
+        MessageUtils.showError(context, message);
       }
     }
   }
@@ -1486,6 +1557,7 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
                     final name = msg.username;
                     final content = msg.content;
                     final timeStr = msg.timeLabel;
+                    final images = msg.images;
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -1538,10 +1610,25 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
                                           offset: const Offset(0, 2)),
                                     ],
                                   ),
-                                  child: Text(content,
-                                      style: TextStyle(
-                                          color: theme
-                                              .textTheme.bodyMedium?.color)),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (content.isNotEmpty)
+                                        Text(
+                                          content,
+                                          style: TextStyle(
+                                            color: theme
+                                                .textTheme.bodyMedium?.color,
+                                          ),
+                                        ),
+                                      if (images.isNotEmpty) ...[
+                                        if (content.isNotEmpty)
+                                          const SizedBox(height: 8),
+                                        _buildChatImageGrid(images),
+                                      ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -1576,20 +1663,53 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
                 child: ChatInputArea(
                   textController: _messageController,
                   isVoiceInputMode: false,
-                  isLoading: false,
+                  isLoading: _sendingChatMessage,
                   conversationType: 'watch_together',
                   onSendMessage: () => _sendMessage(_messageController.text),
                   onSwitchToVoiceMode: () {},
-                  onShowImagePicker: () {},
+                  onShowImagePicker: _pickChatImage,
                   onStartRecording: () {},
                   onStopRecording: () {},
                   onCancelRecording: () {},
+                  selectedImageBytes: _selectedChatImage?.previewBytes,
+                  selectedImageFile: _selectedChatImage?.previewFile,
+                  onCancelSelectedImage: () {
+                    setState(() => _selectedChatImage = null);
+                  },
                 ),
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildChatImageGrid(List<StoredImageInfo> images) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: images.map((image) => _buildChatImageThumb(image)).toList(),
+    );
+  }
+
+  Widget _buildChatImageThumb(StoredImageInfo image) {
+    final url = WatchTogetherService.resolveResourceUrl(image.url);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.network(
+        url,
+        width: 180,
+        height: 120,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: 180,
+          height: 120,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image_outlined),
+        ),
+      ),
     );
   }
 
@@ -2607,7 +2727,6 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
       final switched = await WatchTogetherService.switchMovie(
           widget.room.roomId, movie.id,
           subPath: movie.subPath, playlistId: movie.parentId);
-      _sendPlaybackUpdate(PlaybackControlAction.play, true, 0, 1);
       if (switched.movie != null) {
         await _applyPlaybackStatus(
           WPlaybackStatus(
@@ -2752,17 +2871,45 @@ class _WatchTogetherRoomScreenState extends State<WatchTogetherRoomScreen>
     AddMovieDialog.show(context, widget.room.roomId);
   }
 
-  void _sendMessage(String text) {
-    if (text.trim().isEmpty) return;
-    if (_channel != null) {
-      try {
-        final bytes = RoomRealtimeCodec.encodeChat(text);
-        _channel!.sink.add(bytes);
-      } catch (e) {
-        debugPrint('Send message error: $e');
-        if (mounted) MessageUtils.showError(context, '发送失败: $e');
-      }
+  Future<void> _pickChatImage() async {
+    try {
+      final image = await pickLocalImageUpload();
+      if (image == null || !mounted) return;
+      setState(() => _selectedChatImage = image);
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '选择图片失败: $e');
     }
-    _messageController.clear();
+  }
+
+  Future<void> _sendMessage(String text) async {
+    final content = text.trim();
+    final selectedImage = _selectedChatImage;
+    if (content.isEmpty && selectedImage == null) return;
+    if (_channel == null || _sendingChatMessage) return;
+
+    setState(() => _sendingChatMessage = true);
+    try {
+      final images = <StoredImageInfo>[];
+      if (selectedImage != null) {
+        images.add(
+          await WatchTogetherService.uploadChatImage(
+            widget.room.roomId,
+            selectedImage.upload,
+          ),
+        );
+      }
+      final bytes = RoomRealtimeCodec.encodeChatMessage(
+        content: content,
+        images: images,
+      );
+      _channel!.sink.add(bytes);
+      _messageController.clear();
+      if (mounted) setState(() => _selectedChatImage = null);
+    } catch (e) {
+      debugPrint('Send message error: $e');
+      if (mounted) MessageUtils.showError(context, '发送失败: $e');
+    } finally {
+      if (mounted) setState(() => _sendingChatMessage = false);
+    }
   }
 }

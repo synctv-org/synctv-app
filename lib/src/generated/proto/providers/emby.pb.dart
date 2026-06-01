@@ -424,6 +424,7 @@ class MediaItem extends $pb.GeneratedMessage {
     $core.String? seriesId,
     $core.String? seasonName,
     $core.String? thumbnail,
+    $core.String? description,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -434,6 +435,7 @@ class MediaItem extends $pb.GeneratedMessage {
     if (seriesId != null) result.seriesId = seriesId;
     if (seasonName != null) result.seasonName = seasonName;
     if (thumbnail != null) result.thumbnail = thumbnail;
+    if (description != null) result.description = description;
     return result;
   }
 
@@ -459,6 +461,7 @@ class MediaItem extends $pb.GeneratedMessage {
     ..aOS(6, _omitFieldNames ? '' : 'seriesId')
     ..aOS(7, _omitFieldNames ? '' : 'seasonName')
     ..aOS(8, _omitFieldNames ? '' : 'thumbnail')
+    ..aOS(9, _omitFieldNames ? '' : 'description')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -550,6 +553,15 @@ class MediaItem extends $pb.GeneratedMessage {
   $core.bool hasThumbnail() => $_has(7);
   @$pb.TagNumber(8)
   void clearThumbnail() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get description => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set description($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasDescription() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearDescription() => $_clearField(9);
 }
 
 /// Get user info request

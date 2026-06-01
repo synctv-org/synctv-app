@@ -8,194 +8,211 @@ import 'package:synctv_app/utils/message_utils.dart';
 Future<bool?> showServerSettingsDialog({
   required BuildContext context,
 }) {
-  final controller = TextEditingController();
-  var changed = false;
-  var busy = false;
-
-  Future<void> addServer(StateSetter setDialogState) async {
-    final input = controller.text.trim();
-    if (input.isEmpty) {
-      MessageUtils.showWarning(context, '请输入服务器地址');
-      return;
-    }
-
-    setDialogState(() => busy = true);
-    try {
-      final profile = await WatchTogetherService.addServer(input);
-      controller.clear();
-      changed = true;
-      if (context.mounted) {
-        MessageUtils.showSuccess(context, '已连接 ${profile.name}');
-      }
-      setDialogState(() {});
-    } on SyncTvApiException catch (error) {
-      if (context.mounted) {
-        MessageUtils.showError(context, error.message);
-      }
-    } catch (error) {
-      if (context.mounted) {
-        MessageUtils.showError(context, '无法连接服务器: $error');
-      }
-    } finally {
-      setDialogState(() => busy = false);
-    }
-  }
-
-  Future<void> activateServer(
-    StateSetter setDialogState,
-    SyncTvServerProfile profile,
-  ) async {
-    setDialogState(() => busy = true);
-    try {
-      await WatchTogetherService.activateServer(profile.serverId);
-      changed = true;
-      if (context.mounted) {
-        MessageUtils.showSuccess(context, '已切换到 ${profile.name}');
-      }
-      setDialogState(() {});
-    } catch (error) {
-      if (context.mounted) {
-        MessageUtils.showError(context, '切换服务器失败: $error');
-      }
-    } finally {
-      setDialogState(() => busy = false);
-    }
-  }
-
-  Future<void> removeServer(
-    StateSetter setDialogState,
-    SyncTvServerProfile profile,
-  ) async {
-    setDialogState(() => busy = true);
-    try {
-      await WatchTogetherService.removeServer(profile.serverId);
-      changed = true;
-      if (context.mounted) {
-        MessageUtils.showSuccess(context, '服务器已移除');
-      }
-      setDialogState(() {});
-    } catch (error) {
-      if (context.mounted) {
-        MessageUtils.showError(context, '移除服务器失败: $error');
-      }
-    } finally {
-      setDialogState(() => busy = false);
-    }
-  }
-
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     constraints: const BoxConstraints(maxWidth: 720),
-    builder: (context) => StatefulBuilder(
-      builder: (context, setDialogState) {
-        final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
-        final servers = WatchTogetherService.servers;
-        final activeServer = WatchTogetherService.activeServer;
+    builder: (context) => const _ServerSettingsSheet(),
+  );
+}
 
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              0,
-              20,
-              20 + MediaQuery.viewInsetsOf(context).bottom,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+class _ServerSettingsSheet extends StatefulWidget {
+  const _ServerSettingsSheet();
+
+  @override
+  State<_ServerSettingsSheet> createState() => _ServerSettingsSheetState();
+}
+
+class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
+  final _controller = TextEditingController();
+  var _changed = false;
+  var _busy = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addServer() async {
+    final input = _controller.text.trim();
+    if (input.isEmpty) {
+      MessageUtils.showWarning(context, '请输入服务器地址');
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      final profile = await WatchTogetherService.addServer(input);
+      _controller.clear();
+      _changed = true;
+      if (mounted) {
+        MessageUtils.showSuccess(context, '已连接 ${profile.name}');
+      }
+      setState(() {});
+    } on SyncTvApiException catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, error.message);
+      }
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, '无法连接服务器: $error');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  Future<void> _activateServer(SyncTvServerProfile profile) async {
+    setState(() => _busy = true);
+    try {
+      await WatchTogetherService.activateServer(profile.serverId);
+      _changed = true;
+      if (mounted) {
+        MessageUtils.showSuccess(context, '已切换到 ${profile.name}');
+      }
+      setState(() {});
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, '切换服务器失败: $error');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  Future<void> _removeServer(SyncTvServerProfile profile) async {
+    if (profile.isDefault) {
+      MessageUtils.showWarning(context, '默认服务器由构建配置提供，不能删除');
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await WatchTogetherService.removeServer(profile.serverId);
+      _changed = true;
+      if (mounted) {
+        MessageUtils.showSuccess(context, '服务器已移除');
+      }
+      setState(() {});
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, '移除服务器失败: $error');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final servers = WatchTogetherService.servers;
+    final activeServer = WatchTogetherService.activeServer;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          0,
+          20,
+          20 + MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.dns_rounded, color: theme.colorScheme.primary),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          '服务器',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(context, changed),
-                        child: const Text('完成'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ChatUtils.createFormField(
-                    context: context,
-                    label: '服务器地址',
-                    controller: controller,
-                    hintText: '例如: https://tv.example.com',
-                    prefixIcon: Icons.link_rounded,
-                    onSubmitted: (_) => busy ? null : addServer(setDialogState),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '添加地址后会自动识别服务器，不需要填写回调地址、Code 或 server_id。',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.grey.shade400
-                                : Colors.grey.shade600,
-                            fontSize: 12,
-                            height: 1.35,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      FilledButton.icon(
-                        onPressed:
-                            busy ? null : () => addServer(setDialogState),
-                        icon: busy
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.add_link_rounded, size: 18),
-                        label: const Text('添加'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    '已保存服务器',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  if (servers.isEmpty)
-                    _EmptyServerState(isDark: isDark)
-                  else
-                    ...servers.map(
-                      (profile) => _ServerProfileTile(
-                        profile: profile,
-                        active: profile.serverId == activeServer?.serverId,
-                        canRemove: !busy && !profile.isDefault,
-                        busy: busy,
-                        onActivate: () =>
-                            activateServer(setDialogState, profile),
-                        onRemove: () => removeServer(setDialogState, profile),
+                  Icon(Icons.dns_rounded, color: theme.colorScheme.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '服务器',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(context, _changed),
+                    child: const Text('完成'),
+                  ),
                 ],
               ),
-            ),
+              const SizedBox(height: 16),
+              ChatUtils.createFormField(
+                context: context,
+                label: '服务器地址',
+                controller: _controller,
+                hintText: '例如: https://tv.example.com',
+                prefixIcon: Icons.link_rounded,
+                onSubmitted: (_) => _busy ? null : _addServer(),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '添加地址后会自动识别服务器，不需要填写回调地址、Code 或 server_id。',
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  FilledButton.icon(
+                    onPressed: _busy ? null : _addServer,
+                    icon: _busy
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.add_link_rounded, size: 18),
+                    label: const Text('添加'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Text(
+                '已保存服务器',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (servers.isEmpty)
+                _EmptyServerState(isDark: isDark)
+              else
+                ...servers.map(
+                  (profile) => _ServerProfileTile(
+                    profile: profile,
+                    active: profile.serverId == activeServer?.serverId,
+                    canRemove: !_busy && !profile.isDefault,
+                    busy: _busy,
+                    onActivate: () => _activateServer(profile),
+                    onRemove: () => _removeServer(profile),
+                  ),
+                ),
+            ],
           ),
-        );
-      },
-    ),
-  ).whenComplete(controller.dispose);
+        ),
+      ),
+    );
+  }
 }
 
 class _EmptyServerState extends StatelessWidget {
@@ -304,15 +321,12 @@ class _ServerProfileTile extends StatelessWidget {
                   onPressed: busy ? null : onActivate,
                   icon: const Icon(Icons.login_rounded, size: 20),
                 ),
-              IconButton(
-                tooltip: profile.isDefault
-                    ? '默认服务器不可移除'
-                    : canRemove
-                        ? '移除'
-                        : '正在处理',
-                onPressed: canRemove ? onRemove : null,
-                icon: const Icon(Icons.delete_outline_rounded, size: 20),
-              ),
+              if (!profile.isDefault)
+                IconButton(
+                  tooltip: canRemove ? '移除' : '正在处理',
+                  onPressed: canRemove ? onRemove : null,
+                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                ),
             ],
           ),
           const SizedBox(height: 8),

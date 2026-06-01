@@ -17,12 +17,38 @@ class AddMovieDialog extends StatefulWidget {
 
   static Future<void> show(BuildContext context, String roomId,
       {String? parentId}) {
-    return ChatUtils.showStyledDialog(
+    final theme = Theme.of(context);
+    return showDialog<bool>(
       context: context,
-      title: '添加影片',
-      icon: Icon(Icons.add_to_queue, color: Theme.of(context).primaryColor),
-      content: AddMovieDialog(roomId: roomId, parentId: parentId),
-      actions: [],
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.58),
+      builder: (context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.sizeOf(context).width < 560 ? 10 : 18,
+            vertical: MediaQuery.sizeOf(context).height < 720 ? 10 : 24,
+          ),
+          clipBehavior: Clip.antiAlias,
+          backgroundColor: theme.colorScheme.surface,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 920,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const _AddMovieDialogHeader(),
+                Flexible(
+                  child: AddMovieDialog(roomId: roomId, parentId: parentId),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -30,12 +56,94 @@ class AddMovieDialog extends StatefulWidget {
   State<AddMovieDialog> createState() => _AddMovieDialogState();
 }
 
+class _AddMovieDialogHeader extends StatelessWidget {
+  const _AddMovieDialogHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 22),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.94),
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.add_to_queue_rounded,
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '添加影片',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.maybePop(context),
+            icon: const Icon(Icons.close_rounded),
+            tooltip: '关闭',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MovieSourceSpec {
+  const _MovieSourceSpec({
+    required this.index,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+  });
+
+  final int index;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+}
+
+class _DirectHeaderDraft {
+  _DirectHeaderDraft({String name = '', String value = ''})
+      : key = UniqueKey(),
+        nameController = TextEditingController(text: name),
+        valueController = TextEditingController(text: value);
+
+  final Key key;
+  final TextEditingController nameController;
+  final TextEditingController valueController;
+
+  void dispose() {
+    nameController.dispose();
+    valueController.dispose();
+  }
+}
+
 class _AddMovieDialogState extends State<AddMovieDialog> {
-  int _selectedIndex = -1;
+  int _selectedIndex = 0;
 
   final _urlController = TextEditingController();
   final _nameController = TextEditingController();
-  final _directHeadersController = TextEditingController();
   final _biliUrlController = TextEditingController();
   final _alistSearchController = TextEditingController();
   final _alistPasswordController = TextEditingController();
@@ -43,6 +151,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   bool _isProxy = false;
   bool _isLoading = false;
+  String _directHeaderError = '';
 
   BilibiliParseInfo? _biliInfo;
   int _biliSelectedIndex = 0;
@@ -59,6 +168,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   List<AlistBindInfo> _alistBinds = [];
   static const int _pageSize = 20;
   final Map<String, AlistItemInfo> _selectedAlistItems = {};
+  final List<_DirectHeaderDraft> _directHeaders = [];
 
   String _embyPath = '/';
   List<EmbyItemInfo> _embyFiles = [];
@@ -120,7 +230,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   void dispose() {
     _urlController.dispose();
     _nameController.dispose();
-    _directHeadersController.dispose();
+    for (final header in _directHeaders) {
+      header.dispose();
+    }
     _biliUrlController.dispose();
     _alistSearchController.dispose();
     _alistPasswordController.dispose();
@@ -132,76 +244,44 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final contentWidth = size.width > 600 ? 560.0 : size.width * 0.9 - 40;
+    final compact = size.width < 720;
+    final contentHeight = compact
+        ? (size.height * 0.76).clamp(500.0, 660.0)
+        : (size.height * 0.54).clamp(380.0, 500.0);
 
-    return SizedBox(
-      width: contentWidth,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (_selectedIndex != -1)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Row(
+    return PopScope(
+      canPop: !_hasUnsavedDraft,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (!context.mounted) return;
+        final confirmed = await _confirmDiscardDraft();
+        if (!mounted || !confirmed) return;
+        Navigator.of(this.context).pop();
+      },
+      child: SizedBox(
+        height: contentHeight,
+        child: compact
+            ? Column(
                 children: [
-                  InkWell(
-                    onTap: () => setState(() => _selectedIndex = -1),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: theme.cardColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.arrow_back_rounded,
-                          size: 22,
-                          color: theme.brightness == Brightness.dark
-                              ? Colors.white
-                              : theme.primaryColor),
-                    ),
+                  _buildCompactSourceRail(theme),
+                  Expanded(child: _buildSourcePanel(theme, compact: true)),
+                ],
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: 236,
+                    child: _buildSourceRail(theme),
                   ),
-                  const SizedBox(width: 16),
-                  Text(
-                    _getTitle(_selectedIndex),
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
+                  VerticalDivider(
+                    width: 1,
+                    color:
+                        theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
                   ),
-                  if (_providerBindingIndex(_selectedIndex) != null) ...[
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () async {
-                        await PlatformBindingDialog.show(context,
-                            initialIndex:
-                                _providerBindingIndex(_selectedIndex)!);
-                        await _checkVendors();
-                        if (mounted) {
-                          if (_selectedIndex == 3) _loadAlist(_alistPath);
-                          if (_selectedIndex == 4) _loadEmby(_embyPath);
-                        }
-                      },
-                      icon:
-                          Icon(Icons.settings_rounded, color: theme.hintColor),
-                      tooltip: '管理配置',
-                    ),
-                  ],
+                  Expanded(child: _buildSourcePanel(theme)),
                 ],
               ),
-            ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-            alignment: Alignment.topCenter,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: _selectedIndex == -1
-                  ? _buildMenu(theme, contentWidth)
-                  : SizedBox(
-                      height: 450,
-                      child: _buildContent(theme),
-                    ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -215,7 +295,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       case 2:
         return 'Bilibili';
       case 3:
-        return 'Alist 网盘';
+        return 'AList 网盘';
       case 4:
         return 'Emby 媒体库';
       default:
@@ -223,139 +303,242 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     }
   }
 
-  Widget _buildMenu(ThemeData theme, double dialogWidth) {
-    // Reduce padding to maximize card width
-    // Dialog itself has 20px padding, so we don't need huge padding here
-    const double gridPadding = 4.0;
-    const double spacing = 16.0;
+  List<_MovieSourceSpec> get _sourceSpecs => [
+        const _MovieSourceSpec(
+          index: 0,
+          title: '直链',
+          subtitle: 'HTTP / HTTPS / HLS',
+          icon: Icons.link_rounded,
+          color: Color(0xFF5D5FEF),
+        ),
+        _MovieSourceSpec(
+          index: 1,
+          title: 'RTMP 推流',
+          subtitle: '生成推流地址',
+          icon: Icons.upload_rounded,
+          color: Colors.deepOrange.shade600,
+        ),
+        const _MovieSourceSpec(
+          index: 2,
+          title: 'Bilibili',
+          subtitle: 'BV / 链接解析',
+          icon: Icons.tv_rounded,
+          color: Color(0xFFFB7299),
+        ),
+        _MovieSourceSpec(
+          index: 3,
+          title: 'AList 网盘',
+          subtitle: '挂载目录资源',
+          icon: Icons.cloud_circle_rounded,
+          color: Colors.amber.shade700,
+        ),
+        _MovieSourceSpec(
+          index: 4,
+          title: 'Emby 媒体库',
+          subtitle: '个人媒体服务器',
+          icon: Icons.video_library_rounded,
+          color: Colors.green.shade600,
+        ),
+      ];
 
-    // Calculate aspect ratio dynamically
-    // Available width = Total Width - Horizontal Padding - Cross Axis Spacing
-    final double itemWidth = (dialogWidth - (gridPadding * 2) - spacing) / 2;
+  void _selectSource(int index) {
+    setState(() {
+      _selectedIndex = index;
+      _isProxy = index == 2 || index == 3;
+    });
+    if (index == 3 && _alistBinds.isNotEmpty && _alistFiles.isEmpty) {
+      _loadAlist('/');
+    }
+    if (index == 4 && _embyBinds.isNotEmpty && _embyFiles.isEmpty) {
+      _loadEmby('/');
+    }
+  }
 
-    // Fixed height to ensure all content (Icon + Title + Subtitle + Spacing) fits comfortably
-    // Icon(70 container) + Spacing(20) + Title(45) + Spacing(8) + Subtitle(40) + Padding(40) = ~223
-    const double itemHeight = 240.0;
-
-    final double ratio = itemWidth / itemHeight;
-
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(gridPadding),
-      crossAxisCount: 2,
-      mainAxisSpacing: spacing,
-      crossAxisSpacing: spacing,
-      childAspectRatio: ratio,
-      children: [
-        _buildGridMenuItem(
-          0,
-          '直链',
-          'HTTP / HTTPS / HLS',
-          Icons.link_rounded,
-          const Color(0xFF5D5FEF),
-          theme,
-        ),
-        _buildGridMenuItem(
-          1,
-          'RTMP 推流',
-          '生成推流地址',
-          Icons.upload_rounded,
-          Colors.deepOrange.shade600,
-          theme,
-        ),
-        _buildGridMenuItem(
-          2,
-          'Bilibili',
-          '支持 BV / 链接解析',
-          Icons.tv_rounded,
-          const Color(0xFFFB7299),
-          theme,
-        ),
-        _buildGridMenuItem(
-          3,
-          'Alist 网盘',
-          '挂载的云盘资源',
-          Icons.cloud_circle_rounded,
-          Colors.amber.shade700,
-          theme,
-        ),
-        _buildGridMenuItem(
-          4,
-          'Emby 媒体库',
-          '个人媒体服务器',
-          Icons.video_library_rounded,
-          Colors.green.shade600,
-          theme,
-        ),
-      ],
+  Widget _buildSourceRail(ThemeData theme) {
+    return Container(
+      color: theme.colorScheme.surfaceContainerLow,
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '来源',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          for (final spec in _sourceSpecs) ...[
+            _buildSourceTile(theme, spec),
+            const SizedBox(height: 6),
+          ],
+          const Spacer(),
+          if (_checkingVendors)
+            const LinearProgressIndicator(minHeight: 2)
+          else
+            Text(
+              '已连接 ${_boundVendors.length} 个媒体源',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
-  Widget _buildGridMenuItem(int index, String title, String subtitle,
-      IconData icon, Color color, ThemeData theme) {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-          if (index == 2 || index == 3) {
-            _isProxy = true;
-          } else {
-            _isProxy = false;
-          }
-        });
-        if (index == 3 && _alistFiles.isEmpty) {
-          _loadAlist('/');
-        }
-        if (index == 4 && _embyFiles.isEmpty) {
-          _loadEmby('/');
-        }
-      },
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: theme.dividerColor.withValues(alpha: 0.05)),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.05),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 36),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: TextStyle(fontSize: 12, color: theme.hintColor),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+  Widget _buildCompactSourceRail(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+          ),
         ),
       ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final spec in _sourceSpecs)
+            SizedBox(
+              width: 160,
+              child: _buildSourceTile(theme, spec, compact: true),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSourceTile(
+    ThemeData theme,
+    _MovieSourceSpec spec, {
+    bool compact = false,
+  }) {
+    final selected = _selectedIndex == spec.index;
+    return Material(
+      color: selected
+          ? spec.color.withValues(alpha: 0.13)
+          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: () => _selectSource(spec.index),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 10 : 11,
+            vertical: compact ? 8 : 10,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: selected
+                  ? spec.color.withValues(alpha: 0.55)
+                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: compact ? 30 : 32,
+                height: compact ? 30 : 32,
+                decoration: BoxDecoration(
+                  color: spec.color.withValues(alpha: selected ? 0.18 : 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(spec.icon, color: spec.color, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      spec.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      spec.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSourcePanel(ThemeData theme, {bool compact = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          height: 58,
+          padding: EdgeInsets.symmetric(horizontal: compact ? 16 : 22),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _getTitle(_selectedIndex),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (_providerBindingIndex(_selectedIndex) != null)
+                TextButton.icon(
+                  onPressed: () async {
+                    await PlatformBindingDialog.show(
+                      context,
+                      initialIndex: _providerBindingIndex(_selectedIndex)!,
+                    );
+                    await _checkVendors();
+                    if (!mounted) return;
+                    if (_selectedIndex == 3 && _alistBinds.isNotEmpty) {
+                      _loadAlist(_alistPath);
+                    }
+                    if (_selectedIndex == 4 && _embyBinds.isNotEmpty) {
+                      _loadEmby(_embyPath);
+                    }
+                  },
+                  icon: const Icon(Icons.tune_rounded, size: 18),
+                  label: const Text('媒体源'),
+                ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.all(compact ? 14 : 18),
+            child: _buildContent(theme),
+          ),
+        ),
+      ],
     );
   }
 
@@ -378,54 +561,53 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildDirectLinkContent(ThemeData theme) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.zero,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildMultilineTextField(
-            theme,
-            _urlController,
-            '视频链接（每行一个）',
-            'https://example.com/video.mp4',
-            Icons.link_rounded,
-            minLines: 3,
-            maxLines: 6,
+          TextField(
+            controller: _urlController,
+            minLines: 1,
+            maxLines: 2,
+            keyboardType: TextInputType.url,
+            textInputAction: TextInputAction.newline,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: '视频链接',
+              hintText: '每行一个 HTTP / HTTPS / HLS 地址',
+              prefixIcon: const Icon(Icons.link_rounded),
+              isDense: true,
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildTextField(
-            theme,
-            _nameController,
-            '视频名称（单条可选）',
-            '默认为文件名',
-            Icons.title,
+          const SizedBox(height: 10),
+          TextField(
+            controller: _nameController,
+            textInputAction: TextInputAction.next,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: '视频名称（单条可选）',
+              hintText: '默认为文件名',
+              prefixIcon: const Icon(Icons.title_rounded),
+              isDense: true,
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildMultilineTextField(
-            theme,
-            _directHeadersController,
-            '请求头',
-            'Referer: https://example.com\nCookie: session=...',
-            Icons.http_rounded,
-            minLines: 3,
-            maxLines: 5,
+          const SizedBox(height: 10),
+          _buildDirectHeadersEditor(theme),
+          if (_directHeadersContainCredentials())
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: _buildDirectHeaderRiskNotice(theme),
+            ),
+          const SizedBox(height: 18),
+          _buildActionButton(
+            '添加到播放列表',
+            _addDirectLink,
+            icon: Icons.playlist_add_rounded,
           ),
-          AnimatedBuilder(
-            animation: _directHeadersController,
-            builder: (context, _) {
-              final hasCredentials =
-                  DirectUrlSourceConfig.hasCredentialHeaderLines(
-                _directHeadersController.text,
-              );
-              if (!hasCredentials) {
-                return const SizedBox.shrink();
-              }
-              return Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: _buildDirectHeaderRiskNotice(theme),
-              );
-            },
-          ),
-          const SizedBox(height: 32),
-          _buildActionButton('添加', _addDirectLink),
         ],
       ),
     );
@@ -461,10 +643,167 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     );
   }
 
+  Widget _buildDirectHeadersEditor(ThemeData theme) {
+    final borderColor =
+        theme.colorScheme.outlineVariant.withValues(alpha: 0.45);
+    final validationMessage = _directHeaderError;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color:
+            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.http_rounded,
+                size: 18,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '请求头',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: _addDirectHeaderRow,
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('请求头'),
+              ),
+            ],
+          ),
+          if (_directHeaders.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(26, 2, 0, 4),
+              child: Text(
+                '默认不发送额外请求头。',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            )
+          else ...[
+            const SizedBox(height: 8),
+            for (var i = 0; i < _directHeaders.length; i++) ...[
+              _buildDirectHeaderRow(theme, i),
+              if (i != _directHeaders.length - 1) const SizedBox(height: 8),
+            ],
+            if (validationMessage.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _buildInlineValidationMessage(theme, validationMessage),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInlineValidationMessage(ThemeData theme, String message) {
+    final color = theme.colorScheme.error;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_outline_rounded, size: 18, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: color,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDirectHeaderRow(ThemeData theme, int index) {
+    final header = _directHeaders[index];
+    return KeyedSubtree(
+      key: header.key,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 520;
+          final border = OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          );
+          final nameField = TextField(
+            controller: header.nameController,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: '名称',
+              hintText: 'Referer',
+              isDense: true,
+              border: border,
+            ),
+            onChanged: (_) => _updateDirectHeaderValidation(),
+          );
+          final valueField = TextField(
+            controller: header.valueController,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(
+              labelText: '值',
+              hintText: 'https://example.com',
+              isDense: true,
+              border: border,
+            ),
+            onChanged: (_) => _updateDirectHeaderValidation(),
+          );
+          final removeButton = IconButton(
+            onPressed: () => _removeDirectHeaderRow(index),
+            icon: const Icon(Icons.close_rounded),
+            tooltip: '移除请求头',
+          );
+
+          if (compact) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(width: 150, child: nameField),
+                const SizedBox(width: 8),
+                Expanded(child: valueField),
+                removeButton,
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 180, child: nameField),
+              const SizedBox(width: 8),
+              Expanded(child: valueField),
+              removeButton,
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildRtmpPublishContent(ThemeData theme) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.zero,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildTextField(
             theme,
@@ -478,31 +817,20 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             _buildRtmpPublicSettingsPanel(theme, _publicSettings!),
             const SizedBox(height: 16),
           ],
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              borderRadius: BorderRadius.circular(16),
-              border:
-                  Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.key_rounded, color: theme.primaryColor),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    '创建后会生成推流地址和 Stream Key',
-                    style: TextStyle(color: theme.hintColor),
-                  ),
-                ),
-              ],
-            ),
+          _buildInlineNotice(
+            theme,
+            icon: Icons.key_rounded,
+            title: '创建后会生成推流地址和 Stream Key',
+            subtitle: '复制到 OBS 或其他推流工具即可开始直播。',
+            color: Colors.deepOrange.shade600,
           ),
-          const SizedBox(height: 32),
-          _buildActionButton('创建推流入口', _addRtmpPublish,
-              color: Colors.deepOrange.shade600),
+          const SizedBox(height: 24),
+          _buildActionButton(
+            '创建推流入口',
+            _addRtmpPublish,
+            color: Colors.deepOrange.shade600,
+            icon: Icons.live_tv_rounded,
+          ),
         ],
       ),
     );
@@ -540,7 +868,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           },
         ),
         Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 14),
           child: Row(
             children: [
               Expanded(
@@ -548,23 +876,27 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                     '粘贴链接自动解析', Icons.search),
               ),
               const SizedBox(width: 12),
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [Color(0xFFFB7299), Color(0xFFFF9EB5)]),
-                  shape: BoxShape.circle,
+              FilledButton(
+                onPressed: _isLoading ? null : _parseBilibili,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFFB7299),
+                  foregroundColor: Colors.white,
+                  fixedSize: const Size(48, 48),
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: IconButton(
-                  onPressed: _isLoading ? null : _parseBilibili,
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
-                      : const Icon(Icons.arrow_forward_rounded,
-                          color: Colors.white),
-                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.arrow_forward_rounded),
               ),
             ],
           ),
@@ -572,19 +904,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         Expanded(
           child: _biliInfo == null
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.tv_off_rounded,
-                          size: 64,
-                          color: theme.disabledColor.withValues(alpha: 0.2)),
-                      const SizedBox(height: 16),
-                      Text('暂无解析内容', style: TextStyle(color: theme.hintColor)),
-                    ],
+                  child: _buildEmptyState(
+                    theme,
+                    icon: Icons.tv_rounded,
+                    title: '粘贴 Bilibili 链接',
+                    subtitle: '支持 BV 号、视频链接和直播间链接。',
+                    color: const Color(0xFFFB7299),
                   ),
                 )
               : SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 18),
                   child: Column(
                     children: [
                       if (coverImage.isNotEmpty)
@@ -634,8 +963,12 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                       ],
                       const SizedBox(height: 16),
                       const SizedBox(height: 8),
-                      _buildActionButton('添加到播放列表', _addBilibili,
-                          color: const Color(0xFFFB7299)),
+                      _buildActionButton(
+                        '添加到播放列表',
+                        _addBilibili,
+                        color: const Color(0xFFFB7299),
+                        icon: Icons.playlist_add_rounded,
+                      ),
                     ],
                   ),
                 ),
@@ -649,7 +982,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       return const Center(child: CircularProgressIndicator());
     }
     if (!_boundVendors.contains('alist')) {
-      return _buildBindGuide('Alist', theme);
+      return _buildBindGuide('AList', theme);
     }
 
     return Column(
@@ -686,8 +1019,13 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         _buildPathBar(theme, _alistPath, _goUpAlist),
         Expanded(
           child: !_alistLoading && _alistFiles.isEmpty
-              ? Center(
-                  child: Text('暂无文件', style: TextStyle(color: theme.hintColor)))
+              ? _buildEmptyState(
+                  theme,
+                  icon: Icons.cloud_queue_rounded,
+                  title: '暂无文件',
+                  subtitle: '当前目录没有可添加的媒体资源。',
+                  color: Colors.amber.shade700,
+                )
               : _alistLoading && _alistFiles.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : NotificationListener<ScrollNotification>(
@@ -763,8 +1101,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                     offset: const Offset(0, -4))
               ],
             ),
-            child: _buildActionButton('添加选中的 ${_selectedAlistItems.length} 项',
-                _addSelectedAlistItems),
+            child: _buildActionButton(
+              '添加选中的 ${_selectedAlistItems.length} 项',
+              _addSelectedAlistItems,
+              icon: Icons.playlist_add_check_rounded,
+            ),
           ),
       ],
     );
@@ -806,8 +1147,13 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         _buildPathBar(theme, _embyPath, _goUpEmby),
         Expanded(
           child: !_embyLoading && _embyFiles.isEmpty
-              ? Center(
-                  child: Text('暂无媒体', style: TextStyle(color: theme.hintColor)))
+              ? _buildEmptyState(
+                  theme,
+                  icon: Icons.video_library_rounded,
+                  title: '暂无媒体',
+                  subtitle: '当前媒体库目录没有可添加的项目。',
+                  color: Colors.green.shade600,
+                )
               : _embyLoading && _embyFiles.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : NotificationListener<ScrollNotification>(
@@ -873,82 +1219,135 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     );
   }
 
-  Widget _buildMultilineTextField(
-    ThemeData theme,
-    TextEditingController controller,
-    String label,
-    String hint,
-    IconData icon, {
-    int minLines = 2,
-    int maxLines = 4,
-  }) {
-    return TextField(
-      controller: controller,
-      minLines: minLines,
-      maxLines: maxLines,
-      keyboardType: TextInputType.multiline,
-      textInputAction: TextInputAction.newline,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.3),
-          ),
+  Widget _buildActionButton(String text, VoidCallback onPressed,
+      {Color? color, IconData? icon}) {
+    final buttonColor = color ?? themeColor(context);
+    return Align(
+      alignment: Alignment.centerRight,
+      child: FilledButton.icon(
+        onPressed: _isLoading ? null : onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: buttonColor,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(168, 46),
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.primaryColor, width: 2),
+        icon: _isLoading
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Icon(icon ?? Icons.check_rounded, size: 20),
+        label: Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.w700),
         ),
-        filled: true,
-        fillColor: theme.cardColor,
       ),
     );
   }
 
-  Widget _buildActionButton(String text, VoidCallback onPressed,
-      {Color? color}) {
-    return SizedBox(
+  Color themeColor(BuildContext context) {
+    return Theme.of(context).colorScheme.primary;
+  }
+
+  Widget _buildInlineNotice(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Container(
       width: double.infinity,
-      height: 50,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: color != null
-                ? [color, color.withValues(alpha: 0.8)]
-                : const [Color(0xFF5D5FEF), Color(0xFF843CF6)],
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 20),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: (color ?? const Color(0xFF5D5FEF)).withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: color, size: 30),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.35,
+              ),
             ),
           ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _isLoading ? null : onPressed,
-            borderRadius: BorderRadius.circular(16),
-            child: Center(
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
-                  : Text(text,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold)),
-            ),
-          ),
         ),
       ),
     );
@@ -1365,15 +1764,151 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     return '${(size / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
   }
 
+  String _directUrlDisplayName(String url) {
+    final parsed = Uri.tryParse(url);
+    final segments = parsed?.pathSegments
+            .where((segment) => segment.trim().isNotEmpty)
+            .toList(growable: false) ??
+        const <String>[];
+    final fileName = segments.isEmpty ? '' : Uri.decodeComponent(segments.last);
+    if (fileName.isNotEmpty) return fileName;
+    final host = parsed?.host ?? '';
+    if (host.isNotEmpty) return host;
+    return '直链视频';
+  }
+
+  void _addDirectHeaderRow() {
+    final hasBlank = _directHeaders.any((header) =>
+        header.nameController.text.trim().isEmpty &&
+        header.valueController.text.trim().isEmpty);
+    if (hasBlank) {
+      setState(() => _directHeaderError = '请先填写当前空白请求头');
+      return;
+    }
+    setState(() {
+      _directHeaders.add(_DirectHeaderDraft());
+      _directHeaderError = _currentDirectHeaderValidationMessage();
+    });
+  }
+
+  void _removeDirectHeaderRow(int index) {
+    if (index < 0 || index >= _directHeaders.length) return;
+    final header = _directHeaders.removeAt(index);
+    header.dispose();
+    _updateDirectHeaderValidation();
+  }
+
+  void _updateDirectHeaderValidation() {
+    final message = _currentDirectHeaderValidationMessage();
+    if (!mounted || _directHeaderError == message) return;
+    setState(() => _directHeaderError = message);
+  }
+
+  String _currentDirectHeaderValidationMessage() {
+    try {
+      _collectDirectHeaders(validateCompleteRows: false);
+      return '';
+    } on DirectUrlSourceConfigException catch (e) {
+      return e.message;
+    }
+  }
+
+  bool _directHeadersContainCredentials() {
+    return DirectUrlSourceConfig.hasCredentialHeaders(
+      _directHeaders
+          .where((header) => header.nameController.text.trim().isNotEmpty)
+          .fold<Map<String, String>>(
+        {},
+        (headers, header) {
+          headers[header.nameController.text.trim()] =
+              header.valueController.text.trim();
+          return headers;
+        },
+      ),
+    );
+  }
+
+  Map<String, String> _collectDirectHeaders({
+    bool validateCompleteRows = true,
+  }) {
+    final headers = <String, String>{};
+    final normalizedNames = <String>{};
+    for (final draft in _directHeaders) {
+      final name = draft.nameController.text.trim();
+      final value = draft.valueController.text.trim();
+      if (name.isEmpty && value.isEmpty) continue;
+      if (validateCompleteRows && (name.isEmpty || value.isEmpty)) {
+        throw const DirectUrlSourceConfigException('请填写完整的请求头名称和值');
+      }
+      if (name.isNotEmpty) {
+        DirectUrlSourceConfig.validateHeaderName(name);
+        final normalized = name.toLowerCase();
+        if (!normalizedNames.add(normalized)) {
+          throw DirectUrlSourceConfigException('请求头 $name 重复');
+        }
+      }
+      if (validateCompleteRows) {
+        headers[name] = value;
+      } else if (name.isNotEmpty && value.isNotEmpty) {
+        headers[name] = value;
+      }
+    }
+    DirectUrlSourceConfig.validateHeaders(headers);
+    return headers;
+  }
+
+  bool get _hasUnsavedDraft {
+    if (_urlController.text.trim().isNotEmpty ||
+        _nameController.text.trim().isNotEmpty ||
+        _biliUrlController.text.trim().isNotEmpty ||
+        _alistSearchController.text.trim().isNotEmpty ||
+        _embySearchController.text.trim().isNotEmpty) {
+      return true;
+    }
+    return _directHeaders.any((header) =>
+        header.nameController.text.trim().isNotEmpty ||
+        header.valueController.text.trim().isNotEmpty);
+  }
+
+  Future<bool> _confirmDiscardDraft() async {
+    final result = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: '放弃当前编辑？',
+      icon: Icon(
+        Icons.warning_amber_rounded,
+        color: Theme.of(context).colorScheme.error,
+      ),
+      iconColor: Theme.of(context).colorScheme.error,
+      content: Text(
+        '已填写的影片链接、名称或请求头会被清空。',
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('继续编辑'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.error,
+            foregroundColor: Theme.of(context).colorScheme.onError,
+          ),
+          child: const Text('放弃'),
+        ),
+      ],
+    );
+    return result == true;
+  }
+
   Future<void> _addDirectLink() async {
     late final List<String> urls;
     late final Map<String, String> headers;
     try {
       urls = _parseDirectUrls(_urlController.text);
-      headers = DirectUrlSourceConfig.parseHeaderLines(
-        _directHeadersController.text,
-      );
+      headers = _collectDirectHeaders();
     } on DirectUrlSourceConfigException catch (e) {
+      setState(() => _directHeaderError = e.message);
       MessageUtils.showWarning(context, e.message);
       return;
     }
@@ -1391,7 +1926,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           widget.roomId,
           playlistId: widget.parentId ?? '',
           url: urls.single,
-          name: name,
+          name: name.isEmpty ? _directUrlDisplayName(urls.single) : name,
           headers: headers,
         );
       } else {
@@ -1406,7 +1941,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                     url: url,
                     headers: headers,
                   ).toJson(),
-                  'name': '',
+                  'name': _directUrlDisplayName(url),
                 },
               )
               .toList(growable: false),
@@ -1714,6 +2249,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   Future<void> _loadAlist(String path, {bool loadMore = false}) async {
+    if (_alistBinds.isEmpty || _alistServerId.isEmpty) return;
     if (loadMore && _alistLoading) return;
 
     int targetPage = loadMore ? _alistPage + 1 : 1;
@@ -1760,7 +2296,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         });
       }
     } catch (e) {
-      debugPrint('Alist load error: $e');
+      debugPrint('AList load error: $e');
       if (mounted) MessageUtils.showError(context, '加载失败: $e');
     } finally {
       if (mounted) setState(() => _alistLoading = false);
@@ -1841,7 +2377,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Future<void> _addAlistFile(AlistItemInfo file) async {
     if (_alistServerId.isEmpty) {
-      MessageUtils.showWarning(context, '请选择已绑定的 Alist 账号');
+      MessageUtils.showWarning(context, '请选择已绑定的 AList 账号');
       return;
     }
     setState(() => _isLoading = true);
@@ -1870,7 +2406,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   Future<void> _addSelectedAlistItems() async {
     if (_selectedAlistItems.isEmpty) return;
     if (_alistServerId.isEmpty) {
-      MessageUtils.showWarning(context, '请选择已绑定的 Alist 账号');
+      MessageUtils.showWarning(context, '请选择已绑定的 AList 账号');
       return;
     }
     setState(() => _isLoading = true);
@@ -1908,6 +2444,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   Future<void> _loadEmby(String path, {bool loadMore = false}) async {
+    if (_embyBinds.isEmpty || _embyServerId.isEmpty) return;
     if (loadMore && _embyLoading) return;
     final targetPage = loadMore ? _embyPage + 1 : 1;
     final keyword = _embyKeyword;

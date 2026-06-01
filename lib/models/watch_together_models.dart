@@ -2,6 +2,7 @@ class WUser {
   final String id;
   final String username;
   final String? email;
+  final String avatarUrl;
   final int role;
   final int createdAt;
   final int updatedAt;
@@ -16,6 +17,7 @@ class WUser {
     required this.id,
     required this.username,
     this.email,
+    this.avatarUrl = '',
     required this.role,
     this.createdAt = 0,
     this.updatedAt = 0,
@@ -53,6 +55,7 @@ class WRoom {
   final int myPermissions;
   final int myRole;
   final int myRelation;
+  final String coverUrl;
 
   WRoom({
     required this.roomId,
@@ -77,6 +80,7 @@ class WRoom {
     this.myPermissions = 0,
     this.myRole = 0,
     this.myRelation = 0,
+    this.coverUrl = '',
   });
 
   WRoom copyWith({
@@ -102,6 +106,7 @@ class WRoom {
     int? myPermissions,
     int? myRole,
     int? myRelation,
+    String? coverUrl,
   }) {
     return WRoom(
       roomId: roomId ?? this.roomId,
@@ -126,6 +131,7 @@ class WRoom {
       myPermissions: myPermissions ?? this.myPermissions,
       myRole: myRole ?? this.myRole,
       myRelation: myRelation ?? this.myRelation,
+      coverUrl: coverUrl ?? this.coverUrl,
     );
   }
 }
@@ -157,6 +163,8 @@ class WMovie {
   final String providerInstanceName;
   final Map<String, dynamic> sourceConfig;
   final Map<String, dynamic> metadata;
+  final String description;
+  final String coverUrl;
 
   WMovie({
     required this.id,
@@ -185,6 +193,8 @@ class WMovie {
     this.providerInstanceName = '',
     this.sourceConfig = const {},
     this.metadata = const {},
+    this.description = '',
+    this.coverUrl = '',
   });
 
   bool get isStaticMedia => id.startsWith('med_');
@@ -245,6 +255,8 @@ class WMovie {
     String? providerInstanceName,
     Map<String, dynamic>? sourceConfig,
     Map<String, dynamic>? metadata,
+    String? description,
+    String? coverUrl,
   }) {
     return WMovie(
       id: id ?? this.id,
@@ -273,6 +285,8 @@ class WMovie {
       providerInstanceName: providerInstanceName ?? this.providerInstanceName,
       sourceConfig: sourceConfig ?? this.sourceConfig,
       metadata: metadata ?? this.metadata,
+      description: description ?? this.description,
+      coverUrl: coverUrl ?? this.coverUrl,
     );
   }
 

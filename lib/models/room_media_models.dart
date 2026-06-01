@@ -76,6 +76,28 @@ class PlaylistDetailInfo {
   });
 }
 
+class StoredImageInfo {
+  final String id;
+  final String storageBackend;
+  final String objectKey;
+  final String url;
+  final String mimeType;
+  final int sizeBytes;
+  final int width;
+  final int height;
+
+  const StoredImageInfo({
+    required this.id,
+    required this.storageBackend,
+    required this.objectKey,
+    required this.url,
+    required this.mimeType,
+    required this.sizeBytes,
+    required this.width,
+    required this.height,
+  });
+}
+
 class ChatHistoryPage {
   final List<RoomChatMessageInfo> messages;
   final String nextCursor;
@@ -86,6 +108,38 @@ class ChatHistoryPage {
   });
 }
 
+class ChatMessageContextInfo {
+  const ChatMessageContextInfo({
+    required this.before,
+    required this.message,
+    required this.after,
+  });
+
+  final List<RoomChatMessageInfo> before;
+  final RoomChatMessageInfo message;
+  final List<RoomChatMessageInfo> after;
+}
+
+class ChatReadStateInfo {
+  const ChatReadStateInfo({
+    required this.roomId,
+    required this.userId,
+    required this.lastReadMessageId,
+    required this.lastReadEventId,
+    required this.lastReadEventSequence,
+    required this.updatedAt,
+    required this.unreadCount,
+  });
+
+  final String roomId;
+  final String userId;
+  final String lastReadMessageId;
+  final String lastReadEventId;
+  final int lastReadEventSequence;
+  final int updatedAt;
+  final int unreadCount;
+}
+
 class RoomChatMessageInfo {
   final String id;
   final String roomId;
@@ -93,8 +147,13 @@ class RoomChatMessageInfo {
   final String username;
   final String content;
   final int timestamp;
-  final double? position;
-  final String? color;
+  final String displayPosition;
+  final String displayColor;
+  final int version;
+  final int editedAt;
+  final int deletedAt;
+  final int status;
+  final List<StoredImageInfo> images;
 
   const RoomChatMessageInfo({
     required this.id,
@@ -103,7 +162,17 @@ class RoomChatMessageInfo {
     required this.username,
     required this.content,
     required this.timestamp,
-    this.position,
-    this.color,
+    this.displayPosition = '',
+    this.displayColor = '',
+    this.version = 0,
+    this.editedAt = 0,
+    this.deletedAt = 0,
+    this.status = 0,
+    this.images = const [],
   });
+
+  double? get position => double.tryParse(displayPosition);
+  String? get color => displayColor.isEmpty ? null : displayColor;
+  bool get isDeleted => deletedAt > 0 || status == 3;
+  bool get isEdited => editedAt > 0 || status == 2;
 }

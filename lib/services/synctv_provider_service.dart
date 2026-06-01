@@ -19,25 +19,23 @@ class SyncTvProviderDomainService {
   Future<AlistLoginInfo> loginAList(
     String host,
     String username,
-    String password, {
-    String hashedPassword = '',
+    String hashedPassword, {
     String otpCode = '',
     String otpSecret = '',
     String instanceName = '',
   }) async {
     final trimmedHashedPassword = hashedPassword.trim();
+    if (trimmedHashedPassword.isEmpty) {
+      throw ArgumentError.value(hashedPassword, 'hashedPassword', '不能为空');
+    }
     final request = alist.LoginRequest(
       host: host,
       username: username,
+      hashedPassword: trimmedHashedPassword,
       otpCode: otpCode,
       otpSecret: otpSecret,
       instanceName: instanceName,
     );
-    if (trimmedHashedPassword.isEmpty) {
-      request.password = password;
-    } else {
-      request.hashedPassword = trimmedHashedPassword;
-    }
     final response = await _api.alistProvider.login(request);
     return AlistLoginInfo(token: response.token, serverId: response.serverId);
   }
@@ -254,7 +252,7 @@ class SyncTvProviderDomainService {
   }) async {
     final resolvedServerId = serverId.trim();
     if (resolvedServerId.isEmpty) {
-      throw StateError('请选择已绑定的 Alist 账号');
+      throw StateError('请选择已绑定的 AList 账号');
     }
     final normalizedKeyword = keyword?.trim() ?? '';
     if (normalizedKeyword.isNotEmpty) {

@@ -157,6 +157,7 @@ const AdminUser$json = {
     {'1': 'banned_at', '3': 9, '4': 1, '5': 3, '10': 'bannedAt'},
     {'1': 'banned_by', '3': 10, '4': 1, '5': 9, '10': 'bannedBy'},
     {'1': 'banned_reason', '3': 11, '4': 1, '5': 9, '10': 'bannedReason'},
+    {'1': 'avatar_url', '3': 12, '4': 1, '5': 9, '10': 'avatarUrl'},
   ],
 };
 
@@ -168,7 +169,8 @@ final $typed_data.Uint8List adminUserDescriptor = $convert.base64Decode(
     'ZzdGF0dXMSHQoKY3JlYXRlZF9hdBgGIAEoA1IJY3JlYXRlZEF0Eh0KCnVwZGF0ZWRfYXQYByAB'
     'KANSCXVwZGF0ZWRBdBIbCglpc19iYW5uZWQYCCABKAhSCGlzQmFubmVkEhsKCWJhbm5lZF9hdB'
     'gJIAEoA1IIYmFubmVkQXQSGwoJYmFubmVkX2J5GAogASgJUghiYW5uZWRCeRIjCg1iYW5uZWRf'
-    'cmVhc29uGAsgASgJUgxiYW5uZWRSZWFzb24=');
+    'cmVhc29uGAsgASgJUgxiYW5uZWRSZWFzb24SHQoKYXZhdGFyX3VybBgMIAEoCVIJYXZhdGFyVX'
+    'Js');
 
 @$core.Deprecated('Use adminRoomDescriptor instead')
 const AdminRoom$json = {

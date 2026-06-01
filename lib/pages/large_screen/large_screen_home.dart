@@ -34,6 +34,7 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
   bool _isLoggedIn = false;
   WUser? _currentUser;
   StreamSubscription? _authErrorSubscription;
+  final Set<String> _joiningRoomIds = <String>{};
   final FocusNode _createRoomFocus = FocusNode();
   final FocusNode _refreshFocus = FocusNode();
   final TextEditingController _roomSearchController = TextEditingController();
@@ -96,6 +97,16 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
   }
 
   Future<void> _loadRooms({bool silent = false}) async {
+    if (WatchTogetherService.activeServer == null) {
+      if (mounted) {
+        setState(() {
+          _rooms = const [];
+          _roomsTotal = 0;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
     if (!_isLoggedIn && _roomFeed == _RoomFeed.mine) {
       setState(() {
         _rooms = const [];
@@ -315,34 +326,38 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
   }
 
   Future<void> _handleJoinRoom(WRoom room) async {
+    if (_joiningRoomIds.contains(room.roomId)) return;
+    _joiningRoomIds.add(room.roomId);
     String password = '';
 
-    if (!_isLoggedIn) {
-      final authenticated = await _showLoginDialog(guestRoomId: room.roomId);
-      if (!authenticated || !mounted) return;
-    }
-
-    if (room.needPassword) {
-      final result = await showRoomPasswordDialog(
-        context: context,
-        roomName: room.roomName,
-      );
-
-      if (result == null) return;
-      if (result.isEmpty) {
-        if (mounted) MessageUtils.showWarning(context, '请输入密码');
-        return;
-      }
-      password = result;
-    }
-
     try {
+      if (!_isLoggedIn) {
+        final authenticated = await _showLoginDialog(guestRoomId: room.roomId);
+        if (!authenticated || !mounted) return;
+      }
+
+      if (room.needPassword) {
+        final result = await showRoomPasswordDialog(
+          context: context,
+          roomName: room.roomName,
+        );
+
+        if (result == null) return;
+        if (result.isEmpty) {
+          if (mounted) MessageUtils.showWarning(context, '请输入密码');
+          return;
+        }
+        password = result;
+      }
+
       await WatchTogetherService.joinRoom(room.roomId, password);
       if (mounted) {
         _navigateToRoom(room);
       }
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '加入房间失败: $e');
+    } finally {
+      _joiningRoomIds.remove(room.roomId);
     }
   }
 
@@ -592,20 +607,29 @@ class _LargeScreenHomeState extends State<LargeScreenHome> {
   }
 
   Widget _buildRoomGrid() {
+    final hasServer = WatchTogetherService.activeServer != null;
     if (_rooms.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.weekend_rounded,
+              hasServer ? Icons.weekend_rounded : Icons.dns_rounded,
               size: 120,
               color: Colors.grey.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 24),
-            const Text(
-              '暂无房间，去创建一个吧',
-              style: TextStyle(fontSize: 24, color: Colors.grey),
+            Text(
+              hasServer ? '暂无房间，去创建一个吧' : '添加服务器后开始使用',
+              style: const TextStyle(fontSize: 24, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.tonalIcon(
+              onPressed: hasServer
+                  ? () => _loadRooms(silent: false)
+                  : _showServerSettingsDialog,
+              icon: Icon(hasServer ? Icons.refresh_rounded : Icons.add_link),
+              label: Text(hasServer ? '刷新' : '添加服务器'),
             ),
           ],
         ),

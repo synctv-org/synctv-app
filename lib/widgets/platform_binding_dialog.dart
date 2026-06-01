@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/services/bilibili_geetest_service.dart';
@@ -27,6 +29,11 @@ List<String> _mergeInstanceNames(List<String> remoteInstances) {
 
 String _providerInstanceLabel(String instanceName) {
   return instanceName.isEmpty ? '本地实例' : instanceName;
+}
+
+String _hashAlistPassword(String password) {
+  const salt = 'https://github.com/alist-org/alist';
+  return sha256.convert(utf8.encode('$password-$salt')).toString();
 }
 
 class PlatformBindingDialog extends StatefulWidget {
@@ -237,7 +244,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
 
     ChatUtils.showStyledDialog(
       context: context,
-      title: '登录 ${provider.label}',
+      title: '绑定 ${provider.label}',
       icon: Icon(provider.icon, color: provider.color),
       iconColor: provider.color,
       content: _PasswordAccountDialog(
@@ -574,9 +581,11 @@ class _ProviderBindList extends StatelessWidget {
               icon: Icon(provider.kind == _ProviderKind.bilibili
                   ? Icons.link_rounded
                   : Icons.add_rounded),
-              label: Text(provider.kind == _ProviderKind.bilibili
-                  ? '绑定 Bilibili'
-                  : '添加 ${provider.label} 账号'),
+              label: Text(
+                items.isEmpty
+                    ? '绑定 ${provider.label}'
+                    : '重新绑定 ${provider.label}',
+              ),
             ),
           ),
         ),
@@ -798,7 +807,6 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   List<String> _instanceNames = const [''];
   String _instanceName = '';
   bool _useApiKey = false;
-  bool _useHashedPassword = false;
   bool _loadingInstances = true;
   bool _isLoading = false;
 
@@ -843,18 +851,13 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
     final host = _hostController.text.trim();
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
-    final hashedPassword = _secretController.text.trim();
     final apiKey = _secretController.text.trim();
     final otpCode = _otpCodeController.text.trim();
     final otpSecret = _otpSecretController.text.trim();
 
     if (host.isEmpty ||
         username.isEmpty ||
-        (_isEmby && _useApiKey
-            ? apiKey.isEmpty
-            : _isAlist && _useHashedPassword
-                ? hashedPassword.isEmpty
-                : password.isEmpty)) {
+        (_isEmby && _useApiKey ? apiKey.isEmpty : password.isEmpty)) {
       MessageUtils.showError(context, '请填写完整信息');
       return;
     }
@@ -865,8 +868,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
         await WatchTogetherService.loginAList(
           host,
           username,
-          _useHashedPassword ? '' : password,
-          hashedPassword: _useHashedPassword ? hashedPassword : '',
+          _hashAlistPassword(password),
           otpCode: otpCode,
           otpSecret: otpSecret,
           instanceName: _instanceName,
@@ -895,158 +897,147 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final providerColor = _isAlist ? Colors.amber : Colors.green;
-    return SingleChildScrollView(
+    final mediaHeight = MediaQuery.sizeOf(context).height;
+    final maxHeight = (mediaHeight * 0.62).clamp(
+      420.0,
+      _isAlist ? 540.0 : 500.0,
+    );
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_isAlist)
-            const _ProviderNotice(
-              icon: Icons.warning_amber_rounded,
-              text: '仅支持 AList 3.25.0 及以上版本',
-              color: Colors.amber,
-            ),
-          _ProviderFormSection(
-            icon: Icons.hub_outlined,
-            title: '连接目标',
-            color: providerColor,
-            children: [
-              _ProviderInstanceSelector(
-                instanceNames: _instanceNames,
-                selected: _instanceName,
-                loading: _loadingInstances,
-                onChanged: (value) => setState(() => _instanceName = value),
-              ),
-              const SizedBox(height: 14),
-              ChatUtils.createFormField(
-                context: context,
-                label: '$_label 地址',
-                controller: _hostController,
-                hintText: 'https://example.com',
-                prefixIcon: Icons.link_rounded,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _ProviderFormSection(
-            icon: Icons.person_outline_rounded,
-            title: '登录凭据',
-            color: providerColor,
-            children: [
-              ChatUtils.createFormField(
-                context: context,
-                label: '用户名',
-                controller: _usernameController,
-                prefixIcon: Icons.person_outline_rounded,
-              ),
-              const SizedBox(height: 14),
-              if (_isAlist) ...[
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(
-                        value: false,
-                        icon: Icon(Icons.lock_outline_rounded),
-                        label: Text('密码'),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_isAlist)
+                    const _ProviderNotice(
+                      icon: Icons.warning_amber_rounded,
+                      text: '仅支持 AList 3.25.0 及以上版本',
+                      color: Colors.amber,
+                    ),
+                  _ProviderFormSection(
+                    icon: Icons.hub_outlined,
+                    title: '连接目标',
+                    color: providerColor,
+                    children: [
+                      _ProviderInstanceSelector(
+                        instanceNames: _instanceNames,
+                        selected: _instanceName,
+                        loading: _loadingInstances,
+                        onChanged: (value) =>
+                            setState(() => _instanceName = value),
                       ),
-                      ButtonSegment(
-                        value: true,
-                        icon: Icon(Icons.tag_rounded),
-                        label: Text('哈希'),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: '$_label 地址',
+                        controller: _hostController,
+                        hintText: 'https://example.com',
+                        prefixIcon: Icons.link_rounded,
                       ),
                     ],
-                    selected: {_useHashedPassword},
-                    onSelectionChanged: (selected) => setState(() {
-                      _useHashedPassword = selected.single;
-                      _passwordController.clear();
-                      _secretController.clear();
-                    }),
                   ),
-                ),
-                const SizedBox(height: 14),
-              ],
-              if (_isEmby) ...[
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(
-                        value: false,
-                        icon: Icon(Icons.lock_outline_rounded),
-                        label: Text('密码'),
+                  const SizedBox(height: 14),
+                  _ProviderFormSection(
+                    icon: Icons.person_outline_rounded,
+                    title: '登录凭据',
+                    color: providerColor,
+                    children: [
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: '用户名',
+                        controller: _usernameController,
+                        prefixIcon: Icons.person_outline_rounded,
                       ),
-                      ButtonSegment(
-                        value: true,
-                        icon: Icon(Icons.key_rounded),
-                        label: Text('API Key'),
-                      ),
+                      const SizedBox(height: 12),
+                      if (_isEmby) ...[
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: SegmentedButton<bool>(
+                            segments: const [
+                              ButtonSegment(
+                                value: false,
+                                icon: Icon(Icons.lock_outline_rounded),
+                                label: Text('密码'),
+                              ),
+                              ButtonSegment(
+                                value: true,
+                                icon: Icon(Icons.key_rounded),
+                                label: Text('API Key'),
+                              ),
+                            ],
+                            selected: {_useApiKey},
+                            onSelectionChanged: (selected) =>
+                                setState(() => _useApiKey = selected.single),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      if (_useApiKey)
+                        ChatUtils.createFormField(
+                          context: context,
+                          label: 'API Key',
+                          controller: _secretController,
+                          prefixIcon: Icons.key_rounded,
+                          obscureText: true,
+                        )
+                      else
+                        ChatUtils.createFormField(
+                          context: context,
+                          label: '密码',
+                          controller: _passwordController,
+                          prefixIcon: Icons.lock_outline_rounded,
+                          obscureText: true,
+                        ),
                     ],
-                    selected: {_useApiKey},
-                    onSelectionChanged: (selected) =>
-                        setState(() => _useApiKey = selected.single),
                   ),
-                ),
-                const SizedBox(height: 14),
-              ],
-              if (_isAlist && _useHashedPassword)
-                ChatUtils.createFormField(
-                  context: context,
-                  label: '已哈希密码',
-                  controller: _secretController,
-                  hintText: 'AList hashed_password',
-                  prefixIcon: Icons.tag_rounded,
-                  obscureText: true,
-                )
-              else if (_useApiKey)
-                ChatUtils.createFormField(
-                  context: context,
-                  label: 'API Key',
-                  controller: _secretController,
-                  prefixIcon: Icons.key_rounded,
-                  obscureText: true,
-                )
-              else
-                ChatUtils.createFormField(
-                  context: context,
-                  label: '密码',
-                  controller: _passwordController,
-                  prefixIcon: Icons.lock_outline_rounded,
-                  obscureText: true,
-                ),
-            ],
-          ),
-          if (_isAlist) ...[
-            const SizedBox(height: 16),
-            _ProviderFormSection(
-              icon: Icons.shield_outlined,
-              title: '双因素验证',
-              color: theme.colorScheme.secondary,
-              children: [
-                ChatUtils.createFormField(
-                  context: context,
-                  label: '一次性验证码',
-                  controller: _otpCodeController,
-                  hintText: '启用 2FA 时填写',
-                  prefixIcon: Icons.pin_outlined,
-                ),
-                const SizedBox(height: 14),
-                ChatUtils.createFormField(
-                  context: context,
-                  label: 'TOTP Secret',
-                  controller: _otpSecretController,
-                  hintText: '可选，用于后续自动刷新',
-                  prefixIcon: Icons.shield_outlined,
-                  obscureText: true,
-                ),
-              ],
+                  if (_isAlist) ...[
+                    const SizedBox(height: 14),
+                    _ProviderFormSection(
+                      icon: Icons.shield_outlined,
+                      title: '双因素验证',
+                      color: theme.colorScheme.secondary,
+                      children: [
+                        ChatUtils.createFormField(
+                          context: context,
+                          label: '一次性验证码',
+                          controller: _otpCodeController,
+                          hintText: '启用 2FA 时填写',
+                          prefixIcon: Icons.pin_outlined,
+                        ),
+                        const SizedBox(height: 12),
+                        ChatUtils.createFormField(
+                          context: context,
+                          label: 'TOTP Secret',
+                          controller: _otpSecretController,
+                          hintText: '可选，用于后续自动刷新',
+                          prefixIcon: Icons.shield_outlined,
+                          obscureText: true,
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ],
-          const SizedBox(height: 24),
-          _DialogActions(
-            isLoading: _isLoading,
-            onSubmit: _submit,
-            submitText: '登录',
+          ),
+          Divider(
+            height: 1,
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 12, 0, 2),
+            child: _DialogActions(
+              isLoading: _isLoading,
+              onSubmit: _submit,
+              submitText: '登录',
+            ),
           ),
         ],
       ),
@@ -1164,11 +1155,13 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
   String _key = '';
   String _statusText = '切换到扫码页后生成登录二维码';
   bool _isLoading = false;
+  bool _checkingStatus = false;
   bool _isExpired = false;
   bool _qrStarted = false;
   List<String> _instanceNames = const [''];
   String _instanceName = '';
   bool _loadingInstances = true;
+  int _activeLoginTabIndex = 0;
 
   @override
   void initState() {
@@ -1188,9 +1181,17 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
   }
 
   void _handleLoginTabChanged() {
-    if (_loginTabController.indexIsChanging) return;
-    if (_loginTabController.index == 0 && !_qrStarted && !_loadingInstances) {
-      _startLogin();
+    final nextIndex = _loginTabController.index;
+    if (nextIndex == _activeLoginTabIndex) return;
+    _activeLoginTabIndex = nextIndex;
+    if (nextIndex == 0) {
+      if (!_qrStarted && !_loadingInstances) {
+        _startLogin();
+      } else {
+        _resumeQrPolling();
+      }
+    } else {
+      _pauseQrPolling();
     }
   }
 
@@ -1217,7 +1218,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
   }
 
   Future<void> _startLogin() async {
-    _pollTimer?.cancel();
+    _pauseQrPolling();
     setState(() {
       _qrStarted = true;
       _url = '';
@@ -1238,10 +1239,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
         _statusText = '请在浏览器或 Bilibili App 中完成登录';
         _isLoading = false;
       });
-      _pollTimer = Timer.periodic(
-        const Duration(seconds: 5),
-        (_) => _checkStatus(),
-      );
+      _resumeQrPolling();
       await _checkStatus();
     } catch (e) {
       if (!mounted) return;
@@ -1252,8 +1250,33 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
     }
   }
 
+  void _pauseQrPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
+  void _resumeQrPolling() {
+    if (!mounted ||
+        _loginTabController.index != 0 ||
+        _key.isEmpty ||
+        _isExpired ||
+        _pollTimer != null) {
+      return;
+    }
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _checkStatus(),
+    );
+  }
+
   Future<void> _checkStatus() async {
-    if (_key.isEmpty) return;
+    if (_key.isEmpty ||
+        _checkingStatus ||
+        _loginTabController.index != 0 ||
+        _isExpired) {
+      return;
+    }
+    _checkingStatus = true;
     try {
       final status = await WatchTogetherService.checkBilibiliQrLogin(
         _key,
@@ -1287,6 +1310,8 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
         return;
       }
       setState(() => _statusText = '检查登录状态失败: $e');
+    } finally {
+      _checkingStatus = false;
     }
   }
 
@@ -1323,6 +1348,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
             loading: _loadingInstances,
             onChanged: (value) {
               if (value == _instanceName) return;
+              _pauseQrPolling();
               setState(() {
                 _instanceName = value;
                 _qrStarted = false;
@@ -1332,7 +1358,6 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
                 _isLoading = false;
                 _statusText = '切换到扫码页后生成登录二维码';
               });
-              _pollTimer?.cancel();
               if (_loginTabController.index == 0) _startLogin();
             },
           ),

@@ -37,6 +37,7 @@ class AdminUser extends $pb.GeneratedMessage {
     $fixnum.Int64? bannedAt,
     $core.String? bannedBy,
     $core.String? bannedReason,
+    $core.String? avatarUrl,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -50,6 +51,7 @@ class AdminUser extends $pb.GeneratedMessage {
     if (bannedAt != null) result.bannedAt = bannedAt;
     if (bannedBy != null) result.bannedBy = bannedBy;
     if (bannedReason != null) result.bannedReason = bannedReason;
+    if (avatarUrl != null) result.avatarUrl = avatarUrl;
     return result;
   }
 
@@ -79,6 +81,7 @@ class AdminUser extends $pb.GeneratedMessage {
     ..aInt64(9, _omitFieldNames ? '' : 'bannedAt')
     ..aOS(10, _omitFieldNames ? '' : 'bannedBy')
     ..aOS(11, _omitFieldNames ? '' : 'bannedReason')
+    ..aOS(12, _omitFieldNames ? '' : 'avatarUrl')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -197,6 +200,15 @@ class AdminUser extends $pb.GeneratedMessage {
   $core.bool hasBannedReason() => $_has(10);
   @$pb.TagNumber(11)
   void clearBannedReason() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get avatarUrl => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set avatarUrl($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasAvatarUrl() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearAvatarUrl() => $_clearField(12);
 }
 
 class AdminRoom extends $pb.GeneratedMessage {

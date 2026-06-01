@@ -121,6 +121,18 @@ class SyncTvApiClient {
     'synctv.client.PlaylistBrowsePathNode.target',
     'synctv.client.CreatePlaylistRequest.source_config',
     'synctv.client.RoomSettingsChanged.settings',
+    'synctv.client.ResourceCover.metadata',
+    'synctv.client.ChatImage.metadata',
+    'synctv.client.CreateChatImageUploadSessionRequest.metadata',
+    'synctv.client.UserAvatar.metadata',
+    'synctv.client.CreateUserAvatarUploadSessionRequest.metadata',
+    'synctv.client.FileCover.metadata',
+    'synctv.client.VideoCover.metadata',
+    'synctv.client.CreateVideoCoverUploadSessionRequest.metadata',
+    'synctv.client.CreateRoomCoverUploadSessionRequest.metadata',
+    'synctv.client.CreatePlaylistCoverUploadSessionRequest.metadata',
+    'synctv.client.SendChatMessageRequest.metadata',
+    'synctv.client.EditChatMessageRequest.metadata',
     'synctv.admin.AdminRoom.settings',
     'synctv.admin.SettingsGroup.settings',
     'synctv.admin.GetRoomSettingsResponse.settings',
@@ -135,6 +147,36 @@ class SyncTvApiClient {
 
   set baseUrl(String value) {
     _baseUri = _normalizeBaseUri(value);
+  }
+
+  Future<void> uploadRawBytes(
+    String uploadUrl,
+    List<int> data, {
+    required String contentType,
+    Map<String, String> headers = const {},
+  }) async {
+    final uri = _resolveUploadUri(uploadUrl);
+    final requestHeaders = <String, String>{
+      ...headers,
+      if (contentType.isNotEmpty) 'content-type': contentType,
+    };
+    final response = await _http.put(
+      uri,
+      headers: requestHeaders,
+      body: data,
+    );
+    if (response.statusCode == 401) {
+      onAuthError?.call();
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _apiException(response);
+    }
+  }
+
+  Uri _resolveUploadUri(String uploadUrl) {
+    final parsed = Uri.parse(uploadUrl);
+    if (parsed.hasScheme) return parsed;
+    return _baseUri.resolve(uploadUrl);
   }
 
   List<int> encodeJsonBytes(Object? value) => _jsonBytes(value);
@@ -792,6 +834,13 @@ extension SyncTvModelMapping on SyncTvApiClient {
       id: user.id,
       username: user.username,
       email: user.email.isEmpty ? null : user.email,
+      avatarUrl: resolveResourceUrl(
+        user.avatarUrl.isNotEmpty
+            ? user.avatarUrl
+            : user.hasAvatar()
+                ? user.avatar.url
+                : '',
+      ),
       role: user.role.value,
       status: user.status.value,
       createdAt: user.createdAt.toInt(),
@@ -860,6 +909,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       viewerCount: room.memberCount,
       memberCount: room.memberCount,
       creatorId: room.createdBy,
+      coverUrl: resolveResourceUrl(room.hasCover() ? room.cover.url : ''),
       createdAt: room.createdAt.toInt(),
       updatedAt: room.updatedAt.toInt(),
       status: room.status.value,
@@ -906,6 +956,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
       providerInstanceName: media.providerInstanceName,
       sourceConfig: sourceConfig,
       metadata: metadata,
+      description: media.description,
+      coverUrl: resolveResourceUrl(media.hasCover() ? media.cover.url : ''),
     );
   }
 
@@ -923,6 +975,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
       itemCount: playlist.itemCount,
       availability: playlist.availability.value,
       version: playlist.version.toInt(),
+      description: playlist.description,
+      coverUrl: resolveResourceUrl(playlist.hasCover() ? playlist.cover.url : ''),
       type: playlist.isDynamic ? playlist.sourceProvider : 'playlist',
       sourceProvider: playlist.sourceProvider,
       providerInstanceName: playlist.providerInstanceName,

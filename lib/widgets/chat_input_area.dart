@@ -18,6 +18,7 @@ class ChatInputArea extends StatefulWidget {
   final Function onStopRecording;
   final Function onCancelRecording;
   final File? selectedImageFile;
+  final Uint8List? selectedImageBytes;
   final VoidCallback? onCancelSelectedImage;
   final VoidCallback? onInputFocused;
   final bool showAsBackButton;
@@ -36,6 +37,7 @@ class ChatInputArea extends StatefulWidget {
     required this.onStopRecording,
     required this.onCancelRecording,
     this.selectedImageFile,
+    this.selectedImageBytes,
     this.onCancelSelectedImage,
     this.onInputFocused,
     this.showAsBackButton = false,
@@ -154,6 +156,7 @@ class _ChatInputAreaState extends State<ChatInputArea>
                           }
                         : null,
                     selectedImageFile: widget.selectedImageFile,
+                    selectedImageBytes: widget.selectedImageBytes,
                     onCancelSelectedImage: widget.onCancelSelectedImage,
                     onInputFocused: widget.onInputFocused,
                     animationValue: 1.0 - _modeTransitionController.value,
@@ -236,6 +239,7 @@ class TextInputArea extends StatefulWidget {
   final VoidCallback onShowImagePicker;
   final VoidCallback? onSwitchToVoiceMode;
   final File? selectedImageFile;
+  final Uint8List? selectedImageBytes;
   final VoidCallback? onCancelSelectedImage;
   final VoidCallback? onInputFocused;
   final double animationValue;
@@ -250,6 +254,7 @@ class TextInputArea extends StatefulWidget {
     required this.onShowImagePicker,
     this.onSwitchToVoiceMode,
     this.selectedImageFile,
+    this.selectedImageBytes,
     this.onCancelSelectedImage,
     this.onInputFocused,
     this.animationValue = 1.0,
@@ -261,10 +266,12 @@ class TextInputArea extends StatefulWidget {
 
 class _TextInputAreaState extends State<TextInputArea> {
   bool _hasText = false;
+  late final FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
+    _focusNode = FocusNode();
     _hasText = widget.textController.text.trim().isNotEmpty;
     widget.textController.addListener(_onTextChanged);
   }
@@ -272,6 +279,7 @@ class _TextInputAreaState extends State<TextInputArea> {
   @override
   void dispose() {
     widget.textController.removeListener(_onTextChanged);
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -288,13 +296,21 @@ class _TextInputAreaState extends State<TextInputArea> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final bool hasSelectedImage = widget.selectedImageFile != null;
+    final bool hasSelectedImage =
+        widget.selectedImageBytes != null || widget.selectedImageFile != null;
+    final canSend = (_hasText || hasSelectedImage) && !widget.isLoading;
+    final fieldFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.04);
+    final fieldBorder = isDark
+        ? Colors.white.withValues(alpha: 0.10)
+        : Colors.black.withValues(alpha: 0.10);
 
     return Opacity(
       opacity: widget.animationValue,
       child: Transform.scale(
         scale: 0.95 + 0.05 * widget.animationValue,
-        child: Container(
+        child: Material(
           color: Colors.transparent,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -318,12 +334,19 @@ class _TextInputAreaState extends State<TextInputArea> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                widget.selectedImageFile!,
-                                width: 60,
-                                height: 60,
-                                fit: BoxFit.cover,
-                              ),
+                              child: widget.selectedImageBytes != null
+                                  ? Image.memory(
+                                      widget.selectedImageBytes!,
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.file(
+                                      widget.selectedImageFile!,
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                             const SizedBox(width: 10), // 从12减小到10
                             Expanded(
@@ -353,70 +376,55 @@ class _TextInputAreaState extends State<TextInputArea> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.grey.shade800.withValues(alpha: 0.5)
-                                : Colors.grey.shade100.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          constraints: const BoxConstraints(
-                            minHeight: 48, // 从54减小到48
-                            maxHeight: 120,
-                          ),
-                          child: TextField(
-                            controller: widget.textController,
-                            decoration: InputDecoration(
-                              hintText:
-                                  hasSelectedImage ? '请描述图片...' : '输入消息...',
-                              hintStyle: TextStyle(
-                                color: isDark
-                                    ? Colors.white.withValues(alpha: 0.6)
-                                    : Colors.black.withValues(alpha: 0.6),
-                                fontSize: 16,
-                              ),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              focusedErrorBorder: InputBorder.none,
-                              filled: false,
-                              contentPadding: const EdgeInsets.only(
-                                left: 18, // 稍微减小左边距
-                                right: 18, // 右边距统一，不再需要为内嵌按钮留空间
-                                top: 13, // 稍微减小上下边距
-                                bottom: 13,
-                              ),
-                            ),
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: null,
-                            minLines: 1,
-                            keyboardType: TextInputType.multiline,
-                            textInputAction:
-                                TextInputAction.send, // 改为send，支持回车发送
-                            onSubmitted: (_hasText || hasSelectedImage) &&
-                                    !widget.isLoading
-                                ? (_) => widget.onSendMessage() // 添加回车发送功能
-                                : null,
-                            onTap: widget.onInputFocused, // 点击输入框时触发回调
-                            enabled: !widget.isLoading,
+                    child: TextField(
+                      focusNode: _focusNode,
+                      controller: widget.textController,
+                      decoration: InputDecoration(
+                        hintText: hasSelectedImage ? '请描述图片...' : '输入消息...',
+                        prefixIcon: const Icon(Icons.chat_bubble_outline),
+                        filled: true,
+                        fillColor: fieldFill,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: fieldBorder),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: fieldBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color: theme.colorScheme.primary,
+                            width: 1.4,
                           ),
                         ),
+                        disabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: fieldBorder),
+                        ),
                       ),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 4,
+                      minLines: 1,
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted:
+                          canSend ? (_) => widget.onSendMessage() : null,
+                      onTap: widget.onInputFocused,
+                      enabled: !widget.isLoading,
                     ),
                   ),
-                  // 添加图片选择按钮（仅在dify和openai对话中显示，且没有选择图片时）
                   if ((widget.conversationType == 'dify' ||
-                          widget.conversationType == 'openai') &&
+                          widget.conversationType == 'openai' ||
+                          widget.conversationType == 'watch_together') &&
                       !hasSelectedImage) ...[
                     const SizedBox(width: 10),
                     GlassIconButton(
@@ -426,37 +434,28 @@ class _TextInputAreaState extends State<TextInputArea> {
                           : Colors.black.withValues(alpha: 0.7),
                       onTap: widget.onShowImagePicker,
                       isDark: isDark,
-                      size: 48, // 与发送按钮保持一致的大小
+                      size: 44,
                     ),
                   ],
-                  const SizedBox(width: 10), // 从12减小到10
-                  GlassButton(
-                    icon: widget.isLoading
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                isDark
-                                    ? Colors.white.withValues(alpha: 0.8)
-                                    : Colors.black.withValues(alpha: 0.7),
-                              ),
-                            ),
-                          )
-                        : Icon(
-                            Icons.send_rounded,
-                            color: (_hasText || hasSelectedImage)
-                                ? (isDark ? Colors.white : Colors.black)
-                                : (isDark
-                                    ? Colors.white.withValues(alpha: 0.4)
-                                    : Colors.black.withValues(alpha: 0.4)),
-                            size: 22,
-                          ),
-                    onTap: (_hasText || hasSelectedImage) && !widget.isLoading
-                        ? widget.onSendMessage
-                        : null,
-                    isDark: isDark,
+                  const SizedBox(width: 10),
+                  SizedBox.square(
+                    dimension: 44,
+                    child: FilledButton(
+                      onPressed: canSend ? widget.onSendMessage : null,
+                      style: FilledButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: widget.isLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.send_rounded, size: 20),
+                    ),
                   ),
                   if (widget.conversationType == 'xiaozhi' &&
                       widget.onSwitchToVoiceMode != null) ...[

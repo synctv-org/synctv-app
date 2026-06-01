@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/public_models.dart';
@@ -43,7 +44,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   bool _emailTokenRequested = false;
   bool _mfaEmailRequested = false;
   bool _passkeyAvailable = false;
-  bool _agreedToTerms = false;
+  bool _agreedToTerms = kDebugMode;
   bool _loginIdentifierConfirmed = false;
   bool _registerIdentifierConfirmed = false;
   bool _registerIncludeEmail = false;
@@ -144,6 +145,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _submitPasswordLogin() async {
     if (!_ensureTermsAccepted()) return;
+    _normalizeControllerSelection(_loginPasswordController);
     await _withLoading(() async {
       final result = await _opaqueAuthenticator.login(
         identifier: _loginIdentifierController.text,
@@ -402,15 +404,28 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final text = clipboard?.text;
     if (text == null || text.isEmpty) return;
 
+    _replaceControllerText(controller, text);
+  }
+
+  void _replaceControllerText(TextEditingController controller, String text) {
     final value = controller.value;
     final selection = value.selection;
-    final start = selection.isValid ? selection.start : value.text.length;
-    final end = selection.isValid ? selection.end : value.text.length;
+    final hasSelection = selection.isValid && !selection.isCollapsed;
+    final start = hasSelection ? selection.start : 0;
+    final end = hasSelection ? selection.end : value.text.length;
     final nextText = value.text.replaceRange(start, end, text);
     final offset = start + text.length;
     controller.value = value.copyWith(
       text: nextText,
       selection: TextSelection.collapsed(offset: offset),
+      composing: TextRange.empty,
+    );
+  }
+
+  void _normalizeControllerSelection(TextEditingController controller) {
+    final value = controller.value;
+    controller.value = value.copyWith(
+      selection: TextSelection.collapsed(offset: value.text.length),
       composing: TextRange.empty,
     );
   }
@@ -1289,32 +1304,46 @@ class _AgreementRow extends StatelessWidget {
     final linkColor = isDark
         ? const Color(0xFF9EA0FF)
         : Theme.of(context).colorScheme.primary;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Checkbox(
-          value: agreed,
-          onChanged: (value) => onChanged(value ?? false),
-          visualDensity: VisualDensity.compact,
-        ),
-        Expanded(
-          child: Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              const Text('我已阅读并同意'),
-              InkWell(
-                onTap: onOpenAgreement,
-                child: Text('《用户协议》', style: TextStyle(color: linkColor)),
+    return Material(
+      color: Colors.transparent,
+      child: CheckboxListTile(
+        value: agreed,
+        onChanged: (value) => onChanged(value ?? false),
+        dense: true,
+        visualDensity: VisualDensity.compact,
+        contentPadding: EdgeInsets.zero,
+        controlAffinity: ListTileControlAffinity.leading,
+        title: Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 2,
+          children: [
+            const Text('我已阅读并同意'),
+            InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: onOpenAgreement,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Text(
+                  '《用户协议》',
+                  style: TextStyle(color: linkColor),
+                ),
               ),
-              const Text('和'),
-              InkWell(
-                onTap: onOpenAgreement,
-                child: Text('《隐私政策》', style: TextStyle(color: linkColor)),
+            ),
+            const Text('和'),
+            InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: onOpenAgreement,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Text(
+                  '《隐私政策》',
+                  style: TextStyle(color: linkColor),
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

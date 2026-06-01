@@ -121,6 +121,9 @@ class SyncTvSessionStore {
   static bool get hasDefaultBaseUrl => defaultBaseUrl.isNotEmpty;
 
   static String get initialClientBaseUrl =>
+      hasDefaultBaseUrl ? defaultBaseUrl : '';
+
+  static String get clientBootstrapBaseUrl =>
       hasDefaultBaseUrl ? defaultBaseUrl : fallbackClientBaseUrl;
 
   final SyncTvSession session;

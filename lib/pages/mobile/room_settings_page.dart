@@ -14,6 +14,7 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/utils/chat_utils.dart';
+import 'package:synctv_app/utils/local_image_picker.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/ios_style_switch.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
@@ -22,7 +23,7 @@ const Map<String, String> _mediaSourceLabels = {
   '': '全部来源',
   'direct_url': '直链',
   'bilibili': 'Bilibili',
-  'alist': 'Alist',
+  'alist': 'AList',
   'emby': 'Emby',
   'rtmp': 'RTMP',
 };
@@ -224,7 +225,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _mediaProviderInstancesLoading = false;
   bool _chatLoading = false;
   bool _iceLoading = false;
+  bool _coverUpdating = false;
+  ChatReadStateInfo? _chatReadState;
   late String _currentUserId;
+  WRoom? _roomInfo;
+
+  String get _roomCoverUrl => _roomInfo?.coverUrl ?? '';
 
   bool get _canLeaveRoom =>
       _currentUserId.isNotEmpty &&
@@ -254,6 +260,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _loadMembers();
     _loadMediaProviderInstances();
     _loadMediaLibrary();
+    _loadRoomInfo();
     _loadChatHistory();
     _loadIceServers();
     _loadCurrentUserIfNeeded();
@@ -315,6 +322,51 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       setState(() => _currentUserId = user.id);
     } catch (e) {
       debugPrint('Load room settings current user failed: $e');
+    }
+  }
+
+  Future<void> _loadRoomInfo() async {
+    try {
+      final room = await WatchTogetherService.getRoomInfo(widget.roomId);
+      if (!mounted) return;
+      setState(() => _roomInfo = room);
+    } catch (e) {
+      debugPrint('Load room info failed: $e');
+    }
+  }
+
+  Future<void> _updateRoomCover() async {
+    if (_coverUpdating) return;
+    try {
+      final image = await pickLocalImageUpload();
+      if (image == null || !mounted) return;
+      setState(() => _coverUpdating = true);
+      final room = await WatchTogetherService.updateRoomCover(
+        widget.roomId,
+        image.upload,
+      );
+      if (!mounted) return;
+      setState(() => _roomInfo = room);
+      MessageUtils.showSuccess(context, '房间封面已更新');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '更新房间封面失败: $e');
+    } finally {
+      if (mounted) setState(() => _coverUpdating = false);
+    }
+  }
+
+  Future<void> _clearRoomCover() async {
+    if (_coverUpdating || _roomCoverUrl.isEmpty) return;
+    try {
+      setState(() => _coverUpdating = true);
+      final room = await WatchTogetherService.clearRoomCover(widget.roomId);
+      if (!mounted) return;
+      setState(() => _roomInfo = room);
+      MessageUtils.showSuccess(context, '房间封面已移除');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '移除房间封面失败: $e');
+    } finally {
+      if (mounted) setState(() => _coverUpdating = false);
     }
   }
 
@@ -880,11 +932,28 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         widget.roomId,
         cursor: loadMore ? _chatCursor : '',
       );
+      ChatReadStateInfo? readState;
+      if (!loadMore && page.messages.isNotEmpty) {
+        try {
+          readState = await WatchTogetherService.markChatRead(
+            widget.roomId,
+            page.messages.first.id,
+          );
+        } catch (e) {
+          debugPrint('Mark chat read failed: $e');
+          try {
+            readState = await WatchTogetherService.getChatReadState(
+              widget.roomId,
+            );
+          } catch (_) {}
+        }
+      }
       if (!mounted) return;
       setState(() {
         if (!loadMore) _chatMessages.clear();
         _chatMessages.addAll(page.messages);
         _chatCursor = page.nextCursor;
+        if (readState != null) _chatReadState = readState;
       });
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '加载聊天历史失败: $e');
@@ -1241,14 +1310,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _resetSettings() async {
     final confirmed = await _confirm(
       title: '重置设置',
-      content: '确认恢复房间默认设置？',
+      content: '确认将访问控制、消息开关、成员权限和访客权限恢复为服务端默认策略？当前未保存的房间策略会被覆盖。',
       action: '重置',
     );
     if (!confirmed) return;
     try {
       await WatchTogetherService.resetRoomSettings(widget.roomId);
-      final settings =
-          await WatchTogetherService.getRoomSettings(widget.roomId);
+      final settings = await WatchTogetherService.getRoomSettings(
+        widget.roomId,
+        refresh: true,
+      );
       if (!mounted) return;
       setState(() {
         _settings = settings;
@@ -1301,13 +1372,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       MessageUtils.showInfo(context, '动态目录中不能创建本地播放列表');
       return;
     }
-    final name = await _showNameDialog(title: '新建播放列表', label: '名称');
-    if (name == null || name.isEmpty) return;
+    final input = await _showEntryEditDialog(title: '新建播放列表');
+    if (input == null || input.name.isEmpty) return;
     try {
       await WatchTogetherService.createPlaylist(
         widget.roomId,
-        name: name,
+        name: input.name,
         parentId: _currentPlaylistId,
+        description: input.description,
       );
       await _loadMediaLibrary();
       if (mounted) MessageUtils.showSuccess(context, '播放列表已创建');
@@ -1344,24 +1416,29 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _renameEntry(WMovie entry) async {
-    final name = await _showNameDialog(
-      title: entry.isFolder ? '重命名播放列表' : '重命名媒体',
-      label: '名称',
-      initialValue: entry.name,
+    final input = await _showEntryEditDialog(
+      title: entry.isFolder ? '编辑播放列表' : '编辑媒体',
+      initialName: entry.name,
+      initialDescription: entry.description,
     );
-    if (name == null || name.isEmpty || name == entry.name) return;
+    if (input == null || input.name.isEmpty) return;
+    if (input.name == entry.name && input.description == entry.description) {
+      return;
+    }
     try {
       if (entry.id.startsWith('pl_')) {
         await WatchTogetherService.updatePlaylist(
           widget.roomId,
           entry.id,
-          name: name,
+          name: input.name,
+          description: input.description,
         );
       } else if (entry.id.startsWith('med_')) {
         await WatchTogetherService.editMedia(
           widget.roomId,
           entry.id,
-          name: name,
+          name: input.name,
+          description: input.description,
         );
       }
       await _loadMediaLibrary();
@@ -1374,7 +1451,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _deleteEntry(WMovie entry) async {
     final confirmed = await _confirm(
       title: '删除条目',
-      content: '确认删除 ${entry.name}？',
+      content: entry.isFolder
+          ? '确认删除播放列表 ${entry.name}？其中的子播放列表和媒体也会从房间媒体库移除，成员会立即看到变更。'
+          : '确认删除媒体 ${entry.name}？该条目会从房间媒体库移除，当前播放或成员播放列表会立即同步变更。',
       action: '删除',
     );
     if (!confirmed) return;
@@ -1426,6 +1505,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildCoverPreview(
+                      url: detail.coverUrl,
+                      fallbackIcon: isPlaylist
+                          ? Icons.folder_rounded
+                          : detail.live
+                              ? Icons.live_tv
+                              : Icons.movie_creation_outlined,
+                      height: 180,
+                    ),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Icon(
@@ -1479,6 +1568,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     ),
                     if (detail.parentId?.isNotEmpty == true)
                       _buildDetailLine('父级', detail.parentId!),
+                    if (detail.description.isNotEmpty)
+                      _buildDetailLine('描述', detail.description),
                     if (detail.url.isNotEmpty)
                       _buildDetailLine('URL', detail.url),
                     if (detail.subPath?.isNotEmpty == true)
@@ -1522,7 +1613,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                                 }
                               : null,
                           icon: const Icon(Icons.edit_outlined),
-                          label: const Text('重命名'),
+                          label: const Text('编辑'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton.tonalIcon(
+                          onPressed: isPersisted
+                              ? () {
+                                  Navigator.pop(context);
+                                  _updateEntryCover(detail);
+                                }
+                              : null,
+                          icon: const Icon(Icons.image_outlined),
+                          label: const Text('封面'),
                         ),
                       ],
                     ),
@@ -1535,6 +1637,164 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       );
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '加载条目详情失败: $e');
+    }
+  }
+
+  Future<void> _updateEntryCover(WMovie entry) async {
+    if (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_')) return;
+    try {
+      final image = await pickLocalImageUpload();
+      if (image == null || !mounted) return;
+      if (entry.id.startsWith('pl_')) {
+        await WatchTogetherService.updatePlaylistCover(
+          widget.roomId,
+          entry.id,
+          image.upload,
+        );
+      } else {
+        await WatchTogetherService.updateVideoCover(
+          widget.roomId,
+          entry.id,
+          image.upload,
+        );
+      }
+      await _loadMediaLibrary();
+      if (mounted) MessageUtils.showSuccess(context, '封面已更新');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '更新封面失败: $e');
+    }
+  }
+
+  Future<void> _clearEntryCover(WMovie entry) async {
+    if (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_')) return;
+    try {
+      if (entry.id.startsWith('pl_')) {
+        await WatchTogetherService.clearPlaylistCover(widget.roomId, entry.id);
+      } else {
+        await WatchTogetherService.clearVideoCover(widget.roomId, entry.id);
+      }
+      await _loadMediaLibrary();
+      if (mounted) MessageUtils.showSuccess(context, '封面已移除');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '移除封面失败: $e');
+    }
+  }
+
+  Future<void> _editChatMessage(RoomChatMessageInfo message) async {
+    if (message.isDeleted) {
+      MessageUtils.showInfo(context, '已删除的消息不能编辑');
+      return;
+    }
+    final controller = TextEditingController(text: message.content);
+    final content = await _showChatMessageEditDialog(controller);
+    if (content == null || content == message.content) return;
+    try {
+      await WatchTogetherService.editChatMessage(
+        widget.roomId,
+        message.id,
+        content: content,
+        expectedVersion: message.version,
+      );
+      await _loadChatHistory();
+      if (mounted) MessageUtils.showSuccess(context, '消息已更新');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '编辑消息失败: $e');
+    }
+  }
+
+  Future<String?> _showChatMessageEditDialog(
+    TextEditingController controller,
+  ) {
+    return ChatUtils.showStyledDialog<String>(
+      context: context,
+      title: '编辑消息',
+      icon: const Icon(Icons.edit_outlined),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        minLines: 2,
+        maxLines: 5,
+        decoration: const InputDecoration(
+          labelText: '消息内容',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, controller.text.trim()),
+          text: '保存',
+        ),
+      ],
+    ).whenComplete(() => _disposeTextControllersAfterDialog([controller]));
+  }
+
+  Future<void> _deleteChatMessage(RoomChatMessageInfo message) async {
+    if (message.isDeleted) return;
+    final confirmed = await _confirm(
+      title: '删除消息',
+      content: '确认删除这条聊天消息？删除后所有成员的聊天历史都会同步移除该消息。',
+      action: '删除',
+    );
+    if (!confirmed) return;
+    try {
+      await WatchTogetherService.deleteChatMessage(
+        widget.roomId,
+        message.id,
+        expectedVersion: message.version,
+      );
+      await _loadChatHistory();
+      if (mounted) MessageUtils.showSuccess(context, '消息已删除');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '删除消息失败: $e');
+    }
+  }
+
+  Future<void> _showChatMessageContext(RoomChatMessageInfo message) async {
+    try {
+      final contextInfo = await WatchTogetherService.getChatMessageContext(
+        widget.roomId,
+        message.id,
+        beforeLimit: 10,
+        afterLimit: 10,
+        includeDeleted: true,
+      );
+      if (!mounted) return;
+      final messages = [
+        ...contextInfo.before,
+        contextInfo.message,
+        ...contextInfo.after,
+      ];
+      await showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        builder: (context) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          return SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                  child: Text(
+                    '消息上下文',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                ...messages.map(
+                  (item) => _buildChatMessageTile(item, theme, isDark),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '加载消息上下文失败: $e');
     }
   }
 
@@ -1749,37 +2009,76 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           label: const Text('拒绝'),
         ),
       ],
-    ).whenComplete(controller.dispose);
+    ).whenComplete(() => _disposeTextControllersAfterDialog([controller]));
   }
 
-  Future<String?> _showNameDialog({
+  Future<_EntryEditResult?> _showEntryEditDialog({
     required String title,
-    required String label,
-    String initialValue = '',
+    String initialName = '',
+    String initialDescription = '',
   }) {
-    final controller = TextEditingController(text: initialValue);
-    return ChatUtils.showStyledDialog<String>(
+    final nameController = TextEditingController(text: initialName);
+    final descriptionController =
+        TextEditingController(text: initialDescription);
+    return ChatUtils.showStyledDialog<_EntryEditResult>(
       context: context,
       title: title,
       icon: const Icon(Icons.edit_outlined),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: '名称',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (_) {
+                Navigator.pop(
+                  context,
+                  _EntryEditResult(
+                    nameController.text.trim(),
+                    descriptionController.text.trim(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descriptionController,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: '描述',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
         ),
-        onSubmitted: (_) => Navigator.pop(context, controller.text.trim()),
       ),
       actions: [
         ChatUtils.createCancelButton(context),
         ChatUtils.createConfirmButton(
           context,
-          () => Navigator.pop(context, controller.text.trim()),
+          () => Navigator.pop(
+            context,
+            _EntryEditResult(
+              nameController.text.trim(),
+              descriptionController.text.trim(),
+            ),
+          ),
           text: '保存',
         ),
       ],
-    ).whenComplete(controller.dispose);
+    ).whenComplete(() {
+      _disposeTextControllersAfterDialog([
+        nameController,
+        descriptionController,
+      ]);
+    });
   }
 
   Future<_MemberEditResult?> _showMemberEditDialog() {
@@ -1847,7 +2146,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           text: '添加',
         ),
       ],
-    ).whenComplete(userIdController.dispose);
+    ).whenComplete(
+        () => _disposeTextControllersAfterDialog([userIdController]));
+  }
+
+  void _disposeTextControllersAfterDialog(
+    List<TextEditingController> controllers,
+  ) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final controller in controllers) {
+        controller.dispose();
+      }
+    });
   }
 
   Future<int?> _showMemberRoleDialog(int currentRole) {
@@ -3497,7 +3807,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
-            title: '聊天历史',
+            title: _chatReadState == null
+                ? '聊天历史'
+                : '聊天历史 · 未读 ${_chatReadState!.unreadCount}',
             count: _chatMessages.length,
             loading: _chatLoading,
             onRefresh: _loadChatHistory,
@@ -3928,7 +4240,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E24) : Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -4081,15 +4392,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
         ),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Row(
         children: [
-          Icon(
-            entry.isFolder
-                ? Icons.folder
+          _buildCoverPreview(
+            url: entry.coverUrl,
+            fallbackIcon: entry.isFolder
+                ? Icons.folder_rounded
                 : entry.live
                     ? Icons.live_tv
-                    : Icons.movie,
-            color: entry.isFolder ? Colors.amber.shade700 : theme.primaryColor,
+                    : Icons.movie_creation_outlined,
+            width: 68,
+            height: 68,
+            borderRadius: 0,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -4107,6 +4422,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (entry.description.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      entry.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: theme.hintColor, fontSize: 12),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     _mediaSubtitle(entry),
@@ -4128,6 +4452,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   _openMediaEntry(entry);
                 case _MediaAction.rename:
                   _renameEntry(entry);
+                case _MediaAction.updateCover:
+                  _updateEntryCover(entry);
+                case _MediaAction.clearCover:
+                  _clearEntryCover(entry);
                 case _MediaAction.moveUp:
                   _movePlaylistRelative(entry, -1);
                 case _MediaAction.moveDown:
@@ -4151,7 +4479,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               PopupMenuItem(
                 value: _MediaAction.rename,
                 enabled: isPersisted,
-                child: const Text('重命名'),
+                child: const Text('编辑'),
+              ),
+              PopupMenuItem(
+                value: _MediaAction.updateCover,
+                enabled: isPersisted,
+                child: const Text('更新封面'),
+              ),
+              PopupMenuItem(
+                value: _MediaAction.clearCover,
+                enabled: isPersisted && entry.coverUrl.isNotEmpty,
+                child: const Text('移除封面'),
               ),
               PopupMenuItem(
                 value: _MediaAction.moveUp,
@@ -4186,6 +4524,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     ThemeData theme,
     bool isDark,
   ) {
+    final title = message.username.isEmpty ? message.userId : message.username;
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       padding: const EdgeInsets.all(14),
@@ -4203,20 +4542,68 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             children: [
               Expanded(
                 child: Text(
-                  message.username.isEmpty ? message.userId : message.username,
+                  message.isDeleted ? '$title · 已删除' : title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
+              if (message.isEdited && !message.isDeleted) ...[
+                Text(
+                  '已编辑',
+                  style: TextStyle(color: theme.hintColor, fontSize: 12),
+                ),
+                const SizedBox(width: 8),
+              ],
               Text(
                 _formatTimestamp(message.timestamp),
                 style: TextStyle(color: theme.hintColor, fontSize: 12),
               ),
+              const SizedBox(width: 4),
+              _buildChatMessageActionButton(
+                tooltip: '查看上下文',
+                icon: Icons.forum_outlined,
+                onPressed: () => _showChatMessageContext(message),
+              ),
+              _buildChatMessageActionButton(
+                tooltip: '编辑',
+                icon: Icons.edit_outlined,
+                onPressed:
+                    message.isDeleted ? null : () => _editChatMessage(message),
+              ),
+              _buildChatMessageActionButton(
+                tooltip: '删除',
+                icon: Icons.delete_outline,
+                color: theme.colorScheme.error,
+                onPressed: message.isDeleted
+                    ? null
+                    : () => _deleteChatMessage(message),
+              ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(message.content),
+          if (message.content.isNotEmpty)
+            Text(
+              message.isDeleted ? '这条消息已删除' : message.content,
+              style: message.isDeleted
+                  ? TextStyle(
+                      color: theme.hintColor,
+                      fontStyle: FontStyle.italic,
+                    )
+                  : null,
+            ),
+          if (message.images.isNotEmpty && !message.isDeleted) ...[
+            if (message.content.isNotEmpty) const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: message.images
+                  .map(
+                    (image) => _buildChatImageThumb(image, theme),
+                  )
+                  .toList(),
+            ),
+          ],
           if (message.position != null || message.color != null) ...[
             const SizedBox(height: 6),
             Text(
@@ -4231,6 +4618,79 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildChatMessageActionButton({
+    required String tooltip,
+    required IconData icon,
+    required VoidCallback? onPressed,
+    Color? color,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: IconButton(
+        visualDensity: VisualDensity.compact,
+        iconSize: 18,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+        onPressed: onPressed,
+        icon: Icon(icon, color: color),
+      ),
+    );
+  }
+
+  Widget _buildChatImageThumb(StoredImageInfo image, ThemeData theme) {
+    final resolved = WatchTogetherService.resolveResourceUrl(image.url);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        resolved,
+        width: 160,
+        height: 104,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: 160,
+          height: 104,
+          color: theme.colorScheme.surfaceContainerHighest,
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image_outlined),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCoverPreview({
+    required String url,
+    required IconData fallbackIcon,
+    double width = double.infinity,
+    required double height,
+    double borderRadius = 8,
+  }) {
+    final theme = Theme.of(context);
+    final resolved = WatchTogetherService.resolveResourceUrl(url);
+    final fallback = Container(
+      width: width,
+      height: height,
+      color: theme.colorScheme.surfaceContainerHighest,
+      alignment: Alignment.center,
+      child: Icon(
+        fallbackIcon,
+        color: theme.colorScheme.onSurfaceVariant,
+        size: height >= 120 ? 42 : 24,
+      ),
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: resolved.isEmpty
+          ? fallback
+          : Image.network(
+              resolved,
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => fallback,
+            ),
     );
   }
 
@@ -4320,6 +4780,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     final isCreator = member.role ==
         common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value;
+    final isCurrentUser =
+        _currentUserId.isNotEmpty && member.userId == _currentUserId;
+    final canManageMember = !isCreator && !isCurrentUser;
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       padding: const EdgeInsets.all(14),
@@ -4363,43 +4826,40 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               ],
             ),
           ),
-          PopupMenuButton<_MemberAction>(
-            tooltip: '成员操作',
-            onSelected: (action) {
-              switch (action) {
-                case _MemberAction.role:
-                  _setMemberRole(member);
-                case _MemberAction.permissions:
-                  _editMemberPermissionOverrides(member);
-                case _MemberAction.transfer:
-                  _transferOwnership(member);
-                case _MemberAction.kick:
-                  _kickMember(member);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: _MemberAction.role,
-                enabled: !isCreator,
-                child: const Text('修改角色'),
-              ),
-              PopupMenuItem(
-                value: _MemberAction.permissions,
-                enabled: !isCreator,
-                child: const Text('权限覆盖'),
-              ),
-              PopupMenuItem(
-                value: _MemberAction.transfer,
-                enabled: !isCreator,
-                child: const Text('转让房主'),
-              ),
-              PopupMenuItem(
-                value: _MemberAction.kick,
-                enabled: !isCreator,
-                child: const Text('移出房间'),
-              ),
-            ],
-          ),
+          if (canManageMember)
+            PopupMenuButton<_MemberAction>(
+              tooltip: '成员操作',
+              onSelected: (action) {
+                switch (action) {
+                  case _MemberAction.role:
+                    _setMemberRole(member);
+                  case _MemberAction.permissions:
+                    _editMemberPermissionOverrides(member);
+                  case _MemberAction.transfer:
+                    _transferOwnership(member);
+                  case _MemberAction.kick:
+                    _kickMember(member);
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: _MemberAction.role,
+                  child: Text('修改角色'),
+                ),
+                PopupMenuItem(
+                  value: _MemberAction.permissions,
+                  child: Text('权限覆盖'),
+                ),
+                PopupMenuItem(
+                  value: _MemberAction.transfer,
+                  child: Text('转让房主'),
+                ),
+                PopupMenuItem(
+                  value: _MemberAction.kick,
+                  child: Text('移出房间'),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -4408,44 +4868,106 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Widget _buildRoomActions(ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Material(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(
-            color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+      child: Column(
+        children: [
+          Material(
+            color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(
+                color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                _buildCoverPreview(
+                  url: _roomCoverUrl,
+                  fallbackIcon: Icons.meeting_room_outlined,
+                  height: 148,
+                  borderRadius: 0,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _roomInfo?.roomName ?? widget.roomName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      FilledButton.tonalIcon(
+                        onPressed: _coverUpdating ? null : _updateRoomCover,
+                        icon: _coverUpdating
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.image_outlined),
+                        label: const Text('封面'),
+                      ),
+                      if (_roomCoverUrl.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        IconButton.outlined(
+                          tooltip: '移除封面',
+                          onPressed: _coverUpdating ? null : _clearRoomCover,
+                          icon: const Icon(Icons.delete_outline_rounded),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.restart_alt),
-              title: const Text('重置房间设置'),
-              subtitle: const Text('恢复服务端默认房间策略'),
-              onTap: _resetSettings,
-            ),
-            if (_canLeaveRoom) ...[
-              _buildDivider(theme),
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: const Text('退出房间'),
-                subtitle: const Text('退出后需要重新加入才能访问成员内容'),
-                onTap: _leaveRoom,
+          const SizedBox(height: 12),
+          Material(
+            color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(
+                color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
               ),
-            ],
-            _buildDivider(theme),
-            ListTile(
-              leading: Icon(Icons.delete_forever_rounded,
-                  color: theme.colorScheme.error),
-              title: Text(
-                '删除房间',
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-              onTap: _deleteRoom,
             ),
-          ],
-        ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.restart_alt),
+                  title: const Text('重置房间设置'),
+                  subtitle: const Text('恢复服务端默认房间策略'),
+                  onTap: _resetSettings,
+                ),
+                if (_canLeaveRoom) ...[
+                  _buildDivider(theme),
+                  ListTile(
+                    leading: const Icon(Icons.logout),
+                    title: const Text('退出房间'),
+                    subtitle: const Text('退出后需要重新加入才能访问成员内容'),
+                    onTap: _leaveRoom,
+                  ),
+                ],
+                _buildDivider(theme),
+                ListTile(
+                  leading: Icon(Icons.delete_forever_rounded,
+                      color: theme.colorScheme.error),
+                  title: Text(
+                    '删除房间',
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                  onTap: _deleteRoom,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -4756,7 +5278,24 @@ class _MemberPermissionOverrideResult {
   });
 }
 
-enum _MediaAction { details, open, rename, moveUp, moveDown, move, delete }
+enum _MediaAction {
+  details,
+  open,
+  rename,
+  updateCover,
+  clearCover,
+  moveUp,
+  moveDown,
+  move,
+  delete,
+}
+
+class _EntryEditResult {
+  final String name;
+  final String description;
+
+  const _EntryEditResult(this.name, this.description);
+}
 
 class _MediaMoveTarget {
   final String playlistId;

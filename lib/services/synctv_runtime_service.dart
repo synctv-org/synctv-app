@@ -7,7 +7,7 @@ import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 class SyncTvRuntimeService {
   SyncTvRuntimeService() : session = SyncTvSession() {
     sessionStore = SyncTvSessionStore(session);
-    _api = _createClient(SyncTvSessionStore.initialClientBaseUrl);
+    _api = _createClient(SyncTvSessionStore.clientBootstrapBaseUrl);
   }
 
   final SyncTvSession session;
@@ -33,7 +33,11 @@ class SyncTvRuntimeService {
 
   Future<void> init() async {
     await sessionStore.load();
-    _api = _createClient(sessionStore.baseUrl);
+    _api = _createClient(
+      sessionStore.baseUrl.isEmpty
+          ? SyncTvSessionStore.clientBootstrapBaseUrl
+          : sessionStore.baseUrl,
+    );
     await _promotePendingActiveServer();
   }
 

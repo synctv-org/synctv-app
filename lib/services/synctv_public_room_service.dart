@@ -2,6 +2,7 @@ import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_auth_service.dart';
+import 'package:synctv_app/services/synctv_memory_cache.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -14,15 +15,27 @@ class SyncTvPublicRoomDomainService {
     required SyncTvApiClient api,
     required SyncTvSessionStore sessionStore,
     required SyncTvAuthDomainService authService,
+    SyncTvMemoryCache? cache,
   })  : _api = api,
         _sessionStore = sessionStore,
-        _authService = authService;
+        _authService = authService,
+        _cache = cache ?? SyncTvMemoryCache();
 
   final SyncTvApiClient _api;
   final SyncTvSessionStore _sessionStore;
   final SyncTvAuthDomainService _authService;
+  final SyncTvMemoryCache _cache;
 
-  Future<PublicSettingsInfo> getPublicSettings() async {
+  Future<PublicSettingsInfo> getPublicSettings({bool refresh = false}) async {
+    return _cache.get<PublicSettingsInfo>(
+      'public:settings',
+      ttl: const Duration(minutes: 5),
+      refresh: refresh,
+      loader: _fetchPublicSettings,
+    );
+  }
+
+  Future<PublicSettingsInfo> _fetchPublicSettings() async {
     final settings = await _api.publicService.getPublicSettings(
       client.GetPublicSettingsRequest(),
     );

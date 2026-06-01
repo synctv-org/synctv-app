@@ -11,6 +11,7 @@ import 'package:video_player_media_kit/video_player_media_kit.dart';
 import 'package:synctv_app/widgets/auth_panel.dart';
 import 'package:synctv_app/services/smart_grip_service.dart';
 import 'package:synctv_app/pages/mobile/admin_settings_page.dart';
+import 'package:synctv_app/pages/desktop/desktop_room_screen.dart';
 import 'package:synctv_app/pages/account_center_page.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
@@ -18,7 +19,6 @@ import 'package:synctv_app/widgets/join_room_dialog.dart';
 import 'package:synctv_app/widgets/server_settings_dialog.dart';
 import 'package:synctv_app/pages/splash_page.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
-import 'package:synctv_app/services/native_text_editing_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
@@ -33,7 +33,6 @@ void main(List<String> args) async {
   }
   await WatchTogetherService.init();
   await OAuth2DeepLinkService.initialize();
-  NativeTextEditingService.initialize();
   SmartGripService().init();
 
   try {
@@ -57,6 +56,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '看搭子',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       builder: (context, child) {
@@ -71,8 +71,7 @@ class MyApp extends StatelessWidget {
           child: child!,
         );
       },
-      // home: const LargeScreenHome(),
-      home: const SplashPage(),
+      home: const ResponsiveHome(),
     );
   }
 }
@@ -96,6 +95,7 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   bool _isLoggedIn = false;
   WUser? _currentUser;
   StreamSubscription? _authErrorSubscription;
+  final Set<String> _joiningRoomIds = <String>{};
 
   final TextEditingController _roomSearchController = TextEditingController();
 
@@ -156,6 +156,16 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   }
 
   Future<void> _loadRooms({bool silent = false}) async {
+    if (WatchTogetherService.activeServer == null) {
+      if (mounted) {
+        setState(() {
+          _rooms = const [];
+          _roomsTotal = 0;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
     if (!_isLoggedIn && _roomFeed == _RoomFeed.mine) {
       setState(() {
         _rooms = const [];
@@ -641,6 +651,7 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
 
   Widget _buildEmptyRooms(bool isDark) {
     final theme = Theme.of(context);
+    final hasServer = WatchTogetherService.activeServer != null;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -655,21 +666,25 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                Icons.meeting_room_outlined,
+                hasServer ? Icons.meeting_room_outlined : Icons.dns_rounded,
                 color: theme.colorScheme.primary,
                 size: 32,
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无房间',
+              hasServer ? '暂无房间' : '添加服务器后开始使用',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              _roomFeed == _RoomFeed.mine ? '加入或创建房间后会出现在这里' : '当前筛选下没有可显示的房间',
+              hasServer
+                  ? (_roomFeed == _RoomFeed.mine
+                      ? '加入或创建房间后会出现在这里'
+                      : '当前筛选下没有可显示的房间')
+                  : '输入服务器地址即可浏览公开房间、登录账号和加入观影房间。',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
@@ -677,9 +692,11 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
             ),
             const SizedBox(height: 16),
             FilledButton.tonalIcon(
-              onPressed: () => _loadRooms(silent: false),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('刷新'),
+              onPressed: hasServer
+                  ? () => _loadRooms(silent: false)
+                  : _showServerSettingsDialog,
+              icon: Icon(hasServer ? Icons.refresh_rounded : Icons.add_link),
+              label: Text(hasServer ? '刷新' : '添加服务器'),
             ),
           ],
         ),
@@ -898,40 +915,50 @@ class _WatchTogetherHomeScreenState extends State<WatchTogetherHomeScreen> {
   }
 
   Future<void> _handleJoinRoom(WRoom room) async {
+    if (_joiningRoomIds.contains(room.roomId)) return;
+    _joiningRoomIds.add(room.roomId);
     String password = '';
 
-    if (!_isLoggedIn) {
-      final authenticated = await _showLoginDialog(guestRoomId: room.roomId);
-      if (!authenticated || !mounted) return;
-    }
-
-    if (room.needPassword) {
-      final result = await showRoomPasswordDialog(
-        context: context,
-        roomName: room.roomName,
-      );
-
-      if (result == null) return;
-      if (result.isEmpty) {
-        if (mounted) MessageUtils.showWarning(context, '请输入密码');
-        return;
-      }
-      password = result;
-    }
-
     try {
+      if (!_isLoggedIn) {
+        final authenticated = await _showLoginDialog(guestRoomId: room.roomId);
+        if (!authenticated || !mounted) return;
+      }
+
+      if (room.needPassword) {
+        final result = await showRoomPasswordDialog(
+          context: context,
+          roomName: room.roomName,
+        );
+
+        if (result == null) return;
+        if (result.isEmpty) {
+          if (mounted) MessageUtils.showWarning(context, '请输入密码');
+          return;
+        }
+        password = result;
+      }
+
       await WatchTogetherService.joinRoom(room.roomId, password);
 
       if (mounted) {
+        final roomPage = MediaQuery.sizeOf(context).width >= 900
+            ? DesktopRoomScreen(room: room)
+            : WatchTogetherRoomScreen(room: room);
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => WatchTogetherRoomScreen(room: room),
+          PageRouteBuilder(
+            opaque: true,
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+            pageBuilder: (context, animation, secondaryAnimation) => roomPage,
           ),
         );
       }
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '加入房间失败: $e');
+    } finally {
+      _joiningRoomIds.remove(room.roomId);
     }
   }
 

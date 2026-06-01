@@ -633,6 +633,64 @@ class ResourceDeliveryMode extends $pb.ProtobufEnum {
   const ResourceDeliveryMode._(super.value, super.name);
 }
 
+class ChatMessageStatus extends $pb.ProtobufEnum {
+  static const ChatMessageStatus CHAT_MESSAGE_STATUS_UNSPECIFIED =
+      ChatMessageStatus._(
+          0, _omitEnumNames ? '' : 'CHAT_MESSAGE_STATUS_UNSPECIFIED');
+  static const ChatMessageStatus CHAT_MESSAGE_STATUS_ACTIVE =
+      ChatMessageStatus._(
+          1, _omitEnumNames ? '' : 'CHAT_MESSAGE_STATUS_ACTIVE');
+  static const ChatMessageStatus CHAT_MESSAGE_STATUS_EDITED =
+      ChatMessageStatus._(
+          2, _omitEnumNames ? '' : 'CHAT_MESSAGE_STATUS_EDITED');
+  static const ChatMessageStatus CHAT_MESSAGE_STATUS_DELETED =
+      ChatMessageStatus._(
+          3, _omitEnumNames ? '' : 'CHAT_MESSAGE_STATUS_DELETED');
+
+  static const $core.List<ChatMessageStatus> values = <ChatMessageStatus>[
+    CHAT_MESSAGE_STATUS_UNSPECIFIED,
+    CHAT_MESSAGE_STATUS_ACTIVE,
+    CHAT_MESSAGE_STATUS_EDITED,
+    CHAT_MESSAGE_STATUS_DELETED,
+  ];
+
+  static final $core.List<ChatMessageStatus?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static ChatMessageStatus? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ChatMessageStatus._(super.value, super.name);
+}
+
+class ChatMessageEventKind extends $pb.ProtobufEnum {
+  static const ChatMessageEventKind CHAT_MESSAGE_EVENT_KIND_UNSPECIFIED =
+      ChatMessageEventKind._(
+          0, _omitEnumNames ? '' : 'CHAT_MESSAGE_EVENT_KIND_UNSPECIFIED');
+  static const ChatMessageEventKind CHAT_MESSAGE_EVENT_KIND_CREATED =
+      ChatMessageEventKind._(
+          1, _omitEnumNames ? '' : 'CHAT_MESSAGE_EVENT_KIND_CREATED');
+  static const ChatMessageEventKind CHAT_MESSAGE_EVENT_KIND_EDITED =
+      ChatMessageEventKind._(
+          2, _omitEnumNames ? '' : 'CHAT_MESSAGE_EVENT_KIND_EDITED');
+  static const ChatMessageEventKind CHAT_MESSAGE_EVENT_KIND_DELETED =
+      ChatMessageEventKind._(
+          3, _omitEnumNames ? '' : 'CHAT_MESSAGE_EVENT_KIND_DELETED');
+
+  static const $core.List<ChatMessageEventKind> values = <ChatMessageEventKind>[
+    CHAT_MESSAGE_EVENT_KIND_UNSPECIFIED,
+    CHAT_MESSAGE_EVENT_KIND_CREATED,
+    CHAT_MESSAGE_EVENT_KIND_EDITED,
+    CHAT_MESSAGE_EVENT_KIND_DELETED,
+  ];
+
+  static final $core.List<ChatMessageEventKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static ChatMessageEventKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ChatMessageEventKind._(super.value, super.name);
+}
+
 class NotificationType extends $pb.ProtobufEnum {
   static const NotificationType NOTIFICATION_TYPE_UNSPECIFIED =
       NotificationType._(

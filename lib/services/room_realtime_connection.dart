@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
@@ -34,6 +35,7 @@ class RoomRealtimeConnection {
   }) {
     late final WebSocket socket;
     StreamSubscription<List<int>>? outgoingSubscription;
+    Timer? heartbeatTimer;
     final incoming = StreamController<Uint8List>();
     final outgoing = StreamController<List<int>>();
 
@@ -64,6 +66,11 @@ class RoomRealtimeConnection {
         final message = client.ClientMessage.fromBuffer(bytes);
         socket.add(WatchTogetherService.encodeRealtimeMessageJson(message));
       });
+      heartbeatTimer = Timer.periodic(const Duration(seconds: 25), (_) {
+        if (!outgoing.isClosed) {
+          outgoing.add(RoomRealtimeCodec.encodeSync());
+        }
+      });
       for (final message in initialMessages) {
         if (message.isNotEmpty) outgoing.add(message);
       }
@@ -76,6 +83,7 @@ class RoomRealtimeConnection {
       throw error;
     });
     incoming.onCancel = () async {
+      heartbeatTimer?.cancel();
       await outgoing.close();
       await outgoingSubscription?.cancel();
       await socketFuture.then((_) => socket.close()).catchError((_) {});

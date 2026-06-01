@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io' as io;
+import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -193,6 +195,13 @@ void main() {
     final messages = RoomRealtimeCodec.encodeInitialObservations()
         .map(client.ClientMessage.fromBuffer)
         .toList(growable: false);
+    expect(
+      messages
+          .map((message) => message.observeResource.observeId)
+          .contains('chat_events'),
+      isTrue,
+    );
+
     final snapshotObserve = messages
         .map((message) => message.observeResource)
         .firstWhere((observe) => observe.observeId == 'playback_snapshot');
@@ -227,6 +236,30 @@ void main() {
       profile.subtitlePreference,
       client.PlaybackSubtitlePreference.PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL,
     );
+
+    final chatObserve = messages
+        .map((message) => message.observeResource)
+        .firstWhere((observe) => observe.observeId == 'chat_events');
+    expect(chatObserve.hasChatEvents(), isTrue);
+    expect(
+      chatObserve.deliveryMode,
+      client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
+    );
+  });
+
+  test('chat event observation uses event id cursor', () {
+    final message = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodeInitialObservations(afterChatEventId: 'evt_42')
+          .map(client.ClientMessage.fromBuffer)
+          .firstWhere(
+            (message) => message.observeResource.observeId == 'chat_events',
+          )
+          .writeToBuffer(),
+    );
+
+    expect(message.hasObserveResource(), isTrue);
+    expect(message.observeResource.hasChatEvents(), isTrue);
+    expect(message.observeResource.chatEvents.afterEventId, 'evt_42');
   });
 
   test('room realtime decoder exposes typed protobuf messages', () {
@@ -283,6 +316,180 @@ void main() {
       'from': 'usr_peer:conn_1',
       'type': 'offer',
     });
+  });
+
+  test('chat realtime events update existing entries and remove deleted ones',
+      () {
+    RoomRealtimeMessage decodeChatEvent({
+      required String eventId,
+      required client_enum.ChatMessageEventKind kind,
+      required String content,
+      client_enum.ChatMessageStatus status =
+          client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE,
+      int editedAt = 0,
+      int deletedAt = 0,
+    }) {
+      return RoomRealtimeCodec.decode(
+        client.ServerMessage(
+          resourceChanged: client.ResourceChanged(
+            observeId: 'chat_events',
+            version: '100:$eventId',
+            chatEvent: client.ChatMessageEvent(
+              eventId: eventId,
+              roomId: 'room_1',
+              kind: kind,
+              message: client.ChatMessageReceive(
+                id: 'msg_1',
+                userId: 'usr_1',
+                username: 'alice',
+                content: content,
+                timestamp: Int64(123),
+                status: status,
+                editedAt: Int64(editedAt),
+                deletedAt: Int64(deletedAt),
+              ),
+            ),
+          ),
+        ).writeToBuffer(),
+      );
+    }
+
+    final messages = <RoomRealtimeChatEntry>[];
+
+    final created = decodeChatEvent(
+      eventId: 'evt_1',
+      kind: client_enum.ChatMessageEventKind.CHAT_MESSAGE_EVENT_KIND_CREATED,
+      content: 'hello',
+    );
+    expect(created.kind, RoomRealtimeMessageKind.chat);
+    expect(created.chatEventId, 'evt_1');
+    expect(created.resourceVersion, '100:evt_1');
+    expect(created.isChatCreated, isTrue);
+
+    messages.applyRealtimeEvent(
+      RoomRealtimeChatEntry.fromMessage(created),
+      eventKind: created.chatEventKind,
+      maxEntries: 100,
+    );
+    expect(messages.map((entry) => entry.content), ['hello']);
+
+    final edited = decodeChatEvent(
+      eventId: 'evt_2',
+      kind: client_enum.ChatMessageEventKind.CHAT_MESSAGE_EVENT_KIND_EDITED,
+      content: 'hello edited',
+      status: client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_EDITED,
+      editedAt: 124,
+    );
+    expect(edited.chatEventId, 'evt_2');
+    expect(edited.isChatEdited, isTrue);
+
+    messages.applyRealtimeEvent(
+      RoomRealtimeChatEntry.fromMessage(edited),
+      eventKind: edited.chatEventKind,
+      maxEntries: 100,
+    );
+    expect(messages, hasLength(1));
+    expect(messages.single.content, 'hello edited');
+    expect(messages.single.isEdited, isTrue);
+
+    final deleted = decodeChatEvent(
+      eventId: 'evt_3',
+      kind: client_enum.ChatMessageEventKind.CHAT_MESSAGE_EVENT_KIND_DELETED,
+      content: 'hello edited',
+      status: client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_DELETED,
+      deletedAt: 125,
+    );
+    expect(deleted.chatEventId, 'evt_3');
+    expect(deleted.isChatDeleted, isTrue);
+
+    messages.applyRealtimeEvent(
+      RoomRealtimeChatEntry.fromMessage(deleted),
+      eventKind: deleted.chatEventKind,
+      maxEntries: 100,
+    );
+    expect(messages, isEmpty);
+  });
+
+  test('avatar upload attaches ownership proof metadata before update',
+      () async {
+    final upload = LocalImageUpload(
+      bytes: Uint8List.fromList([10, 20, 30, 40, 50, 60]),
+      fileName: 'avatar.png',
+      mimeType: 'image/png',
+      width: 2,
+      height: 3,
+    );
+    Map<String, dynamic>? updateBody;
+
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        if (request.method == 'POST' &&
+            request.url.path == '/api/user/avatar/upload-session') {
+          return http.Response(
+            jsonEncode({
+              'session': {
+                'avatar': {
+                  'id': 'avatar_1',
+                  'storage_backend': 'local',
+                  'object_key': 'avatars/avatar_1.png',
+                  'url': '/api/user/avatar/avatar_1',
+                  'mime_type': 'image/png',
+                  'size_bytes': upload.sizeBytes,
+                  'width': upload.width,
+                  'height': upload.height,
+                  'metadata': {'file_name': upload.fileName},
+                },
+                'upload_required': false,
+                'ownership_proof_required': true,
+                'ownership_proof_nonce': 'nonce_1',
+                'ownership_proof_ranges': [
+                  {'offset': 1, 'length': 3}
+                ],
+                'ownership_proof_metadata_key': '_synctv_ownership_proof',
+              }
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        if (request.method == 'PUT' && request.url.path == '/api/user/avatar') {
+          updateBody = jsonDecode(request.body) as Map<String, dynamic>;
+          return http.Response(
+            jsonEncode({
+              'user': {
+                'id': 'usr_1',
+                'username': 'root',
+                'avatar': updateBody?['avatar'],
+              }
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        return http.Response(
+            'unexpected request: ${request.method} '
+            '${request.url.path}',
+            404);
+      }),
+    );
+
+    final updated =
+        await SyncTvFileUploadDomainService(api).updateUserAvatar(upload);
+    final avatarMetadata =
+        updateBody?['avatar']?['metadata'] as Map<String, dynamic>?;
+
+    expect(updated.id, 'usr_1');
+    expect(avatarMetadata?['file_name'], 'avatar.png');
+    expect(
+      avatarMetadata?['_synctv_ownership_proof'],
+      _expectedOwnershipProof(
+        upload.bytes,
+        nonce: 'nonce_1',
+        ranges: const [(offset: 1, length: 3)],
+      ),
+    );
   });
 
   test('OAuth2 callback parser accepts callback URLs and validates state', () {
@@ -6316,4 +6523,29 @@ void main() {
       expect(body.values, isNot(contains('not-real-provider-credential')));
     }
   });
+}
+
+String _expectedOwnershipProof(
+  List<int> bytes, {
+  required String nonce,
+  required List<({int offset, int length})> ranges,
+}) {
+  final proofBytes = BytesBuilder();
+  proofBytes.add(utf8.encode('synctv-file-ownership-proof-v1'));
+  proofBytes.add([0]);
+  proofBytes.add(utf8.encode(nonce));
+  for (final range in ranges) {
+    proofBytes.add((ByteData(8)..setInt64(0, range.offset, Endian.big))
+        .buffer
+        .asUint8List());
+    proofBytes.add((ByteData(4)..setInt32(0, range.length, Endian.big))
+        .buffer
+        .asUint8List());
+    proofBytes.add(Uint8List.sublistView(
+      Uint8List.fromList(bytes),
+      range.offset,
+      range.offset + range.length,
+    ));
+  }
+  return sha256.convert(proofBytes.toBytes()).toString();
 }

@@ -35,6 +35,12 @@ enum RoomRealtimeMessageKind {
   webrtcLeave,
 }
 
+enum RoomRealtimeChatEventKind {
+  created,
+  edited,
+  deleted,
+}
+
 enum PlaybackControlAction {
   play,
   pause,
@@ -115,6 +121,11 @@ class RoomRealtimeMessage {
     this.senderUserId = '',
     this.senderUsername = '',
     this.timestampMillis = 0,
+    this.images = const [],
+    this.chatEventId = '',
+    this.chatEventKind = RoomRealtimeChatEventKind.created,
+    this.chatDeleted = false,
+    this.chatEdited = false,
     this.status,
     this.playbackStatus,
     this.roomSettings,
@@ -135,6 +146,11 @@ class RoomRealtimeMessage {
   final String senderUserId;
   final String senderUsername;
   final int timestampMillis;
+  final List<StoredImageInfo> images;
+  final String chatEventId;
+  final RoomRealtimeChatEventKind chatEventKind;
+  final bool chatDeleted;
+  final bool chatEdited;
   final RoomRealtimePlaybackStatus? status;
   final WPlaybackStatus? playbackStatus;
   final WRoomSettings? roomSettings;
@@ -147,6 +163,11 @@ class RoomRealtimeMessage {
   final String resourceVersion;
   final bool resourceChanged;
   final int resourceTotal;
+
+  bool get isChatCreated => chatEventKind == RoomRealtimeChatEventKind.created;
+  bool get isChatEdited => chatEventKind == RoomRealtimeChatEventKind.edited;
+  bool get isChatDeleted =>
+      chatDeleted || chatEventKind == RoomRealtimeChatEventKind.deleted;
 }
 
 class RoomRealtimeSession {
@@ -170,6 +191,9 @@ class RoomRealtimeChatEntry {
     required this.username,
     required this.content,
     required this.timestampMillis,
+    this.images = const [],
+    this.isDeleted = false,
+    this.isEdited = false,
   });
 
   factory RoomRealtimeChatEntry.fromMessage(RoomRealtimeMessage message) {
@@ -179,9 +203,12 @@ class RoomRealtimeChatEntry {
       username:
           message.senderUsername.isEmpty ? 'Unknown' : message.senderUsername,
       content: message.chatContent,
+      images: message.images,
       timestampMillis: message.timestampMillis == 0
           ? DateTime.now().millisecondsSinceEpoch
           : message.timestampMillis,
+      isDeleted: message.isChatDeleted,
+      isEdited: message.isChatEdited,
     );
   }
 
@@ -191,7 +218,10 @@ class RoomRealtimeChatEntry {
       userId: message.userId,
       username: message.username.isEmpty ? 'Unknown' : message.username,
       content: message.content,
+      images: message.images,
       timestampMillis: message.timestamp * 1000,
+      isDeleted: message.isDeleted,
+      isEdited: message.isEdited,
     );
   }
 
@@ -200,6 +230,9 @@ class RoomRealtimeChatEntry {
   final String username;
   final String content;
   final int timestampMillis;
+  final List<StoredImageInfo> images;
+  final bool isDeleted;
+  final bool isEdited;
 
   String get dedupeKey {
     if (id.isNotEmpty) return 'id:$id';
@@ -234,6 +267,24 @@ extension RoomRealtimeChatEntries on List<RoomRealtimeChatEntry> {
     required int maxEntries,
   }) {
     if (any((message) => message.dedupeKey == entry.dedupeKey)) return;
+    add(entry);
+    trimToLatest(maxEntries);
+  }
+
+  void applyRealtimeEvent(
+    RoomRealtimeChatEntry entry, {
+    required RoomRealtimeChatEventKind eventKind,
+    required int maxEntries,
+  }) {
+    final index = indexWhere((message) => message.dedupeKey == entry.dedupeKey);
+    if (eventKind == RoomRealtimeChatEventKind.deleted || entry.isDeleted) {
+      if (index >= 0) removeAt(index);
+      return;
+    }
+    if (index >= 0) {
+      this[index] = entry;
+      return;
+    }
     add(entry);
     trimToLatest(maxEntries);
   }
@@ -287,6 +338,30 @@ class RoomRealtimeCodec {
   static List<int> encodeChat(String content) {
     return client.ClientMessage(
       chat: client.ChatMessageSend(content: content),
+    ).writeToBuffer();
+  }
+
+  static List<int> encodeChatMessage({
+    String content = '',
+    Iterable<StoredImageInfo> images = const [],
+  }) {
+    return client.ClientMessage(
+      chat: client.ChatMessageSend(
+        content: content,
+        clientMessageId: 'msg_${DateTime.now().microsecondsSinceEpoch}',
+        images: images.map(
+          (image) => client.ChatImage(
+            id: image.id,
+            storageBackend: image.storageBackend,
+            objectKey: image.objectKey,
+            url: image.url,
+            mimeType: image.mimeType,
+            sizeBytes: Int64(image.sizeBytes),
+            width: image.width,
+            height: image.height,
+          ),
+        ),
+      ),
     ).writeToBuffer();
   }
 
@@ -394,17 +469,23 @@ class RoomRealtimeCodec {
           'username': message.chat.username,
           'content': message.chat.content,
           'timestamp': message.chat.timestamp.toInt(),
+          'images': message.chat.images.length,
         };
       case client.ServerMessage_Message.playbackState:
         return _playbackStatePayload(message.playbackState.state);
       case client.ServerMessage_Message.playbackSnapshot:
         return _playbackSnapshotPayload(message.playbackSnapshot.snapshot);
-      case client.ServerMessage_Message.resourceChanged:
+      case client.ServerMessage_Message.userJoined:
+        return _userJoinedPayload(message.userJoined);
+      case client.ServerMessage_Message.userLeft:
         return {
-          'observe_id': message.resourceChanged.observeId,
-          'version': message.resourceChanged.version,
-          'payload': realtimeEnumName(message.resourceChanged.whichPayload()),
+          'room_id': message.userLeft.roomId,
+          'user_id': message.userLeft.userId,
         };
+      case client.ServerMessage_Message.chatEvent:
+        return _chatEventPayload(message.chatEvent);
+      case client.ServerMessage_Message.resourceChanged:
+        return _resourceChangedPayload(message.resourceChanged);
       case client.ServerMessage_Message.resourceObserved:
         return {
           'observe_id': message.resourceObserved.observeId,
@@ -460,6 +541,70 @@ class RoomRealtimeCodec {
     };
   }
 
+  static Map<String, Object?> _userJoinedPayload(client.UserJoinedRoom joined) {
+    final member = joined.member;
+    return {
+      'room_id': joined.roomId,
+      'user_id': member.userId,
+      'username': member.username,
+      'role': realtimeEnumName(member.role),
+      'permissions': member.permissions.toInt(),
+      'joined_at': member.joinedAt.toInt(),
+      'online': member.isOnline,
+    };
+  }
+
+  static Map<String, Object?> _chatEventPayload(client.ChatMessageEvent event) {
+    final message = event.hasMessage() ? event.message : null;
+    return {
+      'event_id': event.eventId,
+      'room_id': event.roomId,
+      'kind': realtimeEnumName(event.kind),
+      'message_id': message?.id ?? '',
+      'user_id': message?.userId ?? '',
+      'content': message?.content ?? '',
+      'status': message == null ? '' : realtimeEnumName(message.status),
+      'version': message?.version.toInt() ?? 0,
+      'images': message?.images.length ?? 0,
+    };
+  }
+
+  static Map<String, Object?> _resourceChangedPayload(
+    client.ResourceChanged changed,
+  ) {
+    final payloadType = changed.whichPayload();
+    final result = <String, Object?>{
+      'observe_id': changed.observeId,
+      'version': changed.version,
+      'payload': realtimeEnumName(payloadType),
+    };
+    switch (payloadType) {
+      case client.ResourceChanged_Payload.chatEvent:
+        result['chat_event'] = _chatEventPayload(changed.chatEvent);
+        break;
+      case client.ResourceChanged_Payload.playbackState:
+        result['playback_state'] = _playbackStatePayload(changed.playbackState);
+        break;
+      case client.ResourceChanged_Payload.playbackSnapshot:
+        result['playback_snapshot'] =
+            _playbackSnapshotPayload(changed.playbackSnapshot);
+        break;
+      case client.ResourceChanged_Payload.playlistItems:
+        result['media'] = changed.playlistItems.media.length;
+        result['playlists'] = changed.playlistItems.playlists.length;
+        result['dynamic_items'] = changed.playlistItems.dynamicItems.length;
+        result['total'] = changed.playlistItems.total.toInt();
+        break;
+      case client.ResourceChanged_Payload.roomMembers:
+        result['members'] = changed.roomMembers.members.length;
+        result['total'] = changed.roomMembers.total.toInt();
+        break;
+      default:
+        break;
+    }
+    return result;
+  }
+
   static List<int> encodePlaybackUpdate(
     PlaybackControlAction action, {
     bool? isPlaying,
@@ -506,12 +651,15 @@ class RoomRealtimeCodec {
     ).writeToBuffer();
   }
 
-  static List<List<int>> encodeInitialObservations() {
+  static List<List<int>> encodeInitialObservations({
+    String afterChatEventId = '',
+  }) {
     return [
       ...encodePlaybackObservations(),
       encodeRoomSettingsObservation(),
       encodePlaylistObservation(),
       encodeRoomMembersObservation(),
+      encodeChatEventsObservation(afterEventId: afterChatEventId),
     ];
   }
 
@@ -606,6 +754,20 @@ class RoomRealtimeCodec {
     );
   }
 
+  static List<int> encodeChatEventsObservation({
+    String observeId = 'chat_events',
+    String version = '',
+    String afterEventId = '',
+  }) {
+    return _observe(
+      observeId,
+      version: version,
+      deliveryMode:
+          client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
+      chatEvents: client.ObserveChatEvents(afterEventId: afterEventId),
+    );
+  }
+
   static List<int> encodeUnobserveResource(String observeId) {
     return client.ClientMessage(
       unobserveResource: client.UnobserveResource(observeId: observeId),
@@ -620,18 +782,21 @@ class RoomRealtimeCodec {
     client.ObserveRoomSettings? roomSettings,
     client.ObservePlaylistItems? playlistItems,
     client.ObserveRoomMembers? roomMembers,
+    client.ObserveChatEvents? chatEvents,
+    client.ResourceDeliveryMode deliveryMode =
+        client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
   }) {
     return client.ClientMessage(
       observeResource: client.ObserveResource(
         observeId: observeId,
         version: version,
-        deliveryMode:
-            client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
+        deliveryMode: deliveryMode,
         playbackState: playbackState,
         playbackSnapshot: playbackSnapshot,
         roomSettings: roomSettings,
         playlistItems: playlistItems,
         roomMembers: roomMembers,
+        chatEvents: chatEvents,
       ),
     ).writeToBuffer();
   }
@@ -696,15 +861,7 @@ class RoomRealtimeCodec {
     final message = client.ServerMessage.fromBuffer(data);
     switch (message.whichMessage()) {
       case client.ServerMessage_Message.chat:
-        final chat = message.chat;
-        return RoomRealtimeMessage(
-          kind: RoomRealtimeMessageKind.chat,
-          chatId: chat.id,
-          chatContent: chat.content,
-          timestampMillis: chat.timestamp.toInt() * 1000,
-          senderUserId: chat.userId,
-          senderUsername: chat.username,
-        );
+        return _chatMessage(message.chat);
       case client.ServerMessage_Message.playbackState:
         return _playbackState(message.playbackState.state);
       case client.ServerMessage_Message.playingChanged:
@@ -807,9 +964,81 @@ class RoomRealtimeCodec {
             detail: message.resourceObserveError.error.detail,
           ),
         );
+      case client.ServerMessage_Message.chatEvent:
+        return _chatEvent(message.chatEvent);
       default:
         return const RoomRealtimeMessage(kind: RoomRealtimeMessageKind.unknown);
     }
+  }
+
+  static RoomRealtimeMessage _chatEvent(
+    client.ChatMessageEvent event, {
+    String observeId = '',
+    String version = '',
+  }) {
+    if (!event.hasMessage()) {
+      return const RoomRealtimeMessage(kind: RoomRealtimeMessageKind.unknown);
+    }
+    return _chatMessage(
+      event.message,
+      observeId: observeId,
+      version: version.isEmpty ? event.eventId : version,
+      eventId: event.eventId,
+      eventKind: _chatEventKind(event.kind),
+    );
+  }
+
+  static RoomRealtimeMessage _chatMessage(
+    client.ChatMessageReceive chat, {
+    String observeId = '',
+    String version = '',
+    String eventId = '',
+    RoomRealtimeChatEventKind eventKind = RoomRealtimeChatEventKind.created,
+  }) {
+    return RoomRealtimeMessage(
+      kind: RoomRealtimeMessageKind.chat,
+      chatId: chat.id,
+      chatContent: chat.content,
+      timestampMillis: chat.timestamp.toInt() * 1000,
+      senderUserId: chat.userId,
+      senderUsername: chat.username,
+      chatEventId: eventId,
+      chatEventKind: eventKind,
+      chatDeleted: chat.deletedAt.toInt() > 0 ||
+          chat.status ==
+              client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_DELETED,
+      chatEdited: chat.editedAt.toInt() > 0 ||
+          chat.status ==
+              client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_EDITED,
+      resourceObserveId: observeId,
+      resourceVersion: version,
+      images: chat.images
+          .map(
+            (image) => StoredImageInfo(
+              id: image.id,
+              storageBackend: image.storageBackend,
+              objectKey: image.objectKey,
+              url: image.url,
+              mimeType: image.mimeType,
+              sizeBytes: image.sizeBytes.toInt(),
+              width: image.width,
+              height: image.height,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  static RoomRealtimeChatEventKind _chatEventKind(
+    client_enum.ChatMessageEventKind kind,
+  ) {
+    return switch (kind) {
+      client_enum.ChatMessageEventKind.CHAT_MESSAGE_EVENT_KIND_EDITED =>
+        RoomRealtimeChatEventKind.edited,
+      client_enum.ChatMessageEventKind.CHAT_MESSAGE_EVENT_KIND_DELETED =>
+        RoomRealtimeChatEventKind.deleted,
+      _ => RoomRealtimeChatEventKind.created,
+    };
   }
 
   static RoomRealtimeMessage _playbackState(client.PlaybackState state) {
@@ -902,7 +1131,21 @@ class RoomRealtimeCodec {
           observeId: changed.observeId,
           version: changed.version,
         );
+      case client.ResourceChanged_Payload.chatEvent:
+        return _chatEvent(
+          changed.chatEvent,
+          observeId: changed.observeId,
+          version: changed.version,
+        );
       case client.ResourceChanged_Payload.changedOnly:
+        if (changed.observeId == 'chat_events') {
+          return RoomRealtimeMessage(
+            kind: RoomRealtimeMessageKind.checkStatus,
+            resourceObserveId: changed.observeId,
+            resourceVersion: changed.version,
+            resourceChanged: true,
+          );
+        }
         return RoomRealtimeMessage(
           kind: RoomRealtimeMessageKind.error,
           error: RoomRealtimeError(

@@ -3,6 +3,7 @@ import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/services/synctv_account_service.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
+import 'package:synctv_app/services/synctv_memory_cache.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -11,9 +12,11 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 
 class SyncTvRoomManagementDomainService {
-  SyncTvRoomManagementDomainService(this._api);
+  SyncTvRoomManagementDomainService(this._api, {SyncTvMemoryCache? cache})
+      : _cache = cache ?? SyncTvMemoryCache();
 
   final SyncTvApiClient _api;
+  final SyncTvMemoryCache _cache;
 
   Future<List<WUser>> getRoomMembers(String roomId) async {
     final response = await _api.room.getRoomMembers(
@@ -171,7 +174,19 @@ class SyncTvRoomManagementDomainService {
     );
   }
 
-  Future<WRoomSettings> getRoomSettings(String roomId) async {
+  Future<WRoomSettings> getRoomSettings(
+    String roomId, {
+    bool refresh = false,
+  }) async {
+    return _cache.get<WRoomSettings>(
+      'room:$roomId:settings',
+      ttl: const Duration(minutes: 2),
+      refresh: refresh,
+      loader: () => _fetchRoomSettings(roomId),
+    );
+  }
+
+  Future<WRoomSettings> _fetchRoomSettings(String roomId) async {
     final response = await _api.room.getRoomSettings(
       roomId,
       client.GetRoomSettingsRequest(),
@@ -188,6 +203,11 @@ class SyncTvRoomManagementDomainService {
       client.UpdateRoomSettingsRequest(
         settings: _api.encodeJsonBytes(settings.toJson()),
       ),
+    );
+    _cache.put(
+      'room:$roomId:settings',
+      settings,
+      ttl: const Duration(minutes: 2),
     );
   }
 
@@ -383,6 +403,7 @@ class SyncTvRoomManagementDomainService {
       roomId,
       client.ResetRoomSettingsRequest(),
     );
+    _cache.invalidate('room:$roomId:settings');
   }
 
   Future<void> setRoomAdmin(String roomId, String userId) async {
