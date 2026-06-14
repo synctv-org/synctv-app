@@ -1,9 +1,14 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:crop_your_image/crop_your_image.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:synctv_app/services/synctv_file_upload_service.dart';
+import 'package:synctv_app/utils/chat_utils.dart';
+import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 class PickedLocalImage {
   const PickedLocalImage({
@@ -17,8 +22,11 @@ class PickedLocalImage {
   final File? previewFile;
 }
 
-Future<PickedLocalImage?> pickLocalImageUpload() async {
-  final result = await FilePicker.platform.pickFiles(
+Future<PickedLocalImage?> pickLocalImageUpload(
+  BuildContext context, {
+  double? aspectRatio,
+}) async {
+  final result = await FilePicker.pickFiles(
     type: FileType.image,
     allowMultiple: false,
     withData: true,
@@ -26,25 +34,186 @@ Future<PickedLocalImage?> pickLocalImageUpload() async {
   final file = result?.files.single;
   if (file == null) return null;
 
-  final bytes = file.bytes ??
+  final originalBytes = file.bytes ??
       (file.path == null ? null : await File(file.path!).readAsBytes());
-  if (bytes == null || bytes.isEmpty) return null;
+  if (originalBytes == null || originalBytes.isEmpty) return null;
+
+  if (!context.mounted) return null;
+  final edited = await showAppDialog<_PreparedLocalImage>(
+    context: context,
+    builder: (_) => _LocalImageEditDialog(
+      fileName: file.name,
+      originalBytes: originalBytes,
+      aspectRatio: aspectRatio,
+    ),
+  );
+  if (edited == null) return null;
+
+  final bytes = edited.bytes;
 
   final dimensions = await _decodeImageDimensions(bytes);
   final upload = LocalImageUpload(
     bytes: bytes,
     fileName: file.name,
-    mimeType: _mimeTypeForName(file.name),
+    mimeType: edited.mimeType,
     width: dimensions?.width ?? 0,
     height: dimensions?.height ?? 0,
   );
   return PickedLocalImage(
     upload: upload,
     previewBytes: bytes,
-    previewFile: !kIsWeb && file.path != null && file.path!.isNotEmpty
-        ? File(file.path!)
-        : null,
+    previewFile:
+        file.path != null && file.path!.isNotEmpty ? File(file.path!) : null,
   );
+}
+
+class _PreparedLocalImage {
+  const _PreparedLocalImage({
+    required this.bytes,
+    required this.mimeType,
+  });
+
+  final Uint8List bytes;
+  final String mimeType;
+}
+
+class _LocalImageEditDialog extends StatefulWidget {
+  const _LocalImageEditDialog({
+    required this.fileName,
+    required this.originalBytes,
+    required this.aspectRatio,
+  });
+
+  final String fileName;
+  final Uint8List originalBytes;
+  final double? aspectRatio;
+
+  @override
+  State<_LocalImageEditDialog> createState() => _LocalImageEditDialogState();
+}
+
+class _LocalImageEditDialogState extends State<_LocalImageEditDialog> {
+  final CropController _controller = CropController();
+  bool _squareCrop = false;
+  bool _cropping = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final effectiveRatio = _squareCrop ? 1.0 : widget.aspectRatio;
+    return AppDialog(
+      title: const Text('编辑图片'),
+      icon: const Icon(Icons.photo_size_select_large_outlined),
+      body: Material(
+        type: MaterialType.transparency,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppPanelSurface(
+                color: theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+                padding: const EdgeInsets.all(10),
+                child: SizedBox(
+                  height: 320,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Crop(
+                      image: widget.originalBytes,
+                      controller: _controller,
+                      aspectRatio: effectiveRatio,
+                      interactive: true,
+                      maskColor: Colors.black.withValues(alpha: 0.48),
+                      baseColor: theme.colorScheme.surfaceContainerHighest,
+                      cornerDotBuilder: (size, edgeAlignment) => DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: SizedBox(width: size, height: size),
+                      ),
+                      progressIndicator: const Center(
+                        child: AppLoadingIndicator(),
+                      ),
+                      onCropped: (result) {
+                        switch (result) {
+                          case CropSuccess(:final croppedImage):
+                            Navigator.pop(
+                              context,
+                              _PreparedLocalImage(
+                                bytes: croppedImage,
+                                mimeType: _mimeTypeForName(widget.fileName),
+                              ),
+                            );
+                          case CropFailure(:final cause):
+                            setState(() => _cropping = false);
+                            MessageUtils.showError(context, '图片裁剪失败: $cause');
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  FilterChip(
+                    label: const Text('按用途裁剪'),
+                    selected: effectiveRatio != null && !_squareCrop,
+                    onSelected: widget.aspectRatio == null
+                        ? null
+                        : (_) {
+                            setState(() => _squareCrop = false);
+                            _controller.aspectRatio = widget.aspectRatio;
+                          },
+                  ),
+                  FilterChip(
+                    label: const Text('方形裁剪'),
+                    selected: _squareCrop,
+                    onSelected: (_) {
+                      setState(() => _squareCrop = true);
+                      _controller.aspectRatio = 1;
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        if (!_cropping) ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        if (!_cropping)
+          ChatUtils.createConfirmButton(
+            context,
+            () => Navigator.pop(
+              context,
+              _PreparedLocalImage(
+                bytes: widget.originalBytes,
+                mimeType: _mimeTypeForName(widget.fileName),
+              ),
+            ),
+            text: '上传原图',
+          ),
+        const SizedBox(width: 8),
+        _cropping
+            ? const AppLoadingIndicator()
+            : ChatUtils.createConfirmButton(
+                context,
+                () {
+                  setState(() => _cropping = true);
+                  _controller.crop();
+                },
+                text: '使用编辑',
+              ),
+      ],
+    );
+  }
 }
 
 String _mimeTypeForName(String name) {

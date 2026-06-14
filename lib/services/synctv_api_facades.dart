@@ -5,6 +5,60 @@ class SyncTvAuthApi {
 
   final SyncTvApiClient _api;
 
+  Future<client.RegisterResponse> registerWithDirectPassword(
+    client.RegisterWithDirectPasswordRequest request,
+  ) async {
+    final response = await _api._send(
+      'POST',
+      '/api/auth/direct-password/register',
+      client.RegisterResponse.create,
+      auth: false,
+      body: request,
+    );
+    _api._storeLogin(response.accessToken, response.refreshToken);
+    return response;
+  }
+
+  Future<client.LoginResponse> loginWithDirectPassword(
+    client.LoginWithDirectPasswordRequest request,
+  ) async {
+    final response = await _api._send(
+      'POST',
+      '/api/auth/direct-password/login',
+      client.LoginResponse.create,
+      auth: false,
+      body: request,
+    );
+    _api._storeLogin(response.accessToken, response.refreshToken);
+    return response;
+  }
+
+  Future<client.RequestEmailRegistrationResponse> requestEmailRegistration(
+    client.RequestEmailRegistrationRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/auth/email/registration/request',
+      client.RequestEmailRegistrationResponse.create,
+      auth: false,
+      body: request,
+    );
+  }
+
+  Future<client.RegisterResponse> confirmEmailRegistration(
+    client.ConfirmEmailRegistrationRequest request,
+  ) async {
+    final response = await _api._send(
+      'POST',
+      '/api/auth/email/registration/confirm',
+      client.RegisterResponse.create,
+      auth: false,
+      body: request,
+    );
+    _api._storeLogin(response.accessToken, response.refreshToken);
+    return response;
+  }
+
   Future<client.LoginResponse> confirmEmailLogin(
     client.ConfirmEmailLoginRequest request,
   ) async {
@@ -349,6 +403,54 @@ class SyncTvUserApi {
     );
   }
 
+  Future<client.StartSensitiveOperationVerificationResponse>
+      startSensitiveOperationVerification(
+    client.StartSensitiveOperationVerificationRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/user/sensitive-verification/start',
+      client.StartSensitiveOperationVerificationResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.StartSensitiveOperationPasskeyResponse>
+      startSensitiveOperationPasskey(
+    client.StartSensitiveOperationPasskeyRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/user/sensitive-verification/passkey/start',
+      client.StartSensitiveOperationPasskeyResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.RequestSensitiveOperationEmailCodeResponse>
+      requestSensitiveOperationEmailCode(
+    client.RequestSensitiveOperationEmailCodeRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/user/sensitive-verification/email/request',
+      client.RequestSensitiveOperationEmailCodeResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.FinishSensitiveOperationVerificationResponse>
+      finishSensitiveOperationVerification(
+    client.FinishSensitiveOperationVerificationRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/user/sensitive-verification/finish',
+      client.FinishSensitiveOperationVerificationResponse.create,
+      body: request,
+    );
+  }
+
   Future<client.StartPasskeyBindResponse> startPasskeyBind(
     client.StartPasskeyBindRequest request,
   ) {
@@ -456,6 +558,30 @@ class SyncTvUserApi {
     );
   }
 
+  Future<client.StartRoomPasswordLoginResponse> startRoomPasswordLogin(
+    String roomId,
+    client.StartRoomPasswordLoginRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/password/opaque/login/start',
+      client.StartRoomPasswordLoginResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.JoinRoomResponse> finishRoomPasswordLogin(
+    String roomId,
+    client.FinishRoomPasswordLoginRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/password/opaque/login/finish',
+      client.JoinRoomResponse.create,
+      body: request,
+    );
+  }
+
   Future<client.ListMyRoomsResponse> listMyRooms(
     client.ListMyRoomsRequest request,
   ) {
@@ -544,11 +670,43 @@ class SyncTvRoomApi {
 
   Future<client.SetRoomPasswordResponse> setRoomPassword(
     String roomId,
-    client.SetRoomPasswordRequest request,
+    client.ClearRoomPasswordRequest request,
+  ) {
+    return clearRoomPassword(roomId, request);
+  }
+
+  Future<client.SetRoomPasswordResponse> clearRoomPassword(
+    String roomId,
+    client.ClearRoomPasswordRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/rooms/$roomId/password',
+      client.SetRoomPasswordResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.StartRoomPasswordRegistrationResponse>
+      startRoomPasswordRegistration(
+    String roomId,
+    client.StartRoomPasswordRegistrationRequest request,
   ) {
     return _api._send(
       'PATCH',
-      '/api/rooms/$roomId/password',
+      '/api/rooms/$roomId/password/opaque/registration/start',
+      client.StartRoomPasswordRegistrationResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.SetRoomPasswordResponse> finishRoomPasswordRegistration(
+    String roomId,
+    client.FinishRoomPasswordRegistrationRequest request,
+  ) {
+    return _api._send(
+      'PATCH',
+      '/api/rooms/$roomId/password/opaque/registration/finish',
       client.SetRoomPasswordResponse.create,
       body: request,
     );
@@ -691,26 +849,27 @@ class SyncTvRoomApi {
     return _api._watchSse(
       '/api/rooms/$roomId/watch/playback-state',
       client.WatchPlaybackStateEvent.create,
-      query: _api._watchOptionsQuery(request.options),
+      query: _api._watchQuery(
+        deliveryMode: request.deliveryMode,
+        afterEventSequence: request.playbackState.hasAfterEventSequence()
+            ? request.playbackState.afterEventSequence
+            : null,
+      ),
     );
   }
 
-  Stream<client.WatchPlaybackSnapshotEvent> watchPlaybackSnapshot(
+  Stream<client.WatchPlaybackEvent> watchPlayback(
     String roomId,
-    client.WatchPlaybackSnapshotRequest request,
+    client.WatchPlaybackRequest request,
   ) {
-    final snapshot = _api._messageQuery(request.playbackSnapshot);
-    final profile = request.playbackSnapshot.hasPlaybackClientProfile()
-        ? request.playbackSnapshot.playbackClientProfile
+    final profile = request.playback.hasPlaybackClientProfile()
+        ? request.playback.playbackClientProfile
         : defaultPlaybackClientProfile();
     return _api._watchSse(
-      '/api/rooms/$roomId/watch/playback-snapshot',
-      client.WatchPlaybackSnapshotEvent.create,
+      '/api/rooms/$roomId/watch/playback',
+      client.WatchPlaybackEvent.create,
       query: {
-        ..._api._watchOptionsQuery(request.options),
-        'media_id': snapshot['media_id'],
-        'playlist_id': snapshot['playlist_id'],
-        'target': snapshot['target'],
+        ..._api._watchQuery(deliveryMode: request.deliveryMode),
         ..._api._playbackClientProfileQuery(profile),
       },
     );
@@ -723,7 +882,12 @@ class SyncTvRoomApi {
     return _api._watchSse(
       '/api/rooms/$roomId/watch/room-settings',
       client.WatchRoomSettingsEvent.create,
-      query: _api._watchOptionsQuery(request.options),
+      query: _api._watchQuery(
+        deliveryMode: request.deliveryMode,
+        afterEventSequence: request.roomSettings.hasAfterEventSequence()
+            ? request.roomSettings.afterEventSequence
+            : null,
+      ),
     );
   }
 
@@ -735,22 +899,31 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/watch/playlist-items',
       client.WatchPlaylistItemsEvent.create,
       query: {
-        ..._api._watchOptionsQuery(request.options),
-        ..._api._messageQuery(request.request),
+        ..._api._watchQuery(
+          deliveryMode: request.deliveryMode,
+          afterEventSequence: request.playlistItems.hasAfterEventSequence()
+              ? request.playlistItems.afterEventSequence
+              : null,
+        ),
+        ..._api._messageQuery(request.playlistItems.request),
       },
     );
   }
 
-  Stream<client.WatchRoomMembersEvent> watchRoomMembers(
+  Stream<client.WatchRoomMemberEventsEvent> watchRoomMemberEvents(
     String roomId,
-    client.WatchRoomMembersRequest request,
+    client.WatchRoomMemberEventsRequest request,
   ) {
     return _api._watchSse(
       '/api/rooms/$roomId/watch/room-members',
-      client.WatchRoomMembersEvent.create,
+      client.WatchRoomMemberEventsEvent.create,
       query: {
-        ..._api._watchOptionsQuery(request.options),
-        ..._api._messageQuery(request.request),
+        ..._api._watchQuery(
+          deliveryMode: request.deliveryMode,
+          afterEventSequence: request.roomMemberEvents.hasAfterEventSequence()
+              ? request.roomMemberEvents.afterEventSequence
+              : null,
+        ),
       },
     );
   }
@@ -763,7 +936,12 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/watch/chat-events',
       client.WatchChatEventsEvent.create,
       query: {
-        ..._api._watchOptionsQuery(request.options),
+        ..._api._watchQuery(
+          deliveryMode: request.deliveryMode,
+          afterEventSequence: request.chatEvents.hasAfterEventSequence()
+              ? request.chatEvents.afterEventSequence
+              : null,
+        ),
         ..._api._messageQuery(request.chatEvents),
       },
     );
@@ -853,6 +1031,81 @@ class SyncTvRoomApi {
     );
   }
 
+  Future<client.SetChatReactionResponse> setChatReaction(
+    String roomId,
+    client.SetChatReactionRequest request,
+  ) {
+    final messageId = Uri.encodeComponent(request.messageId);
+    final reactionKey = Uri.encodeComponent(request.reactionKey);
+    return _api._send(
+      request.enabled ? 'PUT' : 'DELETE',
+      '/api/rooms/$roomId/chat/messages/$messageId/reactions/$reactionKey',
+      client.SetChatReactionResponse.create,
+    );
+  }
+
+  Future<client.ReportContentResponse> reportContent(
+    String roomId,
+    client.ReportContentRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/reports',
+      client.ReportContentResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.ListRoomContentReportsResponse> listRoomContentReports(
+    String roomId,
+    client.ListRoomContentReportsRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/reports',
+      client.ListRoomContentReportsResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.GetRoomContentReportResponse> getRoomContentReport(
+    String roomId,
+    client.GetRoomContentReportRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/reports/${request.reportId}',
+      client.GetRoomContentReportResponse.create,
+    );
+  }
+
+  Future<client.UpdateRoomContentReportStatusResponse>
+      updateRoomContentReportStatus(
+    String roomId,
+    client.UpdateRoomContentReportStatusRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/reports/${request.reportId}/status',
+      client.UpdateRoomContentReportStatusResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.ListChatReactionUsersResponse> listChatReactionUsers(
+    String roomId,
+    client.ListChatReactionUsersRequest request,
+  ) {
+    final messageId = Uri.encodeComponent(request.messageId);
+    final reactionKey = Uri.encodeComponent(request.reactionKey);
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/chat/messages/$messageId/reactions/$reactionKey/users',
+      client.ListChatReactionUsersResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
   Future<client.ChatReadStateResponse> markChatRead(
     String roomId,
     client.MarkChatReadRequest request,
@@ -873,6 +1126,19 @@ class SyncTvRoomApi {
       'GET',
       '/api/rooms/$roomId/chat/read-state',
       client.ChatReadStateResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.GetChatMessageReadReceiptsResponse> getChatMessageReadReceipts(
+    String roomId,
+    client.GetChatMessageReadReceiptsRequest request,
+  ) {
+    final messageId = Uri.encodeComponent(request.messageId);
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/chat/messages/$messageId/read-receipts',
+      client.GetChatMessageReadReceiptsResponse.create,
       query: _api._messageQuery(request),
     );
   }
@@ -1227,14 +1493,14 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.GetPlaybackResponse> updatePlayback(
+  Future<client.UpdatePlaybackStateResponse> updatePlaybackState(
     String roomId,
-    client.UpdatePlaybackRequest request,
+    client.UpdatePlaybackStateRequest request,
   ) {
     return _api._send(
       'PATCH',
       '/api/rooms/$roomId/playback',
-      client.GetPlaybackResponse.create,
+      client.UpdatePlaybackStateResponse.create,
       body: request,
     );
   }
@@ -1597,13 +1863,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.UpdateUserPasswordResponse> updateUserPassword(
-    admin.UpdateUserPasswordRequest request,
+  Future<admin.SetUserPasswordResponse> setUserPassword(
+    admin.SetUserPasswordRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/admin/users/${request.userId}/password',
-      admin.UpdateUserPasswordResponse.create,
+      admin.SetUserPasswordResponse.create,
       body: request,
     );
   }
@@ -2002,6 +2268,38 @@ class SyncTvAdminApi {
       '/api/admin/bans',
       admin.ListBanRecordsResponse.create,
       query: _api._messageQuery(request),
+    );
+  }
+
+  Future<admin.ListContentReportsResponse> listContentReports(
+    admin.ListContentReportsRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/admin/reports',
+      admin.ListContentReportsResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<admin.GetContentReportResponse> getContentReport(
+    admin.GetContentReportRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/admin/reports/${request.reportId}',
+      admin.GetContentReportResponse.create,
+    );
+  }
+
+  Future<admin.UpdateContentReportStatusResponse> updateContentReportStatus(
+    admin.UpdateContentReportStatusRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/admin/reports/${request.reportId}/status',
+      admin.UpdateContentReportStatusResponse.create,
+      body: request,
     );
   }
 }

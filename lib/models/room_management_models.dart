@@ -69,6 +69,8 @@ class RoomJoinReviewsPage {
 class RoomMembersPage {
   final List<AdminRoomMember> members;
   final int total;
+  final int onlineCount;
+  final int connectionCount;
   final int page;
   final int pageSize;
   final String version;
@@ -76,6 +78,8 @@ class RoomMembersPage {
   const RoomMembersPage({
     required this.members,
     required this.total,
+    this.onlineCount = 0,
+    this.connectionCount = 0,
     required this.page,
     required this.pageSize,
     required this.version,
@@ -166,6 +170,7 @@ class AdminRoomMember {
   final int adminRemovedPermissions;
   final int joinedAt;
   final bool isOnline;
+  final int connectionCount;
 
   const AdminRoomMember({
     required this.roomId,
@@ -179,15 +184,52 @@ class AdminRoomMember {
     required this.adminRemovedPermissions,
     required this.joinedAt,
     required this.isOnline,
+    this.connectionCount = 0,
   });
+
+  AdminRoomMember copyWith({
+    String? roomId,
+    String? userId,
+    String? username,
+    int? role,
+    int? permissions,
+    int? addedPermissions,
+    int? removedPermissions,
+    int? adminAddedPermissions,
+    int? adminRemovedPermissions,
+    int? joinedAt,
+    bool? isOnline,
+    int? connectionCount,
+  }) {
+    return AdminRoomMember(
+      roomId: roomId ?? this.roomId,
+      userId: userId ?? this.userId,
+      username: username ?? this.username,
+      role: role ?? this.role,
+      permissions: permissions ?? this.permissions,
+      addedPermissions: addedPermissions ?? this.addedPermissions,
+      removedPermissions: removedPermissions ?? this.removedPermissions,
+      adminAddedPermissions:
+          adminAddedPermissions ?? this.adminAddedPermissions,
+      adminRemovedPermissions:
+          adminRemovedPermissions ?? this.adminRemovedPermissions,
+      joinedAt: joinedAt ?? this.joinedAt,
+      isOnline: isOnline ?? this.isOnline,
+      connectionCount: connectionCount ?? this.connectionCount,
+    );
+  }
 }
 
 class AdminRoomMembersPage {
   final List<AdminRoomMember> members;
   final int total;
+  final int onlineCount;
+  final int connectionCount;
 
   const AdminRoomMembersPage({
     required this.members,
     required this.total,
+    this.onlineCount = 0,
+    this.connectionCount = 0,
   });
 }

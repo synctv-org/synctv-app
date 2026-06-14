@@ -151,7 +151,7 @@ class SyncTvProviderDomainService {
   Future<List<AlistBindInfo>> getAllAlistBindInfos() async {
     final instances = await _availableInstanceNames('alist');
     final lists = await Future.wait(
-      instances.map((instanceName) {
+      _withDefaultInstance(instances).map((instanceName) {
         return getAlistBindInfos(instanceName: instanceName);
       }),
     );
@@ -173,7 +173,7 @@ class SyncTvProviderDomainService {
   Future<List<EmbyBindInfo>> getAllEmbyBindInfos() async {
     final instances = await _availableInstanceNames('emby');
     final lists = await Future.wait(
-      instances.map((instanceName) {
+      _withDefaultInstance(instances).map((instanceName) {
         return getEmbyBindInfos(instanceName: instanceName);
       }),
     );
@@ -195,7 +195,7 @@ class SyncTvProviderDomainService {
   Future<List<BilibiliBindInfo>> getAllBilibiliBindInfos() async {
     final instances = await _availableInstanceNames('bilibili');
     final lists = await Future.wait(
-      instances.map((instanceName) {
+      _withDefaultInstance(instances).map((instanceName) {
         return getBilibiliBindInfos(instanceName: instanceName);
       }),
     );
@@ -460,12 +460,20 @@ class SyncTvProviderDomainService {
         providerType: providerType,
       ),
     );
-    final names = <String>[''];
+    final names = <String>[];
     for (final instance in response.instances) {
       final trimmed = instance.trim();
-      if (trimmed.isNotEmpty && !names.contains(trimmed)) {
+      if (!names.contains(trimmed)) {
         names.add(trimmed);
       }
+    }
+    return names;
+  }
+
+  List<String> _withDefaultInstance(List<String> instances) {
+    final names = <String>[''];
+    for (final instance in instances) {
+      if (!names.contains(instance)) names.add(instance);
     }
     return names;
   }

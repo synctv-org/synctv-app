@@ -11,6 +11,7 @@ class RoomRealtimeConnection {
     required StreamController<List<int>> outgoing,
     required Future<WebSocket> socket,
     required Stream<Uint8List> incoming,
+    required this.onOutgoing,
   })  : _outgoing = outgoing,
         _socket = socket,
         stream = incoming;
@@ -18,8 +19,21 @@ class RoomRealtimeConnection {
   final StreamController<List<int>> _outgoing;
   final Future<WebSocket> _socket;
   final Stream<Uint8List> stream;
+  final void Function(List<int> bytes, [client.ClientMessage? message])?
+      onOutgoing;
 
   StreamSink<List<int>> get sink => _outgoing.sink;
+
+  void sendMessage(client.ClientMessage message) {
+    unawaited(_sendMessage(message));
+  }
+
+  Future<void> _sendMessage(client.ClientMessage message) async {
+    final socket = await _socket;
+    final bytes = message.writeToBuffer();
+    onOutgoing?.call(bytes, message);
+    socket.add(WatchTogetherService.encodeRealtimeMessageJson(message));
+  }
 
   Future<void> close([int? closeCode, String? closeReason]) async {
     await _outgoing.close();
@@ -30,7 +44,7 @@ class RoomRealtimeConnection {
   static RoomRealtimeConnection connect(
     String roomId, {
     Iterable<List<int>> initialMessages = const [],
-    void Function(List<int> bytes)? onOutgoing,
+    void Function(List<int> bytes, [client.ClientMessage? message])? onOutgoing,
     void Function(Uint8List bytes)? onIncoming,
   }) {
     late final WebSocket socket;
@@ -62,8 +76,8 @@ class RoomRealtimeConnection {
       );
       outgoingSubscription =
           outgoing.stream.where((bytes) => bytes.isNotEmpty).listen((bytes) {
-        onOutgoing?.call(bytes);
         final message = client.ClientMessage.fromBuffer(bytes);
+        onOutgoing?.call(bytes, message);
         socket.add(WatchTogetherService.encodeRealtimeMessageJson(message));
       });
       heartbeatTimer = Timer.periodic(const Duration(seconds: 25), (_) {
@@ -93,6 +107,7 @@ class RoomRealtimeConnection {
       outgoing: outgoing,
       socket: socketFuture,
       incoming: incoming.stream,
+      onOutgoing: onOutgoing,
     );
   }
 }

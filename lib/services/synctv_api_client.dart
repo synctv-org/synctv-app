@@ -112,15 +112,15 @@ class SyncTvApiClient {
     'synctv.client.NotificationProto.data',
     'synctv.client.StartMfaPasskeyResponse.options',
     'synctv.client.FinishMfaPasskeyRequest.credential',
+    'synctv.client.StartSensitiveOperationPasskeyResponse.options',
+    'synctv.client.FinishSensitiveOperationVerificationRequest.passkey_credential',
     'synctv.client.StartOpaquePasswordUpdateResponse.passkey_options',
     'synctv.client.FinishOpaquePasswordUpdateRequest.passkey_credential',
     'synctv.client.AddMediaRequest.source_config',
     'synctv.client.ListPlaylistItemsRequest.target',
-    'synctv.client.ObservePlaybackSnapshot.target',
     'synctv.client.PlaylistItem.target',
     'synctv.client.PlaylistBrowsePathNode.target',
     'synctv.client.CreatePlaylistRequest.source_config',
-    'synctv.client.RoomSettingsChanged.settings',
     'synctv.client.ResourceCover.metadata',
     'synctv.client.ChatImage.metadata',
     'synctv.client.CreateChatImageUploadSessionRequest.metadata',
@@ -637,9 +637,9 @@ class SyncTvApiClient {
       case 'changed':
         final normalized = _normalizeProtoJson(
           decoded,
-          client.ResourceChanged.create(),
+          client.ResourceEvent.create(),
         );
-        final changed = client.ResourceChanged()
+        final changed = client.ResourceEvent()
           ..mergeFromProto3Json(
             normalized,
             supportNamesWithUnderscores: true,
@@ -679,13 +679,15 @@ class SyncTvApiClient {
     switch (message) {
       case client.WatchPlaybackStateEvent event:
         event.observed = observed;
-      case client.WatchPlaybackSnapshotEvent event:
+      case client.WatchPlaybackEvent event:
         event.observed = observed;
       case client.WatchRoomSettingsEvent event:
         event.observed = observed;
       case client.WatchPlaylistItemsEvent event:
         event.observed = observed;
-      case client.WatchRoomMembersEvent event:
+      case client.WatchRoomMemberEventsEvent event:
+        event.observed = observed;
+      case client.WatchChatEventsEvent event:
         event.observed = observed;
       default:
         throw ArgumentError.value(message, 'message');
@@ -694,19 +696,21 @@ class SyncTvApiClient {
 
   void _setWatchChanged(
     GeneratedMessage message,
-    client.ResourceChanged changed,
+    client.ResourceEvent changed,
   ) {
     switch (message) {
       case client.WatchPlaybackStateEvent event:
-        event.changed = changed;
-      case client.WatchPlaybackSnapshotEvent event:
-        event.changed = changed;
+        event.resourceEvent = changed;
+      case client.WatchPlaybackEvent event:
+        event.resourceEvent = changed;
       case client.WatchRoomSettingsEvent event:
-        event.changed = changed;
+        event.resourceEvent = changed;
       case client.WatchPlaylistItemsEvent event:
-        event.changed = changed;
-      case client.WatchRoomMembersEvent event:
-        event.changed = changed;
+        event.resourceEvent = changed;
+      case client.WatchRoomMemberEventsEvent event:
+        event.resourceEvent = changed;
+      case client.WatchChatEventsEvent event:
+        event.resourceEvent = changed;
       default:
         throw ArgumentError.value(message, 'message');
     }
@@ -719,13 +723,15 @@ class SyncTvApiClient {
     switch (message) {
       case client.WatchPlaybackStateEvent event:
         event.error = error;
-      case client.WatchPlaybackSnapshotEvent event:
+      case client.WatchPlaybackEvent event:
         event.error = error;
       case client.WatchRoomSettingsEvent event:
         event.error = error;
       case client.WatchPlaylistItemsEvent event:
         event.error = error;
-      case client.WatchRoomMembersEvent event:
+      case client.WatchRoomMemberEventsEvent event:
+        event.error = error;
+      case client.WatchChatEventsEvent event:
         event.error = error;
       default:
         throw ArgumentError.value(message, 'message');
@@ -796,14 +802,18 @@ class SyncTvApiClient {
     };
   }
 
-  Map<String, String?> _watchOptionsQuery(client.WatchOptions options) {
+  Map<String, String?> _watchQuery({
+    client_enum.ResourceDeliveryMode deliveryMode =
+        client_enum.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
+    Int64? afterEventSequence,
+  }) {
     return {
-      ..._messageQuery(options),
-      if (options.hasDeliveryMode())
-        'delivery_mode': _lowerEnumSuffix(
-          options.deliveryMode,
-          'RESOURCE_DELIVERY_MODE_',
-        ),
+      'delivery_mode': _lowerEnumSuffix(
+        deliveryMode,
+        'RESOURCE_DELIVERY_MODE_',
+      ),
+      if (afterEventSequence != null)
+        'after_event_sequence': afterEventSequence.toString(),
     };
   }
 
@@ -848,6 +858,22 @@ extension SyncTvModelMapping on SyncTvApiClient {
     );
   }
 
+  WUser mapPublicUser(client.UserPublicView user) {
+    return WUser(
+      id: user.id,
+      username: user.username,
+      avatarUrl: resolveResourceUrl(
+        user.avatarUrl.isNotEmpty
+            ? user.avatarUrl
+            : user.hasAvatar()
+                ? user.avatar.url
+                : '',
+      ),
+      role: user.role.value,
+      createdAt: user.createdAt.toInt(),
+    );
+  }
+
   WUser mapMember(common.RoomMember member) {
     return WUser(
       id: member.userId,
@@ -856,6 +882,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       createdAt: member.joinedAt.toInt(),
       status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
       onlineCount: member.isOnline ? 1 : 0,
+      connectionCount: member.connectionCount,
     );
   }
 
@@ -870,6 +897,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
       status: user.isBanned
           ? common_enum.UserStatus.USER_STATUS_BANNED.value
           : user.status.value,
+      onlineCount:
+          user.hasPresence() && user.presence.connectionCount > 0 ? 1 : 0,
+      connectionCount: user.hasPresence() ? user.presence.connectionCount : 0,
       isBanned: user.isBanned,
       bannedAt: user.bannedAt.toInt(),
       bannedBy: user.bannedBy,
@@ -883,16 +913,20 @@ extension SyncTvModelMapping on SyncTvApiClient {
       roomId: room.id,
       roomName: room.name,
       description: room.description,
-      viewerCount: room.memberCount,
+      viewerCount:
+          room.hasPresence() ? room.presence.onlineUserCount : room.memberCount,
+      connectionCount: room.hasPresence() ? room.presence.connectionCount : 0,
       memberCount: room.memberCount,
       creator: room.creatorUsername,
       creatorId: room.creatorId,
+      creatorAvatarUrl: resolveResourceUrl(room.creatorAvatarUrl),
       createdAt: room.createdAt.toInt(),
       updatedAt: room.updatedAt.toInt(),
       status: room.status.value,
       isBanned: room.isBanned,
       version: room.version.toInt(),
       creatorStatus: room.creatorStatus.value,
+      coverUrl: resolveResourceUrl(room.hasCover() ? room.cover.url : ''),
       needPassword: settings['require_password'] == true,
       needVerify: settings['require_approval'] == true,
       guestCanPause: true,
@@ -906,9 +940,14 @@ extension SyncTvModelMapping on SyncTvApiClient {
       roomId: room.id,
       roomName: room.name,
       description: room.description,
-      viewerCount: room.memberCount,
+      viewerCount:
+          room.hasPresence() ? room.presence.onlineUserCount : room.memberCount,
+      connectionCount: room.hasPresence() ? room.presence.connectionCount : 0,
       memberCount: room.memberCount,
-      creatorId: room.createdBy,
+      creator: room.hasCreator() ? room.creator.username : '',
+      creatorId: room.hasCreator() ? room.creator.id : room.createdBy,
+      creatorAvatarUrl:
+          resolveResourceUrl(room.hasCreator() ? room.creator.avatarUrl : ''),
       coverUrl: resolveResourceUrl(room.hasCover() ? room.cover.url : ''),
       createdAt: room.createdAt.toInt(),
       updatedAt: room.updatedAt.toInt(),
@@ -976,7 +1015,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
       availability: playlist.availability.value,
       version: playlist.version.toInt(),
       description: playlist.description,
-      coverUrl: resolveResourceUrl(playlist.hasCover() ? playlist.cover.url : ''),
+      coverUrl:
+          resolveResourceUrl(playlist.hasCover() ? playlist.cover.url : ''),
       type: playlist.isDynamic ? playlist.sourceProvider : 'playlist',
       sourceProvider: playlist.sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
@@ -1007,40 +1047,21 @@ extension SyncTvModelMapping on SyncTvApiClient {
 
   WPlaybackStatus mapPlayback(client.GetPlaybackResponse response) {
     final state = response.playbackState;
-    final snapshot = response.playbackSnapshot;
+    final playback = response.playback;
     final encodedTarget =
         state.target.isEmpty ? '' : base64Url.encode(state.target);
     WMovie? movie;
-    if (snapshot.mediaId.isNotEmpty || snapshot.playlistId.isNotEmpty) {
-      final info = snapshot.playbackInfos[snapshot.defaultMode] ??
-          (snapshot.playbackInfos.isNotEmpty
-              ? snapshot.playbackInfos.values.first
-              : null);
-      final playbackUrl = info != null && info.urls.isNotEmpty
-          ? info.urls[(info.defaultUrlIndex >= 0 &&
-                  info.defaultUrlIndex < info.urls.length)
-              ? info.defaultUrlIndex
-              : 0]
-          : null;
-      movie = WMovie(
+    if (playback.mediaId.isNotEmpty || playback.playlistId.isNotEmpty) {
+      movie = WMovie.fromPlaybackProto(
+        playback,
         id: encodedTarget.isNotEmpty
             ? encodedTarget
-            : snapshot.mediaId.isNotEmpty
-                ? snapshot.mediaId
-                : snapshot.playlistId,
-        name: snapshot.name,
-        url: resolveResourceUrl(playbackUrl?.url ?? ''),
-        headers: playbackUrl == null
-            ? const {}
-            : Map<String, String>.from(playbackUrl.headers),
-        type: info?.format ?? '',
+            : playback.mediaId.isNotEmpty
+                ? playback.mediaId
+                : playback.playlistId,
         subPath: encodedTarget.isEmpty ? null : encodedTarget,
         parentId: encodedTarget.isEmpty ? null : state.playingPlaylistId,
-        metadata: {
-          'snapshot_version': snapshot.version,
-          'default_mode': snapshot.defaultMode,
-          'playback_metadata': Map<String, String>.from(snapshot.metadata),
-        },
+        resolveUrl: resolveResourceUrl,
       );
     }
     return WPlaybackStatus(
@@ -1048,6 +1069,27 @@ extension SyncTvModelMapping on SyncTvApiClient {
       isPlaying: state.isPlaying,
       currentTime: state.position,
       playbackRate: state.speed == 0 ? 1.0 : state.speed,
+      version: state.version.toInt(),
+      playingMediaId: state.playingMediaId,
+      playingPlaylistId: state.playingPlaylistId,
+      targetHash: state.targetHash,
+    );
+  }
+
+  WPlaybackStatus mapPlaybackState(
+    client.UpdatePlaybackStateResponse response, {
+    WMovie? movie,
+  }) {
+    final state = response.playbackState;
+    return WPlaybackStatus(
+      movie: movie,
+      isPlaying: state.isPlaying,
+      currentTime: state.position,
+      playbackRate: state.speed == 0 ? 1.0 : state.speed,
+      version: state.version.toInt(),
+      playingMediaId: state.playingMediaId,
+      playingPlaylistId: state.playingPlaylistId,
+      targetHash: state.targetHash,
     );
   }
 

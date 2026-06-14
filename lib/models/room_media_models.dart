@@ -85,6 +85,7 @@ class StoredImageInfo {
   final int sizeBytes;
   final int width;
   final int height;
+  final List<int> metadata;
 
   const StoredImageInfo({
     required this.id,
@@ -95,16 +96,19 @@ class StoredImageInfo {
     required this.sizeBytes,
     required this.width,
     required this.height,
+    this.metadata = const [],
   });
 }
 
 class ChatHistoryPage {
   final List<RoomChatMessageInfo> messages;
   final String nextCursor;
+  final String eventCursor;
 
   const ChatHistoryPage({
     required this.messages,
     required this.nextCursor,
+    this.eventCursor = '',
   });
 }
 
@@ -140,6 +144,66 @@ class ChatReadStateInfo {
   final int unreadCount;
 }
 
+class ChatReactionSummaryInfo {
+  const ChatReactionSummaryInfo({
+    required this.key,
+    required this.count,
+    required this.reactedByMe,
+  });
+
+  final String key;
+  final int count;
+  final bool reactedByMe;
+}
+
+class ChatReactionUserInfo {
+  const ChatReactionUserInfo({
+    required this.userId,
+    required this.username,
+    required this.reactedAt,
+  });
+
+  final String userId;
+  final String username;
+  final int reactedAt;
+}
+
+class ChatReactionUsersPage {
+  const ChatReactionUsersPage({
+    required this.users,
+    required this.nextCursor,
+    required this.total,
+  });
+
+  final List<ChatReactionUserInfo> users;
+  final String nextCursor;
+  final int total;
+}
+
+class ChatReadReceiptUserInfo {
+  const ChatReadReceiptUserInfo({
+    required this.user,
+    required this.readAt,
+  });
+
+  final WUser user;
+  final int readAt;
+}
+
+class ChatMessageReadReceiptsInfo {
+  const ChatMessageReadReceiptsInfo({
+    required this.readers,
+    required this.unreadMembers,
+    required this.readerTotal,
+    required this.unreadTotal,
+  });
+
+  final List<ChatReadReceiptUserInfo> readers;
+  final List<WUser> unreadMembers;
+  final int readerTotal;
+  final int unreadTotal;
+}
+
 class RoomChatMessageInfo {
   final String id;
   final String roomId;
@@ -153,7 +217,11 @@ class RoomChatMessageInfo {
   final int editedAt;
   final int deletedAt;
   final int status;
+  final String replyToMessageId;
   final List<StoredImageInfo> images;
+  final List<ChatReactionSummaryInfo> reactions;
+  final int reactionCount;
+  final List<ChatMentionInfo> mentions;
 
   const RoomChatMessageInfo({
     required this.id,
@@ -168,11 +236,29 @@ class RoomChatMessageInfo {
     this.editedAt = 0,
     this.deletedAt = 0,
     this.status = 0,
+    this.replyToMessageId = '',
     this.images = const [],
+    this.reactions = const [],
+    this.reactionCount = 0,
+    this.mentions = const [],
   });
 
   double? get position => double.tryParse(displayPosition);
   String? get color => displayColor.isEmpty ? null : displayColor;
   bool get isDeleted => deletedAt > 0 || status == 3;
   bool get isEdited => editedAt > 0 || status == 2;
+}
+
+class ChatMentionInfo {
+  final String userId;
+  final String username;
+  final int start;
+  final int length;
+
+  const ChatMentionInfo({
+    required this.userId,
+    required this.username,
+    required this.start,
+    required this.length,
+  });
 }

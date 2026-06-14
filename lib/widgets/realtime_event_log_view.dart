@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/services/realtime_event_log_preferences.dart';
+import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 enum _RealtimeEventLogMenuAction {
   toggleGrouping,
@@ -62,34 +64,39 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
       final controller = TextEditingController(
         text: RealtimeEventLogPreferences.maxEntries.value.toString(),
       );
-      nextValue = await showDialog<int>(
+      nextValue = await showAppDialog<int>(
             context: context,
             builder: (dialogContext) {
-              return AlertDialog(
+              return AppDialog(
                 title: const Text('保留条数'),
-                content: TextField(
+                body: AppTextField(
                   controller: controller,
+                  label: '最近事件数量',
+                  helperText: '范围 20-2000',
+                  prefixIcon: Icons.format_list_numbered_rounded,
                   autofocus: true,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(
-                    labelText: '最近事件数量',
-                    helperText: '范围 20-2000',
-                    border: OutlineInputBorder(),
-                  ),
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) {
+                    final parsed = int.tryParse(controller.text.trim());
+                    if (parsed == null) return;
+                    Navigator.pop(dialogContext, parsed);
+                  },
                 ),
                 actions: [
-                  TextButton(
+                  AppActionButton(
                     onPressed: () => Navigator.pop(dialogContext),
-                    child: const Text('取消'),
+                    label: '取消',
+                    style: AppActionButtonStyle.outlined,
                   ),
-                  FilledButton(
+                  AppActionButton(
                     onPressed: () {
                       final parsed = int.tryParse(controller.text.trim());
                       if (parsed == null) return;
                       Navigator.pop(dialogContext, parsed);
                     },
-                    child: const Text('保存'),
+                    label: '保存',
                   ),
                 ],
               );
@@ -120,12 +127,12 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
     }
   }
 
-  PopupMenuButton<int> _buildMaxEntriesMenu(
+  AppPopupMenuButton<int> _buildMaxEntriesMenu(
     BuildContext context,
     int maxEntries, {
     bool showLabel = false,
   }) {
-    return PopupMenuButton<int>(
+    return AppPopupMenuButton<int>(
       tooltip: '保留条数',
       icon: showLabel ? null : const Icon(Icons.storage_rounded),
       initialValue: maxEntries,
@@ -157,13 +164,13 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
     );
   }
 
-  IconButton _buildGroupingButton(bool grouped) {
-    return IconButton(
+  AppIconButton _buildGroupingButton(bool grouped) {
+    return AppIconButton(
       tooltip: grouped ? '按时间查看' : '按类型分组',
-      selectedIcon: const Icon(Icons.view_agenda_rounded),
-      isSelected: grouped,
+      selectedIcon: Icons.view_agenda_rounded,
+      selected: grouped,
       onPressed: () => RealtimeEventLogPreferences.setGrouped(!grouped),
-      icon: const Icon(Icons.account_tree_rounded),
+      icon: Icons.account_tree_rounded,
     );
   }
 
@@ -175,7 +182,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
     required bool includeCopy,
     required bool includeClear,
   }) {
-    return MenuAnchor(
+    return AppMenuAnchor(
       menuChildren: [
         if (includeGrouping)
           MenuItemButton(
@@ -246,7 +253,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
           ),
       ],
       builder: (context, controller, child) {
-        return IconButton(
+        return AppIconButton(
           tooltip: '更多操作',
           onPressed: () {
             if (controller.isOpen) {
@@ -255,7 +262,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
               controller.open();
             }
           },
-          icon: const Icon(Icons.more_horiz_rounded),
+          icon: Icons.more_horiz_rounded,
         );
       },
     );
@@ -295,17 +302,17 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
       });
   }
 
-  IconButton _buildFilterButton(
+  AppIconButton _buildFilterButton(
     BuildContext context,
     List<_RealtimeEventFilterOption> options,
   ) {
     final active = _hiddenGroupKeys.isNotEmpty;
-    return IconButton(
+    return AppIconButton(
       tooltip: '筛选事件类型',
-      isSelected: active,
-      selectedIcon: const Icon(Icons.filter_alt_rounded),
-      icon: const Icon(Icons.filter_alt_outlined),
-      color: active ? Theme.of(context).colorScheme.primary : null,
+      selected: active,
+      selectedIcon: Icons.filter_alt_rounded,
+      icon: Icons.filter_alt_outlined,
+      style: active ? AppIconButtonStyle.tonal : AppIconButtonStyle.ghost,
       onPressed:
           options.isEmpty ? null : () => _showFilterSheet(context, options),
     );
@@ -318,19 +325,17 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
     final optionKeys = options.map((option) => option.key).toSet();
     var draftHidden =
         _hiddenGroupKeys.where((key) => optionKeys.contains(key)).toSet();
-    final nextHidden = await showModalBottomSheet<Set<String>>(
+    final nextHidden = await showAppBottomSheet<Set<String>>(
       context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
             final selectedCount = options.length - draftHidden.length;
             final allSelected = draftHidden.isEmpty;
-            return SafeArea(
+            return AppBottomSheetFrame(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+                  maxHeight: AppMetrics.dialogMaxHeight(context, null),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -361,49 +366,42 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                               ],
                             ),
                           ),
-                          TextButton(
+                          AppActionButton(
                             onPressed: () => setSheetState(() {
                               draftHidden = <String>{};
                             }),
-                            child: const Text('全选'),
+                            label: '全选',
+                            style: AppActionButtonStyle.text,
                           ),
                         ],
                       ),
                     ),
-                    CheckboxListTile(
-                      value: draftHidden.isNotEmpty &&
-                              draftHidden.length < options.length
-                          ? null
-                          : allSelected,
-                      tristate: draftHidden.isNotEmpty &&
-                          draftHidden.length < options.length,
+                    AppCheckboxTile(
+                      value: allSelected,
                       onChanged: (value) => setSheetState(() {
-                        draftHidden =
-                            value == true ? <String>{} : Set.of(optionKeys);
+                        draftHidden = value ? <String>{} : Set.of(optionKeys);
                       }),
                       title: const Text('全部类型'),
                       subtitle: Text('${events.length} 条事件'),
-                      controlAffinity: ListTileControlAffinity.leading,
                     ),
-                    const Divider(height: 1),
+                    const AppDivider(height: 1),
                     Flexible(
-                      child: ListView.builder(
+                      child: AppListView.builder(
                         shrinkWrap: true,
                         itemCount: options.length,
                         itemBuilder: (context, index) {
                           final option = options[index];
                           final selected = !draftHidden.contains(option.key);
-                          return CheckboxListTile(
+                          return AppCheckboxTile(
                             value: selected,
                             onChanged: (value) => setSheetState(() {
-                              if (value == true) {
+                              if (value) {
                                 draftHidden.remove(option.key);
                               } else {
                                 draftHidden.add(option.key);
                               }
                             }),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            secondary: _DirectionPill(
+                            suffix: _DirectionPill(
                               direction: option.direction,
                             ),
                             title: Text(
@@ -421,15 +419,16 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          TextButton(
+                          AppActionButton(
                             onPressed: () => Navigator.pop(sheetContext),
-                            child: const Text('取消'),
+                            label: '取消',
+                            style: AppActionButtonStyle.text,
                           ),
                           const SizedBox(width: 8),
-                          FilledButton(
+                          AppActionButton(
                             onPressed: () =>
                                 Navigator.pop(sheetContext, draftHidden),
-                            child: const Text('应用'),
+                            label: '应用',
                           ),
                         ],
                       ),
@@ -484,25 +483,24 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
+                    AppBadge(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 3,
                       ),
-                      decoration: BoxDecoration(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(999),
+                      color: theme.colorScheme.primary,
+                      backgroundColor:
+                          theme.colorScheme.primary.withValues(alpha: 0.10),
+                      textStyle: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                       ),
-                      child: Text(
+                      label: Text(
                         grouped
                             ? '$groupCount 组 / $eventCountLabel'
                             : eventCountLabel,
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
                       ),
                     ),
                   ];
@@ -556,16 +554,17 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                           ),
                           _buildFilterButton(context, filterOptions),
                           _buildGroupingButton(grouped),
-                          IconButton(
+                          AppIconButton(
                             tooltip: '复制',
                             onPressed:
                                 events.isEmpty ? null : () => _copy(context),
-                            icon: const Icon(Icons.copy_all_rounded),
+                            icon: Icons.copy_all_rounded,
                           ),
-                          IconButton(
+                          AppIconButton(
                             tooltip: '清空',
                             onPressed: events.isEmpty ? null : onClear,
-                            icon: const Icon(Icons.delete_sweep_rounded),
+                            icon: Icons.delete_sweep_rounded,
+                            style: AppIconButtonStyle.destructive,
                           ),
                         ],
                       );
@@ -579,14 +578,16 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
         Expanded(
           child: events.isEmpty
               ? Center(
-                  child:
-                      Text(emptyText, style: TextStyle(color: theme.hintColor)),
+                  child: AppEmptyState(
+                    icon: Icons.receipt_long_outlined,
+                    title: emptyText,
+                  ),
                 )
               : filteredEvents.isEmpty
-                  ? Center(
-                      child: Text(
-                        '当前过滤条件下暂无实时事件',
-                        style: TextStyle(color: theme.hintColor),
+                  ? const Center(
+                      child: AppEmptyState(
+                        icon: Icons.filter_alt_off_outlined,
+                        title: '当前过滤条件下暂无实时事件',
                       ),
                     )
                   : ValueListenableBuilder<bool>(
@@ -595,7 +596,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                         if (grouped) {
                           final groups =
                               _buildGroups(filteredEvents).reversed.toList();
-                          return ListView.separated(
+                          return AppListView.separated(
                             padding: padding,
                             itemCount: groups.length,
                             separatorBuilder: (_, __) =>
@@ -608,7 +609,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                             },
                           );
                         }
-                        return ListView.separated(
+                        return AppListView.separated(
                           padding: padding,
                           reverse: true,
                           itemCount: filteredEvents.length,
@@ -683,19 +684,18 @@ class _DirectionPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final outgoing = direction == 'out';
     final tone = outgoing ? Colors.blueAccent : Colors.green;
-    return Container(
+    return AppBadge(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: tone.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(999),
+      color: tone,
+      backgroundColor: tone.withValues(alpha: 0.12),
+      textStyle: TextStyle(
+        color: tone,
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
       ),
-      child: Text(
+      label: Text(
         outgoing ? '发出' : '收到',
-        style: TextStyle(
-          color: tone,
-          fontSize: 12,
-          fontWeight: FontWeight.w800,
-        ),
       ),
     );
   }
@@ -713,76 +713,56 @@ class _RealtimeEventGroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final event = group.latest;
-    final outgoing = event.direction == 'out';
-    final tone = outgoing ? Colors.blueAccent : Colors.green;
-    return ExpansionTile(
-      tilePadding: const EdgeInsets.symmetric(horizontal: 12),
-      childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
-      collapsedShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
-      backgroundColor: isDark ? const Color(0xFF1E1E24) : Colors.white,
-      collapsedBackgroundColor: isDark ? const Color(0xFF1E1E24) : Colors.white,
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: tone.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              outgoing ? '发出' : '收到',
-              style: TextStyle(
-                color: tone,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              event.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-        ],
-      ),
-      subtitle: Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 4,
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: AppAccordionItem(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _GroupMeta(label: '${group.count} 条'),
-            _GroupMeta(label: '最新 ${event.timeLabel}'),
-            if (group.totalBytes > 0)
-              _GroupMeta(label: '${group.totalBytes} bytes'),
+            Row(
+              children: [
+                _DirectionPill(direction: event.direction),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    event.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                _GroupMeta(label: '${group.count} 条'),
+                _GroupMeta(label: '最新 ${event.timeLabel}'),
+                if (group.totalBytes > 0)
+                  _GroupMeta(label: '${group.totalBytes} bytes'),
+              ],
+            ),
           ],
         ),
-      ),
-      children: [
-        for (final item in group.events.reversed)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: _RealtimeEventGroupEntryTile(
-              event: item,
-              isDark: isDark,
-            ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+          child: Column(
+            children: [
+              for (final item in group.events.reversed)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: _RealtimeEventGroupEntryTile(
+                    event: item,
+                    isDark: isDark,
+                  ),
+                ),
+            ],
           ),
-      ],
+        ),
+      ),
     );
   }
 }
@@ -800,17 +780,15 @@ class _RealtimeEventGroupEntryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final preview = event.payload == null ? '' : event.payloadPreview();
-    return Container(
+    return AppPanelSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.black.withValues(alpha: 0.025),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
+      color: isDark
+          ? Colors.white.withValues(alpha: 0.04)
+          : Colors.black.withValues(alpha: 0.025),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(
+        color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -835,7 +813,7 @@ class _RealtimeEventGroupEntryTile extends StatelessWidget {
           ],
           if (preview.isNotEmpty) ...[
             const SizedBox(height: 8),
-            SelectableText(
+            AppSelectableText(
               preview,
               style: TextStyle(
                 fontSize: 11,
@@ -878,38 +856,20 @@ class _RealtimeEventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final outgoing = event.direction == 'out';
-    final tone = outgoing ? Colors.blueAccent : Colors.green;
     final preview = event.payload == null ? '' : event.payloadPreview();
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
+      color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(
+        color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: tone.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  outgoing ? '发出' : '收到',
-                  style: TextStyle(
-                    color: tone,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
+              _DirectionPill(direction: event.direction),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -936,7 +896,7 @@ class _RealtimeEventTile extends StatelessWidget {
           ],
           if (preview.isNotEmpty) ...[
             const SizedBox(height: 8),
-            SelectableText(
+            AppSelectableText(
               preview,
               style: TextStyle(
                 fontSize: 11,

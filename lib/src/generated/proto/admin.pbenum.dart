@@ -36,6 +36,114 @@ class BanTargetType extends $pb.ProtobufEnum {
   const BanTargetType._(super.value, super.name);
 }
 
+class ContentReportTargetType extends $pb.ProtobufEnum {
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED =
+      ContentReportTargetType._(
+          0, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED');
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_ROOM =
+      ContentReportTargetType._(
+          1, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_ROOM');
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_USER =
+      ContentReportTargetType._(
+          2, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_USER');
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER =
+      ContentReportTargetType._(
+          3, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER');
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE =
+      ContentReportTargetType._(
+          4, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE');
+
+  static const $core.List<ContentReportTargetType> values =
+      <ContentReportTargetType>[
+    CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
+    CONTENT_REPORT_TARGET_TYPE_ROOM,
+    CONTENT_REPORT_TARGET_TYPE_USER,
+    CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER,
+    CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE,
+  ];
+
+  static final $core.List<ContentReportTargetType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static ContentReportTargetType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ContentReportTargetType._(super.value, super.name);
+}
+
+class ContentReportStatus extends $pb.ProtobufEnum {
+  static const ContentReportStatus CONTENT_REPORT_STATUS_UNSPECIFIED =
+      ContentReportStatus._(
+          0, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_UNSPECIFIED');
+  static const ContentReportStatus CONTENT_REPORT_STATUS_OPEN =
+      ContentReportStatus._(
+          1, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_OPEN');
+  static const ContentReportStatus CONTENT_REPORT_STATUS_REVIEWING =
+      ContentReportStatus._(
+          2, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_REVIEWING');
+  static const ContentReportStatus CONTENT_REPORT_STATUS_RESOLVED =
+      ContentReportStatus._(
+          3, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_RESOLVED');
+  static const ContentReportStatus CONTENT_REPORT_STATUS_DISMISSED =
+      ContentReportStatus._(
+          4, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_DISMISSED');
+
+  static const $core.List<ContentReportStatus> values = <ContentReportStatus>[
+    CONTENT_REPORT_STATUS_UNSPECIFIED,
+    CONTENT_REPORT_STATUS_OPEN,
+    CONTENT_REPORT_STATUS_REVIEWING,
+    CONTENT_REPORT_STATUS_RESOLVED,
+    CONTENT_REPORT_STATUS_DISMISSED,
+  ];
+
+  static final $core.List<ContentReportStatus?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static ContentReportStatus? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ContentReportStatus._(super.value, super.name);
+}
+
+class ContentReportScope extends $pb.ProtobufEnum {
+  static const ContentReportScope CONTENT_REPORT_SCOPE_UNSPECIFIED =
+      ContentReportScope._(
+          0, _omitEnumNames ? '' : 'CONTENT_REPORT_SCOPE_UNSPECIFIED');
+  static const ContentReportScope CONTENT_REPORT_SCOPE_ANY_RELATED =
+      ContentReportScope._(
+          1, _omitEnumNames ? '' : 'CONTENT_REPORT_SCOPE_ANY_RELATED');
+  static const ContentReportScope CONTENT_REPORT_SCOPE_ROOM_CONTEXT =
+      ContentReportScope._(
+          2, _omitEnumNames ? '' : 'CONTENT_REPORT_SCOPE_ROOM_CONTEXT');
+  static const ContentReportScope CONTENT_REPORT_SCOPE_TARGET_ROOM =
+      ContentReportScope._(
+          3, _omitEnumNames ? '' : 'CONTENT_REPORT_SCOPE_TARGET_ROOM');
+  static const ContentReportScope CONTENT_REPORT_SCOPE_TARGET_USER =
+      ContentReportScope._(
+          4, _omitEnumNames ? '' : 'CONTENT_REPORT_SCOPE_TARGET_USER');
+  static const ContentReportScope CONTENT_REPORT_SCOPE_TARGET_MEMBER =
+      ContentReportScope._(
+          5, _omitEnumNames ? '' : 'CONTENT_REPORT_SCOPE_TARGET_MEMBER');
+  static const ContentReportScope CONTENT_REPORT_SCOPE_TARGET_CHAT_MESSAGE =
+      ContentReportScope._(
+          6, _omitEnumNames ? '' : 'CONTENT_REPORT_SCOPE_TARGET_CHAT_MESSAGE');
+
+  static const $core.List<ContentReportScope> values = <ContentReportScope>[
+    CONTENT_REPORT_SCOPE_UNSPECIFIED,
+    CONTENT_REPORT_SCOPE_ANY_RELATED,
+    CONTENT_REPORT_SCOPE_ROOM_CONTEXT,
+    CONTENT_REPORT_SCOPE_TARGET_ROOM,
+    CONTENT_REPORT_SCOPE_TARGET_USER,
+    CONTENT_REPORT_SCOPE_TARGET_MEMBER,
+    CONTENT_REPORT_SCOPE_TARGET_CHAT_MESSAGE,
+  ];
+
+  static final $core.List<ContentReportScope?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 6);
+  static ContentReportScope? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ContentReportScope._(super.value, super.name);
+}
+
 class SortDirection extends $pb.ProtobufEnum {
   static const SortDirection SORT_DIRECTION_UNSPECIFIED =
       SortDirection._(0, _omitEnumNames ? '' : 'SORT_DIRECTION_UNSPECIFIED');

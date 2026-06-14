@@ -86,6 +86,65 @@ class AuthResult {
   bool get requiresMfa => mfa != null;
 }
 
+class SensitiveOperationVerificationInfo {
+  final String verificationId;
+  final SensitiveOperationVerificationChallengeInfo challenge;
+
+  const SensitiveOperationVerificationInfo({
+    required this.verificationId,
+    required this.challenge,
+  });
+}
+
+class SensitiveOperationVerificationChallengeInfo {
+  final String sessionId;
+  final List<int> requiredMethods;
+  final List<int> completedMethods;
+  final List<int> availableMethods;
+
+  const SensitiveOperationVerificationChallengeInfo({
+    required this.sessionId,
+    required this.requiredMethods,
+    required this.completedMethods,
+    required this.availableMethods,
+  });
+
+  bool get requiresPassword => requiredMethods.contains(
+        client_enum.SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD.value,
+      );
+
+  bool get requiresPasskey => requiredMethods.contains(
+        client_enum.SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN.value,
+      );
+
+  bool get requiresEmail => requiredMethods.contains(
+        client_enum.SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL.value,
+      );
+}
+
+class SensitiveOperationPasskeyStart {
+  final String passkeySessionId;
+  final List<int> options;
+
+  const SensitiveOperationPasskeyStart({
+    required this.passkeySessionId,
+    required this.options,
+  });
+}
+
+class SensitiveOperationEmailCodeInfo {
+  final String message;
+  final String maskedEmail;
+
+  const SensitiveOperationEmailCodeInfo({
+    required this.message,
+    required this.maskedEmail,
+  });
+}
+
 class MfaChallengeInfo {
   final String sessionId;
   final List<int> availableMethods;

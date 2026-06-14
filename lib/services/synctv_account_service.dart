@@ -66,9 +66,14 @@ class SyncTvAccountDomainService {
   Future<WUser> confirmEmailBind({
     required String email,
     required String token,
+    required String verificationId,
   }) async {
     final response = await _api.user.confirmEmailBind(
-      client.ConfirmEmailBindRequest(email: email, token: token),
+      client.ConfirmEmailBindRequest(
+        email: email,
+        token: token,
+        verificationId: verificationId,
+      ),
     );
     final user = _api.mapUser(response.user);
     _cache.put('account:me', user, ttl: const Duration(minutes: 2));
@@ -76,8 +81,10 @@ class SyncTvAccountDomainService {
     return user;
   }
 
-  Future<WUser> unbindEmail() async {
-    final response = await _api.user.unbindEmail(client.UnbindEmailRequest());
+  Future<WUser> unbindEmail({required String verificationId}) async {
+    final response = await _api.user.unbindEmail(
+      client.UnbindEmailRequest(verificationId: verificationId),
+    );
     final user = _api.mapUser(response.user);
     _cache.put('account:me', user, ttl: const Duration(minutes: 2));
     _cache.invalidate('account:preferences');

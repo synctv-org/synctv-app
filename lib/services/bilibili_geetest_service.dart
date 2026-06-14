@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class BilibiliGeetestResult {
@@ -50,7 +51,7 @@ class BilibiliGeetestService {
     required String challenge,
     required Duration timeout,
   }) async {
-    final outcome = await showDialog<_BilibiliGeetestDialogOutcome>(
+    final outcome = await showAppDialog<_BilibiliGeetestDialogOutcome>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => _BilibiliGeetestDialog(
@@ -427,10 +428,12 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Dialog(
+    return AppDialogFrame(
+      maxWidth: 460,
+      maxHeight: 620,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      borderRadius: const BorderRadius.all(Radius.circular(18)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 460, maxHeight: 620),
         child: Column(
@@ -462,15 +465,15 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
                       ),
                     ),
                   ),
-                  IconButton(
+                  AppIconButton(
                     tooltip: '取消',
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
+                    icon: Icons.close_rounded,
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1),
+            const AppDivider(height: 1),
             Flexible(
               child: Stack(
                 children: [
@@ -479,7 +482,7 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
                     const Positioned.fill(
                       child: ColoredBox(
                         color: Colors.transparent,
-                        child: Center(child: CircularProgressIndicator()),
+                        child: AppLoadingIndicator(),
                       ),
                     ),
                 ],
@@ -514,10 +517,11 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
               padding: const EdgeInsets.all(16),
               child: SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
+                child: AppActionButton(
                   onPressed: () => _controller.reload(),
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('刷新验证'),
+                  icon: Icons.refresh_rounded,
+                  label: '刷新验证',
+                  style: AppActionButtonStyle.outlined,
                 ),
               ),
             ),

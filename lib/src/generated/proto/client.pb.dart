@@ -314,6 +314,8 @@ class Room extends $pb.GeneratedMessage {
     ResourceAvailability? availability,
     $fixnum.Int64? version,
     ResourceCover? cover,
+    $0.RoomPresenceStats? presence,
+    UserPublicView? creator,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -329,6 +331,8 @@ class Room extends $pb.GeneratedMessage {
     if (availability != null) result.availability = availability;
     if (version != null) result.version = version;
     if (cover != null) result.cover = cover;
+    if (presence != null) result.presence = presence;
+    if (creator != null) result.creator = creator;
     return result;
   }
 
@@ -362,6 +366,10 @@ class Room extends $pb.GeneratedMessage {
     ..aInt64(12, _omitFieldNames ? '' : 'version')
     ..aOM<ResourceCover>(13, _omitFieldNames ? '' : 'cover',
         subBuilder: ResourceCover.create)
+    ..aOM<$0.RoomPresenceStats>(14, _omitFieldNames ? '' : 'presence',
+        subBuilder: $0.RoomPresenceStats.create)
+    ..aOM<UserPublicView>(15, _omitFieldNames ? '' : 'creator',
+        subBuilder: UserPublicView.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -500,6 +508,28 @@ class Room extends $pb.GeneratedMessage {
   void clearCover() => $_clearField(13);
   @$pb.TagNumber(13)
   ResourceCover ensureCover() => $_ensure(12);
+
+  @$pb.TagNumber(14)
+  $0.RoomPresenceStats get presence => $_getN(13);
+  @$pb.TagNumber(14)
+  set presence($0.RoomPresenceStats value) => $_setField(14, value);
+  @$pb.TagNumber(14)
+  $core.bool hasPresence() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearPresence() => $_clearField(14);
+  @$pb.TagNumber(14)
+  $0.RoomPresenceStats ensurePresence() => $_ensure(13);
+
+  @$pb.TagNumber(15)
+  UserPublicView get creator => $_getN(14);
+  @$pb.TagNumber(15)
+  set creator(UserPublicView value) => $_setField(15, value);
+  @$pb.TagNumber(15)
+  $core.bool hasCreator() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearCreator() => $_clearField(15);
+  @$pb.TagNumber(15)
+  UserPublicView ensureCreator() => $_ensure(14);
 }
 
 class Media extends $pb.GeneratedMessage {
@@ -1059,6 +1089,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     $fixnum.Int64? version,
     $core.String? playingPlaylistId,
     $core.List<$core.int>? target,
+    $core.String? targetHash,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
@@ -1070,6 +1101,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     if (version != null) result.version = version;
     if (playingPlaylistId != null) result.playingPlaylistId = playingPlaylistId;
     if (target != null) result.target = target;
+    if (targetHash != null) result.targetHash = targetHash;
     return result;
   }
 
@@ -1096,6 +1128,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     ..aOS(8, _omitFieldNames ? '' : 'playingPlaylistId')
     ..a<$core.List<$core.int>>(
         9, _omitFieldNames ? '' : 'target', $pb.PbFieldType.OY)
+    ..aOS(10, _omitFieldNames ? '' : 'targetHash')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1197,6 +1230,15 @@ class PlaybackState extends $pb.GeneratedMessage {
   $core.bool hasTarget() => $_has(8);
   @$pb.TagNumber(9)
   void clearTarget() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.String get targetHash => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set targetHash($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasTargetHash() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearTargetHash() => $_clearField(10);
 }
 
 class RegisterResponse extends $pb.GeneratedMessage {
@@ -1204,11 +1246,15 @@ class RegisterResponse extends $pb.GeneratedMessage {
     User? user,
     $core.String? accessToken,
     $core.String? refreshToken,
+    RegistrationStatus? status,
+    PendingRegistrationReview? pendingReview,
   }) {
     final result = create();
     if (user != null) result.user = user;
     if (accessToken != null) result.accessToken = accessToken;
     if (refreshToken != null) result.refreshToken = refreshToken;
+    if (status != null) result.status = status;
+    if (pendingReview != null) result.pendingReview = pendingReview;
     return result;
   }
 
@@ -1228,6 +1274,10 @@ class RegisterResponse extends $pb.GeneratedMessage {
     ..aOM<User>(1, _omitFieldNames ? '' : 'user', subBuilder: User.create)
     ..aOS(2, _omitFieldNames ? '' : 'accessToken')
     ..aOS(3, _omitFieldNames ? '' : 'refreshToken')
+    ..aE<RegistrationStatus>(4, _omitFieldNames ? '' : 'status',
+        enumValues: RegistrationStatus.values)
+    ..aOM<PendingRegistrationReview>(5, _omitFieldNames ? '' : 'pendingReview',
+        subBuilder: PendingRegistrationReview.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1277,6 +1327,105 @@ class RegisterResponse extends $pb.GeneratedMessage {
   $core.bool hasRefreshToken() => $_has(2);
   @$pb.TagNumber(3)
   void clearRefreshToken() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  RegistrationStatus get status => $_getN(3);
+  @$pb.TagNumber(4)
+  set status(RegistrationStatus value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasStatus() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearStatus() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  PendingRegistrationReview get pendingReview => $_getN(4);
+  @$pb.TagNumber(5)
+  set pendingReview(PendingRegistrationReview value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasPendingReview() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearPendingReview() => $_clearField(5);
+  @$pb.TagNumber(5)
+  PendingRegistrationReview ensurePendingReview() => $_ensure(4);
+}
+
+class PendingRegistrationReview extends $pb.GeneratedMessage {
+  factory PendingRegistrationReview({
+    $core.String? reviewRequestId,
+    $core.String? username,
+    $core.String? email,
+  }) {
+    final result = create();
+    if (reviewRequestId != null) result.reviewRequestId = reviewRequestId;
+    if (username != null) result.username = username;
+    if (email != null) result.email = email;
+    return result;
+  }
+
+  PendingRegistrationReview._();
+
+  factory PendingRegistrationReview.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PendingRegistrationReview.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PendingRegistrationReview',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'reviewRequestId')
+    ..aOS(2, _omitFieldNames ? '' : 'username')
+    ..aOS(3, _omitFieldNames ? '' : 'email')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PendingRegistrationReview clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PendingRegistrationReview copyWith(
+          void Function(PendingRegistrationReview) updates) =>
+      super.copyWith((message) => updates(message as PendingRegistrationReview))
+          as PendingRegistrationReview;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PendingRegistrationReview create() => PendingRegistrationReview._();
+  @$core.override
+  PendingRegistrationReview createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PendingRegistrationReview getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PendingRegistrationReview>(create);
+  static PendingRegistrationReview? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get reviewRequestId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set reviewRequestId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReviewRequestId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReviewRequestId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get username => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set username($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUsername() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUsername() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get email => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set email($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEmail() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEmail() => $_clearField(3);
 }
 
 /// Start a real OPAQUE account registration. The server receives only the
@@ -1508,8 +1657,391 @@ class FinishOpaqueRegistrationRequest extends $pb.GeneratedMessage {
   void clearRegistrationUpload() => $_clearField(2);
 }
 
-/// Confirm a passwordless email login token. Password login uses
-/// StartOpaqueLogin / FinishOpaqueLogin.
+class RegisterWithDirectPasswordRequest extends $pb.GeneratedMessage {
+  factory RegisterWithDirectPasswordRequest({
+    $core.String? username,
+    $core.String? email,
+    $core.String? password,
+  }) {
+    final result = create();
+    if (username != null) result.username = username;
+    if (email != null) result.email = email;
+    if (password != null) result.password = password;
+    return result;
+  }
+
+  RegisterWithDirectPasswordRequest._();
+
+  factory RegisterWithDirectPasswordRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RegisterWithDirectPasswordRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RegisterWithDirectPasswordRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'username')
+    ..aOS(2, _omitFieldNames ? '' : 'email')
+    ..aOS(3, _omitFieldNames ? '' : 'password')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RegisterWithDirectPasswordRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RegisterWithDirectPasswordRequest copyWith(
+          void Function(RegisterWithDirectPasswordRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as RegisterWithDirectPasswordRequest))
+          as RegisterWithDirectPasswordRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RegisterWithDirectPasswordRequest create() =>
+      RegisterWithDirectPasswordRequest._();
+  @$core.override
+  RegisterWithDirectPasswordRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RegisterWithDirectPasswordRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RegisterWithDirectPasswordRequest>(
+          create);
+  static RegisterWithDirectPasswordRequest? _defaultInstance;
+
+  /// Register with direct password transport over TLS.
+  /// The server converts the submitted password into an OPAQUE credential record.
+  @$pb.TagNumber(1)
+  $core.String get username => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set username($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUsername() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUsername() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get email => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set email($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEmail() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEmail() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get password => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set password($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPassword() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPassword() => $_clearField(3);
+}
+
+enum LoginWithDirectPasswordRequest_Identifier { username, email, notSet }
+
+class LoginWithDirectPasswordRequest extends $pb.GeneratedMessage {
+  factory LoginWithDirectPasswordRequest({
+    $core.String? username,
+    $core.String? email,
+    $core.String? password,
+  }) {
+    final result = create();
+    if (username != null) result.username = username;
+    if (email != null) result.email = email;
+    if (password != null) result.password = password;
+    return result;
+  }
+
+  LoginWithDirectPasswordRequest._();
+
+  factory LoginWithDirectPasswordRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory LoginWithDirectPasswordRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, LoginWithDirectPasswordRequest_Identifier>
+      _LoginWithDirectPasswordRequest_IdentifierByTag = {
+    1: LoginWithDirectPasswordRequest_Identifier.username,
+    2: LoginWithDirectPasswordRequest_Identifier.email,
+    0: LoginWithDirectPasswordRequest_Identifier.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'LoginWithDirectPasswordRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOS(1, _omitFieldNames ? '' : 'username')
+    ..aOS(2, _omitFieldNames ? '' : 'email')
+    ..aOS(3, _omitFieldNames ? '' : 'password')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoginWithDirectPasswordRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LoginWithDirectPasswordRequest copyWith(
+          void Function(LoginWithDirectPasswordRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as LoginWithDirectPasswordRequest))
+          as LoginWithDirectPasswordRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LoginWithDirectPasswordRequest create() =>
+      LoginWithDirectPasswordRequest._();
+  @$core.override
+  LoginWithDirectPasswordRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static LoginWithDirectPasswordRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<LoginWithDirectPasswordRequest>(create);
+  static LoginWithDirectPasswordRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  LoginWithDirectPasswordRequest_Identifier whichIdentifier() =>
+      _LoginWithDirectPasswordRequest_IdentifierByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearIdentifier() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.String get username => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set username($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUsername() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUsername() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get email => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set email($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEmail() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEmail() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get password => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set password($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPassword() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPassword() => $_clearField(3);
+}
+
+class RequestEmailRegistrationRequest extends $pb.GeneratedMessage {
+  factory RequestEmailRegistrationRequest({
+    $core.String? username,
+    $core.String? email,
+  }) {
+    final result = create();
+    if (username != null) result.username = username;
+    if (email != null) result.email = email;
+    return result;
+  }
+
+  RequestEmailRegistrationRequest._();
+
+  factory RequestEmailRegistrationRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RequestEmailRegistrationRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RequestEmailRegistrationRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'username')
+    ..aOS(2, _omitFieldNames ? '' : 'email')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestEmailRegistrationRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestEmailRegistrationRequest copyWith(
+          void Function(RequestEmailRegistrationRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as RequestEmailRegistrationRequest))
+          as RequestEmailRegistrationRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RequestEmailRegistrationRequest create() =>
+      RequestEmailRegistrationRequest._();
+  @$core.override
+  RequestEmailRegistrationRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RequestEmailRegistrationRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RequestEmailRegistrationRequest>(
+          create);
+  static RequestEmailRegistrationRequest? _defaultInstance;
+
+  /// Start email-verified registration. Confirmation supplies the password and
+  /// creates the same OPAQUE credential record as password registration.
+  @$pb.TagNumber(1)
+  $core.String get username => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set username($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUsername() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUsername() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get email => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set email($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEmail() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEmail() => $_clearField(2);
+}
+
+class RequestEmailRegistrationResponse extends $pb.GeneratedMessage {
+  factory RequestEmailRegistrationResponse({
+    $core.String? message,
+  }) {
+    final result = create();
+    if (message != null) result.message = message;
+    return result;
+  }
+
+  RequestEmailRegistrationResponse._();
+
+  factory RequestEmailRegistrationResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RequestEmailRegistrationResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RequestEmailRegistrationResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'message')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestEmailRegistrationResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestEmailRegistrationResponse copyWith(
+          void Function(RequestEmailRegistrationResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as RequestEmailRegistrationResponse))
+          as RequestEmailRegistrationResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RequestEmailRegistrationResponse create() =>
+      RequestEmailRegistrationResponse._();
+  @$core.override
+  RequestEmailRegistrationResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RequestEmailRegistrationResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RequestEmailRegistrationResponse>(
+          create);
+  static RequestEmailRegistrationResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get message => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set message($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMessage() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMessage() => $_clearField(1);
+}
+
+class ConfirmEmailRegistrationRequest extends $pb.GeneratedMessage {
+  factory ConfirmEmailRegistrationRequest({
+    $core.String? emailToken,
+    $core.String? password,
+  }) {
+    final result = create();
+    if (emailToken != null) result.emailToken = emailToken;
+    if (password != null) result.password = password;
+    return result;
+  }
+
+  ConfirmEmailRegistrationRequest._();
+
+  factory ConfirmEmailRegistrationRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ConfirmEmailRegistrationRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ConfirmEmailRegistrationRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'emailToken')
+    ..aOS(2, _omitFieldNames ? '' : 'password')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ConfirmEmailRegistrationRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ConfirmEmailRegistrationRequest copyWith(
+          void Function(ConfirmEmailRegistrationRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as ConfirmEmailRegistrationRequest))
+          as ConfirmEmailRegistrationRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ConfirmEmailRegistrationRequest create() =>
+      ConfirmEmailRegistrationRequest._();
+  @$core.override
+  ConfirmEmailRegistrationRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ConfirmEmailRegistrationRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ConfirmEmailRegistrationRequest>(
+          create);
+  static ConfirmEmailRegistrationRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get emailToken => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set emailToken($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEmailToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEmailToken() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get password => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set password($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPassword() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPassword() => $_clearField(2);
+}
+
+/// Confirm a passwordless email login token.
 class ConfirmEmailLoginRequest extends $pb.GeneratedMessage {
   factory ConfirmEmailLoginRequest({
     $core.String? email,
@@ -1773,9 +2305,729 @@ class MfaChallenge extends $pb.GeneratedMessage {
   void clearExpiresAt() => $_clearField(5);
 }
 
-/// Start a real OPAQUE password login. The server receives only the OPAQUE
-/// credential request, never the plaintext password. Provide exactly one login
-/// identifier: `username` or `email`.
+class SensitiveOperationVerificationChallenge extends $pb.GeneratedMessage {
+  factory SensitiveOperationVerificationChallenge({
+    $core.String? sessionId,
+    $core.Iterable<SensitiveOperationVerificationMethod>? requiredMethods,
+    $core.Iterable<SensitiveOperationVerificationMethod>? completedMethods,
+    $core.Iterable<SensitiveOperationVerificationMethod>? availableMethods,
+    $core.String? maskedEmail,
+    $fixnum.Int64? expiresAt,
+    $core.int? requiredCount,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    if (requiredMethods != null) result.requiredMethods.addAll(requiredMethods);
+    if (completedMethods != null)
+      result.completedMethods.addAll(completedMethods);
+    if (availableMethods != null)
+      result.availableMethods.addAll(availableMethods);
+    if (maskedEmail != null) result.maskedEmail = maskedEmail;
+    if (expiresAt != null) result.expiresAt = expiresAt;
+    if (requiredCount != null) result.requiredCount = requiredCount;
+    return result;
+  }
+
+  SensitiveOperationVerificationChallenge._();
+
+  factory SensitiveOperationVerificationChallenge.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SensitiveOperationVerificationChallenge.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SensitiveOperationVerificationChallenge',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..pc<SensitiveOperationVerificationMethod>(
+        2, _omitFieldNames ? '' : 'requiredMethods', $pb.PbFieldType.KE,
+        valueOf: SensitiveOperationVerificationMethod.valueOf,
+        enumValues: SensitiveOperationVerificationMethod.values,
+        defaultEnumValue: SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_UNSPECIFIED)
+    ..pc<SensitiveOperationVerificationMethod>(
+        3, _omitFieldNames ? '' : 'completedMethods', $pb.PbFieldType.KE,
+        valueOf: SensitiveOperationVerificationMethod.valueOf,
+        enumValues: SensitiveOperationVerificationMethod.values,
+        defaultEnumValue: SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_UNSPECIFIED)
+    ..pc<SensitiveOperationVerificationMethod>(
+        4, _omitFieldNames ? '' : 'availableMethods', $pb.PbFieldType.KE,
+        valueOf: SensitiveOperationVerificationMethod.valueOf,
+        enumValues: SensitiveOperationVerificationMethod.values,
+        defaultEnumValue: SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_UNSPECIFIED)
+    ..aOS(5, _omitFieldNames ? '' : 'maskedEmail')
+    ..aInt64(6, _omitFieldNames ? '' : 'expiresAt')
+    ..aI(7, _omitFieldNames ? '' : 'requiredCount')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SensitiveOperationVerificationChallenge clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SensitiveOperationVerificationChallenge copyWith(
+          void Function(SensitiveOperationVerificationChallenge) updates) =>
+      super.copyWith((message) =>
+              updates(message as SensitiveOperationVerificationChallenge))
+          as SensitiveOperationVerificationChallenge;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SensitiveOperationVerificationChallenge create() =>
+      SensitiveOperationVerificationChallenge._();
+  @$core.override
+  SensitiveOperationVerificationChallenge createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SensitiveOperationVerificationChallenge getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          SensitiveOperationVerificationChallenge>(create);
+  static SensitiveOperationVerificationChallenge? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<SensitiveOperationVerificationMethod> get requiredMethods =>
+      $_getList(1);
+
+  @$pb.TagNumber(3)
+  $pb.PbList<SensitiveOperationVerificationMethod> get completedMethods =>
+      $_getList(2);
+
+  @$pb.TagNumber(4)
+  $pb.PbList<SensitiveOperationVerificationMethod> get availableMethods =>
+      $_getList(3);
+
+  @$pb.TagNumber(5)
+  $core.String get maskedEmail => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set maskedEmail($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMaskedEmail() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMaskedEmail() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get expiresAt => $_getI64(5);
+  @$pb.TagNumber(6)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasExpiresAt() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearExpiresAt() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.int get requiredCount => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set requiredCount($core.int value) => $_setSignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasRequiredCount() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRequiredCount() => $_clearField(7);
+}
+
+class StartSensitiveOperationVerificationRequest extends $pb.GeneratedMessage {
+  factory StartSensitiveOperationVerificationRequest() => create();
+
+  StartSensitiveOperationVerificationRequest._();
+
+  factory StartSensitiveOperationVerificationRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartSensitiveOperationVerificationRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartSensitiveOperationVerificationRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartSensitiveOperationVerificationRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartSensitiveOperationVerificationRequest copyWith(
+          void Function(StartSensitiveOperationVerificationRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as StartSensitiveOperationVerificationRequest))
+          as StartSensitiveOperationVerificationRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartSensitiveOperationVerificationRequest create() =>
+      StartSensitiveOperationVerificationRequest._();
+  @$core.override
+  StartSensitiveOperationVerificationRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartSensitiveOperationVerificationRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          StartSensitiveOperationVerificationRequest>(create);
+  static StartSensitiveOperationVerificationRequest? _defaultInstance;
+}
+
+class StartSensitiveOperationVerificationResponse extends $pb.GeneratedMessage {
+  factory StartSensitiveOperationVerificationResponse({
+    SensitiveOperationVerificationChallenge? challenge,
+    $core.String? verificationId,
+  }) {
+    final result = create();
+    if (challenge != null) result.challenge = challenge;
+    if (verificationId != null) result.verificationId = verificationId;
+    return result;
+  }
+
+  StartSensitiveOperationVerificationResponse._();
+
+  factory StartSensitiveOperationVerificationResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartSensitiveOperationVerificationResponse.fromJson(
+          $core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartSensitiveOperationVerificationResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<SensitiveOperationVerificationChallenge>(
+        1, _omitFieldNames ? '' : 'challenge',
+        subBuilder: SensitiveOperationVerificationChallenge.create)
+    ..aOS(2, _omitFieldNames ? '' : 'verificationId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartSensitiveOperationVerificationResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartSensitiveOperationVerificationResponse copyWith(
+          void Function(StartSensitiveOperationVerificationResponse) updates) =>
+      super.copyWith((message) =>
+              updates(message as StartSensitiveOperationVerificationResponse))
+          as StartSensitiveOperationVerificationResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartSensitiveOperationVerificationResponse create() =>
+      StartSensitiveOperationVerificationResponse._();
+  @$core.override
+  StartSensitiveOperationVerificationResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartSensitiveOperationVerificationResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          StartSensitiveOperationVerificationResponse>(create);
+  static StartSensitiveOperationVerificationResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  SensitiveOperationVerificationChallenge get challenge => $_getN(0);
+  @$pb.TagNumber(1)
+  set challenge(SensitiveOperationVerificationChallenge value) =>
+      $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasChallenge() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearChallenge() => $_clearField(1);
+  @$pb.TagNumber(1)
+  SensitiveOperationVerificationChallenge ensureChallenge() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.String get verificationId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set verificationId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasVerificationId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearVerificationId() => $_clearField(2);
+}
+
+class StartSensitiveOperationPasskeyRequest extends $pb.GeneratedMessage {
+  factory StartSensitiveOperationPasskeyRequest({
+    $core.String? sessionId,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    return result;
+  }
+
+  StartSensitiveOperationPasskeyRequest._();
+
+  factory StartSensitiveOperationPasskeyRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartSensitiveOperationPasskeyRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartSensitiveOperationPasskeyRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartSensitiveOperationPasskeyRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartSensitiveOperationPasskeyRequest copyWith(
+          void Function(StartSensitiveOperationPasskeyRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as StartSensitiveOperationPasskeyRequest))
+          as StartSensitiveOperationPasskeyRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartSensitiveOperationPasskeyRequest create() =>
+      StartSensitiveOperationPasskeyRequest._();
+  @$core.override
+  StartSensitiveOperationPasskeyRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartSensitiveOperationPasskeyRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          StartSensitiveOperationPasskeyRequest>(create);
+  static StartSensitiveOperationPasskeyRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+}
+
+class StartSensitiveOperationPasskeyResponse extends $pb.GeneratedMessage {
+  factory StartSensitiveOperationPasskeyResponse({
+    $core.String? passkeySessionId,
+    $core.List<$core.int>? options,
+  }) {
+    final result = create();
+    if (passkeySessionId != null) result.passkeySessionId = passkeySessionId;
+    if (options != null) result.options = options;
+    return result;
+  }
+
+  StartSensitiveOperationPasskeyResponse._();
+
+  factory StartSensitiveOperationPasskeyResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartSensitiveOperationPasskeyResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartSensitiveOperationPasskeyResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'passkeySessionId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'options', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartSensitiveOperationPasskeyResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartSensitiveOperationPasskeyResponse copyWith(
+          void Function(StartSensitiveOperationPasskeyResponse) updates) =>
+      super.copyWith((message) =>
+              updates(message as StartSensitiveOperationPasskeyResponse))
+          as StartSensitiveOperationPasskeyResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartSensitiveOperationPasskeyResponse create() =>
+      StartSensitiveOperationPasskeyResponse._();
+  @$core.override
+  StartSensitiveOperationPasskeyResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartSensitiveOperationPasskeyResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          StartSensitiveOperationPasskeyResponse>(create);
+  static StartSensitiveOperationPasskeyResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get passkeySessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set passkeySessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPasskeySessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPasskeySessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get options => $_getN(1);
+  @$pb.TagNumber(2)
+  set options($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasOptions() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOptions() => $_clearField(2);
+}
+
+class RequestSensitiveOperationEmailCodeRequest extends $pb.GeneratedMessage {
+  factory RequestSensitiveOperationEmailCodeRequest({
+    $core.String? sessionId,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    return result;
+  }
+
+  RequestSensitiveOperationEmailCodeRequest._();
+
+  factory RequestSensitiveOperationEmailCodeRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RequestSensitiveOperationEmailCodeRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RequestSensitiveOperationEmailCodeRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestSensitiveOperationEmailCodeRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestSensitiveOperationEmailCodeRequest copyWith(
+          void Function(RequestSensitiveOperationEmailCodeRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as RequestSensitiveOperationEmailCodeRequest))
+          as RequestSensitiveOperationEmailCodeRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RequestSensitiveOperationEmailCodeRequest create() =>
+      RequestSensitiveOperationEmailCodeRequest._();
+  @$core.override
+  RequestSensitiveOperationEmailCodeRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RequestSensitiveOperationEmailCodeRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          RequestSensitiveOperationEmailCodeRequest>(create);
+  static RequestSensitiveOperationEmailCodeRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+}
+
+class RequestSensitiveOperationEmailCodeResponse extends $pb.GeneratedMessage {
+  factory RequestSensitiveOperationEmailCodeResponse({
+    $core.String? message,
+    $core.String? maskedEmail,
+  }) {
+    final result = create();
+    if (message != null) result.message = message;
+    if (maskedEmail != null) result.maskedEmail = maskedEmail;
+    return result;
+  }
+
+  RequestSensitiveOperationEmailCodeResponse._();
+
+  factory RequestSensitiveOperationEmailCodeResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RequestSensitiveOperationEmailCodeResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RequestSensitiveOperationEmailCodeResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'message')
+    ..aOS(2, _omitFieldNames ? '' : 'maskedEmail')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestSensitiveOperationEmailCodeResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RequestSensitiveOperationEmailCodeResponse copyWith(
+          void Function(RequestSensitiveOperationEmailCodeResponse) updates) =>
+      super.copyWith((message) =>
+              updates(message as RequestSensitiveOperationEmailCodeResponse))
+          as RequestSensitiveOperationEmailCodeResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RequestSensitiveOperationEmailCodeResponse create() =>
+      RequestSensitiveOperationEmailCodeResponse._();
+  @$core.override
+  RequestSensitiveOperationEmailCodeResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RequestSensitiveOperationEmailCodeResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          RequestSensitiveOperationEmailCodeResponse>(create);
+  static RequestSensitiveOperationEmailCodeResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get message => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set message($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMessage() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMessage() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get maskedEmail => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set maskedEmail($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMaskedEmail() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMaskedEmail() => $_clearField(2);
+}
+
+class FinishSensitiveOperationVerificationRequest extends $pb.GeneratedMessage {
+  factory FinishSensitiveOperationVerificationRequest({
+    $core.String? sessionId,
+    SensitiveOperationVerificationMethod? method,
+    $core.String? password,
+    $core.String? emailToken,
+    $core.String? passkeySessionId,
+    $core.List<$core.int>? passkeyCredential,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    if (method != null) result.method = method;
+    if (password != null) result.password = password;
+    if (emailToken != null) result.emailToken = emailToken;
+    if (passkeySessionId != null) result.passkeySessionId = passkeySessionId;
+    if (passkeyCredential != null) result.passkeyCredential = passkeyCredential;
+    return result;
+  }
+
+  FinishSensitiveOperationVerificationRequest._();
+
+  factory FinishSensitiveOperationVerificationRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FinishSensitiveOperationVerificationRequest.fromJson(
+          $core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FinishSensitiveOperationVerificationRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..aE<SensitiveOperationVerificationMethod>(
+        2, _omitFieldNames ? '' : 'method',
+        enumValues: SensitiveOperationVerificationMethod.values)
+    ..aOS(3, _omitFieldNames ? '' : 'password')
+    ..aOS(4, _omitFieldNames ? '' : 'emailToken')
+    ..aOS(5, _omitFieldNames ? '' : 'passkeySessionId')
+    ..a<$core.List<$core.int>>(
+        6, _omitFieldNames ? '' : 'passkeyCredential', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishSensitiveOperationVerificationRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishSensitiveOperationVerificationRequest copyWith(
+          void Function(FinishSensitiveOperationVerificationRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as FinishSensitiveOperationVerificationRequest))
+          as FinishSensitiveOperationVerificationRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FinishSensitiveOperationVerificationRequest create() =>
+      FinishSensitiveOperationVerificationRequest._();
+  @$core.override
+  FinishSensitiveOperationVerificationRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FinishSensitiveOperationVerificationRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          FinishSensitiveOperationVerificationRequest>(create);
+  static FinishSensitiveOperationVerificationRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  SensitiveOperationVerificationMethod get method => $_getN(1);
+  @$pb.TagNumber(2)
+  set method(SensitiveOperationVerificationMethod value) =>
+      $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMethod() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMethod() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get password => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set password($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPassword() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPassword() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get emailToken => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set emailToken($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasEmailToken() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearEmailToken() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get passkeySessionId => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set passkeySessionId($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasPasskeySessionId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearPasskeySessionId() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.List<$core.int> get passkeyCredential => $_getN(5);
+  @$pb.TagNumber(6)
+  set passkeyCredential($core.List<$core.int> value) => $_setBytes(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasPasskeyCredential() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearPasskeyCredential() => $_clearField(6);
+}
+
+class FinishSensitiveOperationVerificationResponse
+    extends $pb.GeneratedMessage {
+  factory FinishSensitiveOperationVerificationResponse({
+    $core.String? verificationId,
+    SensitiveOperationVerificationChallenge? challenge,
+  }) {
+    final result = create();
+    if (verificationId != null) result.verificationId = verificationId;
+    if (challenge != null) result.challenge = challenge;
+    return result;
+  }
+
+  FinishSensitiveOperationVerificationResponse._();
+
+  factory FinishSensitiveOperationVerificationResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FinishSensitiveOperationVerificationResponse.fromJson(
+          $core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FinishSensitiveOperationVerificationResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'verificationId')
+    ..aOM<SensitiveOperationVerificationChallenge>(
+        2, _omitFieldNames ? '' : 'challenge',
+        subBuilder: SensitiveOperationVerificationChallenge.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishSensitiveOperationVerificationResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishSensitiveOperationVerificationResponse copyWith(
+          void Function(FinishSensitiveOperationVerificationResponse)
+              updates) =>
+      super.copyWith((message) =>
+              updates(message as FinishSensitiveOperationVerificationResponse))
+          as FinishSensitiveOperationVerificationResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FinishSensitiveOperationVerificationResponse create() =>
+      FinishSensitiveOperationVerificationResponse._();
+  @$core.override
+  FinishSensitiveOperationVerificationResponse createEmptyInstance() =>
+      create();
+  @$core.pragma('dart2js:noInline')
+  static FinishSensitiveOperationVerificationResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          FinishSensitiveOperationVerificationResponse>(create);
+  static FinishSensitiveOperationVerificationResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get verificationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set verificationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVerificationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVerificationId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  SensitiveOperationVerificationChallenge get challenge => $_getN(1);
+  @$pb.TagNumber(2)
+  set challenge(SensitiveOperationVerificationChallenge value) =>
+      $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasChallenge() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearChallenge() => $_clearField(2);
+  @$pb.TagNumber(2)
+  SensitiveOperationVerificationChallenge ensureChallenge() => $_ensure(1);
+}
+
+enum StartOpaqueLoginRequest_Identifier { username, email, notSet }
+
+/// Start an OPAQUE password login. Public clients should prefer this flow because
+/// the server receives an OPAQUE credential request instead of the plaintext
+/// password. Provide exactly one login identifier: `username` or `email`.
 class StartOpaqueLoginRequest extends $pb.GeneratedMessage {
   factory StartOpaqueLoginRequest({
     $core.String? username,
@@ -1798,10 +3050,17 @@ class StartOpaqueLoginRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
+  static const $core.Map<$core.int, StartOpaqueLoginRequest_Identifier>
+      _StartOpaqueLoginRequest_IdentifierByTag = {
+    1: StartOpaqueLoginRequest_Identifier.username,
+    2: StartOpaqueLoginRequest_Identifier.email,
+    0: StartOpaqueLoginRequest_Identifier.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'StartOpaqueLoginRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..oo(0, [1, 2])
     ..aOS(1, _omitFieldNames ? '' : 'username')
     ..aOS(2, _omitFieldNames ? '' : 'email')
     ..a<$core.List<$core.int>>(
@@ -1827,6 +3086,14 @@ class StartOpaqueLoginRequest extends $pb.GeneratedMessage {
   static StartOpaqueLoginRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<StartOpaqueLoginRequest>(create);
   static StartOpaqueLoginRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  StartOpaqueLoginRequest_Identifier whichIdentifier() =>
+      _StartOpaqueLoginRequest_IdentifierByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearIdentifier() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   $core.String get username => $_getSZ(0);
@@ -1995,6 +3262,8 @@ class FinishOpaqueLoginRequest extends $pb.GeneratedMessage {
   void clearCredentialFinalization() => $_clearField(2);
 }
 
+enum StartPasskeyLoginRequest_Identifier { username, email, notSet }
+
 /// Start a passkey login. If username or email is provided, the challenge is
 /// bound to that account's passkeys. If both are empty, the challenge uses
 /// discoverable credentials with conditional mediation.
@@ -2018,10 +3287,17 @@ class StartPasskeyLoginRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
+  static const $core.Map<$core.int, StartPasskeyLoginRequest_Identifier>
+      _StartPasskeyLoginRequest_IdentifierByTag = {
+    1: StartPasskeyLoginRequest_Identifier.username,
+    2: StartPasskeyLoginRequest_Identifier.email,
+    0: StartPasskeyLoginRequest_Identifier.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'StartPasskeyLoginRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..oo(0, [1, 2])
     ..aOS(1, _omitFieldNames ? '' : 'username')
     ..aOS(2, _omitFieldNames ? '' : 'email')
     ..hasRequiredFields = false;
@@ -2045,6 +3321,14 @@ class StartPasskeyLoginRequest extends $pb.GeneratedMessage {
   static StartPasskeyLoginRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<StartPasskeyLoginRequest>(create);
   static StartPasskeyLoginRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  StartPasskeyLoginRequest_Identifier whichIdentifier() =>
+      _StartPasskeyLoginRequest_IdentifierByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearIdentifier() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   $core.String get username => $_getSZ(0);
@@ -2566,10 +3850,12 @@ class FinishPasskeyBindRequest extends $pb.GeneratedMessage {
   factory FinishPasskeyBindRequest({
     $core.String? sessionId,
     $core.List<$core.int>? credential,
+    $core.String? verificationId,
   }) {
     final result = create();
     if (sessionId != null) result.sessionId = sessionId;
     if (credential != null) result.credential = credential;
+    if (verificationId != null) result.verificationId = verificationId;
     return result;
   }
 
@@ -2589,6 +3875,7 @@ class FinishPasskeyBindRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'sessionId')
     ..a<$core.List<$core.int>>(
         2, _omitFieldNames ? '' : 'credential', $pb.PbFieldType.OY)
+    ..aOS(3, _omitFieldNames ? '' : 'verificationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2628,6 +3915,15 @@ class FinishPasskeyBindRequest extends $pb.GeneratedMessage {
   $core.bool hasCredential() => $_has(1);
   @$pb.TagNumber(2)
   void clearCredential() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get verificationId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set verificationId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasVerificationId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVerificationId() => $_clearField(3);
 }
 
 class PasskeyCredential extends $pb.GeneratedMessage {
@@ -2892,9 +4188,11 @@ class ListPasskeysResponse extends $pb.GeneratedMessage {
 class DeletePasskeyRequest extends $pb.GeneratedMessage {
   factory DeletePasskeyRequest({
     $core.String? credentialId,
+    $core.String? verificationId,
   }) {
     final result = create();
     if (credentialId != null) result.credentialId = credentialId;
+    if (verificationId != null) result.verificationId = verificationId;
     return result;
   }
 
@@ -2912,6 +4210,7 @@ class DeletePasskeyRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'credentialId')
+    ..aOS(2, _omitFieldNames ? '' : 'verificationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2941,6 +4240,15 @@ class DeletePasskeyRequest extends $pb.GeneratedMessage {
   $core.bool hasCredentialId() => $_has(0);
   @$pb.TagNumber(1)
   void clearCredentialId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get verificationId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set verificationId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasVerificationId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearVerificationId() => $_clearField(2);
 }
 
 class DeletePasskeyResponse extends $pb.GeneratedMessage {
@@ -5149,15 +6457,15 @@ class WebSocketConnectRequest extends $pb.GeneratedMessage {
 class CreateRoomRequest extends $pb.GeneratedMessage {
   factory CreateRoomRequest({
     $core.String? name,
-    $core.String? password,
     $core.List<$core.int>? settings,
     $core.String? description,
+    $core.String? password,
   }) {
     final result = create();
     if (name != null) result.name = name;
-    if (password != null) result.password = password;
     if (settings != null) result.settings = settings;
     if (description != null) result.description = description;
+    if (password != null) result.password = password;
     return result;
   }
 
@@ -5175,10 +6483,10 @@ class CreateRoomRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..aOS(2, _omitFieldNames ? '' : 'password')
     ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'settings', $pb.PbFieldType.OY)
-    ..aOS(4, _omitFieldNames ? '' : 'description')
+        2, _omitFieldNames ? '' : 'settings', $pb.PbFieldType.OY)
+    ..aOS(3, _omitFieldNames ? '' : 'description')
+    ..aOS(4, _omitFieldNames ? '' : 'password')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -5210,31 +6518,31 @@ class CreateRoomRequest extends $pb.GeneratedMessage {
   void clearName() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get password => $_getSZ(1);
+  $core.List<$core.int> get settings => $_getN(1);
   @$pb.TagNumber(2)
-  set password($core.String value) => $_setString(1, value);
+  set settings($core.List<$core.int> value) => $_setBytes(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasPassword() => $_has(1);
+  $core.bool hasSettings() => $_has(1);
   @$pb.TagNumber(2)
-  void clearPassword() => $_clearField(2);
+  void clearSettings() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.List<$core.int> get settings => $_getN(2);
+  $core.String get description => $_getSZ(2);
   @$pb.TagNumber(3)
-  set settings($core.List<$core.int> value) => $_setBytes(2, value);
+  set description($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasSettings() => $_has(2);
+  $core.bool hasDescription() => $_has(2);
   @$pb.TagNumber(3)
-  void clearSettings() => $_clearField(3);
+  void clearDescription() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get description => $_getSZ(3);
+  $core.String get password => $_getSZ(3);
   @$pb.TagNumber(4)
-  set description($core.String value) => $_setString(3, value);
+  set password($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasDescription() => $_has(3);
+  $core.bool hasPassword() => $_has(3);
   @$pb.TagNumber(4)
-  void clearDescription() => $_clearField(4);
+  void clearPassword() => $_clearField(4);
 }
 
 class CreateRoomResponse extends $pb.GeneratedMessage {
@@ -5421,12 +6729,12 @@ class GetRoomResponse extends $pb.GeneratedMessage {
 
 class JoinRoomRequest extends $pb.GeneratedMessage {
   factory JoinRoomRequest({
-    $core.String? password,
     $core.String? roomId,
+    $core.String? password,
   }) {
     final result = create();
-    if (password != null) result.password = password;
     if (roomId != null) result.roomId = roomId;
+    if (password != null) result.password = password;
     return result;
   }
 
@@ -5443,8 +6751,8 @@ class JoinRoomRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'JoinRoomRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'password')
-    ..aOS(2, _omitFieldNames ? '' : 'roomId')
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..aOS(2, _omitFieldNames ? '' : 'password')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -5467,22 +6775,22 @@ class JoinRoomRequest extends $pb.GeneratedMessage {
   static JoinRoomRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get password => $_getSZ(0);
+  $core.String get roomId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set password($core.String value) => $_setString(0, value);
+  set roomId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasPassword() => $_has(0);
+  $core.bool hasRoomId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearPassword() => $_clearField(1);
+  void clearRoomId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get roomId => $_getSZ(1);
+  $core.String get password => $_getSZ(1);
   @$pb.TagNumber(2)
-  set roomId($core.String value) => $_setString(1, value);
+  set password($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasRoomId() => $_has(1);
+  $core.bool hasPassword() => $_has(1);
   @$pb.TagNumber(2)
-  void clearRoomId() => $_clearField(2);
+  void clearPassword() => $_clearField(2);
 }
 
 class JoinRoomResponse extends $pb.GeneratedMessage {
@@ -6371,59 +7679,250 @@ class TransferRoomOwnershipResponse extends $pb.GeneratedMessage {
 }
 
 /// Room Password Messages
-class SetRoomPasswordRequest extends $pb.GeneratedMessage {
-  factory SetRoomPasswordRequest({
-    $core.String? password,
+class StartRoomPasswordRegistrationRequest extends $pb.GeneratedMessage {
+  factory StartRoomPasswordRegistrationRequest({
+    $core.List<$core.int>? registrationRequest,
   }) {
     final result = create();
-    if (password != null) result.password = password;
+    if (registrationRequest != null)
+      result.registrationRequest = registrationRequest;
     return result;
   }
 
-  SetRoomPasswordRequest._();
+  StartRoomPasswordRegistrationRequest._();
 
-  factory SetRoomPasswordRequest.fromBuffer($core.List<$core.int> data,
+  factory StartRoomPasswordRegistrationRequest.fromBuffer(
+          $core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory SetRoomPasswordRequest.fromJson($core.String json,
+  factory StartRoomPasswordRegistrationRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'SetRoomPasswordRequest',
+      _omitMessageNames ? '' : 'StartRoomPasswordRegistrationRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'password')
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'registrationRequest', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SetRoomPasswordRequest clone() => deepCopy();
+  StartRoomPasswordRegistrationRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SetRoomPasswordRequest copyWith(
-          void Function(SetRoomPasswordRequest) updates) =>
-      super.copyWith((message) => updates(message as SetRoomPasswordRequest))
-          as SetRoomPasswordRequest;
+  StartRoomPasswordRegistrationRequest copyWith(
+          void Function(StartRoomPasswordRegistrationRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as StartRoomPasswordRegistrationRequest))
+          as StartRoomPasswordRegistrationRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static SetRoomPasswordRequest create() => SetRoomPasswordRequest._();
+  static StartRoomPasswordRegistrationRequest create() =>
+      StartRoomPasswordRegistrationRequest._();
   @$core.override
-  SetRoomPasswordRequest createEmptyInstance() => create();
+  StartRoomPasswordRegistrationRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static SetRoomPasswordRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<SetRoomPasswordRequest>(create);
-  static SetRoomPasswordRequest? _defaultInstance;
+  static StartRoomPasswordRegistrationRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          StartRoomPasswordRegistrationRequest>(create);
+  static StartRoomPasswordRegistrationRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get password => $_getSZ(0);
+  $core.List<$core.int> get registrationRequest => $_getN(0);
   @$pb.TagNumber(1)
-  set password($core.String value) => $_setString(0, value);
+  set registrationRequest($core.List<$core.int> value) => $_setBytes(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasPassword() => $_has(0);
+  $core.bool hasRegistrationRequest() => $_has(0);
   @$pb.TagNumber(1)
-  void clearPassword() => $_clearField(1);
+  void clearRegistrationRequest() => $_clearField(1);
+}
+
+class StartRoomPasswordRegistrationResponse extends $pb.GeneratedMessage {
+  factory StartRoomPasswordRegistrationResponse({
+    $core.String? sessionId,
+    $core.List<$core.int>? registrationResponse,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    if (registrationResponse != null)
+      result.registrationResponse = registrationResponse;
+    return result;
+  }
+
+  StartRoomPasswordRegistrationResponse._();
+
+  factory StartRoomPasswordRegistrationResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartRoomPasswordRegistrationResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartRoomPasswordRegistrationResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'registrationResponse', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartRoomPasswordRegistrationResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartRoomPasswordRegistrationResponse copyWith(
+          void Function(StartRoomPasswordRegistrationResponse) updates) =>
+      super.copyWith((message) =>
+              updates(message as StartRoomPasswordRegistrationResponse))
+          as StartRoomPasswordRegistrationResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartRoomPasswordRegistrationResponse create() =>
+      StartRoomPasswordRegistrationResponse._();
+  @$core.override
+  StartRoomPasswordRegistrationResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartRoomPasswordRegistrationResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          StartRoomPasswordRegistrationResponse>(create);
+  static StartRoomPasswordRegistrationResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get registrationResponse => $_getN(1);
+  @$pb.TagNumber(2)
+  set registrationResponse($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRegistrationResponse() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRegistrationResponse() => $_clearField(2);
+}
+
+class FinishRoomPasswordRegistrationRequest extends $pb.GeneratedMessage {
+  factory FinishRoomPasswordRegistrationRequest({
+    $core.String? sessionId,
+    $core.List<$core.int>? registrationUpload,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    if (registrationUpload != null)
+      result.registrationUpload = registrationUpload;
+    return result;
+  }
+
+  FinishRoomPasswordRegistrationRequest._();
+
+  factory FinishRoomPasswordRegistrationRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FinishRoomPasswordRegistrationRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FinishRoomPasswordRegistrationRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'registrationUpload', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishRoomPasswordRegistrationRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishRoomPasswordRegistrationRequest copyWith(
+          void Function(FinishRoomPasswordRegistrationRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as FinishRoomPasswordRegistrationRequest))
+          as FinishRoomPasswordRegistrationRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FinishRoomPasswordRegistrationRequest create() =>
+      FinishRoomPasswordRegistrationRequest._();
+  @$core.override
+  FinishRoomPasswordRegistrationRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FinishRoomPasswordRegistrationRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          FinishRoomPasswordRegistrationRequest>(create);
+  static FinishRoomPasswordRegistrationRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get registrationUpload => $_getN(1);
+  @$pb.TagNumber(2)
+  set registrationUpload($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRegistrationUpload() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRegistrationUpload() => $_clearField(2);
+}
+
+class ClearRoomPasswordRequest extends $pb.GeneratedMessage {
+  factory ClearRoomPasswordRequest() => create();
+
+  ClearRoomPasswordRequest._();
+
+  factory ClearRoomPasswordRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ClearRoomPasswordRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ClearRoomPasswordRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ClearRoomPasswordRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ClearRoomPasswordRequest copyWith(
+          void Function(ClearRoomPasswordRequest) updates) =>
+      super.copyWith((message) => updates(message as ClearRoomPasswordRequest))
+          as ClearRoomPasswordRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ClearRoomPasswordRequest create() => ClearRoomPasswordRequest._();
+  @$core.override
+  ClearRoomPasswordRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ClearRoomPasswordRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ClearRoomPasswordRequest>(create);
+  static ClearRoomPasswordRequest? _defaultInstance;
 }
 
 class SetRoomPasswordResponse extends $pb.GeneratedMessage {
@@ -6479,6 +7978,219 @@ class SetRoomPasswordResponse extends $pb.GeneratedMessage {
   $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
   void clearSuccess() => $_clearField(1);
+}
+
+class StartRoomPasswordLoginRequest extends $pb.GeneratedMessage {
+  factory StartRoomPasswordLoginRequest({
+    $core.String? roomId,
+    $core.List<$core.int>? credentialRequest,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    if (credentialRequest != null) result.credentialRequest = credentialRequest;
+    return result;
+  }
+
+  StartRoomPasswordLoginRequest._();
+
+  factory StartRoomPasswordLoginRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartRoomPasswordLoginRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartRoomPasswordLoginRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'credentialRequest', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartRoomPasswordLoginRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartRoomPasswordLoginRequest copyWith(
+          void Function(StartRoomPasswordLoginRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as StartRoomPasswordLoginRequest))
+          as StartRoomPasswordLoginRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartRoomPasswordLoginRequest create() =>
+      StartRoomPasswordLoginRequest._();
+  @$core.override
+  StartRoomPasswordLoginRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartRoomPasswordLoginRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StartRoomPasswordLoginRequest>(create);
+  static StartRoomPasswordLoginRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get credentialRequest => $_getN(1);
+  @$pb.TagNumber(2)
+  set credentialRequest($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCredentialRequest() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCredentialRequest() => $_clearField(2);
+}
+
+class StartRoomPasswordLoginResponse extends $pb.GeneratedMessage {
+  factory StartRoomPasswordLoginResponse({
+    $core.String? sessionId,
+    $core.List<$core.int>? credentialResponse,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    if (credentialResponse != null)
+      result.credentialResponse = credentialResponse;
+    return result;
+  }
+
+  StartRoomPasswordLoginResponse._();
+
+  factory StartRoomPasswordLoginResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartRoomPasswordLoginResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartRoomPasswordLoginResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'credentialResponse', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartRoomPasswordLoginResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartRoomPasswordLoginResponse copyWith(
+          void Function(StartRoomPasswordLoginResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as StartRoomPasswordLoginResponse))
+          as StartRoomPasswordLoginResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartRoomPasswordLoginResponse create() =>
+      StartRoomPasswordLoginResponse._();
+  @$core.override
+  StartRoomPasswordLoginResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartRoomPasswordLoginResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StartRoomPasswordLoginResponse>(create);
+  static StartRoomPasswordLoginResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get credentialResponse => $_getN(1);
+  @$pb.TagNumber(2)
+  set credentialResponse($core.List<$core.int> value) => $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCredentialResponse() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCredentialResponse() => $_clearField(2);
+}
+
+class FinishRoomPasswordLoginRequest extends $pb.GeneratedMessage {
+  factory FinishRoomPasswordLoginRequest({
+    $core.String? sessionId,
+    $core.List<$core.int>? credentialFinalization,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    if (credentialFinalization != null)
+      result.credentialFinalization = credentialFinalization;
+    return result;
+  }
+
+  FinishRoomPasswordLoginRequest._();
+
+  factory FinishRoomPasswordLoginRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FinishRoomPasswordLoginRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FinishRoomPasswordLoginRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..a<$core.List<$core.int>>(
+        2, _omitFieldNames ? '' : 'credentialFinalization', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishRoomPasswordLoginRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishRoomPasswordLoginRequest copyWith(
+          void Function(FinishRoomPasswordLoginRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as FinishRoomPasswordLoginRequest))
+          as FinishRoomPasswordLoginRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FinishRoomPasswordLoginRequest create() =>
+      FinishRoomPasswordLoginRequest._();
+  @$core.override
+  FinishRoomPasswordLoginRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FinishRoomPasswordLoginRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FinishRoomPasswordLoginRequest>(create);
+  static FinishRoomPasswordLoginRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get credentialFinalization => $_getN(1);
+  @$pb.TagNumber(2)
+  set credentialFinalization($core.List<$core.int> value) =>
+      $_setBytes(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCredentialFinalization() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCredentialFinalization() => $_clearField(2);
 }
 
 /// Room Members Messages
@@ -6606,11 +8318,13 @@ class GetRoomMembersResponse extends $pb.GeneratedMessage {
     $core.Iterable<$0.RoomMember>? members,
     $core.int? total,
     $core.String? version,
+    $0.RoomPresenceStats? presence,
   }) {
     final result = create();
     if (members != null) result.members.addAll(members);
     if (total != null) result.total = total;
     if (version != null) result.version = version;
+    if (presence != null) result.presence = presence;
     return result;
   }
 
@@ -6631,6 +8345,8 @@ class GetRoomMembersResponse extends $pb.GeneratedMessage {
         subBuilder: $0.RoomMember.create)
     ..aI(2, _omitFieldNames ? '' : 'total')
     ..aOS(3, _omitFieldNames ? '' : 'version')
+    ..aOM<$0.RoomPresenceStats>(4, _omitFieldNames ? '' : 'presence',
+        subBuilder: $0.RoomPresenceStats.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6673,6 +8389,17 @@ class GetRoomMembersResponse extends $pb.GeneratedMessage {
   $core.bool hasVersion() => $_has(2);
   @$pb.TagNumber(3)
   void clearVersion() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $0.RoomPresenceStats get presence => $_getN(3);
+  @$pb.TagNumber(4)
+  set presence($0.RoomPresenceStats value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPresence() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPresence() => $_clearField(4);
+  @$pb.TagNumber(4)
+  $0.RoomPresenceStats ensurePresence() => $_ensure(3);
 }
 
 /// Room live streams
@@ -9456,6 +11183,87 @@ class StopPlaybackResponse extends $pb.GeneratedMessage {
   static StopPlaybackResponse? _defaultInstance;
 }
 
+/// Realtime API: update the current playback source. Empty media_id, playlist_id, and target clears playback.
+class UpdatePlaybackRequest extends $pb.GeneratedMessage {
+  factory UpdatePlaybackRequest({
+    $core.String? mediaId,
+    $core.String? playlistId,
+    $core.List<$core.int>? target,
+  }) {
+    final result = create();
+    if (mediaId != null) result.mediaId = mediaId;
+    if (playlistId != null) result.playlistId = playlistId;
+    if (target != null) result.target = target;
+    return result;
+  }
+
+  UpdatePlaybackRequest._();
+
+  factory UpdatePlaybackRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdatePlaybackRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdatePlaybackRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
+    ..aOS(2, _omitFieldNames ? '' : 'playlistId')
+    ..a<$core.List<$core.int>>(
+        3, _omitFieldNames ? '' : 'target', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdatePlaybackRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdatePlaybackRequest copyWith(
+          void Function(UpdatePlaybackRequest) updates) =>
+      super.copyWith((message) => updates(message as UpdatePlaybackRequest))
+          as UpdatePlaybackRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdatePlaybackRequest create() => UpdatePlaybackRequest._();
+  @$core.override
+  UpdatePlaybackRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdatePlaybackRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdatePlaybackRequest>(create);
+  static UpdatePlaybackRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get mediaId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mediaId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMediaId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMediaId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get playlistId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set playlistId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPlaylistId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPlaylistId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get target => $_getN(2);
+  @$pb.TagNumber(3)
+  set target($core.List<$core.int> value) => $_setBytes(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTarget() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTarget() => $_clearField(3);
+}
+
 class AddMediaRequest extends $pb.GeneratedMessage {
   factory AddMediaRequest({
     $core.String? playlistId,
@@ -11033,13 +12841,16 @@ class AddMediaBatchResponse extends $pb.GeneratedMessage {
   $pb.PbList<AddMediaResponse> get results => $_getList(0);
 }
 
-class UpdatePlaybackRequest extends $pb.GeneratedMessage {
-  factory UpdatePlaybackRequest({
+class UpdatePlaybackStateRequest extends $pb.GeneratedMessage {
+  factory UpdatePlaybackStateRequest({
     PlaybackUpdateType? type,
     $core.bool? playing,
     $core.double? position,
     $core.double? speed,
     $fixnum.Int64? version,
+    $core.String? expectedMediaId,
+    $core.String? expectedPlaylistId,
+    $core.String? expectedTargetHash,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -11047,20 +12858,25 @@ class UpdatePlaybackRequest extends $pb.GeneratedMessage {
     if (position != null) result.position = position;
     if (speed != null) result.speed = speed;
     if (version != null) result.version = version;
+    if (expectedMediaId != null) result.expectedMediaId = expectedMediaId;
+    if (expectedPlaylistId != null)
+      result.expectedPlaylistId = expectedPlaylistId;
+    if (expectedTargetHash != null)
+      result.expectedTargetHash = expectedTargetHash;
     return result;
   }
 
-  UpdatePlaybackRequest._();
+  UpdatePlaybackStateRequest._();
 
-  factory UpdatePlaybackRequest.fromBuffer($core.List<$core.int> data,
+  factory UpdatePlaybackStateRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory UpdatePlaybackRequest.fromJson($core.String json,
+  factory UpdatePlaybackStateRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdatePlaybackRequest',
+      _omitMessageNames ? '' : 'UpdatePlaybackStateRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aE<PlaybackUpdateType>(1, _omitFieldNames ? '' : 'type',
@@ -11069,27 +12885,31 @@ class UpdatePlaybackRequest extends $pb.GeneratedMessage {
     ..aD(3, _omitFieldNames ? '' : 'position')
     ..aD(4, _omitFieldNames ? '' : 'speed')
     ..aInt64(5, _omitFieldNames ? '' : 'version')
+    ..aOS(6, _omitFieldNames ? '' : 'expectedMediaId')
+    ..aOS(7, _omitFieldNames ? '' : 'expectedPlaylistId')
+    ..aOS(8, _omitFieldNames ? '' : 'expectedTargetHash')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdatePlaybackRequest clone() => deepCopy();
+  UpdatePlaybackStateRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdatePlaybackRequest copyWith(
-          void Function(UpdatePlaybackRequest) updates) =>
-      super.copyWith((message) => updates(message as UpdatePlaybackRequest))
-          as UpdatePlaybackRequest;
+  UpdatePlaybackStateRequest copyWith(
+          void Function(UpdatePlaybackStateRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as UpdatePlaybackStateRequest))
+          as UpdatePlaybackStateRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static UpdatePlaybackRequest create() => UpdatePlaybackRequest._();
+  static UpdatePlaybackStateRequest create() => UpdatePlaybackStateRequest._();
   @$core.override
-  UpdatePlaybackRequest createEmptyInstance() => create();
+  UpdatePlaybackStateRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static UpdatePlaybackRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdatePlaybackRequest>(create);
-  static UpdatePlaybackRequest? _defaultInstance;
+  static UpdatePlaybackStateRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdatePlaybackStateRequest>(create);
+  static UpdatePlaybackStateRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   PlaybackUpdateType get type => $_getN(0);
@@ -11135,6 +12955,97 @@ class UpdatePlaybackRequest extends $pb.GeneratedMessage {
   $core.bool hasVersion() => $_has(4);
   @$pb.TagNumber(5)
   void clearVersion() => $_clearField(5);
+
+  /// Optional source guard. When any expected_* field is supplied, all expected_* fields are required.
+  /// Empty string means the current source has no media id.
+  @$pb.TagNumber(6)
+  $core.String get expectedMediaId => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set expectedMediaId($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasExpectedMediaId() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearExpectedMediaId() => $_clearField(6);
+
+  /// Empty string means the current source has no playlist id.
+  @$pb.TagNumber(7)
+  $core.String get expectedPlaylistId => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set expectedPlaylistId($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasExpectedPlaylistId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearExpectedPlaylistId() => $_clearField(7);
+
+  /// SHA-256 hex of PlaybackState.target.
+  @$pb.TagNumber(8)
+  $core.String get expectedTargetHash => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set expectedTargetHash($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasExpectedTargetHash() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearExpectedTargetHash() => $_clearField(8);
+}
+
+class UpdatePlaybackStateResponse extends $pb.GeneratedMessage {
+  factory UpdatePlaybackStateResponse({
+    PlaybackState? playbackState,
+  }) {
+    final result = create();
+    if (playbackState != null) result.playbackState = playbackState;
+    return result;
+  }
+
+  UpdatePlaybackStateResponse._();
+
+  factory UpdatePlaybackStateResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdatePlaybackStateResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdatePlaybackStateResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<PlaybackState>(1, _omitFieldNames ? '' : 'playbackState',
+        subBuilder: PlaybackState.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdatePlaybackStateResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdatePlaybackStateResponse copyWith(
+          void Function(UpdatePlaybackStateResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as UpdatePlaybackStateResponse))
+          as UpdatePlaybackStateResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdatePlaybackStateResponse create() =>
+      UpdatePlaybackStateResponse._();
+  @$core.override
+  UpdatePlaybackStateResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdatePlaybackStateResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdatePlaybackStateResponse>(create);
+  static UpdatePlaybackStateResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  PlaybackState get playbackState => $_getN(0);
+  @$pb.TagNumber(1)
+  set playbackState(PlaybackState value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPlaybackState() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPlaybackState() => $_clearField(1);
+  @$pb.TagNumber(1)
+  PlaybackState ensurePlaybackState() => $_ensure(0);
 }
 
 class PlaybackClientProfile extends $pb.GeneratedMessage {
@@ -11335,11 +13246,11 @@ class GetPlaybackRequest extends $pb.GeneratedMessage {
 class GetPlaybackResponse extends $pb.GeneratedMessage {
   factory GetPlaybackResponse({
     PlaybackState? playbackState,
-    PlaybackSnapshot? playbackSnapshot,
+    Playback? playback,
   }) {
     final result = create();
     if (playbackState != null) result.playbackState = playbackState;
-    if (playbackSnapshot != null) result.playbackSnapshot = playbackSnapshot;
+    if (playback != null) result.playback = playback;
     return result;
   }
 
@@ -11358,8 +13269,8 @@ class GetPlaybackResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<PlaybackState>(1, _omitFieldNames ? '' : 'playbackState',
         subBuilder: PlaybackState.create)
-    ..aOM<PlaybackSnapshot>(2, _omitFieldNames ? '' : 'playbackSnapshot',
-        subBuilder: PlaybackSnapshot.create)
+    ..aOM<Playback>(2, _omitFieldNames ? '' : 'playback',
+        subBuilder: Playback.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -11393,31 +13304,30 @@ class GetPlaybackResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   PlaybackState ensurePlaybackState() => $_ensure(0);
 
-  /// Versioned playback snapshot for the current source.
+  /// Player-ready playback information for the current source.
   @$pb.TagNumber(2)
-  PlaybackSnapshot get playbackSnapshot => $_getN(1);
+  Playback get playback => $_getN(1);
   @$pb.TagNumber(2)
-  set playbackSnapshot(PlaybackSnapshot value) => $_setField(2, value);
+  set playback(Playback value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasPlaybackSnapshot() => $_has(1);
+  $core.bool hasPlayback() => $_has(1);
   @$pb.TagNumber(2)
-  void clearPlaybackSnapshot() => $_clearField(2);
+  void clearPlayback() => $_clearField(2);
   @$pb.TagNumber(2)
-  PlaybackSnapshot ensurePlaybackSnapshot() => $_ensure(1);
+  Playback ensurePlayback() => $_ensure(1);
 }
 
-/// Versioned playback information for the current source.
-class PlaybackSnapshot extends $pb.GeneratedMessage {
-  factory PlaybackSnapshot({
+/// Player-ready playback information for the current source.
+class Playback extends $pb.GeneratedMessage {
+  factory Playback({
     $core.String? mediaId,
     $core.String? playlistId,
     $core.String? roomId,
     $core.String? name,
-    $core.double? position,
+    $core.double? playlistPosition,
     $core.Iterable<$core.MapEntry<$core.String, PlaybackInfo>>? playbackInfos,
     $core.String? defaultMode,
     $core.Iterable<$core.MapEntry<$core.String, $core.String>>? metadata,
-    $core.String? version,
     $fixnum.Int64? expiresAt,
   }) {
     final result = create();
@@ -11425,35 +13335,34 @@ class PlaybackSnapshot extends $pb.GeneratedMessage {
     if (playlistId != null) result.playlistId = playlistId;
     if (roomId != null) result.roomId = roomId;
     if (name != null) result.name = name;
-    if (position != null) result.position = position;
+    if (playlistPosition != null) result.playlistPosition = playlistPosition;
     if (playbackInfos != null) result.playbackInfos.addEntries(playbackInfos);
     if (defaultMode != null) result.defaultMode = defaultMode;
     if (metadata != null) result.metadata.addEntries(metadata);
-    if (version != null) result.version = version;
     if (expiresAt != null) result.expiresAt = expiresAt;
     return result;
   }
 
-  PlaybackSnapshot._();
+  Playback._();
 
-  factory PlaybackSnapshot.fromBuffer($core.List<$core.int> data,
+  factory Playback.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory PlaybackSnapshot.fromJson($core.String json,
+  factory Playback.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlaybackSnapshot',
+      _omitMessageNames ? '' : 'Playback',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'mediaId')
     ..aOS(2, _omitFieldNames ? '' : 'playlistId')
     ..aOS(3, _omitFieldNames ? '' : 'roomId')
     ..aOS(4, _omitFieldNames ? '' : 'name')
-    ..aD(5, _omitFieldNames ? '' : 'position')
+    ..aD(5, _omitFieldNames ? '' : 'playlistPosition')
     ..m<$core.String, PlaybackInfo>(6, _omitFieldNames ? '' : 'playbackInfos',
-        entryClassName: 'PlaybackSnapshot.PlaybackInfosEntry',
+        entryClassName: 'Playback.PlaybackInfosEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OM,
         valueCreator: PlaybackInfo.create,
@@ -11461,32 +13370,30 @@ class PlaybackSnapshot extends $pb.GeneratedMessage {
         packageName: const $pb.PackageName('synctv.client'))
     ..aOS(7, _omitFieldNames ? '' : 'defaultMode')
     ..m<$core.String, $core.String>(8, _omitFieldNames ? '' : 'metadata',
-        entryClassName: 'PlaybackSnapshot.MetadataEntry',
+        entryClassName: 'Playback.MetadataEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OS,
         packageName: const $pb.PackageName('synctv.client'))
-    ..aOS(9, _omitFieldNames ? '' : 'version')
     ..aInt64(10, _omitFieldNames ? '' : 'expiresAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaybackSnapshot clone() => deepCopy();
+  Playback clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaybackSnapshot copyWith(void Function(PlaybackSnapshot) updates) =>
-      super.copyWith((message) => updates(message as PlaybackSnapshot))
-          as PlaybackSnapshot;
+  Playback copyWith(void Function(Playback) updates) =>
+      super.copyWith((message) => updates(message as Playback)) as Playback;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static PlaybackSnapshot create() => PlaybackSnapshot._();
+  static Playback create() => Playback._();
   @$core.override
-  PlaybackSnapshot createEmptyInstance() => create();
+  Playback createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PlaybackSnapshot getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlaybackSnapshot>(create);
-  static PlaybackSnapshot? _defaultInstance;
+  static Playback getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Playback>(create);
+  static Playback? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get mediaId => $_getSZ(0);
@@ -11525,13 +13432,13 @@ class PlaybackSnapshot extends $pb.GeneratedMessage {
   void clearName() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.double get position => $_getN(4);
+  $core.double get playlistPosition => $_getN(4);
   @$pb.TagNumber(5)
-  set position($core.double value) => $_setDouble(4, value);
+  set playlistPosition($core.double value) => $_setDouble(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasPosition() => $_has(4);
+  $core.bool hasPlaylistPosition() => $_has(4);
   @$pb.TagNumber(5)
-  void clearPosition() => $_clearField(5);
+  void clearPlaylistPosition() => $_clearField(5);
 
   /// Multiple playback modes (e.g., "direct", "proxied", "cdn1", "cdn2")
   /// Provider can define arbitrary mode names
@@ -11552,23 +13459,13 @@ class PlaybackSnapshot extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   $pb.PbMap<$core.String, $core.String> get metadata => $_getMap(7);
 
-  /// Version scoped to playback snapshots.
-  @$pb.TagNumber(9)
-  $core.String get version => $_getSZ(8);
-  @$pb.TagNumber(9)
-  set version($core.String value) => $_setString(8, value);
-  @$pb.TagNumber(9)
-  $core.bool hasVersion() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearVersion() => $_clearField(9);
-
-  /// Earliest URL expiration across the snapshot, if any.
+  /// Earliest URL expiration across playback URLs, if any.
   @$pb.TagNumber(10)
-  $fixnum.Int64 get expiresAt => $_getI64(9);
+  $fixnum.Int64 get expiresAt => $_getI64(8);
   @$pb.TagNumber(10)
-  set expiresAt($fixnum.Int64 value) => $_setInt64(9, value);
+  set expiresAt($fixnum.Int64 value) => $_setInt64(8, value);
   @$pb.TagNumber(10)
-  $core.bool hasExpiresAt() => $_has(9);
+  $core.bool hasExpiresAt() => $_has(8);
   @$pb.TagNumber(10)
   void clearExpiresAt() => $_clearField(10);
 }
@@ -12172,15 +14069,11 @@ class Danmaku extends $pb.GeneratedMessage {
 enum ClientMessage_Message {
   chat,
   heartbeat,
-  playbackProgress,
+  playbackStateUpdate,
   playbackUpdate,
   observeResource,
   unobserveResource,
-  webrtcOffer,
-  webrtcAnswer,
-  webrtcIceCandidate,
-  webrtcJoin,
-  webrtcLeave,
+  webrtc,
   notSet
 }
 
@@ -12189,29 +14082,21 @@ class ClientMessage extends $pb.GeneratedMessage {
   factory ClientMessage({
     ChatMessageSend? chat,
     HeartbeatMessage? heartbeat,
-    PlaybackProgressReport? playbackProgress,
+    UpdatePlaybackStateRequest? playbackStateUpdate,
     UpdatePlaybackRequest? playbackUpdate,
     ObserveResource? observeResource,
     UnobserveResource? unobserveResource,
-    WebRTCOffer? webrtcOffer,
-    WebRTCAnswer? webrtcAnswer,
-    WebRTCIceCandidate? webrtcIceCandidate,
-    WebRTCJoin? webrtcJoin,
-    WebRTCLeave? webrtcLeave,
+    WebRtcCommand? webrtc,
   }) {
     final result = create();
     if (chat != null) result.chat = chat;
     if (heartbeat != null) result.heartbeat = heartbeat;
-    if (playbackProgress != null) result.playbackProgress = playbackProgress;
+    if (playbackStateUpdate != null)
+      result.playbackStateUpdate = playbackStateUpdate;
     if (playbackUpdate != null) result.playbackUpdate = playbackUpdate;
     if (observeResource != null) result.observeResource = observeResource;
     if (unobserveResource != null) result.unobserveResource = unobserveResource;
-    if (webrtcOffer != null) result.webrtcOffer = webrtcOffer;
-    if (webrtcAnswer != null) result.webrtcAnswer = webrtcAnswer;
-    if (webrtcIceCandidate != null)
-      result.webrtcIceCandidate = webrtcIceCandidate;
-    if (webrtcJoin != null) result.webrtcJoin = webrtcJoin;
-    if (webrtcLeave != null) result.webrtcLeave = webrtcLeave;
+    if (webrtc != null) result.webrtc = webrtc;
     return result;
   }
 
@@ -12228,44 +14113,33 @@ class ClientMessage extends $pb.GeneratedMessage {
       _ClientMessage_MessageByTag = {
     1: ClientMessage_Message.chat,
     2: ClientMessage_Message.heartbeat,
-    3: ClientMessage_Message.playbackProgress,
+    3: ClientMessage_Message.playbackStateUpdate,
     4: ClientMessage_Message.playbackUpdate,
     5: ClientMessage_Message.observeResource,
     6: ClientMessage_Message.unobserveResource,
-    7: ClientMessage_Message.webrtcOffer,
-    8: ClientMessage_Message.webrtcAnswer,
-    9: ClientMessage_Message.webrtcIceCandidate,
-    10: ClientMessage_Message.webrtcJoin,
-    11: ClientMessage_Message.webrtcLeave,
+    7: ClientMessage_Message.webrtc,
     0: ClientMessage_Message.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ClientMessage',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7])
     ..aOM<ChatMessageSend>(1, _omitFieldNames ? '' : 'chat',
         subBuilder: ChatMessageSend.create)
     ..aOM<HeartbeatMessage>(2, _omitFieldNames ? '' : 'heartbeat',
         subBuilder: HeartbeatMessage.create)
-    ..aOM<PlaybackProgressReport>(3, _omitFieldNames ? '' : 'playbackProgress',
-        subBuilder: PlaybackProgressReport.create)
+    ..aOM<UpdatePlaybackStateRequest>(
+        3, _omitFieldNames ? '' : 'playbackStateUpdate',
+        subBuilder: UpdatePlaybackStateRequest.create)
     ..aOM<UpdatePlaybackRequest>(4, _omitFieldNames ? '' : 'playbackUpdate',
         subBuilder: UpdatePlaybackRequest.create)
     ..aOM<ObserveResource>(5, _omitFieldNames ? '' : 'observeResource',
         subBuilder: ObserveResource.create)
     ..aOM<UnobserveResource>(6, _omitFieldNames ? '' : 'unobserveResource',
         subBuilder: UnobserveResource.create)
-    ..aOM<WebRTCOffer>(7, _omitFieldNames ? '' : 'webrtcOffer',
-        subBuilder: WebRTCOffer.create)
-    ..aOM<WebRTCAnswer>(8, _omitFieldNames ? '' : 'webrtcAnswer',
-        subBuilder: WebRTCAnswer.create)
-    ..aOM<WebRTCIceCandidate>(9, _omitFieldNames ? '' : 'webrtcIceCandidate',
-        subBuilder: WebRTCIceCandidate.create)
-    ..aOM<WebRTCJoin>(10, _omitFieldNames ? '' : 'webrtcJoin',
-        subBuilder: WebRTCJoin.create)
-    ..aOM<WebRTCLeave>(11, _omitFieldNames ? '' : 'webrtcLeave',
-        subBuilder: WebRTCLeave.create)
+    ..aOM<WebRtcCommand>(7, _omitFieldNames ? '' : 'webrtc',
+        subBuilder: WebRtcCommand.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -12294,10 +14168,6 @@ class ClientMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
   ClientMessage_Message whichMessage() =>
       _ClientMessage_MessageByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -12307,10 +14177,6 @@ class ClientMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
   void clearMessage() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -12335,19 +14201,20 @@ class ClientMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   HeartbeatMessage ensureHeartbeat() => $_ensure(1);
 
-  /// Playback progress heartbeat: client periodically reports playback position
+  /// Playback state update command (real-time).
   @$pb.TagNumber(3)
-  PlaybackProgressReport get playbackProgress => $_getN(2);
+  UpdatePlaybackStateRequest get playbackStateUpdate => $_getN(2);
   @$pb.TagNumber(3)
-  set playbackProgress(PlaybackProgressReport value) => $_setField(3, value);
+  set playbackStateUpdate(UpdatePlaybackStateRequest value) =>
+      $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasPlaybackProgress() => $_has(2);
+  $core.bool hasPlaybackStateUpdate() => $_has(2);
   @$pb.TagNumber(3)
-  void clearPlaybackProgress() => $_clearField(3);
+  void clearPlaybackStateUpdate() => $_clearField(3);
   @$pb.TagNumber(3)
-  PlaybackProgressReport ensurePlaybackProgress() => $_ensure(2);
+  UpdatePlaybackStateRequest ensurePlaybackStateUpdate() => $_ensure(2);
 
-  /// Playback state update command (real-time)
+  /// Playback source update command (real-time). Empty target clears playback.
   @$pb.TagNumber(4)
   UpdatePlaybackRequest get playbackUpdate => $_getN(3);
   @$pb.TagNumber(4)
@@ -12381,95 +14248,57 @@ class ClientMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   UnobserveResource ensureUnobserveResource() => $_ensure(5);
 
-  /// WebRTC signaling messages (P2P)
   @$pb.TagNumber(7)
-  WebRTCOffer get webrtcOffer => $_getN(6);
+  WebRtcCommand get webrtc => $_getN(6);
   @$pb.TagNumber(7)
-  set webrtcOffer(WebRTCOffer value) => $_setField(7, value);
+  set webrtc(WebRtcCommand value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasWebrtcOffer() => $_has(6);
+  $core.bool hasWebrtc() => $_has(6);
   @$pb.TagNumber(7)
-  void clearWebrtcOffer() => $_clearField(7);
+  void clearWebrtc() => $_clearField(7);
   @$pb.TagNumber(7)
-  WebRTCOffer ensureWebrtcOffer() => $_ensure(6);
-
-  @$pb.TagNumber(8)
-  WebRTCAnswer get webrtcAnswer => $_getN(7);
-  @$pb.TagNumber(8)
-  set webrtcAnswer(WebRTCAnswer value) => $_setField(8, value);
-  @$pb.TagNumber(8)
-  $core.bool hasWebrtcAnswer() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearWebrtcAnswer() => $_clearField(8);
-  @$pb.TagNumber(8)
-  WebRTCAnswer ensureWebrtcAnswer() => $_ensure(7);
-
-  @$pb.TagNumber(9)
-  WebRTCIceCandidate get webrtcIceCandidate => $_getN(8);
-  @$pb.TagNumber(9)
-  set webrtcIceCandidate(WebRTCIceCandidate value) => $_setField(9, value);
-  @$pb.TagNumber(9)
-  $core.bool hasWebrtcIceCandidate() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearWebrtcIceCandidate() => $_clearField(9);
-  @$pb.TagNumber(9)
-  WebRTCIceCandidate ensureWebrtcIceCandidate() => $_ensure(8);
-
-  @$pb.TagNumber(10)
-  WebRTCJoin get webrtcJoin => $_getN(9);
-  @$pb.TagNumber(10)
-  set webrtcJoin(WebRTCJoin value) => $_setField(10, value);
-  @$pb.TagNumber(10)
-  $core.bool hasWebrtcJoin() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearWebrtcJoin() => $_clearField(10);
-  @$pb.TagNumber(10)
-  WebRTCJoin ensureWebrtcJoin() => $_ensure(9);
-
-  @$pb.TagNumber(11)
-  WebRTCLeave get webrtcLeave => $_getN(10);
-  @$pb.TagNumber(11)
-  set webrtcLeave(WebRTCLeave value) => $_setField(11, value);
-  @$pb.TagNumber(11)
-  $core.bool hasWebrtcLeave() => $_has(10);
-  @$pb.TagNumber(11)
-  void clearWebrtcLeave() => $_clearField(11);
-  @$pb.TagNumber(11)
-  WebRTCLeave ensureWebrtcLeave() => $_ensure(10);
+  WebRtcCommand ensureWebrtc() => $_ensure(6);
 }
 
 enum ObserveResource_Resource {
   playbackState,
-  playbackSnapshot,
+  playback,
   roomSettings,
   playlistItems,
-  roomMembers,
+  roomMemberEvents,
   chatEvents,
+  onlineCount,
+  onlineEvent,
+  selfRoomMember,
   notSet
 }
 
 class ObserveResource extends $pb.GeneratedMessage {
   factory ObserveResource({
     $core.String? observeId,
-    $core.String? version,
     ResourceDeliveryMode? deliveryMode,
     ObservePlaybackState? playbackState,
-    ObservePlaybackSnapshot? playbackSnapshot,
+    ObservePlayback? playback,
     ObserveRoomSettings? roomSettings,
     ObservePlaylistItems? playlistItems,
-    ObserveRoomMembers? roomMembers,
+    ObserveRoomMemberEvents? roomMemberEvents,
     ObserveChatEvents? chatEvents,
+    ObserveOnlineCount? onlineCount,
+    ObserveOnlineEvent? onlineEvent,
+    ObserveSelfRoomMember? selfRoomMember,
   }) {
     final result = create();
     if (observeId != null) result.observeId = observeId;
-    if (version != null) result.version = version;
     if (deliveryMode != null) result.deliveryMode = deliveryMode;
     if (playbackState != null) result.playbackState = playbackState;
-    if (playbackSnapshot != null) result.playbackSnapshot = playbackSnapshot;
+    if (playback != null) result.playback = playback;
     if (roomSettings != null) result.roomSettings = roomSettings;
     if (playlistItems != null) result.playlistItems = playlistItems;
-    if (roomMembers != null) result.roomMembers = roomMembers;
+    if (roomMemberEvents != null) result.roomMemberEvents = roomMemberEvents;
     if (chatEvents != null) result.chatEvents = chatEvents;
+    if (onlineCount != null) result.onlineCount = onlineCount;
+    if (onlineEvent != null) result.onlineEvent = onlineEvent;
+    if (selfRoomMember != null) result.selfRoomMember = selfRoomMember;
     return result;
   }
 
@@ -12485,34 +14314,42 @@ class ObserveResource extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, ObserveResource_Resource>
       _ObserveResource_ResourceByTag = {
     4: ObserveResource_Resource.playbackState,
-    5: ObserveResource_Resource.playbackSnapshot,
+    5: ObserveResource_Resource.playback,
     6: ObserveResource_Resource.roomSettings,
     7: ObserveResource_Resource.playlistItems,
-    8: ObserveResource_Resource.roomMembers,
+    8: ObserveResource_Resource.roomMemberEvents,
     9: ObserveResource_Resource.chatEvents,
+    10: ObserveResource_Resource.onlineCount,
+    11: ObserveResource_Resource.onlineEvent,
+    12: ObserveResource_Resource.selfRoomMember,
     0: ObserveResource_Resource.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ObserveResource',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [4, 5, 6, 7, 8, 9])
+    ..oo(0, [4, 5, 6, 7, 8, 9, 10, 11, 12])
     ..aOS(1, _omitFieldNames ? '' : 'observeId')
-    ..aOS(2, _omitFieldNames ? '' : 'version')
     ..aE<ResourceDeliveryMode>(3, _omitFieldNames ? '' : 'deliveryMode',
         enumValues: ResourceDeliveryMode.values)
     ..aOM<ObservePlaybackState>(4, _omitFieldNames ? '' : 'playbackState',
         subBuilder: ObservePlaybackState.create)
-    ..aOM<ObservePlaybackSnapshot>(5, _omitFieldNames ? '' : 'playbackSnapshot',
-        subBuilder: ObservePlaybackSnapshot.create)
+    ..aOM<ObservePlayback>(5, _omitFieldNames ? '' : 'playback',
+        subBuilder: ObservePlayback.create)
     ..aOM<ObserveRoomSettings>(6, _omitFieldNames ? '' : 'roomSettings',
         subBuilder: ObserveRoomSettings.create)
     ..aOM<ObservePlaylistItems>(7, _omitFieldNames ? '' : 'playlistItems',
         subBuilder: ObservePlaylistItems.create)
-    ..aOM<ObserveRoomMembers>(8, _omitFieldNames ? '' : 'roomMembers',
-        subBuilder: ObserveRoomMembers.create)
+    ..aOM<ObserveRoomMemberEvents>(8, _omitFieldNames ? '' : 'roomMemberEvents',
+        subBuilder: ObserveRoomMemberEvents.create)
     ..aOM<ObserveChatEvents>(9, _omitFieldNames ? '' : 'chatEvents',
         subBuilder: ObserveChatEvents.create)
+    ..aOM<ObserveOnlineCount>(10, _omitFieldNames ? '' : 'onlineCount',
+        subBuilder: ObserveOnlineCount.create)
+    ..aOM<ObserveOnlineEvent>(11, _omitFieldNames ? '' : 'onlineEvent',
+        subBuilder: ObserveOnlineEvent.create)
+    ..aOM<ObserveSelfRoomMember>(12, _omitFieldNames ? '' : 'selfRoomMember',
+        subBuilder: ObserveSelfRoomMember.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -12540,6 +14377,9 @@ class ObserveResource extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
   ObserveResource_Resource whichResource() =>
       _ObserveResource_ResourceByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(4)
@@ -12548,6 +14388,9 @@ class ObserveResource extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
   void clearResource() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -12559,90 +14402,113 @@ class ObserveResource extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearObserveId() => $_clearField(1);
 
-  /// Empty means the client has no local version yet.
-  @$pb.TagNumber(2)
-  $core.String get version => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set version($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasVersion() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearVersion() => $_clearField(2);
-
   @$pb.TagNumber(3)
-  ResourceDeliveryMode get deliveryMode => $_getN(2);
+  ResourceDeliveryMode get deliveryMode => $_getN(1);
   @$pb.TagNumber(3)
   set deliveryMode(ResourceDeliveryMode value) => $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasDeliveryMode() => $_has(2);
+  $core.bool hasDeliveryMode() => $_has(1);
   @$pb.TagNumber(3)
   void clearDeliveryMode() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  ObservePlaybackState get playbackState => $_getN(3);
+  ObservePlaybackState get playbackState => $_getN(2);
   @$pb.TagNumber(4)
   set playbackState(ObservePlaybackState value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasPlaybackState() => $_has(3);
+  $core.bool hasPlaybackState() => $_has(2);
   @$pb.TagNumber(4)
   void clearPlaybackState() => $_clearField(4);
   @$pb.TagNumber(4)
-  ObservePlaybackState ensurePlaybackState() => $_ensure(3);
+  ObservePlaybackState ensurePlaybackState() => $_ensure(2);
 
   @$pb.TagNumber(5)
-  ObservePlaybackSnapshot get playbackSnapshot => $_getN(4);
+  ObservePlayback get playback => $_getN(3);
   @$pb.TagNumber(5)
-  set playbackSnapshot(ObservePlaybackSnapshot value) => $_setField(5, value);
+  set playback(ObservePlayback value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasPlaybackSnapshot() => $_has(4);
+  $core.bool hasPlayback() => $_has(3);
   @$pb.TagNumber(5)
-  void clearPlaybackSnapshot() => $_clearField(5);
+  void clearPlayback() => $_clearField(5);
   @$pb.TagNumber(5)
-  ObservePlaybackSnapshot ensurePlaybackSnapshot() => $_ensure(4);
+  ObservePlayback ensurePlayback() => $_ensure(3);
 
   @$pb.TagNumber(6)
-  ObserveRoomSettings get roomSettings => $_getN(5);
+  ObserveRoomSettings get roomSettings => $_getN(4);
   @$pb.TagNumber(6)
   set roomSettings(ObserveRoomSettings value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasRoomSettings() => $_has(5);
+  $core.bool hasRoomSettings() => $_has(4);
   @$pb.TagNumber(6)
   void clearRoomSettings() => $_clearField(6);
   @$pb.TagNumber(6)
-  ObserveRoomSettings ensureRoomSettings() => $_ensure(5);
+  ObserveRoomSettings ensureRoomSettings() => $_ensure(4);
 
   @$pb.TagNumber(7)
-  ObservePlaylistItems get playlistItems => $_getN(6);
+  ObservePlaylistItems get playlistItems => $_getN(5);
   @$pb.TagNumber(7)
   set playlistItems(ObservePlaylistItems value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasPlaylistItems() => $_has(6);
+  $core.bool hasPlaylistItems() => $_has(5);
   @$pb.TagNumber(7)
   void clearPlaylistItems() => $_clearField(7);
   @$pb.TagNumber(7)
-  ObservePlaylistItems ensurePlaylistItems() => $_ensure(6);
+  ObservePlaylistItems ensurePlaylistItems() => $_ensure(5);
 
   @$pb.TagNumber(8)
-  ObserveRoomMembers get roomMembers => $_getN(7);
+  ObserveRoomMemberEvents get roomMemberEvents => $_getN(6);
   @$pb.TagNumber(8)
-  set roomMembers(ObserveRoomMembers value) => $_setField(8, value);
+  set roomMemberEvents(ObserveRoomMemberEvents value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasRoomMembers() => $_has(7);
+  $core.bool hasRoomMemberEvents() => $_has(6);
   @$pb.TagNumber(8)
-  void clearRoomMembers() => $_clearField(8);
+  void clearRoomMemberEvents() => $_clearField(8);
   @$pb.TagNumber(8)
-  ObserveRoomMembers ensureRoomMembers() => $_ensure(7);
+  ObserveRoomMemberEvents ensureRoomMemberEvents() => $_ensure(6);
 
   @$pb.TagNumber(9)
-  ObserveChatEvents get chatEvents => $_getN(8);
+  ObserveChatEvents get chatEvents => $_getN(7);
   @$pb.TagNumber(9)
   set chatEvents(ObserveChatEvents value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasChatEvents() => $_has(8);
+  $core.bool hasChatEvents() => $_has(7);
   @$pb.TagNumber(9)
   void clearChatEvents() => $_clearField(9);
   @$pb.TagNumber(9)
-  ObserveChatEvents ensureChatEvents() => $_ensure(8);
+  ObserveChatEvents ensureChatEvents() => $_ensure(7);
+
+  @$pb.TagNumber(10)
+  ObserveOnlineCount get onlineCount => $_getN(8);
+  @$pb.TagNumber(10)
+  set onlineCount(ObserveOnlineCount value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasOnlineCount() => $_has(8);
+  @$pb.TagNumber(10)
+  void clearOnlineCount() => $_clearField(10);
+  @$pb.TagNumber(10)
+  ObserveOnlineCount ensureOnlineCount() => $_ensure(8);
+
+  @$pb.TagNumber(11)
+  ObserveOnlineEvent get onlineEvent => $_getN(9);
+  @$pb.TagNumber(11)
+  set onlineEvent(ObserveOnlineEvent value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasOnlineEvent() => $_has(9);
+  @$pb.TagNumber(11)
+  void clearOnlineEvent() => $_clearField(11);
+  @$pb.TagNumber(11)
+  ObserveOnlineEvent ensureOnlineEvent() => $_ensure(9);
+
+  @$pb.TagNumber(12)
+  ObserveSelfRoomMember get selfRoomMember => $_getN(10);
+  @$pb.TagNumber(12)
+  set selfRoomMember(ObserveSelfRoomMember value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasSelfRoomMember() => $_has(10);
+  @$pb.TagNumber(12)
+  void clearSelfRoomMember() => $_clearField(12);
+  @$pb.TagNumber(12)
+  ObserveSelfRoomMember ensureSelfRoomMember() => $_ensure(10);
 }
 
 class UnobserveResource extends $pb.GeneratedMessage {
@@ -12700,7 +14566,14 @@ class UnobserveResource extends $pb.GeneratedMessage {
 }
 
 class ObservePlaybackState extends $pb.GeneratedMessage {
-  factory ObservePlaybackState() => create();
+  factory ObservePlaybackState({
+    $fixnum.Int64? afterEventSequence,
+  }) {
+    final result = create();
+    if (afterEventSequence != null)
+      result.afterEventSequence = afterEventSequence;
+    return result;
+  }
 
   ObservePlaybackState._();
 
@@ -12715,6 +14588,7 @@ class ObservePlaybackState extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ObservePlaybackState',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'afterEventSequence')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -12735,111 +14609,89 @@ class ObservePlaybackState extends $pb.GeneratedMessage {
   static ObservePlaybackState getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ObservePlaybackState>(create);
   static ObservePlaybackState? _defaultInstance;
+
+  /// Current room playback control state: playing media, playlist, target, position and speed.
+  /// Unset starts from the current state and live changes.
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get afterEventSequence => $_getI64(0);
+  @$pb.TagNumber(1)
+  set afterEventSequence($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAfterEventSequence() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAfterEventSequence() => $_clearField(1);
 }
 
-class ObservePlaybackSnapshot extends $pb.GeneratedMessage {
-  factory ObservePlaybackSnapshot({
-    $core.String? mediaId,
-    $core.String? playlistId,
-    $core.List<$core.int>? target,
+class ObservePlayback extends $pb.GeneratedMessage {
+  factory ObservePlayback({
     PlaybackClientProfile? playbackClientProfile,
   }) {
     final result = create();
-    if (mediaId != null) result.mediaId = mediaId;
-    if (playlistId != null) result.playlistId = playlistId;
-    if (target != null) result.target = target;
     if (playbackClientProfile != null)
       result.playbackClientProfile = playbackClientProfile;
     return result;
   }
 
-  ObservePlaybackSnapshot._();
+  ObservePlayback._();
 
-  factory ObservePlaybackSnapshot.fromBuffer($core.List<$core.int> data,
+  factory ObservePlayback.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory ObservePlaybackSnapshot.fromJson($core.String json,
+  factory ObservePlayback.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ObservePlaybackSnapshot',
+      _omitMessageNames ? '' : 'ObservePlayback',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'mediaId')
-    ..aOS(2, _omitFieldNames ? '' : 'playlistId')
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'target', $pb.PbFieldType.OY)
     ..aOM<PlaybackClientProfile>(
         4, _omitFieldNames ? '' : 'playbackClientProfile',
         subBuilder: PlaybackClientProfile.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ObservePlaybackSnapshot clone() => deepCopy();
+  ObservePlayback clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ObservePlaybackSnapshot copyWith(
-          void Function(ObservePlaybackSnapshot) updates) =>
-      super.copyWith((message) => updates(message as ObservePlaybackSnapshot))
-          as ObservePlaybackSnapshot;
+  ObservePlayback copyWith(void Function(ObservePlayback) updates) =>
+      super.copyWith((message) => updates(message as ObservePlayback))
+          as ObservePlayback;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ObservePlaybackSnapshot create() => ObservePlaybackSnapshot._();
+  static ObservePlayback create() => ObservePlayback._();
   @$core.override
-  ObservePlaybackSnapshot createEmptyInstance() => create();
+  ObservePlayback createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ObservePlaybackSnapshot getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ObservePlaybackSnapshot>(create);
-  static ObservePlaybackSnapshot? _defaultInstance;
+  static ObservePlayback getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ObservePlayback>(create);
+  static ObservePlayback? _defaultInstance;
 
-  /// Client-side cached playback source identity. Used together with `version`
-  /// so reconnects don't suppress required refreshes when the source changed
-  /// but the DB-derived version collided.
-  @$pb.TagNumber(1)
-  $core.String get mediaId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set mediaId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasMediaId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMediaId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get playlistId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set playlistId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPlaylistId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPlaylistId() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.List<$core.int> get target => $_getN(2);
-  @$pb.TagNumber(3)
-  set target($core.List<$core.int> value) => $_setBytes(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasTarget() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearTarget() => $_clearField(3);
-
+  /// Player-ready aggregate for the current playback source.
   @$pb.TagNumber(4)
-  PlaybackClientProfile get playbackClientProfile => $_getN(3);
+  PlaybackClientProfile get playbackClientProfile => $_getN(0);
   @$pb.TagNumber(4)
   set playbackClientProfile(PlaybackClientProfile value) =>
       $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasPlaybackClientProfile() => $_has(3);
+  $core.bool hasPlaybackClientProfile() => $_has(0);
   @$pb.TagNumber(4)
   void clearPlaybackClientProfile() => $_clearField(4);
   @$pb.TagNumber(4)
-  PlaybackClientProfile ensurePlaybackClientProfile() => $_ensure(3);
+  PlaybackClientProfile ensurePlaybackClientProfile() => $_ensure(0);
 }
 
 class ObserveRoomSettings extends $pb.GeneratedMessage {
-  factory ObserveRoomSettings() => create();
+  factory ObserveRoomSettings({
+    $fixnum.Int64? afterEventSequence,
+  }) {
+    final result = create();
+    if (afterEventSequence != null)
+      result.afterEventSequence = afterEventSequence;
+    return result;
+  }
 
   ObserveRoomSettings._();
 
@@ -12854,6 +14706,7 @@ class ObserveRoomSettings extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ObserveRoomSettings',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'afterEventSequence')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -12874,14 +14727,27 @@ class ObserveRoomSettings extends $pb.GeneratedMessage {
   static ObserveRoomSettings getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<ObserveRoomSettings>(create);
   static ObserveRoomSettings? _defaultInstance;
+
+  /// Unset starts from the current snapshot and live changes.
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get afterEventSequence => $_getI64(0);
+  @$pb.TagNumber(1)
+  set afterEventSequence($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAfterEventSequence() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAfterEventSequence() => $_clearField(1);
 }
 
 class ObservePlaylistItems extends $pb.GeneratedMessage {
   factory ObservePlaylistItems({
     ListPlaylistItemsRequest? request,
+    $fixnum.Int64? afterEventSequence,
   }) {
     final result = create();
     if (request != null) result.request = request;
+    if (afterEventSequence != null)
+      result.afterEventSequence = afterEventSequence;
     return result;
   }
 
@@ -12900,6 +14766,7 @@ class ObservePlaylistItems extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<ListPlaylistItemsRequest>(1, _omitFieldNames ? '' : 'request',
         subBuilder: ListPlaylistItemsRequest.create)
+    ..aInt64(2, _omitFieldNames ? '' : 'afterEventSequence')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -12931,71 +14798,270 @@ class ObservePlaylistItems extends $pb.GeneratedMessage {
   void clearRequest() => $_clearField(1);
   @$pb.TagNumber(1)
   ListPlaylistItemsRequest ensureRequest() => $_ensure(0);
+
+  /// Unset starts from the current snapshot and live changes.
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get afterEventSequence => $_getI64(1);
+  @$pb.TagNumber(2)
+  set afterEventSequence($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAfterEventSequence() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAfterEventSequence() => $_clearField(2);
 }
 
-class ObserveRoomMembers extends $pb.GeneratedMessage {
-  factory ObserveRoomMembers({
-    GetRoomMembersRequest? request,
+class ObserveRoomMemberEvents extends $pb.GeneratedMessage {
+  factory ObserveRoomMemberEvents({
+    $fixnum.Int64? afterEventSequence,
   }) {
     final result = create();
-    if (request != null) result.request = request;
+    if (afterEventSequence != null)
+      result.afterEventSequence = afterEventSequence;
     return result;
   }
 
-  ObserveRoomMembers._();
+  ObserveRoomMemberEvents._();
 
-  factory ObserveRoomMembers.fromBuffer($core.List<$core.int> data,
+  factory ObserveRoomMemberEvents.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory ObserveRoomMembers.fromJson($core.String json,
+  factory ObserveRoomMemberEvents.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ObserveRoomMembers',
+      _omitMessageNames ? '' : 'ObserveRoomMemberEvents',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOM<GetRoomMembersRequest>(1, _omitFieldNames ? '' : 'request',
-        subBuilder: GetRoomMembersRequest.create)
+    ..aInt64(1, _omitFieldNames ? '' : 'afterEventSequence')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ObserveRoomMembers clone() => deepCopy();
+  ObserveRoomMemberEvents clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ObserveRoomMembers copyWith(void Function(ObserveRoomMembers) updates) =>
-      super.copyWith((message) => updates(message as ObserveRoomMembers))
-          as ObserveRoomMembers;
+  ObserveRoomMemberEvents copyWith(
+          void Function(ObserveRoomMemberEvents) updates) =>
+      super.copyWith((message) => updates(message as ObserveRoomMemberEvents))
+          as ObserveRoomMemberEvents;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ObserveRoomMembers create() => ObserveRoomMembers._();
+  static ObserveRoomMemberEvents create() => ObserveRoomMemberEvents._();
   @$core.override
-  ObserveRoomMembers createEmptyInstance() => create();
+  ObserveRoomMemberEvents createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ObserveRoomMembers getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ObserveRoomMembers>(create);
-  static ObserveRoomMembers? _defaultInstance;
+  static ObserveRoomMemberEvents getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ObserveRoomMemberEvents>(create);
+  static ObserveRoomMemberEvents? _defaultInstance;
 
+  /// Replays durable member events with a per-room resource sequence greater than this value.
+  /// Unset starts from live member events; use GetRoomMembers for the current member list.
   @$pb.TagNumber(1)
-  GetRoomMembersRequest get request => $_getN(0);
+  $fixnum.Int64 get afterEventSequence => $_getI64(0);
   @$pb.TagNumber(1)
-  set request(GetRoomMembersRequest value) => $_setField(1, value);
+  set afterEventSequence($fixnum.Int64 value) => $_setInt64(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRequest() => $_has(0);
+  $core.bool hasAfterEventSequence() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRequest() => $_clearField(1);
+  void clearAfterEventSequence() => $_clearField(1);
+}
+
+class ObserveSelfRoomMember extends $pb.GeneratedMessage {
+  factory ObserveSelfRoomMember({
+    $fixnum.Int64? afterEventSequence,
+  }) {
+    final result = create();
+    if (afterEventSequence != null)
+      result.afterEventSequence = afterEventSequence;
+    return result;
+  }
+
+  ObserveSelfRoomMember._();
+
+  factory ObserveSelfRoomMember.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ObserveSelfRoomMember.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ObserveSelfRoomMember',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'afterEventSequence')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ObserveSelfRoomMember clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ObserveSelfRoomMember copyWith(
+          void Function(ObserveSelfRoomMember) updates) =>
+      super.copyWith((message) => updates(message as ObserveSelfRoomMember))
+          as ObserveSelfRoomMember;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ObserveSelfRoomMember create() => ObserveSelfRoomMember._();
+  @$core.override
+  ObserveSelfRoomMember createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ObserveSelfRoomMember getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ObserveSelfRoomMember>(create);
+  static ObserveSelfRoomMember? _defaultInstance;
+
+  /// Current signed-in user's room member and effective permission snapshot.
+  /// Changes when the user's role, permission overrides, or room-level permission defaults change.
   @$pb.TagNumber(1)
-  GetRoomMembersRequest ensureRequest() => $_ensure(0);
+  $fixnum.Int64 get afterEventSequence => $_getI64(0);
+  @$pb.TagNumber(1)
+  set afterEventSequence($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAfterEventSequence() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAfterEventSequence() => $_clearField(1);
+}
+
+class ObserveOnlineCount extends $pb.GeneratedMessage {
+  factory ObserveOnlineCount({
+    $core.Iterable<$0.RoomMemberRole>? roles,
+    $core.Iterable<$core.String>? userIds,
+  }) {
+    final result = create();
+    if (roles != null) result.roles.addAll(roles);
+    if (userIds != null) result.userIds.addAll(userIds);
+    return result;
+  }
+
+  ObserveOnlineCount._();
+
+  factory ObserveOnlineCount.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ObserveOnlineCount.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ObserveOnlineCount',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pc<$0.RoomMemberRole>(
+        1, _omitFieldNames ? '' : 'roles', $pb.PbFieldType.KE,
+        valueOf: $0.RoomMemberRole.valueOf,
+        enumValues: $0.RoomMemberRole.values,
+        defaultEnumValue: $0.RoomMemberRole.ROOM_MEMBER_ROLE_UNSPECIFIED)
+    ..pPS(2, _omitFieldNames ? '' : 'userIds')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ObserveOnlineCount clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ObserveOnlineCount copyWith(void Function(ObserveOnlineCount) updates) =>
+      super.copyWith((message) => updates(message as ObserveOnlineCount))
+          as ObserveOnlineCount;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ObserveOnlineCount create() => ObserveOnlineCount._();
+  @$core.override
+  ObserveOnlineCount createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ObserveOnlineCount getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ObserveOnlineCount>(create);
+  static ObserveOnlineCount? _defaultInstance;
+
+  /// Empty filters return the whole-room online user count.
+  /// Use role filters or user_ids to reduce the aggregation scope for member list views.
+  @$pb.TagNumber(1)
+  $pb.PbList<$0.RoomMemberRole> get roles => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<$core.String> get userIds => $_getList(1);
+}
+
+class ObserveOnlineEvent extends $pb.GeneratedMessage {
+  factory ObserveOnlineEvent({
+    $core.Iterable<$0.RoomMemberRole>? roles,
+    $core.Iterable<OnlineEventKind>? kinds,
+    $core.Iterable<$core.String>? userIds,
+  }) {
+    final result = create();
+    if (roles != null) result.roles.addAll(roles);
+    if (kinds != null) result.kinds.addAll(kinds);
+    if (userIds != null) result.userIds.addAll(userIds);
+    return result;
+  }
+
+  ObserveOnlineEvent._();
+
+  factory ObserveOnlineEvent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ObserveOnlineEvent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ObserveOnlineEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pc<$0.RoomMemberRole>(
+        1, _omitFieldNames ? '' : 'roles', $pb.PbFieldType.KE,
+        valueOf: $0.RoomMemberRole.valueOf,
+        enumValues: $0.RoomMemberRole.values,
+        defaultEnumValue: $0.RoomMemberRole.ROOM_MEMBER_ROLE_UNSPECIFIED)
+    ..pc<OnlineEventKind>(2, _omitFieldNames ? '' : 'kinds', $pb.PbFieldType.KE,
+        valueOf: OnlineEventKind.valueOf,
+        enumValues: OnlineEventKind.values,
+        defaultEnumValue: OnlineEventKind.ONLINE_EVENT_KIND_UNSPECIFIED)
+    ..pPS(3, _omitFieldNames ? '' : 'userIds')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ObserveOnlineEvent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ObserveOnlineEvent copyWith(void Function(ObserveOnlineEvent) updates) =>
+      super.copyWith((message) => updates(message as ObserveOnlineEvent))
+          as ObserveOnlineEvent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ObserveOnlineEvent create() => ObserveOnlineEvent._();
+  @$core.override
+  ObserveOnlineEvent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ObserveOnlineEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ObserveOnlineEvent>(create);
+  static ObserveOnlineEvent? _defaultInstance;
+
+  /// Live-only stream for member online/offline events.
+  /// Use filters to reduce high-frequency updates for large rooms.
+  @$pb.TagNumber(1)
+  $pb.PbList<$0.RoomMemberRole> get roles => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<OnlineEventKind> get kinds => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $pb.PbList<$core.String> get userIds => $_getList(2);
 }
 
 class ObserveChatEvents extends $pb.GeneratedMessage {
   factory ObserveChatEvents({
-    $core.String? afterEventId,
+    $fixnum.Int64? afterEventSequence,
   }) {
     final result = create();
-    if (afterEventId != null) result.afterEventId = afterEventId;
+    if (afterEventSequence != null)
+      result.afterEventSequence = afterEventSequence;
     return result;
   }
 
@@ -13012,7 +15078,7 @@ class ObserveChatEvents extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ObserveChatEvents',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'afterEventId')
+    ..aInt64(1, _omitFieldNames ? '' : 'afterEventSequence')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13034,90 +15100,27 @@ class ObserveChatEvents extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ObserveChatEvents>(create);
   static ObserveChatEvents? _defaultInstance;
 
-  /// Empty means start with newly-created events only. Use GetChatHistory for backfill.
+  /// Replays events with a durable per-room chat event sequence greater than this value.
+  /// Unset starts from live chat events; 0 replays retained chat events from the empty watermark.
+  /// Use GetChatHistory for message backfill.
   @$pb.TagNumber(1)
-  $core.String get afterEventId => $_getSZ(0);
+  $fixnum.Int64 get afterEventSequence => $_getI64(0);
   @$pb.TagNumber(1)
-  set afterEventId($core.String value) => $_setString(0, value);
+  set afterEventSequence($fixnum.Int64 value) => $_setInt64(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasAfterEventId() => $_has(0);
+  $core.bool hasAfterEventSequence() => $_has(0);
   @$pb.TagNumber(1)
-  void clearAfterEventId() => $_clearField(1);
-}
-
-class WatchOptions extends $pb.GeneratedMessage {
-  factory WatchOptions({
-    $core.String? version,
-    ResourceDeliveryMode? deliveryMode,
-  }) {
-    final result = create();
-    if (version != null) result.version = version;
-    if (deliveryMode != null) result.deliveryMode = deliveryMode;
-    return result;
-  }
-
-  WatchOptions._();
-
-  factory WatchOptions.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory WatchOptions.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WatchOptions',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'version')
-    ..aE<ResourceDeliveryMode>(2, _omitFieldNames ? '' : 'deliveryMode',
-        enumValues: ResourceDeliveryMode.values)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchOptions clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchOptions copyWith(void Function(WatchOptions) updates) =>
-      super.copyWith((message) => updates(message as WatchOptions))
-          as WatchOptions;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static WatchOptions create() => WatchOptions._();
-  @$core.override
-  WatchOptions createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static WatchOptions getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WatchOptions>(create);
-  static WatchOptions? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get version => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set version($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasVersion() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearVersion() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  ResourceDeliveryMode get deliveryMode => $_getN(1);
-  @$pb.TagNumber(2)
-  set deliveryMode(ResourceDeliveryMode value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasDeliveryMode() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearDeliveryMode() => $_clearField(2);
+  void clearAfterEventSequence() => $_clearField(1);
 }
 
 class WatchPlaybackStateRequest extends $pb.GeneratedMessage {
   factory WatchPlaybackStateRequest({
-    WatchOptions? options,
+    ResourceDeliveryMode? deliveryMode,
+    ObservePlaybackState? playbackState,
   }) {
     final result = create();
-    if (options != null) result.options = options;
+    if (deliveryMode != null) result.deliveryMode = deliveryMode;
+    if (playbackState != null) result.playbackState = playbackState;
     return result;
   }
 
@@ -13134,8 +15137,10 @@ class WatchPlaybackStateRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'WatchPlaybackStateRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOM<WatchOptions>(1, _omitFieldNames ? '' : 'options',
-        subBuilder: WatchOptions.create)
+    ..aE<ResourceDeliveryMode>(1, _omitFieldNames ? '' : 'deliveryMode',
+        enumValues: ResourceDeliveryMode.values)
+    ..aOM<ObservePlaybackState>(2, _omitFieldNames ? '' : 'playbackState',
+        subBuilder: ObservePlaybackState.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13159,98 +15164,104 @@ class WatchPlaybackStateRequest extends $pb.GeneratedMessage {
   static WatchPlaybackStateRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  WatchOptions get options => $_getN(0);
+  ResourceDeliveryMode get deliveryMode => $_getN(0);
   @$pb.TagNumber(1)
-  set options(WatchOptions value) => $_setField(1, value);
+  set deliveryMode(ResourceDeliveryMode value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasOptions() => $_has(0);
+  $core.bool hasDeliveryMode() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOptions() => $_clearField(1);
-  @$pb.TagNumber(1)
-  WatchOptions ensureOptions() => $_ensure(0);
+  void clearDeliveryMode() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  ObservePlaybackState get playbackState => $_getN(1);
+  @$pb.TagNumber(2)
+  set playbackState(ObservePlaybackState value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPlaybackState() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPlaybackState() => $_clearField(2);
+  @$pb.TagNumber(2)
+  ObservePlaybackState ensurePlaybackState() => $_ensure(1);
 }
 
-class WatchPlaybackSnapshotRequest extends $pb.GeneratedMessage {
-  factory WatchPlaybackSnapshotRequest({
-    WatchOptions? options,
-    ObservePlaybackSnapshot? playbackSnapshot,
+class WatchPlaybackRequest extends $pb.GeneratedMessage {
+  factory WatchPlaybackRequest({
+    ResourceDeliveryMode? deliveryMode,
+    ObservePlayback? playback,
   }) {
     final result = create();
-    if (options != null) result.options = options;
-    if (playbackSnapshot != null) result.playbackSnapshot = playbackSnapshot;
+    if (deliveryMode != null) result.deliveryMode = deliveryMode;
+    if (playback != null) result.playback = playback;
     return result;
   }
 
-  WatchPlaybackSnapshotRequest._();
+  WatchPlaybackRequest._();
 
-  factory WatchPlaybackSnapshotRequest.fromBuffer($core.List<$core.int> data,
+  factory WatchPlaybackRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WatchPlaybackSnapshotRequest.fromJson($core.String json,
+  factory WatchPlaybackRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WatchPlaybackSnapshotRequest',
+      _omitMessageNames ? '' : 'WatchPlaybackRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOM<WatchOptions>(1, _omitFieldNames ? '' : 'options',
-        subBuilder: WatchOptions.create)
-    ..aOM<ObservePlaybackSnapshot>(2, _omitFieldNames ? '' : 'playbackSnapshot',
-        subBuilder: ObservePlaybackSnapshot.create)
+    ..aE<ResourceDeliveryMode>(1, _omitFieldNames ? '' : 'deliveryMode',
+        enumValues: ResourceDeliveryMode.values)
+    ..aOM<ObservePlayback>(2, _omitFieldNames ? '' : 'playback',
+        subBuilder: ObservePlayback.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchPlaybackSnapshotRequest clone() => deepCopy();
+  WatchPlaybackRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchPlaybackSnapshotRequest copyWith(
-          void Function(WatchPlaybackSnapshotRequest) updates) =>
-      super.copyWith(
-              (message) => updates(message as WatchPlaybackSnapshotRequest))
-          as WatchPlaybackSnapshotRequest;
+  WatchPlaybackRequest copyWith(void Function(WatchPlaybackRequest) updates) =>
+      super.copyWith((message) => updates(message as WatchPlaybackRequest))
+          as WatchPlaybackRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WatchPlaybackSnapshotRequest create() =>
-      WatchPlaybackSnapshotRequest._();
+  static WatchPlaybackRequest create() => WatchPlaybackRequest._();
   @$core.override
-  WatchPlaybackSnapshotRequest createEmptyInstance() => create();
+  WatchPlaybackRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WatchPlaybackSnapshotRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WatchPlaybackSnapshotRequest>(create);
-  static WatchPlaybackSnapshotRequest? _defaultInstance;
+  static WatchPlaybackRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WatchPlaybackRequest>(create);
+  static WatchPlaybackRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  WatchOptions get options => $_getN(0);
+  ResourceDeliveryMode get deliveryMode => $_getN(0);
   @$pb.TagNumber(1)
-  set options(WatchOptions value) => $_setField(1, value);
+  set deliveryMode(ResourceDeliveryMode value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasOptions() => $_has(0);
+  $core.bool hasDeliveryMode() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOptions() => $_clearField(1);
-  @$pb.TagNumber(1)
-  WatchOptions ensureOptions() => $_ensure(0);
+  void clearDeliveryMode() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  ObservePlaybackSnapshot get playbackSnapshot => $_getN(1);
+  ObservePlayback get playback => $_getN(1);
   @$pb.TagNumber(2)
-  set playbackSnapshot(ObservePlaybackSnapshot value) => $_setField(2, value);
+  set playback(ObservePlayback value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasPlaybackSnapshot() => $_has(1);
+  $core.bool hasPlayback() => $_has(1);
   @$pb.TagNumber(2)
-  void clearPlaybackSnapshot() => $_clearField(2);
+  void clearPlayback() => $_clearField(2);
   @$pb.TagNumber(2)
-  ObservePlaybackSnapshot ensurePlaybackSnapshot() => $_ensure(1);
+  ObservePlayback ensurePlayback() => $_ensure(1);
 }
 
 class WatchRoomSettingsRequest extends $pb.GeneratedMessage {
   factory WatchRoomSettingsRequest({
-    WatchOptions? options,
+    ResourceDeliveryMode? deliveryMode,
+    ObserveRoomSettings? roomSettings,
   }) {
     final result = create();
-    if (options != null) result.options = options;
+    if (deliveryMode != null) result.deliveryMode = deliveryMode;
+    if (roomSettings != null) result.roomSettings = roomSettings;
     return result;
   }
 
@@ -13267,8 +15278,10 @@ class WatchRoomSettingsRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'WatchRoomSettingsRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOM<WatchOptions>(1, _omitFieldNames ? '' : 'options',
-        subBuilder: WatchOptions.create)
+    ..aE<ResourceDeliveryMode>(1, _omitFieldNames ? '' : 'deliveryMode',
+        enumValues: ResourceDeliveryMode.values)
+    ..aOM<ObserveRoomSettings>(2, _omitFieldNames ? '' : 'roomSettings',
+        subBuilder: ObserveRoomSettings.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13292,25 +15305,34 @@ class WatchRoomSettingsRequest extends $pb.GeneratedMessage {
   static WatchRoomSettingsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  WatchOptions get options => $_getN(0);
+  ResourceDeliveryMode get deliveryMode => $_getN(0);
   @$pb.TagNumber(1)
-  set options(WatchOptions value) => $_setField(1, value);
+  set deliveryMode(ResourceDeliveryMode value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasOptions() => $_has(0);
+  $core.bool hasDeliveryMode() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOptions() => $_clearField(1);
-  @$pb.TagNumber(1)
-  WatchOptions ensureOptions() => $_ensure(0);
+  void clearDeliveryMode() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  ObserveRoomSettings get roomSettings => $_getN(1);
+  @$pb.TagNumber(2)
+  set roomSettings(ObserveRoomSettings value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRoomSettings() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRoomSettings() => $_clearField(2);
+  @$pb.TagNumber(2)
+  ObserveRoomSettings ensureRoomSettings() => $_ensure(1);
 }
 
 class WatchPlaylistItemsRequest extends $pb.GeneratedMessage {
   factory WatchPlaylistItemsRequest({
-    WatchOptions? options,
-    ListPlaylistItemsRequest? request,
+    ResourceDeliveryMode? deliveryMode,
+    ObservePlaylistItems? playlistItems,
   }) {
     final result = create();
-    if (options != null) result.options = options;
-    if (request != null) result.request = request;
+    if (deliveryMode != null) result.deliveryMode = deliveryMode;
+    if (playlistItems != null) result.playlistItems = playlistItems;
     return result;
   }
 
@@ -13327,10 +15349,10 @@ class WatchPlaylistItemsRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'WatchPlaylistItemsRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOM<WatchOptions>(1, _omitFieldNames ? '' : 'options',
-        subBuilder: WatchOptions.create)
-    ..aOM<ListPlaylistItemsRequest>(2, _omitFieldNames ? '' : 'request',
-        subBuilder: ListPlaylistItemsRequest.create)
+    ..aE<ResourceDeliveryMode>(1, _omitFieldNames ? '' : 'deliveryMode',
+        enumValues: ResourceDeliveryMode.values)
+    ..aOM<ObservePlaylistItems>(2, _omitFieldNames ? '' : 'playlistItems',
+        subBuilder: ObservePlaylistItems.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13354,108 +15376,106 @@ class WatchPlaylistItemsRequest extends $pb.GeneratedMessage {
   static WatchPlaylistItemsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  WatchOptions get options => $_getN(0);
+  ResourceDeliveryMode get deliveryMode => $_getN(0);
   @$pb.TagNumber(1)
-  set options(WatchOptions value) => $_setField(1, value);
+  set deliveryMode(ResourceDeliveryMode value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasOptions() => $_has(0);
+  $core.bool hasDeliveryMode() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOptions() => $_clearField(1);
-  @$pb.TagNumber(1)
-  WatchOptions ensureOptions() => $_ensure(0);
+  void clearDeliveryMode() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  ListPlaylistItemsRequest get request => $_getN(1);
+  ObservePlaylistItems get playlistItems => $_getN(1);
   @$pb.TagNumber(2)
-  set request(ListPlaylistItemsRequest value) => $_setField(2, value);
+  set playlistItems(ObservePlaylistItems value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasRequest() => $_has(1);
+  $core.bool hasPlaylistItems() => $_has(1);
   @$pb.TagNumber(2)
-  void clearRequest() => $_clearField(2);
+  void clearPlaylistItems() => $_clearField(2);
   @$pb.TagNumber(2)
-  ListPlaylistItemsRequest ensureRequest() => $_ensure(1);
+  ObservePlaylistItems ensurePlaylistItems() => $_ensure(1);
 }
 
-class WatchRoomMembersRequest extends $pb.GeneratedMessage {
-  factory WatchRoomMembersRequest({
-    WatchOptions? options,
-    GetRoomMembersRequest? request,
+class WatchRoomMemberEventsRequest extends $pb.GeneratedMessage {
+  factory WatchRoomMemberEventsRequest({
+    ResourceDeliveryMode? deliveryMode,
+    ObserveRoomMemberEvents? roomMemberEvents,
   }) {
     final result = create();
-    if (options != null) result.options = options;
-    if (request != null) result.request = request;
+    if (deliveryMode != null) result.deliveryMode = deliveryMode;
+    if (roomMemberEvents != null) result.roomMemberEvents = roomMemberEvents;
     return result;
   }
 
-  WatchRoomMembersRequest._();
+  WatchRoomMemberEventsRequest._();
 
-  factory WatchRoomMembersRequest.fromBuffer($core.List<$core.int> data,
+  factory WatchRoomMemberEventsRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WatchRoomMembersRequest.fromJson($core.String json,
+  factory WatchRoomMemberEventsRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WatchRoomMembersRequest',
+      _omitMessageNames ? '' : 'WatchRoomMemberEventsRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOM<WatchOptions>(1, _omitFieldNames ? '' : 'options',
-        subBuilder: WatchOptions.create)
-    ..aOM<GetRoomMembersRequest>(2, _omitFieldNames ? '' : 'request',
-        subBuilder: GetRoomMembersRequest.create)
+    ..aE<ResourceDeliveryMode>(1, _omitFieldNames ? '' : 'deliveryMode',
+        enumValues: ResourceDeliveryMode.values)
+    ..aOM<ObserveRoomMemberEvents>(2, _omitFieldNames ? '' : 'roomMemberEvents',
+        subBuilder: ObserveRoomMemberEvents.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchRoomMembersRequest clone() => deepCopy();
+  WatchRoomMemberEventsRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchRoomMembersRequest copyWith(
-          void Function(WatchRoomMembersRequest) updates) =>
-      super.copyWith((message) => updates(message as WatchRoomMembersRequest))
-          as WatchRoomMembersRequest;
+  WatchRoomMemberEventsRequest copyWith(
+          void Function(WatchRoomMemberEventsRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as WatchRoomMemberEventsRequest))
+          as WatchRoomMemberEventsRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WatchRoomMembersRequest create() => WatchRoomMembersRequest._();
+  static WatchRoomMemberEventsRequest create() =>
+      WatchRoomMemberEventsRequest._();
   @$core.override
-  WatchRoomMembersRequest createEmptyInstance() => create();
+  WatchRoomMemberEventsRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WatchRoomMembersRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WatchRoomMembersRequest>(create);
-  static WatchRoomMembersRequest? _defaultInstance;
+  static WatchRoomMemberEventsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WatchRoomMemberEventsRequest>(create);
+  static WatchRoomMemberEventsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  WatchOptions get options => $_getN(0);
+  ResourceDeliveryMode get deliveryMode => $_getN(0);
   @$pb.TagNumber(1)
-  set options(WatchOptions value) => $_setField(1, value);
+  set deliveryMode(ResourceDeliveryMode value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasOptions() => $_has(0);
+  $core.bool hasDeliveryMode() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOptions() => $_clearField(1);
-  @$pb.TagNumber(1)
-  WatchOptions ensureOptions() => $_ensure(0);
+  void clearDeliveryMode() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  GetRoomMembersRequest get request => $_getN(1);
+  ObserveRoomMemberEvents get roomMemberEvents => $_getN(1);
   @$pb.TagNumber(2)
-  set request(GetRoomMembersRequest value) => $_setField(2, value);
+  set roomMemberEvents(ObserveRoomMemberEvents value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasRequest() => $_has(1);
+  $core.bool hasRoomMemberEvents() => $_has(1);
   @$pb.TagNumber(2)
-  void clearRequest() => $_clearField(2);
+  void clearRoomMemberEvents() => $_clearField(2);
   @$pb.TagNumber(2)
-  GetRoomMembersRequest ensureRequest() => $_ensure(1);
+  ObserveRoomMemberEvents ensureRoomMemberEvents() => $_ensure(1);
 }
 
 class WatchChatEventsRequest extends $pb.GeneratedMessage {
   factory WatchChatEventsRequest({
-    WatchOptions? options,
+    ResourceDeliveryMode? deliveryMode,
     ObserveChatEvents? chatEvents,
   }) {
     final result = create();
-    if (options != null) result.options = options;
+    if (deliveryMode != null) result.deliveryMode = deliveryMode;
     if (chatEvents != null) result.chatEvents = chatEvents;
     return result;
   }
@@ -13473,8 +15493,8 @@ class WatchChatEventsRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'WatchChatEventsRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOM<WatchOptions>(1, _omitFieldNames ? '' : 'options',
-        subBuilder: WatchOptions.create)
+    ..aE<ResourceDeliveryMode>(1, _omitFieldNames ? '' : 'deliveryMode',
+        enumValues: ResourceDeliveryMode.values)
     ..aOM<ObserveChatEvents>(2, _omitFieldNames ? '' : 'chatEvents',
         subBuilder: ObserveChatEvents.create)
     ..hasRequiredFields = false;
@@ -13500,15 +15520,13 @@ class WatchChatEventsRequest extends $pb.GeneratedMessage {
   static WatchChatEventsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  WatchOptions get options => $_getN(0);
+  ResourceDeliveryMode get deliveryMode => $_getN(0);
   @$pb.TagNumber(1)
-  set options(WatchOptions value) => $_setField(1, value);
+  set deliveryMode(ResourceDeliveryMode value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasOptions() => $_has(0);
+  $core.bool hasDeliveryMode() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOptions() => $_clearField(1);
-  @$pb.TagNumber(1)
-  WatchOptions ensureOptions() => $_ensure(0);
+  void clearDeliveryMode() => $_clearField(1);
 
   @$pb.TagNumber(2)
   ObserveChatEvents get chatEvents => $_getN(1);
@@ -13522,17 +15540,17 @@ class WatchChatEventsRequest extends $pb.GeneratedMessage {
   ObserveChatEvents ensureChatEvents() => $_ensure(1);
 }
 
-enum WatchPlaybackStateEvent_Event { observed, changed, error, notSet }
+enum WatchPlaybackStateEvent_Event { observed, resourceEvent, error, notSet }
 
 class WatchPlaybackStateEvent extends $pb.GeneratedMessage {
   factory WatchPlaybackStateEvent({
     ResourceObserved? observed,
-    ResourceChanged? changed,
+    ResourceEvent? resourceEvent,
     ResourceObserveError? error,
   }) {
     final result = create();
     if (observed != null) result.observed = observed;
-    if (changed != null) result.changed = changed;
+    if (resourceEvent != null) result.resourceEvent = resourceEvent;
     if (error != null) result.error = error;
     return result;
   }
@@ -13549,7 +15567,7 @@ class WatchPlaybackStateEvent extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, WatchPlaybackStateEvent_Event>
       _WatchPlaybackStateEvent_EventByTag = {
     1: WatchPlaybackStateEvent_Event.observed,
-    2: WatchPlaybackStateEvent_Event.changed,
+    2: WatchPlaybackStateEvent_Event.resourceEvent,
     3: WatchPlaybackStateEvent_Event.error,
     0: WatchPlaybackStateEvent_Event.notSet
   };
@@ -13560,8 +15578,8 @@ class WatchPlaybackStateEvent extends $pb.GeneratedMessage {
     ..oo(0, [1, 2, 3])
     ..aOM<ResourceObserved>(1, _omitFieldNames ? '' : 'observed',
         subBuilder: ResourceObserved.create)
-    ..aOM<ResourceChanged>(2, _omitFieldNames ? '' : 'changed',
-        subBuilder: ResourceChanged.create)
+    ..aOM<ResourceEvent>(2, _omitFieldNames ? '' : 'resourceEvent',
+        subBuilder: ResourceEvent.create)
     ..aOM<ResourceObserveError>(3, _omitFieldNames ? '' : 'error',
         subBuilder: ResourceObserveError.create)
     ..hasRequiredFields = false;
@@ -13608,15 +15626,15 @@ class WatchPlaybackStateEvent extends $pb.GeneratedMessage {
   ResourceObserved ensureObserved() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  ResourceChanged get changed => $_getN(1);
+  ResourceEvent get resourceEvent => $_getN(1);
   @$pb.TagNumber(2)
-  set changed(ResourceChanged value) => $_setField(2, value);
+  set resourceEvent(ResourceEvent value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasChanged() => $_has(1);
+  $core.bool hasResourceEvent() => $_has(1);
   @$pb.TagNumber(2)
-  void clearChanged() => $_clearField(2);
+  void clearResourceEvent() => $_clearField(2);
   @$pb.TagNumber(2)
-  ResourceChanged ensureChanged() => $_ensure(1);
+  ResourceEvent ensureResourceEvent() => $_ensure(1);
 
   @$pb.TagNumber(3)
   ResourceObserveError get error => $_getN(2);
@@ -13630,76 +15648,74 @@ class WatchPlaybackStateEvent extends $pb.GeneratedMessage {
   ResourceObserveError ensureError() => $_ensure(2);
 }
 
-enum WatchPlaybackSnapshotEvent_Event { observed, changed, error, notSet }
+enum WatchPlaybackEvent_Event { observed, resourceEvent, error, notSet }
 
-class WatchPlaybackSnapshotEvent extends $pb.GeneratedMessage {
-  factory WatchPlaybackSnapshotEvent({
+class WatchPlaybackEvent extends $pb.GeneratedMessage {
+  factory WatchPlaybackEvent({
     ResourceObserved? observed,
-    ResourceChanged? changed,
+    ResourceEvent? resourceEvent,
     ResourceObserveError? error,
   }) {
     final result = create();
     if (observed != null) result.observed = observed;
-    if (changed != null) result.changed = changed;
+    if (resourceEvent != null) result.resourceEvent = resourceEvent;
     if (error != null) result.error = error;
     return result;
   }
 
-  WatchPlaybackSnapshotEvent._();
+  WatchPlaybackEvent._();
 
-  factory WatchPlaybackSnapshotEvent.fromBuffer($core.List<$core.int> data,
+  factory WatchPlaybackEvent.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WatchPlaybackSnapshotEvent.fromJson($core.String json,
+  factory WatchPlaybackEvent.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, WatchPlaybackSnapshotEvent_Event>
-      _WatchPlaybackSnapshotEvent_EventByTag = {
-    1: WatchPlaybackSnapshotEvent_Event.observed,
-    2: WatchPlaybackSnapshotEvent_Event.changed,
-    3: WatchPlaybackSnapshotEvent_Event.error,
-    0: WatchPlaybackSnapshotEvent_Event.notSet
+  static const $core.Map<$core.int, WatchPlaybackEvent_Event>
+      _WatchPlaybackEvent_EventByTag = {
+    1: WatchPlaybackEvent_Event.observed,
+    2: WatchPlaybackEvent_Event.resourceEvent,
+    3: WatchPlaybackEvent_Event.error,
+    0: WatchPlaybackEvent_Event.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WatchPlaybackSnapshotEvent',
+      _omitMessageNames ? '' : 'WatchPlaybackEvent',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..oo(0, [1, 2, 3])
     ..aOM<ResourceObserved>(1, _omitFieldNames ? '' : 'observed',
         subBuilder: ResourceObserved.create)
-    ..aOM<ResourceChanged>(2, _omitFieldNames ? '' : 'changed',
-        subBuilder: ResourceChanged.create)
+    ..aOM<ResourceEvent>(2, _omitFieldNames ? '' : 'resourceEvent',
+        subBuilder: ResourceEvent.create)
     ..aOM<ResourceObserveError>(3, _omitFieldNames ? '' : 'error',
         subBuilder: ResourceObserveError.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchPlaybackSnapshotEvent clone() => deepCopy();
+  WatchPlaybackEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchPlaybackSnapshotEvent copyWith(
-          void Function(WatchPlaybackSnapshotEvent) updates) =>
-      super.copyWith(
-              (message) => updates(message as WatchPlaybackSnapshotEvent))
-          as WatchPlaybackSnapshotEvent;
+  WatchPlaybackEvent copyWith(void Function(WatchPlaybackEvent) updates) =>
+      super.copyWith((message) => updates(message as WatchPlaybackEvent))
+          as WatchPlaybackEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WatchPlaybackSnapshotEvent create() => WatchPlaybackSnapshotEvent._();
+  static WatchPlaybackEvent create() => WatchPlaybackEvent._();
   @$core.override
-  WatchPlaybackSnapshotEvent createEmptyInstance() => create();
+  WatchPlaybackEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WatchPlaybackSnapshotEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WatchPlaybackSnapshotEvent>(create);
-  static WatchPlaybackSnapshotEvent? _defaultInstance;
+  static WatchPlaybackEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WatchPlaybackEvent>(create);
+  static WatchPlaybackEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
-  WatchPlaybackSnapshotEvent_Event whichEvent() =>
-      _WatchPlaybackSnapshotEvent_EventByTag[$_whichOneof(0)]!;
+  WatchPlaybackEvent_Event whichEvent() =>
+      _WatchPlaybackEvent_EventByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
@@ -13717,15 +15733,15 @@ class WatchPlaybackSnapshotEvent extends $pb.GeneratedMessage {
   ResourceObserved ensureObserved() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  ResourceChanged get changed => $_getN(1);
+  ResourceEvent get resourceEvent => $_getN(1);
   @$pb.TagNumber(2)
-  set changed(ResourceChanged value) => $_setField(2, value);
+  set resourceEvent(ResourceEvent value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasChanged() => $_has(1);
+  $core.bool hasResourceEvent() => $_has(1);
   @$pb.TagNumber(2)
-  void clearChanged() => $_clearField(2);
+  void clearResourceEvent() => $_clearField(2);
   @$pb.TagNumber(2)
-  ResourceChanged ensureChanged() => $_ensure(1);
+  ResourceEvent ensureResourceEvent() => $_ensure(1);
 
   @$pb.TagNumber(3)
   ResourceObserveError get error => $_getN(2);
@@ -13739,17 +15755,17 @@ class WatchPlaybackSnapshotEvent extends $pb.GeneratedMessage {
   ResourceObserveError ensureError() => $_ensure(2);
 }
 
-enum WatchRoomSettingsEvent_Event { observed, changed, error, notSet }
+enum WatchRoomSettingsEvent_Event { observed, resourceEvent, error, notSet }
 
 class WatchRoomSettingsEvent extends $pb.GeneratedMessage {
   factory WatchRoomSettingsEvent({
     ResourceObserved? observed,
-    ResourceChanged? changed,
+    ResourceEvent? resourceEvent,
     ResourceObserveError? error,
   }) {
     final result = create();
     if (observed != null) result.observed = observed;
-    if (changed != null) result.changed = changed;
+    if (resourceEvent != null) result.resourceEvent = resourceEvent;
     if (error != null) result.error = error;
     return result;
   }
@@ -13766,7 +15782,7 @@ class WatchRoomSettingsEvent extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, WatchRoomSettingsEvent_Event>
       _WatchRoomSettingsEvent_EventByTag = {
     1: WatchRoomSettingsEvent_Event.observed,
-    2: WatchRoomSettingsEvent_Event.changed,
+    2: WatchRoomSettingsEvent_Event.resourceEvent,
     3: WatchRoomSettingsEvent_Event.error,
     0: WatchRoomSettingsEvent_Event.notSet
   };
@@ -13777,8 +15793,8 @@ class WatchRoomSettingsEvent extends $pb.GeneratedMessage {
     ..oo(0, [1, 2, 3])
     ..aOM<ResourceObserved>(1, _omitFieldNames ? '' : 'observed',
         subBuilder: ResourceObserved.create)
-    ..aOM<ResourceChanged>(2, _omitFieldNames ? '' : 'changed',
-        subBuilder: ResourceChanged.create)
+    ..aOM<ResourceEvent>(2, _omitFieldNames ? '' : 'resourceEvent',
+        subBuilder: ResourceEvent.create)
     ..aOM<ResourceObserveError>(3, _omitFieldNames ? '' : 'error',
         subBuilder: ResourceObserveError.create)
     ..hasRequiredFields = false;
@@ -13825,15 +15841,15 @@ class WatchRoomSettingsEvent extends $pb.GeneratedMessage {
   ResourceObserved ensureObserved() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  ResourceChanged get changed => $_getN(1);
+  ResourceEvent get resourceEvent => $_getN(1);
   @$pb.TagNumber(2)
-  set changed(ResourceChanged value) => $_setField(2, value);
+  set resourceEvent(ResourceEvent value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasChanged() => $_has(1);
+  $core.bool hasResourceEvent() => $_has(1);
   @$pb.TagNumber(2)
-  void clearChanged() => $_clearField(2);
+  void clearResourceEvent() => $_clearField(2);
   @$pb.TagNumber(2)
-  ResourceChanged ensureChanged() => $_ensure(1);
+  ResourceEvent ensureResourceEvent() => $_ensure(1);
 
   @$pb.TagNumber(3)
   ResourceObserveError get error => $_getN(2);
@@ -13847,17 +15863,17 @@ class WatchRoomSettingsEvent extends $pb.GeneratedMessage {
   ResourceObserveError ensureError() => $_ensure(2);
 }
 
-enum WatchPlaylistItemsEvent_Event { observed, changed, error, notSet }
+enum WatchPlaylistItemsEvent_Event { observed, resourceEvent, error, notSet }
 
 class WatchPlaylistItemsEvent extends $pb.GeneratedMessage {
   factory WatchPlaylistItemsEvent({
     ResourceObserved? observed,
-    ResourceChanged? changed,
+    ResourceEvent? resourceEvent,
     ResourceObserveError? error,
   }) {
     final result = create();
     if (observed != null) result.observed = observed;
-    if (changed != null) result.changed = changed;
+    if (resourceEvent != null) result.resourceEvent = resourceEvent;
     if (error != null) result.error = error;
     return result;
   }
@@ -13874,7 +15890,7 @@ class WatchPlaylistItemsEvent extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, WatchPlaylistItemsEvent_Event>
       _WatchPlaylistItemsEvent_EventByTag = {
     1: WatchPlaylistItemsEvent_Event.observed,
-    2: WatchPlaylistItemsEvent_Event.changed,
+    2: WatchPlaylistItemsEvent_Event.resourceEvent,
     3: WatchPlaylistItemsEvent_Event.error,
     0: WatchPlaylistItemsEvent_Event.notSet
   };
@@ -13885,8 +15901,8 @@ class WatchPlaylistItemsEvent extends $pb.GeneratedMessage {
     ..oo(0, [1, 2, 3])
     ..aOM<ResourceObserved>(1, _omitFieldNames ? '' : 'observed',
         subBuilder: ResourceObserved.create)
-    ..aOM<ResourceChanged>(2, _omitFieldNames ? '' : 'changed',
-        subBuilder: ResourceChanged.create)
+    ..aOM<ResourceEvent>(2, _omitFieldNames ? '' : 'resourceEvent',
+        subBuilder: ResourceEvent.create)
     ..aOM<ResourceObserveError>(3, _omitFieldNames ? '' : 'error',
         subBuilder: ResourceObserveError.create)
     ..hasRequiredFields = false;
@@ -13933,15 +15949,15 @@ class WatchPlaylistItemsEvent extends $pb.GeneratedMessage {
   ResourceObserved ensureObserved() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  ResourceChanged get changed => $_getN(1);
+  ResourceEvent get resourceEvent => $_getN(1);
   @$pb.TagNumber(2)
-  set changed(ResourceChanged value) => $_setField(2, value);
+  set resourceEvent(ResourceEvent value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasChanged() => $_has(1);
+  $core.bool hasResourceEvent() => $_has(1);
   @$pb.TagNumber(2)
-  void clearChanged() => $_clearField(2);
+  void clearResourceEvent() => $_clearField(2);
   @$pb.TagNumber(2)
-  ResourceChanged ensureChanged() => $_ensure(1);
+  ResourceEvent ensureResourceEvent() => $_ensure(1);
 
   @$pb.TagNumber(3)
   ResourceObserveError get error => $_getN(2);
@@ -13955,75 +15971,76 @@ class WatchPlaylistItemsEvent extends $pb.GeneratedMessage {
   ResourceObserveError ensureError() => $_ensure(2);
 }
 
-enum WatchRoomMembersEvent_Event { observed, changed, error, notSet }
+enum WatchRoomMemberEventsEvent_Event { observed, resourceEvent, error, notSet }
 
-class WatchRoomMembersEvent extends $pb.GeneratedMessage {
-  factory WatchRoomMembersEvent({
+class WatchRoomMemberEventsEvent extends $pb.GeneratedMessage {
+  factory WatchRoomMemberEventsEvent({
     ResourceObserved? observed,
-    ResourceChanged? changed,
+    ResourceEvent? resourceEvent,
     ResourceObserveError? error,
   }) {
     final result = create();
     if (observed != null) result.observed = observed;
-    if (changed != null) result.changed = changed;
+    if (resourceEvent != null) result.resourceEvent = resourceEvent;
     if (error != null) result.error = error;
     return result;
   }
 
-  WatchRoomMembersEvent._();
+  WatchRoomMemberEventsEvent._();
 
-  factory WatchRoomMembersEvent.fromBuffer($core.List<$core.int> data,
+  factory WatchRoomMemberEventsEvent.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WatchRoomMembersEvent.fromJson($core.String json,
+  factory WatchRoomMemberEventsEvent.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, WatchRoomMembersEvent_Event>
-      _WatchRoomMembersEvent_EventByTag = {
-    1: WatchRoomMembersEvent_Event.observed,
-    2: WatchRoomMembersEvent_Event.changed,
-    3: WatchRoomMembersEvent_Event.error,
-    0: WatchRoomMembersEvent_Event.notSet
+  static const $core.Map<$core.int, WatchRoomMemberEventsEvent_Event>
+      _WatchRoomMemberEventsEvent_EventByTag = {
+    1: WatchRoomMemberEventsEvent_Event.observed,
+    2: WatchRoomMemberEventsEvent_Event.resourceEvent,
+    3: WatchRoomMemberEventsEvent_Event.error,
+    0: WatchRoomMemberEventsEvent_Event.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WatchRoomMembersEvent',
+      _omitMessageNames ? '' : 'WatchRoomMemberEventsEvent',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..oo(0, [1, 2, 3])
     ..aOM<ResourceObserved>(1, _omitFieldNames ? '' : 'observed',
         subBuilder: ResourceObserved.create)
-    ..aOM<ResourceChanged>(2, _omitFieldNames ? '' : 'changed',
-        subBuilder: ResourceChanged.create)
+    ..aOM<ResourceEvent>(2, _omitFieldNames ? '' : 'resourceEvent',
+        subBuilder: ResourceEvent.create)
     ..aOM<ResourceObserveError>(3, _omitFieldNames ? '' : 'error',
         subBuilder: ResourceObserveError.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchRoomMembersEvent clone() => deepCopy();
+  WatchRoomMemberEventsEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WatchRoomMembersEvent copyWith(
-          void Function(WatchRoomMembersEvent) updates) =>
-      super.copyWith((message) => updates(message as WatchRoomMembersEvent))
-          as WatchRoomMembersEvent;
+  WatchRoomMemberEventsEvent copyWith(
+          void Function(WatchRoomMemberEventsEvent) updates) =>
+      super.copyWith(
+              (message) => updates(message as WatchRoomMemberEventsEvent))
+          as WatchRoomMemberEventsEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WatchRoomMembersEvent create() => WatchRoomMembersEvent._();
+  static WatchRoomMemberEventsEvent create() => WatchRoomMemberEventsEvent._();
   @$core.override
-  WatchRoomMembersEvent createEmptyInstance() => create();
+  WatchRoomMemberEventsEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WatchRoomMembersEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WatchRoomMembersEvent>(create);
-  static WatchRoomMembersEvent? _defaultInstance;
+  static WatchRoomMemberEventsEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WatchRoomMemberEventsEvent>(create);
+  static WatchRoomMemberEventsEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
-  WatchRoomMembersEvent_Event whichEvent() =>
-      _WatchRoomMembersEvent_EventByTag[$_whichOneof(0)]!;
+  WatchRoomMemberEventsEvent_Event whichEvent() =>
+      _WatchRoomMemberEventsEvent_EventByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
@@ -14041,15 +16058,15 @@ class WatchRoomMembersEvent extends $pb.GeneratedMessage {
   ResourceObserved ensureObserved() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  ResourceChanged get changed => $_getN(1);
+  ResourceEvent get resourceEvent => $_getN(1);
   @$pb.TagNumber(2)
-  set changed(ResourceChanged value) => $_setField(2, value);
+  set resourceEvent(ResourceEvent value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasChanged() => $_has(1);
+  $core.bool hasResourceEvent() => $_has(1);
   @$pb.TagNumber(2)
-  void clearChanged() => $_clearField(2);
+  void clearResourceEvent() => $_clearField(2);
   @$pb.TagNumber(2)
-  ResourceChanged ensureChanged() => $_ensure(1);
+  ResourceEvent ensureResourceEvent() => $_ensure(1);
 
   @$pb.TagNumber(3)
   ResourceObserveError get error => $_getN(2);
@@ -14063,17 +16080,17 @@ class WatchRoomMembersEvent extends $pb.GeneratedMessage {
   ResourceObserveError ensureError() => $_ensure(2);
 }
 
-enum WatchChatEventsEvent_Event { observed, changed, error, notSet }
+enum WatchChatEventsEvent_Event { observed, resourceEvent, error, notSet }
 
 class WatchChatEventsEvent extends $pb.GeneratedMessage {
   factory WatchChatEventsEvent({
     ResourceObserved? observed,
-    ResourceChanged? changed,
+    ResourceEvent? resourceEvent,
     ResourceObserveError? error,
   }) {
     final result = create();
     if (observed != null) result.observed = observed;
-    if (changed != null) result.changed = changed;
+    if (resourceEvent != null) result.resourceEvent = resourceEvent;
     if (error != null) result.error = error;
     return result;
   }
@@ -14090,7 +16107,7 @@ class WatchChatEventsEvent extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, WatchChatEventsEvent_Event>
       _WatchChatEventsEvent_EventByTag = {
     1: WatchChatEventsEvent_Event.observed,
-    2: WatchChatEventsEvent_Event.changed,
+    2: WatchChatEventsEvent_Event.resourceEvent,
     3: WatchChatEventsEvent_Event.error,
     0: WatchChatEventsEvent_Event.notSet
   };
@@ -14101,8 +16118,8 @@ class WatchChatEventsEvent extends $pb.GeneratedMessage {
     ..oo(0, [1, 2, 3])
     ..aOM<ResourceObserved>(1, _omitFieldNames ? '' : 'observed',
         subBuilder: ResourceObserved.create)
-    ..aOM<ResourceChanged>(2, _omitFieldNames ? '' : 'changed',
-        subBuilder: ResourceChanged.create)
+    ..aOM<ResourceEvent>(2, _omitFieldNames ? '' : 'resourceEvent',
+        subBuilder: ResourceEvent.create)
     ..aOM<ResourceObserveError>(3, _omitFieldNames ? '' : 'error',
         subBuilder: ResourceObserveError.create)
     ..hasRequiredFields = false;
@@ -14148,15 +16165,15 @@ class WatchChatEventsEvent extends $pb.GeneratedMessage {
   ResourceObserved ensureObserved() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  ResourceChanged get changed => $_getN(1);
+  ResourceEvent get resourceEvent => $_getN(1);
   @$pb.TagNumber(2)
-  set changed(ResourceChanged value) => $_setField(2, value);
+  set resourceEvent(ResourceEvent value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasChanged() => $_has(1);
+  $core.bool hasResourceEvent() => $_has(1);
   @$pb.TagNumber(2)
-  void clearChanged() => $_clearField(2);
+  void clearResourceEvent() => $_clearField(2);
   @$pb.TagNumber(2)
-  ResourceChanged ensureChanged() => $_ensure(1);
+  ResourceEvent ensureResourceEvent() => $_ensure(1);
 
   @$pb.TagNumber(3)
   ResourceObserveError get error => $_getN(2);
@@ -14170,177 +16187,33 @@ class WatchChatEventsEvent extends $pb.GeneratedMessage {
   ResourceObserveError ensureError() => $_ensure(2);
 }
 
-/// Client -> Server: periodic playback progress heartbeat
-/// Sent every few seconds by clients that are actively playing media.
-/// The server uses these reports to track actual client playback positions,
-/// detect drift between clients, and provide accurate positions to new joiners.
-class PlaybackProgressReport extends $pb.GeneratedMessage {
-  factory PlaybackProgressReport({
-    $core.double? position,
-    $core.bool? isPlaying,
-  }) {
-    final result = create();
-    if (position != null) result.position = position;
-    if (isPlaying != null) result.isPlaying = isPlaying;
-    return result;
-  }
-
-  PlaybackProgressReport._();
-
-  factory PlaybackProgressReport.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory PlaybackProgressReport.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlaybackProgressReport',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aD(1, _omitFieldNames ? '' : 'position')
-    ..aOB(2, _omitFieldNames ? '' : 'isPlaying')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaybackProgressReport clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaybackProgressReport copyWith(
-          void Function(PlaybackProgressReport) updates) =>
-      super.copyWith((message) => updates(message as PlaybackProgressReport))
-          as PlaybackProgressReport;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PlaybackProgressReport create() => PlaybackProgressReport._();
-  @$core.override
-  PlaybackProgressReport createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static PlaybackProgressReport getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlaybackProgressReport>(create);
-  static PlaybackProgressReport? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.double get position => $_getN(0);
-  @$pb.TagNumber(1)
-  set position($core.double value) => $_setDouble(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasPosition() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearPosition() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.bool get isPlaying => $_getBF(1);
-  @$pb.TagNumber(2)
-  set isPlaying($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasIsPlaying() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearIsPlaying() => $_clearField(2);
-}
-
 enum ServerMessage_Message {
-  chat,
-  playbackState,
-  userJoined,
-  userLeft,
-  roomSettings,
   heartbeatAck,
   error,
-  mediaAdded,
-  mediaRemoved,
-  mediaRemovedBatch,
-  permissionChanged,
-  playlistCreated,
-  playlistUpdated,
-  playlistDeleted,
-  playlistReordered,
-  playingChanged,
-  webrtcOffer,
-  webrtcAnswer,
-  webrtcIceCandidate,
-  webrtcJoin,
-  webrtcLeave,
   notification,
-  mediaUpdated,
-  playbackSnapshot,
-  playlistItems,
-  roomMembers,
   resourceObserved,
-  resourceChanged,
+  resourceEvent,
   resourceObserveError,
-  chatEvent,
   notSet
 }
 
 class ServerMessage extends $pb.GeneratedMessage {
   factory ServerMessage({
-    ChatMessageReceive? chat,
-    PlaybackStateChanged? playbackState,
-    UserJoinedRoom? userJoined,
-    UserLeftRoom? userLeft,
-    RoomSettingsChanged? roomSettings,
     HeartbeatAck? heartbeatAck,
     ErrorMessage? error,
-    MediaAdded? mediaAdded,
-    MediaRemoved? mediaRemoved,
-    MediaRemovedBatch? mediaRemovedBatch,
-    PermissionChanged? permissionChanged,
-    PlaylistCreated? playlistCreated,
-    PlaylistUpdated? playlistUpdated,
-    PlaylistDeleted? playlistDeleted,
-    PlaylistReordered? playlistReordered,
-    PlayingChanged? playingChanged,
-    WebRTCOffer? webrtcOffer,
-    WebRTCAnswer? webrtcAnswer,
-    WebRTCIceCandidate? webrtcIceCandidate,
-    WebRTCJoin? webrtcJoin,
-    WebRTCLeave? webrtcLeave,
     UserNotification? notification,
-    MediaUpdated? mediaUpdated,
-    PlaybackSnapshotChanged? playbackSnapshot,
-    PlaylistItemsChanged? playlistItems,
-    RoomMembersChanged? roomMembers,
     ResourceObserved? resourceObserved,
-    ResourceChanged? resourceChanged,
+    ResourceEvent? resourceEvent,
     ResourceObserveError? resourceObserveError,
-    ChatMessageEvent? chatEvent,
   }) {
     final result = create();
-    if (chat != null) result.chat = chat;
-    if (playbackState != null) result.playbackState = playbackState;
-    if (userJoined != null) result.userJoined = userJoined;
-    if (userLeft != null) result.userLeft = userLeft;
-    if (roomSettings != null) result.roomSettings = roomSettings;
     if (heartbeatAck != null) result.heartbeatAck = heartbeatAck;
     if (error != null) result.error = error;
-    if (mediaAdded != null) result.mediaAdded = mediaAdded;
-    if (mediaRemoved != null) result.mediaRemoved = mediaRemoved;
-    if (mediaRemovedBatch != null) result.mediaRemovedBatch = mediaRemovedBatch;
-    if (permissionChanged != null) result.permissionChanged = permissionChanged;
-    if (playlistCreated != null) result.playlistCreated = playlistCreated;
-    if (playlistUpdated != null) result.playlistUpdated = playlistUpdated;
-    if (playlistDeleted != null) result.playlistDeleted = playlistDeleted;
-    if (playlistReordered != null) result.playlistReordered = playlistReordered;
-    if (playingChanged != null) result.playingChanged = playingChanged;
-    if (webrtcOffer != null) result.webrtcOffer = webrtcOffer;
-    if (webrtcAnswer != null) result.webrtcAnswer = webrtcAnswer;
-    if (webrtcIceCandidate != null)
-      result.webrtcIceCandidate = webrtcIceCandidate;
-    if (webrtcJoin != null) result.webrtcJoin = webrtcJoin;
-    if (webrtcLeave != null) result.webrtcLeave = webrtcLeave;
     if (notification != null) result.notification = notification;
-    if (mediaUpdated != null) result.mediaUpdated = mediaUpdated;
-    if (playbackSnapshot != null) result.playbackSnapshot = playbackSnapshot;
-    if (playlistItems != null) result.playlistItems = playlistItems;
-    if (roomMembers != null) result.roomMembers = roomMembers;
     if (resourceObserved != null) result.resourceObserved = resourceObserved;
-    if (resourceChanged != null) result.resourceChanged = resourceChanged;
+    if (resourceEvent != null) result.resourceEvent = resourceEvent;
     if (resourceObserveError != null)
       result.resourceObserveError = resourceObserveError;
-    if (chatEvent != null) result.chatEvent = chatEvent;
     return result;
   }
 
@@ -14355,136 +16228,32 @@ class ServerMessage extends $pb.GeneratedMessage {
 
   static const $core.Map<$core.int, ServerMessage_Message>
       _ServerMessage_MessageByTag = {
-    1: ServerMessage_Message.chat,
-    2: ServerMessage_Message.playbackState,
-    3: ServerMessage_Message.userJoined,
-    4: ServerMessage_Message.userLeft,
-    5: ServerMessage_Message.roomSettings,
     6: ServerMessage_Message.heartbeatAck,
     7: ServerMessage_Message.error,
-    8: ServerMessage_Message.mediaAdded,
-    9: ServerMessage_Message.mediaRemoved,
-    10: ServerMessage_Message.mediaRemovedBatch,
-    11: ServerMessage_Message.permissionChanged,
-    12: ServerMessage_Message.playlistCreated,
-    13: ServerMessage_Message.playlistUpdated,
-    14: ServerMessage_Message.playlistDeleted,
-    15: ServerMessage_Message.playlistReordered,
-    16: ServerMessage_Message.playingChanged,
-    17: ServerMessage_Message.webrtcOffer,
-    18: ServerMessage_Message.webrtcAnswer,
-    19: ServerMessage_Message.webrtcIceCandidate,
-    20: ServerMessage_Message.webrtcJoin,
-    21: ServerMessage_Message.webrtcLeave,
     24: ServerMessage_Message.notification,
-    25: ServerMessage_Message.mediaUpdated,
-    26: ServerMessage_Message.playbackSnapshot,
-    27: ServerMessage_Message.playlistItems,
-    28: ServerMessage_Message.roomMembers,
     29: ServerMessage_Message.resourceObserved,
-    30: ServerMessage_Message.resourceChanged,
+    30: ServerMessage_Message.resourceEvent,
     31: ServerMessage_Message.resourceObserveError,
-    32: ServerMessage_Message.chatEvent,
     0: ServerMessage_Message.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ServerMessage',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
-      20,
-      21,
-      24,
-      25,
-      26,
-      27,
-      28,
-      29,
-      30,
-      31,
-      32
-    ])
-    ..aOM<ChatMessageReceive>(1, _omitFieldNames ? '' : 'chat',
-        subBuilder: ChatMessageReceive.create)
-    ..aOM<PlaybackStateChanged>(2, _omitFieldNames ? '' : 'playbackState',
-        subBuilder: PlaybackStateChanged.create)
-    ..aOM<UserJoinedRoom>(3, _omitFieldNames ? '' : 'userJoined',
-        subBuilder: UserJoinedRoom.create)
-    ..aOM<UserLeftRoom>(4, _omitFieldNames ? '' : 'userLeft',
-        subBuilder: UserLeftRoom.create)
-    ..aOM<RoomSettingsChanged>(5, _omitFieldNames ? '' : 'roomSettings',
-        subBuilder: RoomSettingsChanged.create)
+    ..oo(0, [6, 7, 24, 29, 30, 31])
     ..aOM<HeartbeatAck>(6, _omitFieldNames ? '' : 'heartbeatAck',
         subBuilder: HeartbeatAck.create)
     ..aOM<ErrorMessage>(7, _omitFieldNames ? '' : 'error',
         subBuilder: ErrorMessage.create)
-    ..aOM<MediaAdded>(8, _omitFieldNames ? '' : 'mediaAdded',
-        subBuilder: MediaAdded.create)
-    ..aOM<MediaRemoved>(9, _omitFieldNames ? '' : 'mediaRemoved',
-        subBuilder: MediaRemoved.create)
-    ..aOM<MediaRemovedBatch>(10, _omitFieldNames ? '' : 'mediaRemovedBatch',
-        subBuilder: MediaRemovedBatch.create)
-    ..aOM<PermissionChanged>(11, _omitFieldNames ? '' : 'permissionChanged',
-        subBuilder: PermissionChanged.create)
-    ..aOM<PlaylistCreated>(12, _omitFieldNames ? '' : 'playlistCreated',
-        subBuilder: PlaylistCreated.create)
-    ..aOM<PlaylistUpdated>(13, _omitFieldNames ? '' : 'playlistUpdated',
-        subBuilder: PlaylistUpdated.create)
-    ..aOM<PlaylistDeleted>(14, _omitFieldNames ? '' : 'playlistDeleted',
-        subBuilder: PlaylistDeleted.create)
-    ..aOM<PlaylistReordered>(15, _omitFieldNames ? '' : 'playlistReordered',
-        subBuilder: PlaylistReordered.create)
-    ..aOM<PlayingChanged>(16, _omitFieldNames ? '' : 'playingChanged',
-        subBuilder: PlayingChanged.create)
-    ..aOM<WebRTCOffer>(17, _omitFieldNames ? '' : 'webrtcOffer',
-        subBuilder: WebRTCOffer.create)
-    ..aOM<WebRTCAnswer>(18, _omitFieldNames ? '' : 'webrtcAnswer',
-        subBuilder: WebRTCAnswer.create)
-    ..aOM<WebRTCIceCandidate>(19, _omitFieldNames ? '' : 'webrtcIceCandidate',
-        subBuilder: WebRTCIceCandidate.create)
-    ..aOM<WebRTCJoin>(20, _omitFieldNames ? '' : 'webrtcJoin',
-        subBuilder: WebRTCJoin.create)
-    ..aOM<WebRTCLeave>(21, _omitFieldNames ? '' : 'webrtcLeave',
-        subBuilder: WebRTCLeave.create)
     ..aOM<UserNotification>(24, _omitFieldNames ? '' : 'notification',
         subBuilder: UserNotification.create)
-    ..aOM<MediaUpdated>(25, _omitFieldNames ? '' : 'mediaUpdated',
-        subBuilder: MediaUpdated.create)
-    ..aOM<PlaybackSnapshotChanged>(
-        26, _omitFieldNames ? '' : 'playbackSnapshot',
-        subBuilder: PlaybackSnapshotChanged.create)
-    ..aOM<PlaylistItemsChanged>(27, _omitFieldNames ? '' : 'playlistItems',
-        subBuilder: PlaylistItemsChanged.create)
-    ..aOM<RoomMembersChanged>(28, _omitFieldNames ? '' : 'roomMembers',
-        subBuilder: RoomMembersChanged.create)
     ..aOM<ResourceObserved>(29, _omitFieldNames ? '' : 'resourceObserved',
         subBuilder: ResourceObserved.create)
-    ..aOM<ResourceChanged>(30, _omitFieldNames ? '' : 'resourceChanged',
-        subBuilder: ResourceChanged.create)
+    ..aOM<ResourceEvent>(30, _omitFieldNames ? '' : 'resourceEvent',
+        subBuilder: ResourceEvent.create)
     ..aOM<ResourceObserveError>(
         31, _omitFieldNames ? '' : 'resourceObserveError',
         subBuilder: ResourceObserveError.create)
-    ..aOM<ChatMessageEvent>(32, _omitFieldNames ? '' : 'chatEvent',
-        subBuilder: ChatMessageEvent.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -14506,413 +16275,100 @@ class ServerMessage extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ServerMessage>(create);
   static ServerMessage? _defaultInstance;
 
-  @$pb.TagNumber(1)
-  @$pb.TagNumber(2)
-  @$pb.TagNumber(3)
-  @$pb.TagNumber(4)
-  @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
-  @$pb.TagNumber(12)
-  @$pb.TagNumber(13)
-  @$pb.TagNumber(14)
-  @$pb.TagNumber(15)
-  @$pb.TagNumber(16)
-  @$pb.TagNumber(17)
-  @$pb.TagNumber(18)
-  @$pb.TagNumber(19)
-  @$pb.TagNumber(20)
-  @$pb.TagNumber(21)
   @$pb.TagNumber(24)
-  @$pb.TagNumber(25)
-  @$pb.TagNumber(26)
-  @$pb.TagNumber(27)
-  @$pb.TagNumber(28)
   @$pb.TagNumber(29)
   @$pb.TagNumber(30)
   @$pb.TagNumber(31)
-  @$pb.TagNumber(32)
   ServerMessage_Message whichMessage() =>
       _ServerMessage_MessageByTag[$_whichOneof(0)]!;
-  @$pb.TagNumber(1)
-  @$pb.TagNumber(2)
-  @$pb.TagNumber(3)
-  @$pb.TagNumber(4)
-  @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
-  @$pb.TagNumber(12)
-  @$pb.TagNumber(13)
-  @$pb.TagNumber(14)
-  @$pb.TagNumber(15)
-  @$pb.TagNumber(16)
-  @$pb.TagNumber(17)
-  @$pb.TagNumber(18)
-  @$pb.TagNumber(19)
-  @$pb.TagNumber(20)
-  @$pb.TagNumber(21)
   @$pb.TagNumber(24)
-  @$pb.TagNumber(25)
-  @$pb.TagNumber(26)
-  @$pb.TagNumber(27)
-  @$pb.TagNumber(28)
   @$pb.TagNumber(29)
   @$pb.TagNumber(30)
   @$pb.TagNumber(31)
-  @$pb.TagNumber(32)
   void clearMessage() => $_clearField($_whichOneof(0));
 
-  @$pb.TagNumber(1)
-  ChatMessageReceive get chat => $_getN(0);
-  @$pb.TagNumber(1)
-  set chat(ChatMessageReceive value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasChat() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearChat() => $_clearField(1);
-  @$pb.TagNumber(1)
-  ChatMessageReceive ensureChat() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  PlaybackStateChanged get playbackState => $_getN(1);
-  @$pb.TagNumber(2)
-  set playbackState(PlaybackStateChanged value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPlaybackState() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPlaybackState() => $_clearField(2);
-  @$pb.TagNumber(2)
-  PlaybackStateChanged ensurePlaybackState() => $_ensure(1);
-
-  @$pb.TagNumber(3)
-  UserJoinedRoom get userJoined => $_getN(2);
-  @$pb.TagNumber(3)
-  set userJoined(UserJoinedRoom value) => $_setField(3, value);
-  @$pb.TagNumber(3)
-  $core.bool hasUserJoined() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearUserJoined() => $_clearField(3);
-  @$pb.TagNumber(3)
-  UserJoinedRoom ensureUserJoined() => $_ensure(2);
-
-  @$pb.TagNumber(4)
-  UserLeftRoom get userLeft => $_getN(3);
-  @$pb.TagNumber(4)
-  set userLeft(UserLeftRoom value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasUserLeft() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearUserLeft() => $_clearField(4);
-  @$pb.TagNumber(4)
-  UserLeftRoom ensureUserLeft() => $_ensure(3);
-
-  @$pb.TagNumber(5)
-  RoomSettingsChanged get roomSettings => $_getN(4);
-  @$pb.TagNumber(5)
-  set roomSettings(RoomSettingsChanged value) => $_setField(5, value);
-  @$pb.TagNumber(5)
-  $core.bool hasRoomSettings() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearRoomSettings() => $_clearField(5);
-  @$pb.TagNumber(5)
-  RoomSettingsChanged ensureRoomSettings() => $_ensure(4);
-
   @$pb.TagNumber(6)
-  HeartbeatAck get heartbeatAck => $_getN(5);
+  HeartbeatAck get heartbeatAck => $_getN(0);
   @$pb.TagNumber(6)
   set heartbeatAck(HeartbeatAck value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasHeartbeatAck() => $_has(5);
+  $core.bool hasHeartbeatAck() => $_has(0);
   @$pb.TagNumber(6)
   void clearHeartbeatAck() => $_clearField(6);
   @$pb.TagNumber(6)
-  HeartbeatAck ensureHeartbeatAck() => $_ensure(5);
+  HeartbeatAck ensureHeartbeatAck() => $_ensure(0);
 
   @$pb.TagNumber(7)
-  ErrorMessage get error => $_getN(6);
+  ErrorMessage get error => $_getN(1);
   @$pb.TagNumber(7)
   set error(ErrorMessage value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasError() => $_has(6);
+  $core.bool hasError() => $_has(1);
   @$pb.TagNumber(7)
   void clearError() => $_clearField(7);
   @$pb.TagNumber(7)
-  ErrorMessage ensureError() => $_ensure(6);
-
-  @$pb.TagNumber(8)
-  MediaAdded get mediaAdded => $_getN(7);
-  @$pb.TagNumber(8)
-  set mediaAdded(MediaAdded value) => $_setField(8, value);
-  @$pb.TagNumber(8)
-  $core.bool hasMediaAdded() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearMediaAdded() => $_clearField(8);
-  @$pb.TagNumber(8)
-  MediaAdded ensureMediaAdded() => $_ensure(7);
-
-  @$pb.TagNumber(9)
-  MediaRemoved get mediaRemoved => $_getN(8);
-  @$pb.TagNumber(9)
-  set mediaRemoved(MediaRemoved value) => $_setField(9, value);
-  @$pb.TagNumber(9)
-  $core.bool hasMediaRemoved() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearMediaRemoved() => $_clearField(9);
-  @$pb.TagNumber(9)
-  MediaRemoved ensureMediaRemoved() => $_ensure(8);
-
-  @$pb.TagNumber(10)
-  MediaRemovedBatch get mediaRemovedBatch => $_getN(9);
-  @$pb.TagNumber(10)
-  set mediaRemovedBatch(MediaRemovedBatch value) => $_setField(10, value);
-  @$pb.TagNumber(10)
-  $core.bool hasMediaRemovedBatch() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearMediaRemovedBatch() => $_clearField(10);
-  @$pb.TagNumber(10)
-  MediaRemovedBatch ensureMediaRemovedBatch() => $_ensure(9);
-
-  @$pb.TagNumber(11)
-  PermissionChanged get permissionChanged => $_getN(10);
-  @$pb.TagNumber(11)
-  set permissionChanged(PermissionChanged value) => $_setField(11, value);
-  @$pb.TagNumber(11)
-  $core.bool hasPermissionChanged() => $_has(10);
-  @$pb.TagNumber(11)
-  void clearPermissionChanged() => $_clearField(11);
-  @$pb.TagNumber(11)
-  PermissionChanged ensurePermissionChanged() => $_ensure(10);
-
-  @$pb.TagNumber(12)
-  PlaylistCreated get playlistCreated => $_getN(11);
-  @$pb.TagNumber(12)
-  set playlistCreated(PlaylistCreated value) => $_setField(12, value);
-  @$pb.TagNumber(12)
-  $core.bool hasPlaylistCreated() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearPlaylistCreated() => $_clearField(12);
-  @$pb.TagNumber(12)
-  PlaylistCreated ensurePlaylistCreated() => $_ensure(11);
-
-  @$pb.TagNumber(13)
-  PlaylistUpdated get playlistUpdated => $_getN(12);
-  @$pb.TagNumber(13)
-  set playlistUpdated(PlaylistUpdated value) => $_setField(13, value);
-  @$pb.TagNumber(13)
-  $core.bool hasPlaylistUpdated() => $_has(12);
-  @$pb.TagNumber(13)
-  void clearPlaylistUpdated() => $_clearField(13);
-  @$pb.TagNumber(13)
-  PlaylistUpdated ensurePlaylistUpdated() => $_ensure(12);
-
-  @$pb.TagNumber(14)
-  PlaylistDeleted get playlistDeleted => $_getN(13);
-  @$pb.TagNumber(14)
-  set playlistDeleted(PlaylistDeleted value) => $_setField(14, value);
-  @$pb.TagNumber(14)
-  $core.bool hasPlaylistDeleted() => $_has(13);
-  @$pb.TagNumber(14)
-  void clearPlaylistDeleted() => $_clearField(14);
-  @$pb.TagNumber(14)
-  PlaylistDeleted ensurePlaylistDeleted() => $_ensure(13);
-
-  @$pb.TagNumber(15)
-  PlaylistReordered get playlistReordered => $_getN(14);
-  @$pb.TagNumber(15)
-  set playlistReordered(PlaylistReordered value) => $_setField(15, value);
-  @$pb.TagNumber(15)
-  $core.bool hasPlaylistReordered() => $_has(14);
-  @$pb.TagNumber(15)
-  void clearPlaylistReordered() => $_clearField(15);
-  @$pb.TagNumber(15)
-  PlaylistReordered ensurePlaylistReordered() => $_ensure(14);
-
-  @$pb.TagNumber(16)
-  PlayingChanged get playingChanged => $_getN(15);
-  @$pb.TagNumber(16)
-  set playingChanged(PlayingChanged value) => $_setField(16, value);
-  @$pb.TagNumber(16)
-  $core.bool hasPlayingChanged() => $_has(15);
-  @$pb.TagNumber(16)
-  void clearPlayingChanged() => $_clearField(16);
-  @$pb.TagNumber(16)
-  PlayingChanged ensurePlayingChanged() => $_ensure(15);
-
-  /// WebRTC signaling messages (forwarded from other peers)
-  @$pb.TagNumber(17)
-  WebRTCOffer get webrtcOffer => $_getN(16);
-  @$pb.TagNumber(17)
-  set webrtcOffer(WebRTCOffer value) => $_setField(17, value);
-  @$pb.TagNumber(17)
-  $core.bool hasWebrtcOffer() => $_has(16);
-  @$pb.TagNumber(17)
-  void clearWebrtcOffer() => $_clearField(17);
-  @$pb.TagNumber(17)
-  WebRTCOffer ensureWebrtcOffer() => $_ensure(16);
-
-  @$pb.TagNumber(18)
-  WebRTCAnswer get webrtcAnswer => $_getN(17);
-  @$pb.TagNumber(18)
-  set webrtcAnswer(WebRTCAnswer value) => $_setField(18, value);
-  @$pb.TagNumber(18)
-  $core.bool hasWebrtcAnswer() => $_has(17);
-  @$pb.TagNumber(18)
-  void clearWebrtcAnswer() => $_clearField(18);
-  @$pb.TagNumber(18)
-  WebRTCAnswer ensureWebrtcAnswer() => $_ensure(17);
-
-  @$pb.TagNumber(19)
-  WebRTCIceCandidate get webrtcIceCandidate => $_getN(18);
-  @$pb.TagNumber(19)
-  set webrtcIceCandidate(WebRTCIceCandidate value) => $_setField(19, value);
-  @$pb.TagNumber(19)
-  $core.bool hasWebrtcIceCandidate() => $_has(18);
-  @$pb.TagNumber(19)
-  void clearWebrtcIceCandidate() => $_clearField(19);
-  @$pb.TagNumber(19)
-  WebRTCIceCandidate ensureWebrtcIceCandidate() => $_ensure(18);
-
-  @$pb.TagNumber(20)
-  WebRTCJoin get webrtcJoin => $_getN(19);
-  @$pb.TagNumber(20)
-  set webrtcJoin(WebRTCJoin value) => $_setField(20, value);
-  @$pb.TagNumber(20)
-  $core.bool hasWebrtcJoin() => $_has(19);
-  @$pb.TagNumber(20)
-  void clearWebrtcJoin() => $_clearField(20);
-  @$pb.TagNumber(20)
-  WebRTCJoin ensureWebrtcJoin() => $_ensure(19);
-
-  @$pb.TagNumber(21)
-  WebRTCLeave get webrtcLeave => $_getN(20);
-  @$pb.TagNumber(21)
-  set webrtcLeave(WebRTCLeave value) => $_setField(21, value);
-  @$pb.TagNumber(21)
-  $core.bool hasWebrtcLeave() => $_has(20);
-  @$pb.TagNumber(21)
-  void clearWebrtcLeave() => $_clearField(21);
-  @$pb.TagNumber(21)
-  WebRTCLeave ensureWebrtcLeave() => $_ensure(20);
+  ErrorMessage ensureError() => $_ensure(1);
 
   /// User notification push (replaces NOTIFICATION_PUSH error code abuse)
   @$pb.TagNumber(24)
-  UserNotification get notification => $_getN(21);
+  UserNotification get notification => $_getN(2);
   @$pb.TagNumber(24)
   set notification(UserNotification value) => $_setField(24, value);
   @$pb.TagNumber(24)
-  $core.bool hasNotification() => $_has(21);
+  $core.bool hasNotification() => $_has(2);
   @$pb.TagNumber(24)
   void clearNotification() => $_clearField(24);
   @$pb.TagNumber(24)
-  UserNotification ensureNotification() => $_ensure(21);
-
-  @$pb.TagNumber(25)
-  MediaUpdated get mediaUpdated => $_getN(22);
-  @$pb.TagNumber(25)
-  set mediaUpdated(MediaUpdated value) => $_setField(25, value);
-  @$pb.TagNumber(25)
-  $core.bool hasMediaUpdated() => $_has(22);
-  @$pb.TagNumber(25)
-  void clearMediaUpdated() => $_clearField(25);
-  @$pb.TagNumber(25)
-  MediaUpdated ensureMediaUpdated() => $_ensure(22);
-
-  @$pb.TagNumber(26)
-  PlaybackSnapshotChanged get playbackSnapshot => $_getN(23);
-  @$pb.TagNumber(26)
-  set playbackSnapshot(PlaybackSnapshotChanged value) => $_setField(26, value);
-  @$pb.TagNumber(26)
-  $core.bool hasPlaybackSnapshot() => $_has(23);
-  @$pb.TagNumber(26)
-  void clearPlaybackSnapshot() => $_clearField(26);
-  @$pb.TagNumber(26)
-  PlaybackSnapshotChanged ensurePlaybackSnapshot() => $_ensure(23);
-
-  @$pb.TagNumber(27)
-  PlaylistItemsChanged get playlistItems => $_getN(24);
-  @$pb.TagNumber(27)
-  set playlistItems(PlaylistItemsChanged value) => $_setField(27, value);
-  @$pb.TagNumber(27)
-  $core.bool hasPlaylistItems() => $_has(24);
-  @$pb.TagNumber(27)
-  void clearPlaylistItems() => $_clearField(27);
-  @$pb.TagNumber(27)
-  PlaylistItemsChanged ensurePlaylistItems() => $_ensure(24);
-
-  @$pb.TagNumber(28)
-  RoomMembersChanged get roomMembers => $_getN(25);
-  @$pb.TagNumber(28)
-  set roomMembers(RoomMembersChanged value) => $_setField(28, value);
-  @$pb.TagNumber(28)
-  $core.bool hasRoomMembers() => $_has(25);
-  @$pb.TagNumber(28)
-  void clearRoomMembers() => $_clearField(28);
-  @$pb.TagNumber(28)
-  RoomMembersChanged ensureRoomMembers() => $_ensure(25);
+  UserNotification ensureNotification() => $_ensure(2);
 
   @$pb.TagNumber(29)
-  ResourceObserved get resourceObserved => $_getN(26);
+  ResourceObserved get resourceObserved => $_getN(3);
   @$pb.TagNumber(29)
   set resourceObserved(ResourceObserved value) => $_setField(29, value);
   @$pb.TagNumber(29)
-  $core.bool hasResourceObserved() => $_has(26);
+  $core.bool hasResourceObserved() => $_has(3);
   @$pb.TagNumber(29)
   void clearResourceObserved() => $_clearField(29);
   @$pb.TagNumber(29)
-  ResourceObserved ensureResourceObserved() => $_ensure(26);
+  ResourceObserved ensureResourceObserved() => $_ensure(3);
 
   @$pb.TagNumber(30)
-  ResourceChanged get resourceChanged => $_getN(27);
+  ResourceEvent get resourceEvent => $_getN(4);
   @$pb.TagNumber(30)
-  set resourceChanged(ResourceChanged value) => $_setField(30, value);
+  set resourceEvent(ResourceEvent value) => $_setField(30, value);
   @$pb.TagNumber(30)
-  $core.bool hasResourceChanged() => $_has(27);
+  $core.bool hasResourceEvent() => $_has(4);
   @$pb.TagNumber(30)
-  void clearResourceChanged() => $_clearField(30);
+  void clearResourceEvent() => $_clearField(30);
   @$pb.TagNumber(30)
-  ResourceChanged ensureResourceChanged() => $_ensure(27);
+  ResourceEvent ensureResourceEvent() => $_ensure(4);
 
   @$pb.TagNumber(31)
-  ResourceObserveError get resourceObserveError => $_getN(28);
+  ResourceObserveError get resourceObserveError => $_getN(5);
   @$pb.TagNumber(31)
   set resourceObserveError(ResourceObserveError value) => $_setField(31, value);
   @$pb.TagNumber(31)
-  $core.bool hasResourceObserveError() => $_has(28);
+  $core.bool hasResourceObserveError() => $_has(5);
   @$pb.TagNumber(31)
   void clearResourceObserveError() => $_clearField(31);
   @$pb.TagNumber(31)
-  ResourceObserveError ensureResourceObserveError() => $_ensure(28);
-
-  @$pb.TagNumber(32)
-  ChatMessageEvent get chatEvent => $_getN(29);
-  @$pb.TagNumber(32)
-  set chatEvent(ChatMessageEvent value) => $_setField(32, value);
-  @$pb.TagNumber(32)
-  $core.bool hasChatEvent() => $_has(29);
-  @$pb.TagNumber(32)
-  void clearChatEvent() => $_clearField(32);
-  @$pb.TagNumber(32)
-  ChatMessageEvent ensureChatEvent() => $_ensure(29);
+  ResourceObserveError ensureResourceObserveError() => $_ensure(5);
 }
 
 class ResourceObserved extends $pb.GeneratedMessage {
   factory ResourceObserved({
     $core.String? observeId,
-    $core.String? version,
     $core.bool? changed,
+    EventCursor? eventCursor,
   }) {
     final result = create();
     if (observeId != null) result.observeId = observeId;
-    if (version != null) result.version = version;
     if (changed != null) result.changed = changed;
+    if (eventCursor != null) result.eventCursor = eventCursor;
     return result;
   }
 
@@ -14930,8 +16386,9 @@ class ResourceObserved extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'observeId')
-    ..aOS(2, _omitFieldNames ? '' : 'version')
     ..aOB(3, _omitFieldNames ? '' : 'changed')
+    ..aOM<EventCursor>(4, _omitFieldNames ? '' : 'eventCursor',
+        subBuilder: EventCursor.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -14962,160 +16419,187 @@ class ResourceObserved extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearObserveId() => $_clearField(1);
 
-  @$pb.TagNumber(2)
-  $core.String get version => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set version($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasVersion() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearVersion() => $_clearField(2);
-
   @$pb.TagNumber(3)
-  $core.bool get changed => $_getBF(2);
+  $core.bool get changed => $_getBF(1);
   @$pb.TagNumber(3)
-  set changed($core.bool value) => $_setBool(2, value);
+  set changed($core.bool value) => $_setBool(1, value);
   @$pb.TagNumber(3)
-  $core.bool hasChanged() => $_has(2);
+  $core.bool hasChanged() => $_has(1);
   @$pb.TagNumber(3)
   void clearChanged() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  EventCursor get eventCursor => $_getN(2);
+  @$pb.TagNumber(4)
+  set eventCursor(EventCursor value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasEventCursor() => $_has(2);
+  @$pb.TagNumber(4)
+  void clearEventCursor() => $_clearField(4);
+  @$pb.TagNumber(4)
+  EventCursor ensureEventCursor() => $_ensure(2);
 }
 
-class ResourceChangedOnly extends $pb.GeneratedMessage {
-  factory ResourceChangedOnly() => create();
+class ResourceEventOnly extends $pb.GeneratedMessage {
+  factory ResourceEventOnly() => create();
 
-  ResourceChangedOnly._();
+  ResourceEventOnly._();
 
-  factory ResourceChangedOnly.fromBuffer($core.List<$core.int> data,
+  factory ResourceEventOnly.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory ResourceChangedOnly.fromJson($core.String json,
+  factory ResourceEventOnly.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ResourceChangedOnly',
+      _omitMessageNames ? '' : 'ResourceEventOnly',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ResourceChangedOnly clone() => deepCopy();
+  ResourceEventOnly clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ResourceChangedOnly copyWith(void Function(ResourceChangedOnly) updates) =>
-      super.copyWith((message) => updates(message as ResourceChangedOnly))
-          as ResourceChangedOnly;
+  ResourceEventOnly copyWith(void Function(ResourceEventOnly) updates) =>
+      super.copyWith((message) => updates(message as ResourceEventOnly))
+          as ResourceEventOnly;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ResourceChangedOnly create() => ResourceChangedOnly._();
+  static ResourceEventOnly create() => ResourceEventOnly._();
   @$core.override
-  ResourceChangedOnly createEmptyInstance() => create();
+  ResourceEventOnly createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ResourceChangedOnly getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ResourceChangedOnly>(create);
-  static ResourceChangedOnly? _defaultInstance;
+  static ResourceEventOnly getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ResourceEventOnly>(create);
+  static ResourceEventOnly? _defaultInstance;
 }
 
-enum ResourceChanged_Payload {
+enum ResourceEvent_Payload {
   changedOnly,
   playbackState,
-  playbackSnapshot,
+  playback,
   roomSettings,
   playlistItems,
-  roomMembers,
+  roomMemberEvent,
   chatEvent,
+  onlineCount,
+  onlineEvent,
+  webrtcEvent,
+  selfRoomMember,
   notSet
 }
 
-class ResourceChanged extends $pb.GeneratedMessage {
-  factory ResourceChanged({
+class ResourceEvent extends $pb.GeneratedMessage {
+  factory ResourceEvent({
     $core.String? observeId,
-    $core.String? version,
-    ResourceChangedOnly? changedOnly,
+    ResourceEventOnly? changedOnly,
     PlaybackState? playbackState,
-    PlaybackSnapshot? playbackSnapshot,
-    RoomSettingsChanged? roomSettings,
+    Playback? playback,
+    GetRoomSettingsResponse? roomSettings,
     ListPlaylistItemsResponse? playlistItems,
-    GetRoomMembersResponse? roomMembers,
+    RoomMemberEvent? roomMemberEvent,
     ChatMessageEvent? chatEvent,
+    OnlineCount? onlineCount,
+    EventCursor? eventCursor,
+    OnlineEvent? onlineEvent,
+    WebRtcEvent? webrtcEvent,
+    $0.RoomMember? selfRoomMember,
   }) {
     final result = create();
     if (observeId != null) result.observeId = observeId;
-    if (version != null) result.version = version;
     if (changedOnly != null) result.changedOnly = changedOnly;
     if (playbackState != null) result.playbackState = playbackState;
-    if (playbackSnapshot != null) result.playbackSnapshot = playbackSnapshot;
+    if (playback != null) result.playback = playback;
     if (roomSettings != null) result.roomSettings = roomSettings;
     if (playlistItems != null) result.playlistItems = playlistItems;
-    if (roomMembers != null) result.roomMembers = roomMembers;
+    if (roomMemberEvent != null) result.roomMemberEvent = roomMemberEvent;
     if (chatEvent != null) result.chatEvent = chatEvent;
+    if (onlineCount != null) result.onlineCount = onlineCount;
+    if (eventCursor != null) result.eventCursor = eventCursor;
+    if (onlineEvent != null) result.onlineEvent = onlineEvent;
+    if (webrtcEvent != null) result.webrtcEvent = webrtcEvent;
+    if (selfRoomMember != null) result.selfRoomMember = selfRoomMember;
     return result;
   }
 
-  ResourceChanged._();
+  ResourceEvent._();
 
-  factory ResourceChanged.fromBuffer($core.List<$core.int> data,
+  factory ResourceEvent.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory ResourceChanged.fromJson($core.String json,
+  factory ResourceEvent.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, ResourceChanged_Payload>
-      _ResourceChanged_PayloadByTag = {
-    3: ResourceChanged_Payload.changedOnly,
-    4: ResourceChanged_Payload.playbackState,
-    5: ResourceChanged_Payload.playbackSnapshot,
-    6: ResourceChanged_Payload.roomSettings,
-    7: ResourceChanged_Payload.playlistItems,
-    8: ResourceChanged_Payload.roomMembers,
-    9: ResourceChanged_Payload.chatEvent,
-    0: ResourceChanged_Payload.notSet
+  static const $core.Map<$core.int, ResourceEvent_Payload>
+      _ResourceEvent_PayloadByTag = {
+    3: ResourceEvent_Payload.changedOnly,
+    4: ResourceEvent_Payload.playbackState,
+    5: ResourceEvent_Payload.playback,
+    6: ResourceEvent_Payload.roomSettings,
+    7: ResourceEvent_Payload.playlistItems,
+    8: ResourceEvent_Payload.roomMemberEvent,
+    9: ResourceEvent_Payload.chatEvent,
+    10: ResourceEvent_Payload.onlineCount,
+    12: ResourceEvent_Payload.onlineEvent,
+    13: ResourceEvent_Payload.webrtcEvent,
+    14: ResourceEvent_Payload.selfRoomMember,
+    0: ResourceEvent_Payload.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ResourceChanged',
+      _omitMessageNames ? '' : 'ResourceEvent',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [3, 4, 5, 6, 7, 8, 9])
+    ..oo(0, [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14])
     ..aOS(1, _omitFieldNames ? '' : 'observeId')
-    ..aOS(2, _omitFieldNames ? '' : 'version')
-    ..aOM<ResourceChangedOnly>(3, _omitFieldNames ? '' : 'changedOnly',
-        subBuilder: ResourceChangedOnly.create)
+    ..aOM<ResourceEventOnly>(3, _omitFieldNames ? '' : 'changedOnly',
+        subBuilder: ResourceEventOnly.create)
     ..aOM<PlaybackState>(4, _omitFieldNames ? '' : 'playbackState',
         subBuilder: PlaybackState.create)
-    ..aOM<PlaybackSnapshot>(5, _omitFieldNames ? '' : 'playbackSnapshot',
-        subBuilder: PlaybackSnapshot.create)
-    ..aOM<RoomSettingsChanged>(6, _omitFieldNames ? '' : 'roomSettings',
-        subBuilder: RoomSettingsChanged.create)
+    ..aOM<Playback>(5, _omitFieldNames ? '' : 'playback',
+        subBuilder: Playback.create)
+    ..aOM<GetRoomSettingsResponse>(6, _omitFieldNames ? '' : 'roomSettings',
+        subBuilder: GetRoomSettingsResponse.create)
     ..aOM<ListPlaylistItemsResponse>(7, _omitFieldNames ? '' : 'playlistItems',
         subBuilder: ListPlaylistItemsResponse.create)
-    ..aOM<GetRoomMembersResponse>(8, _omitFieldNames ? '' : 'roomMembers',
-        subBuilder: GetRoomMembersResponse.create)
+    ..aOM<RoomMemberEvent>(8, _omitFieldNames ? '' : 'roomMemberEvent',
+        subBuilder: RoomMemberEvent.create)
     ..aOM<ChatMessageEvent>(9, _omitFieldNames ? '' : 'chatEvent',
         subBuilder: ChatMessageEvent.create)
+    ..aOM<OnlineCount>(10, _omitFieldNames ? '' : 'onlineCount',
+        subBuilder: OnlineCount.create)
+    ..aOM<EventCursor>(11, _omitFieldNames ? '' : 'eventCursor',
+        subBuilder: EventCursor.create)
+    ..aOM<OnlineEvent>(12, _omitFieldNames ? '' : 'onlineEvent',
+        subBuilder: OnlineEvent.create)
+    ..aOM<WebRtcEvent>(13, _omitFieldNames ? '' : 'webrtcEvent',
+        subBuilder: WebRtcEvent.create)
+    ..aOM<$0.RoomMember>(14, _omitFieldNames ? '' : 'selfRoomMember',
+        subBuilder: $0.RoomMember.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ResourceChanged clone() => deepCopy();
+  ResourceEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ResourceChanged copyWith(void Function(ResourceChanged) updates) =>
-      super.copyWith((message) => updates(message as ResourceChanged))
-          as ResourceChanged;
+  ResourceEvent copyWith(void Function(ResourceEvent) updates) =>
+      super.copyWith((message) => updates(message as ResourceEvent))
+          as ResourceEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ResourceChanged create() => ResourceChanged._();
+  static ResourceEvent create() => ResourceEvent._();
   @$core.override
-  ResourceChanged createEmptyInstance() => create();
+  ResourceEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ResourceChanged getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ResourceChanged>(create);
-  static ResourceChanged? _defaultInstance;
+  static ResourceEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ResourceEvent>(create);
+  static ResourceEvent? _defaultInstance;
 
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
@@ -15124,8 +16608,12 @@ class ResourceChanged extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
-  ResourceChanged_Payload whichPayload() =>
-      _ResourceChanged_PayloadByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
+  ResourceEvent_Payload whichPayload() =>
+      _ResourceEvent_PayloadByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
@@ -15133,6 +16621,10 @@ class ResourceChanged extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
   @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
   void clearPayload() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -15144,91 +16636,137 @@ class ResourceChanged extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearObserveId() => $_clearField(1);
 
-  @$pb.TagNumber(2)
-  $core.String get version => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set version($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasVersion() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearVersion() => $_clearField(2);
-
   @$pb.TagNumber(3)
-  ResourceChangedOnly get changedOnly => $_getN(2);
+  ResourceEventOnly get changedOnly => $_getN(1);
   @$pb.TagNumber(3)
-  set changedOnly(ResourceChangedOnly value) => $_setField(3, value);
+  set changedOnly(ResourceEventOnly value) => $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasChangedOnly() => $_has(2);
+  $core.bool hasChangedOnly() => $_has(1);
   @$pb.TagNumber(3)
   void clearChangedOnly() => $_clearField(3);
   @$pb.TagNumber(3)
-  ResourceChangedOnly ensureChangedOnly() => $_ensure(2);
+  ResourceEventOnly ensureChangedOnly() => $_ensure(1);
 
   @$pb.TagNumber(4)
-  PlaybackState get playbackState => $_getN(3);
+  PlaybackState get playbackState => $_getN(2);
   @$pb.TagNumber(4)
   set playbackState(PlaybackState value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasPlaybackState() => $_has(3);
+  $core.bool hasPlaybackState() => $_has(2);
   @$pb.TagNumber(4)
   void clearPlaybackState() => $_clearField(4);
   @$pb.TagNumber(4)
-  PlaybackState ensurePlaybackState() => $_ensure(3);
+  PlaybackState ensurePlaybackState() => $_ensure(2);
 
   @$pb.TagNumber(5)
-  PlaybackSnapshot get playbackSnapshot => $_getN(4);
+  Playback get playback => $_getN(3);
   @$pb.TagNumber(5)
-  set playbackSnapshot(PlaybackSnapshot value) => $_setField(5, value);
+  set playback(Playback value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasPlaybackSnapshot() => $_has(4);
+  $core.bool hasPlayback() => $_has(3);
   @$pb.TagNumber(5)
-  void clearPlaybackSnapshot() => $_clearField(5);
+  void clearPlayback() => $_clearField(5);
   @$pb.TagNumber(5)
-  PlaybackSnapshot ensurePlaybackSnapshot() => $_ensure(4);
+  Playback ensurePlayback() => $_ensure(3);
 
   @$pb.TagNumber(6)
-  RoomSettingsChanged get roomSettings => $_getN(5);
+  GetRoomSettingsResponse get roomSettings => $_getN(4);
   @$pb.TagNumber(6)
-  set roomSettings(RoomSettingsChanged value) => $_setField(6, value);
+  set roomSettings(GetRoomSettingsResponse value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasRoomSettings() => $_has(5);
+  $core.bool hasRoomSettings() => $_has(4);
   @$pb.TagNumber(6)
   void clearRoomSettings() => $_clearField(6);
   @$pb.TagNumber(6)
-  RoomSettingsChanged ensureRoomSettings() => $_ensure(5);
+  GetRoomSettingsResponse ensureRoomSettings() => $_ensure(4);
 
   @$pb.TagNumber(7)
-  ListPlaylistItemsResponse get playlistItems => $_getN(6);
+  ListPlaylistItemsResponse get playlistItems => $_getN(5);
   @$pb.TagNumber(7)
   set playlistItems(ListPlaylistItemsResponse value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasPlaylistItems() => $_has(6);
+  $core.bool hasPlaylistItems() => $_has(5);
   @$pb.TagNumber(7)
   void clearPlaylistItems() => $_clearField(7);
   @$pb.TagNumber(7)
-  ListPlaylistItemsResponse ensurePlaylistItems() => $_ensure(6);
+  ListPlaylistItemsResponse ensurePlaylistItems() => $_ensure(5);
 
   @$pb.TagNumber(8)
-  GetRoomMembersResponse get roomMembers => $_getN(7);
+  RoomMemberEvent get roomMemberEvent => $_getN(6);
   @$pb.TagNumber(8)
-  set roomMembers(GetRoomMembersResponse value) => $_setField(8, value);
+  set roomMemberEvent(RoomMemberEvent value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasRoomMembers() => $_has(7);
+  $core.bool hasRoomMemberEvent() => $_has(6);
   @$pb.TagNumber(8)
-  void clearRoomMembers() => $_clearField(8);
+  void clearRoomMemberEvent() => $_clearField(8);
   @$pb.TagNumber(8)
-  GetRoomMembersResponse ensureRoomMembers() => $_ensure(7);
+  RoomMemberEvent ensureRoomMemberEvent() => $_ensure(6);
 
   @$pb.TagNumber(9)
-  ChatMessageEvent get chatEvent => $_getN(8);
+  ChatMessageEvent get chatEvent => $_getN(7);
   @$pb.TagNumber(9)
   set chatEvent(ChatMessageEvent value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasChatEvent() => $_has(8);
+  $core.bool hasChatEvent() => $_has(7);
   @$pb.TagNumber(9)
   void clearChatEvent() => $_clearField(9);
   @$pb.TagNumber(9)
-  ChatMessageEvent ensureChatEvent() => $_ensure(8);
+  ChatMessageEvent ensureChatEvent() => $_ensure(7);
+
+  @$pb.TagNumber(10)
+  OnlineCount get onlineCount => $_getN(8);
+  @$pb.TagNumber(10)
+  set onlineCount(OnlineCount value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasOnlineCount() => $_has(8);
+  @$pb.TagNumber(10)
+  void clearOnlineCount() => $_clearField(10);
+  @$pb.TagNumber(10)
+  OnlineCount ensureOnlineCount() => $_ensure(8);
+
+  @$pb.TagNumber(11)
+  EventCursor get eventCursor => $_getN(9);
+  @$pb.TagNumber(11)
+  set eventCursor(EventCursor value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasEventCursor() => $_has(9);
+  @$pb.TagNumber(11)
+  void clearEventCursor() => $_clearField(11);
+  @$pb.TagNumber(11)
+  EventCursor ensureEventCursor() => $_ensure(9);
+
+  @$pb.TagNumber(12)
+  OnlineEvent get onlineEvent => $_getN(10);
+  @$pb.TagNumber(12)
+  set onlineEvent(OnlineEvent value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasOnlineEvent() => $_has(10);
+  @$pb.TagNumber(12)
+  void clearOnlineEvent() => $_clearField(12);
+  @$pb.TagNumber(12)
+  OnlineEvent ensureOnlineEvent() => $_ensure(10);
+
+  @$pb.TagNumber(13)
+  WebRtcEvent get webrtcEvent => $_getN(11);
+  @$pb.TagNumber(13)
+  set webrtcEvent(WebRtcEvent value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasWebrtcEvent() => $_has(11);
+  @$pb.TagNumber(13)
+  void clearWebrtcEvent() => $_clearField(13);
+  @$pb.TagNumber(13)
+  WebRtcEvent ensureWebrtcEvent() => $_ensure(11);
+
+  @$pb.TagNumber(14)
+  $0.RoomMember get selfRoomMember => $_getN(12);
+  @$pb.TagNumber(14)
+  set selfRoomMember($0.RoomMember value) => $_setField(14, value);
+  @$pb.TagNumber(14)
+  $core.bool hasSelfRoomMember() => $_has(12);
+  @$pb.TagNumber(14)
+  void clearSelfRoomMember() => $_clearField(14);
+  @$pb.TagNumber(14)
+  $0.RoomMember ensureSelfRoomMember() => $_ensure(12);
 }
 
 class ResourceObserveError extends $pb.GeneratedMessage {
@@ -15300,144 +16838,6 @@ class ResourceObserveError extends $pb.GeneratedMessage {
   ErrorMessage ensureError() => $_ensure(1);
 }
 
-class PlaylistItemsChanged extends $pb.GeneratedMessage {
-  factory PlaylistItemsChanged({
-    $core.String? roomId,
-    ListPlaylistItemsResponse? snapshot,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (snapshot != null) result.snapshot = snapshot;
-    return result;
-  }
-
-  PlaylistItemsChanged._();
-
-  factory PlaylistItemsChanged.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory PlaylistItemsChanged.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlaylistItemsChanged',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOM<ListPlaylistItemsResponse>(2, _omitFieldNames ? '' : 'snapshot',
-        subBuilder: ListPlaylistItemsResponse.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistItemsChanged clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistItemsChanged copyWith(void Function(PlaylistItemsChanged) updates) =>
-      super.copyWith((message) => updates(message as PlaylistItemsChanged))
-          as PlaylistItemsChanged;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PlaylistItemsChanged create() => PlaylistItemsChanged._();
-  @$core.override
-  PlaylistItemsChanged createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static PlaylistItemsChanged getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlaylistItemsChanged>(create);
-  static PlaylistItemsChanged? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  ListPlaylistItemsResponse get snapshot => $_getN(1);
-  @$pb.TagNumber(2)
-  set snapshot(ListPlaylistItemsResponse value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasSnapshot() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSnapshot() => $_clearField(2);
-  @$pb.TagNumber(2)
-  ListPlaylistItemsResponse ensureSnapshot() => $_ensure(1);
-}
-
-class RoomMembersChanged extends $pb.GeneratedMessage {
-  factory RoomMembersChanged({
-    $core.String? roomId,
-    GetRoomMembersResponse? snapshot,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (snapshot != null) result.snapshot = snapshot;
-    return result;
-  }
-
-  RoomMembersChanged._();
-
-  factory RoomMembersChanged.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory RoomMembersChanged.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RoomMembersChanged',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOM<GetRoomMembersResponse>(2, _omitFieldNames ? '' : 'snapshot',
-        subBuilder: GetRoomMembersResponse.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomMembersChanged clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomMembersChanged copyWith(void Function(RoomMembersChanged) updates) =>
-      super.copyWith((message) => updates(message as RoomMembersChanged))
-          as RoomMembersChanged;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static RoomMembersChanged create() => RoomMembersChanged._();
-  @$core.override
-  RoomMembersChanged createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static RoomMembersChanged getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RoomMembersChanged>(create);
-  static RoomMembersChanged? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  GetRoomMembersResponse get snapshot => $_getN(1);
-  @$pb.TagNumber(2)
-  set snapshot(GetRoomMembersResponse value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasSnapshot() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSnapshot() => $_clearField(2);
-  @$pb.TagNumber(2)
-  GetRoomMembersResponse ensureSnapshot() => $_ensure(1);
-}
-
 /// Note: room_id extracted from x-room-id metadata in MessageStream context.
 class ChatMessageSend extends $pb.GeneratedMessage {
   factory ChatMessageSend({
@@ -15447,6 +16847,8 @@ class ChatMessageSend extends $pb.GeneratedMessage {
     $core.String? clientMessageId,
     $core.Iterable<ChatImage>? images,
     $core.String? replyToMessageId,
+    $core.List<$core.int>? metadata,
+    $core.Iterable<ChatMentionInput>? mentions,
   }) {
     final result = create();
     if (content != null) result.content = content;
@@ -15455,6 +16857,8 @@ class ChatMessageSend extends $pb.GeneratedMessage {
     if (clientMessageId != null) result.clientMessageId = clientMessageId;
     if (images != null) result.images.addAll(images);
     if (replyToMessageId != null) result.replyToMessageId = replyToMessageId;
+    if (metadata != null) result.metadata = metadata;
+    if (mentions != null) result.mentions.addAll(mentions);
     return result;
   }
 
@@ -15478,6 +16882,10 @@ class ChatMessageSend extends $pb.GeneratedMessage {
     ..pPM<ChatImage>(5, _omitFieldNames ? '' : 'images',
         subBuilder: ChatImage.create)
     ..aOS(6, _omitFieldNames ? '' : 'replyToMessageId')
+    ..a<$core.List<$core.int>>(
+        7, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
+    ..pPM<ChatMentionInput>(8, _omitFieldNames ? '' : 'mentions',
+        subBuilder: ChatMentionInput.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -15546,6 +16954,186 @@ class ChatMessageSend extends $pb.GeneratedMessage {
   $core.bool hasReplyToMessageId() => $_has(5);
   @$pb.TagNumber(6)
   void clearReplyToMessageId() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.List<$core.int> get metadata => $_getN(6);
+  @$pb.TagNumber(7)
+  set metadata($core.List<$core.int> value) => $_setBytes(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasMetadata() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearMetadata() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $pb.PbList<ChatMentionInput> get mentions => $_getList(7);
+}
+
+class ChatMentionInput extends $pb.GeneratedMessage {
+  factory ChatMentionInput({
+    $core.String? userId,
+    $core.int? start,
+    $core.int? length,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (start != null) result.start = start;
+    if (length != null) result.length = length;
+    return result;
+  }
+
+  ChatMentionInput._();
+
+  factory ChatMentionInput.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ChatMentionInput.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ChatMentionInput',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..aI(2, _omitFieldNames ? '' : 'start')
+    ..aI(3, _omitFieldNames ? '' : 'length')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMentionInput clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMentionInput copyWith(void Function(ChatMentionInput) updates) =>
+      super.copyWith((message) => updates(message as ChatMentionInput))
+          as ChatMentionInput;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ChatMentionInput create() => ChatMentionInput._();
+  @$core.override
+  ChatMentionInput createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ChatMentionInput getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ChatMentionInput>(create);
+  static ChatMentionInput? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get start => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set start($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasStart() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearStart() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get length => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set length($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLength() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLength() => $_clearField(3);
+}
+
+class ChatMention extends $pb.GeneratedMessage {
+  factory ChatMention({
+    $core.String? userId,
+    $core.String? username,
+    $core.int? start,
+    $core.int? length,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (username != null) result.username = username;
+    if (start != null) result.start = start;
+    if (length != null) result.length = length;
+    return result;
+  }
+
+  ChatMention._();
+
+  factory ChatMention.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ChatMention.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ChatMention',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..aOS(2, _omitFieldNames ? '' : 'username')
+    ..aI(3, _omitFieldNames ? '' : 'start')
+    ..aI(4, _omitFieldNames ? '' : 'length')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMention clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMention copyWith(void Function(ChatMention) updates) =>
+      super.copyWith((message) => updates(message as ChatMention))
+          as ChatMention;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ChatMention create() => ChatMention._();
+  @$core.override
+  ChatMention createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ChatMention getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ChatMention>(create);
+  static ChatMention? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get username => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set username($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUsername() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUsername() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get start => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set start($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStart() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStart() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.int get length => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set length($core.int value) => $_setSignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasLength() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearLength() => $_clearField(4);
 }
 
 class ChatMessageReceive extends $pb.GeneratedMessage {
@@ -15572,6 +17160,10 @@ class ChatMessageReceive extends $pb.GeneratedMessage {
     $core.List<$core.int>? playbackTarget,
     $core.String? playbackTargetHash,
     $core.double? playbackPositionSeconds,
+    $core.Iterable<ChatReactionSummary>? reactions,
+    $core.int? reactionCount,
+    $core.List<$core.int>? metadata,
+    $core.Iterable<ChatMention>? mentions,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -15599,6 +17191,10 @@ class ChatMessageReceive extends $pb.GeneratedMessage {
       result.playbackTargetHash = playbackTargetHash;
     if (playbackPositionSeconds != null)
       result.playbackPositionSeconds = playbackPositionSeconds;
+    if (reactions != null) result.reactions.addAll(reactions);
+    if (reactionCount != null) result.reactionCount = reactionCount;
+    if (metadata != null) result.metadata = metadata;
+    if (mentions != null) result.mentions.addAll(mentions);
     return result;
   }
 
@@ -15640,6 +17236,13 @@ class ChatMessageReceive extends $pb.GeneratedMessage {
         20, _omitFieldNames ? '' : 'playbackTarget', $pb.PbFieldType.OY)
     ..aOS(21, _omitFieldNames ? '' : 'playbackTargetHash')
     ..aD(22, _omitFieldNames ? '' : 'playbackPositionSeconds')
+    ..pPM<ChatReactionSummary>(23, _omitFieldNames ? '' : 'reactions',
+        subBuilder: ChatReactionSummary.create)
+    ..aI(24, _omitFieldNames ? '' : 'reactionCount')
+    ..a<$core.List<$core.int>>(
+        25, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
+    ..pPM<ChatMention>(26, _omitFieldNames ? '' : 'mentions',
+        subBuilder: ChatMention.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -15852,6 +17455,186 @@ class ChatMessageReceive extends $pb.GeneratedMessage {
   $core.bool hasPlaybackPositionSeconds() => $_has(21);
   @$pb.TagNumber(22)
   void clearPlaybackPositionSeconds() => $_clearField(22);
+
+  @$pb.TagNumber(23)
+  $pb.PbList<ChatReactionSummary> get reactions => $_getList(22);
+
+  @$pb.TagNumber(24)
+  $core.int get reactionCount => $_getIZ(23);
+  @$pb.TagNumber(24)
+  set reactionCount($core.int value) => $_setSignedInt32(23, value);
+  @$pb.TagNumber(24)
+  $core.bool hasReactionCount() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearReactionCount() => $_clearField(24);
+
+  @$pb.TagNumber(25)
+  $core.List<$core.int> get metadata => $_getN(24);
+  @$pb.TagNumber(25)
+  set metadata($core.List<$core.int> value) => $_setBytes(24, value);
+  @$pb.TagNumber(25)
+  $core.bool hasMetadata() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearMetadata() => $_clearField(25);
+
+  @$pb.TagNumber(26)
+  $pb.PbList<ChatMention> get mentions => $_getList(25);
+}
+
+class ChatReactionSummary extends $pb.GeneratedMessage {
+  factory ChatReactionSummary({
+    $core.String? key,
+    $fixnum.Int64? count,
+    $core.bool? reactedByMe,
+  }) {
+    final result = create();
+    if (key != null) result.key = key;
+    if (count != null) result.count = count;
+    if (reactedByMe != null) result.reactedByMe = reactedByMe;
+    return result;
+  }
+
+  ChatReactionSummary._();
+
+  factory ChatReactionSummary.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ChatReactionSummary.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ChatReactionSummary',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'key')
+    ..aInt64(2, _omitFieldNames ? '' : 'count')
+    ..aOB(3, _omitFieldNames ? '' : 'reactedByMe')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatReactionSummary clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatReactionSummary copyWith(void Function(ChatReactionSummary) updates) =>
+      super.copyWith((message) => updates(message as ChatReactionSummary))
+          as ChatReactionSummary;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ChatReactionSummary create() => ChatReactionSummary._();
+  @$core.override
+  ChatReactionSummary createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ChatReactionSummary getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ChatReactionSummary>(create);
+  static ChatReactionSummary? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get key => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set key($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get count => $_getI64(1);
+  @$pb.TagNumber(2)
+  set count($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCount() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCount() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get reactedByMe => $_getBF(2);
+  @$pb.TagNumber(3)
+  set reactedByMe($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasReactedByMe() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearReactedByMe() => $_clearField(3);
+}
+
+class ChatReactionUser extends $pb.GeneratedMessage {
+  factory ChatReactionUser({
+    $core.String? userId,
+    $core.String? username,
+    $fixnum.Int64? reactedAt,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (username != null) result.username = username;
+    if (reactedAt != null) result.reactedAt = reactedAt;
+    return result;
+  }
+
+  ChatReactionUser._();
+
+  factory ChatReactionUser.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ChatReactionUser.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ChatReactionUser',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..aOS(2, _omitFieldNames ? '' : 'username')
+    ..aInt64(3, _omitFieldNames ? '' : 'reactedAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatReactionUser clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatReactionUser copyWith(void Function(ChatReactionUser) updates) =>
+      super.copyWith((message) => updates(message as ChatReactionUser))
+          as ChatReactionUser;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ChatReactionUser create() => ChatReactionUser._();
+  @$core.override
+  ChatReactionUser createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ChatReactionUser getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ChatReactionUser>(create);
+  static ChatReactionUser? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get username => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set username($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUsername() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUsername() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get reactedAt => $_getI64(2);
+  @$pb.TagNumber(3)
+  set reactedAt($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasReactedAt() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearReactedAt() => $_clearField(3);
 }
 
 class ChatImage extends $pb.GeneratedMessage {
@@ -20781,6 +22564,7 @@ class ChatMessageEvent extends $pb.GeneratedMessage {
     ChatMessageEventKind? kind,
     ChatMessageReceive? message,
     $fixnum.Int64? occurredAt,
+    $fixnum.Int64? sequence,
   }) {
     final result = create();
     if (eventId != null) result.eventId = eventId;
@@ -20788,6 +22572,7 @@ class ChatMessageEvent extends $pb.GeneratedMessage {
     if (kind != null) result.kind = kind;
     if (message != null) result.message = message;
     if (occurredAt != null) result.occurredAt = occurredAt;
+    if (sequence != null) result.sequence = sequence;
     return result;
   }
 
@@ -20811,6 +22596,7 @@ class ChatMessageEvent extends $pb.GeneratedMessage {
     ..aOM<ChatMessageReceive>(4, _omitFieldNames ? '' : 'message',
         subBuilder: ChatMessageReceive.create)
     ..aInt64(5, _omitFieldNames ? '' : 'occurredAt')
+    ..aInt64(6, _omitFieldNames ? '' : 'sequence')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -20878,6 +22664,193 @@ class ChatMessageEvent extends $pb.GeneratedMessage {
   $core.bool hasOccurredAt() => $_has(4);
   @$pb.TagNumber(5)
   void clearOccurredAt() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get sequence => $_getI64(5);
+  @$pb.TagNumber(6)
+  set sequence($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSequence() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSequence() => $_clearField(6);
+}
+
+class RoomMemberEvent extends $pb.GeneratedMessage {
+  factory RoomMemberEvent({
+    $core.String? eventId,
+    $core.String? roomId,
+    RoomMemberEventKind? kind,
+    $0.RoomMember? member,
+    $core.String? userId,
+    $core.String? guestId,
+    $core.String? username,
+    $core.String? actorUserId,
+    $core.String? reason,
+    $fixnum.Int64? occurredAt,
+    $fixnum.Int64? sequence,
+  }) {
+    final result = create();
+    if (eventId != null) result.eventId = eventId;
+    if (roomId != null) result.roomId = roomId;
+    if (kind != null) result.kind = kind;
+    if (member != null) result.member = member;
+    if (userId != null) result.userId = userId;
+    if (guestId != null) result.guestId = guestId;
+    if (username != null) result.username = username;
+    if (actorUserId != null) result.actorUserId = actorUserId;
+    if (reason != null) result.reason = reason;
+    if (occurredAt != null) result.occurredAt = occurredAt;
+    if (sequence != null) result.sequence = sequence;
+    return result;
+  }
+
+  RoomMemberEvent._();
+
+  factory RoomMemberEvent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RoomMemberEvent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RoomMemberEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'eventId')
+    ..aOS(2, _omitFieldNames ? '' : 'roomId')
+    ..aE<RoomMemberEventKind>(3, _omitFieldNames ? '' : 'kind',
+        enumValues: RoomMemberEventKind.values)
+    ..aOM<$0.RoomMember>(4, _omitFieldNames ? '' : 'member',
+        subBuilder: $0.RoomMember.create)
+    ..aOS(5, _omitFieldNames ? '' : 'userId')
+    ..aOS(6, _omitFieldNames ? '' : 'guestId')
+    ..aOS(7, _omitFieldNames ? '' : 'username')
+    ..aOS(8, _omitFieldNames ? '' : 'actorUserId')
+    ..aOS(9, _omitFieldNames ? '' : 'reason')
+    ..aInt64(10, _omitFieldNames ? '' : 'occurredAt')
+    ..aInt64(11, _omitFieldNames ? '' : 'sequence')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RoomMemberEvent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RoomMemberEvent copyWith(void Function(RoomMemberEvent) updates) =>
+      super.copyWith((message) => updates(message as RoomMemberEvent))
+          as RoomMemberEvent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RoomMemberEvent create() => RoomMemberEvent._();
+  @$core.override
+  RoomMemberEvent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RoomMemberEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RoomMemberEvent>(create);
+  static RoomMemberEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get eventId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set eventId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEventId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEventId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get roomId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set roomId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRoomId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRoomId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  RoomMemberEventKind get kind => $_getN(2);
+  @$pb.TagNumber(3)
+  set kind(RoomMemberEventKind value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasKind() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearKind() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $0.RoomMember get member => $_getN(3);
+  @$pb.TagNumber(4)
+  set member($0.RoomMember value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMember() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMember() => $_clearField(4);
+  @$pb.TagNumber(4)
+  $0.RoomMember ensureMember() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  $core.String get userId => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set userId($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasUserId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearUserId() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get guestId => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set guestId($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasGuestId() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearGuestId() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get username => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set username($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasUsername() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearUsername() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get actorUserId => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set actorUserId($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasActorUserId() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearActorUserId() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get reason => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set reason($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasReason() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearReason() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get occurredAt => $_getI64(9);
+  @$pb.TagNumber(10)
+  set occurredAt($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasOccurredAt() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearOccurredAt() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get sequence => $_getI64(10);
+  @$pb.TagNumber(11)
+  set sequence($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasSequence() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearSequence() => $_clearField(11);
 }
 
 class HeartbeatMessage extends $pb.GeneratedMessage {
@@ -20988,357 +22961,186 @@ class HeartbeatAck extends $pb.GeneratedMessage {
   void clearTimestamp() => $_clearField(1);
 }
 
-class PlaybackStateChanged extends $pb.GeneratedMessage {
-  factory PlaybackStateChanged({
-    $core.String? roomId,
-    PlaybackState? state,
+class OnlineCount extends $pb.GeneratedMessage {
+  factory OnlineCount({
+    $core.int? count,
   }) {
     final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (state != null) result.state = state;
+    if (count != null) result.count = count;
     return result;
   }
 
-  PlaybackStateChanged._();
+  OnlineCount._();
 
-  factory PlaybackStateChanged.fromBuffer($core.List<$core.int> data,
+  factory OnlineCount.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory PlaybackStateChanged.fromJson($core.String json,
+  factory OnlineCount.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlaybackStateChanged',
+      _omitMessageNames ? '' : 'OnlineCount',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOM<PlaybackState>(2, _omitFieldNames ? '' : 'state',
-        subBuilder: PlaybackState.create)
+    ..aI(1, _omitFieldNames ? '' : 'count')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaybackStateChanged clone() => deepCopy();
+  OnlineCount clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaybackStateChanged copyWith(void Function(PlaybackStateChanged) updates) =>
-      super.copyWith((message) => updates(message as PlaybackStateChanged))
-          as PlaybackStateChanged;
+  OnlineCount copyWith(void Function(OnlineCount) updates) =>
+      super.copyWith((message) => updates(message as OnlineCount))
+          as OnlineCount;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static PlaybackStateChanged create() => PlaybackStateChanged._();
+  static OnlineCount create() => OnlineCount._();
   @$core.override
-  PlaybackStateChanged createEmptyInstance() => create();
+  OnlineCount createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static PlaybackStateChanged getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlaybackStateChanged>(create);
-  static PlaybackStateChanged? _defaultInstance;
+  static OnlineCount getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OnlineCount>(create);
+  static OnlineCount? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
+  $core.int get count => $_getIZ(0);
   @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
+  set count($core.int value) => $_setSignedInt32(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
+  $core.bool hasCount() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  PlaybackState get state => $_getN(1);
-  @$pb.TagNumber(2)
-  set state(PlaybackState value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasState() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearState() => $_clearField(2);
-  @$pb.TagNumber(2)
-  PlaybackState ensureState() => $_ensure(1);
+  void clearCount() => $_clearField(1);
 }
 
-class PlaybackSnapshotChanged extends $pb.GeneratedMessage {
-  factory PlaybackSnapshotChanged({
-    $core.String? roomId,
-    PlaybackSnapshot? snapshot,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (snapshot != null) result.snapshot = snapshot;
-    return result;
-  }
-
-  PlaybackSnapshotChanged._();
-
-  factory PlaybackSnapshotChanged.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory PlaybackSnapshotChanged.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlaybackSnapshotChanged',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOM<PlaybackSnapshot>(2, _omitFieldNames ? '' : 'snapshot',
-        subBuilder: PlaybackSnapshot.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaybackSnapshotChanged clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaybackSnapshotChanged copyWith(
-          void Function(PlaybackSnapshotChanged) updates) =>
-      super.copyWith((message) => updates(message as PlaybackSnapshotChanged))
-          as PlaybackSnapshotChanged;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PlaybackSnapshotChanged create() => PlaybackSnapshotChanged._();
-  @$core.override
-  PlaybackSnapshotChanged createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static PlaybackSnapshotChanged getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlaybackSnapshotChanged>(create);
-  static PlaybackSnapshotChanged? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  PlaybackSnapshot get snapshot => $_getN(1);
-  @$pb.TagNumber(2)
-  set snapshot(PlaybackSnapshot value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasSnapshot() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSnapshot() => $_clearField(2);
-  @$pb.TagNumber(2)
-  PlaybackSnapshot ensureSnapshot() => $_ensure(1);
-}
-
-class UserJoinedRoom extends $pb.GeneratedMessage {
-  factory UserJoinedRoom({
-    $core.String? roomId,
-    $0.RoomMember? member,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (member != null) result.member = member;
-    return result;
-  }
-
-  UserJoinedRoom._();
-
-  factory UserJoinedRoom.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UserJoinedRoom.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UserJoinedRoom',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOM<$0.RoomMember>(2, _omitFieldNames ? '' : 'member',
-        subBuilder: $0.RoomMember.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserJoinedRoom clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserJoinedRoom copyWith(void Function(UserJoinedRoom) updates) =>
-      super.copyWith((message) => updates(message as UserJoinedRoom))
-          as UserJoinedRoom;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UserJoinedRoom create() => UserJoinedRoom._();
-  @$core.override
-  UserJoinedRoom createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UserJoinedRoom getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UserJoinedRoom>(create);
-  static UserJoinedRoom? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $0.RoomMember get member => $_getN(1);
-  @$pb.TagNumber(2)
-  set member($0.RoomMember value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasMember() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearMember() => $_clearField(2);
-  @$pb.TagNumber(2)
-  $0.RoomMember ensureMember() => $_ensure(1);
-}
-
-class UserLeftRoom extends $pb.GeneratedMessage {
-  factory UserLeftRoom({
+class OnlineEvent extends $pb.GeneratedMessage {
+  factory OnlineEvent({
+    $core.String? eventId,
     $core.String? roomId,
     $core.String? userId,
+    $core.String? username,
+    $0.RoomMemberRole? role,
+    OnlineEventKind? kind,
+    $fixnum.Int64? occurredAt,
   }) {
     final result = create();
+    if (eventId != null) result.eventId = eventId;
     if (roomId != null) result.roomId = roomId;
     if (userId != null) result.userId = userId;
+    if (username != null) result.username = username;
+    if (role != null) result.role = role;
+    if (kind != null) result.kind = kind;
+    if (occurredAt != null) result.occurredAt = occurredAt;
     return result;
   }
 
-  UserLeftRoom._();
+  OnlineEvent._();
 
-  factory UserLeftRoom.fromBuffer($core.List<$core.int> data,
+  factory OnlineEvent.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory UserLeftRoom.fromJson($core.String json,
+  factory OnlineEvent.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UserLeftRoom',
+      _omitMessageNames ? '' : 'OnlineEvent',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOS(2, _omitFieldNames ? '' : 'userId')
+    ..aOS(1, _omitFieldNames ? '' : 'eventId')
+    ..aOS(2, _omitFieldNames ? '' : 'roomId')
+    ..aOS(3, _omitFieldNames ? '' : 'userId')
+    ..aOS(4, _omitFieldNames ? '' : 'username')
+    ..aE<$0.RoomMemberRole>(5, _omitFieldNames ? '' : 'role',
+        enumValues: $0.RoomMemberRole.values)
+    ..aE<OnlineEventKind>(6, _omitFieldNames ? '' : 'kind',
+        enumValues: OnlineEventKind.values)
+    ..aInt64(7, _omitFieldNames ? '' : 'occurredAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserLeftRoom clone() => deepCopy();
+  OnlineEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UserLeftRoom copyWith(void Function(UserLeftRoom) updates) =>
-      super.copyWith((message) => updates(message as UserLeftRoom))
-          as UserLeftRoom;
+  OnlineEvent copyWith(void Function(OnlineEvent) updates) =>
+      super.copyWith((message) => updates(message as OnlineEvent))
+          as OnlineEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static UserLeftRoom create() => UserLeftRoom._();
+  static OnlineEvent create() => OnlineEvent._();
   @$core.override
-  UserLeftRoom createEmptyInstance() => create();
+  OnlineEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static UserLeftRoom getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UserLeftRoom>(create);
-  static UserLeftRoom? _defaultInstance;
+  static OnlineEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OnlineEvent>(create);
+  static OnlineEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
+  $core.String get eventId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
+  set eventId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
+  $core.bool hasEventId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
+  void clearEventId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get userId => $_getSZ(1);
+  $core.String get roomId => $_getSZ(1);
   @$pb.TagNumber(2)
-  set userId($core.String value) => $_setString(1, value);
+  set roomId($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasUserId() => $_has(1);
+  $core.bool hasRoomId() => $_has(1);
   @$pb.TagNumber(2)
-  void clearUserId() => $_clearField(2);
-}
-
-class RoomSettingsChanged extends $pb.GeneratedMessage {
-  factory RoomSettingsChanged({
-    $core.String? roomId,
-    $core.List<$core.int>? settings,
-    $fixnum.Int64? version,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (settings != null) result.settings = settings;
-    if (version != null) result.version = version;
-    return result;
-  }
-
-  RoomSettingsChanged._();
-
-  factory RoomSettingsChanged.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory RoomSettingsChanged.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RoomSettingsChanged',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'settings', $pb.PbFieldType.OY)
-    ..aInt64(3, _omitFieldNames ? '' : 'version')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomSettingsChanged clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomSettingsChanged copyWith(void Function(RoomSettingsChanged) updates) =>
-      super.copyWith((message) => updates(message as RoomSettingsChanged))
-          as RoomSettingsChanged;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static RoomSettingsChanged create() => RoomSettingsChanged._();
-  @$core.override
-  RoomSettingsChanged createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static RoomSettingsChanged getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RoomSettingsChanged>(create);
-  static RoomSettingsChanged? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.List<$core.int> get settings => $_getN(1);
-  @$pb.TagNumber(2)
-  set settings($core.List<$core.int> value) => $_setBytes(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasSettings() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSettings() => $_clearField(2);
+  void clearRoomId() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $fixnum.Int64 get version => $_getI64(2);
+  $core.String get userId => $_getSZ(2);
   @$pb.TagNumber(3)
-  set version($fixnum.Int64 value) => $_setInt64(2, value);
+  set userId($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasVersion() => $_has(2);
+  $core.bool hasUserId() => $_has(2);
   @$pb.TagNumber(3)
-  void clearVersion() => $_clearField(3);
+  void clearUserId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get username => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set username($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasUsername() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearUsername() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $0.RoomMemberRole get role => $_getN(4);
+  @$pb.TagNumber(5)
+  set role($0.RoomMemberRole value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRole() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRole() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  OnlineEventKind get kind => $_getN(5);
+  @$pb.TagNumber(6)
+  set kind(OnlineEventKind value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasKind() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearKind() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get occurredAt => $_getI64(6);
+  @$pb.TagNumber(7)
+  set occurredAt($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasOccurredAt() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearOccurredAt() => $_clearField(7);
 }
 
 class ErrorMessage extends $pb.GeneratedMessage {
@@ -21559,6 +23361,7 @@ class SendChatMessageRequest extends $pb.GeneratedMessage {
     $core.List<$core.int>? metadata,
     $core.String? displayPosition,
     $core.String? displayColor,
+    $core.Iterable<ChatMentionInput>? mentions,
   }) {
     final result = create();
     if (content != null) result.content = content;
@@ -21568,6 +23371,7 @@ class SendChatMessageRequest extends $pb.GeneratedMessage {
     if (metadata != null) result.metadata = metadata;
     if (displayPosition != null) result.displayPosition = displayPosition;
     if (displayColor != null) result.displayColor = displayColor;
+    if (mentions != null) result.mentions.addAll(mentions);
     return result;
   }
 
@@ -21593,6 +23397,8 @@ class SendChatMessageRequest extends $pb.GeneratedMessage {
         5, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
     ..aOS(6, _omitFieldNames ? '' : 'displayPosition')
     ..aOS(7, _omitFieldNames ? '' : 'displayColor')
+    ..pPM<ChatMentionInput>(8, _omitFieldNames ? '' : 'mentions',
+        subBuilder: ChatMentionInput.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -21671,6 +23477,9 @@ class SendChatMessageRequest extends $pb.GeneratedMessage {
   $core.bool hasDisplayColor() => $_has(6);
   @$pb.TagNumber(7)
   void clearDisplayColor() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $pb.PbList<ChatMentionInput> get mentions => $_getList(7);
 }
 
 class EditChatMessageRequest extends $pb.GeneratedMessage {
@@ -21868,6 +23677,1632 @@ class DeleteChatMessageRequest extends $pb.GeneratedMessage {
   void clearClientOperationId() => $_clearField(4);
 }
 
+class SetChatReactionRequest extends $pb.GeneratedMessage {
+  factory SetChatReactionRequest({
+    $core.String? messageId,
+    $core.String? reactionKey,
+    $core.bool? enabled,
+  }) {
+    final result = create();
+    if (messageId != null) result.messageId = messageId;
+    if (reactionKey != null) result.reactionKey = reactionKey;
+    if (enabled != null) result.enabled = enabled;
+    return result;
+  }
+
+  SetChatReactionRequest._();
+
+  factory SetChatReactionRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SetChatReactionRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SetChatReactionRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'messageId')
+    ..aOS(2, _omitFieldNames ? '' : 'reactionKey')
+    ..aOB(3, _omitFieldNames ? '' : 'enabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetChatReactionRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetChatReactionRequest copyWith(
+          void Function(SetChatReactionRequest) updates) =>
+      super.copyWith((message) => updates(message as SetChatReactionRequest))
+          as SetChatReactionRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SetChatReactionRequest create() => SetChatReactionRequest._();
+  @$core.override
+  SetChatReactionRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SetChatReactionRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SetChatReactionRequest>(create);
+  static SetChatReactionRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get messageId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set messageId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMessageId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMessageId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get reactionKey => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set reactionKey($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasReactionKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearReactionKey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get enabled => $_getBF(2);
+  @$pb.TagNumber(3)
+  set enabled($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEnabled() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEnabled() => $_clearField(3);
+}
+
+class SetChatReactionResponse extends $pb.GeneratedMessage {
+  factory SetChatReactionResponse({
+    ChatMessageEvent? event,
+  }) {
+    final result = create();
+    if (event != null) result.event = event;
+    return result;
+  }
+
+  SetChatReactionResponse._();
+
+  factory SetChatReactionResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SetChatReactionResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SetChatReactionResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<ChatMessageEvent>(1, _omitFieldNames ? '' : 'event',
+        subBuilder: ChatMessageEvent.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetChatReactionResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetChatReactionResponse copyWith(
+          void Function(SetChatReactionResponse) updates) =>
+      super.copyWith((message) => updates(message as SetChatReactionResponse))
+          as SetChatReactionResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SetChatReactionResponse create() => SetChatReactionResponse._();
+  @$core.override
+  SetChatReactionResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SetChatReactionResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SetChatReactionResponse>(create);
+  static SetChatReactionResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ChatMessageEvent get event => $_getN(0);
+  @$pb.TagNumber(1)
+  set event(ChatMessageEvent value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEvent() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEvent() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ChatMessageEvent ensureEvent() => $_ensure(0);
+}
+
+class ReportRoomTarget extends $pb.GeneratedMessage {
+  factory ReportRoomTarget({
+    $core.String? roomId,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    return result;
+  }
+
+  ReportRoomTarget._();
+
+  factory ReportRoomTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ReportRoomTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReportRoomTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportRoomTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportRoomTarget copyWith(void Function(ReportRoomTarget) updates) =>
+      super.copyWith((message) => updates(message as ReportRoomTarget))
+          as ReportRoomTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ReportRoomTarget create() => ReportRoomTarget._();
+  @$core.override
+  ReportRoomTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ReportRoomTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReportRoomTarget>(create);
+  static ReportRoomTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+}
+
+class ReportUserTarget extends $pb.GeneratedMessage {
+  factory ReportUserTarget({
+    $core.String? userId,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    return result;
+  }
+
+  ReportUserTarget._();
+
+  factory ReportUserTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ReportUserTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReportUserTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportUserTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportUserTarget copyWith(void Function(ReportUserTarget) updates) =>
+      super.copyWith((message) => updates(message as ReportUserTarget))
+          as ReportUserTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ReportUserTarget create() => ReportUserTarget._();
+  @$core.override
+  ReportUserTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ReportUserTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReportUserTarget>(create);
+  static ReportUserTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+}
+
+class ReportRoomMemberTarget extends $pb.GeneratedMessage {
+  factory ReportRoomMemberTarget({
+    $core.String? roomId,
+    $core.String? userId,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    if (userId != null) result.userId = userId;
+    return result;
+  }
+
+  ReportRoomMemberTarget._();
+
+  factory ReportRoomMemberTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ReportRoomMemberTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReportRoomMemberTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..aOS(2, _omitFieldNames ? '' : 'userId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportRoomMemberTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportRoomMemberTarget copyWith(
+          void Function(ReportRoomMemberTarget) updates) =>
+      super.copyWith((message) => updates(message as ReportRoomMemberTarget))
+          as ReportRoomMemberTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ReportRoomMemberTarget create() => ReportRoomMemberTarget._();
+  @$core.override
+  ReportRoomMemberTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ReportRoomMemberTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReportRoomMemberTarget>(create);
+  static ReportRoomMemberTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get userId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set userId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUserId() => $_clearField(2);
+}
+
+class ReportChatMessageTarget extends $pb.GeneratedMessage {
+  factory ReportChatMessageTarget({
+    $core.String? roomId,
+    $core.String? messageId,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    if (messageId != null) result.messageId = messageId;
+    return result;
+  }
+
+  ReportChatMessageTarget._();
+
+  factory ReportChatMessageTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ReportChatMessageTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReportChatMessageTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..aOS(2, _omitFieldNames ? '' : 'messageId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportChatMessageTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportChatMessageTarget copyWith(
+          void Function(ReportChatMessageTarget) updates) =>
+      super.copyWith((message) => updates(message as ReportChatMessageTarget))
+          as ReportChatMessageTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ReportChatMessageTarget create() => ReportChatMessageTarget._();
+  @$core.override
+  ReportChatMessageTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ReportChatMessageTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReportChatMessageTarget>(create);
+  static ReportChatMessageTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get messageId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set messageId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMessageId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMessageId() => $_clearField(2);
+}
+
+enum ReportContentRequest_Target { room, user, roomMember, chatMessage, notSet }
+
+class ReportContentRequest extends $pb.GeneratedMessage {
+  factory ReportContentRequest({
+    ReportRoomTarget? room,
+    ReportUserTarget? user,
+    ReportRoomMemberTarget? roomMember,
+    ReportChatMessageTarget? chatMessage,
+    $core.String? reasonCode,
+    $core.String? reason,
+    $core.List<$core.int>? metadata,
+  }) {
+    final result = create();
+    if (room != null) result.room = room;
+    if (user != null) result.user = user;
+    if (roomMember != null) result.roomMember = roomMember;
+    if (chatMessage != null) result.chatMessage = chatMessage;
+    if (reasonCode != null) result.reasonCode = reasonCode;
+    if (reason != null) result.reason = reason;
+    if (metadata != null) result.metadata = metadata;
+    return result;
+  }
+
+  ReportContentRequest._();
+
+  factory ReportContentRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ReportContentRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, ReportContentRequest_Target>
+      _ReportContentRequest_TargetByTag = {
+    1: ReportContentRequest_Target.room,
+    2: ReportContentRequest_Target.user,
+    3: ReportContentRequest_Target.roomMember,
+    4: ReportContentRequest_Target.chatMessage,
+    0: ReportContentRequest_Target.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReportContentRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3, 4])
+    ..aOM<ReportRoomTarget>(1, _omitFieldNames ? '' : 'room',
+        subBuilder: ReportRoomTarget.create)
+    ..aOM<ReportUserTarget>(2, _omitFieldNames ? '' : 'user',
+        subBuilder: ReportUserTarget.create)
+    ..aOM<ReportRoomMemberTarget>(3, _omitFieldNames ? '' : 'roomMember',
+        subBuilder: ReportRoomMemberTarget.create)
+    ..aOM<ReportChatMessageTarget>(4, _omitFieldNames ? '' : 'chatMessage',
+        subBuilder: ReportChatMessageTarget.create)
+    ..aOS(5, _omitFieldNames ? '' : 'reasonCode')
+    ..aOS(6, _omitFieldNames ? '' : 'reason')
+    ..a<$core.List<$core.int>>(
+        7, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportContentRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportContentRequest copyWith(void Function(ReportContentRequest) updates) =>
+      super.copyWith((message) => updates(message as ReportContentRequest))
+          as ReportContentRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ReportContentRequest create() => ReportContentRequest._();
+  @$core.override
+  ReportContentRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ReportContentRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReportContentRequest>(create);
+  static ReportContentRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  ReportContentRequest_Target whichTarget() =>
+      _ReportContentRequest_TargetByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  void clearTarget() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  ReportRoomTarget get room => $_getN(0);
+  @$pb.TagNumber(1)
+  set room(ReportRoomTarget value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoom() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ReportRoomTarget ensureRoom() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  ReportUserTarget get user => $_getN(1);
+  @$pb.TagNumber(2)
+  set user(ReportUserTarget value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUser() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUser() => $_clearField(2);
+  @$pb.TagNumber(2)
+  ReportUserTarget ensureUser() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  ReportRoomMemberTarget get roomMember => $_getN(2);
+  @$pb.TagNumber(3)
+  set roomMember(ReportRoomMemberTarget value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRoomMember() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRoomMember() => $_clearField(3);
+  @$pb.TagNumber(3)
+  ReportRoomMemberTarget ensureRoomMember() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  ReportChatMessageTarget get chatMessage => $_getN(3);
+  @$pb.TagNumber(4)
+  set chatMessage(ReportChatMessageTarget value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasChatMessage() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearChatMessage() => $_clearField(4);
+  @$pb.TagNumber(4)
+  ReportChatMessageTarget ensureChatMessage() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  $core.String get reasonCode => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set reasonCode($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasReasonCode() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearReasonCode() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get reason => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set reason($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasReason() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearReason() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.List<$core.int> get metadata => $_getN(6);
+  @$pb.TagNumber(7)
+  set metadata($core.List<$core.int> value) => $_setBytes(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasMetadata() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearMetadata() => $_clearField(7);
+}
+
+class ReportContentResponse extends $pb.GeneratedMessage {
+  factory ReportContentResponse({
+    $core.String? reportId,
+    $fixnum.Int64? createdAt,
+  }) {
+    final result = create();
+    if (reportId != null) result.reportId = reportId;
+    if (createdAt != null) result.createdAt = createdAt;
+    return result;
+  }
+
+  ReportContentResponse._();
+
+  factory ReportContentResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ReportContentResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ReportContentResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'reportId')
+    ..aInt64(2, _omitFieldNames ? '' : 'createdAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportContentResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ReportContentResponse copyWith(
+          void Function(ReportContentResponse) updates) =>
+      super.copyWith((message) => updates(message as ReportContentResponse))
+          as ReportContentResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ReportContentResponse create() => ReportContentResponse._();
+  @$core.override
+  ReportContentResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ReportContentResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReportContentResponse>(create);
+  static ReportContentResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get reportId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set reportId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReportId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReportId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get createdAt => $_getI64(1);
+  @$pb.TagNumber(2)
+  set createdAt($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCreatedAt() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCreatedAt() => $_clearField(2);
+}
+
+class ListRoomContentReportsRequest extends $pb.GeneratedMessage {
+  factory ListRoomContentReportsRequest({
+    $core.int? page,
+    $core.int? pageSize,
+    ContentReportStatus? status,
+    ContentReportTargetType? targetType,
+    $core.String? targetMemberUserId,
+    $fixnum.Int64? targetChatMessageId,
+    $core.String? search,
+  }) {
+    final result = create();
+    if (page != null) result.page = page;
+    if (pageSize != null) result.pageSize = pageSize;
+    if (status != null) result.status = status;
+    if (targetType != null) result.targetType = targetType;
+    if (targetMemberUserId != null)
+      result.targetMemberUserId = targetMemberUserId;
+    if (targetChatMessageId != null)
+      result.targetChatMessageId = targetChatMessageId;
+    if (search != null) result.search = search;
+    return result;
+  }
+
+  ListRoomContentReportsRequest._();
+
+  factory ListRoomContentReportsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRoomContentReportsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRoomContentReportsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'page')
+    ..aI(2, _omitFieldNames ? '' : 'pageSize')
+    ..aE<ContentReportStatus>(3, _omitFieldNames ? '' : 'status',
+        enumValues: ContentReportStatus.values)
+    ..aE<ContentReportTargetType>(4, _omitFieldNames ? '' : 'targetType',
+        enumValues: ContentReportTargetType.values)
+    ..aOS(5, _omitFieldNames ? '' : 'targetMemberUserId')
+    ..aInt64(6, _omitFieldNames ? '' : 'targetChatMessageId')
+    ..aOS(7, _omitFieldNames ? '' : 'search')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomContentReportsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomContentReportsRequest copyWith(
+          void Function(ListRoomContentReportsRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as ListRoomContentReportsRequest))
+          as ListRoomContentReportsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRoomContentReportsRequest create() =>
+      ListRoomContentReportsRequest._();
+  @$core.override
+  ListRoomContentReportsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRoomContentReportsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRoomContentReportsRequest>(create);
+  static ListRoomContentReportsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get page => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set page($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPage() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPage() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get pageSize => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set pageSize($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPageSize() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPageSize() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  ContentReportStatus get status => $_getN(2);
+  @$pb.TagNumber(3)
+  set status(ContentReportStatus value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStatus() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStatus() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  ContentReportTargetType get targetType => $_getN(3);
+  @$pb.TagNumber(4)
+  set targetType(ContentReportTargetType value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasTargetType() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearTargetType() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get targetMemberUserId => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set targetMemberUserId($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasTargetMemberUserId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearTargetMemberUserId() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get targetChatMessageId => $_getI64(5);
+  @$pb.TagNumber(6)
+  set targetChatMessageId($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTargetChatMessageId() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTargetChatMessageId() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get search => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set search($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSearch() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSearch() => $_clearField(7);
+}
+
+class ListRoomContentReportsResponse extends $pb.GeneratedMessage {
+  factory ListRoomContentReportsResponse({
+    $core.Iterable<ContentReport>? reports,
+    $core.int? total,
+  }) {
+    final result = create();
+    if (reports != null) result.reports.addAll(reports);
+    if (total != null) result.total = total;
+    return result;
+  }
+
+  ListRoomContentReportsResponse._();
+
+  factory ListRoomContentReportsResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRoomContentReportsResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRoomContentReportsResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pPM<ContentReport>(1, _omitFieldNames ? '' : 'reports',
+        subBuilder: ContentReport.create)
+    ..aI(2, _omitFieldNames ? '' : 'total')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomContentReportsResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomContentReportsResponse copyWith(
+          void Function(ListRoomContentReportsResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ListRoomContentReportsResponse))
+          as ListRoomContentReportsResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRoomContentReportsResponse create() =>
+      ListRoomContentReportsResponse._();
+  @$core.override
+  ListRoomContentReportsResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRoomContentReportsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRoomContentReportsResponse>(create);
+  static ListRoomContentReportsResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<ContentReport> get reports => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.int get total => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set total($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTotal() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTotal() => $_clearField(2);
+}
+
+class GetRoomContentReportRequest extends $pb.GeneratedMessage {
+  factory GetRoomContentReportRequest({
+    $core.String? reportId,
+  }) {
+    final result = create();
+    if (reportId != null) result.reportId = reportId;
+    return result;
+  }
+
+  GetRoomContentReportRequest._();
+
+  factory GetRoomContentReportRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetRoomContentReportRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetRoomContentReportRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'reportId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetRoomContentReportRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetRoomContentReportRequest copyWith(
+          void Function(GetRoomContentReportRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as GetRoomContentReportRequest))
+          as GetRoomContentReportRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetRoomContentReportRequest create() =>
+      GetRoomContentReportRequest._();
+  @$core.override
+  GetRoomContentReportRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetRoomContentReportRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetRoomContentReportRequest>(create);
+  static GetRoomContentReportRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get reportId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set reportId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReportId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReportId() => $_clearField(1);
+}
+
+class GetRoomContentReportResponse extends $pb.GeneratedMessage {
+  factory GetRoomContentReportResponse({
+    ContentReport? report,
+  }) {
+    final result = create();
+    if (report != null) result.report = report;
+    return result;
+  }
+
+  GetRoomContentReportResponse._();
+
+  factory GetRoomContentReportResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetRoomContentReportResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetRoomContentReportResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<ContentReport>(1, _omitFieldNames ? '' : 'report',
+        subBuilder: ContentReport.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetRoomContentReportResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetRoomContentReportResponse copyWith(
+          void Function(GetRoomContentReportResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as GetRoomContentReportResponse))
+          as GetRoomContentReportResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetRoomContentReportResponse create() =>
+      GetRoomContentReportResponse._();
+  @$core.override
+  GetRoomContentReportResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetRoomContentReportResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetRoomContentReportResponse>(create);
+  static GetRoomContentReportResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ContentReport get report => $_getN(0);
+  @$pb.TagNumber(1)
+  set report(ContentReport value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReport() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReport() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ContentReport ensureReport() => $_ensure(0);
+}
+
+class UpdateRoomContentReportStatusRequest extends $pb.GeneratedMessage {
+  factory UpdateRoomContentReportStatusRequest({
+    $core.String? reportId,
+    ContentReportStatus? status,
+    $core.String? resolutionNote,
+  }) {
+    final result = create();
+    if (reportId != null) result.reportId = reportId;
+    if (status != null) result.status = status;
+    if (resolutionNote != null) result.resolutionNote = resolutionNote;
+    return result;
+  }
+
+  UpdateRoomContentReportStatusRequest._();
+
+  factory UpdateRoomContentReportStatusRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateRoomContentReportStatusRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateRoomContentReportStatusRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'reportId')
+    ..aE<ContentReportStatus>(2, _omitFieldNames ? '' : 'status',
+        enumValues: ContentReportStatus.values)
+    ..aOS(3, _omitFieldNames ? '' : 'resolutionNote')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomContentReportStatusRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomContentReportStatusRequest copyWith(
+          void Function(UpdateRoomContentReportStatusRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as UpdateRoomContentReportStatusRequest))
+          as UpdateRoomContentReportStatusRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomContentReportStatusRequest create() =>
+      UpdateRoomContentReportStatusRequest._();
+  @$core.override
+  UpdateRoomContentReportStatusRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomContentReportStatusRequest getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          UpdateRoomContentReportStatusRequest>(create);
+  static UpdateRoomContentReportStatusRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get reportId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set reportId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReportId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReportId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  ContentReportStatus get status => $_getN(1);
+  @$pb.TagNumber(2)
+  set status(ContentReportStatus value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasStatus() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearStatus() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get resolutionNote => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set resolutionNote($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasResolutionNote() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearResolutionNote() => $_clearField(3);
+}
+
+class UpdateRoomContentReportStatusResponse extends $pb.GeneratedMessage {
+  factory UpdateRoomContentReportStatusResponse({
+    ContentReport? report,
+    $core.bool? success,
+  }) {
+    final result = create();
+    if (report != null) result.report = report;
+    if (success != null) result.success = success;
+    return result;
+  }
+
+  UpdateRoomContentReportStatusResponse._();
+
+  factory UpdateRoomContentReportStatusResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateRoomContentReportStatusResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateRoomContentReportStatusResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<ContentReport>(1, _omitFieldNames ? '' : 'report',
+        subBuilder: ContentReport.create)
+    ..aOB(2, _omitFieldNames ? '' : 'success')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomContentReportStatusResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomContentReportStatusResponse copyWith(
+          void Function(UpdateRoomContentReportStatusResponse) updates) =>
+      super.copyWith((message) =>
+              updates(message as UpdateRoomContentReportStatusResponse))
+          as UpdateRoomContentReportStatusResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomContentReportStatusResponse create() =>
+      UpdateRoomContentReportStatusResponse._();
+  @$core.override
+  UpdateRoomContentReportStatusResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomContentReportStatusResponse getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          UpdateRoomContentReportStatusResponse>(create);
+  static UpdateRoomContentReportStatusResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ContentReport get report => $_getN(0);
+  @$pb.TagNumber(1)
+  set report(ContentReport value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReport() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReport() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ContentReport ensureReport() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.bool get success => $_getBF(1);
+  @$pb.TagNumber(2)
+  set success($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSuccess() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSuccess() => $_clearField(2);
+}
+
+class ContentReport extends $pb.GeneratedMessage {
+  factory ContentReport({
+    $core.String? id,
+    $core.String? reporterUserId,
+    $core.String? reporterUsername,
+    $core.String? roomId,
+    $core.String? roomName,
+    ContentReportTargetType? targetType,
+    $core.String? targetRoomId,
+    $core.String? targetRoomName,
+    $core.String? targetUserId,
+    $core.String? targetUsername,
+    $core.String? targetMemberRoomId,
+    $core.String? targetMemberRoomName,
+    $core.String? targetMemberUserId,
+    $core.String? targetMemberUsername,
+    $fixnum.Int64? targetChatMessageId,
+    $fixnum.Int64? targetChatMessageCreatedAt,
+    $core.String? targetChatMessagePreview,
+    $core.String? reasonCode,
+    $core.String? reason,
+    $core.List<$core.int>? metadata,
+    ContentReportStatus? status,
+    $core.String? reviewedBy,
+    $core.String? reviewedByUsername,
+    $fixnum.Int64? reviewedAt,
+    $core.String? resolutionNote,
+    $fixnum.Int64? createdAt,
+    $fixnum.Int64? updatedAt,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (reporterUserId != null) result.reporterUserId = reporterUserId;
+    if (reporterUsername != null) result.reporterUsername = reporterUsername;
+    if (roomId != null) result.roomId = roomId;
+    if (roomName != null) result.roomName = roomName;
+    if (targetType != null) result.targetType = targetType;
+    if (targetRoomId != null) result.targetRoomId = targetRoomId;
+    if (targetRoomName != null) result.targetRoomName = targetRoomName;
+    if (targetUserId != null) result.targetUserId = targetUserId;
+    if (targetUsername != null) result.targetUsername = targetUsername;
+    if (targetMemberRoomId != null)
+      result.targetMemberRoomId = targetMemberRoomId;
+    if (targetMemberRoomName != null)
+      result.targetMemberRoomName = targetMemberRoomName;
+    if (targetMemberUserId != null)
+      result.targetMemberUserId = targetMemberUserId;
+    if (targetMemberUsername != null)
+      result.targetMemberUsername = targetMemberUsername;
+    if (targetChatMessageId != null)
+      result.targetChatMessageId = targetChatMessageId;
+    if (targetChatMessageCreatedAt != null)
+      result.targetChatMessageCreatedAt = targetChatMessageCreatedAt;
+    if (targetChatMessagePreview != null)
+      result.targetChatMessagePreview = targetChatMessagePreview;
+    if (reasonCode != null) result.reasonCode = reasonCode;
+    if (reason != null) result.reason = reason;
+    if (metadata != null) result.metadata = metadata;
+    if (status != null) result.status = status;
+    if (reviewedBy != null) result.reviewedBy = reviewedBy;
+    if (reviewedByUsername != null)
+      result.reviewedByUsername = reviewedByUsername;
+    if (reviewedAt != null) result.reviewedAt = reviewedAt;
+    if (resolutionNote != null) result.resolutionNote = resolutionNote;
+    if (createdAt != null) result.createdAt = createdAt;
+    if (updatedAt != null) result.updatedAt = updatedAt;
+    return result;
+  }
+
+  ContentReport._();
+
+  factory ContentReport.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ContentReport.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ContentReport',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'reporterUserId')
+    ..aOS(3, _omitFieldNames ? '' : 'reporterUsername')
+    ..aOS(4, _omitFieldNames ? '' : 'roomId')
+    ..aOS(5, _omitFieldNames ? '' : 'roomName')
+    ..aE<ContentReportTargetType>(6, _omitFieldNames ? '' : 'targetType',
+        enumValues: ContentReportTargetType.values)
+    ..aOS(7, _omitFieldNames ? '' : 'targetRoomId')
+    ..aOS(8, _omitFieldNames ? '' : 'targetRoomName')
+    ..aOS(9, _omitFieldNames ? '' : 'targetUserId')
+    ..aOS(10, _omitFieldNames ? '' : 'targetUsername')
+    ..aOS(11, _omitFieldNames ? '' : 'targetMemberRoomId')
+    ..aOS(12, _omitFieldNames ? '' : 'targetMemberRoomName')
+    ..aOS(13, _omitFieldNames ? '' : 'targetMemberUserId')
+    ..aOS(14, _omitFieldNames ? '' : 'targetMemberUsername')
+    ..aInt64(15, _omitFieldNames ? '' : 'targetChatMessageId')
+    ..aInt64(16, _omitFieldNames ? '' : 'targetChatMessageCreatedAt')
+    ..aOS(17, _omitFieldNames ? '' : 'targetChatMessagePreview')
+    ..aOS(18, _omitFieldNames ? '' : 'reasonCode')
+    ..aOS(19, _omitFieldNames ? '' : 'reason')
+    ..a<$core.List<$core.int>>(
+        20, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
+    ..aE<ContentReportStatus>(21, _omitFieldNames ? '' : 'status',
+        enumValues: ContentReportStatus.values)
+    ..aOS(22, _omitFieldNames ? '' : 'reviewedBy')
+    ..aOS(23, _omitFieldNames ? '' : 'reviewedByUsername')
+    ..aInt64(24, _omitFieldNames ? '' : 'reviewedAt')
+    ..aOS(25, _omitFieldNames ? '' : 'resolutionNote')
+    ..aInt64(26, _omitFieldNames ? '' : 'createdAt')
+    ..aInt64(27, _omitFieldNames ? '' : 'updatedAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ContentReport clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ContentReport copyWith(void Function(ContentReport) updates) =>
+      super.copyWith((message) => updates(message as ContentReport))
+          as ContentReport;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ContentReport create() => ContentReport._();
+  @$core.override
+  ContentReport createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ContentReport getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ContentReport>(create);
+  static ContentReport? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get reporterUserId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set reporterUserId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasReporterUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearReporterUserId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get reporterUsername => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set reporterUsername($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasReporterUsername() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearReporterUsername() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get roomId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set roomId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRoomId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRoomId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get roomName => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set roomName($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRoomName() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRoomName() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  ContentReportTargetType get targetType => $_getN(5);
+  @$pb.TagNumber(6)
+  set targetType(ContentReportTargetType value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTargetType() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTargetType() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get targetRoomId => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set targetRoomId($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasTargetRoomId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearTargetRoomId() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get targetRoomName => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set targetRoomName($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasTargetRoomName() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearTargetRoomName() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get targetUserId => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set targetUserId($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasTargetUserId() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearTargetUserId() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.String get targetUsername => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set targetUsername($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasTargetUsername() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearTargetUsername() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.String get targetMemberRoomId => $_getSZ(10);
+  @$pb.TagNumber(11)
+  set targetMemberRoomId($core.String value) => $_setString(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasTargetMemberRoomId() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearTargetMemberRoomId() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get targetMemberRoomName => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set targetMemberRoomName($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasTargetMemberRoomName() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearTargetMemberRoomName() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get targetMemberUserId => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set targetMemberUserId($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasTargetMemberUserId() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearTargetMemberUserId() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.String get targetMemberUsername => $_getSZ(13);
+  @$pb.TagNumber(14)
+  set targetMemberUsername($core.String value) => $_setString(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasTargetMemberUsername() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearTargetMemberUsername() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $fixnum.Int64 get targetChatMessageId => $_getI64(14);
+  @$pb.TagNumber(15)
+  set targetChatMessageId($fixnum.Int64 value) => $_setInt64(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasTargetChatMessageId() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearTargetChatMessageId() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $fixnum.Int64 get targetChatMessageCreatedAt => $_getI64(15);
+  @$pb.TagNumber(16)
+  set targetChatMessageCreatedAt($fixnum.Int64 value) => $_setInt64(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasTargetChatMessageCreatedAt() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearTargetChatMessageCreatedAt() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $core.String get targetChatMessagePreview => $_getSZ(16);
+  @$pb.TagNumber(17)
+  set targetChatMessagePreview($core.String value) => $_setString(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasTargetChatMessagePreview() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearTargetChatMessagePreview() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $core.String get reasonCode => $_getSZ(17);
+  @$pb.TagNumber(18)
+  set reasonCode($core.String value) => $_setString(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasReasonCode() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearReasonCode() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $core.String get reason => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set reason($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasReason() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearReason() => $_clearField(19);
+
+  @$pb.TagNumber(20)
+  $core.List<$core.int> get metadata => $_getN(19);
+  @$pb.TagNumber(20)
+  set metadata($core.List<$core.int> value) => $_setBytes(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasMetadata() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearMetadata() => $_clearField(20);
+
+  @$pb.TagNumber(21)
+  ContentReportStatus get status => $_getN(20);
+  @$pb.TagNumber(21)
+  set status(ContentReportStatus value) => $_setField(21, value);
+  @$pb.TagNumber(21)
+  $core.bool hasStatus() => $_has(20);
+  @$pb.TagNumber(21)
+  void clearStatus() => $_clearField(21);
+
+  @$pb.TagNumber(22)
+  $core.String get reviewedBy => $_getSZ(21);
+  @$pb.TagNumber(22)
+  set reviewedBy($core.String value) => $_setString(21, value);
+  @$pb.TagNumber(22)
+  $core.bool hasReviewedBy() => $_has(21);
+  @$pb.TagNumber(22)
+  void clearReviewedBy() => $_clearField(22);
+
+  @$pb.TagNumber(23)
+  $core.String get reviewedByUsername => $_getSZ(22);
+  @$pb.TagNumber(23)
+  set reviewedByUsername($core.String value) => $_setString(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasReviewedByUsername() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearReviewedByUsername() => $_clearField(23);
+
+  @$pb.TagNumber(24)
+  $fixnum.Int64 get reviewedAt => $_getI64(23);
+  @$pb.TagNumber(24)
+  set reviewedAt($fixnum.Int64 value) => $_setInt64(23, value);
+  @$pb.TagNumber(24)
+  $core.bool hasReviewedAt() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearReviewedAt() => $_clearField(24);
+
+  @$pb.TagNumber(25)
+  $core.String get resolutionNote => $_getSZ(24);
+  @$pb.TagNumber(25)
+  set resolutionNote($core.String value) => $_setString(24, value);
+  @$pb.TagNumber(25)
+  $core.bool hasResolutionNote() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearResolutionNote() => $_clearField(25);
+
+  @$pb.TagNumber(26)
+  $fixnum.Int64 get createdAt => $_getI64(25);
+  @$pb.TagNumber(26)
+  set createdAt($fixnum.Int64 value) => $_setInt64(25, value);
+  @$pb.TagNumber(26)
+  $core.bool hasCreatedAt() => $_has(25);
+  @$pb.TagNumber(26)
+  void clearCreatedAt() => $_clearField(26);
+
+  @$pb.TagNumber(27)
+  $fixnum.Int64 get updatedAt => $_getI64(26);
+  @$pb.TagNumber(27)
+  set updatedAt($fixnum.Int64 value) => $_setInt64(26, value);
+  @$pb.TagNumber(27)
+  $core.bool hasUpdatedAt() => $_has(26);
+  @$pb.TagNumber(27)
+  void clearUpdatedAt() => $_clearField(27);
+}
+
+class ListChatReactionUsersRequest extends $pb.GeneratedMessage {
+  factory ListChatReactionUsersRequest({
+    $core.String? messageId,
+    $core.String? reactionKey,
+    $core.int? limit,
+    $core.String? cursor,
+  }) {
+    final result = create();
+    if (messageId != null) result.messageId = messageId;
+    if (reactionKey != null) result.reactionKey = reactionKey;
+    if (limit != null) result.limit = limit;
+    if (cursor != null) result.cursor = cursor;
+    return result;
+  }
+
+  ListChatReactionUsersRequest._();
+
+  factory ListChatReactionUsersRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListChatReactionUsersRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListChatReactionUsersRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'messageId')
+    ..aOS(2, _omitFieldNames ? '' : 'reactionKey')
+    ..aI(3, _omitFieldNames ? '' : 'limit')
+    ..aOS(4, _omitFieldNames ? '' : 'cursor')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListChatReactionUsersRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListChatReactionUsersRequest copyWith(
+          void Function(ListChatReactionUsersRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as ListChatReactionUsersRequest))
+          as ListChatReactionUsersRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListChatReactionUsersRequest create() =>
+      ListChatReactionUsersRequest._();
+  @$core.override
+  ListChatReactionUsersRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListChatReactionUsersRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListChatReactionUsersRequest>(create);
+  static ListChatReactionUsersRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get messageId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set messageId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMessageId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMessageId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get reactionKey => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set reactionKey($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasReactionKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearReactionKey() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get limit => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set limit($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLimit() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLimit() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get cursor => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set cursor($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCursor() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCursor() => $_clearField(4);
+}
+
+class ListChatReactionUsersResponse extends $pb.GeneratedMessage {
+  factory ListChatReactionUsersResponse({
+    $core.Iterable<ChatReactionUser>? users,
+    $core.String? nextCursor,
+    $fixnum.Int64? total,
+  }) {
+    final result = create();
+    if (users != null) result.users.addAll(users);
+    if (nextCursor != null) result.nextCursor = nextCursor;
+    if (total != null) result.total = total;
+    return result;
+  }
+
+  ListChatReactionUsersResponse._();
+
+  factory ListChatReactionUsersResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListChatReactionUsersResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListChatReactionUsersResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pPM<ChatReactionUser>(1, _omitFieldNames ? '' : 'users',
+        subBuilder: ChatReactionUser.create)
+    ..aOS(2, _omitFieldNames ? '' : 'nextCursor')
+    ..aInt64(3, _omitFieldNames ? '' : 'total')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListChatReactionUsersResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListChatReactionUsersResponse copyWith(
+          void Function(ListChatReactionUsersResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ListChatReactionUsersResponse))
+          as ListChatReactionUsersResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListChatReactionUsersResponse create() =>
+      ListChatReactionUsersResponse._();
+  @$core.override
+  ListChatReactionUsersResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListChatReactionUsersResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListChatReactionUsersResponse>(create);
+  static ListChatReactionUsersResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<ChatReactionUser> get users => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.String get nextCursor => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set nextCursor($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasNextCursor() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearNextCursor() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get total => $_getI64(2);
+  @$pb.TagNumber(3)
+  set total($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTotal() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTotal() => $_clearField(3);
+}
+
 class ChatMessageEventResponse extends $pb.GeneratedMessage {
   factory ChatMessageEventResponse({
     ChatMessageEvent? event,
@@ -21997,10 +25432,12 @@ class GetChatHistoryResponse extends $pb.GeneratedMessage {
   factory GetChatHistoryResponse({
     $core.Iterable<ChatMessageReceive>? messages,
     $core.String? nextCursor,
+    EventCursor? eventCursor,
   }) {
     final result = create();
     if (messages != null) result.messages.addAll(messages);
     if (nextCursor != null) result.nextCursor = nextCursor;
+    if (eventCursor != null) result.eventCursor = eventCursor;
     return result;
   }
 
@@ -22020,6 +25457,8 @@ class GetChatHistoryResponse extends $pb.GeneratedMessage {
     ..pPM<ChatMessageReceive>(1, _omitFieldNames ? '' : 'messages',
         subBuilder: ChatMessageReceive.create)
     ..aOS(2, _omitFieldNames ? '' : 'nextCursor')
+    ..aOM<EventCursor>(3, _omitFieldNames ? '' : 'eventCursor',
+        subBuilder: EventCursor.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -22053,6 +25492,83 @@ class GetChatHistoryResponse extends $pb.GeneratedMessage {
   $core.bool hasNextCursor() => $_has(1);
   @$pb.TagNumber(2)
   void clearNextCursor() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  EventCursor get eventCursor => $_getN(2);
+  @$pb.TagNumber(3)
+  set eventCursor(EventCursor value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEventCursor() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEventCursor() => $_clearField(3);
+  @$pb.TagNumber(3)
+  EventCursor ensureEventCursor() => $_ensure(2);
+}
+
+class EventCursor extends $pb.GeneratedMessage {
+  factory EventCursor({
+    $core.String? eventId,
+    $fixnum.Int64? sequence,
+  }) {
+    final result = create();
+    if (eventId != null) result.eventId = eventId;
+    if (sequence != null) result.sequence = sequence;
+    return result;
+  }
+
+  EventCursor._();
+
+  factory EventCursor.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EventCursor.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EventCursor',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'eventId')
+    ..aInt64(2, _omitFieldNames ? '' : 'sequence')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EventCursor clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EventCursor copyWith(void Function(EventCursor) updates) =>
+      super.copyWith((message) => updates(message as EventCursor))
+          as EventCursor;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EventCursor create() => EventCursor._();
+  @$core.override
+  EventCursor createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EventCursor getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EventCursor>(create);
+  static EventCursor? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get eventId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set eventId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEventId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEventId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get sequence => $_getI64(1);
+  @$pb.TagNumber(2)
+  set sequence($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSequence() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSequence() => $_clearField(2);
 }
 
 class GetChatMessageRequest extends $pb.GeneratedMessage {
@@ -22821,6 +26337,303 @@ class ChatReadStateResponse extends $pb.GeneratedMessage {
   void clearUnreadCount() => $_clearField(2);
 }
 
+class ChatMessageReadReceiptUser extends $pb.GeneratedMessage {
+  factory ChatMessageReadReceiptUser({
+    UserPublicView? user,
+    $fixnum.Int64? readAt,
+  }) {
+    final result = create();
+    if (user != null) result.user = user;
+    if (readAt != null) result.readAt = readAt;
+    return result;
+  }
+
+  ChatMessageReadReceiptUser._();
+
+  factory ChatMessageReadReceiptUser.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ChatMessageReadReceiptUser.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ChatMessageReadReceiptUser',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<UserPublicView>(1, _omitFieldNames ? '' : 'user',
+        subBuilder: UserPublicView.create)
+    ..aInt64(2, _omitFieldNames ? '' : 'readAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMessageReadReceiptUser clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMessageReadReceiptUser copyWith(
+          void Function(ChatMessageReadReceiptUser) updates) =>
+      super.copyWith(
+              (message) => updates(message as ChatMessageReadReceiptUser))
+          as ChatMessageReadReceiptUser;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ChatMessageReadReceiptUser create() => ChatMessageReadReceiptUser._();
+  @$core.override
+  ChatMessageReadReceiptUser createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ChatMessageReadReceiptUser getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ChatMessageReadReceiptUser>(create);
+  static ChatMessageReadReceiptUser? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  UserPublicView get user => $_getN(0);
+  @$pb.TagNumber(1)
+  set user(UserPublicView value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUser() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUser() => $_clearField(1);
+  @$pb.TagNumber(1)
+  UserPublicView ensureUser() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get readAt => $_getI64(1);
+  @$pb.TagNumber(2)
+  set readAt($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasReadAt() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearReadAt() => $_clearField(2);
+}
+
+class ChatMessageUnreadMember extends $pb.GeneratedMessage {
+  factory ChatMessageUnreadMember({
+    UserPublicView? user,
+  }) {
+    final result = create();
+    if (user != null) result.user = user;
+    return result;
+  }
+
+  ChatMessageUnreadMember._();
+
+  factory ChatMessageUnreadMember.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ChatMessageUnreadMember.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ChatMessageUnreadMember',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<UserPublicView>(1, _omitFieldNames ? '' : 'user',
+        subBuilder: UserPublicView.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMessageUnreadMember clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatMessageUnreadMember copyWith(
+          void Function(ChatMessageUnreadMember) updates) =>
+      super.copyWith((message) => updates(message as ChatMessageUnreadMember))
+          as ChatMessageUnreadMember;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ChatMessageUnreadMember create() => ChatMessageUnreadMember._();
+  @$core.override
+  ChatMessageUnreadMember createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ChatMessageUnreadMember getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ChatMessageUnreadMember>(create);
+  static ChatMessageUnreadMember? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  UserPublicView get user => $_getN(0);
+  @$pb.TagNumber(1)
+  set user(UserPublicView value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUser() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUser() => $_clearField(1);
+  @$pb.TagNumber(1)
+  UserPublicView ensureUser() => $_ensure(0);
+}
+
+class GetChatMessageReadReceiptsRequest extends $pb.GeneratedMessage {
+  factory GetChatMessageReadReceiptsRequest({
+    $core.String? messageId,
+    $core.int? page,
+    $core.int? pageSize,
+  }) {
+    final result = create();
+    if (messageId != null) result.messageId = messageId;
+    if (page != null) result.page = page;
+    if (pageSize != null) result.pageSize = pageSize;
+    return result;
+  }
+
+  GetChatMessageReadReceiptsRequest._();
+
+  factory GetChatMessageReadReceiptsRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetChatMessageReadReceiptsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetChatMessageReadReceiptsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'messageId')
+    ..aI(2, _omitFieldNames ? '' : 'page')
+    ..aI(3, _omitFieldNames ? '' : 'pageSize')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetChatMessageReadReceiptsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetChatMessageReadReceiptsRequest copyWith(
+          void Function(GetChatMessageReadReceiptsRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as GetChatMessageReadReceiptsRequest))
+          as GetChatMessageReadReceiptsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetChatMessageReadReceiptsRequest create() =>
+      GetChatMessageReadReceiptsRequest._();
+  @$core.override
+  GetChatMessageReadReceiptsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetChatMessageReadReceiptsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetChatMessageReadReceiptsRequest>(
+          create);
+  static GetChatMessageReadReceiptsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get messageId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set messageId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMessageId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMessageId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get page => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set page($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPage() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get pageSize => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set pageSize($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPageSize() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPageSize() => $_clearField(3);
+}
+
+class GetChatMessageReadReceiptsResponse extends $pb.GeneratedMessage {
+  factory GetChatMessageReadReceiptsResponse({
+    $core.Iterable<ChatMessageReadReceiptUser>? readers,
+    $core.Iterable<ChatMessageUnreadMember>? unreadMembers,
+    $fixnum.Int64? readerTotal,
+    $fixnum.Int64? unreadTotal,
+  }) {
+    final result = create();
+    if (readers != null) result.readers.addAll(readers);
+    if (unreadMembers != null) result.unreadMembers.addAll(unreadMembers);
+    if (readerTotal != null) result.readerTotal = readerTotal;
+    if (unreadTotal != null) result.unreadTotal = unreadTotal;
+    return result;
+  }
+
+  GetChatMessageReadReceiptsResponse._();
+
+  factory GetChatMessageReadReceiptsResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetChatMessageReadReceiptsResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetChatMessageReadReceiptsResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pPM<ChatMessageReadReceiptUser>(1, _omitFieldNames ? '' : 'readers',
+        subBuilder: ChatMessageReadReceiptUser.create)
+    ..pPM<ChatMessageUnreadMember>(2, _omitFieldNames ? '' : 'unreadMembers',
+        subBuilder: ChatMessageUnreadMember.create)
+    ..aInt64(3, _omitFieldNames ? '' : 'readerTotal')
+    ..aInt64(4, _omitFieldNames ? '' : 'unreadTotal')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetChatMessageReadReceiptsResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetChatMessageReadReceiptsResponse copyWith(
+          void Function(GetChatMessageReadReceiptsResponse) updates) =>
+      super.copyWith((message) =>
+              updates(message as GetChatMessageReadReceiptsResponse))
+          as GetChatMessageReadReceiptsResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetChatMessageReadReceiptsResponse create() =>
+      GetChatMessageReadReceiptsResponse._();
+  @$core.override
+  GetChatMessageReadReceiptsResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetChatMessageReadReceiptsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetChatMessageReadReceiptsResponse>(
+          create);
+  static GetChatMessageReadReceiptsResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<ChatMessageReadReceiptUser> get readers => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<ChatMessageUnreadMember> get unreadMembers => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get readerTotal => $_getI64(2);
+  @$pb.TagNumber(3)
+  set readerTotal($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasReaderTotal() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearReaderTotal() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get unreadTotal => $_getI64(3);
+  @$pb.TagNumber(4)
+  set unreadTotal($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasUnreadTotal() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearUnreadTotal() => $_clearField(4);
+}
+
 /// User Profile Management
 class LogoutRequest extends $pb.GeneratedMessage {
   factory LogoutRequest() => create();
@@ -23151,10 +26964,12 @@ class ConfirmEmailBindRequest extends $pb.GeneratedMessage {
   factory ConfirmEmailBindRequest({
     $core.String? email,
     $core.String? token,
+    $core.String? verificationId,
   }) {
     final result = create();
     if (email != null) result.email = email;
     if (token != null) result.token = token;
+    if (verificationId != null) result.verificationId = verificationId;
     return result;
   }
 
@@ -23173,6 +26988,7 @@ class ConfirmEmailBindRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'email')
     ..aOS(2, _omitFieldNames ? '' : 'token')
+    ..aOS(3, _omitFieldNames ? '' : 'verificationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -23212,6 +27028,15 @@ class ConfirmEmailBindRequest extends $pb.GeneratedMessage {
   $core.bool hasToken() => $_has(1);
   @$pb.TagNumber(2)
   void clearToken() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get verificationId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set verificationId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasVerificationId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVerificationId() => $_clearField(3);
 }
 
 class ConfirmEmailBindResponse extends $pb.GeneratedMessage {
@@ -23272,7 +27097,13 @@ class ConfirmEmailBindResponse extends $pb.GeneratedMessage {
 }
 
 class UnbindEmailRequest extends $pb.GeneratedMessage {
-  factory UnbindEmailRequest() => create();
+  factory UnbindEmailRequest({
+    $core.String? verificationId,
+  }) {
+    final result = create();
+    if (verificationId != null) result.verificationId = verificationId;
+    return result;
+  }
 
   UnbindEmailRequest._();
 
@@ -23287,6 +27118,7 @@ class UnbindEmailRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'UnbindEmailRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'verificationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -23307,6 +27139,15 @@ class UnbindEmailRequest extends $pb.GeneratedMessage {
   static UnbindEmailRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UnbindEmailRequest>(create);
   static UnbindEmailRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get verificationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set verificationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVerificationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVerificationId() => $_clearField(1);
 }
 
 class UnbindEmailResponse extends $pb.GeneratedMessage {
@@ -25183,921 +29024,6 @@ class ConfirmPasswordResetResponse extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(2);
 }
 
-class MediaAdded extends $pb.GeneratedMessage {
-  factory MediaAdded({
-    $core.String? roomId,
-    $core.String? mediaId,
-    $core.String? name,
-    $core.String? creatorUsername,
-    $core.String? creatorId,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (mediaId != null) result.mediaId = mediaId;
-    if (name != null) result.name = name;
-    if (creatorUsername != null) result.creatorUsername = creatorUsername;
-    if (creatorId != null) result.creatorId = creatorId;
-    return result;
-  }
-
-  MediaAdded._();
-
-  factory MediaAdded.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory MediaAdded.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MediaAdded',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOS(2, _omitFieldNames ? '' : 'mediaId')
-    ..aOS(3, _omitFieldNames ? '' : 'name')
-    ..aOS(4, _omitFieldNames ? '' : 'creatorUsername')
-    ..aOS(5, _omitFieldNames ? '' : 'creatorId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  MediaAdded clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  MediaAdded copyWith(void Function(MediaAdded) updates) =>
-      super.copyWith((message) => updates(message as MediaAdded)) as MediaAdded;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static MediaAdded create() => MediaAdded._();
-  @$core.override
-  MediaAdded createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static MediaAdded getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<MediaAdded>(create);
-  static MediaAdded? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get mediaId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set mediaId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasMediaId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearMediaId() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get name => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set name($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasName() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearName() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.String get creatorUsername => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set creatorUsername($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasCreatorUsername() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearCreatorUsername() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $core.String get creatorId => $_getSZ(4);
-  @$pb.TagNumber(5)
-  set creatorId($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasCreatorId() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearCreatorId() => $_clearField(5);
-}
-
-class MediaRemoved extends $pb.GeneratedMessage {
-  factory MediaRemoved({
-    $core.String? roomId,
-    $core.String? mediaId,
-    $core.String? removedBy,
-    $core.String? removedByUserId,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (mediaId != null) result.mediaId = mediaId;
-    if (removedBy != null) result.removedBy = removedBy;
-    if (removedByUserId != null) result.removedByUserId = removedByUserId;
-    return result;
-  }
-
-  MediaRemoved._();
-
-  factory MediaRemoved.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory MediaRemoved.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MediaRemoved',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOS(2, _omitFieldNames ? '' : 'mediaId')
-    ..aOS(4, _omitFieldNames ? '' : 'removedBy')
-    ..aOS(5, _omitFieldNames ? '' : 'removedByUserId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  MediaRemoved clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  MediaRemoved copyWith(void Function(MediaRemoved) updates) =>
-      super.copyWith((message) => updates(message as MediaRemoved))
-          as MediaRemoved;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static MediaRemoved create() => MediaRemoved._();
-  @$core.override
-  MediaRemoved createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static MediaRemoved getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<MediaRemoved>(create);
-  static MediaRemoved? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get mediaId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set mediaId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasMediaId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearMediaId() => $_clearField(2);
-
-  @$pb.TagNumber(4)
-  $core.String get removedBy => $_getSZ(2);
-  @$pb.TagNumber(4)
-  set removedBy($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(4)
-  $core.bool hasRemovedBy() => $_has(2);
-  @$pb.TagNumber(4)
-  void clearRemovedBy() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $core.String get removedByUserId => $_getSZ(3);
-  @$pb.TagNumber(5)
-  set removedByUserId($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(5)
-  $core.bool hasRemovedByUserId() => $_has(3);
-  @$pb.TagNumber(5)
-  void clearRemovedByUserId() => $_clearField(5);
-}
-
-class MediaRemovedBatch extends $pb.GeneratedMessage {
-  factory MediaRemovedBatch({
-    $core.String? roomId,
-    $core.Iterable<$core.String>? mediaIds,
-    $core.String? removedBy,
-    $core.String? removedByUserId,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (mediaIds != null) result.mediaIds.addAll(mediaIds);
-    if (removedBy != null) result.removedBy = removedBy;
-    if (removedByUserId != null) result.removedByUserId = removedByUserId;
-    return result;
-  }
-
-  MediaRemovedBatch._();
-
-  factory MediaRemovedBatch.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory MediaRemovedBatch.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MediaRemovedBatch',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..pPS(2, _omitFieldNames ? '' : 'mediaIds')
-    ..aOS(4, _omitFieldNames ? '' : 'removedBy')
-    ..aOS(5, _omitFieldNames ? '' : 'removedByUserId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  MediaRemovedBatch clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  MediaRemovedBatch copyWith(void Function(MediaRemovedBatch) updates) =>
-      super.copyWith((message) => updates(message as MediaRemovedBatch))
-          as MediaRemovedBatch;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static MediaRemovedBatch create() => MediaRemovedBatch._();
-  @$core.override
-  MediaRemovedBatch createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static MediaRemovedBatch getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<MediaRemovedBatch>(create);
-  static MediaRemovedBatch? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $pb.PbList<$core.String> get mediaIds => $_getList(1);
-
-  @$pb.TagNumber(4)
-  $core.String get removedBy => $_getSZ(2);
-  @$pb.TagNumber(4)
-  set removedBy($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(4)
-  $core.bool hasRemovedBy() => $_has(2);
-  @$pb.TagNumber(4)
-  void clearRemovedBy() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $core.String get removedByUserId => $_getSZ(3);
-  @$pb.TagNumber(5)
-  set removedByUserId($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(5)
-  $core.bool hasRemovedByUserId() => $_has(3);
-  @$pb.TagNumber(5)
-  void clearRemovedByUserId() => $_clearField(5);
-}
-
-class MediaUpdated extends $pb.GeneratedMessage {
-  factory MediaUpdated({
-    $core.String? roomId,
-    $core.String? mediaId,
-    $core.String? name,
-    $core.String? updatedBy,
-    $core.String? updatedByUserId,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (mediaId != null) result.mediaId = mediaId;
-    if (name != null) result.name = name;
-    if (updatedBy != null) result.updatedBy = updatedBy;
-    if (updatedByUserId != null) result.updatedByUserId = updatedByUserId;
-    return result;
-  }
-
-  MediaUpdated._();
-
-  factory MediaUpdated.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory MediaUpdated.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MediaUpdated',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOS(2, _omitFieldNames ? '' : 'mediaId')
-    ..aOS(3, _omitFieldNames ? '' : 'name')
-    ..aOS(4, _omitFieldNames ? '' : 'updatedBy')
-    ..aOS(5, _omitFieldNames ? '' : 'updatedByUserId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  MediaUpdated clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  MediaUpdated copyWith(void Function(MediaUpdated) updates) =>
-      super.copyWith((message) => updates(message as MediaUpdated))
-          as MediaUpdated;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static MediaUpdated create() => MediaUpdated._();
-  @$core.override
-  MediaUpdated createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static MediaUpdated getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<MediaUpdated>(create);
-  static MediaUpdated? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get mediaId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set mediaId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasMediaId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearMediaId() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get name => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set name($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasName() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearName() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.String get updatedBy => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set updatedBy($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasUpdatedBy() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearUpdatedBy() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $core.String get updatedByUserId => $_getSZ(4);
-  @$pb.TagNumber(5)
-  set updatedByUserId($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasUpdatedByUserId() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearUpdatedByUserId() => $_clearField(5);
-}
-
-class PermissionChanged extends $pb.GeneratedMessage {
-  factory PermissionChanged({
-    $core.String? roomId,
-    $core.String? userId,
-    $0.RoomMemberRole? role,
-    $fixnum.Int64? effectivePermissions,
-    $fixnum.Int64? addedPermissions,
-    $fixnum.Int64? removedPermissions,
-    $fixnum.Int64? adminAddedPermissions,
-    $fixnum.Int64? adminRemovedPermissions,
-    $core.String? updatedBy,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (userId != null) result.userId = userId;
-    if (role != null) result.role = role;
-    if (effectivePermissions != null)
-      result.effectivePermissions = effectivePermissions;
-    if (addedPermissions != null) result.addedPermissions = addedPermissions;
-    if (removedPermissions != null)
-      result.removedPermissions = removedPermissions;
-    if (adminAddedPermissions != null)
-      result.adminAddedPermissions = adminAddedPermissions;
-    if (adminRemovedPermissions != null)
-      result.adminRemovedPermissions = adminRemovedPermissions;
-    if (updatedBy != null) result.updatedBy = updatedBy;
-    return result;
-  }
-
-  PermissionChanged._();
-
-  factory PermissionChanged.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory PermissionChanged.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PermissionChanged',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOS(2, _omitFieldNames ? '' : 'userId')
-    ..aE<$0.RoomMemberRole>(3, _omitFieldNames ? '' : 'role',
-        enumValues: $0.RoomMemberRole.values)
-    ..a<$fixnum.Int64>(
-        4, _omitFieldNames ? '' : 'effectivePermissions', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        5, _omitFieldNames ? '' : 'addedPermissions', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        6, _omitFieldNames ? '' : 'removedPermissions', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        7, _omitFieldNames ? '' : 'adminAddedPermissions', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(8, _omitFieldNames ? '' : 'adminRemovedPermissions',
-        $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOS(9, _omitFieldNames ? '' : 'updatedBy')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PermissionChanged clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PermissionChanged copyWith(void Function(PermissionChanged) updates) =>
-      super.copyWith((message) => updates(message as PermissionChanged))
-          as PermissionChanged;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PermissionChanged create() => PermissionChanged._();
-  @$core.override
-  PermissionChanged createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static PermissionChanged getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PermissionChanged>(create);
-  static PermissionChanged? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get userId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set userId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasUserId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearUserId() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $0.RoomMemberRole get role => $_getN(2);
-  @$pb.TagNumber(3)
-  set role($0.RoomMemberRole value) => $_setField(3, value);
-  @$pb.TagNumber(3)
-  $core.bool hasRole() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearRole() => $_clearField(3);
-
-  /// All permission fields for full state sync
-  @$pb.TagNumber(4)
-  $fixnum.Int64 get effectivePermissions => $_getI64(3);
-  @$pb.TagNumber(4)
-  set effectivePermissions($fixnum.Int64 value) => $_setInt64(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasEffectivePermissions() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearEffectivePermissions() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $fixnum.Int64 get addedPermissions => $_getI64(4);
-  @$pb.TagNumber(5)
-  set addedPermissions($fixnum.Int64 value) => $_setInt64(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasAddedPermissions() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearAddedPermissions() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $fixnum.Int64 get removedPermissions => $_getI64(5);
-  @$pb.TagNumber(6)
-  set removedPermissions($fixnum.Int64 value) => $_setInt64(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasRemovedPermissions() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearRemovedPermissions() => $_clearField(6);
-
-  @$pb.TagNumber(7)
-  $fixnum.Int64 get adminAddedPermissions => $_getI64(6);
-  @$pb.TagNumber(7)
-  set adminAddedPermissions($fixnum.Int64 value) => $_setInt64(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasAdminAddedPermissions() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearAdminAddedPermissions() => $_clearField(7);
-
-  @$pb.TagNumber(8)
-  $fixnum.Int64 get adminRemovedPermissions => $_getI64(7);
-  @$pb.TagNumber(8)
-  set adminRemovedPermissions($fixnum.Int64 value) => $_setInt64(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasAdminRemovedPermissions() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearAdminRemovedPermissions() => $_clearField(8);
-
-  @$pb.TagNumber(9)
-  $core.String get updatedBy => $_getSZ(8);
-  @$pb.TagNumber(9)
-  set updatedBy($core.String value) => $_setString(8, value);
-  @$pb.TagNumber(9)
-  $core.bool hasUpdatedBy() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearUpdatedBy() => $_clearField(9);
-}
-
-class PlaylistCreated extends $pb.GeneratedMessage {
-  factory PlaylistCreated({
-    $core.String? roomId,
-    Playlist? playlist,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (playlist != null) result.playlist = playlist;
-    return result;
-  }
-
-  PlaylistCreated._();
-
-  factory PlaylistCreated.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory PlaylistCreated.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlaylistCreated',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOM<Playlist>(2, _omitFieldNames ? '' : 'playlist',
-        subBuilder: Playlist.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistCreated clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistCreated copyWith(void Function(PlaylistCreated) updates) =>
-      super.copyWith((message) => updates(message as PlaylistCreated))
-          as PlaylistCreated;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PlaylistCreated create() => PlaylistCreated._();
-  @$core.override
-  PlaylistCreated createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static PlaylistCreated getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlaylistCreated>(create);
-  static PlaylistCreated? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  Playlist get playlist => $_getN(1);
-  @$pb.TagNumber(2)
-  set playlist(Playlist value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPlaylist() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPlaylist() => $_clearField(2);
-  @$pb.TagNumber(2)
-  Playlist ensurePlaylist() => $_ensure(1);
-}
-
-class PlaylistUpdated extends $pb.GeneratedMessage {
-  factory PlaylistUpdated({
-    $core.String? roomId,
-    Playlist? playlist,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (playlist != null) result.playlist = playlist;
-    return result;
-  }
-
-  PlaylistUpdated._();
-
-  factory PlaylistUpdated.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory PlaylistUpdated.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlaylistUpdated',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOM<Playlist>(2, _omitFieldNames ? '' : 'playlist',
-        subBuilder: Playlist.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistUpdated clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistUpdated copyWith(void Function(PlaylistUpdated) updates) =>
-      super.copyWith((message) => updates(message as PlaylistUpdated))
-          as PlaylistUpdated;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PlaylistUpdated create() => PlaylistUpdated._();
-  @$core.override
-  PlaylistUpdated createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static PlaylistUpdated getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlaylistUpdated>(create);
-  static PlaylistUpdated? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  Playlist get playlist => $_getN(1);
-  @$pb.TagNumber(2)
-  set playlist(Playlist value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPlaylist() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPlaylist() => $_clearField(2);
-  @$pb.TagNumber(2)
-  Playlist ensurePlaylist() => $_ensure(1);
-}
-
-class PlaylistDeleted extends $pb.GeneratedMessage {
-  factory PlaylistDeleted({
-    $core.String? roomId,
-    $core.String? playlistId,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (playlistId != null) result.playlistId = playlistId;
-    return result;
-  }
-
-  PlaylistDeleted._();
-
-  factory PlaylistDeleted.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory PlaylistDeleted.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlaylistDeleted',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOS(2, _omitFieldNames ? '' : 'playlistId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistDeleted clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistDeleted copyWith(void Function(PlaylistDeleted) updates) =>
-      super.copyWith((message) => updates(message as PlaylistDeleted))
-          as PlaylistDeleted;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PlaylistDeleted create() => PlaylistDeleted._();
-  @$core.override
-  PlaylistDeleted createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static PlaylistDeleted getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlaylistDeleted>(create);
-  static PlaylistDeleted? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get playlistId => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set playlistId($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPlaylistId() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPlaylistId() => $_clearField(2);
-}
-
-class PlaylistReordered extends $pb.GeneratedMessage {
-  factory PlaylistReordered({
-    $core.String? roomId,
-    $core.Iterable<$core.String>? mediaIds,
-    $core.String? reorderedBy,
-    $core.String? reorderedByUserId,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (mediaIds != null) result.mediaIds.addAll(mediaIds);
-    if (reorderedBy != null) result.reorderedBy = reorderedBy;
-    if (reorderedByUserId != null) result.reorderedByUserId = reorderedByUserId;
-    return result;
-  }
-
-  PlaylistReordered._();
-
-  factory PlaylistReordered.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory PlaylistReordered.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlaylistReordered',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..pPS(2, _omitFieldNames ? '' : 'mediaIds')
-    ..aOS(3, _omitFieldNames ? '' : 'reorderedBy')
-    ..aOS(4, _omitFieldNames ? '' : 'reorderedByUserId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistReordered clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlaylistReordered copyWith(void Function(PlaylistReordered) updates) =>
-      super.copyWith((message) => updates(message as PlaylistReordered))
-          as PlaylistReordered;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PlaylistReordered create() => PlaylistReordered._();
-  @$core.override
-  PlaylistReordered createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static PlaylistReordered getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlaylistReordered>(create);
-  static PlaylistReordered? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $pb.PbList<$core.String> get mediaIds => $_getList(1);
-
-  @$pb.TagNumber(3)
-  $core.String get reorderedBy => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set reorderedBy($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasReorderedBy() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearReorderedBy() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.String get reorderedByUserId => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set reorderedByUserId($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasReorderedByUserId() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearReorderedByUserId() => $_clearField(4);
-}
-
-class PlayingChanged extends $pb.GeneratedMessage {
-  factory PlayingChanged({
-    $core.String? roomId,
-    Playlist? playlist,
-    Media? playingMedia,
-  }) {
-    final result = create();
-    if (roomId != null) result.roomId = roomId;
-    if (playlist != null) result.playlist = playlist;
-    if (playingMedia != null) result.playingMedia = playingMedia;
-    return result;
-  }
-
-  PlayingChanged._();
-
-  factory PlayingChanged.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory PlayingChanged.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PlayingChanged',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOM<Playlist>(2, _omitFieldNames ? '' : 'playlist',
-        subBuilder: Playlist.create)
-    ..aOM<Media>(3, _omitFieldNames ? '' : 'playingMedia',
-        subBuilder: Media.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlayingChanged clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  PlayingChanged copyWith(void Function(PlayingChanged) updates) =>
-      super.copyWith((message) => updates(message as PlayingChanged))
-          as PlayingChanged;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static PlayingChanged create() => PlayingChanged._();
-  @$core.override
-  PlayingChanged createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static PlayingChanged getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PlayingChanged>(create);
-  static PlayingChanged? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get roomId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set roomId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoomId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoomId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  Playlist get playlist => $_getN(1);
-  @$pb.TagNumber(2)
-  set playlist(Playlist value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasPlaylist() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearPlaylist() => $_clearField(2);
-  @$pb.TagNumber(2)
-  Playlist ensurePlaylist() => $_ensure(1);
-
-  @$pb.TagNumber(3)
-  Media get playingMedia => $_getN(2);
-  @$pb.TagNumber(3)
-  set playingMedia(Media value) => $_setField(3, value);
-  @$pb.TagNumber(3)
-  $core.bool hasPlayingMedia() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearPlayingMedia() => $_clearField(3);
-  @$pb.TagNumber(3)
-  Media ensurePlayingMedia() => $_ensure(2);
-}
-
 /// WebRTC Offer (SDP offer from initiator)
 /// Client sends this to another specific peer through the server
 class WebRTCOffer extends $pb.GeneratedMessage {
@@ -26483,6 +29409,291 @@ class WebRTCLeave extends $pb.GeneratedMessage {
   $core.bool hasConnId() => $_has(1);
   @$pb.TagNumber(2)
   void clearConnId() => $_clearField(2);
+}
+
+enum WebRtcCommand_Command { offer, answer, iceCandidate, join, leave, notSet }
+
+class WebRtcCommand extends $pb.GeneratedMessage {
+  factory WebRtcCommand({
+    WebRTCOffer? offer,
+    WebRTCAnswer? answer,
+    WebRTCIceCandidate? iceCandidate,
+    WebRTCJoin? join,
+    WebRTCLeave? leave,
+  }) {
+    final result = create();
+    if (offer != null) result.offer = offer;
+    if (answer != null) result.answer = answer;
+    if (iceCandidate != null) result.iceCandidate = iceCandidate;
+    if (join != null) result.join = join;
+    if (leave != null) result.leave = leave;
+    return result;
+  }
+
+  WebRtcCommand._();
+
+  factory WebRtcCommand.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRtcCommand.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, WebRtcCommand_Command>
+      _WebRtcCommand_CommandByTag = {
+    1: WebRtcCommand_Command.offer,
+    2: WebRtcCommand_Command.answer,
+    3: WebRtcCommand_Command.iceCandidate,
+    4: WebRtcCommand_Command.join,
+    5: WebRtcCommand_Command.leave,
+    0: WebRtcCommand_Command.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRtcCommand',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3, 4, 5])
+    ..aOM<WebRTCOffer>(1, _omitFieldNames ? '' : 'offer',
+        subBuilder: WebRTCOffer.create)
+    ..aOM<WebRTCAnswer>(2, _omitFieldNames ? '' : 'answer',
+        subBuilder: WebRTCAnswer.create)
+    ..aOM<WebRTCIceCandidate>(3, _omitFieldNames ? '' : 'iceCandidate',
+        subBuilder: WebRTCIceCandidate.create)
+    ..aOM<WebRTCJoin>(4, _omitFieldNames ? '' : 'join',
+        subBuilder: WebRTCJoin.create)
+    ..aOM<WebRTCLeave>(5, _omitFieldNames ? '' : 'leave',
+        subBuilder: WebRTCLeave.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRtcCommand clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRtcCommand copyWith(void Function(WebRtcCommand) updates) =>
+      super.copyWith((message) => updates(message as WebRtcCommand))
+          as WebRtcCommand;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRtcCommand create() => WebRtcCommand._();
+  @$core.override
+  WebRtcCommand createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRtcCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRtcCommand>(create);
+  static WebRtcCommand? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  WebRtcCommand_Command whichCommand() =>
+      _WebRtcCommand_CommandByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  void clearCommand() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  WebRTCOffer get offer => $_getN(0);
+  @$pb.TagNumber(1)
+  set offer(WebRTCOffer value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasOffer() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearOffer() => $_clearField(1);
+  @$pb.TagNumber(1)
+  WebRTCOffer ensureOffer() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  WebRTCAnswer get answer => $_getN(1);
+  @$pb.TagNumber(2)
+  set answer(WebRTCAnswer value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAnswer() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAnswer() => $_clearField(2);
+  @$pb.TagNumber(2)
+  WebRTCAnswer ensureAnswer() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  WebRTCIceCandidate get iceCandidate => $_getN(2);
+  @$pb.TagNumber(3)
+  set iceCandidate(WebRTCIceCandidate value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasIceCandidate() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearIceCandidate() => $_clearField(3);
+  @$pb.TagNumber(3)
+  WebRTCIceCandidate ensureIceCandidate() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  WebRTCJoin get join => $_getN(3);
+  @$pb.TagNumber(4)
+  set join(WebRTCJoin value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasJoin() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearJoin() => $_clearField(4);
+  @$pb.TagNumber(4)
+  WebRTCJoin ensureJoin() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  WebRTCLeave get leave => $_getN(4);
+  @$pb.TagNumber(5)
+  set leave(WebRTCLeave value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasLeave() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearLeave() => $_clearField(5);
+  @$pb.TagNumber(5)
+  WebRTCLeave ensureLeave() => $_ensure(4);
+}
+
+enum WebRtcEvent_Event { offer, answer, iceCandidate, join, leave, notSet }
+
+class WebRtcEvent extends $pb.GeneratedMessage {
+  factory WebRtcEvent({
+    WebRTCOffer? offer,
+    WebRTCAnswer? answer,
+    WebRTCIceCandidate? iceCandidate,
+    WebRTCJoin? join,
+    WebRTCLeave? leave,
+  }) {
+    final result = create();
+    if (offer != null) result.offer = offer;
+    if (answer != null) result.answer = answer;
+    if (iceCandidate != null) result.iceCandidate = iceCandidate;
+    if (join != null) result.join = join;
+    if (leave != null) result.leave = leave;
+    return result;
+  }
+
+  WebRtcEvent._();
+
+  factory WebRtcEvent.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRtcEvent.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, WebRtcEvent_Event> _WebRtcEvent_EventByTag =
+      {
+    1: WebRtcEvent_Event.offer,
+    2: WebRtcEvent_Event.answer,
+    3: WebRtcEvent_Event.iceCandidate,
+    4: WebRtcEvent_Event.join,
+    5: WebRtcEvent_Event.leave,
+    0: WebRtcEvent_Event.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRtcEvent',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3, 4, 5])
+    ..aOM<WebRTCOffer>(1, _omitFieldNames ? '' : 'offer',
+        subBuilder: WebRTCOffer.create)
+    ..aOM<WebRTCAnswer>(2, _omitFieldNames ? '' : 'answer',
+        subBuilder: WebRTCAnswer.create)
+    ..aOM<WebRTCIceCandidate>(3, _omitFieldNames ? '' : 'iceCandidate',
+        subBuilder: WebRTCIceCandidate.create)
+    ..aOM<WebRTCJoin>(4, _omitFieldNames ? '' : 'join',
+        subBuilder: WebRTCJoin.create)
+    ..aOM<WebRTCLeave>(5, _omitFieldNames ? '' : 'leave',
+        subBuilder: WebRTCLeave.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRtcEvent clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRtcEvent copyWith(void Function(WebRtcEvent) updates) =>
+      super.copyWith((message) => updates(message as WebRtcEvent))
+          as WebRtcEvent;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRtcEvent create() => WebRtcEvent._();
+  @$core.override
+  WebRtcEvent createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRtcEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRtcEvent>(create);
+  static WebRtcEvent? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  WebRtcEvent_Event whichEvent() => _WebRtcEvent_EventByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  void clearEvent() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  WebRTCOffer get offer => $_getN(0);
+  @$pb.TagNumber(1)
+  set offer(WebRTCOffer value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasOffer() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearOffer() => $_clearField(1);
+  @$pb.TagNumber(1)
+  WebRTCOffer ensureOffer() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  WebRTCAnswer get answer => $_getN(1);
+  @$pb.TagNumber(2)
+  set answer(WebRTCAnswer value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAnswer() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAnswer() => $_clearField(2);
+  @$pb.TagNumber(2)
+  WebRTCAnswer ensureAnswer() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  WebRTCIceCandidate get iceCandidate => $_getN(2);
+  @$pb.TagNumber(3)
+  set iceCandidate(WebRTCIceCandidate value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasIceCandidate() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearIceCandidate() => $_clearField(3);
+  @$pb.TagNumber(3)
+  WebRTCIceCandidate ensureIceCandidate() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  WebRTCJoin get join => $_getN(3);
+  @$pb.TagNumber(4)
+  set join(WebRTCJoin value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasJoin() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearJoin() => $_clearField(4);
+  @$pb.TagNumber(4)
+  WebRTCJoin ensureJoin() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  WebRTCLeave get leave => $_getN(4);
+  @$pb.TagNumber(5)
+  set leave(WebRTCLeave value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasLeave() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearLeave() => $_clearField(5);
+  @$pb.TagNumber(5)
+  WebRTCLeave ensureLeave() => $_ensure(4);
 }
 
 /// ICE Servers Configuration
@@ -28049,8 +31260,16 @@ class AuthServiceApi {
 
   AuthServiceApi(this._client);
 
-  /// Public client local password registration/login uses OPAQUE.
-  /// Passwordless email login is confirmed through its dedicated request.
+  /// Public account password registration/login supports two transports:
+  /// OPAQUE challenge-response and direct password over TLS. Direct password
+  /// transport is kept for constrained clients; the server converts it into the
+  /// same OPAQUE credential record used by the OPAQUE transport.
+  /// Email registration is a request/confirm flow that also stores an OPAQUE
+  /// credential record after confirmation.
+  $async.Future<RequestEmailLoginResponse> requestEmailLogin(
+          $pb.ClientContext? ctx, RequestEmailLoginRequest request) =>
+      _client.invoke<RequestEmailLoginResponse>(ctx, 'AuthService',
+          'RequestEmailLogin', request, RequestEmailLoginResponse());
   $async.Future<LoginResponse> confirmEmailLogin(
           $pb.ClientContext? ctx, ConfirmEmailLoginRequest request) =>
       _client.invoke<LoginResponse>(
@@ -28059,6 +31278,26 @@ class AuthServiceApi {
           $pb.ClientContext? ctx, CreateGuestTokenRequest request) =>
       _client.invoke<CreateGuestTokenResponse>(ctx, 'AuthService',
           'CreateGuestToken', request, CreateGuestTokenResponse());
+  $async.Future<RegisterResponse> registerWithDirectPassword(
+          $pb.ClientContext? ctx, RegisterWithDirectPasswordRequest request) =>
+      _client.invoke<RegisterResponse>(ctx, 'AuthService',
+          'RegisterWithDirectPassword', request, RegisterResponse());
+  $async.Future<LoginResponse> loginWithDirectPassword(
+          $pb.ClientContext? ctx, LoginWithDirectPasswordRequest request) =>
+      _client.invoke<LoginResponse>(ctx, 'AuthService',
+          'LoginWithDirectPassword', request, LoginResponse());
+  $async.Future<RequestEmailRegistrationResponse> requestEmailRegistration(
+          $pb.ClientContext? ctx, RequestEmailRegistrationRequest request) =>
+      _client.invoke<RequestEmailRegistrationResponse>(
+          ctx,
+          'AuthService',
+          'RequestEmailRegistration',
+          request,
+          RequestEmailRegistrationResponse());
+  $async.Future<RegisterResponse> confirmEmailRegistration(
+          $pb.ClientContext? ctx, ConfirmEmailRegistrationRequest request) =>
+      _client.invoke<RegisterResponse>(ctx, 'AuthService',
+          'ConfirmEmailRegistration', request, RegisterResponse());
   $async.Future<StartOpaqueRegistrationResponse> startOpaqueRegistration(
           $pb.ClientContext? ctx, StartOpaqueRegistrationRequest request) =>
       _client.invoke<StartOpaqueRegistrationResponse>(
@@ -28099,10 +31338,6 @@ class AuthServiceApi {
           $pb.ClientContext? ctx, FinishPasskeyLoginRequest request) =>
       _client.invoke<LoginResponse>(
           ctx, 'AuthService', 'FinishPasskeyLogin', request, LoginResponse());
-  $async.Future<RequestEmailLoginResponse> requestEmailLogin(
-          $pb.ClientContext? ctx, RequestEmailLoginRequest request) =>
-      _client.invoke<RequestEmailLoginResponse>(ctx, 'AuthService',
-          'RequestEmailLogin', request, RequestEmailLoginResponse());
   $async.Future<RequestMfaEmailCodeResponse> requestMfaEmailCode(
           $pb.ClientContext? ctx, RequestMfaEmailCodeRequest request) =>
       _client.invoke<RequestMfaEmailCodeResponse>(ctx, 'AuthService',
@@ -28171,6 +31406,42 @@ class UserServiceApi {
           $pb.ClientContext? ctx, ClearUserAvatarRequest request) =>
       _client.invoke<GetProfileResponse>(
           ctx, 'UserService', 'ClearUserAvatar', request, GetProfileResponse());
+  $async.Future<StartSensitiveOperationVerificationResponse>
+      startSensitiveOperationVerification($pb.ClientContext? ctx,
+              StartSensitiveOperationVerificationRequest request) =>
+          _client.invoke<StartSensitiveOperationVerificationResponse>(
+              ctx,
+              'UserService',
+              'StartSensitiveOperationVerification',
+              request,
+              StartSensitiveOperationVerificationResponse());
+  $async.Future<StartSensitiveOperationPasskeyResponse>
+      startSensitiveOperationPasskey($pb.ClientContext? ctx,
+              StartSensitiveOperationPasskeyRequest request) =>
+          _client.invoke<StartSensitiveOperationPasskeyResponse>(
+              ctx,
+              'UserService',
+              'StartSensitiveOperationPasskey',
+              request,
+              StartSensitiveOperationPasskeyResponse());
+  $async.Future<RequestSensitiveOperationEmailCodeResponse>
+      requestSensitiveOperationEmailCode($pb.ClientContext? ctx,
+              RequestSensitiveOperationEmailCodeRequest request) =>
+          _client.invoke<RequestSensitiveOperationEmailCodeResponse>(
+              ctx,
+              'UserService',
+              'RequestSensitiveOperationEmailCode',
+              request,
+              RequestSensitiveOperationEmailCodeResponse());
+  $async.Future<FinishSensitiveOperationVerificationResponse>
+      finishSensitiveOperationVerification($pb.ClientContext? ctx,
+              FinishSensitiveOperationVerificationRequest request) =>
+          _client.invoke<FinishSensitiveOperationVerificationResponse>(
+              ctx,
+              'UserService',
+              'FinishSensitiveOperationVerification',
+              request,
+              FinishSensitiveOperationVerificationResponse());
   $async.Future<StartEmailBindResponse> startEmailBind(
           $pb.ClientContext? ctx, StartEmailBindRequest request) =>
       _client.invoke<StartEmailBindResponse>(ctx, 'UserService',
@@ -28241,6 +31512,14 @@ class UserServiceApi {
           $pb.ClientContext? ctx, JoinRoomRequest request) =>
       _client.invoke<JoinRoomResponse>(
           ctx, 'UserService', 'JoinRoom', request, JoinRoomResponse());
+  $async.Future<StartRoomPasswordLoginResponse> startRoomPasswordLogin(
+          $pb.ClientContext? ctx, StartRoomPasswordLoginRequest request) =>
+      _client.invoke<StartRoomPasswordLoginResponse>(ctx, 'UserService',
+          'StartRoomPasswordLogin', request, StartRoomPasswordLoginResponse());
+  $async.Future<JoinRoomResponse> finishRoomPasswordLogin(
+          $pb.ClientContext? ctx, FinishRoomPasswordLoginRequest request) =>
+      _client.invoke<JoinRoomResponse>(ctx, 'UserService',
+          'FinishRoomPasswordLogin', request, JoinRoomResponse());
   $async.Future<ListMyRoomsResponse> listMyRooms(
           $pb.ClientContext? ctx, ListMyRoomsRequest request) =>
       _client.invoke<ListMyRoomsResponse>(
@@ -28282,10 +31561,24 @@ class RoomServiceApi {
           ctx, 'RoomService', 'DeleteRoom', request, DeleteRoomResponse());
 
   /// Room Password Management
-  $async.Future<SetRoomPasswordResponse> setRoomPassword(
-          $pb.ClientContext? ctx, SetRoomPasswordRequest request) =>
+  $async.Future<StartRoomPasswordRegistrationResponse>
+      startRoomPasswordRegistration($pb.ClientContext? ctx,
+              StartRoomPasswordRegistrationRequest request) =>
+          _client.invoke<StartRoomPasswordRegistrationResponse>(
+              ctx,
+              'RoomService',
+              'StartRoomPasswordRegistration',
+              request,
+              StartRoomPasswordRegistrationResponse());
+  $async.Future<SetRoomPasswordResponse> finishRoomPasswordRegistration(
+          $pb.ClientContext? ctx,
+          FinishRoomPasswordRegistrationRequest request) =>
       _client.invoke<SetRoomPasswordResponse>(ctx, 'RoomService',
-          'SetRoomPassword', request, SetRoomPasswordResponse());
+          'FinishRoomPasswordRegistration', request, SetRoomPasswordResponse());
+  $async.Future<SetRoomPasswordResponse> clearRoomPassword(
+          $pb.ClientContext? ctx, ClearRoomPasswordRequest request) =>
+      _client.invoke<SetRoomPasswordResponse>(ctx, 'RoomService',
+          'ClearRoomPassword', request, SetRoomPasswordResponse());
 
   /// Member Management (room-scoped operations)
   $async.Future<GetRoomMembersResponse> getRoomMembers(
@@ -28346,10 +31639,10 @@ class RoomServiceApi {
           $pb.ClientContext? ctx, WatchPlaybackStateRequest request) =>
       _client.invoke<WatchPlaybackStateEvent>(ctx, 'RoomService',
           'WatchPlaybackState', request, WatchPlaybackStateEvent());
-  $async.Future<WatchPlaybackSnapshotEvent> watchPlaybackSnapshot(
-          $pb.ClientContext? ctx, WatchPlaybackSnapshotRequest request) =>
-      _client.invoke<WatchPlaybackSnapshotEvent>(ctx, 'RoomService',
-          'WatchPlaybackSnapshot', request, WatchPlaybackSnapshotEvent());
+  $async.Future<WatchPlaybackEvent> watchPlayback(
+          $pb.ClientContext? ctx, WatchPlaybackRequest request) =>
+      _client.invoke<WatchPlaybackEvent>(
+          ctx, 'RoomService', 'WatchPlayback', request, WatchPlaybackEvent());
   $async.Future<WatchRoomSettingsEvent> watchRoomSettings(
           $pb.ClientContext? ctx, WatchRoomSettingsRequest request) =>
       _client.invoke<WatchRoomSettingsEvent>(ctx, 'RoomService',
@@ -28358,10 +31651,10 @@ class RoomServiceApi {
           $pb.ClientContext? ctx, WatchPlaylistItemsRequest request) =>
       _client.invoke<WatchPlaylistItemsEvent>(ctx, 'RoomService',
           'WatchPlaylistItems', request, WatchPlaylistItemsEvent());
-  $async.Future<WatchRoomMembersEvent> watchRoomMembers(
-          $pb.ClientContext? ctx, WatchRoomMembersRequest request) =>
-      _client.invoke<WatchRoomMembersEvent>(ctx, 'RoomService',
-          'WatchRoomMembers', request, WatchRoomMembersEvent());
+  $async.Future<WatchRoomMemberEventsEvent> watchRoomMemberEvents(
+          $pb.ClientContext? ctx, WatchRoomMemberEventsRequest request) =>
+      _client.invoke<WatchRoomMemberEventsEvent>(ctx, 'RoomService',
+          'WatchRoomMemberEvents', request, WatchRoomMemberEventsEvent());
   $async.Future<WatchChatEventsEvent> watchChatEvents(
           $pb.ClientContext? ctx, WatchChatEventsRequest request) =>
       _client.invoke<WatchChatEventsEvent>(ctx, 'RoomService',
@@ -28440,6 +31733,14 @@ class RoomServiceApi {
           'GetChatPlaybackMessages',
           request,
           GetChatPlaybackMessagesResponse());
+  $async.Future<SetChatReactionResponse> setChatReaction(
+          $pb.ClientContext? ctx, SetChatReactionRequest request) =>
+      _client.invoke<SetChatReactionResponse>(ctx, 'RoomService',
+          'SetChatReaction', request, SetChatReactionResponse());
+  $async.Future<ListChatReactionUsersResponse> listChatReactionUsers(
+          $pb.ClientContext? ctx, ListChatReactionUsersRequest request) =>
+      _client.invoke<ListChatReactionUsersResponse>(ctx, 'RoomService',
+          'ListChatReactionUsers', request, ListChatReactionUsersResponse());
   $async.Future<ChatReadStateResponse> markChatRead(
           $pb.ClientContext? ctx, MarkChatReadRequest request) =>
       _client.invoke<ChatReadStateResponse>(
@@ -28448,6 +31749,35 @@ class RoomServiceApi {
           $pb.ClientContext? ctx, GetChatReadStateRequest request) =>
       _client.invoke<ChatReadStateResponse>(ctx, 'RoomService',
           'GetChatReadState', request, ChatReadStateResponse());
+  $async.Future<GetChatMessageReadReceiptsResponse> getChatMessageReadReceipts(
+          $pb.ClientContext? ctx, GetChatMessageReadReceiptsRequest request) =>
+      _client.invoke<GetChatMessageReadReceiptsResponse>(
+          ctx,
+          'RoomService',
+          'GetChatMessageReadReceipts',
+          request,
+          GetChatMessageReadReceiptsResponse());
+  $async.Future<ReportContentResponse> reportContent(
+          $pb.ClientContext? ctx, ReportContentRequest request) =>
+      _client.invoke<ReportContentResponse>(ctx, 'RoomService', 'ReportContent',
+          request, ReportContentResponse());
+  $async.Future<ListRoomContentReportsResponse> listRoomContentReports(
+          $pb.ClientContext? ctx, ListRoomContentReportsRequest request) =>
+      _client.invoke<ListRoomContentReportsResponse>(ctx, 'RoomService',
+          'ListRoomContentReports', request, ListRoomContentReportsResponse());
+  $async.Future<GetRoomContentReportResponse> getRoomContentReport(
+          $pb.ClientContext? ctx, GetRoomContentReportRequest request) =>
+      _client.invoke<GetRoomContentReportResponse>(ctx, 'RoomService',
+          'GetRoomContentReport', request, GetRoomContentReportResponse());
+  $async.Future<UpdateRoomContentReportStatusResponse>
+      updateRoomContentReportStatus($pb.ClientContext? ctx,
+              UpdateRoomContentReportStatusRequest request) =>
+          _client.invoke<UpdateRoomContentReportStatusResponse>(
+              ctx,
+              'RoomService',
+              'UpdateRoomContentReportStatus',
+              request,
+              UpdateRoomContentReportStatusResponse());
 
   /// WebRTC ICE Servers Configuration
   $async.Future<GetIceServersResponse> getIceServers(
@@ -28590,10 +31920,10 @@ class RoomServiceApi {
           $pb.ClientContext? ctx, GetPlaybackRequest request) =>
       _client.invoke<GetPlaybackResponse>(
           ctx, 'RoomService', 'GetPlayback', request, GetPlaybackResponse());
-  $async.Future<GetPlaybackResponse> updatePlayback(
-          $pb.ClientContext? ctx, UpdatePlaybackRequest request) =>
-      _client.invoke<GetPlaybackResponse>(
-          ctx, 'RoomService', 'UpdatePlayback', request, GetPlaybackResponse());
+  $async.Future<UpdatePlaybackStateResponse> updatePlaybackState(
+          $pb.ClientContext? ctx, UpdatePlaybackStateRequest request) =>
+      _client.invoke<UpdatePlaybackStateResponse>(ctx, 'RoomService',
+          'UpdatePlaybackState', request, UpdatePlaybackStateResponse());
 }
 
 /// ==================== Public Service ====================

@@ -1,5 +1,15 @@
 import 'package:synctv_app/models/watch_together_models.dart';
 
+class ServerInfo {
+  final String serverId;
+  final String serverName;
+
+  const ServerInfo({
+    required this.serverId,
+    required this.serverName,
+  });
+}
+
 class PublicSettingsInfo {
   final bool allowRoomCreation;
   final int maxRoomsPerUser;

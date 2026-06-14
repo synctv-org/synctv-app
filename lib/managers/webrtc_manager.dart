@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:synctv_app/models/room_management_models.dart';
@@ -10,6 +9,8 @@ typedef SignalingCallback = void Function(
 typedef IceServersLoader = Future<List<IceServerInfo>> Function();
 
 class WebRTCManager {
+  static const Duration _getUserMediaTimeout = Duration(seconds: 12);
+
   final Map<String, RTCPeerConnection> _peerConnections = {};
   MediaStream? _localStream;
   final Map<String, MediaStream> _remoteStreams = {};
@@ -23,8 +24,6 @@ class WebRTCManager {
   bool get isConnected => _isConnected;
   bool get hasPeersConnected => _connectedPeers.isNotEmpty;
   int get participantCount => _connectedPeers.length + (_isConnected ? 1 : 0);
-  bool _softMuted = false;
-  bool get _isHarmony => Platform.operatingSystem.toLowerCase() == 'ohos';
 
   WebRTCManager({
     required this.onSignalingMessage,
@@ -74,11 +73,15 @@ class WebRTCManager {
       };
 
       _localStream =
-          await navigator.mediaDevices.getUserMedia(mediaConstraints);
+          await navigator.mediaDevices.getUserMedia(mediaConstraints).timeout(
+                _getUserMediaTimeout,
+                onTimeout: () => throw TimeoutException(
+                  '获取麦克风权限超时，请检查系统麦克风权限',
+                  _getUserMediaTimeout,
+                ),
+              );
 
-      if (Platform.isAndroid || Platform.isIOS || _isHarmony) {
-        await Helper.setSpeakerphoneOn(true);
-      }
+      await Helper.setSpeakerphoneOn(true);
 
       onSignalingMessage('join', {});
 
@@ -236,12 +239,8 @@ class WebRTCManager {
   }
 
   Future<void> leave() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      await Helper.setSpeakerphoneOn(false);
-    }
-    if (_isHarmony) {
-      await AudioUtil.setVoiceCallMode(false);
-    }
+    await Helper.setSpeakerphoneOn(false);
+    await AudioUtil.setVoiceCallMode(false);
     if (_isConnected) {
       onSignalingMessage('leave', {});
     }
@@ -277,18 +276,12 @@ class WebRTCManager {
         track.enabled = !track.enabled;
       }
       onStateChange();
-    } else if (_isHarmony) {
-      _softMuted = !_softMuted;
-      onStateChange();
     }
   }
 
   bool get isMuted {
     if (_localStream != null && _localStream!.getAudioTracks().isNotEmpty) {
       return !_localStream!.getAudioTracks().first.enabled;
-    }
-    if (_isHarmony) {
-      return _softMuted;
     }
     return false;
   }

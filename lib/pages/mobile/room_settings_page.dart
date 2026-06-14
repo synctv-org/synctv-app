@@ -7,16 +7,20 @@ import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/pages/mobile/admin_settings_page.dart';
 import 'package:synctv_app/services/realtime_event_log_preferences.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/local_image_picker.dart';
 import 'package:synctv_app/utils/message_utils.dart';
-import 'package:synctv_app/widgets/ios_style_switch.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
+import 'package:synctv_app/widgets/app_responsive_layout.dart';
+import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 
 const Map<String, String> _mediaSourceLabels = {
@@ -29,12 +33,16 @@ const Map<String, String> _mediaSourceLabels = {
 };
 
 const String _settingsObserveId = 'manage_room_settings';
-const String _membersObserveId = 'manage_room_members';
+const String _membersObserveId = 'manage_room_member_events';
+const String _membersOnlineCountObserveId = 'manage_member_online_count';
 const String _mediaObserveId = 'manage_playlist_items';
+const String _chatObserveId = 'manage_chat_events';
 const Set<String> _managementObserveIds = {
   _settingsObserveId,
   _membersObserveId,
+  _membersOnlineCountObserveId,
   _mediaObserveId,
+  _chatObserveId,
 };
 
 const Set<String> _mediaSourcesWithProviderInstances = {
@@ -165,9 +173,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   final List<RoomJoinReviewInfo> _reviews = [];
   final List<AdminRoomMember> _members = [];
   final List<RoomChatMessageInfo> _chatMessages = [];
+  final Map<String, ChatMessageReadReceiptsInfo> _chatReceiptCache = {};
   final List<IceServerInfo> _iceServers = [];
   final List<RealtimeEventLogEntry> _realtimeEvents = [];
   final List<String> _mediaPlaylistStack = [];
+  final List<WMovie> _mediaPlaylistEntryStack = [];
   final List<String> _mediaTargetStack = [];
   StreamSubscription<RoomRealtimeMessage>? _realtimeMessageSubscription;
   StreamSubscription<RealtimeEventLogEntry>? _realtimeEventSubscription;
@@ -176,10 +186,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   final _RealtimeWatchStats _settingsWatchStats = _RealtimeWatchStats();
   final _RealtimeWatchStats _membersWatchStats = _RealtimeWatchStats();
   final _RealtimeWatchStats _mediaWatchStats = _RealtimeWatchStats();
+  final _RealtimeWatchStats _chatWatchStats = _RealtimeWatchStats();
   String _chatCursor = '';
+  bool _chatHistoryLoaded = false;
   String _settingsWatchVersion = '';
   String _membersWatchVersion = '';
   String _mediaWatchVersion = '';
+  String _chatWatchVersion = '';
   client_enum.MediaListSortBy _mediaSortBy =
       client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION;
   client_enum.SortDirection _mediaSortDirection =
@@ -200,6 +213,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   int _membersPage = 1;
   final int _membersPageSize = 50;
   int _membersTotal = 0;
+  int _membersOnlineCount = 0;
   common_enum.RoomMemberRole? _memberRoleFilter;
   client_enum.RoomMemberListSortBy _memberSortBy =
       client_enum.RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_JOINED_AT;
@@ -209,7 +223,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       common_enum.ReviewStatus.REVIEW_STATUS_PENDING;
   _RealtimeDiagnosticsPane _realtimePane = _RealtimeDiagnosticsPane.overview;
 
-  bool _updatePassword = false;
   bool _allowGuestJoin = false;
   bool _requireApproval = false;
   bool _allowAutoJoin = true;
@@ -224,8 +237,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _mediaLoading = false;
   bool _mediaProviderInstancesLoading = false;
   bool _chatLoading = false;
+  final Set<String> _chatReceiptLoadingIds = {};
   bool _iceLoading = false;
   bool _coverUpdating = false;
+  bool _passwordUpdating = false;
   ChatReadStateInfo? _chatReadState;
   late String _currentUserId;
   WRoom? _roomInfo;
@@ -239,7 +254,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 8, vsync: this);
+    _tabController = TabController(length: 9, vsync: this);
     _settings = widget.currentSettings;
     _currentUserId = widget.currentUserId;
     _passwordController = TextEditingController();
@@ -270,6 +285,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         widget.realtime.events.listen(_handleRealtimeEvent);
     _realtimeReconnectSubscription = widget.realtime.reconnects.listen((_) {
       if (!mounted) return;
+      _chatHistoryLoaded = false;
+      _loadChatHistory();
       _startResourceWatches();
     });
     _startResourceWatches();
@@ -283,7 +300,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _sendRealtime(
         RoomRealtimeCodec.encodeUnobserveResource(_settingsObserveId));
     _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_membersObserveId));
+    _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(
+        _membersOnlineCountObserveId));
     _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_mediaObserveId));
+    _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_chatObserveId));
     _realtimeMessageSubscription?.cancel();
     _realtimeEventSubscription?.cancel();
     _realtimeReconnectSubscription?.cancel();
@@ -312,6 +332,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _startSettingsWatch();
     _startMembersWatch();
     _startMediaWatch();
+    _startChatWatch();
   }
 
   Future<void> _loadCurrentUserIfNeeded() async {
@@ -338,7 +359,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _updateRoomCover() async {
     if (_coverUpdating) return;
     try {
-      final image = await pickLocalImageUpload();
+      final image = await pickLocalImageUpload(context, aspectRatio: 16 / 9);
       if (image == null || !mounted) return;
       setState(() => _coverUpdating = true);
       final room = await WatchTogetherService.updateRoomCover(
@@ -370,6 +391,34 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
+  Future<void> _updateRoomPassword() async {
+    if (_passwordUpdating) return;
+    final password = _passwordController.text.trim();
+    setState(() => _passwordUpdating = true);
+    try {
+      await WatchTogetherService.updateRoomPassword(
+        widget.roomId,
+        password.isEmpty ? null : password,
+      );
+      final freshSettings =
+          await WatchTogetherService.getRoomSettings(widget.roomId);
+      if (!mounted) return;
+      setState(() {
+        _settings = freshSettings;
+        _passwordController.clear();
+        _applySettings(freshSettings);
+      });
+      MessageUtils.showSuccess(
+        context,
+        password.isEmpty ? '房间密码已移除' : '房间密码已更新',
+      );
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '更新房间密码失败: $e');
+    } finally {
+      if (mounted) setState(() => _passwordUpdating = false);
+    }
+  }
+
   void _startSettingsWatch() {
     _sendRealtime(
       RoomRealtimeCodec.encodeRoomSettingsObservation(
@@ -390,6 +439,30 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         role: _memberRoleFilter,
         sortBy: _memberSortBy,
         sortDirection: _memberSortDirection,
+      ),
+    );
+    _startMembersOnlineWatches();
+  }
+
+  void _startMembersOnlineWatches() {
+    final userIds = _members
+        .map((member) => member.userId)
+        .where((userId) => userId.isNotEmpty)
+        .toSet();
+    if (userIds.isEmpty) {
+      _sendRealtime(
+        RoomRealtimeCodec.encodeUnobserveResource(_membersOnlineCountObserveId),
+      );
+      return;
+    }
+    final roles = _memberRoleFilter == null
+        ? const <common_enum.RoomMemberRole>[]
+        : <common_enum.RoomMemberRole>[_memberRoleFilter!];
+    _sendRealtime(
+      RoomRealtimeCodec.encodeOnlineCountObservation(
+        observeId: _membersOnlineCountObserveId,
+        userIds: userIds,
+        roles: roles,
       ),
     );
   }
@@ -418,6 +491,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
+  void _startChatWatch() {
+    if (!_chatHistoryLoaded && _chatWatchVersion.isEmpty) return;
+    _sendRealtime(
+      RoomRealtimeCodec.encodeChatEventsObservation(
+        observeId: _chatObserveId,
+        version: _chatWatchVersion,
+      ),
+    );
+  }
+
   void _sendRealtime(List<int> bytes) {
     if (bytes.isEmpty) return;
     widget.realtime.send(bytes);
@@ -426,7 +509,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   void _handleRealtimeEvent(RealtimeEventLogEntry entry) {
     final payload = entry.payload;
     final observeId =
-        payload is Map ? payload['observe_id']?.toString() ?? '' : '';
+        payload is Map ? payload['observeId']?.toString() ?? '' : '';
     if (!_managementObserveIds.contains(observeId)) return;
     _appendRealtimeEvent(entry);
   }
@@ -439,8 +522,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       case _membersObserveId:
         _handleRealtimeMembersMessage(message);
         break;
+      case _membersOnlineCountObserveId:
+        _handleRealtimeMembersOnlineMessage(message);
+        break;
       case _mediaObserveId:
         _handleRealtimeMediaMessage(message);
+        break;
+      case _chatObserveId:
+        _handleRealtimeChatMessage(message);
         break;
     }
   }
@@ -450,7 +539,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       _handleSettingsWatchEvent(
         RoomResourceWatchEvent<WRoomSettings>.observed(
           version: message.resourceVersion,
-          changed: message.resourceChanged,
+          changed: message.resourceEvent,
         ),
       );
       return;
@@ -479,19 +568,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       _handleMembersWatchEvent(
         RoomResourceWatchEvent<List<AdminRoomMember>>.observed(
           version: message.resourceVersion,
-          changed: message.resourceChanged,
+          changed: message.resourceEvent,
         ),
       );
       return;
     }
-    if (message.kind == RoomRealtimeMessageKind.viewerCount) {
+    if (message.kind == RoomRealtimeMessageKind.memberEvent) {
       _handleMembersWatchEvent(
         RoomResourceWatchEvent<List<AdminRoomMember>>.changed(
           version: message.resourceVersion,
-          snapshot: message.adminMembers,
         ),
-        total: message.resourceTotal,
       );
+      _loadMembers();
       return;
     }
     if (message.kind == RoomRealtimeMessageKind.error) {
@@ -504,12 +592,61 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
+  void _handleRealtimeMembersOnlineMessage(RoomRealtimeMessage message) {
+    if (message.kind == RoomRealtimeMessageKind.checkStatus) {
+      _membersWatchStats.record(
+        RoomResourceWatchEvent<void>.observed(
+          version: message.resourceVersion,
+          changed: message.resourceEvent,
+        ),
+      );
+      if (mounted) setState(() {});
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.viewerCount) {
+      _membersWatchStats.record(
+        RoomResourceWatchEvent<void>.changed(
+          version: message.resourceVersion,
+        ),
+      );
+      if (mounted) {
+        setState(() => _membersOnlineCount = message.resourceTotal);
+      }
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.onlineEvent) {
+      _membersWatchStats.record(
+        RoomResourceWatchEvent<void>.changed(
+          version: message.resourceVersion,
+        ),
+      );
+      _applyMemberOnlineEvent(message.onlineEvent);
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.error) {
+      _membersWatchStats.record(
+        RoomResourceWatchEvent<void>.error(
+          message: message.error?.message ?? '',
+          code: message.error?.code ?? 0,
+        ),
+      );
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          message.error?.message.isNotEmpty == true
+              ? message.error!.message
+              : '成员在线状态监听失败',
+        );
+      }
+    }
+  }
+
   void _handleRealtimeMediaMessage(RoomRealtimeMessage message) {
     if (message.kind == RoomRealtimeMessageKind.checkStatus) {
       _handleMediaWatchEvent(
         RoomResourceWatchEvent<RoomMediaLibraryPage>.observed(
           version: message.resourceVersion,
-          changed: message.resourceChanged,
+          changed: message.resourceEvent,
         ),
       );
       return;
@@ -526,6 +663,35 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (message.kind == RoomRealtimeMessageKind.error) {
       _handleMediaWatchEvent(
         RoomResourceWatchEvent<RoomMediaLibraryPage>.error(
+          message: message.error?.message ?? '',
+          code: message.error?.code ?? 0,
+        ),
+      );
+    }
+  }
+
+  void _handleRealtimeChatMessage(RoomRealtimeMessage message) {
+    if (message.kind == RoomRealtimeMessageKind.checkStatus) {
+      _handleChatWatchEvent(
+        RoomResourceWatchEvent<void>.observed(
+          version: message.resourceVersion,
+          changed: message.resourceEvent,
+        ),
+      );
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.chat) {
+      _handleChatWatchEvent(
+        RoomResourceWatchEvent<RoomRealtimeMessage>.changed(
+          version: message.resourceVersion,
+          snapshot: message,
+        ),
+      );
+      return;
+    }
+    if (message.kind == RoomRealtimeMessageKind.error) {
+      _handleChatWatchEvent(
+        RoomResourceWatchEvent<void>.error(
           message: message.error?.message ?? '',
           code: message.error?.code ?? 0,
         ),
@@ -577,7 +743,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       case RoomResourceWatchKind.changed:
         final snapshot = event.snapshot;
         if (snapshot == null) {
-          MessageUtils.showError(context, '成员列表快照为空');
+          setState(() {});
           return;
         }
         setState(() {
@@ -585,7 +751,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ..clear()
             ..addAll(snapshot);
           _membersTotal = total ?? snapshot.length;
+          _membersOnlineCount =
+              snapshot.where((member) => member.isOnline).length;
         });
+        _startMembersOnlineWatches();
         break;
       case RoomResourceWatchKind.error:
         MessageUtils.showError(
@@ -594,6 +763,24 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         );
         break;
     }
+  }
+
+  void _applyMemberOnlineEvent(RoomRealtimeOnlineEvent? event) {
+    if (!mounted || event == null || event.userId.isEmpty) return;
+    final index =
+        _members.indexWhere((member) => member.userId == event.userId);
+    if (index < 0) return;
+    final member = _members[index];
+    final updated = member.copyWith(
+      isOnline: event.isOnline,
+      connectionCount: event.isOnline
+          ? (member.connectionCount > 0 ? member.connectionCount : 1)
+          : 0,
+    );
+    setState(() {
+      _members[index] = updated;
+      _membersOnlineCount = _members.where((member) => member.isOnline).length;
+    });
   }
 
   void _handleMediaWatchEvent(
@@ -618,6 +805,31 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         MessageUtils.showError(
           context,
           event.errorMessage.isEmpty ? '媒体库监听失败' : event.errorMessage,
+        );
+        break;
+    }
+  }
+
+  void _handleChatWatchEvent<T>(RoomResourceWatchEvent<T> event) {
+    if (!mounted) return;
+    _chatWatchStats.record(event);
+    if (event.version.isNotEmpty) _chatWatchVersion = event.version;
+    switch (event.kind) {
+      case RoomResourceWatchKind.observed:
+        setState(() {});
+        break;
+      case RoomResourceWatchKind.changed:
+        final snapshot = event.snapshot;
+        if (snapshot is RoomRealtimeMessage) {
+          setState(() => _applyChatRealtimeMessage(snapshot));
+        } else {
+          setState(() {});
+        }
+        break;
+      case RoomResourceWatchKind.error:
+        MessageUtils.showError(
+          context,
+          event.errorMessage.isEmpty ? '聊天事件监听失败' : event.errorMessage,
         );
         break;
     }
@@ -674,17 +886,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
     setState(() => _isSaving = true);
     try {
-      if (_updatePassword) {
-        await WatchTogetherService.updateRoomPassword(
-          widget.roomId,
-          _passwordController.text,
-        );
-      }
-
       final settings = WRoomSettings(
-        requirePassword: _updatePassword
-            ? _passwordController.text.isNotEmpty
-            : _settings.requirePassword,
+        requirePassword: _settings.requirePassword,
         allowGuestJoin: _allowGuestJoin,
         requireApproval: _requireApproval,
         allowAutoJoin: _allowAutoJoin,
@@ -706,8 +909,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       if (!mounted) return;
       setState(() {
         _settings = freshSettings;
-        _updatePassword = false;
-        _passwordController.clear();
         _applySettings(freshSettings);
       });
       MessageUtils.showSuccess(context, '设置已更新');
@@ -789,8 +990,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ..clear()
           ..addAll(page.members);
         _membersTotal = page.total;
+        _membersOnlineCount = page.onlineCount > 0
+            ? page.onlineCount
+            : _members.where((m) => m.isOnline).length;
         _membersWatchVersion = page.version;
       });
+      _startMembersOnlineWatches();
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '加载成员失败: $e');
     } finally {
@@ -837,11 +1042,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       _settingsWatchVersion = '';
       _membersWatchVersion = '';
       _mediaWatchVersion = '';
+      _chatWatchVersion = '';
+      _chatHistoryLoaded = false;
       _settingsWatchStats.reset();
       _membersWatchStats.reset();
       _mediaWatchStats.reset();
+      _chatWatchStats.reset();
       _realtimeEvents.clear();
     });
+    _loadChatHistory();
     _startResourceWatches();
   }
 
@@ -949,17 +1158,77 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         }
       }
       if (!mounted) return;
+      var shouldRestartChatWatch = false;
       setState(() {
-        if (!loadMore) _chatMessages.clear();
-        _chatMessages.addAll(page.messages);
+        if (loadMore) {
+          _appendChatHistoryPage(page.messages);
+        } else {
+          _replaceChatHistory(page.messages);
+          _chatHistoryLoaded = true;
+          shouldRestartChatWatch = true;
+        }
         _chatCursor = page.nextCursor;
+        if (!loadMore && page.eventCursor.isNotEmpty) {
+          _chatWatchVersion = page.eventCursor;
+        }
         if (readState != null) _chatReadState = readState;
       });
+      if (shouldRestartChatWatch) _startChatWatch();
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '加载聊天历史失败: $e');
     } finally {
       if (mounted) setState(() => _chatLoading = false);
     }
+  }
+
+  void _replaceChatHistory(List<RoomChatMessageInfo> messages) {
+    _chatMessages
+      ..clear()
+      ..addAll(messages);
+  }
+
+  void _appendChatHistoryPage(List<RoomChatMessageInfo> messages) {
+    final existingIds = _chatMessages.map((message) => message.id).toSet();
+    for (final message in messages) {
+      if (message.id.isEmpty || existingIds.add(message.id)) {
+        _chatMessages.add(message);
+      }
+    }
+  }
+
+  void _applyChatRealtimeMessage(RoomRealtimeMessage message) {
+    final next = _chatInfoFromRealtime(message);
+    final index = _chatMessages.indexWhere((item) => item.id == next.id);
+    if (index >= 0) {
+      _chatMessages[index] = next;
+    } else {
+      _chatMessages.insert(0, next);
+    }
+    if (_chatMessages.length > 200) {
+      _chatMessages.removeRange(200, _chatMessages.length);
+    }
+    _chatReadState = null;
+  }
+
+  RoomChatMessageInfo _chatInfoFromRealtime(RoomRealtimeMessage message) {
+    return RoomChatMessageInfo(
+      id: message.chatId,
+      roomId: widget.roomId,
+      userId: message.senderUserId,
+      username: message.senderUsername,
+      content: message.chatContent,
+      timestamp: (message.timestampMillis / 1000).round(),
+      displayPosition: message.chatDisplayPosition,
+      displayColor: message.chatDisplayColor,
+      version: message.chatVersion,
+      editedAt: message.chatEditedAt,
+      deletedAt: message.chatDeletedAt,
+      status: message.chatStatus,
+      replyToMessageId: message.chatReplyToMessageId,
+      images: message.images,
+      reactions: message.reactions,
+      reactionCount: message.reactionCount,
+    );
   }
 
   Future<void> _loadIceServers() async {
@@ -1000,6 +1269,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   List<_RoomSettingsSection> get _sections => [
         _RoomSettingsSection(
+          label: '信息',
+          icon: Icons.info_outline_rounded,
+          builder: _buildRoomInfoTab,
+        ),
+        _RoomSettingsSection(
           label: '设置',
           icon: Icons.tune_rounded,
           builder: _buildSettingsTab,
@@ -1025,6 +1299,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           builder: _buildChatHistoryTab,
         ),
         _RoomSettingsSection(
+          label: '举报',
+          icon: Icons.report_gmailerrorred_rounded,
+          builder: _buildReportsTab,
+        ),
+        _RoomSettingsSection(
           label: '网络',
           icon: Icons.hub_rounded,
           builder: _buildNetworkTab,
@@ -1047,6 +1326,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   String get _mediaTarget =>
       _mediaTargetStack.isEmpty ? '' : _mediaTargetStack.last;
 
+  bool get _isInsideDynamicMediaPlaylist =>
+      _mediaPlaylistEntryStack.any((entry) => entry.isDynamicPlaylist);
+
+  bool get _canMutateCurrentMediaScope =>
+      _mediaTarget.isEmpty && !_isInsideDynamicMediaPlaylist;
+
   Future<void> _openMediaEntry(WMovie entry) async {
     if (!entry.isFolder) return;
     final isPersistedPlaylist = entry.id.startsWith('pl_');
@@ -1055,6 +1340,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     setState(() {
       if (isPersistedPlaylist) {
         _mediaPlaylistStack.add(entry.id);
+        _mediaPlaylistEntryStack.add(entry);
         _mediaTargetStack.clear();
       } else {
         _mediaTargetStack.add(target);
@@ -1078,6 +1364,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (_mediaPlaylistStack.isNotEmpty) {
       setState(() {
         _mediaPlaylistStack.removeLast();
+        if (_mediaPlaylistEntryStack.isNotEmpty) {
+          _mediaPlaylistEntryStack.removeLast();
+        }
         _mediaWatchVersion = '';
       });
       _startMediaWatch();
@@ -1108,12 +1397,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         stream.mediaId,
       );
       if (!mounted) return;
-      await showModalBottomSheet<void>(
+      await showAppBottomSheet<void>(
         context: context,
-        showDragHandle: true,
         builder: (context) {
           final theme = Theme.of(context);
-          return SafeArea(
+          return AppSafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               child: Column(
@@ -1158,7 +1446,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton.icon(
+                      AppActionButton(
                         onPressed: () {
                           Clipboard.setData(
                             ClipboardData(text: detail.mediaId),
@@ -1166,19 +1454,21 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           Navigator.pop(context);
                           MessageUtils.showSuccess(context, '媒体 ID 已复制');
                         },
-                        icon: const Icon(Icons.copy_rounded),
-                        label: const Text('复制 ID'),
+                        icon: Icons.copy_rounded,
+                        label: '复制 ID',
+                        style: AppActionButtonStyle.text,
                       ),
                       const SizedBox(width: 8),
-                      FilledButton.tonalIcon(
+                      AppActionButton(
                         onPressed: detail.active
                             ? () {
                                 Navigator.pop(context);
                                 _kickStream(detail);
                               }
                             : null,
-                        icon: const Icon(Icons.link_off),
-                        label: const Text('断开推流'),
+                        icon: Icons.link_off,
+                        label: '断开推流',
+                        style: AppActionButtonStyle.destructive,
                       ),
                     ],
                   ),
@@ -1323,8 +1613,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       if (!mounted) return;
       setState(() {
         _settings = settings;
-        _updatePassword = false;
-        _passwordController.clear();
         _applySettings(settings);
       });
       MessageUtils.showSuccess(context, '设置已重置');
@@ -1368,8 +1656,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _createPlaylist() async {
-    if (_mediaTarget.isNotEmpty) {
-      MessageUtils.showInfo(context, '动态目录中不能创建本地播放列表');
+    if (!_canMutateCurrentMediaScope) {
+      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
     }
     final input = await _showEntryEditDialog(title: '新建播放列表');
@@ -1389,8 +1677,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _clearCurrentMediaScope() async {
-    if (_mediaTarget.isNotEmpty) {
-      MessageUtils.showInfo(context, '动态目录内容不能在房间内清空');
+    if (!_canMutateCurrentMediaScope) {
+      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
     }
     final playlistId = _currentPlaylistId;
@@ -1416,6 +1704,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _renameEntry(WMovie entry) async {
+    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
+      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      return;
+    }
     final input = await _showEntryEditDialog(
       title: entry.isFolder ? '编辑播放列表' : '编辑媒体',
       initialName: entry.name,
@@ -1449,6 +1741,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _deleteEntry(WMovie entry) async {
+    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
+      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      return;
+    }
     final confirmed = await _confirm(
       title: '删除条目',
       content: entry.isFolder
@@ -1488,16 +1784,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         detail = await WatchTogetherService.getMedia(widget.roomId, entry.id);
       }
       if (!mounted) return;
-      await showModalBottomSheet<void>(
+      await showAppBottomSheet<void>(
         context: context,
-        showDragHandle: true,
         builder: (context) {
           final theme = Theme.of(context);
           final isPlaylist = detail.id.startsWith('pl_');
-          final isPersisted =
-              detail.id.startsWith('pl_') || detail.id.startsWith('med_');
-          return SafeArea(
-            child: SingleChildScrollView(
+          final canMutate = _canMutateCurrentMediaScope &&
+              (detail.id.startsWith('pl_') || detail.id.startsWith('med_')) &&
+              !detail.isProviderDynamicEntry;
+          return AppSafeArea(
+            child: AppSingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 560),
@@ -1595,37 +1891,38 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        TextButton.icon(
+                        AppActionButton(
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: detail.id));
                             Navigator.pop(context);
                             MessageUtils.showSuccess(context, 'ID 已复制');
                           },
-                          icon: const Icon(Icons.copy_rounded),
-                          label: const Text('复制 ID'),
+                          icon: Icons.copy_rounded,
+                          label: '复制 ID',
+                          style: AppActionButtonStyle.text,
                         ),
-                        const SizedBox(width: 8),
-                        FilledButton.tonalIcon(
-                          onPressed: isPersisted
-                              ? () {
-                                  Navigator.pop(context);
-                                  _renameEntry(detail);
-                                }
-                              : null,
-                          icon: const Icon(Icons.edit_outlined),
-                          label: const Text('编辑'),
-                        ),
-                        const SizedBox(width: 8),
-                        FilledButton.tonalIcon(
-                          onPressed: isPersisted
-                              ? () {
-                                  Navigator.pop(context);
-                                  _updateEntryCover(detail);
-                                }
-                              : null,
-                          icon: const Icon(Icons.image_outlined),
-                          label: const Text('封面'),
-                        ),
+                        if (canMutate) ...[
+                          const SizedBox(width: 8),
+                          AppActionButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _renameEntry(detail);
+                            },
+                            icon: Icons.edit_outlined,
+                            label: '编辑',
+                            style: AppActionButtonStyle.tonal,
+                          ),
+                          const SizedBox(width: 8),
+                          AppActionButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _updateEntryCover(detail);
+                            },
+                            icon: Icons.image_outlined,
+                            label: '封面',
+                            style: AppActionButtonStyle.tonal,
+                          ),
+                        ],
                       ],
                     ),
                   ],
@@ -1641,9 +1938,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _updateEntryCover(WMovie entry) async {
-    if (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_')) return;
+    if (!_canMutateCurrentMediaScope ||
+        entry.isProviderDynamicEntry ||
+        (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_'))) {
+      return;
+    }
     try {
-      final image = await pickLocalImageUpload();
+      final image = await pickLocalImageUpload(context, aspectRatio: 16 / 9);
       if (image == null || !mounted) return;
       if (entry.id.startsWith('pl_')) {
         await WatchTogetherService.updatePlaylistCover(
@@ -1666,7 +1967,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _clearEntryCover(WMovie entry) async {
-    if (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_')) return;
+    if (!_canMutateCurrentMediaScope ||
+        entry.isProviderDynamicEntry ||
+        (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_'))) {
+      return;
+    }
     try {
       if (entry.id.startsWith('pl_')) {
         await WatchTogetherService.clearPlaylistCover(widget.roomId, entry.id);
@@ -1685,8 +1990,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       MessageUtils.showInfo(context, '已删除的消息不能编辑');
       return;
     }
-    final controller = TextEditingController(text: message.content);
-    final content = await _showChatMessageEditDialog(controller);
+    final content = await _showChatMessageEditDialog(message.content);
     if (content == null || content == message.content) return;
     try {
       await WatchTogetherService.editChatMessage(
@@ -1702,32 +2006,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<String?> _showChatMessageEditDialog(
-    TextEditingController controller,
-  ) {
+  Future<String?> _showChatMessageEditDialog(String initialContent) {
     return ChatUtils.showStyledDialog<String>(
       context: context,
       title: '编辑消息',
       icon: const Icon(Icons.edit_outlined),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        minLines: 2,
-        maxLines: 5,
-        decoration: const InputDecoration(
-          labelText: '消息内容',
-          border: OutlineInputBorder(),
-        ),
-      ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        ChatUtils.createConfirmButton(
-          context,
-          () => Navigator.pop(context, controller.text.trim()),
-          text: '保存',
-        ),
-      ],
-    ).whenComplete(() => _disposeTextControllersAfterDialog([controller]));
+      content: _ChatMessageEditForm(initialContent: initialContent),
+      actions: const [],
+    );
   }
 
   Future<void> _deleteChatMessage(RoomChatMessageInfo message) async {
@@ -1751,6 +2037,42 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
+  Future<void> _openRoomScopedReportsViewer({
+    required String title,
+    int targetType = 0,
+    String targetMemberUserId = '',
+    int targetChatMessageId = 0,
+  }) {
+    return ChatUtils.showStyledDialog<void>(
+      context: context,
+      title: title,
+      icon: const Icon(Icons.report_gmailerrorred_rounded, color: Colors.red),
+      content: SizedBox(
+        width: 900,
+        height: 620,
+        child: AdminContentReportsTab(
+          title: '',
+          initialTargetType: targetType,
+          roomScopedRoomId: widget.roomId,
+          initialTargetMemberUserId: targetMemberUserId,
+          initialTargetChatMessageId: targetChatMessageId,
+          showTargetTypeTabs: targetType == 0,
+        ),
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+      ],
+    );
+  }
+
+  Widget _buildReportsTab(ThemeData theme, bool isDark) {
+    return AdminContentReportsTab(
+      title: '${widget.roomName} 的举报管理',
+      roomScopedRoomId: widget.roomId,
+      showTargetTypeTabs: true,
+    );
+  }
+
   Future<void> _showChatMessageContext(RoomChatMessageInfo message) async {
     try {
       final contextInfo = await WatchTogetherService.getChatMessageContext(
@@ -1766,14 +2088,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         contextInfo.message,
         ...contextInfo.after,
       ];
-      await showModalBottomSheet<void>(
+      await showAppBottomSheet<void>(
         context: context,
-        showDragHandle: true,
         builder: (context) {
           final theme = Theme.of(context);
           final isDark = theme.brightness == Brightness.dark;
-          return SafeArea(
-            child: ListView(
+          return AppSafeArea(
+            child: AppListView(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
               children: [
                 Padding(
@@ -1799,6 +2120,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _moveMedia(WMovie entry) async {
+    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
+      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      return;
+    }
     if (!entry.id.startsWith('med_')) return;
     final target = await _showMoveMediaTargetDialog(entry);
     if (target == null) return;
@@ -1821,6 +2146,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _movePlaylistRelative(WMovie entry, int direction) async {
+    if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
+      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      return;
+    }
     if (!entry.id.startsWith('pl_')) return;
     final playlists = _mediaPage?.playlists ?? const <WMovie>[];
     final index = playlists.indexWhere((item) => item.id == entry.id);
@@ -1882,7 +2211,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       }
     }
 
-    return showDialog<_MediaMoveTarget>(
+    return showAppDialog<_MediaMoveTarget>(
       context: context,
       builder: (context) {
         var started = false;
@@ -1895,9 +2224,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               });
             }
 
-            return AlertDialog(
+            return AppDialog(
               title: const Text('移动媒体'),
-              content: SizedBox(
+              body: SizedBox(
                 width: 420,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -1912,11 +2241,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ListTile(
-                      leading: const Icon(Icons.home_outlined),
+                    AppTile(
+                      prefix: const Icon(Icons.home_outlined),
                       title: const Text('根目录'),
                       enabled: _currentPlaylistId.isNotEmpty,
-                      onTap: _currentPlaylistId.isEmpty
+                      onPressed: _currentPlaylistId.isEmpty
                           ? null
                           : () => Navigator.pop(
                                 context,
@@ -1926,7 +2255,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     if (loading)
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 24),
-                        child: CircularProgressIndicator(),
+                        child: AppLoadingIndicator(centered: false),
                       )
                     else if (error.isNotEmpty)
                       Padding(
@@ -1940,13 +2269,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       )
                     else
                       Flexible(
-                        child: ListView.builder(
+                        child: AppListView.builder(
                           shrinkWrap: true,
                           itemCount: playlists.length,
                           itemBuilder: (context, index) {
                             final playlist = playlists[index];
-                            return ListTile(
-                              leading: const Icon(Icons.folder_outlined),
+                            return AppTile(
+                              prefix: const Icon(Icons.folder_outlined),
                               title: Text(
                                 playlist.name,
                                 maxLines: 1,
@@ -1955,7 +2284,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                               subtitle: playlist.parentId == null
                                   ? null
                                   : Text('上级 ${playlist.parentId}'),
-                              onTap: () => Navigator.pop(
+                              onPressed: () => Navigator.pop(
                                 context,
                                 _MediaMoveTarget(playlist.id, playlist.name),
                               ),
@@ -1967,15 +2296,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 ),
               ),
               actions: [
-                TextButton(
+                AppActionButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('取消'),
+                  label: '取消',
+                  style: AppActionButtonStyle.text,
                 ),
-                TextButton.icon(
+                AppActionButton(
                   onPressed:
                       loading ? null : () => loadPlaylists(setDialogState),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('刷新'),
+                  icon: Icons.refresh,
+                  label: '刷新',
+                  style: AppActionButtonStyle.text,
                 ),
               ],
             );
@@ -1992,21 +2323,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       title: '拒绝申请',
       icon: const Icon(Icons.block_rounded),
       iconColor: Theme.of(context).colorScheme.error,
-      content: TextField(
+      content: AppTextField(
         controller: controller,
+        label: '原因',
         autofocus: true,
         maxLines: 3,
-        decoration: const InputDecoration(
-          labelText: '原因',
-          border: OutlineInputBorder(),
-        ),
       ),
       actions: [
         ChatUtils.createCancelButton(context),
-        FilledButton.tonalIcon(
+        AppActionButton(
           onPressed: () => Navigator.pop(context, controller.text.trim()),
-          icon: const Icon(Icons.block_rounded),
-          label: const Text('拒绝'),
+          icon: Icons.block_rounded,
+          label: '拒绝',
+          style: AppActionButtonStyle.destructive,
         ),
       ],
     ).whenComplete(() => _disposeTextControllersAfterDialog([controller]));
@@ -2029,13 +2358,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
+            AppTextField(
               controller: nameController,
+              label: '名称',
               autofocus: true,
-              decoration: const InputDecoration(
-                labelText: '名称',
-                border: OutlineInputBorder(),
-              ),
               onSubmitted: (_) {
                 Navigator.pop(
                   context,
@@ -2047,14 +2373,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               },
             ),
             const SizedBox(height: 12),
-            TextField(
+            AppTextField(
               controller: descriptionController,
+              label: '描述',
               minLines: 2,
               maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: '描述',
-                border: OutlineInputBorder(),
-              ),
             ),
           ],
         ),
@@ -2094,35 +2417,28 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
+              AppTextField(
                 controller: userIdController,
+                label: '用户 ID',
+                prefixIcon: Icons.person_outline_rounded,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: '用户 ID',
-                  prefixIcon: Icon(Icons.person_outline_rounded),
-                  border: OutlineInputBorder(),
-                ),
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<int>(
-                initialValue: role,
-                decoration: const InputDecoration(
-                  labelText: '角色',
-                  prefixIcon: Icon(Icons.admin_panel_settings_outlined),
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 2, child: Text('管理员')),
-                  DropdownMenuItem(value: 3, child: Text('成员')),
-                  DropdownMenuItem(value: 4, child: Text('访客')),
-                ],
+              AppSelect<int>(
+                value: role,
+                label: '角色',
+                prefixIcon: Icons.admin_panel_settings_outlined,
+                options: const {
+                  '管理员': 2,
+                  '成员': 3,
+                  '访客': 4,
+                },
                 onChanged: (value) {
                   if (value != null) setDialogState(() => role = value);
                 },
               ),
               const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
+              AppSwitchTile(
                 title: const Text('发送通知'),
                 value: notify,
                 onChanged: (value) => setDialogState(() => notify = value),
@@ -2153,7 +2469,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   void _disposeTextControllersAfterDialog(
     List<TextEditingController> controllers,
   ) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    Future<void>.delayed(const Duration(milliseconds: 350), () {
       for (final controller in controllers) {
         controller.dispose();
       }
@@ -2168,18 +2484,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       icon: const Icon(Icons.admin_panel_settings_outlined),
       content: StatefulBuilder(
         builder: (context, setDialogState) {
-          return DropdownButtonFormField<int>(
-            initialValue: role,
-            decoration: const InputDecoration(
-              labelText: '角色',
-              prefixIcon: Icon(Icons.admin_panel_settings_outlined),
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(value: 2, child: Text('管理员')),
-              DropdownMenuItem(value: 3, child: Text('成员')),
-              DropdownMenuItem(value: 4, child: Text('访客')),
-            ],
+          return AppSelect<int>(
+            value: role,
+            label: '角色',
+            prefixIcon: Icons.admin_panel_settings_outlined,
+            options: const {
+              '管理员': 2,
+              '成员': 3,
+              '访客': 4,
+            },
             onChanged: (value) {
               if (value != null) setDialogState(() => role = value);
             },
@@ -2207,7 +2520,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     var removed =
         isAdmin ? member.adminRemovedPermissions : member.removedPermissions;
 
-    return showDialog<_MemberPermissionOverrideResult>(
+    return showAppDialog<_MemberPermissionOverrideResult>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
@@ -2227,9 +2540,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               });
             }
 
-            return AlertDialog(
+            return AppDialog(
               title: const Text('权限覆盖'),
-              content: SizedBox(
+              body: SizedBox(
                 width: 440,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -2247,20 +2560,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 ),
               ),
               actions: [
-                TextButton(
+                AppActionButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('取消'),
+                  label: '取消',
+                  style: AppActionButtonStyle.text,
                 ),
-                TextButton(
+                AppActionButton(
                   onPressed: () {
                     setDialogState(() {
                       added = 0;
                       removed = 0;
                     });
                   },
-                  child: const Text('清除覆盖'),
+                  label: '清除覆盖',
+                  style: AppActionButtonStyle.text,
                 ),
-                FilledButton(
+                AppActionButton(
                   onPressed: () {
                     Navigator.pop(
                       context,
@@ -2272,7 +2587,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ),
                     );
                   },
-                  child: const Text('保存'),
+                  label: '保存',
                 ),
               ],
             );
@@ -2299,7 +2614,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       child: Row(
         children: [
           Expanded(child: Text(title)),
-          SegmentedButton<_PermissionOverrideMode>(
+          AppSegmentedControl<_PermissionOverrideMode>(
             segments: const [
               ButtonSegment(
                 value: _PermissionOverrideMode.inherit,
@@ -2314,10 +2629,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 label: Text('拒绝'),
               ),
             ],
-            selected: {mode},
-            onSelectionChanged: (selection) {
-              onChanged(flag, selection.single);
-            },
+            value: mode,
+            onChanged: (selection) => onChanged(flag, selection),
           ),
         ],
       ),
@@ -2341,10 +2654,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       content: Text(content),
       actions: [
         ChatUtils.createCancelButton(context),
-        FilledButton.tonalIcon(
+        AppActionButton(
           onPressed: () => Navigator.pop(context, true),
-          icon: Icon(destructive ? Icons.warning_amber_rounded : Icons.check),
-          label: Text(action),
+          icon: destructive ? Icons.warning_amber_rounded : Icons.check,
+          label: action,
+          style: destructive
+              ? AppActionButtonStyle.destructive
+              : AppActionButtonStyle.tonal,
         ),
       ],
     );
@@ -2384,7 +2700,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               ],
             ),
           ),
-          IOSStyleSwitch(value: value, onChanged: onChanged, isDark: isDark),
+          AppSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );
@@ -2426,21 +2742,26 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     required List<Widget> children,
     required bool isDark,
   }) {
-    return Container(
+    return AppPanelSurface(
       margin: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
+      color: _settingsSurfaceColor(isDark),
+      border: _settingsSurfaceBorder(isDark),
       child: Column(children: children),
     );
   }
 
+  Color _settingsSurfaceColor(bool isDark) {
+    return isDark ? const Color(0xFF1E1E24) : Colors.white;
+  }
+
+  Border _settingsSurfaceBorder(bool isDark) {
+    return Border.all(
+      color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+    );
+  }
+
   Widget _buildDivider(ThemeData theme) {
-    return Divider(
+    return AppDivider(
       height: 1,
       indent: 16,
       endIndent: 16,
@@ -2448,85 +2769,44 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
+  Widget _buildSearchField({
+    required TextEditingController controller,
+    required String label,
+    required VoidCallback onSearch,
+    IconData icon = Icons.search_rounded,
+  }) {
+    return AppSearchField(
+      controller: controller,
+      hintText: label,
+      icon: icon,
+      onChanged: (value) {
+        if (value.isEmpty) onSearch();
+      },
+      onSubmitted: (_) => onSearch(),
+    );
+  }
+
   Widget _buildMaxMembersField(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: TextField(
+      child: AppTextField(
         controller: _maxMembersController,
+        label: '最大成员数',
+        helperText: '0 表示不限制',
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration: InputDecoration(
-          labelText: '最大成员数',
-          helperText: '0 表示不限制',
-          labelStyle: TextStyle(color: theme.hintColor),
-          helperStyle: TextStyle(color: theme.hintColor, fontSize: 11),
-          border: InputBorder.none,
-        ),
       ),
     );
   }
 
   Widget _buildSettingsTab(ThemeData theme, bool isDark) {
-    return ListView(
+    return AppListView(
       padding: const EdgeInsets.only(bottom: 32, top: 8),
       children: [
         _buildSectionHeader('访问控制', theme),
         _buildSurface(
           isDark: isDark,
           children: [
-            InkWell(
-              onTap: () => setState(() => _updatePassword = !_updatePassword),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        '修改房间密码',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Checkbox(
-                      value: _updatePassword,
-                      onChanged: (v) =>
-                          setState(() => _updatePassword = v ?? false),
-                      activeColor: theme.primaryColor,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (_updatePassword) ...[
-              _buildDivider(theme),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: '新密码',
-                    helperText: '留空保存会移除房间密码',
-                    labelStyle: TextStyle(color: theme.hintColor),
-                    helperStyle:
-                        TextStyle(color: theme.hintColor, fontSize: 11),
-                    border: InputBorder.none,
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: _passwordController.clear,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            _buildDivider(theme),
             _buildSwitchItem(
               '允许访客加入',
               '访客 token 只能访问当前房间',
@@ -2685,19 +2965,50 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ],
         ),
-        _buildSectionHeader('房间操作', theme),
-        _buildRoomActions(theme, isDark),
+        _buildSectionHeader('设置操作', theme),
+        _buildSurface(
+          isDark: isDark,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _isSaving ? '正在保存设置' : '保存访问控制、消息开关和权限策略',
+                      style: TextStyle(color: theme.hintColor, fontSize: 13),
+                    ),
+                  ),
+                  AppActionButton(
+                    onPressed: _isSaving ? null : _saveSettings,
+                    loading: _isSaving,
+                    icon: Icons.save_outlined,
+                    label: '保存设置',
+                    style: AppActionButtonStyle.tonal,
+                  ),
+                ],
+              ),
+            ),
+            _buildDivider(theme),
+            AppTile(
+              prefix: const Icon(Icons.restart_alt),
+              title: const Text('重置房间设置'),
+              subtitle: const Text('恢复服务端默认房间策略'),
+              onPressed: _resetSettings,
+            ),
+          ],
+        ),
       ],
     );
   }
 
   Widget _buildStreamsTab(ThemeData theme, bool isDark) {
     if (_streamsLoading && _streams.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _loadStreams,
-      child: ListView(
+      child: AppListView(
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
@@ -2712,34 +3023,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: _buildSearchField(
                     controller: _streamSearchController,
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _streamSearchController.text.isEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: () {
-                                _streamSearchController.clear();
-                                setState(() => _streamsPage = 1);
-                                _loadStreams();
-                              },
-                              icon: const Icon(Icons.close_rounded),
-                              tooltip: '清除搜索',
-                            ),
-                      labelText: '媒体 ID',
-                      border: const OutlineInputBorder(),
-                    ),
-                    onSubmitted: (_) {
+                    label: '媒体 ID',
+                    onSearch: () {
                       setState(() => _streamsPage = 1);
                       _loadStreams();
                     },
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton.outlined(
+                AppIconButton(
                   onPressed: () {
                     setState(() {
                       _streamSortDirection = _streamSortDirection ==
@@ -2750,51 +3044,36 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     });
                     _loadStreams();
                   },
-                  icon: Icon(
-                    _streamSortDirection ==
-                            client_enum.SortDirection.SORT_DIRECTION_ASC
-                        ? Icons.north_rounded
-                        : Icons.south_rounded,
-                  ),
+                  icon: _streamSortDirection ==
+                          client_enum.SortDirection.SORT_DIRECTION_ASC
+                      ? Icons.north_rounded
+                      : Icons.south_rounded,
                   tooltip: _streamSortDirection ==
                           client_enum.SortDirection.SORT_DIRECTION_ASC
                       ? '媒体 ID 升序'
                       : '媒体 ID 降序',
+                  style: AppIconButtonStyle.outlined,
                 ),
               ],
             ),
           ),
-          Padding(
+          AppPaginationBar(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Row(
-              children: [
-                Text(
-                  '第 $_streamsPage 页 · 每页 $_streamsPageSize · 共 $_streamsTotal 条',
-                  style: TextStyle(color: theme.hintColor, fontSize: 12),
-                ),
-                const Spacer(),
-                IconButton(
-                  tooltip: '上一页',
-                  icon: const Icon(Icons.chevron_left_rounded),
-                  onPressed: _streamsPage <= 1
-                      ? null
-                      : () {
-                          setState(() => _streamsPage -= 1);
-                          _loadStreams();
-                        },
-                ),
-                IconButton(
-                  tooltip: '下一页',
-                  icon: const Icon(Icons.chevron_right_rounded),
-                  onPressed: _streamsPage >= _streamPageCount
-                      ? null
-                      : () {
-                          setState(() => _streamsPage += 1);
-                          _loadStreams();
-                        },
-                ),
-              ],
-            ),
+            label:
+                '第 $_streamsPage 页 · 每页 $_streamsPageSize · 共 $_streamsTotal 条',
+            labelStyle: TextStyle(color: theme.hintColor, fontSize: 12),
+            onPrevious: _streamsPage <= 1
+                ? null
+                : () {
+                    setState(() => _streamsPage -= 1);
+                    _loadStreams();
+                  },
+            onNext: _streamsPage >= _streamPageCount
+                ? null
+                : () {
+                    setState(() => _streamsPage += 1);
+                    _loadStreams();
+                  },
           ),
           if (_streams.isEmpty)
             _buildEmptyState('当前没有活跃推流', theme)
@@ -2809,11 +3088,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Widget _buildReviewsTab(ThemeData theme, bool isDark) {
     if (_reviewsLoading && _reviews.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _loadReviews,
-      child: ListView(
+      child: AppListView(
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
@@ -2828,27 +3107,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: _buildSearchField(
                     controller: _reviewUserController,
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _reviewUserController.text.isEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: () {
-                                _reviewUserController.clear();
-                                setState(() => _reviewsPage = 1);
-                                _loadReviews();
-                              },
-                              icon: const Icon(Icons.close_rounded),
-                              tooltip: '清除用户过滤',
-                            ),
-                      labelText: '用户 ID',
-                      border: const OutlineInputBorder(),
-                    ),
-                    onSubmitted: (_) {
+                    label: '用户 ID',
+                    onSearch: () {
                       setState(() => _reviewsPage = 1);
                       _loadReviews();
                     },
@@ -2857,27 +3119,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 150,
-                  child: DropdownButtonFormField<common_enum.ReviewStatus>(
-                    initialValue: _reviewStatusFilter,
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      labelText: '状态',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
-                        child: Text('待审核'),
-                      ),
-                      DropdownMenuItem(
-                        value: common_enum.ReviewStatus.REVIEW_STATUS_APPROVED,
-                        child: Text('已通过'),
-                      ),
-                      DropdownMenuItem(
-                        value: common_enum.ReviewStatus.REVIEW_STATUS_REJECTED,
-                        child: Text('已拒绝'),
-                      ),
-                    ],
+                  child: AppSelect<common_enum.ReviewStatus>(
+                    value: _reviewStatusFilter,
+                    label: '状态',
+                    options: const {
+                      '待审核': common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
+                      '已通过': common_enum.ReviewStatus.REVIEW_STATUS_APPROVED,
+                      '已拒绝': common_enum.ReviewStatus.REVIEW_STATUS_REJECTED,
+                    },
                     onChanged: (value) {
                       if (value == null) return;
                       setState(() {
@@ -2891,39 +3140,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               ],
             ),
           ),
-          Padding(
+          AppPaginationBar(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '第 $_reviewsPage 页 · 每页 $_reviewsPageSize · 共 $_reviewsTotal 条',
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: theme.hintColor),
-                  ),
-                ),
-                IconButton(
-                  tooltip: '上一页',
-                  icon: const Icon(Icons.chevron_left_rounded),
-                  onPressed: _reviewsPage <= 1
-                      ? null
-                      : () {
-                          setState(() => _reviewsPage -= 1);
-                          _loadReviews();
-                        },
-                ),
-                IconButton(
-                  tooltip: '下一页',
-                  icon: const Icon(Icons.chevron_right_rounded),
-                  onPressed: _reviewsPage >= _reviewPageCount
-                      ? null
-                      : () {
-                          setState(() => _reviewsPage += 1);
-                          _loadReviews();
-                        },
-                ),
-              ],
+            label:
+                '第 $_reviewsPage 页 · 每页 $_reviewsPageSize · 共 $_reviewsTotal 条',
+            labelStyle: theme.textTheme.bodySmall?.copyWith(
+              color: theme.hintColor,
             ),
+            onPrevious: _reviewsPage <= 1
+                ? null
+                : () {
+                    setState(() => _reviewsPage -= 1);
+                    _loadReviews();
+                  },
+            onNext: _reviewsPage >= _reviewPageCount
+                ? null
+                : () {
+                    setState(() => _reviewsPage += 1);
+                    _loadReviews();
+                  },
           ),
           if (_reviews.isEmpty)
             _buildEmptyState('当前没有加入申请', theme)
@@ -2939,12 +3174,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Widget _buildMediaTab(ThemeData theme, bool isDark) {
     final page = _mediaPage;
     if (_mediaLoading && page == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
     final entries = page?.entries ?? const <WMovie>[];
-    return RefreshIndicator(
+    final canMutateScope = _canMutateCurrentMediaScope;
+    return AppRefreshIndicator(
       onRefresh: _loadMediaLibrary,
-      child: ListView(
+      child: AppListView(
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
@@ -2956,30 +3192,31 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             action: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
+                AppIconButton(
                   tooltip: '返回上级',
                   onPressed:
                       _mediaTarget.isNotEmpty || _mediaPlaylistStack.isNotEmpty
                           ? _handleMediaBack
                           : null,
-                  icon: const Icon(Icons.arrow_upward),
+                  icon: Icons.arrow_upward,
                 ),
-                IconButton(
-                  tooltip: '新建播放列表',
-                  onPressed: _mediaTarget.isEmpty ? _createPlaylist : null,
-                  icon: const Icon(Icons.create_new_folder),
-                ),
-                IconButton(
-                  tooltip: '清空当前目录',
-                  onPressed: _mediaTarget.isEmpty && !_mediaLoading
-                      ? _clearCurrentMediaScope
-                      : null,
-                  icon: const Icon(Icons.delete_sweep_rounded),
-                ),
-                IconButton(
+                if (canMutateScope) ...[
+                  AppIconButton(
+                    tooltip: '新建播放列表',
+                    onPressed: _createPlaylist,
+                    icon: Icons.create_new_folder,
+                  ),
+                  AppIconButton(
+                    tooltip: '清空当前目录',
+                    onPressed: _mediaLoading ? null : _clearCurrentMediaScope,
+                    icon: Icons.delete_sweep_rounded,
+                    style: AppIconButtonStyle.destructive,
+                  ),
+                ],
+                AppIconButton(
                   tooltip: '刷新动态列表',
                   onPressed: () => _reloadMediaLibrary(refresh: true),
-                  icon: const Icon(Icons.sync),
+                  icon: Icons.sync,
                 ),
               ],
             ),
@@ -2989,47 +3226,23 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Column(
               children: [
-                TextField(
+                _buildSearchField(
                   controller: _mediaSearchController,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    suffixIcon: _mediaSearchController.text.isEmpty
-                        ? null
-                        : IconButton(
-                            onPressed: () {
-                              _mediaSearchController.clear();
-                              _reloadMediaLibrary();
-                            },
-                            icon: const Icon(Icons.close_rounded),
-                            tooltip: '清除搜索',
-                          ),
-                    labelText: '搜索媒体或目录',
-                    border: const OutlineInputBorder(),
-                  ),
-                  onSubmitted: (_) => _reloadMediaLibrary(),
+                  label: '搜索媒体或目录',
+                  onSearch: _reloadMediaLibrary,
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
-                      child: DropdownButtonFormField<String>(
+                      child: AppSelect<String>(
                         key: ValueKey('media-source-$_mediaSourceProvider'),
-                        initialValue: _mediaSourceProvider,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          labelText: '来源',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: _mediaSourceLabels.entries
-                            .map(
-                              (entry) => DropdownMenuItem<String>(
-                                value: entry.key,
-                                child: Text(entry.value),
-                              ),
-                            )
-                            .toList(growable: false),
+                        value: _mediaSourceProvider,
+                        label: '来源',
+                        options: {
+                          for (final entry in _mediaSourceLabels.entries)
+                            entry.value: entry.key,
+                        },
                         onChanged: (value) {
                           if (value == null) return;
                           _selectMediaSourceProvider(value);
@@ -3038,40 +3251,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: DropdownButtonFormField<String>(
+                      child: AppSelect<String>(
                         key: ValueKey(
                           'media-instance-$_mediaSourceProvider-'
                           '$_mediaProviderInstanceName-'
                           '${_mediaProviderInstances.join('|')}',
                         ),
-                        initialValue: _mediaProviderInstances
+                        value: _mediaProviderInstances
                                 .contains(_mediaProviderInstanceName)
                             ? _mediaProviderInstanceName
                             : '',
-                        decoration: InputDecoration(
-                          isDense: true,
-                          labelText: '实例',
-                          border: const OutlineInputBorder(),
-                          suffixIcon: _mediaProviderInstancesLoading
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: SizedBox.square(
-                                    dimension: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                )
-                              : null,
-                        ),
-                        items: _mediaProviderInstances
-                            .map(
-                              (instance) => DropdownMenuItem<String>(
-                                value: instance,
-                                child: Text(_providerInstanceLabel(instance)),
-                              ),
-                            )
-                            .toList(growable: false),
+                        label: '实例',
+                        options: {
+                          for (final instance in _mediaProviderInstances)
+                            _providerInstanceLabel(instance): instance,
+                        },
+                        enabled: _mediaSourcesWithProviderInstances.contains(
+                              _mediaSourceProvider,
+                            ) &&
+                            !_mediaProviderInstancesLoading,
                         onChanged: _mediaSourcesWithProviderInstances.contains(
                                   _mediaSourceProvider,
                                 ) &&
@@ -3089,31 +3287,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 Row(
                   children: [
                     Expanded(
-                      child: DropdownButtonFormField<
-                          client_enum.ResourceAvailabilityFilter>(
-                        initialValue: _mediaAvailability,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          labelText: '可用性',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: client_enum.ResourceAvailabilityFilter
-                                .RESOURCE_AVAILABILITY_FILTER_ALL,
-                            child: Text('全部'),
-                          ),
-                          DropdownMenuItem(
-                            value: client_enum.ResourceAvailabilityFilter
-                                .RESOURCE_AVAILABILITY_FILTER_AVAILABLE,
-                            child: Text('可用'),
-                          ),
-                          DropdownMenuItem(
-                            value: client_enum.ResourceAvailabilityFilter
-                                .RESOURCE_AVAILABILITY_FILTER_UNAVAILABLE,
-                            child: Text('不可用'),
-                          ),
-                        ],
+                      child: AppSelect<client_enum.ResourceAvailabilityFilter>(
+                        value: _mediaAvailability,
+                        label: '可用性',
+                        options: const {
+                          '全部': client_enum.ResourceAvailabilityFilter
+                              .RESOURCE_AVAILABILITY_FILTER_ALL,
+                          '可用': client_enum.ResourceAvailabilityFilter
+                              .RESOURCE_AVAILABILITY_FILTER_AVAILABLE,
+                          '不可用': client_enum.ResourceAvailabilityFilter
+                              .RESOURCE_AVAILABILITY_FILTER_UNAVAILABLE,
+                        },
                         onChanged: (value) {
                           if (value == null) return;
                           setState(() => _mediaAvailability = value);
@@ -3123,46 +3307,23 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child:
-                          DropdownButtonFormField<client_enum.MediaListSortBy>(
-                        initialValue: _mediaSortBy,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          labelText: '排序',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: client_enum
-                                .MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
-                            child: Text('位置'),
-                          ),
-                          DropdownMenuItem(
-                            value: client_enum
-                                .MediaListSortBy.MEDIA_LIST_SORT_BY_NAME,
-                            child: Text('名称'),
-                          ),
-                          DropdownMenuItem(
-                            value: client_enum
-                                .MediaListSortBy.MEDIA_LIST_SORT_BY_ADDED_AT,
-                            child: Text('添加时间'),
-                          ),
-                          DropdownMenuItem(
-                            value: client_enum
-                                .MediaListSortBy.MEDIA_LIST_SORT_BY_UPDATED_AT,
-                            child: Text('更新时间'),
-                          ),
-                          DropdownMenuItem(
-                            value: client_enum.MediaListSortBy
-                                .MEDIA_LIST_SORT_BY_SOURCE_PROVIDER,
-                            child: Text('来源'),
-                          ),
-                          DropdownMenuItem(
-                            value: client_enum.MediaListSortBy
-                                .MEDIA_LIST_SORT_BY_PROVIDER_INSTANCE_NAME,
-                            child: Text('实例'),
-                          ),
-                        ],
+                      child: AppSelect<client_enum.MediaListSortBy>(
+                        value: _mediaSortBy,
+                        label: '排序',
+                        options: const {
+                          '位置': client_enum
+                              .MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
+                          '名称': client_enum
+                              .MediaListSortBy.MEDIA_LIST_SORT_BY_NAME,
+                          '添加时间': client_enum
+                              .MediaListSortBy.MEDIA_LIST_SORT_BY_ADDED_AT,
+                          '更新时间': client_enum
+                              .MediaListSortBy.MEDIA_LIST_SORT_BY_UPDATED_AT,
+                          '来源': client_enum.MediaListSortBy
+                              .MEDIA_LIST_SORT_BY_SOURCE_PROVIDER,
+                          '实例': client_enum.MediaListSortBy
+                              .MEDIA_LIST_SORT_BY_PROVIDER_INSTANCE_NAME,
+                        },
                         onChanged: (value) {
                           if (value == null) return;
                           setState(() => _mediaSortBy = value);
@@ -3171,7 +3332,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton.outlined(
+                    AppIconButton(
                       onPressed: () {
                         setState(() {
                           _mediaSortDirection = _mediaSortDirection ==
@@ -3181,16 +3342,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         });
                         _reloadMediaLibrary();
                       },
-                      icon: Icon(
-                        _mediaSortDirection ==
-                                client_enum.SortDirection.SORT_DIRECTION_ASC
-                            ? Icons.north_rounded
-                            : Icons.south_rounded,
-                      ),
+                      icon: _mediaSortDirection ==
+                              client_enum.SortDirection.SORT_DIRECTION_ASC
+                          ? Icons.north_rounded
+                          : Icons.south_rounded,
                       tooltip: _mediaSortDirection ==
                               client_enum.SortDirection.SORT_DIRECTION_ASC
                           ? '升序'
                           : '降序',
+                      style: AppIconButtonStyle.outlined,
                     ),
                   ],
                 ),
@@ -3221,16 +3381,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           action: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton.outlined(
+              AppIconButton(
                 tooltip: '复制诊断数据',
                 onPressed: _copyRealtimeDiagnostics,
-                icon: const Icon(Icons.copy_all_rounded),
+                icon: Icons.copy_all_rounded,
+                style: AppIconButtonStyle.outlined,
               ),
               const SizedBox(width: 6),
-              IconButton.outlined(
+              AppIconButton(
                 tooltip: '重置监听',
                 onPressed: loading ? null : _resetRealtimeDiagnostics,
-                icon: const Icon(Icons.restart_alt_rounded),
+                icon: Icons.restart_alt_rounded,
+                style: AppIconButtonStyle.outlined,
               ),
             ],
           ),
@@ -3251,9 +3413,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           final compact = constraints.maxWidth < 430;
           return SizedBox(
             width: compact ? double.infinity : null,
-            child: SegmentedButton<_RealtimeDiagnosticsPane>(
+            child: AppSegmentedControl<_RealtimeDiagnosticsPane>(
               showSelectedIcon: false,
-              selected: {_realtimePane},
               style: ButtonStyle(
                 visualDensity: compact ? VisualDensity.compact : null,
                 textStyle: WidgetStatePropertyAll(
@@ -3279,9 +3440,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   label: Text('事件'),
                 ),
               ],
-              onSelectionChanged: (selection) {
-                setState(() => _realtimePane = selection.single);
-              },
+              value: _realtimePane,
+              onChanged: (selection) =>
+                  setState(() => _realtimePane = selection),
             ),
           );
         },
@@ -3296,9 +3457,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     switch (_realtimePane) {
       case _RealtimeDiagnosticsPane.overview:
-        return RefreshIndicator(
+        return AppRefreshIndicator(
           onRefresh: _refreshRealtimeDiagnostics,
-          child: ListView(
+          child: AppListView(
             padding: const EdgeInsets.only(bottom: 32),
             children: [
               _buildRealtimeOverview(resources, theme, isDark),
@@ -3307,9 +3468,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
         );
       case _RealtimeDiagnosticsPane.resources:
-        return RefreshIndicator(
+        return AppRefreshIndicator(
           onRefresh: _refreshRealtimeDiagnostics,
-          child: ListView(
+          child: AppListView(
             padding: const EdgeInsets.only(bottom: 32),
             children: [
               _buildRealtimeDetails(resources, theme, isDark),
@@ -3324,13 +3485,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Widget _buildRoomSettingsRealtimeEvents(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: theme.dividerColor.withValues(alpha: 0.55),
-          ),
+      child: AppPanelSurface(
+        color: theme.colorScheme.surface,
+        border: Border.all(
+          color: theme.dividerColor.withValues(alpha: 0.55),
         ),
         child: RealtimeEventLogView(
           events: _realtimeEvents,
@@ -3345,14 +3503,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   List<_RealtimeResourceDebugInfo> _realtimeResources() {
     final mediaPage = _mediaPage;
-    final onlineMembers = _members.where((member) => member.isOnline).length;
     final mediaEntries = mediaPage?.entries.length ?? 0;
     return [
       _RealtimeResourceDebugInfo(
         key: 'settings',
         title: '房间设置',
         icon: Icons.tune_rounded,
-        observeId: 'room_settings',
+        observeId: _settingsObserveId,
         version: _settingsWatchVersion,
         loading: _isSaving,
         localCount: 1,
@@ -3374,18 +3531,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         key: 'members',
         title: '成员列表',
         icon: Icons.group_rounded,
-        observeId: 'room_members',
+        observeId: _membersObserveId,
         version: _membersWatchVersion,
         loading: _membersLoading,
         localCount: _members.length,
         summary: _membersLoading
             ? '正在刷新成员'
-            : '$onlineMembers 在线 / $_membersTotal 总数',
+            : '$_membersOnlineCount 在线 / $_membersTotal 总数',
         stats: _membersWatchStats,
         details: {
           'page_count': _members.length,
           'total': _membersTotal,
-          'online': onlineMembers,
+          'online': _membersOnlineCount,
           'page': _membersPage,
           'page_size': _membersPageSize,
           'role_filter': _memberRoleFilter?.name ?? '',
@@ -3398,7 +3555,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         key: 'media',
         title: '媒体列表',
         icon: Icons.video_library_rounded,
-        observeId: 'playlist_items',
+        observeId: _mediaObserveId,
         version: _mediaWatchVersion,
         loading: _mediaLoading,
         localCount: mediaEntries,
@@ -3419,6 +3576,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           'sort_by': _mediaSortBy.name,
           'sort_direction': _mediaSortDirection.name,
           'search': _mediaSearchController.text.trim(),
+        },
+      ),
+      _RealtimeResourceDebugInfo(
+        key: 'chat',
+        title: '聊天事件',
+        icon: Icons.forum_rounded,
+        observeId: _chatObserveId,
+        version: _chatWatchVersion,
+        loading: _chatLoading,
+        localCount: _chatMessages.length,
+        summary: _chatLoading ? '正在刷新聊天历史' : '聊天历史 ${_chatMessages.length} 条',
+        stats: _chatWatchStats,
+        details: {
+          'history_count': _chatMessages.length,
+          'next_cursor': _chatCursor,
+          'unread': _chatReadState?.unreadCount ?? 0,
+          'last_read_event_sequence':
+              _chatReadState?.lastReadEventSequence ?? 0,
+          'chat_enabled': _settings.chatEnabled,
         },
       ),
     ];
@@ -3454,12 +3630,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     };
   }
 
+  bool _isRealtimeResourceReady(_RealtimeResourceDebugInfo resource) =>
+      resource.version.isNotEmpty ||
+      resource.stats.observed > 0 ||
+      resource.stats.changed > 0;
+
   Widget _buildRealtimeOverview(
     List<_RealtimeResourceDebugInfo> resources,
     ThemeData theme,
     bool isDark,
   ) {
-    final watched = resources.where((item) => item.version.isNotEmpty).length;
+    final watched = resources.where(_isRealtimeResourceReady).length;
     final eventCount = _realtimeEvents.length;
     final outgoingCount =
         _realtimeEvents.where((event) => event.direction == 'out').length;
@@ -3536,27 +3717,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     required String value,
     required Color tone,
   }) {
-    return Container(
+    return AppPanelSurface(
       constraints: const BoxConstraints(minHeight: 78),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
+      color: _settingsSurfaceColor(isDark),
+      border: _settingsSurfaceBorder(isDark),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: tone.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: tone, size: 21),
-          ),
+          AppIconBadge(icon: icon, color: tone, iconSize: 21),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -3593,15 +3761,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      child: Container(
+      child: AppPanelSurface(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-          ),
-        ),
+        color: _settingsSurfaceColor(isDark),
+        border: _settingsSurfaceBorder(isDark),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -3633,7 +3796,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               '监听状态',
               resources
                   .map((item) =>
-                      '${item.observeId}:${item.version.isEmpty ? 'pending' : item.version}')
+                      '${item.observeId}:${_isRealtimeResourceReady(item) ? (item.version.isEmpty ? 'ready' : item.version) : 'pending'}')
                   .join('  '),
             ),
           ],
@@ -3649,28 +3812,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final columns = width >= 1120 ? 3 : (width >= 720 ? 2 : 1);
-          const spacing = 10.0;
-          final itemWidth = (width - spacing * (columns - 1)) / columns;
-          return Wrap(
-            spacing: spacing,
-            runSpacing: spacing,
-            children: [
-              for (final resource in resources)
-                SizedBox(
-                  width: itemWidth,
-                  child: _buildRealtimeResourceCard(
-                    resource,
-                    theme,
-                    isDark,
-                  ),
-                ),
-            ],
-          );
-        },
+      child: AppResponsiveWrap(
+        minItemWidth: 320,
+        maxColumns: 3,
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          for (final resource in resources)
+            _buildRealtimeResourceCard(
+              resource,
+              theme,
+              isDark,
+            ),
+        ],
       ),
     );
   }
@@ -3680,34 +3834,26 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     ThemeData theme,
     bool isDark,
   ) {
-    final ready = resource.version.isNotEmpty;
+    final ready = _isRealtimeResourceReady(resource);
     final tone = resource.stats.errors > 0
         ? Colors.redAccent
         : ready
             ? Colors.green
             : Colors.orange;
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
+      color: _settingsSurfaceColor(isDark),
+      border: _settingsSurfaceBorder(isDark),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: tone.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(resource.icon, color: tone, size: 21),
+              AppIconBadge(
+                icon: resource.icon,
+                color: tone,
+                size: 38,
+                iconSize: 21,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -3733,7 +3879,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               if (resource.loading)
                 const SizedBox.square(
                   dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: AppLoadingIndicator(
+                      size: AppLoadingSize.sm, centered: false),
                 )
               else
                 Icon(
@@ -3744,7 +3891,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           const SizedBox(height: 14),
           _buildDebugLine(
-              theme, '版本', resource.version.isEmpty ? '等待' : resource.version),
+              theme,
+              '版本',
+              resource.version.isEmpty
+                  ? (ready ? '未提供' : '等待')
+                  : resource.version),
           _buildDebugLine(theme, '本地条目', resource.localCount.toString()),
           _buildDebugLine(theme, '状态', resource.summary),
           _buildDebugLine(theme, '最近事件', resource.stats.lastKind),
@@ -3760,7 +3911,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           if (resource.stats.lastError.isNotEmpty)
             _buildDebugLine(theme, '错误', resource.stats.lastError),
-          const Divider(height: 20),
+          const AppDivider(height: 20),
           ...resource.details.entries.map(
             (entry) => _buildDebugLine(
               theme,
@@ -3790,7 +3941,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: SelectableText(
+            child: AppSelectableText(
               value.isEmpty ? '-' : value,
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
@@ -3801,33 +3952,31 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildChatHistoryTab(ThemeData theme, bool isDark) {
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _loadChatHistory,
-      child: ListView(
+      child: AppListView(
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
-            title: _chatReadState == null
-                ? '聊天历史'
-                : '聊天历史 · 未读 ${_chatReadState!.unreadCount}',
+            title: '聊天历史',
             count: _chatMessages.length,
             loading: _chatLoading,
             onRefresh: _loadChatHistory,
             theme: theme,
             action: _chatCursor.isEmpty
                 ? null
-                : IconButton(
+                : AppIconButton(
                     tooltip: '加载更多',
                     onPressed: _chatLoading
                         ? null
                         : () => _loadChatHistory(loadMore: true),
-                    icon: const Icon(Icons.more_horiz),
+                    icon: Icons.more_horiz,
                   ),
           ),
           if (_chatMessages.isEmpty)
             _buildEmptyState('当前没有聊天历史', theme)
           else
-            ..._chatMessages.map(
+            ..._chatMessages.reversed.map(
               (message) => _buildChatMessageTile(message, theme, isDark),
             ),
         ],
@@ -3836,9 +3985,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildNetworkTab(ThemeData theme, bool isDark) {
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _loadIceServers,
-      child: ListView(
+      child: AppListView(
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
@@ -3865,16 +4014,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     bool isDark,
   ) {
     final label = _mediaScopeLabel(page);
-    return Container(
+    return AppPanelSurface(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
+      color: _settingsSurfaceColor(isDark),
+      border: _settingsSurfaceBorder(isDark),
       child: Row(
         children: [
           const Icon(Icons.folder_open, size: 18),
@@ -3899,11 +4043,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Widget _buildMembersTab(ThemeData theme, bool isDark) {
     if (_membersLoading && _members.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _loadMembers,
-      child: ListView(
+      child: AppListView(
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
@@ -3912,38 +4056,21 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             loading: _membersLoading,
             onRefresh: _loadMembers,
             theme: theme,
-            action: IconButton(
+            action: AppIconButton(
               tooltip: '添加成员',
               onPressed: _addMember,
-              icon: const Icon(Icons.person_add_alt_1),
+              icon: Icons.person_add_alt_1,
             ),
           ),
+          _buildMemberPresenceSummary(theme, isDark),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: Column(
               children: [
-                TextField(
+                _buildSearchField(
                   controller: _memberSearchController,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    suffixIcon: _memberSearchController.text.isEmpty
-                        ? null
-                        : IconButton(
-                            onPressed: () {
-                              _memberSearchController.clear();
-                              setState(() => _membersPage = 1);
-                              _refreshMembersRealtimeQuery();
-                              _loadMembers();
-                            },
-                            icon: const Icon(Icons.close_rounded),
-                            tooltip: '清除搜索',
-                          ),
-                    labelText: '用户名或用户 ID',
-                    border: const OutlineInputBorder(),
-                  ),
-                  onSubmitted: (_) {
+                  label: '用户名或用户 ID',
+                  onSearch: () {
                     setState(() => _membersPage = 1);
                     _refreshMembersRealtimeQuery();
                     _loadMembers();
@@ -3953,40 +4080,20 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 Row(
                   children: [
                     Expanded(
-                      child:
-                          DropdownButtonFormField<common_enum.RoomMemberRole?>(
-                        initialValue: _memberRoleFilter,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          labelText: '角色',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: null,
-                            child: Text('全部角色'),
-                          ),
-                          DropdownMenuItem(
-                            value: common_enum
-                                .RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR,
-                            child: Text('房主'),
-                          ),
-                          DropdownMenuItem(
-                            value: common_enum
-                                .RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
-                            child: Text('管理员'),
-                          ),
-                          DropdownMenuItem(
-                            value: common_enum
-                                .RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
-                            child: Text('成员'),
-                          ),
-                          DropdownMenuItem(
-                            value: common_enum
-                                .RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
-                            child: Text('访客'),
-                          ),
-                        ],
+                      child: AppSelect<common_enum.RoomMemberRole?>(
+                        value: _memberRoleFilter,
+                        label: '角色',
+                        options: const {
+                          '全部角色': null,
+                          '房主': common_enum
+                              .RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR,
+                          '管理员':
+                              common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+                          '成员': common_enum
+                              .RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+                          '访客':
+                              common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
+                        },
                         onChanged: (value) {
                           setState(() {
                             _memberRoleFilter = value;
@@ -3999,31 +4106,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: DropdownButtonFormField<
-                          client_enum.RoomMemberListSortBy>(
-                        initialValue: _memberSortBy,
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          labelText: '排序',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: client_enum.RoomMemberListSortBy
-                                .ROOM_MEMBER_LIST_SORT_BY_JOINED_AT,
-                            child: Text('加入时间'),
-                          ),
-                          DropdownMenuItem(
-                            value: client_enum.RoomMemberListSortBy
-                                .ROOM_MEMBER_LIST_SORT_BY_USERNAME,
-                            child: Text('用户名'),
-                          ),
-                          DropdownMenuItem(
-                            value: client_enum.RoomMemberListSortBy
-                                .ROOM_MEMBER_LIST_SORT_BY_ROLE,
-                            child: Text('角色'),
-                          ),
-                        ],
+                      child: AppSelect<client_enum.RoomMemberListSortBy>(
+                        value: _memberSortBy,
+                        label: '排序',
+                        options: const {
+                          '加入时间': client_enum.RoomMemberListSortBy
+                              .ROOM_MEMBER_LIST_SORT_BY_JOINED_AT,
+                          '用户名': client_enum.RoomMemberListSortBy
+                              .ROOM_MEMBER_LIST_SORT_BY_USERNAME,
+                          '角色': client_enum.RoomMemberListSortBy
+                              .ROOM_MEMBER_LIST_SORT_BY_ROLE,
+                        },
                         onChanged: (value) {
                           if (value == null) return;
                           setState(() {
@@ -4036,7 +4129,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton.outlined(
+                    AppIconButton(
                       onPressed: () {
                         setState(() {
                           _memberSortDirection = _memberSortDirection ==
@@ -4048,58 +4141,42 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         _refreshMembersRealtimeQuery();
                         _loadMembers();
                       },
-                      icon: Icon(
-                        _memberSortDirection ==
-                                client_enum.SortDirection.SORT_DIRECTION_ASC
-                            ? Icons.north_rounded
-                            : Icons.south_rounded,
-                      ),
+                      icon: _memberSortDirection ==
+                              client_enum.SortDirection.SORT_DIRECTION_ASC
+                          ? Icons.north_rounded
+                          : Icons.south_rounded,
                       tooltip: _memberSortDirection ==
                               client_enum.SortDirection.SORT_DIRECTION_ASC
                           ? '升序'
                           : '降序',
+                      style: AppIconButtonStyle.outlined,
                     ),
                   ],
                 ),
               ],
             ),
           ),
-          Padding(
+          AppPaginationBar(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '第 $_membersPage 页 · 每页 $_membersPageSize · 共 $_membersTotal 条',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: '上一页',
-                  icon: const Icon(Icons.chevron_left_rounded),
-                  onPressed: _membersPage <= 1
-                      ? null
-                      : () {
-                          setState(() => _membersPage -= 1);
-                          _refreshMembersRealtimeQuery();
-                          _loadMembers();
-                        },
-                ),
-                IconButton(
-                  tooltip: '下一页',
-                  icon: const Icon(Icons.chevron_right_rounded),
-                  onPressed: _membersPage >= _memberPageCount
-                      ? null
-                      : () {
-                          setState(() => _membersPage += 1);
-                          _refreshMembersRealtimeQuery();
-                          _loadMembers();
-                        },
-                ),
-              ],
+            label:
+                '第 $_membersPage 页 · 每页 $_membersPageSize · 共 $_membersTotal 条',
+            labelStyle: theme.textTheme.bodySmall?.copyWith(
+              color: theme.hintColor,
             ),
+            onPrevious: _membersPage <= 1
+                ? null
+                : () {
+                    setState(() => _membersPage -= 1);
+                    _refreshMembersRealtimeQuery();
+                    _loadMembers();
+                  },
+            onNext: _membersPage >= _memberPageCount
+                ? null
+                : () {
+                    setState(() => _membersPage += 1);
+                    _refreshMembersRealtimeQuery();
+                    _loadMembers();
+                  },
           ),
           if (_members.isEmpty)
             _buildEmptyState('当前没有成员', theme)
@@ -4120,82 +4197,52 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     required ThemeData theme,
     Widget? action,
   }) {
+    return AppDataToolbar(
+      title: title,
+      count: count,
+      loading: loading,
+      onRefresh: onRefresh,
+      action: action,
+    );
+  }
+
+  Widget _buildMemberPresenceSummary(ThemeData theme, bool isDark) {
+    final connectionCount =
+        _members.fold<int>(0, (sum, member) => sum + member.connectionCount);
+    final totalConnections = connectionCount > 0
+        ? connectionCount
+        : _members.where((member) => member.isOnline).length;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 8, 12),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 430;
-          final titleWidget = Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: AppPanelSurface(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+        border: Border.all(
+          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+        ),
+        borderRadius: BorderRadius.circular(8),
+        child: Row(
+          children: [
+            Icon(
+              Icons.circle,
+              size: 10,
+              color: _membersOnlineCount > 0
+                  ? const Color(0xFF16A34A)
+                  : theme.hintColor,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '在线 $_membersOnlineCount / 成员 $_membersTotal',
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  count.toString(),
-                  style: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          );
-          final refresh = IconButton(
-            tooltip: '刷新',
-            onPressed: loading ? null : onRefresh,
-            icon: loading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh),
-          );
-          final actions = Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (action != null) action,
-              refresh,
-            ],
-          );
-          if (compact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                titleWidget,
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  reverse: true,
-                  child: actions,
-                ),
-              ],
-            );
-          }
-          return Row(
-            children: [
-              Expanded(child: titleWidget),
-              actions,
-            ],
-          );
-        },
+            ),
+            Text(
+              '$totalConnections 个连接',
+              style: TextStyle(color: theme.hintColor, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -4203,8 +4250,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Widget _buildEmptyState(String text, ThemeData theme) {
     return SizedBox(
       height: 180,
-      child: Center(
-        child: Text(text, style: TextStyle(color: theme.hintColor)),
+      child: AppEmptyState(
+        icon: Icons.inbox_outlined,
+        title: text,
+        maxWidth: 360,
       ),
     );
   }
@@ -4223,7 +4272,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ),
           Expanded(
-            child: SelectableText(
+            child: AppSelectableText(
               value,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
@@ -4233,20 +4282,33 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
+  Widget _buildManagementTileSurface(
+    ThemeData theme,
+    bool isDark, {
+    required Widget child,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(14),
+  }) {
+    return AppPanelSurface(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      padding: padding,
+      color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(
+        color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+      ),
+      child: child,
+    );
+  }
+
   Widget _buildStreamTile(
     RoomStreamEntryInfo stream,
     ThemeData theme,
     bool isDark,
   ) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
+    return _buildManagementTileSurface(
+      theme,
+      isDark,
+      padding: EdgeInsets.zero,
       child: Row(
         children: [
           Icon(
@@ -4255,8 +4317,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: InkWell(
+            child: AppInkSurface(
               onTap: () => _showStreamInfo(stream),
+              color: Colors.transparent,
+              borderRadius: BorderRadius.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -4280,15 +4344,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               ),
             ),
           ),
-          IconButton(
+          AppIconButton(
             tooltip: '查看详情',
             onPressed: () => _showStreamInfo(stream),
-            icon: const Icon(Icons.info_outline_rounded),
+            icon: Icons.info_outline_rounded,
           ),
-          IconButton(
+          AppIconButton(
             tooltip: '断开推流',
             onPressed: stream.active ? () => _kickStream(stream) : null,
-            icon: const Icon(Icons.link_off),
+            icon: Icons.link_off,
+            style: AppIconButtonStyle.destructive,
           ),
         ],
       ),
@@ -4302,16 +4367,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     final isPending =
         review.status == common_enum.ReviewStatus.REVIEW_STATUS_PENDING.value;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
+    return _buildManagementTileSurface(
+      theme,
+      isDark,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -4355,16 +4413,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton.icon(
+                AppActionButton(
                   onPressed: () => _rejectReview(review),
-                  icon: const Icon(Icons.close, size: 18),
-                  label: const Text('拒绝'),
+                  icon: Icons.close,
+                  label: '拒绝',
+                  style: AppActionButtonStyle.text,
                 ),
                 const SizedBox(width: 8),
-                FilledButton.icon(
+                AppActionButton(
                   onPressed: () => _approveReview(review),
-                  icon: const Icon(Icons.check, size: 18),
-                  label: const Text('通过'),
+                  icon: Icons.check,
+                  label: '通过',
                 ),
               ],
             ),
@@ -4377,22 +4436,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Widget _buildMediaTile(WMovie entry, ThemeData theme, bool isDark) {
     final isPersisted =
         entry.id.startsWith('pl_') || entry.id.startsWith('med_');
-    final isDynamic = !isPersisted;
+    final canMutate = _canMutateCurrentMediaScope &&
+        isPersisted &&
+        !entry.isProviderDynamicEntry;
     final playlistIndex = entry.id.startsWith('pl_')
         ? _mediaPage?.playlists.indexWhere((item) => item.id == entry.id) ?? -1
         : -1;
     final playlistCount = _mediaPage?.playlists.length ?? 0;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
+    return _buildManagementTileSurface(
+      theme,
+      isDark,
       child: Row(
         children: [
           _buildCoverPreview(
@@ -4408,8 +4461,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: InkWell(
+            child: AppInkSurface(
               onTap: entry.isFolder ? () => _openMediaEntry(entry) : null,
+              color: Colors.transparent,
+              borderRadius: BorderRadius.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -4442,7 +4497,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               ),
             ),
           ),
-          PopupMenuButton<_MediaAction>(
+          AppPopupMenuButton<_MediaAction>(
             tooltip: '媒体操作',
             onSelected: (action) {
               switch (action) {
@@ -4476,42 +4531,41 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 enabled: entry.isFolder,
                 child: const Text('打开'),
               ),
-              PopupMenuItem(
-                value: _MediaAction.rename,
-                enabled: isPersisted,
-                child: const Text('编辑'),
-              ),
-              PopupMenuItem(
-                value: _MediaAction.updateCover,
-                enabled: isPersisted,
-                child: const Text('更新封面'),
-              ),
-              PopupMenuItem(
-                value: _MediaAction.clearCover,
-                enabled: isPersisted && entry.coverUrl.isNotEmpty,
-                child: const Text('移除封面'),
-              ),
-              PopupMenuItem(
-                value: _MediaAction.moveUp,
-                enabled: playlistIndex > 0,
-                child: const Text('上移'),
-              ),
-              PopupMenuItem(
-                value: _MediaAction.moveDown,
-                enabled:
-                    playlistIndex >= 0 && playlistIndex < playlistCount - 1,
-                child: const Text('下移'),
-              ),
-              PopupMenuItem(
-                value: _MediaAction.move,
-                enabled: entry.id.startsWith('med_'),
-                child: const Text('移动到...'),
-              ),
-              PopupMenuItem(
-                value: _MediaAction.delete,
-                enabled: isPersisted && !isDynamic,
-                child: const Text('删除'),
-              ),
+              if (canMutate) ...[
+                const PopupMenuItem(
+                  value: _MediaAction.rename,
+                  child: Text('编辑'),
+                ),
+                const PopupMenuItem(
+                  value: _MediaAction.updateCover,
+                  child: Text('更新封面'),
+                ),
+                PopupMenuItem(
+                  value: _MediaAction.clearCover,
+                  enabled: entry.coverUrl.isNotEmpty,
+                  child: const Text('移除封面'),
+                ),
+                PopupMenuItem(
+                  value: _MediaAction.moveUp,
+                  enabled: playlistIndex > 0,
+                  child: const Text('上移'),
+                ),
+                PopupMenuItem(
+                  value: _MediaAction.moveDown,
+                  enabled:
+                      playlistIndex >= 0 && playlistIndex < playlistCount - 1,
+                  child: const Text('下移'),
+                ),
+                if (entry.id.startsWith('med_'))
+                  const PopupMenuItem(
+                    value: _MediaAction.move,
+                    child: Text('移动到...'),
+                  ),
+                const PopupMenuItem(
+                  value: _MediaAction.delete,
+                  child: Text('删除'),
+                ),
+              ],
             ],
           ),
         ],
@@ -4524,100 +4578,422 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     ThemeData theme,
     bool isDark,
   ) {
+    final scheme = theme.colorScheme;
     final title = message.username.isEmpty ? message.userId : message.username;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
-      child: Column(
+    final isMine =
+        _currentUserId.isNotEmpty && message.userId == _currentUserId;
+    final receipt = _chatReceiptCache[message.id];
+    final isReceiptLoading = _chatReceiptLoadingIds.contains(message.id);
+    final bubbleColor = isMine
+        ? scheme.primary.withValues(alpha: 0.12)
+        : scheme.surfaceContainerHighest
+            .withValues(alpha: isDark ? 0.54 : 0.72);
+    final borderColor = isMine
+        ? scheme.primary.withValues(alpha: 0.25)
+        : scheme.outlineVariant.withValues(alpha: 0.55);
+    final content = message.isDeleted
+        ? '这条消息已删除'
+        : message.content.trim().isEmpty && message.images.isNotEmpty
+            ? '图片消息'
+            : message.content;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment:
+            isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  message.isDeleted ? '$title · 已删除' : title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-              if (message.isEdited && !message.isDeleted) ...[
-                Text(
-                  '已编辑',
-                  style: TextStyle(color: theme.hintColor, fontSize: 12),
-                ),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                _formatTimestamp(message.timestamp),
-                style: TextStyle(color: theme.hintColor, fontSize: 12),
-              ),
-              const SizedBox(width: 4),
-              _buildChatMessageActionButton(
-                tooltip: '查看上下文',
-                icon: Icons.forum_outlined,
-                onPressed: () => _showChatMessageContext(message),
-              ),
-              _buildChatMessageActionButton(
-                tooltip: '编辑',
-                icon: Icons.edit_outlined,
-                onPressed:
-                    message.isDeleted ? null : () => _editChatMessage(message),
-              ),
-              _buildChatMessageActionButton(
-                tooltip: '删除',
-                icon: Icons.delete_outline,
-                color: theme.colorScheme.error,
-                onPressed: message.isDeleted
-                    ? null
-                    : () => _deleteChatMessage(message),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          if (message.content.isNotEmpty)
-            Text(
-              message.isDeleted ? '这条消息已删除' : message.content,
-              style: message.isDeleted
-                  ? TextStyle(
-                      color: theme.hintColor,
-                      fontStyle: FontStyle.italic,
-                    )
-                  : null,
-            ),
-          if (message.images.isNotEmpty && !message.isDeleted) ...[
-            if (message.content.isNotEmpty) const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: message.images
-                  .map(
-                    (image) => _buildChatImageThumb(image, theme),
-                  )
-                  .toList(),
-            ),
+          if (!isMine) ...[
+            AppAvatar(name: title, radius: 17),
+            const SizedBox(width: 8),
           ],
-          if (message.position != null || message.color != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              [
-                if (message.position != null)
-                  '${message.position!.toStringAsFixed(1)}s',
-                if (message.color != null && message.color!.isNotEmpty)
-                  message.color!,
-              ].join(' · '),
-              style: TextStyle(color: theme.hintColor, fontSize: 12),
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 720),
+              child: Column(
+                crossAxisAlignment:
+                    isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: isMine
+                                ? scheme.primary
+                                : scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatTimestamp(message.timestamp),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      if (message.isEdited && !message.isDeleted) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          '已编辑',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color:
+                                scheme.onSurfaceVariant.withValues(alpha: 0.64),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  AppPanelSurface(
+                    color: bubbleColor,
+                    border: Border.all(color: borderColor),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(8),
+                      topRight: const Radius.circular(8),
+                      bottomLeft: Radius.circular(isMine ? 8 : 3),
+                      bottomRight: Radius.circular(isMine ? 3 : 8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (message.replyToMessageId.isNotEmpty) ...[
+                          _buildChatQuotePreview(message, theme),
+                          const SizedBox(height: 7),
+                        ],
+                        if (content.isNotEmpty)
+                          Text(
+                            content,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.32,
+                              color: message.isDeleted
+                                  ? scheme.onSurfaceVariant
+                                      .withValues(alpha: 0.72)
+                                  : scheme.onSurface,
+                              fontStyle: message.isDeleted
+                                  ? FontStyle.italic
+                                  : FontStyle.normal,
+                            ),
+                          ),
+                        if (message.images.isNotEmpty &&
+                            !message.isDeleted) ...[
+                          if (content.isNotEmpty) const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: message.images
+                                .map((image) =>
+                                    _buildChatImageThumb(image, theme))
+                                .toList(),
+                          ),
+                        ],
+                        if (message.reactions.isNotEmpty &&
+                            !message.isDeleted) ...[
+                          const SizedBox(height: 7),
+                          _buildChatReactionSummaryRow(message, theme),
+                        ],
+                        if (message.position != null ||
+                            (message.color?.isNotEmpty ?? false)) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            [
+                              if (message.position != null)
+                                '${message.position!.toStringAsFixed(1)}s',
+                              if (message.color?.isNotEmpty ?? false)
+                                message.color!,
+                            ].join(' · '),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: scheme.onSurfaceVariant
+                                  .withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isMine && !message.isDeleted)
+                        _buildChatReadReceiptButton(
+                          message,
+                          receipt,
+                          isReceiptLoading,
+                          theme,
+                        ),
+                      _buildChatMessageActionButton(
+                        tooltip: '查看上下文',
+                        icon: Icons.forum_outlined,
+                        onPressed: () => _showChatMessageContext(message),
+                      ),
+                      _buildChatMessageActionButton(
+                        tooltip: '查看举报',
+                        icon: Icons.report_gmailerrorred_outlined,
+                        onPressed: () => _openRoomScopedReportsViewer(
+                          title: '消息 #${message.id} 的举报',
+                          targetType: 4,
+                          targetChatMessageId: int.tryParse(message.id) ?? 0,
+                        ),
+                      ),
+                      _buildChatMessageActionButton(
+                        tooltip: '编辑',
+                        icon: Icons.edit_outlined,
+                        onPressed: message.isDeleted
+                            ? null
+                            : () => _editChatMessage(message),
+                      ),
+                      _buildChatMessageActionButton(
+                        tooltip: '删除',
+                        icon: Icons.delete_outline,
+                        color: scheme.error,
+                        onPressed: message.isDeleted
+                            ? null
+                            : () => _deleteChatMessage(message),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
+          ),
+          if (isMine) ...[
+            const SizedBox(width: 8),
+            AppAvatar(name: title, radius: 17),
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildChatQuotePreview(RoomChatMessageInfo message, ThemeData theme) {
+    final scheme = theme.colorScheme;
+    RoomChatMessageInfo? quoted;
+    for (final item in _chatMessages) {
+      if (item.id == message.replyToMessageId) {
+        quoted = item;
+        break;
+      }
+    }
+    final title = quoted == null
+        ? '引用消息'
+        : (quoted.username.isEmpty ? quoted.userId : quoted.username);
+    final preview = quoted == null
+        ? '点击查看上下文'
+        : quoted.isDeleted
+            ? '这条消息已删除'
+            : quoted.content.trim().isEmpty
+                ? '图片消息'
+                : quoted.content.trim();
+    return AppInkSurface(
+      onTap: () => _showChatMessageContext(message),
+      borderRadius: BorderRadius.circular(7),
+      color: scheme.surface.withValues(alpha: 0.62),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: IntrinsicHeight(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 3,
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    preview,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatReactionSummaryRow(
+    RoomChatMessageInfo message,
+    ThemeData theme,
+  ) {
+    final sorted = [...message.reactions]
+      ..sort((a, b) => b.count.compareTo(a.count));
+    return Wrap(
+      spacing: 5,
+      runSpacing: 5,
+      children: sorted.take(6).map((reaction) {
+        return AppPanelSurface(
+          color: theme.colorScheme.surface.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          child: Text(
+            '${reaction.key} ${reaction.count}',
+            style: theme.textTheme.labelSmall?.copyWith(height: 1.1),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildChatReadReceiptButton(
+    RoomChatMessageInfo message,
+    ChatMessageReadReceiptsInfo? receipt,
+    bool loading,
+    ThemeData theme,
+  ) {
+    final mentionSummary =
+        receipt == null ? null : _mentionReadReceiptSummary(message, receipt);
+    final text = receipt == null
+        ? '已读'
+        : mentionSummary ??
+            '已读 ${receipt.readerTotal} · 未读 ${receipt.unreadTotal}';
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 4),
+      child: TextButton.icon(
+        onPressed: loading ? null : () => _showChatReadReceipts(message),
+        icon: loading
+            ? const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 1.6),
+              )
+            : const Icon(Icons.visibility_outlined, size: 15),
+        label: Text(text),
+        style: TextButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+          textStyle: theme.textTheme.labelSmall,
+        ),
+      ),
+    );
+  }
+
+  String? _mentionReadReceiptSummary(
+    RoomChatMessageInfo message,
+    ChatMessageReadReceiptsInfo receipt,
+  ) {
+    final mentionedUsers = _mentionedUsersForMessage(message, receipt);
+    if (mentionedUsers.isEmpty) return null;
+    final mentionedIds = mentionedUsers.map((user) => user.id).toSet();
+    final readCount = receipt.readers
+        .where((reader) => mentionedIds.contains(reader.user.id))
+        .length;
+    final unreadCount = receipt.unreadMembers
+        .where((user) => mentionedIds.contains(user.id))
+        .length;
+    if (readCount == 0 && unreadCount == 0) return '@ 已读';
+    if (mentionedUsers.length == 1) {
+      return unreadCount == 0 ? '@ 已读' : '@ 未读';
+    }
+    return '@ $readCount 已读 · $unreadCount 未读';
+  }
+
+  List<WUser> _mentionedUsersForMessage(
+    RoomChatMessageInfo message,
+    ChatMessageReadReceiptsInfo? receipt,
+  ) {
+    if (message.mentions.isEmpty) return const [];
+    final mentionedIds =
+        message.mentions.map((mention) => mention.userId).toSet();
+    final users = <String, WUser>{};
+    for (final mention in message.mentions) {
+      if (mention.userId.isEmpty || mention.username.trim().isEmpty) continue;
+      users[mention.userId] = WUser(
+        id: mention.userId,
+        username: mention.username,
+        role: 0,
+      );
+    }
+    if (receipt != null) {
+      for (final reader in receipt.readers) {
+        users[reader.user.id] = reader.user;
+      }
+      for (final user in receipt.unreadMembers) {
+        users[user.id] = user;
+      }
+    } else {
+      for (final member in _members) {
+        users[member.userId] = WUser(
+          id: member.userId,
+          username: member.username,
+          role: member.role,
+          onlineCount: member.isOnline ? 1 : 0,
+          connectionCount: member.connectionCount,
+        );
+      }
+    }
+    return mentionedIds
+        .map((id) => users[id])
+        .whereType<WUser>()
+        .where((user) => user.username.trim().isNotEmpty)
+        .toList();
+  }
+
+  Future<void> _showChatReadReceipts(RoomChatMessageInfo message) async {
+    ChatMessageReadReceiptsInfo? receipt = _chatReceiptCache[message.id];
+    if (receipt == null) {
+      setState(() => _chatReceiptLoadingIds.add(message.id));
+      try {
+        final loaded = await WatchTogetherService.getChatMessageReadReceipts(
+          widget.roomId,
+          message.id,
+        );
+        if (!mounted) return;
+        setState(() {
+          _chatReceiptCache[message.id] = loaded;
+        });
+        receipt = loaded;
+      } catch (e) {
+        if (mounted) MessageUtils.showError(context, '加载已读详情失败: $e');
+        return;
+      } finally {
+        if (mounted) {
+          setState(() => _chatReceiptLoadingIds.remove(message.id));
+        }
+      }
+    }
+    final visibleReceipt = receipt;
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => ChatReadReceiptsDialog(receipts: visibleReceipt),
     );
   }
 
@@ -4627,36 +5003,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     required VoidCallback? onPressed,
     Color? color,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: IconButton(
-        visualDensity: VisualDensity.compact,
-        iconSize: 18,
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-        onPressed: onPressed,
-        icon: Icon(icon, color: color),
-      ),
+    return AppIconButton(
+      iconSize: 18,
+      size: AppIconButtonSize.sm,
+      onPressed: onPressed,
+      icon: icon,
+      tooltip: tooltip,
+      style: color == null
+          ? AppIconButtonStyle.ghost
+          : AppIconButtonStyle.destructive,
     );
   }
 
   Widget _buildChatImageThumb(StoredImageInfo image, ThemeData theme) {
     final resolved = WatchTogetherService.resolveResourceUrl(image.url);
-    return ClipRRect(
+    return AppImageThumbnail(
+      url: resolved,
+      width: 160,
+      height: 104,
       borderRadius: BorderRadius.circular(8),
-      child: Image.network(
-        resolved,
-        width: 160,
-        height: 104,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Container(
-          width: 160,
-          height: 104,
-          color: theme.colorScheme.surfaceContainerHighest,
-          alignment: Alignment.center,
-          child: const Icon(Icons.broken_image_outlined),
-        ),
-      ),
     );
   }
 
@@ -4669,28 +5034,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }) {
     final theme = Theme.of(context);
     final resolved = WatchTogetherService.resolveResourceUrl(url);
-    final fallback = Container(
+    if (resolved.isEmpty) {
+      return AppPanelSurface(
+        width: width,
+        height: height,
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: Icon(
+          fallbackIcon,
+          color: theme.colorScheme.onSurfaceVariant,
+          size: height >= 120 ? 42 : 24,
+        ),
+      );
+    }
+    return AppImageThumbnail(
+      url: resolved,
       width: width,
       height: height,
-      color: theme.colorScheme.surfaceContainerHighest,
-      alignment: Alignment.center,
-      child: Icon(
-        fallbackIcon,
-        color: theme.colorScheme.onSurfaceVariant,
-        size: height >= 120 ? 42 : 24,
-      ),
-    );
-    return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
-      child: resolved.isEmpty
-          ? fallback
-          : Image.network(
-              resolved,
-              width: width,
-              height: height,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => fallback,
-            ),
+      errorIcon: fallbackIcon,
     );
   }
 
@@ -4699,16 +5061,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     ThemeData theme,
     bool isDark,
   ) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
+    return _buildManagementTileSurface(
+      theme,
+      isDark,
       child: Row(
         children: [
           const Icon(Icons.hub),
@@ -4783,102 +5138,257 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final isCurrentUser =
         _currentUserId.isNotEmpty && member.userId == _currentUserId;
     final canManageMember = !isCreator && !isCurrentUser;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-        ),
-      ),
-      child: Row(
+    final connectionText =
+        member.connectionCount > 0 ? '${member.connectionCount} 个连接' : '0 个连接';
+    final presenceColor =
+        member.isOnline ? const Color(0xFF16A34A) : theme.hintColor;
+    final displayName =
+        member.username.isEmpty ? member.userId : member.username;
+    return _buildManagementTileSurface(
+      theme,
+      isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 18,
-            child: Text(
-              _memberInitial(member),
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppAvatar(
+                name: displayName,
+                radius: 18,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (isCurrentUser)
+                          _buildMemberBadge(
+                            label: '我',
+                            icon: Icons.person_outline_rounded,
+                            color: theme.colorScheme.primary,
+                          ),
+                        if (isCreator)
+                          _buildMemberBadge(
+                            label: '房主',
+                            icon: Icons.star_rounded,
+                            color: const Color(0xFFF59E0B),
+                          )
+                        else
+                          _buildMemberBadge(
+                            label: _roleLabel(member.role),
+                            icon: Icons.badge_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        _buildMemberBadge(
+                          label: member.isOnline ? '在线' : '离线',
+                          icon: Icons.circle,
+                          color: presenceColor,
+                        ),
+                        _buildMemberBadge(
+                          label: connectionText,
+                          icon: Icons.hub_outlined,
+                          color: theme.colorScheme.secondary,
+                        ),
+                        _buildMemberBadge(
+                          label: '加入 ${_formatTimestamp(member.joinedAt)}',
+                          icon: Icons.schedule_rounded,
+                          color: theme.hintColor,
+                        ),
+                      ],
+                    ),
+                    if (member.userId.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        member.userId,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: theme.hintColor, fontSize: 12),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          if (canManageMember) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                Text(
-                  member.username.isEmpty ? member.userId : member.username,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                AppIconButton(
+                  tooltip: '修改角色',
+                  icon: Icons.admin_panel_settings_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.tonal,
+                  onPressed: () => _setMemberRole(member),
+                ),
+                AppIconButton(
+                  tooltip: '权限覆盖',
+                  icon: Icons.rule_rounded,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _editMemberPermissionOverrides(member),
+                ),
+                AppIconButton(
+                  tooltip: '转让房主',
+                  icon: Icons.verified_user_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _transferOwnership(member),
+                ),
+                AppIconButton(
+                  tooltip: '移出房间',
+                  icon: Icons.person_remove_alt_1_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.destructive,
+                  onPressed: () => _kickMember(member),
+                ),
+                AppIconButton(
+                  tooltip: '查看成员举报',
+                  icon: Icons.report_gmailerrorred_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _openRoomScopedReportsViewer(
+                    title:
+                        '${member.username.isEmpty ? member.userId : member.username} 的成员举报',
+                    targetType: 3,
+                    targetMemberUserId: member.userId,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_roleLabel(member.role)} · ${member.isOnline ? '在线' : '离线'} · ${_formatTimestamp(member.joinedAt)}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: theme.hintColor, fontSize: 12),
+                AppPopupMenuButton<_MemberAction>(
+                  tooltip: '更多成员操作',
+                  onSelected: (action) {
+                    switch (action) {
+                      case _MemberAction.role:
+                        _setMemberRole(member);
+                      case _MemberAction.permissions:
+                        _editMemberPermissionOverrides(member);
+                      case _MemberAction.transfer:
+                        _transferOwnership(member);
+                      case _MemberAction.kick:
+                        _kickMember(member);
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: _MemberAction.role,
+                      child: Text('修改角色'),
+                    ),
+                    PopupMenuItem(
+                      value: _MemberAction.permissions,
+                      child: Text('权限覆盖'),
+                    ),
+                    PopupMenuItem(
+                      value: _MemberAction.transfer,
+                      child: Text('转让房主'),
+                    ),
+                    PopupMenuItem(
+                      value: _MemberAction.kick,
+                      child: Text('移出房间'),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          if (canManageMember)
-            PopupMenuButton<_MemberAction>(
-              tooltip: '成员操作',
-              onSelected: (action) {
-                switch (action) {
-                  case _MemberAction.role:
-                    _setMemberRole(member);
-                  case _MemberAction.permissions:
-                    _editMemberPermissionOverrides(member);
-                  case _MemberAction.transfer:
-                    _transferOwnership(member);
-                  case _MemberAction.kick:
-                    _kickMember(member);
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: _MemberAction.role,
-                  child: Text('修改角色'),
+          ] else ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    isCurrentUser ? '当前账号' : '房主账号',
+                    style: TextStyle(color: theme.hintColor, fontSize: 12),
+                  ),
                 ),
-                PopupMenuItem(
-                  value: _MemberAction.permissions,
-                  child: Text('权限覆盖'),
-                ),
-                PopupMenuItem(
-                  value: _MemberAction.transfer,
-                  child: Text('转让房主'),
-                ),
-                PopupMenuItem(
-                  value: _MemberAction.kick,
-                  child: Text('移出房间'),
+                AppIconButton(
+                  tooltip: '查看成员举报',
+                  icon: Icons.report_gmailerrorred_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _openRoomScopedReportsViewer(
+                    title:
+                        '${member.username.isEmpty ? member.userId : member.username} 的成员举报',
+                    targetType: 3,
+                    targetMemberUserId: member.userId,
+                  ),
                 ),
               ],
             ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildRoomActions(ThemeData theme, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Column(
-        children: [
-          Material(
+  Widget _buildMemberBadge({
+    required String label,
+    required IconData icon,
+    required Color color,
+  }) {
+    return AppBadge(
+      icon: icon,
+      iconSize: icon == Icons.circle ? 8 : 13,
+      color: color,
+      backgroundColor: color.withValues(alpha: 0.10),
+      borderRadius: BorderRadius.circular(999),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      textStyle: TextStyle(
+        color: color,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
+      label: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  Widget _buildRoomInfoTab(ThemeData theme, bool isDark) {
+    final room = _roomInfo;
+    final roomName = room?.roomName ?? widget.roomName;
+    final creatorId = (room?.creatorId ?? widget.creatorId).trim();
+    final creatorName = (room?.creator ?? '').trim().isEmpty
+        ? (creatorId.isEmpty ? '创建者' : creatorId)
+        : room!.creator.trim();
+    final creatorAvatarUrl =
+        WatchTogetherService.resolveResourceUrl(room?.creatorAvatarUrl ?? '');
+    return AppListView(
+      padding: const EdgeInsets.only(bottom: 32, top: 8),
+      children: [
+        _buildSectionHeader('房间信息', theme),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: AppInkSurface(
             color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(
-                color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-              ),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
             ),
-            clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
                 _buildCoverPreview(
@@ -4892,83 +5402,210 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          _roomInfo?.roomName ?? widget.roomName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              roomName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              widget.roomId,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: theme.hintColor,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      FilledButton.tonalIcon(
+                      AppActionButton(
+                        onPressed: _loadRoomInfo,
+                        icon: Icons.refresh_rounded,
+                        label: '刷新',
+                        style: AppActionButtonStyle.text,
+                      ),
+                      const SizedBox(width: 8),
+                      AppActionButton(
                         onPressed: _coverUpdating ? null : _updateRoomCover,
-                        icon: _coverUpdating
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.image_outlined),
-                        label: const Text('封面'),
+                        loading: _coverUpdating,
+                        icon: Icons.image_outlined,
+                        label: '封面',
+                        style: AppActionButtonStyle.tonal,
                       ),
                       if (_roomCoverUrl.isNotEmpty) ...[
                         const SizedBox(width: 8),
-                        IconButton.outlined(
+                        AppIconButton(
                           tooltip: '移除封面',
                           onPressed: _coverUpdating ? null : _clearRoomCover,
-                          icon: const Icon(Icons.delete_outline_rounded),
+                          icon: Icons.delete_outline_rounded,
+                          style: AppIconButtonStyle.destructive,
                         ),
                       ],
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                  child: Column(
+                    children: [
+                      if ((room?.description ?? '').trim().isNotEmpty)
+                        _buildDetailLine('简介', room!.description.trim()),
+                      _buildDetailLine(
+                        '创建时间',
+                        _formatTimestamp(room?.createdAt ?? 0),
+                      ),
+                      _buildDetailLine(
+                        '更新时间',
+                        _formatTimestamp(room?.updatedAt ?? 0),
+                      ),
+                      _buildDetailLine(
+                        '成员',
+                        '${room?.viewerCount ?? 0} 在线 / ${room?.memberCount ?? 0} 成员',
+                      ),
+                      _buildDetailLine(
+                        '密码',
+                        _settings.requirePassword ? '已设置' : '未设置',
+                      ),
+                    ],
+                  ),
+                ),
+                _buildDivider(theme),
+                Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
+                    children: [
+                      AppAvatar(
+                        name: creatorName,
+                        imageUrl:
+                            creatorAvatarUrl.isEmpty ? null : creatorAvatarUrl,
+                        radius: 18,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              creatorName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              creatorId.isEmpty ? '创建者' : creatorId,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: theme.hintColor,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Material(
-            color: isDark ? const Color(0xFF1E1E24) : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: BorderSide(
-                color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+        ),
+        _buildSectionHeader('房间密码', theme),
+        _buildSurface(
+          isDark: isDark,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              child: AppTextField(
+                controller: _passwordController,
+                label: '新密码',
+                helperText: '留空提交会移除房间密码',
+                obscureText: true,
+                suffix: AppIconButton(
+                  tooltip: '清空',
+                  icon: Icons.clear,
+                  iconSize: 18,
+                  size: AppIconButtonSize.sm,
+                  onPressed: () {
+                    _passwordController.clear();
+                    setState(() {});
+                  },
+                ),
               ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.restart_alt),
-                  title: const Text('重置房间设置'),
-                  subtitle: const Text('恢复服务端默认房间策略'),
-                  onTap: _resetSettings,
-                ),
-                if (_canLeaveRoom) ...[
-                  _buildDivider(theme),
-                  ListTile(
-                    leading: const Icon(Icons.logout),
-                    title: const Text('退出房间'),
-                    subtitle: const Text('退出后需要重新加入才能访问成员内容'),
-                    onTap: _leaveRoom,
+            _buildDivider(theme),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _settings.requirePassword ? '当前房间需要密码' : '当前房间无需密码',
+                      style: TextStyle(color: theme.hintColor, fontSize: 13),
+                    ),
+                  ),
+                  AppActionButton(
+                    onPressed: _passwordUpdating ? null : _updateRoomPassword,
+                    loading: _passwordUpdating,
+                    icon: Icons.password_rounded,
+                    label: _passwordController.text.trim().isEmpty
+                        ? '移除密码'
+                        : '更新密码',
+                    style: AppActionButtonStyle.tonal,
                   ),
                 ],
-                _buildDivider(theme),
-                ListTile(
-                  leading: Icon(Icons.delete_forever_rounded,
+              ),
+            ),
+          ],
+        ),
+        _buildSectionHeader('房间操作', theme),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: AppInkSurface(
+            color: isDark ? const Color(0xFF1E1E24) : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
+            ),
+            child: Column(
+              children: [
+                if (_canLeaveRoom) ...[
+                  AppTile(
+                    prefix: const Icon(Icons.logout),
+                    title: const Text('退出房间'),
+                    subtitle: const Text('退出后需要重新加入才能访问成员内容'),
+                    onPressed: _leaveRoom,
+                  ),
+                  _buildDivider(theme),
+                ],
+                AppTile(
+                  prefix: Icon(Icons.delete_forever_rounded,
                       color: theme.colorScheme.error),
                   title: Text(
                     '删除房间',
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
-                  onTap: _deleteRoom,
+                  onPressed: _deleteRoom,
+                  destructive: true,
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -4996,11 +5633,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       3 => '已拒绝',
       _ => '未指定',
     };
-  }
-
-  String _memberInitial(AdminRoomMember member) {
-    final source = member.username.isNotEmpty ? member.username : member.userId;
-    return source.isEmpty ? '?' : source.characters.first.toUpperCase();
   }
 
   String _formatTimestamp(int timestamp) {
@@ -5039,10 +5671,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: systemUiOverlayStyle,
-      child: Scaffold(
+      child: AppScaffold(
         backgroundColor:
             isDark ? const Color(0xFF121214) : const Color(0xFFF6F7FB),
-        appBar: AppBar(
+        appBar: AppAppBar(
           title: Text(
             widget.roomName,
             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -5052,31 +5684,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               isDark ? const Color(0xFF121214) : const Color(0xFFF6F7FB),
           centerTitle: true,
           systemOverlayStyle: systemUiOverlayStyle,
-          actions: [
-            if (_isSaving)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              )
-            else
-              TextButton(
-                onPressed: _saveSettings,
-                child: Text(
-                  '保存',
-                  style: TextStyle(
-                    color: theme.primaryColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
         ),
         body: LayoutBuilder(
           builder: (context, constraints) {
@@ -5093,18 +5700,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             return Row(
               children: [
                 _buildSideNavigation(theme, isDark),
-                VerticalDivider(
+                AppVerticalDivider(
                   width: 1,
                   thickness: 1,
                   color: theme.dividerColor.withValues(alpha: 0.55),
                 ),
                 Expanded(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF151518)
-                          : const Color(0xFFF3F5F8),
-                    ),
+                  child: AppPanelSurface(
+                    color: isDark
+                        ? const Color(0xFF151518)
+                        : const Color(0xFFF3F5F8),
+                    borderRadius: BorderRadius.zero,
+                    clipBehavior: Clip.none,
                     child: _buildTabView(theme, isDark),
                   ),
                 ),
@@ -5117,7 +5724,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildTabView(ThemeData theme, bool isDark) {
-    return TabBarView(
+    return AppTabBarView(
       controller: _tabController,
       children: _sections
           .map((section) => section.builder(theme, isDark))
@@ -5126,10 +5733,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildTopTabs(ThemeData theme) {
-    final compact = MediaQuery.sizeOf(context).width < 430;
-    return Material(
+    final compact = AppBreakpoints.widthOf(context) < 430;
+    return AppInkSurface(
       color: theme.colorScheme.surface.withValues(alpha: 0.92),
-      child: TabBar(
+      clipBehavior: Clip.none,
+      child: AppTabBar(
         controller: _tabController,
         isScrollable: true,
         tabAlignment: TabAlignment.start,
@@ -5162,9 +5770,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       builder: (context, _) {
         return SizedBox(
           width: 224,
-          child: Material(
+          child: AppInkSurface(
             color: isDark ? const Color(0xFF101012) : Colors.white,
-            child: SafeArea(
+            clipBehavior: Clip.none,
+            child: AppSafeArea(
               top: false,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
@@ -5183,7 +5792,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ),
                     ),
                     Expanded(
-                      child: ListView.separated(
+                      child: AppListView.separated(
                         itemCount: _sections.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 4),
                         itemBuilder: (context, index) {
@@ -5230,33 +5839,28 @@ class _RoomSettingsNavTile extends StatelessWidget {
     final theme = Theme.of(context);
     final foreground =
         selected ? theme.colorScheme.primary : theme.colorScheme.onSurface;
-    return Material(
+    return AppInkSurface(
       color: selected
           ? theme.colorScheme.primary.withValues(alpha: 0.10)
           : Colors.transparent,
       borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: foreground),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: foreground,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  ),
-                ),
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: foreground),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: foreground,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -5276,6 +5880,65 @@ class _MemberPermissionOverrideResult {
     required this.adminAddedPermissions,
     required this.adminRemovedPermissions,
   });
+}
+
+class _ChatMessageEditForm extends StatefulWidget {
+  final String initialContent;
+
+  const _ChatMessageEditForm({required this.initialContent});
+
+  @override
+  State<_ChatMessageEditForm> createState() => _ChatMessageEditFormState();
+}
+
+class _ChatMessageEditFormState extends State<_ChatMessageEditForm> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialContent);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.pop(context, _controller.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppTextField(
+          controller: _controller,
+          label: '消息内容',
+          autofocus: true,
+          minLines: 2,
+          maxLines: 5,
+          onSubmitted: (_) => _submit(),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            ChatUtils.createCancelButton(context),
+            const SizedBox(width: 8),
+            ChatUtils.createConfirmButton(
+              context,
+              _submit,
+              text: '保存',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 enum _MediaAction {

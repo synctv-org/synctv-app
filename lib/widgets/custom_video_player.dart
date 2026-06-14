@@ -11,10 +11,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:synctv_app/widgets/danmaku_overlay.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/services/dlna.dart';
 import 'package:synctv_app/services/xml_parser.dart';
+import 'package:synctv_app/utils/message_utils.dart';
 
 class DanmakuController extends ChangeNotifier {
   List<DanmakuItem> _items = [];
@@ -64,6 +66,23 @@ class DanmakuController extends ChangeNotifier {
   void addItems(List<DanmakuItem> newItems) {
     _items.addAll(newItems);
     notifyListeners();
+  }
+
+  void addUniqueItems(List<DanmakuItem> newItems) {
+    if (newItems.isEmpty) return;
+    final existingKeys = _items.map(_danmakuKey).toSet();
+    var changed = false;
+    for (final item in newItems) {
+      if (existingKeys.add(_danmakuKey(item))) {
+        _items.add(item);
+        changed = true;
+      }
+    }
+    if (changed) notifyListeners();
+  }
+
+  String _danmakuKey(DanmakuItem item) {
+    return '${item.startTime.inMilliseconds}|${item.text}|${item.type.index}';
   }
 
   void clear() {
@@ -1015,14 +1034,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         }
       }
     } else {
-      if (Platform.operatingSystem == 'ohos') {
+      try {
+        _dragStartVolume = await FlutterVolumeController.getVolume();
+      } catch (e) {
         _dragStartVolume = widget.controller.value.volume;
-      } else {
-        try {
-          _dragStartVolume = await FlutterVolumeController.getVolume();
-        } catch (e) {
-          _dragStartVolume = widget.controller.value.volume;
-        }
       }
       if (!_isVerticalDragging) return;
       await widget.controller.setVolume(_dragStartVolume!.clamp(0.0, 1.0));
@@ -1057,16 +1072,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     } else if (_dragStartVolume != null) {
       final newVal = (_dragStartVolume! + delta).clamp(0.0, 1.0);
 
-      if (Platform.operatingSystem == 'ohos') {
-        await widget.controller.setVolume(newVal);
-      } else {
-        try {
-          await FlutterVolumeController.setVolume(newVal);
-        } catch (e) {
-          // System volume is unavailable on some desktop targets.
-        }
-        await widget.controller.setVolume(newVal);
+      try {
+        await FlutterVolumeController.setVolume(newVal);
+      } catch (e) {
+        // System volume is unavailable on some desktop targets.
       }
+      await widget.controller.setVolume(newVal);
       unawaited(_persistVolume(newVal));
 
       if (!_isVerticalDragging) return;
@@ -1203,12 +1214,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
+          AppIconButton(
             tooltip: videoValue.volume <= 0.01 ? '取消静音' : '静音',
-            icon: Icon(
-              _volumeIcon(videoValue.volume),
-              color: Colors.white,
-            ),
+            icon: _volumeIcon(videoValue.volume),
             padding: EdgeInsets.zero,
             constraints: BoxConstraints.tightFor(
               width: buttonWidth,
@@ -1233,7 +1241,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                   overlayRadius: compact ? 12 : 14,
                 ),
               ),
-              child: Slider(
+              child: AppSlider(
                 value: videoValue.volume.clamp(0.0, 1.0).toDouble(),
                 min: 0,
                 max: 1,
@@ -1248,7 +1256,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _showVolumePanel() {
     _startHideTimer();
-    showModalBottomSheet(
+    showAppBottomSheet<void>(
       context: context,
       backgroundColor: const Color(0xFF15151F),
       shape: const RoundedRectangleBorder(
@@ -1257,16 +1265,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       builder: (context) => StatefulBuilder(
         builder: (context, setPanelState) {
           final volume = widget.controller.value.volume.clamp(0.0, 1.0);
-          return SafeArea(
+          return AppSafeArea(
             top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
               child: Row(
                 children: [
-                  IconButton(
+                  AppIconButton(
                     tooltip: volume <= 0.01 ? '取消静音' : '静音',
-                    icon: Icon(_volumeIcon(volume.toDouble()),
-                        color: Colors.white),
+                    icon: _volumeIcon(volume.toDouble()),
                     onPressed: () async {
                       await _toggleMute();
                       setPanelState(() {});
@@ -1281,7 +1288,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         overlayShape:
                             const RoundSliderOverlayShape(overlayRadius: 18),
                       ),
-                      child: Slider(
+                      child: AppSlider(
                         value: volume.toDouble(),
                         min: 0,
                         max: 1,
@@ -1331,7 +1338,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       });
     });
 
-    showModalBottomSheet(
+    showAppBottomSheet<void>(
       context: context,
       backgroundColor: const Color(0xFF1E1E2C),
       shape: const RoundedRectangleBorder(
@@ -1340,7 +1347,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) {
           sheetSetState = setSheetState;
-          return SafeArea(
+          return AppSafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1355,24 +1362,23 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                               fontSize: 16,
                               fontWeight: FontWeight.bold)),
                       if (_isSearchingDlna)
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
+                        const AppLoadingIndicator(
+                          size: AppLoadingSize.sm,
+                          centered: false,
+                          color: Colors.white,
                         ),
                     ],
                   ),
                 ),
-                const Divider(color: Colors.white24, height: 1),
+                const AppDivider(color: Colors.white24, height: 1),
                 if (_isCasting && _currentDlnaDevice != null)
-                  ListTile(
-                    leading: const Icon(Icons.cast_connected,
+                  AppTile(
+                    prefix: const Icon(Icons.cast_connected,
                         color: Color(0xFF5D5FEF)),
                     title: Text(
                         '正在投屏: ${_currentDlnaDevice!.info.friendlyName}',
                         style: const TextStyle(color: Color(0xFF5D5FEF))),
-                    trailing: TextButton(
+                    suffix: AppActionButton(
                       onPressed: () {
                         // Stop casting
                         _currentDlnaDevice!.stop();
@@ -1387,8 +1393,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         widget.controller.play();
                         Navigator.pop(context);
                       },
-                      child: const Text('退出投屏',
-                          style: TextStyle(color: Colors.red)),
+                      label: '退出投屏',
+                      style: AppActionButtonStyle.destructive,
                     ),
                   ),
                 if (_dlnaDevices.isEmpty)
@@ -1398,12 +1404,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         style: TextStyle(color: Colors.white54)),
                   ),
                 Flexible(
-                  child: SingleChildScrollView(
+                  child: AppSingleChildScrollView(
                     child: Column(
                       children: _dlnaDevices.values.map((device) {
                         final isSelected = _currentDlnaDevice == device;
-                        return ListTile(
-                          leading: Icon(Icons.tv,
+                        return AppTile(
+                          prefix: Icon(Icons.tv,
                               color: isSelected
                                   ? const Color(0xFF5D5FEF)
                                   : Colors.white),
@@ -1412,7 +1418,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   color: isSelected
                                       ? const Color(0xFF5D5FEF)
                                       : Colors.white)),
-                          onTap: () async {
+                          onPressed: () async {
                             Navigator.pop(context);
                             _connectToDlnaDevice(device);
                           },
@@ -1470,8 +1476,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     } catch (e) {
       debugPrint('DLNA Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('投屏失败: $e')));
+        MessageUtils.showError(context, '投屏失败: $e');
         setState(() {
           _isCasting = false;
           _currentDlnaDevice = null;
@@ -1493,13 +1498,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       return;
     }
 
-    showModalBottomSheet(
+    showAppBottomSheet<void>(
       context: context,
       backgroundColor: const Color(0xFF1E1E2C),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => SafeArea(
+      builder: (context) => AppSafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1511,10 +1516,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       fontSize: 16,
                       fontWeight: FontWeight.bold)),
             ),
-            ListTile(
-              leading: const Icon(Icons.close, color: Colors.white),
+            AppTile(
+              prefix: const Icon(Icons.close, color: Colors.white),
               title: const Text('关闭字幕', style: TextStyle(color: Colors.white)),
-              onTap: () {
+              onPressed: () {
                 setState(() {
                   _subtitleItems.clear();
                   _currentSubtitle = '';
@@ -1522,17 +1527,17 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 Navigator.pop(context);
               },
             ),
-            const Divider(color: Colors.white24, height: 1),
+            const AppDivider(color: Colors.white24, height: 1),
             Flexible(
-              child: SingleChildScrollView(
+              child: AppSingleChildScrollView(
                 child: Column(
                   children: widget.subtitles!.entries.map((e) {
                     final label = e.key;
                     final url = e.value is Map ? e.value['url'] : null;
-                    return ListTile(
+                    return AppTile(
                       title: Text(label,
                           style: const TextStyle(color: Colors.white)),
-                      onTap: () {
+                      onPressed: () {
                         if (url != null) _loadSubtitles(url);
                         Navigator.pop(context);
                       },
@@ -1549,35 +1554,43 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _showDanmakuInput() {
     final textController = TextEditingController();
-    showModalBottomSheet(
+    showAppBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       clipBehavior: Clip.none,
       useSafeArea: false,
+      showDragHandle: false,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: Container(
+        child: AppPanelSurface(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           clipBehavior: Clip.antiAlias,
-          decoration: const BoxDecoration(
-            color: Color(0xFF1E1E2C),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          child: SafeArea(
+          color: const Color(0xFF1E1E2C),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: AppSafeArea(
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
+                  child: AppTextField(
                     controller: textController,
+                    label: '弹幕',
+                    showLabel: false,
+                    hintText: '发个弹幕见证当下...',
+                    prefixIcon: Icons.subtitles_rounded,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: '发个弹幕见证当下...',
-                      hintStyle: TextStyle(color: Colors.white54),
-                      border: InputBorder.none,
+                    fillColor: Colors.white.withValues(alpha: 0.08),
+                    enabledBorderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.14),
                     ),
+                    focusedBorderSide: const BorderSide(
+                      color: Color(0xFF5D5FEF),
+                      width: 1.4,
+                    ),
+                    showClearButton: true,
+                    textInputAction: TextInputAction.send,
                     onSubmitted: (value) {
                       if (value.trim().isNotEmpty) {
                         widget.onSendDanmaku?.call(value.trim());
@@ -1585,10 +1598,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       }
                     },
                     autofocus: true,
+                    smartDashesType: SmartDashesType.disabled,
+                    smartQuotesType: SmartQuotesType.disabled,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Color(0xFF5D5FEF)),
+                AppIconButton(
+                  icon: Icons.send,
+                  tooltip: '发送',
+                  style: AppIconButtonStyle.tonal,
                   onPressed: () {
                     if (textController.text.trim().isNotEmpty) {
                       widget.onSendDanmaku?.call(textController.text.trim());
@@ -1605,7 +1622,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   void _showDlnaControlPanel() {
-    showModalBottomSheet(
+    showAppBottomSheet<void>(
       context: context,
       backgroundColor: const Color(0xFF1E1E2C),
       shape: const RoundedRectangleBorder(
@@ -1622,7 +1639,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           onPopInvokedWithResult: (_, __) {
             subscription?.cancel();
           },
-          child: SafeArea(
+          child: AppSafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -1642,7 +1659,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       Text(_formatDuration(_dlnaPosition),
                           style: const TextStyle(color: Colors.white70)),
                       Expanded(
-                        child: Slider(
+                        child: AppSlider(
                           value: _dlnaPosition.inSeconds
                               .toDouble()
                               .clamp(0, _dlnaDuration.inSeconds.toDouble()),
@@ -1674,9 +1691,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Volume Down
-                      IconButton(
-                        icon:
-                            const Icon(Icons.volume_down, color: Colors.white),
+                      AppIconButton(
+                        icon: Icons.volume_down,
+                        tooltip: '降低音量',
                         onPressed: () {
                           final newVol = ((_dragStartDlnaVolume ?? 0) - 10)
                               .clamp(0.0, 100.0);
@@ -1687,14 +1704,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       ),
                       const SizedBox(width: 24),
                       // Play/Pause
-                      IconButton(
+                      AppIconButton(
                         iconSize: 64,
-                        icon: Icon(
-                          _dlnaIsPlaying
-                              ? Icons.pause_circle_filled
-                              : Icons.play_circle_filled,
-                          color: Colors.white,
-                        ),
+                        icon: _dlnaIsPlaying
+                            ? Icons.pause_circle_filled
+                            : Icons.play_circle_filled,
+                        tooltip: _dlnaIsPlaying ? '暂停' : '播放',
                         onPressed: () {
                           if (_dlnaIsPlaying) {
                             _currentDlnaDevice?.pause();
@@ -1709,8 +1724,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       ),
                       const SizedBox(width: 24),
                       // Volume Up
-                      IconButton(
-                        icon: const Icon(Icons.volume_up, color: Colors.white),
+                      AppIconButton(
+                        icon: Icons.volume_up,
+                        tooltip: '提高音量',
                         onPressed: () {
                           final newVol = ((_dragStartDlnaVolume ?? 0) + 10)
                               .clamp(0.0, 100.0);
@@ -1735,7 +1751,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   Widget build(BuildContext context) {
     final videoValue = widget.controller.value;
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: Colors.black,
       body: Focus(
         autofocus: _isDesktopMode,
@@ -1760,38 +1776,31 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
               alignment: Alignment.center,
               children: [
                 if (_isCasting)
-                  Container(
+                  AppPanelSurface(
                     color: Colors.black,
                     width: double.infinity,
                     height: double.infinity,
+                    borderRadius: BorderRadius.zero,
+                    clipBehavior: Clip.none,
                     child: Stack(
                       children: [
                         // Top Right Switch Button
                         Positioned(
                           top: 8,
                           right: 8,
-                          child: SafeArea(
-                            child: TextButton.icon(
-                              icon: const Icon(Icons.swap_horiz,
-                                  color: Colors.white70, size: 18),
-                              label: const Text('切换设备',
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 13)),
+                          child: AppSafeArea(
+                            child: AppOverlayActionButton(
+                              icon: Icons.swap_horiz,
+                              label: '切换设备',
                               onPressed: _showDlnaMenu,
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.black26,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20)),
-                              ),
+                              foregroundColor: Colors.white70,
+                              backgroundColor: Colors.black26,
+                              textStyle: const TextStyle(fontSize: 13),
                             ),
                           ),
                         ),
                         Center(
-                          child: SingleChildScrollView(
+                          child: AppSingleChildScrollView(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
@@ -1822,24 +1831,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                 ),
                                 const SizedBox(height: 24),
                                 // Control Button
-                                TextButton.icon(
+                                AppOverlayActionButton(
                                   onPressed: _showDlnaControlPanel,
-                                  icon: const Icon(Icons.tune,
-                                      color: Colors.white, size: 20),
-                                  label: const Text('遥控器',
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 14)),
-                                  style: TextButton.styleFrom(
-                                    backgroundColor: Colors.white10,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(20)),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  ),
+                                  icon: Icons.tune,
+                                  label: '遥控器',
+                                  backgroundColor: Colors.white10,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  textStyle: const TextStyle(fontSize: 14),
                                 ),
                               ],
                             ),
@@ -1869,11 +1868,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                     bottom: widget.isFullScreen ? 40 : 10,
                     left: 16,
                     right: 16,
-                    child: Container(
+                    child: AppPanelSurface(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
-                      // Transparent background as requested
                       color: Colors.transparent,
+                      borderRadius: BorderRadius.zero,
+                      clipBehavior: Clip.none,
                       child: Text(
                         _currentSubtitle,
                         style: TextStyle(
@@ -1907,12 +1907,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                     ),
                   ),
                 if (_dragLabel.isNotEmpty)
-                  Container(
+                  AppPanelSurface(
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    color: Colors.black54,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1939,26 +1936,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                             top: 0,
                             left: 0,
                             right: 0,
-                            child: Container(
+                            child: AppPanelSurface(
                               padding: EdgeInsets.only(
                                 top: MediaQuery.of(context).padding.top + 8,
                                 bottom: 8,
                                 left: 16,
                                 right: 16,
                               ),
-                              decoration: BoxDecoration(
-                                gradient: widget.isFullScreen
-                                    ? const LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Colors.black87,
-                                          Colors.transparent
-                                        ],
-                                      )
-                                    : null,
-                                color: null,
-                              ),
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.zero,
+                              clipBehavior: Clip.none,
+                              gradient: widget.isFullScreen
+                                  ? const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.black87,
+                                        Colors.transparent
+                                      ],
+                                    )
+                                  : null,
                               child: Row(
                                 children: [
                                   if (widget.isFullScreen)
@@ -1975,32 +1972,31 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   ),
                                   if (widget.onSync != null &&
                                       !widget.isFullScreen) ...[
-                                    TextButton(
+                                    AppOverlayActionButton(
                                       onPressed: widget.onSync,
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        minimumSize: const Size(48, 32),
-                                        tapTargetSize:
-                                            MaterialTapTargetSize.padded,
+                                      label: '同步',
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      minimumSize: const Size(48, 32),
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.padded,
+                                      backgroundColor: Colors.transparent,
+                                      textStyle: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
                                       ),
-                                      child: const Text('同步',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16)),
                                     ),
                                   ],
                                   if (widget.showCastButton)
-                                    IconButton(
-                                      icon: Icon(
-                                        _isCasting
-                                            ? Icons.cast_connected
-                                            : Icons.cast,
-                                        color: _isCasting
-                                            ? const Color(0xFF5D5FEF)
-                                            : Colors.white,
-                                      ),
+                                    AppIconButton(
+                                      icon: _isCasting
+                                          ? Icons.cast_connected
+                                          : Icons.cast,
+                                      tooltip: _isCasting ? '正在投屏' : '投屏',
+                                      selected: _isCasting,
+                                      style: _isCasting
+                                          ? AppIconButtonStyle.tonal
+                                          : AppIconButtonStyle.ghost,
                                       onPressed: _showDlnaMenu,
                                     ),
                                 ],
@@ -2014,40 +2010,39 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                 widget.isFullScreen ? 24 : 0, // 全屏模式下抬高 24 像素
                             left: 0,
                             right: 0,
-                            child: SafeArea(
+                            child: AppSafeArea(
                               top: false,
                               bottom:
                                   false, // 无论是全屏还是非全屏，都禁用 SafeArea 的底部填充，完全由 Positioned 控制
-                              child: Container(
+                              child: AppPanelSurface(
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 8, horizontal: 16),
-                                decoration: BoxDecoration(
-                                  gradient: widget.isFullScreen
-                                      ? const LinearGradient(
-                                          begin: Alignment.bottomCenter,
-                                          end: Alignment.topCenter,
-                                          colors: [
-                                            Colors.black87,
-                                            Colors.transparent
-                                          ],
-                                        )
-                                      : null,
-                                  color: null,
-                                ),
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.zero,
+                                clipBehavior: Clip.none,
+                                gradient: widget.isFullScreen
+                                    ? const LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [
+                                          Colors.black87,
+                                          Colors.transparent
+                                        ],
+                                      )
+                                    : null,
                                 child: LayoutBuilder(
                                   builder: (context, constraints) {
                                     final controlsWidth = constraints.maxWidth;
                                     final showTime = controlsWidth >= 300;
                                     final showSecondaryButtons =
                                         controlsWidth >= 360;
-                                    final showInlineVolume = controlsWidth >=
-                                            520 &&
-                                        (widget.isFullScreen ||
-                                            Platform.isMacOS ||
-                                            Platform.isWindows ||
-                                            Platform.isLinux ||
-                                            MediaQuery.of(context).size.width >=
-                                                720);
+                                    final showInlineVolume =
+                                        controlsWidth >= 520 &&
+                                            (widget.isFullScreen ||
+                                                Platform.isMacOS ||
+                                                Platform.isWindows ||
+                                                Platform.isLinux ||
+                                                controlsWidth >= 720);
                                     final iconSize =
                                         controlsWidth < 360 ? 18.0 : 20.0;
                                     final playIconSize =
@@ -2212,78 +2207,84 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                     });
                                                   }
                                                 },
-                                                child: Container(
+                                                child: SizedBox(
                                                   height: 40, // 增加整体触摸区域高度
-                                                  alignment: Alignment.center,
-                                                  child: SliderTheme(
-                                                    data:
-                                                        SliderTheme.of(context)
-                                                            .copyWith(
-                                                      thumbShape:
-                                                          RoundSliderThumbShape(
-                                                        enabledThumbRadius:
-                                                            _isSliderDragging
-                                                                ? (widget
-                                                                        .isFullScreen
-                                                                    ? 8
-                                                                    : 10)
-                                                                : (widget
-                                                                        .isFullScreen
-                                                                    ? 6
-                                                                    : 8),
+                                                  child: Align(
+                                                    alignment: Alignment.center,
+                                                    child: SliderTheme(
+                                                      data: SliderTheme.of(
+                                                              context)
+                                                          .copyWith(
+                                                        thumbShape:
+                                                            RoundSliderThumbShape(
+                                                          enabledThumbRadius:
+                                                              _isSliderDragging
+                                                                  ? (widget
+                                                                          .isFullScreen
+                                                                      ? 8
+                                                                      : 10)
+                                                                  : (widget
+                                                                          .isFullScreen
+                                                                      ? 6
+                                                                      : 8),
+                                                        ),
+                                                        trackHeight: _isSliderDragging
+                                                            ? (widget
+                                                                    .isFullScreen
+                                                                ? 4
+                                                                : 6)
+                                                            : (widget
+                                                                    .isFullScreen
+                                                                ? 2
+                                                                : 4),
+                                                        overlayShape:
+                                                            const RoundSliderOverlayShape(
+                                                                overlayRadius:
+                                                                    24),
+                                                        activeTrackColor:
+                                                            const Color(
+                                                                0xFF5D5FEF),
+                                                        inactiveTrackColor:
+                                                            Colors.white24,
+                                                        thumbColor:
+                                                            Colors.white,
+                                                        trackShape:
+                                                            const RectangularSliderTrackShape(), // 确保轨道充满可用宽度
                                                       ),
-                                                      trackHeight: _isSliderDragging
-                                                          ? (widget.isFullScreen
-                                                              ? 4
-                                                              : 6)
-                                                          : (widget.isFullScreen
-                                                              ? 2
-                                                              : 4),
-                                                      overlayShape:
-                                                          const RoundSliderOverlayShape(
-                                                              overlayRadius:
-                                                                  24),
-                                                      activeTrackColor:
-                                                          const Color(
-                                                              0xFF5D5FEF),
-                                                      inactiveTrackColor:
-                                                          Colors.white24,
-                                                      thumbColor: Colors.white,
-                                                      trackShape:
-                                                          const RectangularSliderTrackShape(), // 确保轨道充满可用宽度
-                                                    ),
-                                                    child: IgnorePointer(
-                                                      // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
-                                                      child: Slider(
-                                                        value: (_isSliderDragging
-                                                                ? _sliderDragValue
-                                                                : videoValue
-                                                                    .position
-                                                                    .inMilliseconds
-                                                                    .toDouble())
-                                                            .clamp(
-                                                                0,
-                                                                videoValue.duration
-                                                                            .inMilliseconds
-                                                                            .toDouble() >
-                                                                        0
-                                                                    ? videoValue
-                                                                        .duration
-                                                                        .inMilliseconds
-                                                                        .toDouble()
-                                                                    : 1.0),
-                                                        min: 0,
-                                                        max: videoValue.duration
-                                                                    .inMilliseconds
-                                                                    .toDouble() >
-                                                                0
-                                                            ? videoValue
-                                                                .duration
-                                                                .inMilliseconds
-                                                                .toDouble()
-                                                            : 1.0,
-                                                        onChanged:
-                                                            (value) {}, // 忽略，由外层接管
+                                                      child: IgnorePointer(
+                                                        // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
+                                                        child: AppSlider(
+                                                          value: (_isSliderDragging
+                                                                  ? _sliderDragValue
+                                                                  : videoValue
+                                                                      .position
+                                                                      .inMilliseconds
+                                                                      .toDouble())
+                                                              .clamp(
+                                                                  0,
+                                                                  videoValue.duration
+                                                                              .inMilliseconds
+                                                                              .toDouble() >
+                                                                          0
+                                                                      ? videoValue
+                                                                          .duration
+                                                                          .inMilliseconds
+                                                                          .toDouble()
+                                                                      : 1.0),
+                                                          min: 0,
+                                                          max: videoValue
+                                                                      .duration
+                                                                      .inMilliseconds
+                                                                      .toDouble() >
+                                                                  0
+                                                              ? videoValue
+                                                                  .duration
+                                                                  .inMilliseconds
+                                                                  .toDouble()
+                                                              : 1.0,
+                                                          onChanged:
+                                                              (value) {}, // 忽略，由外层接管
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -2313,16 +2314,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                 compact: !widget.isFullScreen,
                                               )
                                             else
-                                              IconButton(
+                                              AppIconButton(
                                                 tooltip:
                                                     videoValue.volume <= 0.01
                                                         ? '取消静音'
                                                         : '音量',
-                                                icon: Icon(
-                                                  _volumeIcon(
-                                                      videoValue.volume),
-                                                  color: Colors.white,
-                                                ),
+                                                icon: _volumeIcon(
+                                                    videoValue.volume),
                                                 padding: EdgeInsets.zero,
                                                 constraints:
                                                     const BoxConstraints(),
@@ -2332,11 +2330,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             if (showSecondaryButtons &&
                                                 widget.subtitles != null &&
                                                 widget.subtitles!.isNotEmpty)
-                                              IconButton(
-                                                icon: const Icon(
-                                                    Icons
-                                                        .closed_caption_rounded,
-                                                    color: Colors.white),
+                                              AppIconButton(
+                                                icon: Icons
+                                                    .closed_caption_rounded,
+                                                tooltip: '字幕',
                                                 onPressed: _showSubtitleMenu,
                                                 padding: widget.isFullScreen
                                                     ? const EdgeInsets.all(8)
@@ -2353,13 +2350,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   width: widget.isFullScreen
                                                       ? 0
                                                       : 4),
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.comment_rounded,
-                                                  color: _showDanmaku
-                                                      ? const Color(0xFF5D5FEF)
-                                                      : Colors.white,
-                                                ),
+                                              AppIconButton(
+                                                icon: Icons.comment_rounded,
+                                                tooltip: _showDanmaku
+                                                    ? '关闭弹幕'
+                                                    : '开启弹幕',
+                                                selected: _showDanmaku,
+                                                style: _showDanmaku
+                                                    ? AppIconButtonStyle.tonal
+                                                    : AppIconButtonStyle.ghost,
                                                 onPressed: () {
                                                   setState(() {
                                                     _showDanmaku =
@@ -2388,34 +2387,27 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             ],
                                             if (widget.isFullScreen &&
                                                 widget.onSendDanmaku != null)
-                                              IconButton(
-                                                icon: const Icon(
-                                                    Icons.send_rounded,
-                                                    color: Colors.white),
+                                              AppIconButton(
+                                                icon: Icons.send_rounded,
                                                 onPressed: _showDanmakuInput,
                                                 tooltip: '发送弹幕',
                                               ),
                                             if (widget.onSync != null &&
                                                 widget.isFullScreen) ...[
                                               const SizedBox(width: 0),
-                                              TextButton(
+                                              AppOverlayActionButton(
                                                 onPressed: widget.onSync,
-                                                style: TextButton.styleFrom(
-                                                  foregroundColor: Colors.white,
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 12),
-                                                  minimumSize:
-                                                      const Size(0, 40),
-                                                  tapTargetSize:
-                                                      MaterialTapTargetSize
-                                                          .shrinkWrap,
+                                                label: '同步',
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 12),
+                                                minimumSize: const Size(0, 40),
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                textStyle: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 18,
                                                 ),
-                                                child: const Text('同步',
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 18)),
                                               ),
                                             ],
                                             if (widget.onToggleFullScreen !=
@@ -2424,17 +2416,16 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   width: widget.isFullScreen
                                                       ? 0
                                                       : 4),
-                                              IconButton(
-                                                icon: Icon(
-                                                  widget.isFullScreen
-                                                      ? (widget
-                                                              .exitFullScreenIcon ??
-                                                          Icons.fullscreen_exit)
-                                                      : (widget
-                                                              .fullScreenIcon ??
-                                                          Icons.fullscreen),
-                                                  color: Colors.white,
-                                                ),
+                                              AppIconButton(
+                                                icon: widget.isFullScreen
+                                                    ? (widget
+                                                            .exitFullScreenIcon ??
+                                                        Icons.fullscreen_exit)
+                                                    : (widget.fullScreenIcon ??
+                                                        Icons.fullscreen),
+                                                tooltip: widget.isFullScreen
+                                                    ? '退出全屏'
+                                                    : '全屏',
                                                 onPressed:
                                                     widget.onToggleFullScreen,
                                                 padding: widget.isFullScreen

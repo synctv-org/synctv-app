@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 Future<bool?> showServerSettingsDialog({
   required BuildContext context,
 }) {
-  return showModalBottomSheet<bool>(
+  return showAppBottomSheet<bool>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
     constraints: const BoxConstraints(maxWidth: 720),
     builder: (context) => const _ServerSettingsSheet(),
   );
@@ -28,11 +28,41 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   final _controller = TextEditingController();
   var _changed = false;
   var _busy = false;
+  ServerInfo? _serverInfo;
+  Object? _serverInfoError;
+  var _loadingServerInfo = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadServerInfo();
+  }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadServerInfo({bool refresh = false}) async {
+    setState(() {
+      _loadingServerInfo = true;
+      _serverInfoError = null;
+    });
+    try {
+      final info = await WatchTogetherService.getServerInfo(refresh: refresh);
+      if (!mounted) return;
+      setState(() {
+        _serverInfo = info;
+        _loadingServerInfo = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _serverInfoError = error;
+        _loadingServerInfo = false;
+      });
+    }
   }
 
   Future<void> _addServer() async {
@@ -70,6 +100,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     setState(() => _busy = true);
     try {
       await WatchTogetherService.activateServer(profile.serverId);
+      await _loadServerInfo(refresh: true);
       _changed = true;
       if (mounted) {
         MessageUtils.showSuccess(context, '已切换到 ${profile.name}');
@@ -117,98 +148,92 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     final servers = WatchTogetherService.servers;
     final activeServer = WatchTogetherService.activeServer;
 
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          0,
-          20,
-          20 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.dns_rounded, color: theme.colorScheme.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      '服务器',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+    return AppBottomSheetFrame(
+      child: AppSingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.dns_rounded, color: theme.colorScheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '服务器',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(context, _changed),
-                    child: const Text('完成'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ChatUtils.createFormField(
-                context: context,
-                label: '服务器地址',
-                controller: _controller,
-                hintText: '例如: https://tv.example.com',
-                prefixIcon: Icons.link_rounded,
-                onSubmitted: (_) => _busy ? null : _addServer(),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '添加地址后会自动识别服务器，不需要填写回调地址、Code 或 server_id。',
-                      style: TextStyle(
-                        color: isDark
-                            ? Colors.grey.shade400
-                            : Colors.grey.shade600,
-                        fontSize: 12,
-                        height: 1.35,
-                      ),
+                ),
+                AppActionButton(
+                  onPressed: () => Navigator.pop(context, _changed),
+                  label: '完成',
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _CurrentServerInfoCard(
+              info: _serverInfo,
+              fallback: activeServer,
+              loading: _loadingServerInfo,
+              error: _serverInfoError,
+              onRefresh: _busy ? null : () => _loadServerInfo(refresh: true),
+            ),
+            const SizedBox(height: 16),
+            ChatUtils.createFormField(
+              context: context,
+              label: '服务器地址',
+              controller: _controller,
+              hintText: '例如: https://tv.example.com',
+              prefixIcon: Icons.link_rounded,
+              onSubmitted: (_) => _busy ? null : _addServer(),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '添加地址后会自动识别服务器，不需要填写回调地址、Code 或 server_id。',
+                    style: TextStyle(
+                      color:
+                          isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      fontSize: 12,
+                      height: 1.35,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  FilledButton.icon(
-                    onPressed: _busy ? null : _addServer,
-                    icon: _busy
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.add_link_rounded, size: 18),
-                    label: const Text('添加'),
-                  ),
-                ],
+                ),
+                const SizedBox(width: 12),
+                AppActionButton(
+                  onPressed: _busy ? null : _addServer,
+                  icon: Icons.add_link_rounded,
+                  label: '添加',
+                  loading: _busy,
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Text(
+              '已保存服务器',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(height: 18),
-              Text(
-                '已保存服务器',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+            ),
+            const SizedBox(height: 10),
+            if (servers.isEmpty)
+              _EmptyServerState(isDark: isDark)
+            else
+              ...servers.map(
+                (profile) => _ServerProfileTile(
+                  profile: profile,
+                  active: profile.serverId == activeServer?.serverId,
+                  canRemove: !_busy && !profile.isDefault,
+                  busy: _busy,
+                  onActivate: () => _activateServer(profile),
+                  onRemove: () => _removeServer(profile),
                 ),
               ),
-              const SizedBox(height: 10),
-              if (servers.isEmpty)
-                _EmptyServerState(isDark: isDark)
-              else
-                ...servers.map(
-                  (profile) => _ServerProfileTile(
-                    profile: profile,
-                    active: profile.serverId == activeServer?.serverId,
-                    canRemove: !_busy && !profile.isDefault,
-                    busy: _busy,
-                    onActivate: () => _activateServer(profile),
-                    onRemove: () => _removeServer(profile),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -222,18 +247,125 @@ class _EmptyServerState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        '还没有保存的服务器。添加服务器后即可登录和浏览公开房间。',
-        style: TextStyle(
-          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+      child: AppInfoBanner(
+        icon: Icons.dns_outlined,
+        title: Text(
+          '还没有保存的服务器。添加服务器后即可登录和浏览公开房间。',
+          style: TextStyle(
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+          ),
         ),
+        padding: const EdgeInsets.all(16),
+        backgroundColor:
+            isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
+        border: Border.all(color: Colors.transparent),
+      ),
+    );
+  }
+}
+
+class _CurrentServerInfoCard extends StatelessWidget {
+  const _CurrentServerInfoCard({
+    required this.info,
+    required this.fallback,
+    required this.loading,
+    required this.error,
+    required this.onRefresh,
+  });
+
+  final ServerInfo? info;
+  final SyncTvServerProfile? fallback;
+  final bool loading;
+  final Object? error;
+  final VoidCallback? onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primary = theme.colorScheme.primary;
+    final serverName = (info?.serverName.trim().isNotEmpty ?? false)
+        ? info!.serverName.trim()
+        : fallback?.name ?? '当前服务器';
+    final serverId = (info?.serverId.trim().isNotEmpty ?? false)
+        ? info!.serverId.trim()
+        : fallback?.serverId ?? '';
+    final endpoint = fallback?.activeEndpoint ?? WatchTogetherService.baseUrl;
+
+    return AppPanelSurface(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      color: primary.withValues(alpha: isDark ? 0.16 : 0.09),
+      border: Border.all(color: primary.withValues(alpha: 0.24)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          loading
+              ? AppIconBadge(
+                  icon: Icons.hub_rounded,
+                  color: primary,
+                  iconColor: Colors.transparent,
+                  size: 34,
+                  iconSize: 20,
+                  child: const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: AppLoadingIndicator(
+                        size: AppLoadingSize.sm, centered: false),
+                  ),
+                )
+              : AppIconBadge(
+                  icon: Icons.hub_rounded,
+                  color: primary,
+                  size: 34,
+                  iconSize: 20,
+                ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  serverName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                if (serverId.isNotEmpty) ...[
+                  _MetaLine(icon: Icons.fingerprint_rounded, text: serverId),
+                  const SizedBox(height: 4),
+                ],
+                if (endpoint.isNotEmpty)
+                  _MetaLine(
+                    icon: Icons.radio_button_checked_rounded,
+                    text: endpoint,
+                  ),
+                if (error != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    '服务器信息读取失败: $error',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: theme.colorScheme.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          AppIconButton(
+            tooltip: '刷新服务器信息',
+            onPressed: loading ? null : onRefresh,
+            icon: Icons.refresh_rounded,
+            loading: loading,
+          ),
+        ],
       ),
     );
   }
@@ -267,15 +399,12 @@ class _ServerProfileTile extends StatelessWidget {
             ? Colors.white.withValues(alpha: 0.06)
             : Colors.black.withValues(alpha: 0.035);
 
-    return Container(
+    return AppPanelSurface(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: active ? primary.withValues(alpha: 0.45) : Colors.transparent,
-        ),
+      color: background,
+      border: Border.all(
+        color: active ? primary.withValues(alpha: 0.45) : Colors.transparent,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,16 +445,17 @@ class _ServerProfileTile extends StatelessWidget {
                 ),
               ),
               if (!active)
-                IconButton(
+                AppIconButton(
                   tooltip: '切换',
                   onPressed: busy ? null : onActivate,
-                  icon: const Icon(Icons.login_rounded, size: 20),
+                  icon: Icons.login_rounded,
                 ),
               if (!profile.isDefault)
-                IconButton(
+                AppIconButton(
                   tooltip: canRemove ? '移除' : '正在处理',
                   onPressed: canRemove ? onRemove : null,
-                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                  icon: Icons.delete_outline_rounded,
+                  style: AppIconButtonStyle.destructive,
                 ),
             ],
           ),
@@ -363,13 +493,12 @@ class _ServerBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppBadge(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
+      borderRadius: BorderRadius.circular(999),
+      color: color,
+      backgroundColor: color.withValues(alpha: 0.12),
+      label: Text(
         label,
         style: TextStyle(
           color: color,
@@ -403,7 +532,7 @@ class _MetaLine extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: SelectableText(
+          child: AppSelectableText(
             text,
             style: TextStyle(
               color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,

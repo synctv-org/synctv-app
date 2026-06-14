@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/managers/webrtc_manager.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
+import 'package:synctv_app/models/playback_client_profile.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
@@ -23,6 +24,7 @@ import 'package:synctv_app/services/room_invite_service.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_auth_service.dart';
 import 'package:synctv_app/services/synctv_public_room_service.dart';
+import 'package:synctv_app/services/synctv_room_management_service.dart';
 import 'package:synctv_app/services/synctv_room_media_service.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
@@ -31,6 +33,7 @@ import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
+import 'package:synctv_app/src/generated/proto/common.pb.dart' as common_pb;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
 import 'package:synctv_app/src/generated/proto/oauth2.pb.dart' as oauth2;
 import 'package:synctv_app/src/generated/proto/providers/alist.pb.dart'
@@ -41,6 +44,9 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/providers/emby.pb.dart' as emby;
 import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
+import 'package:synctv_app/utils/chat_playback_danmaku.dart';
+import 'package:synctv_app/utils/chat_reactions.dart';
+import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
 
 void main() {
   test(
@@ -84,8 +90,8 @@ void main() {
       {
         "observed": {
           "observeId": "playback-state",
-          "version": "42",
-          "changed": true
+          "changed": true,
+          "eventCursor": {"sequence": "42"}
         }
       }
     ''');
@@ -98,14 +104,14 @@ void main() {
       );
 
     expect(observed.hasObserved(), isTrue);
-    expect(observed.observed.version, '42');
+    expect(observed.observed.eventCursor.sequence.toInt(), 42);
     expect(observed.observed.changed, isTrue);
 
     final changedJson = jsonDecode('''
       {
-        "changed": {
+        "resourceEvent": {
           "observeId": "playback-state",
-          "version": "43",
+          "eventCursor": {"sequence": "43"},
           "playbackState": {
             "roomId": "room_abc",
             "playingMediaId": "med_abc",
@@ -125,12 +131,65 @@ void main() {
         ignoreUnknownFields: true,
       );
 
-    expect(changed.hasChanged(), isTrue);
-    expect(changed.changed.version, '43');
-    expect(changed.changed.hasPlaybackState(), isTrue);
-    expect(changed.changed.playbackState.position, 12.5);
-    expect(changed.changed.playbackState.speed, 1.25);
-    expect(changed.changed.playbackState.isPlaying, isTrue);
+    expect(changed.hasResourceEvent(), isTrue);
+    expect(changed.resourceEvent.eventCursor.sequence.toInt(), 43);
+    expect(changed.resourceEvent.hasPlaybackState(), isTrue);
+    expect(changed.resourceEvent.playbackState.position, 12.5);
+    expect(changed.resourceEvent.playbackState.speed, 1.25);
+    expect(changed.resourceEvent.playbackState.isPlaying, isTrue);
+  });
+
+  test('realtime event log displays protobuf JSON payloads', () {
+    final heartbeat = client.ClientMessage(
+      heartbeat: client.HeartbeatMessage(timestamp: Int64(1781248744)),
+    ).writeToBuffer();
+    final outgoing = RoomRealtimeCodec.describeOutgoing(heartbeat);
+    expect(outgoing.payload, {
+      'heartbeat': {'timestamp': '1781248744'},
+    });
+
+    final joined = client.ServerMessage(
+      resourceEvent: client.ResourceEvent(
+        observeId: 'room_member_events',
+        roomMemberEvent: client.RoomMemberEvent(
+          eventId: 'evt_member_1',
+          roomId: 'room_140',
+          kind: client.RoomMemberEventKind.ROOM_MEMBER_EVENT_KIND_JOINED,
+          member: common_pb.RoomMember(
+            roomId: 'room_140',
+            userId: 'usr_133',
+            username: 'test2',
+            role: common.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR,
+            permissions: Int64(1048575),
+            joinedAt: Int64(1781248669),
+            isOnline: true,
+          ),
+        ),
+      ),
+    ).writeToBuffer();
+    final incoming = RoomRealtimeCodec.describeIncoming(
+      Uint8List.fromList(joined),
+    );
+
+    expect(incoming.payload, {
+      'resourceEvent': {
+        'observeId': 'room_member_events',
+        'roomMemberEvent': {
+          'eventId': 'evt_member_1',
+          'roomId': 'room_140',
+          'kind': 'ROOM_MEMBER_EVENT_KIND_JOINED',
+          'member': {
+            'roomId': 'room_140',
+            'userId': 'usr_133',
+            'username': 'test2',
+            'role': 'ROOM_MEMBER_ROLE_CREATOR',
+            'permissions': '1048575',
+            'joinedAt': '1781248669',
+            'isOnline': true,
+          },
+        },
+      },
+    });
   });
 
   test('room resource watch DTO distinguishes observed, changed, and error',
@@ -161,9 +220,9 @@ void main() {
     expect(error.errorCode, 403);
   });
 
-  test('playback control and progress use distinct protobuf oneofs', () {
+  test('playback control uses playback state update oneof', () {
     final update = client.ClientMessage.fromBuffer(
-      RoomRealtimeCodec.encodePlaybackUpdate(
+      RoomRealtimeCodec.encodePlaybackStateUpdate(
         PlaybackControlAction.seek,
         isPlaying: true,
         position: 12.5,
@@ -171,24 +230,63 @@ void main() {
       ),
     );
 
-    expect(update.hasPlaybackUpdate(), isTrue);
-    expect(update.hasPlaybackProgress(), isFalse);
+    expect(update.hasPlaybackStateUpdate(), isTrue);
     expect(
-      update.playbackUpdate.type,
+      update.playbackStateUpdate.type,
       client.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SEEK,
     );
-    expect(update.playbackUpdate.playing, isTrue);
-    expect(update.playbackUpdate.position, 12.5);
-    expect(update.playbackUpdate.speed, 1.25);
+    expect(update.playbackStateUpdate.playing, isTrue);
+    expect(update.playbackStateUpdate.position, 12.5);
+    expect(update.playbackStateUpdate.speed, 1.25);
+  });
 
-    final progress = client.ClientMessage.fromBuffer(
-      RoomRealtimeCodec.encodePlaybackProgress(true, 13.5),
+  test('guarded playback state update uses source guard without version lock',
+      () {
+    final message = RoomRealtimeCodec.buildGuardedPlaybackStateUpdateMessage(
+      PlaybackControlAction.pause,
+      WPlaybackStatus(
+        playbackRate: 1,
+        version: 7,
+        playingMediaId: 'med_1',
+        playingPlaylistId: '',
+        targetHash:
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      ),
+      isPlaying: false,
+      position: 0.658,
+      playbackRate: 1,
     );
 
-    expect(progress.hasPlaybackProgress(), isTrue);
-    expect(progress.hasPlaybackUpdate(), isFalse);
-    expect(progress.playbackProgress.isPlaying, isTrue);
-    expect(progress.playbackProgress.position, 13.5);
+    expect(message.hasPlaybackStateUpdate(), isTrue);
+    expect(
+      message.playbackStateUpdate.type,
+      client.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PAUSE,
+    );
+    expect(message.playbackStateUpdate.playing, isFalse);
+    expect(message.playbackStateUpdate.position, 0.658);
+    expect(message.playbackStateUpdate.speed, 1);
+    expect(message.playbackStateUpdate.hasVersion(), isFalse);
+    expect(message.playbackStateUpdate.expectedMediaId, 'med_1');
+    expect(message.playbackStateUpdate.expectedPlaylistId, '');
+    expect(
+      message.playbackStateUpdate.expectedTargetHash,
+      'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    );
+  });
+
+  test('realtime chat messages preserve danmaku presentation fields', () {
+    final chat = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodeChat(
+        'hello overlay',
+        displayPosition: 'scroll',
+        displayColor: '#ff6600',
+      ),
+    );
+
+    expect(chat.hasChat(), isTrue);
+    expect(chat.chat.content, 'hello overlay');
+    expect(chat.chat.displayPosition, 'scroll');
+    expect(chat.chat.displayColor, '#ff6600');
   });
 
   test('initial realtime observations include playback client profile', () {
@@ -201,17 +299,23 @@ void main() {
           .contains('chat_events'),
       isTrue,
     );
+    expect(
+      messages
+          .map((message) => message.observeResource.observeId)
+          .contains('webrtc_events'),
+      isFalse,
+    );
 
     final snapshotObserve = messages
         .map((message) => message.observeResource)
-        .firstWhere((observe) => observe.observeId == 'playback_snapshot');
+        .firstWhere((observe) => observe.observeId == 'playback');
 
     expect(
       snapshotObserve.deliveryMode,
       client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
     );
-    expect(snapshotObserve.hasPlaybackSnapshot(), isTrue);
-    final profile = snapshotObserve.playbackSnapshot.playbackClientProfile;
+    expect(snapshotObserve.hasPlayback(), isTrue);
+    final profile = snapshotObserve.playback.playbackClientProfile;
     expect(
       profile.deliveryPreference,
       client.PlaybackDeliveryPreference.PLAYBACK_DELIVERY_PREFERENCE_AUTO,
@@ -247,7 +351,7 @@ void main() {
     );
   });
 
-  test('chat event observation uses event id cursor', () {
+  test('chat event observation uses event sequence cursor', () {
     final message = client.ClientMessage.fromBuffer(
       RoomRealtimeCodec.encodeInitialObservations(afterChatEventId: 'evt_42')
           .map(client.ClientMessage.fromBuffer)
@@ -259,17 +363,44 @@ void main() {
 
     expect(message.hasObserveResource(), isTrue);
     expect(message.observeResource.hasChatEvents(), isTrue);
-    expect(message.observeResource.chatEvents.afterEventId, 'evt_42');
+    expect(message.observeResource.chatEvents.afterEventSequence.toInt(), 0);
+  });
+
+  test('online count observation supports member list filters', () {
+    final message = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodeOnlineCountObservation(
+        observeId: 'visible_member_online_count',
+        userIds: const ['usr_1', 'usr_2'],
+        roles: const [common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN],
+      ),
+    );
+
+    expect(message.hasObserveResource(), isTrue);
+    final observe = message.observeResource;
+    expect(observe.observeId, 'visible_member_online_count');
+    expect(observe.hasOnlineCount(), isTrue);
+    expect(observe.onlineCount.userIds, ['usr_1', 'usr_2']);
+    expect(observe.onlineCount.roles, [
+      common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+    ]);
   });
 
   test('room realtime decoder exposes typed protobuf messages', () {
     final chat = RoomRealtimeCodec.decode(
       client.ServerMessage(
-        chat: client.ChatMessageReceive(
-          content: 'hello',
-          userId: 'usr_sender',
-          username: 'alice',
-          timestamp: Int64(123),
+        resourceEvent: client.ResourceEvent(
+          observeId: 'chat_events',
+          chatEvent: client.ChatMessageEvent(
+            eventId: 'evt_chat',
+            kind: client_enum
+                .ChatMessageEventKind.CHAT_MESSAGE_EVENT_KIND_CREATED,
+            message: client.ChatMessageReceive(
+              content: 'hello',
+              userId: 'usr_sender',
+              username: 'alice',
+              timestamp: Int64(123),
+            ),
+          ),
         ),
       ).writeToBuffer(),
     );
@@ -282,8 +413,9 @@ void main() {
 
     final playback = RoomRealtimeCodec.decode(
       client.ServerMessage(
-        playbackState: client.PlaybackStateChanged(
-          state: client.PlaybackState(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'playback_state',
+          playbackState: client.PlaybackState(
             isPlaying: true,
             position: 42.5,
             speed: 1.25,
@@ -299,10 +431,15 @@ void main() {
 
     final webrtc = RoomRealtimeCodec.decode(
       client.ServerMessage(
-        webrtcOffer: client.WebRTCOffer(
-          from: 'usr_peer:conn_1',
-          to: 'usr_me:conn_2',
-          data: '{"sdp":"offer"}',
+        resourceEvent: client.ResourceEvent(
+          observeId: 'webrtc',
+          webrtcEvent: client.WebRtcEvent(
+            offer: client.WebRTCOffer(
+              from: 'usr_peer:conn_1',
+              to: 'usr_me:conn_2',
+              data: '{"sdp":"offer"}',
+            ),
+          ),
         ),
       ).writeToBuffer(),
     );
@@ -316,6 +453,30 @@ void main() {
       'from': 'usr_peer:conn_1',
       'type': 'offer',
     });
+
+    final onlineEvent = RoomRealtimeCodec.decode(
+      client.ServerMessage(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'manage_member_online_events',
+          onlineEvent: client.OnlineEvent(
+            eventId: 'evt_online_1',
+            roomId: 'room_1',
+            userId: 'usr_1',
+            username: 'alice',
+            role: common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+            kind: client.OnlineEventKind.ONLINE_EVENT_KIND_JOINED,
+            occurredAt: Int64(1781260000),
+          ),
+        ),
+      ).writeToBuffer(),
+    );
+
+    expect(onlineEvent.kind, RoomRealtimeMessageKind.onlineEvent);
+    expect(onlineEvent.resourceObserveId, 'manage_member_online_events');
+    expect(onlineEvent.onlineEvent?.userId, 'usr_1');
+    expect(onlineEvent.onlineEvent?.username, 'alice');
+    expect(onlineEvent.onlineEvent?.isOnline, isTrue);
+    expect(onlineEvent.timestampMillis, 1781260000000);
   });
 
   test('chat realtime events update existing entries and remove deleted ones',
@@ -331,9 +492,10 @@ void main() {
     }) {
       return RoomRealtimeCodec.decode(
         client.ServerMessage(
-          resourceChanged: client.ResourceChanged(
+          resourceEvent: client.ResourceEvent(
             observeId: 'chat_events',
-            version: '100:$eventId',
+            eventCursor:
+                client.EventCursor(eventId: eventId, sequence: Int64(100)),
             chatEvent: client.ChatMessageEvent(
               eventId: eventId,
               roomId: 'room_1',
@@ -363,7 +525,7 @@ void main() {
     );
     expect(created.kind, RoomRealtimeMessageKind.chat);
     expect(created.chatEventId, 'evt_1');
-    expect(created.resourceVersion, '100:evt_1');
+    expect(created.resourceVersion, '100');
     expect(created.isChatCreated, isTrue);
 
     messages.applyRealtimeEvent(
@@ -408,6 +570,224 @@ void main() {
       maxEntries: 100,
     );
     expect(messages, isEmpty);
+  });
+
+  test('chat reactions are mapped from protobuf events and endpoints',
+      () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        if (request.url.path ==
+            '/api/rooms/room_1/chat/messages/msg_1/reactions/%F0%9F%91%8D') {
+          return http.Response(
+            jsonEncode({
+              'event': {
+                'id': 'evt_1',
+                'sequence': '8',
+                'room_id': 'room_1',
+                'kind': client_enum.ChatMessageEventKind
+                    .CHAT_MESSAGE_EVENT_KIND_REACTIONS_CHANGED.value,
+                'message': {
+                  'id': 'msg_1',
+                  'room_id': 'room_1',
+                  'user_id': 'usr_sender',
+                  'username': 'sender',
+                  'content': 'hello',
+                  'timestamp': '1760000100',
+                  'version': '2',
+                  'status': client_enum
+                      .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
+                  'reactions': [
+                    {
+                      'key': '👍',
+                      'count': '3',
+                      'reacted_by_me': true,
+                    }
+                  ],
+                  'reaction_count': 3,
+                }
+              }
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        if (request.url.path ==
+            '/api/rooms/room_1/chat/messages/msg_1/reactions/%F0%9F%91%8D/users') {
+          return http.Response(
+            jsonEncode({
+              'users': [
+                {
+                  'user_id': 'usr_1',
+                  'username': 'alice',
+                  'reacted_at': '1760000200',
+                }
+              ],
+              'next_cursor': 'cursor_2',
+              'total': '1',
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        return http.Response(
+            'unexpected ${request.method} ${request.url}', 404);
+      }),
+    );
+    final service = SyncTvRoomMediaDomainService(api);
+
+    final reacted = await service.setChatReaction(
+      'room_1',
+      'msg_1',
+      '👍',
+      enabled: true,
+    );
+    final users = await service.listChatReactionUsers(
+      'room_1',
+      'msg_1',
+      '👍',
+      limit: 25,
+      cursor: 'cursor_1',
+    );
+
+    expect(requests[0].method, 'PUT');
+    expect(requests[0].url.queryParameters, isEmpty);
+    expect(reacted.reactionCount, 3);
+    expect(reacted.reactions, hasLength(1));
+    expect(reacted.reactions.single.key, '👍');
+    expect(reacted.reactions.single.count, 3);
+    expect(reacted.reactions.single.reactedByMe, isTrue);
+
+    expect(requests[1].method, 'GET');
+    expect(requests[1].url.queryParameters, {
+      'message_id': 'msg_1',
+      'reaction_key': '👍',
+      'limit': '25',
+      'cursor': 'cursor_1',
+    });
+    expect(users.total, 1);
+    expect(users.nextCursor, 'cursor_2');
+    expect(users.users.single.userId, 'usr_1');
+    expect(users.users.single.username, 'alice');
+    expect(users.users.single.reactedAt, 1760000200);
+  });
+
+  test('single chat message endpoint is exposed through room media service',
+      () async {
+    http.Request? captured;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        captured = request;
+        return http.Response(
+          jsonEncode({
+            'message': {
+              'id': 'msg_42',
+              'room_id': 'room_1',
+              'user_id': 'usr_sender',
+              'username': 'sender',
+              'content': 'single message',
+              'timestamp': '1760000300',
+              'version': '4',
+              'status': client_enum
+                  .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
+              'display_position': 'top',
+              'display_color': '#ffcc00',
+            }
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final service = SyncTvRoomMediaDomainService(api);
+
+    final message = await service.getChatMessage(
+      'room_1',
+      'msg_42',
+      includeDeleted: true,
+    );
+
+    expect(captured, isNotNull);
+    expect(captured!.method, 'GET');
+    expect(captured!.url.path, '/api/rooms/room_1/chat/messages/msg_42');
+    expect(captured!.url.queryParameters, {
+      'message_id': 'msg_42',
+      'include_deleted': 'true',
+    });
+    expect(message.id, 'msg_42');
+    expect(message.content, 'single message');
+    expect(message.version, 4);
+    expect(message.displayPosition, 'top');
+    expect(message.displayColor, '#ffcc00');
+  });
+
+  test('chat reaction realtime event updates the existing message', () {
+    final messages = <RoomRealtimeChatEntry>[
+      const RoomRealtimeChatEntry(
+        id: 'msg_1',
+        userId: 'usr_sender',
+        username: 'sender',
+        content: 'hello',
+        timestampMillis: 1760000100000,
+      ),
+    ];
+    final updated = RoomRealtimeChatEntry.fromHistory(
+      const RoomChatMessageInfo(
+        id: 'msg_1',
+        roomId: 'room_1',
+        userId: 'usr_sender',
+        username: 'sender',
+        content: 'hello',
+        timestamp: 1760000100,
+        reactions: [
+          ChatReactionSummaryInfo(
+            key: 'like',
+            count: 1,
+            reactedByMe: true,
+          )
+        ],
+        reactionCount: 1,
+      ),
+    );
+
+    messages.applyRealtimeEvent(
+      updated,
+      eventKind: RoomRealtimeChatEventKind.reactionsChanged,
+      maxEntries: 100,
+    );
+
+    expect(messages, hasLength(1));
+    expect(messages.single.id, 'msg_1');
+    expect(messages.single.content, 'hello');
+  });
+
+  test('chat reaction summary is appended to playback danmaku text', () {
+    const reactions = [
+      ChatReactionSummaryInfo(key: '👍', count: 2, reactedByMe: false),
+      ChatReactionSummaryInfo(key: '😂', count: 5, reactedByMe: true),
+      ChatReactionSummaryInfo(key: '🎉', count: 3, reactedByMe: false),
+    ];
+    final danmaku = chatMessageToDanmaku(
+      const RoomChatMessageInfo(
+        id: 'msg_1',
+        roomId: 'room_1',
+        userId: 'usr_sender',
+        username: 'sender',
+        content: 'hello',
+        timestamp: 1760000100,
+        displayPosition: '12.5',
+        reactions: reactions,
+        reactionCount: 10,
+      ),
+    );
+
+    expect(chatReactionSummarySuffix(reactions), '  😂5 🎉3');
+    expect(danmaku.text, 'sender: hello  😂5 🎉3');
   });
 
   test('avatar upload attaches ownership proof metadata before update',
@@ -657,9 +1037,10 @@ void main() {
         'to': 'usr_peer:conn_1',
       }),
     );
-    expect(offer.hasWebrtcOffer(), isTrue);
-    expect(offer.webrtcOffer.to, 'usr_peer:conn_1');
-    expect(jsonDecode(offer.webrtcOffer.data), {
+    expect(offer.hasWebrtc(), isTrue);
+    expect(offer.webrtc.hasOffer(), isTrue);
+    expect(offer.webrtc.offer.to, 'usr_peer:conn_1');
+    expect(jsonDecode(offer.webrtc.offer.data), {
       'sdp': 'sdp-offer',
       'type': 'offer',
       'to': 'usr_peer:conn_1',
@@ -668,7 +1049,8 @@ void main() {
     final join = client.ClientMessage.fromBuffer(
       RoomRealtimeCodec.encodeWebRtcSignal('join', const {}),
     );
-    expect(join.hasWebrtcJoin(), isTrue);
+    expect(join.hasWebrtc(), isTrue);
+    expect(join.webrtc.hasJoin(), isTrue);
 
     expect(RoomRealtimeCodec.encodeWebRtcSignal('unknown', const {}), isEmpty);
   });
@@ -826,6 +1208,67 @@ void main() {
                 !request.url.queryParameters.containsKey('instance_name'))
             .length,
         1,
+      );
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+  });
+
+  test(
+      'provider bind aggregation includes default local instance when discovery is empty',
+      () async {
+    final requests = <http.Request>[];
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      requests.add(http.Request(request.method, request.uri));
+      request.response.headers.contentType = io.ContentType.json;
+      if (request.uri.path == '/api/providers/instances/available') {
+        request.response.write(jsonEncode({'instances': []}));
+      } else if (request.uri.path == '/api/providers/alist/binds') {
+        request.response.write(jsonEncode({
+          'binds': [
+            {
+              'id': 'alist_default',
+              'server_id': 'alist_server_default',
+              'host': 'https://alist.example.test',
+              'username': 'default-user',
+              'created_at': 1,
+              'provider_instance_name': '',
+            }
+          ],
+        }));
+      } else {
+        request.response
+          ..statusCode = 404
+          ..write('{}');
+      }
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await WatchTogetherService.init();
+      await WatchTogetherService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      final binds = await WatchTogetherService.getAllAlistBindInfos();
+
+      expect(binds.map((bind) => bind.serverId), ['alist_server_default']);
+      expect(binds.single.providerInstanceName, isEmpty);
+
+      final paths = requests.map((request) => request.url.path);
+      expect(paths, contains('/api/providers/instances/available'));
+      expect(paths, contains('/api/providers/alist/binds'));
+      expect(
+        requests
+            .where(
+                (request) => request.url.path == '/api/providers/alist/binds')
+            .single
+            .url
+            .queryParameters,
+        isNot(contains('instance_name')),
       );
     } finally {
       await subscription.cancel();
@@ -1016,7 +1459,11 @@ void main() {
 
       expect(playlist.playlist.id, 'pl_1');
       expect(playlist.playlist.name, 'Season 1');
+      expect(playlist.playlist.isFolder, isTrue);
+      expect(playlist.playlist.playbackWatchPlaylistId, 'pl_1');
+      expect(playlist.playlist.metadata['is_dynamic'], isTrue);
       expect(playlist.playlist.sourceProvider, 'alist');
+      expect(playlist.playlist.providerInstanceName, 'alist_main');
       expect(playlist.playlist.sourceConfig['path'], '/shows/season-1');
       expect(playlist.childFolderCount, 2);
       expect(playlist.mediaCount, 8);
@@ -1052,23 +1499,23 @@ void main() {
         .watchPlaylistItems(
           'room_1',
           client.WatchPlaylistItemsRequest(
-            options: client.WatchOptions(
-              version: 'v7',
-              deliveryMode: client
-                  .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
-            ),
-            request: client.ListPlaylistItemsRequest(
-              playlistId: 'playlist_1',
-              target: utf8.encode(jsonEncode({'cursor': 'season-1'})),
-              page: 2,
-              pageSize: 25,
-              search: 'matrix',
-              sourceProvider: 'emby',
-              providerInstanceName: 'home',
-              sortBy: client.MediaListSortBy.MEDIA_LIST_SORT_BY_NAME,
-              sortDirection: client.SortDirection.SORT_DIRECTION_DESC,
-              availability: client.ResourceAvailabilityFilter
-                  .RESOURCE_AVAILABILITY_FILTER_AVAILABLE,
+            deliveryMode:
+                client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
+            playlistItems: client.ObservePlaylistItems(
+              afterEventSequence: Int64(7),
+              request: client.ListPlaylistItemsRequest(
+                playlistId: 'playlist_1',
+                target: utf8.encode(jsonEncode({'cursor': 'season-1'})),
+                page: 2,
+                pageSize: 25,
+                search: 'matrix',
+                sourceProvider: 'emby',
+                providerInstanceName: 'home',
+                sortBy: client.MediaListSortBy.MEDIA_LIST_SORT_BY_NAME,
+                sortDirection: client.SortDirection.SORT_DIRECTION_DESC,
+                availability: client.ResourceAvailabilityFilter
+                    .RESOURCE_AVAILABILITY_FILTER_AVAILABLE,
+              ),
             ),
           ),
         )
@@ -1076,7 +1523,10 @@ void main() {
 
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/rooms/room_1/watch/playlist-items');
-    expect(requestedUri!.queryParameters, containsPair('version', 'v7'));
+    expect(
+      requestedUri!.queryParameters,
+      containsPair('after_event_sequence', '7'),
+    );
     expect(
       requestedUri!.queryParameters,
       containsPair('delivery_mode', 'notify_only'),
@@ -1179,15 +1629,17 @@ void main() {
           .watchPlaylistItems(
             'room_1',
             client.WatchPlaylistItemsRequest(
-              request: client.ListPlaylistItemsRequest(
-                playlistId: 'pl_dynamic',
+              playlistItems: client.ObservePlaylistItems(
+                request: client.ListPlaylistItemsRequest(
+                  playlistId: 'pl_dynamic',
+                ),
               ),
             ),
           )
           .first;
 
-      expect(event.hasChanged(), isTrue);
-      final snapshot = event.changed.playlistItems;
+      expect(event.hasResourceEvent(), isTrue);
+      final snapshot = event.resourceEvent.playlistItems;
       expect(snapshot.version, 'snapshot-v2');
       expect(
         jsonDecode(utf8.decode(snapshot.playlists.single.sourceConfig)),
@@ -1342,7 +1794,7 @@ void main() {
           expect(request.headers['authorization'], 'Bearer fresh-access');
           return http.Response(
             'event: observed\n'
-            'data: {"observeId":"room-members","version":"members-v2","changed":false}\n\n',
+            'data: {"observeId":"room-members","eventCursor":{"eventId":"members-v2"},"changed":false}\n\n',
             200,
             headers: {'content-type': 'text/event-stream'},
           );
@@ -1362,10 +1814,13 @@ void main() {
     );
 
     final event = await api.room
-        .watchRoomMembers('room_1', client.WatchRoomMembersRequest())
+        .watchRoomMemberEvents(
+          'room_1',
+          client.WatchRoomMemberEventsRequest(),
+        )
         .first;
 
-    expect(event.observed.version, 'members-v2');
+    expect(event.observed.eventCursor.eventId, 'members-v2');
     expect(session.accessToken, 'fresh-access');
     expect(session.refreshToken, 'fresh-refresh');
     expect(persistedRefresh, isTrue);
@@ -1389,7 +1844,7 @@ void main() {
           'event: changed\n'
           'data: ${jsonEncode({
                 'observe_id': 'room-settings',
-                'version': '99',
+                'event_cursor': {'sequence': 99},
                 'room_settings': {
                   'room_id': 'room_1',
                   'version': 99,
@@ -1450,15 +1905,53 @@ void main() {
     expect(movie.metadata['target_json'], {'path': '/shows/ep1.mkv'});
   });
 
+  test('realtime dynamic playlist items keep observed playlist parent id', () {
+    final target = utf8.encode(jsonEncode({'path': '/shows/ep1.mkv'}));
+    RoomRealtimeCodec.encodePlaylistObservation(
+      observeId: 'playlist_items',
+      playlistId: 'pl_dynamic',
+      target: base64Url.encode(utf8.encode(jsonEncode({'path': '/shows'}))),
+    );
+
+    final message = RoomRealtimeCodec.decode(
+      client.ServerMessage(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'playlist_items',
+          playlistItems: client.ListPlaylistItemsResponse(
+            dynamicItems: [
+              client.PlaylistItem(
+                name: 'Episode 1',
+                itemType: client.ItemType.ITEM_TYPE_MEDIA,
+                target: target,
+              ),
+            ],
+            currentPath: [
+              client.PlaylistBrowsePathNode(
+                name: 'Season 1',
+                target: utf8.encode(jsonEncode({'path': '/shows'})),
+              ),
+            ],
+          ),
+        ),
+      ).writeToBuffer(),
+    );
+
+    final movie = message.mediaLibrary!.dynamicItems.single;
+    expect(movie.parentId, 'pl_dynamic');
+    expect(movie.subPath, base64Url.encode(target));
+    expect(movie.playbackWatchPlaylistId, 'pl_dynamic');
+    expect(movie.playbackWatchTarget, base64Url.encode(target));
+  });
+
   test('dynamic playlist playback sends playlist target protobuf body',
       () async {
-    String? requestBody;
-    Uri? requestedUri;
+    final requestBodies = <String>[];
+    final requestedUris = <Uri>[];
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final origin = 'http://${server.address.host}:${server.port}';
     final requests = server.listen((request) async {
-      requestedUri = request.uri;
-      requestBody = await utf8.decoder.bind(request).join();
+      requestedUris.add(request.uri);
+      requestBodies.add(await utf8.decoder.bind(request).join());
       request.response
         ..statusCode = 200
         ..headers.contentType = io.ContentType.json
@@ -1483,8 +1976,8 @@ void main() {
       await server.close(force: true);
     }
 
-    expect(requestedUri!.path, '/api/rooms/room_1/playback/start');
-    final body = jsonDecode(requestBody!) as Map<String, dynamic>;
+    expect(requestedUris.first.path, '/api/rooms/room_1/playback/start');
+    final body = jsonDecode(requestBodies.first) as Map<String, dynamic>;
     expect(body['media_id'], '');
     expect(body['playlist_id'], 'pl_dynamic');
     expect(body['target'], {'path': '/shows/ep1.mkv'});
@@ -1507,7 +2000,7 @@ void main() {
           speed: 1,
           isPlaying: true,
         ),
-        playbackSnapshot: client.PlaybackSnapshot(
+        playback: client.Playback(
           roomId: 'room_1',
           playlistId: 'pl_dynamic',
           name: 'Episode 1',
@@ -1523,7 +2016,6 @@ void main() {
             ),
           ],
           defaultMode: 'direct',
-          version: 'snapshot-v1',
         ),
       ),
     );
@@ -1538,6 +2030,160 @@ void main() {
     expect(movie.url, 'https://example.test/proxy/episode-1.m3u8');
   });
 
+  test('playback mapping preserves mode and url choices', () {
+    final movie = WMovie.fromPlaybackProto(
+      client.Playback(
+        mediaId: 'med_1',
+        name: 'Multi Source',
+        playbackInfos: [
+          MapEntry(
+            'direct',
+            client.PlaybackInfo(
+              urls: [
+                client.PlaybackUrl(
+                  name: 'Original',
+                  url: 'http://origin.test/video.mp4',
+                  metadata: client.PlaybackUrlMetadata(
+                    resolution: '1920x1080',
+                    codec: 'h264',
+                  ),
+                ),
+              ],
+              subtitles: [
+                client.Subtitle(
+                  name: '中文',
+                  urls: [
+                    client.SubtitleUrl(
+                      name: 'SRT',
+                      url: 'http://origin.test/video.srt',
+                      format: 'srt',
+                    ),
+                  ],
+                ),
+              ],
+              danmakus: [
+                client.Danmaku(
+                  name: '弹幕',
+                  url: 'http://origin.test/danmaku.xml',
+                  format: 'xml',
+                ),
+              ],
+              format: 'mp4',
+            ),
+          ),
+          MapEntry(
+            'proxied',
+            client.PlaybackInfo(
+              urls: [
+                client.PlaybackUrl(
+                  name: 'Proxy 720P',
+                  url: '/proxy/video-720.m3u8',
+                  metadata: client.PlaybackUrlMetadata(
+                    resolution: '1280x720',
+                    codec: 'h264',
+                  ),
+                ),
+                client.PlaybackUrl(
+                  name: 'Proxy 1080P',
+                  url: '/proxy/video-1080.m3u8',
+                  metadata: client.PlaybackUrlMetadata(
+                    resolution: '1920x1080',
+                    codec: 'hevc',
+                  ),
+                ),
+              ],
+              defaultUrlIndex: 1,
+              format: 'hls',
+            ),
+          ),
+        ],
+        defaultMode: 'proxied',
+      ),
+      resolveUrl: (url) =>
+          url.startsWith('/') ? 'https://example.test$url' : url,
+    );
+
+    expect(movie.url, 'https://example.test/proxy/video-1080.m3u8');
+    expect(movie.playbackModes, hasLength(2));
+    expect(movie.hasPlaybackChoices, isTrue);
+    expect(movie.selectedPlaybackMode, 'proxied');
+    expect(movie.selectedPlaybackUrlIndex, 1);
+    expect(movie.playbackModes.first.key, 'proxied');
+
+    final switched = movie.selectPlayback(
+      modeKey: 'direct',
+      urlIndex: 0,
+      resolveUrl: (url) => url,
+    );
+    expect(switched.url, 'http://origin.test/video.mp4');
+    expect(switched.type, 'mp4');
+    expect(switched.subtitles, isNotNull);
+    expect(switched.danmu, 'http://origin.test/danmaku.xml');
+    expect(switched.playbackChoiceLabel, contains('原始'));
+  });
+
+  test('playback mapping resolves nested playback resources', () {
+    final movie = WMovie.fromPlaybackProto(
+      client.Playback(
+        mediaId: 'med_1',
+        name: 'AList Source',
+        playbackInfos: [
+          MapEntry(
+            'proxy',
+            client.PlaybackInfo(
+              urls: [
+                client.PlaybackUrl(
+                  name: 'Proxy',
+                  url: '/api/providers/proxy/alist/item/stream?token=abc',
+                ),
+              ],
+              subtitles: [
+                client.Subtitle(
+                  name: '中文',
+                  urls: [
+                    client.SubtitleUrl(
+                      name: 'SRT',
+                      url: '/api/providers/proxy/alist/subtitle.srt',
+                      format: 'srt',
+                    ),
+                  ],
+                ),
+              ],
+              danmakus: [
+                client.Danmaku(
+                  name: '弹幕',
+                  url: '/api/providers/proxy/alist/danmaku.xml',
+                  format: 'xml',
+                ),
+              ],
+              format: 'mp4',
+            ),
+          ),
+        ],
+        defaultMode: 'proxy',
+      ),
+      resolveUrl: (url) =>
+          url.startsWith('/') ? 'https://example.test$url' : url,
+    );
+
+    expect(
+      movie.url,
+      'https://example.test/api/providers/proxy/alist/item/stream?token=abc',
+    );
+    expect(
+      movie.playbackModes.single.urls.single.url,
+      'https://example.test/api/providers/proxy/alist/item/stream?token=abc',
+    );
+    expect(
+      movie.subtitles?['sub_0']['url'],
+      'https://example.test/api/providers/proxy/alist/subtitle.srt',
+    );
+    expect(
+      movie.danmu,
+      'https://example.test/api/providers/proxy/alist/danmaku.xml',
+    );
+  });
+
   test('playback state watch decodes protobuf JSON target payload', () async {
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final subscription = server.listen((request) async {
@@ -1550,7 +2196,7 @@ void main() {
           'event: changed\n'
           'data: ${jsonEncode({
                 'observe_id': 'playback-state',
-                'version': '100',
+                'event_cursor': {'sequence': 100},
                 'playback_state': {
                   'room_id': 'room_1',
                   'playing_playlist_id': 'pl_dynamic',
@@ -1604,30 +2250,18 @@ void main() {
     );
 
     await api.room
-        .watchPlaybackSnapshot(
+        .watchPlayback(
           'room_1',
-          client.WatchPlaybackSnapshotRequest(
-            options: client.WatchOptions(version: 'snapshot-v1'),
-            playbackSnapshot: client.ObservePlaybackSnapshot(
-              playlistId: 'pl_dynamic',
-              target: utf8.encode(jsonEncode({'path': '/shows/ep1.mkv'})),
+          client.WatchPlaybackRequest(
+            playback: client.ObservePlayback(
+              playbackClientProfile: defaultPlaybackClientProfile(),
             ),
           ),
         )
         .drain<void>();
 
     expect(requestedUri, isNotNull);
-    expect(requestedUri!.path, '/api/rooms/room_1/watch/playback-snapshot');
-    expect(
-        requestedUri!.queryParameters, containsPair('version', 'snapshot-v1'));
-    expect(
-      requestedUri!.queryParameters,
-      containsPair('playlist_id', 'pl_dynamic'),
-    );
-    expect(
-      requestedUri!.queryParameters,
-      containsPair('target', '{"path":"/shows/ep1.mkv"}'),
-    );
+    expect(requestedUri!.path, '/api/rooms/room_1/watch/playback');
     expect(
       requestedUri!.queryParameters,
       containsPair('delivery_preference', 'auto'),
@@ -1654,7 +2288,8 @@ void main() {
     );
   });
 
-  test('playback update parses GetPlaybackResponse from protobuf endpoint',
+  test(
+      'playback state update parses UpdatePlaybackStateResponse from protobuf endpoint',
       () async {
     Uri? requestedUri;
     String? requestMethod;
@@ -1683,9 +2318,9 @@ void main() {
       }),
     );
 
-    final response = await api.room.updatePlayback(
+    final response = await api.room.updatePlaybackState(
       'room_1',
-      client.UpdatePlaybackRequest(
+      client.UpdatePlaybackStateRequest(
         type: client.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SPEED,
         playing: true,
         position: 42.5,
@@ -2184,19 +2819,13 @@ void main() {
     );
 
     await api.room
-        .watchRoomMembers(
+        .watchRoomMemberEvents(
           'room_1',
-          client.WatchRoomMembersRequest(
-            options: client.WatchOptions(
-              version: 'members-v1',
-              deliveryMode: client
-                  .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
-            ),
-            request: client.GetRoomMembersRequest(
-              page: 3,
-              pageSize: 50,
-              search: 'alice',
-              role: common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
+          client.WatchRoomMemberEventsRequest(
+            deliveryMode: client
+                .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
+            roomMemberEvents: client.ObserveRoomMemberEvents(
+              afterEventSequence: Int64(1),
             ),
           ),
         )
@@ -2205,15 +2834,13 @@ void main() {
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/rooms/room_1/watch/room-members');
     expect(
-        requestedUri!.queryParameters, containsPair('version', 'members-v1'));
+      requestedUri!.queryParameters,
+      containsPair('after_event_sequence', '1'),
+    );
     expect(
       requestedUri!.queryParameters,
       containsPair('delivery_mode', 'push_snapshot'),
     );
-    expect(requestedUri!.queryParameters, containsPair('page', '3'));
-    expect(requestedUri!.queryParameters, containsPair('page_size', '50'));
-    expect(requestedUri!.queryParameters, containsPair('search', 'alice'));
-    expect(requestedUri!.queryParameters, containsPair('role', '2'));
   });
 
   test('admin list users query preserves protobuf filters', () async {
@@ -3719,6 +4346,209 @@ void main() {
       'room_id': 'room_1',
       'new_password': '',
     });
+  });
+
+  test('room password clear uses room password delete endpoint', () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          jsonEncode({'success': true}),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final service = SyncTvRoomManagementDomainService(api);
+
+    await service.updateRoomPassword('room_1', '');
+
+    expect(requests, hasLength(1));
+    expect(requests.single.method, 'DELETE');
+    expect(requests.single.url.path, '/api/rooms/room_1/password');
+    expect(jsonDecode(requests.single.body), <String, dynamic>{});
+  });
+
+  test('room password update registers OPAQUE bytes without plaintext',
+      () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        switch (request.url.path) {
+          case '/api/rooms/room_1/password/opaque/registration/start':
+            return http.Response(
+              jsonEncode({
+                'session_id': 'room_password_session',
+                'registration_response': base64Encode([9, 8, 7]),
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/rooms/room_1/password/opaque/registration/finish':
+            return http.Response(
+              jsonEncode({'success': true}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response('not found', 404);
+      }),
+    );
+    final service = SyncTvRoomManagementDomainService(
+      api,
+      opaqueClient: _FakeOpaqueClient(),
+    );
+
+    await service.updateRoomPassword('room_1', 'plain-room-password');
+
+    expect(requests.map((request) => request.method), ['PATCH', 'PATCH']);
+    expect(requests.map((request) => request.url.path), [
+      '/api/rooms/room_1/password/opaque/registration/start',
+      '/api/rooms/room_1/password/opaque/registration/finish',
+    ]);
+
+    final bodies = requests
+        .map((request) => jsonDecode(request.body) as Map<String, dynamic>)
+        .toList();
+    expect(bodies[0], {
+      'registration_request': base64Encode([1, 2, 3]),
+    });
+    expect(bodies[1], {
+      'session_id': 'room_password_session',
+      'registration_upload': base64Encode([4, 5, 6]),
+    });
+    for (final body in bodies) {
+      expect(body.containsKey('password'), isFalse);
+      expect(body.values, isNot(contains('plain-room-password')));
+    }
+  });
+
+  test('room join with password uses OPAQUE login bytes without plaintext',
+      () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        switch (request.url.path) {
+          case '/api/rooms/room_1/password/opaque/login/start':
+            return http.Response(
+              jsonEncode({
+                'session_id': 'room_login_session',
+                'credential_response': base64Encode([30, 31, 32]),
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/rooms/room_1/password/opaque/login/finish':
+            return http.Response(
+              jsonEncode({
+                'room': {
+                  'id': 'room_1',
+                  'name': 'Room',
+                  'created_by': 'usr_1',
+                  'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
+                },
+                'member': {
+                  'room_id': 'room_1',
+                  'user_id': 'usr_2',
+                  'username': 'bob',
+                  'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+                },
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response('not found', 404);
+      }),
+    );
+    final service = SyncTvPublicRoomDomainService(
+      api: api,
+      sessionStore: SyncTvSessionStore(api.session),
+      authService: SyncTvAuthDomainService(
+        api: api,
+        sessionStore: SyncTvSessionStore(api.session),
+      ),
+      opaqueClient: _FakeOpaqueClient(),
+    );
+
+    await service.joinRoom('room_1', 'plain-room-password');
+
+    expect(requests.map((request) => request.method), ['POST', 'POST']);
+    expect(requests.map((request) => request.url.path), [
+      '/api/rooms/room_1/password/opaque/login/start',
+      '/api/rooms/room_1/password/opaque/login/finish',
+    ]);
+
+    final bodies = requests
+        .map((request) => jsonDecode(request.body) as Map<String, dynamic>)
+        .toList();
+    expect(bodies[0], {
+      'room_id': 'room_1',
+      'credential_request': base64Encode([40, 41, 42]),
+    });
+    expect(bodies[1], {
+      'session_id': 'room_login_session',
+      'credential_finalization': base64Encode([50, 51, 52]),
+    });
+    for (final body in bodies) {
+      expect(body.containsKey('password'), isFalse);
+      expect(body.values, isNot(contains('plain-room-password')));
+    }
+  });
+
+  test('room join without password keeps plain membership endpoint empty',
+      () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          jsonEncode({
+            'room': {
+              'id': 'room_1',
+              'name': 'Room',
+              'created_by': 'usr_1',
+              'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
+            },
+            'member': {
+              'room_id': 'room_1',
+              'user_id': 'usr_2',
+              'username': 'bob',
+              'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
+            },
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final sessionStore = SyncTvSessionStore(api.session);
+    final service = SyncTvPublicRoomDomainService(
+      api: api,
+      sessionStore: sessionStore,
+      authService: SyncTvAuthDomainService(
+        api: api,
+        sessionStore: sessionStore,
+      ),
+    );
+
+    await service.joinRoom('room_1', '');
+
+    expect(requests, hasLength(1));
+    expect(requests.single.method, 'PUT');
+    expect(requests.single.url.path, '/api/rooms/room_1/members/@me');
+    expect(jsonDecode(requests.single.body), {'room_id': 'room_1'});
   });
 
   test('admin unban room uses protobuf path command endpoint', () async {
@@ -5770,6 +6600,38 @@ void main() {
     expect(response.serverName, 'SyncTV Prod');
   });
 
+  test('public server info is exposed through watch service domain', () async {
+    Uri? requestedUri;
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      requestedUri = request.uri;
+      request.response.headers.contentType = io.ContentType.json;
+      request.response.write(jsonEncode({
+        'server_id': 'srv_local',
+        'server_name': 'Local Dev',
+      }));
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await WatchTogetherService.init();
+      await WatchTogetherService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      final info = await WatchTogetherService.getServerInfo(refresh: true);
+
+      expect(requestedUri, isNotNull);
+      expect(requestedUri!.path, '/api/public/server-info');
+      expect(info.serverId, 'srv_local');
+      expect(info.serverName, 'Local Dev');
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+  });
+
   test('server profiles merge endpoints for one server id', () async {
     SharedPreferences.setMockInitialValues({});
     final session = SyncTvSession();
@@ -6086,6 +6948,176 @@ void main() {
     expect(session.refreshToken, 'refresh-token');
   });
 
+  test('direct password and email registration use protobuf auth contracts',
+      () async {
+    final requests = <http.Request>[];
+    final session = SyncTvSession();
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: session,
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        switch (request.url.path) {
+          case '/api/auth/direct-password/register':
+            return http.Response(
+              jsonEncode({
+                'user': {
+                  'id': 'usr_register',
+                  'username': 'alice',
+                  'email': 'alice@example.test',
+                },
+                'access_token': 'register-access',
+                'refresh_token': 'register-refresh',
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/auth/direct-password/login':
+            return http.Response(
+              jsonEncode({
+                'user': {
+                  'id': 'usr_login',
+                  'username': 'alice',
+                  'email': 'alice@example.test',
+                },
+                'access_token': 'login-access',
+                'refresh_token': 'login-refresh',
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/auth/email/registration/request':
+            return http.Response(
+              jsonEncode({'message': 'sent'}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/auth/email/registration/confirm':
+            return http.Response(
+              jsonEncode({
+                'user': {
+                  'id': 'usr_email',
+                  'username': 'alice',
+                  'email': 'alice@example.test',
+                },
+                'access_token': 'email-access',
+                'refresh_token': 'email-refresh',
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response('not found', 404);
+      }),
+    );
+
+    await api.auth.registerWithDirectPassword(
+      client.RegisterWithDirectPasswordRequest(
+        username: 'alice',
+        email: 'alice@example.test',
+        password: 'plain-password',
+      ),
+    );
+    await api.auth.loginWithDirectPassword(
+      client.LoginWithDirectPasswordRequest(
+        email: 'alice@example.test',
+        password: 'plain-password',
+      ),
+    );
+    await api.auth.requestEmailRegistration(
+      client.RequestEmailRegistrationRequest(
+        username: 'alice',
+        email: 'alice@example.test',
+      ),
+    );
+    await api.auth.confirmEmailRegistration(
+      client.ConfirmEmailRegistrationRequest(
+        emailToken: 'email-register-token',
+        password: 'plain-password',
+      ),
+    );
+
+    expect(requests.map((request) => request.url.path), [
+      '/api/auth/direct-password/register',
+      '/api/auth/direct-password/login',
+      '/api/auth/email/registration/request',
+      '/api/auth/email/registration/confirm',
+    ]);
+    expect(jsonDecode(requests[0].body), {
+      'username': 'alice',
+      'email': 'alice@example.test',
+      'password': 'plain-password',
+    });
+    expect(jsonDecode(requests[1].body), {
+      'email': 'alice@example.test',
+      'password': 'plain-password',
+    });
+    expect(jsonDecode(requests[2].body), {
+      'username': 'alice',
+      'email': 'alice@example.test',
+    });
+    expect(jsonDecode(requests[3].body), {
+      'email_token': 'email-register-token',
+      'password': 'plain-password',
+    });
+    expect(session.accessToken, 'email-access');
+    expect(session.refreshToken, 'email-refresh');
+  });
+
+  test('direct password domain selects one populated login identifier',
+      () async {
+    final requests = <http.Request>[];
+    final session = SyncTvSession();
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: session,
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          jsonEncode({
+            'user': {
+              'id': 'usr_1',
+              'username': 'alice',
+              'email': 'alice@example.test',
+            },
+            'access_token': 'access',
+            'refresh_token': 'refresh',
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final service = SyncTvAuthDomainService(
+      api: api,
+      sessionStore: SyncTvSessionStore(session),
+    );
+
+    await service.loginWithDirectPassword(
+      username: 'alice',
+      email: '',
+      password: 'plain-password',
+    );
+    await service.loginWithDirectPassword(
+      username: 'alice',
+      email: 'alice@example.test',
+      password: 'plain-password',
+    );
+
+    expect(requests.map((request) => jsonDecode(request.body)), [
+      {
+        'username': 'alice',
+        'password': 'plain-password',
+      },
+      {
+        'email': 'alice@example.test',
+        'password': 'plain-password',
+      },
+    ]);
+    expect(session.accessToken, 'access');
+    expect(session.refreshToken, 'refresh');
+  });
+
   test('passkey endpoints translate WebAuthn JSON through protobuf bytes',
       () async {
     final requests = <http.Request>[];
@@ -6266,6 +7298,138 @@ void main() {
     });
   });
 
+  test('sensitive operation verification endpoints use protobuf payloads',
+      () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'access',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        switch (request.url.path) {
+          case '/api/user/sensitive-verification/start':
+            return http.Response(
+              jsonEncode({
+                'verification_id': 'verification_1',
+                'challenge': {
+                  'session_id': 'sensitive_session',
+                  'required_methods': [
+                    'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN'
+                  ],
+                  'completed_methods': [],
+                  'available_methods': [
+                    'SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD',
+                    'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN',
+                    'SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL'
+                  ],
+                },
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/user/sensitive-verification/passkey/start':
+            return http.Response(
+              jsonEncode({
+                'passkey_session_id': 'passkey_session',
+                'options': {'challenge': 'sensitive-passkey'},
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/user/sensitive-verification/email/request':
+            return http.Response(
+              jsonEncode({
+                'message': 'sent',
+                'masked_email': 'a***@example.test',
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/user/sensitive-verification/finish':
+            return http.Response(
+              jsonEncode({
+                'verification_id': 'verification_1',
+                'challenge': {
+                  'session_id': 'sensitive_session',
+                  'required_methods': [
+                    'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN'
+                  ],
+                  'completed_methods': [
+                    'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN'
+                  ],
+                  'available_methods': [
+                    'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN'
+                  ],
+                },
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response('not found', 404);
+      }),
+    );
+    final service = SyncTvAuthDomainService(
+      api: api,
+      sessionStore: SyncTvSessionStore(api.session),
+    );
+
+    final start = await service.startSensitiveOperationVerification();
+    final passkey = await service.startSensitiveOperationPasskey(
+      start.challenge.sessionId,
+    );
+    final emailCode = await service.requestSensitiveOperationEmailCode(
+      start.challenge.sessionId,
+    );
+    final finish = await service.finishSensitiveOperationVerification(
+      sessionId: start.challenge.sessionId,
+      method: client.SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
+      passkeySessionId: passkey.passkeySessionId,
+      passkeyCredential: {
+        'id': 'cred-sensitive',
+        'type': 'public-key',
+      },
+    );
+
+    expect(start.verificationId, 'verification_1');
+    expect(start.challenge.requiresPasskey, isTrue);
+    expect(jsonDecode(utf8.decode(passkey.options)), {
+      'challenge': 'sensitive-passkey',
+    });
+    expect(emailCode.maskedEmail, 'a***@example.test');
+    expect(finish.challenge.completedMethods, [
+      client.SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN.value,
+    ]);
+
+    expect(requests.map((request) => request.url.path), [
+      '/api/user/sensitive-verification/start',
+      '/api/user/sensitive-verification/passkey/start',
+      '/api/user/sensitive-verification/email/request',
+      '/api/user/sensitive-verification/finish',
+    ]);
+    expect(jsonDecode(requests[0].body), <String, dynamic>{});
+    expect(jsonDecode(requests[1].body), {
+      'session_id': 'sensitive_session',
+    });
+    expect(jsonDecode(requests[2].body), {
+      'session_id': 'sensitive_session',
+    });
+    expect(jsonDecode(requests[3].body), {
+      'session_id': 'sensitive_session',
+      'method': client.SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN.value,
+      'password': '',
+      'email_token': '',
+      'passkey_session_id': 'passkey_session',
+      'passkey_credential': {
+        'id': 'cred-sensitive',
+        'type': 'public-key',
+      },
+    });
+  });
+
   test('opaque auth endpoints send protocol bytes without plaintext password',
       () async {
     final requests = <http.Request>[];
@@ -6342,7 +7506,6 @@ void main() {
     await api.auth.startOpaqueLogin(
       client.StartOpaqueLoginRequest(
         username: 'alice',
-        email: '',
         credentialRequest: [7, 8, 9],
       ),
     );
@@ -6374,7 +7537,6 @@ void main() {
     });
     expect(bodies[2], {
       'username': 'alice',
-      'email': '',
       'credential_request': base64Encode([7, 8, 9]),
     });
     expect(bodies[3], {
@@ -6385,6 +7547,43 @@ void main() {
       expect(body.containsKey('password'), isFalse);
       expect(body.values, isNot(contains('plain-password')));
     }
+  });
+
+  test('opaque registration domain omits blank email identifier', () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession(),
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          jsonEncode({
+            'session_id': 'reg_session',
+            'registration_response': base64Encode([9, 8, 7]),
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final sessionStore = SyncTvSessionStore(api.session);
+    final service = SyncTvAuthDomainService(
+      api: api,
+      sessionStore: sessionStore,
+    );
+
+    await service.startOpaqueRegistration(
+      username: 'alice',
+      email: '',
+      registrationRequest: [1, 2, 3],
+    );
+
+    expect(requests, hasLength(1));
+    expect(requests.single.url.path, '/api/auth/opaque/registration/start');
+    expect(jsonDecode(requests.single.body), {
+      'username': 'alice',
+      'registration_request': base64Encode([1, 2, 3]),
+    });
   });
 
   test('opaque password management sends protocol bytes without plaintext',
@@ -6548,4 +7747,53 @@ String _expectedOwnershipProof(
     ));
   }
   return sha256.convert(proofBytes.toBytes()).toString();
+}
+
+class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {
+  @override
+  opaque.OpaqueRegistrationStart startRegistration(String password) {
+    expect(password, 'plain-room-password');
+    return opaque.OpaqueRegistrationStart(
+      registrationRequest: Uint8List.fromList([1, 2, 3]),
+      state: Uint8List.fromList([20, 21, 22]),
+    );
+  }
+
+  @override
+  opaque.OpaqueRegistrationFinish finishRegistration({
+    required String password,
+    required Uint8List state,
+    required Uint8List registrationResponse,
+  }) {
+    expect(password, 'plain-room-password');
+    expect(state, [20, 21, 22]);
+    expect(registrationResponse, [9, 8, 7]);
+    return opaque.OpaqueRegistrationFinish(
+      registrationUpload: Uint8List.fromList([4, 5, 6]),
+    );
+  }
+
+  @override
+  opaque.OpaqueLoginStart startLogin(String password) {
+    expect(password, 'plain-room-password');
+    return opaque.OpaqueLoginStart(
+      credentialRequest: Uint8List.fromList([40, 41, 42]),
+      state: Uint8List.fromList([60, 61, 62]),
+    );
+  }
+
+  @override
+  opaque.OpaqueLoginFinish finishLogin({
+    required String password,
+    required Uint8List state,
+    required Uint8List credentialResponse,
+  }) {
+    expect(password, 'plain-room-password');
+    expect(state, [60, 61, 62]);
+    expect(credentialResponse, [30, 31, 32]);
+    return opaque.OpaqueLoginFinish(
+      credentialFinalization: Uint8List.fromList([50, 51, 52]),
+      sessionKey: Uint8List.fromList([70, 71, 72]),
+    );
+  }
 }

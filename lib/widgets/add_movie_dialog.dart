@@ -4,9 +4,10 @@ import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
-import 'package:synctv_app/widgets/ios_style_switch.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'platform_binding_dialog.dart';
 
 class AddMovieDialog extends StatefulWidget {
@@ -17,35 +18,28 @@ class AddMovieDialog extends StatefulWidget {
 
   static Future<void> show(BuildContext context, String roomId,
       {String? parentId}) {
-    final theme = Theme.of(context);
-    return showDialog<bool>(
+    final dialogKey = GlobalKey<_AddMovieDialogState>();
+    return showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.58),
       builder: (context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.sizeOf(context).width < 560 ? 10 : 18,
-            vertical: MediaQuery.sizeOf(context).height < 720 ? 10 : 24,
-          ),
-          clipBehavior: Clip.antiAlias,
-          backgroundColor: theme.colorScheme.surface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 920,
-              maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const _AddMovieDialogHeader(),
-                Flexible(
-                  child: AddMovieDialog(roomId: roomId, parentId: parentId),
+        return AppDialogFrame(
+          maxWidth: 920,
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _AddMovieDialogHeader(
+                onClose: () => dialogKey.currentState?._requestClose(),
+              ),
+              Flexible(
+                child: AddMovieDialog(
+                  key: dialogKey,
+                  roomId: roomId,
+                  parentId: parentId,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -57,35 +51,32 @@ class AddMovieDialog extends StatefulWidget {
 }
 
 class _AddMovieDialogHeader extends StatelessWidget {
-  const _AddMovieDialogHeader();
+  const _AddMovieDialogHeader({required this.onClose});
+
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return AppPanelSurface(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 22),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.94),
-        border: Border(
-          bottom: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
-          ),
+      color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.94),
+      borderRadius: BorderRadius.zero,
+      border: Border(
+        bottom: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
         ),
       ),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.add_to_queue_rounded,
-              color: theme.colorScheme.onPrimaryContainer,
-            ),
+          AppIconBadge(
+            icon: Icons.add_to_queue_rounded,
+            color: theme.colorScheme.primary,
+            iconColor: theme.colorScheme.onPrimaryContainer,
+            backgroundColor: theme.colorScheme.primaryContainer,
+            size: 36,
+            borderRadius: BorderRadius.circular(8),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -96,9 +87,9 @@ class _AddMovieDialogHeader extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            onPressed: () => Navigator.maybePop(context),
-            icon: const Icon(Icons.close_rounded),
+          AppIconButton(
+            onPressed: onClose,
+            icon: Icons.close_rounded,
             tooltip: '关闭',
           ),
         ],
@@ -143,6 +134,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   int _selectedIndex = 0;
 
   final _urlController = TextEditingController();
+  final _urlFocusNode = FocusNode();
   final _nameController = TextEditingController();
   final _biliUrlController = TextEditingController();
   final _alistSearchController = TextEditingController();
@@ -191,6 +183,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   void initState() {
     super.initState();
     _checkVendors();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _selectedIndex == 0) {
+        _urlFocusNode.requestFocus();
+      }
+    });
   }
 
   Future<void> _checkVendors() async {
@@ -229,6 +226,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   @override
   void dispose() {
     _urlController.dispose();
+    _urlFocusNode.dispose();
     _nameController.dispose();
     for (final header in _directHeaders) {
       header.dispose();
@@ -243,11 +241,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
-    final compact = size.width < 720;
+    final compact = AppBreakpoints.widthOf(context) < 720;
+    final availableHeight = AppMetrics.dialogMaxHeight(context, null);
     final contentHeight = compact
-        ? (size.height * 0.76).clamp(500.0, 660.0)
-        : (size.height * 0.54).clamp(380.0, 500.0);
+        ? (availableHeight - 84).clamp(500.0, 660.0)
+        : (availableHeight * 0.62).clamp(380.0, 520.0);
 
     return PopScope(
       canPop: !_hasUnsavedDraft,
@@ -274,7 +272,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                     width: 236,
                     child: _buildSourceRail(theme),
                   ),
-                  VerticalDivider(
+                  AppVerticalDivider(
                     width: 1,
                     color:
                         theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
@@ -346,6 +344,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       _selectedIndex = index;
       _isProxy = index == 2 || index == 3;
     });
+    if (index == 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _urlFocusNode.requestFocus();
+      });
+    }
     if (index == 3 && _alistBinds.isNotEmpty && _alistFiles.isEmpty) {
       _loadAlist('/');
     }
@@ -355,9 +358,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   Widget _buildSourceRail(ThemeData theme) {
-    return Container(
+    return AppPanelSurface(
       color: theme.colorScheme.surfaceContainerLow,
       padding: const EdgeInsets.all(12),
+      borderRadius: BorderRadius.zero,
+      clipBehavior: Clip.none,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -369,13 +374,18 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             ),
           ),
           const SizedBox(height: 8),
-          for (final spec in _sourceSpecs) ...[
-            _buildSourceTile(theme, spec),
-            const SizedBox(height: 6),
-          ],
-          const Spacer(),
+          Expanded(
+            child: AppListView.separated(
+              padding: EdgeInsets.zero,
+              itemCount: _sourceSpecs.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              itemBuilder: (context, index) =>
+                  _buildSourceTile(theme, _sourceSpecs[index]),
+            ),
+          ),
+          const SizedBox(height: 8),
           if (_checkingVendors)
-            const LinearProgressIndicator(minHeight: 2)
+            const AppLinearProgress(minHeight: 2)
           else
             Text(
               '已连接 ${_boundVendors.length} 个媒体源',
@@ -389,16 +399,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   Widget _buildCompactSourceRail(ThemeData theme) {
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        border: Border(
-          bottom: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
-          ),
+      color: theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.zero,
+      border: Border(
+        bottom: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
         ),
       ),
+      clipBehavior: Clip.none,
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -419,66 +429,61 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     bool compact = false,
   }) {
     final selected = _selectedIndex == spec.index;
-    return Material(
+    return AppInkSurface(
       color: selected
           ? spec.color.withValues(alpha: 0.13)
           : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.38),
       borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: () => _selectSource(spec.index),
+      onTap: () => _selectSource(spec.index),
+      child: AppPanelSurface(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 10 : 11,
+          vertical: compact ? 8 : 10,
+        ),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 10 : 11,
-            vertical: compact ? 8 : 10,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: selected
-                  ? spec.color.withValues(alpha: 0.55)
-                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+        border: Border.all(
+          color: selected
+              ? spec.color.withValues(alpha: 0.55)
+              : theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+        ),
+        clipBehavior: Clip.none,
+        child: Row(
+          children: [
+            AppIconBadge(
+              icon: spec.icon,
+              color: spec.color,
+              size: compact ? 30 : 32,
+              iconSize: 20,
+              backgroundAlpha: selected ? 0.18 : 0.12,
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: compact ? 30 : 32,
-                height: compact ? 30 : 32,
-                decoration: BoxDecoration(
-                  color: spec.color.withValues(alpha: selected ? 0.18 : 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(spec.icon, color: spec.color, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      spec.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    spec.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      spec.subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    spec.subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -488,14 +493,14 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
+        AppPanelSurface(
           height: 58,
           padding: EdgeInsets.symmetric(horizontal: compact ? 16 : 22),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
-              ),
+          color: Colors.transparent,
+          borderRadius: BorderRadius.zero,
+          border: Border(
+            bottom: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
             ),
           ),
           child: Row(
@@ -511,7 +516,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                 ),
               ),
               if (_providerBindingIndex(_selectedIndex) != null)
-                TextButton.icon(
+                AppActionButton(
                   onPressed: () async {
                     await PlatformBindingDialog.show(
                       context,
@@ -526,8 +531,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                       _loadEmby(_embyPath);
                     }
                   },
-                  icon: const Icon(Icons.tune_rounded, size: 18),
-                  label: const Text('媒体源'),
+                  icon: Icons.tune_rounded,
+                  label: '媒体源',
+                  style: AppActionButtonStyle.text,
                 ),
             ],
           ),
@@ -560,40 +566,36 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   Widget _buildDirectLinkContent(ThemeData theme) {
-    return SingleChildScrollView(
+    return AppSingleChildScrollView(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextField(
+          AppTextField(
             controller: _urlController,
+            focusNode: _urlFocusNode,
+            label: '视频链接',
+            hintText: '每行一个 HTTP / HTTPS / HLS 地址',
+            prefixIcon: Icons.link_rounded,
             minLines: 1,
             maxLines: 2,
             keyboardType: TextInputType.url,
             textInputAction: TextInputAction.newline,
+            autocorrect: false,
+            smartDashesType: SmartDashesType.disabled,
+            smartQuotesType: SmartQuotesType.disabled,
+            enabled: !_isLoading,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              labelText: '视频链接',
-              hintText: '每行一个 HTTP / HTTPS / HLS 地址',
-              prefixIcon: const Icon(Icons.link_rounded),
-              isDense: true,
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            ),
           ),
           const SizedBox(height: 10),
-          TextField(
+          AppTextField(
             controller: _nameController,
+            label: '视频名称（单条可选）',
+            hintText: '默认为文件名',
+            prefixIcon: Icons.title_rounded,
             textInputAction: TextInputAction.next,
+            enabled: !_isLoading,
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              labelText: '视频名称（单条可选）',
-              hintText: '默认为文件名',
-              prefixIcon: const Icon(Icons.title_rounded),
-              isDense: true,
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            ),
           ),
           const SizedBox(height: 10),
           _buildDirectHeadersEditor(theme),
@@ -615,30 +617,20 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildDirectHeaderRiskNotice(ThemeData theme) {
     final warningColor = Colors.orange.shade700;
-    return Container(
-      width: double.infinity,
+    return AppInfoBanner(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: warningColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: warningColor.withValues(alpha: 0.28)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.warning_amber_rounded, size: 20, color: warningColor),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Authorization、Cookie 等凭据请求头会写入媒体播放信息，房间成员播放时可能获取这些值。只对可信房间和可信链接使用。',
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.4,
-                color: theme.textTheme.bodyMedium?.color,
-              ),
-            ),
-          ),
-        ],
+      icon: Icons.warning_amber_rounded,
+      color: warningColor,
+      backgroundColor: warningColor.withValues(alpha: 0.08),
+      border: Border.all(color: warningColor.withValues(alpha: 0.28)),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      title: Text(
+        'Authorization、Cookie 等凭据请求头会写入媒体播放信息，房间成员播放时可能获取这些值。只对可信房间和可信链接使用。',
+        style: TextStyle(
+          fontSize: 12,
+          height: 1.4,
+          color: theme.textTheme.bodyMedium?.color,
+        ),
       ),
     );
   }
@@ -647,14 +639,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     final borderColor =
         theme.colorScheme.outlineVariant.withValues(alpha: 0.45);
     final validationMessage = _directHeaderError;
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color:
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: borderColor),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -674,10 +663,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                   ),
                 ),
               ),
-              TextButton.icon(
+              AppActionButton(
                 onPressed: _addDirectHeaderRow,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('请求头'),
+                icon: Icons.add_rounded,
+                label: '请求头',
+                style: AppActionButtonStyle.text,
               ),
             ],
           ),
@@ -709,29 +699,20 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildInlineValidationMessage(ThemeData theme, String message) {
     final color = theme.colorScheme.error;
-    return Container(
-      width: double.infinity,
+    return AppInfoBanner(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.error_outline_rounded, size: 18, color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: color,
-                height: 1.35,
-              ),
-            ),
-          ),
-        ],
+      icon: Icons.error_outline_rounded,
+      iconSize: 18,
+      color: color,
+      backgroundColor: color.withValues(alpha: 0.08),
+      border: Border.all(color: color.withValues(alpha: 0.25)),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      title: Text(
+        message,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: color,
+          height: 1.35,
+        ),
       ),
     );
   }
@@ -743,35 +724,35 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 520;
-          final border = OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          );
-          final nameField = TextField(
+          final nameField = AppTextField(
             controller: header.nameController,
+            label: '名称',
+            hintText: 'Referer',
             textInputAction: TextInputAction.next,
-            decoration: InputDecoration(
-              labelText: '名称',
-              hintText: 'Referer',
-              isDense: true,
-              border: border,
-            ),
+            autocorrect: false,
+            smartDashesType: SmartDashesType.disabled,
+            smartQuotesType: SmartQuotesType.disabled,
             onChanged: (_) => _updateDirectHeaderValidation(),
           );
-          final valueField = TextField(
+          final valueField = AppTextField(
             controller: header.valueController,
+            label: '值',
+            hintText: 'https://example.com',
             textInputAction: TextInputAction.done,
-            decoration: InputDecoration(
-              labelText: '值',
-              hintText: 'https://example.com',
-              isDense: true,
-              border: border,
-            ),
+            autocorrect: false,
+            smartDashesType: SmartDashesType.disabled,
+            smartQuotesType: SmartQuotesType.disabled,
             onChanged: (_) => _updateDirectHeaderValidation(),
           );
-          final removeButton = IconButton(
-            onPressed: () => _removeDirectHeaderRow(index),
-            icon: const Icon(Icons.close_rounded),
-            tooltip: '移除请求头',
+          final removeButton = SizedBox(
+            width: 44,
+            height: 44,
+            child: AppIconButton(
+              onPressed: () => _removeDirectHeaderRow(index),
+              icon: Icons.close_rounded,
+              tooltip: '移除请求头',
+              style: AppIconButtonStyle.destructive,
+            ),
           );
 
           if (compact) {
@@ -800,7 +781,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   Widget _buildRtmpPublishContent(ThemeData theme) {
-    return SingleChildScrollView(
+    return AppSingleChildScrollView(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -812,7 +793,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             '例如 摄像机、OBS 推流',
             Icons.live_tv_rounded,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
           if (_publicSettings != null) ...[
             _buildRtmpPublicSettingsPanel(theme, _publicSettings!),
             const SizedBox(height: 16),
@@ -824,7 +805,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             subtitle: '复制到 OBS 或其他推流工具即可开始直播。',
             color: Colors.deepOrange.shade600,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
           _buildActionButton(
             '创建推流入口',
             _addRtmpPublish,
@@ -876,67 +857,49 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                     '粘贴链接自动解析', Icons.search),
               ),
               const SizedBox(width: 12),
-              FilledButton(
-                onPressed: _isLoading ? null : _parseBilibili,
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFFB7299),
-                  foregroundColor: Colors.white,
-                  fixedSize: const Size(48, 48),
-                  padding: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+              SizedBox.square(
+                dimension: 44,
+                child: AppIconButton(
+                  onPressed: _parseBilibili,
+                  icon: Icons.arrow_forward_rounded,
+                  tooltip: '解析 Bilibili 链接',
+                  loading: _isLoading,
+                  style: AppIconButtonStyle.filled,
                 ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.arrow_forward_rounded),
               ),
             ],
           ),
         ),
         Expanded(
           child: _biliInfo == null
-              ? Center(
-                  child: _buildEmptyState(
-                    theme,
+              ? const Center(
+                  child: AppEmptyState(
                     icon: Icons.tv_rounded,
+                    iconColor: Color(0xFFFB7299),
+                    iconSize: 58,
                     title: '粘贴 Bilibili 链接',
                     subtitle: '支持 BV 号、视频链接和直播间链接。',
-                    color: const Color(0xFFFB7299),
+                    maxWidth: 360,
                   ),
                 )
-              : SingleChildScrollView(
+              : AppSingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(0, 0, 0, 18),
                   child: Column(
                     children: [
                       if (coverImage.isNotEmpty)
-                        Container(
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
+                        AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: AppImageThumbnail(
+                            url: coverImage,
+                            width: double.infinity,
+                            height: double.infinity,
                             boxShadow: [
                               BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4))
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
                             ],
-                          ),
-                          child: AspectRatio(
-                            aspectRatio: 16 / 9,
-                            child: Image.network(
-                              coverImage,
-                              fit: BoxFit.cover,
-                              errorBuilder: (ctx, err, stack) => Container(
-                                  color: Colors.grey.withValues(alpha: 0.3),
-                                  child: const Icon(Icons.broken_image)),
-                            ),
                           ),
                         ),
                       const SizedBox(height: 16),
@@ -979,7 +942,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildAlistContent(ThemeData theme) {
     if (_checkingVendors) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
     if (!_boundVendors.contains('alist')) {
       return _buildBindGuide('AList', theme);
@@ -1019,15 +982,18 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         _buildPathBar(theme, _alistPath, _goUpAlist),
         Expanded(
           child: !_alistLoading && _alistFiles.isEmpty
-              ? _buildEmptyState(
-                  theme,
-                  icon: Icons.cloud_queue_rounded,
-                  title: '暂无文件',
-                  subtitle: '当前目录没有可添加的媒体资源。',
-                  color: Colors.amber.shade700,
+              ? Center(
+                  child: AppEmptyState(
+                    icon: Icons.cloud_queue_rounded,
+                    iconColor: Colors.amber.shade700,
+                    iconSize: 58,
+                    title: '暂无文件',
+                    subtitle: '当前目录没有可添加的媒体资源。',
+                    maxWidth: 360,
+                  ),
                 )
               : _alistLoading && _alistFiles.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const AppLoadingIndicator()
                   : NotificationListener<ScrollNotification>(
                       onNotification: (ScrollNotification scrollInfo) {
                         if (!_alistLoading &&
@@ -1038,25 +1004,17 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                         }
                         return false;
                       },
-                      child: ListView.builder(
+                      child: AppListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         itemCount: _alistFiles.length + (_alistHasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == _alistFiles.length) {
-                            return Container(
-                              padding: const EdgeInsets.all(16),
-                              alignment: Alignment.center,
-                              child: _alistLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2))
-                                  : TextButton(
-                                      onPressed: () => _loadAlist(_alistPath,
-                                          loadMore: true),
-                                      child: const Text('加载更多'),
-                                    ),
+                            return AppLoadMoreFooter(
+                              loading: _alistLoading,
+                              onPressed: () => _loadAlist(
+                                _alistPath,
+                                loadMore: true,
+                              ),
                             );
                           }
 
@@ -1075,6 +1033,14 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                             subtitle:
                                 file.isDir ? null : _formatSize(file.size),
                             isSelected: isSelected,
+                            trailing: file.isDir
+                                ? AppIconButton(
+                                    icon: Icons.playlist_add_rounded,
+                                    tooltip: '添加为动态播放列表',
+                                    onPressed: () =>
+                                        _addAlistDirectoryPlaylist(file),
+                                  )
+                                : null,
                             onSelectionChanged: (val) {
                               setState(() {
                                 if (val == true) {
@@ -1090,17 +1056,17 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                     ),
         ),
         if (_selectedAlistItems.isNotEmpty)
-          Container(
+          AppPanelSurface(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4))
-              ],
-            ),
+            color: theme.cardColor,
+            borderRadius: BorderRadius.zero,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -4),
+              ),
+            ],
             child: _buildActionButton(
               '添加选中的 ${_selectedAlistItems.length} 项',
               _addSelectedAlistItems,
@@ -1113,7 +1079,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildEmbyContent(ThemeData theme) {
     if (_checkingVendors) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
     if (!_boundVendors.contains('emby')) return _buildBindGuide('Emby', theme);
 
@@ -1147,15 +1113,18 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         _buildPathBar(theme, _embyPath, _goUpEmby),
         Expanded(
           child: !_embyLoading && _embyFiles.isEmpty
-              ? _buildEmptyState(
-                  theme,
-                  icon: Icons.video_library_rounded,
-                  title: '暂无媒体',
-                  subtitle: '当前媒体库目录没有可添加的项目。',
-                  color: Colors.green.shade600,
+              ? Center(
+                  child: AppEmptyState(
+                    icon: Icons.video_library_rounded,
+                    iconColor: Colors.green.shade600,
+                    iconSize: 58,
+                    title: '暂无媒体',
+                    subtitle: '当前媒体库目录没有可添加的项目。',
+                    maxWidth: 360,
+                  ),
                 )
               : _embyLoading && _embyFiles.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const AppLoadingIndicator()
                   : NotificationListener<ScrollNotification>(
                       onNotification: (scrollInfo) {
                         if (!_embyLoading &&
@@ -1166,26 +1135,17 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                         }
                         return false;
                       },
-                      child: ListView.builder(
+                      child: AppListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         itemCount: _embyFiles.length + (_embyHasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == _embyFiles.length) {
-                            return Container(
-                              padding: const EdgeInsets.all(16),
-                              alignment: Alignment.center,
-                              child: _embyLoading
-                                  ? const SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2),
-                                    )
-                                  : TextButton(
-                                      onPressed: () =>
-                                          _loadEmby(_embyPath, loadMore: true),
-                                      child: const Text('加载更多'),
-                                    ),
+                            return AppLoadMoreFooter(
+                              loading: _embyLoading,
+                              onPressed: () => _loadEmby(
+                                _embyPath,
+                                loadMore: true,
+                              ),
                             );
                           }
                           final file = _embyFiles[index];
@@ -1210,50 +1170,36 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildTextField(ThemeData theme, TextEditingController controller,
       String label, String hint, IconData icon) {
-    return ChatUtils.createFormField(
-      context: context,
-      label: label,
+    final isUrlLike = label.contains('链接') || hint.contains('https');
+    return AppTextField(
       controller: controller,
+      label: label,
       hintText: hint,
       prefixIcon: icon,
+      enabled: !_isLoading,
+      keyboardType: isUrlLike ? TextInputType.url : null,
+      autocorrect: false,
+      smartDashesType:
+          isUrlLike ? SmartDashesType.disabled : SmartDashesType.enabled,
+      smartQuotesType:
+          isUrlLike ? SmartQuotesType.disabled : SmartQuotesType.enabled,
     );
   }
 
   Widget _buildActionButton(String text, VoidCallback onPressed,
       {Color? color, IconData? icon}) {
-    final buttonColor = color ?? themeColor(context);
     return Align(
       alignment: Alignment.centerRight,
-      child: FilledButton.icon(
-        onPressed: _isLoading ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: buttonColor,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(168, 46),
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        icon: _isLoading
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : Icon(icon ?? Icons.check_rounded, size: 20),
-        label: Text(
-          text,
-          style: const TextStyle(fontWeight: FontWeight.w700),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 168, minHeight: 46),
+        child: AppActionButton(
+          onPressed: onPressed,
+          loading: _isLoading,
+          icon: icon ?? Icons.check_rounded,
+          label: text,
         ),
       ),
     );
-  }
-
-  Color themeColor(BuildContext context) {
-    return Theme.of(context).colorScheme.primary;
   }
 
   Widget _buildInlineNotice(
@@ -1263,112 +1209,43 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     required String subtitle,
     required Color color,
   }) {
-    return Container(
-      width: double.infinity,
+    return AppInfoBanner(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.22)),
+      icon: icon,
+      color: color,
+      backgroundColor: color.withValues(alpha: 0.08),
+      border: Border.all(color: color.withValues(alpha: 0.22)),
+      boxedIcon: true,
+      spacing: 12,
+      title: Text(
+        title,
+        style: theme.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w800,
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(
-    ThemeData theme, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 360),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 58,
-              height: 58,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: color, size: 30),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.35,
-              ),
-            ),
-          ],
+      message: Text(
+        subtitle,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
         ),
       ),
     );
   }
 
   Widget _buildPathBar(ThemeData theme, String path, VoidCallback onUp) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+    return AppPanelSurface(
+      margin: const EdgeInsets.fromLTRB(0, 0, 0, 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
-      ),
+      color: theme.cardColor,
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.1)),
       child: Row(
         children: [
-          InkWell(
-            onTap: path == '/' ? null : onUp,
-            borderRadius: BorderRadius.circular(8),
-            child: Icon(Icons.arrow_upward_rounded,
-                color: path == '/' ? theme.disabledColor : theme.primaryColor),
+          AppIconButton(
+            tooltip: '上级目录',
+            icon: Icons.arrow_upward_rounded,
+            onPressed: path == '/' ? null : onUp,
+            style: AppIconButtonStyle.ghost,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1386,10 +1263,10 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
               const SizedBox(width: 4),
               Transform.scale(
                 scale: 0.8,
-                child: IOSStyleSwitch(
+                child: AppSwitch(
                   value: _isProxy,
                   onChanged: (val) => setState(() => _isProxy = val),
-                  isDark: theme.brightness == Brightness.dark,
+                  semanticsLabel: '代理',
                 ),
               ),
             ],
@@ -1412,27 +1289,14 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         ? selectedKey
         : keyOf(items.first);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-      child: DropdownButtonFormField<String>(
-        initialValue: value,
-        isExpanded: true,
-        decoration: InputDecoration(
-          labelText: '媒体源账号',
-          prefixIcon: const Icon(Icons.account_tree_rounded),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          isDense: true,
-        ),
-        items: [
-          for (final item in items)
-            DropdownMenuItem(
-              value: keyOf(item),
-              child: Text(
-                labelOf(item),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-        ],
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+      child: AppSelect<String>(
+        value: value,
+        label: '媒体源账号',
+        prefixIcon: Icons.account_tree_rounded,
+        options: {
+          for (final item in items) labelOf(item): keyOf(item),
+        },
         onChanged: (key) {
           if (key == null) return;
           onChanged(items.firstWhere((item) => keyOf(item) == key));
@@ -1443,23 +1307,13 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildAlistSearchBar(ThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-      child: TextField(
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+      child: AppSearchField(
         controller: _alistSearchController,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          labelText: '搜索当前目录',
-          prefixIcon: const Icon(Icons.search_rounded),
-          suffixIcon: _alistKeyword.isEmpty
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  tooltip: '清除搜索',
-                  onPressed: _clearAlistSearch,
-                ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          isDense: true,
-        ),
+        hintText: '搜索当前目录',
+        onChanged: (value) {
+          if (value.isEmpty && _alistKeyword.isNotEmpty) _clearAlistSearch();
+        },
         onSubmitted: (_) => _searchAlist(),
       ),
     );
@@ -1467,24 +1321,21 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildAlistPasswordField(ThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-      child: TextField(
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+      child: AppTextField(
         controller: _alistPasswordController,
+        label: '目录密码',
+        prefixIcon: Icons.lock_outline_rounded,
+        suffix: _alistPasswordController.text.isEmpty && _alistPassword.isEmpty
+            ? null
+            : AppIconButton(
+                icon: Icons.backspace_outlined,
+                tooltip: '清除目录密码',
+                onPressed: _clearAlistPassword,
+                style: AppIconButtonStyle.destructive,
+              ),
         obscureText: true,
         textInputAction: TextInputAction.done,
-        decoration: InputDecoration(
-          labelText: '目录密码',
-          prefixIcon: const Icon(Icons.lock_outline_rounded),
-          suffixIcon: _alistPasswordController.text.isEmpty
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  tooltip: '清除目录密码',
-                  onPressed: _clearAlistPassword,
-                ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          isDense: true,
-        ),
         onChanged: (_) => setState(() {}),
         onSubmitted: (_) => _applyAlistPassword(),
       ),
@@ -1493,23 +1344,13 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildEmbySearchBar(ThemeData theme) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-      child: TextField(
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+      child: AppSearchField(
         controller: _embySearchController,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          labelText: '搜索媒体库',
-          prefixIcon: const Icon(Icons.search_rounded),
-          suffixIcon: _embyKeyword.isEmpty
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  tooltip: '清除搜索',
-                  onPressed: _clearEmbySearch,
-                ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          isDense: true,
-        ),
+        hintText: '搜索媒体库',
+        onChanged: (value) {
+          if (value.isEmpty && _embyKeyword.isNotEmpty) _clearEmbySearch();
+        },
         onSubmitted: (_) => _searchEmby(),
       ),
     );
@@ -1521,16 +1362,14 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   ) {
     final selectedIndex =
         _biliSelectedIndex.clamp(0, videos.length - 1).toInt();
-    return Container(
+    return AppPanelSurface(
       constraints: const BoxConstraints(maxHeight: 220),
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.15)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListView.separated(
+      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.15)),
+      borderRadius: BorderRadius.circular(8),
+      child: AppListView.separated(
         shrinkWrap: true,
         itemCount: videos.length,
-        separatorBuilder: (_, __) => Divider(
+        separatorBuilder: (_, __) => AppDivider(
             height: 1, color: theme.dividerColor.withValues(alpha: 0.08)),
         itemBuilder: (context, index) {
           final video = videos[index];
@@ -1541,10 +1380,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
               : video.epid > 0
                   ? 'EP ${video.epid} · CID ${video.cid}'
                   : '${video.bvid} · CID ${video.cid}';
-          return ListTile(
-            dense: true,
+          return AppTile(
             selected: selected,
-            leading: Icon(
+            prefix: Icon(
               video.isLive
                   ? Icons.live_tv_rounded
                   : selected
@@ -1555,7 +1393,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle:
                 Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-            onTap: () => setState(() => _biliSelectedIndex = index),
+            onPressed: () => setState(() => _biliSelectedIndex = index),
           );
         },
       ),
@@ -1568,25 +1406,23 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       String? thumbnailUrl,
       Color? iconColor,
       bool? isSelected,
-      ValueChanged<bool?>? onSelectionChanged}) {
+      ValueChanged<bool?>? onSelectionChanged,
+      Widget? trailing}) {
     final hasThumbnail = thumbnailUrl != null && thumbnailUrl.isNotEmpty;
-    return Container(
+    return AppPanelSurface(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 2))
-        ],
-      ),
-      child: ListTile(
-        onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: theme.cardColor,
+      borderRadius: BorderRadius.circular(8),
+      boxShadow: [
+        BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2))
+      ],
+      child: AppTile(
+        onPressed: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        leading: Row(
+        prefix: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (onSelectionChanged != null)
@@ -1595,31 +1431,22 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                 child: SizedBox(
                   width: 24,
                   height: 24,
-                  child: Checkbox(
+                  child: AppCheckbox(
                     value: isSelected ?? false,
+                    semanticsLabel: '选择媒体',
                     onChanged: onSelectionChanged,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4)),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
                   ),
                 ),
               ),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: hasThumbnail
-                    ? Image.network(
-                        thumbnailUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildFileIcon(isDir, iconColor),
-                      )
-                    : _buildFileIcon(isDir, iconColor),
-              ),
-            ),
+            hasThumbnail
+                ? AppImageThumbnail(
+                    url: thumbnailUrl,
+                    width: 40,
+                    height: 40,
+                    errorIcon:
+                        isDir ? Icons.folder_rounded : Icons.movie_rounded,
+                  )
+                : _buildFileIcon(isDir, iconColor),
           ],
         ),
         title: Text(name,
@@ -1630,22 +1457,17 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             ? Text(subtitle,
                 style: TextStyle(fontSize: 12, color: theme.hintColor))
             : null,
+        suffix: trailing,
       ),
     );
   }
 
   Widget _buildFileIcon(bool isDir, Color? iconColor) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: (isDir ? Colors.amber : (iconColor ?? Colors.blue))
-            .withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(
-        isDir ? Icons.folder_rounded : Icons.movie_rounded,
-        color: isDir ? Colors.amber : (iconColor ?? Colors.blue),
-      ),
+    final color = isDir ? Colors.amber : (iconColor ?? Colors.blue);
+    return AppIconBadge(
+      icon: isDir ? Icons.folder_rounded : Icons.movie_rounded,
+      color: color,
+      size: 40,
     );
   }
 
@@ -1663,36 +1485,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           const SizedBox(height: 8),
           Text('请先绑定账号以访问资源', style: TextStyle(color: theme.hintColor)),
           const SizedBox(height: 24),
-          Material(
-            color: theme.primaryColor,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: () async {
-                await PlatformBindingDialog.show(context,
-                    initialIndex: _providerBindingIndexByName(name));
-                _checkVendors();
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.link, color: Colors.white, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      '立即绑定 $name',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          AppActionButton(
+            onPressed: () async {
+              await PlatformBindingDialog.show(
+                context,
+                initialIndex: _providerBindingIndexByName(name),
+              );
+              _checkVendors();
+            },
+            icon: Icons.link_rounded,
+            label: '立即绑定 $name',
           ),
         ],
       ),
@@ -1884,21 +1686,29 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         style: Theme.of(context).textTheme.bodyMedium,
       ),
       actions: [
-        OutlinedButton(
+        AppActionButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('继续编辑'),
+          label: '继续编辑',
+          style: AppActionButtonStyle.outlined,
         ),
-        FilledButton(
+        AppActionButton(
           onPressed: () => Navigator.pop(context, true),
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-          ),
-          child: const Text('放弃'),
+          label: '放弃',
+          style: AppActionButtonStyle.tonal,
         ),
       ],
     );
     return result == true;
+  }
+
+  Future<void> _requestClose() async {
+    if (!_hasUnsavedDraft) {
+      Navigator.of(context).pop();
+      return;
+    }
+    final confirmed = await _confirmDiscardDraft();
+    if (!mounted || !confirmed) return;
+    Navigator.of(context).pop();
   }
 
   Future<void> _addDirectLink() async {
@@ -2087,14 +1897,12 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     PublicSettingsInfo settings,
   ) {
     final publishHost = settings.customPublishHost.trim();
-    return Container(
+    return AppPanelSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
-      ),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2130,16 +1938,18 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             child: Text(label, style: TextStyle(color: theme.hintColor)),
           ),
           Expanded(
-            child: SelectableText(
+            child: AppSelectableText(
               value.isEmpty ? '-' : value,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
           if (copyable) ...[
             const SizedBox(width: 8),
-            IconButton(
+            AppIconButton(
               tooltip: '复制',
-              icon: const Icon(Icons.copy_rounded, size: 18),
+              icon: Icons.copy_rounded,
+              iconSize: 18,
+              size: AppIconButtonSize.sm,
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: value));
                 MessageUtils.showSuccess(context, '已复制');
@@ -2403,6 +2213,38 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     }
   }
 
+  Future<void> _addAlistDirectoryPlaylist(AlistItemInfo file) async {
+    if (_alistServerId.isEmpty) {
+      MessageUtils.showWarning(context, '请选择已绑定的 AList 账号');
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      final password = _alistPasswordController.text;
+      final sourceConfig = <String, dynamic>{
+        'server_id': _alistServerId,
+        'path': file.path,
+      };
+      if (password.isNotEmpty) sourceConfig['password'] = password;
+      await WatchTogetherService.createPlaylist(
+        widget.roomId,
+        parentId: widget.parentId ?? '',
+        sourceProvider: 'alist',
+        providerInstanceName: _alistInstanceName,
+        sourceConfig: sourceConfig,
+        name: file.name,
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        MessageUtils.showSuccess(context, '已添加动态播放列表');
+      }
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '添加失败: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _addSelectedAlistItems() async {
     if (_selectedAlistItems.isEmpty) return;
     if (_alistServerId.isEmpty) {
@@ -2413,6 +2255,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
     try {
       final List<Map<String, dynamic>> items = [];
+      final List<AlistItemInfo> directories = [];
       final password = _alistPasswordController.text;
       for (final file in _selectedAlistItems.values) {
         final sourceConfig = <String, dynamic>{
@@ -2420,6 +2263,10 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           'path': file.path,
         };
         if (password.isNotEmpty) sourceConfig['password'] = password;
+        if (file.isDir) {
+          directories.add(file);
+          continue;
+        }
         items.add({
           'playlist_id': widget.parentId ?? '',
           'source_provider': 'alist',
@@ -2429,7 +2276,24 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         });
       }
 
-      await WatchTogetherService.addMediaBatch(widget.roomId, items);
+      if (items.isNotEmpty) {
+        await WatchTogetherService.addMediaBatch(widget.roomId, items);
+      }
+      for (final directory in directories) {
+        final sourceConfig = <String, dynamic>{
+          'server_id': _alistServerId,
+          'path': directory.path,
+        };
+        if (password.isNotEmpty) sourceConfig['password'] = password;
+        await WatchTogetherService.createPlaylist(
+          widget.roomId,
+          parentId: widget.parentId ?? '',
+          sourceProvider: 'alist',
+          providerInstanceName: _alistInstanceName,
+          sourceConfig: sourceConfig,
+          name: directory.name,
+        );
+      }
 
       if (mounted) {
         Navigator.pop(context);

@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/public_models.dart';
+import 'package:synctv_app/models/realtime_event_log.dart';
+import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
-import 'package:synctv_app/pages/desktop/desktop_room_screen.dart';
-import 'package:synctv_app/pages/large_screen/large_screen_room.dart';
-import 'package:synctv_app/pages/mobile/watch_together_room_screen.dart';
+import 'package:synctv_app/pages/mobile/room_settings_page.dart';
+import 'package:synctv_app/pages/room_screen.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/services/opaque_authenticator_service.dart';
 import 'package:synctv_app/services/passkey_authenticator_service.dart';
@@ -16,9 +17,13 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/local_image_picker.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
+import 'package:synctv_app/widgets/app_responsive_layout.dart';
+import 'package:synctv_app/widgets/create_room_dialog.dart';
 import 'package:synctv_app/widgets/platform_binding_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -296,7 +301,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _rename() async {
-    final next = await showDialog<String>(
+    final next = await showAppDialog<String>(
       context: context,
       builder: (_) => _SingleTextInputDialog(
         title: '修改用户名',
@@ -322,7 +327,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _updateAvatar() async {
     if (_updatingAvatar) return;
     try {
-      final image = await pickLocalImageUpload();
+      final image = await pickLocalImageUpload(context, aspectRatio: 1);
       if (image == null || !mounted) return;
       setState(() => _updatingAvatar = true);
       final user = await WatchTogetherService.updateUserAvatar(image.upload);
@@ -385,28 +390,26 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _unbindEmail() async {
     if (!_user.hasEmail) return;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppConfirmDialog(
         icon: const Icon(Icons.link_off_rounded),
-        title: const Text('解绑邮箱'),
+        title: '解绑邮箱',
         content: const Text('解绑后将无法继续使用这个邮箱接收验证码、邮件通知或密码重置邮件。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('解绑'),
-          ),
-        ],
+        confirmLabel: '解绑',
+        confirmIcon: Icons.link_off_rounded,
+        destructive: true,
+        onConfirm: () => Navigator.pop(context, true),
       ),
     );
     if (confirmed != true) return;
 
     try {
-      final user = await WatchTogetherService.unbindEmail();
+      final verificationId = await _verifySensitiveOperationWithPassword();
+      if (verificationId == null) return;
+      final user = await WatchTogetherService.unbindEmail(
+        verificationId: verificationId,
+      );
       final preferences =
           await WatchTogetherService.getAccountPreferences(refresh: true);
       if (!mounted) return;
@@ -426,9 +429,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _bindEmail() async {
     if (!_emailFeatureEnabled) return;
-    final user = await showDialog<WUser>(
+    final user = await showAppDialog<WUser>(
       context: context,
-      builder: (context) => const _EmailBindDialog(),
+      builder: (context) => _EmailBindDialog(
+        verifySensitiveOperation: _verifySensitiveOperationWithPassword,
+      ),
     );
     if (user == null || !mounted) return;
     final preferences = await WatchTogetherService.getAccountPreferences();
@@ -438,6 +443,30 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       _preferences = preferences;
     });
     MessageUtils.showSuccess(context, '邮箱已绑定');
+  }
+
+  Future<String?> _verifySensitiveOperationWithPassword() async {
+    final password = await showAppDialog<String>(
+      context: context,
+      builder: (context) => const _SensitivePasswordDialog(),
+    );
+    if (password == null || password.isEmpty) return null;
+
+    try {
+      final challenge =
+          await WatchTogetherService.startSensitiveOperationVerification();
+      final finished =
+          await WatchTogetherService.finishSensitiveOperationVerification(
+        sessionId: challenge.challenge.sessionId,
+        method: client_enum.SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD,
+        password: password,
+      );
+      return finished.verificationId;
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '身份验证失败: $e');
+      return null;
+    }
   }
 
   Future<void> _changePassword() async {
@@ -450,7 +479,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       return;
     }
 
-    final result = await showDialog<_PasswordUpdateInput>(
+    final result = await showAppDialog<_PasswordUpdateInput>(
       context: context,
       builder: (context) => _PasswordUpdateDialog(
         canUseCurrentPassword: canUseCurrentPassword,
@@ -497,7 +526,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       return;
     }
 
-    final result = await showDialog<_PasswordResetInput>(
+    final result = await showAppDialog<_PasswordResetInput>(
       context: context,
       builder: (context) => _PasswordResetDialog(email: email),
     );
@@ -528,10 +557,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       ),
       actions: [
         ChatUtils.createCancelButton(context),
-        FilledButton.tonalIcon(
+        AppActionButton(
           onPressed: () => Navigator.pop(context, true),
-          icon: const Icon(Icons.delete_outline_rounded),
-          label: const Text('删除'),
+          icon: Icons.delete_outline_rounded,
+          label: '删除',
+          style: AppActionButtonStyle.destructive,
         ),
       ],
     );
@@ -553,7 +583,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _bindPasskey() async {
-    final name = await showDialog<String>(
+    final name = await showAppDialog<String>(
       context: context,
       builder: (_) => const _SingleTextInputDialog(
         title: '绑定 Passkey',
@@ -595,7 +625,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _markAllRead() async {
     try {
       await WatchTogetherService.markAllNotificationsAsRead();
-        await _reloadNotifications(refresh: true);
+      await _reloadNotifications(refresh: true);
       if (mounted) MessageUtils.showSuccess(context, '已全部标记为已读');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '操作失败: $e');
@@ -662,10 +692,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
     if (!mounted) return;
 
-    final action = await showModalBottomSheet<_NotificationDetailAction>(
+    final action = await showAppBottomSheet<_NotificationDetailAction>(
       context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
       builder: (context) => _NotificationDetailSheet(
         notification: detail,
         typeLabel: _notificationType(detail.type),
@@ -756,10 +784,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _startOAuth2Bind(OAuth2ProviderOption provider) async {
     try {
+      final verificationId = await _verifySensitiveOperationWithPassword();
+      if (verificationId == null) return;
       final callbackSession = await OAuth2DeepLinkService.createSession();
       final start = await WatchTogetherService.startOAuth2Bind(
         provider.name,
         redirectUrl: callbackSession.redirectUrl,
+        verificationId: verificationId,
       );
       try {
         if (!mounted) return;
@@ -804,7 +835,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _unlinkOAuth2(OAuth2LinkedAccount account) async {
     try {
-      await WatchTogetherService.unlinkOAuth2Account(account);
+      final verificationId = await _verifySensitiveOperationWithPassword();
+      if (verificationId == null) return;
+      await WatchTogetherService.unlinkOAuth2Account(
+        account,
+        verificationId: verificationId,
+      );
       final linked = await WatchTogetherService.getLinkedOAuth2Accounts();
       if (!mounted) return;
       setState(() {
@@ -886,20 +922,54 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     try {
       final latest = await WatchTogetherService.getRoomInfo(room.roomId);
       if (!mounted) return;
-      final width = MediaQuery.sizeOf(context).width;
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) {
-            if (width >= 1100) return DesktopRoomScreen(room: latest);
-            if (width >= 700) return LargeScreenRoom(room: latest);
-            return WatchTogetherRoomScreen(room: latest);
-          },
+          builder: (context) => RoomScreen(room: latest),
         ),
       );
       if (mounted) await _reloadRooms();
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '打开房间失败: $e');
+    }
+  }
+
+  Future<void> _createRoom() async {
+    await showCreateRoomDialog(
+      context: context,
+      onCreated: (room) async {
+        await _reloadRooms(page: 1, refresh: true);
+        if (!mounted) return;
+        await _openRoom(room);
+      },
+    );
+  }
+
+  Future<void> _manageRoom(WRoom room) async {
+    try {
+      final settings = await WatchTogetherService.getRoomSettings(room.roomId);
+      if (!mounted) return;
+      await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RoomSettingsPage(
+            roomId: room.roomId,
+            roomName: room.roomName,
+            creatorId: room.creatorId,
+            currentUserId: _user.id,
+            currentSettings: settings,
+            realtime: RoomRealtimeSession(
+              send: (_) {},
+              messages: const Stream<RoomRealtimeMessage>.empty(),
+              events: const Stream<RealtimeEventLogEntry>.empty(),
+              reconnects: const Stream<void>.empty(),
+            ),
+          ),
+        ),
+      );
+      if (mounted) await _reloadRooms(refresh: true);
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '打开房间管理失败: $e');
     }
   }
 
@@ -920,10 +990,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       ),
       actions: [
         ChatUtils.createCancelButton(context),
-        FilledButton.tonalIcon(
+        AppActionButton(
           onPressed: () => Navigator.pop(context, true),
-          icon: Icon(isOwner ? Icons.delete_outline : Icons.logout),
-          label: Text(actionText),
+          icon: isOwner ? Icons.delete_outline : Icons.logout,
+          label: actionText,
+          style: isOwner
+              ? AppActionButtonStyle.destructive
+              : AppActionButtonStyle.tonal,
         ),
       ],
     );
@@ -959,14 +1032,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
           const SizedBox(height: 12),
-          TextField(
+          AppTextField(
             controller: controller,
+            label: '输入 关闭账户 确认',
+            prefixIcon: Icons.warning_amber_rounded,
             autofocus: true,
-            decoration: const InputDecoration(
-              labelText: '输入 关闭账户 确认',
-              prefixIcon: Icon(Icons.warning_amber_rounded),
-              border: OutlineInputBorder(),
-            ),
             onSubmitted: (_) => Navigator.pop(
               context,
               controller.text.trim() == confirmationText,
@@ -976,13 +1046,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       ),
       actions: [
         ChatUtils.createCancelButton(context),
-        FilledButton.tonalIcon(
+        AppActionButton(
           onPressed: () => Navigator.pop(
             context,
             controller.text.trim() == confirmationText,
           ),
-          icon: const Icon(Icons.delete_forever_rounded),
-          label: const Text('关闭账户'),
+          icon: Icons.delete_forever_rounded,
+          label: '关闭账户',
+          style: AppActionButtonStyle.destructive,
         ),
       ],
     );
@@ -1018,19 +1089,19 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Scaffold(
+    return AppScaffold(
       backgroundColor:
           isDark ? const Color(0xFF121212) : const Color(0xFFF4F6FA),
-      appBar: AppBar(
+      appBar: AppAppBar(
         title: const Text(
           '账号中心',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         centerTitle: false,
         actions: [
-          IconButton(
+          AppIconButton(
             onPressed: () => _load(refresh: true),
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icons.refresh_rounded,
             tooltip: '刷新',
           ),
         ],
@@ -1038,9 +1109,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       body: LayoutBuilder(
         builder: (context, constraints) {
           final useRail = constraints.maxWidth >= 900;
-          final content = _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildTabView(theme);
+          final content =
+              _loading ? const AppLoadingIndicator() : _buildTabView(theme);
 
           if (!useRail) {
             return Column(
@@ -1054,7 +1124,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           return Row(
             children: [
               _buildSideNavigation(theme),
-              VerticalDivider(
+              AppVerticalDivider(
                 width: 1,
                 thickness: 1,
                 color: theme.dividerColor.withValues(alpha: 0.55),
@@ -1068,7 +1138,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Widget _buildTabView(ThemeData theme) {
-    return TabBarView(
+    return AppTabBarView(
       controller: _tabController,
       children: [
         _buildOverviewTab(theme),
@@ -1087,9 +1157,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       builder: (context, _) {
         return SizedBox(
           width: 232,
-          child: Material(
+          child: AppInkSurface(
             color: theme.colorScheme.surface,
-            child: SafeArea(
+            clipBehavior: Clip.none,
+            child: AppSafeArea(
               top: false,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
@@ -1124,7 +1195,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       ),
                     ),
                     Expanded(
-                      child: ListView.separated(
+                      child: AppListView.separated(
                         itemCount: _sections.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 4),
                         itemBuilder: (context, index) {
@@ -1152,25 +1223,26 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Widget _buildTopTabs(ThemeData theme) {
-    return Material(
+    return AppInkSurface(
       color: theme.colorScheme.surface,
-      child: SafeArea(
+      clipBehavior: Clip.none,
+      child: AppSafeArea(
         bottom: false,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: theme.dividerColor.withValues(alpha: 0.65),
-              ),
+        child: AppPanelSurface(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.zero,
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withValues(alpha: 0.65),
             ),
           ),
           padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-          child: TabBar(
+          child: AppTabBar(
             controller: _tabController,
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             dividerColor: Colors.transparent,
-            indicator: BoxDecoration(
+            indicator: appTabPillIndicator(
               color: theme.colorScheme.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -1213,7 +1285,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             : constraints.maxWidth >= 760
                 ? 860.0
                 : double.infinity;
-        return ListView(
+        return AppListView(
           padding: padding,
           children: [
             Center(
@@ -1297,7 +1369,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 : tiles.length == 1
                     ? 1
                     : 2;
-            return GridView.count(
+            return AppGridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: columns,
@@ -1412,10 +1484,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ],
                 ],
               );
-              final action = FilledButton.icon(
+              final action = AppActionButton(
                 onPressed: _rename,
-                icon: const Icon(Icons.edit_rounded),
-                label: const Text('修改用户名'),
+                icon: Icons.edit_rounded,
+                label: '修改用户名',
               );
               if (!wide) {
                 return Column(
@@ -1464,89 +1536,77 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           _Section(
             title: '通知偏好',
             subtitle: '按场景控制站内通知和邮件通知',
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final twoColumns = constraints.maxWidth >= 720;
-                final items = [
+            child: AppResponsiveWrap(
+              minItemWidth: 320,
+              maxColumns: 2,
+              runSpacing: 4,
+              children: [
+                _PreferenceSwitch(
+                  title: '房间邀请站内通知',
+                  value: notifications.roomInvitationInApp,
+                  onChanged: _savingPreferences
+                      ? null
+                      : (value) => _updateNotifications(
+                            notifications.copyWith(
+                              roomInvitationInApp: value,
+                            ),
+                          ),
+                ),
+                _PreferenceSwitch(
+                  title: '房间事件站内通知',
+                  value: notifications.roomEventInApp,
+                  onChanged: _savingPreferences
+                      ? null
+                      : (value) => _updateNotifications(
+                            notifications.copyWith(roomEventInApp: value),
+                          ),
+                ),
+                _PreferenceSwitch(
+                  title: '系统公告站内通知',
+                  value: notifications.systemAnnouncementInApp,
+                  onChanged: _savingPreferences
+                      ? null
+                      : (value) => _updateNotifications(
+                            notifications.copyWith(
+                              systemAnnouncementInApp: value,
+                            ),
+                          ),
+                ),
+                if (_user.hasEmail && _emailFeatureEnabled)
                   _PreferenceSwitch(
-                    title: '房间邀请站内通知',
-                    value: notifications.roomInvitationInApp,
+                    title: '房间邀请邮件通知',
+                    value: notifications.roomInvitationEmail,
                     onChanged: _savingPreferences
                         ? null
                         : (value) => _updateNotifications(
                               notifications.copyWith(
-                                roomInvitationInApp: value,
+                                roomInvitationEmail: value,
                               ),
                             ),
                   ),
+                if (_user.hasEmail && _emailFeatureEnabled)
                   _PreferenceSwitch(
-                    title: '房间事件站内通知',
-                    value: notifications.roomEventInApp,
+                    title: '房间事件邮件通知',
+                    value: notifications.roomEventEmail,
                     onChanged: _savingPreferences
                         ? null
                         : (value) => _updateNotifications(
-                              notifications.copyWith(roomEventInApp: value),
+                              notifications.copyWith(roomEventEmail: value),
                             ),
                   ),
+                if (_user.hasEmail && _emailFeatureEnabled)
                   _PreferenceSwitch(
-                    title: '系统公告站内通知',
-                    value: notifications.systemAnnouncementInApp,
+                    title: '系统公告邮件通知',
+                    value: notifications.systemAnnouncementEmail,
                     onChanged: _savingPreferences
                         ? null
                         : (value) => _updateNotifications(
                               notifications.copyWith(
-                                systemAnnouncementInApp: value,
+                                systemAnnouncementEmail: value,
                               ),
                             ),
                   ),
-                  if (_user.hasEmail && _emailFeatureEnabled)
-                    _PreferenceSwitch(
-                      title: '房间邀请邮件通知',
-                      value: notifications.roomInvitationEmail,
-                      onChanged: _savingPreferences
-                          ? null
-                          : (value) => _updateNotifications(
-                                notifications.copyWith(
-                                  roomInvitationEmail: value,
-                                ),
-                              ),
-                    ),
-                  if (_user.hasEmail && _emailFeatureEnabled)
-                    _PreferenceSwitch(
-                      title: '房间事件邮件通知',
-                      value: notifications.roomEventEmail,
-                      onChanged: _savingPreferences
-                          ? null
-                          : (value) => _updateNotifications(
-                                notifications.copyWith(roomEventEmail: value),
-                              ),
-                    ),
-                  if (_user.hasEmail && _emailFeatureEnabled)
-                    _PreferenceSwitch(
-                      title: '系统公告邮件通知',
-                      value: notifications.systemAnnouncementEmail,
-                      onChanged: _savingPreferences
-                          ? null
-                          : (value) => _updateNotifications(
-                                notifications.copyWith(
-                                  systemAnnouncementEmail: value,
-                                ),
-                              ),
-                    ),
-                ];
-                if (!twoColumns) return Column(children: items);
-                return Wrap(
-                  spacing: 12,
-                  runSpacing: 4,
-                  children: [
-                    for (final item in items)
-                      SizedBox(
-                        width: (constraints.maxWidth - 12) / 2,
-                        child: item,
-                      ),
-                  ],
-                );
-              },
+              ],
             ),
           )
         else if (_loadError('账号偏好') != null)
@@ -1590,11 +1650,22 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           dense: true,
                         ),
                       ),
+                      AppActionButton(
+                        onPressed: _createRoom,
+                        icon: Icons.add_rounded,
+                        label: '创建房间',
+                      ),
                       if (_loadingRooms)
-                        const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                        const Padding(
+                          padding: EdgeInsetsDirectional.only(start: 10),
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: AppLoadingIndicator(
+                              size: AppLoadingSize.sm,
+                              centered: false,
+                            ),
+                          ),
                         ),
                     ],
                   ),
@@ -1602,25 +1673,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final wide = constraints.maxWidth >= 760;
-                      final search = TextField(
+                      final search = AppSearchField(
                         controller: _roomSearchController,
-                        textInputAction: TextInputAction.search,
-                        decoration: InputDecoration(
-                          isDense: true,
-                          prefixIcon: const Icon(Icons.search_rounded),
-                          suffixIcon: _roomSearchController.text.isEmpty
-                              ? null
-                              : IconButton(
-                                  onPressed: () {
-                                    _roomSearchController.clear();
-                                    _reloadRoomsFromFirstPage();
-                                  },
-                                  icon: const Icon(Icons.close_rounded),
-                                  tooltip: '清除搜索',
-                                ),
-                          hintText: '搜索房间名称或描述',
-                          border: const OutlineInputBorder(),
-                        ),
+                        hintText: '搜索房间名称或描述',
+                        onChanged: (value) {
+                          if (value.isEmpty) _reloadRoomsFromFirstPage();
+                        },
                         onSubmitted: (_) => _reloadRoomsFromFirstPage(),
                       );
                       final filters = Wrap(
@@ -1649,42 +1707,27 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             groupValue: _roomRelationFilter,
                             onSelected: _setRoomRelationFilter,
                           ),
-                          DropdownButtonHideUnderline(
-                            child: DropdownButton<client_enum.MyRoomListSortBy>(
-                              value: _roomSortBy,
-                              borderRadius: BorderRadius.circular(8),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: client_enum.MyRoomListSortBy
-                                      .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-                                  child: Text('最近活跃'),
-                                ),
-                                DropdownMenuItem(
-                                  value: client_enum.MyRoomListSortBy
-                                      .MY_ROOM_LIST_SORT_BY_UPDATED_AT,
-                                  child: Text('更新时间'),
-                                ),
-                                DropdownMenuItem(
-                                  value: client_enum.MyRoomListSortBy
-                                      .MY_ROOM_LIST_SORT_BY_CREATED_AT,
-                                  child: Text('创建时间'),
-                                ),
-                                DropdownMenuItem(
-                                  value: client_enum.MyRoomListSortBy
-                                      .MY_ROOM_LIST_SORT_BY_NAME,
-                                  child: Text('名称'),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                if (value == null) return;
-                                setState(() => _roomSortBy = value);
-                                _reloadRoomsFromFirstPage();
-                              },
-                            ),
+                          AppSelect<client_enum.MyRoomListSortBy>(
+                            value: _roomSortBy,
+                            options: const {
+                              '最近活跃': client_enum.MyRoomListSortBy
+                                  .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+                              '更新时间': client_enum.MyRoomListSortBy
+                                  .MY_ROOM_LIST_SORT_BY_UPDATED_AT,
+                              '创建时间': client_enum.MyRoomListSortBy
+                                  .MY_ROOM_LIST_SORT_BY_CREATED_AT,
+                              '名称': client_enum
+                                  .MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_NAME,
+                            },
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setState(() => _roomSortBy = value);
+                              _reloadRoomsFromFirstPage();
+                            },
                           ),
-                          IconButton(
+                          AppIconButton(
                             onPressed: _reloadRooms,
-                            icon: const Icon(Icons.refresh_rounded),
+                            icon: Icons.refresh_rounded,
                             tooltip: '刷新房间',
                           ),
                         ],
@@ -1710,28 +1753,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     },
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Text(
+                  AppPaginationBar(
+                    padding: EdgeInsets.zero,
+                    label:
                         '第 $_roomsPage / $maxPage 页 · $pageStart-$pageEnd / $total',
-                        style: TextStyle(color: theme.hintColor),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        onPressed: _loadingRooms || _roomsPage <= 1
-                            ? null
-                            : () => _reloadRooms(page: _roomsPage - 1),
-                        icon: const Icon(Icons.chevron_left_rounded),
-                        tooltip: '上一页',
-                      ),
-                      IconButton(
-                        onPressed: _loadingRooms || _roomsPage >= maxPage
-                            ? null
-                            : () => _reloadRooms(page: _roomsPage + 1),
-                        icon: const Icon(Icons.chevron_right_rounded),
-                        tooltip: '下一页',
-                      ),
-                    ],
+                    onPrevious: _loadingRooms || _roomsPage <= 1
+                        ? null
+                        : () => _reloadRooms(page: _roomsPage - 1),
+                    onNext: _loadingRooms || _roomsPage >= maxPage
+                        ? null
+                        : () => _reloadRooms(page: _roomsPage + 1),
                   ),
                 ],
               ),
@@ -1752,8 +1783,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ),
                 )
               : rooms.isEmpty
-                  ? const Center(child: Text('没有匹配的房间'))
-                  : RefreshIndicator(
+                  ? const AppEmptyMessage(message: '没有匹配的房间')
+                  : AppRefreshIndicator(
                       onRefresh: _reloadRooms,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
@@ -1762,7 +1793,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                               : constraints.maxWidth >= 760
                                   ? 900.0
                                   : double.infinity;
-                          return ListView.separated(
+                          return AppListView.separated(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
                             itemCount: rooms.length,
                             separatorBuilder: (_, __) =>
@@ -1781,7 +1812,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                                     updatedAtLabel:
                                         _formatTimestamp(room.updatedAt),
                                     isOwner: _isMyCreatedRoom(room),
+                                    canManage:
+                                        _canManageRoomFromListEntry(room),
                                     onOpen: () => _openRoom(room),
+                                    onManage: () => _manageRoom(room),
                                     onLeaveOrDelete: () =>
                                         _leaveOrDeleteRoom(room),
                                   ),
@@ -1818,8 +1852,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             subtitle: '多因素认证会在密码之外要求额外验证因素',
             child: Column(
               children: [
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
+                AppSwitchTile(
                   value: preferences.twoFactorEnabled,
                   onChanged: _savingPreferences
                       ? null
@@ -1830,44 +1863,47 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ),
                 ),
                 if (_showEmailBindingControls) ...[
-                  const Divider(height: 1),
-                  ListTile(
+                  const AppDivider(height: 1),
+                  AppTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(emailStatus.icon, color: emailStatus.tone),
+                    prefix: Icon(emailStatus.icon, color: emailStatus.tone),
                     title: const Text('邮箱'),
                     subtitle: Text(
                       _user.hasEmail ? _user.email! : '绑定邮箱后可接收验证码、通知和密码重置邮件',
                     ),
-                    trailing: _user.hasEmail
-                        ? OutlinedButton.icon(
+                    suffix: _user.hasEmail
+                        ? AppActionButton(
                             onPressed: _unbindEmail,
-                            icon: const Icon(Icons.link_off_rounded),
-                            label: const Text('解绑'),
+                            icon: Icons.link_off_rounded,
+                            label: '解绑',
+                            style: AppActionButtonStyle.outlined,
                           )
-                        : FilledButton.tonalIcon(
+                        : AppActionButton(
                             onPressed: _emailFeatureEnabled ? _bindEmail : null,
-                            icon: const Icon(Icons.add_link_rounded),
-                            label: const Text('绑定'),
+                            icon: Icons.add_link_rounded,
+                            label: '绑定',
+                            style: AppActionButtonStyle.tonal,
                           ),
                   ),
                 ],
-                const Divider(height: 1),
-                ListTile(
+                const AppDivider(height: 1),
+                AppTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.password_rounded),
+                  prefix: const Icon(Icons.password_rounded),
                   title: const Text('登录密码'),
                   subtitle: const Text('通过 OPAQUE 协议更新账号密码'),
-                  trailing: Wrap(
+                  suffix: Wrap(
                     spacing: 8,
                     children: [
                       if (_user.hasEmail && _emailFeatureEnabled)
-                        OutlinedButton(
+                        AppActionButton(
                           onPressed: _resetPasswordByEmail,
-                          child: const Text('邮件重置'),
+                          label: '邮件重置',
+                          style: AppActionButtonStyle.outlined,
                         ),
-                      FilledButton(
+                      AppActionButton(
                         onPressed: _changePassword,
-                        child: const Text('修改'),
+                        label: '修改',
                       ),
                     ],
                   ),
@@ -1897,28 +1933,23 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       style: TextStyle(fontWeight: FontWeight.w700),
                     ),
                     const Spacer(),
-                    FilledButton.tonalIcon(
-                      onPressed: _passkeyAvailable && !_bindingPasskey
-                          ? _bindPasskey
-                          : null,
-                      icon: _bindingPasskey
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.add_rounded),
-                      label: const Text('绑定'),
+                    AppActionButton(
+                      onPressed: _passkeyAvailable ? _bindPasskey : null,
+                      loading: _bindingPasskey,
+                      icon: Icons.add_rounded,
+                      label: '绑定',
+                      style: AppActionButtonStyle.tonal,
                     ),
                     const SizedBox(width: 8),
-                    TextButton.icon(
+                    AppActionButton(
                       onPressed: () async {
                         final passkeys =
                             await WatchTogetherService.listPasskeys();
                         if (mounted) setState(() => _passkeys = passkeys);
                       },
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('刷新'),
+                      icon: Icons.refresh_rounded,
+                      label: '刷新',
+                      style: AppActionButtonStyle.text,
                     ),
                   ],
                 ),
@@ -1933,9 +1964,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   Text('暂无 Passkey', style: TextStyle(color: theme.hintColor))
                 else
                   for (final credential in _passkeys)
-                    ListTile(
+                    AppTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.fingerprint_rounded),
+                      prefix: const Icon(Icons.fingerprint_rounded),
                       title: Text(
                         credential.name.isEmpty
                             ? '未命名 Passkey'
@@ -1949,10 +1980,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             '最近使用 ${_formatTimestamp(credential.lastUsedAt)}',
                         ].join(' · '),
                       ),
-                      trailing: IconButton(
+                      suffix: AppIconButton(
                         onPressed: () => _deletePasskey(credential),
-                        icon: const Icon(Icons.delete_outline_rounded),
+                        icon: Icons.delete_outline_rounded,
                         tooltip: '删除 Passkey',
+                        style: AppIconButtonStyle.destructive,
                       ),
                     ),
               ],
@@ -1964,18 +1996,19 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           title: '危险操作',
           subtitle: '这些操作会影响账号可用性或永久删除数据',
           danger: true,
-          child: ListTile(
+          child: AppTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(
+            prefix: const Icon(
               Icons.person_off_rounded,
               color: Colors.red,
             ),
             title: const Text('关闭账户'),
             subtitle: const Text('永久关闭当前账户，并清除本机登录状态'),
-            trailing: FilledButton.tonalIcon(
+            suffix: AppActionButton(
               onPressed: _closeAccount,
-              icon: const Icon(Icons.person_remove_rounded),
-              label: const Text('关闭'),
+              icon: Icons.person_remove_rounded,
+              label: '关闭',
+              style: AppActionButtonStyle.destructive,
             ),
           ),
         ),
@@ -2016,24 +2049,26 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       child: SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: AppLoadingIndicator(
+                            size: AppLoadingSize.sm, centered: false),
                       ),
                     ),
                   if (_selectedNotificationIds.isNotEmpty) ...[
-                    TextButton.icon(
+                    AppActionButton(
                       onPressed: () =>
                           setState(() => _selectedNotificationIds.clear()),
-                      icon: const Icon(Icons.close_rounded),
-                      label: Text('已选 ${_selectedNotificationIds.length}'),
+                      icon: Icons.close_rounded,
+                      label: '已选 ${_selectedNotificationIds.length}',
+                      style: AppActionButtonStyle.text,
                     ),
-                    IconButton(
+                    AppIconButton(
                       onPressed:
                           selectedUnreadCount == 0 ? null : _markSelectedRead,
-                      icon: const Icon(Icons.mark_email_read_rounded),
+                      icon: Icons.mark_email_read_rounded,
                       tooltip: '标记所选未读通知',
                     ),
                   ] else
-                    IconButton(
+                    AppIconButton(
                       onPressed: unreadSelectableIds.isEmpty
                           ? null
                           : () => setState(() {
@@ -2041,41 +2076,29 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                                   ..clear()
                                   ..addAll(unreadSelectableIds);
                               }),
-                      icon: const Icon(Icons.select_all_rounded),
+                      icon: Icons.select_all_rounded,
                       tooltip: '选择当前未读通知',
                     ),
-                  IconButton(
+                  AppIconButton(
                     onPressed: items.isEmpty ? null : _markAllRead,
-                    icon: const Icon(Icons.done_all_rounded),
+                    icon: Icons.done_all_rounded,
                     tooltip: '全部标记为已读',
                   ),
-                  IconButton(
+                  AppIconButton(
                     onPressed: items.isEmpty ? null : _deleteAllRead,
-                    icon: const Icon(Icons.delete_sweep_rounded),
+                    icon: Icons.delete_sweep_rounded,
                     tooltip: '删除已读通知',
+                    style: AppIconButtonStyle.destructive,
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              TextField(
+              AppSearchField(
                 controller: _notificationSearchController,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  isDense: true,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _notificationSearchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          onPressed: () {
-                            _notificationSearchController.clear();
-                            _reloadNotificationsFromFirstPage();
-                          },
-                          icon: const Icon(Icons.close_rounded),
-                          tooltip: '清除搜索',
-                        ),
-                  hintText: '搜索标题或内容',
-                  border: const OutlineInputBorder(),
-                ),
+                hintText: '搜索标题或内容',
+                onChanged: (value) {
+                  if (value.isEmpty) _reloadNotificationsFromFirstPage();
+                },
                 onSubmitted: (_) => _reloadNotificationsFromFirstPage(),
               ),
               const SizedBox(height: 8),
@@ -2108,78 +2131,45 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       _reloadNotificationsFromFirstPage();
                     },
                   ),
-                  DropdownButtonHideUnderline(
-                    child: DropdownButton<client_enum.NotificationType?>(
-                      value: _notificationTypeFilter,
-                      borderRadius: BorderRadius.circular(8),
-                      hint: const Text('通知类型'),
-                      items: [
-                        const DropdownMenuItem<client_enum.NotificationType?>(
-                          value: null,
-                          child: Text('全部类型'),
-                        ),
-                        const DropdownMenuItem(
-                          value: client_enum.NotificationType
-                              .NOTIFICATION_TYPE_ROOM_INVITATION,
-                          child: Text('房间邀请'),
-                        ),
-                        const DropdownMenuItem(
-                          value: client_enum.NotificationType
-                              .NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
-                          child: Text('系统公告'),
-                        ),
-                        const DropdownMenuItem(
-                          value: client_enum
-                              .NotificationType.NOTIFICATION_TYPE_ROOM_EVENT,
-                          child: Text('房间事件'),
-                        ),
-                        const DropdownMenuItem(
-                          value: client_enum.NotificationType
-                              .NOTIFICATION_TYPE_PASSWORD_RESET,
-                          child: Text('密码重置'),
-                        ),
-                        if (_showEmailBindingControls)
-                          const DropdownMenuItem(
-                            value: client_enum
-                                .NotificationType.NOTIFICATION_TYPE_EMAIL_BIND,
-                            child: Text('邮箱绑定'),
-                          ),
-                      ],
-                      onChanged: (value) {
-                        setState(() => _notificationTypeFilter = value);
-                        _reloadNotificationsFromFirstPage();
-                      },
-                    ),
+                  AppSelect<client_enum.NotificationType?>(
+                    value: _notificationTypeFilter,
+                    hintText: '通知类型',
+                    options: {
+                      '全部类型': null,
+                      '房间邀请': client_enum
+                          .NotificationType.NOTIFICATION_TYPE_ROOM_INVITATION,
+                      '系统公告': client_enum.NotificationType
+                          .NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
+                      '房间事件': client_enum
+                          .NotificationType.NOTIFICATION_TYPE_ROOM_EVENT,
+                      '密码重置': client_enum
+                          .NotificationType.NOTIFICATION_TYPE_PASSWORD_RESET,
+                      if (_showEmailBindingControls)
+                        '邮箱绑定': client_enum
+                            .NotificationType.NOTIFICATION_TYPE_EMAIL_BIND,
+                    },
+                    onChanged: (value) {
+                      setState(() => _notificationTypeFilter = value);
+                      _reloadNotificationsFromFirstPage();
+                    },
                   ),
-                  DropdownButtonHideUnderline(
-                    child: DropdownButton<client_enum.NotificationListSortBy>(
-                      value: _notificationSortBy,
-                      borderRadius: BorderRadius.circular(8),
-                      items: const [
-                        DropdownMenuItem(
-                          value: client_enum.NotificationListSortBy
-                              .NOTIFICATION_LIST_SORT_BY_CREATED_AT,
-                          child: Text('创建时间'),
-                        ),
-                        DropdownMenuItem(
-                          value: client_enum.NotificationListSortBy
-                              .NOTIFICATION_LIST_SORT_BY_UPDATED_AT,
-                          child: Text('更新时间'),
-                        ),
-                        DropdownMenuItem(
-                          value: client_enum.NotificationListSortBy
-                              .NOTIFICATION_LIST_SORT_BY_TITLE,
-                          child: Text('标题'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setState(() => _notificationSortBy = value);
-                        _reloadNotificationsFromFirstPage();
-                      },
-                    ),
+                  AppSelect<client_enum.NotificationListSortBy>(
+                    value: _notificationSortBy,
+                    options: const {
+                      '创建时间': client_enum.NotificationListSortBy
+                          .NOTIFICATION_LIST_SORT_BY_CREATED_AT,
+                      '更新时间': client_enum.NotificationListSortBy
+                          .NOTIFICATION_LIST_SORT_BY_UPDATED_AT,
+                      '标题': client_enum.NotificationListSortBy
+                          .NOTIFICATION_LIST_SORT_BY_TITLE,
+                    },
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() => _notificationSortBy = value);
+                      _reloadNotificationsFromFirstPage();
+                    },
                   ),
-                  IconButton(
+                  AppIconButton(
                     onPressed: () {
                       setState(() {
                         _notificationSortDirection =
@@ -2191,47 +2181,33 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       });
                       _reloadNotificationsFromFirstPage();
                     },
-                    icon: Icon(
-                      _notificationSortDirection ==
-                              client_enum.SortDirection.SORT_DIRECTION_DESC
-                          ? Icons.south_rounded
-                          : Icons.north_rounded,
-                    ),
+                    icon: _notificationSortDirection ==
+                            client_enum.SortDirection.SORT_DIRECTION_DESC
+                        ? Icons.south_rounded
+                        : Icons.north_rounded,
                     tooltip: _notificationSortDirection ==
                             client_enum.SortDirection.SORT_DIRECTION_DESC
                         ? '降序'
                         : '升序',
+                    style: AppIconButtonStyle.outlined,
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
+              AppPaginationBar(
+                padding: EdgeInsets.zero,
+                label:
                     '第 $_notificationPage / $maxPage 页 · $pageStart-$pageEnd',
-                    style: TextStyle(color: theme.hintColor),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: _loadingNotifications || _notificationPage <= 1
-                        ? null
-                        : () => _reloadNotifications(
-                              page: _notificationPage - 1,
-                            ),
-                    icon: const Icon(Icons.chevron_left_rounded),
-                    tooltip: '上一页',
-                  ),
-                  IconButton(
-                    onPressed:
-                        _loadingNotifications || _notificationPage >= maxPage
-                            ? null
-                            : () => _reloadNotifications(
-                                  page: _notificationPage + 1,
-                                ),
-                    icon: const Icon(Icons.chevron_right_rounded),
-                    tooltip: '下一页',
-                  ),
-                ],
+                onPrevious: _loadingNotifications || _notificationPage <= 1
+                    ? null
+                    : () => _reloadNotifications(
+                          page: _notificationPage - 1,
+                        ),
+                onNext: _loadingNotifications || _notificationPage >= maxPage
+                    ? null
+                    : () => _reloadNotifications(
+                          page: _notificationPage + 1,
+                        ),
               ),
             ],
           ),
@@ -2250,10 +2226,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ),
                 )
               : items.isEmpty
-                  ? const Center(child: Text('暂无通知'))
-                  : RefreshIndicator(
+                  ? const AppEmptyMessage(message: '暂无通知')
+                  : AppRefreshIndicator(
                       onRefresh: _reloadNotifications,
-                      child: ListView.separated(
+                      child: AppListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         itemCount: items.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -2263,10 +2239,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                               _selectedNotificationIds.contains(item.numericId);
                           final selectable = item.numericId > 0;
                           return _Section(
-                            child: ListTile(
+                            child: AppTile(
                               contentPadding: EdgeInsets.zero,
                               selected: selected,
-                              onTap: selected
+                              onPressed: selected
                                   ? () {
                                       if (!selectable) return;
                                       setState(() {
@@ -2286,11 +2262,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                                         }
                                       })
                                   : null,
-                              leading: Checkbox(
+                              prefix: AppCheckbox(
                                 value: selected,
+                                semanticsLabel: '选择通知',
                                 onChanged: selectable
                                     ? (value) => setState(() {
-                                          if (value == true) {
+                                          if (value) {
                                             _selectedNotificationIds
                                                 .add(item.numericId);
                                           } else {
@@ -2325,32 +2302,34 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                                   ),
                                 ],
                               ),
-                              trailing: Wrap(
+                              suffix: Wrap(
                                 spacing: 2,
                                 children: [
-                                  IconButton(
+                                  AppIconButton(
                                     onPressed: selected
                                         ? null
                                         : () => _openNotification(item),
-                                    icon: const Icon(Icons.open_in_new_rounded),
+                                    icon: Icons.open_in_new_rounded,
                                     tooltip: '查看详情',
+                                    size: AppIconButtonSize.sm,
                                   ),
                                   if (!item.isRead)
-                                    IconButton(
+                                    AppIconButton(
                                       onPressed: selected
                                           ? null
                                           : () => _markRead(item),
-                                      icon: const Icon(
-                                          Icons.mark_email_read_rounded),
+                                      icon: Icons.mark_email_read_rounded,
                                       tooltip: '标记已读',
+                                      size: AppIconButtonSize.sm,
                                     ),
-                                  IconButton(
+                                  AppIconButton(
                                     onPressed: selected
                                         ? null
                                         : () => _deleteNotification(item),
-                                    icon: const Icon(
-                                        Icons.delete_outline_rounded),
+                                    icon: Icons.delete_outline_rounded,
                                     tooltip: '删除',
+                                    size: AppIconButtonSize.sm,
+                                    style: AppIconButtonStyle.destructive,
                                   ),
                                 ],
                               ),
@@ -2373,7 +2352,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final showBindableOAuth2 =
         providersError != null || bindableProviders.isNotEmpty;
     final showOAuth2Bindings = showLinkedOAuth2 || showBindableOAuth2;
-    return ListView(
+    return AppListView(
       padding: const EdgeInsets.all(16),
       children: [
         _Section(
@@ -2455,9 +2434,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     )
                   else
                     for (final account in _linkedOAuth2)
-                      ListTile(
+                      AppTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.link_rounded),
+                        prefix: const Icon(Icons.link_rounded),
                         title: Text(
                           '${account.providerType} / ${account.providerInstanceName}',
                         ),
@@ -2472,10 +2451,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             _formatTimestamp(account.linkedAt),
                           ].join(' · '),
                         ),
-                        trailing: IconButton(
+                        suffix: AppIconButton(
                           onPressed: () => _unlinkOAuth2(account),
-                          icon: const Icon(Icons.link_off_rounded),
+                          icon: Icons.link_off_rounded,
                           tooltip: '解绑',
+                          style: AppIconButtonStyle.destructive,
                         ),
                       ),
                 ],
@@ -2503,12 +2483,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       runSpacing: 8,
                       children: [
                         for (final provider in bindableProviders)
-                          OutlinedButton.icon(
+                          AppActionButton(
                             onPressed: oauth2Available
                                 ? () => _startOAuth2Bind(provider)
                                 : null,
-                            icon: const Icon(Icons.open_in_new_rounded),
-                            label: Text('${provider.type} (${provider.name})'),
+                            icon: Icons.open_in_new_rounded,
+                            label: '${provider.type} (${provider.name})',
+                            style: AppActionButtonStyle.outlined,
                           ),
                       ],
                     ),
@@ -2526,7 +2507,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: AppLoadingIndicator(
+                              size: AppLoadingSize.sm, centered: false),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -2540,13 +2522,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     const SizedBox(height: 10),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: TextButton.icon(
+                      child: AppActionButton(
                         onPressed: () => setState(() {
                           _bindProvider = null;
                           _bindAttempt++;
                         }),
-                        icon: const Icon(Icons.close_rounded),
-                        label: const Text('取消绑定'),
+                        icon: Icons.close_rounded,
+                        label: '取消绑定',
+                        style: AppActionButtonStyle.text,
                       ),
                     ),
                   ],
@@ -2570,10 +2553,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton.icon(
+            child: AppActionButton(
               onPressed: () => _tabController.animateTo(1),
-              icon: const Icon(Icons.person_outline_rounded),
-              label: const Text('查看资料'),
+              icon: Icons.person_outline_rounded,
+              label: '查看资料',
+              style: AppActionButtonStyle.outlined,
             ),
           ),
         ],
@@ -2603,10 +2587,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton.icon(
+            child: AppActionButton(
               onPressed: () => _tabController.animateTo(3),
-              icon: const Icon(Icons.security_rounded),
-              label: const Text('管理安全'),
+              icon: Icons.security_rounded,
+              label: '管理安全',
+              style: AppActionButtonStyle.outlined,
             ),
           ),
         ],
@@ -2622,28 +2607,47 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (rooms.isEmpty)
-            Text('暂无房间', style: TextStyle(color: theme.hintColor))
+            const AppEmptyMessage(
+              message: '暂无房间',
+              centered: false,
+              padding: EdgeInsets.zero,
+            )
           else
             for (final room in rooms)
-              ListTile(
-                dense: true,
+              AppTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.meeting_room_outlined),
+                prefix: _RoomCoverThumb(room: room, size: 36),
                 title: Text(
                   room.roomName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                subtitle: Text(_roomRoleLabel(room.myRole)),
-                onTap: () => _openRoom(room),
+                subtitle: Text(
+                  [
+                    _roomRoleLabel(room.myRole),
+                    if (room.creator.trim().isNotEmpty)
+                      '创建者 ${room.creator.trim()}',
+                  ].join(' · '),
+                ),
+                onPressed: () => _openRoom(room),
               ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton.icon(
+            child: AppActionButton(
+              onPressed: _createRoom,
+              icon: Icons.add_rounded,
+              label: '创建房间',
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: AppActionButton(
               onPressed: () => _tabController.animateTo(2),
-              icon: const Icon(Icons.meeting_room_outlined),
-              label: const Text('管理房间'),
+              icon: Icons.meeting_room_outlined,
+              label: '管理房间',
+              style: AppActionButtonStyle.outlined,
             ),
           ),
         ],
@@ -2662,6 +2666,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         room.myRole ==
             common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value ||
         room.creatorId == _user.id;
+  }
+
+  bool _canManageRoomFromListEntry(WRoom room) {
+    return _isMyCreatedRoom(room) ||
+        room.myRole ==
+            common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value ||
+        _user.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
+        _user.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
   }
 
   String _userRoleLabel(int role) {
@@ -2877,14 +2889,12 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
           _DialogFieldGroup(
             title: '验证方式',
             subtitle: methodDescriptions[_method] ?? '',
-            child: SingleChildScrollView(
+            child: AppSingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: SegmentedButton<_PasswordUpdateMethod>(
+              child: AppSegmentedControl<_PasswordUpdateMethod>(
                 segments: methods,
-                selected: {_method},
-                onSelectionChanged: (selected) {
-                  setState(() => _method = selected.single);
-                },
+                value: _method,
+                onChanged: (selected) => setState(() => _method = selected),
               ),
             ),
           ),
@@ -3028,16 +3038,12 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
                   value: widget.email,
                   icon: Icons.email_outlined,
                 );
-                final sendButton = OutlinedButton.icon(
-                  onPressed: _requesting ? null : _requestResetEmail,
-                  icon: _requesting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.send_rounded),
-                  label: const Text('发送验证码'),
+                final sendButton = AppActionButton(
+                  onPressed: _requestResetEmail,
+                  loading: _requesting,
+                  icon: Icons.send_rounded,
+                  label: '发送验证码',
+                  style: AppActionButtonStyle.outlined,
                 );
                 if (compact) {
                   return Column(
@@ -3104,7 +3110,9 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
 }
 
 class _EmailBindDialog extends StatefulWidget {
-  const _EmailBindDialog();
+  final Future<String?> Function() verifySensitiveOperation;
+
+  const _EmailBindDialog({required this.verifySensitiveOperation});
 
   @override
   State<_EmailBindDialog> createState() => _EmailBindDialogState();
@@ -3146,9 +3154,12 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
     if (email.isEmpty || token.isEmpty || _submitting) return;
     setState(() => _submitting = true);
     try {
+      final verificationId = await widget.verifySensitiveOperation();
+      if (verificationId == null) return;
       final user = await WatchTogetherService.confirmEmailBind(
         email: email,
         token: token,
+        verificationId: verificationId,
       );
       if (mounted) Navigator.pop(context, user);
     } catch (e) {
@@ -3182,16 +3193,12 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
                   icon: Icons.email_outlined,
                   textInputAction: TextInputAction.next,
                 );
-                final sendButton = OutlinedButton.icon(
-                  onPressed: _requesting ? null : _requestToken,
-                  icon: _requesting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.send_rounded),
-                  label: const Text('发送验证码'),
+                final sendButton = AppActionButton(
+                  onPressed: _requestToken,
+                  loading: _requesting,
+                  icon: Icons.send_rounded,
+                  label: '发送验证码',
+                  style: AppActionButtonStyle.outlined,
                 );
                 if (compact) {
                   return Column(
@@ -3244,6 +3251,51 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
   }
 }
 
+class _SensitivePasswordDialog extends StatefulWidget {
+  const _SensitivePasswordDialog();
+
+  @override
+  State<_SensitivePasswordDialog> createState() =>
+      _SensitivePasswordDialogState();
+}
+
+class _SensitivePasswordDialogState extends State<_SensitivePasswordDialog> {
+  final _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final password = _passwordController.text;
+    if (password.isEmpty) return;
+    Navigator.pop(context, password);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _AccountActionDialog(
+      icon: Icons.verified_user_rounded,
+      title: '身份验证',
+      subtitle: '输入当前密码以继续账号安全操作。',
+      maxWidth: 460,
+      content: _DialogTextField(
+        controller: _passwordController,
+        autofocus: true,
+        obscureText: true,
+        label: '当前密码',
+        icon: Icons.lock_outline_rounded,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+      ),
+      primaryLabel: '验证',
+      onPrimary: _submit,
+    );
+  }
+}
+
 class _NotificationDetailSheet extends StatelessWidget {
   final UserNotificationItem notification;
   final String typeLabel;
@@ -3264,7 +3316,7 @@ class _NotificationDetailSheet extends StatelessWidget {
         ? ''
         : const JsonEncoder.withIndent('  ').convert(notification.data);
 
-    return SafeArea(
+    return AppSafeArea(
       child: Padding(
         padding: EdgeInsets.only(
           left: 20,
@@ -3273,9 +3325,9 @@ class _NotificationDetailSheet extends StatelessWidget {
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+            maxHeight: AppMetrics.dialogMaxHeight(context, null),
           ),
-          child: SingleChildScrollView(
+          child: AppSingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3308,8 +3360,8 @@ class _NotificationDetailSheet extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    Chip(label: Text(typeLabel)),
-                    Chip(label: Text(notification.isRead ? '已读' : '未读')),
+                    AppChip(label: Text(typeLabel)),
+                    AppChip(label: Text(notification.isRead ? '已读' : '未读')),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -3338,14 +3390,12 @@ class _NotificationDetailSheet extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Container(
+                  AppPanelSurface(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: SelectableText(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                    child: AppSelectableText(
                       dataText,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontFamily: 'monospace',
@@ -3357,26 +3407,28 @@ class _NotificationDetailSheet extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton.icon(
+                      child: AppActionButton(
                         onPressed: notification.isRead
                             ? null
                             : () => Navigator.pop(
                                   context,
                                   _NotificationDetailAction.markRead,
                                 ),
-                        icon: const Icon(Icons.mark_email_read_rounded),
-                        label: const Text('标记已读'),
+                        icon: Icons.mark_email_read_rounded,
+                        label: '标记已读',
+                        style: AppActionButtonStyle.outlined,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: FilledButton.tonalIcon(
+                      child: AppActionButton(
                         onPressed: () => Navigator.pop(
                           context,
                           _NotificationDetailAction.delete,
                         ),
-                        icon: const Icon(Icons.delete_outline_rounded),
-                        label: const Text('删除'),
+                        icon: Icons.delete_outline_rounded,
+                        label: '删除',
+                        style: AppActionButtonStyle.destructive,
                       ),
                     ),
                   ],
@@ -3414,115 +3466,96 @@ class _AccountActionDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.sizeOf(context);
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+    return AppDialogFrame(
+      maxWidth: maxWidth,
       backgroundColor: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: maxWidth,
-          maxHeight: size.height * 0.88,
+      child: AppInkSurface(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.72),
         ),
-        child: Material(
-          color: theme.colorScheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.72),
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 12, 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(icon, color: theme.colorScheme.primary),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 12, 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppIconBadge(
+                    icon: icon,
+                    color: theme.colorScheme.primary,
+                    size: 42,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            subtitle,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.62),
-                            ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.62),
                           ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: '关闭',
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-                  ],
-                ),
-              ),
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
-                  child: content,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.42),
-                  border: Border(
-                    top: BorderSide(
-                      color: theme.colorScheme.outlineVariant
-                          .withValues(alpha: 0.6),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    const Spacer(),
-                    TextButton(
-                      onPressed:
-                          primaryLoading ? null : () => Navigator.pop(context),
-                      child: const Text('取消'),
-                    ),
-                    const SizedBox(width: 10),
-                    FilledButton.icon(
-                      onPressed: onPrimary,
-                      icon: primaryLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check_rounded),
-                      label: Text(primaryLabel),
-                    ),
-                  ],
+                  AppIconButton(
+                    tooltip: '关闭',
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icons.close_rounded,
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: AppSingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+                child: content,
+              ),
+            ),
+            AppPanelSurface(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.42),
+              borderRadius: BorderRadius.zero,
+              border: Border(
+                top: BorderSide(
+                  color:
+                      theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
                 ),
               ),
-            ],
-          ),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  AppActionButton(
+                    onPressed:
+                        primaryLoading ? null : () => Navigator.pop(context),
+                    label: '取消',
+                    style: AppActionButtonStyle.text,
+                  ),
+                  const SizedBox(width: 10),
+                  AppActionButton(
+                    onPressed: onPrimary,
+                    loading: primaryLoading,
+                    icon: Icons.check_rounded,
+                    label: primaryLabel,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -3611,15 +3644,12 @@ class _DialogFieldGroup extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: children ?? const [],
         );
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color:
-            theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.36),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.68),
-        ),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.36),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.68),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3672,21 +3702,19 @@ class _DialogTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return AppTextField(
       controller: controller,
+      label: label,
+      hintText: hintText.isEmpty ? null : hintText,
+      prefixIcon: icon,
       autofocus: autofocus,
       obscureText: obscureText,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onSubmitted: onSubmitted,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText.isEmpty ? null : hintText,
-        prefixIcon: Icon(icon),
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+      autocorrect: false,
+      smartDashesType: SmartDashesType.disabled,
+      smartQuotesType: SmartQuotesType.disabled,
     );
   }
 }
@@ -3704,19 +3732,10 @@ class _DialogReadOnlyField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-      child: Text(
-        value,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+    return AppReadOnlyField(
+      label: label,
+      value: value,
+      prefixIcon: icon,
     );
   }
 }
@@ -3735,41 +3754,28 @@ class _DialogNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return AppInfoBanner(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.18),
+      icon: icon,
+      color: theme.colorScheme.primary,
+      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(
+        color: theme.colorScheme.primary.withValues(alpha: 0.18),
+      ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      iconSize: 22,
+      title: Text(
+        title,
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w800,
         ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: theme.colorScheme.primary, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  message,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      message: Text(
+        message,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
+        ),
       ),
     );
   }
@@ -3794,15 +3800,12 @@ class _SectionHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: dense ? 36 : 42,
-          height: dense ? 36 : 42,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon,
-              color: theme.colorScheme.primary, size: dense ? 20 : 22),
+        AppIconBadge(
+          icon: icon,
+          color: theme.colorScheme.primary,
+          size: dense ? 36 : 42,
+          iconSize: dense ? 20 : 22,
+          borderRadius: BorderRadius.circular(8),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -3849,15 +3852,13 @@ class _Section extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final hasHeader = title != null || subtitle != null;
-    return Material(
+    return AppInkSurface(
       color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: danger
-              ? Colors.red.withValues(alpha: 0.38)
-              : theme.dividerColor.withValues(alpha: 0.55),
-        ),
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(
+        color: danger
+            ? Colors.red.withValues(alpha: 0.38)
+            : theme.dividerColor.withValues(alpha: 0.55),
       ),
       clipBehavior: Clip.antiAlias,
       child: Padding(
@@ -3925,10 +3926,11 @@ class _LoadErrorSummary extends StatelessWidget {
                   ),
                 ),
               ),
-              TextButton.icon(
+              AppActionButton(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('全部重试'),
+                icon: Icons.refresh_rounded,
+                label: '全部重试',
+                style: AppActionButtonStyle.text,
               ),
             ],
           ),
@@ -3939,7 +3941,7 @@ class _LoadErrorSummary extends StatelessWidget {
               fallbackLabel: entry.key,
               message: entry.value,
             ),
-            if (entry.key != errors.keys.last) const Divider(height: 16),
+            if (entry.key != errors.keys.last) const AppDivider(height: 16),
           ],
         ],
       ),
@@ -3983,10 +3985,11 @@ class _LoadErrorBanner extends StatelessWidget {
                   ),
                 ),
               ),
-              TextButton.icon(
+              AppActionButton(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('重试'),
+                icon: Icons.refresh_rounded,
+                label: '重试',
+                style: AppActionButtonStyle.text,
               ),
             ],
           ),
@@ -4086,53 +4089,46 @@ class _MediaProviderBindCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Material(
+    return AppInkSurface(
       color: color.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.arrow_forward_rounded, color: color),
-            ],
+      onTap: onTap,
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          AppIconBadge(
+            icon: icon,
+            color: color,
+            size: 40,
+            backgroundAlpha: 0.14,
+            borderRadius: BorderRadius.circular(8),
           ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.arrow_forward_rounded, color: color),
+        ],
       ),
     );
   }
@@ -4152,58 +4148,43 @@ class _InlineModuleError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
+    return AppInfoBanner(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.26)),
+      icon: moduleInfo?.icon ?? Icons.error_outline_rounded,
+      color: Colors.red,
+      backgroundColor: Colors.red.withValues(alpha: 0.06),
+      border: Border.all(color: Colors.red.withValues(alpha: 0.26)),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      title: Text(
+        moduleInfo?.label ?? '模块不可用',
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w800,
+        ),
       ),
-      child: Row(
+      message: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            moduleInfo?.icon ?? Icons.error_outline_rounded,
-            color: Colors.red,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  moduleInfo?.label ?? '模块不可用',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                if (moduleInfo != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    moduleInfo!.impact,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.70),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 3),
-                Text(
-                  message,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
-                  ),
-                ),
-              ],
+          if (moduleInfo != null) ...[
+            Text(
+              moduleInfo!.impact,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.70),
+              ),
+            ),
+            const SizedBox(height: 3),
+          ],
+          Text(
+            message,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
             ),
           ),
-          const SizedBox(width: 10),
-          TextButton(
-            onPressed: onRetry,
-            child: const Text('重试'),
-          ),
         ],
+      ),
+      trailing: AppActionButton(
+        onPressed: onRetry,
+        label: '重试',
+        style: AppActionButtonStyle.text,
       ),
     );
   }
@@ -4224,38 +4205,15 @@ class _ProfileAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final imageUrl = WatchTogetherService.resolveResourceUrl(avatarUrl);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        width: size,
-        height: size,
-        color: theme.colorScheme.primary.withValues(alpha: 0.12),
-        alignment: Alignment.center,
-        child: imageUrl.isEmpty
-            ? Text(
-                username.isEmpty
-                    ? '?'
-                    : username.characters.first.toUpperCase(),
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w900,
-                ),
-              )
-            : Image.network(
-                imageUrl,
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Text(
-                  username.isEmpty
-                      ? '?'
-                      : username.characters.first.toUpperCase(),
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
+    return AppAvatar(
+      name: username,
+      imageUrl: imageUrl,
+      size: size,
+      shape: BoxShape.rectangle,
+      backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+      foregroundColor: theme.colorScheme.primary,
+      textStyle: theme.textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w900,
       ),
     );
   }
@@ -4294,35 +4252,32 @@ class _EditableProfileAvatar extends StatelessWidget {
                 size: size,
               ),
               Positioned.fill(
-                child: Material(
-                  color: Colors.black.withValues(alpha: 0.0),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: updating ? null : onPick,
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: Container(
-                        margin: const EdgeInsets.all(4),
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: updating
-                            ? const Padding(
-                                padding: EdgeInsets.all(6),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.photo_camera_outlined,
+                child: AppInkSurface(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: updating ? null : onPick,
+                  child: Align(
+                    alignment: Alignment.bottomRight,
+                    child: AppPanelSurface(
+                      margin: const EdgeInsets.all(4),
+                      width: 26,
+                      height: 26,
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(8),
+                      child: updating
+                          ? const Padding(
+                              padding: EdgeInsets.all(6),
+                              child: AppLoadingIndicator(
+                                size: AppLoadingSize.sm,
+                                centered: false,
                                 color: Colors.white,
-                                size: 16,
                               ),
-                      ),
+                            )
+                          : const Icon(
+                              Icons.photo_camera_outlined,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                     ),
                   ),
                 ),
@@ -4331,9 +4286,10 @@ class _EditableProfileAvatar extends StatelessWidget {
           ),
           if (onClear != null) ...[
             const SizedBox(height: 8),
-            TextButton(
+            AppActionButton(
               onPressed: updating ? null : onClear,
-              child: const Text('移除'),
+              label: '移除',
+              style: AppActionButtonStyle.text,
             ),
           ],
         ],
@@ -4360,27 +4316,19 @@ class _StatusPill extends StatelessWidget {
     final theme = Theme.of(context);
     final color =
         this.color ?? (danger ? Colors.red : theme.colorScheme.primary);
-    return Container(
+    return AppBadge(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.20)),
+      borderRadius: BorderRadius.circular(999),
+      borderSide: BorderSide(color: color.withValues(alpha: 0.20)),
+      icon: icon,
+      iconSize: 14,
+      color: color,
+      backgroundColor: color.withValues(alpha: 0.10),
+      textStyle: theme.textTheme.labelSmall?.copyWith(
+        color: color,
+        fontWeight: FontWeight.w700,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
+      label: Text(label),
     );
   }
 }
@@ -4403,33 +4351,28 @@ class _AccountNavTile extends StatelessWidget {
     final theme = Theme.of(context);
     final foreground =
         selected ? theme.colorScheme.primary : theme.colorScheme.onSurface;
-    return Material(
+    return AppInkSurface(
       color: selected
           ? theme.colorScheme.primary.withValues(alpha: 0.10)
           : Colors.transparent,
       borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: foreground),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: foreground,
-                    fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-                  ),
-                ),
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: foreground),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: foreground,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -4454,13 +4397,10 @@ class _AccountHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return Material(
+    return AppInkSurface(
       color: isDark ? const Color(0xFF1C1C1F) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.55)),
-      ),
-      clipBehavior: Clip.antiAlias,
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.55)),
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: LayoutBuilder(
@@ -4609,24 +4549,13 @@ class _InfoGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 760 ? 3 : 1;
-        final width = columns == 1
-            ? constraints.maxWidth
-            : (constraints.maxWidth - (columns - 1) * 12) / columns;
-        return Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            for (final entry in entries)
-              SizedBox(
-                width: width,
-                child: _InfoRow(label: entry.label, value: entry.value),
-              ),
-          ],
-        );
-      },
+    return AppResponsiveWrap(
+      minItemWidth: 240,
+      maxColumns: 3,
+      children: [
+        for (final entry in entries)
+          _InfoRow(label: entry.label, value: entry.value),
+      ],
     );
   }
 }
@@ -4652,7 +4581,7 @@ class _InfoRow extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          SelectableText(
+          AppSelectableText(
             value.isEmpty ? '-' : value,
             maxLines: 2,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -4680,12 +4609,11 @@ class _RelationChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilterChip(
+    return AppChip(
       label: Text(label),
       selected: value == groupValue,
       onSelected: (_) => onSelected(value),
       showCheckmark: false,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 }
@@ -4696,7 +4624,9 @@ class _RoomManagementTile extends StatelessWidget {
   final String relationLabel;
   final String updatedAtLabel;
   final bool isOwner;
+  final bool canManage;
   final VoidCallback onOpen;
+  final VoidCallback onManage;
   final VoidCallback onLeaveOrDelete;
 
   const _RoomManagementTile({
@@ -4705,7 +4635,9 @@ class _RoomManagementTile extends StatelessWidget {
     required this.relationLabel,
     required this.updatedAtLabel,
     required this.isOwner,
+    required this.canManage,
     required this.onOpen,
+    required this.onManage,
     required this.onLeaveOrDelete,
   });
 
@@ -4770,17 +4702,25 @@ class _RoomManagementTile extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              FilledButton.icon(
+              AppActionButton(
                 onPressed: onOpen,
-                icon: const Icon(Icons.open_in_new_rounded),
-                label: const Text('打开'),
+                icon: Icons.open_in_new_rounded,
+                label: '打开',
               ),
-              OutlinedButton.icon(
-                onPressed: onLeaveOrDelete,
-                icon: Icon(
-                  isOwner ? Icons.delete_outline_rounded : Icons.logout_rounded,
+              if (canManage)
+                AppActionButton(
+                  onPressed: onManage,
+                  icon: Icons.settings_outlined,
+                  label: '管理',
+                  style: AppActionButtonStyle.outlined,
                 ),
-                label: Text(isOwner ? '删除' : '退出'),
+              AppActionButton(
+                onPressed: onLeaveOrDelete,
+                icon: isOwner
+                    ? Icons.delete_outline_rounded
+                    : Icons.logout_rounded,
+                label: isOwner ? '删除' : '退出',
+                style: AppActionButtonStyle.outlined,
               ),
             ],
           );
@@ -4788,7 +4728,11 @@ class _RoomManagementTile extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _RoomCoverThumb(room: room, size: 88, wide: true),
+                const SizedBox(height: 10),
                 title,
+                const SizedBox(height: 10),
+                _RoomCreatorLine(room: room),
                 const SizedBox(height: 10),
                 chips,
                 const SizedBox(height: 10),
@@ -4801,11 +4745,15 @@ class _RoomManagementTile extends StatelessWidget {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _RoomCoverThumb(room: room, size: 88, wide: true),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     title,
+                    const SizedBox(height: 10),
+                    _RoomCreatorLine(room: room),
                     const SizedBox(height: 10),
                     chips,
                     const SizedBox(height: 10),
@@ -4818,6 +4766,86 @@ class _RoomManagementTile extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _RoomCreatorLine extends StatelessWidget {
+  const _RoomCreatorLine({required this.room});
+
+  final WRoom room;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final creatorName =
+        room.creator.trim().isEmpty ? '未知创建者' : room.creator.trim();
+    return Row(
+      children: [
+        AppAvatar(
+          name: creatorName,
+          imageUrl:
+              WatchTogetherService.resolveResourceUrl(room.creatorAvatarUrl),
+          radius: 12,
+          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.10),
+          foregroundColor: theme.colorScheme.primary,
+          textStyle: theme.textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            '创建者 $creatorName',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.66),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RoomCoverThumb extends StatelessWidget {
+  const _RoomCoverThumb({
+    required this.room,
+    required this.size,
+    this.wide = false,
+  });
+
+  final WRoom room;
+  final double size;
+  final bool wide;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final borderRadius = BorderRadius.circular(7);
+    final fallback = ColoredBox(
+      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+      child: Icon(
+        Icons.meeting_room_outlined,
+        color: theme.colorScheme.primary,
+        size: wide ? 28 : 18,
+      ),
+    );
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: SizedBox(
+        width: wide ? size * 1.35 : size,
+        height: size,
+        child: room.coverUrl.isEmpty
+            ? fallback
+            : Image.network(
+                room.coverUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => fallback,
+              ),
       ),
     );
   }
@@ -4836,12 +4864,11 @@ class _NotificationFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilterChip(
+    return AppChip(
       label: Text(label),
       selected: selected,
       onSelected: (_) => onSelected(),
       showCheckmark: false,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 }
@@ -4859,8 +4886,7 @@ class _PreferenceSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
+    return AppSwitchTile(
       title: Text(title),
       value: value,
       onChanged: onChanged,

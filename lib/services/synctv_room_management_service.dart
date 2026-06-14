@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
@@ -10,13 +12,19 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/common.pb.dart' as common;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
 
 class SyncTvRoomManagementDomainService {
-  SyncTvRoomManagementDomainService(this._api, {SyncTvMemoryCache? cache})
-      : _cache = cache ?? SyncTvMemoryCache();
+  SyncTvRoomManagementDomainService(
+    this._api, {
+    SyncTvMemoryCache? cache,
+    opaque.SyncTvOpaqueClient? opaqueClient,
+  })  : _cache = cache ?? SyncTvMemoryCache(),
+        _opaqueClient = opaqueClient ?? opaque.SyncTvOpaqueClient();
 
   final SyncTvApiClient _api;
   final SyncTvMemoryCache _cache;
+  final opaque.SyncTvOpaqueClient _opaqueClient;
 
   Future<List<WUser>> getRoomMembers(String roomId) async {
     final response = await _api.room.getRoomMembers(
@@ -52,6 +60,10 @@ class SyncTvRoomManagementDomainService {
       members:
           response.members.map(roomMemberFromProto).toList(growable: false),
       total: response.total,
+      onlineCount:
+          response.hasPresence() ? response.presence.onlineUserCount : 0,
+      connectionCount:
+          response.hasPresence() ? response.presence.connectionCount : 0,
       page: page,
       pageSize: pageSize,
       version: response.version,
@@ -66,17 +78,17 @@ class SyncTvRoomManagementDomainService {
         .watchRoomSettings(
       roomId,
       client.WatchRoomSettingsRequest(
-        options: client.WatchOptions(
-          version: version,
-          deliveryMode: client_enum
-              .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
+        deliveryMode: client_enum
+            .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
+        roomSettings: client.ObserveRoomSettings(
+          afterEventSequence: _watchSequence(version),
         ),
       ),
     )
         .map((event) {
       if (event.hasObserved()) {
         return RoomResourceWatchEvent<WRoomSettings>.observed(
-          version: event.observed.version,
+          version: _cursorVersion(event.observed.eventCursor),
           changed: event.observed.changed,
         );
       }
@@ -87,9 +99,9 @@ class SyncTvRoomManagementDomainService {
         );
       }
       return RoomResourceWatchEvent<WRoomSettings>.changed(
-        version: event.changed.version,
+        version: _cursorVersion(event.resourceEvent.eventCursor),
         snapshot: WRoomSettings.fromJson(
-          decodeJsonBytes(event.changed.roomSettings.settings),
+          decodeJsonBytes(event.resourceEvent.roomSettings.settings),
         ),
       );
     });
@@ -100,21 +112,20 @@ class SyncTvRoomManagementDomainService {
     String version = '',
   }) {
     return _api.room
-        .watchRoomMembers(
+        .watchRoomMemberEvents(
       roomId,
-      client.WatchRoomMembersRequest(
-        options: client.WatchOptions(
-          version: version,
-          deliveryMode: client_enum
-              .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
+      client.WatchRoomMemberEventsRequest(
+        deliveryMode:
+            client_enum.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
+        roomMemberEvents: client.ObserveRoomMemberEvents(
+          afterEventSequence: _watchSequence(version),
         ),
-        request: client.GetRoomMembersRequest(),
       ),
     )
         .map((event) {
       if (event.hasObserved()) {
         return RoomResourceWatchEvent<List<AdminRoomMember>>.observed(
-          version: event.observed.version,
+          version: _cursorVersion(event.observed.eventCursor),
           changed: event.observed.changed,
         );
       }
@@ -125,10 +136,8 @@ class SyncTvRoomManagementDomainService {
         );
       }
       return RoomResourceWatchEvent<List<AdminRoomMember>>.changed(
-        version: event.changed.version,
-        snapshot: event.changed.roomMembers.members
-            .map(roomMemberFromProto)
-            .toList(growable: false),
+        version: _cursorVersion(event.resourceEvent.eventCursor),
+        snapshot: const <AdminRoomMember>[],
       );
     });
   }
@@ -168,10 +177,43 @@ class SyncTvRoomManagementDomainService {
   }
 
   Future<void> updateRoomPassword(String roomId, String? password) async {
-    await _api.room.setRoomPassword(
+    final newPassword = password ?? '';
+    if (newPassword.isEmpty) {
+      await _api.room
+          .clearRoomPassword(roomId, client.ClearRoomPasswordRequest());
+      return;
+    }
+
+    final start = _opaqueClient.startRegistration(newPassword);
+    final challenge = await _api.room.startRoomPasswordRegistration(
       roomId,
-      client.SetRoomPasswordRequest(password: password ?? ''),
+      client.StartRoomPasswordRegistrationRequest(
+        registrationRequest: start.registrationRequest,
+      ),
     );
+    final finish = _opaqueClient.finishRegistration(
+      password: newPassword,
+      state: start.state,
+      registrationResponse: Uint8List.fromList(challenge.registrationResponse),
+    );
+    await _api.room.finishRoomPasswordRegistration(
+      roomId,
+      client.FinishRoomPasswordRegistrationRequest(
+        sessionId: challenge.sessionId,
+        registrationUpload: finish.registrationUpload,
+      ),
+    );
+  }
+
+  Int64? _watchSequence(String version) {
+    if (version.isEmpty) return null;
+    final parsed = int.tryParse(version);
+    return parsed == null ? null : Int64(parsed);
+  }
+
+  String _cursorVersion(client.EventCursor cursor) {
+    final sequence = cursor.sequence.toInt();
+    return sequence == 0 ? cursor.eventId : sequence.toString();
   }
 
   Future<WRoomSettings> getRoomSettings(
@@ -440,6 +482,7 @@ AdminRoomMember roomMemberFromProto(common.RoomMember member) {
     adminRemovedPermissions: member.adminRemovedPermissions.toInt(),
     joinedAt: member.joinedAt.toInt(),
     isOnline: member.isOnline,
+    connectionCount: member.connectionCount,
   );
 }
 
@@ -451,6 +494,7 @@ WUser roomMemberToUser(AdminRoomMember member) {
     createdAt: member.joinedAt,
     status: common_enum.MemberStatus.MEMBER_STATUS_ACTIVE.value,
     onlineCount: member.isOnline ? 1 : 0,
+    connectionCount: member.connectionCount,
   );
 }
 

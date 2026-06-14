@@ -5,12 +5,13 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/services/bilibili_geetest_service.dart';
-import 'package:synctv_app/services/smart_grip_service.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pbenum.dart'
     as bilibili_enum;
+import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -42,12 +43,32 @@ class PlatformBindingDialog extends StatefulWidget {
   const PlatformBindingDialog({super.key, this.initialIndex = 0});
 
   static Future<void> show(BuildContext context, {int initialIndex = 0}) {
-    return ChatUtils.showStyledDialog(
+    return showAppDialog<void>(
       context: context,
-      title: '账号绑定',
-      icon: Icon(Icons.link_rounded, color: Theme.of(context).primaryColor),
-      content: PlatformBindingDialog(initialIndex: initialIndex),
-      actions: [],
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final accent = theme.colorScheme.primary;
+        return AppDialogFrame(
+          maxWidth: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppDialogHeader(
+                title: const Text('账号绑定'),
+                icon: Icons.link_rounded,
+                color: accent,
+                onClose: () => Navigator.of(dialogContext).pop(),
+              ),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
+                  child: PlatformBindingDialog(initialIndex: initialIndex),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -225,7 +246,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
   void _showAdd(_ProviderKind kind) {
     final provider = _spec(kind);
     if (kind == _ProviderKind.bilibili) {
-      ChatUtils.showStyledDialog(
+      _showProviderFormDialog(
         context: context,
         title: '绑定 Bilibili',
         icon: const Icon(Icons.tv_rounded, color: Color(0xFFFB7299)),
@@ -237,12 +258,11 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           ),
           onSuccess: () => _loadBinds(kind, showLoading: false),
         ),
-        actions: [],
       );
       return;
     }
 
-    ChatUtils.showStyledDialog(
+    _showProviderFormDialog(
       context: context,
       title: '绑定 ${provider.label}',
       icon: Icon(provider.icon, color: provider.color),
@@ -255,7 +275,50 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
         ),
         onSuccess: () => _loadBinds(kind, showLoading: false),
       ),
-      actions: [],
+    );
+  }
+
+  Future<void> _showProviderFormDialog({
+    required BuildContext context,
+    required String title,
+    required Icon icon,
+    required Color iconColor,
+    required Widget content,
+  }) {
+    return showAppDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final size = MediaQuery.sizeOf(dialogContext);
+        return AppDialogFrame(
+          maxWidth: 520,
+          maxHeight: size.height * 0.94,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 520,
+              maxHeight: size.height * 0.94,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppDialogHeader(
+                  title: Text(title),
+                  icon: icon.icon ?? Icons.info_outline_rounded,
+                  color: iconColor,
+                  onClose: () => Navigator.of(dialogContext).pop(),
+                ),
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 16, 22, 14),
+                    child: content,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -341,33 +404,26 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final availableHeight = AppMetrics.dialogMaxHeight(context, null) * 0.72;
+
     return SizedBox(
-      height: 430,
+      height: availableHeight.clamp(460.0, 560.0),
       width: double.maxFinite,
       child: Column(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.black.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(8),
-            ),
+          AppPanelSurface(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(8),
             padding: const EdgeInsets.all(4),
-            child: TabBar(
+            child: AppTabBar(
               controller: _tabController,
               labelColor: isDark ? Colors.white : theme.primaryColor,
               unselectedLabelColor: theme.hintColor,
-              indicator: BoxDecoration(
+              indicator: appTabPillIndicator(
                 borderRadius: BorderRadius.circular(6),
                 color: theme.scaffoldBackgroundColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
@@ -378,7 +434,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: TabBarView(
+            child: AppTabBarView(
               controller: _tabController,
               children: [
                 for (final provider in _providers)
@@ -452,7 +508,7 @@ class _ProviderBindList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) return const Center(child: CircularProgressIndicator());
+    if (isLoading) return const AppLoadingIndicator();
     final theme = Theme.of(context);
     if (provider.kind == _ProviderKind.bilibili) {
       final item = items.firstOrNull;
@@ -469,26 +525,13 @@ class _ProviderBindList extends StatelessWidget {
       children: [
         Expanded(
           child: items.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        provider.emptyIcon,
-                        size: 48,
-                        color: theme.disabledColor.withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        provider.kind == _ProviderKind.bilibili
-                            ? '尚未绑定 Bilibili'
-                            : '暂无绑定的 ${provider.label} 账号',
-                        style: TextStyle(color: theme.hintColor),
-                      ),
-                    ],
-                  ),
+              ? AppEmptyMessage(
+                  icon: provider.emptyIcon,
+                  message: provider.kind == _ProviderKind.bilibili
+                      ? '尚未绑定 Bilibili'
+                      : '暂无绑定的 ${provider.label} 账号',
                 )
-              : ListView.builder(
+              : AppListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   itemCount: items.length,
                   itemBuilder: (context, index) {
@@ -498,27 +541,21 @@ class _ProviderBindList extends StatelessWidget {
                     final title = _itemTitle(item, serverId);
                     final instanceLabel =
                         _providerInstanceLabel(item.instanceName);
-                    return Container(
+                    return AppPanelSurface(
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: theme.colorScheme.outlineVariant
-                              .withValues(alpha: 0.72),
-                        ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant
+                            .withValues(alpha: 0.72),
                       ),
                       child: Row(
                         children: [
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: provider.color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(provider.icon, color: provider.color),
+                          AppIconBadge(
+                            icon: provider.icon,
+                            color: provider.color,
+                            size: 42,
+                            backgroundAlpha: 0.12,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -554,17 +591,18 @@ class _ProviderBindList extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          IconButton.filledTonal(
-                            icon: const Icon(Icons.info_outline, size: 20),
+                          AppIconButton(
+                            icon: Icons.info_outline,
                             onPressed: () => onInfo(item),
                             tooltip: '详情',
+                            style: AppIconButtonStyle.tonal,
                           ),
                           const SizedBox(width: 4),
-                          IconButton.filledTonal(
-                            icon: const Icon(Icons.link_off_rounded, size: 20),
+                          AppIconButton(
+                            icon: Icons.link_off_rounded,
                             onPressed: () => onUnbind(item),
                             tooltip: '解绑',
-                            color: Colors.redAccent,
+                            style: AppIconButtonStyle.destructive,
                           ),
                         ],
                       ),
@@ -576,16 +614,15 @@ class _ProviderBindList extends StatelessWidget {
           padding: const EdgeInsets.only(top: 16),
           child: SizedBox(
             width: double.infinity,
-            child: FilledButton.tonalIcon(
+            child: AppActionButton(
               onPressed: onAdd,
-              icon: Icon(provider.kind == _ProviderKind.bilibili
+              icon: provider.kind == _ProviderKind.bilibili
                   ? Icons.link_rounded
-                  : Icons.add_rounded),
-              label: Text(
-                items.isEmpty
-                    ? '绑定 ${provider.label}'
-                    : '重新绑定 ${provider.label}',
-              ),
+                  : Icons.add_rounded,
+              label: items.isEmpty
+                  ? '绑定 ${provider.label}'
+                  : '重新绑定 ${provider.label}',
+              style: AppActionButtonStyle.tonal,
             ),
           ),
         ),
@@ -623,14 +660,13 @@ class _BilibiliSingleBindView extends StatelessWidget {
       children: [
         Expanded(
           child: Center(
-            child: Container(
+            child: AppPanelSurface(
               width: double.infinity,
               padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: provider.color.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(16),
-                border:
-                    Border.all(color: provider.color.withValues(alpha: 0.2)),
+              color: provider.color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: provider.color.withValues(alpha: 0.2),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -638,14 +674,11 @@ class _BilibiliSingleBindView extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: provider.color.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(provider.icon, color: provider.color),
+                      AppIconBadge(
+                        icon: provider.icon,
+                        color: provider.color,
+                        size: 46,
+                        backgroundAlpha: 0.14,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -702,34 +735,36 @@ class _BilibiliSingleBindView extends StatelessWidget {
           children: [
             if (bound) ...[
               Expanded(
-                child: OutlinedButton.icon(
+                child: AppActionButton(
                   onPressed: onInfo,
-                  icon: const Icon(Icons.info_outline_rounded),
-                  label: const Text('查看状态'),
+                  icon: Icons.info_outline_rounded,
+                  label: '查看状态',
+                  style: AppActionButtonStyle.outlined,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: FilledButton.icon(
+                child: AppActionButton(
                   onPressed: onBind,
-                  icon: const Icon(Icons.sync_rounded),
-                  label: const Text('重新绑定'),
+                  icon: Icons.sync_rounded,
+                  label: '重新绑定',
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: FilledButton.tonalIcon(
+                child: AppActionButton(
                   onPressed: onUnbind,
-                  icon: const Icon(Icons.link_off_rounded),
-                  label: const Text('解绑'),
+                  icon: Icons.link_off_rounded,
+                  label: '解绑',
+                  style: AppActionButtonStyle.tonal,
                 ),
               ),
             ] else
               Expanded(
-                child: FilledButton.icon(
+                child: AppActionButton(
                   onPressed: onBind,
-                  icon: const Icon(Icons.link_rounded),
-                  label: const Text('绑定 Bilibili'),
+                  icon: Icons.link_rounded,
+                  label: '绑定 Bilibili',
                 ),
               ),
           ],
@@ -752,31 +787,25 @@ class _ProviderTinyChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppBadge(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(999),
+      icon: icon,
+      iconSize: 13,
+      color: color,
+      backgroundColor: color.withValues(alpha: 0.1),
+      textStyle: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: color),
-          const SizedBox(width: 4),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 180),
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ),
-        ],
+      label: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 180),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
   }
@@ -848,7 +877,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   }
 
   Future<void> _submit() async {
-    final host = _hostController.text.trim();
+    final host = _normalizeProviderHost(_hostController.text);
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
     final apiKey = _secretController.text.trim();
@@ -893,12 +922,23 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
     }
   }
 
+  String _normalizeProviderHost(String value) {
+    final trimmed = value.trim();
+    if (trimmed.startsWith('http//')) {
+      return 'http://${trimmed.substring('http//'.length)}';
+    }
+    if (trimmed.startsWith('https//')) {
+      return 'https://${trimmed.substring('https//'.length)}';
+    }
+    return trimmed;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final providerColor = _isAlist ? Colors.amber : Colors.green;
-    final mediaHeight = MediaQuery.sizeOf(context).height;
-    final maxHeight = (mediaHeight * 0.62).clamp(
+    final availableHeight = AppMetrics.dialogMaxHeight(context, null);
+    final maxHeight = (availableHeight * 0.70).clamp(
       420.0,
       _isAlist ? 540.0 : 500.0,
     );
@@ -910,7 +950,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: SingleChildScrollView(
+            child: AppSingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -940,6 +980,11 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                         controller: _hostController,
                         hintText: 'https://example.com',
                         prefixIcon: Icons.link_rounded,
+                        keyboardType: TextInputType.url,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        smartDashesType: SmartDashesType.disabled,
+                        smartQuotesType: SmartQuotesType.disabled,
                       ),
                     ],
                   ),
@@ -959,7 +1004,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                       if (_isEmby) ...[
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: SegmentedButton<bool>(
+                          child: AppSegmentedControl<bool>(
                             segments: const [
                               ButtonSegment(
                                 value: false,
@@ -972,9 +1017,9 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                                 label: Text('API Key'),
                               ),
                             ],
-                            selected: {_useApiKey},
-                            onSelectionChanged: (selected) =>
-                                setState(() => _useApiKey = selected.single),
+                            value: _useApiKey,
+                            onChanged: (selected) =>
+                                setState(() => _useApiKey = selected),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -1027,7 +1072,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
               ),
             ),
           ),
-          Divider(
+          AppDivider(
             height: 1,
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
           ),
@@ -1058,28 +1103,21 @@ class _ProviderNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppInfoBanner(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.24)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
+      borderRadius: BorderRadius.circular(12),
+      icon: icon,
+      iconSize: 18,
+      color: color,
+      backgroundColor: color.withValues(alpha: 0.1),
+      border: Border.all(color: color.withValues(alpha: 0.24)),
+      title: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
             ),
-          ),
-        ],
       ),
     );
   }
@@ -1101,15 +1139,12 @@ class _ProviderFormSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return AppPanelSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
-        ),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(
+        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1337,7 +1372,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return AppSingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1361,19 +1396,17 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
               if (_loginTabController.index == 0) _startLogin();
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
+              AppPanelSurface(
                 height: 48,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : Colors.black.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: TabBar(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(8),
+                child: AppTabBar(
                   controller: _loginTabController,
                   indicatorSize: TabBarIndicatorSize.tab,
                   tabs: const [
@@ -1390,10 +1423,10 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 430,
-                child: TabBarView(
+                height: 374,
+                child: AppTabBarView(
                   controller: _loginTabController,
                   children: [
                     _buildQrLogin(Theme.of(context)),
@@ -1423,89 +1456,71 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
   }
 
   Widget _buildQrLogin(ThemeData theme) {
-    return SingleChildScrollView(
+    return AppSingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFB7299).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: const Color(0xFFFB7299).withValues(alpha: 0.2),
-              ),
+          AppInfoBanner(
+            padding: const EdgeInsets.all(10),
+            icon: _isExpired ? Icons.refresh_rounded : Icons.qr_code_2_rounded,
+            color: const Color(0xFFFB7299),
+            backgroundColor: const Color(0xFFFB7299).withValues(alpha: 0.1),
+            border: Border.all(
+              color: const Color(0xFFFB7299).withValues(alpha: 0.2),
             ),
-            child: Row(
-              children: [
-                if (_isLoading)
-                  const SizedBox(
+            iconSize: 22,
+            title: Text(
+              _statusText,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            trailing: _isLoading
+                ? const SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: AppLoadingIndicator(
+                        size: AppLoadingSize.sm, centered: false),
                   )
-                else
-                  Icon(
-                    _isExpired
-                        ? Icons.refresh_rounded
-                        : Icons.qr_code_2_rounded,
-                    color: const Color(0xFFFB7299),
-                  ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _statusText,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
+                : null,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           if (_url.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.black.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(8),
-              ),
+            AppPanelSurface(
+              padding: const EdgeInsets.all(10),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(8),
               child: Column(
                 children: [
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: QrImageView(
-                        data: _url,
-                        version: QrVersions.auto,
-                        size: 196,
-                        gapless: false,
-                        eyeStyle: const QrEyeStyle(
-                          eyeShape: QrEyeShape.square,
-                          color: Colors.black,
-                        ),
-                        dataModuleStyle: const QrDataModuleStyle(
-                          dataModuleShape: QrDataModuleShape.square,
-                          color: Colors.black,
-                        ),
+                  AppPanelSurface(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                    padding: const EdgeInsets.all(8),
+                    child: QrImageView(
+                      data: _url,
+                      version: QrVersions.auto,
+                      size: 144,
+                      gapless: false,
+                      eyeStyle: const QrEyeStyle(
+                        eyeShape: QrEyeShape.square,
+                        color: Colors.black,
+                      ),
+                      dataModuleStyle: const QrDataModuleStyle(
+                        dataModuleShape: QrDataModuleShape.square,
+                        color: Colors.black,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  SelectableText(
+                  const SizedBox(height: 6),
+                  AppSelectableText(
                     _url,
                     style: TextStyle(fontSize: 12, color: theme.hintColor),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -1529,7 +1544,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
                 ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
             child: ChatUtils.createCancelButton(context),
@@ -1728,42 +1743,34 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return SingleChildScrollView(
+    return AppSingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFB7299).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: const Color(0xFFFB7299).withValues(alpha: 0.2),
-              ),
+          AppInfoBanner(
+            padding: const EdgeInsets.all(10),
+            icon: Icons.sms_rounded,
+            color: const Color(0xFFFB7299),
+            backgroundColor: const Color(0xFFFB7299).withValues(alpha: 0.1),
+            border: Border.all(
+              color: const Color(0xFFFB7299).withValues(alpha: 0.2),
             ),
-            child: Row(
-              children: [
-                if (_busy)
-                  const SizedBox(
+            iconSize: 22,
+            title: Text(
+              _statusText,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            trailing: _busy
+                ? const SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: AppLoadingIndicator(
+                        size: AppLoadingSize.sm, centered: false),
                   )
-                else
-                  const Icon(Icons.sms_rounded, color: Color(0xFFFB7299)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _statusText,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
+                : null,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           ChatUtils.createFormField(
             context: context,
             label: '手机号',
@@ -1772,7 +1779,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
             prefixIcon: Icons.phone_iphone_rounded,
             keyboardType: TextInputType.phone,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           ChatUtils.createFormField(
             context: context,
             label: '短信验证码',
@@ -1781,7 +1788,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
             prefixIcon: Icons.pin_rounded,
             keyboardType: TextInputType.number,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -1797,23 +1804,15 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
                 label: '发送短信',
                 onTap: _busy ? null : _sendSms,
               ),
-              FilledButton.icon(
+              AppActionButton(
                 onPressed: _busy ? null : _login,
-                icon: _loggingIn
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: theme.colorScheme.onPrimary,
-                        ),
-                      )
-                    : const Icon(Icons.login_rounded),
-                label: const Text('绑定'),
+                icon: Icons.login_rounded,
+                label: '绑定',
+                loading: _loggingIn,
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerRight,
             child: ChatUtils.createCancelButton(context),
@@ -1842,35 +1841,15 @@ class _ProviderInstanceSelector extends StatelessWidget {
     final value = instanceNames.contains(selected)
         ? selected
         : (instanceNames.isEmpty ? '' : instanceNames.first);
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: '媒体源实例',
-        prefixIcon: loading
-            ? const Padding(
-                padding: EdgeInsets.all(14),
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              )
-            : const Icon(Icons.account_tree_rounded),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        isDense: true,
-      ),
-      items: [
+    return AppSelect<String>(
+      value: value,
+      label: '媒体源实例',
+      prefixIcon: loading ? null : Icons.account_tree_rounded,
+      options: {
         for (final instanceName in instanceNames)
-          DropdownMenuItem(
-            value: instanceName,
-            child: Text(
-              _providerInstanceLabel(instanceName),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-      ],
+          _providerInstanceLabel(instanceName): instanceName,
+      },
+      enabled: !loading,
       onChanged: loading ? null : (value) => onChanged(value ?? ''),
     );
   }
@@ -1915,7 +1894,7 @@ class _InfoRow extends StatelessWidget {
           child: Text(label, style: TextStyle(color: theme.hintColor)),
         ),
         Expanded(
-          child: SelectableText(
+          child: AppSelectableText(
             value.isEmpty ? '-' : value,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
@@ -1938,32 +1917,24 @@ class _DialogActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<SmartGripStatus>(
-      stream: SmartGripService().onStatusChanged,
-      initialData: SmartGripService().currentStatus,
-      builder: (context, snapshot) {
-        final isLeftHand = snapshot.data == SmartGripStatus.leftHand;
-        final actions = [
-          ChatUtils.createCancelButton(context),
-          const SizedBox(width: 8),
-          isLoading
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : ChatUtils.createConfirmButton(
-                  context,
-                  onSubmit,
-                  text: submitText,
-                ),
-        ];
-        return Row(
-          mainAxisAlignment:
-              isLeftHand ? MainAxisAlignment.start : MainAxisAlignment.end,
-          children: isLeftHand ? actions.reversed.toList() : actions,
-        );
-      },
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: AppLoadingIndicator(
+                    size: AppLoadingSize.sm, centered: false),
+              )
+            : ChatUtils.createConfirmButton(
+                context,
+                onSubmit,
+                text: submitText,
+              ),
+      ],
     );
   }
 }
@@ -1983,35 +1954,30 @@ class _SecondaryActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onTap != null;
     final theme = Theme.of(context);
-    return Material(
+    return AppInkSurface(
       color: enabled
           ? theme.primaryColor.withValues(alpha: 0.08)
           : theme.disabledColor.withValues(alpha: 0.08),
       borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: enabled ? theme.primaryColor : theme.disabledColor,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: enabled ? theme.primaryColor : theme.disabledColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: enabled ? theme.primaryColor : theme.disabledColor,
           ),
-        ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: enabled ? theme.primaryColor : theme.disabledColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

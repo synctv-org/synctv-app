@@ -1,30 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
+
+class _ToastAction {
+  final String label;
+  final VoidCallback onPressed;
+
+  const _ToastAction({
+    required this.label,
+    required this.onPressed,
+  });
+}
 
 /// 统一的系统消息工具类
 class MessageUtils {
   /// 私有构造函数，防止实例化
   MessageUtils._();
-
-  /// 默认的底部边距（考虑导航栏高度）
-  static EdgeInsets _getDefaultMargin(BuildContext context) {
-    // 改为胶囊形状，左右边距加大，不要太宽
-    final width = MediaQuery.of(context).size.width;
-    // 如果是宽屏，限制最大宽度
-    double horizontalMargin = width > 600 ? (width - 400) / 2 : 40;
-
-    return EdgeInsets.only(
-      bottom: 70 + MediaQuery.of(context).padding.bottom,
-      left: horizontalMargin,
-      right: horizontalMargin,
-    );
-  }
-
-  /// 默认的形状
-  static RoundedRectangleBorder get _defaultShape {
-    return RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(24), // 胶囊形状
-    );
-  }
 
   /// 显示成功消息
   static void showSuccess(
@@ -39,6 +30,8 @@ class MessageUtils {
       message,
       backgroundColor: Colors.green.shade600,
       icon: Icons.check_circle_outline,
+      duration: duration,
+      action: _actionFromSnackBarAction(action),
     );
   }
 
@@ -54,6 +47,8 @@ class MessageUtils {
       message,
       backgroundColor: Colors.red.shade600,
       icon: Icons.error_outline,
+      duration: duration,
+      action: _actionFromSnackBarAction(action),
     );
   }
 
@@ -69,6 +64,8 @@ class MessageUtils {
       message,
       backgroundColor: Colors.orange.shade600,
       icon: Icons.warning_amber_rounded,
+      duration: duration,
+      action: _actionFromSnackBarAction(action),
     );
   }
 
@@ -84,6 +81,8 @@ class MessageUtils {
       message,
       backgroundColor: const Color(0xFF333333),
       icon: Icons.info_outline,
+      duration: duration,
+      action: _actionFromSnackBarAction(action),
     );
   }
 
@@ -92,64 +91,100 @@ class MessageUtils {
     BuildContext context,
     String message, {
     required Color backgroundColor,
-    required IconData icon,
+    IconData? icon,
+    Duration duration = const Duration(seconds: 3),
+    Color textColor = Colors.white,
+    _ToastAction? action,
+    bool loading = false,
+    Color? indicatorColor,
   }) {
     final overlayState = Overlay.of(context);
-    final overlayEntry = OverlayEntry(
+    late final OverlayEntry overlayEntry;
+    overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         bottom: 70 + MediaQuery.of(context).padding.bottom,
-        left: 0,
-        right: 0,
-        child: Material(
-          color: Colors.transparent,
+        left: 24,
+        right: 24,
+        child: AppOverlaySurface(
           child: Center(
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutBack,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
               builder: (context, value, child) {
                 final animationValue = value.clamp(0.0, 1.0);
-                return Transform.scale(
-                  scale: animationValue,
+                return Transform.translate(
+                  offset: Offset(0, 16 * (1 - animationValue)),
                   child: Opacity(
                     opacity: animationValue,
                     child: child,
                   ),
                 );
               },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 40),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: AppPanelSurface(
                   color: backgroundColor,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
                   ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, color: Colors.white, size: 20),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        message,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (loading) ...[
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: FCircularProgress(
+                              size: FCircularProgressSizeVariant.sm,
+                              style: FCircularProgressStyleDelta.delta(
+                                iconStyle: IconThemeDataDelta.delta(
+                                  color: indicatorColor ?? textColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                        ] else if (icon != null) ...[
+                          Icon(icon, color: textColor, size: 20),
+                          const SizedBox(width: 10),
+                        ],
+                        Flexible(
+                          child: Text(
+                            message,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              height: 1.35,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                        if (action != null) ...[
+                          const SizedBox(width: 12),
+                          FButton(
+                            size: FButtonSizeVariant.sm,
+                            variant: FButtonVariant.ghost,
+                            onPress: () {
+                              overlayEntry.remove();
+                              action.onPressed();
+                            },
+                            child: Text(action.label),
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -160,10 +195,19 @@ class MessageUtils {
 
     overlayState.insert(overlayEntry);
 
-    // 2秒后自动消失
-    Future.delayed(const Duration(seconds: 2), () {
-      overlayEntry.remove();
+    Future.delayed(duration, () {
+      if (overlayEntry.mounted) {
+        overlayEntry.remove();
+      }
     });
+  }
+
+  static _ToastAction? _actionFromSnackBarAction(SnackBarAction? action) {
+    if (action == null) return null;
+    return _ToastAction(
+      label: action.label,
+      onPressed: action.onPressed,
+    );
   }
 
   /// 显示删除操作消息（带撤销功能）
@@ -175,25 +219,13 @@ class MessageUtils {
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.white),
-        ),
-        backgroundColor: isDark ? Colors.grey.shade900 : Colors.grey.shade800,
-        behavior: SnackBarBehavior.floating,
-        duration: duration,
-        margin: _getDefaultMargin(context),
-        shape: _defaultShape,
-        action: SnackBarAction(
-          label: '撤销',
-          textColor: Colors.white,
-          onPressed: onUndo,
-        ),
-      ),
+    _showToast(
+      context,
+      message,
+      backgroundColor: isDark ? Colors.grey.shade900 : Colors.grey.shade800,
+      icon: Icons.delete_outline_rounded,
+      duration: duration,
+      action: _ToastAction(label: '撤销', onPressed: onUndo),
     );
   }
 
@@ -206,20 +238,13 @@ class MessageUtils {
     Duration duration = const Duration(seconds: 3),
     SnackBarAction? action,
   }) {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(color: textColor),
-        ),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        duration: duration,
-        margin: _getDefaultMargin(context),
-        shape: _defaultShape,
-        action: action,
-      ),
+    _showToast(
+      context,
+      message,
+      backgroundColor: backgroundColor,
+      textColor: textColor,
+      duration: duration,
+      action: _actionFromSnackBarAction(action),
     );
   }
 
@@ -246,36 +271,13 @@ class MessageUtils {
     Duration? duration,
     Color? indicatorColor,
   }) {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  indicatorColor ?? Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.blue.shade700,
-        behavior: SnackBarBehavior.floating,
-        duration: duration ?? const Duration(seconds: 5), // 默认较长时间，通常需要手动关闭
-        margin: _getDefaultMargin(context),
-        shape: _defaultShape,
-      ),
+    _showToast(
+      context,
+      message,
+      backgroundColor: Colors.blue.shade700,
+      duration: duration ?? const Duration(seconds: 5),
+      loading: true,
+      indicatorColor: indicatorColor,
     );
   }
 }

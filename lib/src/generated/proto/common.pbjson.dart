@@ -193,6 +193,7 @@ const RoomMember$json = {
     },
     {'1': 'joined_at', '3': 10, '4': 1, '5': 3, '10': 'joinedAt'},
     {'1': 'is_online', '3': 11, '4': 1, '5': 8, '10': 'isOnline'},
+    {'1': 'connection_count', '3': 12, '4': 1, '5': 5, '10': 'connectionCount'},
   ],
 };
 
@@ -205,4 +206,122 @@ final $typed_data.Uint8List roomMemberDescriptor = $convert.base64Decode(
     'ChNyZW1vdmVkX3Blcm1pc3Npb25zGAcgASgEUhJyZW1vdmVkUGVybWlzc2lvbnMSNgoXYWRtaW'
     '5fYWRkZWRfcGVybWlzc2lvbnMYCCABKARSFWFkbWluQWRkZWRQZXJtaXNzaW9ucxI6ChlhZG1p'
     'bl9yZW1vdmVkX3Blcm1pc3Npb25zGAkgASgEUhdhZG1pblJlbW92ZWRQZXJtaXNzaW9ucxIbCg'
-    'lqb2luZWRfYXQYCiABKANSCGpvaW5lZEF0EhsKCWlzX29ubGluZRgLIAEoCFIIaXNPbmxpbmU=');
+    'lqb2luZWRfYXQYCiABKANSCGpvaW5lZEF0EhsKCWlzX29ubGluZRgLIAEoCFIIaXNPbmxpbmUS'
+    'KQoQY29ubmVjdGlvbl9jb3VudBgMIAEoBVIPY29ubmVjdGlvbkNvdW50');
+
+@$core.Deprecated('Use nodeConnectionCountDescriptor instead')
+const NodeConnectionCount$json = {
+  '1': 'NodeConnectionCount',
+  '2': [
+    {'1': 'node_id', '3': 1, '4': 1, '5': 9, '10': 'nodeId'},
+    {'1': 'connection_count', '3': 2, '4': 1, '5': 5, '10': 'connectionCount'},
+  ],
+};
+
+/// Descriptor for `NodeConnectionCount`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List nodeConnectionCountDescriptor = $convert.base64Decode(
+    'ChNOb2RlQ29ubmVjdGlvbkNvdW50EhcKB25vZGVfaWQYASABKAlSBm5vZGVJZBIpChBjb25uZW'
+    'N0aW9uX2NvdW50GAIgASgFUg9jb25uZWN0aW9uQ291bnQ=');
+
+@$core.Deprecated('Use roomPresenceStatsDescriptor instead')
+const RoomPresenceStats$json = {
+  '1': 'RoomPresenceStats',
+  '2': [
+    {'1': 'online_user_count', '3': 1, '4': 1, '5': 5, '10': 'onlineUserCount'},
+    {'1': 'connection_count', '3': 2, '4': 1, '5': 5, '10': 'connectionCount'},
+    {
+      '1': 'node_connection_counts',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.common.NodeConnectionCount',
+      '10': 'nodeConnectionCounts'
+    },
+    {'1': 'sampled_at', '3': 4, '4': 1, '5': 3, '10': 'sampledAt'},
+    {'1': 'version', '3': 5, '4': 1, '5': 4, '10': 'version'},
+  ],
+};
+
+/// Descriptor for `RoomPresenceStats`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List roomPresenceStatsDescriptor = $convert.base64Decode(
+    'ChFSb29tUHJlc2VuY2VTdGF0cxIqChFvbmxpbmVfdXNlcl9jb3VudBgBIAEoBVIPb25saW5lVX'
+    'NlckNvdW50EikKEGNvbm5lY3Rpb25fY291bnQYAiABKAVSD2Nvbm5lY3Rpb25Db3VudBJYChZu'
+    'b2RlX2Nvbm5lY3Rpb25fY291bnRzGAMgAygLMiIuc3luY3R2LmNvbW1vbi5Ob2RlQ29ubmVjdG'
+    'lvbkNvdW50UhRub2RlQ29ubmVjdGlvbkNvdW50cxIdCgpzYW1wbGVkX2F0GAQgASgDUglzYW1w'
+    'bGVkQXQSGAoHdmVyc2lvbhgFIAEoBFIHdmVyc2lvbg==');
+
+@$core.Deprecated('Use userPresenceStatsDescriptor instead')
+const UserPresenceStats$json = {
+  '1': 'UserPresenceStats',
+  '2': [
+    {'1': 'connection_count', '3': 1, '4': 1, '5': 5, '10': 'connectionCount'},
+    {
+      '1': 'node_connection_counts',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.common.NodeConnectionCount',
+      '10': 'nodeConnectionCounts'
+    },
+    {'1': 'room_count', '3': 3, '4': 1, '5': 5, '10': 'roomCount'},
+    {'1': 'room_ids', '3': 4, '4': 3, '5': 9, '10': 'roomIds'},
+    {'1': 'sampled_at', '3': 5, '4': 1, '5': 3, '10': 'sampledAt'},
+    {'1': 'version', '3': 6, '4': 1, '5': 4, '10': 'version'},
+  ],
+};
+
+/// Descriptor for `UserPresenceStats`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List userPresenceStatsDescriptor = $convert.base64Decode(
+    'ChFVc2VyUHJlc2VuY2VTdGF0cxIpChBjb25uZWN0aW9uX2NvdW50GAEgASgFUg9jb25uZWN0aW'
+    '9uQ291bnQSWAoWbm9kZV9jb25uZWN0aW9uX2NvdW50cxgCIAMoCzIiLnN5bmN0di5jb21tb24u'
+    'Tm9kZUNvbm5lY3Rpb25Db3VudFIUbm9kZUNvbm5lY3Rpb25Db3VudHMSHQoKcm9vbV9jb3VudB'
+    'gDIAEoBVIJcm9vbUNvdW50EhkKCHJvb21faWRzGAQgAygJUgdyb29tSWRzEh0KCnNhbXBsZWRf'
+    'YXQYBSABKANSCXNhbXBsZWRBdBIYCgd2ZXJzaW9uGAYgASgEUgd2ZXJzaW9u');
+
+@$core.Deprecated('Use nodePresenceStatsDescriptor instead')
+const NodePresenceStats$json = {
+  '1': 'NodePresenceStats',
+  '2': [
+    {'1': 'node_id', '3': 1, '4': 1, '5': 9, '10': 'nodeId'},
+    {'1': 'connection_count', '3': 2, '4': 1, '5': 5, '10': 'connectionCount'},
+    {'1': 'online_user_count', '3': 3, '4': 1, '5': 5, '10': 'onlineUserCount'},
+    {'1': 'room_count', '3': 4, '4': 1, '5': 5, '10': 'roomCount'},
+    {'1': 'sampled_at', '3': 5, '4': 1, '5': 3, '10': 'sampledAt'},
+    {'1': 'version', '3': 6, '4': 1, '5': 4, '10': 'version'},
+  ],
+};
+
+/// Descriptor for `NodePresenceStats`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List nodePresenceStatsDescriptor = $convert.base64Decode(
+    'ChFOb2RlUHJlc2VuY2VTdGF0cxIXCgdub2RlX2lkGAEgASgJUgZub2RlSWQSKQoQY29ubmVjdG'
+    'lvbl9jb3VudBgCIAEoBVIPY29ubmVjdGlvbkNvdW50EioKEW9ubGluZV91c2VyX2NvdW50GAMg'
+    'ASgFUg9vbmxpbmVVc2VyQ291bnQSHQoKcm9vbV9jb3VudBgEIAEoBVIJcm9vbUNvdW50Eh0KCn'
+    'NhbXBsZWRfYXQYBSABKANSCXNhbXBsZWRBdBIYCgd2ZXJzaW9uGAYgASgEUgd2ZXJzaW9u');
+
+@$core.Deprecated('Use presenceOverviewDescriptor instead')
+const PresenceOverview$json = {
+  '1': 'PresenceOverview',
+  '2': [
+    {'1': 'online_user_count', '3': 1, '4': 1, '5': 5, '10': 'onlineUserCount'},
+    {'1': 'connection_count', '3': 2, '4': 1, '5': 5, '10': 'connectionCount'},
+    {'1': 'active_room_count', '3': 3, '4': 1, '5': 5, '10': 'activeRoomCount'},
+    {
+      '1': 'nodes',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.common.NodePresenceStats',
+      '10': 'nodes'
+    },
+    {'1': 'sampled_at', '3': 5, '4': 1, '5': 3, '10': 'sampledAt'},
+    {'1': 'version', '3': 6, '4': 1, '5': 4, '10': 'version'},
+  ],
+};
+
+/// Descriptor for `PresenceOverview`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List presenceOverviewDescriptor = $convert.base64Decode(
+    'ChBQcmVzZW5jZU92ZXJ2aWV3EioKEW9ubGluZV91c2VyX2NvdW50GAEgASgFUg9vbmxpbmVVc2'
+    'VyQ291bnQSKQoQY29ubmVjdGlvbl9jb3VudBgCIAEoBVIPY29ubmVjdGlvbkNvdW50EioKEWFj'
+    'dGl2ZV9yb29tX2NvdW50GAMgASgFUg9hY3RpdmVSb29tQ291bnQSNgoFbm9kZXMYBCADKAsyIC'
+    '5zeW5jdHYuY29tbW9uLk5vZGVQcmVzZW5jZVN0YXRzUgVub2RlcxIdCgpzYW1wbGVkX2F0GAUg'
+    'ASgDUglzYW1wbGVkQXQSGAoHdmVyc2lvbhgGIAEoBFIHdmVyc2lvbg==');

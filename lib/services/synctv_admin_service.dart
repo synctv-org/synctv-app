@@ -11,6 +11,7 @@ import 'package:synctv_app/services/synctv_memory_cache.dart';
 import 'package:synctv_app/services/synctv_room_management_service.dart';
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
+import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
@@ -157,10 +158,10 @@ class SyncTvAdminDomainService {
     String password, {
     String reason = '',
   }) async {
-    await _api.adminService.updateUserPassword(
-      admin.UpdateUserPasswordRequest(
+    await _api.adminService.setUserPassword(
+      admin.SetUserPasswordRequest(
         userId: userId,
-        newPassword: password,
+        password: password,
         reason: reason,
       ),
     );
@@ -438,6 +439,12 @@ class SyncTvAdminDomainService {
       bannedRooms: response.bannedRooms,
       totalMedia: response.totalMedia,
       providerInstances: response.providerInstances,
+      onlineUsers:
+          response.hasPresence() ? response.presence.onlineUserCount : 0,
+      onlineConnections:
+          response.hasPresence() ? response.presence.connectionCount : 0,
+      activePresenceRooms:
+          response.hasPresence() ? response.presence.activeRoomCount : 0,
       additionalStats: decodeJsonBytes(response.additionalStats),
     );
   }
@@ -510,6 +517,10 @@ class SyncTvAdminDomainService {
     return AdminRoomMembersPage(
       members: response.members.map(roomMemberFromProto).toList(),
       total: response.total,
+      onlineCount:
+          response.hasPresence() ? response.presence.onlineUserCount : 0,
+      connectionCount:
+          response.hasPresence() ? response.presence.connectionCount : 0,
     );
   }
 
@@ -827,6 +838,130 @@ class SyncTvAdminDomainService {
     );
   }
 
+  Future<AdminContentReportsPage> listContentReportsPage({
+    int page = 1,
+    int pageSize = 50,
+    int status = 0,
+    int targetType = 0,
+    String reporterUserId = '',
+    String roomId = '',
+    String targetRoomId = '',
+    String targetUserId = '',
+    String targetMemberRoomId = '',
+    String targetMemberUserId = '',
+    int targetChatMessageId = 0,
+    int scope = 0,
+    String search = '',
+  }) async {
+    final response = await _api.adminService.listContentReports(
+      admin.ListContentReportsRequest(
+        page: page,
+        pageSize: pageSize,
+        status: _contentReportStatusFromValue(status),
+        targetType: _contentReportTargetTypeFromValue(targetType),
+        reporterUserId: reporterUserId,
+        roomId: roomId,
+        targetRoomId: targetRoomId,
+        targetUserId: targetUserId,
+        targetMemberRoomId: targetMemberRoomId,
+        targetMemberUserId: targetMemberUserId,
+        targetChatMessageId: Int64(targetChatMessageId),
+        scope: _contentReportScopeFromValue(scope),
+        search: search,
+      ),
+    );
+    return AdminContentReportsPage(
+      reports: response.reports.map(_contentReportFromProto).toList(),
+      total: response.total,
+      page: page,
+      pageSize: pageSize,
+    );
+  }
+
+  Future<AdminContentReport> getContentReport(String reportId) async {
+    final response = await _api.adminService.getContentReport(
+      admin.GetContentReportRequest(reportId: reportId),
+    );
+    return _contentReportFromProto(response.report);
+  }
+
+  Future<AdminContentReport> updateContentReportStatus(
+    String reportId,
+    int status, {
+    String resolutionNote = '',
+  }) async {
+    final response = await _api.adminService.updateContentReportStatus(
+      admin.UpdateContentReportStatusRequest(
+        reportId: reportId,
+        status: _requiredContentReportStatusFromValue(status),
+        resolutionNote: resolutionNote,
+      ),
+    );
+    return _contentReportFromProto(response.report);
+  }
+
+  Future<AdminContentReportsPage> listRoomContentReportsPage(
+    String roomId, {
+    int page = 1,
+    int pageSize = 50,
+    int status = 0,
+    int targetType = 0,
+    String targetMemberUserId = '',
+    int targetChatMessageId = 0,
+    String search = '',
+  }) async {
+    final response = await _api.room.listRoomContentReports(
+      roomId,
+      client.ListRoomContentReportsRequest(
+        page: page,
+        pageSize: pageSize,
+        status: client.ContentReportStatus.valueOf(status) ??
+            client.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED,
+        targetType: client.ContentReportTargetType.valueOf(targetType) ??
+            client
+                .ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
+        targetMemberUserId: targetMemberUserId,
+        targetChatMessageId: Int64(targetChatMessageId),
+        search: search,
+      ),
+    );
+    return AdminContentReportsPage(
+      reports: response.reports.map(_clientContentReportFromProto).toList(),
+      total: response.total,
+      page: page,
+      pageSize: pageSize,
+    );
+  }
+
+  Future<AdminContentReport> getRoomContentReport(
+    String roomId,
+    String reportId,
+  ) async {
+    final response = await _api.room.getRoomContentReport(
+      roomId,
+      client.GetRoomContentReportRequest(reportId: reportId),
+    );
+    return _clientContentReportFromProto(response.report);
+  }
+
+  Future<AdminContentReport> updateRoomContentReportStatus(
+    String roomId,
+    String reportId,
+    int status, {
+    String resolutionNote = '',
+  }) async {
+    final response = await _api.room.updateRoomContentReportStatus(
+      roomId,
+      client.UpdateRoomContentReportStatusRequest(
+        reportId: reportId,
+        status: client.ContentReportStatus.valueOf(status) ??
+            client.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN,
+        resolutionNote: resolutionNote,
+      ),
+    );
+    return _clientContentReportFromProto(response.report);
+  }
+
   Future<AdminReviewsPage> listReviewsPage({
     required String kind,
     int page = 1,
@@ -978,6 +1113,29 @@ class SyncTvAdminDomainService {
         admin.BanTargetType.BAN_TARGET_TYPE_UNSPECIFIED;
   }
 
+  admin.ContentReportStatus _contentReportStatusFromValue(int value) {
+    return admin.ContentReportStatus.valueOf(value) ??
+        admin.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED;
+  }
+
+  admin.ContentReportStatus _requiredContentReportStatusFromValue(int value) {
+    final status = _contentReportStatusFromValue(value);
+    if (status == admin.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED) {
+      throw ArgumentError.value(value, 'status', '请选择举报处置状态');
+    }
+    return status;
+  }
+
+  admin.ContentReportTargetType _contentReportTargetTypeFromValue(int value) {
+    return admin.ContentReportTargetType.valueOf(value) ??
+        admin.ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED;
+  }
+
+  admin.ContentReportScope _contentReportScopeFromValue(int value) {
+    return admin.ContentReportScope.valueOf(value) ??
+        admin.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED;
+  }
+
   String _settingValueToString(dynamic value) {
     if (value is bool || value is num || value is String) {
       return value.toString();
@@ -1037,6 +1195,79 @@ class SyncTvAdminDomainService {
       revokedBy: record.revokedBy,
       isActive: record.isActive,
     );
+  }
+
+  AdminContentReport _contentReportFromProto(admin.ContentReport report) {
+    return AdminContentReport(
+      id: report.id,
+      reporterUserId: report.reporterUserId,
+      reporterUsername: report.reporterUsername,
+      roomId: report.roomId,
+      roomName: report.roomName,
+      targetType: report.targetType.value,
+      targetRoomId: report.targetRoomId,
+      targetRoomName: report.targetRoomName,
+      targetUserId: report.targetUserId,
+      targetUsername: report.targetUsername,
+      targetMemberRoomId: report.targetMemberRoomId,
+      targetMemberRoomName: report.targetMemberRoomName,
+      targetMemberUserId: report.targetMemberUserId,
+      targetMemberUsername: report.targetMemberUsername,
+      targetChatMessageId: report.targetChatMessageId.toInt(),
+      targetChatMessageCreatedAt: report.targetChatMessageCreatedAt.toInt(),
+      targetChatMessagePreview: report.targetChatMessagePreview,
+      reasonCode: report.reasonCode,
+      reason: report.reason,
+      metadata: _jsonBytesToMap(report.metadata),
+      status: report.status.value,
+      reviewedBy: report.reviewedBy,
+      reviewedByUsername: report.reviewedByUsername,
+      reviewedAt: report.reviewedAt.toInt(),
+      resolutionNote: report.resolutionNote,
+      createdAt: report.createdAt.toInt(),
+      updatedAt: report.updatedAt.toInt(),
+    );
+  }
+
+  AdminContentReport _clientContentReportFromProto(
+      client.ContentReport report) {
+    return AdminContentReport(
+      id: report.id,
+      reporterUserId: report.reporterUserId,
+      reporterUsername: report.reporterUsername,
+      roomId: report.roomId,
+      roomName: report.roomName,
+      targetType: report.targetType.value,
+      targetRoomId: report.targetRoomId,
+      targetRoomName: report.targetRoomName,
+      targetUserId: report.targetUserId,
+      targetUsername: report.targetUsername,
+      targetMemberRoomId: report.targetMemberRoomId,
+      targetMemberRoomName: report.targetMemberRoomName,
+      targetMemberUserId: report.targetMemberUserId,
+      targetMemberUsername: report.targetMemberUsername,
+      targetChatMessageId: report.targetChatMessageId.toInt(),
+      targetChatMessageCreatedAt: report.targetChatMessageCreatedAt.toInt(),
+      targetChatMessagePreview: report.targetChatMessagePreview,
+      reasonCode: report.reasonCode,
+      reason: report.reason,
+      metadata: _jsonBytesToMap(report.metadata),
+      status: report.status.value,
+      reviewedBy: report.reviewedBy,
+      reviewedByUsername: report.reviewedByUsername,
+      reviewedAt: report.reviewedAt.toInt(),
+      resolutionNote: report.resolutionNote,
+      createdAt: report.createdAt.toInt(),
+      updatedAt: report.updatedAt.toInt(),
+    );
+  }
+
+  Map<String, dynamic> _jsonBytesToMap(List<int> bytes) {
+    if (bytes.isEmpty) return const {};
+    final decoded = jsonDecode(utf8.decode(bytes));
+    if (decoded is Map<String, dynamic>) return decoded;
+    if (decoded is Map) return decoded.cast<String, dynamic>();
+    return const {};
   }
 
   AdminBatchResult _batchResultFromProto(admin.BatchResultItem item) {

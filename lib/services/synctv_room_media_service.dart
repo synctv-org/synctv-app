@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
+import 'package:synctv_app/models/playback_client_profile.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/room_media_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
@@ -33,13 +34,16 @@ class SyncTvRoomMediaDomainService {
         .watchPlaybackState(
       roomId,
       client.WatchPlaybackStateRequest(
-        options: _watchOptions(version),
+        deliveryMode: _watchDeliveryMode,
+        playbackState: client.ObservePlaybackState(
+          afterEventSequence: _watchSequence(version),
+        ),
       ),
     )
         .map((event) {
       if (event.hasObserved()) {
         return RoomResourceWatchEvent<WPlaybackStatus>.observed(
-          version: event.observed.version,
+          version: _cursorVersion(event.observed.eventCursor),
           changed: event.observed.changed,
         );
       }
@@ -50,8 +54,8 @@ class SyncTvRoomMediaDomainService {
         );
       }
       return RoomResourceWatchEvent<WPlaybackStatus>.changed(
-        version: event.changed.version,
-        snapshot: _playbackStatusFromState(event.changed.playbackState),
+        version: _cursorVersion(event.resourceEvent.eventCursor),
+        snapshot: _playbackStatusFromState(event.resourceEvent.playbackState),
       );
     });
   }
@@ -64,21 +68,19 @@ class SyncTvRoomMediaDomainService {
     String? target,
   }) {
     return _api.room
-        .watchPlaybackSnapshot(
+        .watchPlayback(
       roomId,
-      client.WatchPlaybackSnapshotRequest(
-        options: _watchOptions(version),
-        playbackSnapshot: client.ObservePlaybackSnapshot(
-          mediaId: mediaId,
-          playlistId: playlistId,
-          target: _decodeTarget(target) ?? const [],
+      client.WatchPlaybackRequest(
+        deliveryMode: _watchDeliveryMode,
+        playback: client.ObservePlayback(
+          playbackClientProfile: defaultPlaybackClientProfile(),
         ),
       ),
     )
         .map((event) {
       if (event.hasObserved()) {
         return RoomResourceWatchEvent<WPlaybackStatus>.observed(
-          version: event.observed.version,
+          version: _cursorVersion(event.observed.eventCursor),
           changed: event.observed.changed,
         );
       }
@@ -89,8 +91,8 @@ class SyncTvRoomMediaDomainService {
         );
       }
       return RoomResourceWatchEvent<WPlaybackStatus>.changed(
-        version: event.changed.version,
-        snapshot: _playbackStatusFromSnapshot(event.changed.playbackSnapshot),
+        version: _cursorVersion(event.resourceEvent.eventCursor),
+        snapshot: _playbackStatusFromPlayback(event.resourceEvent.playback),
       );
     });
   }
@@ -116,25 +118,28 @@ class SyncTvRoomMediaDomainService {
         .watchPlaylistItems(
       roomId,
       client.WatchPlaylistItemsRequest(
-        options: _watchOptions(version),
-        request: client.ListPlaylistItemsRequest(
-          playlistId: playlistId,
-          target: _decodeTarget(target) ?? const [],
-          page: page,
-          pageSize: pageSize,
-          search: search,
-          sourceProvider: sourceProvider,
-          providerInstanceName: providerInstanceName,
-          sortBy: sortBy,
-          sortDirection: sortDirection,
-          availability: availability,
+        deliveryMode: _watchDeliveryMode,
+        playlistItems: client.ObservePlaylistItems(
+          afterEventSequence: _watchSequence(version),
+          request: client.ListPlaylistItemsRequest(
+            playlistId: playlistId,
+            target: _decodeTarget(target) ?? const [],
+            page: page,
+            pageSize: pageSize,
+            search: search,
+            sourceProvider: sourceProvider,
+            providerInstanceName: providerInstanceName,
+            sortBy: sortBy,
+            sortDirection: sortDirection,
+            availability: availability,
+          ),
         ),
       ),
     )
         .map((event) {
       if (event.hasObserved()) {
         return RoomResourceWatchEvent<RoomMediaLibraryPage>.observed(
-          version: event.observed.version,
+          version: _cursorVersion(event.observed.eventCursor),
           changed: event.observed.changed,
         );
       }
@@ -145,9 +150,9 @@ class SyncTvRoomMediaDomainService {
         );
       }
       return RoomResourceWatchEvent<RoomMediaLibraryPage>.changed(
-        version: event.changed.version,
+        version: _cursorVersion(event.resourceEvent.eventCursor),
         snapshot: _mediaLibraryPageFromProto(
-          event.changed.playlistItems,
+          event.resourceEvent.playlistItems,
           parentId: playlistId,
         ),
       );
@@ -354,7 +359,7 @@ class SyncTvRoomMediaDomainService {
       roomId,
       client.MoveMediaRequest(
         mediaIds: mediaIds,
-        sourcePlaylistId: sourcePlaylistId,
+        sourcePlaylistId: allFromScope ? sourcePlaylistId : null,
         targetPlaylistId: targetPlaylistId,
         allFromScope: allFromScope,
         beforeMediaId: beforeMediaId,
@@ -376,6 +381,9 @@ class SyncTvRoomMediaDomainService {
     return ChatHistoryPage(
       messages: response.messages.map(_chatMessageFromProto).toList(),
       nextCursor: response.nextCursor,
+      eventCursor: response.hasEventCursor()
+          ? response.eventCursor.sequence.toInt().toString()
+          : '',
     );
   }
 
@@ -383,6 +391,10 @@ class SyncTvRoomMediaDomainService {
     String roomId, {
     String content = '',
     List<StoredImageInfo> images = const [],
+    String displayPosition = '',
+    String displayColor = '',
+    String replyToMessageId = '',
+    List<ChatMentionInfo> mentions = const [],
   }) async {
     final response = await _api.room.sendChatMessage(
       roomId,
@@ -390,6 +402,16 @@ class SyncTvRoomMediaDomainService {
         content: content,
         clientMessageId: 'msg_${DateTime.now().microsecondsSinceEpoch}',
         images: images.map(chatImageFromStoredImage),
+        displayPosition: displayPosition,
+        displayColor: displayColor,
+        replyToMessageId: replyToMessageId,
+        mentions: mentions.map(
+          (mention) => client.ChatMentionInput(
+            userId: mention.userId,
+            start: mention.start,
+            length: mention.length,
+          ),
+        ),
       ),
     );
     return _chatMessageFromProto(response.event.message);
@@ -429,6 +451,81 @@ class SyncTvRoomMediaDomainService {
       ),
     );
     return _chatMessageFromProto(response.event.message);
+  }
+
+  Future<RoomChatMessageInfo> setChatReaction(
+    String roomId,
+    String messageId,
+    String reactionKey, {
+    required bool enabled,
+  }) async {
+    final response = await _api.room.setChatReaction(
+      roomId,
+      client.SetChatReactionRequest(
+        messageId: messageId,
+        reactionKey: reactionKey,
+        enabled: enabled,
+      ),
+    );
+    return _chatMessageFromProto(response.event.message);
+  }
+
+  Future<String> reportChatMessage(
+    String roomId,
+    String messageId, {
+    required String reasonCode,
+    String reason = '',
+  }) async {
+    final response = await _api.room.reportContent(
+      roomId,
+      client.ReportContentRequest(
+        chatMessage: client.ReportChatMessageTarget(
+          roomId: roomId,
+          messageId: messageId,
+        ),
+        reasonCode: reasonCode,
+        reason: reason,
+      ),
+    );
+    return response.reportId;
+  }
+
+  Future<RoomChatMessageInfo> getChatMessage(
+    String roomId,
+    String messageId, {
+    bool includeDeleted = false,
+  }) async {
+    final response = await _api.room.getChatMessage(
+      roomId,
+      client.GetChatMessageRequest(
+        messageId: messageId,
+        includeDeleted: includeDeleted,
+      ),
+    );
+    return _chatMessageFromProto(response.message);
+  }
+
+  Future<ChatReactionUsersPage> listChatReactionUsers(
+    String roomId,
+    String messageId,
+    String reactionKey, {
+    int limit = 50,
+    String cursor = '',
+  }) async {
+    final response = await _api.room.listChatReactionUsers(
+      roomId,
+      client.ListChatReactionUsersRequest(
+        messageId: messageId,
+        reactionKey: reactionKey,
+        limit: limit,
+        cursor: cursor,
+      ),
+    );
+    return ChatReactionUsersPage(
+      users: response.users.map(_chatReactionUserFromProto).toList(),
+      nextCursor: response.nextCursor,
+      total: response.total.toInt(),
+    );
   }
 
   Future<ChatMessageContextInfo> getChatMessageContext(
@@ -500,6 +597,23 @@ class SyncTvRoomMediaDomainService {
     return _chatReadStateFromProto(response);
   }
 
+  Future<ChatMessageReadReceiptsInfo> getChatMessageReadReceipts(
+    String roomId,
+    String messageId, {
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    final response = await _api.room.getChatMessageReadReceipts(
+      roomId,
+      client.GetChatMessageReadReceiptsRequest(
+        messageId: messageId,
+        page: page,
+        pageSize: pageSize,
+      ),
+    );
+    return _chatMessageReadReceiptsFromProto(response);
+  }
+
   StoredImageInfo storedImageFromChatImage(client.ChatImage image) {
     return StoredImageInfo(
       id: image.id,
@@ -510,6 +624,7 @@ class SyncTvRoomMediaDomainService {
       sizeBytes: image.sizeBytes.toInt(),
       width: image.width,
       height: image.height,
+      metadata: List<int>.from(image.metadata),
     );
   }
 
@@ -523,6 +638,7 @@ class SyncTvRoomMediaDomainService {
       sizeBytes: Int64(image.sizeBytes),
       width: image.width,
       height: image.height,
+      metadata: image.metadata,
     );
   }
 
@@ -736,22 +852,16 @@ class SyncTvRoomMediaDomainService {
         target: target ?? const [],
       ),
     );
-    final localMovie = WMovie(
-      id: target == null ? movieId : base64Url.encode(target),
-      name: '',
-      url: '',
-      subPath: target == null ? null : base64Url.encode(target),
-      parentId: target == null ? null : dynamicPlaylistId,
-    );
+    final current = await getCurrentMovie(roomId);
     return WPlaybackStatus(
-      movie: localMovie,
+      movie: current.movie,
       isPlaying: true,
       currentTime: 0,
-      playbackRate: 1,
+      playbackRate: current.playbackRate,
     );
   }
 
-  Future<WPlaybackStatus> updatePlayback(
+  Future<WPlaybackStatus> updatePlaybackState(
     String roomId, {
     PlaybackControlAction? action,
     required bool isPlaying,
@@ -759,17 +869,18 @@ class SyncTvRoomMediaDomainService {
     double speed = 1.0,
     int? version,
   }) async {
-    final response = await _api.room.updatePlayback(
+    final current = await getCurrentMovie(roomId);
+    final response = await _api.room.updatePlaybackState(
       roomId,
-      client.UpdatePlaybackRequest(
-        type: _playbackUpdateType(action, isPlaying, position),
+      client.UpdatePlaybackStateRequest(
+        type: _playbackStateUpdateType(action, isPlaying, position),
         playing: isPlaying,
         position: position,
         speed: speed,
         version: version == null ? null : Int64(version),
       ),
     );
-    return _api.mapPlayback(response);
+    return _api.mapPlaybackState(response, movie: current.movie);
   }
 
   Future<String> _addMedia(
@@ -793,12 +904,18 @@ class SyncTvRoomMediaDomainService {
     return response.media.id;
   }
 
-  client.WatchOptions _watchOptions(String version) {
-    return client.WatchOptions(
-      version: version,
-      deliveryMode:
-          client_enum.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
-    );
+  client_enum.ResourceDeliveryMode get _watchDeliveryMode =>
+      client_enum.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT;
+
+  Int64? _watchSequence(String version) {
+    if (version.isEmpty) return null;
+    final parsed = int.tryParse(version);
+    return parsed == null ? null : Int64(parsed);
+  }
+
+  String _cursorVersion(client.EventCursor cursor) {
+    final sequence = cursor.sequence.toInt();
+    return sequence == 0 ? cursor.eventId : sequence.toString();
   }
 
   List<int> _playlistSourceConfigBytes({
@@ -816,7 +933,7 @@ class SyncTvRoomMediaDomainService {
     return _api.encodeJsonBytes(sourceConfig);
   }
 
-  client_enum.PlaybackUpdateType _playbackUpdateType(
+  client_enum.PlaybackUpdateType _playbackStateUpdateType(
     PlaybackControlAction? action,
     bool isPlaying,
     double? position,
@@ -891,7 +1008,40 @@ class SyncTvRoomMediaDomainService {
       editedAt: message.editedAt.toInt(),
       deletedAt: message.deletedAt.toInt(),
       status: message.status.value,
+      replyToMessageId: message.replyToMessageId,
       images: message.images.map(storedImageFromChatImage).toList(),
+      reactions: message.reactions.map(_chatReactionSummaryFromProto).toList(),
+      reactionCount: message.reactionCount,
+      mentions: message.mentions
+          .map(
+            (mention) => ChatMentionInfo(
+              userId: mention.userId,
+              username: mention.username,
+              start: mention.start,
+              length: mention.length,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  ChatReactionSummaryInfo _chatReactionSummaryFromProto(
+    client.ChatReactionSummary reaction,
+  ) {
+    return ChatReactionSummaryInfo(
+      key: reaction.key,
+      count: reaction.count.toInt(),
+      reactedByMe: reaction.reactedByMe,
+    );
+  }
+
+  ChatReactionUserInfo _chatReactionUserFromProto(
+    client.ChatReactionUser user,
+  ) {
+    return ChatReactionUserInfo(
+      userId: user.userId,
+      username: user.username,
+      reactedAt: user.reactedAt.toInt(),
     );
   }
 
@@ -907,6 +1057,28 @@ class SyncTvRoomMediaDomainService {
       lastReadEventSequence: state.lastReadEventSequence.toInt(),
       updatedAt: state.updatedAt.toInt(),
       unreadCount: response.unreadCount.toInt(),
+    );
+  }
+
+  ChatMessageReadReceiptsInfo _chatMessageReadReceiptsFromProto(
+    client.GetChatMessageReadReceiptsResponse response,
+  ) {
+    return ChatMessageReadReceiptsInfo(
+      readers: response.readers
+          .where((reader) => reader.hasUser())
+          .map(
+            (reader) => ChatReadReceiptUserInfo(
+              user: _api.mapPublicUser(reader.user),
+              readAt: reader.readAt.toInt(),
+            ),
+          )
+          .toList(),
+      unreadMembers: response.unreadMembers
+          .where((member) => member.hasUser())
+          .map((member) => _api.mapPublicUser(member.user))
+          .toList(),
+      readerTotal: response.readerTotal.toInt(),
+      unreadTotal: response.unreadTotal.toInt(),
     );
   }
 
@@ -934,43 +1106,21 @@ class SyncTvRoomMediaDomainService {
       isPlaying: state.isPlaying,
       currentTime: state.position,
       playbackRate: state.speed == 0 ? 1.0 : state.speed,
+      version: state.version.toInt(),
+      playingMediaId: state.playingMediaId,
+      playingPlaylistId: state.playingPlaylistId,
+      targetHash: state.targetHash,
     );
   }
 
-  WPlaybackStatus _playbackStatusFromSnapshot(
-    client.PlaybackSnapshot snapshot,
+  WPlaybackStatus _playbackStatusFromPlayback(
+    client.Playback playback,
   ) {
-    client.PlaybackInfo? info;
-    if (snapshot.playbackInfos.containsKey(snapshot.defaultMode)) {
-      info = snapshot.playbackInfos[snapshot.defaultMode];
-    } else if (snapshot.playbackInfos.isNotEmpty) {
-      info = snapshot.playbackInfos.values.first;
-    }
-    final playbackUrl = info != null && info.urls.isNotEmpty
-        ? info.urls[
-            info.defaultUrlIndex >= 0 && info.defaultUrlIndex < info.urls.length
-                ? info.defaultUrlIndex
-                : 0]
-        : null;
-    final movie = snapshot.mediaId.isEmpty && snapshot.playlistId.isEmpty
+    final movie = playback.mediaId.isEmpty && playback.playlistId.isEmpty
         ? null
-        : WMovie(
-            id: snapshot.mediaId.isNotEmpty
-                ? snapshot.mediaId
-                : snapshot.playlistId,
-            name: snapshot.name,
-            url: _api.resolveResourceUrl(playbackUrl?.url ?? ''),
-            headers: playbackUrl == null
-                ? const {}
-                : Map<String, String>.from(playbackUrl.headers),
-            type: info?.format ?? '',
-            metadata: {
-              'snapshot_version': snapshot.version,
-              'default_mode': snapshot.defaultMode,
-              'playback_metadata': Map<String, String>.from(
-                snapshot.metadata,
-              ),
-            },
+        : WMovie.fromPlaybackProto(
+            playback,
+            resolveUrl: _api.resolveResourceUrl,
           );
     return WPlaybackStatus(movie: movie);
   }

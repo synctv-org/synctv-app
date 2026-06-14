@@ -37,6 +37,9 @@ class AdminSystemStats {
   final int bannedRooms;
   final int totalMedia;
   final int providerInstances;
+  final int onlineUsers;
+  final int onlineConnections;
+  final int activePresenceRooms;
   final Map<String, dynamic> additionalStats;
 
   const AdminSystemStats({
@@ -48,6 +51,9 @@ class AdminSystemStats {
     required this.bannedRooms,
     required this.totalMedia,
     required this.providerInstances,
+    this.onlineUsers = 0,
+    this.onlineConnections = 0,
+    this.activePresenceRooms = 0,
     required this.additionalStats,
   });
 }
@@ -170,6 +176,80 @@ class AdminBanRecordsPage {
 
   const AdminBanRecordsPage({
     required this.records,
+    required this.total,
+    required this.page,
+    required this.pageSize,
+  });
+}
+
+class AdminContentReport {
+  final String id;
+  final String reporterUserId;
+  final String reporterUsername;
+  final String roomId;
+  final String roomName;
+  final int targetType;
+  final String targetRoomId;
+  final String targetRoomName;
+  final String targetUserId;
+  final String targetUsername;
+  final String targetMemberRoomId;
+  final String targetMemberRoomName;
+  final String targetMemberUserId;
+  final String targetMemberUsername;
+  final int targetChatMessageId;
+  final int targetChatMessageCreatedAt;
+  final String targetChatMessagePreview;
+  final String reasonCode;
+  final String reason;
+  final Map<String, dynamic> metadata;
+  final int status;
+  final String reviewedBy;
+  final String reviewedByUsername;
+  final int reviewedAt;
+  final String resolutionNote;
+  final int createdAt;
+  final int updatedAt;
+
+  const AdminContentReport({
+    required this.id,
+    required this.reporterUserId,
+    required this.reporterUsername,
+    required this.roomId,
+    required this.roomName,
+    required this.targetType,
+    required this.targetRoomId,
+    required this.targetRoomName,
+    required this.targetUserId,
+    required this.targetUsername,
+    required this.targetMemberRoomId,
+    required this.targetMemberRoomName,
+    required this.targetMemberUserId,
+    required this.targetMemberUsername,
+    required this.targetChatMessageId,
+    required this.targetChatMessageCreatedAt,
+    required this.targetChatMessagePreview,
+    required this.reasonCode,
+    required this.reason,
+    required this.metadata,
+    required this.status,
+    required this.reviewedBy,
+    required this.reviewedByUsername,
+    required this.reviewedAt,
+    required this.resolutionNote,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+}
+
+class AdminContentReportsPage {
+  final List<AdminContentReport> reports;
+  final int total;
+  final int page;
+  final int pageSize;
+
+  const AdminContentReportsPage({
+    required this.reports,
     required this.total,
     required this.page,
     required this.pageSize,

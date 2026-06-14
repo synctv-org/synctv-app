@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'dart:math';
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
+import 'package:synctv_app/models/room_media_models.dart';
+import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 /// 聊天输入区域组件
 class ChatInputArea extends StatefulWidget {
@@ -21,8 +23,14 @@ class ChatInputArea extends StatefulWidget {
   final Uint8List? selectedImageBytes;
   final VoidCallback? onCancelSelectedImage;
   final VoidCallback? onInputFocused;
+  final ValueChanged<String>? onMentionQueryChanged;
+  final VoidCallback? onMentionLoadMore;
   final bool showAsBackButton;
   final VoidCallback? onBackToBottom;
+  final bool mentionCandidatesLoading;
+  final bool mentionCandidatesHasMore;
+  final List<WUser> mentionCandidates;
+  final ValueChanged<List<ChatMentionInfo>>? onMentionsChanged;
 
   const ChatInputArea({
     Key? key,
@@ -40,8 +48,14 @@ class ChatInputArea extends StatefulWidget {
     this.selectedImageBytes,
     this.onCancelSelectedImage,
     this.onInputFocused,
+    this.onMentionQueryChanged,
+    this.onMentionLoadMore,
     this.showAsBackButton = false,
     this.onBackToBottom,
+    this.mentionCandidatesLoading = false,
+    this.mentionCandidatesHasMore = false,
+    this.mentionCandidates = const [],
+    this.onMentionsChanged,
   }) : super(key: key);
 
   @override
@@ -159,6 +173,12 @@ class _ChatInputAreaState extends State<ChatInputArea>
                     selectedImageBytes: widget.selectedImageBytes,
                     onCancelSelectedImage: widget.onCancelSelectedImage,
                     onInputFocused: widget.onInputFocused,
+                    onMentionQueryChanged: widget.onMentionQueryChanged,
+                    onMentionLoadMore: widget.onMentionLoadMore,
+                    mentionCandidatesLoading: widget.mentionCandidatesLoading,
+                    mentionCandidatesHasMore: widget.mentionCandidatesHasMore,
+                    mentionCandidates: widget.mentionCandidates,
+                    onMentionsChanged: widget.onMentionsChanged,
                     animationValue: 1.0 - _modeTransitionController.value,
                   );
           },
@@ -181,31 +201,27 @@ class _ChatInputAreaState extends State<ChatInputArea>
           widthProgress = (_modeTransitionController.value - 0.3) / 0.7;
         }
 
-        final screenWidth = MediaQuery.of(context).size.width - 32;
-        final currentWidth =
-            screenWidth * (1 - widthProgress) + buttonSize * widthProgress;
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final availableWidth =
+                (constraints.maxWidth - 32).clamp(buttonSize, 640.0);
+            final currentWidth = availableWidth * (1 - widthProgress) +
+                buttonSize * widthProgress;
+            final finalWidth = currentWidth.clamp(buttonSize, availableWidth);
 
-        final finalWidth = currentWidth.clamp(buttonSize, screenWidth);
-
-        return Center(
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              widget.onBackToBottom?.call();
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(finalWidth / 2),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(
+            return Center(
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  widget.onBackToBottom?.call();
+                },
+                child: AppBlurSurface(
                   width: finalWidth,
                   height: buttonSize,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.grey.shade800.withValues(alpha: 0.6)
-                        : Colors.grey.shade100.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(finalWidth / 2),
-                  ),
+                  borderRadius: BorderRadius.circular(finalWidth / 2),
+                  color: isDark
+                      ? Colors.grey.shade800.withValues(alpha: 0.6)
+                      : Colors.grey.shade100.withValues(alpha: 0.9),
                   child: Center(
                     child: AnimatedScale(
                       scale: 0.8 + 0.2 * widthProgress,
@@ -215,14 +231,14 @@ class _ChatInputAreaState extends State<ChatInputArea>
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.9)
                             : Colors.black.withValues(alpha: 0.8),
-                        size: 24, // 稍微减小图标大小以适配48px的按钮
+                        size: 24,
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -242,7 +258,13 @@ class TextInputArea extends StatefulWidget {
   final Uint8List? selectedImageBytes;
   final VoidCallback? onCancelSelectedImage;
   final VoidCallback? onInputFocused;
+  final ValueChanged<String>? onMentionQueryChanged;
+  final VoidCallback? onMentionLoadMore;
+  final bool mentionCandidatesLoading;
+  final bool mentionCandidatesHasMore;
   final double animationValue;
+  final List<WUser> mentionCandidates;
+  final ValueChanged<List<ChatMentionInfo>>? onMentionsChanged;
 
   const TextInputArea({
     Key? key,
@@ -257,6 +279,12 @@ class TextInputArea extends StatefulWidget {
     this.selectedImageBytes,
     this.onCancelSelectedImage,
     this.onInputFocused,
+    this.onMentionQueryChanged,
+    this.onMentionLoadMore,
+    this.mentionCandidatesLoading = false,
+    this.mentionCandidatesHasMore = false,
+    this.mentionCandidates = const [],
+    this.onMentionsChanged,
     this.animationValue = 1.0,
   }) : super(key: key);
 
@@ -267,6 +295,10 @@ class TextInputArea extends StatefulWidget {
 class _TextInputAreaState extends State<TextInputArea> {
   bool _hasText = false;
   late final FocusNode _focusNode;
+  final List<ChatMentionInfo> _mentions = <ChatMentionInfo>[];
+  String _mentionQuery = '';
+  int _mentionTokenStart = -1;
+  String _lastNotifiedMentionQuery = '';
 
   @override
   void initState() {
@@ -284,12 +316,144 @@ class _TextInputAreaState extends State<TextInputArea> {
   }
 
   void _onTextChanged() {
+    _refreshInputState();
+  }
+
+  void _refreshInputState() {
     final hasText = widget.textController.text.trim().isNotEmpty;
+    _syncMentionsWithText();
+    _updateMentionQuery();
     if (hasText != _hasText) {
       setState(() {
         _hasText = hasText;
       });
+    } else {
+      setState(() {});
     }
+  }
+
+  void _syncMentionsWithText() {
+    final text = widget.textController.text;
+    _mentions.removeWhere((mention) {
+      final startCodeUnit = _codeUnitOffsetForRuneOffset(text, mention.start);
+      final endCodeUnit =
+          _codeUnitOffsetForRuneOffset(text, mention.start + mention.length);
+      if (startCodeUnit < 0 ||
+          endCodeUnit > text.length ||
+          endCodeUnit <= startCodeUnit) {
+        return true;
+      }
+      final token = text.substring(startCodeUnit, endCodeUnit);
+      return !token.startsWith('@') || token.contains(RegExp(r'\s'));
+    });
+    widget.onMentionsChanged?.call(List.unmodifiable(_mentions));
+  }
+
+  void _updateMentionQuery() {
+    final selection = widget.textController.selection;
+    if (!selection.isValid || !selection.isCollapsed) {
+      _mentionTokenStart = -1;
+      _mentionQuery = '';
+      return;
+    }
+    final text = widget.textController.text;
+    final caret = selection.baseOffset.clamp(0, text.length);
+    var start = caret - 1;
+    while (start >= 0) {
+      final ch = text.substring(start, start + 1);
+      if (ch == '@') break;
+      if (RegExp(r'\s').hasMatch(ch)) {
+        start = -1;
+        break;
+      }
+      start -= 1;
+    }
+    if (start < 0 || start >= text.length || text[start] != '@') {
+      _mentionTokenStart = -1;
+      _mentionQuery = '';
+      _notifyMentionQueryChanged();
+      return;
+    }
+    _mentionTokenStart = start;
+    _mentionQuery = text.substring(start + 1, caret).toLowerCase();
+    _notifyMentionQueryChanged();
+  }
+
+  void _notifyMentionQueryChanged() {
+    final nextQuery = _mentionTokenStart < 0 ? '' : _mentionQuery.trim();
+    if (nextQuery == _lastNotifiedMentionQuery) return;
+    _lastNotifiedMentionQuery = nextQuery;
+    widget.onMentionQueryChanged?.call(nextQuery);
+  }
+
+  bool get _hasMentionToken => _mentionTokenStart >= 0;
+
+  List<WUser> get _filteredMentionCandidates {
+    if (!_hasMentionToken || widget.mentionCandidates.isEmpty) {
+      return const [];
+    }
+    final query = _mentionQuery.trim();
+    return widget.mentionCandidates
+        .where((user) {
+          if (user.id.isEmpty || user.username.trim().isEmpty) return false;
+          if (query.isEmpty) return true;
+          return user.username.toLowerCase().contains(query);
+        })
+        .take(8)
+        .toList();
+  }
+
+  void _selectMention(WUser user) {
+    final selection = widget.textController.selection;
+    if (_mentionTokenStart < 0 || !selection.isValid) return;
+    final text = widget.textController.text;
+    final caret = selection.baseOffset.clamp(0, text.length);
+    final replacement = '@${user.username} ';
+    final nextText = text.replaceRange(_mentionTokenStart, caret, replacement);
+    final startRune = _runeOffsetForCodeUnitOffset(text, _mentionTokenStart);
+    final lengthRune = replacement.trimRight().runes.length;
+    widget.textController.value = TextEditingValue(
+      text: nextText,
+      selection: TextSelection.collapsed(
+        offset: _mentionTokenStart + replacement.length,
+      ),
+    );
+    _mentions.removeWhere(
+        (mention) => mention.start == startRune || mention.userId == user.id);
+    _mentions.add(ChatMentionInfo(
+      userId: user.id,
+      username: user.username,
+      start: startRune,
+      length: lengthRune,
+    ));
+    _mentions.sort((a, b) => a.start.compareTo(b.start));
+    widget.onMentionsChanged?.call(List.unmodifiable(_mentions));
+    _mentionTokenStart = -1;
+    _mentionQuery = '';
+    setState(() {});
+  }
+
+  int _runeOffsetForCodeUnitOffset(String text, int codeUnitOffset) {
+    var runeOffset = 0;
+    var currentCodeUnit = 0;
+    for (final rune in text.runes) {
+      if (currentCodeUnit >= codeUnitOffset) break;
+      currentCodeUnit += String.fromCharCodes([rune]).length;
+      runeOffset += 1;
+    }
+    return runeOffset;
+  }
+
+  int _codeUnitOffsetForRuneOffset(String text, int runeOffset) {
+    if (runeOffset < 0) return -1;
+    var currentRune = 0;
+    var codeUnitOffset = 0;
+    for (final rune in text.runes) {
+      if (currentRune >= runeOffset) break;
+      codeUnitOffset += String.fromCharCodes([rune]).length;
+      currentRune += 1;
+    }
+    return codeUnitOffset;
   }
 
   @override
@@ -310,65 +474,68 @@ class _TextInputAreaState extends State<TextInputArea> {
       opacity: widget.animationValue,
       child: Transform.scale(
         scale: 0.95 + 0.05 * widget.animationValue,
-        child: Material(
+        child: AppInkSurface(
           color: Colors.transparent,
+          clipBehavior: Clip.none,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (_hasMentionToken &&
+                  (widget.mentionCandidatesLoading ||
+                      _filteredMentionCandidates.isNotEmpty))
+                _MentionSuggestions(
+                  users: _filteredMentionCandidates,
+                  loading: widget.mentionCandidatesLoading,
+                  hasMore: widget.mentionCandidatesHasMore,
+                  onLoadMore: widget.onMentionLoadMore,
+                  onSelected: _selectMention,
+                ),
               if (hasSelectedImage)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.grey.shade800.withValues(alpha: 0.5)
-                              : Colors.grey.shade100.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: widget.selectedImageBytes != null
-                                  ? Image.memory(
-                                      widget.selectedImageBytes!,
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      widget.selectedImageFile!,
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
-                            const SizedBox(width: 10), // 从12减小到10
-                            Expanded(
-                              child: Text(
-                                '已选择图片，输入描述后发送',
-                                style: TextStyle(
-                                  color: theme.textTheme.bodyMedium?.color,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                  child: AppBlurSurface(
+                    borderRadius: BorderRadius.circular(8),
+                    color: isDark
+                        ? Colors.grey.shade800.withValues(alpha: 0.5)
+                        : Colors.grey.shade100.withValues(alpha: 0.8),
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        widget.selectedImageBytes != null
+                            ? AppImageThumbnail.memory(
+                                bytes: widget.selectedImageBytes!,
+                                width: 60,
+                                height: 60,
+                              )
+                            : AppImageThumbnail.file(
+                                file: widget.selectedImageFile!,
+                                width: 60,
+                                height: 60,
                               ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '已选择图片，输入描述后发送',
+                            style: TextStyle(
+                              color: theme.textTheme.bodyMedium?.color,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
-                            GlassIconButton(
-                              icon: Icons.cancel,
-                              color: Colors.red.shade400,
-                              onTap: widget.onCancelSelectedImage,
-                              isDark: isDark,
-                              size: 36,
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                        AppGlassIconButton(
+                          icon: Icon(
+                            Icons.cancel,
+                            color: Colors.red.shade400,
+                            size: 18,
+                          ),
+                          tooltip: '取消图片',
+                          onPressed: widget.onCancelSelectedImage,
+                          isDark: isDark,
+                          size: 36,
+                          pressedScale: 0.9,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -390,22 +557,22 @@ class _TextInputAreaState extends State<TextInputArea> {
                           vertical: 12,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(color: fieldBorder),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(color: fieldBorder),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(
                             color: theme.colorScheme.primary,
                             width: 1.4,
                           ),
                         ),
                         disabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(color: fieldBorder),
                         ),
                       ),
@@ -418,6 +585,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                       textInputAction: TextInputAction.send,
                       onSubmitted:
                           canSend ? (_) => widget.onSendMessage() : null,
+                      onChanged: (_) => _refreshInputState(),
                       onTap: widget.onInputFocused,
                       enabled: !widget.isLoading,
                     ),
@@ -427,46 +595,49 @@ class _TextInputAreaState extends State<TextInputArea> {
                           widget.conversationType == 'watch_together') &&
                       !hasSelectedImage) ...[
                     const SizedBox(width: 10),
-                    GlassIconButton(
-                      icon: Icons.add_photo_alternate_outlined,
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.8)
-                          : Colors.black.withValues(alpha: 0.7),
-                      onTap: widget.onShowImagePicker,
+                    AppGlassIconButton(
+                      icon: Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : Colors.black.withValues(alpha: 0.7),
+                        size: 22,
+                      ),
+                      tooltip: '选择图片',
+                      onPressed: widget.onShowImagePicker,
                       isDark: isDark,
                       size: 44,
+                      pressedScale: 0.9,
                     ),
                   ],
                   const SizedBox(width: 10),
                   SizedBox.square(
                     dimension: 44,
-                    child: FilledButton(
+                    child: AppIconButton(
                       onPressed: canSend ? widget.onSendMessage : null,
-                      style: FilledButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: widget.isLoading
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.send_rounded, size: 20),
+                      icon: Icons.send_rounded,
+                      tooltip: '发送',
+                      loading: widget.isLoading,
+                      style: AppIconButtonStyle.filled,
+                      iconSize: 20,
                     ),
                   ),
                   if (widget.conversationType == 'xiaozhi' &&
                       widget.onSwitchToVoiceMode != null) ...[
                     const SizedBox(width: 12),
-                    AnimatedGlassButton(
-                      icon: Icons.mic,
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.8)
-                          : Colors.black.withValues(alpha: 0.7),
-                      onTap: widget.onSwitchToVoiceMode,
+                    AppGlassIconButton(
+                      icon: Icon(
+                        Icons.mic,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : Colors.black.withValues(alpha: 0.7),
+                        size: 20,
+                      ),
+                      tooltip: '切换语音',
+                      onPressed: widget.onSwitchToVoiceMode,
                       isDark: isDark,
+                      rotateOnPressed: true,
+                      hapticFeedback: HapticFeedbackType.medium,
                     ),
                   ],
                 ],
@@ -479,318 +650,137 @@ class _TextInputAreaState extends State<TextInputArea> {
   }
 }
 
-/// 高斯模糊按钮组件
-class GlassButton extends StatefulWidget {
-  final Widget icon;
-  final VoidCallback? onTap;
-  final bool isDark;
+class _MentionSuggestions extends StatelessWidget {
+  const _MentionSuggestions({
+    required this.users,
+    required this.loading,
+    required this.hasMore,
+    required this.onLoadMore,
+    required this.onSelected,
+  });
 
-  const GlassButton({
-    Key? key,
-    required this.icon,
-    this.onTap,
-    required this.isDark,
-  }) : super(key: key);
-
-  @override
-  State<GlassButton> createState() => _GlassButtonState();
-}
-
-class _GlassButtonState extends State<GlassButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _handleTapDown(TapDownDetails details) {
-    _animationController.forward();
-  }
-
-  void _handleTapUp(TapUpDetails details) {
-    _animationController.reverse();
-  }
-
-  void _handleTapCancel() {
-    _animationController.reverse();
-  }
+  final List<WUser> users;
+  final bool loading;
+  final bool hasMore;
+  final VoidCallback? onLoadMore;
+  final ValueChanged<WUser> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      onTap: () {
-        HapticFeedback.lightImpact();
-        widget.onTap?.call();
-      },
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: ClipOval(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(
-                  height: 48, // 从54缩小到48
-                  width: 48, // 从54缩小到48
-                  decoration: BoxDecoration(
-                    color: widget.isDark
-                        ? Colors.grey.shade800.withValues(alpha: 0.5)
-                        : Colors.grey.shade100.withValues(alpha: 0.8),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(child: widget.icon),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// 带动画的高斯模糊按钮组件
-class AnimatedGlassButton extends StatefulWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-  final bool isDark;
-
-  const AnimatedGlassButton({
-    Key? key,
-    required this.icon,
-    required this.color,
-    this.onTap,
-    required this.isDark,
-  }) : super(key: key);
-
-  @override
-  State<AnimatedGlassButton> createState() => _AnimatedGlassButtonState();
-}
-
-class _AnimatedGlassButtonState extends State<AnimatedGlassButton>
-    with TickerProviderStateMixin {
-  late AnimationController _scaleController;
-  late AnimationController _rotationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _rotationAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-
-    _rotationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.easeInOut,
-    ));
-
-    _rotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _rotationController,
-      curve: Curves.elasticOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _scaleController.dispose();
-    _rotationController.dispose();
-    super.dispose();
-  }
-
-  void _handleTapDown(TapDownDetails details) {
-    _scaleController.forward();
-  }
-
-  void _handleTapUp(TapUpDetails details) {
-    _scaleController.reverse();
-  }
-
-  void _handleTapCancel() {
-    _scaleController.reverse();
-  }
-
-  void _handleTap() {
-    _rotationController.reset();
-    _rotationController.forward();
-
-    HapticFeedback.mediumImpact();
-
-    widget.onTap?.call();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      onTap: _handleTap,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_scaleAnimation, _rotationAnimation]),
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: ClipOval(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(
-                  height: 48, // 从54缩小到48
-                  width: 48, // 从54缩小到48
-                  decoration: BoxDecoration(
-                    color: widget.isDark
-                        ? Colors.grey.shade800.withValues(alpha: 0.5)
-                        : Colors.grey.shade100.withValues(alpha: 0.8),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Transform.rotate(
-                      angle: _rotationAnimation.value * 2 * 3.14159,
-                      child: Icon(
-                        widget.icon,
-                        color: widget.color,
-                        size: 20, // 稍微缩小图标尺寸
-                      ),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AppBlurSurface(
+        borderRadius: BorderRadius.circular(8),
+        color: isDark
+            ? Colors.grey.shade900.withValues(alpha: 0.82)
+            : Colors.white.withValues(alpha: 0.92),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: SizedBox(
+          height: 38,
+          child: loading && users.isEmpty
+              ? Align(
+                  alignment: Alignment.centerLeft,
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// 小的高斯模糊图标按钮
-class GlassIconButton extends StatefulWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback? onTap;
-  final bool isDark;
-  final double size;
-
-  const GlassIconButton({
-    Key? key,
-    required this.icon,
-    required this.color,
-    this.onTap,
-    required this.isDark,
-    this.size = 40,
-  }) : super(key: key);
-
-  @override
-  State<GlassIconButton> createState() => _GlassIconButtonState();
-}
-
-class _GlassIconButtonState extends State<GlassIconButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 120),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.9,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _animationController.forward(),
-      onTapUp: (_) => _animationController.reverse(),
-      onTapCancel: () => _animationController.reverse(),
-      onTap: () {
-        HapticFeedback.lightImpact();
-        widget.onTap?.call();
-      },
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: ClipOval(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(
-                  height: widget.size,
-                  width: widget.size,
-                  decoration: BoxDecoration(
-                    color: widget.isDark
-                        ? Colors.grey.shade800.withValues(alpha: 0.5)
-                        : Colors.grey.shade100.withValues(alpha: 0.8),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      widget.icon,
-                      color: widget.color,
-                      size: widget.size * 0.5,
-                    ),
+                )
+              : NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.metrics.axis != Axis.horizontal) {
+                      return false;
+                    }
+                    if (!loading &&
+                        hasMore &&
+                        notification.metrics.extentAfter < 96) {
+                      onLoadMore?.call();
+                    }
+                    return false;
+                  },
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: users.length + (loading || hasMore ? 1 : 0),
+                    separatorBuilder: (_, __) => const SizedBox(width: 6),
+                    itemBuilder: (context, index) {
+                      if (index >= users.length) {
+                        if (loading) {
+                          return const SizedBox(
+                            width: 32,
+                            child: Center(
+                              child: SizedBox.square(
+                                dimension: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return SizedBox(
+                          width: 32,
+                          child: AppIconButton(
+                            onPressed: onLoadMore,
+                            icon: Icons.more_horiz_rounded,
+                            tooltip: '加载更多',
+                            iconSize: 18,
+                          ),
+                        );
+                      }
+                      final user = users[index];
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => onSelected(user),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: theme.dividerColor.withValues(alpha: 0.45),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 12,
+                                backgroundColor: theme.colorScheme.primary
+                                    .withValues(alpha: 0.12),
+                                child: Text(
+                                  user.username.isEmpty
+                                      ? '?'
+                                      : String.fromCharCodes(
+                                          user.username.runes.take(1),
+                                        ),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                user.username,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
-            ),
-          );
-        },
+        ),
       ),
     );
   }
@@ -856,31 +846,30 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(
           16,
-          (index) => AnimatedContainer(
+          (index) => AppAnimatedPanelSurface(
             duration: const Duration(milliseconds: 100),
             width: 3,
             height: 20 * _waveHeights[index % _waveHeights.length],
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.grey.shade800.withValues(alpha: 0.5)
-                  : Colors.grey.shade100.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: (isDark ? Colors.white : Colors.blue)
-                      .withValues(alpha: 0.3),
-                  blurRadius: 2,
-                  spreadRadius: 0,
-                ),
-              ],
-            ),
+            color: isDark
+                ? Colors.grey.shade800.withValues(alpha: 0.5)
+                : Colors.grey.shade100.withValues(alpha: 0.8),
+            borderRadius: const BorderRadius.all(Radius.circular(1.5)),
+            boxShadow: [
+              BoxShadow(
+                color: (isDark ? Colors.white : Colors.blue)
+                    .withValues(alpha: 0.3),
+                blurRadius: 2,
+                spreadRadius: 0,
+              ),
+            ],
             curve: Curves.easeInOut,
+            child: const SizedBox.shrink(),
           ),
         ),
       ),
@@ -896,7 +885,7 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
       opacity: widget.animationValue,
       child: Transform.scale(
         scale: 0.95 + 0.05 * widget.animationValue,
-        child: Container(
+        child: AppPanelSurface(
           color: Colors.transparent,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -947,62 +936,57 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
                       }
                     }
                   },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.grey.shade800.withValues(alpha: 0.5)
-                              : Colors.grey.shade100.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        height: 48, // 从54缩小到48
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            if (_isRecording && !_isCancelling)
-                              _buildWaveAnimationIndicator(),
-                            Center(
-                              child: Text(
-                                _isRecording
-                                    ? _isCancelling
-                                        ? "松开手指，取消发送"
-                                        : "松开发送，上滑取消"
-                                    : "按住说话",
-                                style: TextStyle(
-                                  color: _isRecording
-                                      ? _isCancelling
-                                          ? Colors.red.shade300
-                                          : (isDark
-                                              ? Colors.blue.shade300
-                                              : Colors.blue.shade700)
+                  child: AppBlurSurface(
+                    borderRadius: BorderRadius.circular(8),
+                    height: 48,
+                    color: isDark
+                        ? Colors.grey.shade800.withValues(alpha: 0.5)
+                        : Colors.grey.shade100.withValues(alpha: 0.8),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        if (_isRecording && !_isCancelling)
+                          _buildWaveAnimationIndicator(),
+                        Center(
+                          child: Text(
+                            _isRecording
+                                ? _isCancelling
+                                    ? "松开手指，取消发送"
+                                    : "松开发送，上滑取消"
+                                : "按住说话",
+                            style: TextStyle(
+                              color: _isRecording
+                                  ? _isCancelling
+                                      ? Colors.red.shade300
                                       : (isDark
-                                          ? Colors.white.withValues(alpha: 0.9)
-                                          : Colors.black
-                                              .withValues(alpha: 0.9)),
-                                  fontSize: 16,
-                                  fontWeight: _isRecording
-                                      ? FontWeight.w600
-                                      : FontWeight.w500,
-                                ),
-                              ),
+                                          ? Colors.blue.shade300
+                                          : Colors.blue.shade700)
+                                  : (isDark
+                                      ? Colors.white.withValues(alpha: 0.9)
+                                      : Colors.black.withValues(alpha: 0.9)),
+                              fontSize: 16,
+                              fontWeight: _isRecording
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              AnimatedGlassButton(
-                icon: Icons.keyboard,
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.8)
-                    : Colors.black.withValues(alpha: 0.7),
-                onTap: () {
+              AppGlassIconButton(
+                icon: Icon(
+                  Icons.keyboard,
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.8)
+                      : Colors.black.withValues(alpha: 0.7),
+                  size: 20,
+                ),
+                tooltip: '切换文字',
+                onPressed: () {
                   if (_isRecording) {
                     widget.onCancelRecording();
                     _stopWaveAnimation();
@@ -1010,6 +994,8 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
                   widget.onSwitchToTextMode();
                 },
                 isDark: isDark,
+                rotateOnPressed: true,
+                hapticFeedback: HapticFeedbackType.medium,
               ),
             ],
           ),

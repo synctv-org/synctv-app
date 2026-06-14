@@ -286,10 +286,12 @@ class GetAuthorizationUrlForBindRequest extends $pb.GeneratedMessage {
   factory GetAuthorizationUrlForBindRequest({
     $core.String? provider,
     $core.String? redirectUrl,
+    $core.String? verificationId,
   }) {
     final result = create();
     if (provider != null) result.provider = provider;
     if (redirectUrl != null) result.redirectUrl = redirectUrl;
+    if (verificationId != null) result.verificationId = verificationId;
     return result;
   }
 
@@ -309,6 +311,7 @@ class GetAuthorizationUrlForBindRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'provider')
     ..aOS(2, _omitFieldNames ? '' : 'redirectUrl')
+    ..aOS(3, _omitFieldNames ? '' : 'verificationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -355,6 +358,15 @@ class GetAuthorizationUrlForBindRequest extends $pb.GeneratedMessage {
   $core.bool hasRedirectUrl() => $_has(1);
   @$pb.TagNumber(2)
   void clearRedirectUrl() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get verificationId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set verificationId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasVerificationId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVerificationId() => $_clearField(3);
 }
 
 class GetAuthorizationUrlForBindResponse extends $pb.GeneratedMessage {
@@ -870,12 +882,14 @@ class UnlinkProviderRequest extends $pb.GeneratedMessage {
     $core.String? provider,
     $core.String? providerUserId,
     $core.String? providerInstanceName,
+    $core.String? verificationId,
   }) {
     final result = create();
     if (provider != null) result.provider = provider;
     if (providerUserId != null) result.providerUserId = providerUserId;
     if (providerInstanceName != null)
       result.providerInstanceName = providerInstanceName;
+    if (verificationId != null) result.verificationId = verificationId;
     return result;
   }
 
@@ -895,6 +909,7 @@ class UnlinkProviderRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'provider')
     ..aOS(2, _omitFieldNames ? '' : 'providerUserId')
     ..aOS(3, _omitFieldNames ? '' : 'providerInstanceName')
+    ..aOS(4, _omitFieldNames ? '' : 'verificationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -948,6 +963,15 @@ class UnlinkProviderRequest extends $pb.GeneratedMessage {
   $core.bool hasProviderInstanceName() => $_has(2);
   @$pb.TagNumber(3)
   void clearProviderInstanceName() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get verificationId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set verificationId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasVerificationId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearVerificationId() => $_clearField(4);
 }
 
 class UnlinkProviderResponse extends $pb.GeneratedMessage {
@@ -1211,7 +1235,7 @@ class LinkedProvider extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearProviderInstanceName() => $_clearField(4);
 
-  /// Optional issuer metadata when known for OIDC-like providers.
+  /// Issuer metadata when known for OIDC-like providers.
   @$pb.TagNumber(5)
   $core.String get providerIssuer => $_getSZ(4);
   @$pb.TagNumber(5)
@@ -1317,7 +1341,7 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearUsername() => $_clearField(2);
 
-  /// Email (optional)
+  /// Email, when the provider or account record exposes one.
   @$pb.TagNumber(3)
   $core.String get email => $_getSZ(2);
   @$pb.TagNumber(3)
@@ -1327,7 +1351,7 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   void clearEmail() => $_clearField(3);
 
-  /// Avatar URL (optional)
+  /// Avatar URL, when available.
   @$pb.TagNumber(4)
   $core.String get avatar => $_getSZ(3);
   @$pb.TagNumber(4)

@@ -1,3 +1,5 @@
+import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+
 class WUser {
   final String id;
   final String username;
@@ -8,6 +10,7 @@ class WUser {
   final int updatedAt;
   final int status;
   final int onlineCount;
+  final int connectionCount;
   final bool isBanned;
   final int bannedAt;
   final String bannedBy;
@@ -23,6 +26,7 @@ class WUser {
     this.updatedAt = 0,
     this.status = 0,
     this.onlineCount = 0,
+    this.connectionCount = 0,
     this.isBanned = false,
     this.bannedAt = 0,
     this.bannedBy = '',
@@ -30,6 +34,40 @@ class WUser {
   });
 
   bool get hasEmail => email != null && email!.trim().isNotEmpty;
+
+  WUser copyWith({
+    String? id,
+    String? username,
+    String? email,
+    String? avatarUrl,
+    int? role,
+    int? createdAt,
+    int? updatedAt,
+    int? status,
+    int? onlineCount,
+    int? connectionCount,
+    bool? isBanned,
+    int? bannedAt,
+    String? bannedBy,
+    String? bannedReason,
+  }) {
+    return WUser(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      status: status ?? this.status,
+      onlineCount: onlineCount ?? this.onlineCount,
+      connectionCount: connectionCount ?? this.connectionCount,
+      isBanned: isBanned ?? this.isBanned,
+      bannedAt: bannedAt ?? this.bannedAt,
+      bannedBy: bannedBy ?? this.bannedBy,
+      bannedReason: bannedReason ?? this.bannedReason,
+    );
+  }
 }
 
 class WRoom {
@@ -37,10 +75,12 @@ class WRoom {
   final String roomName;
   final String description;
   final int viewerCount;
+  final int connectionCount;
   final int memberCount;
   final bool needPassword;
   final String creator;
   final String creatorId;
+  final String creatorAvatarUrl;
   final int createdAt;
   final int updatedAt;
   final int status;
@@ -62,10 +102,12 @@ class WRoom {
     required this.roomName,
     this.description = '',
     this.viewerCount = 0,
+    this.connectionCount = 0,
     this.memberCount = 0,
     this.needPassword = false,
     this.creator = '',
     required this.creatorId,
+    this.creatorAvatarUrl = '',
     this.createdAt = 0,
     this.updatedAt = 0,
     this.status = 0,
@@ -88,10 +130,12 @@ class WRoom {
     String? roomName,
     String? description,
     int? viewerCount,
+    int? connectionCount,
     int? memberCount,
     bool? needPassword,
     String? creator,
     String? creatorId,
+    String? creatorAvatarUrl,
     int? createdAt,
     int? updatedAt,
     int? status,
@@ -113,10 +157,12 @@ class WRoom {
       roomName: roomName ?? this.roomName,
       description: description ?? this.description,
       viewerCount: viewerCount ?? this.viewerCount,
+      connectionCount: connectionCount ?? this.connectionCount,
       memberCount: memberCount ?? this.memberCount,
       needPassword: needPassword ?? this.needPassword,
       creator: creator ?? this.creator,
       creatorId: creatorId ?? this.creatorId,
+      creatorAvatarUrl: creatorAvatarUrl ?? this.creatorAvatarUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       status: status ?? this.status,
@@ -134,6 +180,87 @@ class WRoom {
       coverUrl: coverUrl ?? this.coverUrl,
     );
   }
+}
+
+class WPlaybackUrlOption {
+  final String name;
+  final String url;
+  final Map<String, String> headers;
+  final int? expireAt;
+  final String resolution;
+  final int? bitrate;
+  final String codec;
+  final int? fps;
+  final Map<String, String> metadata;
+
+  const WPlaybackUrlOption({
+    required this.name,
+    required this.url,
+    this.headers = const {},
+    this.expireAt,
+    this.resolution = '',
+    this.bitrate,
+    this.codec = '',
+    this.fps,
+    this.metadata = const {},
+  });
+
+  String label(int index) {
+    final parts = <String>[];
+    if (name.trim().isNotEmpty) parts.add(name.trim());
+    if (resolution.trim().isNotEmpty) parts.add(resolution.trim());
+    if (codec.trim().isNotEmpty) parts.add(codec.trim().toUpperCase());
+    if (fps != null && fps! > 0) parts.add('${fps}fps');
+    if (bitrate != null && bitrate! > 0) {
+      final mbps = bitrate! / 1000000;
+      parts.add('${mbps.toStringAsFixed(mbps >= 10 ? 0 : 1)}Mbps');
+    }
+    return parts.isEmpty ? '线路 ${index + 1}' : parts.join(' · ');
+  }
+}
+
+class WPlaybackModeOption {
+  final String key;
+  final String format;
+  final List<WPlaybackUrlOption> urls;
+  final int defaultUrlIndex;
+  final Map<String, dynamic>? subtitles;
+  final String? danmu;
+
+  const WPlaybackModeOption({
+    required this.key,
+    this.format = '',
+    this.urls = const [],
+    this.defaultUrlIndex = 0,
+    this.subtitles,
+    this.danmu,
+  });
+
+  String get label {
+    final lower = key.toLowerCase();
+    final display = switch (lower) {
+      'direct' => '原始',
+      'proxy' || 'proxied' => '代理',
+      'dash' => 'DASH',
+      'hls' => 'HLS',
+      'mp4' => 'MP4',
+      _ when lower.endsWith('_transcode') =>
+        '${key.substring(0, key.length - '_transcode'.length)} 转码',
+      _ when lower.startsWith('transcoded_') =>
+        key.substring('transcoded_'.length),
+      _ => key,
+    };
+    if (format.trim().isEmpty) return display;
+    return '$display · ${format.trim().toUpperCase()}';
+  }
+
+  int get safeDefaultUrlIndex =>
+      defaultUrlIndex >= 0 && defaultUrlIndex < urls.length
+          ? defaultUrlIndex
+          : 0;
+
+  WPlaybackUrlOption? get defaultUrl =>
+      urls.isEmpty ? null : urls[safeDefaultUrlIndex];
 }
 
 class WMovie {
@@ -165,6 +292,9 @@ class WMovie {
   final Map<String, dynamic> metadata;
   final String description;
   final String coverUrl;
+  final List<WPlaybackModeOption> playbackModes;
+  final String selectedPlaybackMode;
+  final int selectedPlaybackUrlIndex;
 
   WMovie({
     required this.id,
@@ -195,11 +325,20 @@ class WMovie {
     this.metadata = const {},
     this.description = '',
     this.coverUrl = '',
+    this.playbackModes = const [],
+    this.selectedPlaybackMode = '',
+    this.selectedPlaybackUrlIndex = 0,
   });
 
   bool get isStaticMedia => id.startsWith('med_');
 
   bool get isPlaylist => id.startsWith('pl_');
+
+  bool get isDynamicPlaylist => isPlaylist && metadata['is_dynamic'] == true;
+
+  bool get isProviderDynamicItem => !isStaticMedia && !isPlaylist;
+
+  bool get isProviderDynamicEntry => isDynamicPlaylist || isProviderDynamicItem;
 
   bool get hasPlaybackTarget =>
       (subPath ?? '').isNotEmpty && (parentId ?? '').startsWith('pl_');
@@ -211,6 +350,64 @@ class WMovie {
       hasPlaybackTarget ? parentId! : (isPlaylist ? id : '');
 
   String? get playbackWatchTarget => hasPlaybackTarget ? subPath : null;
+
+  bool get hasPlaybackChoices =>
+      playbackModes.length > 1 ||
+      playbackModes.any((mode) => mode.urls.length > 1);
+
+  WPlaybackModeOption? get selectedPlaybackModeOption {
+    if (playbackModes.isEmpty) return null;
+    for (final mode in playbackModes) {
+      if (mode.key == selectedPlaybackMode) return mode;
+    }
+    return playbackModes.first;
+  }
+
+  WPlaybackUrlOption? get selectedPlaybackUrlOption {
+    final mode = selectedPlaybackModeOption;
+    if (mode == null || mode.urls.isEmpty) return null;
+    final index = selectedPlaybackUrlIndex >= 0 &&
+            selectedPlaybackUrlIndex < mode.urls.length
+        ? selectedPlaybackUrlIndex
+        : mode.safeDefaultUrlIndex;
+    return mode.urls[index];
+  }
+
+  String get playbackChoiceLabel {
+    final mode = selectedPlaybackModeOption;
+    if (mode == null) return '';
+    final url = selectedPlaybackUrlOption;
+    final urlLabel =
+        url == null ? '' : url.label(selectedPlaybackUrlIndex).trim();
+    return urlLabel.isEmpty ? mode.label : '${mode.label} · $urlLabel';
+  }
+
+  WMovie selectPlayback({
+    required String modeKey,
+    required int urlIndex,
+    String Function(String url)? resolveUrl,
+  }) {
+    final mode = playbackModes.firstWhere(
+      (entry) => entry.key == modeKey,
+      orElse: () => playbackModes.isEmpty
+          ? const WPlaybackModeOption(key: '')
+          : playbackModes.first,
+    );
+    final index = urlIndex >= 0 && urlIndex < mode.urls.length
+        ? urlIndex
+        : mode.safeDefaultUrlIndex;
+    final selectedUrl = mode.urls.isEmpty ? null : mode.urls[index];
+    final rawUrl = selectedUrl?.url ?? url;
+    return copyWith(
+      url: resolveUrl == null ? rawUrl : resolveUrl(rawUrl),
+      headers: selectedUrl?.headers ?? headers,
+      type: mode.format.isEmpty ? type : mode.format,
+      subtitles: mode.subtitles ?? subtitles,
+      danmu: mode.danmu ?? danmu,
+      selectedPlaybackMode: mode.key,
+      selectedPlaybackUrlIndex: index,
+    );
+  }
 
   bool hasSamePlaybackIdentity(WMovie other) {
     final mediaId = playbackWatchMediaId;
@@ -257,6 +454,9 @@ class WMovie {
     Map<String, dynamic>? metadata,
     String? description,
     String? coverUrl,
+    List<WPlaybackModeOption>? playbackModes,
+    String? selectedPlaybackMode,
+    int? selectedPlaybackUrlIndex,
   }) {
     return WMovie(
       id: id ?? this.id,
@@ -287,6 +487,10 @@ class WMovie {
       metadata: metadata ?? this.metadata,
       description: description ?? this.description,
       coverUrl: coverUrl ?? this.coverUrl,
+      playbackModes: playbackModes ?? this.playbackModes,
+      selectedPlaybackMode: selectedPlaybackMode ?? this.selectedPlaybackMode,
+      selectedPlaybackUrlIndex:
+          selectedPlaybackUrlIndex ?? this.selectedPlaybackUrlIndex,
     );
   }
 
@@ -302,6 +506,143 @@ class WMovie {
       providerInstanceName: source.providerInstanceName,
       sourceConfig: source.sourceConfig,
     );
+  }
+
+  static WMovie fromPlaybackProto(
+    client.Playback playback, {
+    String id = '',
+    String? subPath,
+    String? parentId,
+    String Function(String url)? resolveUrl,
+  }) {
+    final modes = playbackModeOptionsFromProto(
+      playback,
+      resolveUrl: resolveUrl,
+    );
+    final defaultMode = modes.any((mode) => mode.key == playback.defaultMode)
+        ? playback.defaultMode
+        : modes.isEmpty
+            ? ''
+            : modes.first.key;
+    final selectedMode = modes.firstWhere(
+      (mode) => mode.key == defaultMode,
+      orElse: () =>
+          modes.isEmpty ? const WPlaybackModeOption(key: '') : modes.first,
+    );
+    final selectedUrl = selectedMode.defaultUrl;
+    final selectedUrlValue = selectedUrl?.url ?? '';
+    return WMovie(
+      id: id.isNotEmpty
+          ? id
+          : playback.mediaId.isNotEmpty
+              ? playback.mediaId
+              : playback.playlistId,
+      name: playback.name,
+      url: selectedUrlValue,
+      headers: selectedUrl?.headers ?? const {},
+      type: selectedMode.format,
+      subPath: subPath,
+      parentId: parentId,
+      subtitles: selectedMode.subtitles,
+      danmu: selectedMode.danmu,
+      playbackModes: modes,
+      selectedPlaybackMode: selectedMode.key,
+      selectedPlaybackUrlIndex: selectedMode.safeDefaultUrlIndex,
+      metadata: {
+        'default_mode': playback.defaultMode,
+        'playback_metadata': Map<String, String>.from(
+          playback.metadata,
+        ),
+      },
+    );
+  }
+
+  static List<WPlaybackModeOption> playbackModeOptionsFromProto(
+    client.Playback playback, {
+    String Function(String url)? resolveUrl,
+  }) {
+    final entries = playback.playbackInfos.entries.toList()
+      ..sort((a, b) {
+        if (a.key == playback.defaultMode) return -1;
+        if (b.key == playback.defaultMode) return 1;
+        return a.key.compareTo(b.key);
+      });
+
+    return entries.map((entry) {
+      final info = entry.value;
+      final urls = info.urls.map((url) {
+        final metadata = url.hasMetadata() ? url.metadata : null;
+        return WPlaybackUrlOption(
+          name: url.name,
+          url: resolveUrl == null ? url.url : resolveUrl(url.url),
+          headers: Map<String, String>.from(url.headers),
+          expireAt: url.hasExpireAt() ? url.expireAt.toInt() : null,
+          resolution: metadata?.resolution ?? '',
+          bitrate:
+              metadata?.hasBitrate() == true ? metadata!.bitrate.toInt() : null,
+          codec: metadata?.codec ?? '',
+          fps: metadata?.hasFps() == true ? metadata!.fps : null,
+          metadata: metadata == null
+              ? const {}
+              : Map<String, String>.from(metadata.extra),
+        );
+      }).toList();
+
+      return WPlaybackModeOption(
+        key: entry.key,
+        format: info.format,
+        urls: urls,
+        defaultUrlIndex: info.defaultUrlIndex,
+        subtitles: _subtitleMapFromProto(
+          info.subtitles,
+          resolveUrl: resolveUrl,
+        ),
+        danmu: _danmuUrlFromProto(info.danmakus, resolveUrl: resolveUrl),
+      );
+    }).toList();
+  }
+
+  static Map<String, dynamic>? _subtitleMapFromProto(
+    Iterable<client.Subtitle> subtitles, {
+    String Function(String url)? resolveUrl,
+  }) {
+    final result = <String, dynamic>{};
+    var index = 0;
+    for (final subtitle in subtitles) {
+      if (subtitle.urls.isEmpty) continue;
+      final urlIndex = subtitle.defaultUrlIndex >= 0 &&
+              subtitle.defaultUrlIndex < subtitle.urls.length
+          ? subtitle.defaultUrlIndex
+          : 0;
+      final subtitleUrl = subtitle.urls[urlIndex];
+      if (subtitleUrl.url.isEmpty) continue;
+      final name = subtitle.name.trim().isNotEmpty
+          ? subtitle.name.trim()
+          : subtitle.language.trim().isNotEmpty
+              ? subtitle.language.trim()
+              : '字幕 ${index + 1}';
+      result['sub_$index'] = {
+        'name': name,
+        'language': subtitle.language,
+        'url':
+            resolveUrl == null ? subtitleUrl.url : resolveUrl(subtitleUrl.url),
+        'format': subtitleUrl.format,
+        'headers': Map<String, String>.from(subtitleUrl.headers),
+      };
+      index++;
+    }
+    return result.isEmpty ? null : result;
+  }
+
+  static String? _danmuUrlFromProto(
+    Iterable<client.Danmaku> danmakus, {
+    String Function(String url)? resolveUrl,
+  }) {
+    for (final danmaku in danmakus) {
+      final url = danmaku.url.trim();
+      if (url.isNotEmpty) return resolveUrl == null ? url : resolveUrl(url);
+    }
+    return null;
   }
 }
 
@@ -326,13 +667,43 @@ class WPlaybackStatus {
   final bool isPlaying;
   final double currentTime;
   final double playbackRate;
+  final int? version;
+  final String playingMediaId;
+  final String playingPlaylistId;
+  final String targetHash;
 
   WPlaybackStatus({
     this.movie,
     this.isPlaying = false,
     this.currentTime = 0,
     this.playbackRate = 1.0,
+    this.version,
+    this.playingMediaId = '',
+    this.playingPlaylistId = '',
+    this.targetHash = '',
   });
+
+  WPlaybackStatus copyWith({
+    WMovie? movie,
+    bool? isPlaying,
+    double? currentTime,
+    double? playbackRate,
+    int? version,
+    String? playingMediaId,
+    String? playingPlaylistId,
+    String? targetHash,
+  }) {
+    return WPlaybackStatus(
+      movie: movie ?? this.movie,
+      isPlaying: isPlaying ?? this.isPlaying,
+      currentTime: currentTime ?? this.currentTime,
+      playbackRate: playbackRate ?? this.playbackRate,
+      version: version ?? this.version,
+      playingMediaId: playingMediaId ?? this.playingMediaId,
+      playingPlaylistId: playingPlaylistId ?? this.playingPlaylistId,
+      targetHash: targetHash ?? this.targetHash,
+    );
+  }
 }
 
 class RoomMemberPermissions {

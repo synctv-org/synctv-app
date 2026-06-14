@@ -91,6 +91,14 @@ const GetAuthorizationUrlForBindRequest$json = {
   '2': [
     {'1': 'provider', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'provider'},
     {'1': 'redirect_url', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'redirectUrl'},
+    {
+      '1': 'verification_id',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'verificationId'
+    },
   ],
 };
 
@@ -103,7 +111,8 @@ final $typed_data.Uint8List getAuthorizationUrlForBindRequestDescriptor = $conve
     'b3IgYSBsb29wYmFjayBodHRwIFVSTBqdAXRoaXMgPT0gJycgfHwgKHNpemUodGhpcykgPD0gMj'
     'A0OCAmJiAodGhpcy5tYXRjaGVzKCdeaHR0cHM6Ly9bXlxcc10rJCcpIHx8IHRoaXMubWF0Y2hl'
     'cygnXmh0dHA6Ly8oMTI3XFwuMFxcLjBcXC4xfGxvY2FsaG9zdHxcXFs6OjFcXF0pKDpbMC05XS'
-    'spPy9bXlxcc10qJCcpKSlSC3JlZGlyZWN0VXJs');
+    'spPy9bXlxcc10qJCcpKSlSC3JlZGlyZWN0VXJsEjMKD3ZlcmlmaWNhdGlvbl9pZBgDIAEoCUIK'
+    'ukgHcgUQARiAAVIOdmVyaWZpY2F0aW9uSWQ=');
 
 @$core.Deprecated('Use getAuthorizationUrlForBindResponseDescriptor instead')
 const GetAuthorizationUrlForBindResponse$json = {
@@ -148,8 +157,24 @@ final $typed_data.Uint8List exchangeAuthorizationCodeRequestDescriptor =
 const ExchangeAuthorizationCodeResponse$json = {
   '1': 'ExchangeAuthorizationCodeResponse',
   '2': [
-    {'1': 'access_token', '3': 1, '4': 1, '5': 9, '10': 'accessToken'},
-    {'1': 'refresh_token', '3': 2, '4': 1, '5': 9, '10': 'refreshToken'},
+    {
+      '1': 'access_token',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'accessToken',
+      '17': true
+    },
+    {
+      '1': 'refresh_token',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'refreshToken',
+      '17': true
+    },
     {'1': 'expires_in', '3': 3, '4': 1, '5': 3, '10': 'expiresIn'},
     {
       '1': 'user_info',
@@ -159,7 +184,15 @@ const ExchangeAuthorizationCodeResponse$json = {
       '6': '.synctv.client.OAuth2UserInfo',
       '10': 'userInfo'
     },
-    {'1': 'redirect_url', '3': 5, '4': 1, '5': 9, '10': 'redirectUrl'},
+    {
+      '1': 'redirect_url',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'redirectUrl',
+      '17': true
+    },
     {'1': 'is_bind', '3': 6, '4': 1, '5': 8, '10': 'isBind'},
     {
       '1': 'registration_review_required',
@@ -173,20 +206,30 @@ const ExchangeAuthorizationCodeResponse$json = {
       '3': 8,
       '4': 1,
       '5': 9,
-      '10': 'registrationReviewId'
+      '9': 3,
+      '10': 'registrationReviewId',
+      '17': true
     },
+  ],
+  '8': [
+    {'1': '_access_token'},
+    {'1': '_refresh_token'},
+    {'1': '_redirect_url'},
+    {'1': '_registration_review_id'},
   ],
 };
 
 /// Descriptor for `ExchangeAuthorizationCodeResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List exchangeAuthorizationCodeResponseDescriptor = $convert.base64Decode(
-    'CiFFeGNoYW5nZUF1dGhvcml6YXRpb25Db2RlUmVzcG9uc2USIQoMYWNjZXNzX3Rva2VuGAEgAS'
-    'gJUgthY2Nlc3NUb2tlbhIjCg1yZWZyZXNoX3Rva2VuGAIgASgJUgxyZWZyZXNoVG9rZW4SHQoK'
-    'ZXhwaXJlc19pbhgDIAEoA1IJZXhwaXJlc0luEjoKCXVzZXJfaW5mbxgEIAEoCzIdLnN5bmN0di'
-    '5jbGllbnQuT0F1dGgyVXNlckluZm9SCHVzZXJJbmZvEiEKDHJlZGlyZWN0X3VybBgFIAEoCVIL'
-    'cmVkaXJlY3RVcmwSFwoHaXNfYmluZBgGIAEoCFIGaXNCaW5kEkAKHHJlZ2lzdHJhdGlvbl9yZX'
-    'ZpZXdfcmVxdWlyZWQYByABKAhSGnJlZ2lzdHJhdGlvblJldmlld1JlcXVpcmVkEjQKFnJlZ2lz'
-    'dHJhdGlvbl9yZXZpZXdfaWQYCCABKAlSFHJlZ2lzdHJhdGlvblJldmlld0lk');
+    'CiFFeGNoYW5nZUF1dGhvcml6YXRpb25Db2RlUmVzcG9uc2USJgoMYWNjZXNzX3Rva2VuGAEgAS'
+    'gJSABSC2FjY2Vzc1Rva2VuiAEBEigKDXJlZnJlc2hfdG9rZW4YAiABKAlIAVIMcmVmcmVzaFRv'
+    'a2VuiAEBEh0KCmV4cGlyZXNfaW4YAyABKANSCWV4cGlyZXNJbhI6Cgl1c2VyX2luZm8YBCABKA'
+    'syHS5zeW5jdHYuY2xpZW50Lk9BdXRoMlVzZXJJbmZvUgh1c2VySW5mbxImCgxyZWRpcmVjdF91'
+    'cmwYBSABKAlIAlILcmVkaXJlY3RVcmyIAQESFwoHaXNfYmluZBgGIAEoCFIGaXNCaW5kEkAKHH'
+    'JlZ2lzdHJhdGlvbl9yZXZpZXdfcmVxdWlyZWQYByABKAhSGnJlZ2lzdHJhdGlvblJldmlld1Jl'
+    'cXVpcmVkEjkKFnJlZ2lzdHJhdGlvbl9yZXZpZXdfaWQYCCABKAlIA1IUcmVnaXN0cmF0aW9uUm'
+    'V2aWV3SWSIAQFCDwoNX2FjY2Vzc190b2tlbkIQCg5fcmVmcmVzaF90b2tlbkIPCg1fcmVkaXJl'
+    'Y3RfdXJsQhkKF19yZWdpc3RyYXRpb25fcmV2aWV3X2lk');
 
 @$core.Deprecated('Use listAvailableProvidersRequestDescriptor instead')
 const ListAvailableProvidersRequest$json = {
@@ -262,6 +305,14 @@ const UnlinkProviderRequest$json = {
       '8': {},
       '10': 'providerInstanceName'
     },
+    {
+      '1': 'verification_id',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'verificationId'
+    },
   ],
   '7': {},
 };
@@ -276,10 +327,11 @@ final $typed_data.Uint8List unlinkProviderRequestDescriptor = $convert.base64Dec
     'JzGkx0aGlzID09ICcnIHx8IChzaXplKHRoaXMpIDw9IDI1NiAmJiAhdGhpcy5tYXRjaGVzKCcu'
     'KltcXHgwMC1cXHgxRlxceDdGXS4qJykpUg5wcm92aWRlclVzZXJJZBJSChZwcm92aWRlcl9pbn'
     'N0YW5jZV9uYW1lGAMgASgJQhy6SBlyFBhAMhBeW0EtWmEtejAtOV8tXSsk2AEBUhRwcm92aWRl'
-    'ckluc3RhbmNlTmFtZTrBAbpIvQEaugEKNW9hdXRoMi51bmxpbmtfcHJvdmlkZXIuaW5zdGFuY2'
-    'VfZm9yX3NwZWNpZmljX2lkZW50aXR5Ej9wcm92aWRlcl9pbnN0YW5jZV9uYW1lIGlzIHJlcXVp'
-    'cmVkIHdoZW4gcHJvdmlkZXJfdXNlcl9pZCBpcyBzZXQaQHRoaXMucHJvdmlkZXJfdXNlcl9pZC'
-    'A9PSAnJyB8fCB0aGlzLnByb3ZpZGVyX2luc3RhbmNlX25hbWUgIT0gJyc=');
+    'ckluc3RhbmNlTmFtZRIzCg92ZXJpZmljYXRpb25faWQYBCABKAlCCrpIB3IFEAEYgAFSDnZlcm'
+    'lmaWNhdGlvbklkOsEBuki9ARq6AQo1b2F1dGgyLnVubGlua19wcm92aWRlci5pbnN0YW5jZV9m'
+    'b3Jfc3BlY2lmaWNfaWRlbnRpdHkSP3Byb3ZpZGVyX2luc3RhbmNlX25hbWUgaXMgcmVxdWlyZW'
+    'Qgd2hlbiBwcm92aWRlcl91c2VyX2lkIGlzIHNldBpAdGhpcy5wcm92aWRlcl91c2VyX2lkID09'
+    'ICcnIHx8IHRoaXMucHJvdmlkZXJfaW5zdGFuY2VfbmFtZSAhPSAnJw==');
 
 @$core.Deprecated('Use unlinkProviderResponseDescriptor instead')
 const UnlinkProviderResponse$json = {
@@ -346,8 +398,19 @@ const LinkedProvider$json = {
       '5': 9,
       '10': 'providerInstanceName'
     },
-    {'1': 'provider_issuer', '3': 5, '4': 1, '5': 9, '10': 'providerIssuer'},
+    {
+      '1': 'provider_issuer',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'providerIssuer',
+      '17': true
+    },
     {'1': 'provider_user_id', '3': 6, '4': 1, '5': 9, '10': 'providerUserId'},
+  ],
+  '8': [
+    {'1': '_provider_issuer'},
   ],
 };
 
@@ -356,8 +419,9 @@ final $typed_data.Uint8List linkedProviderDescriptor = $convert.base64Decode(
     'Cg5MaW5rZWRQcm92aWRlchIjCg1wcm92aWRlcl90eXBlGAEgASgJUgxwcm92aWRlclR5cGUSKw'
     'oRcHJvdmlkZXJfdXNlcm5hbWUYAiABKAlSEHByb3ZpZGVyVXNlcm5hbWUSGwoJbGlua2VkX2F0'
     'GAMgASgDUghsaW5rZWRBdBI0ChZwcm92aWRlcl9pbnN0YW5jZV9uYW1lGAQgASgJUhRwcm92aW'
-    'Rlckluc3RhbmNlTmFtZRInCg9wcm92aWRlcl9pc3N1ZXIYBSABKAlSDnByb3ZpZGVySXNzdWVy'
-    'EigKEHByb3ZpZGVyX3VzZXJfaWQYBiABKAlSDnByb3ZpZGVyVXNlcklk');
+    'Rlckluc3RhbmNlTmFtZRIsCg9wcm92aWRlcl9pc3N1ZXIYBSABKAlIAFIOcHJvdmlkZXJJc3N1'
+    'ZXKIAQESKAoQcHJvdmlkZXJfdXNlcl9pZBgGIAEoCVIOcHJvdmlkZXJVc2VySWRCEgoQX3Byb3'
+    'ZpZGVyX2lzc3Vlcg==');
 
 @$core.Deprecated('Use oAuth2UserInfoDescriptor instead')
 const OAuth2UserInfo$json = {
@@ -365,8 +429,8 @@ const OAuth2UserInfo$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 9, '10': 'userId'},
     {'1': 'username', '3': 2, '4': 1, '5': 9, '10': 'username'},
-    {'1': 'email', '3': 3, '4': 1, '5': 9, '10': 'email'},
-    {'1': 'avatar', '3': 4, '4': 1, '5': 9, '10': 'avatar'},
+    {'1': 'email', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'email', '17': true},
+    {'1': 'avatar', '3': 4, '4': 1, '5': 9, '9': 1, '10': 'avatar', '17': true},
     {
       '1': 'role',
       '3': 5,
@@ -385,15 +449,19 @@ const OAuth2UserInfo$json = {
     },
     {'1': 'created_at', '3': 7, '4': 1, '5': 3, '10': 'createdAt'},
   ],
+  '8': [
+    {'1': '_email'},
+    {'1': '_avatar'},
+  ],
 };
 
 /// Descriptor for `OAuth2UserInfo`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2UserInfoDescriptor = $convert.base64Decode(
     'Cg5PQXV0aDJVc2VySW5mbxIXCgd1c2VyX2lkGAEgASgJUgZ1c2VySWQSGgoIdXNlcm5hbWUYAi'
-    'ABKAlSCHVzZXJuYW1lEhQKBWVtYWlsGAMgASgJUgVlbWFpbBIWCgZhdmF0YXIYBCABKAlSBmF2'
-    'YXRhchIrCgRyb2xlGAUgASgOMhcuc3luY3R2LmNvbW1vbi5Vc2VyUm9sZVIEcm9sZRIxCgZzdG'
-    'F0dXMYBiABKA4yGS5zeW5jdHYuY29tbW9uLlVzZXJTdGF0dXNSBnN0YXR1cxIdCgpjcmVhdGVk'
-    'X2F0GAcgASgDUgljcmVhdGVkQXQ=');
+    'ABKAlSCHVzZXJuYW1lEhkKBWVtYWlsGAMgASgJSABSBWVtYWlsiAEBEhsKBmF2YXRhchgEIAEo'
+    'CUgBUgZhdmF0YXKIAQESKwoEcm9sZRgFIAEoDjIXLnN5bmN0di5jb21tb24uVXNlclJvbGVSBH'
+    'JvbGUSMQoGc3RhdHVzGAYgASgOMhkuc3luY3R2LmNvbW1vbi5Vc2VyU3RhdHVzUgZzdGF0dXMS'
+    'HQoKY3JlYXRlZF9hdBgHIAEoA1IJY3JlYXRlZEF0QggKBl9lbWFpbEIJCgdfYXZhdGFy');
 
 const $core.Map<$core.String, $core.dynamic> OAuth2ServiceBase$json = {
   '1': 'OAuth2Service',

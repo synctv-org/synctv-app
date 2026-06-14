@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:synctv_app/utils/message_utils.dart';
-import 'package:synctv_app/services/smart_grip_service.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 /// 聊天相关的工具类，提供复用功能
 class ChatUtils {
@@ -68,204 +69,127 @@ class ChatUtils {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    showModalBottomSheet(
+    showAppBottomSheet<void>(
       context: context,
-      backgroundColor: theme.dialogTheme.backgroundColor,
-      elevation: 20,
-      barrierColor: Colors.black.withValues(alpha: 0.5),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (context) {
-        return SafeArea(
+        return AppBottomSheetFrame(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          includeKeyboardInset: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 顶部拖动条
-              Container(
-                width: 36,
-                height: 5,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2.5),
+              // 从相册选择选项
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: AppPanelSurface(
+                  color: isDark ? Colors.grey.shade800 : Colors.white,
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                   boxShadow: [
                     BoxShadow(
                       color:
-                          Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                      blurRadius: 1,
+                          Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+                      blurRadius: 10,
                       spreadRadius: 0,
-                      offset: const Offset(0, 0.5),
+                      offset: const Offset(0, 2),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // 从相册选择选项
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey.shade800 : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-                        blurRadius: 10,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 6,
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.blue.shade900.withValues(alpha: 0.3)
-                              : Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.blue.withValues(
-                                alpha: isDark ? 0.2 : 0.1,
-                              ),
-                              blurRadius: 4,
-                              spreadRadius: 0,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.photo_library,
-                          color: isDark
-                              ? Colors.blue.shade300
-                              : Colors.blue.shade600,
-                          size: 24,
-                        ),
-                      ),
-                      title: Text(
-                        '从相册选择',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.textTheme.titleMedium?.color,
-                        ),
-                      ),
-                      subtitle: Text(
-                        '选择已有照片',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onGallerySelected();
-                      },
+                  child: AppTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 6,
                     ),
+                    prefix: AppIconBadge(
+                      icon: Icons.photo_library,
+                      color:
+                          isDark ? Colors.blue.shade300 : Colors.blue.shade600,
+                      backgroundColor: isDark
+                          ? Colors.blue.shade900.withValues(alpha: 0.3)
+                          : Colors.blue.shade50,
+                      size: 40,
+                      iconSize: 24,
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    ),
+                    title: Text(
+                      '从相册选择',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textTheme.titleMedium?.color,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '选择已有照片',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onGallerySelected();
+                    },
                   ),
                 ),
               ),
 
               // 拍照选项
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey.shade800 : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-                        blurRadius: 10,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 6,
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.green.shade900.withValues(alpha: 0.3)
-                              : Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.green.withValues(
-                                alpha: isDark ? 0.2 : 0.1,
-                              ),
-                              blurRadius: 4,
-                              spreadRadius: 0,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.camera_alt,
-                          color: isDark
-                              ? Colors.green.shade300
-                              : Colors.green.shade600,
-                          size: 24,
-                        ),
-                      ),
-                      title: Text(
-                        '拍照',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.textTheme.titleMedium?.color,
-                        ),
-                      ),
-                      subtitle: Text(
-                        '拍摄新照片',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
-                        ),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      onTap: () {
-                        Navigator.of(context).pop();
-                        onCameraSelected();
-                      },
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: AppPanelSurface(
+                  color: isDark ? Colors.grey.shade800 : Colors.white,
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+                      blurRadius: 10,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 2),
                     ),
+                  ],
+                  child: AppTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 6,
+                    ),
+                    prefix: AppIconBadge(
+                      icon: Icons.camera_alt,
+                      color: isDark
+                          ? Colors.green.shade300
+                          : Colors.green.shade600,
+                      backgroundColor: isDark
+                          ? Colors.green.shade900.withValues(alpha: 0.3)
+                          : Colors.green.shade50,
+                      size: 40,
+                      iconSize: 24,
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    ),
+                    title: Text(
+                      '拍照',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textTheme.titleMedium?.color,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '拍摄新照片',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onCameraSelected();
+                    },
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
             ],
           ),
         );
@@ -285,47 +209,34 @@ class ChatUtils {
     final theme = Theme.of(context);
     final accent = iconColor ?? theme.colorScheme.primary;
 
-    return showDialog<T>(
+    return showAppDialog<T>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (context) {
-        return Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          backgroundColor: theme.colorScheme.surface,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 520,
-              maxHeight: MediaQuery.sizeOf(context).height * 0.86,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _DialogHeaderBar(
-                  title: title,
-                  icon: icon.icon ?? Icons.info_outline_rounded,
-                  color: accent,
-                  onClose: () => Navigator.of(context).pop(),
-                ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: content,
-                    ),
+        return AppDialogFrame(
+          maxWidth: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _DialogHeaderBar(
+                title: title,
+                icon: icon.icon ?? Icons.info_outline_rounded,
+                color: accent,
+                onClose: () => Navigator.of(context).pop(),
+              ),
+              Flexible(
+                child: AppSingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: content,
                   ),
                 ),
-                _DialogActionBar(
-                  actions: actions,
-                  topBorder: true,
-                ),
-              ],
-            ),
+              ),
+              _DialogActionBar(
+                actions: actions,
+                topBorder: true,
+              ),
+            ],
           ),
         );
       },
@@ -334,9 +245,10 @@ class ChatUtils {
 
   /// 创建标准取消按钮
   static Widget createCancelButton(BuildContext context) {
-    return OutlinedButton(
+    return AppActionButton(
       onPressed: () => Navigator.pop(context),
-      child: const Text('取消'),
+      label: '取消',
+      style: AppActionButtonStyle.outlined,
     );
   }
 
@@ -346,9 +258,9 @@ class ChatUtils {
     VoidCallback onTap, {
     String text = '确定',
   }) {
-    return FilledButton(
+    return AppActionButton(
       onPressed: onTap,
-      child: Text(text),
+      label: text,
     );
   }
 
@@ -395,19 +307,16 @@ class ChatUtils {
             const SizedBox(height: 20),
             Column(
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color:
-                        isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                AppPanelSurface(
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 12,
                   ),
                   child: Column(
                     children: [
-                      Slider(
+                      AppSlider(
                         value: newTemperature,
                         min: 0.0,
                         max: 2.0,
@@ -513,43 +422,23 @@ class ChatUtils {
             ),
           ),
           const SizedBox(height: 20),
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(10),
+          AppTextField(
+            controller: controller,
+            label: '最大 Token 数',
+            hintText: '输入最大Token数',
+            prefixIcon: Icons.data_usage_rounded,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            textInputAction: TextInputAction.done,
+            style: TextStyle(
+              fontSize: 15,
+              color: isDark ? Colors.white : Colors.black87,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(9),
-              child: TextField(
-                controller: controller,
-                keyboardType: TextInputType.number,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-                decoration: InputDecoration(
-                  hintText: '输入最大Token数',
-                  hintStyle: TextStyle(
-                    color: isDark ? Colors.grey.shade500 : Colors.grey.shade500,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  border: InputBorder.none,
-                  filled: true,
-                  fillColor:
-                      isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
-                ),
-                onChanged: (value) {
-                  try {
-                    newMaxTokens = int.parse(value);
-                  } catch (e) {
-                    // 处理无效输入
-                  }
-                },
-              ),
-            ),
+            fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.grey.shade50,
+            onChanged: (value) {
+              final parsed = int.tryParse(value);
+              if (parsed != null) newMaxTokens = parsed;
+            },
           ),
           const SizedBox(height: 10),
           Row(
@@ -589,19 +478,13 @@ class ChatUtils {
     int value,
     TextEditingController controller,
   ) {
-    return InkWell(
-      onTap: () {
+    return AppActionButton(
+      onPressed: () {
         controller.text = value.toString();
       },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text('$value', style: const TextStyle(fontSize: 12)),
-      ),
+      label: '$value',
+      size: AppActionButtonSize.sm,
+      style: AppActionButtonStyle.tonal,
     );
   }
 
@@ -676,41 +559,23 @@ class ChatUtils {
               ),
             ),
             const SizedBox(height: 16),
-            Container(
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.black.withValues(alpha: 0.05),
-                  width: 1,
-                ),
+            AppTextField(
+              controller: promptController,
+              label: '系统提示词',
+              hintText: '输入系统提示词...',
+              prefixIcon: Icons.psychology_outlined,
+              minLines: 4,
+              maxLines: 6,
+              textInputAction: TextInputAction.newline,
+              style: TextStyle(
+                fontSize: 15,
+                color: isDark ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w500,
               ),
-              child: TextField(
-                controller: promptController,
-                maxLines: 5,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontWeight: FontWeight.w500,
-                ),
-                decoration: InputDecoration(
-                  hintText: '输入系统提示词...',
-                  hintStyle: TextStyle(
-                    color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                  border: InputBorder.none,
-                ),
-                onChanged: (text) {
-                  // 保存光标位置
-                  currentSelection = promptController.selection;
-                },
-              ),
+              fillColor: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+              onChanged: (text) {
+                currentSelection = promptController.selection;
+              },
             ),
             const SizedBox(height: 16),
 
@@ -740,7 +605,7 @@ class ChatUtils {
                   ],
                 ),
                 // 添加自定义变量按钮
-                GestureDetector(
+                AppInkSurface(
                   onTap: () async {
                     final newVar = await _showAddCustomVariableDialog(
                       context,
@@ -754,42 +619,36 @@ class ChatUtils {
                         'prompt_custom_variables',
                         jsonEncode(customVariables),
                       );
-
                       setState(() {});
                     }
                   },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.add,
-                          size: 12,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                  borderRadius: const BorderRadius.all(Radius.circular(8)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.add,
+                        size: 12,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade700,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        '添加变量',
+                        style: TextStyle(
+                          fontSize: 10,
                           color: isDark
                               ? Colors.grey.shade400
                               : Colors.grey.shade700,
                         ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '添加变量',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isDark
-                                ? Colors.grey.shade400
-                                : Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -977,60 +836,43 @@ class ChatUtils {
     final theme = Theme.of(context);
     final accent = iconColor ?? theme.colorScheme.primary;
 
-    return showDialog<T>(
+    return showAppDialog<T>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.55),
       barrierDismissible: !isLoading,
       builder: (context) {
-        return Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          backgroundColor: theme.colorScheme.surface,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 620,
-              maxHeight: MediaQuery.sizeOf(context).height * 0.86,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _DialogHeaderBar(
-                  title: title,
-                  icon: icon.icon ?? Icons.tune_rounded,
-                  color: accent,
-                  onClose: isLoading ? null : () => Navigator.of(context).pop(),
-                ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: formFields,
-                    ),
+        return AppDialogFrame(
+          maxWidth: 620,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _DialogHeaderBar(
+                title: title,
+                icon: icon.icon ?? Icons.tune_rounded,
+                color: accent,
+                onClose: isLoading ? null : () => Navigator.of(context).pop(),
+              ),
+              Flexible(
+                child: AppSingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: formFields,
                   ),
                 ),
-                _DialogActionBar(
-                  topBorder: true,
-                  actions: [
-                    if (!isLoading) createCancelButton(context),
-                    FilledButton.icon(
-                      onPressed: isLoading ? null : onSave,
-                      icon: isLoading
-                          ? const SizedBox.square(
-                              dimension: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check_rounded),
-                      label: Text(isLoading ? '处理中' : saveButtonText),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+              _DialogActionBar(
+                topBorder: true,
+                actions: [
+                  if (!isLoading) createCancelButton(context),
+                  AppActionButton(
+                    onPressed: onSave,
+                    loading: isLoading,
+                    icon: Icons.check_rounded,
+                    label: isLoading ? '处理中' : saveButtonText,
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
@@ -1050,106 +892,28 @@ class ChatUtils {
     Widget? suffix,
     int? maxLines = 1,
     TextInputType? keyboardType,
+    bool enableSuggestions = true,
+    bool autocorrect = true,
+    SmartDashesType? smartDashesType,
+    SmartQuotesType? smartQuotesType,
     void Function(String)? onSubmitted,
   }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final backgroundColor = enabled
-        ? (isDark ? const Color(0xFF353535) : Colors.grey.shade50)
-        : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5));
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextField(
-              controller: controller,
-              obscureText: obscureText,
-              enabled: enabled,
-              maxLines: maxLines,
-              keyboardType: keyboardType,
-              onSubmitted: onSubmitted,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 15,
-              ),
-              decoration: InputDecoration(
-                hintText: hintText,
-                hintStyle: TextStyle(
-                  color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
-                  fontSize: 15,
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: maxLines! > 1 ? 12 : 10,
-                ),
-                filled: true,
-                fillColor: backgroundColor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                prefixIcon: prefixIcon != null
-                    ? Icon(
-                        prefixIcon,
-                        color: isDark
-                            ? Colors.grey.shade400
-                            : Colors.grey.shade600,
-                        size: 18,
-                      )
-                    : null,
-                suffixIcon: suffix,
-              ),
-            ),
-          ),
-        ),
-        if (helperText != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            helperText,
-            style: TextStyle(
-              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ],
+    return AppTextField(
+      controller: controller,
+      label: label,
+      hintText: hintText,
+      helperText: helperText,
+      obscureText: obscureText,
+      enabled: enabled,
+      prefixIcon: prefixIcon,
+      suffix: suffix,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      enableSuggestions: enableSuggestions,
+      autocorrect: autocorrect,
+      smartDashesType: smartDashesType,
+      smartQuotesType: smartQuotesType,
+      onSubmitted: onSubmitted,
     );
   }
 
@@ -1175,16 +939,37 @@ class ChatUtils {
         ? (isDark ? Colors.blue.shade200 : Colors.blue.shade700)
         : (isDark ? Colors.grey.shade400 : Colors.grey.shade700);
 
-    return GestureDetector(
+    return AppInkSurface(
       onTap: onTap,
       onLongPress: isEditable ? onLongPress : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
+      color: Colors.transparent,
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
+      child: AppBadge(
+        label: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label),
+            if (onDelete != null) ...[
+              const SizedBox(width: 6),
+              AppIconButton(
+                tooltip: '删除变量',
+                icon: Icons.close_rounded,
+                onPressed: onDelete,
+                size: AppIconButtonSize.sm,
+                iconSize: 14,
+                constraints: const BoxConstraints.tightFor(
+                  width: 18,
+                  height: 18,
+                ),
+                padding: EdgeInsets.zero,
+              ),
+            ],
+          ],
         ),
-        child: Text(label, style: TextStyle(fontSize: 12, color: textColor)),
+        color: textColor,
+        backgroundColor: bgColor,
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       ),
     );
   }
@@ -1306,19 +1091,20 @@ class _DialogHeaderBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.38),
+      borderRadius: BorderRadius.zero,
       child: Row(
         children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
+          AppIconBadge(
+            icon: icon,
+            color: color,
+            iconColor: Colors.white,
+            backgroundColor: color,
+            size: 42,
+            iconSize: 22,
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -1331,9 +1117,9 @@ class _DialogHeaderBar extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
+          AppIconButton(
             tooltip: '关闭',
-            icon: const Icon(Icons.close_rounded),
+            icon: Icons.close_rounded,
             onPressed: onClose,
           ),
         ],
@@ -1354,35 +1140,24 @@ class _DialogActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
-      decoration: BoxDecoration(
-        border: topBorder
-            ? Border(
-                top: BorderSide(
-                  color: theme.dividerColor.withValues(alpha: 0.55),
-                ),
-              )
-            : null,
-      ),
-      child: StreamBuilder<SmartGripStatus>(
-        stream: SmartGripService().onStatusChanged,
-        initialData: SmartGripService().currentStatus,
-        builder: (context, snapshot) {
-          final ordered = snapshot.data == SmartGripStatus.leftHand
-              ? actions.reversed.toList(growable: false)
-              : actions;
-          return Align(
-            alignment: snapshot.data == SmartGripStatus.leftHand
-                ? Alignment.centerLeft
-                : Alignment.centerRight,
-            child: Wrap(
-              spacing: 10,
-              runSpacing: 8,
-              children: ordered,
-            ),
-          );
-        },
+      color: Colors.transparent,
+      borderRadius: BorderRadius.zero,
+      border: topBorder
+          ? Border(
+              top: BorderSide(
+                color: theme.dividerColor.withValues(alpha: 0.55),
+              ),
+            )
+          : null,
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          children: actions,
+        ),
       ),
     );
   }

@@ -65,6 +65,31 @@ class ResourceAvailabilityFilter extends $pb.ProtobufEnum {
   const ResourceAvailabilityFilter._(super.value, super.name);
 }
 
+class RegistrationStatus extends $pb.ProtobufEnum {
+  static const RegistrationStatus REGISTRATION_STATUS_UNSPECIFIED =
+      RegistrationStatus._(
+          0, _omitEnumNames ? '' : 'REGISTRATION_STATUS_UNSPECIFIED');
+  static const RegistrationStatus REGISTRATION_STATUS_REGISTERED =
+      RegistrationStatus._(
+          1, _omitEnumNames ? '' : 'REGISTRATION_STATUS_REGISTERED');
+  static const RegistrationStatus REGISTRATION_STATUS_PENDING_REVIEW =
+      RegistrationStatus._(
+          2, _omitEnumNames ? '' : 'REGISTRATION_STATUS_PENDING_REVIEW');
+
+  static const $core.List<RegistrationStatus> values = <RegistrationStatus>[
+    REGISTRATION_STATUS_UNSPECIFIED,
+    REGISTRATION_STATUS_REGISTERED,
+    REGISTRATION_STATUS_PENDING_REVIEW,
+  ];
+
+  static final $core.List<RegistrationStatus?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static RegistrationStatus? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RegistrationStatus._(super.value, super.name);
+}
+
 class MfaMethod extends $pb.ProtobufEnum {
   static const MfaMethod MFA_METHOD_UNSPECIFIED =
       MfaMethod._(0, _omitEnumNames ? '' : 'MFA_METHOD_UNSPECIFIED');
@@ -88,6 +113,52 @@ class MfaMethod extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const MfaMethod._(super.value, super.name);
+}
+
+class SensitiveOperationVerificationMethod extends $pb.ProtobufEnum {
+  static const SensitiveOperationVerificationMethod
+      SENSITIVE_OPERATION_VERIFICATION_METHOD_UNSPECIFIED =
+      SensitiveOperationVerificationMethod._(
+          0,
+          _omitEnumNames
+              ? ''
+              : 'SENSITIVE_OPERATION_VERIFICATION_METHOD_UNSPECIFIED');
+  static const SensitiveOperationVerificationMethod
+      SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD =
+      SensitiveOperationVerificationMethod._(
+          1,
+          _omitEnumNames
+              ? ''
+              : 'SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD');
+  static const SensitiveOperationVerificationMethod
+      SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN =
+      SensitiveOperationVerificationMethod._(
+          2,
+          _omitEnumNames
+              ? ''
+              : 'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN');
+  static const SensitiveOperationVerificationMethod
+      SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL =
+      SensitiveOperationVerificationMethod._(
+          3,
+          _omitEnumNames
+              ? ''
+              : 'SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL');
+
+  static const $core.List<SensitiveOperationVerificationMethod> values =
+      <SensitiveOperationVerificationMethod>[
+    SENSITIVE_OPERATION_VERIFICATION_METHOD_UNSPECIFIED,
+    SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD,
+    SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
+    SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL,
+  ];
+
+  static final $core.List<SensitiveOperationVerificationMethod?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static SensitiveOperationVerificationMethod? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const SensitiveOperationVerificationMethod._(super.value, super.name);
 }
 
 /// Start changing the current user's password credential via OPAQUE. This is an
@@ -675,20 +746,147 @@ class ChatMessageEventKind extends $pb.ProtobufEnum {
   static const ChatMessageEventKind CHAT_MESSAGE_EVENT_KIND_DELETED =
       ChatMessageEventKind._(
           3, _omitEnumNames ? '' : 'CHAT_MESSAGE_EVENT_KIND_DELETED');
+  static const ChatMessageEventKind CHAT_MESSAGE_EVENT_KIND_REACTIONS_CHANGED =
+      ChatMessageEventKind._(
+          4, _omitEnumNames ? '' : 'CHAT_MESSAGE_EVENT_KIND_REACTIONS_CHANGED');
 
   static const $core.List<ChatMessageEventKind> values = <ChatMessageEventKind>[
     CHAT_MESSAGE_EVENT_KIND_UNSPECIFIED,
     CHAT_MESSAGE_EVENT_KIND_CREATED,
     CHAT_MESSAGE_EVENT_KIND_EDITED,
     CHAT_MESSAGE_EVENT_KIND_DELETED,
+    CHAT_MESSAGE_EVENT_KIND_REACTIONS_CHANGED,
   ];
 
   static final $core.List<ChatMessageEventKind?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 3);
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
   static ChatMessageEventKind? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const ChatMessageEventKind._(super.value, super.name);
+}
+
+class RoomMemberEventKind extends $pb.ProtobufEnum {
+  static const RoomMemberEventKind ROOM_MEMBER_EVENT_KIND_UNSPECIFIED =
+      RoomMemberEventKind._(
+          0, _omitEnumNames ? '' : 'ROOM_MEMBER_EVENT_KIND_UNSPECIFIED');
+  static const RoomMemberEventKind ROOM_MEMBER_EVENT_KIND_JOINED =
+      RoomMemberEventKind._(
+          1, _omitEnumNames ? '' : 'ROOM_MEMBER_EVENT_KIND_JOINED');
+  static const RoomMemberEventKind ROOM_MEMBER_EVENT_KIND_LEFT =
+      RoomMemberEventKind._(
+          2, _omitEnumNames ? '' : 'ROOM_MEMBER_EVENT_KIND_LEFT');
+  static const RoomMemberEventKind ROOM_MEMBER_EVENT_KIND_PERMISSION_CHANGED =
+      RoomMemberEventKind._(
+          3, _omitEnumNames ? '' : 'ROOM_MEMBER_EVENT_KIND_PERMISSION_CHANGED');
+  static const RoomMemberEventKind ROOM_MEMBER_EVENT_KIND_KICKED =
+      RoomMemberEventKind._(
+          4, _omitEnumNames ? '' : 'ROOM_MEMBER_EVENT_KIND_KICKED');
+
+  static const $core.List<RoomMemberEventKind> values = <RoomMemberEventKind>[
+    ROOM_MEMBER_EVENT_KIND_UNSPECIFIED,
+    ROOM_MEMBER_EVENT_KIND_JOINED,
+    ROOM_MEMBER_EVENT_KIND_LEFT,
+    ROOM_MEMBER_EVENT_KIND_PERMISSION_CHANGED,
+    ROOM_MEMBER_EVENT_KIND_KICKED,
+  ];
+
+  static final $core.List<RoomMemberEventKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static RoomMemberEventKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RoomMemberEventKind._(super.value, super.name);
+}
+
+class OnlineEventKind extends $pb.ProtobufEnum {
+  static const OnlineEventKind ONLINE_EVENT_KIND_UNSPECIFIED =
+      OnlineEventKind._(
+          0, _omitEnumNames ? '' : 'ONLINE_EVENT_KIND_UNSPECIFIED');
+  static const OnlineEventKind ONLINE_EVENT_KIND_JOINED =
+      OnlineEventKind._(1, _omitEnumNames ? '' : 'ONLINE_EVENT_KIND_JOINED');
+  static const OnlineEventKind ONLINE_EVENT_KIND_LEFT =
+      OnlineEventKind._(2, _omitEnumNames ? '' : 'ONLINE_EVENT_KIND_LEFT');
+
+  static const $core.List<OnlineEventKind> values = <OnlineEventKind>[
+    ONLINE_EVENT_KIND_UNSPECIFIED,
+    ONLINE_EVENT_KIND_JOINED,
+    ONLINE_EVENT_KIND_LEFT,
+  ];
+
+  static final $core.List<OnlineEventKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static OnlineEventKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const OnlineEventKind._(super.value, super.name);
+}
+
+class ContentReportTargetType extends $pb.ProtobufEnum {
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED =
+      ContentReportTargetType._(
+          0, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED');
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_ROOM =
+      ContentReportTargetType._(
+          1, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_ROOM');
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_USER =
+      ContentReportTargetType._(
+          2, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_USER');
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER =
+      ContentReportTargetType._(
+          3, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER');
+  static const ContentReportTargetType CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE =
+      ContentReportTargetType._(
+          4, _omitEnumNames ? '' : 'CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE');
+
+  static const $core.List<ContentReportTargetType> values =
+      <ContentReportTargetType>[
+    CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
+    CONTENT_REPORT_TARGET_TYPE_ROOM,
+    CONTENT_REPORT_TARGET_TYPE_USER,
+    CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER,
+    CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE,
+  ];
+
+  static final $core.List<ContentReportTargetType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static ContentReportTargetType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ContentReportTargetType._(super.value, super.name);
+}
+
+class ContentReportStatus extends $pb.ProtobufEnum {
+  static const ContentReportStatus CONTENT_REPORT_STATUS_UNSPECIFIED =
+      ContentReportStatus._(
+          0, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_UNSPECIFIED');
+  static const ContentReportStatus CONTENT_REPORT_STATUS_OPEN =
+      ContentReportStatus._(
+          1, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_OPEN');
+  static const ContentReportStatus CONTENT_REPORT_STATUS_REVIEWING =
+      ContentReportStatus._(
+          2, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_REVIEWING');
+  static const ContentReportStatus CONTENT_REPORT_STATUS_RESOLVED =
+      ContentReportStatus._(
+          3, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_RESOLVED');
+  static const ContentReportStatus CONTENT_REPORT_STATUS_DISMISSED =
+      ContentReportStatus._(
+          4, _omitEnumNames ? '' : 'CONTENT_REPORT_STATUS_DISMISSED');
+
+  static const $core.List<ContentReportStatus> values = <ContentReportStatus>[
+    CONTENT_REPORT_STATUS_UNSPECIFIED,
+    CONTENT_REPORT_STATUS_OPEN,
+    CONTENT_REPORT_STATUS_REVIEWING,
+    CONTENT_REPORT_STATUS_RESOLVED,
+    CONTENT_REPORT_STATUS_DISMISSED,
+  ];
+
+  static final $core.List<ContentReportStatus?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static ContentReportStatus? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ContentReportStatus._(super.value, super.name);
 }
 
 class NotificationType extends $pb.ProtobufEnum {

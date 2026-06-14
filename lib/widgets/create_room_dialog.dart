@@ -5,7 +5,9 @@ import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 Future<void> showCreateRoomDialog({
   required BuildContext context,
@@ -13,20 +15,14 @@ Future<void> showCreateRoomDialog({
   double width = 520,
   String successMessage = '房间创建成功',
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.55),
-    builder: (_) => Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: width.clamp(520, 680)),
-        child: _CreateRoomDialogBody(
-          pageContext: context,
-          onCreated: onCreated,
-          successMessage: successMessage,
-        ),
+    builder: (_) => AppDialogFrame(
+      maxWidth: width.clamp(520, 680),
+      child: _CreateRoomDialogBody(
+        pageContext: context,
+        onCreated: onCreated,
+        successMessage: successMessage,
       ),
     ),
   );
@@ -60,7 +56,6 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
   Object? _settingsError;
   bool _loadingSettings = true;
   bool _creating = false;
-  bool _showPassword = false;
   _RoomAccessMode _accessMode = _RoomAccessMode.public;
 
   @override
@@ -82,7 +77,9 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
 
   Future<void> _loadSettings() async {
     try {
-      final settings = await WatchTogetherService.getPublicSettings();
+      final settings = await WatchTogetherService.getPublicSettings(
+        refresh: true,
+      );
       if (!mounted) return;
       setState(() {
         _settings = settings;
@@ -96,6 +93,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
         }
       });
     } catch (error) {
+      debugPrint('Failed to load create room policy: $error');
       if (!mounted) return;
       setState(() {
         _settingsError = error;
@@ -165,7 +163,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isCompact = MediaQuery.sizeOf(context).width < 560;
+    final isCompact = AppBreakpoints.isCompact(context);
     return Shortcuts(
       shortcuts: const {
         SingleActivator(LogicalKeyboardKey.enter, meta: true): _SubmitIntent(),
@@ -187,7 +185,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
               onClose: _creating ? null : () => Navigator.pop(context),
             ),
             Flexible(
-              child: SingleChildScrollView(
+              child: AppSingleChildScrollView(
                 padding: EdgeInsets.fromLTRB(
                   isCompact ? 18 : 24,
                   18,
@@ -229,44 +227,40 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      TextFormField(
+                      AppTextField(
                         controller: _nameController,
                         focusNode: _nameFocus,
+                        label: '房间名称',
+                        hintText: '例如 周末电影夜',
+                        prefixIcon: Icons.meeting_room_outlined,
                         enabled: !_creating &&
                             !_creationDisabled &&
                             _settingsError == null,
                         textInputAction: TextInputAction.next,
                         maxLength: 64,
-                        decoration: const InputDecoration(
-                          labelText: '房间名称',
-                          hintText: '例如 周末电影夜',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.meeting_room_outlined),
-                          counterText: '',
-                        ),
+                        counterText: '',
                         validator: (value) {
                           final name = value?.trim() ?? '';
                           if (name.isEmpty) return '请输入房间名称';
-                          if (name.length > 64) return '房间名称不能超过 64 个字符';
+                          if (name.length > 64) {
+                            return '房间名称不能超过 64 个字符';
+                          }
                           return null;
                         },
+                        onChanged: (_) => _formKey.currentState?.validate(),
                       ),
                       const SizedBox(height: 12),
-                      TextFormField(
+                      AppTextField(
                         controller: _descriptionController,
+                        label: '房间简介',
+                        hintText: '可选，帮助成员理解这个房间的用途',
+                        prefixIcon: Icons.notes_outlined,
                         enabled: !_creating &&
                             !_creationDisabled &&
                             _settingsError == null,
                         minLines: 2,
                         maxLines: 4,
                         maxLength: 200,
-                        decoration: const InputDecoration(
-                          labelText: '房间简介',
-                          hintText: '可选，帮助成员理解这个房间的用途',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.notes_outlined),
-                          alignLabelWithHint: true,
-                        ),
                       ),
                       const SizedBox(height: 18),
                       Text(
@@ -299,31 +293,17 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                               ? Padding(
                                   key: const ValueKey('password'),
                                   padding: const EdgeInsets.only(top: 12),
-                                  child: TextFormField(
+                                  child: AppTextField(
                                     controller: _passwordController,
+                                    label: '房间密码',
+                                    hintText: _passwordRequired
+                                        ? '服务器要求设置密码'
+                                        : '成员加入时需要输入',
+                                    prefixIcon: Icons.lock_outline_rounded,
                                     enabled: !_creating &&
                                         !_creationDisabled &&
                                         _settingsError == null,
-                                    obscureText: !_showPassword,
-                                    decoration: InputDecoration(
-                                      labelText: '房间密码',
-                                      hintText: _passwordRequired
-                                          ? '服务器要求设置密码'
-                                          : '成员加入时需要输入',
-                                      border: const OutlineInputBorder(),
-                                      prefixIcon: const Icon(
-                                          Icons.lock_outline_rounded),
-                                      suffixIcon: IconButton(
-                                        tooltip:
-                                            _showPassword ? '隐藏密码' : '显示密码',
-                                        icon: Icon(_showPassword
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined),
-                                        onPressed: () => setState(
-                                          () => _showPassword = !_showPassword,
-                                        ),
-                                      ),
-                                    ),
+                                    obscureText: true,
                                     validator: (value) {
                                       if (_needPassword &&
                                           (value == null || value.isEmpty)) {
@@ -331,6 +311,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                                       }
                                       return null;
                                     },
+                                    onChanged: (_) =>
+                                        _formKey.currentState?.validate(),
                                   ),
                                 )
                               : const SizedBox.shrink(),
@@ -341,19 +323,19 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                 ),
               ),
             ),
-            Container(
+            AppPanelSurface(
               padding: EdgeInsets.fromLTRB(
                 isCompact ? 18 : 24,
                 14,
                 isCompact ? 18 : 24,
                 18,
               ),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                border: Border(
-                  top: BorderSide(
-                    color: theme.dividerColor.withValues(alpha: 0.55),
-                  ),
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.zero,
+              clipBehavior: Clip.none,
+              border: Border(
+                top: BorderSide(
+                  color: theme.dividerColor.withValues(alpha: 0.55),
                 ),
               ),
               child: Row(
@@ -369,20 +351,18 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  OutlinedButton(
+                  AppActionButton(
                     onPressed: _creating ? null : () => Navigator.pop(context),
-                    child: const Text('取消'),
+                    icon: Icons.close_rounded,
+                    label: '取消',
+                    style: AppActionButtonStyle.outlined,
                   ),
                   const SizedBox(width: 10),
-                  FilledButton.icon(
+                  AppActionButton(
                     onPressed: _canSubmit ? _submit : null,
-                    icon: _creating
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.add_rounded),
-                    label: Text(_creating ? '创建中' : '创建房间'),
+                    icon: Icons.add_rounded,
+                    label: _creating ? '创建中' : '创建房间',
+                    loading: _creating,
                   ),
                 ],
               ),
@@ -418,26 +398,22 @@ class _CreateRoomHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.45),
-      ),
+      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.45),
+      borderRadius: BorderRadius.zero,
+      clipBehavior: Clip.none,
       child: Column(
         children: [
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.video_call_outlined,
-                  color: theme.colorScheme.onPrimary,
-                ),
+              AppIconBadge(
+                icon: Icons.video_call_outlined,
+                color: theme.colorScheme.primary,
+                iconColor: theme.colorScheme.onPrimary,
+                backgroundColor: theme.colorScheme.primary,
+                size: 44,
+                borderRadius: BorderRadius.circular(12),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -460,16 +436,16 @@ class _CreateRoomHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
+              AppIconButton(
                 tooltip: '关闭',
-                icon: const Icon(Icons.close_rounded),
+                icon: Icons.close_rounded,
                 onPressed: onClose,
               ),
             ],
           ),
           if (loading) ...[
             const SizedBox(height: 16),
-            const LinearProgressIndicator(minHeight: 2),
+            const AppLinearProgress(minHeight: 2),
           ],
         ],
       ),
@@ -562,62 +538,55 @@ class _AccessModeCard extends StatelessWidget {
     final borderColor = selected
         ? theme.colorScheme.primary
         : theme.dividerColor.withValues(alpha: 0.6);
-    return Material(
+    return AppInkSurface(
       color: selected
           ? theme.colorScheme.primaryContainer.withValues(alpha: 0.55)
           : theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: enabled ? onTap : null,
+      onTap: enabled ? onTap : null,
+      child: AppPanelSurface(
+        padding: const EdgeInsets.all(14),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: borderColor, width: selected ? 1.6 : 1),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                icon,
-                color:
-                    enabled ? theme.colorScheme.primary : theme.disabledColor,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: enabled ? null : theme.disabledColor,
-                      ),
+        border: Border.all(color: borderColor, width: selected ? 1.6 : 1),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              icon,
+              color: enabled ? theme.colorScheme.primary : theme.disabledColor,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: enabled ? null : theme.disabledColor,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: enabled
-                            ? theme.colorScheme.onSurfaceVariant
-                            : theme.disabledColor,
-                      ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: enabled
+                          ? theme.colorScheme.onSurfaceVariant
+                          : theme.disabledColor,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              Icon(
-                selected
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                color:
-                    enabled ? theme.colorScheme.primary : theme.disabledColor,
-              ),
-            ],
-          ),
+            ),
+            Icon(
+              selected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              color: enabled ? theme.colorScheme.primary : theme.disabledColor,
+            ),
+          ],
         ),
       ),
     );
@@ -645,28 +614,21 @@ class _CreateRoomPolicyBanner extends StatelessWidget {
       _PolicyTone.warning => const Color(0xFFE09F3E),
       _PolicyTone.danger => theme.colorScheme.error,
     };
-    return Container(
+    return AppInfoBanner(
+      icon: icon,
+      color: color,
+      backgroundColor: color.withValues(alpha: 0.1),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: theme.textTheme.bodySmall?.copyWith(
-                height: 1.35,
-                color: color,
-              ),
-            ),
-          ),
-        ],
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: 0.3)),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      iconSize: 18,
+      title: Text(
+        text,
+        style: theme.textTheme.bodySmall?.copyWith(
+          height: 1.35,
+          color: color,
+        ),
       ),
     );
   }

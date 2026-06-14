@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/watch_together_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
@@ -9,6 +11,7 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
 
 class SyncTvPublicRoomDomainService {
   SyncTvPublicRoomDomainService({
@@ -16,15 +19,18 @@ class SyncTvPublicRoomDomainService {
     required SyncTvSessionStore sessionStore,
     required SyncTvAuthDomainService authService,
     SyncTvMemoryCache? cache,
+    opaque.SyncTvOpaqueClient? opaqueClient,
   })  : _api = api,
         _sessionStore = sessionStore,
         _authService = authService,
-        _cache = cache ?? SyncTvMemoryCache();
+        _cache = cache ?? SyncTvMemoryCache(),
+        _opaqueClient = opaqueClient ?? opaque.SyncTvOpaqueClient();
 
   final SyncTvApiClient _api;
   final SyncTvSessionStore _sessionStore;
   final SyncTvAuthDomainService _authService;
   final SyncTvMemoryCache _cache;
+  final opaque.SyncTvOpaqueClient _opaqueClient;
 
   Future<PublicSettingsInfo> getPublicSettings({bool refresh = false}) async {
     return _cache.get<PublicSettingsInfo>(
@@ -32,6 +38,25 @@ class SyncTvPublicRoomDomainService {
       ttl: const Duration(minutes: 5),
       refresh: refresh,
       loader: _fetchPublicSettings,
+    );
+  }
+
+  Future<ServerInfo> getServerInfo({bool refresh = false}) async {
+    return _cache.get<ServerInfo>(
+      'public:server-info',
+      ttl: const Duration(minutes: 5),
+      refresh: refresh,
+      loader: _fetchServerInfo,
+    );
+  }
+
+  Future<ServerInfo> _fetchServerInfo() async {
+    final response = await _api.publicService.getServerInfo(
+      client.GetServerInfoRequest(),
+    );
+    return ServerInfo(
+      serverId: response.serverId,
+      serverName: response.serverName,
     );
   }
 
@@ -152,7 +177,8 @@ class SyncTvPublicRoomDomainService {
     return response.rooms.map((item) {
       final room = _api.mapRoom(item.room);
       return room.copyWith(
-        viewerCount: item.onlineCount,
+        viewerCount:
+            item.room.hasPresence() ? room.viewerCount : item.onlineCount,
         memberCount: item.totalMembers,
       );
     }).toList(growable: false);
@@ -203,10 +229,37 @@ class SyncTvPublicRoomDomainService {
       }
       return;
     }
+    if (password.isNotEmpty) {
+      await _joinRoomWithOpaquePassword(roomId, password);
+      return;
+    }
     await _api.user.joinRoom(client.JoinRoomRequest(
       roomId: roomId,
-      password: password,
     ));
+  }
+
+  Future<void> _joinRoomWithOpaquePassword(
+      String roomId, String password) async {
+    final start = _opaqueClient.startLogin(password);
+    final challenge = await _api.user.startRoomPasswordLogin(
+      roomId,
+      client.StartRoomPasswordLoginRequest(
+        roomId: roomId,
+        credentialRequest: start.credentialRequest,
+      ),
+    );
+    final finish = _opaqueClient.finishLogin(
+      password: password,
+      state: start.state,
+      credentialResponse: Uint8List.fromList(challenge.credentialResponse),
+    );
+    await _api.user.finishRoomPasswordLogin(
+      roomId,
+      client.FinishRoomPasswordLoginRequest(
+        sessionId: challenge.sessionId,
+        credentialFinalization: finish.credentialFinalization,
+      ),
+    );
   }
 
   Future<WRoom> getRoomInfo(String roomId) async {

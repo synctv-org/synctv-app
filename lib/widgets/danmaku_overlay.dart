@@ -192,7 +192,7 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
         fontSize: 25.0,
         opacity: widget.opacity,
         duration: 8, // 8秒滚动时间
-        showStroke: true, // 显示描边
+        strokeWidth: 1.5, // 显示描边
         area: 1.0, // 使用全屏幕区域
         massiveMode: false, // 不使用海量模式，避免弹幕重叠
         hideTop: false,

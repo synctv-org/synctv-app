@@ -4,6 +4,7 @@ import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/services/watch_together_service.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/server_settings_dialog.dart';
 
 Future<String?> prepareRoomInviteTarget({
@@ -96,23 +97,15 @@ Future<String?> _chooseEndpoint(
           ...profile.endpoints.map(
             (endpoint) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                tileColor: endpoint == profile.activeEndpoint
-                    ? Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.10)
-                    : Theme.of(context).colorScheme.surfaceContainerHighest,
-                leading: Icon(
+              child: AppTile(
+                selected: endpoint == profile.activeEndpoint,
+                prefix: Icon(
                   endpoint == profile.activeEndpoint
                       ? Icons.radio_button_checked_rounded
                       : Icons.radio_button_unchecked_rounded,
                 ),
                 title: Text(endpoint),
-                onTap: () => Navigator.pop(context, endpoint),
+                onPressed: () => Navigator.pop(context, endpoint),
               ),
             ),
           ),

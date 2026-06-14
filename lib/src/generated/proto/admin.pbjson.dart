@@ -15,8 +15,8 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-import 'client.pbjson.dart' as $0;
-import 'common.pbjson.dart' as $1;
+import 'client.pbjson.dart' as $1;
+import 'common.pbjson.dart' as $0;
 
 @$core.Deprecated('Use banTargetTypeDescriptor instead')
 const BanTargetType$json = {
@@ -32,6 +32,68 @@ const BanTargetType$json = {
 final $typed_data.Uint8List banTargetTypeDescriptor = $convert.base64Decode(
     'Cg1CYW5UYXJnZXRUeXBlEh8KG0JBTl9UQVJHRVRfVFlQRV9VTlNQRUNJRklFRBAAEhgKFEJBTl'
     '9UQVJHRVRfVFlQRV9VU0VSEAESGAoUQkFOX1RBUkdFVF9UWVBFX1JPT00QAg==');
+
+@$core.Deprecated('Use contentReportTargetTypeDescriptor instead')
+const ContentReportTargetType$json = {
+  '1': 'ContentReportTargetType',
+  '2': [
+    {'1': 'CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED', '2': 0},
+    {'1': 'CONTENT_REPORT_TARGET_TYPE_ROOM', '2': 1},
+    {'1': 'CONTENT_REPORT_TARGET_TYPE_USER', '2': 2},
+    {'1': 'CONTENT_REPORT_TARGET_TYPE_ROOM_MEMBER', '2': 3},
+    {'1': 'CONTENT_REPORT_TARGET_TYPE_CHAT_MESSAGE', '2': 4},
+  ],
+};
+
+/// Descriptor for `ContentReportTargetType`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List contentReportTargetTypeDescriptor = $convert.base64Decode(
+    'ChdDb250ZW50UmVwb3J0VGFyZ2V0VHlwZRIqCiZDT05URU5UX1JFUE9SVF9UQVJHRVRfVFlQRV'
+    '9VTlNQRUNJRklFRBAAEiMKH0NPTlRFTlRfUkVQT1JUX1RBUkdFVF9UWVBFX1JPT00QARIjCh9D'
+    'T05URU5UX1JFUE9SVF9UQVJHRVRfVFlQRV9VU0VSEAISKgomQ09OVEVOVF9SRVBPUlRfVEFSR0'
+    'VUX1RZUEVfUk9PTV9NRU1CRVIQAxIrCidDT05URU5UX1JFUE9SVF9UQVJHRVRfVFlQRV9DSEFU'
+    'X01FU1NBR0UQBA==');
+
+@$core.Deprecated('Use contentReportStatusDescriptor instead')
+const ContentReportStatus$json = {
+  '1': 'ContentReportStatus',
+  '2': [
+    {'1': 'CONTENT_REPORT_STATUS_UNSPECIFIED', '2': 0},
+    {'1': 'CONTENT_REPORT_STATUS_OPEN', '2': 1},
+    {'1': 'CONTENT_REPORT_STATUS_REVIEWING', '2': 2},
+    {'1': 'CONTENT_REPORT_STATUS_RESOLVED', '2': 3},
+    {'1': 'CONTENT_REPORT_STATUS_DISMISSED', '2': 4},
+  ],
+};
+
+/// Descriptor for `ContentReportStatus`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List contentReportStatusDescriptor = $convert.base64Decode(
+    'ChNDb250ZW50UmVwb3J0U3RhdHVzEiUKIUNPTlRFTlRfUkVQT1JUX1NUQVRVU19VTlNQRUNJRk'
+    'lFRBAAEh4KGkNPTlRFTlRfUkVQT1JUX1NUQVRVU19PUEVOEAESIwofQ09OVEVOVF9SRVBPUlRf'
+    'U1RBVFVTX1JFVklFV0lORxACEiIKHkNPTlRFTlRfUkVQT1JUX1NUQVRVU19SRVNPTFZFRBADEi'
+    'MKH0NPTlRFTlRfUkVQT1JUX1NUQVRVU19ESVNNSVNTRUQQBA==');
+
+@$core.Deprecated('Use contentReportScopeDescriptor instead')
+const ContentReportScope$json = {
+  '1': 'ContentReportScope',
+  '2': [
+    {'1': 'CONTENT_REPORT_SCOPE_UNSPECIFIED', '2': 0},
+    {'1': 'CONTENT_REPORT_SCOPE_ANY_RELATED', '2': 1},
+    {'1': 'CONTENT_REPORT_SCOPE_ROOM_CONTEXT', '2': 2},
+    {'1': 'CONTENT_REPORT_SCOPE_TARGET_ROOM', '2': 3},
+    {'1': 'CONTENT_REPORT_SCOPE_TARGET_USER', '2': 4},
+    {'1': 'CONTENT_REPORT_SCOPE_TARGET_MEMBER', '2': 5},
+    {'1': 'CONTENT_REPORT_SCOPE_TARGET_CHAT_MESSAGE', '2': 6},
+  ],
+};
+
+/// Descriptor for `ContentReportScope`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List contentReportScopeDescriptor = $convert.base64Decode(
+    'ChJDb250ZW50UmVwb3J0U2NvcGUSJAogQ09OVEVOVF9SRVBPUlRfU0NPUEVfVU5TUEVDSUZJRU'
+    'QQABIkCiBDT05URU5UX1JFUE9SVF9TQ09QRV9BTllfUkVMQVRFRBABEiUKIUNPTlRFTlRfUkVQ'
+    'T1JUX1NDT1BFX1JPT01fQ09OVEVYVBACEiQKIENPTlRFTlRfUkVQT1JUX1NDT1BFX1RBUkdFVF'
+    '9ST09NEAMSJAogQ09OVEVOVF9SRVBPUlRfU0NPUEVfVEFSR0VUX1VTRVIQBBImCiJDT05URU5U'
+    'X1JFUE9SVF9TQ09QRV9UQVJHRVRfTUVNQkVSEAUSLAooQ09OVEVOVF9SRVBPUlRfU0NPUEVfVE'
+    'FSR0VUX0NIQVRfTUVTU0FHRRAG');
 
 @$core.Deprecated('Use sortDirectionDescriptor instead')
 const SortDirection$json = {
@@ -158,6 +220,14 @@ const AdminUser$json = {
     {'1': 'banned_by', '3': 10, '4': 1, '5': 9, '10': 'bannedBy'},
     {'1': 'banned_reason', '3': 11, '4': 1, '5': 9, '10': 'bannedReason'},
     {'1': 'avatar_url', '3': 12, '4': 1, '5': 9, '10': 'avatarUrl'},
+    {
+      '1': 'presence',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.common.UserPresenceStats',
+      '10': 'presence'
+    },
   ],
 };
 
@@ -170,7 +240,8 @@ final $typed_data.Uint8List adminUserDescriptor = $convert.base64Decode(
     'KANSCXVwZGF0ZWRBdBIbCglpc19iYW5uZWQYCCABKAhSCGlzQmFubmVkEhsKCWJhbm5lZF9hdB'
     'gJIAEoA1IIYmFubmVkQXQSGwoJYmFubmVkX2J5GAogASgJUghiYW5uZWRCeRIjCg1iYW5uZWRf'
     'cmVhc29uGAsgASgJUgxiYW5uZWRSZWFzb24SHQoKYXZhdGFyX3VybBgMIAEoCVIJYXZhdGFyVX'
-    'Js');
+    'JsEjwKCHByZXNlbmNlGA0gASgLMiAuc3luY3R2LmNvbW1vbi5Vc2VyUHJlc2VuY2VTdGF0c1II'
+    'cHJlc2VuY2U=');
 
 @$core.Deprecated('Use adminRoomDescriptor instead')
 const AdminRoom$json = {
@@ -203,6 +274,29 @@ const AdminRoom$json = {
       '10': 'creatorStatus'
     },
     {'1': 'version', '3': 13, '4': 1, '5': 3, '10': 'version'},
+    {
+      '1': 'presence',
+      '3': 14,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.common.RoomPresenceStats',
+      '10': 'presence'
+    },
+    {
+      '1': 'creator_avatar_url',
+      '3': 15,
+      '4': 1,
+      '5': 9,
+      '10': 'creatorAvatarUrl'
+    },
+    {
+      '1': 'cover',
+      '3': 16,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ResourceCover',
+      '10': 'cover'
+    },
   ],
 };
 
@@ -216,7 +310,10 @@ final $typed_data.Uint8List adminRoomDescriptor = $convert.base64Decode(
     '9hdBgJIAEoA1IJdXBkYXRlZEF0EiAKC2Rlc2NyaXB0aW9uGAogASgJUgtkZXNjcmlwdGlvbhIb'
     'Cglpc19iYW5uZWQYCyABKAhSCGlzQmFubmVkEkAKDmNyZWF0b3Jfc3RhdHVzGAwgASgOMhkuc3'
     'luY3R2LmNvbW1vbi5Vc2VyU3RhdHVzUg1jcmVhdG9yU3RhdHVzEhgKB3ZlcnNpb24YDSABKANS'
-    'B3ZlcnNpb24=');
+    'B3ZlcnNpb24SPAoIcHJlc2VuY2UYDiABKAsyIC5zeW5jdHYuY29tbW9uLlJvb21QcmVzZW5jZV'
+    'N0YXRzUghwcmVzZW5jZRIsChJjcmVhdG9yX2F2YXRhcl91cmwYDyABKAlSEGNyZWF0b3JBdmF0'
+    'YXJVcmwSMgoFY292ZXIYECABKAsyHC5zeW5jdHYuY2xpZW50LlJlc291cmNlQ292ZXJSBWNvdm'
+    'Vy');
 
 @$core.Deprecated('Use settingsGroupDescriptor instead')
 const SettingsGroup$json = {
@@ -250,29 +347,59 @@ const UserRegistrationReview$json = {
     },
     {'1': 'requested_at', '3': 6, '4': 1, '5': 3, '10': 'requestedAt'},
     {'1': 'reviewed_at', '3': 7, '4': 1, '5': 3, '10': 'reviewedAt'},
-    {'1': 'reviewed_by', '3': 8, '4': 1, '5': 9, '10': 'reviewedBy'},
-    {'1': 'rejection_reason', '3': 9, '4': 1, '5': 9, '10': 'rejectionReason'},
-    {'1': 'oauth2_provider', '3': 10, '4': 1, '5': 9, '10': 'oauth2Provider'},
+    {
+      '1': 'reviewed_by',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'reviewedBy',
+      '17': true
+    },
+    {
+      '1': 'rejection_reason',
+      '3': 9,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'rejectionReason',
+      '17': true
+    },
+    {
+      '1': 'oauth2_provider',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'oauth2Provider',
+      '17': true
+    },
     {
       '1': 'oauth2_provider_user_id',
       '3': 11,
       '4': 1,
       '5': 9,
-      '10': 'oauth2ProviderUserId'
+      '9': 3,
+      '10': 'oauth2ProviderUserId',
+      '17': true
     },
     {
       '1': 'oauth2_provider_username',
       '3': 12,
       '4': 1,
       '5': 9,
-      '10': 'oauth2ProviderUsername'
+      '9': 4,
+      '10': 'oauth2ProviderUsername',
+      '17': true
     },
     {
       '1': 'oauth2_avatar_url',
       '3': 13,
       '4': 1,
       '5': 9,
-      '10': 'oauth2AvatarUrl'
+      '9': 5,
+      '10': 'oauth2AvatarUrl',
+      '17': true
     },
     {
       '1': 'oauth2_email_trusted',
@@ -286,29 +413,49 @@ const UserRegistrationReview$json = {
       '3': 15,
       '4': 1,
       '5': 9,
-      '10': 'oauth2ProviderInstanceName'
+      '9': 6,
+      '10': 'oauth2ProviderInstanceName',
+      '17': true
     },
     {
       '1': 'oauth2_provider_issuer',
       '3': 16,
       '4': 1,
       '5': 9,
-      '10': 'oauth2ProviderIssuer'
+      '9': 7,
+      '10': 'oauth2ProviderIssuer',
+      '17': true
     },
     {
       '1': 'webauthn_credential_id',
       '3': 17,
       '4': 1,
       '5': 9,
-      '10': 'webauthnCredentialId'
+      '9': 8,
+      '10': 'webauthnCredentialId',
+      '17': true
     },
     {
       '1': 'webauthn_credential_name',
       '3': 18,
       '4': 1,
       '5': 9,
-      '10': 'webauthnCredentialName'
+      '9': 9,
+      '10': 'webauthnCredentialName',
+      '17': true
     },
+  ],
+  '8': [
+    {'1': '_reviewed_by'},
+    {'1': '_rejection_reason'},
+    {'1': '_oauth2_provider'},
+    {'1': '_oauth2_provider_user_id'},
+    {'1': '_oauth2_provider_username'},
+    {'1': '_oauth2_avatar_url'},
+    {'1': '_oauth2_provider_instance_name'},
+    {'1': '_oauth2_provider_issuer'},
+    {'1': '_webauthn_credential_id'},
+    {'1': '_webauthn_credential_name'},
   ],
 };
 
@@ -318,17 +465,22 @@ final $typed_data.Uint8List userRegistrationReviewDescriptor = $convert.base64De
     'EoCVIIdXNlcm5hbWUSFAoFZW1haWwYAyABKAlSBWVtYWlsEiMKDXNpZ251cF9tZXRob2QYBCAB'
     'KAVSDHNpZ251cE1ldGhvZBIzCgZzdGF0dXMYBSABKA4yGy5zeW5jdHYuY29tbW9uLlJldmlld1'
     'N0YXR1c1IGc3RhdHVzEiEKDHJlcXVlc3RlZF9hdBgGIAEoA1ILcmVxdWVzdGVkQXQSHwoLcmV2'
-    'aWV3ZWRfYXQYByABKANSCnJldmlld2VkQXQSHwoLcmV2aWV3ZWRfYnkYCCABKAlSCnJldmlld2'
-    'VkQnkSKQoQcmVqZWN0aW9uX3JlYXNvbhgJIAEoCVIPcmVqZWN0aW9uUmVhc29uEicKD29hdXRo'
-    'Ml9wcm92aWRlchgKIAEoCVIOb2F1dGgyUHJvdmlkZXISNQoXb2F1dGgyX3Byb3ZpZGVyX3VzZX'
-    'JfaWQYCyABKAlSFG9hdXRoMlByb3ZpZGVyVXNlcklkEjgKGG9hdXRoMl9wcm92aWRlcl91c2Vy'
-    'bmFtZRgMIAEoCVIWb2F1dGgyUHJvdmlkZXJVc2VybmFtZRIqChFvYXV0aDJfYXZhdGFyX3VybB'
-    'gNIAEoCVIPb2F1dGgyQXZhdGFyVXJsEjAKFG9hdXRoMl9lbWFpbF90cnVzdGVkGA4gASgIUhJv'
-    'YXV0aDJFbWFpbFRydXN0ZWQSQQodb2F1dGgyX3Byb3ZpZGVyX2luc3RhbmNlX25hbWUYDyABKA'
-    'lSGm9hdXRoMlByb3ZpZGVySW5zdGFuY2VOYW1lEjQKFm9hdXRoMl9wcm92aWRlcl9pc3N1ZXIY'
-    'ECABKAlSFG9hdXRoMlByb3ZpZGVySXNzdWVyEjQKFndlYmF1dGhuX2NyZWRlbnRpYWxfaWQYES'
-    'ABKAlSFHdlYmF1dGhuQ3JlZGVudGlhbElkEjgKGHdlYmF1dGhuX2NyZWRlbnRpYWxfbmFtZRgS'
-    'IAEoCVIWd2ViYXV0aG5DcmVkZW50aWFsTmFtZQ==');
+    'aWV3ZWRfYXQYByABKANSCnJldmlld2VkQXQSJAoLcmV2aWV3ZWRfYnkYCCABKAlIAFIKcmV2aW'
+    'V3ZWRCeYgBARIuChByZWplY3Rpb25fcmVhc29uGAkgASgJSAFSD3JlamVjdGlvblJlYXNvbogB'
+    'ARIsCg9vYXV0aDJfcHJvdmlkZXIYCiABKAlIAlIOb2F1dGgyUHJvdmlkZXKIAQESOgoXb2F1dG'
+    'gyX3Byb3ZpZGVyX3VzZXJfaWQYCyABKAlIA1IUb2F1dGgyUHJvdmlkZXJVc2VySWSIAQESPQoY'
+    'b2F1dGgyX3Byb3ZpZGVyX3VzZXJuYW1lGAwgASgJSARSFm9hdXRoMlByb3ZpZGVyVXNlcm5hbW'
+    'WIAQESLwoRb2F1dGgyX2F2YXRhcl91cmwYDSABKAlIBVIPb2F1dGgyQXZhdGFyVXJsiAEBEjAK'
+    'FG9hdXRoMl9lbWFpbF90cnVzdGVkGA4gASgIUhJvYXV0aDJFbWFpbFRydXN0ZWQSRgodb2F1dG'
+    'gyX3Byb3ZpZGVyX2luc3RhbmNlX25hbWUYDyABKAlIBlIab2F1dGgyUHJvdmlkZXJJbnN0YW5j'
+    'ZU5hbWWIAQESOQoWb2F1dGgyX3Byb3ZpZGVyX2lzc3VlchgQIAEoCUgHUhRvYXV0aDJQcm92aW'
+    'Rlcklzc3VlcogBARI5ChZ3ZWJhdXRobl9jcmVkZW50aWFsX2lkGBEgASgJSAhSFHdlYmF1dGhu'
+    'Q3JlZGVudGlhbElkiAEBEj0KGHdlYmF1dGhuX2NyZWRlbnRpYWxfbmFtZRgSIAEoCUgJUhZ3ZW'
+    'JhdXRobkNyZWRlbnRpYWxOYW1liAEBQg4KDF9yZXZpZXdlZF9ieUITChFfcmVqZWN0aW9uX3Jl'
+    'YXNvbkISChBfb2F1dGgyX3Byb3ZpZGVyQhoKGF9vYXV0aDJfcHJvdmlkZXJfdXNlcl9pZEIbCh'
+    'lfb2F1dGgyX3Byb3ZpZGVyX3VzZXJuYW1lQhQKEl9vYXV0aDJfYXZhdGFyX3VybEIgCh5fb2F1'
+    'dGgyX3Byb3ZpZGVyX2luc3RhbmNlX25hbWVCGQoXX29hdXRoMl9wcm92aWRlcl9pc3N1ZXJCGQ'
+    'oXX3dlYmF1dGhuX2NyZWRlbnRpYWxfaWRCGwoZX3dlYmF1dGhuX2NyZWRlbnRpYWxfbmFtZQ==');
 
 @$core.Deprecated('Use roomCreationReviewDescriptor instead')
 const RoomCreationReview$json = {
@@ -355,8 +507,28 @@ const RoomCreationReview$json = {
     },
     {'1': 'requested_at', '3': 7, '4': 1, '5': 3, '10': 'requestedAt'},
     {'1': 'reviewed_at', '3': 8, '4': 1, '5': 3, '10': 'reviewedAt'},
-    {'1': 'reviewed_by', '3': 9, '4': 1, '5': 9, '10': 'reviewedBy'},
-    {'1': 'rejection_reason', '3': 10, '4': 1, '5': 9, '10': 'rejectionReason'},
+    {
+      '1': 'reviewed_by',
+      '3': 9,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'reviewedBy',
+      '17': true
+    },
+    {
+      '1': 'rejection_reason',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'rejectionReason',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_reviewed_by'},
+    {'1': '_rejection_reason'},
   ],
 };
 
@@ -367,8 +539,9 @@ final $typed_data.Uint8List roomCreationReviewDescriptor = $convert.base64Decode
     'ZWRCeVVzZXJuYW1lEhIKBG5hbWUYBCABKAlSBG5hbWUSIAoLZGVzY3JpcHRpb24YBSABKAlSC2'
     'Rlc2NyaXB0aW9uEjMKBnN0YXR1cxgGIAEoDjIbLnN5bmN0di5jb21tb24uUmV2aWV3U3RhdHVz'
     'UgZzdGF0dXMSIQoMcmVxdWVzdGVkX2F0GAcgASgDUgtyZXF1ZXN0ZWRBdBIfCgtyZXZpZXdlZF'
-    '9hdBgIIAEoA1IKcmV2aWV3ZWRBdBIfCgtyZXZpZXdlZF9ieRgJIAEoCVIKcmV2aWV3ZWRCeRIp'
-    'ChByZWplY3Rpb25fcmVhc29uGAogASgJUg9yZWplY3Rpb25SZWFzb24=');
+    '9hdBgIIAEoA1IKcmV2aWV3ZWRBdBIkCgtyZXZpZXdlZF9ieRgJIAEoCUgAUgpyZXZpZXdlZEJ5'
+    'iAEBEi4KEHJlamVjdGlvbl9yZWFzb24YCiABKAlIAVIPcmVqZWN0aW9uUmVhc29uiAEBQg4KDF'
+    '9yZXZpZXdlZF9ieUITChFfcmVqZWN0aW9uX3JlYXNvbg==');
 
 @$core.Deprecated('Use roomJoinReviewDescriptor instead')
 const RoomJoinReview$json = {
@@ -397,8 +570,28 @@ const RoomJoinReview$json = {
     },
     {'1': 'requested_at', '3': 8, '4': 1, '5': 3, '10': 'requestedAt'},
     {'1': 'reviewed_at', '3': 9, '4': 1, '5': 3, '10': 'reviewedAt'},
-    {'1': 'reviewed_by', '3': 10, '4': 1, '5': 9, '10': 'reviewedBy'},
-    {'1': 'rejection_reason', '3': 11, '4': 1, '5': 9, '10': 'rejectionReason'},
+    {
+      '1': 'reviewed_by',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'reviewedBy',
+      '17': true
+    },
+    {
+      '1': 'rejection_reason',
+      '3': 11,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'rejectionReason',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_reviewed_by'},
+    {'1': '_rejection_reason'},
   ],
 };
 
@@ -409,9 +602,10 @@ final $typed_data.Uint8List roomJoinReviewDescriptor = $convert.base64Decode(
     'EhoKCHVzZXJuYW1lGAUgASgJUgh1c2VybmFtZRJECg5yZXF1ZXN0ZWRfcm9sZRgGIAEoDjIdLn'
     'N5bmN0di5jb21tb24uUm9vbU1lbWJlclJvbGVSDXJlcXVlc3RlZFJvbGUSMwoGc3RhdHVzGAcg'
     'ASgOMhsuc3luY3R2LmNvbW1vbi5SZXZpZXdTdGF0dXNSBnN0YXR1cxIhCgxyZXF1ZXN0ZWRfYX'
-    'QYCCABKANSC3JlcXVlc3RlZEF0Eh8KC3Jldmlld2VkX2F0GAkgASgDUgpyZXZpZXdlZEF0Eh8K'
-    'C3Jldmlld2VkX2J5GAogASgJUgpyZXZpZXdlZEJ5EikKEHJlamVjdGlvbl9yZWFzb24YCyABKA'
-    'lSD3JlamVjdGlvblJlYXNvbg==');
+    'QYCCABKANSC3JlcXVlc3RlZEF0Eh8KC3Jldmlld2VkX2F0GAkgASgDUgpyZXZpZXdlZEF0EiQK'
+    'C3Jldmlld2VkX2J5GAogASgJSABSCnJldmlld2VkQnmIAQESLgoQcmVqZWN0aW9uX3JlYXNvbh'
+    'gLIAEoCUgBUg9yZWplY3Rpb25SZWFzb26IAQFCDgoMX3Jldmlld2VkX2J5QhMKEV9yZWplY3Rp'
+    'b25fcmVhc29u');
 
 @$core.Deprecated('Use banRecordDescriptor instead')
 const BanRecord$json = {
@@ -457,6 +651,132 @@ final $typed_data.Uint8List banRecordDescriptor = $convert.base64Decode(
     'Fzb24YCSABKAlSBnJlYXNvbhIbCglzdGFydHNfYXQYCiABKANSCHN0YXJ0c0F0EhcKB2VuZHNf'
     'YXQYCyABKANSBmVuZHNBdBIdCgpyZXZva2VkX2F0GAwgASgDUglyZXZva2VkQXQSHQoKcmV2b2'
     'tlZF9ieRgNIAEoCVIJcmV2b2tlZEJ5EhsKCWlzX2FjdGl2ZRgOIAEoCFIIaXNBY3RpdmU=');
+
+@$core.Deprecated('Use contentReportDescriptor instead')
+const ContentReport$json = {
+  '1': 'ContentReport',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'reporter_user_id', '3': 2, '4': 1, '5': 9, '10': 'reporterUserId'},
+    {
+      '1': 'reporter_username',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '10': 'reporterUsername'
+    },
+    {'1': 'room_id', '3': 4, '4': 1, '5': 9, '10': 'roomId'},
+    {'1': 'room_name', '3': 5, '4': 1, '5': 9, '10': 'roomName'},
+    {
+      '1': 'target_type',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.admin.ContentReportTargetType',
+      '10': 'targetType'
+    },
+    {'1': 'target_room_id', '3': 7, '4': 1, '5': 9, '10': 'targetRoomId'},
+    {'1': 'target_room_name', '3': 8, '4': 1, '5': 9, '10': 'targetRoomName'},
+    {'1': 'target_user_id', '3': 9, '4': 1, '5': 9, '10': 'targetUserId'},
+    {'1': 'target_username', '3': 10, '4': 1, '5': 9, '10': 'targetUsername'},
+    {
+      '1': 'target_member_room_id',
+      '3': 11,
+      '4': 1,
+      '5': 9,
+      '10': 'targetMemberRoomId'
+    },
+    {
+      '1': 'target_member_room_name',
+      '3': 12,
+      '4': 1,
+      '5': 9,
+      '10': 'targetMemberRoomName'
+    },
+    {
+      '1': 'target_member_user_id',
+      '3': 13,
+      '4': 1,
+      '5': 9,
+      '10': 'targetMemberUserId'
+    },
+    {
+      '1': 'target_member_username',
+      '3': 14,
+      '4': 1,
+      '5': 9,
+      '10': 'targetMemberUsername'
+    },
+    {
+      '1': 'target_chat_message_id',
+      '3': 15,
+      '4': 1,
+      '5': 3,
+      '10': 'targetChatMessageId'
+    },
+    {
+      '1': 'target_chat_message_created_at',
+      '3': 16,
+      '4': 1,
+      '5': 3,
+      '10': 'targetChatMessageCreatedAt'
+    },
+    {
+      '1': 'target_chat_message_preview',
+      '3': 17,
+      '4': 1,
+      '5': 9,
+      '10': 'targetChatMessagePreview'
+    },
+    {'1': 'reason_code', '3': 18, '4': 1, '5': 9, '10': 'reasonCode'},
+    {'1': 'reason', '3': 19, '4': 1, '5': 9, '10': 'reason'},
+    {'1': 'metadata', '3': 20, '4': 1, '5': 12, '10': 'metadata'},
+    {
+      '1': 'status',
+      '3': 21,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.admin.ContentReportStatus',
+      '10': 'status'
+    },
+    {'1': 'reviewed_by', '3': 22, '4': 1, '5': 9, '10': 'reviewedBy'},
+    {
+      '1': 'reviewed_by_username',
+      '3': 23,
+      '4': 1,
+      '5': 9,
+      '10': 'reviewedByUsername'
+    },
+    {'1': 'reviewed_at', '3': 24, '4': 1, '5': 3, '10': 'reviewedAt'},
+    {'1': 'resolution_note', '3': 25, '4': 1, '5': 9, '10': 'resolutionNote'},
+    {'1': 'created_at', '3': 26, '4': 1, '5': 3, '10': 'createdAt'},
+    {'1': 'updated_at', '3': 27, '4': 1, '5': 3, '10': 'updatedAt'},
+  ],
+};
+
+/// Descriptor for `ContentReport`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List contentReportDescriptor = $convert.base64Decode(
+    'Cg1Db250ZW50UmVwb3J0Eg4KAmlkGAEgASgJUgJpZBIoChByZXBvcnRlcl91c2VyX2lkGAIgAS'
+    'gJUg5yZXBvcnRlclVzZXJJZBIrChFyZXBvcnRlcl91c2VybmFtZRgDIAEoCVIQcmVwb3J0ZXJV'
+    'c2VybmFtZRIXCgdyb29tX2lkGAQgASgJUgZyb29tSWQSGwoJcm9vbV9uYW1lGAUgASgJUghyb2'
+    '9tTmFtZRJGCgt0YXJnZXRfdHlwZRgGIAEoDjIlLnN5bmN0di5hZG1pbi5Db250ZW50UmVwb3J0'
+    'VGFyZ2V0VHlwZVIKdGFyZ2V0VHlwZRIkCg50YXJnZXRfcm9vbV9pZBgHIAEoCVIMdGFyZ2V0Um'
+    '9vbUlkEigKEHRhcmdldF9yb29tX25hbWUYCCABKAlSDnRhcmdldFJvb21OYW1lEiQKDnRhcmdl'
+    'dF91c2VyX2lkGAkgASgJUgx0YXJnZXRVc2VySWQSJwoPdGFyZ2V0X3VzZXJuYW1lGAogASgJUg'
+    '50YXJnZXRVc2VybmFtZRIxChV0YXJnZXRfbWVtYmVyX3Jvb21faWQYCyABKAlSEnRhcmdldE1l'
+    'bWJlclJvb21JZBI1Chd0YXJnZXRfbWVtYmVyX3Jvb21fbmFtZRgMIAEoCVIUdGFyZ2V0TWVtYm'
+    'VyUm9vbU5hbWUSMQoVdGFyZ2V0X21lbWJlcl91c2VyX2lkGA0gASgJUhJ0YXJnZXRNZW1iZXJV'
+    'c2VySWQSNAoWdGFyZ2V0X21lbWJlcl91c2VybmFtZRgOIAEoCVIUdGFyZ2V0TWVtYmVyVXNlcm'
+    '5hbWUSMwoWdGFyZ2V0X2NoYXRfbWVzc2FnZV9pZBgPIAEoA1ITdGFyZ2V0Q2hhdE1lc3NhZ2VJ'
+    'ZBJCCh50YXJnZXRfY2hhdF9tZXNzYWdlX2NyZWF0ZWRfYXQYECABKANSGnRhcmdldENoYXRNZX'
+    'NzYWdlQ3JlYXRlZEF0Ej0KG3RhcmdldF9jaGF0X21lc3NhZ2VfcHJldmlldxgRIAEoCVIYdGFy'
+    'Z2V0Q2hhdE1lc3NhZ2VQcmV2aWV3Eh8KC3JlYXNvbl9jb2RlGBIgASgJUgpyZWFzb25Db2RlEh'
+    'YKBnJlYXNvbhgTIAEoCVIGcmVhc29uEhoKCG1ldGFkYXRhGBQgASgMUghtZXRhZGF0YRI5CgZz'
+    'dGF0dXMYFSABKA4yIS5zeW5jdHYuYWRtaW4uQ29udGVudFJlcG9ydFN0YXR1c1IGc3RhdHVzEh'
+    '8KC3Jldmlld2VkX2J5GBYgASgJUgpyZXZpZXdlZEJ5EjAKFHJldmlld2VkX2J5X3VzZXJuYW1l'
+    'GBcgASgJUhJyZXZpZXdlZEJ5VXNlcm5hbWUSHwoLcmV2aWV3ZWRfYXQYGCABKANSCnJldmlld2'
+    'VkQXQSJwoPcmVzb2x1dGlvbl9ub3RlGBkgASgJUg5yZXNvbHV0aW9uTm90ZRIdCgpjcmVhdGVk'
+    'X2F0GBogASgDUgljcmVhdGVkQXQSHQoKdXBkYXRlZF9hdBgbIAEoA1IJdXBkYXRlZEF0');
 
 @$core.Deprecated('Use getSettingsRequestDescriptor instead')
 const GetSettingsRequest$json = {
@@ -608,11 +928,10 @@ const CreateUserRequest$json = {
   '1': 'CreateUserRequest',
   '2': [
     {'1': 'username', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'username'},
-    {'1': 'password', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'password'},
-    {'1': 'email', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'email'},
+    {'1': 'email', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'email'},
     {
       '1': 'role',
-      '3': 4,
+      '3': 3,
       '4': 1,
       '5': 14,
       '6': '.synctv.common.UserRole',
@@ -621,23 +940,24 @@ const CreateUserRequest$json = {
     },
     {
       '1': 'status',
-      '3': 5,
+      '3': 4,
       '4': 1,
       '5': 14,
       '6': '.synctv.common.UserStatus',
       '8': {},
       '10': 'status'
     },
+    {'1': 'password', '3': 5, '4': 1, '5': 9, '8': {}, '10': 'password'},
   ],
 };
 
 /// Descriptor for `CreateUserRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List createUserRequestDescriptor = $convert.base64Decode(
     'ChFDcmVhdGVVc2VyUmVxdWVzdBI4Cgh1c2VybmFtZRgBIAEoCUIcukgZchcQAxgyMhFeW1xwe0'
-    'x9XHB7Tn1fLV0rJFIIdXNlcm5hbWUSJgoIcGFzc3dvcmQYAiABKAlCCrpIB3IFEAgYgAFSCHBh'
-    'c3N3b3JkEiMKBWVtYWlsGAMgASgJQg26SApyBRj+AWAB2AEBUgVlbWFpbBI1CgRyb2xlGAQgAS'
-    'gOMhcuc3luY3R2LmNvbW1vbi5Vc2VyUm9sZUIIukgFggECEAFSBHJvbGUSOwoGc3RhdHVzGAUg'
-    'ASgOMhkuc3luY3R2LmNvbW1vbi5Vc2VyU3RhdHVzQgi6SAWCAQIQAVIGc3RhdHVz');
+    'x9XHB7Tn1fLV0rJFIIdXNlcm5hbWUSIwoFZW1haWwYAiABKAlCDbpICnIFGP4BYAHYAQFSBWVt'
+    'YWlsEjUKBHJvbGUYAyABKA4yFy5zeW5jdHYuY29tbW9uLlVzZXJSb2xlQgi6SAWCAQIQAVIEcm'
+    '9sZRI7CgZzdGF0dXMYBCABKA4yGS5zeW5jdHYuY29tbW9uLlVzZXJTdGF0dXNCCLpIBYIBAhAB'
+    'UgZzdGF0dXMSKQoIcGFzc3dvcmQYBSABKAlCDbpICnIFEAgYgAHYAQFSCHBhc3N3b3Jk');
 
 @$core.Deprecated('Use createUserResponseDescriptor instead')
 const CreateUserResponse$json = {
@@ -953,34 +1273,43 @@ final $typed_data.Uint8List updateUserPreferencesResponseDescriptor = $convert.b
     'bnQuVXNlclByZWZlcmVuY2VzUgtwcmVmZXJlbmNlcxJBCgxhdXRoX2ZhY3RvcnMYAyABKAsyHi'
     '5zeW5jdHYuY2xpZW50LlVzZXJBdXRoRmFjdG9yc1ILYXV0aEZhY3RvcnM=');
 
-@$core.Deprecated('Use updateUserPasswordRequestDescriptor instead')
-const UpdateUserPasswordRequest$json = {
-  '1': 'UpdateUserPasswordRequest',
+@$core.Deprecated('Use setUserPasswordRequestDescriptor instead')
+const SetUserPasswordRequest$json = {
+  '1': 'SetUserPasswordRequest',
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'userId'},
-    {'1': 'new_password', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'newPassword'},
+    {'1': 'password', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'password'},
     {'1': 'reason', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'reason'},
   ],
 };
 
-/// Descriptor for `UpdateUserPasswordRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateUserPasswordRequestDescriptor = $convert.base64Decode(
-    'ChlVcGRhdGVVc2VyUGFzc3dvcmRSZXF1ZXN0EjYKB3VzZXJfaWQYASABKAlCHbpIGnIYEAEYQD'
-    'ISXnVzcl9bQS1aYS16MC05XSskUgZ1c2VySWQSLQoMbmV3X3Bhc3N3b3JkGAIgASgJQgq6SAdy'
-    'BRAIGIABUgtuZXdQYXNzd29yZBIgCgZyZWFzb24YAyABKAlCCLpIBXIDGPQDUgZyZWFzb24=');
+/// Descriptor for `SetUserPasswordRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List setUserPasswordRequestDescriptor = $convert.base64Decode(
+    'ChZTZXRVc2VyUGFzc3dvcmRSZXF1ZXN0EjYKB3VzZXJfaWQYASABKAlCHbpIGnIYEAEYQDISXn'
+    'Vzcl9bQS1aYS16MC05XSskUgZ1c2VySWQSJgoIcGFzc3dvcmQYAiABKAlCCrpIB3IFEAgYgAhS'
+    'CHBhc3N3b3JkEiAKBnJlYXNvbhgDIAEoCUIIukgFcgMY9ANSBnJlYXNvbg==');
 
-@$core.Deprecated('Use updateUserPasswordResponseDescriptor instead')
-const UpdateUserPasswordResponse$json = {
-  '1': 'UpdateUserPasswordResponse',
+@$core.Deprecated('Use setUserPasswordResponseDescriptor instead')
+const SetUserPasswordResponse$json = {
+  '1': 'SetUserPasswordResponse',
   '2': [
     {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
+    {
+      '1': 'user',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.AdminUser',
+      '10': 'user'
+    },
   ],
 };
 
-/// Descriptor for `UpdateUserPasswordResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateUserPasswordResponseDescriptor =
+/// Descriptor for `SetUserPasswordResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List setUserPasswordResponseDescriptor =
     $convert.base64Decode(
-        'ChpVcGRhdGVVc2VyUGFzc3dvcmRSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
+        'ChdTZXRVc2VyUGFzc3dvcmRSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNzEisKBH'
+        'VzZXIYAiABKAsyFy5zeW5jdHYuYWRtaW4uQWRtaW5Vc2VyUgR1c2Vy');
 
 @$core.Deprecated('Use updateUserUsernameRequestDescriptor instead')
 const UpdateUserUsernameRequest$json = {
@@ -2058,14 +2387,22 @@ const GetRoomMembersResponse$json = {
       '10': 'members'
     },
     {'1': 'total', '3': 2, '4': 1, '5': 5, '10': 'total'},
+    {
+      '1': 'presence',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.common.RoomPresenceStats',
+      '10': 'presence'
+    },
   ],
 };
 
 /// Descriptor for `GetRoomMembersResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getRoomMembersResponseDescriptor =
-    $convert.base64Decode(
-        'ChZHZXRSb29tTWVtYmVyc1Jlc3BvbnNlEjMKB21lbWJlcnMYASADKAsyGS5zeW5jdHYuY29tbW'
-        '9uLlJvb21NZW1iZXJSB21lbWJlcnMSFAoFdG90YWwYAiABKAVSBXRvdGFs');
+final $typed_data.Uint8List getRoomMembersResponseDescriptor = $convert.base64Decode(
+    'ChZHZXRSb29tTWVtYmVyc1Jlc3BvbnNlEjMKB21lbWJlcnMYASADKAsyGS5zeW5jdHYuY29tbW'
+    '9uLlJvb21NZW1iZXJSB21lbWJlcnMSFAoFdG90YWwYAiABKAVSBXRvdGFsEjwKCHByZXNlbmNl'
+    'GAMgASgLMiAuc3luY3R2LmNvbW1vbi5Sb29tUHJlc2VuY2VTdGF0c1IIcHJlc2VuY2U=');
 
 @$core.Deprecated('Use addMemberRequestDescriptor instead')
 const AddMemberRequest$json = {
@@ -2376,6 +2713,14 @@ const GetSystemStatsResponse$json = {
       '10': 'providerInstances'
     },
     {'1': 'additional_stats', '3': 9, '4': 1, '5': 12, '10': 'additionalStats'},
+    {
+      '1': 'presence',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.common.PresenceOverview',
+      '10': 'presence'
+    },
   ],
 };
 
@@ -2387,7 +2732,8 @@ final $typed_data.Uint8List getSystemStatsResponseDescriptor = $convert.base64De
     'RpdmVfcm9vbXMYBSABKAVSC2FjdGl2ZVJvb21zEiEKDGJhbm5lZF9yb29tcxgGIAEoBVILYmFu'
     'bmVkUm9vbXMSHwoLdG90YWxfbWVkaWEYByABKAVSCnRvdGFsTWVkaWESLQoScHJvdmlkZXJfaW'
     '5zdGFuY2VzGAggASgFUhFwcm92aWRlckluc3RhbmNlcxIpChBhZGRpdGlvbmFsX3N0YXRzGAkg'
-    'ASgMUg9hZGRpdGlvbmFsU3RhdHM=');
+    'ASgMUg9hZGRpdGlvbmFsU3RhdHMSOwoIcHJlc2VuY2UYCiABKAsyHy5zeW5jdHYuY29tbW9uLl'
+    'ByZXNlbmNlT3ZlcnZpZXdSCHByZXNlbmNl');
 
 @$core.Deprecated('Use listActiveStreamsRequestDescriptor instead')
 const ListActiveStreamsRequest$json = {
@@ -2696,6 +3042,230 @@ final $typed_data.Uint8List listBanRecordsResponseDescriptor =
         'ChZMaXN0QmFuUmVjb3Jkc1Jlc3BvbnNlEisKBGJhbnMYASADKAsyFy5zeW5jdHYuYWRtaW4uQm'
         'FuUmVjb3JkUgRiYW5zEhQKBXRvdGFsGAIgASgFUgV0b3RhbA==');
 
+@$core.Deprecated('Use listContentReportsRequestDescriptor instead')
+const ListContentReportsRequest$json = {
+  '1': 'ListContentReportsRequest',
+  '2': [
+    {'1': 'page', '3': 1, '4': 1, '5': 5, '10': 'page'},
+    {'1': 'page_size', '3': 2, '4': 1, '5': 5, '10': 'pageSize'},
+    {
+      '1': 'status',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.admin.ContentReportStatus',
+      '8': {},
+      '10': 'status'
+    },
+    {
+      '1': 'target_type',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.admin.ContentReportTargetType',
+      '8': {},
+      '10': 'targetType'
+    },
+    {
+      '1': 'reporter_user_id',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'reporterUserId'
+    },
+    {'1': 'room_id', '3': 6, '4': 1, '5': 9, '8': {}, '10': 'roomId'},
+    {'1': 'search', '3': 7, '4': 1, '5': 9, '8': {}, '10': 'search'},
+    {
+      '1': 'target_user_id',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'targetUserId'
+    },
+    {
+      '1': 'target_member_user_id',
+      '3': 9,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'targetMemberUserId'
+    },
+    {
+      '1': 'target_chat_message_id',
+      '3': 10,
+      '4': 1,
+      '5': 3,
+      '8': {},
+      '10': 'targetChatMessageId'
+    },
+    {
+      '1': 'target_room_id',
+      '3': 11,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'targetRoomId'
+    },
+    {
+      '1': 'target_member_room_id',
+      '3': 12,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'targetMemberRoomId'
+    },
+    {
+      '1': 'scope',
+      '3': 13,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.admin.ContentReportScope',
+      '8': {},
+      '10': 'scope'
+    },
+  ],
+  '7': {},
+};
+
+/// Descriptor for `ListContentReportsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listContentReportsRequestDescriptor = $convert.base64Decode(
+    'ChlMaXN0Q29udGVudFJlcG9ydHNSZXF1ZXN0EhIKBHBhZ2UYASABKAVSBHBhZ2USGwoJcGFnZV'
+    '9zaXplGAIgASgFUghwYWdlU2l6ZRJDCgZzdGF0dXMYAyABKA4yIS5zeW5jdHYuYWRtaW4uQ29u'
+    'dGVudFJlcG9ydFN0YXR1c0IIukgFggECEAFSBnN0YXR1cxJQCgt0YXJnZXRfdHlwZRgEIAEoDj'
+    'IlLnN5bmN0di5hZG1pbi5Db250ZW50UmVwb3J0VGFyZ2V0VHlwZUIIukgFggECEAFSCnRhcmdl'
+    'dFR5cGUSSAoQcmVwb3J0ZXJfdXNlcl9pZBgFIAEoCUIeukgbchkYQDIVXiR8XnVzcl9bQS1aYS'
+    '16MC05XSskUg5yZXBvcnRlclVzZXJJZBI4Cgdyb29tX2lkGAYgASgJQh+6SBxyGhhAMhZeJHxe'
+    'cm9vbV9bQS1aYS16MC05XSskUgZyb29tSWQSHwoGc2VhcmNoGAcgASgJQge6SARyAhh4UgZzZW'
+    'FyY2gSRAoOdGFyZ2V0X3VzZXJfaWQYCCABKAlCHrpIG3IZGEAyFV4kfF51c3JfW0EtWmEtejAt'
+    'OV0rJFIMdGFyZ2V0VXNlcklkElEKFXRhcmdldF9tZW1iZXJfdXNlcl9pZBgJIAEoCUIeukgbch'
+    'kYQDIVXiR8XnVzcl9bQS1aYS16MC05XSskUhJ0YXJnZXRNZW1iZXJVc2VySWQSPAoWdGFyZ2V0'
+    'X2NoYXRfbWVzc2FnZV9pZBgKIAEoA0IHukgEIgIoAFITdGFyZ2V0Q2hhdE1lc3NhZ2VJZBJFCg'
+    '50YXJnZXRfcm9vbV9pZBgLIAEoCUIfukgcchoYQDIWXiR8XnJvb21fW0EtWmEtejAtOV0rJFIM'
+    'dGFyZ2V0Um9vbUlkElIKFXRhcmdldF9tZW1iZXJfcm9vbV9pZBgMIAEoCUIfukgcchoYQDIWXi'
+    'R8XnJvb21fW0EtWmEtejAtOV0rJFISdGFyZ2V0TWVtYmVyUm9vbUlkEkAKBXNjb3BlGA0gASgO'
+    'MiAuc3luY3R2LmFkbWluLkNvbnRlbnRSZXBvcnRTY29wZUIIukgFggECEAFSBXNjb3BlOp0Cuk'
+    'iZAhpvCh9hZG1pbi5saXN0X2NvbnRlbnRfcmVwb3J0cy5wYWdlEipwYWdlIG11c3QgYmUgMCAo'
+    'dXNlIGRlZmF1bHQpIG9yIGF0IGxlYXN0IDEaIHRoaXMucGFnZSA9PSAwIHx8IHRoaXMucGFnZS'
+    'A+PSAxGqUBCiRhZG1pbi5saXN0X2NvbnRlbnRfcmVwb3J0cy5wYWdlX3NpemUSNnBhZ2Vfc2l6'
+    'ZSBtdXN0IGJlIDAgKHVzZSBkZWZhdWx0KSBvciBiZXR3ZWVuIDEgYW5kIDEwMBpFdGhpcy5wYW'
+    'dlX3NpemUgPT0gMCB8fCAodGhpcy5wYWdlX3NpemUgPj0gMSAmJiB0aGlzLnBhZ2Vfc2l6ZSA8'
+    'PSAxMDAp');
+
+@$core.Deprecated('Use listContentReportsResponseDescriptor instead')
+const ListContentReportsResponse$json = {
+  '1': 'ListContentReportsResponse',
+  '2': [
+    {
+      '1': 'reports',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.admin.ContentReport',
+      '10': 'reports'
+    },
+    {'1': 'total', '3': 2, '4': 1, '5': 5, '10': 'total'},
+  ],
+};
+
+/// Descriptor for `ListContentReportsResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listContentReportsResponseDescriptor =
+    $convert.base64Decode(
+        'ChpMaXN0Q29udGVudFJlcG9ydHNSZXNwb25zZRI1CgdyZXBvcnRzGAEgAygLMhsuc3luY3R2Lm'
+        'FkbWluLkNvbnRlbnRSZXBvcnRSB3JlcG9ydHMSFAoFdG90YWwYAiABKAVSBXRvdGFs');
+
+@$core.Deprecated('Use getContentReportRequestDescriptor instead')
+const GetContentReportRequest$json = {
+  '1': 'GetContentReportRequest',
+  '2': [
+    {'1': 'report_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'reportId'},
+  ],
+};
+
+/// Descriptor for `GetContentReportRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getContentReportRequestDescriptor =
+    $convert.base64Decode(
+        'ChdHZXRDb250ZW50UmVwb3J0UmVxdWVzdBI9CglyZXBvcnRfaWQYASABKAlCILpIHXIbEAEYQD'
+        'IVXnJlcG9ydF9bQS1aYS16MC05XSskUghyZXBvcnRJZA==');
+
+@$core.Deprecated('Use getContentReportResponseDescriptor instead')
+const GetContentReportResponse$json = {
+  '1': 'GetContentReportResponse',
+  '2': [
+    {
+      '1': 'report',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.ContentReport',
+      '10': 'report'
+    },
+  ],
+};
+
+/// Descriptor for `GetContentReportResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getContentReportResponseDescriptor =
+    $convert.base64Decode(
+        'ChhHZXRDb250ZW50UmVwb3J0UmVzcG9uc2USMwoGcmVwb3J0GAEgASgLMhsuc3luY3R2LmFkbW'
+        'luLkNvbnRlbnRSZXBvcnRSBnJlcG9ydA==');
+
+@$core.Deprecated('Use updateContentReportStatusRequestDescriptor instead')
+const UpdateContentReportStatusRequest$json = {
+  '1': 'UpdateContentReportStatusRequest',
+  '2': [
+    {'1': 'report_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'reportId'},
+    {
+      '1': 'status',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.admin.ContentReportStatus',
+      '8': {},
+      '10': 'status'
+    },
+    {
+      '1': 'resolution_note',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'resolutionNote'
+    },
+  ],
+};
+
+/// Descriptor for `UpdateContentReportStatusRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateContentReportStatusRequestDescriptor =
+    $convert.base64Decode(
+        'CiBVcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVxdWVzdBI9CglyZXBvcnRfaWQYASABKAlCIL'
+        'pIHXIbEAEYQDIVXnJlcG9ydF9bQS1aYS16MC05XSskUghyZXBvcnRJZBJFCgZzdGF0dXMYAiAB'
+        'KA4yIS5zeW5jdHYuYWRtaW4uQ29udGVudFJlcG9ydFN0YXR1c0IKukgHggEEEAEgAFIGc3RhdH'
+        'VzEjEKD3Jlc29sdXRpb25fbm90ZRgDIAEoCUIIukgFcgMY0A9SDnJlc29sdXRpb25Ob3Rl');
+
+@$core.Deprecated('Use updateContentReportStatusResponseDescriptor instead')
+const UpdateContentReportStatusResponse$json = {
+  '1': 'UpdateContentReportStatusResponse',
+  '2': [
+    {
+      '1': 'report',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.ContentReport',
+      '10': 'report'
+    },
+    {'1': 'success', '3': 2, '4': 1, '5': 8, '10': 'success'},
+  ],
+};
+
+/// Descriptor for `UpdateContentReportStatusResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateContentReportStatusResponseDescriptor =
+    $convert.base64Decode(
+        'CiFVcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVzcG9uc2USMwoGcmVwb3J0GAEgASgLMhsuc3'
+        'luY3R2LmFkbWluLkNvbnRlbnRSZXBvcnRSBnJlcG9ydBIYCgdzdWNjZXNzGAIgASgIUgdzdWNj'
+        'ZXNz');
+
 @$core.Deprecated('Use batchDeleteRoomsRequestDescriptor instead')
 const BatchDeleteRoomsRequest$json = {
   '1': 'BatchDeleteRoomsRequest',
@@ -2787,9 +3357,9 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
       '3': '.synctv.admin.UpdateUserPreferencesResponse'
     },
     {
-      '1': 'UpdateUserPassword',
-      '2': '.synctv.admin.UpdateUserPasswordRequest',
-      '3': '.synctv.admin.UpdateUserPasswordResponse'
+      '1': 'SetUserPassword',
+      '2': '.synctv.admin.SetUserPasswordRequest',
+      '3': '.synctv.admin.SetUserPasswordResponse'
     },
     {
       '1': 'UpdateUserUsername',
@@ -2981,6 +3551,21 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
       '2': '.synctv.admin.ListBanRecordsRequest',
       '3': '.synctv.admin.ListBanRecordsResponse'
     },
+    {
+      '1': 'ListContentReports',
+      '2': '.synctv.admin.ListContentReportsRequest',
+      '3': '.synctv.admin.ListContentReportsResponse'
+    },
+    {
+      '1': 'GetContentReport',
+      '2': '.synctv.admin.GetContentReportRequest',
+      '3': '.synctv.admin.GetContentReportResponse'
+    },
+    {
+      '1': 'UpdateContentReportStatus',
+      '2': '.synctv.admin.UpdateContentReportStatusRequest',
+      '3': '.synctv.admin.UpdateContentReportStatusResponse'
+    },
   ],
 };
 
@@ -3001,6 +3586,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.CreateUserRequest': CreateUserRequest$json,
   '.synctv.admin.CreateUserResponse': CreateUserResponse$json,
   '.synctv.admin.AdminUser': AdminUser$json,
+  '.synctv.common.UserPresenceStats': $0.UserPresenceStats$json,
+  '.synctv.common.NodeConnectionCount': $0.NodeConnectionCount$json,
   '.synctv.admin.DeleteUserRequest': DeleteUserRequest$json,
   '.synctv.admin.DeleteUserResponse': DeleteUserResponse$json,
   '.synctv.admin.ListUsersRequest': ListUsersRequest$json,
@@ -3009,16 +3596,16 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.GetUserResponse': GetUserResponse$json,
   '.synctv.admin.GetUserPreferencesRequest': GetUserPreferencesRequest$json,
   '.synctv.admin.GetUserPreferencesResponse': GetUserPreferencesResponse$json,
-  '.synctv.client.UserPreferences': $0.UserPreferences$json,
+  '.synctv.client.UserPreferences': $1.UserPreferences$json,
   '.synctv.client.UserNotificationPreferences':
-      $0.UserNotificationPreferences$json,
-  '.synctv.client.UserAuthFactors': $0.UserAuthFactors$json,
+      $1.UserNotificationPreferences$json,
+  '.synctv.client.UserAuthFactors': $1.UserAuthFactors$json,
   '.synctv.admin.UpdateUserPreferencesRequest':
       UpdateUserPreferencesRequest$json,
   '.synctv.admin.UpdateUserPreferencesResponse':
       UpdateUserPreferencesResponse$json,
-  '.synctv.admin.UpdateUserPasswordRequest': UpdateUserPasswordRequest$json,
-  '.synctv.admin.UpdateUserPasswordResponse': UpdateUserPasswordResponse$json,
+  '.synctv.admin.SetUserPasswordRequest': SetUserPasswordRequest$json,
+  '.synctv.admin.SetUserPasswordResponse': SetUserPasswordResponse$json,
   '.synctv.admin.UpdateUserUsernameRequest': UpdateUserUsernameRequest$json,
   '.synctv.admin.UpdateUserUsernameResponse': UpdateUserUsernameResponse$json,
   '.synctv.admin.UpdateUserRoleRequest': UpdateUserRoleRequest$json,
@@ -3030,6 +3617,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.GetUserRoomsRequest': GetUserRoomsRequest$json,
   '.synctv.admin.GetUserRoomsResponse': GetUserRoomsResponse$json,
   '.synctv.admin.AdminRoom': AdminRoom$json,
+  '.synctv.common.RoomPresenceStats': $0.RoomPresenceStats$json,
+  '.synctv.client.ResourceCover': $1.ResourceCover$json,
   '.synctv.admin.BatchBanUsersRequest': BatchBanUsersRequest$json,
   '.synctv.admin.BatchBanUsersResponse': BatchBanUsersResponse$json,
   '.synctv.admin.BatchResultItem': BatchResultItem$json,
@@ -3059,7 +3648,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.UnbanRoomResponse': UnbanRoomResponse$json,
   '.synctv.admin.GetRoomMembersRequest': GetRoomMembersRequest$json,
   '.synctv.admin.GetRoomMembersResponse': GetRoomMembersResponse$json,
-  '.synctv.common.RoomMember': $1.RoomMember$json,
+  '.synctv.common.RoomMember': $0.RoomMember$json,
   '.synctv.admin.AddMemberRequest': AddMemberRequest$json,
   '.synctv.admin.AddMemberResponse': AddMemberResponse$json,
   '.synctv.admin.UpdateMemberPermissionsRequest':
@@ -3076,6 +3665,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ListAdminsResponse': ListAdminsResponse$json,
   '.synctv.admin.GetSystemStatsRequest': GetSystemStatsRequest$json,
   '.synctv.admin.GetSystemStatsResponse': GetSystemStatsResponse$json,
+  '.synctv.common.PresenceOverview': $0.PresenceOverview$json,
+  '.synctv.common.NodePresenceStats': $0.NodePresenceStats$json,
   '.synctv.admin.ListActiveStreamsRequest': ListActiveStreamsRequest$json,
   '.synctv.admin.ListActiveStreamsResponse': ListActiveStreamsResponse$json,
   '.synctv.admin.ActiveStreamInfo': ActiveStreamInfo$json,
@@ -3120,6 +3711,15 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ListBanRecordsRequest': ListBanRecordsRequest$json,
   '.synctv.admin.ListBanRecordsResponse': ListBanRecordsResponse$json,
   '.synctv.admin.BanRecord': BanRecord$json,
+  '.synctv.admin.ListContentReportsRequest': ListContentReportsRequest$json,
+  '.synctv.admin.ListContentReportsResponse': ListContentReportsResponse$json,
+  '.synctv.admin.ContentReport': ContentReport$json,
+  '.synctv.admin.GetContentReportRequest': GetContentReportRequest$json,
+  '.synctv.admin.GetContentReportResponse': GetContentReportResponse$json,
+  '.synctv.admin.UpdateContentReportStatusRequest':
+      UpdateContentReportStatusRequest$json,
+  '.synctv.admin.UpdateContentReportStatusResponse':
+      UpdateContentReportStatusResponse$json,
 };
 
 /// Descriptor for `AdminService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
@@ -3140,72 +3740,78 @@ final $typed_data.Uint8List adminServiceDescriptor = $convert.base64Decode(
     'R2LmFkbWluLkdldFVzZXJQcmVmZXJlbmNlc1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uR2V0VXNl'
     'clByZWZlcmVuY2VzUmVzcG9uc2UScAoVVXBkYXRlVXNlclByZWZlcmVuY2VzEiouc3luY3R2Lm'
     'FkbWluLlVwZGF0ZVVzZXJQcmVmZXJlbmNlc1JlcXVlc3QaKy5zeW5jdHYuYWRtaW4uVXBkYXRl'
-    'VXNlclByZWZlcmVuY2VzUmVzcG9uc2USZwoSVXBkYXRlVXNlclBhc3N3b3JkEicuc3luY3R2Lm'
-    'FkbWluLlVwZGF0ZVVzZXJQYXNzd29yZFJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlVXNl'
-    'clBhc3N3b3JkUmVzcG9uc2USZwoSVXBkYXRlVXNlclVzZXJuYW1lEicuc3luY3R2LmFkbWluLl'
-    'VwZGF0ZVVzZXJVc2VybmFtZVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlVXNlclVzZXJu'
-    'YW1lUmVzcG9uc2USWwoOVXBkYXRlVXNlclJvbGUSIy5zeW5jdHYuYWRtaW4uVXBkYXRlVXNlcl'
-    'JvbGVSZXF1ZXN0GiQuc3luY3R2LmFkbWluLlVwZGF0ZVVzZXJSb2xlUmVzcG9uc2USRgoHQmFu'
-    'VXNlchIcLnN5bmN0di5hZG1pbi5CYW5Vc2VyUmVxdWVzdBodLnN5bmN0di5hZG1pbi5CYW5Vc2'
-    'VyUmVzcG9uc2USTAoJVW5iYW5Vc2VyEh4uc3luY3R2LmFkbWluLlVuYmFuVXNlclJlcXVlc3Qa'
-    'Hy5zeW5jdHYuYWRtaW4uVW5iYW5Vc2VyUmVzcG9uc2USVQoMR2V0VXNlclJvb21zEiEuc3luY3'
-    'R2LmFkbWluLkdldFVzZXJSb29tc1JlcXVlc3QaIi5zeW5jdHYuYWRtaW4uR2V0VXNlclJvb21z'
-    'UmVzcG9uc2USWAoNQmF0Y2hCYW5Vc2VycxIiLnN5bmN0di5hZG1pbi5CYXRjaEJhblVzZXJzUm'
-    'VxdWVzdBojLnN5bmN0di5hZG1pbi5CYXRjaEJhblVzZXJzUmVzcG9uc2USYQoQQmF0Y2hEZWxl'
-    'dGVVc2VycxIlLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVVzZXJzUmVxdWVzdBomLnN5bmN0di'
-    '5hZG1pbi5CYXRjaERlbGV0ZVVzZXJzUmVzcG9uc2USWAoNQmF0Y2hCYW5Sb29tcxIiLnN5bmN0'
-    'di5hZG1pbi5CYXRjaEJhblJvb21zUmVxdWVzdBojLnN5bmN0di5hZG1pbi5CYXRjaEJhblJvb2'
-    '1zUmVzcG9uc2USYQoQQmF0Y2hEZWxldGVSb29tcxIlLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0'
-    'ZVJvb21zUmVxdWVzdBomLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVJvb21zUmVzcG9uc2USTA'
-    'oJTGlzdFJvb21zEh4uc3luY3R2LmFkbWluLkxpc3RSb29tc1JlcXVlc3QaHy5zeW5jdHYuYWRt'
-    'aW4uTGlzdFJvb21zUmVzcG9uc2USRgoHR2V0Um9vbRIcLnN5bmN0di5hZG1pbi5HZXRSb29tUm'
-    'VxdWVzdBodLnN5bmN0di5hZG1pbi5HZXRSb29tUmVzcG9uc2USXgoPR2V0Um9vbVNldHRpbmdz'
-    'EiQuc3luY3R2LmFkbWluLkdldFJvb21TZXR0aW5nc1JlcXVlc3QaJS5zeW5jdHYuYWRtaW4uR2'
-    'V0Um9vbVNldHRpbmdzUmVzcG9uc2USZwoSVXBkYXRlUm9vbVNldHRpbmdzEicuc3luY3R2LmFk'
-    'bWluLlVwZGF0ZVJvb21TZXR0aW5nc1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbV'
-    'NldHRpbmdzUmVzcG9uc2USZAoRUmVzZXRSb29tU2V0dGluZ3MSJi5zeW5jdHYuYWRtaW4uUmVz'
-    'ZXRSb29tU2V0dGluZ3NSZXF1ZXN0Gicuc3luY3R2LmFkbWluLlJlc2V0Um9vbVNldHRpbmdzUm'
-    'VzcG9uc2USZwoSVXBkYXRlUm9vbVBhc3N3b3JkEicuc3luY3R2LmFkbWluLlVwZGF0ZVJvb21Q'
-    'YXNzd29yZFJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVBhc3N3b3JkUmVzcG9uc2'
-    'USTwoKRGVsZXRlUm9vbRIfLnN5bmN0di5hZG1pbi5EZWxldGVSb29tUmVxdWVzdBogLnN5bmN0'
-    'di5hZG1pbi5EZWxldGVSb29tUmVzcG9uc2USRgoHQmFuUm9vbRIcLnN5bmN0di5hZG1pbi5CYW'
-    '5Sb29tUmVxdWVzdBodLnN5bmN0di5hZG1pbi5CYW5Sb29tUmVzcG9uc2USTAoJVW5iYW5Sb29t'
-    'Eh4uc3luY3R2LmFkbWluLlVuYmFuUm9vbVJlcXVlc3QaHy5zeW5jdHYuYWRtaW4uVW5iYW5Sb2'
-    '9tUmVzcG9uc2USWwoOR2V0Um9vbU1lbWJlcnMSIy5zeW5jdHYuYWRtaW4uR2V0Um9vbU1lbWJl'
-    'cnNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkdldFJvb21NZW1iZXJzUmVzcG9uc2USTAoJQWRkTW'
-    'VtYmVyEh4uc3luY3R2LmFkbWluLkFkZE1lbWJlclJlcXVlc3QaHy5zeW5jdHYuYWRtaW4uQWRk'
-    'TWVtYmVyUmVzcG9uc2USdgoXVXBkYXRlTWVtYmVyUGVybWlzc2lvbnMSLC5zeW5jdHYuYWRtaW'
-    '4uVXBkYXRlTWVtYmVyUGVybWlzc2lvbnNSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLlVwZGF0ZU1l'
-    'bWJlclBlcm1pc3Npb25zUmVzcG9uc2USTwoKS2lja01lbWJlchIfLnN5bmN0di5hZG1pbi5LaW'
-    'NrTWVtYmVyUmVxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUmVzcG9uc2USSQoIQWRk'
-    'QWRtaW4SHS5zeW5jdHYuYWRtaW4uQWRkQWRtaW5SZXF1ZXN0Gh4uc3luY3R2LmFkbWluLkFkZE'
-    'FkbWluUmVzcG9uc2USUgoLUmVtb3ZlQWRtaW4SIC5zeW5jdHYuYWRtaW4uUmVtb3ZlQWRtaW5S'
-    'ZXF1ZXN0GiEuc3luY3R2LmFkbWluLlJlbW92ZUFkbWluUmVzcG9uc2USTwoKTGlzdEFkbWlucx'
-    'IfLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5zUmVxdWVzdBogLnN5bmN0di5hZG1pbi5MaXN0QWRt'
-    'aW5zUmVzcG9uc2USWwoOR2V0U3lzdGVtU3RhdHMSIy5zeW5jdHYuYWRtaW4uR2V0U3lzdGVtU3'
-    'RhdHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkdldFN5c3RlbVN0YXRzUmVzcG9uc2USZAoRTGlz'
-    'dEFjdGl2ZVN0cmVhbXMSJi5zeW5jdHYuYWRtaW4uTGlzdEFjdGl2ZVN0cmVhbXNSZXF1ZXN0Gi'
-    'cuc3luY3R2LmFkbWluLkxpc3RBY3RpdmVTdHJlYW1zUmVzcG9uc2USTwoKS2lja1N0cmVhbRIf'
-    'LnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUmVxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrU3RyZW'
-    'FtUmVzcG9uc2USggEKG0xpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3cxIwLnN5bmN0di5hZG1p'
-    'bi5MaXN0VXNlclJlZ2lzdHJhdGlvblJldmlld3NSZXF1ZXN0GjEuc3luY3R2LmFkbWluLkxpc3'
-    'RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3c1Jlc3BvbnNlEogBCh1BcHByb3ZlVXNlclJlZ2lzdHJh'
-    'dGlvblJldmlldxIyLnN5bmN0di5hZG1pbi5BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmlld1'
-    'JlcXVlc3QaMy5zeW5jdHYuYWRtaW4uQXBwcm92ZVVzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXNw'
-    'b25zZRKFAQocUmVqZWN0VXNlclJlZ2lzdHJhdGlvblJldmlldxIxLnN5bmN0di5hZG1pbi5SZW'
-    'plY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVxdWVzdBoyLnN5bmN0di5hZG1pbi5SZWplY3RV'
-    'c2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVzcG9uc2USdgoXTGlzdFJvb21DcmVhdGlvblJldmlld3'
-    'MSLC5zeW5jdHYuYWRtaW4uTGlzdFJvb21DcmVhdGlvblJldmlld3NSZXF1ZXN0Gi0uc3luY3R2'
-    'LmFkbWluLkxpc3RSb29tQ3JlYXRpb25SZXZpZXdzUmVzcG9uc2USfAoZQXBwcm92ZVJvb21Dcm'
-    'VhdGlvblJldmlldxIuLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVx'
-    'dWVzdBovLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USeQ'
-    'oYUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3Ei0uc3luY3R2LmFkbWluLlJlamVjdFJvb21DcmVh'
-    'dGlvblJldmlld1JlcXVlc3QaLi5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUNyZWF0aW9uUmV2aW'
-    'V3UmVzcG9uc2USagoTTGlzdFJvb21Kb2luUmV2aWV3cxIoLnN5bmN0di5hZG1pbi5MaXN0Um9v'
-    'bUpvaW5SZXZpZXdzUmVxdWVzdBopLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZpZXdzUm'
-    'VzcG9uc2UScAoVQXBwcm92ZVJvb21Kb2luUmV2aWV3Eiouc3luY3R2LmFkbWluLkFwcHJvdmVS'
-    'b29tSm9pblJldmlld1JlcXVlc3QaKy5zeW5jdHYuYWRtaW4uQXBwcm92ZVJvb21Kb2luUmV2aW'
-    'V3UmVzcG9uc2USbQoUUmVqZWN0Um9vbUpvaW5SZXZpZXcSKS5zeW5jdHYuYWRtaW4uUmVqZWN0'
-    'Um9vbUpvaW5SZXZpZXdSZXF1ZXN0Giouc3luY3R2LmFkbWluLlJlamVjdFJvb21Kb2luUmV2aW'
-    'V3UmVzcG9uc2USWwoOTGlzdEJhblJlY29yZHMSIy5zeW5jdHYuYWRtaW4uTGlzdEJhblJlY29y'
-    'ZHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkxpc3RCYW5SZWNvcmRzUmVzcG9uc2U=');
+    'VXNlclByZWZlcmVuY2VzUmVzcG9uc2USXgoPU2V0VXNlclBhc3N3b3JkEiQuc3luY3R2LmFkbW'
+    'luLlNldFVzZXJQYXNzd29yZFJlcXVlc3QaJS5zeW5jdHYuYWRtaW4uU2V0VXNlclBhc3N3b3Jk'
+    'UmVzcG9uc2USZwoSVXBkYXRlVXNlclVzZXJuYW1lEicuc3luY3R2LmFkbWluLlVwZGF0ZVVzZX'
+    'JVc2VybmFtZVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlVXNlclVzZXJuYW1lUmVzcG9u'
+    'c2USWwoOVXBkYXRlVXNlclJvbGUSIy5zeW5jdHYuYWRtaW4uVXBkYXRlVXNlclJvbGVSZXF1ZX'
+    'N0GiQuc3luY3R2LmFkbWluLlVwZGF0ZVVzZXJSb2xlUmVzcG9uc2USRgoHQmFuVXNlchIcLnN5'
+    'bmN0di5hZG1pbi5CYW5Vc2VyUmVxdWVzdBodLnN5bmN0di5hZG1pbi5CYW5Vc2VyUmVzcG9uc2'
+    'USTAoJVW5iYW5Vc2VyEh4uc3luY3R2LmFkbWluLlVuYmFuVXNlclJlcXVlc3QaHy5zeW5jdHYu'
+    'YWRtaW4uVW5iYW5Vc2VyUmVzcG9uc2USVQoMR2V0VXNlclJvb21zEiEuc3luY3R2LmFkbWluLk'
+    'dldFVzZXJSb29tc1JlcXVlc3QaIi5zeW5jdHYuYWRtaW4uR2V0VXNlclJvb21zUmVzcG9uc2US'
+    'WAoNQmF0Y2hCYW5Vc2VycxIiLnN5bmN0di5hZG1pbi5CYXRjaEJhblVzZXJzUmVxdWVzdBojLn'
+    'N5bmN0di5hZG1pbi5CYXRjaEJhblVzZXJzUmVzcG9uc2USYQoQQmF0Y2hEZWxldGVVc2VycxIl'
+    'LnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVVzZXJzUmVxdWVzdBomLnN5bmN0di5hZG1pbi5CYX'
+    'RjaERlbGV0ZVVzZXJzUmVzcG9uc2USWAoNQmF0Y2hCYW5Sb29tcxIiLnN5bmN0di5hZG1pbi5C'
+    'YXRjaEJhblJvb21zUmVxdWVzdBojLnN5bmN0di5hZG1pbi5CYXRjaEJhblJvb21zUmVzcG9uc2'
+    'USYQoQQmF0Y2hEZWxldGVSb29tcxIlLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVJvb21zUmVx'
+    'dWVzdBomLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVJvb21zUmVzcG9uc2USTAoJTGlzdFJvb2'
+    '1zEh4uc3luY3R2LmFkbWluLkxpc3RSb29tc1JlcXVlc3QaHy5zeW5jdHYuYWRtaW4uTGlzdFJv'
+    'b21zUmVzcG9uc2USRgoHR2V0Um9vbRIcLnN5bmN0di5hZG1pbi5HZXRSb29tUmVxdWVzdBodLn'
+    'N5bmN0di5hZG1pbi5HZXRSb29tUmVzcG9uc2USXgoPR2V0Um9vbVNldHRpbmdzEiQuc3luY3R2'
+    'LmFkbWluLkdldFJvb21TZXR0aW5nc1JlcXVlc3QaJS5zeW5jdHYuYWRtaW4uR2V0Um9vbVNldH'
+    'RpbmdzUmVzcG9uc2USZwoSVXBkYXRlUm9vbVNldHRpbmdzEicuc3luY3R2LmFkbWluLlVwZGF0'
+    'ZVJvb21TZXR0aW5nc1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVNldHRpbmdzUm'
+    'VzcG9uc2USZAoRUmVzZXRSb29tU2V0dGluZ3MSJi5zeW5jdHYuYWRtaW4uUmVzZXRSb29tU2V0'
+    'dGluZ3NSZXF1ZXN0Gicuc3luY3R2LmFkbWluLlJlc2V0Um9vbVNldHRpbmdzUmVzcG9uc2USZw'
+    'oSVXBkYXRlUm9vbVBhc3N3b3JkEicuc3luY3R2LmFkbWluLlVwZGF0ZVJvb21QYXNzd29yZFJl'
+    'cXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVBhc3N3b3JkUmVzcG9uc2USTwoKRGVsZX'
+    'RlUm9vbRIfLnN5bmN0di5hZG1pbi5EZWxldGVSb29tUmVxdWVzdBogLnN5bmN0di5hZG1pbi5E'
+    'ZWxldGVSb29tUmVzcG9uc2USRgoHQmFuUm9vbRIcLnN5bmN0di5hZG1pbi5CYW5Sb29tUmVxdW'
+    'VzdBodLnN5bmN0di5hZG1pbi5CYW5Sb29tUmVzcG9uc2USTAoJVW5iYW5Sb29tEh4uc3luY3R2'
+    'LmFkbWluLlVuYmFuUm9vbVJlcXVlc3QaHy5zeW5jdHYuYWRtaW4uVW5iYW5Sb29tUmVzcG9uc2'
+    'USWwoOR2V0Um9vbU1lbWJlcnMSIy5zeW5jdHYuYWRtaW4uR2V0Um9vbU1lbWJlcnNSZXF1ZXN0'
+    'GiQuc3luY3R2LmFkbWluLkdldFJvb21NZW1iZXJzUmVzcG9uc2USTAoJQWRkTWVtYmVyEh4uc3'
+    'luY3R2LmFkbWluLkFkZE1lbWJlclJlcXVlc3QaHy5zeW5jdHYuYWRtaW4uQWRkTWVtYmVyUmVz'
+    'cG9uc2USdgoXVXBkYXRlTWVtYmVyUGVybWlzc2lvbnMSLC5zeW5jdHYuYWRtaW4uVXBkYXRlTW'
+    'VtYmVyUGVybWlzc2lvbnNSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLlVwZGF0ZU1lbWJlclBlcm1p'
+    'c3Npb25zUmVzcG9uc2USTwoKS2lja01lbWJlchIfLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUm'
+    'VxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUmVzcG9uc2USSQoIQWRkQWRtaW4SHS5z'
+    'eW5jdHYuYWRtaW4uQWRkQWRtaW5SZXF1ZXN0Gh4uc3luY3R2LmFkbWluLkFkZEFkbWluUmVzcG'
+    '9uc2USUgoLUmVtb3ZlQWRtaW4SIC5zeW5jdHYuYWRtaW4uUmVtb3ZlQWRtaW5SZXF1ZXN0GiEu'
+    'c3luY3R2LmFkbWluLlJlbW92ZUFkbWluUmVzcG9uc2USTwoKTGlzdEFkbWlucxIfLnN5bmN0di'
+    '5hZG1pbi5MaXN0QWRtaW5zUmVxdWVzdBogLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5zUmVzcG9u'
+    'c2USWwoOR2V0U3lzdGVtU3RhdHMSIy5zeW5jdHYuYWRtaW4uR2V0U3lzdGVtU3RhdHNSZXF1ZX'
+    'N0GiQuc3luY3R2LmFkbWluLkdldFN5c3RlbVN0YXRzUmVzcG9uc2USZAoRTGlzdEFjdGl2ZVN0'
+    'cmVhbXMSJi5zeW5jdHYuYWRtaW4uTGlzdEFjdGl2ZVN0cmVhbXNSZXF1ZXN0Gicuc3luY3R2Lm'
+    'FkbWluLkxpc3RBY3RpdmVTdHJlYW1zUmVzcG9uc2USTwoKS2lja1N0cmVhbRIfLnN5bmN0di5h'
+    'ZG1pbi5LaWNrU3RyZWFtUmVxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUmVzcG9uc2'
+    'USggEKG0xpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3cxIwLnN5bmN0di5hZG1pbi5MaXN0VXNl'
+    'clJlZ2lzdHJhdGlvblJldmlld3NSZXF1ZXN0GjEuc3luY3R2LmFkbWluLkxpc3RVc2VyUmVnaX'
+    'N0cmF0aW9uUmV2aWV3c1Jlc3BvbnNlEogBCh1BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmll'
+    'dxIyLnN5bmN0di5hZG1pbi5BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmlld1JlcXVlc3QaMy'
+    '5zeW5jdHYuYWRtaW4uQXBwcm92ZVVzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXNwb25zZRKFAQoc'
+    'UmVqZWN0VXNlclJlZ2lzdHJhdGlvblJldmlldxIxLnN5bmN0di5hZG1pbi5SZWplY3RVc2VyUm'
+    'VnaXN0cmF0aW9uUmV2aWV3UmVxdWVzdBoyLnN5bmN0di5hZG1pbi5SZWplY3RVc2VyUmVnaXN0'
+    'cmF0aW9uUmV2aWV3UmVzcG9uc2USdgoXTGlzdFJvb21DcmVhdGlvblJldmlld3MSLC5zeW5jdH'
+    'YuYWRtaW4uTGlzdFJvb21DcmVhdGlvblJldmlld3NSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLkxp'
+    'c3RSb29tQ3JlYXRpb25SZXZpZXdzUmVzcG9uc2USfAoZQXBwcm92ZVJvb21DcmVhdGlvblJldm'
+    'lldxIuLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVxdWVzdBovLnN5'
+    'bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USeQoYUmVqZWN0Um'
+    '9vbUNyZWF0aW9uUmV2aWV3Ei0uc3luY3R2LmFkbWluLlJlamVjdFJvb21DcmVhdGlvblJldmll'
+    'd1JlcXVlc3QaLi5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2'
+    'USagoTTGlzdFJvb21Kb2luUmV2aWV3cxIoLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZp'
+    'ZXdzUmVxdWVzdBopLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZpZXdzUmVzcG9uc2UScA'
+    'oVQXBwcm92ZVJvb21Kb2luUmV2aWV3Eiouc3luY3R2LmFkbWluLkFwcHJvdmVSb29tSm9pblJl'
+    'dmlld1JlcXVlc3QaKy5zeW5jdHYuYWRtaW4uQXBwcm92ZVJvb21Kb2luUmV2aWV3UmVzcG9uc2'
+    'USbQoUUmVqZWN0Um9vbUpvaW5SZXZpZXcSKS5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUpvaW5S'
+    'ZXZpZXdSZXF1ZXN0Giouc3luY3R2LmFkbWluLlJlamVjdFJvb21Kb2luUmV2aWV3UmVzcG9uc2'
+    'USWwoOTGlzdEJhblJlY29yZHMSIy5zeW5jdHYuYWRtaW4uTGlzdEJhblJlY29yZHNSZXF1ZXN0'
+    'GiQuc3luY3R2LmFkbWluLkxpc3RCYW5SZWNvcmRzUmVzcG9uc2USZwoSTGlzdENvbnRlbnRSZX'
+    'BvcnRzEicuc3luY3R2LmFkbWluLkxpc3RDb250ZW50UmVwb3J0c1JlcXVlc3QaKC5zeW5jdHYu'
+    'YWRtaW4uTGlzdENvbnRlbnRSZXBvcnRzUmVzcG9uc2USYQoQR2V0Q29udGVudFJlcG9ydBIlLn'
+    'N5bmN0di5hZG1pbi5HZXRDb250ZW50UmVwb3J0UmVxdWVzdBomLnN5bmN0di5hZG1pbi5HZXRD'
+    'b250ZW50UmVwb3J0UmVzcG9uc2USfAoZVXBkYXRlQ29udGVudFJlcG9ydFN0YXR1cxIuLnN5bm'
+    'N0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVxdWVzdBovLnN5bmN0di5hZG1p'
+    'bi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVzcG9uc2U=');

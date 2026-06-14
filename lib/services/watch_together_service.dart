@@ -108,6 +108,50 @@ class WatchTogetherService {
     _domains.cache.clear();
   }
 
+  static Future<AuthResult> registerWithDirectPassword({
+    required String username,
+    String email = '',
+    required String password,
+  }) async {
+    return _domains.auth.registerWithDirectPassword(
+      username: username,
+      email: email,
+      password: password,
+    );
+  }
+
+  static Future<AuthResult> loginWithDirectPassword({
+    String username = '',
+    String email = '',
+    required String password,
+  }) async {
+    return _domains.auth.loginWithDirectPassword(
+      username: username,
+      email: email,
+      password: password,
+    );
+  }
+
+  static Future<String> requestEmailRegistration({
+    required String username,
+    required String email,
+  }) async {
+    return _domains.auth.requestEmailRegistration(
+      username: username,
+      email: email,
+    );
+  }
+
+  static Future<AuthResult> confirmEmailRegistration({
+    required String emailToken,
+    required String password,
+  }) async {
+    return _domains.auth.confirmEmailRegistration(
+      emailToken: emailToken,
+      password: password,
+    );
+  }
+
   static Future<AuthResult> confirmEmailLoginResult(
       String email, String token) async {
     return _domains.auth.confirmEmailLoginResult(email, token);
@@ -235,10 +279,51 @@ class WatchTogetherService {
     );
   }
 
+  static Future<SensitiveOperationVerificationInfo>
+      startSensitiveOperationVerification() async {
+    return _domains.auth.startSensitiveOperationVerification();
+  }
+
+  static Future<SensitiveOperationPasskeyStart> startSensitiveOperationPasskey(
+    String sessionId,
+  ) async {
+    return _domains.auth.startSensitiveOperationPasskey(sessionId);
+  }
+
+  static Future<SensitiveOperationEmailCodeInfo>
+      requestSensitiveOperationEmailCode(
+    String sessionId,
+  ) async {
+    return _domains.auth.requestSensitiveOperationEmailCode(sessionId);
+  }
+
+  static Future<SensitiveOperationVerificationInfo>
+      finishSensitiveOperationVerification({
+    required String sessionId,
+    required client.SensitiveOperationVerificationMethod method,
+    String password = '',
+    String emailToken = '',
+    String passkeySessionId = '',
+    Object? passkeyCredential,
+  }) async {
+    return _domains.auth.finishSensitiveOperationVerification(
+      sessionId: sessionId,
+      method: method,
+      password: password,
+      emailToken: emailToken,
+      passkeySessionId: passkeySessionId,
+      passkeyCredential: passkeyCredential,
+    );
+  }
+
   static Future<PublicSettingsInfo> getPublicSettings({
     bool refresh = false,
   }) async {
     return _domains.publicRooms.getPublicSettings(refresh: refresh);
+  }
+
+  static Future<ServerInfo> getServerInfo({bool refresh = false}) async {
+    return _domains.publicRooms.getServerInfo(refresh: refresh);
   }
 
   static Future<WUser> createGuestToken(String roomId) async {
@@ -318,12 +403,17 @@ class WatchTogetherService {
   static Future<WUser> confirmEmailBind({
     required String email,
     required String token,
+    required String verificationId,
   }) async {
-    return _domains.account.confirmEmailBind(email: email, token: token);
+    return _domains.account.confirmEmailBind(
+      email: email,
+      token: token,
+      verificationId: verificationId,
+    );
   }
 
-  static Future<WUser> unbindEmail() async {
-    return _domains.account.unbindEmail();
+  static Future<WUser> unbindEmail({required String verificationId}) async {
+    return _domains.account.unbindEmail(verificationId: verificationId);
   }
 
   static Future<AccountPreferences> getAccountPreferences({
@@ -484,10 +574,12 @@ class WatchTogetherService {
   static Future<OAuth2AuthorizationStart> startOAuth2Bind(
     String provider, {
     String redirectUrl = '',
+    required String verificationId,
   }) async {
     return _domains.auth.startOAuth2Bind(
       provider,
       redirectUrl: redirectUrl,
+      verificationId: verificationId,
     );
   }
 
@@ -504,8 +596,14 @@ class WatchTogetherService {
     _domains.cache.invalidate('account:oauth2:linked');
   }
 
-  static Future<void> unlinkOAuth2Account(OAuth2LinkedAccount account) async {
-    await _domains.auth.unlinkOAuth2Account(account);
+  static Future<void> unlinkOAuth2Account(
+    OAuth2LinkedAccount account, {
+    required String verificationId,
+  }) async {
+    await _domains.auth.unlinkOAuth2Account(
+      account,
+      verificationId: verificationId,
+    );
     _domains.cache.invalidate('account:oauth2:linked');
   }
 
@@ -954,11 +1052,19 @@ class WatchTogetherService {
     String roomId, {
     String content = '',
     List<StoredImageInfo> images = const [],
+    String displayPosition = '',
+    String displayColor = '',
+    String replyToMessageId = '',
+    List<ChatMentionInfo> mentions = const [],
   }) async {
     return _domains.roomMedia.sendChatMessage(
       roomId,
       content: content,
       images: images,
+      displayPosition: displayPosition,
+      displayColor: displayColor,
+      replyToMessageId: replyToMessageId,
+      mentions: mentions,
     );
   }
 
@@ -987,6 +1093,62 @@ class WatchTogetherService {
       messageId,
       expectedVersion: expectedVersion,
       reason: reason,
+    );
+  }
+
+  static Future<RoomChatMessageInfo> setChatReaction(
+    String roomId,
+    String messageId,
+    String reactionKey, {
+    required bool enabled,
+  }) {
+    return _domains.roomMedia.setChatReaction(
+      roomId,
+      messageId,
+      reactionKey,
+      enabled: enabled,
+    );
+  }
+
+  static Future<String> reportChatMessage(
+    String roomId,
+    String messageId, {
+    required String reasonCode,
+    String reason = '',
+  }) {
+    return _domains.roomMedia.reportChatMessage(
+      roomId,
+      messageId,
+      reasonCode: reasonCode,
+      reason: reason,
+    );
+  }
+
+  static Future<RoomChatMessageInfo> getChatMessage(
+    String roomId,
+    String messageId, {
+    bool includeDeleted = false,
+  }) {
+    return _domains.roomMedia.getChatMessage(
+      roomId,
+      messageId,
+      includeDeleted: includeDeleted,
+    );
+  }
+
+  static Future<ChatReactionUsersPage> listChatReactionUsers(
+    String roomId,
+    String messageId,
+    String reactionKey, {
+    int limit = 50,
+    String cursor = '',
+  }) {
+    return _domains.roomMedia.listChatReactionUsers(
+      roomId,
+      messageId,
+      reactionKey,
+      limit: limit,
+      cursor: cursor,
     );
   }
 
@@ -1039,6 +1201,20 @@ class WatchTogetherService {
 
   static Future<ChatReadStateInfo> getChatReadState(String roomId) {
     return _domains.roomMedia.getChatReadState(roomId);
+  }
+
+  static Future<ChatMessageReadReceiptsInfo> getChatMessageReadReceipts(
+    String roomId,
+    String messageId, {
+    int page = 1,
+    int pageSize = 50,
+  }) {
+    return _domains.roomMedia.getChatMessageReadReceipts(
+      roomId,
+      messageId,
+      page: page,
+      pageSize: pageSize,
+    );
   }
 
   static Future<String> addDirectUrlMedia(
@@ -1193,7 +1369,7 @@ class WatchTogetherService {
       subPath: subPath,
       playlistId: playlistId,
     );
-    final playback = await updatePlayback(
+    final playback = await updatePlaybackState(
       roomId,
       action: PlaybackControlAction.play,
       isPlaying: true,
@@ -1210,7 +1386,7 @@ class WatchTogetherService {
         : playback;
   }
 
-  static Future<WPlaybackStatus> updatePlayback(
+  static Future<WPlaybackStatus> updatePlaybackState(
     String roomId, {
     PlaybackControlAction? action,
     required bool isPlaying,
@@ -1218,7 +1394,7 @@ class WatchTogetherService {
     double speed = 1.0,
     int? version,
   }) async {
-    return _domains.roomMedia.updatePlayback(
+    return _domains.roomMedia.updatePlaybackState(
       roomId,
       action: action,
       isPlaying: isPlaying,
@@ -2140,6 +2316,97 @@ class WatchTogetherService {
       active: active,
       userId: userId,
       roomId: roomId,
+    );
+  }
+
+  static Future<AdminContentReportsPage> adminListContentReportsPage({
+    int page = 1,
+    int pageSize = 50,
+    int status = 0,
+    int targetType = 0,
+    String reporterUserId = '',
+    String roomId = '',
+    String targetRoomId = '',
+    String targetUserId = '',
+    String targetMemberRoomId = '',
+    String targetMemberUserId = '',
+    int targetChatMessageId = 0,
+    int scope = 0,
+    String search = '',
+  }) {
+    return _domains.admin.listContentReportsPage(
+      page: page,
+      pageSize: pageSize,
+      status: status,
+      targetType: targetType,
+      reporterUserId: reporterUserId,
+      roomId: roomId,
+      targetRoomId: targetRoomId,
+      targetUserId: targetUserId,
+      targetMemberRoomId: targetMemberRoomId,
+      targetMemberUserId: targetMemberUserId,
+      targetChatMessageId: targetChatMessageId,
+      scope: scope,
+      search: search,
+    );
+  }
+
+  static Future<AdminContentReport> adminGetContentReport(String reportId) {
+    return _domains.admin.getContentReport(reportId);
+  }
+
+  static Future<AdminContentReport> adminUpdateContentReportStatus(
+    String reportId,
+    int status, {
+    String resolutionNote = '',
+  }) {
+    return _domains.admin.updateContentReportStatus(
+      reportId,
+      status,
+      resolutionNote: resolutionNote,
+    );
+  }
+
+  static Future<AdminContentReportsPage> listRoomContentReportsPage(
+    String roomId, {
+    int page = 1,
+    int pageSize = 50,
+    int status = 0,
+    int targetType = 0,
+    String targetMemberUserId = '',
+    int targetChatMessageId = 0,
+    String search = '',
+  }) {
+    return _domains.admin.listRoomContentReportsPage(
+      roomId,
+      page: page,
+      pageSize: pageSize,
+      status: status,
+      targetType: targetType,
+      targetMemberUserId: targetMemberUserId,
+      targetChatMessageId: targetChatMessageId,
+      search: search,
+    );
+  }
+
+  static Future<AdminContentReport> getRoomContentReport(
+    String roomId,
+    String reportId,
+  ) {
+    return _domains.admin.getRoomContentReport(roomId, reportId);
+  }
+
+  static Future<AdminContentReport> updateRoomContentReportStatus(
+    String roomId,
+    String reportId,
+    int status, {
+    String resolutionNote = '',
+  }) {
+    return _domains.admin.updateRoomContentReportStatus(
+      roomId,
+      reportId,
+      status,
+      resolutionNote: resolutionNote,
     );
   }
 

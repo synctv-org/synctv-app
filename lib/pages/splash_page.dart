@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:synctv_app/pages/desktop/desktop_home_screen.dart';
-import 'package:synctv_app/pages/large_screen/large_screen_home.dart';
-import 'package:synctv_app/main.dart'; // For WatchTogetherHomeScreen
+import 'package:synctv_app/pages/home_screen.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -44,7 +42,7 @@ class _SplashPageState extends State<SplashPage> {
     final backgroundColor = isDark ? Colors.black : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: backgroundColor,
       body: Stack(
         children: [
@@ -53,27 +51,17 @@ class _SplashPageState extends State<SplashPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Image.asset(
-                    'assets/icon/robot_3.png',
-                    width: 96,
-                    height: 96,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                          color: theme.primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Icon(
-                          Icons.live_tv_rounded,
-                          size: 48,
-                          color: theme.primaryColor,
-                        ),
-                      );
-                    },
+                AppImageThumbnail.asset(
+                  assetName: 'assets/icon/robot_3.png',
+                  width: 96,
+                  height: 96,
+                  borderRadius: const BorderRadius.all(Radius.circular(24)),
+                  errorChild: AppIconBadge(
+                    icon: Icons.live_tv_rounded,
+                    color: theme.primaryColor,
+                    size: 96,
+                    iconSize: 48,
+                    borderRadius: const BorderRadius.all(Radius.circular(24)),
                   ),
                 ),
               ],
@@ -117,18 +105,8 @@ class _SplashPageState extends State<SplashPage> {
 class ResponsiveHome extends StatelessWidget {
   const ResponsiveHome({super.key});
 
-  bool _isDesktop() {
-    return Platform.isWindows || Platform.isMacOS || Platform.isLinux;
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isDesktop()) {
-      return const DesktopHomeScreen();
-    }
-    if (MediaQuery.of(context).size.width > 600) {
-      return const LargeScreenHome();
-    }
-    return const WatchTogetherHomeScreen();
+    return const HomeScreen();
   }
 }

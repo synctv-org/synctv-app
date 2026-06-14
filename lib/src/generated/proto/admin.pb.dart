@@ -17,8 +17,8 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'admin.pbenum.dart';
-import 'client.pb.dart' as $0;
-import 'common.pb.dart' as $1;
+import 'client.pb.dart' as $1;
+import 'common.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -29,8 +29,8 @@ class AdminUser extends $pb.GeneratedMessage {
     $core.String? id,
     $core.String? username,
     $core.String? email,
-    $1.UserRole? role,
-    $1.UserStatus? status,
+    $0.UserRole? role,
+    $0.UserStatus? status,
     $fixnum.Int64? createdAt,
     $fixnum.Int64? updatedAt,
     $core.bool? isBanned,
@@ -38,6 +38,7 @@ class AdminUser extends $pb.GeneratedMessage {
     $core.String? bannedBy,
     $core.String? bannedReason,
     $core.String? avatarUrl,
+    $0.UserPresenceStats? presence,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -52,6 +53,7 @@ class AdminUser extends $pb.GeneratedMessage {
     if (bannedBy != null) result.bannedBy = bannedBy;
     if (bannedReason != null) result.bannedReason = bannedReason;
     if (avatarUrl != null) result.avatarUrl = avatarUrl;
+    if (presence != null) result.presence = presence;
     return result;
   }
 
@@ -71,10 +73,10 @@ class AdminUser extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..aOS(2, _omitFieldNames ? '' : 'username')
     ..aOS(3, _omitFieldNames ? '' : 'email')
-    ..aE<$1.UserRole>(4, _omitFieldNames ? '' : 'role',
-        enumValues: $1.UserRole.values)
-    ..aE<$1.UserStatus>(5, _omitFieldNames ? '' : 'status',
-        enumValues: $1.UserStatus.values)
+    ..aE<$0.UserRole>(4, _omitFieldNames ? '' : 'role',
+        enumValues: $0.UserRole.values)
+    ..aE<$0.UserStatus>(5, _omitFieldNames ? '' : 'status',
+        enumValues: $0.UserStatus.values)
     ..aInt64(6, _omitFieldNames ? '' : 'createdAt')
     ..aInt64(7, _omitFieldNames ? '' : 'updatedAt')
     ..aOB(8, _omitFieldNames ? '' : 'isBanned')
@@ -82,6 +84,8 @@ class AdminUser extends $pb.GeneratedMessage {
     ..aOS(10, _omitFieldNames ? '' : 'bannedBy')
     ..aOS(11, _omitFieldNames ? '' : 'bannedReason')
     ..aOS(12, _omitFieldNames ? '' : 'avatarUrl')
+    ..aOM<$0.UserPresenceStats>(13, _omitFieldNames ? '' : 'presence',
+        subBuilder: $0.UserPresenceStats.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -130,18 +134,18 @@ class AdminUser extends $pb.GeneratedMessage {
   void clearEmail() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $1.UserRole get role => $_getN(3);
+  $0.UserRole get role => $_getN(3);
   @$pb.TagNumber(4)
-  set role($1.UserRole value) => $_setField(4, value);
+  set role($0.UserRole value) => $_setField(4, value);
   @$pb.TagNumber(4)
   $core.bool hasRole() => $_has(3);
   @$pb.TagNumber(4)
   void clearRole() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $1.UserStatus get status => $_getN(4);
+  $0.UserStatus get status => $_getN(4);
   @$pb.TagNumber(5)
-  set status($1.UserStatus value) => $_setField(5, value);
+  set status($0.UserStatus value) => $_setField(5, value);
   @$pb.TagNumber(5)
   $core.bool hasStatus() => $_has(4);
   @$pb.TagNumber(5)
@@ -209,6 +213,17 @@ class AdminUser extends $pb.GeneratedMessage {
   $core.bool hasAvatarUrl() => $_has(11);
   @$pb.TagNumber(12)
   void clearAvatarUrl() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $0.UserPresenceStats get presence => $_getN(12);
+  @$pb.TagNumber(13)
+  set presence($0.UserPresenceStats value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasPresence() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearPresence() => $_clearField(13);
+  @$pb.TagNumber(13)
+  $0.UserPresenceStats ensurePresence() => $_ensure(12);
 }
 
 class AdminRoom extends $pb.GeneratedMessage {
@@ -217,15 +232,18 @@ class AdminRoom extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? creatorId,
     $core.String? creatorUsername,
-    $1.RoomStatus? status,
+    $0.RoomStatus? status,
     $core.List<$core.int>? settings,
     $core.int? memberCount,
     $fixnum.Int64? createdAt,
     $fixnum.Int64? updatedAt,
     $core.String? description,
     $core.bool? isBanned,
-    $1.UserStatus? creatorStatus,
+    $0.UserStatus? creatorStatus,
     $fixnum.Int64? version,
+    $0.RoomPresenceStats? presence,
+    $core.String? creatorAvatarUrl,
+    $1.ResourceCover? cover,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -241,6 +259,9 @@ class AdminRoom extends $pb.GeneratedMessage {
     if (isBanned != null) result.isBanned = isBanned;
     if (creatorStatus != null) result.creatorStatus = creatorStatus;
     if (version != null) result.version = version;
+    if (presence != null) result.presence = presence;
+    if (creatorAvatarUrl != null) result.creatorAvatarUrl = creatorAvatarUrl;
+    if (cover != null) result.cover = cover;
     return result;
   }
 
@@ -261,8 +282,8 @@ class AdminRoom extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'creatorId')
     ..aOS(4, _omitFieldNames ? '' : 'creatorUsername')
-    ..aE<$1.RoomStatus>(5, _omitFieldNames ? '' : 'status',
-        enumValues: $1.RoomStatus.values)
+    ..aE<$0.RoomStatus>(5, _omitFieldNames ? '' : 'status',
+        enumValues: $0.RoomStatus.values)
     ..a<$core.List<$core.int>>(
         6, _omitFieldNames ? '' : 'settings', $pb.PbFieldType.OY)
     ..aI(7, _omitFieldNames ? '' : 'memberCount')
@@ -270,9 +291,14 @@ class AdminRoom extends $pb.GeneratedMessage {
     ..aInt64(9, _omitFieldNames ? '' : 'updatedAt')
     ..aOS(10, _omitFieldNames ? '' : 'description')
     ..aOB(11, _omitFieldNames ? '' : 'isBanned')
-    ..aE<$1.UserStatus>(12, _omitFieldNames ? '' : 'creatorStatus',
-        enumValues: $1.UserStatus.values)
+    ..aE<$0.UserStatus>(12, _omitFieldNames ? '' : 'creatorStatus',
+        enumValues: $0.UserStatus.values)
     ..aInt64(13, _omitFieldNames ? '' : 'version')
+    ..aOM<$0.RoomPresenceStats>(14, _omitFieldNames ? '' : 'presence',
+        subBuilder: $0.RoomPresenceStats.create)
+    ..aOS(15, _omitFieldNames ? '' : 'creatorAvatarUrl')
+    ..aOM<$1.ResourceCover>(16, _omitFieldNames ? '' : 'cover',
+        subBuilder: $1.ResourceCover.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -330,9 +356,9 @@ class AdminRoom extends $pb.GeneratedMessage {
   void clearCreatorUsername() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $1.RoomStatus get status => $_getN(4);
+  $0.RoomStatus get status => $_getN(4);
   @$pb.TagNumber(5)
-  set status($1.RoomStatus value) => $_setField(5, value);
+  set status($0.RoomStatus value) => $_setField(5, value);
   @$pb.TagNumber(5)
   $core.bool hasStatus() => $_has(4);
   @$pb.TagNumber(5)
@@ -393,9 +419,9 @@ class AdminRoom extends $pb.GeneratedMessage {
   void clearIsBanned() => $_clearField(11);
 
   @$pb.TagNumber(12)
-  $1.UserStatus get creatorStatus => $_getN(11);
+  $0.UserStatus get creatorStatus => $_getN(11);
   @$pb.TagNumber(12)
-  set creatorStatus($1.UserStatus value) => $_setField(12, value);
+  set creatorStatus($0.UserStatus value) => $_setField(12, value);
   @$pb.TagNumber(12)
   $core.bool hasCreatorStatus() => $_has(11);
   @$pb.TagNumber(12)
@@ -409,6 +435,37 @@ class AdminRoom extends $pb.GeneratedMessage {
   $core.bool hasVersion() => $_has(12);
   @$pb.TagNumber(13)
   void clearVersion() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $0.RoomPresenceStats get presence => $_getN(13);
+  @$pb.TagNumber(14)
+  set presence($0.RoomPresenceStats value) => $_setField(14, value);
+  @$pb.TagNumber(14)
+  $core.bool hasPresence() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearPresence() => $_clearField(14);
+  @$pb.TagNumber(14)
+  $0.RoomPresenceStats ensurePresence() => $_ensure(13);
+
+  @$pb.TagNumber(15)
+  $core.String get creatorAvatarUrl => $_getSZ(14);
+  @$pb.TagNumber(15)
+  set creatorAvatarUrl($core.String value) => $_setString(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasCreatorAvatarUrl() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearCreatorAvatarUrl() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $1.ResourceCover get cover => $_getN(15);
+  @$pb.TagNumber(16)
+  set cover($1.ResourceCover value) => $_setField(16, value);
+  @$pb.TagNumber(16)
+  $core.bool hasCover() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearCover() => $_clearField(16);
+  @$pb.TagNumber(16)
+  $1.ResourceCover ensureCover() => $_ensure(15);
 }
 
 class SettingsGroup extends $pb.GeneratedMessage {
@@ -484,7 +541,7 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     $core.String? username,
     $core.String? email,
     $core.int? signupMethod,
-    $1.ReviewStatus? status,
+    $0.ReviewStatus? status,
     $fixnum.Int64? requestedAt,
     $fixnum.Int64? reviewedAt,
     $core.String? reviewedBy,
@@ -545,8 +602,8 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'username')
     ..aOS(3, _omitFieldNames ? '' : 'email')
     ..aI(4, _omitFieldNames ? '' : 'signupMethod')
-    ..aE<$1.ReviewStatus>(5, _omitFieldNames ? '' : 'status',
-        enumValues: $1.ReviewStatus.values)
+    ..aE<$0.ReviewStatus>(5, _omitFieldNames ? '' : 'status',
+        enumValues: $0.ReviewStatus.values)
     ..aInt64(6, _omitFieldNames ? '' : 'requestedAt')
     ..aInt64(7, _omitFieldNames ? '' : 'reviewedAt')
     ..aOS(8, _omitFieldNames ? '' : 'reviewedBy')
@@ -619,9 +676,9 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
   void clearSignupMethod() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $1.ReviewStatus get status => $_getN(4);
+  $0.ReviewStatus get status => $_getN(4);
   @$pb.TagNumber(5)
-  set status($1.ReviewStatus value) => $_setField(5, value);
+  set status($0.ReviewStatus value) => $_setField(5, value);
   @$pb.TagNumber(5)
   $core.bool hasStatus() => $_has(4);
   @$pb.TagNumber(5)
@@ -752,7 +809,7 @@ class RoomCreationReview extends $pb.GeneratedMessage {
     $core.String? requestedByUsername,
     $core.String? name,
     $core.String? description,
-    $1.ReviewStatus? status,
+    $0.ReviewStatus? status,
     $fixnum.Int64? requestedAt,
     $fixnum.Int64? reviewedAt,
     $core.String? reviewedBy,
@@ -791,8 +848,8 @@ class RoomCreationReview extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'requestedByUsername')
     ..aOS(4, _omitFieldNames ? '' : 'name')
     ..aOS(5, _omitFieldNames ? '' : 'description')
-    ..aE<$1.ReviewStatus>(6, _omitFieldNames ? '' : 'status',
-        enumValues: $1.ReviewStatus.values)
+    ..aE<$0.ReviewStatus>(6, _omitFieldNames ? '' : 'status',
+        enumValues: $0.ReviewStatus.values)
     ..aInt64(7, _omitFieldNames ? '' : 'requestedAt')
     ..aInt64(8, _omitFieldNames ? '' : 'reviewedAt')
     ..aOS(9, _omitFieldNames ? '' : 'reviewedBy')
@@ -864,9 +921,9 @@ class RoomCreationReview extends $pb.GeneratedMessage {
   void clearDescription() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $1.ReviewStatus get status => $_getN(5);
+  $0.ReviewStatus get status => $_getN(5);
   @$pb.TagNumber(6)
-  set status($1.ReviewStatus value) => $_setField(6, value);
+  set status($0.ReviewStatus value) => $_setField(6, value);
   @$pb.TagNumber(6)
   $core.bool hasStatus() => $_has(5);
   @$pb.TagNumber(6)
@@ -916,8 +973,8 @@ class RoomJoinReview extends $pb.GeneratedMessage {
     $core.String? roomName,
     $core.String? userId,
     $core.String? username,
-    $1.RoomMemberRole? requestedRole,
-    $1.ReviewStatus? status,
+    $0.RoomMemberRole? requestedRole,
+    $0.ReviewStatus? status,
     $fixnum.Int64? requestedAt,
     $fixnum.Int64? reviewedAt,
     $core.String? reviewedBy,
@@ -956,10 +1013,10 @@ class RoomJoinReview extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'roomName')
     ..aOS(4, _omitFieldNames ? '' : 'userId')
     ..aOS(5, _omitFieldNames ? '' : 'username')
-    ..aE<$1.RoomMemberRole>(6, _omitFieldNames ? '' : 'requestedRole',
-        enumValues: $1.RoomMemberRole.values)
-    ..aE<$1.ReviewStatus>(7, _omitFieldNames ? '' : 'status',
-        enumValues: $1.ReviewStatus.values)
+    ..aE<$0.RoomMemberRole>(6, _omitFieldNames ? '' : 'requestedRole',
+        enumValues: $0.RoomMemberRole.values)
+    ..aE<$0.ReviewStatus>(7, _omitFieldNames ? '' : 'status',
+        enumValues: $0.ReviewStatus.values)
     ..aInt64(8, _omitFieldNames ? '' : 'requestedAt')
     ..aInt64(9, _omitFieldNames ? '' : 'reviewedAt')
     ..aOS(10, _omitFieldNames ? '' : 'reviewedBy')
@@ -1031,18 +1088,18 @@ class RoomJoinReview extends $pb.GeneratedMessage {
   void clearUsername() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $1.RoomMemberRole get requestedRole => $_getN(5);
+  $0.RoomMemberRole get requestedRole => $_getN(5);
   @$pb.TagNumber(6)
-  set requestedRole($1.RoomMemberRole value) => $_setField(6, value);
+  set requestedRole($0.RoomMemberRole value) => $_setField(6, value);
   @$pb.TagNumber(6)
   $core.bool hasRequestedRole() => $_has(5);
   @$pb.TagNumber(6)
   void clearRequestedRole() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $1.ReviewStatus get status => $_getN(6);
+  $0.ReviewStatus get status => $_getN(6);
   @$pb.TagNumber(7)
-  set status($1.ReviewStatus value) => $_setField(7, value);
+  set status($0.ReviewStatus value) => $_setField(7, value);
   @$pb.TagNumber(7)
   $core.bool hasStatus() => $_has(6);
   @$pb.TagNumber(7)
@@ -1293,6 +1350,383 @@ class BanRecord extends $pb.GeneratedMessage {
   $core.bool hasIsActive() => $_has(13);
   @$pb.TagNumber(14)
   void clearIsActive() => $_clearField(14);
+}
+
+class ContentReport extends $pb.GeneratedMessage {
+  factory ContentReport({
+    $core.String? id,
+    $core.String? reporterUserId,
+    $core.String? reporterUsername,
+    $core.String? roomId,
+    $core.String? roomName,
+    ContentReportTargetType? targetType,
+    $core.String? targetRoomId,
+    $core.String? targetRoomName,
+    $core.String? targetUserId,
+    $core.String? targetUsername,
+    $core.String? targetMemberRoomId,
+    $core.String? targetMemberRoomName,
+    $core.String? targetMemberUserId,
+    $core.String? targetMemberUsername,
+    $fixnum.Int64? targetChatMessageId,
+    $fixnum.Int64? targetChatMessageCreatedAt,
+    $core.String? targetChatMessagePreview,
+    $core.String? reasonCode,
+    $core.String? reason,
+    $core.List<$core.int>? metadata,
+    ContentReportStatus? status,
+    $core.String? reviewedBy,
+    $core.String? reviewedByUsername,
+    $fixnum.Int64? reviewedAt,
+    $core.String? resolutionNote,
+    $fixnum.Int64? createdAt,
+    $fixnum.Int64? updatedAt,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (reporterUserId != null) result.reporterUserId = reporterUserId;
+    if (reporterUsername != null) result.reporterUsername = reporterUsername;
+    if (roomId != null) result.roomId = roomId;
+    if (roomName != null) result.roomName = roomName;
+    if (targetType != null) result.targetType = targetType;
+    if (targetRoomId != null) result.targetRoomId = targetRoomId;
+    if (targetRoomName != null) result.targetRoomName = targetRoomName;
+    if (targetUserId != null) result.targetUserId = targetUserId;
+    if (targetUsername != null) result.targetUsername = targetUsername;
+    if (targetMemberRoomId != null)
+      result.targetMemberRoomId = targetMemberRoomId;
+    if (targetMemberRoomName != null)
+      result.targetMemberRoomName = targetMemberRoomName;
+    if (targetMemberUserId != null)
+      result.targetMemberUserId = targetMemberUserId;
+    if (targetMemberUsername != null)
+      result.targetMemberUsername = targetMemberUsername;
+    if (targetChatMessageId != null)
+      result.targetChatMessageId = targetChatMessageId;
+    if (targetChatMessageCreatedAt != null)
+      result.targetChatMessageCreatedAt = targetChatMessageCreatedAt;
+    if (targetChatMessagePreview != null)
+      result.targetChatMessagePreview = targetChatMessagePreview;
+    if (reasonCode != null) result.reasonCode = reasonCode;
+    if (reason != null) result.reason = reason;
+    if (metadata != null) result.metadata = metadata;
+    if (status != null) result.status = status;
+    if (reviewedBy != null) result.reviewedBy = reviewedBy;
+    if (reviewedByUsername != null)
+      result.reviewedByUsername = reviewedByUsername;
+    if (reviewedAt != null) result.reviewedAt = reviewedAt;
+    if (resolutionNote != null) result.resolutionNote = resolutionNote;
+    if (createdAt != null) result.createdAt = createdAt;
+    if (updatedAt != null) result.updatedAt = updatedAt;
+    return result;
+  }
+
+  ContentReport._();
+
+  factory ContentReport.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ContentReport.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ContentReport',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'reporterUserId')
+    ..aOS(3, _omitFieldNames ? '' : 'reporterUsername')
+    ..aOS(4, _omitFieldNames ? '' : 'roomId')
+    ..aOS(5, _omitFieldNames ? '' : 'roomName')
+    ..aE<ContentReportTargetType>(6, _omitFieldNames ? '' : 'targetType',
+        enumValues: ContentReportTargetType.values)
+    ..aOS(7, _omitFieldNames ? '' : 'targetRoomId')
+    ..aOS(8, _omitFieldNames ? '' : 'targetRoomName')
+    ..aOS(9, _omitFieldNames ? '' : 'targetUserId')
+    ..aOS(10, _omitFieldNames ? '' : 'targetUsername')
+    ..aOS(11, _omitFieldNames ? '' : 'targetMemberRoomId')
+    ..aOS(12, _omitFieldNames ? '' : 'targetMemberRoomName')
+    ..aOS(13, _omitFieldNames ? '' : 'targetMemberUserId')
+    ..aOS(14, _omitFieldNames ? '' : 'targetMemberUsername')
+    ..aInt64(15, _omitFieldNames ? '' : 'targetChatMessageId')
+    ..aInt64(16, _omitFieldNames ? '' : 'targetChatMessageCreatedAt')
+    ..aOS(17, _omitFieldNames ? '' : 'targetChatMessagePreview')
+    ..aOS(18, _omitFieldNames ? '' : 'reasonCode')
+    ..aOS(19, _omitFieldNames ? '' : 'reason')
+    ..a<$core.List<$core.int>>(
+        20, _omitFieldNames ? '' : 'metadata', $pb.PbFieldType.OY)
+    ..aE<ContentReportStatus>(21, _omitFieldNames ? '' : 'status',
+        enumValues: ContentReportStatus.values)
+    ..aOS(22, _omitFieldNames ? '' : 'reviewedBy')
+    ..aOS(23, _omitFieldNames ? '' : 'reviewedByUsername')
+    ..aInt64(24, _omitFieldNames ? '' : 'reviewedAt')
+    ..aOS(25, _omitFieldNames ? '' : 'resolutionNote')
+    ..aInt64(26, _omitFieldNames ? '' : 'createdAt')
+    ..aInt64(27, _omitFieldNames ? '' : 'updatedAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ContentReport clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ContentReport copyWith(void Function(ContentReport) updates) =>
+      super.copyWith((message) => updates(message as ContentReport))
+          as ContentReport;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ContentReport create() => ContentReport._();
+  @$core.override
+  ContentReport createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ContentReport getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ContentReport>(create);
+  static ContentReport? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get reporterUserId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set reporterUserId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasReporterUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearReporterUserId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get reporterUsername => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set reporterUsername($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasReporterUsername() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearReporterUsername() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get roomId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set roomId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRoomId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRoomId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get roomName => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set roomName($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRoomName() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRoomName() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  ContentReportTargetType get targetType => $_getN(5);
+  @$pb.TagNumber(6)
+  set targetType(ContentReportTargetType value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTargetType() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTargetType() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get targetRoomId => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set targetRoomId($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasTargetRoomId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearTargetRoomId() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get targetRoomName => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set targetRoomName($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasTargetRoomName() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearTargetRoomName() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get targetUserId => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set targetUserId($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasTargetUserId() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearTargetUserId() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.String get targetUsername => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set targetUsername($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasTargetUsername() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearTargetUsername() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.String get targetMemberRoomId => $_getSZ(10);
+  @$pb.TagNumber(11)
+  set targetMemberRoomId($core.String value) => $_setString(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasTargetMemberRoomId() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearTargetMemberRoomId() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get targetMemberRoomName => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set targetMemberRoomName($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasTargetMemberRoomName() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearTargetMemberRoomName() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get targetMemberUserId => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set targetMemberUserId($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasTargetMemberUserId() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearTargetMemberUserId() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.String get targetMemberUsername => $_getSZ(13);
+  @$pb.TagNumber(14)
+  set targetMemberUsername($core.String value) => $_setString(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasTargetMemberUsername() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearTargetMemberUsername() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $fixnum.Int64 get targetChatMessageId => $_getI64(14);
+  @$pb.TagNumber(15)
+  set targetChatMessageId($fixnum.Int64 value) => $_setInt64(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasTargetChatMessageId() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearTargetChatMessageId() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $fixnum.Int64 get targetChatMessageCreatedAt => $_getI64(15);
+  @$pb.TagNumber(16)
+  set targetChatMessageCreatedAt($fixnum.Int64 value) => $_setInt64(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasTargetChatMessageCreatedAt() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearTargetChatMessageCreatedAt() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $core.String get targetChatMessagePreview => $_getSZ(16);
+  @$pb.TagNumber(17)
+  set targetChatMessagePreview($core.String value) => $_setString(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasTargetChatMessagePreview() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearTargetChatMessagePreview() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $core.String get reasonCode => $_getSZ(17);
+  @$pb.TagNumber(18)
+  set reasonCode($core.String value) => $_setString(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasReasonCode() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearReasonCode() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $core.String get reason => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set reason($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasReason() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearReason() => $_clearField(19);
+
+  @$pb.TagNumber(20)
+  $core.List<$core.int> get metadata => $_getN(19);
+  @$pb.TagNumber(20)
+  set metadata($core.List<$core.int> value) => $_setBytes(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasMetadata() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearMetadata() => $_clearField(20);
+
+  @$pb.TagNumber(21)
+  ContentReportStatus get status => $_getN(20);
+  @$pb.TagNumber(21)
+  set status(ContentReportStatus value) => $_setField(21, value);
+  @$pb.TagNumber(21)
+  $core.bool hasStatus() => $_has(20);
+  @$pb.TagNumber(21)
+  void clearStatus() => $_clearField(21);
+
+  @$pb.TagNumber(22)
+  $core.String get reviewedBy => $_getSZ(21);
+  @$pb.TagNumber(22)
+  set reviewedBy($core.String value) => $_setString(21, value);
+  @$pb.TagNumber(22)
+  $core.bool hasReviewedBy() => $_has(21);
+  @$pb.TagNumber(22)
+  void clearReviewedBy() => $_clearField(22);
+
+  @$pb.TagNumber(23)
+  $core.String get reviewedByUsername => $_getSZ(22);
+  @$pb.TagNumber(23)
+  set reviewedByUsername($core.String value) => $_setString(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasReviewedByUsername() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearReviewedByUsername() => $_clearField(23);
+
+  @$pb.TagNumber(24)
+  $fixnum.Int64 get reviewedAt => $_getI64(23);
+  @$pb.TagNumber(24)
+  set reviewedAt($fixnum.Int64 value) => $_setInt64(23, value);
+  @$pb.TagNumber(24)
+  $core.bool hasReviewedAt() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearReviewedAt() => $_clearField(24);
+
+  @$pb.TagNumber(25)
+  $core.String get resolutionNote => $_getSZ(24);
+  @$pb.TagNumber(25)
+  set resolutionNote($core.String value) => $_setString(24, value);
+  @$pb.TagNumber(25)
+  $core.bool hasResolutionNote() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearResolutionNote() => $_clearField(25);
+
+  @$pb.TagNumber(26)
+  $fixnum.Int64 get createdAt => $_getI64(25);
+  @$pb.TagNumber(26)
+  set createdAt($fixnum.Int64 value) => $_setInt64(25, value);
+  @$pb.TagNumber(26)
+  $core.bool hasCreatedAt() => $_has(25);
+  @$pb.TagNumber(26)
+  void clearCreatedAt() => $_clearField(26);
+
+  @$pb.TagNumber(27)
+  $fixnum.Int64 get updatedAt => $_getI64(26);
+  @$pb.TagNumber(27)
+  set updatedAt($fixnum.Int64 value) => $_setInt64(26, value);
+  @$pb.TagNumber(27)
+  $core.bool hasUpdatedAt() => $_has(26);
+  @$pb.TagNumber(27)
+  void clearUpdatedAt() => $_clearField(27);
 }
 
 class GetSettingsRequest extends $pb.GeneratedMessage {
@@ -1739,21 +2173,20 @@ class SendTestEmailResponse extends $pb.GeneratedMessage {
   void clearMessage() => $_clearField(2);
 }
 
-/// SECURITY: password is transmitted as plaintext. TLS MUST be used.
 class CreateUserRequest extends $pb.GeneratedMessage {
   factory CreateUserRequest({
     $core.String? username,
-    $core.String? password,
     $core.String? email,
-    $1.UserRole? role,
-    $1.UserStatus? status,
+    $0.UserRole? role,
+    $0.UserStatus? status,
+    $core.String? password,
   }) {
     final result = create();
     if (username != null) result.username = username;
-    if (password != null) result.password = password;
     if (email != null) result.email = email;
     if (role != null) result.role = role;
     if (status != null) result.status = status;
+    if (password != null) result.password = password;
     return result;
   }
 
@@ -1771,12 +2204,12 @@ class CreateUserRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'username')
-    ..aOS(2, _omitFieldNames ? '' : 'password')
-    ..aOS(3, _omitFieldNames ? '' : 'email')
-    ..aE<$1.UserRole>(4, _omitFieldNames ? '' : 'role',
-        enumValues: $1.UserRole.values)
-    ..aE<$1.UserStatus>(5, _omitFieldNames ? '' : 'status',
-        enumValues: $1.UserStatus.values)
+    ..aOS(2, _omitFieldNames ? '' : 'email')
+    ..aE<$0.UserRole>(3, _omitFieldNames ? '' : 'role',
+        enumValues: $0.UserRole.values)
+    ..aE<$0.UserStatus>(4, _omitFieldNames ? '' : 'status',
+        enumValues: $0.UserStatus.values)
+    ..aOS(5, _omitFieldNames ? '' : 'password')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1808,40 +2241,40 @@ class CreateUserRequest extends $pb.GeneratedMessage {
   void clearUsername() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get password => $_getSZ(1);
+  $core.String get email => $_getSZ(1);
   @$pb.TagNumber(2)
-  set password($core.String value) => $_setString(1, value);
+  set email($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasPassword() => $_has(1);
+  $core.bool hasEmail() => $_has(1);
   @$pb.TagNumber(2)
-  void clearPassword() => $_clearField(2);
+  void clearEmail() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get email => $_getSZ(2);
+  $0.UserRole get role => $_getN(2);
   @$pb.TagNumber(3)
-  set email($core.String value) => $_setString(2, value);
+  set role($0.UserRole value) => $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasEmail() => $_has(2);
+  $core.bool hasRole() => $_has(2);
   @$pb.TagNumber(3)
-  void clearEmail() => $_clearField(3);
+  void clearRole() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $1.UserRole get role => $_getN(3);
+  $0.UserStatus get status => $_getN(3);
   @$pb.TagNumber(4)
-  set role($1.UserRole value) => $_setField(4, value);
+  set status($0.UserStatus value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasRole() => $_has(3);
+  $core.bool hasStatus() => $_has(3);
   @$pb.TagNumber(4)
-  void clearRole() => $_clearField(4);
+  void clearStatus() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $1.UserStatus get status => $_getN(4);
+  $core.String get password => $_getSZ(4);
   @$pb.TagNumber(5)
-  set status($1.UserStatus value) => $_setField(5, value);
+  set password($core.String value) => $_setString(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasStatus() => $_has(4);
+  $core.bool hasPassword() => $_has(4);
   @$pb.TagNumber(5)
-  void clearStatus() => $_clearField(5);
+  void clearPassword() => $_clearField(5);
 }
 
 class CreateUserResponse extends $pb.GeneratedMessage {
@@ -2013,8 +2446,8 @@ class ListUsersRequest extends $pb.GeneratedMessage {
   factory ListUsersRequest({
     $core.int? page,
     $core.int? pageSize,
-    $1.UserStatus? status,
-    $1.UserRole? role,
+    $0.UserStatus? status,
+    $0.UserRole? role,
     $core.String? search,
     UserListSortBy? sortBy,
     SortDirection? sortDirection,
@@ -2047,10 +2480,10 @@ class ListUsersRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'page')
     ..aI(2, _omitFieldNames ? '' : 'pageSize')
-    ..aE<$1.UserStatus>(3, _omitFieldNames ? '' : 'status',
-        enumValues: $1.UserStatus.values)
-    ..aE<$1.UserRole>(4, _omitFieldNames ? '' : 'role',
-        enumValues: $1.UserRole.values)
+    ..aE<$0.UserStatus>(3, _omitFieldNames ? '' : 'status',
+        enumValues: $0.UserStatus.values)
+    ..aE<$0.UserRole>(4, _omitFieldNames ? '' : 'role',
+        enumValues: $0.UserRole.values)
     ..aOS(5, _omitFieldNames ? '' : 'search')
     ..aE<UserListSortBy>(6, _omitFieldNames ? '' : 'sortBy',
         enumValues: UserListSortBy.values)
@@ -2097,18 +2530,18 @@ class ListUsersRequest extends $pb.GeneratedMessage {
   void clearPageSize() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $1.UserStatus get status => $_getN(2);
+  $0.UserStatus get status => $_getN(2);
   @$pb.TagNumber(3)
-  set status($1.UserStatus value) => $_setField(3, value);
+  set status($0.UserStatus value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasStatus() => $_has(2);
   @$pb.TagNumber(3)
   void clearStatus() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $1.UserRole get role => $_getN(3);
+  $0.UserRole get role => $_getN(3);
   @$pb.TagNumber(4)
-  set role($1.UserRole value) => $_setField(4, value);
+  set role($0.UserRole value) => $_setField(4, value);
   @$pb.TagNumber(4)
   $core.bool hasRole() => $_has(3);
   @$pb.TagNumber(4)
@@ -2435,8 +2868,8 @@ class GetUserPreferencesRequest extends $pb.GeneratedMessage {
 class GetUserPreferencesResponse extends $pb.GeneratedMessage {
   factory GetUserPreferencesResponse({
     AdminUser? user,
-    $0.UserPreferences? preferences,
-    $0.UserAuthFactors? authFactors,
+    $1.UserPreferences? preferences,
+    $1.UserAuthFactors? authFactors,
   }) {
     final result = create();
     if (user != null) result.user = user;
@@ -2460,10 +2893,10 @@ class GetUserPreferencesResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<AdminUser>(1, _omitFieldNames ? '' : 'user',
         subBuilder: AdminUser.create)
-    ..aOM<$0.UserPreferences>(2, _omitFieldNames ? '' : 'preferences',
-        subBuilder: $0.UserPreferences.create)
-    ..aOM<$0.UserAuthFactors>(3, _omitFieldNames ? '' : 'authFactors',
-        subBuilder: $0.UserAuthFactors.create)
+    ..aOM<$1.UserPreferences>(2, _omitFieldNames ? '' : 'preferences',
+        subBuilder: $1.UserPreferences.create)
+    ..aOM<$1.UserAuthFactors>(3, _omitFieldNames ? '' : 'authFactors',
+        subBuilder: $1.UserAuthFactors.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2499,33 +2932,33 @@ class GetUserPreferencesResponse extends $pb.GeneratedMessage {
   AdminUser ensureUser() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $0.UserPreferences get preferences => $_getN(1);
+  $1.UserPreferences get preferences => $_getN(1);
   @$pb.TagNumber(2)
-  set preferences($0.UserPreferences value) => $_setField(2, value);
+  set preferences($1.UserPreferences value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasPreferences() => $_has(1);
   @$pb.TagNumber(2)
   void clearPreferences() => $_clearField(2);
   @$pb.TagNumber(2)
-  $0.UserPreferences ensurePreferences() => $_ensure(1);
+  $1.UserPreferences ensurePreferences() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $0.UserAuthFactors get authFactors => $_getN(2);
+  $1.UserAuthFactors get authFactors => $_getN(2);
   @$pb.TagNumber(3)
-  set authFactors($0.UserAuthFactors value) => $_setField(3, value);
+  set authFactors($1.UserAuthFactors value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasAuthFactors() => $_has(2);
   @$pb.TagNumber(3)
   void clearAuthFactors() => $_clearField(3);
   @$pb.TagNumber(3)
-  $0.UserAuthFactors ensureAuthFactors() => $_ensure(2);
+  $1.UserAuthFactors ensureAuthFactors() => $_ensure(2);
 }
 
 class UpdateUserPreferencesRequest extends $pb.GeneratedMessage {
   factory UpdateUserPreferencesRequest({
     $core.String? userId,
     $core.bool? twoFactorEnabled,
-    $0.UserNotificationPreferences? notifications,
+    $1.UserNotificationPreferences? notifications,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
@@ -2549,9 +2982,9 @@ class UpdateUserPreferencesRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'userId')
     ..aOB(2, _omitFieldNames ? '' : 'twoFactorEnabled')
-    ..aOM<$0.UserNotificationPreferences>(
+    ..aOM<$1.UserNotificationPreferences>(
         4, _omitFieldNames ? '' : 'notifications',
-        subBuilder: $0.UserNotificationPreferences.create)
+        subBuilder: $1.UserNotificationPreferences.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2595,23 +3028,23 @@ class UpdateUserPreferencesRequest extends $pb.GeneratedMessage {
   void clearTwoFactorEnabled() => $_clearField(2);
 
   @$pb.TagNumber(4)
-  $0.UserNotificationPreferences get notifications => $_getN(2);
+  $1.UserNotificationPreferences get notifications => $_getN(2);
   @$pb.TagNumber(4)
-  set notifications($0.UserNotificationPreferences value) =>
+  set notifications($1.UserNotificationPreferences value) =>
       $_setField(4, value);
   @$pb.TagNumber(4)
   $core.bool hasNotifications() => $_has(2);
   @$pb.TagNumber(4)
   void clearNotifications() => $_clearField(4);
   @$pb.TagNumber(4)
-  $0.UserNotificationPreferences ensureNotifications() => $_ensure(2);
+  $1.UserNotificationPreferences ensureNotifications() => $_ensure(2);
 }
 
 class UpdateUserPreferencesResponse extends $pb.GeneratedMessage {
   factory UpdateUserPreferencesResponse({
     AdminUser? user,
-    $0.UserPreferences? preferences,
-    $0.UserAuthFactors? authFactors,
+    $1.UserPreferences? preferences,
+    $1.UserAuthFactors? authFactors,
   }) {
     final result = create();
     if (user != null) result.user = user;
@@ -2635,10 +3068,10 @@ class UpdateUserPreferencesResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<AdminUser>(1, _omitFieldNames ? '' : 'user',
         subBuilder: AdminUser.create)
-    ..aOM<$0.UserPreferences>(2, _omitFieldNames ? '' : 'preferences',
-        subBuilder: $0.UserPreferences.create)
-    ..aOM<$0.UserAuthFactors>(3, _omitFieldNames ? '' : 'authFactors',
-        subBuilder: $0.UserAuthFactors.create)
+    ..aOM<$1.UserPreferences>(2, _omitFieldNames ? '' : 'preferences',
+        subBuilder: $1.UserPreferences.create)
+    ..aOM<$1.UserAuthFactors>(3, _omitFieldNames ? '' : 'authFactors',
+        subBuilder: $1.UserAuthFactors.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2675,80 +3108,78 @@ class UpdateUserPreferencesResponse extends $pb.GeneratedMessage {
   AdminUser ensureUser() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $0.UserPreferences get preferences => $_getN(1);
+  $1.UserPreferences get preferences => $_getN(1);
   @$pb.TagNumber(2)
-  set preferences($0.UserPreferences value) => $_setField(2, value);
+  set preferences($1.UserPreferences value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasPreferences() => $_has(1);
   @$pb.TagNumber(2)
   void clearPreferences() => $_clearField(2);
   @$pb.TagNumber(2)
-  $0.UserPreferences ensurePreferences() => $_ensure(1);
+  $1.UserPreferences ensurePreferences() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $0.UserAuthFactors get authFactors => $_getN(2);
+  $1.UserAuthFactors get authFactors => $_getN(2);
   @$pb.TagNumber(3)
-  set authFactors($0.UserAuthFactors value) => $_setField(3, value);
+  set authFactors($1.UserAuthFactors value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasAuthFactors() => $_has(2);
   @$pb.TagNumber(3)
   void clearAuthFactors() => $_clearField(3);
   @$pb.TagNumber(3)
-  $0.UserAuthFactors ensureAuthFactors() => $_ensure(2);
+  $1.UserAuthFactors ensureAuthFactors() => $_ensure(2);
 }
 
-/// SECURITY: Admin password reset is a privileged operation. The reason field
-/// provides an audit trail for compliance.
-class UpdateUserPasswordRequest extends $pb.GeneratedMessage {
-  factory UpdateUserPasswordRequest({
+class SetUserPasswordRequest extends $pb.GeneratedMessage {
+  factory SetUserPasswordRequest({
     $core.String? userId,
-    $core.String? newPassword,
+    $core.String? password,
     $core.String? reason,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
-    if (newPassword != null) result.newPassword = newPassword;
+    if (password != null) result.password = password;
     if (reason != null) result.reason = reason;
     return result;
   }
 
-  UpdateUserPasswordRequest._();
+  SetUserPasswordRequest._();
 
-  factory UpdateUserPasswordRequest.fromBuffer($core.List<$core.int> data,
+  factory SetUserPasswordRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory UpdateUserPasswordRequest.fromJson($core.String json,
+  factory SetUserPasswordRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateUserPasswordRequest',
+      _omitMessageNames ? '' : 'SetUserPasswordRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'userId')
-    ..aOS(2, _omitFieldNames ? '' : 'newPassword')
+    ..aOS(2, _omitFieldNames ? '' : 'password')
     ..aOS(3, _omitFieldNames ? '' : 'reason')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateUserPasswordRequest clone() => deepCopy();
+  SetUserPasswordRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateUserPasswordRequest copyWith(
-          void Function(UpdateUserPasswordRequest) updates) =>
-      super.copyWith((message) => updates(message as UpdateUserPasswordRequest))
-          as UpdateUserPasswordRequest;
+  SetUserPasswordRequest copyWith(
+          void Function(SetUserPasswordRequest) updates) =>
+      super.copyWith((message) => updates(message as SetUserPasswordRequest))
+          as SetUserPasswordRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static UpdateUserPasswordRequest create() => UpdateUserPasswordRequest._();
+  static SetUserPasswordRequest create() => SetUserPasswordRequest._();
   @$core.override
-  UpdateUserPasswordRequest createEmptyInstance() => create();
+  SetUserPasswordRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static UpdateUserPasswordRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateUserPasswordRequest>(create);
-  static UpdateUserPasswordRequest? _defaultInstance;
+  static SetUserPasswordRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SetUserPasswordRequest>(create);
+  static SetUserPasswordRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get userId => $_getSZ(0);
@@ -2760,13 +3191,13 @@ class UpdateUserPasswordRequest extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get newPassword => $_getSZ(1);
+  $core.String get password => $_getSZ(1);
   @$pb.TagNumber(2)
-  set newPassword($core.String value) => $_setString(1, value);
+  set password($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasNewPassword() => $_has(1);
+  $core.bool hasPassword() => $_has(1);
   @$pb.TagNumber(2)
-  void clearNewPassword() => $_clearField(2);
+  void clearPassword() => $_clearField(2);
 
   @$pb.TagNumber(3)
   $core.String get reason => $_getSZ(2);
@@ -2778,51 +3209,54 @@ class UpdateUserPasswordRequest extends $pb.GeneratedMessage {
   void clearReason() => $_clearField(3);
 }
 
-class UpdateUserPasswordResponse extends $pb.GeneratedMessage {
-  factory UpdateUserPasswordResponse({
+class SetUserPasswordResponse extends $pb.GeneratedMessage {
+  factory SetUserPasswordResponse({
     $core.bool? success,
+    AdminUser? user,
   }) {
     final result = create();
     if (success != null) result.success = success;
+    if (user != null) result.user = user;
     return result;
   }
 
-  UpdateUserPasswordResponse._();
+  SetUserPasswordResponse._();
 
-  factory UpdateUserPasswordResponse.fromBuffer($core.List<$core.int> data,
+  factory SetUserPasswordResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory UpdateUserPasswordResponse.fromJson($core.String json,
+  factory SetUserPasswordResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateUserPasswordResponse',
+      _omitMessageNames ? '' : 'SetUserPasswordResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'success')
+    ..aOM<AdminUser>(2, _omitFieldNames ? '' : 'user',
+        subBuilder: AdminUser.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateUserPasswordResponse clone() => deepCopy();
+  SetUserPasswordResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateUserPasswordResponse copyWith(
-          void Function(UpdateUserPasswordResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as UpdateUserPasswordResponse))
-          as UpdateUserPasswordResponse;
+  SetUserPasswordResponse copyWith(
+          void Function(SetUserPasswordResponse) updates) =>
+      super.copyWith((message) => updates(message as SetUserPasswordResponse))
+          as SetUserPasswordResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static UpdateUserPasswordResponse create() => UpdateUserPasswordResponse._();
+  static SetUserPasswordResponse create() => SetUserPasswordResponse._();
   @$core.override
-  UpdateUserPasswordResponse createEmptyInstance() => create();
+  SetUserPasswordResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static UpdateUserPasswordResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateUserPasswordResponse>(create);
-  static UpdateUserPasswordResponse? _defaultInstance;
+  static SetUserPasswordResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SetUserPasswordResponse>(create);
+  static SetUserPasswordResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get success => $_getBF(0);
@@ -2832,6 +3266,17 @@ class UpdateUserPasswordResponse extends $pb.GeneratedMessage {
   $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
   void clearSuccess() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  AdminUser get user => $_getN(1);
+  @$pb.TagNumber(2)
+  set user(AdminUser value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUser() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUser() => $_clearField(2);
+  @$pb.TagNumber(2)
+  AdminUser ensureUser() => $_ensure(1);
 }
 
 class UpdateUserUsernameRequest extends $pb.GeneratedMessage {
@@ -2963,7 +3408,7 @@ class UpdateUserUsernameResponse extends $pb.GeneratedMessage {
 class UpdateUserRoleRequest extends $pb.GeneratedMessage {
   factory UpdateUserRoleRequest({
     $core.String? userId,
-    $1.UserRole? role,
+    $0.UserRole? role,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
@@ -2985,8 +3430,8 @@ class UpdateUserRoleRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'userId')
-    ..aE<$1.UserRole>(2, _omitFieldNames ? '' : 'role',
-        enumValues: $1.UserRole.values)
+    ..aE<$0.UserRole>(2, _omitFieldNames ? '' : 'role',
+        enumValues: $0.UserRole.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3019,9 +3464,9 @@ class UpdateUserRoleRequest extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $1.UserRole get role => $_getN(1);
+  $0.UserRole get role => $_getN(1);
   @$pb.TagNumber(2)
-  set role($1.UserRole value) => $_setField(2, value);
+  set role($0.UserRole value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasRole() => $_has(1);
   @$pb.TagNumber(2)
@@ -3325,7 +3770,7 @@ class GetUserRoomsRequest extends $pb.GeneratedMessage {
     $core.String? userId,
     $core.int? page,
     $core.int? pageSize,
-    $1.RoomStatus? status,
+    $0.RoomStatus? status,
     $core.String? search,
     $core.bool? isBanned,
     RoomListSortBy? sortBy,
@@ -3359,8 +3804,8 @@ class GetUserRoomsRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'userId')
     ..aI(2, _omitFieldNames ? '' : 'page')
     ..aI(3, _omitFieldNames ? '' : 'pageSize')
-    ..aE<$1.RoomStatus>(4, _omitFieldNames ? '' : 'status',
-        enumValues: $1.RoomStatus.values)
+    ..aE<$0.RoomStatus>(4, _omitFieldNames ? '' : 'status',
+        enumValues: $0.RoomStatus.values)
     ..aOS(5, _omitFieldNames ? '' : 'search')
     ..aOB(6, _omitFieldNames ? '' : 'isBanned')
     ..aE<RoomListSortBy>(7, _omitFieldNames ? '' : 'sortBy',
@@ -3416,9 +3861,9 @@ class GetUserRoomsRequest extends $pb.GeneratedMessage {
   void clearPageSize() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $1.RoomStatus get status => $_getN(3);
+  $0.RoomStatus get status => $_getN(3);
   @$pb.TagNumber(4)
-  set status($1.RoomStatus value) => $_setField(4, value);
+  set status($0.RoomStatus value) => $_setField(4, value);
   @$pb.TagNumber(4)
   $core.bool hasStatus() => $_has(3);
   @$pb.TagNumber(4)
@@ -3526,7 +3971,7 @@ class ListUserRegistrationReviewsRequest extends $pb.GeneratedMessage {
   factory ListUserRegistrationReviewsRequest({
     $core.int? page,
     $core.int? pageSize,
-    $1.ReviewStatus? status,
+    $0.ReviewStatus? status,
     $core.String? search,
   }) {
     final result = create();
@@ -3553,8 +3998,8 @@ class ListUserRegistrationReviewsRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'page')
     ..aI(2, _omitFieldNames ? '' : 'pageSize')
-    ..aE<$1.ReviewStatus>(3, _omitFieldNames ? '' : 'status',
-        enumValues: $1.ReviewStatus.values)
+    ..aE<$0.ReviewStatus>(3, _omitFieldNames ? '' : 'status',
+        enumValues: $0.ReviewStatus.values)
     ..aOS(4, _omitFieldNames ? '' : 'search')
     ..hasRequiredFields = false;
 
@@ -3600,9 +4045,9 @@ class ListUserRegistrationReviewsRequest extends $pb.GeneratedMessage {
   void clearPageSize() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $1.ReviewStatus get status => $_getN(2);
+  $0.ReviewStatus get status => $_getN(2);
   @$pb.TagNumber(3)
-  set status($1.ReviewStatus value) => $_setField(3, value);
+  set status($0.ReviewStatus value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasStatus() => $_has(2);
   @$pb.TagNumber(3)
@@ -3969,7 +4414,7 @@ class ListRoomCreationReviewsRequest extends $pb.GeneratedMessage {
   factory ListRoomCreationReviewsRequest({
     $core.int? page,
     $core.int? pageSize,
-    $1.ReviewStatus? status,
+    $0.ReviewStatus? status,
     $core.String? requestedBy,
     $core.String? search,
   }) {
@@ -3997,8 +4442,8 @@ class ListRoomCreationReviewsRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'page')
     ..aI(2, _omitFieldNames ? '' : 'pageSize')
-    ..aE<$1.ReviewStatus>(3, _omitFieldNames ? '' : 'status',
-        enumValues: $1.ReviewStatus.values)
+    ..aE<$0.ReviewStatus>(3, _omitFieldNames ? '' : 'status',
+        enumValues: $0.ReviewStatus.values)
     ..aOS(4, _omitFieldNames ? '' : 'requestedBy')
     ..aOS(5, _omitFieldNames ? '' : 'search')
     ..hasRequiredFields = false;
@@ -4044,9 +4489,9 @@ class ListRoomCreationReviewsRequest extends $pb.GeneratedMessage {
   void clearPageSize() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $1.ReviewStatus get status => $_getN(2);
+  $0.ReviewStatus get status => $_getN(2);
   @$pb.TagNumber(3)
-  set status($1.ReviewStatus value) => $_setField(3, value);
+  set status($0.ReviewStatus value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasStatus() => $_has(2);
   @$pb.TagNumber(3)
@@ -4420,7 +4865,7 @@ class ListRoomJoinReviewsRequest extends $pb.GeneratedMessage {
   factory ListRoomJoinReviewsRequest({
     $core.int? page,
     $core.int? pageSize,
-    $1.ReviewStatus? status,
+    $0.ReviewStatus? status,
     $core.String? roomId,
     $core.String? userId,
   }) {
@@ -4448,8 +4893,8 @@ class ListRoomJoinReviewsRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'page')
     ..aI(2, _omitFieldNames ? '' : 'pageSize')
-    ..aE<$1.ReviewStatus>(3, _omitFieldNames ? '' : 'status',
-        enumValues: $1.ReviewStatus.values)
+    ..aE<$0.ReviewStatus>(3, _omitFieldNames ? '' : 'status',
+        enumValues: $0.ReviewStatus.values)
     ..aOS(4, _omitFieldNames ? '' : 'roomId')
     ..aOS(5, _omitFieldNames ? '' : 'userId')
     ..hasRequiredFields = false;
@@ -4494,9 +4939,9 @@ class ListRoomJoinReviewsRequest extends $pb.GeneratedMessage {
   void clearPageSize() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $1.ReviewStatus get status => $_getN(2);
+  $0.ReviewStatus get status => $_getN(2);
   @$pb.TagNumber(3)
-  set status($1.ReviewStatus value) => $_setField(3, value);
+  set status($0.ReviewStatus value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasStatus() => $_has(2);
   @$pb.TagNumber(3)
@@ -4645,7 +5090,7 @@ class ApproveRoomJoinReviewRequest extends $pb.GeneratedMessage {
 class ApproveRoomJoinReviewResponse extends $pb.GeneratedMessage {
   factory ApproveRoomJoinReviewResponse({
     RoomJoinReview? review,
-    $1.RoomMember? member,
+    $0.RoomMember? member,
   }) {
     final result = create();
     if (review != null) result.review = review;
@@ -4668,8 +5113,8 @@ class ApproveRoomJoinReviewResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<RoomJoinReview>(1, _omitFieldNames ? '' : 'review',
         subBuilder: RoomJoinReview.create)
-    ..aOM<$1.RoomMember>(2, _omitFieldNames ? '' : 'member',
-        subBuilder: $1.RoomMember.create)
+    ..aOM<$0.RoomMember>(2, _omitFieldNames ? '' : 'member',
+        subBuilder: $0.RoomMember.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4706,15 +5151,15 @@ class ApproveRoomJoinReviewResponse extends $pb.GeneratedMessage {
   RoomJoinReview ensureReview() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $1.RoomMember get member => $_getN(1);
+  $0.RoomMember get member => $_getN(1);
   @$pb.TagNumber(2)
-  set member($1.RoomMember value) => $_setField(2, value);
+  set member($0.RoomMember value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasMember() => $_has(1);
   @$pb.TagNumber(2)
   void clearMember() => $_clearField(2);
   @$pb.TagNumber(2)
-  $1.RoomMember ensureMember() => $_ensure(1);
+  $0.RoomMember ensureMember() => $_ensure(1);
 }
 
 class RejectRoomJoinReviewRequest extends $pb.GeneratedMessage {
@@ -4862,7 +5307,7 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
   factory ListRoomsRequest({
     $core.int? page,
     $core.int? pageSize,
-    $1.RoomStatus? status,
+    $0.RoomStatus? status,
     $core.String? search,
     $core.String? creatorId,
     $core.bool? isBanned,
@@ -4896,8 +5341,8 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'page')
     ..aI(2, _omitFieldNames ? '' : 'pageSize')
-    ..aE<$1.RoomStatus>(3, _omitFieldNames ? '' : 'status',
-        enumValues: $1.RoomStatus.values)
+    ..aE<$0.RoomStatus>(3, _omitFieldNames ? '' : 'status',
+        enumValues: $0.RoomStatus.values)
     ..aOS(4, _omitFieldNames ? '' : 'search')
     ..aOS(5, _omitFieldNames ? '' : 'creatorId')
     ..aOB(6, _omitFieldNames ? '' : 'isBanned')
@@ -4945,9 +5390,9 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
   void clearPageSize() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $1.RoomStatus get status => $_getN(2);
+  $0.RoomStatus get status => $_getN(2);
   @$pb.TagNumber(3)
-  set status($1.RoomStatus value) => $_setField(3, value);
+  set status($0.RoomStatus value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasStatus() => $_has(2);
   @$pb.TagNumber(3)
@@ -6059,7 +6504,7 @@ class GetRoomMembersRequest extends $pb.GeneratedMessage {
     $core.int? page,
     $core.int? pageSize,
     $core.String? search,
-    $1.RoomMemberRole? role,
+    $0.RoomMemberRole? role,
     RoomMemberListSortBy? sortBy,
     SortDirection? sortDirection,
   }) {
@@ -6091,8 +6536,8 @@ class GetRoomMembersRequest extends $pb.GeneratedMessage {
     ..aI(2, _omitFieldNames ? '' : 'page')
     ..aI(3, _omitFieldNames ? '' : 'pageSize')
     ..aOS(4, _omitFieldNames ? '' : 'search')
-    ..aE<$1.RoomMemberRole>(5, _omitFieldNames ? '' : 'role',
-        enumValues: $1.RoomMemberRole.values)
+    ..aE<$0.RoomMemberRole>(5, _omitFieldNames ? '' : 'role',
+        enumValues: $0.RoomMemberRole.values)
     ..aE<RoomMemberListSortBy>(7, _omitFieldNames ? '' : 'sortBy',
         enumValues: RoomMemberListSortBy.values)
     ..aE<SortDirection>(8, _omitFieldNames ? '' : 'sortDirection',
@@ -6156,9 +6601,9 @@ class GetRoomMembersRequest extends $pb.GeneratedMessage {
   void clearSearch() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $1.RoomMemberRole get role => $_getN(4);
+  $0.RoomMemberRole get role => $_getN(4);
   @$pb.TagNumber(5)
-  set role($1.RoomMemberRole value) => $_setField(5, value);
+  set role($0.RoomMemberRole value) => $_setField(5, value);
   @$pb.TagNumber(5)
   $core.bool hasRole() => $_has(4);
   @$pb.TagNumber(5)
@@ -6185,12 +6630,14 @@ class GetRoomMembersRequest extends $pb.GeneratedMessage {
 
 class GetRoomMembersResponse extends $pb.GeneratedMessage {
   factory GetRoomMembersResponse({
-    $core.Iterable<$1.RoomMember>? members,
+    $core.Iterable<$0.RoomMember>? members,
     $core.int? total,
+    $0.RoomPresenceStats? presence,
   }) {
     final result = create();
     if (members != null) result.members.addAll(members);
     if (total != null) result.total = total;
+    if (presence != null) result.presence = presence;
     return result;
   }
 
@@ -6207,9 +6654,11 @@ class GetRoomMembersResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'GetRoomMembersResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..pPM<$1.RoomMember>(1, _omitFieldNames ? '' : 'members',
-        subBuilder: $1.RoomMember.create)
+    ..pPM<$0.RoomMember>(1, _omitFieldNames ? '' : 'members',
+        subBuilder: $0.RoomMember.create)
     ..aI(2, _omitFieldNames ? '' : 'total')
+    ..aOM<$0.RoomPresenceStats>(3, _omitFieldNames ? '' : 'presence',
+        subBuilder: $0.RoomPresenceStats.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6233,7 +6682,7 @@ class GetRoomMembersResponse extends $pb.GeneratedMessage {
   static GetRoomMembersResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbList<$1.RoomMember> get members => $_getList(0);
+  $pb.PbList<$0.RoomMember> get members => $_getList(0);
 
   @$pb.TagNumber(2)
   $core.int get total => $_getIZ(1);
@@ -6243,13 +6692,24 @@ class GetRoomMembersResponse extends $pb.GeneratedMessage {
   $core.bool hasTotal() => $_has(1);
   @$pb.TagNumber(2)
   void clearTotal() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $0.RoomPresenceStats get presence => $_getN(2);
+  @$pb.TagNumber(3)
+  set presence($0.RoomPresenceStats value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPresence() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPresence() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $0.RoomPresenceStats ensurePresence() => $_ensure(2);
 }
 
 class AddMemberRequest extends $pb.GeneratedMessage {
   factory AddMemberRequest({
     $core.String? roomId,
     $core.String? userId,
-    $1.RoomMemberRole? role,
+    $0.RoomMemberRole? role,
     $core.bool? notify,
   }) {
     final result = create();
@@ -6275,8 +6735,8 @@ class AddMemberRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'roomId')
     ..aOS(2, _omitFieldNames ? '' : 'userId')
-    ..aE<$1.RoomMemberRole>(3, _omitFieldNames ? '' : 'role',
-        enumValues: $1.RoomMemberRole.values)
+    ..aE<$0.RoomMemberRole>(3, _omitFieldNames ? '' : 'role',
+        enumValues: $0.RoomMemberRole.values)
     ..aOB(4, _omitFieldNames ? '' : 'notify')
     ..hasRequiredFields = false;
 
@@ -6318,9 +6778,9 @@ class AddMemberRequest extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $1.RoomMemberRole get role => $_getN(2);
+  $0.RoomMemberRole get role => $_getN(2);
   @$pb.TagNumber(3)
-  set role($1.RoomMemberRole value) => $_setField(3, value);
+  set role($0.RoomMemberRole value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasRole() => $_has(2);
   @$pb.TagNumber(3)
@@ -6338,7 +6798,7 @@ class AddMemberRequest extends $pb.GeneratedMessage {
 
 class AddMemberResponse extends $pb.GeneratedMessage {
   factory AddMemberResponse({
-    $1.RoomMember? member,
+    $0.RoomMember? member,
   }) {
     final result = create();
     if (member != null) result.member = member;
@@ -6358,8 +6818,8 @@ class AddMemberResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'AddMemberResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<$1.RoomMember>(1, _omitFieldNames ? '' : 'member',
-        subBuilder: $1.RoomMember.create)
+    ..aOM<$0.RoomMember>(1, _omitFieldNames ? '' : 'member',
+        subBuilder: $0.RoomMember.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6382,22 +6842,22 @@ class AddMemberResponse extends $pb.GeneratedMessage {
   static AddMemberResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $1.RoomMember get member => $_getN(0);
+  $0.RoomMember get member => $_getN(0);
   @$pb.TagNumber(1)
-  set member($1.RoomMember value) => $_setField(1, value);
+  set member($0.RoomMember value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasMember() => $_has(0);
   @$pb.TagNumber(1)
   void clearMember() => $_clearField(1);
   @$pb.TagNumber(1)
-  $1.RoomMember ensureMember() => $_ensure(0);
+  $0.RoomMember ensureMember() => $_ensure(0);
 }
 
 class UpdateMemberPermissionsRequest extends $pb.GeneratedMessage {
   factory UpdateMemberPermissionsRequest({
     $core.String? roomId,
     $core.String? userId,
-    $1.RoomMemberRole? role,
+    $0.RoomMemberRole? role,
     $fixnum.Int64? addedPermissions,
     $fixnum.Int64? removedPermissions,
     $fixnum.Int64? adminAddedPermissions,
@@ -6432,8 +6892,8 @@ class UpdateMemberPermissionsRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'roomId')
     ..aOS(2, _omitFieldNames ? '' : 'userId')
-    ..aE<$1.RoomMemberRole>(3, _omitFieldNames ? '' : 'role',
-        enumValues: $1.RoomMemberRole.values)
+    ..aE<$0.RoomMemberRole>(3, _omitFieldNames ? '' : 'role',
+        enumValues: $0.RoomMemberRole.values)
     ..a<$fixnum.Int64>(
         4, _omitFieldNames ? '' : 'addedPermissions', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
@@ -6489,9 +6949,9 @@ class UpdateMemberPermissionsRequest extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $1.RoomMemberRole get role => $_getN(2);
+  $0.RoomMemberRole get role => $_getN(2);
   @$pb.TagNumber(3)
-  set role($1.RoomMemberRole value) => $_setField(3, value);
+  set role($0.RoomMemberRole value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasRole() => $_has(2);
   @$pb.TagNumber(3)
@@ -6536,7 +6996,7 @@ class UpdateMemberPermissionsRequest extends $pb.GeneratedMessage {
 
 class UpdateMemberPermissionsResponse extends $pb.GeneratedMessage {
   factory UpdateMemberPermissionsResponse({
-    $1.RoomMember? member,
+    $0.RoomMember? member,
   }) {
     final result = create();
     if (member != null) result.member = member;
@@ -6556,8 +7016,8 @@ class UpdateMemberPermissionsResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'UpdateMemberPermissionsResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<$1.RoomMember>(1, _omitFieldNames ? '' : 'member',
-        subBuilder: $1.RoomMember.create)
+    ..aOM<$0.RoomMember>(1, _omitFieldNames ? '' : 'member',
+        subBuilder: $0.RoomMember.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6584,15 +7044,15 @@ class UpdateMemberPermissionsResponse extends $pb.GeneratedMessage {
   static UpdateMemberPermissionsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $1.RoomMember get member => $_getN(0);
+  $0.RoomMember get member => $_getN(0);
   @$pb.TagNumber(1)
-  set member($1.RoomMember value) => $_setField(1, value);
+  set member($0.RoomMember value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasMember() => $_has(0);
   @$pb.TagNumber(1)
   void clearMember() => $_clearField(1);
   @$pb.TagNumber(1)
-  $1.RoomMember ensureMember() => $_ensure(0);
+  $0.RoomMember ensureMember() => $_ensure(0);
 }
 
 class KickMemberRequest extends $pb.GeneratedMessage {
@@ -7162,6 +7622,7 @@ class GetSystemStatsResponse extends $pb.GeneratedMessage {
     $core.int? totalMedia,
     $core.int? providerInstances,
     $core.List<$core.int>? additionalStats,
+    $0.PresenceOverview? presence,
   }) {
     final result = create();
     if (totalUsers != null) result.totalUsers = totalUsers;
@@ -7173,6 +7634,7 @@ class GetSystemStatsResponse extends $pb.GeneratedMessage {
     if (totalMedia != null) result.totalMedia = totalMedia;
     if (providerInstances != null) result.providerInstances = providerInstances;
     if (additionalStats != null) result.additionalStats = additionalStats;
+    if (presence != null) result.presence = presence;
     return result;
   }
 
@@ -7199,6 +7661,8 @@ class GetSystemStatsResponse extends $pb.GeneratedMessage {
     ..aI(8, _omitFieldNames ? '' : 'providerInstances')
     ..a<$core.List<$core.int>>(
         9, _omitFieldNames ? '' : 'additionalStats', $pb.PbFieldType.OY)
+    ..aOM<$0.PresenceOverview>(10, _omitFieldNames ? '' : 'presence',
+        subBuilder: $0.PresenceOverview.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -7301,6 +7765,17 @@ class GetSystemStatsResponse extends $pb.GeneratedMessage {
   $core.bool hasAdditionalStats() => $_has(8);
   @$pb.TagNumber(9)
   void clearAdditionalStats() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $0.PresenceOverview get presence => $_getN(9);
+  @$pb.TagNumber(10)
+  set presence($0.PresenceOverview value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasPresence() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearPresence() => $_clearField(10);
+  @$pb.TagNumber(10)
+  $0.PresenceOverview ensurePresence() => $_ensure(9);
 }
 
 class ListActiveStreamsRequest extends $pb.GeneratedMessage {
@@ -8378,6 +8853,545 @@ class ListBanRecordsResponse extends $pb.GeneratedMessage {
   void clearTotal() => $_clearField(2);
 }
 
+class ListContentReportsRequest extends $pb.GeneratedMessage {
+  factory ListContentReportsRequest({
+    $core.int? page,
+    $core.int? pageSize,
+    ContentReportStatus? status,
+    ContentReportTargetType? targetType,
+    $core.String? reporterUserId,
+    $core.String? roomId,
+    $core.String? search,
+    $core.String? targetUserId,
+    $core.String? targetMemberUserId,
+    $fixnum.Int64? targetChatMessageId,
+    $core.String? targetRoomId,
+    $core.String? targetMemberRoomId,
+    ContentReportScope? scope,
+  }) {
+    final result = create();
+    if (page != null) result.page = page;
+    if (pageSize != null) result.pageSize = pageSize;
+    if (status != null) result.status = status;
+    if (targetType != null) result.targetType = targetType;
+    if (reporterUserId != null) result.reporterUserId = reporterUserId;
+    if (roomId != null) result.roomId = roomId;
+    if (search != null) result.search = search;
+    if (targetUserId != null) result.targetUserId = targetUserId;
+    if (targetMemberUserId != null)
+      result.targetMemberUserId = targetMemberUserId;
+    if (targetChatMessageId != null)
+      result.targetChatMessageId = targetChatMessageId;
+    if (targetRoomId != null) result.targetRoomId = targetRoomId;
+    if (targetMemberRoomId != null)
+      result.targetMemberRoomId = targetMemberRoomId;
+    if (scope != null) result.scope = scope;
+    return result;
+  }
+
+  ListContentReportsRequest._();
+
+  factory ListContentReportsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListContentReportsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListContentReportsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'page')
+    ..aI(2, _omitFieldNames ? '' : 'pageSize')
+    ..aE<ContentReportStatus>(3, _omitFieldNames ? '' : 'status',
+        enumValues: ContentReportStatus.values)
+    ..aE<ContentReportTargetType>(4, _omitFieldNames ? '' : 'targetType',
+        enumValues: ContentReportTargetType.values)
+    ..aOS(5, _omitFieldNames ? '' : 'reporterUserId')
+    ..aOS(6, _omitFieldNames ? '' : 'roomId')
+    ..aOS(7, _omitFieldNames ? '' : 'search')
+    ..aOS(8, _omitFieldNames ? '' : 'targetUserId')
+    ..aOS(9, _omitFieldNames ? '' : 'targetMemberUserId')
+    ..aInt64(10, _omitFieldNames ? '' : 'targetChatMessageId')
+    ..aOS(11, _omitFieldNames ? '' : 'targetRoomId')
+    ..aOS(12, _omitFieldNames ? '' : 'targetMemberRoomId')
+    ..aE<ContentReportScope>(13, _omitFieldNames ? '' : 'scope',
+        enumValues: ContentReportScope.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListContentReportsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListContentReportsRequest copyWith(
+          void Function(ListContentReportsRequest) updates) =>
+      super.copyWith((message) => updates(message as ListContentReportsRequest))
+          as ListContentReportsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListContentReportsRequest create() => ListContentReportsRequest._();
+  @$core.override
+  ListContentReportsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListContentReportsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListContentReportsRequest>(create);
+  static ListContentReportsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get page => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set page($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPage() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPage() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get pageSize => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set pageSize($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPageSize() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPageSize() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  ContentReportStatus get status => $_getN(2);
+  @$pb.TagNumber(3)
+  set status(ContentReportStatus value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStatus() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStatus() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  ContentReportTargetType get targetType => $_getN(3);
+  @$pb.TagNumber(4)
+  set targetType(ContentReportTargetType value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasTargetType() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearTargetType() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get reporterUserId => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set reporterUserId($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasReporterUserId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearReporterUserId() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get roomId => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set roomId($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasRoomId() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearRoomId() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get search => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set search($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSearch() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSearch() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get targetUserId => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set targetUserId($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasTargetUserId() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearTargetUserId() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get targetMemberUserId => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set targetMemberUserId($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasTargetMemberUserId() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearTargetMemberUserId() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get targetChatMessageId => $_getI64(9);
+  @$pb.TagNumber(10)
+  set targetChatMessageId($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasTargetChatMessageId() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearTargetChatMessageId() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.String get targetRoomId => $_getSZ(10);
+  @$pb.TagNumber(11)
+  set targetRoomId($core.String value) => $_setString(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasTargetRoomId() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearTargetRoomId() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get targetMemberRoomId => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set targetMemberRoomId($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasTargetMemberRoomId() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearTargetMemberRoomId() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  ContentReportScope get scope => $_getN(12);
+  @$pb.TagNumber(13)
+  set scope(ContentReportScope value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasScope() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearScope() => $_clearField(13);
+}
+
+class ListContentReportsResponse extends $pb.GeneratedMessage {
+  factory ListContentReportsResponse({
+    $core.Iterable<ContentReport>? reports,
+    $core.int? total,
+  }) {
+    final result = create();
+    if (reports != null) result.reports.addAll(reports);
+    if (total != null) result.total = total;
+    return result;
+  }
+
+  ListContentReportsResponse._();
+
+  factory ListContentReportsResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListContentReportsResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListContentReportsResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..pPM<ContentReport>(1, _omitFieldNames ? '' : 'reports',
+        subBuilder: ContentReport.create)
+    ..aI(2, _omitFieldNames ? '' : 'total')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListContentReportsResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListContentReportsResponse copyWith(
+          void Function(ListContentReportsResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ListContentReportsResponse))
+          as ListContentReportsResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListContentReportsResponse create() => ListContentReportsResponse._();
+  @$core.override
+  ListContentReportsResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListContentReportsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListContentReportsResponse>(create);
+  static ListContentReportsResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<ContentReport> get reports => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.int get total => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set total($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTotal() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTotal() => $_clearField(2);
+}
+
+class GetContentReportRequest extends $pb.GeneratedMessage {
+  factory GetContentReportRequest({
+    $core.String? reportId,
+  }) {
+    final result = create();
+    if (reportId != null) result.reportId = reportId;
+    return result;
+  }
+
+  GetContentReportRequest._();
+
+  factory GetContentReportRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetContentReportRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetContentReportRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'reportId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetContentReportRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetContentReportRequest copyWith(
+          void Function(GetContentReportRequest) updates) =>
+      super.copyWith((message) => updates(message as GetContentReportRequest))
+          as GetContentReportRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetContentReportRequest create() => GetContentReportRequest._();
+  @$core.override
+  GetContentReportRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetContentReportRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetContentReportRequest>(create);
+  static GetContentReportRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get reportId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set reportId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReportId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReportId() => $_clearField(1);
+}
+
+class GetContentReportResponse extends $pb.GeneratedMessage {
+  factory GetContentReportResponse({
+    ContentReport? report,
+  }) {
+    final result = create();
+    if (report != null) result.report = report;
+    return result;
+  }
+
+  GetContentReportResponse._();
+
+  factory GetContentReportResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetContentReportResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetContentReportResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<ContentReport>(1, _omitFieldNames ? '' : 'report',
+        subBuilder: ContentReport.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetContentReportResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetContentReportResponse copyWith(
+          void Function(GetContentReportResponse) updates) =>
+      super.copyWith((message) => updates(message as GetContentReportResponse))
+          as GetContentReportResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetContentReportResponse create() => GetContentReportResponse._();
+  @$core.override
+  GetContentReportResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetContentReportResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetContentReportResponse>(create);
+  static GetContentReportResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ContentReport get report => $_getN(0);
+  @$pb.TagNumber(1)
+  set report(ContentReport value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReport() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReport() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ContentReport ensureReport() => $_ensure(0);
+}
+
+class UpdateContentReportStatusRequest extends $pb.GeneratedMessage {
+  factory UpdateContentReportStatusRequest({
+    $core.String? reportId,
+    ContentReportStatus? status,
+    $core.String? resolutionNote,
+  }) {
+    final result = create();
+    if (reportId != null) result.reportId = reportId;
+    if (status != null) result.status = status;
+    if (resolutionNote != null) result.resolutionNote = resolutionNote;
+    return result;
+  }
+
+  UpdateContentReportStatusRequest._();
+
+  factory UpdateContentReportStatusRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateContentReportStatusRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateContentReportStatusRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'reportId')
+    ..aE<ContentReportStatus>(2, _omitFieldNames ? '' : 'status',
+        enumValues: ContentReportStatus.values)
+    ..aOS(3, _omitFieldNames ? '' : 'resolutionNote')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateContentReportStatusRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateContentReportStatusRequest copyWith(
+          void Function(UpdateContentReportStatusRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as UpdateContentReportStatusRequest))
+          as UpdateContentReportStatusRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateContentReportStatusRequest create() =>
+      UpdateContentReportStatusRequest._();
+  @$core.override
+  UpdateContentReportStatusRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateContentReportStatusRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateContentReportStatusRequest>(
+          create);
+  static UpdateContentReportStatusRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get reportId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set reportId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReportId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReportId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  ContentReportStatus get status => $_getN(1);
+  @$pb.TagNumber(2)
+  set status(ContentReportStatus value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasStatus() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearStatus() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get resolutionNote => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set resolutionNote($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasResolutionNote() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearResolutionNote() => $_clearField(3);
+}
+
+class UpdateContentReportStatusResponse extends $pb.GeneratedMessage {
+  factory UpdateContentReportStatusResponse({
+    ContentReport? report,
+    $core.bool? success,
+  }) {
+    final result = create();
+    if (report != null) result.report = report;
+    if (success != null) result.success = success;
+    return result;
+  }
+
+  UpdateContentReportStatusResponse._();
+
+  factory UpdateContentReportStatusResponse.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateContentReportStatusResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateContentReportStatusResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<ContentReport>(1, _omitFieldNames ? '' : 'report',
+        subBuilder: ContentReport.create)
+    ..aOB(2, _omitFieldNames ? '' : 'success')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateContentReportStatusResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateContentReportStatusResponse copyWith(
+          void Function(UpdateContentReportStatusResponse) updates) =>
+      super.copyWith((message) =>
+              updates(message as UpdateContentReportStatusResponse))
+          as UpdateContentReportStatusResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateContentReportStatusResponse create() =>
+      UpdateContentReportStatusResponse._();
+  @$core.override
+  UpdateContentReportStatusResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateContentReportStatusResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateContentReportStatusResponse>(
+          create);
+  static UpdateContentReportStatusResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ContentReport get report => $_getN(0);
+  @$pb.TagNumber(1)
+  set report(ContentReport value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasReport() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearReport() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ContentReport ensureReport() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $core.bool get success => $_getBF(1);
+  @$pb.TagNumber(2)
+  set success($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSuccess() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSuccess() => $_clearField(2);
+}
+
 /// Batch delete rooms request
 class BatchDeleteRoomsRequest extends $pb.GeneratedMessage {
   factory BatchDeleteRoomsRequest({
@@ -8505,9 +9519,9 @@ class BatchDeleteRoomsResponse extends $pb.GeneratedMessage {
 
 /// Admin API for SyncTV - Requires admin or root permissions
 ///
-/// SECURITY: Several RPCs (CreateUser, UpdateUserPassword) transmit passwords as
-/// plaintext. Deployments MUST use TLS. UpdateUserPassword operations should be
-/// logged for audit compliance.
+/// SECURITY: User password operations revoke or initialize credentials through
+/// the OPAQUE password reset flow. Admin APIs never receive user replacement
+/// passwords.
 class AdminServiceApi {
   final $pb.RpcClient _client;
 
@@ -8560,10 +9574,10 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, UpdateUserPreferencesRequest request) =>
       _client.invoke<UpdateUserPreferencesResponse>(ctx, 'AdminService',
           'UpdateUserPreferences', request, UpdateUserPreferencesResponse());
-  $async.Future<UpdateUserPasswordResponse> updateUserPassword(
-          $pb.ClientContext? ctx, UpdateUserPasswordRequest request) =>
-      _client.invoke<UpdateUserPasswordResponse>(ctx, 'AdminService',
-          'UpdateUserPassword', request, UpdateUserPasswordResponse());
+  $async.Future<SetUserPasswordResponse> setUserPassword(
+          $pb.ClientContext? ctx, SetUserPasswordRequest request) =>
+      _client.invoke<SetUserPasswordResponse>(ctx, 'AdminService',
+          'SetUserPassword', request, SetUserPasswordResponse());
   $async.Future<UpdateUserUsernameResponse> updateUserUsername(
           $pb.ClientContext? ctx, UpdateUserUsernameRequest request) =>
       _client.invoke<UpdateUserUsernameResponse>(ctx, 'AdminService',
@@ -8775,6 +9789,26 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, ListBanRecordsRequest request) =>
       _client.invoke<ListBanRecordsResponse>(ctx, 'AdminService',
           'ListBanRecords', request, ListBanRecordsResponse());
+
+  /// =========================
+  /// Moderation Reports
+  /// =========================
+  $async.Future<ListContentReportsResponse> listContentReports(
+          $pb.ClientContext? ctx, ListContentReportsRequest request) =>
+      _client.invoke<ListContentReportsResponse>(ctx, 'AdminService',
+          'ListContentReports', request, ListContentReportsResponse());
+  $async.Future<GetContentReportResponse> getContentReport(
+          $pb.ClientContext? ctx, GetContentReportRequest request) =>
+      _client.invoke<GetContentReportResponse>(ctx, 'AdminService',
+          'GetContentReport', request, GetContentReportResponse());
+  $async.Future<UpdateContentReportStatusResponse> updateContentReportStatus(
+          $pb.ClientContext? ctx, UpdateContentReportStatusRequest request) =>
+      _client.invoke<UpdateContentReportStatusResponse>(
+          ctx,
+          'AdminService',
+          'UpdateContentReportStatus',
+          request,
+          UpdateContentReportStatusResponse());
 }
 
 const $core.bool _omitFieldNames =

@@ -47,9 +47,9 @@ class SyncTvRuntimeService {
   }
 
   Future<SyncTvServerProfile> addServer(String url) async {
-    final probe = _createClient(url);
-    final info =
-        await probe.publicService.getServerInfo(client.GetServerInfoRequest());
+    final serverClient = _createClient(url);
+    final info = await serverClient.publicService
+        .getServerInfo(client.GetServerInfoRequest());
     final serverId = info.serverId.trim();
     if (serverId.isEmpty) {
       throw SyncTvApiException(
@@ -60,7 +60,7 @@ class SyncTvRuntimeService {
     final profile = await sessionStore.addOrUpdateServer(
       serverId: serverId,
       name: info.serverName,
-      endpoint: probe.baseUrl,
+      endpoint: serverClient.baseUrl,
     );
     _api.baseUrl = sessionStore.baseUrl;
     return profile;

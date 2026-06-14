@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 Future<void> showJoinRoomDialog({
   required BuildContext context,
   required Future<void> Function(String value) onSubmitted,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.55),
     builder: (_) => _JoinRoomDialog(onSubmitted: onSubmitted),
   );
 }
@@ -16,9 +16,8 @@ Future<String?> showRoomPasswordDialog({
   required BuildContext context,
   required String roomName,
 }) {
-  return showDialog<String>(
+  return showAppDialog<String>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.55),
     builder: (_) => _RoomPasswordDialog(roomName: roomName),
   );
 }
@@ -52,15 +51,6 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
     super.dispose();
   }
 
-  Future<void> _pasteFromClipboard() async {
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    final text = data?.text?.trim();
-    if (text == null || text.isEmpty) return;
-    _controller.text = text;
-    _controller.selection = TextSelection.collapsed(offset: text.length);
-    setState(() => _hasInput = true);
-  }
-
   Future<void> _submit() async {
     if (_joining) return;
     final value = _controller.text.trim();
@@ -76,10 +66,8 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return AppDialogFrame(
+      maxWidth: 560,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
         child: Shortcuts(
@@ -110,17 +98,14 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
+                      AppPanelSurface(
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.58),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: theme.colorScheme.outlineVariant
-                                .withValues(alpha: 0.7),
-                          ),
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.58),
+                        border: Border.all(
+                          color: theme.colorScheme.outlineVariant
+                              .withValues(alpha: 0.7),
                         ),
                         child: Row(
                           children: [
@@ -141,70 +126,31 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      TextField(
+                      AppTextField(
                         controller: _controller,
                         focusNode: _focusNode,
+                        label: '房间 ID 或邀请链接',
+                        hintText: 'room_xxx 或 https://...',
+                        prefixIcon: Icons.meeting_room_outlined,
                         enabled: !_joining,
                         textInputAction: TextInputAction.done,
                         minLines: 1,
                         maxLines: 3,
-                        decoration: InputDecoration(
-                          labelText: '房间 ID 或邀请链接',
-                          hintText: 'room_xxx 或 https://...',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.meeting_room_outlined),
-                          suffixIcon: _hasInput
-                              ? IconButton(
-                                  tooltip: '清空',
-                                  icon: const Icon(Icons.close_rounded),
-                                  onPressed: _joining
-                                      ? null
-                                      : () {
-                                          _controller.clear();
-                                          setState(() => _hasInput = false);
-                                          _focusNode.requestFocus();
-                                        },
-                                )
-                              : null,
-                        ),
+                        keyboardType: TextInputType.url,
+                        autocorrect: false,
+                        smartDashesType: SmartDashesType.disabled,
+                        smartQuotesType: SmartQuotesType.disabled,
                         onChanged: (value) =>
                             setState(() => _hasInput = value.trim().isNotEmpty),
                         onSubmitted: (_) => _submit(),
-                      ),
-                      const SizedBox(height: 14),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 8,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: _joining ? null : _pasteFromClipboard,
-                            icon: const Icon(Icons.content_paste_rounded),
-                            label: const Text('粘贴邀请'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: _joining
-                                ? null
-                                : () {
-                                    _controller.clear();
-                                    setState(() => _hasInput = false);
-                                    _focusNode.requestFocus();
-                                  },
-                            icon: const Icon(Icons.backspace_outlined),
-                            label: const Text('清空'),
-                          ),
-                        ],
                       ),
                     ],
                   ),
                 ),
                 _DialogActions(
                   primaryLabel: _joining ? '查找中' : '继续',
-                  primaryIcon: _joining
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.arrow_forward_rounded),
+                  primaryIcon: Icons.arrow_forward_rounded,
+                  primaryLoading: _joining,
                   primaryEnabled: !_joining && _hasInput,
                   onCancel: () => Navigator.pop(context),
                   onPrimary: _submit,
@@ -230,8 +176,6 @@ class _RoomPasswordDialog extends StatefulWidget {
 class _RoomPasswordDialogState extends State<_RoomPasswordDialog> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
-  bool _obscure = true;
-
   @override
   void initState() {
     super.initState();
@@ -252,10 +196,8 @@ class _RoomPasswordDialogState extends State<_RoomPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return AppDialogFrame(
+      maxWidth: 500,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 500),
         child: Column(
@@ -269,32 +211,20 @@ class _RoomPasswordDialogState extends State<_RoomPasswordDialog> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
-              child: TextField(
+              child: AppTextField(
                 controller: _controller,
                 focusNode: _focusNode,
-                obscureText: _obscure,
+                label: '房间密码',
+                hintText: '输入后加入房间',
+                prefixIcon: Icons.key_rounded,
+                obscureText: true,
                 textInputAction: TextInputAction.done,
-                decoration: InputDecoration(
-                  labelText: '房间密码',
-                  hintText: '输入后加入房间',
-                  border: const OutlineInputBorder(),
-                  prefixIcon: const Icon(Icons.key_rounded),
-                  suffixIcon: IconButton(
-                    tooltip: _obscure ? '显示密码' : '隐藏密码',
-                    icon: Icon(
-                      _obscure
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                  ),
-                ),
                 onSubmitted: (_) => _submit(),
               ),
             ),
             _DialogActions(
               primaryLabel: '加入房间',
-              primaryIcon: const Icon(Icons.login_rounded),
+              primaryIcon: Icons.login_rounded,
               primaryEnabled: true,
               onCancel: () => Navigator.pop(context),
               onPrimary: _submit,
@@ -322,19 +252,20 @@ class _DialogHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
       color: theme.colorScheme.primaryContainer.withValues(alpha: 0.45),
+      borderRadius: BorderRadius.zero,
+      clipBehavior: Clip.none,
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: theme.colorScheme.onPrimary),
+          AppIconBadge(
+            icon: icon,
+            color: theme.colorScheme.primary,
+            iconColor: theme.colorScheme.onPrimary,
+            backgroundColor: theme.colorScheme.primary,
+            size: 44,
+            borderRadius: BorderRadius.circular(12),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -359,9 +290,9 @@ class _DialogHeader extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
+          AppIconButton(
             tooltip: '关闭',
-            icon: const Icon(Icons.close_rounded),
+            icon: Icons.close_rounded,
             onPressed: onClose,
           ),
         ],
@@ -372,7 +303,8 @@ class _DialogHeader extends StatelessWidget {
 
 class _DialogActions extends StatelessWidget {
   final String primaryLabel;
-  final Widget primaryIcon;
+  final IconData primaryIcon;
+  final bool primaryLoading;
   final bool primaryEnabled;
   final VoidCallback onCancel;
   final VoidCallback onPrimary;
@@ -380,6 +312,7 @@ class _DialogActions extends StatelessWidget {
   const _DialogActions({
     required this.primaryLabel,
     required this.primaryIcon,
+    this.primaryLoading = false,
     required this.primaryEnabled,
     required this.onCancel,
     required this.onPrimary,
@@ -388,25 +321,27 @@ class _DialogActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
+    return AppPanelSurface(
       padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.55)),
-        ),
+      borderRadius: BorderRadius.zero,
+      clipBehavior: Clip.none,
+      border: Border(
+        top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.55)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          OutlinedButton(
+          AppActionButton(
             onPressed: onCancel,
-            child: const Text('取消'),
+            label: '取消',
+            style: AppActionButtonStyle.outlined,
           ),
           const SizedBox(width: 10),
-          FilledButton.icon(
+          AppActionButton(
             onPressed: primaryEnabled ? onPrimary : null,
             icon: primaryIcon,
-            label: Text(primaryLabel),
+            label: primaryLabel,
+            loading: primaryLoading,
           ),
         ],
       ),
