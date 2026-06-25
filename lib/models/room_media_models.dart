@@ -1,4 +1,4 @@
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 
 class RtmpPublishKeyInfo {
   final String publishKey;
@@ -15,9 +15,9 @@ class RtmpPublishKeyInfo {
 }
 
 class RoomMediaLibraryPage {
-  final List<WMovie> playlists;
-  final List<WMovie> media;
-  final List<WMovie> dynamicItems;
+  final List<SyncTvMovie> playlists;
+  final List<SyncTvMovie> media;
+  final List<SyncTvMovie> dynamicItems;
   final List<PlaylistBrowsePathInfo> currentPath;
   final int total;
   final int folderCount;
@@ -35,11 +35,11 @@ class RoomMediaLibraryPage {
     required this.version,
   });
 
-  List<WMovie> get entries => [...playlists, ...media, ...dynamicItems];
+  List<SyncTvMovie> get entries => [...playlists, ...media, ...dynamicItems];
 }
 
 class RoomPlaylistsPage {
-  final List<WMovie> playlists;
+  final List<SyncTvMovie> playlists;
   final int total;
   final int page;
   final int pageSize;
@@ -65,7 +65,7 @@ class PlaylistBrowsePathInfo {
 }
 
 class PlaylistDetailInfo {
-  final WMovie playlist;
+  final SyncTvMovie playlist;
   final int childFolderCount;
   final int mediaCount;
 
@@ -78,6 +78,7 @@ class PlaylistDetailInfo {
 
 class StoredImageInfo {
   final String id;
+  final bool uploadReference;
   final String storageBackend;
   final String objectKey;
   final String url;
@@ -89,6 +90,7 @@ class StoredImageInfo {
 
   const StoredImageInfo({
     required this.id,
+    this.uploadReference = false,
     required this.storageBackend,
     required this.objectKey,
     required this.url,
@@ -106,6 +108,18 @@ class ChatHistoryPage {
   final String eventCursor;
 
   const ChatHistoryPage({
+    required this.messages,
+    required this.nextCursor,
+    this.eventCursor = '',
+  });
+}
+
+class ChatSearchPage {
+  final List<RoomChatMessageInfo> messages;
+  final String nextCursor;
+  final String eventCursor;
+
+  const ChatSearchPage({
     required this.messages,
     required this.nextCursor,
     this.eventCursor = '',
@@ -186,7 +200,7 @@ class ChatReadReceiptUserInfo {
     required this.readAt,
   });
 
-  final WUser user;
+  final SyncTvUser user;
   final int readAt;
 }
 
@@ -199,9 +213,53 @@ class ChatMessageReadReceiptsInfo {
   });
 
   final List<ChatReadReceiptUserInfo> readers;
-  final List<WUser> unreadMembers;
+  final List<SyncTvUser> unreadMembers;
   final int readerTotal;
   final int unreadTotal;
+}
+
+class ChatPinInfo {
+  const ChatPinInfo({
+    required this.pinnedByUserId,
+    required this.pinnedByUsername,
+    required this.note,
+    required this.pinnedAt,
+  });
+
+  final String pinnedByUserId;
+  final String pinnedByUsername;
+  final String note;
+  final int pinnedAt;
+}
+
+class ChatPinnedMessageInfo {
+  const ChatPinnedMessageInfo({
+    required this.message,
+    required this.pin,
+  });
+
+  final RoomChatMessageInfo message;
+  final ChatPinInfo pin;
+}
+
+class ChatPinEventInfo {
+  const ChatPinEventInfo({
+    required this.eventId,
+    required this.roomId,
+    required this.kind,
+    required this.message,
+    this.pin,
+    required this.occurredAt,
+    required this.sequence,
+  });
+
+  final String eventId;
+  final String roomId;
+  final int kind;
+  final RoomChatMessageInfo message;
+  final ChatPinInfo? pin;
+  final int occurredAt;
+  final int sequence;
 }
 
 class RoomChatMessageInfo {
@@ -222,6 +280,7 @@ class RoomChatMessageInfo {
   final List<ChatReactionSummaryInfo> reactions;
   final int reactionCount;
   final List<ChatMentionInfo> mentions;
+  final ChatPinInfo? pin;
 
   const RoomChatMessageInfo({
     required this.id,
@@ -241,12 +300,57 @@ class RoomChatMessageInfo {
     this.reactions = const [],
     this.reactionCount = 0,
     this.mentions = const [],
+    this.pin,
   });
 
   double? get position => double.tryParse(displayPosition);
   String? get color => displayColor.isEmpty ? null : displayColor;
   bool get isDeleted => deletedAt > 0 || status == 3;
   bool get isEdited => editedAt > 0 || status == 2;
+  bool get isPinned => pin != null;
+
+  RoomChatMessageInfo copyWith({
+    String? id,
+    String? roomId,
+    String? userId,
+    String? username,
+    String? content,
+    int? timestamp,
+    String? displayPosition,
+    String? displayColor,
+    int? version,
+    int? editedAt,
+    int? deletedAt,
+    int? status,
+    String? replyToMessageId,
+    List<StoredImageInfo>? images,
+    List<ChatReactionSummaryInfo>? reactions,
+    int? reactionCount,
+    List<ChatMentionInfo>? mentions,
+    ChatPinInfo? pin,
+    bool clearPin = false,
+  }) {
+    return RoomChatMessageInfo(
+      id: id ?? this.id,
+      roomId: roomId ?? this.roomId,
+      userId: userId ?? this.userId,
+      username: username ?? this.username,
+      content: content ?? this.content,
+      timestamp: timestamp ?? this.timestamp,
+      displayPosition: displayPosition ?? this.displayPosition,
+      displayColor: displayColor ?? this.displayColor,
+      version: version ?? this.version,
+      editedAt: editedAt ?? this.editedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      status: status ?? this.status,
+      replyToMessageId: replyToMessageId ?? this.replyToMessageId,
+      images: images ?? this.images,
+      reactions: reactions ?? this.reactions,
+      reactionCount: reactionCount ?? this.reactionCount,
+      mentions: mentions ?? this.mentions,
+      pin: clearPin ? null : pin ?? this.pin,
+    );
+  }
 }
 
 class ChatMentionInfo {

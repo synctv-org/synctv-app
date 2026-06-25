@@ -1,4 +1,4 @@
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -64,7 +64,7 @@ List<OAuth2ProviderOption> oauth2BindableProviders(
 }
 
 class AuthResult {
-  final WUser? user;
+  final SyncTvUser? user;
   final MfaChallengeInfo? mfa;
   final bool registrationReviewRequired;
   final String registrationReviewId;

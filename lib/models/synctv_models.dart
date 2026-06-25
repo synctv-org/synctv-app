@@ -1,6 +1,46 @@
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
-class WUser {
+class RoomCategoryInfo {
+  final String id;
+  final String key;
+  final String name;
+  final String description;
+  final int sortOrder;
+  final bool isEnabled;
+
+  const RoomCategoryInfo({
+    required this.id,
+    required this.key,
+    required this.name,
+    required this.description,
+    required this.sortOrder,
+    required this.isEnabled,
+  });
+}
+
+class RoomLabelInfo {
+  final String id;
+  final String key;
+  final String name;
+  final String description;
+  final String color;
+  final String categoryId;
+  final int sortOrder;
+  final bool isEnabled;
+
+  const RoomLabelInfo({
+    required this.id,
+    required this.key,
+    required this.name,
+    required this.description,
+    required this.color,
+    required this.categoryId,
+    required this.sortOrder,
+    required this.isEnabled,
+  });
+}
+
+class SyncTvUser {
   final String id;
   final String username;
   final String? email;
@@ -16,7 +56,7 @@ class WUser {
   final String bannedBy;
   final String bannedReason;
 
-  WUser({
+  SyncTvUser({
     required this.id,
     required this.username,
     this.email,
@@ -35,7 +75,7 @@ class WUser {
 
   bool get hasEmail => email != null && email!.trim().isNotEmpty;
 
-  WUser copyWith({
+  SyncTvUser copyWith({
     String? id,
     String? username,
     String? email,
@@ -51,7 +91,7 @@ class WUser {
     String? bannedBy,
     String? bannedReason,
   }) {
-    return WUser(
+    return SyncTvUser(
       id: id ?? this.id,
       username: username ?? this.username,
       email: email ?? this.email,
@@ -70,7 +110,7 @@ class WUser {
   }
 }
 
-class WRoom {
+class SyncTvRoom {
   final String roomId;
   final String roomName;
   final String description;
@@ -96,8 +136,10 @@ class WRoom {
   final int myRole;
   final int myRelation;
   final String coverUrl;
+  final RoomCategoryInfo? category;
+  final List<RoomLabelInfo> labels;
 
-  WRoom({
+  SyncTvRoom({
     required this.roomId,
     required this.roomName,
     this.description = '',
@@ -123,9 +165,11 @@ class WRoom {
     this.myRole = 0,
     this.myRelation = 0,
     this.coverUrl = '',
+    this.category,
+    this.labels = const [],
   });
 
-  WRoom copyWith({
+  SyncTvRoom copyWith({
     String? roomId,
     String? roomName,
     String? description,
@@ -151,8 +195,10 @@ class WRoom {
     int? myRole,
     int? myRelation,
     String? coverUrl,
+    RoomCategoryInfo? category,
+    List<RoomLabelInfo>? labels,
   }) {
-    return WRoom(
+    return SyncTvRoom(
       roomId: roomId ?? this.roomId,
       roomName: roomName ?? this.roomName,
       description: description ?? this.description,
@@ -178,11 +224,13 @@ class WRoom {
       myRole: myRole ?? this.myRole,
       myRelation: myRelation ?? this.myRelation,
       coverUrl: coverUrl ?? this.coverUrl,
+      category: category ?? this.category,
+      labels: labels ?? this.labels,
     );
   }
 }
 
-class WPlaybackUrlOption {
+class SyncTvPlaybackUrlOption {
   final String name;
   final String url;
   final Map<String, String> headers;
@@ -193,7 +241,7 @@ class WPlaybackUrlOption {
   final int? fps;
   final Map<String, String> metadata;
 
-  const WPlaybackUrlOption({
+  const SyncTvPlaybackUrlOption({
     required this.name,
     required this.url,
     this.headers = const {},
@@ -219,21 +267,27 @@ class WPlaybackUrlOption {
   }
 }
 
-class WPlaybackModeOption {
+class SyncTvPlaybackModeOption {
   final String key;
   final String format;
-  final List<WPlaybackUrlOption> urls;
+  final List<SyncTvPlaybackUrlOption> urls;
   final int defaultUrlIndex;
   final Map<String, dynamic>? subtitles;
   final String? danmu;
+  final Map<String, String> danmuHeaders;
+  final String? streamDanmu;
+  final Map<String, String> streamDanmuHeaders;
 
-  const WPlaybackModeOption({
+  const SyncTvPlaybackModeOption({
     required this.key,
     this.format = '',
     this.urls = const [],
     this.defaultUrlIndex = 0,
     this.subtitles,
     this.danmu,
+    this.danmuHeaders = const {},
+    this.streamDanmu,
+    this.streamDanmuHeaders = const {},
   });
 
   String get label {
@@ -259,11 +313,11 @@ class WPlaybackModeOption {
           ? defaultUrlIndex
           : 0;
 
-  WPlaybackUrlOption? get defaultUrl =>
+  SyncTvPlaybackUrlOption? get defaultUrl =>
       urls.isEmpty ? null : urls[safeDefaultUrlIndex];
 }
 
-class WMovie {
+class SyncTvMovie {
   final String id;
   final String name;
   final String url;
@@ -285,18 +339,20 @@ class WMovie {
   final String? parentId;
   final Map<String, dynamic>? subtitles;
   final String? danmu;
+  final Map<String, String> danmuHeaders;
   final String? streamDanmu;
+  final Map<String, String> streamDanmuHeaders;
   final String sourceProvider;
   final String providerInstanceName;
   final Map<String, dynamic> sourceConfig;
   final Map<String, dynamic> metadata;
   final String description;
   final String coverUrl;
-  final List<WPlaybackModeOption> playbackModes;
+  final List<SyncTvPlaybackModeOption> playbackModes;
   final String selectedPlaybackMode;
   final int selectedPlaybackUrlIndex;
 
-  WMovie({
+  SyncTvMovie({
     required this.id,
     required this.name,
     required this.url,
@@ -318,7 +374,9 @@ class WMovie {
     this.parentId,
     this.subtitles,
     this.danmu,
+    this.danmuHeaders = const {},
     this.streamDanmu,
+    this.streamDanmuHeaders = const {},
     this.sourceProvider = '',
     this.providerInstanceName = '',
     this.sourceConfig = const {},
@@ -343,19 +401,19 @@ class WMovie {
   bool get hasPlaybackTarget =>
       (subPath ?? '').isNotEmpty && (parentId ?? '').startsWith('pl_');
 
-  String get playbackWatchMediaId =>
+  String get playbackMediaId =>
       isStaticMedia && !hasPlaybackTarget ? id : '';
 
-  String get playbackWatchPlaylistId =>
+  String get playbackPlaylistId =>
       hasPlaybackTarget ? parentId! : (isPlaylist ? id : '');
 
-  String? get playbackWatchTarget => hasPlaybackTarget ? subPath : null;
+  String? get playbackTarget => hasPlaybackTarget ? subPath : null;
 
   bool get hasPlaybackChoices =>
       playbackModes.length > 1 ||
       playbackModes.any((mode) => mode.urls.length > 1);
 
-  WPlaybackModeOption? get selectedPlaybackModeOption {
+  SyncTvPlaybackModeOption? get selectedPlaybackModeOption {
     if (playbackModes.isEmpty) return null;
     for (final mode in playbackModes) {
       if (mode.key == selectedPlaybackMode) return mode;
@@ -363,7 +421,7 @@ class WMovie {
     return playbackModes.first;
   }
 
-  WPlaybackUrlOption? get selectedPlaybackUrlOption {
+  SyncTvPlaybackUrlOption? get selectedPlaybackUrlOption {
     final mode = selectedPlaybackModeOption;
     if (mode == null || mode.urls.isEmpty) return null;
     final index = selectedPlaybackUrlIndex >= 0 &&
@@ -382,7 +440,7 @@ class WMovie {
     return urlLabel.isEmpty ? mode.label : '${mode.label} · $urlLabel';
   }
 
-  WMovie selectPlayback({
+  SyncTvMovie selectPlayback({
     required String modeKey,
     required int urlIndex,
     String Function(String url)? resolveUrl,
@@ -390,7 +448,7 @@ class WMovie {
     final mode = playbackModes.firstWhere(
       (entry) => entry.key == modeKey,
       orElse: () => playbackModes.isEmpty
-          ? const WPlaybackModeOption(key: '')
+          ? const SyncTvPlaybackModeOption(key: '')
           : playbackModes.first,
     );
     final index = urlIndex >= 0 && urlIndex < mode.urls.length
@@ -402,30 +460,36 @@ class WMovie {
       url: resolveUrl == null ? rawUrl : resolveUrl(rawUrl),
       headers: selectedUrl?.headers ?? headers,
       type: mode.format.isEmpty ? type : mode.format,
-      subtitles: mode.subtitles ?? subtitles,
-      danmu: mode.danmu ?? danmu,
+      subtitles: mode.subtitles,
+      danmu: mode.danmu,
+      danmuHeaders: mode.danmuHeaders,
+      streamDanmu: mode.streamDanmu,
+      streamDanmuHeaders: mode.streamDanmuHeaders,
+      clearSubtitles: mode.subtitles == null,
+      clearDanmu: mode.danmu == null,
+      clearStreamDanmu: mode.streamDanmu == null,
       selectedPlaybackMode: mode.key,
       selectedPlaybackUrlIndex: index,
     );
   }
 
-  bool hasSamePlaybackIdentity(WMovie other) {
-    final mediaId = playbackWatchMediaId;
-    final otherMediaId = other.playbackWatchMediaId;
+  bool hasSamePlaybackIdentity(SyncTvMovie other) {
+    final mediaId = playbackMediaId;
+    final otherMediaId = other.playbackMediaId;
     if (mediaId.isNotEmpty || otherMediaId.isNotEmpty) {
       return mediaId.isNotEmpty && mediaId == otherMediaId;
     }
 
-    final playlistId = playbackWatchPlaylistId;
-    final otherPlaylistId = other.playbackWatchPlaylistId;
+    final playlistId = playbackPlaylistId;
+    final otherPlaylistId = other.playbackPlaylistId;
     if (playlistId.isEmpty || playlistId != otherPlaylistId) return false;
 
-    final target = playbackWatchTarget ?? '';
-    final otherTarget = other.playbackWatchTarget ?? '';
+    final target = playbackTarget ?? '';
+    final otherTarget = other.playbackTarget ?? '';
     return target.isEmpty || otherTarget.isEmpty || target == otherTarget;
   }
 
-  WMovie copyWith({
+  SyncTvMovie copyWith({
     String? id,
     String? name,
     String? url,
@@ -447,18 +511,23 @@ class WMovie {
     String? parentId,
     Map<String, dynamic>? subtitles,
     String? danmu,
+    Map<String, String>? danmuHeaders,
     String? streamDanmu,
+    Map<String, String>? streamDanmuHeaders,
+    bool clearSubtitles = false,
+    bool clearDanmu = false,
+    bool clearStreamDanmu = false,
     String? sourceProvider,
     String? providerInstanceName,
     Map<String, dynamic>? sourceConfig,
     Map<String, dynamic>? metadata,
     String? description,
     String? coverUrl,
-    List<WPlaybackModeOption>? playbackModes,
+    List<SyncTvPlaybackModeOption>? playbackModes,
     String? selectedPlaybackMode,
     int? selectedPlaybackUrlIndex,
   }) {
-    return WMovie(
+    return SyncTvMovie(
       id: id ?? this.id,
       name: name ?? this.name,
       url: url ?? this.url,
@@ -478,9 +547,13 @@ class WMovie {
       headers: headers ?? this.headers,
       isFolder: isFolder ?? this.isFolder,
       parentId: parentId ?? this.parentId,
-      subtitles: subtitles ?? this.subtitles,
-      danmu: danmu ?? this.danmu,
-      streamDanmu: streamDanmu ?? this.streamDanmu,
+      subtitles: clearSubtitles ? null : subtitles ?? this.subtitles,
+      danmu: clearDanmu ? null : danmu ?? this.danmu,
+      danmuHeaders: clearDanmu ? const {} : danmuHeaders ?? this.danmuHeaders,
+      streamDanmu: clearStreamDanmu ? null : streamDanmu ?? this.streamDanmu,
+      streamDanmuHeaders: clearStreamDanmu
+          ? const {}
+          : streamDanmuHeaders ?? this.streamDanmuHeaders,
       sourceProvider: sourceProvider ?? this.sourceProvider,
       providerInstanceName: providerInstanceName ?? this.providerInstanceName,
       sourceConfig: sourceConfig ?? this.sourceConfig,
@@ -494,7 +567,7 @@ class WMovie {
     );
   }
 
-  WMovie withPlaybackIdentityFrom(WMovie? source) {
+  SyncTvMovie withPlaybackIdentityFrom(SyncTvMovie? source) {
     if (source == null || !source.hasPlaybackTarget || id != source.parentId) {
       return this;
     }
@@ -508,7 +581,7 @@ class WMovie {
     );
   }
 
-  static WMovie fromPlaybackProto(
+  static SyncTvMovie fromPlaybackProto(
     client.Playback playback, {
     String id = '',
     String? subPath,
@@ -527,11 +600,11 @@ class WMovie {
     final selectedMode = modes.firstWhere(
       (mode) => mode.key == defaultMode,
       orElse: () =>
-          modes.isEmpty ? const WPlaybackModeOption(key: '') : modes.first,
+          modes.isEmpty ? const SyncTvPlaybackModeOption(key: '') : modes.first,
     );
     final selectedUrl = selectedMode.defaultUrl;
     final selectedUrlValue = selectedUrl?.url ?? '';
-    return WMovie(
+    return SyncTvMovie(
       id: id.isNotEmpty
           ? id
           : playback.mediaId.isNotEmpty
@@ -539,12 +612,20 @@ class WMovie {
               : playback.playlistId,
       name: playback.name,
       url: selectedUrlValue,
+      live: playback.isLive,
       headers: selectedUrl?.headers ?? const {},
       type: selectedMode.format,
+      roomId: playback.roomId,
+      position: playback.playlistPosition,
       subPath: subPath,
       parentId: parentId,
       subtitles: selectedMode.subtitles,
       danmu: selectedMode.danmu,
+      danmuHeaders: selectedMode.danmuHeaders,
+      streamDanmu: selectedMode.streamDanmu,
+      streamDanmuHeaders: selectedMode.streamDanmuHeaders,
+      sourceProvider: playback.provider,
+      providerInstanceName: playback.providerInstanceName,
       playbackModes: modes,
       selectedPlaybackMode: selectedMode.key,
       selectedPlaybackUrlIndex: selectedMode.safeDefaultUrlIndex,
@@ -553,11 +634,14 @@ class WMovie {
         'playback_metadata': Map<String, String>.from(
           playback.metadata,
         ),
+        if (playback.hasExpiresAt()) 'expires_at': playback.expiresAt.toInt(),
+        if (playback.hasDurationSeconds())
+          'duration_seconds': playback.durationSeconds,
       },
     );
   }
 
-  static List<WPlaybackModeOption> playbackModeOptionsFromProto(
+  static List<SyncTvPlaybackModeOption> playbackModeOptionsFromProto(
     client.Playback playback, {
     String Function(String url)? resolveUrl,
   }) {
@@ -570,13 +654,13 @@ class WMovie {
 
     return entries.map((entry) {
       final info = entry.value;
-      final urls = info.urls.map((url) {
-        final metadata = url.hasMetadata() ? url.metadata : null;
-        return WPlaybackUrlOption(
-          name: url.name,
-          url: resolveUrl == null ? url.url : resolveUrl(url.url),
-          headers: Map<String, String>.from(url.headers),
-          expireAt: url.hasExpireAt() ? url.expireAt.toInt() : null,
+      final urls = info.medias.map((media) {
+        final metadata = media.hasMetadata() ? media.metadata : null;
+        return SyncTvPlaybackUrlOption(
+          name: media.name,
+          url: resolveUrl == null ? media.url : resolveUrl(media.url),
+          headers: Map<String, String>.from(media.headers),
+          expireAt: media.hasExpireAt() ? media.expireAt.toInt() : null,
           resolution: metadata?.resolution ?? '',
           bitrate:
               metadata?.hasBitrate() == true ? metadata!.bitrate.toInt() : null,
@@ -587,35 +671,55 @@ class WMovie {
               : Map<String, String>.from(metadata.extra),
         );
       }).toList();
+      final defaultMediaIndex =
+          info.hasDefaultMediaIndex() ? info.defaultMediaIndex : 0;
+      final formatMediaIndex =
+          defaultMediaIndex >= 0 && defaultMediaIndex < info.medias.length
+              ? defaultMediaIndex
+              : 0;
+      final format =
+          info.medias.isEmpty ? '' : info.medias[formatMediaIndex].format;
 
-      return WPlaybackModeOption(
+      return SyncTvPlaybackModeOption(
         key: entry.key,
-        format: info.format,
+        format: format,
         urls: urls,
-        defaultUrlIndex: info.defaultUrlIndex,
+        defaultUrlIndex: defaultMediaIndex,
         subtitles: _subtitleMapFromProto(
           info.subtitles,
           resolveUrl: resolveUrl,
         ),
-        danmu: _danmuUrlFromProto(info.danmakus, resolveUrl: resolveUrl),
+        danmu: _danmuUrlFromProto(
+          info.danmakus,
+          stream: false,
+          resolveUrl: resolveUrl,
+        ),
+        danmuHeaders: _danmuHeadersFromProto(
+          info.danmakus,
+          stream: false,
+        ),
+        streamDanmu: _danmuUrlFromProto(
+          info.danmakus,
+          stream: true,
+          resolveUrl: resolveUrl,
+        ),
+        streamDanmuHeaders: _danmuHeadersFromProto(
+          info.danmakus,
+          stream: true,
+        ),
       );
     }).toList();
   }
 
   static Map<String, dynamic>? _subtitleMapFromProto(
-    Iterable<client.Subtitle> subtitles, {
+    Iterable<client.PlaybackSubtitle> subtitles, {
     String Function(String url)? resolveUrl,
   }) {
     final result = <String, dynamic>{};
     var index = 0;
     for (final subtitle in subtitles) {
-      if (subtitle.urls.isEmpty) continue;
-      final urlIndex = subtitle.defaultUrlIndex >= 0 &&
-              subtitle.defaultUrlIndex < subtitle.urls.length
-          ? subtitle.defaultUrlIndex
-          : 0;
-      final subtitleUrl = subtitle.urls[urlIndex];
-      if (subtitleUrl.url.isEmpty) continue;
+      final url = subtitle.url.trim();
+      if (url.isEmpty) continue;
       final name = subtitle.name.trim().isNotEmpty
           ? subtitle.name.trim()
           : subtitle.language.trim().isNotEmpty
@@ -624,10 +728,9 @@ class WMovie {
       result['sub_$index'] = {
         'name': name,
         'language': subtitle.language,
-        'url':
-            resolveUrl == null ? subtitleUrl.url : resolveUrl(subtitleUrl.url),
-        'format': subtitleUrl.format,
-        'headers': Map<String, String>.from(subtitleUrl.headers),
+        'url': resolveUrl == null ? url : resolveUrl(url),
+        'format': subtitle.format,
+        'headers': Map<String, String>.from(subtitle.headers),
       };
       index++;
     }
@@ -635,14 +738,36 @@ class WMovie {
   }
 
   static String? _danmuUrlFromProto(
-    Iterable<client.Danmaku> danmakus, {
+    Iterable<client.PlaybackDanmaku> danmakus, {
+    required bool stream,
     String Function(String url)? resolveUrl,
   }) {
     for (final danmaku in danmakus) {
       final url = danmaku.url.trim();
-      if (url.isNotEmpty) return resolveUrl == null ? url : resolveUrl(url);
+      if (url.isEmpty) continue;
+      if (_isStreamDanmu(danmaku) != stream) continue;
+      return resolveUrl == null ? url : resolveUrl(url);
     }
     return null;
+  }
+
+  static Map<String, String> _danmuHeadersFromProto(
+    Iterable<client.PlaybackDanmaku> danmakus, {
+    required bool stream,
+  }) {
+    for (final danmaku in danmakus) {
+      final url = danmaku.url.trim();
+      if (url.isEmpty) continue;
+      if (_isStreamDanmu(danmaku) != stream) continue;
+      return Map<String, String>.from(danmaku.headers);
+    }
+    return const {};
+  }
+
+  static bool _isStreamDanmu(client.PlaybackDanmaku danmaku) {
+    final format = danmaku.format.trim().toLowerCase();
+    if (format == 'synctv-bilibili-live') return true;
+    return danmaku.url.contains('/live-danmaku/');
   }
 }
 
@@ -662,8 +787,8 @@ class RoomCheckInfo {
   bool get isAvailable => availability == 1;
 }
 
-class WPlaybackStatus {
-  final WMovie? movie;
+class SyncTvPlaybackStatus {
+  final SyncTvMovie? movie;
   final bool isPlaying;
   final double currentTime;
   final double playbackRate;
@@ -672,7 +797,7 @@ class WPlaybackStatus {
   final String playingPlaylistId;
   final String targetHash;
 
-  WPlaybackStatus({
+  SyncTvPlaybackStatus({
     this.movie,
     this.isPlaying = false,
     this.currentTime = 0,
@@ -683,8 +808,8 @@ class WPlaybackStatus {
     this.targetHash = '',
   });
 
-  WPlaybackStatus copyWith({
-    WMovie? movie,
+  SyncTvPlaybackStatus copyWith({
+    SyncTvMovie? movie,
     bool? isPlaying,
     double? currentTime,
     double? playbackRate,
@@ -693,7 +818,7 @@ class WPlaybackStatus {
     String? playingPlaylistId,
     String? targetHash,
   }) {
-    return WPlaybackStatus(
+    return SyncTvPlaybackStatus(
       movie: movie ?? this.movie,
       isPlaying: isPlaying ?? this.isPlaying,
       currentTime: currentTime ?? this.currentTime,
@@ -737,7 +862,7 @@ class RoomGuestPermissions {
   static const int all = viewMemberList | viewChatHistory | useWebRTC;
 }
 
-class WRoomSettings {
+class SyncTvRoomSettings {
   bool requirePassword;
   bool allowGuestJoin;
   bool requireApproval;
@@ -752,7 +877,7 @@ class WRoomSettings {
   int guestAddedPermissions;
   int guestRemovedPermissions;
 
-  WRoomSettings({
+  SyncTvRoomSettings({
     this.requirePassword = false,
     this.allowGuestJoin = false,
     this.requireApproval = false,
@@ -768,8 +893,8 @@ class WRoomSettings {
     this.guestRemovedPermissions = 0,
   });
 
-  factory WRoomSettings.fromJson(Map<String, dynamic> json) {
-    return WRoomSettings(
+  factory SyncTvRoomSettings.fromJson(Map<String, dynamic> json) {
+    return SyncTvRoomSettings(
       requirePassword: _readBool(json, 'require_password', false),
       allowGuestJoin: _readBool(json, 'allow_guest_join', false),
       requireApproval: _readBool(json, 'require_approval', false),

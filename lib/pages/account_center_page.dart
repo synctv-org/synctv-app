@@ -6,13 +6,13 @@ import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/pages/mobile/room_settings_page.dart';
 import 'package:synctv_app/pages/room_screen.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/services/opaque_authenticator_service.dart';
 import 'package:synctv_app/services/passkey_authenticator_service.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
@@ -62,7 +62,7 @@ class _EmailStatusView {
 }
 
 class AccountCenterPage extends StatefulWidget {
-  final WUser initialUser;
+  final SyncTvUser initialUser;
 
   const AccountCenterPage({super.key, required this.initialUser});
 
@@ -126,7 +126,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   };
 
   late TabController _tabController;
-  late WUser _user;
+  late SyncTvUser _user;
   AccountPreferences? _preferences;
   UserNotificationsPage? _notifications;
   RoomsPage? _myRooms;
@@ -204,23 +204,23 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     setState(() => _loading = true);
     try {
       final errors = <String, String>{};
-      final user = await WatchTogetherService.getMe(refresh: refresh);
+      final user = await SyncTvService.getMe(refresh: refresh);
       final publicSettings = await _loadOptional(
         errors,
         '公开设置',
-        () => WatchTogetherService.getPublicSettings(refresh: refresh),
+        () => SyncTvService.getPublicSettings(refresh: refresh),
       );
       final serverPasskeyEnabled = publicSettings?.enableWebauthn == true;
       final results = await Future.wait<dynamic>([
         _loadOptional(
           errors,
           '账号偏好',
-          () => WatchTogetherService.getAccountPreferences(refresh: refresh),
+          () => SyncTvService.getAccountPreferences(refresh: refresh),
         ),
         _loadOptional(
           errors,
           '通知',
-          () => WatchTogetherService.listNotifications(
+          () => SyncTvService.listNotifications(
             page: _notificationPage,
             pageSize: _notificationPageSize,
             refresh: refresh,
@@ -229,7 +229,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _loadOptional(
           errors,
           '房间',
-          () => WatchTogetherService.getMyRoomsPage(
+          () => SyncTvService.getMyRoomsPage(
             page: _roomsPage,
             pageSize: _roomsPageSize,
             relation: _roomRelationFilter,
@@ -239,18 +239,18 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _loadOptional(
           errors,
           'OAuth2 Provider',
-          WatchTogetherService.listOAuth2Providers,
+          SyncTvService.listOAuth2Providers,
         ),
         _loadOptional(
           errors,
           'OAuth2 绑定',
-          WatchTogetherService.getLinkedOAuth2Accounts,
+          SyncTvService.getLinkedOAuth2Accounts,
         ),
         if (serverPasskeyEnabled)
           _loadOptional(
             errors,
             'Passkey',
-            () => WatchTogetherService.listPasskeys(refresh: refresh),
+            () => SyncTvService.listPasskeys(refresh: refresh),
           )
         else
           Future<List<PasskeyCredentialInfo>?>.value(const []),
@@ -315,7 +315,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     if (next == null || next.isEmpty || next == _user.username) return;
 
     try {
-      final user = await WatchTogetherService.updateUsername(next);
+      final user = await SyncTvService.updateUsername(next);
       if (!mounted) return;
       setState(() => _user = user);
       MessageUtils.showSuccess(context, '用户名已更新');
@@ -330,7 +330,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       final image = await pickLocalImageUpload(context, aspectRatio: 1);
       if (image == null || !mounted) return;
       setState(() => _updatingAvatar = true);
-      final user = await WatchTogetherService.updateUserAvatar(image.upload);
+      final user = await SyncTvService.updateUserAvatar(image.upload);
       if (!mounted) return;
       setState(() => _user = user);
       MessageUtils.showSuccess(context, '头像已更新');
@@ -345,7 +345,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     if (_updatingAvatar || _user.avatarUrl.isEmpty) return;
     try {
       setState(() => _updatingAvatar = true);
-      final user = await WatchTogetherService.clearUserAvatar();
+      final user = await SyncTvService.clearUserAvatar();
       if (!mounted) return;
       setState(() => _user = user);
       MessageUtils.showSuccess(context, '头像已移除');
@@ -359,7 +359,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _updateNotifications(NotificationPreferences preferences) async {
     setState(() => _savingPreferences = true);
     try {
-      final updated = await WatchTogetherService.updateAccountPreferences(
+      final updated = await SyncTvService.updateAccountPreferences(
         notifications: preferences,
       );
       if (!mounted) return;
@@ -375,7 +375,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _toggleTwoFactor(bool value) async {
     setState(() => _savingPreferences = true);
     try {
-      final updated = await WatchTogetherService.updateAccountPreferences(
+      final updated = await SyncTvService.updateAccountPreferences(
         twoFactorEnabled: value,
       );
       if (!mounted) return;
@@ -405,13 +405,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     if (confirmed != true) return;
 
     try {
-      final verificationId = await _verifySensitiveOperationWithPassword();
+      final verificationId = await _verifySensitiveOperation();
       if (verificationId == null) return;
-      final user = await WatchTogetherService.unbindEmail(
+      final user = await SyncTvService.unbindEmail(
         verificationId: verificationId,
       );
       final preferences =
-          await WatchTogetherService.getAccountPreferences(refresh: true);
+          await SyncTvService.getAccountPreferences(refresh: true);
       if (!mounted) return;
       setState(() {
         _user = user;
@@ -429,14 +429,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _bindEmail() async {
     if (!_emailFeatureEnabled) return;
-    final user = await showAppDialog<WUser>(
+    final user = await showAppDialog<SyncTvUser>(
       context: context,
       builder: (context) => _EmailBindDialog(
-        verifySensitiveOperation: _verifySensitiveOperationWithPassword,
+        verifySensitiveOperation: _verifySensitiveOperation,
       ),
     );
     if (user == null || !mounted) return;
-    final preferences = await WatchTogetherService.getAccountPreferences();
+    final preferences = await SyncTvService.getAccountPreferences();
     if (!mounted) return;
     setState(() {
       _user = user;
@@ -445,28 +445,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     MessageUtils.showSuccess(context, '邮箱已绑定');
   }
 
-  Future<String?> _verifySensitiveOperationWithPassword() async {
-    final password = await showAppDialog<String>(
+  Future<String?> _verifySensitiveOperation() {
+    return showAppDialog<String>(
       context: context,
-      builder: (context) => const _SensitivePasswordDialog(),
+      builder: (context) => const _SensitiveOperationDialog(),
     );
-    if (password == null || password.isEmpty) return null;
-
-    try {
-      final challenge =
-          await WatchTogetherService.startSensitiveOperationVerification();
-      final finished =
-          await WatchTogetherService.finishSensitiveOperationVerification(
-        sessionId: challenge.challenge.sessionId,
-        method: client_enum.SensitiveOperationVerificationMethod
-            .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD,
-        password: password,
-      );
-      return finished.verificationId;
-    } catch (e) {
-      if (mounted) MessageUtils.showError(context, '身份验证失败: $e');
-      return null;
-    }
   }
 
   Future<void> _changePassword() async {
@@ -506,8 +489,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             newPassword: result.newPassword,
           ),
       };
-      final updatedPreferences =
-          await WatchTogetherService.getAccountPreferences();
+      final updatedPreferences = await SyncTvService.getAccountPreferences();
       if (!mounted) return;
       setState(() {
         _user = user;
@@ -567,10 +549,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     );
     if (confirmed != true) return;
     try {
-      await WatchTogetherService.deletePasskey(credential.credentialId);
-      final passkeys = await WatchTogetherService.listPasskeys(refresh: true);
+      await SyncTvService.deletePasskey(credential.credentialId);
+      final passkeys = await SyncTvService.listPasskeys(refresh: true);
       final preferences =
-          await WatchTogetherService.getAccountPreferences(refresh: true);
+          await SyncTvService.getAccountPreferences(refresh: true);
       if (!mounted) return;
       setState(() {
         _passkeys = passkeys;
@@ -598,17 +580,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
     setState(() => _bindingPasskey = true);
     try {
-      final start = await WatchTogetherService.startPasskeyBind(name: name);
+      final start = await SyncTvService.startPasskeyBind(name: name);
       final credential = await PasskeyAuthenticatorService.createCredential(
         start.options,
       );
-      await WatchTogetherService.finishPasskeyBind(
+      await SyncTvService.finishPasskeyBind(
         sessionId: start.sessionId,
         credential: credential,
       );
       if (!mounted) return;
-      final passkeys = await WatchTogetherService.listPasskeys();
-      final preferences = await WatchTogetherService.getAccountPreferences();
+      final passkeys = await SyncTvService.listPasskeys();
+      final preferences = await SyncTvService.getAccountPreferences();
       if (!mounted) return;
       setState(() {
         _passkeys = passkeys;
@@ -624,7 +606,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _markAllRead() async {
     try {
-      await WatchTogetherService.markAllNotificationsAsRead();
+      await SyncTvService.markAllNotificationsAsRead();
       await _reloadNotifications(refresh: true);
       if (mounted) MessageUtils.showSuccess(context, '已全部标记为已读');
     } catch (e) {
@@ -637,7 +619,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     if (ids.isEmpty) return;
 
     try {
-      await WatchTogetherService.markNotificationsAsRead(ids);
+      await SyncTvService.markNotificationsAsRead(ids);
       if (!mounted) return;
       setState(() => _selectedNotificationIds.clear());
       await _reloadNotifications(refresh: true);
@@ -649,7 +631,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _deleteAllRead() async {
     try {
-      await WatchTogetherService.deleteAllReadNotifications();
+      await SyncTvService.deleteAllReadNotifications();
       await _reloadNotifications(refresh: true);
       if (mounted) MessageUtils.showSuccess(context, '已删除已读通知');
     } catch (e) {
@@ -659,7 +641,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _markRead(UserNotificationItem item) async {
     try {
-      await WatchTogetherService.markNotificationAsRead(item);
+      await SyncTvService.markNotificationAsRead(item);
       if (mounted) {
         setState(() => _selectedNotificationIds.remove(item.numericId));
       }
@@ -671,7 +653,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _deleteNotification(UserNotificationItem item) async {
     try {
-      await WatchTogetherService.deleteNotification(item);
+      await SyncTvService.deleteNotification(item);
       if (mounted) {
         setState(() => _selectedNotificationIds.remove(item.numericId));
       }
@@ -684,7 +666,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _openNotification(UserNotificationItem item) async {
     UserNotificationItem detail = item;
     try {
-      detail = await WatchTogetherService.getNotification(item.numericId);
+      detail = await SyncTvService.getNotification(item.numericId);
     } catch (e) {
       if (mounted) {
         MessageUtils.showWarning(context, '加载通知详情失败，显示列表内容: $e');
@@ -760,7 +742,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     int page, {
     bool refresh = false,
   }) {
-    return WatchTogetherService.listNotifications(
+    return SyncTvService.listNotifications(
       page: page,
       pageSize: _notificationPageSize,
       isRead: _notificationReadFilter,
@@ -784,10 +766,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _startOAuth2Bind(OAuth2ProviderOption provider) async {
     try {
-      final verificationId = await _verifySensitiveOperationWithPassword();
+      final verificationId = await _verifySensitiveOperation();
       if (verificationId == null) return;
       final callbackSession = await OAuth2DeepLinkService.createSession();
-      final start = await WatchTogetherService.startOAuth2Bind(
+      final start = await SyncTvService.startOAuth2Bind(
         provider.name,
         redirectUrl: callbackSession.redirectUrl,
         verificationId: verificationId,
@@ -812,12 +794,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           expectedState: start.state,
         );
         if (!mounted || attempt != _bindAttempt) return;
-        await WatchTogetherService.finishOAuth2Bind(
+        await SyncTvService.finishOAuth2Bind(
           provider: provider.name,
           code: parsed.code,
           state: parsed.state,
         );
-        final linked = await WatchTogetherService.getLinkedOAuth2Accounts();
+        final linked = await SyncTvService.getLinkedOAuth2Accounts();
         if (!mounted) return;
         setState(() {
           _linkedOAuth2 = linked;
@@ -835,13 +817,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _unlinkOAuth2(OAuth2LinkedAccount account) async {
     try {
-      final verificationId = await _verifySensitiveOperationWithPassword();
+      final verificationId = await _verifySensitiveOperation();
       if (verificationId == null) return;
-      await WatchTogetherService.unlinkOAuth2Account(
+      await SyncTvService.unlinkOAuth2Account(
         account,
         verificationId: verificationId,
       );
-      final linked = await WatchTogetherService.getLinkedOAuth2Accounts();
+      final linked = await SyncTvService.getLinkedOAuth2Accounts();
       if (!mounted) return;
       setState(() {
         _linkedOAuth2 = linked;
@@ -898,7 +880,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<RoomsPage> _fetchRoomsPage(int page, {bool refresh = false}) {
-    return WatchTogetherService.getMyRoomsPage(
+    return SyncTvService.getMyRoomsPage(
       page: page,
       pageSize: _roomsPageSize,
       search: _roomSearchController.text.trim(),
@@ -918,9 +900,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     return ((total + _roomsPageSize - 1) / _roomsPageSize).ceil();
   }
 
-  Future<void> _openRoom(WRoom room) async {
+  Future<void> _openRoom(SyncTvRoom room) async {
     try {
-      final latest = await WatchTogetherService.getRoomInfo(room.roomId);
+      final latest = await SyncTvService.getRoomInfo(room.roomId);
       if (!mounted) return;
       await Navigator.push(
         context,
@@ -945,9 +927,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     );
   }
 
-  Future<void> _manageRoom(WRoom room) async {
+  Future<void> _manageRoom(SyncTvRoom room) async {
     try {
-      final settings = await WatchTogetherService.getRoomSettings(room.roomId);
+      final settings = await SyncTvService.getRoomSettings(room.roomId);
       if (!mounted) return;
       await Navigator.push<bool>(
         context,
@@ -973,7 +955,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
   }
 
-  Future<void> _leaveOrDeleteRoom(WRoom room) async {
+  Future<void> _leaveOrDeleteRoom(SyncTvRoom room) async {
     final isOwner = _isMyCreatedRoom(room);
     final actionText = isOwner ? '删除房间' : '退出房间';
     final confirmed = await ChatUtils.showStyledDialog<bool>(
@@ -1004,9 +986,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
     try {
       if (isOwner) {
-        await WatchTogetherService.deleteRoom(room.roomId);
+        await SyncTvService.deleteRoom(room.roomId);
       } else {
-        await WatchTogetherService.leaveRoom(room.roomId);
+        await SyncTvService.leaveRoom(room.roomId);
       }
       await _reloadRooms();
       if (mounted) MessageUtils.showSuccess(context, '$actionText 已完成');
@@ -1066,7 +1048,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
 
     try {
-      await WatchTogetherService.closeAccount();
+      await SyncTvService.closeAccount();
       if (!mounted) return;
       MessageUtils.showSuccess(context, '账户已关闭');
       Navigator.pop(context, true);
@@ -1323,7 +1305,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           user: _user,
           roleLabel: _userRoleLabel(_user.role),
           statusLabel: _userStatusLabel(_user.status),
-          activeServerName: WatchTogetherService.activeServer?.name ?? '未连接服务器',
+          activeServerName: SyncTvService.activeServer?.name ?? '未连接服务器',
           createdAtLabel: _formatTimestamp(_user.createdAt),
         ),
         if (_loadErrors.isNotEmpty) ...[
@@ -1623,7 +1605,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Widget _buildRoomsTab(ThemeData theme) {
     final page = _myRooms;
     final loadError = _loadError('房间');
-    final rooms = page?.rooms ?? const <WRoom>[];
+    final rooms = page?.rooms ?? const <SyncTvRoom>[];
     final total = page?.total ?? 0;
     final maxPage = _roomsMaxPage(total);
     final pageStart = total == 0 ? 0 : ((_roomsPage - 1) * _roomsPageSize) + 1;
@@ -1943,8 +1925,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     const SizedBox(width: 8),
                     AppActionButton(
                       onPressed: () async {
-                        final passkeys =
-                            await WatchTogetherService.listPasskeys();
+                        final passkeys = await SyncTvService.listPasskeys();
                         if (mounted) setState(() => _passkeys = passkeys);
                       },
                       icon: Icons.refresh_rounded,
@@ -2600,7 +2581,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Widget _buildRecentRoomsPanel(ThemeData theme) {
-    final rooms = (_myRooms?.rooms ?? const <WRoom>[]).take(3).toList();
+    final rooms = (_myRooms?.rooms ?? const <SyncTvRoom>[]).take(3).toList();
     return _Section(
       title: '最近房间',
       child: Column(
@@ -2660,7 +2641,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     _reloadRoomsFromFirstPage();
   }
 
-  bool _isMyCreatedRoom(WRoom room) {
+  bool _isMyCreatedRoom(SyncTvRoom room) {
     return room.myRelation ==
             client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED.value ||
         room.myRole ==
@@ -2668,7 +2649,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         room.creatorId == _user.id;
   }
 
-  bool _canManageRoomFromListEntry(WRoom room) {
+  bool _canManageRoomFromListEntry(SyncTvRoom room) {
     return _isMyCreatedRoom(room) ||
         room.myRole ==
             common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value ||
@@ -2749,6 +2730,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 enum _NotificationDetailAction { markRead, delete }
 
 enum _PasswordUpdateMethod { currentPassword, emailToken, passkey }
+
+enum _SensitiveOperationMethod { password, email, passkey }
 
 class _PasswordUpdateInput {
   final _PasswordUpdateMethod method;
@@ -2984,7 +2967,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
     if (_requesting) return;
     setState(() => _requesting = true);
     try {
-      final message = await WatchTogetherService.requestPasswordReset(
+      final message = await SyncTvService.requestPasswordReset(
         widget.email,
       );
       if (!mounted) return;
@@ -3137,7 +3120,7 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
     if (email.isEmpty || _requesting) return;
     setState(() => _requesting = true);
     try {
-      final maskedEmail = await WatchTogetherService.startEmailBind(email);
+      final maskedEmail = await SyncTvService.startEmailBind(email);
       if (!mounted) return;
       setState(() => _maskedEmail = maskedEmail);
       MessageUtils.showSuccess(context, '绑定确认邮件已发送');
@@ -3156,7 +3139,7 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
     try {
       final verificationId = await widget.verifySensitiveOperation();
       if (verificationId == null) return;
-      final user = await WatchTogetherService.confirmEmailBind(
+      final user = await SyncTvService.confirmEmailBind(
         email: email,
         token: token,
         verificationId: verificationId,
@@ -3251,47 +3234,316 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
   }
 }
 
-class _SensitivePasswordDialog extends StatefulWidget {
-  const _SensitivePasswordDialog();
+class _SensitiveOperationDialog extends StatefulWidget {
+  const _SensitiveOperationDialog();
 
   @override
-  State<_SensitivePasswordDialog> createState() =>
-      _SensitivePasswordDialogState();
+  State<_SensitiveOperationDialog> createState() =>
+      _SensitiveOperationDialogState();
 }
 
-class _SensitivePasswordDialogState extends State<_SensitivePasswordDialog> {
+class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
   final _passwordController = TextEditingController();
+  final _emailTokenController = TextEditingController();
+  SensitiveOperationVerificationInfo? _verification;
+  SensitiveOperationEmailCodeInfo? _emailCode;
+  _SensitiveOperationMethod? _method;
+  bool _loading = true;
+  bool _requestingEmail = false;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
 
   @override
   void dispose() {
     _passwordController.dispose();
+    _emailTokenController.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    final password = _passwordController.text;
-    if (password.isEmpty) return;
-    Navigator.pop(context, password);
+  Future<void> _start() async {
+    setState(() => _loading = true);
+    try {
+      final verification =
+          await SyncTvService.startSensitiveOperationVerification();
+      if (!mounted) return;
+      final method = _defaultMethod(verification.challenge);
+      setState(() {
+        _verification = verification;
+        _method = method;
+        _loading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        MessageUtils.showError(context, '身份验证初始化失败: $e');
+      }
+    }
+  }
+
+  _SensitiveOperationMethod? _defaultMethod(
+    SensitiveOperationVerificationChallengeInfo challenge,
+  ) {
+    if (_method != null && _methodAvailable(challenge, _method!)) {
+      return _method;
+    }
+    if (_methodAvailable(challenge, _SensitiveOperationMethod.password)) {
+      return _SensitiveOperationMethod.password;
+    }
+    if (_methodAvailable(challenge, _SensitiveOperationMethod.passkey)) {
+      return _SensitiveOperationMethod.passkey;
+    }
+    if (_methodAvailable(challenge, _SensitiveOperationMethod.email)) {
+      return _SensitiveOperationMethod.email;
+    }
+    return null;
+  }
+
+  bool _methodAvailable(
+    SensitiveOperationVerificationChallengeInfo challenge,
+    _SensitiveOperationMethod method,
+  ) {
+    return challenge.availableMethods.contains(_methodProto(method).value);
+  }
+
+  client_enum.SensitiveOperationVerificationMethod _methodProto(
+    _SensitiveOperationMethod method,
+  ) {
+    return switch (method) {
+      _SensitiveOperationMethod.password => client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD,
+      _SensitiveOperationMethod.email => client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL,
+      _SensitiveOperationMethod.passkey => client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
+    };
+  }
+
+  List<ButtonSegment<_SensitiveOperationMethod>> _methodSegments(
+    SensitiveOperationVerificationChallengeInfo challenge,
+  ) {
+    return [
+      if (_methodAvailable(challenge, _SensitiveOperationMethod.password))
+        const ButtonSegment(
+          value: _SensitiveOperationMethod.password,
+          icon: Icon(Icons.password_rounded),
+          label: Text('密码'),
+        ),
+      if (_methodAvailable(challenge, _SensitiveOperationMethod.passkey))
+        const ButtonSegment(
+          value: _SensitiveOperationMethod.passkey,
+          icon: Icon(Icons.fingerprint_rounded),
+          label: Text('Passkey'),
+        ),
+      if (_methodAvailable(challenge, _SensitiveOperationMethod.email))
+        const ButtonSegment(
+          value: _SensitiveOperationMethod.email,
+          icon: Icon(Icons.mark_email_read_rounded),
+          label: Text('邮箱'),
+        ),
+    ];
+  }
+
+  Future<void> _requestEmailCode() async {
+    final verification = _verification;
+    if (verification == null || _requestingEmail) return;
+    setState(() => _requestingEmail = true);
+    try {
+      final info = await SyncTvService.requestSensitiveOperationEmailCode(
+        verification.challenge.sessionId,
+      );
+      if (!mounted) return;
+      setState(() => _emailCode = info);
+      MessageUtils.showSuccess(
+        context,
+        info.message.isEmpty ? '验证码已发送' : info.message,
+      );
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '发送验证码失败: $e');
+    } finally {
+      if (mounted) setState(() => _requestingEmail = false);
+    }
+  }
+
+  Future<void> _submit() async {
+    final verification = _verification;
+    final method = _method;
+    if (verification == null || method == null || _submitting) return;
+    if (method == _SensitiveOperationMethod.password &&
+        _passwordController.text.isEmpty) {
+      MessageUtils.showWarning(context, '请输入当前密码');
+      return;
+    }
+    if (method == _SensitiveOperationMethod.email &&
+        _emailTokenController.text.trim().isEmpty) {
+      MessageUtils.showWarning(context, '请输入邮箱验证码');
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      var passkeySessionId = '';
+      Object? passkeyCredential;
+      if (method == _SensitiveOperationMethod.passkey) {
+        final passkey = await SyncTvService.startSensitiveOperationPasskey(
+          verification.challenge.sessionId,
+        );
+        if (passkey.passkeySessionId.isEmpty || passkey.options.isEmpty) {
+          throw const FormatException('服务器未返回 Passkey 验证 challenge');
+        }
+        passkeySessionId = passkey.passkeySessionId;
+        passkeyCredential = await PasskeyAuthenticatorService.getCredential(
+          passkey.options,
+        );
+      }
+      final finished = await SyncTvService.finishSensitiveOperationVerification(
+        sessionId: verification.challenge.sessionId,
+        method: _methodProto(method),
+        password: _passwordController.text,
+        emailToken: _emailTokenController.text.trim(),
+        passkeySessionId: passkeySessionId,
+        passkeyCredential: passkeyCredential,
+      );
+      if (!mounted) return;
+      Navigator.pop(context, finished.verificationId);
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '身份验证失败: $e');
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final verification = _verification;
+    final challenge = verification?.challenge;
+    final method = _method;
+    final segments = challenge == null
+        ? const <ButtonSegment<_SensitiveOperationMethod>>[]
+        : _methodSegments(challenge);
     return _AccountActionDialog(
       icon: Icons.verified_user_rounded,
       title: '身份验证',
-      subtitle: '输入当前密码以继续账号安全操作。',
-      maxWidth: 460,
-      content: _DialogTextField(
-        controller: _passwordController,
-        autofocus: true,
-        obscureText: true,
-        label: '当前密码',
-        icon: Icons.lock_outline_rounded,
-        textInputAction: TextInputAction.done,
-        onSubmitted: (_) => _submit(),
-      ),
+      subtitle: '选择一种可用方式以继续账号安全操作。',
+      maxWidth: 560,
+      content: _loading
+          ? const SizedBox(
+              height: 72,
+              child: Center(child: AppLoadingIndicator()),
+            )
+          : challenge == null || method == null || segments.isEmpty
+              ? const _DialogNotice(
+                  icon: Icons.error_outline_rounded,
+                  title: '没有可用验证方式',
+                  message: '当前账号缺少密码、邮箱或 Passkey 验证能力。',
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _DialogFieldGroup(
+                      title: '验证方式',
+                      child: AppSingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: AppSegmentedControl<_SensitiveOperationMethod>(
+                          segments: segments,
+                          value: method,
+                          onChanged: (selected) =>
+                              setState(() => _method = selected),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _DialogFieldGroup(
+                      title: '验证信息',
+                      children: [
+                        if (method == _SensitiveOperationMethod.password)
+                          _DialogTextField(
+                            controller: _passwordController,
+                            autofocus: true,
+                            obscureText: true,
+                            label: '当前密码',
+                            icon: Icons.lock_outline_rounded,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _submit(),
+                          ),
+                        if (method == _SensitiveOperationMethod.passkey)
+                          const _DialogNotice(
+                            icon: Icons.fingerprint_rounded,
+                            title: 'Passkey 验证',
+                            message: '点击验证后会弹出系统验证窗口。',
+                          ),
+                        if (method == _SensitiveOperationMethod.email)
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final compact = constraints.maxWidth < 420;
+                              final field = _DialogTextField(
+                                controller: _emailTokenController,
+                                autofocus: true,
+                                label: '邮箱验证码',
+                                icon: Icons.mark_email_read_outlined,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => _submit(),
+                              );
+                              final sendButton = AppActionButton(
+                                onPressed: _requestingEmail
+                                    ? null
+                                    : _requestEmailCode,
+                                loading: _requestingEmail,
+                                icon: Icons.send_rounded,
+                                label:
+                                    _emailCode == null ? '发送验证码' : '重新发送',
+                                style: AppActionButtonStyle.outlined,
+                              );
+                              final maskedEmail =
+                                  _emailCode?.maskedEmail ?? '';
+                              final children = [
+                                Expanded(child: field),
+                                const SizedBox(width: 10),
+                                SizedBox(height: 48, child: sendButton),
+                              ];
+                              return Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
+                                children: [
+                                  if (compact) ...[
+                                    field,
+                                    const SizedBox(height: 10),
+                                    sendButton,
+                                  ] else
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: children,
+                                    ),
+                                  if (maskedEmail.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '验证码已发送至 $maskedEmail',
+                                      style: TextStyle(
+                                        color: Theme.of(context).hintColor,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              );
+                            },
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
       primaryLabel: '验证',
-      onPrimary: _submit,
+      primaryLoading: _submitting,
+      onPrimary:
+          _loading || challenge == null || method == null ? null : _submit,
     );
   }
 }
@@ -4204,7 +4456,7 @@ class _ProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final imageUrl = WatchTogetherService.resolveResourceUrl(avatarUrl);
+    final imageUrl = SyncTvService.resolveResourceUrl(avatarUrl);
     return AppAvatar(
       name: username,
       imageUrl: imageUrl,
@@ -4379,7 +4631,7 @@ class _AccountNavTile extends StatelessWidget {
 }
 
 class _AccountHero extends StatelessWidget {
-  final WUser user;
+  final SyncTvUser user;
   final String roleLabel;
   final String statusLabel;
   final String activeServerName;
@@ -4619,7 +4871,7 @@ class _RelationChip extends StatelessWidget {
 }
 
 class _RoomManagementTile extends StatelessWidget {
-  final WRoom room;
+  final SyncTvRoom room;
   final String roleLabel;
   final String relationLabel;
   final String updatedAtLabel;
@@ -4774,7 +5026,7 @@ class _RoomManagementTile extends StatelessWidget {
 class _RoomCreatorLine extends StatelessWidget {
   const _RoomCreatorLine({required this.room});
 
-  final WRoom room;
+  final SyncTvRoom room;
 
   @override
   Widget build(BuildContext context) {
@@ -4785,8 +5037,7 @@ class _RoomCreatorLine extends StatelessWidget {
       children: [
         AppAvatar(
           name: creatorName,
-          imageUrl:
-              WatchTogetherService.resolveResourceUrl(room.creatorAvatarUrl),
+          imageUrl: SyncTvService.resolveResourceUrl(room.creatorAvatarUrl),
           radius: 12,
           backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.10),
           foregroundColor: theme.colorScheme.primary,
@@ -4818,7 +5069,7 @@ class _RoomCoverThumb extends StatelessWidget {
     this.wide = false,
   });
 
-  final WRoom room;
+  final SyncTvRoom room;
   final double size;
   final bool wide;
 
@@ -4834,19 +5085,21 @@ class _RoomCoverThumb extends StatelessWidget {
         size: wide ? 28 : 18,
       ),
     );
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: SizedBox(
-        width: wide ? size * 1.35 : size,
+    final width = wide ? size * 1.35 : size;
+    if (room.coverUrl.isEmpty) {
+      return AppPanelSurface(
+        width: width,
         height: size,
-        child: room.coverUrl.isEmpty
-            ? fallback
-            : Image.network(
-                room.coverUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => fallback,
-              ),
-      ),
+        borderRadius: borderRadius,
+        child: fallback,
+      );
+    }
+    return AppImageThumbnail(
+      url: room.coverUrl,
+      width: width,
+      height: size,
+      borderRadius: borderRadius,
+      errorChild: fallback,
     );
   }
 }

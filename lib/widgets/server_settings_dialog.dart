@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
@@ -50,7 +50,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
       _serverInfoError = null;
     });
     try {
-      final info = await WatchTogetherService.getServerInfo(refresh: refresh);
+      final info = await SyncTvService.getServerInfo(refresh: refresh);
       if (!mounted) return;
       setState(() {
         _serverInfo = info;
@@ -74,7 +74,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
 
     setState(() => _busy = true);
     try {
-      final profile = await WatchTogetherService.addServer(input);
+      final profile = await SyncTvService.addServer(input);
       _controller.clear();
       _changed = true;
       if (mounted) {
@@ -99,7 +99,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   Future<void> _activateServer(SyncTvServerProfile profile) async {
     setState(() => _busy = true);
     try {
-      await WatchTogetherService.activateServer(profile.serverId);
+      await SyncTvService.activateServer(profile.serverId);
       await _loadServerInfo(refresh: true);
       _changed = true;
       if (mounted) {
@@ -124,7 +124,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     }
     setState(() => _busy = true);
     try {
-      await WatchTogetherService.removeServer(profile.serverId);
+      await SyncTvService.removeServer(profile.serverId);
       _changed = true;
       if (mounted) {
         MessageUtils.showSuccess(context, '服务器已移除');
@@ -145,8 +145,8 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final servers = WatchTogetherService.servers;
-    final activeServer = WatchTogetherService.activeServer;
+    final servers = SyncTvService.servers;
+    final activeServer = SyncTvService.activeServer;
 
     return AppBottomSheetFrame(
       child: AppSingleChildScrollView(
@@ -292,7 +292,7 @@ class _CurrentServerInfoCard extends StatelessWidget {
     final serverId = (info?.serverId.trim().isNotEmpty ?? false)
         ? info!.serverId.trim()
         : fallback?.serverId ?? '';
-    final endpoint = fallback?.activeEndpoint ?? WatchTogetherService.baseUrl;
+    final endpoint = fallback?.activeEndpoint ?? SyncTvService.baseUrl;
 
     return AppPanelSurface(
       width: double.infinity,

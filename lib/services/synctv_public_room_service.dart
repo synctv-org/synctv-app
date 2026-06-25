@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:synctv_app/models/public_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_auth_service.dart';
 import 'package:synctv_app/services/synctv_memory_cache.dart';
@@ -50,6 +50,48 @@ class SyncTvPublicRoomDomainService {
     );
   }
 
+  Future<List<RoomCategoryInfo>> listRoomCategories({
+    bool includeDisabled = false,
+    bool refresh = false,
+  }) {
+    return _cache.get<List<RoomCategoryInfo>>(
+      'public:room-categories:$includeDisabled',
+      ttl: const Duration(minutes: 10),
+      refresh: refresh,
+      loader: () async {
+        final response = await _api.publicService.listRoomCategories(
+          client.ListRoomCategoriesRequest(
+            includeDisabled: includeDisabled,
+          ),
+        );
+        return response.categories
+            .map(_api.mapRoomCategory)
+            .toList(growable: false);
+      },
+    );
+  }
+
+  Future<List<RoomLabelInfo>> listRoomLabels({
+    bool includeDisabled = false,
+    String categoryId = '',
+    bool refresh = false,
+  }) {
+    return _cache.get<List<RoomLabelInfo>>(
+      'public:room-labels:$includeDisabled:$categoryId',
+      ttl: const Duration(minutes: 10),
+      refresh: refresh,
+      loader: () async {
+        final response = await _api.publicService.listRoomLabels(
+          client.ListRoomLabelsRequest(
+            includeDisabled: includeDisabled,
+            categoryId: categoryId,
+          ),
+        );
+        return response.labels.map(_api.mapRoomLabel).toList(growable: false);
+      },
+    );
+  }
+
   Future<ServerInfo> _fetchServerInfo() async {
     final response = await _api.publicService.getServerInfo(
       client.GetServerInfoRequest(),
@@ -94,6 +136,8 @@ class SyncTvPublicRoomDomainService {
     int page = 1,
     int pageSize = 100,
     String? search,
+    String categoryId = '',
+    List<String> labelIds = const [],
     client_enum.RoomListSortBy sortBy =
         client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
     client_enum.SortDirection sortDirection =
@@ -104,6 +148,8 @@ class SyncTvPublicRoomDomainService {
         page: page,
         pageSize: pageSize,
         search: search ?? '',
+        categoryId: categoryId,
+        labelIds: labelIds,
         sortBy: sortBy,
         sortDirection: sortDirection,
       ),
@@ -134,7 +180,7 @@ class SyncTvPublicRoomDomainService {
       final roomId = _sessionStore.guestRoomId;
       if (roomId == null || roomId.isEmpty) {
         return RoomsPage(
-          rooms: const <WRoom>[],
+          rooms: const <SyncTvRoom>[],
           total: 0,
           page: page,
           pageSize: pageSize,
@@ -170,7 +216,7 @@ class SyncTvPublicRoomDomainService {
     );
   }
 
-  Future<List<WRoom>> getHotRooms({int limit = 20}) async {
+  Future<List<SyncTvRoom>> getHotRooms({int limit = 20}) async {
     final response = await _api.publicService.getHotRooms(
       client.GetHotRoomsRequest(limit: limit),
     );
@@ -196,10 +242,12 @@ class SyncTvPublicRoomDomainService {
     );
   }
 
-  Future<WRoom> createRoom(
+  Future<SyncTvRoom> createRoom(
     String name, {
     String? password,
     String? description,
+    String categoryId = '',
+    List<String> labelIds = const [],
   }) async {
     if (_api.session.isGuest) {
       throw AuthException('访客 token 只能访问对应房间，不能创建房间。');
@@ -211,6 +259,10 @@ class SyncTvPublicRoomDomainService {
     if (description != null && description.trim().isNotEmpty) {
       request.description = description.trim();
     }
+    if (categoryId.isNotEmpty) {
+      request.categoryId = categoryId;
+    }
+    request.labelIds.addAll(labelIds);
     final response = await _api.user.createRoom(request);
     return _api.mapRoom(response.room);
   }
@@ -262,7 +314,7 @@ class SyncTvPublicRoomDomainService {
     );
   }
 
-  Future<WRoom> getRoomInfo(String roomId) async {
+  Future<SyncTvRoom> getRoomInfo(String roomId) async {
     final response = await _api.user.getRoom(
       client.GetRoomRequest(roomId: roomId),
     );

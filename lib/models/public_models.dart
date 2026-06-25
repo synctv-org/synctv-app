@@ -1,4 +1,4 @@
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 
 class ServerInfo {
   final String serverId;
@@ -79,7 +79,7 @@ class PublicSettingsInfo {
 }
 
 class RoomsPage {
-  final List<WRoom> rooms;
+  final List<SyncTvRoom> rooms;
   final int total;
   final int page;
   final int pageSize;

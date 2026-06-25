@@ -76,12 +76,12 @@ class _SplashPageState extends State<SplashPage> {
             child: Column(
               children: [
                 Text(
-                  '看搭子',
+                  'SyncTV',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: textColor,
-                    letterSpacing: 8.0,
+                    letterSpacing: 1.0,
                   ),
                 ),
                 const SizedBox(height: 8),

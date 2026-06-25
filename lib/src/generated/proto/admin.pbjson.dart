@@ -297,6 +297,22 @@ const AdminRoom$json = {
       '6': '.synctv.client.ResourceCover',
       '10': 'cover'
     },
+    {
+      '1': 'category',
+      '3': 17,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.RoomCategory',
+      '10': 'category'
+    },
+    {
+      '1': 'labels',
+      '3': 18,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.RoomLabel',
+      '10': 'labels'
+    },
   ],
 };
 
@@ -313,7 +329,8 @@ final $typed_data.Uint8List adminRoomDescriptor = $convert.base64Decode(
     'B3ZlcnNpb24SPAoIcHJlc2VuY2UYDiABKAsyIC5zeW5jdHYuY29tbW9uLlJvb21QcmVzZW5jZV'
     'N0YXRzUghwcmVzZW5jZRIsChJjcmVhdG9yX2F2YXRhcl91cmwYDyABKAlSEGNyZWF0b3JBdmF0'
     'YXJVcmwSMgoFY292ZXIYECABKAsyHC5zeW5jdHYuY2xpZW50LlJlc291cmNlQ292ZXJSBWNvdm'
-    'Vy');
+    'VyEjcKCGNhdGVnb3J5GBEgASgLMhsuc3luY3R2LmNsaWVudC5Sb29tQ2F0ZWdvcnlSCGNhdGVn'
+    'b3J5EjAKBmxhYmVscxgSIAMoCzIYLnN5bmN0di5jbGllbnQuUm9vbUxhYmVsUgZsYWJlbHM=');
 
 @$core.Deprecated('Use settingsGroupDescriptor instead')
 const SettingsGroup$json = {
@@ -525,6 +542,22 @@ const RoomCreationReview$json = {
       '10': 'rejectionReason',
       '17': true
     },
+    {
+      '1': 'category',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.RoomCategory',
+      '10': 'category'
+    },
+    {
+      '1': 'labels',
+      '3': 12,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.RoomLabel',
+      '10': 'labels'
+    },
   ],
   '8': [
     {'1': '_reviewed_by'},
@@ -540,8 +573,10 @@ final $typed_data.Uint8List roomCreationReviewDescriptor = $convert.base64Decode
     'Rlc2NyaXB0aW9uEjMKBnN0YXR1cxgGIAEoDjIbLnN5bmN0di5jb21tb24uUmV2aWV3U3RhdHVz'
     'UgZzdGF0dXMSIQoMcmVxdWVzdGVkX2F0GAcgASgDUgtyZXF1ZXN0ZWRBdBIfCgtyZXZpZXdlZF'
     '9hdBgIIAEoA1IKcmV2aWV3ZWRBdBIkCgtyZXZpZXdlZF9ieRgJIAEoCUgAUgpyZXZpZXdlZEJ5'
-    'iAEBEi4KEHJlamVjdGlvbl9yZWFzb24YCiABKAlIAVIPcmVqZWN0aW9uUmVhc29uiAEBQg4KDF'
-    '9yZXZpZXdlZF9ieUITChFfcmVqZWN0aW9uX3JlYXNvbg==');
+    'iAEBEi4KEHJlamVjdGlvbl9yZWFzb24YCiABKAlIAVIPcmVqZWN0aW9uUmVhc29uiAEBEjcKCG'
+    'NhdGVnb3J5GAsgASgLMhsuc3luY3R2LmNsaWVudC5Sb29tQ2F0ZWdvcnlSCGNhdGVnb3J5EjAK'
+    'BmxhYmVscxgMIAMoCzIYLnN5bmN0di5jbGllbnQuUm9vbUxhYmVsUgZsYWJlbHNCDgoMX3Jldm'
+    'lld2VkX2J5QhMKEV9yZWplY3Rpb25fcmVhc29u');
 
 @$core.Deprecated('Use roomJoinReviewDescriptor instead')
 const RoomJoinReview$json = {
@@ -2006,6 +2041,8 @@ const ListRoomsRequest$json = {
       '8': {},
       '10': 'sortDirection'
     },
+    {'1': 'category_id', '3': 9, '4': 1, '5': 9, '8': {}, '10': 'categoryId'},
+    {'1': 'label_ids', '3': 10, '4': 3, '5': 9, '8': {}, '10': 'labelIds'},
   ],
   '7': {},
   '8': [
@@ -2021,16 +2058,18 @@ final $typed_data.Uint8List listRoomsRequestDescriptor = $convert.base64Decode(
     'JlYXRvcl9pZBgFIAEoCVIJY3JlYXRvcklkEiAKCWlzX2Jhbm5lZBgGIAEoCEgAUghpc0Jhbm5l'
     'ZIgBARI/Cgdzb3J0X2J5GAcgASgOMhwuc3luY3R2LmFkbWluLlJvb21MaXN0U29ydEJ5Qgi6SA'
     'WCAQIQAVIGc29ydEJ5EkwKDnNvcnRfZGlyZWN0aW9uGAggASgOMhsuc3luY3R2LmFkbWluLlNv'
-    'cnREaXJlY3Rpb25CCLpIBYIBAhABUg1zb3J0RGlyZWN0aW9uOsMDuki/Axq3AQobYWRtaW4ubG'
-    'lzdF9yb29tcy5jcmVhdG9yX2lkEi9jcmVhdG9yX2lkIG11c3QgYmUgZW1wdHkgb3IgYSBwdWJs'
-    'aWMgaWRlbnRpZmllchpndGhpcy5jcmVhdG9yX2lkID09ICcnIHx8IChzaXplKHRoaXMuY3JlYX'
-    'Rvcl9pZCkgPD0gNjQgJiYgdGhpcy5jcmVhdG9yX2lkLm1hdGNoZXMoJ151c3JfW0EtWmEtejAt'
-    'OV0rJCcpKRplChVhZG1pbi5saXN0X3Jvb21zLnBhZ2USKnBhZ2UgbXVzdCBiZSAwICh1c2UgZG'
-    'VmYXVsdCkgb3IgYXQgbGVhc3QgMRogdGhpcy5wYWdlID09IDAgfHwgdGhpcy5wYWdlID49IDEa'
-    'mwEKGmFkbWluLmxpc3Rfcm9vbXMucGFnZV9zaXplEjZwYWdlX3NpemUgbXVzdCBiZSAwICh1c2'
-    'UgZGVmYXVsdCkgb3IgYmV0d2VlbiAxIGFuZCAxMDAaRXRoaXMucGFnZV9zaXplID09IDAgfHwg'
-    'KHRoaXMucGFnZV9zaXplID49IDEgJiYgdGhpcy5wYWdlX3NpemUgPD0gMTAwKUIMCgpfaXNfYm'
-    'FubmVk');
+    'cnREaXJlY3Rpb25CCLpIBYIBAhABUg1zb3J0RGlyZWN0aW9uEkMKC2NhdGVnb3J5X2lkGAkgAS'
+    'gJQiK6SB9yHRhAMhleJHxecm9vbWNhdF9bQS1aYS16MC05XSskUgpjYXRlZ29yeUlkEkUKCWxh'
+    'YmVsX2lkcxgKIAMoCUIoukglkgEiEAoiHnIcEAEYQDIWXnJvb21sYmxfW0EtWmEtejAtOV0rJF'
+    'IIbGFiZWxJZHM6wwO6SL8DGrcBChthZG1pbi5saXN0X3Jvb21zLmNyZWF0b3JfaWQSL2NyZWF0'
+    'b3JfaWQgbXVzdCBiZSBlbXB0eSBvciBhIHB1YmxpYyBpZGVudGlmaWVyGmd0aGlzLmNyZWF0b3'
+    'JfaWQgPT0gJycgfHwgKHNpemUodGhpcy5jcmVhdG9yX2lkKSA8PSA2NCAmJiB0aGlzLmNyZWF0'
+    'b3JfaWQubWF0Y2hlcygnXnVzcl9bQS1aYS16MC05XSskJykpGmUKFWFkbWluLmxpc3Rfcm9vbX'
+    'MucGFnZRIqcGFnZSBtdXN0IGJlIDAgKHVzZSBkZWZhdWx0KSBvciBhdCBsZWFzdCAxGiB0aGlz'
+    'LnBhZ2UgPT0gMCB8fCB0aGlzLnBhZ2UgPj0gMRqbAQoaYWRtaW4ubGlzdF9yb29tcy5wYWdlX3'
+    'NpemUSNnBhZ2Vfc2l6ZSBtdXN0IGJlIDAgKHVzZSBkZWZhdWx0KSBvciBiZXR3ZWVuIDEgYW5k'
+    'IDEwMBpFdGhpcy5wYWdlX3NpemUgPT0gMCB8fCAodGhpcy5wYWdlX3NpemUgPj0gMSAmJiB0aG'
+    'lzLnBhZ2Vfc2l6ZSA8PSAxMDApQgwKCl9pc19iYW5uZWQ=');
 
 @$core.Deprecated('Use listRoomsResponseDescriptor instead')
 const ListRoomsResponse$json = {
@@ -2052,6 +2091,290 @@ const ListRoomsResponse$json = {
 final $typed_data.Uint8List listRoomsResponseDescriptor = $convert.base64Decode(
     'ChFMaXN0Um9vbXNSZXNwb25zZRItCgVyb29tcxgBIAMoCzIXLnN5bmN0di5hZG1pbi5BZG1pbl'
     'Jvb21SBXJvb21zEhQKBXRvdGFsGAIgASgFUgV0b3RhbA==');
+
+@$core.Deprecated('Use listRoomCategoriesRequestDescriptor instead')
+const ListRoomCategoriesRequest$json = {
+  '1': 'ListRoomCategoriesRequest',
+  '2': [
+    {'1': 'include_disabled', '3': 1, '4': 1, '5': 8, '10': 'includeDisabled'},
+  ],
+};
+
+/// Descriptor for `ListRoomCategoriesRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listRoomCategoriesRequestDescriptor =
+    $convert.base64Decode(
+        'ChlMaXN0Um9vbUNhdGVnb3JpZXNSZXF1ZXN0EikKEGluY2x1ZGVfZGlzYWJsZWQYASABKAhSD2'
+        'luY2x1ZGVEaXNhYmxlZA==');
+
+@$core.Deprecated('Use listRoomCategoriesResponseDescriptor instead')
+const ListRoomCategoriesResponse$json = {
+  '1': 'ListRoomCategoriesResponse',
+  '2': [
+    {
+      '1': 'categories',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.RoomCategory',
+      '10': 'categories'
+    },
+  ],
+};
+
+/// Descriptor for `ListRoomCategoriesResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listRoomCategoriesResponseDescriptor =
+    $convert.base64Decode(
+        'ChpMaXN0Um9vbUNhdGVnb3JpZXNSZXNwb25zZRI7CgpjYXRlZ29yaWVzGAEgAygLMhsuc3luY3'
+        'R2LmNsaWVudC5Sb29tQ2F0ZWdvcnlSCmNhdGVnb3JpZXM=');
+
+@$core.Deprecated('Use upsertRoomCategoryRequestDescriptor instead')
+const UpsertRoomCategoryRequest$json = {
+  '1': 'UpsertRoomCategoryRequest',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'key'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'name'},
+    {'1': 'description', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'description'},
+    {'1': 'sort_order', '3': 4, '4': 1, '5': 5, '10': 'sortOrder'},
+    {
+      '1': 'is_enabled',
+      '3': 5,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'isEnabled',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_is_enabled'},
+  ],
+};
+
+/// Descriptor for `UpsertRoomCategoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List upsertRoomCategoryRequestDescriptor = $convert.base64Decode(
+    'ChlVcHNlcnRSb29tQ2F0ZWdvcnlSZXF1ZXN0EhsKA2tleRgBIAEoCUIJukgGcgQQARhAUgNrZX'
+    'kSHQoEbmFtZRgCIAEoCUIJukgGcgQQARhQUgRuYW1lEioKC2Rlc2NyaXB0aW9uGAMgASgJQgi6'
+    'SAVyAxisAlILZGVzY3JpcHRpb24SHQoKc29ydF9vcmRlchgEIAEoBVIJc29ydE9yZGVyEiIKCm'
+    'lzX2VuYWJsZWQYBSABKAhIAFIJaXNFbmFibGVkiAEBQg0KC19pc19lbmFibGVk');
+
+@$core.Deprecated('Use upsertRoomCategoryResponseDescriptor instead')
+const UpsertRoomCategoryResponse$json = {
+  '1': 'UpsertRoomCategoryResponse',
+  '2': [
+    {
+      '1': 'category',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.RoomCategory',
+      '10': 'category'
+    },
+  ],
+};
+
+/// Descriptor for `UpsertRoomCategoryResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List upsertRoomCategoryResponseDescriptor =
+    $convert.base64Decode(
+        'ChpVcHNlcnRSb29tQ2F0ZWdvcnlSZXNwb25zZRI3CghjYXRlZ29yeRgBIAEoCzIbLnN5bmN0di'
+        '5jbGllbnQuUm9vbUNhdGVnb3J5UghjYXRlZ29yeQ==');
+
+@$core.Deprecated('Use deleteRoomCategoryRequestDescriptor instead')
+const DeleteRoomCategoryRequest$json = {
+  '1': 'DeleteRoomCategoryRequest',
+  '2': [
+    {'1': 'category_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'categoryId'},
+  ],
+};
+
+/// Descriptor for `DeleteRoomCategoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteRoomCategoryRequestDescriptor =
+    $convert.base64Decode(
+        'ChlEZWxldGVSb29tQ2F0ZWdvcnlSZXF1ZXN0EkIKC2NhdGVnb3J5X2lkGAEgASgJQiG6SB5yHB'
+        'ABGEAyFl5yb29tY2F0X1tBLVphLXowLTldKyRSCmNhdGVnb3J5SWQ=');
+
+@$core.Deprecated('Use deleteRoomCategoryResponseDescriptor instead')
+const DeleteRoomCategoryResponse$json = {
+  '1': 'DeleteRoomCategoryResponse',
+  '2': [
+    {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
+  ],
+};
+
+/// Descriptor for `DeleteRoomCategoryResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteRoomCategoryResponseDescriptor =
+    $convert.base64Decode(
+        'ChpEZWxldGVSb29tQ2F0ZWdvcnlSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
+
+@$core.Deprecated('Use listRoomLabelsRequestDescriptor instead')
+const ListRoomLabelsRequest$json = {
+  '1': 'ListRoomLabelsRequest',
+  '2': [
+    {'1': 'include_disabled', '3': 1, '4': 1, '5': 8, '10': 'includeDisabled'},
+    {'1': 'category_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'categoryId'},
+  ],
+};
+
+/// Descriptor for `ListRoomLabelsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listRoomLabelsRequestDescriptor = $convert.base64Decode(
+    'ChVMaXN0Um9vbUxhYmVsc1JlcXVlc3QSKQoQaW5jbHVkZV9kaXNhYmxlZBgBIAEoCFIPaW5jbH'
+    'VkZURpc2FibGVkEkMKC2NhdGVnb3J5X2lkGAIgASgJQiK6SB9yHRhAMhleJHxecm9vbWNhdF9b'
+    'QS1aYS16MC05XSskUgpjYXRlZ29yeUlk');
+
+@$core.Deprecated('Use listRoomLabelsResponseDescriptor instead')
+const ListRoomLabelsResponse$json = {
+  '1': 'ListRoomLabelsResponse',
+  '2': [
+    {
+      '1': 'labels',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.RoomLabel',
+      '10': 'labels'
+    },
+  ],
+};
+
+/// Descriptor for `ListRoomLabelsResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listRoomLabelsResponseDescriptor =
+    $convert.base64Decode(
+        'ChZMaXN0Um9vbUxhYmVsc1Jlc3BvbnNlEjAKBmxhYmVscxgBIAMoCzIYLnN5bmN0di5jbGllbn'
+        'QuUm9vbUxhYmVsUgZsYWJlbHM=');
+
+@$core.Deprecated('Use upsertRoomLabelRequestDescriptor instead')
+const UpsertRoomLabelRequest$json = {
+  '1': 'UpsertRoomLabelRequest',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'key'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'name'},
+    {'1': 'description', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'description'},
+    {'1': 'color', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'color'},
+    {'1': 'category_id', '3': 5, '4': 1, '5': 9, '8': {}, '10': 'categoryId'},
+    {'1': 'sort_order', '3': 6, '4': 1, '5': 5, '10': 'sortOrder'},
+    {
+      '1': 'is_enabled',
+      '3': 7,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'isEnabled',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_is_enabled'},
+  ],
+};
+
+/// Descriptor for `UpsertRoomLabelRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List upsertRoomLabelRequestDescriptor = $convert.base64Decode(
+    'ChZVcHNlcnRSb29tTGFiZWxSZXF1ZXN0EhsKA2tleRgBIAEoCUIJukgGcgQQARhAUgNrZXkSHQ'
+    'oEbmFtZRgCIAEoCUIJukgGcgQQARhQUgRuYW1lEioKC2Rlc2NyaXB0aW9uGAMgASgJQgi6SAVy'
+    'AxisAlILZGVzY3JpcHRpb24SHQoFY29sb3IYBCABKAlCB7pIBHICGAdSBWNvbG9yEkMKC2NhdG'
+    'Vnb3J5X2lkGAUgASgJQiK6SB9yHRhAMhleJHxecm9vbWNhdF9bQS1aYS16MC05XSskUgpjYXRl'
+    'Z29yeUlkEh0KCnNvcnRfb3JkZXIYBiABKAVSCXNvcnRPcmRlchIiCgppc19lbmFibGVkGAcgAS'
+    'gISABSCWlzRW5hYmxlZIgBAUINCgtfaXNfZW5hYmxlZA==');
+
+@$core.Deprecated('Use upsertRoomLabelResponseDescriptor instead')
+const UpsertRoomLabelResponse$json = {
+  '1': 'UpsertRoomLabelResponse',
+  '2': [
+    {
+      '1': 'label',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.RoomLabel',
+      '10': 'label'
+    },
+  ],
+};
+
+/// Descriptor for `UpsertRoomLabelResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List upsertRoomLabelResponseDescriptor =
+    $convert.base64Decode(
+        'ChdVcHNlcnRSb29tTGFiZWxSZXNwb25zZRIuCgVsYWJlbBgBIAEoCzIYLnN5bmN0di5jbGllbn'
+        'QuUm9vbUxhYmVsUgVsYWJlbA==');
+
+@$core.Deprecated('Use deleteRoomLabelRequestDescriptor instead')
+const DeleteRoomLabelRequest$json = {
+  '1': 'DeleteRoomLabelRequest',
+  '2': [
+    {'1': 'label_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'labelId'},
+  ],
+};
+
+/// Descriptor for `DeleteRoomLabelRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteRoomLabelRequestDescriptor =
+    $convert.base64Decode(
+        'ChZEZWxldGVSb29tTGFiZWxSZXF1ZXN0EjwKCGxhYmVsX2lkGAEgASgJQiG6SB5yHBABGEAyFl'
+        '5yb29tbGJsX1tBLVphLXowLTldKyRSB2xhYmVsSWQ=');
+
+@$core.Deprecated('Use deleteRoomLabelResponseDescriptor instead')
+const DeleteRoomLabelResponse$json = {
+  '1': 'DeleteRoomLabelResponse',
+  '2': [
+    {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
+  ],
+};
+
+/// Descriptor for `DeleteRoomLabelResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteRoomLabelResponseDescriptor =
+    $convert.base64Decode(
+        'ChdEZWxldGVSb29tTGFiZWxSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
+
+@$core.Deprecated('Use updateRoomTaxonomyRequestDescriptor instead')
+const UpdateRoomTaxonomyRequest$json = {
+  '1': 'UpdateRoomTaxonomyRequest',
+  '2': [
+    {'1': 'room_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'roomId'},
+    {
+      '1': 'category_id',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 0,
+      '10': 'categoryId',
+      '17': true
+    },
+    {'1': 'label_ids', '3': 3, '4': 3, '5': 9, '8': {}, '10': 'labelIds'},
+    {'1': 'clear_category', '3': 4, '4': 1, '5': 8, '10': 'clearCategory'},
+  ],
+  '8': [
+    {'1': '_category_id'},
+  ],
+};
+
+/// Descriptor for `UpdateRoomTaxonomyRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateRoomTaxonomyRequestDescriptor = $convert.base64Decode(
+    'ChlVcGRhdGVSb29tVGF4b25vbXlSZXF1ZXN0EjcKB3Jvb21faWQYASABKAlCHrpIG3IZEAEYQD'
+    'ITXnJvb21fW0EtWmEtejAtOV0rJFIGcm9vbUlkEkUKC2NhdGVnb3J5X2lkGAIgASgJQh+6SBxy'
+    'GhhAMhZecm9vbWNhdF9bQS1aYS16MC05XSskSABSCmNhdGVnb3J5SWSIAQESRQoJbGFiZWxfaW'
+    'RzGAMgAygJQii6SCWSASIQCiIechwQARhAMhZecm9vbWxibF9bQS1aYS16MC05XSskUghsYWJl'
+    'bElkcxIlCg5jbGVhcl9jYXRlZ29yeRgEIAEoCFINY2xlYXJDYXRlZ29yeUIOCgxfY2F0ZWdvcn'
+    'lfaWQ=');
+
+@$core.Deprecated('Use updateRoomTaxonomyResponseDescriptor instead')
+const UpdateRoomTaxonomyResponse$json = {
+  '1': 'UpdateRoomTaxonomyResponse',
+  '2': [
+    {
+      '1': 'room',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.AdminRoom',
+      '10': 'room'
+    },
+  ],
+};
+
+/// Descriptor for `UpdateRoomTaxonomyResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateRoomTaxonomyResponseDescriptor =
+    $convert.base64Decode(
+        'ChpVcGRhdGVSb29tVGF4b25vbXlSZXNwb25zZRIrCgRyb29tGAEgASgLMhcuc3luY3R2LmFkbW'
+        'luLkFkbWluUm9vbVIEcm9vbQ==');
 
 @$core.Deprecated('Use getRoomRequestDescriptor instead')
 const GetRoomRequest$json = {
@@ -3472,6 +3795,41 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
       '3': '.synctv.admin.KickMemberResponse'
     },
     {
+      '1': 'ListRoomCategories',
+      '2': '.synctv.admin.ListRoomCategoriesRequest',
+      '3': '.synctv.admin.ListRoomCategoriesResponse'
+    },
+    {
+      '1': 'UpsertRoomCategory',
+      '2': '.synctv.admin.UpsertRoomCategoryRequest',
+      '3': '.synctv.admin.UpsertRoomCategoryResponse'
+    },
+    {
+      '1': 'DeleteRoomCategory',
+      '2': '.synctv.admin.DeleteRoomCategoryRequest',
+      '3': '.synctv.admin.DeleteRoomCategoryResponse'
+    },
+    {
+      '1': 'ListRoomLabels',
+      '2': '.synctv.admin.ListRoomLabelsRequest',
+      '3': '.synctv.admin.ListRoomLabelsResponse'
+    },
+    {
+      '1': 'UpsertRoomLabel',
+      '2': '.synctv.admin.UpsertRoomLabelRequest',
+      '3': '.synctv.admin.UpsertRoomLabelResponse'
+    },
+    {
+      '1': 'DeleteRoomLabel',
+      '2': '.synctv.admin.DeleteRoomLabelRequest',
+      '3': '.synctv.admin.DeleteRoomLabelResponse'
+    },
+    {
+      '1': 'UpdateRoomTaxonomy',
+      '2': '.synctv.admin.UpdateRoomTaxonomyRequest',
+      '3': '.synctv.admin.UpdateRoomTaxonomyResponse'
+    },
+    {
       '1': 'AddAdmin',
       '2': '.synctv.admin.AddAdminRequest',
       '3': '.synctv.admin.AddAdminResponse'
@@ -3619,6 +3977,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.AdminRoom': AdminRoom$json,
   '.synctv.common.RoomPresenceStats': $0.RoomPresenceStats$json,
   '.synctv.client.ResourceCover': $1.ResourceCover$json,
+  '.synctv.client.FileObjectVariant': $1.FileObjectVariant$json,
+  '.synctv.client.RoomCategory': $1.RoomCategory$json,
+  '.synctv.client.RoomLabel': $1.RoomLabel$json,
   '.synctv.admin.BatchBanUsersRequest': BatchBanUsersRequest$json,
   '.synctv.admin.BatchBanUsersResponse': BatchBanUsersResponse$json,
   '.synctv.admin.BatchResultItem': BatchResultItem$json,
@@ -3657,6 +4018,20 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       UpdateMemberPermissionsResponse$json,
   '.synctv.admin.KickMemberRequest': KickMemberRequest$json,
   '.synctv.admin.KickMemberResponse': KickMemberResponse$json,
+  '.synctv.admin.ListRoomCategoriesRequest': ListRoomCategoriesRequest$json,
+  '.synctv.admin.ListRoomCategoriesResponse': ListRoomCategoriesResponse$json,
+  '.synctv.admin.UpsertRoomCategoryRequest': UpsertRoomCategoryRequest$json,
+  '.synctv.admin.UpsertRoomCategoryResponse': UpsertRoomCategoryResponse$json,
+  '.synctv.admin.DeleteRoomCategoryRequest': DeleteRoomCategoryRequest$json,
+  '.synctv.admin.DeleteRoomCategoryResponse': DeleteRoomCategoryResponse$json,
+  '.synctv.admin.ListRoomLabelsRequest': ListRoomLabelsRequest$json,
+  '.synctv.admin.ListRoomLabelsResponse': ListRoomLabelsResponse$json,
+  '.synctv.admin.UpsertRoomLabelRequest': UpsertRoomLabelRequest$json,
+  '.synctv.admin.UpsertRoomLabelResponse': UpsertRoomLabelResponse$json,
+  '.synctv.admin.DeleteRoomLabelRequest': DeleteRoomLabelRequest$json,
+  '.synctv.admin.DeleteRoomLabelResponse': DeleteRoomLabelResponse$json,
+  '.synctv.admin.UpdateRoomTaxonomyRequest': UpdateRoomTaxonomyRequest$json,
+  '.synctv.admin.UpdateRoomTaxonomyResponse': UpdateRoomTaxonomyResponse$json,
   '.synctv.admin.AddAdminRequest': AddAdminRequest$json,
   '.synctv.admin.AddAdminResponse': AddAdminResponse$json,
   '.synctv.admin.RemoveAdminRequest': RemoveAdminRequest$json,
@@ -3777,41 +4152,54 @@ final $typed_data.Uint8List adminServiceDescriptor = $convert.base64Decode(
     'cG9uc2USdgoXVXBkYXRlTWVtYmVyUGVybWlzc2lvbnMSLC5zeW5jdHYuYWRtaW4uVXBkYXRlTW'
     'VtYmVyUGVybWlzc2lvbnNSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLlVwZGF0ZU1lbWJlclBlcm1p'
     'c3Npb25zUmVzcG9uc2USTwoKS2lja01lbWJlchIfLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUm'
-    'VxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUmVzcG9uc2USSQoIQWRkQWRtaW4SHS5z'
-    'eW5jdHYuYWRtaW4uQWRkQWRtaW5SZXF1ZXN0Gh4uc3luY3R2LmFkbWluLkFkZEFkbWluUmVzcG'
-    '9uc2USUgoLUmVtb3ZlQWRtaW4SIC5zeW5jdHYuYWRtaW4uUmVtb3ZlQWRtaW5SZXF1ZXN0GiEu'
-    'c3luY3R2LmFkbWluLlJlbW92ZUFkbWluUmVzcG9uc2USTwoKTGlzdEFkbWlucxIfLnN5bmN0di'
-    '5hZG1pbi5MaXN0QWRtaW5zUmVxdWVzdBogLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5zUmVzcG9u'
-    'c2USWwoOR2V0U3lzdGVtU3RhdHMSIy5zeW5jdHYuYWRtaW4uR2V0U3lzdGVtU3RhdHNSZXF1ZX'
-    'N0GiQuc3luY3R2LmFkbWluLkdldFN5c3RlbVN0YXRzUmVzcG9uc2USZAoRTGlzdEFjdGl2ZVN0'
-    'cmVhbXMSJi5zeW5jdHYuYWRtaW4uTGlzdEFjdGl2ZVN0cmVhbXNSZXF1ZXN0Gicuc3luY3R2Lm'
-    'FkbWluLkxpc3RBY3RpdmVTdHJlYW1zUmVzcG9uc2USTwoKS2lja1N0cmVhbRIfLnN5bmN0di5h'
-    'ZG1pbi5LaWNrU3RyZWFtUmVxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUmVzcG9uc2'
-    'USggEKG0xpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3cxIwLnN5bmN0di5hZG1pbi5MaXN0VXNl'
-    'clJlZ2lzdHJhdGlvblJldmlld3NSZXF1ZXN0GjEuc3luY3R2LmFkbWluLkxpc3RVc2VyUmVnaX'
-    'N0cmF0aW9uUmV2aWV3c1Jlc3BvbnNlEogBCh1BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmll'
-    'dxIyLnN5bmN0di5hZG1pbi5BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmlld1JlcXVlc3QaMy'
-    '5zeW5jdHYuYWRtaW4uQXBwcm92ZVVzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXNwb25zZRKFAQoc'
-    'UmVqZWN0VXNlclJlZ2lzdHJhdGlvblJldmlldxIxLnN5bmN0di5hZG1pbi5SZWplY3RVc2VyUm'
-    'VnaXN0cmF0aW9uUmV2aWV3UmVxdWVzdBoyLnN5bmN0di5hZG1pbi5SZWplY3RVc2VyUmVnaXN0'
-    'cmF0aW9uUmV2aWV3UmVzcG9uc2USdgoXTGlzdFJvb21DcmVhdGlvblJldmlld3MSLC5zeW5jdH'
-    'YuYWRtaW4uTGlzdFJvb21DcmVhdGlvblJldmlld3NSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLkxp'
-    'c3RSb29tQ3JlYXRpb25SZXZpZXdzUmVzcG9uc2USfAoZQXBwcm92ZVJvb21DcmVhdGlvblJldm'
-    'lldxIuLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVxdWVzdBovLnN5'
-    'bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USeQoYUmVqZWN0Um'
-    '9vbUNyZWF0aW9uUmV2aWV3Ei0uc3luY3R2LmFkbWluLlJlamVjdFJvb21DcmVhdGlvblJldmll'
-    'd1JlcXVlc3QaLi5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2'
-    'USagoTTGlzdFJvb21Kb2luUmV2aWV3cxIoLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZp'
-    'ZXdzUmVxdWVzdBopLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZpZXdzUmVzcG9uc2UScA'
-    'oVQXBwcm92ZVJvb21Kb2luUmV2aWV3Eiouc3luY3R2LmFkbWluLkFwcHJvdmVSb29tSm9pblJl'
-    'dmlld1JlcXVlc3QaKy5zeW5jdHYuYWRtaW4uQXBwcm92ZVJvb21Kb2luUmV2aWV3UmVzcG9uc2'
-    'USbQoUUmVqZWN0Um9vbUpvaW5SZXZpZXcSKS5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUpvaW5S'
-    'ZXZpZXdSZXF1ZXN0Giouc3luY3R2LmFkbWluLlJlamVjdFJvb21Kb2luUmV2aWV3UmVzcG9uc2'
-    'USWwoOTGlzdEJhblJlY29yZHMSIy5zeW5jdHYuYWRtaW4uTGlzdEJhblJlY29yZHNSZXF1ZXN0'
-    'GiQuc3luY3R2LmFkbWluLkxpc3RCYW5SZWNvcmRzUmVzcG9uc2USZwoSTGlzdENvbnRlbnRSZX'
-    'BvcnRzEicuc3luY3R2LmFkbWluLkxpc3RDb250ZW50UmVwb3J0c1JlcXVlc3QaKC5zeW5jdHYu'
-    'YWRtaW4uTGlzdENvbnRlbnRSZXBvcnRzUmVzcG9uc2USYQoQR2V0Q29udGVudFJlcG9ydBIlLn'
-    'N5bmN0di5hZG1pbi5HZXRDb250ZW50UmVwb3J0UmVxdWVzdBomLnN5bmN0di5hZG1pbi5HZXRD'
-    'b250ZW50UmVwb3J0UmVzcG9uc2USfAoZVXBkYXRlQ29udGVudFJlcG9ydFN0YXR1cxIuLnN5bm'
-    'N0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVxdWVzdBovLnN5bmN0di5hZG1p'
-    'bi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVzcG9uc2U=');
+    'VxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUmVzcG9uc2USZwoSTGlzdFJvb21DYXRl'
+    'Z29yaWVzEicuc3luY3R2LmFkbWluLkxpc3RSb29tQ2F0ZWdvcmllc1JlcXVlc3QaKC5zeW5jdH'
+    'YuYWRtaW4uTGlzdFJvb21DYXRlZ29yaWVzUmVzcG9uc2USZwoSVXBzZXJ0Um9vbUNhdGVnb3J5'
+    'Eicuc3luY3R2LmFkbWluLlVwc2VydFJvb21DYXRlZ29yeVJlcXVlc3QaKC5zeW5jdHYuYWRtaW'
+    '4uVXBzZXJ0Um9vbUNhdGVnb3J5UmVzcG9uc2USZwoSRGVsZXRlUm9vbUNhdGVnb3J5Eicuc3lu'
+    'Y3R2LmFkbWluLkRlbGV0ZVJvb21DYXRlZ29yeVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uRGVsZX'
+    'RlUm9vbUNhdGVnb3J5UmVzcG9uc2USWwoOTGlzdFJvb21MYWJlbHMSIy5zeW5jdHYuYWRtaW4u'
+    'TGlzdFJvb21MYWJlbHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkxpc3RSb29tTGFiZWxzUmVzcG'
+    '9uc2USXgoPVXBzZXJ0Um9vbUxhYmVsEiQuc3luY3R2LmFkbWluLlVwc2VydFJvb21MYWJlbFJl'
+    'cXVlc3QaJS5zeW5jdHYuYWRtaW4uVXBzZXJ0Um9vbUxhYmVsUmVzcG9uc2USXgoPRGVsZXRlUm'
+    '9vbUxhYmVsEiQuc3luY3R2LmFkbWluLkRlbGV0ZVJvb21MYWJlbFJlcXVlc3QaJS5zeW5jdHYu'
+    'YWRtaW4uRGVsZXRlUm9vbUxhYmVsUmVzcG9uc2USZwoSVXBkYXRlUm9vbVRheG9ub215Eicuc3'
+    'luY3R2LmFkbWluLlVwZGF0ZVJvb21UYXhvbm9teVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBk'
+    'YXRlUm9vbVRheG9ub215UmVzcG9uc2USSQoIQWRkQWRtaW4SHS5zeW5jdHYuYWRtaW4uQWRkQW'
+    'RtaW5SZXF1ZXN0Gh4uc3luY3R2LmFkbWluLkFkZEFkbWluUmVzcG9uc2USUgoLUmVtb3ZlQWRt'
+    'aW4SIC5zeW5jdHYuYWRtaW4uUmVtb3ZlQWRtaW5SZXF1ZXN0GiEuc3luY3R2LmFkbWluLlJlbW'
+    '92ZUFkbWluUmVzcG9uc2USTwoKTGlzdEFkbWlucxIfLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5z'
+    'UmVxdWVzdBogLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5zUmVzcG9uc2USWwoOR2V0U3lzdGVtU3'
+    'RhdHMSIy5zeW5jdHYuYWRtaW4uR2V0U3lzdGVtU3RhdHNSZXF1ZXN0GiQuc3luY3R2LmFkbWlu'
+    'LkdldFN5c3RlbVN0YXRzUmVzcG9uc2USZAoRTGlzdEFjdGl2ZVN0cmVhbXMSJi5zeW5jdHYuYW'
+    'RtaW4uTGlzdEFjdGl2ZVN0cmVhbXNSZXF1ZXN0Gicuc3luY3R2LmFkbWluLkxpc3RBY3RpdmVT'
+    'dHJlYW1zUmVzcG9uc2USTwoKS2lja1N0cmVhbRIfLnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUm'
+    'VxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUmVzcG9uc2USggEKG0xpc3RVc2VyUmVn'
+    'aXN0cmF0aW9uUmV2aWV3cxIwLnN5bmN0di5hZG1pbi5MaXN0VXNlclJlZ2lzdHJhdGlvblJldm'
+    'lld3NSZXF1ZXN0GjEuc3luY3R2LmFkbWluLkxpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3c1Jl'
+    'c3BvbnNlEogBCh1BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmlldxIyLnN5bmN0di5hZG1pbi'
+    '5BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmlld1JlcXVlc3QaMy5zeW5jdHYuYWRtaW4uQXBw'
+    'cm92ZVVzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXNwb25zZRKFAQocUmVqZWN0VXNlclJlZ2lzdH'
+    'JhdGlvblJldmlldxIxLnN5bmN0di5hZG1pbi5SZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3'
+    'UmVxdWVzdBoyLnN5bmN0di5hZG1pbi5SZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVzcG'
+    '9uc2USdgoXTGlzdFJvb21DcmVhdGlvblJldmlld3MSLC5zeW5jdHYuYWRtaW4uTGlzdFJvb21D'
+    'cmVhdGlvblJldmlld3NSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLkxpc3RSb29tQ3JlYXRpb25SZX'
+    'ZpZXdzUmVzcG9uc2USfAoZQXBwcm92ZVJvb21DcmVhdGlvblJldmlldxIuLnN5bmN0di5hZG1p'
+    'bi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVxdWVzdBovLnN5bmN0di5hZG1pbi5BcHByb3'
+    'ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USeQoYUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3'
+    'Ei0uc3luY3R2LmFkbWluLlJlamVjdFJvb21DcmVhdGlvblJldmlld1JlcXVlc3QaLi5zeW5jdH'
+    'YuYWRtaW4uUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USagoTTGlzdFJvb21Kb2lu'
+    'UmV2aWV3cxIoLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZpZXdzUmVxdWVzdBopLnN5bm'
+    'N0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZpZXdzUmVzcG9uc2UScAoVQXBwcm92ZVJvb21Kb2lu'
+    'UmV2aWV3Eiouc3luY3R2LmFkbWluLkFwcHJvdmVSb29tSm9pblJldmlld1JlcXVlc3QaKy5zeW'
+    '5jdHYuYWRtaW4uQXBwcm92ZVJvb21Kb2luUmV2aWV3UmVzcG9uc2USbQoUUmVqZWN0Um9vbUpv'
+    'aW5SZXZpZXcSKS5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUpvaW5SZXZpZXdSZXF1ZXN0Giouc3'
+    'luY3R2LmFkbWluLlJlamVjdFJvb21Kb2luUmV2aWV3UmVzcG9uc2USWwoOTGlzdEJhblJlY29y'
+    'ZHMSIy5zeW5jdHYuYWRtaW4uTGlzdEJhblJlY29yZHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLk'
+    'xpc3RCYW5SZWNvcmRzUmVzcG9uc2USZwoSTGlzdENvbnRlbnRSZXBvcnRzEicuc3luY3R2LmFk'
+    'bWluLkxpc3RDb250ZW50UmVwb3J0c1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uTGlzdENvbnRlbn'
+    'RSZXBvcnRzUmVzcG9uc2USYQoQR2V0Q29udGVudFJlcG9ydBIlLnN5bmN0di5hZG1pbi5HZXRD'
+    'b250ZW50UmVwb3J0UmVxdWVzdBomLnN5bmN0di5hZG1pbi5HZXRDb250ZW50UmVwb3J0UmVzcG'
+    '9uc2USfAoZVXBkYXRlQ29udGVudFJlcG9ydFN0YXR1cxIuLnN5bmN0di5hZG1pbi5VcGRhdGVD'
+    'b250ZW50UmVwb3J0U3RhdHVzUmVxdWVzdBovLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50Um'
+    'Vwb3J0U3RhdHVzUmVzcG9uc2U=');

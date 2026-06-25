@@ -7,7 +7,7 @@ import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/room_media_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/oauth2_callback_parser.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_domain_services.dart';
@@ -30,7 +30,7 @@ export 'package:synctv_app/models/provider_models.dart';
 export 'package:synctv_app/models/room_media_models.dart';
 export 'package:synctv_app/services/synctv_file_upload_service.dart';
 
-class WatchTogetherService {
+class SyncTvService {
   static String get baseUrl => _runtime.baseUrl;
   static List<SyncTvServerProfile> get servers => _runtime.servers;
   static SyncTvServerProfile? get activeServer => _runtime.activeServer;
@@ -326,7 +326,29 @@ class WatchTogetherService {
     return _domains.publicRooms.getServerInfo(refresh: refresh);
   }
 
-  static Future<WUser> createGuestToken(String roomId) async {
+  static Future<List<RoomCategoryInfo>> listRoomCategories({
+    bool includeDisabled = false,
+    bool refresh = false,
+  }) {
+    return _domains.publicRooms.listRoomCategories(
+      includeDisabled: includeDisabled,
+      refresh: refresh,
+    );
+  }
+
+  static Future<List<RoomLabelInfo>> listRoomLabels({
+    bool includeDisabled = false,
+    String categoryId = '',
+    bool refresh = false,
+  }) {
+    return _domains.publicRooms.listRoomLabels(
+      includeDisabled: includeDisabled,
+      categoryId: categoryId,
+      refresh: refresh,
+    );
+  }
+
+  static Future<SyncTvUser> createGuestToken(String roomId) async {
     return _domains.auth.createGuestToken(roomId);
   }
 
@@ -366,15 +388,15 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WUser> getMe({bool refresh = false}) async {
+  static Future<SyncTvUser> getMe({bool refresh = false}) async {
     return _domains.account.getMe(refresh: refresh);
   }
 
-  static Future<WUser> updateUsername(String username) async {
+  static Future<SyncTvUser> updateUsername(String username) async {
     return _domains.account.updateUsername(username);
   }
 
-  static Future<WUser> updateUserAvatar(LocalImageUpload upload) async {
+  static Future<SyncTvUser> updateUserAvatar(LocalImageUpload upload) async {
     final user = await _domains.fileUploads.updateUserAvatar(upload);
     final mapped = _api.mapUser(user);
     _domains.cache.put(
@@ -385,7 +407,7 @@ class WatchTogetherService {
     return mapped;
   }
 
-  static Future<WUser> clearUserAvatar() async {
+  static Future<SyncTvUser> clearUserAvatar() async {
     final user = await _domains.fileUploads.clearUserAvatar();
     final mapped = _api.mapUser(user);
     _domains.cache.put(
@@ -400,7 +422,7 @@ class WatchTogetherService {
     return _domains.account.startEmailBind(email);
   }
 
-  static Future<WUser> confirmEmailBind({
+  static Future<SyncTvUser> confirmEmailBind({
     required String email,
     required String token,
     required String verificationId,
@@ -412,7 +434,8 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WUser> unbindEmail({required String verificationId}) async {
+  static Future<SyncTvUser> unbindEmail(
+      {required String verificationId}) async {
     return _domains.account.unbindEmail(verificationId: verificationId);
   }
 
@@ -505,7 +528,7 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WUser> finishOpaquePasswordUpdate({
+  static Future<SyncTvUser> finishOpaquePasswordUpdate({
     required String sessionId,
     List<int> credentialFinalization = const [],
     required List<int> registrationUpload,
@@ -611,6 +634,8 @@ class WatchTogetherService {
     int page = 1,
     int pageSize = 100,
     String? search,
+    String categoryId = '',
+    List<String> labelIds = const [],
     client_enum.RoomListSortBy sortBy =
         client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
     client_enum.SortDirection sortDirection =
@@ -620,6 +645,8 @@ class WatchTogetherService {
       page: page,
       pageSize: pageSize,
       search: search,
+      categoryId: categoryId,
+      labelIds: labelIds,
       sortBy: sortBy,
       sortDirection: sortDirection,
     );
@@ -668,7 +695,7 @@ class WatchTogetherService {
     );
   }
 
-  static Future<List<WRoom>> getHotRooms({int limit = 20}) async {
+  static Future<List<SyncTvRoom>> getHotRooms({int limit = 20}) async {
     return _domains.publicRooms.getHotRooms(limit: limit);
   }
 
@@ -676,15 +703,19 @@ class WatchTogetherService {
     return _domains.publicRooms.checkRoom(roomId);
   }
 
-  static Future<WRoom> createRoom(
+  static Future<SyncTvRoom> createRoom(
     String name, {
     String? password,
     String? description,
+    String categoryId = '',
+    List<String> labelIds = const [],
   }) async {
     final room = await _domains.publicRooms.createRoom(
       name,
       password: password,
       description: description,
+      categoryId: categoryId,
+      labelIds: labelIds,
     );
     _domains.cache.invalidatePrefix('account:rooms');
     return room;
@@ -700,11 +731,11 @@ class WatchTogetherService {
     _domains.cache.invalidatePrefix('account:rooms');
   }
 
-  static Future<WRoom> getRoomInfo(String roomId) async {
+  static Future<SyncTvRoom> getRoomInfo(String roomId) async {
     return _domains.publicRooms.getRoomInfo(roomId);
   }
 
-  static Future<List<WUser>> getRoomMembers(String roomId) async {
+  static Future<List<SyncTvUser>> getRoomMembers(String roomId) async {
     return _domains.roomManagement.getRoomMembers(roomId);
   }
 
@@ -730,34 +761,30 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WPlaybackStatus> getCurrentMovie(String roomId) async {
+  static Future<SyncTvPlaybackStatus> getCurrentMovie(String roomId) async {
     return _domains.roomMedia.getCurrentMovie(roomId);
   }
 
-  static Stream<RoomResourceWatchEvent<WPlaybackStatus>> watchPlaybackState(
+  static Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>>
+      watchPlaybackState(
     String roomId, {
     String version = '',
   }) {
     return _domains.roomMedia.watchPlaybackState(roomId, version: version);
   }
 
-  static Stream<RoomResourceWatchEvent<WPlaybackStatus>> watchPlaybackSnapshot(
+  static Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>>
+      watchPlaybackSnapshot(
     String roomId, {
     String version = '',
-    String mediaId = '',
-    String playlistId = '',
-    String? target,
   }) {
     return _domains.roomMedia.watchPlaybackSnapshot(
       roomId,
       version: version,
-      mediaId: mediaId,
-      playlistId: playlistId,
-      target: target,
     );
   }
 
-  static Stream<RoomResourceWatchEvent<WRoomSettings>> watchRoomSettings(
+  static Stream<RoomResourceWatchEvent<SyncTvRoomSettings>> watchRoomSettings(
     String roomId, {
     String version = '',
   }) {
@@ -805,7 +832,7 @@ class WatchTogetherService {
     return _domains.roomManagement.watchRoomMembers(roomId, version: version);
   }
 
-  static Stream<RoomResourceWatchEvent<List<WUser>>> watchRoomUsers(
+  static Stream<RoomResourceWatchEvent<List<SyncTvUser>>> watchRoomUsers(
     String roomId, {
     String version = '',
   }) {
@@ -883,7 +910,7 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WMovie> createPlaylist(
+  static Future<SyncTvMovie> createPlaylist(
     String roomId, {
     required String name,
     String parentId = '',
@@ -903,7 +930,7 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WMovie> updatePlaylist(
+  static Future<SyncTvMovie> updatePlaylist(
     String roomId,
     String playlistId, {
     required String name,
@@ -917,7 +944,7 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WRoom> updateRoomCover(
+  static Future<SyncTvRoom> updateRoomCover(
     String roomId,
     LocalImageUpload upload,
   ) async {
@@ -925,12 +952,12 @@ class WatchTogetherService {
     return _api.mapRoom(room);
   }
 
-  static Future<WRoom> clearRoomCover(String roomId) async {
+  static Future<SyncTvRoom> clearRoomCover(String roomId) async {
     final room = await _domains.fileUploads.clearRoomCover(roomId);
     return _api.mapRoom(room);
   }
 
-  static Future<WMovie> updatePlaylistCover(
+  static Future<SyncTvMovie> updatePlaylistCover(
     String roomId,
     String playlistId,
     LocalImageUpload upload,
@@ -940,7 +967,7 @@ class WatchTogetherService {
     return _api.mapPlaylist(playlist);
   }
 
-  static Future<WMovie> clearPlaylistCover(
+  static Future<SyncTvMovie> clearPlaylistCover(
     String roomId,
     String playlistId,
   ) async {
@@ -949,7 +976,7 @@ class WatchTogetherService {
     return _api.mapPlaylist(playlist);
   }
 
-  static Future<WMovie> movePlaylist(
+  static Future<SyncTvMovie> movePlaylist(
     String roomId,
     String playlistId, {
     String? beforePlaylistId,
@@ -971,7 +998,7 @@ class WatchTogetherService {
     await _domains.roomMedia.deletePlaylist(roomId, playlistId, force: force);
   }
 
-  static Future<WMovie> editMedia(
+  static Future<SyncTvMovie> editMedia(
     String roomId,
     String mediaId, {
     required String name,
@@ -985,7 +1012,7 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WMovie> updateVideoCover(
+  static Future<SyncTvMovie> updateVideoCover(
     String roomId,
     String mediaId,
     LocalImageUpload upload,
@@ -995,12 +1022,13 @@ class WatchTogetherService {
     return _api.mapMedia(media);
   }
 
-  static Future<WMovie> clearVideoCover(String roomId, String mediaId) async {
+  static Future<SyncTvMovie> clearVideoCover(
+      String roomId, String mediaId) async {
     final media = await _domains.fileUploads.clearVideoCover(roomId, mediaId);
     return _api.mapMedia(media);
   }
 
-  static Future<WMovie> getMedia(String roomId, String mediaId) async {
+  static Future<SyncTvMovie> getMedia(String roomId, String mediaId) async {
     return _domains.roomMedia.getMedia(roomId, mediaId);
   }
 
@@ -1040,12 +1068,42 @@ class WatchTogetherService {
     );
   }
 
+  static Future<ChatSearchPage> searchChatMessages(
+    String roomId, {
+    required String query,
+    int limit = 50,
+    String cursor = '',
+    bool includeDeleted = false,
+    String userId = '',
+  }) {
+    return _domains.roomMedia.searchChatMessages(
+      roomId,
+      query: query,
+      limit: limit,
+      cursor: cursor,
+      includeDeleted: includeDeleted,
+      userId: userId,
+    );
+  }
+
   static Future<StoredImageInfo> uploadChatImage(
     String roomId,
     LocalImageUpload upload,
   ) async {
-    final image = await _domains.fileUploads.uploadChatImage(roomId, upload);
-    return _domains.roomMedia.storedImageFromChatImage(image);
+    final reference =
+        await _domains.fileUploads.uploadChatImage(roomId, upload);
+    return StoredImageInfo(
+      id: reference.id,
+      uploadReference: true,
+      storageBackend: '',
+      objectKey: '',
+      url: '',
+      mimeType: upload.mimeType,
+      sizeBytes: upload.sizeBytes,
+      width: upload.width,
+      height: upload.height,
+      metadata: upload.metadata,
+    );
   }
 
   static Future<RoomChatMessageInfo> sendChatMessage(
@@ -1066,6 +1124,39 @@ class WatchTogetherService {
       replyToMessageId: replyToMessageId,
       mentions: mentions,
     );
+  }
+
+  static Future<List<ChatPinnedMessageInfo>> listPinnedChatMessages(
+    String roomId, {
+    int limit = 50,
+  }) {
+    return _domains.roomMedia.listPinnedChatMessages(roomId, limit: limit);
+  }
+
+  static Future<ChatPinEventInfo> pinChatMessage(
+    String roomId,
+    String messageId, {
+    String note = '',
+  }) {
+    return _domains.roomMedia.pinChatMessage(
+      roomId,
+      messageId,
+      note: note,
+    );
+  }
+
+  static Future<ChatPinEventInfo> unpinChatMessage(
+    String roomId,
+    String messageId,
+  ) {
+    return _domains.roomMedia.unpinChatMessage(roomId, messageId);
+  }
+
+  static Stream<RoomResourceWatchEvent<ChatPinEventInfo>> watchChatPinEvents(
+    String roomId, {
+    String version = '',
+  }) {
+    return _domains.roomMedia.watchChatPinEvents(roomId, version: version);
   }
 
   static Future<RoomChatMessageInfo> editChatMessage(
@@ -1119,6 +1210,46 @@ class WatchTogetherService {
     return _domains.roomMedia.reportChatMessage(
       roomId,
       messageId,
+      reasonCode: reasonCode,
+      reason: reason,
+    );
+  }
+
+  static Future<String> reportRoom(
+    String roomId, {
+    required String reasonCode,
+    String reason = '',
+  }) {
+    return _domains.roomMedia.reportRoom(
+      roomId,
+      reasonCode: reasonCode,
+      reason: reason,
+    );
+  }
+
+  static Future<String> reportUser(
+    String roomId,
+    String userId, {
+    required String reasonCode,
+    String reason = '',
+  }) {
+    return _domains.roomMedia.reportUser(
+      roomId,
+      userId,
+      reasonCode: reasonCode,
+      reason: reason,
+    );
+  }
+
+  static Future<String> reportRoomMember(
+    String roomId,
+    String userId, {
+    required String reasonCode,
+    String reason = '',
+  }) {
+    return _domains.roomMedia.reportRoomMember(
+      roomId,
+      userId,
       reasonCode: reasonCode,
       reason: reason,
     );
@@ -1223,6 +1354,7 @@ class WatchTogetherService {
     required String url,
     Map<String, String> headers = const {},
     String name = '',
+    bool preferProxy = false,
   }) {
     return _domains.roomMedia.addDirectUrlMedia(
       roomId,
@@ -1230,6 +1362,7 @@ class WatchTogetherService {
       url: url,
       headers: headers,
       name: name,
+      preferProxy: preferProxy,
     );
   }
 
@@ -1299,6 +1432,20 @@ class WatchTogetherService {
     );
   }
 
+  static Future<String> addLiveProxyMedia(
+    String roomId, {
+    String playlistId = '',
+    required String url,
+    String name = '',
+  }) {
+    return _domains.roomMedia.addLiveProxyMedia(
+      roomId,
+      playlistId: playlistId,
+      url: url,
+      name: name,
+    );
+  }
+
   static Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
     String roomId,
     String mediaId,
@@ -1343,7 +1490,7 @@ class WatchTogetherService {
     await _domains.roomMedia.clearMovies(roomId, parentId: parentId);
   }
 
-  static Future<WPlaybackStatus> switchMovie(
+  static Future<SyncTvPlaybackStatus> switchMovie(
     String roomId,
     String movieId, {
     String? subPath,
@@ -1357,7 +1504,7 @@ class WatchTogetherService {
     );
   }
 
-  static Future<WPlaybackStatus> switchMovieAndPlay(
+  static Future<SyncTvPlaybackStatus> switchMovieAndPlay(
     String roomId,
     String movieId, {
     String? subPath,
@@ -1377,7 +1524,7 @@ class WatchTogetherService {
       speed: 1,
     );
     return playback.movie == null && switched.movie != null
-        ? WPlaybackStatus(
+        ? SyncTvPlaybackStatus(
             movie: switched.movie,
             isPlaying: true,
             currentTime: 0,
@@ -1386,7 +1533,7 @@ class WatchTogetherService {
         : playback;
   }
 
-  static Future<WPlaybackStatus> updatePlaybackState(
+  static Future<SyncTvPlaybackStatus> updatePlaybackState(
     String roomId, {
     PlaybackControlAction? action,
     required bool isPlaying,
@@ -1630,7 +1777,7 @@ class WatchTogetherService {
     return _domains.roomManagement.updateRoomPassword(roomId, password);
   }
 
-  static Future<WRoomSettings> getRoomSettings(
+  static Future<SyncTvRoomSettings> getRoomSettings(
     String roomId, {
     bool refresh = false,
   }) async {
@@ -1639,13 +1786,21 @@ class WatchTogetherService {
 
   static Future<void> updateRoomSettings(
     String roomId,
-    WRoomSettings settings,
+    SyncTvRoomSettings settings,
   ) async {
     await _domains.roomManagement.updateRoomSettings(roomId, settings);
   }
 
-  static Future<void> kickMember(String roomId, String userId) {
-    return _domains.roomManagement.kickMember(roomId, userId);
+  static Future<void> kickMember(
+    String roomId,
+    String userId, {
+    int kickCooldownSeconds = 60,
+  }) {
+    return _domains.roomManagement.kickMember(
+      roomId,
+      userId,
+      kickCooldownSeconds: kickCooldownSeconds,
+    );
   }
 
   static Future<RoomStreamsPage> listRoomStreamsPage(
@@ -1831,7 +1986,7 @@ class WatchTogetherService {
     return _domains.admin.deleteUser(userId);
   }
 
-  static Future<WUser> adminGetUser(String userId) {
+  static Future<SyncTvUser> adminGetUser(String userId) {
     return _domains.admin.getUser(userId);
   }
 
@@ -1930,6 +2085,8 @@ class WatchTogetherService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String categoryId = '',
+    List<String> labelIds = const [],
     common_enum.RoomStatus status =
         common_enum.RoomStatus.ROOM_STATUS_UNSPECIFIED,
     bool? isBanned,
@@ -1942,6 +2099,8 @@ class WatchTogetherService {
       page: page,
       pageSize: pageSize,
       search: search,
+      categoryId: categoryId,
+      labelIds: labelIds,
       status: status,
       isBanned: isBanned,
       sortBy: sortBy,
@@ -1974,11 +2133,11 @@ class WatchTogetherService {
     return _domains.admin.deleteRoom(roomId);
   }
 
-  static Future<WRoom> adminGetRoom(String roomId) {
+  static Future<SyncTvRoom> adminGetRoom(String roomId) {
     return _domains.admin.getRoom(roomId);
   }
 
-  static Future<WRoomSettings> adminGetRoomSettings(
+  static Future<SyncTvRoomSettings> adminGetRoomSettings(
     String roomId, {
     bool refresh = false,
   }) {
@@ -1987,7 +2146,7 @@ class WatchTogetherService {
 
   static Future<void> adminUpdateRoomSettings(
     String roomId,
-    WRoomSettings settings,
+    SyncTvRoomSettings settings,
   ) {
     return _domains.admin.updateRoomSettings(roomId, settings);
   }
@@ -1998,6 +2157,86 @@ class WatchTogetherService {
 
   static Future<void> adminUpdateRoomPassword(String roomId, String password) {
     return _domains.admin.updateRoomPassword(roomId, password);
+  }
+
+  static Future<List<RoomCategoryInfo>> adminListRoomCategories({
+    bool includeDisabled = false,
+    bool refresh = false,
+  }) {
+    return _domains.admin.listRoomCategories(
+      includeDisabled: includeDisabled,
+      refresh: refresh,
+    );
+  }
+
+  static Future<RoomCategoryInfo> adminUpsertRoomCategory({
+    required String key,
+    required String name,
+    String description = '',
+    int sortOrder = 0,
+    bool? isEnabled,
+  }) {
+    return _domains.admin.upsertRoomCategory(
+      key: key,
+      name: name,
+      description: description,
+      sortOrder: sortOrder,
+      isEnabled: isEnabled,
+    );
+  }
+
+  static Future<void> adminDeleteRoomCategory(String categoryId) {
+    return _domains.admin.deleteRoomCategory(categoryId);
+  }
+
+  static Future<List<RoomLabelInfo>> adminListRoomLabels({
+    bool includeDisabled = false,
+    String categoryId = '',
+    bool refresh = false,
+  }) {
+    return _domains.admin.listRoomLabels(
+      includeDisabled: includeDisabled,
+      categoryId: categoryId,
+      refresh: refresh,
+    );
+  }
+
+  static Future<RoomLabelInfo> adminUpsertRoomLabel({
+    required String key,
+    required String name,
+    String description = '',
+    String color = '',
+    String categoryId = '',
+    int sortOrder = 0,
+    bool? isEnabled,
+  }) {
+    return _domains.admin.upsertRoomLabel(
+      key: key,
+      name: name,
+      description: description,
+      color: color,
+      categoryId: categoryId,
+      sortOrder: sortOrder,
+      isEnabled: isEnabled,
+    );
+  }
+
+  static Future<void> adminDeleteRoomLabel(String labelId) {
+    return _domains.admin.deleteRoomLabel(labelId);
+  }
+
+  static Future<SyncTvRoom> adminUpdateRoomTaxonomy(
+    String roomId, {
+    String? categoryId,
+    List<String> labelIds = const [],
+    bool clearCategory = false,
+  }) {
+    return _domains.admin.updateRoomTaxonomy(
+      roomId,
+      categoryId: categoryId,
+      labelIds: labelIds,
+      clearCategory: clearCategory,
+    );
   }
 
   static Future<AdminSettingsGroup> adminUpdateSettingInGroup(
@@ -2034,7 +2273,7 @@ class WatchTogetherService {
     );
   }
 
-  static Future<List<WUser>> adminListAdmins({String search = ''}) {
+  static Future<List<SyncTvUser>> adminListAdmins({String search = ''}) {
     return _domains.admin.listAdmins(search: search);
   }
 

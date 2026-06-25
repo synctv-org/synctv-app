@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/theme/app_theme.dart';
 import 'package:video_player_media_kit/video_player_media_kit.dart';
@@ -16,7 +16,7 @@ void main(List<String> args) async {
   if (runWebViewTitleBarWidget(args)) {
     return;
   }
-  await WatchTogetherService.init();
+  await SyncTvService.init();
   await OAuth2DeepLinkService.initialize();
 
   try {
@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '看搭子',
+      title: 'SyncTV',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,

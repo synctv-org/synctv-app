@@ -21,7 +21,7 @@ class PlaylistEmptyState extends StatelessWidget {
             icon: Icons.movie_filter_outlined,
             iconSize: compact ? 48 : 64,
             title: '播放列表为空',
-            subtitle: '添加影片后即可一起观看',
+            subtitle: '添加影片后即可同步观看',
             maxWidth: 280,
           ),
           if (onAdd != null) ...[

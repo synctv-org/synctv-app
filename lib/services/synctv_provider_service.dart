@@ -1,5 +1,6 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/provider_models.dart';
+import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/src/generated/proto/providers/alist.pb.dart'
     as alist;
@@ -418,6 +419,7 @@ class SyncTvProviderDomainService {
       modified: item.modified.toInt(),
       thumb: item.thumb,
       type: item.type.toInt(),
+      sign: item.sign,
     );
   }
 
@@ -435,6 +437,7 @@ class SyncTvProviderDomainService {
       modified: 0,
       thumb: '',
       type: item.type.toInt(),
+      sign: '',
     );
   }
 
@@ -451,13 +454,14 @@ class SyncTvProviderDomainService {
       seasonName: item.seasonName,
       thumbnail:
           item.thumbnail.isEmpty ? '' : _api.resolveResourceUrl(item.thumbnail),
+      description: item.description,
     );
   }
 
   Future<List<String>> _availableInstanceNames(String providerType) async {
     final response = await _api.providerCommon.listAvailableProviderInstances(
       provider_common.ListAvailableProviderInstancesRequest(
-        providerType: providerType,
+        providerType: SourceConfigCodec.providerFromString(providerType),
       ),
     );
     final names = <String>[];

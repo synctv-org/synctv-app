@@ -1,4 +1,4 @@
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 
 class AdminProviderInstance {
   final String name;
@@ -139,7 +139,7 @@ class AdminBanRecord {
 }
 
 class AdminUsersPage {
-  final List<WUser> users;
+  final List<SyncTvUser> users;
   final int total;
 
   const AdminUsersPage({
@@ -149,7 +149,7 @@ class AdminUsersPage {
 }
 
 class AdminRoomsPage {
-  final List<WRoom> rooms;
+  final List<SyncTvRoom> rooms;
   final int total;
 
   const AdminRoomsPage({
@@ -159,7 +159,7 @@ class AdminRoomsPage {
 }
 
 class AdminsPage {
-  final List<WUser> admins;
+  final List<SyncTvUser> admins;
   final int total;
 
   const AdminsPage({

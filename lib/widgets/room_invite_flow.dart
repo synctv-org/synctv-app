@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:synctv_app/services/room_invite_service.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
@@ -64,13 +64,13 @@ Future<void> _activateBestEndpoint(
 ) async {
   final profile = matches.first;
   if (profile.endpoints.length <= 1) {
-    await WatchTogetherService.activateServer(profile.serverId);
+    await SyncTvService.activateServer(profile.serverId);
     return;
   }
 
   final endpoint = await _chooseEndpoint(context, profile);
   if (endpoint == null) return;
-  await WatchTogetherService.activateServerEndpoint(profile.serverId, endpoint);
+  await SyncTvService.activateServerEndpoint(profile.serverId, endpoint);
 }
 
 Future<String?> _chooseEndpoint(

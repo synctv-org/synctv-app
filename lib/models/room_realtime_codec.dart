@@ -7,13 +7,14 @@ import 'package:synctv_app/models/playback_client_profile.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/room_media_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
+import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/common.pb.dart' as common;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 
 enum RoomRealtimeMessageKind {
   unknown,
@@ -28,6 +29,7 @@ enum RoomRealtimeMessageKind {
   viewerCount,
   memberEvent,
   onlineEvent,
+  chatPin,
   sync,
   myStatus,
   webrtcOffer,
@@ -146,6 +148,7 @@ class RoomRealtimeMessage {
     this.reactions = const [],
     this.reactionCount = 0,
     this.mentions = const [],
+    this.chatPinEvent,
     this.chatEventId = '',
     this.chatEventKind = RoomRealtimeChatEventKind.created,
     this.chatDeleted = false,
@@ -183,6 +186,7 @@ class RoomRealtimeMessage {
   final List<ChatReactionSummaryInfo> reactions;
   final int reactionCount;
   final List<ChatMentionInfo> mentions;
+  final ChatPinEventInfo? chatPinEvent;
   final String chatEventId;
   final RoomRealtimeChatEventKind chatEventKind;
   final bool chatDeleted;
@@ -195,10 +199,10 @@ class RoomRealtimeMessage {
   final String chatDisplayColor;
   final String chatReplyToMessageId;
   final RoomRealtimePlaybackStatus? status;
-  final WPlaybackStatus? playbackStatus;
-  final WRoomSettings? roomSettings;
+  final SyncTvPlaybackStatus? playbackStatus;
+  final SyncTvRoomSettings? roomSettings;
   final RoomMediaLibraryPage? mediaLibrary;
-  final List<WUser>? members;
+  final List<SyncTvUser>? members;
   final List<AdminRoomMember>? adminMembers;
   final AdminRoomMember? selfMember;
   final RoomRealtimeOnlineEvent? onlineEvent;
@@ -244,6 +248,7 @@ class RoomRealtimeChatEntry {
     this.isDeleted = false,
     this.isEdited = false,
     this.replyToMessageId = '',
+    this.pin,
   });
 
   factory RoomRealtimeChatEntry.fromMessage(RoomRealtimeMessage message) {
@@ -264,6 +269,7 @@ class RoomRealtimeChatEntry {
           : message.timestampMillis,
       isDeleted: message.isChatDeleted,
       isEdited: message.isChatEdited,
+      pin: message.chatPinEvent?.pin,
     );
   }
 
@@ -282,6 +288,7 @@ class RoomRealtimeChatEntry {
       timestampMillis: message.timestamp * 1000,
       isDeleted: message.isDeleted,
       isEdited: message.isEdited,
+      pin: message.pin,
     );
   }
 
@@ -298,6 +305,7 @@ class RoomRealtimeChatEntry {
   final bool isDeleted;
   final bool isEdited;
   final String replyToMessageId;
+  final ChatPinInfo? pin;
 
   String get dedupeKey {
     if (id.isNotEmpty) return 'id:$id';
@@ -310,6 +318,43 @@ class RoomRealtimeChatEntry {
     final dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
     return '${dateTime.hour.toString().padLeft(2, '0')}:'
         '${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  bool get isPinned => pin != null;
+
+  RoomRealtimeChatEntry copyWith({
+    String? id,
+    String? userId,
+    String? username,
+    String? content,
+    int? timestampMillis,
+    List<StoredImageInfo>? images,
+    List<ChatReactionSummaryInfo>? reactions,
+    int? reactionCount,
+    List<ChatMentionInfo>? mentions,
+    int? version,
+    bool? isDeleted,
+    bool? isEdited,
+    String? replyToMessageId,
+    ChatPinInfo? pin,
+    bool clearPin = false,
+  }) {
+    return RoomRealtimeChatEntry(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      username: username ?? this.username,
+      content: content ?? this.content,
+      timestampMillis: timestampMillis ?? this.timestampMillis,
+      images: images ?? this.images,
+      reactions: reactions ?? this.reactions,
+      reactionCount: reactionCount ?? this.reactionCount,
+      mentions: mentions ?? this.mentions,
+      version: version ?? this.version,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isEdited: isEdited ?? this.isEdited,
+      replyToMessageId: replyToMessageId ?? this.replyToMessageId,
+      pin: clearPin ? null : pin ?? this.pin,
+    );
   }
 }
 
@@ -445,16 +490,14 @@ class RoomRealtimeCodec {
         displayColor: displayColor,
         replyToMessageId: replyToMessageId,
         mentions: mentions.map(_chatMentionInputFromInfo),
-        images: images.map(
-          (image) => client.ChatImage(
+        attachments: images.map(
+          (image) => client.ChatAttachmentReference(
             id: image.id,
-            storageBackend: image.storageBackend,
-            objectKey: image.objectKey,
-            url: image.url,
-            mimeType: image.mimeType,
-            sizeBytes: Int64(image.sizeBytes),
-            width: image.width,
-            height: image.height,
+            kind: image.uploadReference
+                ? client_enum.ChatAttachmentReferenceKind
+                    .CHAT_ATTACHMENT_REFERENCE_KIND_UPLOAD
+                : client_enum.ChatAttachmentReferenceKind
+                    .CHAT_ATTACHMENT_REFERENCE_KIND_REUSE,
           ),
         ),
       ),
@@ -518,7 +561,8 @@ class RoomRealtimeCodec {
             if (chat.displayPosition.isNotEmpty)
               'displayPosition': chat.displayPosition,
             if (chat.displayColor.isNotEmpty) 'displayColor': chat.displayColor,
-            if (chat.images.isNotEmpty) 'images': chat.images.length,
+            if (chat.attachments.isNotEmpty)
+              'attachments': chat.attachments.length,
           },
         };
       case client.ClientMessage_Message.heartbeat:
@@ -668,7 +712,7 @@ class RoomRealtimeCodec {
 
   static client.ClientMessage buildGuardedPlaybackStateUpdateMessage(
     PlaybackControlAction action,
-    WPlaybackStatus? currentStatus, {
+    SyncTvPlaybackStatus? currentStatus, {
     bool? isPlaying,
     double? position,
     double? playbackRate,
@@ -753,7 +797,7 @@ class RoomRealtimeCodec {
           page: page,
           pageSize: pageSize,
           search: search,
-          sourceProvider: sourceProvider,
+          sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
           providerInstanceName: providerInstanceName,
           sortBy: sortBy,
           sortDirection: sortDirection,
@@ -867,6 +911,20 @@ class RoomRealtimeCodec {
     );
   }
 
+  static List<int> encodeChatPinEventsObservation({
+    String observeId = 'chat_pin_events',
+    String version = '',
+  }) {
+    return _observe(
+      observeId,
+      deliveryMode:
+          client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
+      chatPinEvents: client.ObserveChatPinEvents(
+        afterEventSequence: _watchSequence(version),
+      ),
+    );
+  }
+
   static List<int> encodeUnobserveResource(String observeId) {
     _observeDeliveryModes.remove(observeId);
     _playlistObserveParents.remove(observeId);
@@ -883,6 +941,7 @@ class RoomRealtimeCodec {
     client.ObservePlaylistItems? playlistItems,
     client.ObserveRoomMemberEvents? roomMemberEvents,
     client.ObserveChatEvents? chatEvents,
+    client.ObserveChatPinEvents? chatPinEvents,
     client.ObserveOnlineCount? onlineCount,
     client.ObserveOnlineEvent? onlineEvent,
     client.ObserveSelfRoomMember? selfRoomMember,
@@ -900,6 +959,7 @@ class RoomRealtimeCodec {
         playlistItems: playlistItems,
         roomMemberEvents: roomMemberEvents,
         chatEvents: chatEvents,
+        chatPinEvents: chatPinEvents,
         onlineCount: onlineCount,
         onlineEvent: onlineEvent,
         selfRoomMember: selfRoomMember,
@@ -1072,18 +1132,18 @@ class RoomRealtimeCodec {
             ),
           )
           .toList(),
-      images: chat.images
+      images: chat.attachments
           .map(
-            (image) => StoredImageInfo(
-              id: image.id,
-              storageBackend: image.storageBackend,
-              objectKey: image.objectKey,
-              url: image.url,
-              mimeType: image.mimeType,
-              sizeBytes: image.sizeBytes.toInt(),
-              width: image.width,
-              height: image.height,
-              metadata: List<int>.from(image.metadata),
+            (attachment) => StoredImageInfo(
+              id: attachment.id,
+              storageBackend: '',
+              objectKey: '',
+              url: attachment.url,
+              mimeType: attachment.mimeType,
+              sizeBytes: attachment.sizeBytes.toInt(),
+              width: attachment.width,
+              height: attachment.height,
+              metadata: List<int>.from(attachment.metadata),
             ),
           )
           .toList(),
@@ -1150,7 +1210,8 @@ class RoomRealtimeCodec {
   }) {
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.roomSettings,
-      roomSettings: WRoomSettings.fromJson(_decodeJsonBytes(changed.settings)),
+      roomSettings:
+          SyncTvRoomSettings.fromJson(_decodeJsonBytes(changed.settings)),
       resourceObserveId: observeId,
       resourceVersion: version,
     );
@@ -1164,8 +1225,8 @@ class RoomRealtimeCodec {
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.memberEvent,
       members: event.hasMember()
-          ? <WUser>[_memberFromProto(event.member)]
-          : const <WUser>[],
+          ? <SyncTvUser>[_memberFromProto(event.member)]
+          : const <SyncTvUser>[],
       adminMembers: event.hasMember()
           ? <AdminRoomMember>[_adminMemberFromProto(event.member)]
           : const <AdminRoomMember>[],
@@ -1207,7 +1268,7 @@ class RoomRealtimeCodec {
         return RoomRealtimeMessage(
           kind: RoomRealtimeMessageKind.myStatus,
           selfMember: _adminMemberFromProto(changed.selfRoomMember),
-          members: <WUser>[_memberFromProto(changed.selfRoomMember)],
+          members: <SyncTvUser>[_memberFromProto(changed.selfRoomMember)],
           adminMembers: <AdminRoomMember>[
             _adminMemberFromProto(changed.selfRoomMember),
           ],
@@ -1217,6 +1278,12 @@ class RoomRealtimeCodec {
       case client.ResourceEvent_Payload.chatEvent:
         return _chatEvent(
           changed.chatEvent,
+          observeId: changed.observeId,
+          version: _cursorVersion(changed.eventCursor),
+        );
+      case client.ResourceEvent_Payload.chatPinEvent:
+        return _chatPinEvent(
+          changed.chatPinEvent,
           observeId: changed.observeId,
           version: _cursorVersion(changed.eventCursor),
         );
@@ -1265,6 +1332,100 @@ class RoomRealtimeCodec {
     }
   }
 
+  static RoomRealtimeMessage _chatPinEvent(
+    client.ChatPinEvent event, {
+    String observeId = '',
+    String version = '',
+  }) {
+    if (!event.hasMessage()) {
+      return const RoomRealtimeMessage(kind: RoomRealtimeMessageKind.unknown);
+    }
+    return RoomRealtimeMessage(
+      kind: RoomRealtimeMessageKind.chatPin,
+      chatId: event.message.id,
+      chatContent: event.message.content,
+      timestampMillis: event.occurredAt.toInt() * 1000,
+      senderUserId: event.message.userId,
+      senderUsername: event.message.username,
+      chatPinEvent: ChatPinEventInfo(
+        eventId: event.eventId,
+        roomId: event.roomId,
+        kind: event.kind.value,
+        message: _chatMessageInfoFromProto(event.message),
+        pin: event.hasPin() ? _chatPinFromProto(event.pin) : null,
+        occurredAt: event.occurredAt.toInt(),
+        sequence: event.sequence.toInt(),
+      ),
+      resourceObserveId: observeId,
+      resourceVersion: version.isEmpty ? event.sequence.toString() : version,
+    );
+  }
+
+  static RoomChatMessageInfo _chatMessageInfoFromProto(
+    client.ChatMessageReceive message,
+  ) {
+    return RoomChatMessageInfo(
+      id: message.id,
+      roomId: message.roomId,
+      userId: message.userId,
+      username: message.username,
+      content: message.content,
+      timestamp: message.timestamp.toInt(),
+      displayPosition: message.displayPosition,
+      displayColor: message.displayColor,
+      version: message.version.toInt(),
+      editedAt: message.editedAt.toInt(),
+      deletedAt: message.deletedAt.toInt(),
+      status: message.status.value,
+      replyToMessageId: message.replyToMessageId,
+      images: message.attachments
+          .map(
+            (attachment) => StoredImageInfo(
+              id: attachment.id,
+              storageBackend: '',
+              objectKey: '',
+              url: attachment.url,
+              mimeType: attachment.mimeType,
+              sizeBytes: attachment.sizeBytes.toInt(),
+              width: attachment.width,
+              height: attachment.height,
+              metadata: List<int>.from(attachment.metadata),
+            ),
+          )
+          .toList(),
+      reactions: message.reactions
+          .map(
+            (reaction) => ChatReactionSummaryInfo(
+              key: reaction.key,
+              count: reaction.count.toInt(),
+              reactedByMe: reaction.reactedByMe,
+            ),
+          )
+          .toList(),
+      reactionCount: message.reactionCount,
+      mentions: message.mentions
+          .map(
+            (mention) => ChatMentionInfo(
+              userId: mention.userId,
+              username: mention.username,
+              start: mention.start,
+              length: mention.length,
+            ),
+          )
+          .toList(),
+      pin: message.hasPin() ? _chatPinFromProto(message.pin) : null,
+    );
+  }
+
+  static ChatPinInfo _chatPinFromProto(client.ChatMessagePin pin) {
+    return ChatPinInfo(
+      pinnedByUserId: pin.pinnedByUserId,
+      pinnedByUsername: pin.pinnedByUsername,
+      note: pin.note,
+      pinnedAt: pin.pinnedAt.toInt(),
+    );
+  }
+
   static bool _isNotifyOnlyObserveId(String observeId) {
     return _observeDeliveryModes[observeId] ==
         client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY;
@@ -1292,7 +1453,7 @@ class RoomRealtimeCodec {
     );
   }
 
-  static WPlaybackStatus _playbackStatusFromState(
+  static SyncTvPlaybackStatus _playbackStatusFromState(
     client.PlaybackState state,
   ) {
     final encodedTarget =
@@ -1300,7 +1461,7 @@ class RoomRealtimeCodec {
     final movie = state.playingMediaId.isEmpty &&
             state.playingPlaylistId.isEmpty
         ? null
-        : WMovie(
+        : SyncTvMovie(
             id: encodedTarget.isNotEmpty
                 ? encodedTarget
                 : state.playingMediaId.isNotEmpty
@@ -1311,7 +1472,7 @@ class RoomRealtimeCodec {
             subPath: encodedTarget.isEmpty ? null : encodedTarget,
             parentId: encodedTarget.isEmpty ? null : state.playingPlaylistId,
           );
-    return WPlaybackStatus(
+    return SyncTvPlaybackStatus(
       movie: movie,
       isPlaying: state.isPlaying,
       currentTime: state.position,
@@ -1323,13 +1484,13 @@ class RoomRealtimeCodec {
     );
   }
 
-  static WPlaybackStatus _playbackStatusFromPlayback(
+  static SyncTvPlaybackStatus _playbackStatusFromPlayback(
     client.Playback playback,
   ) {
     final movie = playback.mediaId.isEmpty && playback.playlistId.isEmpty
         ? null
-        : WMovie.fromPlaybackProto(playback);
-    return WPlaybackStatus(movie: movie);
+        : SyncTvMovie.fromPlaybackProto(playback);
+    return SyncTvPlaybackStatus(movie: movie);
   }
 
   static Int64? _watchSequence(String version) {
@@ -1381,10 +1542,15 @@ class RoomRealtimeCodec {
     );
   }
 
-  static WMovie _mediaFromProto(client.Media media) {
+  static SyncTvMovie _mediaFromProto(client.Media media) {
     final metadata = _decodeJsonBytes(media.metadata);
-    final sourceConfig = _decodeJsonBytes(media.sourceConfig);
-    return WMovie(
+    final sourceConfig = media.hasSourceConfig()
+        ? SourceConfigCodec.mediaSourceConfigToMap(media.sourceConfig)
+        : <String, dynamic>{};
+    final sourceProvider = media.hasSourceProvider()
+        ? SourceConfigCodec.providerToString(media.sourceProvider)
+        : '';
+    return SyncTvMovie(
       id: media.id,
       name: media.name,
       url: (metadata['url'] ?? sourceConfig['url'] ?? '').toString(),
@@ -1394,22 +1560,27 @@ class RoomRealtimeCodec {
       addedAt: media.addedAt.toInt(),
       availability: media.availability.value,
       version: media.version.toInt(),
-      type: media.sourceProvider,
+      type: sourceProvider,
       headers: _stringMap(metadata['headers']),
       proxy: metadata['proxy'] == true,
-      live: media.sourceProvider == 'rtmp' ||
-          (media.sourceProvider == 'bilibili' &&
-              sourceConfig['type'] == 'live') ||
+      live: sourceProvider == 'rtmp' ||
+          (sourceProvider == 'bilibili' && sourceConfig['type'] == 'live') ||
           metadata['is_live'] == true,
-      sourceProvider: media.sourceProvider,
+      sourceProvider: sourceProvider,
       providerInstanceName: media.providerInstanceName,
       sourceConfig: sourceConfig,
       metadata: metadata,
     );
   }
 
-  static WMovie _playlistFromProto(client.Playlist playlist) {
-    return WMovie(
+  static SyncTvMovie _playlistFromProto(client.Playlist playlist) {
+    final sourceProvider = playlist.hasSourceProvider()
+        ? SourceConfigCodec.providerToString(playlist.sourceProvider)
+        : '';
+    final sourceConfig = playlist.hasSourceConfig()
+        ? SourceConfigCodec.playlistSourceConfigToMap(playlist.sourceConfig)
+        : <String, dynamic>{};
+    return SyncTvMovie(
       id: playlist.id,
       name: playlist.name,
       url: '',
@@ -1422,21 +1593,21 @@ class RoomRealtimeCodec {
       itemCount: playlist.itemCount,
       availability: playlist.availability.value,
       version: playlist.version.toInt(),
-      type: playlist.isDynamic ? playlist.sourceProvider : 'playlist',
-      sourceProvider: playlist.sourceProvider,
+      type: playlist.isDynamic ? sourceProvider : 'playlist',
+      sourceProvider: sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
-      sourceConfig: _decodeJsonBytes(playlist.sourceConfig),
+      sourceConfig: sourceConfig,
       metadata: {'is_dynamic': playlist.isDynamic},
     );
   }
 
-  static WMovie _dynamicItemFromProto(
+  static SyncTvMovie _dynamicItemFromProto(
     client.PlaylistItem item, {
     required String playlistId,
   }) {
     final target = Uint8List.fromList(item.target);
     final encodedTarget = base64Url.encode(target);
-    return WMovie(
+    return SyncTvMovie(
       id: encodedTarget,
       name: item.name,
       url: '',
@@ -1452,8 +1623,8 @@ class RoomRealtimeCodec {
     );
   }
 
-  static WUser _memberFromProto(common.RoomMember member) {
-    return WUser(
+  static SyncTvUser _memberFromProto(common.RoomMember member) {
+    return SyncTvUser(
       id: member.userId,
       username: member.username,
       role: member.role.value,

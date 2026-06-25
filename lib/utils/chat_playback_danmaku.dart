@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/models/synctv_models.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/utils/chat_reactions.dart';
 
 class PlaybackDanmakuWindow {
@@ -34,11 +34,11 @@ class PlaybackDanmakuFetchResult {
   final List<DanmakuItem> items;
 }
 
-String playbackDanmakuSourceKey(WMovie? movie) {
+String playbackDanmakuSourceKey(SyncTvMovie? movie) {
   if (movie == null) return '';
-  final target = movie.playbackWatchTarget ?? '';
-  final mediaId = movie.playbackWatchMediaId;
-  final playlistId = movie.playbackWatchPlaylistId;
+  final target = movie.playbackTarget ?? '';
+  final mediaId = movie.playbackMediaId;
+  final playlistId = movie.playbackPlaylistId;
   if (mediaId.isEmpty && playlistId.isEmpty && target.isEmpty) return '';
   return [
     mediaId,
@@ -49,7 +49,7 @@ String playbackDanmakuSourceKey(WMovie? movie) {
 
 Future<PlaybackDanmakuFetchResult?> fetchPlaybackDanmakuWindow({
   required String roomId,
-  required WMovie? movie,
+  required SyncTvMovie? movie,
   required double positionSeconds,
   double beforeSeconds = 5,
   double afterSeconds = 90,
@@ -59,13 +59,13 @@ Future<PlaybackDanmakuFetchResult?> fetchPlaybackDanmakuWindow({
   final sourceKey = playbackDanmakuSourceKey(movie);
   if (sourceKey.isEmpty) return null;
 
-  final target = movie.playbackWatchTarget;
+  final target = movie.playbackTarget;
   final playbackTarget =
       target == null ? const <int>[] : base64Url.decode(target);
-  final messages = await WatchTogetherService.getChatPlaybackMessages(
+  final messages = await SyncTvService.getChatPlaybackMessages(
     roomId,
-    playbackMediaId: movie.playbackWatchMediaId,
-    playbackPlaylistId: movie.playbackWatchPlaylistId,
+    playbackMediaId: movie.playbackMediaId,
+    playbackPlaylistId: movie.playbackPlaylistId,
     playbackTarget: playbackTarget,
     positionSeconds: positionSeconds < 0 ? 0 : positionSeconds,
     beforeSeconds: beforeSeconds,

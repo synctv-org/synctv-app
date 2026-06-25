@@ -4,7 +4,7 @@ import 'dart:math';
 import 'dart:async';
 import 'dart:io';
 import 'package:synctv_app/models/room_media_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
 /// 聊天输入区域组件
@@ -29,7 +29,7 @@ class ChatInputArea extends StatefulWidget {
   final VoidCallback? onBackToBottom;
   final bool mentionCandidatesLoading;
   final bool mentionCandidatesHasMore;
-  final List<WUser> mentionCandidates;
+  final List<SyncTvUser> mentionCandidates;
   final ValueChanged<List<ChatMentionInfo>>? onMentionsChanged;
 
   const ChatInputArea({
@@ -263,7 +263,7 @@ class TextInputArea extends StatefulWidget {
   final bool mentionCandidatesLoading;
   final bool mentionCandidatesHasMore;
   final double animationValue;
-  final List<WUser> mentionCandidates;
+  final List<SyncTvUser> mentionCandidates;
   final ValueChanged<List<ChatMentionInfo>>? onMentionsChanged;
 
   const TextInputArea({
@@ -388,7 +388,7 @@ class _TextInputAreaState extends State<TextInputArea> {
 
   bool get _hasMentionToken => _mentionTokenStart >= 0;
 
-  List<WUser> get _filteredMentionCandidates {
+  List<SyncTvUser> get _filteredMentionCandidates {
     if (!_hasMentionToken || widget.mentionCandidates.isEmpty) {
       return const [];
     }
@@ -403,7 +403,7 @@ class _TextInputAreaState extends State<TextInputArea> {
         .toList();
   }
 
-  void _selectMention(WUser user) {
+  void _selectMention(SyncTvUser user) {
     final selection = widget.textController.selection;
     if (_mentionTokenStart < 0 || !selection.isValid) return;
     final text = widget.textController.text;
@@ -543,39 +543,26 @@ class _TextInputAreaState extends State<TextInputArea> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: AppTextField(
                       focusNode: _focusNode,
                       controller: widget.textController,
-                      decoration: InputDecoration(
-                        hintText: hasSelectedImage ? '请描述图片...' : '输入消息...',
-                        prefixIcon: const Icon(Icons.chat_bubble_outline),
-                        filled: true,
-                        fillColor: fieldFill,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: fieldBorder),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: fieldBorder),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(
-                            color: theme.colorScheme.primary,
-                            width: 1.4,
-                          ),
-                        ),
-                        disabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: fieldBorder),
-                        ),
+                      label: '消息',
+                      showLabel: false,
+                      hintText: hasSelectedImage ? '请描述图片...' : '输入消息...',
+                      prefixIcon: Icons.chat_bubble_outline,
+                      filled: true,
+                      fillColor: fieldFill,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
                       ),
+                      borderRadius: BorderRadius.circular(8),
+                      enabledBorderSide: BorderSide(color: fieldBorder),
+                      focusedBorderSide: BorderSide(
+                        color: theme.colorScheme.primary,
+                        width: 1.4,
+                      ),
+                      disabledBorderSide: BorderSide(color: fieldBorder),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -583,6 +570,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                       minLines: 1,
                       keyboardType: TextInputType.multiline,
                       textInputAction: TextInputAction.send,
+                      showClearButton: false,
                       onSubmitted:
                           canSend ? (_) => widget.onSendMessage() : null,
                       onChanged: (_) => _refreshInputState(),
@@ -592,7 +580,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                   ),
                   if ((widget.conversationType == 'dify' ||
                           widget.conversationType == 'openai' ||
-                          widget.conversationType == 'watch_together') &&
+                          widget.conversationType == 'synctv') &&
                       !hasSelectedImage) ...[
                     const SizedBox(width: 10),
                     AppGlassIconButton(
@@ -659,11 +647,11 @@ class _MentionSuggestions extends StatelessWidget {
     required this.onSelected,
   });
 
-  final List<WUser> users;
+  final List<SyncTvUser> users;
   final bool loading;
   final bool hasMore;
   final VoidCallback? onLoadMore;
-  final ValueChanged<WUser> onSelected;
+  final ValueChanged<SyncTvUser> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -685,8 +673,9 @@ class _MentionSuggestions extends StatelessWidget {
                   child: SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+                    child: AppLoadingIndicator(
+                      size: AppLoadingSize.sm,
+                      centered: false,
                       color: theme.colorScheme.primary,
                     ),
                   ),
@@ -703,7 +692,7 @@ class _MentionSuggestions extends StatelessWidget {
                     }
                     return false;
                   },
-                  child: ListView.separated(
+                  child: AppListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: users.length + (loading || hasMore ? 1 : 0),
                     separatorBuilder: (_, __) => const SizedBox(width: 6),
@@ -715,8 +704,9 @@ class _MentionSuggestions extends StatelessWidget {
                             child: Center(
                               child: SizedBox.square(
                                 dimension: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                                child: AppLoadingIndicator(
+                                  size: AppLoadingSize.sm,
+                                  centered: false,
                                 ),
                               ),
                             ),

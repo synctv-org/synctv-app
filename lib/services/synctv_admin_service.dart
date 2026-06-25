@@ -4,7 +4,8 @@ import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/admin_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/source_config_codec.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_account_service.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_memory_cache.dart';
@@ -81,7 +82,7 @@ class SyncTvAdminDomainService {
     await _api.adminService.deleteUser(admin.DeleteUserRequest(userId: userId));
   }
 
-  Future<WUser> getUser(String userId) async {
+  Future<SyncTvUser> getUser(String userId) async {
     final response = await _api.adminService.getUser(
       admin.GetUserRequest(userId: userId),
     );
@@ -264,6 +265,8 @@ class SyncTvAdminDomainService {
     int page = 1,
     int pageSize = 20,
     String? search,
+    String categoryId = '',
+    List<String> labelIds = const [],
     common_enum.RoomStatus status =
         common_enum.RoomStatus.ROOM_STATUS_UNSPECIFIED,
     bool? isBanned,
@@ -277,6 +280,8 @@ class SyncTvAdminDomainService {
         page: page,
         pageSize: pageSize,
         search: search,
+        categoryId: categoryId,
+        labelIds: labelIds,
         status: status,
         isBanned: isBanned,
         sortBy: sortBy,
@@ -330,18 +335,18 @@ class SyncTvAdminDomainService {
     await _api.adminService.deleteRoom(admin.DeleteRoomRequest(roomId: roomId));
   }
 
-  Future<WRoom> getRoom(String roomId) async {
+  Future<SyncTvRoom> getRoom(String roomId) async {
     final response = await _api.adminService.getRoom(
       admin.GetRoomRequest(roomId: roomId),
     );
     return _api.mapAdminRoom(response.room);
   }
 
-  Future<WRoomSettings> getRoomSettings(
+  Future<SyncTvRoomSettings> getRoomSettings(
     String roomId, {
     bool refresh = false,
   }) async {
-    return _cache.get<WRoomSettings>(
+    return _cache.get<SyncTvRoomSettings>(
       'admin:room:$roomId:settings',
       ttl: const Duration(minutes: 2),
       refresh: refresh,
@@ -349,16 +354,16 @@ class SyncTvAdminDomainService {
     );
   }
 
-  Future<WRoomSettings> _fetchRoomSettings(String roomId) async {
+  Future<SyncTvRoomSettings> _fetchRoomSettings(String roomId) async {
     final response = await _api.adminService.getRoomSettings(
       admin.GetRoomSettingsRequest(roomId: roomId),
     );
-    return WRoomSettings.fromJson(decodeJsonBytes(response.settings));
+    return SyncTvRoomSettings.fromJson(decodeJsonBytes(response.settings));
   }
 
   Future<void> updateRoomSettings(
     String roomId,
-    WRoomSettings settings,
+    SyncTvRoomSettings settings,
   ) async {
     await _api.adminService.updateRoomSettings(
       admin.UpdateRoomSettingsRequest(
@@ -384,6 +389,127 @@ class SyncTvAdminDomainService {
     await _api.adminService.updateRoomPassword(
       admin.UpdateRoomPasswordRequest(roomId: roomId, newPassword: password),
     );
+  }
+
+  Future<List<RoomCategoryInfo>> listRoomCategories({
+    bool includeDisabled = false,
+    bool refresh = false,
+  }) {
+    return _cache.get<List<RoomCategoryInfo>>(
+      'admin:room-categories:$includeDisabled',
+      ttl: const Duration(minutes: 2),
+      refresh: refresh,
+      loader: () async {
+        final response = await _api.adminService.listRoomCategories(
+          admin.ListRoomCategoriesRequest(
+            includeDisabled: includeDisabled,
+          ),
+        );
+        return response.categories
+            .map(_api.mapRoomCategory)
+            .toList(growable: false);
+      },
+    );
+  }
+
+  Future<RoomCategoryInfo> upsertRoomCategory({
+    required String key,
+    required String name,
+    String description = '',
+    int sortOrder = 0,
+    bool? isEnabled,
+  }) async {
+    final response = await _api.adminService.upsertRoomCategory(
+      admin.UpsertRoomCategoryRequest(
+        key: key,
+        name: name,
+        description: description,
+        sortOrder: sortOrder,
+        isEnabled: isEnabled,
+      ),
+    );
+    _cache.invalidatePrefix('admin:room-categories');
+    _cache.invalidatePrefix('public:room-categories');
+    return _api.mapRoomCategory(response.category);
+  }
+
+  Future<void> deleteRoomCategory(String categoryId) async {
+    await _api.adminService.deleteRoomCategory(
+      admin.DeleteRoomCategoryRequest(categoryId: categoryId),
+    );
+    _cache.invalidatePrefix('admin:room-categories');
+    _cache.invalidatePrefix('public:room-categories');
+  }
+
+  Future<List<RoomLabelInfo>> listRoomLabels({
+    bool includeDisabled = false,
+    String categoryId = '',
+    bool refresh = false,
+  }) {
+    return _cache.get<List<RoomLabelInfo>>(
+      'admin:room-labels:$includeDisabled:$categoryId',
+      ttl: const Duration(minutes: 2),
+      refresh: refresh,
+      loader: () async {
+        final response = await _api.adminService.listRoomLabels(
+          admin.ListRoomLabelsRequest(
+            includeDisabled: includeDisabled,
+            categoryId: categoryId,
+          ),
+        );
+        return response.labels.map(_api.mapRoomLabel).toList(growable: false);
+      },
+    );
+  }
+
+  Future<RoomLabelInfo> upsertRoomLabel({
+    required String key,
+    required String name,
+    String description = '',
+    String color = '',
+    String categoryId = '',
+    int sortOrder = 0,
+    bool? isEnabled,
+  }) async {
+    final response = await _api.adminService.upsertRoomLabel(
+      admin.UpsertRoomLabelRequest(
+        key: key,
+        name: name,
+        description: description,
+        color: color,
+        categoryId: categoryId,
+        sortOrder: sortOrder,
+        isEnabled: isEnabled,
+      ),
+    );
+    _cache.invalidatePrefix('admin:room-labels');
+    _cache.invalidatePrefix('public:room-labels');
+    return _api.mapRoomLabel(response.label);
+  }
+
+  Future<void> deleteRoomLabel(String labelId) async {
+    await _api.adminService.deleteRoomLabel(
+      admin.DeleteRoomLabelRequest(labelId: labelId),
+    );
+    _cache.invalidatePrefix('admin:room-labels');
+    _cache.invalidatePrefix('public:room-labels');
+  }
+
+  Future<SyncTvRoom> updateRoomTaxonomy(
+    String roomId, {
+    String? categoryId,
+    List<String> labelIds = const [],
+    bool clearCategory = false,
+  }) async {
+    final response = await _api.adminService.updateRoomTaxonomy(
+      admin.UpdateRoomTaxonomyRequest(
+        roomId: roomId,
+        categoryId: categoryId,
+        labelIds: labelIds,
+        clearCategory: clearCategory,
+      ),
+    );
+    return _api.mapAdminRoom(response.room);
   }
 
   Future<AdminSettingsGroup> updateSettingInGroup(
@@ -473,7 +599,7 @@ class SyncTvAdminDomainService {
     );
   }
 
-  Future<List<WUser>> listAdmins({String search = ''}) async {
+  Future<List<SyncTvUser>> listAdmins({String search = ''}) async {
     final page = await listAdminsPage(
       page: 1,
       pageSize: 100,
@@ -607,7 +733,7 @@ class SyncTvAdminDomainService {
       provider_common.ListProviderInstancesRequest(
         page: page,
         pageSize: pageSize,
-        providerType: providerType,
+        providerType: SourceConfigCodec.providerFromString(providerType),
         search: search,
         enabled: enabled,
         tls: tls,
@@ -650,7 +776,7 @@ class SyncTvAdminDomainService {
   }) async {
     final response = await _api.providerCommon.listAvailableProviderInstances(
       provider_common.ListAvailableProviderInstancesRequest(
-        providerType: providerType,
+        providerType: SourceConfigCodec.providerFromString(providerType),
       ),
     );
     return response.instances.toList();
@@ -658,7 +784,9 @@ class SyncTvAdminDomainService {
 
   Future<List<String>> listProviderBackends(String providerType) async {
     final response = await _api.providerCommon.listProviderBackends(
-      provider_common.ListProviderBackendsRequest(providerType: providerType),
+      provider_common.ListProviderBackendsRequest(
+        providerType: SourceConfigCodec.providerFromString(providerType),
+      ),
     );
     return response.backends.toList();
   }
@@ -678,7 +806,7 @@ class SyncTvAdminDomainService {
       provider_common.AddProviderInstanceRequest(
         name: name,
         endpoint: endpoint,
-        providers: providers,
+        providers: SourceConfigCodec.providersFromStrings(providers),
         comment: comment,
         timeoutSeconds: timeoutSeconds,
         tls: tls,
@@ -712,7 +840,7 @@ class SyncTvAdminDomainService {
         timeoutSeconds: timeoutSeconds,
         tls: tls,
         insecureTls: insecureTls,
-        providers: providers,
+        providers: SourceConfigCodec.providersFromStrings(providers),
         jwtSecret: jwtSecret,
         customCa: customCa,
         clearComment_10: clearComment,
@@ -1160,7 +1288,7 @@ class SyncTvAdminDomainService {
       timeoutSeconds: instance.timeoutSeconds,
       tls: instance.tls,
       insecureTls: instance.insecureTls,
-      providers: instance.providers.toList(),
+      providers: SourceConfigCodec.providersToStrings(instance.providers),
       enabled: instance.enabled,
       status: instance.status.value,
       createdAt: instance.createdAt.toInt(),

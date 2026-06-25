@@ -1,5 +1,5 @@
 import 'package:synctv_app/models/account_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -366,7 +366,7 @@ class SyncTvAuthDomainService {
     return response.message;
   }
 
-  Future<WUser> createGuestToken(String roomId) async {
+  Future<SyncTvUser> createGuestToken(String roomId) async {
     final response = await _api.auth.createGuestToken(
       client.CreateGuestTokenRequest(roomId: roomId),
     );
@@ -375,7 +375,7 @@ class SyncTvAuthDomainService {
       roomId: response.roomId,
       displayName: response.displayName,
     );
-    return WUser(
+    return SyncTvUser(
       id: response.guestId,
       username: response.displayName.isEmpty ? 'Guest' : response.displayName,
       role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST.value,
@@ -438,7 +438,7 @@ class SyncTvAuthDomainService {
       );
     }
     return AuthResult(
-      user: WUser(
+      user: SyncTvUser(
         id: response.userInfo.userId,
         username: response.userInfo.username,
         email: response.userInfo.email.isEmpty ? null : response.userInfo.email,

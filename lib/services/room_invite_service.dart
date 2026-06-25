@@ -1,7 +1,7 @@
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 
 class RoomInvite {
   const RoomInvite({
@@ -18,8 +18,8 @@ class RoomInviteService {
 
   static const String linkPath = '/rooms/join';
 
-  static String createInviteLink(WRoom room) {
-    final activeServer = WatchTogetherService.activeServer;
+  static String createInviteLink(SyncTvRoom room) {
+    final activeServer = SyncTvService.activeServer;
     if (activeServer == null) {
       throw SyncTvApiException('请先添加并连接服务器', statusCode: 400);
     }
@@ -68,7 +68,7 @@ class RoomInviteService {
   static List<SyncTvServerProfile> matchingServers(String? serverId) {
     final id = serverId?.trim();
     if (id == null || id.isEmpty) return const [];
-    return WatchTogetherService.servers
+    return SyncTvService.servers
         .where((server) => server.serverId == id)
         .toList(growable: false);
   }

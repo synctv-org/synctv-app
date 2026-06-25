@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:synctv_app/models/synctv_models.dart';
+import 'package:synctv_app/utils/room_taxonomy.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
 class CinemaRoomCard extends StatelessWidget {
@@ -17,6 +19,8 @@ class CinemaRoomCard extends StatelessWidget {
   final bool needPassword;
   final bool hidden;
   final int createdAt;
+  final String categoryName;
+  final List<RoomLabelInfo> labels;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool showScaleAnimation;
@@ -37,6 +41,8 @@ class CinemaRoomCard extends StatelessWidget {
     required this.needPassword,
     required this.hidden,
     required this.createdAt,
+    this.categoryName = '',
+    this.labels = const [],
     required this.onTap,
     this.onLongPress,
     this.showScaleAnimation = false,
@@ -53,6 +59,7 @@ class CinemaRoomCard extends StatelessWidget {
         ? '在线 $viewerCount / 成员 $memberCount'
         : '在线 $viewerCount';
     final connectionText = connectionCount > 0 ? '$connectionCount 连接' : '暂无连接';
+    final hasTaxonomy = categoryName.trim().isNotEmpty || labels.isNotEmpty;
     final dateStr = createdAt > 0
         ? DateFormat('MM-dd HH:mm')
             .format(DateTime.fromMillisecondsSinceEpoch(createdAt))
@@ -126,6 +133,14 @@ class CinemaRoomCard extends StatelessWidget {
               ),
             ),
           ),
+          if (hasTaxonomy)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: _RoomTaxonomyRow(
+                categoryName: categoryName,
+                labels: labels,
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: _RoomCreator(
@@ -241,6 +256,84 @@ class _RoomCreator extends StatelessWidget {
   }
 }
 
+class _RoomTaxonomyRow extends StatelessWidget {
+  const _RoomTaxonomyRow({
+    required this.categoryName,
+    required this.labels,
+  });
+
+  final String categoryName;
+  final List<RoomLabelInfo> labels;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final category = categoryName.trim();
+    final visibleLabels = labels.take(category.isEmpty ? 3 : 2).toList();
+    final overflowCount = labels.length - visibleLabels.length;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        if (category.isNotEmpty)
+          AppBadge(
+            icon: Icons.category_outlined,
+            iconSize: 12,
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            color: theme.colorScheme.primary,
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.10),
+            borderSide: BorderSide(
+              color: theme.colorScheme.primary.withValues(alpha: 0.24),
+            ),
+            constraints: const BoxConstraints(maxWidth: 150),
+            label: Text(
+              category,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        for (final label in visibleLabels) _RoomLabelBadge(label: label),
+        if (overflowCount > 0)
+          AppBadge(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            color: theme.colorScheme.onSurfaceVariant,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.7),
+            label: Text('+$overflowCount'),
+          ),
+      ],
+    );
+  }
+}
+
+class _RoomLabelBadge extends StatelessWidget {
+  const _RoomLabelBadge({required this.label});
+
+  final RoomLabelInfo label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = parseRoomLabelColor(
+      label.color,
+      theme.colorScheme.secondary,
+    );
+    final text = label.name.trim().isEmpty ? label.key : label.name.trim();
+    return AppBadge(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      color: color,
+      backgroundColor: color.withValues(alpha: 0.11),
+      borderSide: BorderSide(color: color.withValues(alpha: 0.24)),
+      constraints: const BoxConstraints(maxWidth: 126),
+      label: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
 class _RoomCover extends StatelessWidget {
   const _RoomCover({
     required this.coverUrl,
@@ -265,7 +358,7 @@ class _RoomCover extends StatelessWidget {
         ),
       ),
     );
-    return ClipRRect(
+    return AppPanelSurface(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
       child: AspectRatio(
         aspectRatio: 16 / 7,
@@ -274,10 +367,16 @@ class _RoomCover extends StatelessWidget {
             : Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    coverUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => fallback,
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      return AppImageThumbnail(
+                        url: coverUrl,
+                        width: constraints.maxWidth,
+                        height: constraints.maxHeight,
+                        borderRadius: BorderRadius.zero,
+                        errorChild: fallback,
+                      );
+                    },
                   ),
                   DecoratedBox(
                     decoration: BoxDecoration(

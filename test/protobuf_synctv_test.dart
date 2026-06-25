@@ -15,7 +15,8 @@ import 'package:synctv_app/models/playback_client_profile.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/source_config_codec.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/bilibili_geetest_service.dart';
 import 'package:synctv_app/services/oauth2_callback_config.dart';
 import 'package:synctv_app/services/oauth2_callback_parser.dart';
@@ -23,11 +24,12 @@ import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/services/room_invite_service.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_auth_service.dart';
+import 'package:synctv_app/services/synctv_admin_service.dart';
 import 'package:synctv_app/services/synctv_public_room_service.dart';
 import 'package:synctv_app/services/synctv_room_management_service.dart';
 import 'package:synctv_app/services/synctv_room_media_service.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -36,6 +38,8 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/common.pb.dart' as common_pb;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
 import 'package:synctv_app/src/generated/proto/oauth2.pb.dart' as oauth2;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 import 'package:synctv_app/src/generated/proto/providers/alist.pb.dart'
     as alist;
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pb.dart'
@@ -244,7 +248,7 @@ void main() {
       () {
     final message = RoomRealtimeCodec.buildGuardedPlaybackStateUpdateMessage(
       PlaybackControlAction.pause,
-      WPlaybackStatus(
+      SyncTvPlaybackStatus(
         playbackRate: 1,
         version: 7,
         playingMediaId: 'med_1',
@@ -317,8 +321,8 @@ void main() {
     expect(snapshotObserve.hasPlayback(), isTrue);
     final profile = snapshotObserve.playback.playbackClientProfile;
     expect(
-      profile.deliveryPreference,
-      client.PlaybackDeliveryPreference.PLAYBACK_DELIVERY_PREFERENCE_AUTO,
+      profile.streamPreference,
+      client.PlaybackStreamPreference.PLAYBACK_STREAM_PREFERENCE_AUTO,
     );
     expect(profile.maxAudioChannels, 2);
     expect(profile.supportedVideoCodecs, [
@@ -572,6 +576,86 @@ void main() {
     expect(messages, isEmpty);
   });
 
+  test('chat pin resource event is decoded from websocket payload', () {
+    final decoded = RoomRealtimeCodec.decode(
+      client.ServerMessage(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'chat_pin_events',
+          eventCursor: client.EventCursor(sequence: Int64(78)),
+          chatPinEvent: client.ChatPinEvent(
+            eventId: 'pin_evt_1',
+            roomId: 'room_1',
+            kind: client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_PINNED,
+            message: client.ChatMessageReceive(
+              id: 'msg_1',
+              roomId: 'room_1',
+              userId: 'usr_sender',
+              username: 'sender',
+              content: 'pinned',
+              timestamp: Int64(1760000100),
+              status: client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE,
+            ),
+            pin: client.ChatMessagePin(
+              pinnedByUserId: 'usr_mod',
+              pinnedByUsername: 'mod',
+              note: 'important',
+              pinnedAt: Int64(1760000200),
+            ),
+            occurredAt: Int64(1760000201),
+            sequence: Int64(78),
+          ),
+        ),
+      ).writeToBuffer(),
+    );
+
+    expect(decoded.kind, RoomRealtimeMessageKind.chatPin);
+    expect(decoded.resourceObserveId, 'chat_pin_events');
+    expect(decoded.resourceVersion, '78');
+    expect(decoded.chatPinEvent?.eventId, 'pin_evt_1');
+    expect(decoded.chatPinEvent?.message.id, 'msg_1');
+    expect(decoded.chatPinEvent?.pin?.note, 'important');
+    expect(decoded.chatPinEvent?.sequence, 78);
+
+    final observe = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodeChatPinEventsObservation(version: '78'),
+    );
+    expect(observe.observeResource.hasChatPinEvents(), isTrue);
+    expect(
+      observe.observeResource.chatPinEvents.afterEventSequence.toInt(),
+      78,
+    );
+    expect(
+      observe.observeResource.deliveryMode,
+      client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
+    );
+  });
+
+  test('chat pin state is preserved for realtime chat entries', () {
+    const pin = ChatPinInfo(
+      pinnedByUserId: 'usr_mod',
+      pinnedByUsername: 'mod',
+      note: 'important',
+      pinnedAt: 1760000200,
+    );
+    const message = RoomChatMessageInfo(
+      id: 'msg_1',
+      roomId: 'room_1',
+      userId: 'usr_sender',
+      username: 'sender',
+      content: 'pinned',
+      timestamp: 1760000100,
+      pin: pin,
+    );
+
+    final entry = RoomRealtimeChatEntry.fromHistory(message);
+    expect(entry.isPinned, isTrue);
+    expect(entry.pin?.note, 'important');
+
+    final cleared = entry.copyWith(clearPin: true);
+    expect(cleared.isPinned, isFalse);
+    expect(cleared.pin, isNull);
+  });
+
   test('chat reactions are mapped from protobuf events and endpoints',
       () async {
     final requests = <http.Request>[];
@@ -673,6 +757,324 @@ void main() {
     expect(users.users.single.userId, 'usr_1');
     expect(users.users.single.username, 'alice');
     expect(users.users.single.reactedAt, 1760000200);
+  });
+
+  test('chat search and pin endpoints map current protobuf contracts',
+      () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        switch (request.url.path) {
+          case '/api/rooms/room_1/chat/search':
+            return http.Response(
+              jsonEncode({
+                'messages': [
+                  {
+                    'id': 'msg_1',
+                    'room_id': 'room_1',
+                    'user_id': 'usr_sender',
+                    'username': 'sender',
+                    'content': 'search hit',
+                    'timestamp': '1760000100',
+                    'version': '1',
+                    'status': client_enum
+                        .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
+                    'pin': {
+                      'pinned_by_user_id': 'usr_mod',
+                      'pinned_by_username': 'mod',
+                      'note': 'important',
+                      'pinned_at': '1760000200',
+                    },
+                  }
+                ],
+                'next_cursor': 'cursor_2',
+                'event_cursor': {'sequence': '77'},
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/rooms/room_1/chat/pinned-messages':
+            return http.Response(
+              jsonEncode({
+                'messages': [
+                  {
+                    'message': {
+                      'id': 'msg_1',
+                      'room_id': 'room_1',
+                      'user_id': 'usr_sender',
+                      'username': 'sender',
+                      'content': 'pinned',
+                      'timestamp': '1760000100',
+                      'version': '1',
+                      'status': client_enum
+                          .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
+                    },
+                    'pinned_by_user_id': 'usr_mod',
+                    'pinned_by_username': 'mod',
+                    'note': 'important',
+                    'pinned_at': '1760000200',
+                  }
+                ],
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/rooms/room_1/chat/messages/msg_1/pin':
+            if (request.method == 'PUT') {
+              return http.Response(
+                jsonEncode({
+                  'event': {
+                    'event_id': 'pin_evt_1',
+                    'room_id': 'room_1',
+                    'kind': client_enum
+                        .ChatPinEventKind.CHAT_PIN_EVENT_KIND_PINNED.value,
+                    'message': {
+                      'id': 'msg_1',
+                      'room_id': 'room_1',
+                      'user_id': 'usr_sender',
+                      'username': 'sender',
+                      'content': 'pinned',
+                      'timestamp': '1760000100',
+                      'version': '1',
+                      'status': client_enum
+                          .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
+                    },
+                    'pin': {
+                      'pinned_by_user_id': 'usr_mod',
+                      'pinned_by_username': 'mod',
+                      'note': 'important',
+                      'pinned_at': '1760000200',
+                    },
+                    'occurred_at': '1760000201',
+                    'sequence': '78',
+                  }
+                }),
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            return http.Response(
+              jsonEncode({
+                'event': {
+                  'event_id': 'pin_evt_2',
+                  'room_id': 'room_1',
+                  'kind': client_enum
+                      .ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED.value,
+                  'message': {
+                    'id': 'msg_1',
+                    'room_id': 'room_1',
+                    'user_id': 'usr_sender',
+                    'username': 'sender',
+                    'content': 'unpinned',
+                    'timestamp': '1760000100',
+                    'version': '1',
+                    'status': client_enum
+                        .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
+                  },
+                  'occurred_at': '1760000301',
+                  'sequence': '79',
+                }
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response(
+            'unexpected ${request.method} ${request.url}', 404);
+      }),
+    );
+    final service = SyncTvRoomMediaDomainService(api);
+
+    final search = await service.searchChatMessages(
+      'room_1',
+      query: 'needle',
+      limit: 25,
+      cursor: 'cursor_1',
+      includeDeleted: true,
+      userId: 'usr_sender',
+    );
+    final pinned = await service.listPinnedChatMessages('room_1', limit: 10);
+    final pinEvent = await service.pinChatMessage(
+      'room_1',
+      'msg_1',
+      note: 'important',
+    );
+    final unpinEvent = await service.unpinChatMessage('room_1', 'msg_1');
+
+    expect(requests[0].method, 'GET');
+    expect(requests[0].url.queryParameters, {
+      'query': 'needle',
+      'cursor': 'cursor_1',
+      'limit': '25',
+      'include_deleted': 'true',
+      'user_id': 'usr_sender',
+    });
+    expect(search.nextCursor, 'cursor_2');
+    expect(search.eventCursor, '77');
+    expect(search.messages.single.isPinned, isTrue);
+    expect(search.messages.single.pin?.note, 'important');
+
+    expect(requests[1].method, 'GET');
+    expect(requests[1].url.queryParameters, {'limit': '10'});
+    expect(pinned.single.message.id, 'msg_1');
+    expect(pinned.single.pin.pinnedByUsername, 'mod');
+
+    expect(requests[2].method, 'PUT');
+    final pinBody = jsonDecode(requests[2].body) as Map<String, dynamic>;
+    expect(pinBody..remove('client_operation_id'), {
+      'message_id': 'msg_1',
+      'note': 'important',
+    });
+    expect(jsonDecode(requests[2].body),
+        containsPair('client_operation_id', isA<String>()));
+    expect(pinEvent.eventId, 'pin_evt_1');
+    expect(pinEvent.kind,
+        client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_PINNED.value);
+    expect(pinEvent.pin?.pinnedAt, 1760000200);
+
+    expect(requests[3].method, 'DELETE');
+    final unpinBody = jsonDecode(requests[3].body) as Map<String, dynamic>;
+    expect(unpinBody..remove('client_operation_id'), {
+      'message_id': 'msg_1',
+    });
+    expect(jsonDecode(requests[3].body),
+        containsPair('client_operation_id', isA<String>()));
+    expect(unpinEvent.kind,
+        client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED.value);
+    expect(unpinEvent.pin, isNull);
+  });
+
+  test('chat pin watch decodes SSE resource events', () async {
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      expect(request.uri.path, '/api/rooms/room_1/watch/chat-pin-events');
+      expect(request.uri.queryParameters, {
+        'delivery_mode': 'push_snapshot',
+        'after_event_sequence': '76',
+      });
+      request.response
+        ..statusCode = 200
+        ..headers.contentType =
+            io.ContentType('text', 'event-stream', charset: 'utf-8')
+        ..write(
+          'event: changed\n'
+          'data: ${jsonEncode({
+                'observeId': 'chat_pin_events',
+                'eventCursor': {'sequence': '78'},
+                'chatPinEvent': {
+                  'eventId': 'pin_evt_1',
+                  'roomId': 'room_1',
+                  'kind': 'CHAT_PIN_EVENT_KIND_PINNED',
+                  'message': {
+                    'id': 'msg_1',
+                    'roomId': 'room_1',
+                    'userId': 'usr_sender',
+                    'username': 'sender',
+                    'content': 'pinned',
+                    'timestamp': '1760000100',
+                    'status': 'CHAT_MESSAGE_STATUS_ACTIVE',
+                  },
+                  'pin': {
+                    'pinnedByUserId': 'usr_mod',
+                    'pinnedByUsername': 'mod',
+                    'note': 'important',
+                    'pinnedAt': '1760000200',
+                  },
+                  'occurredAt': '1760000201',
+                  'sequence': '78',
+                },
+              })}\n\n',
+        );
+      await request.response.close();
+    });
+    final api = SyncTvApiClient(
+      baseUrl: 'http://${server.address.host}:${server.port}',
+      session: SyncTvSession()..accessToken = 'token',
+    );
+    final service = SyncTvRoomMediaDomainService(api);
+
+    try {
+      final event =
+          await service.watchChatPinEvents('room_1', version: '76').first;
+
+      expect(event.kind, RoomResourceWatchKind.changed);
+      expect(event.version, '78');
+      expect(event.snapshot?.eventId, 'pin_evt_1');
+      expect(event.snapshot?.message.id, 'msg_1');
+      expect(event.snapshot?.pin?.note, 'important');
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+  });
+
+  test('content reports can target rooms, users, members, and chat messages',
+      () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        expect(request.method, 'POST');
+        expect(request.url.path, '/api/rooms/room_1/reports');
+        return http.Response(
+          jsonEncode({'report_id': 'report_${requests.length}'}),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final service = SyncTvRoomMediaDomainService(api);
+
+    await service.reportRoom(
+      'room_1',
+      reasonCode: 'spam',
+      reason: 'room reason',
+    );
+    await service.reportUser(
+      'room_1',
+      'usr_target',
+      reasonCode: 'abuse',
+      reason: 'user reason',
+    );
+    await service.reportRoomMember(
+      'room_1',
+      'usr_member',
+      reasonCode: 'illegal',
+      reason: 'member reason',
+    );
+    await service.reportChatMessage(
+      'room_1',
+      'msg_1',
+      reasonCode: 'other',
+      reason: 'message reason',
+    );
+
+    expect(requests, hasLength(4));
+    expect(jsonDecode(requests[0].body), {
+      'room': {'room_id': 'room_1'},
+      'reason_code': 'spam',
+      'reason': 'room reason',
+    });
+    expect(jsonDecode(requests[1].body), {
+      'user': {'user_id': 'usr_target'},
+      'reason_code': 'abuse',
+      'reason': 'user reason',
+    });
+    expect(jsonDecode(requests[2].body), {
+      'room_member': {'room_id': 'room_1', 'user_id': 'usr_member'},
+      'reason_code': 'illegal',
+      'reason': 'member reason',
+    });
+    expect(jsonDecode(requests[3].body), {
+      'chat_message': {'room_id': 'room_1', 'message_id': 'msg_1'},
+      'reason_code': 'other',
+      'reason': 'message reason',
+    });
   });
 
   test('single chat message endpoint is exposed through room media service',
@@ -790,8 +1192,7 @@ void main() {
     expect(danmaku.text, 'sender: hello  😂5 🎉3');
   });
 
-  test('avatar upload attaches ownership proof metadata before update',
-      () async {
+  test('avatar upload completes ownership proof before update', () async {
     final upload = LocalImageUpload(
       bytes: Uint8List.fromList([10, 20, 30, 40, 50, 60]),
       fileName: 'avatar.png',
@@ -800,6 +1201,8 @@ void main() {
       height: 3,
     );
     Map<String, dynamic>? updateBody;
+    Map<String, dynamic>? completeBody;
+    var uploadSessionRequests = 0;
 
     final api = SyncTvApiClient(
       baseUrl: 'https://example.test',
@@ -807,28 +1210,63 @@ void main() {
       httpClient: MockClient((request) async {
         if (request.method == 'POST' &&
             request.url.path == '/api/user/avatar/upload-session') {
+          uploadSessionRequests += 1;
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          final parts = body['parts'] as List<dynamic>? ?? const [];
+          if (parts.isEmpty) {
+            return http.Response(
+              jsonEncode({
+                'plan': {
+                  'checksum_algorithm': 'sha256',
+                  'part_size_bytes': upload.sizeBytes,
+                  'parts': [
+                    {
+                      'part_number': 1,
+                      'offset_bytes': 0,
+                      'size_bytes': upload.sizeBytes,
+                    }
+                  ],
+                },
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }
+          expect(parts, [
+            {
+              'part_number': 1,
+              'offset_bytes': '0',
+              'size_bytes': upload.sizeBytes.toString(),
+              'checksum_sha256': upload.checksumSha256,
+            }
+          ]);
           return http.Response(
             jsonEncode({
               'session': {
-                'avatar': {
-                  'id': 'avatar_1',
-                  'storage_backend': 'local',
-                  'object_key': 'avatars/avatar_1.png',
-                  'url': '/api/user/avatar/avatar_1',
-                  'mime_type': 'image/png',
-                  'size_bytes': upload.sizeBytes,
-                  'width': upload.width,
-                  'height': upload.height,
-                  'metadata': {'file_name': upload.fileName},
-                },
+                'avatar_reference': {'id': 'avatar_1'},
                 'upload_required': false,
                 'ownership_proof_required': true,
                 'ownership_proof_nonce': 'nonce_1',
                 'ownership_proof_ranges': [
                   {'offset': 1, 'length': 3}
                 ],
-                'ownership_proof_metadata_key': '_synctv_ownership_proof',
+                'upload_token': 'upload-token',
+                'encoded_object_key': 'avatar-object-key',
               }
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        if (request.method == 'POST' &&
+            request.url.path ==
+                '/api/user/avatar-objects/avatar-object-key/complete') {
+          completeBody = jsonDecode(request.body) as Map<String, dynamic>;
+          return http.Response(
+            jsonEncode({
+              'complete': true,
+              'uploaded_size_bytes': upload.sizeBytes,
+              'uploaded_parts': [1],
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -841,7 +1279,6 @@ void main() {
               'user': {
                 'id': 'usr_1',
                 'username': 'root',
-                'avatar': updateBody?['avatar'],
               }
             }),
             200,
@@ -857,19 +1294,484 @@ void main() {
 
     final updated =
         await SyncTvFileUploadDomainService(api).updateUserAvatar(upload);
-    final avatarMetadata =
-        updateBody?['avatar']?['metadata'] as Map<String, dynamic>?;
 
     expect(updated.id, 'usr_1');
-    expect(avatarMetadata?['file_name'], 'avatar.png');
+    expect(uploadSessionRequests, 2);
+    expect(updateBody?['avatar_reference'], {'id': 'avatar_1'});
+    expect(completeBody?['file_id'], 'avatar_1');
+    expect(completeBody?['token'], 'upload-token');
+    expect(completeBody?['parts'], [
+      {
+        'part_number': 1,
+        'etag': '',
+        'size_bytes': upload.sizeBytes.toString(),
+        'checksum_sha256': upload.checksumSha256,
+      }
+    ]);
     expect(
-      avatarMetadata?['_synctv_ownership_proof'],
+      completeBody?['ownership_proof'],
       _expectedOwnershipProof(
         upload.bytes,
         nonce: 'nonce_1',
+        contentManifestSha256: _expectedContentManifestSha256(
+          upload.sizeBytes,
+          upload.sizeBytes,
+          [
+            (
+              partNumber: 1,
+              sizeBytes: upload.sizeBytes,
+              checksum: upload.checksumSha256
+            )
+          ],
+        ),
         ranges: const [(offset: 1, length: 3)],
       ),
     );
+  });
+
+  test('object upload facades send raw bytes and parse progress headers',
+      () async {
+    final uploadBytes = Uint8List.fromList([1, 2, 3, 4]);
+    final range = client.FileUploadRange(
+      start: Int64(1),
+      endInclusive: Int64(3),
+      totalSize: Int64(9),
+    );
+    final expectedPaths = <String>{
+      '/api/user/avatar-objects/avatar-object-key',
+      '/api/chat/attachment-objects/chat-attachment-key',
+      '/api/room/cover-objects/room-cover-key',
+      '/api/playlist/cover-objects/playlist-cover-key',
+      '/api/media/cover-objects/media-cover-key',
+    };
+    final seenPaths = <String>[];
+
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'access-token',
+      httpClient: MockClient((request) async {
+        seenPaths.add(request.url.path);
+        expect(request.method, 'PUT');
+        expect(expectedPaths, contains(request.url.path));
+        expect(request.headers.containsKey('authorization'), isFalse);
+        expect(request.headers['x-synctv-file-upload-token'], 'upload-token');
+        expect(request.headers['content-type'], 'image/png');
+        expect(request.bodyBytes, uploadBytes);
+        if (request.url.path.endsWith('/avatar-object-key')) {
+          expect(request.headers['content-range'], 'bytes 1-3/9');
+        } else {
+          expect(request.headers.containsKey('content-range'), isFalse);
+        }
+        return http.Response(
+          '',
+          204,
+          headers: {
+            'x-synctv-upload-complete': 'true',
+            'x-synctv-uploaded-size-bytes': uploadBytes.length.toString(),
+            'x-synctv-uploaded-parts': '1,2',
+          },
+        );
+      }),
+    );
+
+    final cases = <Future<dynamic>>[
+      api.user.uploadUserAvatarObject(
+        client.UploadUserAvatarObjectRequest(
+          encodedObjectKey: 'avatar-object-key',
+          token: 'upload-token',
+          contentType: 'image/png',
+          data: uploadBytes,
+          contentRange: range,
+        ),
+      ),
+      api.room.uploadChatAttachmentObject(
+        client.UploadChatAttachmentObjectRequest(
+          roomId: 'room_1',
+          encodedObjectKey: 'chat-attachment-key',
+          token: 'upload-token',
+          contentType: 'image/png',
+          data: uploadBytes,
+        ),
+      ),
+      api.room.uploadRoomCoverObject(
+        client.UploadRoomCoverObjectRequest(
+          encodedObjectKey: 'room-cover-key',
+          token: 'upload-token',
+          contentType: 'image/png',
+          data: uploadBytes,
+        ),
+      ),
+      api.room.uploadPlaylistCoverObject(
+        client.UploadPlaylistCoverObjectRequest(
+          encodedObjectKey: 'playlist-cover-key',
+          token: 'upload-token',
+          contentType: 'image/png',
+          data: uploadBytes,
+        ),
+      ),
+      api.room.uploadMediaCoverObject(
+        client.UploadMediaCoverObjectRequest(
+          encodedObjectKey: 'media-cover-key',
+          token: 'upload-token',
+          contentType: 'image/png',
+          data: uploadBytes,
+        ),
+      ),
+    ];
+
+    for (final pending in cases) {
+      final response = await pending;
+      expect(response.complete, isTrue);
+      expect(response.uploadedSizeBytes, Int64(uploadBytes.length));
+      expect(response.uploadedParts, [1, 2]);
+    }
+    expect(seenPaths.toSet(), expectedPaths);
+  });
+
+  test('object get facades map token, range, bytes, and response headers',
+      () async {
+    const manifest =
+        '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    final body = Uint8List.fromList([8, 9, 10]);
+    final expectedPaths = <String>{
+      '/api/user/avatar-objects/avatar-object-key',
+      '/api/chat/attachment-objects/chat-attachment-key',
+      '/api/room/cover-objects/room-cover-key',
+      '/api/playlist/cover-objects/playlist-cover-key',
+      '/api/media/cover-objects/media-cover-key',
+    };
+    final rangeHeaders = <String, String>{
+      '/api/user/avatar-objects/avatar-object-key': 'bytes=1-3',
+      '/api/chat/attachment-objects/chat-attachment-key': 'bytes=4-',
+      '/api/room/cover-objects/room-cover-key': 'bytes=-5',
+    };
+    final seenPaths = <String>[];
+
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'access-token',
+      httpClient: MockClient((request) async {
+        seenPaths.add(request.url.path);
+        expect(request.method, 'GET');
+        expect(expectedPaths, contains(request.url.path));
+        expect(request.headers.containsKey('authorization'), isFalse);
+        expect(request.url.queryParameters['token'], 'download-token');
+        final expectedRange = rangeHeaders[request.url.path];
+        if (expectedRange == null) {
+          expect(request.headers.containsKey('range'), isFalse);
+          return http.Response.bytes(
+            body,
+            200,
+            headers: {
+              'content-type': 'image/webp',
+              'content-length': body.length.toString(),
+              'x-synctv-content-manifest-sha256': manifest,
+            },
+          );
+        }
+        expect(request.headers['range'], expectedRange);
+        return http.Response.bytes(
+          body,
+          206,
+          headers: {
+            'content-type': 'image/webp',
+            'content-range': 'bytes 1-3/9',
+            'x-synctv-content-manifest-sha256': manifest,
+          },
+        );
+      }),
+    );
+
+    final responses = <dynamic>[
+      await api.user.getUserAvatarObject(
+        client.GetUserAvatarObjectRequest(
+          encodedObjectKey: 'avatar-object-key',
+          token: 'download-token',
+          range: client.FileRangeRequest(
+            exact: client.FileByteRange(
+              start: Int64(1),
+              endInclusive: Int64(3),
+            ),
+          ),
+        ),
+      ),
+      await api.room.getChatAttachmentObject(
+        client.GetChatAttachmentObjectRequest(
+          roomId: 'room_1',
+          encodedObjectKey: 'chat-attachment-key',
+          token: 'download-token',
+          range: client.FileRangeRequest(fromStart: Int64(4)),
+        ),
+      ),
+      await api.room.getRoomCoverObject(
+        client.GetRoomCoverObjectRequest(
+          encodedObjectKey: 'room-cover-key',
+          token: 'download-token',
+          range: client.FileRangeRequest(suffixLength: Int64(5)),
+        ),
+      ),
+      await api.room.getPlaylistCoverObject(
+        client.GetPlaylistCoverObjectRequest(
+          encodedObjectKey: 'playlist-cover-key',
+          token: 'download-token',
+        ),
+      ),
+      await api.room.getMediaCoverObject(
+        client.GetMediaCoverObjectRequest(
+          encodedObjectKey: 'media-cover-key',
+          token: 'download-token',
+        ),
+      ),
+    ];
+
+    for (final response in responses) {
+      expect(response.mimeType, 'image/webp');
+      expect(response.contentManifestSha256, manifest);
+      expect(response.data, body);
+    }
+    expect(responses[0].totalSizeBytes, Int64(9));
+    expect(responses[1].totalSizeBytes, Int64(9));
+    expect(responses[2].totalSizeBytes, Int64(9));
+    expect(responses[3].totalSizeBytes, Int64(body.length));
+    expect(responses[4].totalSizeBytes, Int64(body.length));
+    expect(responses[0].contentRange.start, Int64(1));
+    expect(responses[0].contentRange.endInclusive, Int64(3));
+    expect(responses[1].contentRange.start, Int64(1));
+    expect(responses[2].contentRange.endInclusive, Int64(3));
+    expect(responses[3].hasContentRange(), isFalse);
+    expect(responses[4].hasContentRange(), isFalse);
+    expect(responses[1].roomId, 'room_1');
+    expect(seenPaths.toSet(), expectedPaths);
+  });
+
+  test('avatar upload session sends whole-object upload without byte range',
+      () async {
+    final upload = LocalImageUpload(
+      bytes: Uint8List.fromList([10, 20, 30, 40, 50, 60]),
+      fileName: 'avatar.png',
+      mimeType: 'image/png',
+      width: 2,
+      height: 3,
+    );
+    Map<String, dynamic>? completeBody;
+    List<int>? uploadedBody;
+    Map<String, String>? uploadedHeaders;
+    var uploadSessionRequests = 0;
+
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        if (request.method == 'POST' &&
+            request.url.path == '/api/user/avatar/upload-session') {
+          uploadSessionRequests += 1;
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          final parts = body['parts'] as List<dynamic>? ?? const [];
+          if (parts.isEmpty) {
+            return http.Response(
+              jsonEncode({
+                'plan': {
+                  'checksum_algorithm': 'sha256',
+                  'part_size_bytes': upload.sizeBytes,
+                  'parts': [
+                    {
+                      'part_number': 1,
+                      'offset_bytes': 0,
+                      'size_bytes': upload.sizeBytes,
+                    }
+                  ],
+                },
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }
+          return http.Response(
+            jsonEncode({
+              'session': {
+                'avatar_reference': {'id': 'avatar_2'},
+                'upload_required': true,
+                'upload_url': '/api/user/avatar-objects/avatar-object-key',
+                'upload_headers': {
+                  'x-synctv-file-upload-token': 'upload-token',
+                  'x-upload-extra': '1',
+                },
+                'upload_token': 'upload-token',
+                'encoded_object_key': 'avatar-object-key',
+              }
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        if (request.method == 'PUT' &&
+            request.url.path == '/api/user/avatar-objects/avatar-object-key') {
+          uploadedBody = request.bodyBytes;
+          uploadedHeaders = Map<String, String>.from(request.headers);
+          return http.Response('', 204, headers: {'etag': 'etag-1'});
+        }
+        if (request.method == 'POST' &&
+            request.url.path ==
+                '/api/user/avatar-objects/avatar-object-key/complete') {
+          completeBody = jsonDecode(request.body) as Map<String, dynamic>;
+          return http.Response(
+            jsonEncode({
+              'complete': true,
+              'uploaded_size_bytes': upload.sizeBytes,
+              'uploaded_parts': [1],
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        if (request.method == 'PUT' && request.url.path == '/api/user/avatar') {
+          return http.Response(
+            jsonEncode({
+              'user': {
+                'id': 'usr_1',
+                'username': 'root',
+              }
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        return http.Response(
+            'unexpected request: ${request.method} '
+            '${request.url.path}',
+            404);
+      }),
+    );
+
+    final updated =
+        await SyncTvFileUploadDomainService(api).updateUserAvatar(upload);
+
+    expect(updated.id, 'usr_1');
+    expect(uploadSessionRequests, 2);
+    expect(uploadedBody, upload.bytes);
+    expect(uploadedHeaders?['x-synctv-file-upload-token'], 'upload-token');
+    expect(uploadedHeaders?['x-upload-extra'], '1');
+    expect(uploadedHeaders?['content-type'], 'image/png');
+    expect(uploadedHeaders?.containsKey('content-range'), isFalse);
+    expect(completeBody?['parts'], [
+      {
+        'part_number': 1,
+        'etag': 'etag-1',
+        'size_bytes': upload.sizeBytes.toString(),
+        'checksum_sha256': upload.checksumSha256,
+      }
+    ]);
+  });
+
+  test('avatar upload session sends byte ranges for server-mediated parts',
+      () async {
+    final upload = LocalImageUpload(
+      bytes: Uint8List.fromList([10, 20, 30, 40, 50, 60]),
+      fileName: 'avatar.png',
+      mimeType: 'image/png',
+      width: 2,
+      height: 3,
+    );
+    final uploadedRanges = <String>[];
+    var uploadSessionRequests = 0;
+
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        if (request.method == 'POST' &&
+            request.url.path == '/api/user/avatar/upload-session') {
+          uploadSessionRequests += 1;
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          final parts = body['parts'] as List<dynamic>? ?? const [];
+          if (parts.isEmpty) {
+            return http.Response(
+              jsonEncode({
+                'plan': {
+                  'checksum_algorithm': 'sha256',
+                  'part_size_bytes': 3,
+                  'parts': [
+                    {
+                      'part_number': 1,
+                      'offset_bytes': 0,
+                      'size_bytes': 3,
+                    },
+                    {
+                      'part_number': 2,
+                      'offset_bytes': 3,
+                      'size_bytes': 3,
+                    }
+                  ],
+                },
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }
+          return http.Response(
+            jsonEncode({
+              'session': {
+                'avatar_reference': {'id': 'avatar_2'},
+                'upload_required': true,
+                'upload_url': '/api/user/avatar-objects/avatar-object-key',
+                'upload_headers': {
+                  'x-synctv-file-upload-token': 'upload-token',
+                },
+                'upload_token': 'upload-token',
+                'encoded_object_key': 'avatar-object-key',
+              }
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        if (request.method == 'PUT' &&
+            request.url.path == '/api/user/avatar-objects/avatar-object-key') {
+          uploadedRanges.add(request.headers['content-range'] ?? '');
+          return http.Response(
+            '',
+            204,
+            headers: {'etag': 'etag-${uploadedRanges.length}'},
+          );
+        }
+        if (request.method == 'POST' &&
+            request.url.path ==
+                '/api/user/avatar-objects/avatar-object-key/complete') {
+          return http.Response(
+            jsonEncode({
+              'complete': true,
+              'uploaded_size_bytes': upload.sizeBytes,
+              'uploaded_parts': [1, 2],
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        if (request.method == 'PUT' && request.url.path == '/api/user/avatar') {
+          return http.Response(
+            jsonEncode({
+              'user': {
+                'id': 'usr_1',
+                'username': 'root',
+              }
+            }),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        return http.Response(
+            'unexpected request: ${request.method} '
+            '${request.url.path}',
+            404);
+      }),
+    );
+
+    final updated =
+        await SyncTvFileUploadDomainService(api).updateUserAvatar(upload);
+
+    expect(updated.id, 'usr_1');
+    expect(uploadSessionRequests, 2);
+    expect(uploadedRanges, ['bytes 0-2/6', 'bytes 3-5/6']);
   });
 
   test('OAuth2 callback parser accepts callback URLs and validates state', () {
@@ -1159,15 +2061,14 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final alistBinds = await WatchTogetherService.getAllAlistBindInfos();
-      final embyBinds = await WatchTogetherService.getAllEmbyBindInfos();
-      final bilibiliBinds =
-          await WatchTogetherService.getAllBilibiliBindInfos();
+      final alistBinds = await SyncTvService.getAllAlistBindInfos();
+      final embyBinds = await SyncTvService.getAllEmbyBindInfos();
+      final bilibiliBinds = await SyncTvService.getAllBilibiliBindInfos();
 
       expect(alistBinds.map((bind) => bind.serverId), [
         'alist_server_default',
@@ -1248,12 +2149,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final binds = await WatchTogetherService.getAllAlistBindInfos();
+      final binds = await SyncTvService.getAllAlistBindInfos();
 
       expect(binds.map((bind) => bind.serverId), ['alist_server_default']);
       expect(binds.single.providerInstanceName, isEmpty);
@@ -1446,21 +2347,21 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final playlist = await WatchTogetherService.getPlaylist(
+      final playlist = await SyncTvService.getPlaylist(
         'room_1',
         'pl_1',
       );
-      final media = await WatchTogetherService.getMedia('room_1', 'med_1');
+      final media = await SyncTvService.getMedia('room_1', 'med_1');
 
       expect(playlist.playlist.id, 'pl_1');
       expect(playlist.playlist.name, 'Season 1');
       expect(playlist.playlist.isFolder, isTrue);
-      expect(playlist.playlist.playbackWatchPlaylistId, 'pl_1');
+      expect(playlist.playlist.playbackPlaylistId, 'pl_1');
       expect(playlist.playlist.metadata['is_dynamic'], isTrue);
       expect(playlist.playlist.sourceProvider, 'alist');
       expect(playlist.playlist.providerInstanceName, 'alist_main');
@@ -1509,7 +2410,7 @@ void main() {
                 page: 2,
                 pageSize: 25,
                 search: 'matrix',
-                sourceProvider: 'emby',
+                sourceProvider: source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
                 providerInstanceName: 'home',
                 sortBy: client.MediaListSortBy.MEDIA_LIST_SORT_BY_NAME,
                 sortDirection: client.SortDirection.SORT_DIRECTION_DESC,
@@ -1642,7 +2543,9 @@ void main() {
       final snapshot = event.resourceEvent.playlistItems;
       expect(snapshot.version, 'snapshot-v2');
       expect(
-        jsonDecode(utf8.decode(snapshot.playlists.single.sourceConfig)),
+        SourceConfigCodec.playlistSourceConfigToMap(
+          snapshot.playlists.single.sourceConfig,
+        ),
         {'path': '/shows/season-1'},
       );
       expect(
@@ -1653,7 +2556,9 @@ void main() {
         },
       );
       expect(
-        jsonDecode(utf8.decode(snapshot.media.single.sourceConfig)),
+        SourceConfigCodec.mediaSourceConfigToMap(
+          snapshot.media.single.sourceConfig,
+        ),
         {'url': 'https://origin.example/episode-1.mp4'},
       );
       expect(
@@ -1704,12 +2609,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.listPlaylistsPage(
+      final page = await SyncTvService.listPlaylistsPage(
         'room_1',
         parentId: 'pl_parent',
         page: 2,
@@ -1862,12 +2767,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final event = await WatchTogetherService.watchRoomSettings('room_1')
+      final event = await SyncTvService.watchRoomSettings('room_1')
           .firstWhere((event) => event.kind == RoomResourceWatchKind.changed);
 
       expect(event.version, '99');
@@ -1939,8 +2844,8 @@ void main() {
     final movie = message.mediaLibrary!.dynamicItems.single;
     expect(movie.parentId, 'pl_dynamic');
     expect(movie.subPath, base64Url.encode(target));
-    expect(movie.playbackWatchPlaylistId, 'pl_dynamic');
-    expect(movie.playbackWatchTarget, base64Url.encode(target));
+    expect(movie.playbackPlaylistId, 'pl_dynamic');
+    expect(movie.playbackTarget, base64Url.encode(target));
   });
 
   test('dynamic playlist playback sends playlist target protobuf body',
@@ -1962,10 +2867,10 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(origin);
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(origin);
 
-      await WatchTogetherService.switchMovie(
+      await SyncTvService.switchMovie(
         'room_1',
         base64Url.encode(target),
         subPath: base64Url.encode(target),
@@ -1981,6 +2886,105 @@ void main() {
     expect(body['media_id'], '');
     expect(body['playlist_id'], 'pl_dynamic');
     expect(body['target'], {'path': '/shows/ep1.mkv'});
+  });
+
+  test('switch movie and play starts media then sends play state update',
+      () async {
+    final requestUris = <Uri>[];
+    final requestBodies = <String>[];
+    final requestMethods = <String>[];
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      requestUris.add(request.uri);
+      requestMethods.add(request.method);
+      requestBodies.add(await utf8.decoder.bind(request).join());
+      switch (request.uri.path) {
+        case '/api/rooms/room_1/playback/start':
+          request.response
+            ..statusCode = 200
+            ..headers.contentType = io.ContentType.json
+            ..write('{}');
+        case '/api/rooms/room_1/playback':
+          if (request.method == 'GET') {
+            request.response
+              ..statusCode = 200
+              ..headers.contentType = io.ContentType.json
+              ..write(jsonEncode({
+                'playback_state': {
+                  'room_id': 'room_1',
+                  'playing_media_id': 'med_1',
+                  'position': 0.0,
+                  'speed': 1.0,
+                  'is_playing': true,
+                  'version': '8',
+                },
+                'playback': {
+                  'media_id': 'med_1',
+                  'room_id': 'room_1',
+                  'name': 'Episode 1',
+                },
+              }));
+          } else {
+            request.response
+              ..statusCode = 200
+              ..headers.contentType = io.ContentType.json
+              ..write(jsonEncode({
+                'playback_state': {
+                  'room_id': 'room_1',
+                  'playing_media_id': 'med_1',
+                  'position': 0.0,
+                  'speed': 1.0,
+                  'is_playing': true,
+                  'version': '9',
+                },
+              }));
+          }
+        default:
+          request.response
+            ..statusCode = 404
+            ..write('unexpected ${request.method} ${request.uri}');
+      }
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      final playback =
+          await SyncTvService.switchMovieAndPlay('room_1', 'med_1');
+
+      expect(playback.movie?.id, 'med_1');
+      expect(playback.isPlaying, isTrue);
+      expect(
+        List.generate(
+          requestUris.length,
+          (index) => '${requestMethods[index]} ${requestUris[index].path}',
+        ),
+        [
+          'POST /api/rooms/room_1/playback/start',
+          'GET /api/rooms/room_1/playback',
+          'GET /api/rooms/room_1/playback',
+          'PATCH /api/rooms/room_1/playback',
+        ],
+      );
+      expect(jsonDecode(requestBodies[0]), {
+        'media_id': 'med_1',
+        'playlist_id': '',
+      });
+      expect(jsonDecode(requestBodies[3]), {
+        'type': client.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PLAY.value,
+        'playing': true,
+        'position': 0.0,
+        'speed': 1.0,
+      });
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
   });
 
   test('dynamic playback state keeps playlist target identity', () {
@@ -2008,10 +3012,12 @@ void main() {
             MapEntry(
               'direct',
               client.PlaybackInfo(
-                urls: [
-                  client.PlaybackUrl(url: '/proxy/episode-1.m3u8'),
+                medias: [
+                  client.PlaybackMedia(
+                    url: '/proxy/episode-1.m3u8',
+                    format: 'hls',
+                  ),
                 ],
-                format: 'hls',
               ),
             ),
           ],
@@ -2024,76 +3030,82 @@ void main() {
     expect(movie.id, base64Url.encode(target));
     expect(movie.parentId, 'pl_dynamic');
     expect(movie.subPath, base64Url.encode(target));
-    expect(movie.playbackWatchMediaId, '');
-    expect(movie.playbackWatchPlaylistId, 'pl_dynamic');
-    expect(movie.playbackWatchTarget, base64Url.encode(target));
+    expect(movie.playbackMediaId, '');
+    expect(movie.playbackPlaylistId, 'pl_dynamic');
+    expect(movie.playbackTarget, base64Url.encode(target));
     expect(movie.url, 'https://example.test/proxy/episode-1.m3u8');
   });
 
   test('playback mapping preserves mode and url choices', () {
-    final movie = WMovie.fromPlaybackProto(
+    final movie = SyncTvMovie.fromPlaybackProto(
       client.Playback(
         mediaId: 'med_1',
+        roomId: 'room_1',
         name: 'Multi Source',
+        playlistPosition: 3.5,
+        provider: 'alist',
+        providerInstanceName: 'alist_main',
+        isLive: true,
+        expiresAt: Int64(1700000000),
+        durationSeconds: 3661.5,
         playbackInfos: [
           MapEntry(
             'direct',
             client.PlaybackInfo(
-              urls: [
-                client.PlaybackUrl(
+              medias: [
+                client.PlaybackMedia(
                   name: 'Original',
                   url: 'http://origin.test/video.mp4',
-                  metadata: client.PlaybackUrlMetadata(
+                  headers: const {'Authorization': 'Bearer media'}.entries,
+                  metadata: client.PlaybackMediaMetadata(
                     resolution: '1920x1080',
                     codec: 'h264',
                   ),
+                  format: 'mp4',
                 ),
               ],
               subtitles: [
-                client.Subtitle(
+                client.PlaybackSubtitle(
                   name: '中文',
-                  urls: [
-                    client.SubtitleUrl(
-                      name: 'SRT',
-                      url: 'http://origin.test/video.srt',
-                      format: 'srt',
-                    ),
-                  ],
+                  url: 'http://origin.test/video.srt',
+                  headers: const {'Referer': 'https://subtitle.test/'}.entries,
+                  format: 'srt',
                 ),
               ],
               danmakus: [
-                client.Danmaku(
+                client.PlaybackDanmaku(
                   name: '弹幕',
                   url: 'http://origin.test/danmaku.xml',
+                  headers: const {'User-Agent': 'danmaku-client'}.entries,
                   format: 'xml',
                 ),
               ],
-              format: 'mp4',
             ),
           ),
           MapEntry(
             'proxied',
             client.PlaybackInfo(
-              urls: [
-                client.PlaybackUrl(
+              medias: [
+                client.PlaybackMedia(
                   name: 'Proxy 720P',
                   url: '/proxy/video-720.m3u8',
-                  metadata: client.PlaybackUrlMetadata(
+                  metadata: client.PlaybackMediaMetadata(
                     resolution: '1280x720',
                     codec: 'h264',
                   ),
+                  format: 'hls',
                 ),
-                client.PlaybackUrl(
+                client.PlaybackMedia(
                   name: 'Proxy 1080P',
                   url: '/proxy/video-1080.m3u8',
-                  metadata: client.PlaybackUrlMetadata(
+                  metadata: client.PlaybackMediaMetadata(
                     resolution: '1920x1080',
                     codec: 'hevc',
                   ),
+                  format: 'hls',
                 ),
               ],
-              defaultUrlIndex: 1,
-              format: 'hls',
+              defaultMediaIndex: 1,
             ),
           ),
         ],
@@ -2104,6 +3116,13 @@ void main() {
     );
 
     expect(movie.url, 'https://example.test/proxy/video-1080.m3u8');
+    expect(movie.roomId, 'room_1');
+    expect(movie.position, 3.5);
+    expect(movie.live, isTrue);
+    expect(movie.sourceProvider, 'alist');
+    expect(movie.providerInstanceName, 'alist_main');
+    expect(movie.metadata['expires_at'], 1700000000);
+    expect(movie.metadata['duration_seconds'], 3661.5);
     expect(movie.playbackModes, hasLength(2));
     expect(movie.hasPlaybackChoices, isTrue);
     expect(movie.selectedPlaybackMode, 'proxied');
@@ -2116,14 +3135,162 @@ void main() {
       resolveUrl: (url) => url,
     );
     expect(switched.url, 'http://origin.test/video.mp4');
+    expect(switched.headers, {'Authorization': 'Bearer media'});
     expect(switched.type, 'mp4');
     expect(switched.subtitles, isNotNull);
+    expect(switched.subtitles?['sub_0']['headers'], {
+      'Referer': 'https://subtitle.test/',
+    });
     expect(switched.danmu, 'http://origin.test/danmaku.xml');
+    expect(switched.danmuHeaders, {'User-Agent': 'danmaku-client'});
     expect(switched.playbackChoiceLabel, contains('原始'));
   });
 
+  test('playback mapping routes live danmaku to stream channel', () {
+    final movie = SyncTvMovie.fromPlaybackProto(
+      client.Playback(
+        mediaId: 'med_1',
+        name: 'Bilibili Live Source',
+        playbackInfos: [
+          MapEntry(
+            'direct',
+            client.PlaybackInfo(
+              medias: [
+                client.PlaybackMedia(
+                  name: 'File',
+                  url: 'http://origin.test/video.mp4',
+                  format: 'mp4',
+                ),
+              ],
+              danmakus: [
+                client.PlaybackDanmaku(
+                  name: 'XML',
+                  url: 'http://origin.test/danmaku.xml',
+                  format: 'xml',
+                ),
+              ],
+            ),
+          ),
+          MapEntry(
+            'bilibili_live',
+            client.PlaybackInfo(
+              medias: [
+                client.PlaybackMedia(
+                  name: 'Live',
+                  url: '/api/playback-providers/bilibili/live/med_public',
+                  format: 'flv',
+                ),
+              ],
+              danmakus: [
+                client.PlaybackDanmaku(
+                  name: 'Live Danmaku',
+                  url:
+                      '/api/playback-providers/bilibili/live-danmaku/med_public',
+                  headers: const {'X-Live': '1'}.entries,
+                  format: 'synctv-bilibili-live',
+                ),
+              ],
+            ),
+          ),
+        ],
+        defaultMode: 'direct',
+      ),
+      resolveUrl: (url) =>
+          url.startsWith('/') ? 'https://example.test$url' : url,
+    );
+
+    expect(movie.danmu, 'http://origin.test/danmaku.xml');
+    expect(movie.streamDanmu, isNull);
+    expect(
+        movie.playbackModes.singleWhere((mode) => mode.key == 'direct').danmu,
+        'http://origin.test/danmaku.xml');
+
+    final live = movie.selectPlayback(
+      modeKey: 'bilibili_live',
+      urlIndex: 0,
+      resolveUrl: (url) => url,
+    );
+    expect(
+      live.url,
+      'https://example.test/api/playback-providers/bilibili/live/med_public',
+    );
+    expect(live.danmu, isNull);
+    expect(
+      live.streamDanmu,
+      'https://example.test/api/playback-providers/bilibili/live-danmaku/med_public',
+    );
+    expect(live.streamDanmuHeaders, {'X-Live': '1'});
+    expect(
+      live.playbackModes
+          .singleWhere((mode) => mode.key == 'bilibili_live')
+          .streamDanmu,
+      'https://example.test/api/playback-providers/bilibili/live-danmaku/med_public',
+    );
+  });
+
+  test('playback mapping preserves live proxy HLS and FLV choices', () {
+    final movie = SyncTvMovie.fromPlaybackProto(
+      client.Playback(
+        mediaId: 'med_live_proxy',
+        roomId: 'room_1',
+        name: 'Upstream Live',
+        provider: 'live_proxy',
+        isLive: true,
+        playbackInfos: [
+          MapEntry(
+            'hls',
+            client.PlaybackInfo(
+              medias: [
+                client.PlaybackMedia(
+                  name: 'HLS',
+                  url: '/api/playback-providers/live-proxy/ver_1/hls-playlist',
+                  format: 'hls',
+                ),
+              ],
+            ),
+          ),
+          MapEntry(
+            'flv',
+            client.PlaybackInfo(
+              medias: [
+                client.PlaybackMedia(
+                  name: 'FLV',
+                  url: '/api/playback-providers/live-proxy/ver_1/flv-stream',
+                  format: 'flv',
+                ),
+              ],
+            ),
+          ),
+        ],
+        defaultMode: 'hls',
+      ),
+      resolveUrl: (url) =>
+          url.startsWith('/') ? 'https://example.test$url' : url,
+    );
+
+    expect(movie.live, isTrue);
+    expect(movie.sourceProvider, 'live_proxy');
+    expect(movie.type, 'hls');
+    expect(
+      movie.url,
+      'https://example.test/api/playback-providers/live-proxy/ver_1/hls-playlist',
+    );
+
+    final flv = movie.selectPlayback(
+      modeKey: 'flv',
+      urlIndex: 0,
+      resolveUrl: (url) => url,
+    );
+    expect(flv.type, 'flv');
+    expect(
+      flv.url,
+      'https://example.test/api/playback-providers/live-proxy/ver_1/flv-stream',
+    );
+    expect(flv.playbackChoiceLabel, contains('FLV'));
+  });
+
   test('playback mapping resolves nested playback resources', () {
-    final movie = WMovie.fromPlaybackProto(
+    final movie = SyncTvMovie.fromPlaybackProto(
       client.Playback(
         mediaId: 'med_1',
         name: 'AList Source',
@@ -2131,32 +3298,27 @@ void main() {
           MapEntry(
             'proxy',
             client.PlaybackInfo(
-              urls: [
-                client.PlaybackUrl(
+              medias: [
+                client.PlaybackMedia(
                   name: 'Proxy',
                   url: '/api/providers/proxy/alist/item/stream?token=abc',
+                  format: 'mp4',
                 ),
               ],
               subtitles: [
-                client.Subtitle(
+                client.PlaybackSubtitle(
                   name: '中文',
-                  urls: [
-                    client.SubtitleUrl(
-                      name: 'SRT',
-                      url: '/api/providers/proxy/alist/subtitle.srt',
-                      format: 'srt',
-                    ),
-                  ],
+                  url: '/api/providers/proxy/alist/subtitle.srt',
+                  format: 'srt',
                 ),
               ],
               danmakus: [
-                client.Danmaku(
+                client.PlaybackDanmaku(
                   name: '弹幕',
                   url: '/api/providers/proxy/alist/danmaku.xml',
                   format: 'xml',
                 ),
               ],
-              format: 'mp4',
             ),
           ),
         ],
@@ -2212,12 +3374,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final event = await WatchTogetherService.watchPlaybackState('room_1')
+      final event = await SyncTvService.watchPlaybackState('room_1')
           .firstWhere((event) => event.kind == RoomResourceWatchKind.changed);
       final target = utf8.encode(jsonEncode({'path': '/shows/ep1.mkv'}));
 
@@ -2227,8 +3389,7 @@ void main() {
       expect(event.snapshot!.currentTime, 24.5);
       expect(event.snapshot!.playbackRate, 1.25);
       expect(event.snapshot!.movie!.parentId, 'pl_dynamic');
-      expect(
-          event.snapshot!.movie!.playbackWatchTarget, base64Url.encode(target));
+      expect(event.snapshot!.movie!.playbackTarget, base64Url.encode(target));
     } finally {
       await subscription.cancel();
       await server.close(force: true);
@@ -2255,6 +3416,7 @@ void main() {
           client.WatchPlaybackRequest(
             playback: client.ObservePlayback(
               playbackClientProfile: defaultPlaybackClientProfile(),
+              afterEventSequence: Int64(42),
             ),
           ),
         )
@@ -2264,7 +3426,11 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/room_1/watch/playback');
     expect(
       requestedUri!.queryParameters,
-      containsPair('delivery_preference', 'auto'),
+      containsPair('stream_preference', 'auto'),
+    );
+    expect(
+      requestedUri!.queryParameters,
+      containsPair('after_event_sequence', '42'),
     );
     expect(
       requestedUri!.queryParameters,
@@ -2415,6 +3581,7 @@ void main() {
     final config = DirectUrlSourceConfig.fromUserInput(
       url: ' https://media.example.test/feature.mp4 ',
       headers: parsed,
+      preferProxy: true,
     );
     expect(config.toJson(), {
       'url': 'https://media.example.test/feature.mp4',
@@ -2424,6 +3591,7 @@ void main() {
         'Authorization': 'Bearer token',
         'Cookie': 'session=secret',
       },
+      'prefer_proxy': true,
     });
     expect(
       DirectUrlSourceConfig.credentialHeaderRiskKey(parsed),
@@ -2566,11 +3734,23 @@ void main() {
       'source_provider': 'direct_url',
       'provider_instance_name': '',
       'source_config': {
-        'url': 'https://media.example.test/episode-1.mp4',
-        'headers': {
-          'Referer': 'https://media.example.test',
-          'Authorization': 'Bearer shared-token',
-          'Cookie': 'sid=shared',
+        'direct_url': {
+          'medias': [
+            {
+              'url': 'https://media.example.test/episode-1.mp4',
+              'headers': {
+                'Referer': 'https://media.example.test',
+                'Authorization': 'Bearer shared-token',
+                'Cookie': 'sid=shared',
+              },
+            }
+          ],
+          'url': 'https://media.example.test/episode-1.mp4',
+          'headers': {
+            'Referer': 'https://media.example.test',
+            'Authorization': 'Bearer shared-token',
+            'Cookie': 'sid=shared',
+          },
         },
       },
       'name': '',
@@ -2580,11 +3760,23 @@ void main() {
       'source_provider': 'direct_url',
       'provider_instance_name': '',
       'source_config': {
-        'url': 'https://media.example.test/episode-2.mp4',
-        'headers': {
-          'Referer': 'https://media.example.test',
-          'Authorization': 'Bearer shared-token',
-          'Cookie': 'sid=shared',
+        'direct_url': {
+          'medias': [
+            {
+              'url': 'https://media.example.test/episode-2.mp4',
+              'headers': {
+                'Referer': 'https://media.example.test',
+                'Authorization': 'Bearer shared-token',
+                'Cookie': 'sid=shared',
+              },
+            }
+          ],
+          'url': 'https://media.example.test/episode-2.mp4',
+          'headers': {
+            'Referer': 'https://media.example.test',
+            'Authorization': 'Bearer shared-token',
+            'Cookie': 'sid=shared',
+          },
         },
       },
       'name': '',
@@ -2908,12 +4100,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.adminListUsersPage(
+      final page = await SyncTvService.adminListUsersPage(
         page: 2,
         pageSize: 50,
         search: 'alice',
@@ -3152,15 +4344,17 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.getRoomsPage(
+      final page = await SyncTvService.getRoomsPage(
         page: 2,
         pageSize: 30,
         search: 'Public',
+        categoryId: 'roomcat_anime',
+        labelIds: const ['roomlbl_weekly', 'roomlbl_friends'],
         sortBy: client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME,
         sortDirection: client_enum.SortDirection.SORT_DIRECTION_ASC,
       );
@@ -3189,6 +4383,8 @@ void main() {
       'page': '2',
       'page_size': '30',
       'search': 'Public',
+      'category_id': 'roomcat_anime',
+      'label_ids': '["roomlbl_weekly","roomlbl_friends"]',
       'sort_by': '${client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME.value}',
       'sort_direction': '${client_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
@@ -3226,12 +4422,12 @@ void main() {
         'synctv_access_token': 'access',
         'synctv_refresh_token': 'refresh',
       });
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.getMyRoomsPage(
+      final page = await SyncTvService.getMyRoomsPage(
         page: 3,
         pageSize: 40,
         search: 'Mine',
@@ -3293,15 +4489,17 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.adminListRoomsPage(
+      final page = await SyncTvService.adminListRoomsPage(
         page: 3,
         pageSize: 50,
         search: 'Room',
+        categoryId: 'roomcat_anime',
+        labelIds: const ['roomlbl_weekly'],
         status: common.RoomStatus.ROOM_STATUS_ACTIVE,
         isBanned: false,
         sortBy: admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
@@ -3322,6 +4520,8 @@ void main() {
       'page_size': '50',
       'status': '${common.RoomStatus.ROOM_STATUS_ACTIVE.value}',
       'search': 'Room',
+      'category_id': 'roomcat_anime',
+      'label_ids': '["roomlbl_weekly"]',
       'is_banned': 'false',
       'sort_by':
           '${admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT.value}',
@@ -3354,12 +4554,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.adminListUserRoomsPage(
+      final page = await SyncTvService.adminListUserRoomsPage(
         'usr_1',
         page: 2,
         pageSize: 20,
@@ -3458,11 +4658,11 @@ void main() {
     late final AccountPreferences preferences;
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
-      preferences = await WatchTogetherService.getAccountPreferences();
+      preferences = await SyncTvService.getAccountPreferences();
     } finally {
       await subscription.cancel();
       await server.close(force: true);
@@ -3611,19 +4811,19 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.listRoomStreamsPage(
+      final page = await SyncTvService.listRoomStreamsPage(
         'room_1',
         page: 2,
         pageSize: 50,
         search: 'med',
         sortDirection: client.SortDirection.SORT_DIRECTION_DESC,
       );
-      final detail = await WatchTogetherService.getRoomStreamInfo(
+      final detail = await SyncTvService.getRoomStreamInfo(
         'room_1',
         'med_1',
       );
@@ -3706,7 +4906,8 @@ void main() {
     );
   });
 
-  test('direct url and rtmp media creation use distinct provider contracts',
+  test(
+      'direct url, rtmp, and live proxy media creation use distinct provider contracts',
       () async {
     final requests = <http.Request>[];
     final api = SyncTvApiClient(
@@ -3721,7 +4922,11 @@ void main() {
           return http.Response(
             jsonEncode({
               'media': {
-                'id': provider == 'rtmp' ? 'med_rtmp' : 'med_direct',
+                'id': switch (provider) {
+                  'rtmp' => 'med_rtmp',
+                  'live_proxy' => 'med_live_proxy',
+                  _ => 'med_direct',
+                },
                 'room_id': 'room_1',
                 'source_provider': provider,
                 'name': body['name'] ?? '',
@@ -3755,34 +4960,123 @@ void main() {
       url: 'https://media.example.test/movie.m3u8',
       headers: const {'User-Agent': 'Mozilla/5.0'},
       name: 'Direct HLS',
+      preferProxy: true,
     );
     final rtmpId = await domain.addRtmpMedia(
       'room_1',
       playlistId: 'pl_1',
       name: 'Camera',
     );
+    final liveProxyId = await domain.addLiveProxyMedia(
+      'room_1',
+      playlistId: 'pl_1',
+      url: 'rtmp://upstream.example.test/live/room',
+      name: 'Upstream Live',
+    );
     final publish = await domain.createRtmpPublishKeyInfo('room_1', rtmpId);
 
     expect(directId, 'med_direct');
     expect(rtmpId, 'med_rtmp');
+    expect(liveProxyId, 'med_live_proxy');
     expect(publish.streamKey, 'stream_1');
 
     final directBody = jsonDecode(requests[0].body) as Map<String, dynamic>;
     expect(directBody['source_provider'], 'direct_url');
     expect(directBody['playlist_id'], 'pl_1');
     expect(directBody['source_config'], {
-      'url': 'https://media.example.test/movie.m3u8',
-      'headers': {'User-Agent': 'Mozilla/5.0'},
+      'direct_url': {
+        'medias': [
+          {
+            'url': 'https://media.example.test/movie.m3u8',
+            'headers': {'User-Agent': 'Mozilla/5.0'},
+          }
+        ],
+        'url': 'https://media.example.test/movie.m3u8',
+        'headers': {'User-Agent': 'Mozilla/5.0'},
+        'prefer_proxy': true,
+      },
     });
 
     final rtmpBody = jsonDecode(requests[1].body) as Map<String, dynamic>;
     expect(rtmpBody['source_provider'], 'rtmp');
     expect(rtmpBody['playlist_id'], 'pl_1');
-    expect(rtmpBody['source_config'], isEmpty);
+    expect(rtmpBody['source_config'], {'rtmp': <String, dynamic>{}});
+
+    final liveProxyBody = jsonDecode(requests[2].body) as Map<String, dynamic>;
+    expect(liveProxyBody['source_provider'], 'live_proxy');
+    expect(liveProxyBody['playlist_id'], 'pl_1');
+    expect(liveProxyBody['source_config'], {
+      'live_proxy': {'url': 'rtmp://upstream.example.test/live/room'},
+    });
     expect(
-      requests[2].url.path,
+      requests[3].url.path,
       '/api/providers/rtmp/rooms/room_1/publish-key/med_rtmp',
     );
+  });
+
+  test('emby dynamic playlist creation sends playlist source config oneof',
+      () async {
+    Uri? requestedUri;
+    String? requestMethod;
+    String? requestBody;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requestedUri = request.url;
+        requestMethod = request.method;
+        requestBody = request.body;
+        return http.Response(
+          jsonEncode({
+            'playlist': {
+              'id': 'pl_emby',
+              'room_id': 'room_1',
+              'name': 'Season 1',
+              'is_dynamic': true,
+              'source_provider': 'emby',
+              'provider_instance_name': 'emby_main',
+              'source_config': {
+                'emby': {
+                  'server_id': 'server_1',
+                  'item_id': 'folder_1',
+                },
+              },
+            },
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final domain = SyncTvRoomMediaDomainService(api);
+
+    final playlist = await domain.createPlaylist(
+      'room_1',
+      name: 'Season 1',
+      parentId: 'pl_parent',
+      sourceProvider: 'emby',
+      providerInstanceName: 'emby_main',
+      sourceConfig: const {
+        'server_id': 'server_1',
+        'item_id': 'folder_1',
+      },
+    );
+
+    expect(requestMethod, 'POST');
+    expect(requestedUri!.path, '/api/rooms/room_1/playlists');
+    final body = jsonDecode(requestBody!) as Map<String, dynamic>;
+    expect(body['name'], 'Season 1');
+    expect(body['parent_id'], 'pl_parent');
+    expect(body['source_provider'], 'emby');
+    expect(body['provider_instance_name'], 'emby_main');
+    expect(body['source_config'], {
+      'emby': {
+        'server_id': 'server_1',
+        'item_id': 'folder_1',
+      },
+    });
+    expect(playlist.id, 'pl_emby');
+    expect(playlist.isDynamicPlaylist, isTrue);
   });
 
   test('account closure uses protobuf command endpoint and body', () async {
@@ -3910,12 +5204,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(origin);
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(origin);
 
-      await WatchTogetherService.updateRoomSettings(
+      await SyncTvService.updateRoomSettings(
         'room_1',
-        WRoomSettings(
+        SyncTvRoomSettings(
           allowGuestJoin: true,
           requireApproval: true,
           maxMembers: 42,
@@ -3963,12 +5257,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final group = await WatchTogetherService.adminGetSettingsGroup('email');
+      final group = await SyncTvService.adminGetSettingsGroup('email');
 
       expect(group.name, 'email');
       expect(group.settings['smtp_enabled'], isTrue);
@@ -4012,12 +5306,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.getRoomMemberDetailsPage(
+      final page = await SyncTvService.getRoomMemberDetailsPage(
         'room_1',
         page: 2,
         pageSize: 25,
@@ -4081,12 +5375,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.listRoomJoinReviewsPage(
+      final page = await SyncTvService.listRoomJoinReviewsPage(
         'room_1',
         page: 4,
         pageSize: 10,
@@ -4144,6 +5438,45 @@ void main() {
     expect(jsonDecode(requestBody!), {
       'user_id': 'user_1',
       'kick_cooldown_seconds': '120',
+    });
+  });
+
+  test('room management kick member preserves custom cooldown', () async {
+    Uri? requestedUri;
+    String? requestBody;
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      requestedUri = request.uri;
+      requestBody = await utf8.decoder.bind(request).join();
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType.json
+        ..write('{}');
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      await SyncTvService.kickMember(
+        'room_1',
+        'usr_9',
+        kickCooldownSeconds: 300,
+      );
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+
+    expect(requestedUri, isNotNull);
+    expect(requestedUri!.path, '/api/rooms/room_1/members/usr_9');
+    expect(jsonDecode(requestBody!), {
+      'user_id': 'usr_9',
+      'kick_cooldown_seconds': '300',
     });
   });
 
@@ -4716,12 +6049,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.adminListRoomMembersPage(
+      final page = await SyncTvService.adminListRoomMembersPage(
         'room_1',
         page: 2,
         pageSize: 20,
@@ -4731,13 +6064,13 @@ void main() {
             admin_enum.RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_USERNAME,
         sortDirection: admin_enum.SortDirection.SORT_DIRECTION_ASC,
       );
-      await WatchTogetherService.adminAddRoomMember(
+      await SyncTvService.adminAddRoomMember(
         'room_1',
         'usr_2',
         role: common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
         notify: false,
       );
-      await WatchTogetherService.adminKickRoomMember(
+      await SyncTvService.adminKickRoomMember(
         'room_1',
         'usr_1',
         kickCooldownSeconds: 900,
@@ -4800,12 +6133,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.adminListAdminsPage(
+      final page = await SyncTvService.adminListAdminsPage(
         page: 3,
         pageSize: 20,
         search: 'root',
@@ -4830,6 +6163,31 @@ void main() {
           '${admin_enum.UserListSortBy.USER_LIST_SORT_BY_USERNAME.value}',
       'sort_direction': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
+  });
+
+  test('admin add admin promotes an existing user through path command',
+      () async {
+    http.Request? capturedRequest;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        capturedRequest = request;
+        return http.Response(
+          '{}',
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final service = SyncTvAdminDomainService(api);
+
+    await service.addAdmin('usr_2');
+
+    expect(capturedRequest, isNotNull);
+    expect(capturedRequest!.method, 'POST');
+    expect(capturedRequest!.url.path, '/api/admin/admins/usr_2');
+    expect(jsonDecode(capturedRequest!.body), {'user_id': 'usr_2'});
   });
 
   test('admin member role and permission overrides use protobuf body',
@@ -4908,7 +6266,7 @@ void main() {
 
     await api.providerCommon.listAvailableProviderInstances(
       provider_common.ListAvailableProviderInstancesRequest(
-        providerType: 'emby',
+        providerType: source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
       ),
     );
 
@@ -4936,13 +6294,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final instances =
-          await WatchTogetherService.listAvailableProviderInstances(
+      final instances = await SyncTvService.listAvailableProviderInstances(
         providerType: 'emby',
       );
 
@@ -5022,8 +6379,18 @@ void main() {
         requestBody = request.body;
         return http.Response(
           jsonEncode({
-            'content': <Object?>[],
-            'total': '0',
+            'content': [
+              {
+                'name': 'movie.mp4',
+                'size': '1024',
+                'is_dir': false,
+                'modified': '1760000100',
+                'thumb': '/thumb.jpg',
+                'type': '2',
+                'sign': 'signed-query-fragment',
+              }
+            ],
+            'total': '1',
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -5031,7 +6398,7 @@ void main() {
       }),
     );
 
-    await api.alistProvider.list(
+    final response = await api.alistProvider.list(
       alist.ListRequest(
         serverId: 'server_1',
         path: '/private',
@@ -5055,6 +6422,49 @@ void main() {
       'refresh': true,
       'instance_name': 'edge',
     });
+    expect(response.content.single.sign, 'signed-query-fragment');
+  });
+
+  test('alist domain model preserves file item sign', () async {
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType.json
+        ..write(jsonEncode({
+          'content': [
+            {
+              'name': 'movie.mp4',
+              'size': '1024',
+              'is_dir': false,
+              'modified': '1760000100',
+              'thumb': '/thumb.jpg',
+              'type': '2',
+              'sign': 'signed-query-fragment',
+            }
+          ],
+          'total': '1',
+        }));
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      final page = await SyncTvService.listAlistPage(
+        '/private',
+        serverId: 'server_1',
+      );
+
+      expect(page.items.single.sign, 'signed-query-fragment');
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
   });
 
   test('alist login sends plaintext credential and optional otp fields',
@@ -5216,6 +6626,7 @@ void main() {
               'id': 'emby-item-1',
               'name': 'Episode 1',
               'type': 'Episode',
+              'description': 'Pilot episode',
               'thumbnail':
                   '/api/providers/emby/thumbnail/emby-item-1?server_id=srv_1&credential_owner_id=usr_1&max_height=300',
             },
@@ -5228,10 +6639,10 @@ void main() {
     late final EmbyListPage page;
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(origin);
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(origin);
 
-      page = await WatchTogetherService.listEmbyPage(
+      page = await SyncTvService.listEmbyPage(
         '/',
         serverId: 'srv_1',
       );
@@ -5247,6 +6658,7 @@ void main() {
       page.items.single.thumbnail,
       '$origin/api/providers/emby/thumbnail/emby-item-1?server_id=srv_1&credential_owner_id=usr_1&max_height=300',
     );
+    expect(page.items.single.description, 'Pilot episode');
   });
 
   test('provider instance query is generated from protobuf request', () async {
@@ -5266,7 +6678,7 @@ void main() {
       provider_common.ListProviderInstancesRequest(
         page: 2,
         pageSize: 10,
-        providerType: 'emby',
+        providerType: source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
         search: 'home',
         enabled: true,
         tls: false,
@@ -5322,10 +6734,10 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(origin);
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(origin);
 
-      final page = await WatchTogetherService.adminListProviderInstancesPage(
+      final page = await SyncTvService.adminListProviderInstancesPage(
         page: 3,
         pageSize: 20,
         providerType: 'alist',
@@ -5375,7 +6787,9 @@ void main() {
     );
 
     final response = await api.providerCommon.listProviderBackends(
-      provider_common.ListProviderBackendsRequest(providerType: 'alist'),
+      provider_common.ListProviderBackendsRequest(
+        providerType: source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
+      ),
     );
 
     expect(requestedUri, isNotNull);
@@ -5432,7 +6846,10 @@ void main() {
       provider_common.AddProviderInstanceRequest(
         name: 'edge',
         endpoint: 'https://provider.example.test',
-        providers: ['alist', 'emby'],
+        providers: [
+          source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
+          source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
+        ],
         comment: 'edge node',
         timeoutSeconds: 45,
         tls: true,
@@ -5445,7 +6862,7 @@ void main() {
       provider_common.UpdateProviderInstanceRequest(
         name: 'edge',
         endpoint: 'https://provider2.example.test',
-        providers: ['alist'],
+        providers: [source_enum.SourceProvider.SOURCE_PROVIDER_ALIST],
         clearComment_10: true,
         clearJwtSecret_11: true,
         clearCustomCa_12: true,
@@ -5584,13 +7001,13 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      expect(await WatchTogetherService.getToken(), isNull);
-      final result = await WatchTogetherService.finishOAuth2Login(
+      expect(await SyncTvService.getToken(), isNull);
+      final result = await SyncTvService.finishOAuth2Login(
         provider: 'github-main',
         code: 'abc123',
         state: 'AbCdEfGh1234567890aBcDeFgHiJkLm',
@@ -5602,7 +7019,7 @@ void main() {
       expect(result.redirectUrl, 'https://app.example.test/oauth2/done');
       expect(result.expiresIn, 600);
       expect(result.oauth2Bind, isFalse);
-      expect(await WatchTogetherService.getToken(), isNull);
+      expect(await SyncTvService.getToken(), isNull);
     } finally {
       await subscription.cancel();
       await server.close(force: true);
@@ -5824,12 +7241,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      await WatchTogetherService.markNotificationsAsRead([0, 42, -1, 43]);
+      await SyncTvService.markNotificationsAsRead([0, 42, -1, 43]);
     } finally {
       await listener.cancel();
       await server.close(force: true);
@@ -6225,12 +7642,11 @@ void main() {
     });
 
     try {
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
-      final page =
-          await WatchTogetherService.adminListReviewsPage(kind: 'user');
+      final page = await SyncTvService.adminListReviewsPage(kind: 'user');
       expect(page.total, 1);
       final review = page.reviews.single;
       expect(review.signupMethod, 3);
@@ -6278,12 +7694,11 @@ void main() {
     });
 
     try {
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
-      final page =
-          await WatchTogetherService.adminListReviewsPage(kind: 'user');
+      final page = await SyncTvService.adminListReviewsPage(kind: 'user');
       expect(page.total, 1);
       final review = page.reviews.single;
       expect(review.signupMethod, 5);
@@ -6430,12 +7845,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final page = await WatchTogetherService.adminListActiveStreamsPage(
+      final page = await SyncTvService.adminListActiveStreamsPage(
         page: 2,
         pageSize: 20,
         roomId: 'room_1',
@@ -6556,11 +7971,11 @@ void main() {
     });
 
     try {
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
-      final settings = await WatchTogetherService.getPublicSettings();
+      final settings = await SyncTvService.getPublicSettings();
       expect(settings.liveProxy, isTrue);
       expect(settings.tsDisguisedAsPng, isTrue);
       expect(settings.customPublishHost, 'rtmp://publish.example.test/app');
@@ -6600,7 +8015,7 @@ void main() {
     expect(response.serverName, 'SyncTV Prod');
   });
 
-  test('public server info is exposed through watch service domain', () async {
+  test('public server info is exposed through SyncTV service domain', () async {
     Uri? requestedUri;
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final subscription = server.listen((request) async {
@@ -6615,12 +8030,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final info = await WatchTogetherService.getServerInfo(refresh: true);
+      final info = await SyncTvService.getServerInfo(refresh: true);
 
       expect(requestedUri, isNotNull);
       expect(requestedUri!.path, '/api/public/server-info');
@@ -6630,6 +8045,138 @@ void main() {
       await subscription.cancel();
       await server.close(force: true);
     }
+  });
+
+  test('public room taxonomy endpoints map categories and labels', () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession(),
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        switch (request.url.path) {
+          case '/api/rooms/categories':
+            return http.Response(
+              jsonEncode({
+                'categories': [
+                  {
+                    'id': 'roomcat_anime',
+                    'key': 'anime',
+                    'name': 'Anime',
+                    'description': 'Animation rooms',
+                    'sort_order': 10,
+                    'is_enabled': true,
+                  }
+                ],
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/rooms/labels':
+            return http.Response(
+              jsonEncode({
+                'labels': [
+                  {
+                    'id': 'roomlbl_weekly',
+                    'key': 'weekly',
+                    'name': 'Weekly',
+                    'description': 'Weekly sessions',
+                    'color': '#3366ff',
+                    'category_id': 'roomcat_anime',
+                    'sort_order': 20,
+                    'is_enabled': true,
+                  }
+                ],
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response(
+            'unexpected ${request.method} ${request.url}', 404);
+      }),
+    );
+    final sessionStore = SyncTvSessionStore(api.session);
+    final service = SyncTvPublicRoomDomainService(
+      api: api,
+      sessionStore: sessionStore,
+      authService: SyncTvAuthDomainService(
+        api: api,
+        sessionStore: sessionStore,
+      ),
+    );
+
+    final categories = await service.listRoomCategories(
+      includeDisabled: true,
+      refresh: true,
+    );
+    final labels = await service.listRoomLabels(
+      categoryId: 'roomcat_anime',
+      refresh: true,
+    );
+
+    expect(requests[0].url.path, '/api/rooms/categories');
+    expect(requests[0].url.queryParameters, {'include_disabled': 'true'});
+    expect(categories.single.id, 'roomcat_anime');
+    expect(categories.single.sortOrder, 10);
+
+    expect(requests[1].url.path, '/api/rooms/labels');
+    expect(requests[1].url.queryParameters, {
+      'include_disabled': 'false',
+      'category_id': 'roomcat_anime',
+    });
+    expect(labels.single.id, 'roomlbl_weekly');
+    expect(labels.single.color, '#3366ff');
+  });
+
+  test('room mapping preserves category and labels from protobuf response',
+      () async {
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession(),
+      httpClient: MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'room': {
+              'id': 'room_tax',
+              'name': 'Taxonomy Room',
+              'created_by': 'usr_owner',
+              'status': 1,
+              'category': {
+                'id': 'roomcat_anime',
+                'key': 'anime',
+                'name': 'Anime',
+                'sort_order': 10,
+                'is_enabled': true,
+              },
+              'labels': [
+                {
+                  'id': 'roomlbl_weekly',
+                  'key': 'weekly',
+                  'name': 'Weekly',
+                  'color': '#3366ff',
+                  'category_id': 'roomcat_anime',
+                  'sort_order': 20,
+                  'is_enabled': true,
+                }
+              ],
+            }
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+
+    final response = await api.user.getRoom(
+      client.GetRoomRequest(roomId: 'room_tax'),
+    );
+    final room = api.mapRoom(response.room);
+
+    expect(room.category?.id, 'roomcat_anime');
+    expect(room.category?.name, 'Anime');
+    expect(room.labels.single.id, 'roomlbl_weekly');
+    expect(room.labels.single.categoryId, 'roomcat_anime');
   });
 
   test('server profiles merge endpoints for one server id', () async {
@@ -6709,13 +8256,13 @@ void main() {
     });
 
     try {
-      await WatchTogetherService.init();
-      await WatchTogetherService.addServer(
+      await SyncTvService.init();
+      await SyncTvService.addServer(
         'http://${server.address.host}:${server.port}',
       );
 
       final link = RoomInviteService.createInviteLink(
-        WRoom(roomId: 'room_123', roomName: 'Room', creatorId: 'usr_1'),
+        SyncTvRoom(roomId: 'room_123', roomName: 'Room', creatorId: 'usr_1'),
       );
       final parsed = RoomInviteService.parse(link);
 
@@ -6767,6 +8314,8 @@ void main() {
     final room = await service.createRoom(
       'Review Room',
       password: roomCredential,
+      categoryId: 'roomcat_anime',
+      labelIds: const ['roomlbl_weekly'],
     );
 
     expect(capturedRequest, isNotNull);
@@ -6774,6 +8323,8 @@ void main() {
     expect(jsonDecode(capturedRequest!.body), {
       'name': 'Review Room',
       'password': roomCredential,
+      'category_id': 'roomcat_anime',
+      'label_ids': ['roomlbl_weekly'],
     });
     expect(room.roomId, 'room_pending');
     expect(room.status, common.RoomStatus.ROOM_STATUS_UNSPECIFIED.value);
@@ -6806,14 +8357,14 @@ void main() {
       await request.response.close();
     });
 
-    late final List<WRoom> serviceRooms;
+    late final List<SyncTvRoom> serviceRooms;
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
-      serviceRooms = await WatchTogetherService.getHotRooms(limit: 8);
+      serviceRooms = await SyncTvService.getHotRooms(limit: 8);
     } finally {
       await subscription.cancel();
       await server.close(force: true);
@@ -6862,7 +8413,7 @@ void main() {
     );
   });
 
-  test('watch service preserves check room preflight details', () async {
+  test('SyncTV service preserves check room preflight details', () async {
     http.Request? capturedRequest;
     final server = await io.HttpServer.bind('127.0.0.1', 0);
     final listener = server.listen((request) async {
@@ -6881,12 +8432,12 @@ void main() {
 
     try {
       SharedPreferences.setMockInitialValues({});
-      await WatchTogetherService.init();
-      await WatchTogetherService.setBaseUrl(
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
 
-      final check = await WatchTogetherService.checkRoom('room_lobby');
+      final check = await SyncTvService.checkRoom('room_lobby');
 
       expect(capturedRequest, isNotNull);
       expect(capturedRequest!.url.path, '/api/rooms/room_lobby/check');
@@ -7062,6 +8613,210 @@ void main() {
     });
     expect(session.accessToken, 'email-access');
     expect(session.refreshToken, 'email-refresh');
+  });
+
+  test('admin taxonomy endpoints use current protobuf routes and bodies',
+      () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        switch (request.url.path) {
+          case '/api/admin/rooms/categories':
+            if (request.method == 'GET') {
+              return http.Response(
+                jsonEncode({
+                  'categories': [
+                    {
+                      'id': 'roomcat_anime',
+                      'key': 'anime',
+                      'name': 'Anime',
+                      'sort_order': 10,
+                      'is_enabled': true,
+                    }
+                  ],
+                }),
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            return http.Response(
+              jsonEncode({
+                'category': {
+                  'id': 'roomcat_anime',
+                  'key': 'anime',
+                  'name': 'Anime',
+                  'description': 'Animation rooms',
+                  'sort_order': 10,
+                  'is_enabled': true,
+                }
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/admin/rooms/categories/roomcat_anime':
+            return http.Response(
+              jsonEncode({'success': true}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/admin/rooms/labels':
+            if (request.method == 'GET') {
+              return http.Response(
+                jsonEncode({
+                  'labels': [
+                    {
+                      'id': 'roomlbl_weekly',
+                      'key': 'weekly',
+                      'name': 'Weekly',
+                      'color': '#3366ff',
+                      'category_id': 'roomcat_anime',
+                      'sort_order': 20,
+                      'is_enabled': true,
+                    }
+                  ],
+                }),
+                200,
+                headers: {'content-type': 'application/json'},
+              );
+            }
+            return http.Response(
+              jsonEncode({
+                'label': {
+                  'id': 'roomlbl_weekly',
+                  'key': 'weekly',
+                  'name': 'Weekly',
+                  'description': 'Weekly sessions',
+                  'color': '#3366ff',
+                  'category_id': 'roomcat_anime',
+                  'sort_order': 20,
+                  'is_enabled': true,
+                }
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/admin/rooms/labels/roomlbl_weekly':
+            return http.Response(
+              jsonEncode({'success': true}),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          case '/api/admin/rooms/room_tax/taxonomy':
+            return http.Response(
+              jsonEncode({
+                'room': {
+                  'id': 'room_tax',
+                  'name': 'Taxonomy Room',
+                  'created_by': 'usr_owner',
+                  'status': 1,
+                  'category': {
+                    'id': 'roomcat_anime',
+                    'key': 'anime',
+                    'name': 'Anime',
+                    'sort_order': 10,
+                    'is_enabled': true,
+                  },
+                  'labels': [
+                    {
+                      'id': 'roomlbl_weekly',
+                      'key': 'weekly',
+                      'name': 'Weekly',
+                      'color': '#3366ff',
+                      'category_id': 'roomcat_anime',
+                      'sort_order': 20,
+                      'is_enabled': true,
+                    }
+                  ],
+                }
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+        }
+        return http.Response(
+            'unexpected ${request.method} ${request.url}', 404);
+      }),
+    );
+    final service = SyncTvAdminDomainService(api);
+
+    final categories = await service.listRoomCategories(
+      includeDisabled: true,
+      refresh: true,
+    );
+    final category = await service.upsertRoomCategory(
+      key: 'anime',
+      name: 'Anime',
+      description: 'Animation rooms',
+      sortOrder: 10,
+      isEnabled: true,
+    );
+    await service.deleteRoomCategory('roomcat_anime');
+    final labels = await service.listRoomLabels(
+      includeDisabled: true,
+      categoryId: 'roomcat_anime',
+      refresh: true,
+    );
+    final label = await service.upsertRoomLabel(
+      key: 'weekly',
+      name: 'Weekly',
+      description: 'Weekly sessions',
+      color: '#3366ff',
+      categoryId: 'roomcat_anime',
+      sortOrder: 20,
+      isEnabled: true,
+    );
+    await service.deleteRoomLabel('roomlbl_weekly');
+    final room = await service.updateRoomTaxonomy(
+      'room_tax',
+      categoryId: 'roomcat_anime',
+      labelIds: const ['roomlbl_weekly'],
+    );
+
+    expect(requests.map((request) => '${request.method} ${request.url.path}'), [
+      'GET /api/admin/rooms/categories',
+      'POST /api/admin/rooms/categories',
+      'DELETE /api/admin/rooms/categories/roomcat_anime',
+      'GET /api/admin/rooms/labels',
+      'POST /api/admin/rooms/labels',
+      'DELETE /api/admin/rooms/labels/roomlbl_weekly',
+      'PATCH /api/admin/rooms/room_tax/taxonomy',
+    ]);
+    expect(requests[0].url.queryParameters, {'include_disabled': 'true'});
+    expect(categories.single.id, 'roomcat_anime');
+    expect(jsonDecode(requests[1].body), {
+      'key': 'anime',
+      'name': 'Anime',
+      'description': 'Animation rooms',
+      'sort_order': 10,
+      'is_enabled': true,
+    });
+    expect(category.id, 'roomcat_anime');
+    expect(requests[3].url.queryParameters, {
+      'include_disabled': 'true',
+      'category_id': 'roomcat_anime',
+    });
+    expect(labels.single.id, 'roomlbl_weekly');
+    expect(jsonDecode(requests[4].body), {
+      'key': 'weekly',
+      'name': 'Weekly',
+      'description': 'Weekly sessions',
+      'color': '#3366ff',
+      'category_id': 'roomcat_anime',
+      'sort_order': 20,
+      'is_enabled': true,
+    });
+    expect(label.id, 'roomlbl_weekly');
+    expect(jsonDecode(requests[6].body), {
+      'room_id': 'room_tax',
+      'category_id': 'roomcat_anime',
+      'label_ids': ['roomlbl_weekly'],
+      'clear_category': false,
+    });
+    expect(room.category?.id, 'roomcat_anime');
+    expect(room.labels.single.id, 'roomlbl_weekly');
   });
 
   test('direct password domain selects one populated login identifier',
@@ -7727,12 +9482,21 @@ void main() {
 String _expectedOwnershipProof(
   List<int> bytes, {
   required String nonce,
+  required String contentManifestSha256,
   required List<({int offset, int length})> ranges,
 }) {
   final proofBytes = BytesBuilder();
   proofBytes.add(utf8.encode('synctv-file-ownership-proof-v1'));
   proofBytes.add([0]);
   proofBytes.add(utf8.encode(nonce));
+  proofBytes.add([0]);
+  proofBytes.add(utf8.encode(contentManifestSha256.trim().toLowerCase()));
+  proofBytes.add((ByteData(8)..setInt64(0, bytes.length, Endian.big))
+      .buffer
+      .asUint8List());
+  proofBytes.add((ByteData(8)..setUint64(0, ranges.length, Endian.big))
+      .buffer
+      .asUint8List());
   for (final range in ranges) {
     proofBytes.add((ByteData(8)..setInt64(0, range.offset, Endian.big))
         .buffer
@@ -7747,6 +9511,36 @@ String _expectedOwnershipProof(
     ));
   }
   return sha256.convert(proofBytes.toBytes()).toString();
+}
+
+String _expectedContentManifestSha256(
+  int sizeBytes,
+  int partSizeBytes,
+  List<({int partNumber, int sizeBytes, String checksum})> parts,
+) {
+  final sorted = [...parts]
+    ..sort((a, b) => a.partNumber.compareTo(b.partNumber));
+  final bytes = BytesBuilder();
+  bytes.add(utf8.encode('synctv-file-part-manifest-sha256-v1'));
+  bytes.add([0]);
+  bytes.add(
+      (ByteData(8)..setInt64(0, sizeBytes, Endian.big)).buffer.asUint8List());
+  bytes.add((ByteData(8)..setInt64(0, partSizeBytes, Endian.big))
+      .buffer
+      .asUint8List());
+  bytes.add((ByteData(8)..setUint64(0, sorted.length, Endian.big))
+      .buffer
+      .asUint8List());
+  for (final part in sorted) {
+    bytes.add((ByteData(4)..setInt32(0, part.partNumber, Endian.big))
+        .buffer
+        .asUint8List());
+    bytes.add((ByteData(8)..setInt64(0, part.sizeBytes, Endian.big))
+        .buffer
+        .asUint8List());
+    bytes.add(utf8.encode(part.checksum.trim().toLowerCase()));
+  }
+  return sha256.convert(bytes.toBytes()).toString();
 }
 
 class _FakeOpaqueClient extends opaque.SyncTvOpaqueClient {

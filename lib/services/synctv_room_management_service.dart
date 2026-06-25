@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/room_management_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_account_service.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_memory_cache.dart';
@@ -26,7 +26,7 @@ class SyncTvRoomManagementDomainService {
   final SyncTvMemoryCache _cache;
   final opaque.SyncTvOpaqueClient _opaqueClient;
 
-  Future<List<WUser>> getRoomMembers(String roomId) async {
+  Future<List<SyncTvUser>> getRoomMembers(String roomId) async {
     final response = await _api.room.getRoomMembers(
       roomId,
       client.GetRoomMembersRequest(),
@@ -70,7 +70,7 @@ class SyncTvRoomManagementDomainService {
     );
   }
 
-  Stream<RoomResourceWatchEvent<WRoomSettings>> watchRoomSettings(
+  Stream<RoomResourceWatchEvent<SyncTvRoomSettings>> watchRoomSettings(
     String roomId, {
     String version = '',
   }) {
@@ -87,20 +87,20 @@ class SyncTvRoomManagementDomainService {
     )
         .map((event) {
       if (event.hasObserved()) {
-        return RoomResourceWatchEvent<WRoomSettings>.observed(
+        return RoomResourceWatchEvent<SyncTvRoomSettings>.observed(
           version: _cursorVersion(event.observed.eventCursor),
           changed: event.observed.changed,
         );
       }
       if (event.hasError()) {
-        return RoomResourceWatchEvent<WRoomSettings>.error(
+        return RoomResourceWatchEvent<SyncTvRoomSettings>.error(
           message: event.error.hasError() ? event.error.error.message : '',
           code: event.error.hasError() ? event.error.error.code : 0,
         );
       }
-      return RoomResourceWatchEvent<WRoomSettings>.changed(
+      return RoomResourceWatchEvent<SyncTvRoomSettings>.changed(
         version: _cursorVersion(event.resourceEvent.eventCursor),
-        snapshot: WRoomSettings.fromJson(
+        snapshot: SyncTvRoomSettings.fromJson(
           decodeJsonBytes(event.resourceEvent.roomSettings.settings),
         ),
       );
@@ -142,25 +142,25 @@ class SyncTvRoomManagementDomainService {
     });
   }
 
-  Stream<RoomResourceWatchEvent<List<WUser>>> watchRoomUsers(
+  Stream<RoomResourceWatchEvent<List<SyncTvUser>>> watchRoomUsers(
     String roomId, {
     String version = '',
   }) {
     return watchRoomMembers(roomId, version: version).map((event) {
       switch (event.kind) {
         case RoomResourceWatchKind.observed:
-          return RoomResourceWatchEvent<List<WUser>>.observed(
+          return RoomResourceWatchEvent<List<SyncTvUser>>.observed(
             version: event.version,
             changed: event.changed,
           );
         case RoomResourceWatchKind.changed:
-          return RoomResourceWatchEvent<List<WUser>>.changed(
+          return RoomResourceWatchEvent<List<SyncTvUser>>.changed(
             version: event.version,
             snapshot:
                 event.snapshot?.map(roomMemberToUser).toList(growable: false),
           );
         case RoomResourceWatchKind.error:
-          return RoomResourceWatchEvent<List<WUser>>.error(
+          return RoomResourceWatchEvent<List<SyncTvUser>>.error(
             message: event.errorMessage,
             code: event.errorCode,
           );
@@ -216,11 +216,11 @@ class SyncTvRoomManagementDomainService {
     return sequence == 0 ? cursor.eventId : sequence.toString();
   }
 
-  Future<WRoomSettings> getRoomSettings(
+  Future<SyncTvRoomSettings> getRoomSettings(
     String roomId, {
     bool refresh = false,
   }) async {
-    return _cache.get<WRoomSettings>(
+    return _cache.get<SyncTvRoomSettings>(
       'room:$roomId:settings',
       ttl: const Duration(minutes: 2),
       refresh: refresh,
@@ -228,17 +228,17 @@ class SyncTvRoomManagementDomainService {
     );
   }
 
-  Future<WRoomSettings> _fetchRoomSettings(String roomId) async {
+  Future<SyncTvRoomSettings> _fetchRoomSettings(String roomId) async {
     final response = await _api.room.getRoomSettings(
       roomId,
       client.GetRoomSettingsRequest(),
     );
-    return WRoomSettings.fromJson(decodeJsonBytes(response.settings));
+    return SyncTvRoomSettings.fromJson(decodeJsonBytes(response.settings));
   }
 
   Future<void> updateRoomSettings(
     String roomId,
-    WRoomSettings settings,
+    SyncTvRoomSettings settings,
   ) async {
     await _api.room.updateRoomSettings(
       roomId,
@@ -253,12 +253,16 @@ class SyncTvRoomManagementDomainService {
     );
   }
 
-  Future<void> kickMember(String roomId, String userId) async {
+  Future<void> kickMember(
+    String roomId,
+    String userId, {
+    int kickCooldownSeconds = 60,
+  }) async {
     await _api.room.kickMember(
       roomId,
       client.KickMemberRequest(
         userId: userId,
-        kickCooldownSeconds: Int64(60),
+        kickCooldownSeconds: Int64(kickCooldownSeconds),
       ),
     );
   }
@@ -486,8 +490,8 @@ AdminRoomMember roomMemberFromProto(common.RoomMember member) {
   );
 }
 
-WUser roomMemberToUser(AdminRoomMember member) {
-  return WUser(
+SyncTvUser roomMemberToUser(AdminRoomMember member) {
+  return SyncTvUser(
     id: member.userId,
     username: member.username,
     role: member.role,

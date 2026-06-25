@@ -4,8 +4,8 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 
 client.PlaybackClientProfile defaultPlaybackClientProfile() {
   return client.PlaybackClientProfile(
-    deliveryPreference: client_enum
-        .PlaybackDeliveryPreference.PLAYBACK_DELIVERY_PREFERENCE_AUTO,
+    streamPreference:
+        client_enum.PlaybackStreamPreference.PLAYBACK_STREAM_PREFERENCE_AUTO,
     maxAudioChannels: 2,
     supportedVideoCodecs: [
       client_enum.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,

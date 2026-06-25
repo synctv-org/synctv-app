@@ -15,6 +15,7 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import '../source_config.pbenum.dart' as $0;
 import 'common.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -85,7 +86,7 @@ class ProviderInstance extends $pb.GeneratedMessage {
     $core.int? timeoutSeconds,
     $core.bool? tls,
     $core.bool? insecureTls,
-    $core.Iterable<$core.String>? providers,
+    $core.Iterable<$0.SourceProvider>? providers,
     $core.bool? enabled,
     ProviderInstanceStatus? status,
     $fixnum.Int64? createdAt,
@@ -127,7 +128,11 @@ class ProviderInstance extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OU3)
     ..aOB(5, _omitFieldNames ? '' : 'tls')
     ..aOB(6, _omitFieldNames ? '' : 'insecureTls')
-    ..pPS(7, _omitFieldNames ? '' : 'providers')
+    ..pc<$0.SourceProvider>(
+        7, _omitFieldNames ? '' : 'providers', $pb.PbFieldType.KE,
+        valueOf: $0.SourceProvider.valueOf,
+        enumValues: $0.SourceProvider.values,
+        defaultEnumValue: $0.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED)
     ..aOB(8, _omitFieldNames ? '' : 'enabled')
     ..aE<ProviderInstanceStatus>(9, _omitFieldNames ? '' : 'status',
         enumValues: ProviderInstanceStatus.values)
@@ -209,7 +214,7 @@ class ProviderInstance extends $pb.GeneratedMessage {
   void clearInsecureTls() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $pb.PbList<$core.String> get providers => $_getList(6);
+  $pb.PbList<$0.SourceProvider> get providers => $_getList(6);
 
   @$pb.TagNumber(8)
   $core.bool get enabled => $_getBF(7);
@@ -250,7 +255,7 @@ class ProviderInstance extends $pb.GeneratedMessage {
 
 class ListAvailableProviderInstancesRequest extends $pb.GeneratedMessage {
   factory ListAvailableProviderInstancesRequest({
-    $core.String? providerType,
+    $0.SourceProvider? providerType,
   }) {
     final result = create();
     if (providerType != null) result.providerType = providerType;
@@ -272,7 +277,8 @@ class ListAvailableProviderInstancesRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.common'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'providerType')
+    ..aE<$0.SourceProvider>(1, _omitFieldNames ? '' : 'providerType',
+        enumValues: $0.SourceProvider.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -299,9 +305,9 @@ class ListAvailableProviderInstancesRequest extends $pb.GeneratedMessage {
   static ListAvailableProviderInstancesRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get providerType => $_getSZ(0);
+  $0.SourceProvider get providerType => $_getN(0);
   @$pb.TagNumber(1)
-  set providerType($core.String value) => $_setString(0, value);
+  set providerType($0.SourceProvider value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasProviderType() => $_has(0);
   @$pb.TagNumber(1)
@@ -312,7 +318,7 @@ class ListProviderInstancesRequest extends $pb.GeneratedMessage {
   factory ListProviderInstancesRequest({
     $core.int? page,
     $core.int? pageSize,
-    $core.String? providerType,
+    $0.SourceProvider? providerType,
     $core.String? search,
     $core.bool? enabled,
     $core.bool? tls,
@@ -347,7 +353,8 @@ class ListProviderInstancesRequest extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'page')
     ..aI(2, _omitFieldNames ? '' : 'pageSize')
-    ..aOS(3, _omitFieldNames ? '' : 'providerType')
+    ..aE<$0.SourceProvider>(3, _omitFieldNames ? '' : 'providerType',
+        enumValues: $0.SourceProvider.values)
     ..aOS(4, _omitFieldNames ? '' : 'search')
     ..aOB(5, _omitFieldNames ? '' : 'enabled')
     ..aOB(6, _omitFieldNames ? '' : 'tls')
@@ -398,9 +405,9 @@ class ListProviderInstancesRequest extends $pb.GeneratedMessage {
   void clearPageSize() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get providerType => $_getSZ(2);
+  $0.SourceProvider get providerType => $_getN(2);
   @$pb.TagNumber(3)
-  set providerType($core.String value) => $_setString(2, value);
+  set providerType($0.SourceProvider value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasProviderType() => $_has(2);
   @$pb.TagNumber(3)
@@ -525,7 +532,7 @@ class AddProviderInstanceRequest extends $pb.GeneratedMessage {
     $core.int? timeoutSeconds,
     $core.bool? tls,
     $core.bool? insecureTls,
-    $core.Iterable<$core.String>? providers,
+    $core.Iterable<$0.SourceProvider>? providers,
     $core.String? jwtSecret,
     $core.String? customCa,
   }) {
@@ -563,7 +570,11 @@ class AddProviderInstanceRequest extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OU3)
     ..aOB(5, _omitFieldNames ? '' : 'tls')
     ..aOB(6, _omitFieldNames ? '' : 'insecureTls')
-    ..pPS(7, _omitFieldNames ? '' : 'providers')
+    ..pc<$0.SourceProvider>(
+        7, _omitFieldNames ? '' : 'providers', $pb.PbFieldType.KE,
+        valueOf: $0.SourceProvider.valueOf,
+        enumValues: $0.SourceProvider.values,
+        defaultEnumValue: $0.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED)
     ..aOS(8, _omitFieldNames ? '' : 'jwtSecret')
     ..aOS(9, _omitFieldNames ? '' : 'customCa')
     ..hasRequiredFields = false;
@@ -644,7 +655,7 @@ class AddProviderInstanceRequest extends $pb.GeneratedMessage {
   void clearInsecureTls() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $pb.PbList<$core.String> get providers => $_getList(6);
+  $pb.PbList<$0.SourceProvider> get providers => $_getList(6);
 
   @$pb.TagNumber(8)
   $core.String get jwtSecret => $_getSZ(7);
@@ -734,7 +745,7 @@ class UpdateProviderInstanceRequest extends $pb.GeneratedMessage {
     $core.int? timeoutSeconds,
     $core.bool? tls,
     $core.bool? insecureTls,
-    $core.Iterable<$core.String>? providers,
+    $core.Iterable<$0.SourceProvider>? providers,
     $core.String? jwtSecret,
     $core.String? customCa,
     $core.bool? clearComment_10,
@@ -778,7 +789,11 @@ class UpdateProviderInstanceRequest extends $pb.GeneratedMessage {
         fieldType: $pb.PbFieldType.OU3)
     ..aOB(5, _omitFieldNames ? '' : 'tls')
     ..aOB(6, _omitFieldNames ? '' : 'insecureTls')
-    ..pPS(7, _omitFieldNames ? '' : 'providers')
+    ..pc<$0.SourceProvider>(
+        7, _omitFieldNames ? '' : 'providers', $pb.PbFieldType.KE,
+        valueOf: $0.SourceProvider.valueOf,
+        enumValues: $0.SourceProvider.values,
+        defaultEnumValue: $0.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED)
     ..aOS(8, _omitFieldNames ? '' : 'jwtSecret')
     ..aOS(9, _omitFieldNames ? '' : 'customCa')
     ..aOB(10, _omitFieldNames ? '' : 'clearComment')
@@ -863,7 +878,7 @@ class UpdateProviderInstanceRequest extends $pb.GeneratedMessage {
   void clearInsecureTls() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $pb.PbList<$core.String> get providers => $_getList(6);
+  $pb.PbList<$0.SourceProvider> get providers => $_getList(6);
 
   @$pb.TagNumber(8)
   $core.String get jwtSecret => $_getSZ(7);
@@ -1452,7 +1467,7 @@ class DisableProviderInstanceResponse extends $pb.GeneratedMessage {
 
 class ListProviderBackendsRequest extends $pb.GeneratedMessage {
   factory ListProviderBackendsRequest({
-    $core.String? providerType,
+    $0.SourceProvider? providerType,
   }) {
     final result = create();
     if (providerType != null) result.providerType = providerType;
@@ -1473,7 +1488,8 @@ class ListProviderBackendsRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.common'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'providerType')
+    ..aE<$0.SourceProvider>(1, _omitFieldNames ? '' : 'providerType',
+        enumValues: $0.SourceProvider.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1499,81 +1515,13 @@ class ListProviderBackendsRequest extends $pb.GeneratedMessage {
   static ListProviderBackendsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get providerType => $_getSZ(0);
+  $0.SourceProvider get providerType => $_getN(0);
   @$pb.TagNumber(1)
-  set providerType($core.String value) => $_setString(0, value);
+  set providerType($0.SourceProvider value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasProviderType() => $_has(0);
   @$pb.TagNumber(1)
   void clearProviderType() => $_clearField(1);
-}
-
-class ProviderProxyPathRequest extends $pb.GeneratedMessage {
-  factory ProviderProxyPathRequest({
-    $core.String? providerName,
-    $core.String? subPath,
-  }) {
-    final result = create();
-    if (providerName != null) result.providerName = providerName;
-    if (subPath != null) result.subPath = subPath;
-    return result;
-  }
-
-  ProviderProxyPathRequest._();
-
-  factory ProviderProxyPathRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ProviderProxyPathRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ProviderProxyPathRequest',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'synctv.provider.common'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'providerName')
-    ..aOS(2, _omitFieldNames ? '' : 'subPath')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ProviderProxyPathRequest clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ProviderProxyPathRequest copyWith(
-          void Function(ProviderProxyPathRequest) updates) =>
-      super.copyWith((message) => updates(message as ProviderProxyPathRequest))
-          as ProviderProxyPathRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ProviderProxyPathRequest create() => ProviderProxyPathRequest._();
-  @$core.override
-  ProviderProxyPathRequest createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ProviderProxyPathRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ProviderProxyPathRequest>(create);
-  static ProviderProxyPathRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get providerName => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set providerName($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasProviderName() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearProviderName() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get subPath => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set subPath($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasSubPath() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSubPath() => $_clearField(2);
 }
 
 class ProviderInstancesResponse extends $pb.GeneratedMessage {

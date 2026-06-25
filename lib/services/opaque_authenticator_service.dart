@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:synctv_app/models/account_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/passkey_authenticator_service.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
@@ -24,7 +24,7 @@ class OpaqueAuthenticatorService {
     }
 
     final start = _client.startLogin(password);
-    final challenge = await WatchTogetherService.startOpaqueLogin(
+    final challenge = await SyncTvService.startOpaqueLogin(
       username: normalized.contains('@') ? '' : normalized,
       email: normalized.contains('@') ? normalized : '',
       credentialRequest: start.credentialRequest,
@@ -34,7 +34,7 @@ class OpaqueAuthenticatorService {
       state: start.state,
       credentialResponse: Uint8List.fromList(challenge.credentialResponse),
     );
-    return WatchTogetherService.finishOpaqueLogin(
+    return SyncTvService.finishOpaqueLogin(
       sessionId: challenge.sessionId,
       credentialFinalization: finish.credentialFinalization,
     );
@@ -52,7 +52,7 @@ class OpaqueAuthenticatorService {
     }
 
     final start = _client.startRegistration(password);
-    final challenge = await WatchTogetherService.startOpaqueRegistration(
+    final challenge = await SyncTvService.startOpaqueRegistration(
       username: normalizedUsername,
       email: normalizedEmail,
       registrationRequest: start.registrationRequest,
@@ -62,13 +62,13 @@ class OpaqueAuthenticatorService {
       state: start.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),
     );
-    return WatchTogetherService.finishOpaqueRegistration(
+    return SyncTvService.finishOpaqueRegistration(
       sessionId: challenge.sessionId,
       registrationUpload: finish.registrationUpload,
     );
   }
 
-  Future<WUser> updateWithCurrentPassword({
+  Future<SyncTvUser> updateWithCurrentPassword({
     required String currentPassword,
     required String newPassword,
   }) async {
@@ -78,7 +78,7 @@ class OpaqueAuthenticatorService {
 
     final loginStart = _client.startLogin(currentPassword);
     final registrationStart = _client.startRegistration(newPassword);
-    final challenge = await WatchTogetherService.startOpaquePasswordUpdate(
+    final challenge = await SyncTvService.startOpaquePasswordUpdate(
       credentialRequest: loginStart.credentialRequest,
       registrationRequest: registrationStart.registrationRequest,
       verificationMethod: client_enum
@@ -96,14 +96,14 @@ class OpaqueAuthenticatorService {
       state: registrationStart.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),
     );
-    return WatchTogetherService.finishOpaquePasswordUpdate(
+    return SyncTvService.finishOpaquePasswordUpdate(
       sessionId: challenge.sessionId,
       credentialFinalization: loginFinish.credentialFinalization,
       registrationUpload: registrationFinish.registrationUpload,
     );
   }
 
-  Future<WUser> updateWithEmailToken({
+  Future<SyncTvUser> updateWithEmailToken({
     required String emailToken,
     required String newPassword,
   }) async {
@@ -113,7 +113,7 @@ class OpaqueAuthenticatorService {
     }
 
     final registrationStart = _client.startRegistration(newPassword);
-    final challenge = await WatchTogetherService.startOpaquePasswordUpdate(
+    final challenge = await SyncTvService.startOpaquePasswordUpdate(
       registrationRequest: registrationStart.registrationRequest,
       verificationMethod: client_enum.OpaquePasswordUpdateVerificationMethod
           .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_EMAIL_TOKEN.value,
@@ -124,19 +124,19 @@ class OpaqueAuthenticatorService {
       state: registrationStart.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),
     );
-    return WatchTogetherService.finishOpaquePasswordUpdate(
+    return SyncTvService.finishOpaquePasswordUpdate(
       sessionId: challenge.sessionId,
       registrationUpload: registrationFinish.registrationUpload,
     );
   }
 
-  Future<WUser> updateWithPasskey({required String newPassword}) async {
+  Future<SyncTvUser> updateWithPasskey({required String newPassword}) async {
     if (newPassword.isEmpty) {
       throw const FormatException('请输入新密码');
     }
 
     final registrationStart = _client.startRegistration(newPassword);
-    final challenge = await WatchTogetherService.startOpaquePasswordUpdate(
+    final challenge = await SyncTvService.startOpaquePasswordUpdate(
       registrationRequest: registrationStart.registrationRequest,
       verificationMethod: client_enum.OpaquePasswordUpdateVerificationMethod
           .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_PASSKEY.value,
@@ -153,7 +153,7 @@ class OpaqueAuthenticatorService {
       state: registrationStart.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),
     );
-    return WatchTogetherService.finishOpaquePasswordUpdate(
+    return SyncTvService.finishOpaquePasswordUpdate(
       sessionId: challenge.sessionId,
       registrationUpload: registrationFinish.registrationUpload,
       passkeySessionId: challenge.passkeySessionId,
@@ -175,7 +175,7 @@ class OpaqueAuthenticatorService {
     }
 
     final registrationStart = _client.startRegistration(newPassword);
-    final challenge = await WatchTogetherService.startOpaquePasswordReset(
+    final challenge = await SyncTvService.startOpaquePasswordReset(
       email: normalizedEmail,
       token: normalizedToken,
       registrationRequest: registrationStart.registrationRequest,
@@ -185,7 +185,7 @@ class OpaqueAuthenticatorService {
       state: registrationStart.state,
       registrationResponse: Uint8List.fromList(challenge.registrationResponse),
     );
-    await WatchTogetherService.finishOpaquePasswordReset(
+    await SyncTvService.finishOpaquePasswordReset(
       sessionId: challenge.sessionId,
       registrationUpload: registrationFinish.registrationUpload,
     );

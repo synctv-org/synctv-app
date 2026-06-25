@@ -528,34 +528,34 @@ class PlaybackUpdateType extends $pb.ProtobufEnum {
   const PlaybackUpdateType._(super.value, super.name);
 }
 
-class PlaybackDeliveryPreference extends $pb.ProtobufEnum {
-  static const PlaybackDeliveryPreference
-      PLAYBACK_DELIVERY_PREFERENCE_UNSPECIFIED = PlaybackDeliveryPreference._(
-          0, _omitEnumNames ? '' : 'PLAYBACK_DELIVERY_PREFERENCE_UNSPECIFIED');
-  static const PlaybackDeliveryPreference PLAYBACK_DELIVERY_PREFERENCE_AUTO =
-      PlaybackDeliveryPreference._(
-          1, _omitEnumNames ? '' : 'PLAYBACK_DELIVERY_PREFERENCE_AUTO');
-  static const PlaybackDeliveryPreference
-      PLAYBACK_DELIVERY_PREFERENCE_DIRECT_PLAY = PlaybackDeliveryPreference._(
-          2, _omitEnumNames ? '' : 'PLAYBACK_DELIVERY_PREFERENCE_DIRECT_PLAY');
-  static const PlaybackDeliveryPreference
-      PLAYBACK_DELIVERY_PREFERENCE_TRANSCODE = PlaybackDeliveryPreference._(
-          3, _omitEnumNames ? '' : 'PLAYBACK_DELIVERY_PREFERENCE_TRANSCODE');
+class PlaybackStreamPreference extends $pb.ProtobufEnum {
+  static const PlaybackStreamPreference PLAYBACK_STREAM_PREFERENCE_UNSPECIFIED =
+      PlaybackStreamPreference._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_STREAM_PREFERENCE_UNSPECIFIED');
+  static const PlaybackStreamPreference PLAYBACK_STREAM_PREFERENCE_AUTO =
+      PlaybackStreamPreference._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_STREAM_PREFERENCE_AUTO');
+  static const PlaybackStreamPreference PLAYBACK_STREAM_PREFERENCE_DIRECT_PLAY =
+      PlaybackStreamPreference._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_STREAM_PREFERENCE_DIRECT_PLAY');
+  static const PlaybackStreamPreference PLAYBACK_STREAM_PREFERENCE_TRANSCODE =
+      PlaybackStreamPreference._(
+          3, _omitEnumNames ? '' : 'PLAYBACK_STREAM_PREFERENCE_TRANSCODE');
 
-  static const $core.List<PlaybackDeliveryPreference> values =
-      <PlaybackDeliveryPreference>[
-    PLAYBACK_DELIVERY_PREFERENCE_UNSPECIFIED,
-    PLAYBACK_DELIVERY_PREFERENCE_AUTO,
-    PLAYBACK_DELIVERY_PREFERENCE_DIRECT_PLAY,
-    PLAYBACK_DELIVERY_PREFERENCE_TRANSCODE,
+  static const $core.List<PlaybackStreamPreference> values =
+      <PlaybackStreamPreference>[
+    PLAYBACK_STREAM_PREFERENCE_UNSPECIFIED,
+    PLAYBACK_STREAM_PREFERENCE_AUTO,
+    PLAYBACK_STREAM_PREFERENCE_DIRECT_PLAY,
+    PLAYBACK_STREAM_PREFERENCE_TRANSCODE,
   ];
 
-  static final $core.List<PlaybackDeliveryPreference?> _byValue =
+  static final $core.List<PlaybackStreamPreference?> _byValue =
       $pb.ProtobufEnum.$_initByValueList(values, 3);
-  static PlaybackDeliveryPreference? valueOf($core.int value) =>
+  static PlaybackStreamPreference? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
-  const PlaybackDeliveryPreference._(super.value, super.name);
+  const PlaybackStreamPreference._(super.value, super.name);
 }
 
 class PlaybackSubtitlePreference extends $pb.ProtobufEnum {
@@ -766,6 +766,38 @@ class ChatMessageEventKind extends $pb.ProtobufEnum {
   const ChatMessageEventKind._(super.value, super.name);
 }
 
+class ChatPinEventKind extends $pb.ProtobufEnum {
+  static const ChatPinEventKind CHAT_PIN_EVENT_KIND_UNSPECIFIED =
+      ChatPinEventKind._(
+          0, _omitEnumNames ? '' : 'CHAT_PIN_EVENT_KIND_UNSPECIFIED');
+  static const ChatPinEventKind CHAT_PIN_EVENT_KIND_PINNED =
+      ChatPinEventKind._(1, _omitEnumNames ? '' : 'CHAT_PIN_EVENT_KIND_PINNED');
+  static const ChatPinEventKind CHAT_PIN_EVENT_KIND_UNPINNED =
+      ChatPinEventKind._(
+          2, _omitEnumNames ? '' : 'CHAT_PIN_EVENT_KIND_UNPINNED');
+  static const ChatPinEventKind CHAT_PIN_EVENT_KIND_MESSAGE_UPDATED =
+      ChatPinEventKind._(
+          3, _omitEnumNames ? '' : 'CHAT_PIN_EVENT_KIND_MESSAGE_UPDATED');
+  static const ChatPinEventKind CHAT_PIN_EVENT_KIND_MESSAGE_DELETED =
+      ChatPinEventKind._(
+          4, _omitEnumNames ? '' : 'CHAT_PIN_EVENT_KIND_MESSAGE_DELETED');
+
+  static const $core.List<ChatPinEventKind> values = <ChatPinEventKind>[
+    CHAT_PIN_EVENT_KIND_UNSPECIFIED,
+    CHAT_PIN_EVENT_KIND_PINNED,
+    CHAT_PIN_EVENT_KIND_UNPINNED,
+    CHAT_PIN_EVENT_KIND_MESSAGE_UPDATED,
+    CHAT_PIN_EVENT_KIND_MESSAGE_DELETED,
+  ];
+
+  static final $core.List<ChatPinEventKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static ChatPinEventKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ChatPinEventKind._(super.value, super.name);
+}
+
 class RoomMemberEventKind extends $pb.ProtobufEnum {
   static const RoomMemberEventKind ROOM_MEMBER_EVENT_KIND_UNSPECIFIED =
       RoomMemberEventKind._(
@@ -797,6 +829,62 @@ class RoomMemberEventKind extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const RoomMemberEventKind._(super.value, super.name);
+}
+
+class ChatAttachmentKind extends $pb.ProtobufEnum {
+  static const ChatAttachmentKind CHAT_ATTACHMENT_KIND_UNSPECIFIED =
+      ChatAttachmentKind._(
+          0, _omitEnumNames ? '' : 'CHAT_ATTACHMENT_KIND_UNSPECIFIED');
+  static const ChatAttachmentKind CHAT_ATTACHMENT_KIND_FILE =
+      ChatAttachmentKind._(
+          1, _omitEnumNames ? '' : 'CHAT_ATTACHMENT_KIND_FILE');
+  static const ChatAttachmentKind CHAT_ATTACHMENT_KIND_IMAGE =
+      ChatAttachmentKind._(
+          2, _omitEnumNames ? '' : 'CHAT_ATTACHMENT_KIND_IMAGE');
+  static const ChatAttachmentKind CHAT_ATTACHMENT_KIND_AUDIO =
+      ChatAttachmentKind._(
+          3, _omitEnumNames ? '' : 'CHAT_ATTACHMENT_KIND_AUDIO');
+
+  static const $core.List<ChatAttachmentKind> values = <ChatAttachmentKind>[
+    CHAT_ATTACHMENT_KIND_UNSPECIFIED,
+    CHAT_ATTACHMENT_KIND_FILE,
+    CHAT_ATTACHMENT_KIND_IMAGE,
+    CHAT_ATTACHMENT_KIND_AUDIO,
+  ];
+
+  static final $core.List<ChatAttachmentKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static ChatAttachmentKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ChatAttachmentKind._(super.value, super.name);
+}
+
+class ChatAttachmentReferenceKind extends $pb.ProtobufEnum {
+  static const ChatAttachmentReferenceKind
+      CHAT_ATTACHMENT_REFERENCE_KIND_UNSPECIFIED =
+      ChatAttachmentReferenceKind._(0,
+          _omitEnumNames ? '' : 'CHAT_ATTACHMENT_REFERENCE_KIND_UNSPECIFIED');
+  static const ChatAttachmentReferenceKind
+      CHAT_ATTACHMENT_REFERENCE_KIND_UPLOAD = ChatAttachmentReferenceKind._(
+          1, _omitEnumNames ? '' : 'CHAT_ATTACHMENT_REFERENCE_KIND_UPLOAD');
+  static const ChatAttachmentReferenceKind
+      CHAT_ATTACHMENT_REFERENCE_KIND_REUSE = ChatAttachmentReferenceKind._(
+          2, _omitEnumNames ? '' : 'CHAT_ATTACHMENT_REFERENCE_KIND_REUSE');
+
+  static const $core.List<ChatAttachmentReferenceKind> values =
+      <ChatAttachmentReferenceKind>[
+    CHAT_ATTACHMENT_REFERENCE_KIND_UNSPECIFIED,
+    CHAT_ATTACHMENT_REFERENCE_KIND_UPLOAD,
+    CHAT_ATTACHMENT_REFERENCE_KIND_REUSE,
+  ];
+
+  static final $core.List<ChatAttachmentReferenceKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static ChatAttachmentReferenceKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const ChatAttachmentReferenceKind._(super.value, super.name);
 }
 
 class OnlineEventKind extends $pb.ProtobufEnum {

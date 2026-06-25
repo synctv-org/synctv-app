@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:fixnum/fixnum.dart';
 
 import 'package:synctv_app/models/account_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_memory_cache.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
@@ -26,15 +26,15 @@ class SyncTvAccountDomainService {
   final SyncTvSessionStore _sessionStore;
   final SyncTvMemoryCache _cache;
 
-  Future<WUser> getMe({bool refresh = false}) async {
+  Future<SyncTvUser> getMe({bool refresh = false}) async {
     if (_api.session.isGuest) {
-      return WUser(
+      return SyncTvUser(
         id: _sessionStore.guestRoomId ?? 'guest',
         username: _sessionStore.guestDisplayName ?? 'Guest',
         role: common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST.value,
       );
     }
-    return _cache.get<WUser>(
+    return _cache.get<SyncTvUser>(
       'account:me',
       ttl: const Duration(minutes: 2),
       refresh: refresh,
@@ -42,12 +42,12 @@ class SyncTvAccountDomainService {
     );
   }
 
-  Future<WUser> _fetchMe() async {
+  Future<SyncTvUser> _fetchMe() async {
     final response = await _api.user.getProfile(client.GetProfileRequest());
     return _api.mapUser(response.user);
   }
 
-  Future<WUser> updateUsername(String username) async {
+  Future<SyncTvUser> updateUsername(String username) async {
     await _api.user.setUsername(client.SetUsernameRequest(
       newUsername: username,
     ));
@@ -63,7 +63,7 @@ class SyncTvAccountDomainService {
     return response.maskedEmail;
   }
 
-  Future<WUser> confirmEmailBind({
+  Future<SyncTvUser> confirmEmailBind({
     required String email,
     required String token,
     required String verificationId,
@@ -81,7 +81,7 @@ class SyncTvAccountDomainService {
     return user;
   }
 
-  Future<WUser> unbindEmail({required String verificationId}) async {
+  Future<SyncTvUser> unbindEmail({required String verificationId}) async {
     final response = await _api.user.unbindEmail(
       client.UnbindEmailRequest(verificationId: verificationId),
     );
@@ -183,7 +183,7 @@ class SyncTvAccountDomainService {
     );
   }
 
-  Future<WUser> finishOpaquePasswordUpdate({
+  Future<SyncTvUser> finishOpaquePasswordUpdate({
     required String sessionId,
     List<int> credentialFinalization = const [],
     required List<int> registrationUpload,

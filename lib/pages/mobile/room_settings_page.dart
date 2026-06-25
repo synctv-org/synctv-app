@@ -6,10 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/room_management_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/pages/mobile/admin_settings_page.dart';
 import 'package:synctv_app/services/realtime_event_log_preferences.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
@@ -21,6 +21,7 @@ import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
+import 'package:synctv_app/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 
 const Map<String, String> _mediaSourceLabels = {
@@ -141,7 +142,7 @@ class RoomSettingsPage extends StatefulWidget {
   final String roomName;
   final String creatorId;
   final String currentUserId;
-  final WRoomSettings currentSettings;
+  final SyncTvRoomSettings currentSettings;
   final RoomRealtimeSession realtime;
 
   const RoomSettingsPage({
@@ -167,7 +168,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   late final TextEditingController _memberSearchController;
   late final TextEditingController _reviewUserController;
   late final TextEditingController _mediaSearchController;
-  late WRoomSettings _settings;
+  late final TextEditingController _chatSearchController;
+  late SyncTvRoomSettings _settings;
 
   final List<RoomStreamEntryInfo> _streams = [];
   final List<RoomJoinReviewInfo> _reviews = [];
@@ -177,7 +179,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   final List<IceServerInfo> _iceServers = [];
   final List<RealtimeEventLogEntry> _realtimeEvents = [];
   final List<String> _mediaPlaylistStack = [];
-  final List<WMovie> _mediaPlaylistEntryStack = [];
+  final List<SyncTvMovie> _mediaPlaylistEntryStack = [];
   final List<String> _mediaTargetStack = [];
   StreamSubscription<RoomRealtimeMessage>? _realtimeMessageSubscription;
   StreamSubscription<RealtimeEventLogEntry>? _realtimeEventSubscription;
@@ -188,6 +190,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   final _RealtimeWatchStats _mediaWatchStats = _RealtimeWatchStats();
   final _RealtimeWatchStats _chatWatchStats = _RealtimeWatchStats();
   String _chatCursor = '';
+  String _chatSearchCursor = '';
+  String _chatSearchQuery = '';
   bool _chatHistoryLoaded = false;
   String _settingsWatchVersion = '';
   String _membersWatchVersion = '';
@@ -243,7 +247,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _passwordUpdating = false;
   ChatReadStateInfo? _chatReadState;
   late String _currentUserId;
-  WRoom? _roomInfo;
+  SyncTvRoom? _roomInfo;
 
   String get _roomCoverUrl => _roomInfo?.coverUrl ?? '';
 
@@ -263,6 +267,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _memberSearchController = TextEditingController();
     _reviewUserController = TextEditingController();
     _mediaSearchController = TextEditingController();
+    _chatSearchController = TextEditingController();
     RealtimeEventLogPreferences.maxEntries.addListener(
       _handleRealtimeLogMaxEntriesChanged,
     );
@@ -314,10 +319,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _memberSearchController.dispose();
     _reviewUserController.dispose();
     _mediaSearchController.dispose();
+    _chatSearchController.dispose();
     super.dispose();
   }
 
-  void _applySettings(WRoomSettings settings) {
+  void _applySettings(SyncTvRoomSettings settings) {
     _allowGuestJoin = settings.allowGuestJoin;
     _requireApproval = settings.requireApproval;
     _allowAutoJoin = settings.allowAutoJoin;
@@ -338,7 +344,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _loadCurrentUserIfNeeded() async {
     if (_currentUserId.isNotEmpty) return;
     try {
-      final user = await WatchTogetherService.getMe();
+      final user = await SyncTvService.getMe();
       if (!mounted) return;
       setState(() => _currentUserId = user.id);
     } catch (e) {
@@ -348,7 +354,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _loadRoomInfo() async {
     try {
-      final room = await WatchTogetherService.getRoomInfo(widget.roomId);
+      final room = await SyncTvService.getRoomInfo(widget.roomId);
       if (!mounted) return;
       setState(() => _roomInfo = room);
     } catch (e) {
@@ -362,7 +368,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       final image = await pickLocalImageUpload(context, aspectRatio: 16 / 9);
       if (image == null || !mounted) return;
       setState(() => _coverUpdating = true);
-      final room = await WatchTogetherService.updateRoomCover(
+      final room = await SyncTvService.updateRoomCover(
         widget.roomId,
         image.upload,
       );
@@ -380,7 +386,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (_coverUpdating || _roomCoverUrl.isEmpty) return;
     try {
       setState(() => _coverUpdating = true);
-      final room = await WatchTogetherService.clearRoomCover(widget.roomId);
+      final room = await SyncTvService.clearRoomCover(widget.roomId);
       if (!mounted) return;
       setState(() => _roomInfo = room);
       MessageUtils.showSuccess(context, '房间封面已移除');
@@ -396,12 +402,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final password = _passwordController.text.trim();
     setState(() => _passwordUpdating = true);
     try {
-      await WatchTogetherService.updateRoomPassword(
+      await SyncTvService.updateRoomPassword(
         widget.roomId,
         password.isEmpty ? null : password,
       );
-      final freshSettings =
-          await WatchTogetherService.getRoomSettings(widget.roomId);
+      final freshSettings = await SyncTvService.getRoomSettings(widget.roomId);
       if (!mounted) return;
       setState(() {
         _settings = freshSettings;
@@ -537,7 +542,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   void _handleRealtimeSettingsMessage(RoomRealtimeMessage message) {
     if (message.kind == RoomRealtimeMessageKind.checkStatus) {
       _handleSettingsWatchEvent(
-        RoomResourceWatchEvent<WRoomSettings>.observed(
+        RoomResourceWatchEvent<SyncTvRoomSettings>.observed(
           version: message.resourceVersion,
           changed: message.resourceEvent,
         ),
@@ -546,7 +551,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     if (message.kind == RoomRealtimeMessageKind.roomSettings) {
       _handleSettingsWatchEvent(
-        RoomResourceWatchEvent<WRoomSettings>.changed(
+        RoomResourceWatchEvent<SyncTvRoomSettings>.changed(
           version: message.resourceVersion,
           snapshot: message.roomSettings,
         ),
@@ -555,7 +560,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     if (message.kind == RoomRealtimeMessageKind.error) {
       _handleSettingsWatchEvent(
-        RoomResourceWatchEvent<WRoomSettings>.error(
+        RoomResourceWatchEvent<SyncTvRoomSettings>.error(
           message: message.error?.message ?? '',
           code: message.error?.code ?? 0,
         ),
@@ -700,7 +705,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   void _handleSettingsWatchEvent(
-    RoomResourceWatchEvent<WRoomSettings> event,
+    RoomResourceWatchEvent<SyncTvRoomSettings> event,
   ) {
     if (!mounted) return;
     _settingsWatchStats.record(event);
@@ -886,7 +891,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
     setState(() => _isSaving = true);
     try {
-      final settings = WRoomSettings(
+      final settings = SyncTvRoomSettings(
         requirePassword: _settings.requirePassword,
         allowGuestJoin: _allowGuestJoin,
         requireApproval: _requireApproval,
@@ -900,12 +905,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         guestRemovedPermissions: _guestRemovedPermissions(),
       );
 
-      await WatchTogetherService.updateRoomSettings(
+      await SyncTvService.updateRoomSettings(
         widget.roomId,
         settings,
       );
-      final freshSettings =
-          await WatchTogetherService.getRoomSettings(widget.roomId);
+      final freshSettings = await SyncTvService.getRoomSettings(widget.roomId);
       if (!mounted) return;
       setState(() {
         _settings = freshSettings;
@@ -925,7 +929,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (!mounted) return;
     setState(() => _streamsLoading = true);
     try {
-      final page = await WatchTogetherService.listRoomStreamsPage(
+      final page = await SyncTvService.listRoomStreamsPage(
         widget.roomId,
         page: _streamsPage,
         pageSize: _streamsPageSize,
@@ -950,7 +954,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (!mounted) return;
     setState(() => _reviewsLoading = true);
     try {
-      final page = await WatchTogetherService.listRoomJoinReviewsPage(
+      final page = await SyncTvService.listRoomJoinReviewsPage(
         widget.roomId,
         page: _reviewsPage,
         pageSize: _reviewsPageSize,
@@ -975,7 +979,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (!mounted) return;
     setState(() => _membersLoading = true);
     try {
-      final page = await WatchTogetherService.getRoomMemberDetailsPage(
+      final page = await SyncTvService.getRoomMemberDetailsPage(
         widget.roomId,
         page: _membersPage,
         pageSize: _membersPageSize,
@@ -1007,7 +1011,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (!mounted) return;
     setState(() => _mediaLoading = true);
     try {
-      final page = await WatchTogetherService.listMediaLibrary(
+      final page = await SyncTvService.listMediaLibrary(
         widget.roomId,
         playlistId: _currentPlaylistId,
         target: _mediaTarget,
@@ -1079,8 +1083,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
     setState(() => _mediaProviderInstancesLoading = true);
     try {
-      final instances =
-          await WatchTogetherService.listAvailableProviderInstances(
+      final instances = await SyncTvService.listAvailableProviderInstances(
         providerType: provider,
       );
       if (!mounted || provider != _mediaSourceProvider) return;
@@ -1134,24 +1137,28 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _loadChatHistory({bool loadMore = false}) async {
     if (!mounted) return;
+    if (_chatSearchQuery.isNotEmpty) {
+      await _searchChatHistory(loadMore: loadMore);
+      return;
+    }
     if (loadMore && _chatCursor.isEmpty) return;
     setState(() => _chatLoading = true);
     try {
-      final page = await WatchTogetherService.getChatHistory(
+      final page = await SyncTvService.getChatHistory(
         widget.roomId,
         cursor: loadMore ? _chatCursor : '',
       );
       ChatReadStateInfo? readState;
       if (!loadMore && page.messages.isNotEmpty) {
         try {
-          readState = await WatchTogetherService.markChatRead(
+          readState = await SyncTvService.markChatRead(
             widget.roomId,
             page.messages.first.id,
           );
         } catch (e) {
           debugPrint('Mark chat read failed: $e');
           try {
-            readState = await WatchTogetherService.getChatReadState(
+            readState = await SyncTvService.getChatReadState(
               widget.roomId,
             );
           } catch (_) {}
@@ -1196,6 +1203,48 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
+  Future<void> _searchChatHistory({bool loadMore = false}) async {
+    if (!mounted) return;
+    final query = _chatSearchController.text.trim();
+    if (query.isEmpty) {
+      if (_chatSearchQuery.isEmpty) return;
+      setState(() {
+        _chatSearchQuery = '';
+        _chatSearchCursor = '';
+      });
+      await _loadChatHistory();
+      return;
+    }
+    if (loadMore && _chatSearchCursor.isEmpty) return;
+    setState(() {
+      _chatLoading = true;
+      if (!loadMore) {
+        _chatSearchQuery = query;
+        _chatSearchCursor = '';
+      }
+    });
+    try {
+      final page = await SyncTvService.searchChatMessages(
+        widget.roomId,
+        query: query,
+        cursor: loadMore ? _chatSearchCursor : '',
+      );
+      if (!mounted) return;
+      setState(() {
+        if (loadMore) {
+          _appendChatHistoryPage(page.messages);
+        } else {
+          _replaceChatHistory(page.messages);
+        }
+        _chatSearchCursor = page.nextCursor;
+      });
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '搜索聊天历史失败: $e');
+    } finally {
+      if (mounted) setState(() => _chatLoading = false);
+    }
+  }
+
   void _applyChatRealtimeMessage(RoomRealtimeMessage message) {
     final next = _chatInfoFromRealtime(message);
     final index = _chatMessages.indexWhere((item) => item.id == next.id);
@@ -1228,14 +1277,29 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       images: message.images,
       reactions: message.reactions,
       reactionCount: message.reactionCount,
+      pin: message.chatPinEvent?.pin,
     );
+  }
+
+  void _applyChatPinEvent(ChatPinEventInfo event) {
+    final clearPin = event.kind ==
+            client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED.value ||
+        event.kind ==
+            client_enum
+                .ChatPinEventKind.CHAT_PIN_EVENT_KIND_MESSAGE_DELETED.value;
+    final index =
+        _chatMessages.indexWhere((item) => item.id == event.message.id);
+    if (index >= 0) {
+      _chatMessages[index] =
+          _chatMessages[index].copyWith(pin: event.pin, clearPin: clearPin);
+    }
   }
 
   Future<void> _loadIceServers() async {
     if (!mounted) return;
     setState(() => _iceLoading = true);
     try {
-      final servers = await WatchTogetherService.getIceServers(widget.roomId);
+      final servers = await SyncTvService.getIceServers(widget.roomId);
       if (!mounted) return;
       setState(() {
         _iceServers
@@ -1332,10 +1396,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool get _canMutateCurrentMediaScope =>
       _mediaTarget.isEmpty && !_isInsideDynamicMediaPlaylist;
 
-  Future<void> _openMediaEntry(WMovie entry) async {
+  Future<void> _openMediaEntry(SyncTvMovie entry) async {
     if (!entry.isFolder) return;
     final isPersistedPlaylist = entry.id.startsWith('pl_');
-    final target = isPersistedPlaylist ? '' : entry.playbackWatchTarget ?? '';
+    final target = isPersistedPlaylist ? '' : entry.playbackTarget ?? '';
     if (!isPersistedPlaylist && target.isEmpty) return;
     setState(() {
       if (isPersistedPlaylist) {
@@ -1378,7 +1442,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _kickStream(RoomStreamEntryInfo stream) async {
     try {
-      await WatchTogetherService.kickRoomStream(
+      await SyncTvService.kickRoomStream(
         widget.roomId,
         stream.mediaId,
         reason: 'Kicked from room settings',
@@ -1392,7 +1456,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _showStreamInfo(RoomStreamEntryInfo stream) async {
     try {
-      final detail = await WatchTogetherService.getRoomStreamInfo(
+      final detail = await SyncTvService.getRoomStreamInfo(
         widget.roomId,
         stream.mediaId,
       );
@@ -1485,8 +1549,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _approveReview(RoomJoinReviewInfo review) async {
     try {
-      await WatchTogetherService.approveRoomJoinReview(
-          widget.roomId, review.id);
+      await SyncTvService.approveRoomJoinReview(widget.roomId, review.id);
       await _loadReviews();
       if (mounted) MessageUtils.showSuccess(context, '已通过申请');
     } catch (e) {
@@ -1498,7 +1561,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final reason = await _showRejectReasonDialog();
     if (reason == null) return;
     try {
-      await WatchTogetherService.rejectRoomJoinReview(
+      await SyncTvService.rejectRoomJoinReview(
         widget.roomId,
         review.id,
         reason: reason,
@@ -1514,7 +1577,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final result = await _showMemberEditDialog();
     if (result == null) return;
     try {
-      await WatchTogetherService.addRoomMember(
+      await SyncTvService.addRoomMember(
         widget.roomId,
         result.userId,
         role: result.role,
@@ -1531,7 +1594,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final result = await _showMemberRoleDialog(member.role);
     if (result == null || result == member.role) return;
     try {
-      await WatchTogetherService.setRoomMemberRole(
+      await SyncTvService.setRoomMemberRole(
         widget.roomId,
         member.userId,
         result,
@@ -1547,7 +1610,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final result = await _showMemberPermissionOverrideDialog(member);
     if (result == null) return;
     try {
-      await WatchTogetherService.updateRoomMemberPermissionOverrides(
+      await SyncTvService.updateRoomMemberPermissionOverrides(
         widget.roomId,
         member.userId,
         addedPermissions: result.addedPermissions,
@@ -1570,7 +1633,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
     if (!confirmed) return;
     try {
-      await WatchTogetherService.transferRoomOwnership(
+      await SyncTvService.transferRoomOwnership(
         widget.roomId,
         member.userId,
       );
@@ -1582,19 +1645,186 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<void> _kickMember(AdminRoomMember member) async {
-    final confirmed = await _confirm(
-      title: '移出成员',
-      content: '确认将 ${member.username} 移出房间？',
-      action: '移出',
-    );
-    if (!confirmed) return;
+    final cooldown = await _askKickCooldownSeconds(member.username);
+    if (cooldown == null) return;
     try {
-      await WatchTogetherService.kickMember(widget.roomId, member.userId);
+      await SyncTvService.kickMember(
+        widget.roomId,
+        member.userId,
+        kickCooldownSeconds: cooldown,
+      );
       await _loadMembers();
       if (mounted) MessageUtils.showSuccess(context, '成员已移出');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '移出成员失败: $e');
     }
+  }
+
+  Future<void> _reportRoomMember(AdminRoomMember member) async {
+    if (member.userId.isEmpty) return;
+    await _showReportContentDialog(
+      title: '举报成员',
+      targetLabel: member.username.isEmpty ? member.userId : member.username,
+      submit: (reasonCode, reason) => SyncTvService.reportRoomMember(
+        widget.roomId,
+        member.userId,
+        reasonCode: reasonCode,
+        reason: reason,
+      ),
+    );
+  }
+
+  Future<void> _reportUser(AdminRoomMember member) async {
+    if (member.userId.isEmpty) return;
+    await _showReportContentDialog(
+      title: '举报用户',
+      targetLabel: member.username.isEmpty ? member.userId : member.username,
+      submit: (reasonCode, reason) => SyncTvService.reportUser(
+        widget.roomId,
+        member.userId,
+        reasonCode: reasonCode,
+        reason: reason,
+      ),
+    );
+  }
+
+  Future<void> _showReportContentDialog({
+    required String title,
+    String targetLabel = '',
+    required Future<String> Function(String reasonCode, String reason) submit,
+  }) async {
+    const reasons = <String, String>{
+      'spam': '垃圾广告',
+      'abuse': '辱骂骚扰',
+      'illegal': '违法违规',
+      'sexual': '低俗色情',
+      'other': '其他问题',
+    };
+    var selectedReason = 'spam';
+    final detailController = TextEditingController();
+    final submitted = await showAppDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AppDialog(
+              title: Text(title),
+              icon: const Icon(Icons.flag_outlined),
+              body: SizedBox(
+                width: 360,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (targetLabel.isNotEmpty) ...[
+                      Text(
+                        targetLabel,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: reasons.entries
+                          .map(
+                            (entry) => AppChip(
+                              label: Text(entry.value),
+                              selected: selectedReason == entry.key,
+                              onSelected: (_) => setDialogState(
+                                () => selectedReason = entry.key,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 12),
+                    AppTextField(
+                      controller: detailController,
+                      label: '补充说明',
+                      hintText: '描述具体问题',
+                      minLines: 3,
+                      maxLines: 5,
+                      maxLength: 2000,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                AppActionButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  label: '取消',
+                  style: AppActionButtonStyle.text,
+                ),
+                AppActionButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  label: '提交',
+                  icon: Icons.flag_outlined,
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    try {
+      if (submitted != true) return;
+      await submit(selectedReason, detailController.text);
+      if (mounted) MessageUtils.showSuccess(context, '举报已提交');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '举报失败: $e');
+    } finally {
+      detailController.dispose();
+    }
+  }
+
+  Future<int?> _askKickCooldownSeconds(String username) async {
+    final controller = TextEditingController(text: '60');
+    final value = await showAppDialog<int>(
+      context: context,
+      builder: (dialogContext) => AppDialog(
+        title: const Text('移出成员'),
+        icon: const Icon(Icons.logout_rounded),
+        body: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('确认将 $username 移出房间，并设置重新加入冷却时间。'),
+            const SizedBox(height: 12),
+            AppTextField(
+              controller: controller,
+              label: '冷却秒数',
+              hintText: '1 - 2592000',
+              prefixIcon: Icons.timer_outlined,
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          AppActionButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            label: '取消',
+            style: AppActionButtonStyle.text,
+          ),
+          AppActionButton(
+            onPressed: () {
+              final seconds = int.tryParse(controller.text.trim());
+              if (seconds == null || seconds < 1 || seconds > 2592000) {
+                MessageUtils.showWarning(context, '请输入 1 到 2592000 之间的秒数');
+                return;
+              }
+              Navigator.pop(dialogContext, seconds);
+            },
+            icon: Icons.logout_rounded,
+            label: '移出',
+            style: AppActionButtonStyle.destructive,
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return value;
   }
 
   Future<void> _resetSettings() async {
@@ -1605,8 +1835,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
     if (!confirmed) return;
     try {
-      await WatchTogetherService.resetRoomSettings(widget.roomId);
-      final settings = await WatchTogetherService.getRoomSettings(
+      await SyncTvService.resetRoomSettings(widget.roomId);
+      final settings = await SyncTvService.getRoomSettings(
         widget.roomId,
         refresh: true,
       );
@@ -1629,7 +1859,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
     if (!confirmed) return;
     try {
-      await WatchTogetherService.leaveRoom(widget.roomId);
+      await SyncTvService.leaveRoom(widget.roomId);
       if (!mounted) return;
       Navigator.pop(context);
       MessageUtils.showSuccess(context, '已退出房间');
@@ -1646,7 +1876,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
     if (!confirmed) return;
     try {
-      await WatchTogetherService.deleteRoom(widget.roomId);
+      await SyncTvService.deleteRoom(widget.roomId);
       if (!mounted) return;
       Navigator.pop(context, true);
       MessageUtils.showSuccess(context, '房间已删除');
@@ -1663,7 +1893,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final input = await _showEntryEditDialog(title: '新建播放列表');
     if (input == null || input.name.isEmpty) return;
     try {
-      await WatchTogetherService.createPlaylist(
+      await SyncTvService.createPlaylist(
         widget.roomId,
         name: input.name,
         parentId: _currentPlaylistId,
@@ -1692,7 +1922,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (!confirmed) return;
 
     try {
-      await WatchTogetherService.clearMovies(
+      await SyncTvService.clearMovies(
         widget.roomId,
         parentId: playlistId.isEmpty ? null : playlistId,
       );
@@ -1703,7 +1933,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _renameEntry(WMovie entry) async {
+  Future<void> _renameEntry(SyncTvMovie entry) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
@@ -1719,14 +1949,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     try {
       if (entry.id.startsWith('pl_')) {
-        await WatchTogetherService.updatePlaylist(
+        await SyncTvService.updatePlaylist(
           widget.roomId,
           entry.id,
           name: input.name,
           description: input.description,
         );
       } else if (entry.id.startsWith('med_')) {
-        await WatchTogetherService.editMedia(
+        await SyncTvService.editMedia(
           widget.roomId,
           entry.id,
           name: input.name,
@@ -1740,7 +1970,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _deleteEntry(WMovie entry) async {
+  Future<void> _deleteEntry(SyncTvMovie entry) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
@@ -1755,13 +1985,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (!confirmed) return;
     try {
       if (entry.id.startsWith('pl_')) {
-        await WatchTogetherService.deletePlaylist(
+        await SyncTvService.deletePlaylist(
           widget.roomId,
           entry.id,
           force: true,
         );
       } else if (entry.id.startsWith('med_')) {
-        await WatchTogetherService.deleteMovie(widget.roomId, entry.id);
+        await SyncTvService.deleteMovie(widget.roomId, entry.id);
       }
       await _loadMediaLibrary();
       if (mounted) MessageUtils.showSuccess(context, '条目已删除');
@@ -1770,18 +2000,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _showMediaEntryDetails(WMovie entry) async {
+  Future<void> _showMediaEntryDetails(SyncTvMovie entry) async {
     try {
       var detail = entry;
       PlaylistDetailInfo? playlistDetail;
       if (entry.id.startsWith('pl_')) {
-        playlistDetail = await WatchTogetherService.getPlaylist(
+        playlistDetail = await SyncTvService.getPlaylist(
           widget.roomId,
           entry.id,
         );
         detail = playlistDetail.playlist;
       } else if (entry.id.startsWith('med_')) {
-        detail = await WatchTogetherService.getMedia(widget.roomId, entry.id);
+        detail = await SyncTvService.getMedia(widget.roomId, entry.id);
       }
       if (!mounted) return;
       await showAppBottomSheet<void>(
@@ -1937,7 +2167,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _updateEntryCover(WMovie entry) async {
+  Future<void> _updateEntryCover(SyncTvMovie entry) async {
     if (!_canMutateCurrentMediaScope ||
         entry.isProviderDynamicEntry ||
         (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_'))) {
@@ -1947,13 +2177,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       final image = await pickLocalImageUpload(context, aspectRatio: 16 / 9);
       if (image == null || !mounted) return;
       if (entry.id.startsWith('pl_')) {
-        await WatchTogetherService.updatePlaylistCover(
+        await SyncTvService.updatePlaylistCover(
           widget.roomId,
           entry.id,
           image.upload,
         );
       } else {
-        await WatchTogetherService.updateVideoCover(
+        await SyncTvService.updateVideoCover(
           widget.roomId,
           entry.id,
           image.upload,
@@ -1966,7 +2196,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _clearEntryCover(WMovie entry) async {
+  Future<void> _clearEntryCover(SyncTvMovie entry) async {
     if (!_canMutateCurrentMediaScope ||
         entry.isProviderDynamicEntry ||
         (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_'))) {
@@ -1974,9 +2204,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     try {
       if (entry.id.startsWith('pl_')) {
-        await WatchTogetherService.clearPlaylistCover(widget.roomId, entry.id);
+        await SyncTvService.clearPlaylistCover(widget.roomId, entry.id);
       } else {
-        await WatchTogetherService.clearVideoCover(widget.roomId, entry.id);
+        await SyncTvService.clearVideoCover(widget.roomId, entry.id);
       }
       await _loadMediaLibrary();
       if (mounted) MessageUtils.showSuccess(context, '封面已移除');
@@ -1993,7 +2223,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final content = await _showChatMessageEditDialog(message.content);
     if (content == null || content == message.content) return;
     try {
-      await WatchTogetherService.editChatMessage(
+      await SyncTvService.editChatMessage(
         widget.roomId,
         message.id,
         content: content,
@@ -2025,7 +2255,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
     if (!confirmed) return;
     try {
-      await WatchTogetherService.deleteChatMessage(
+      await SyncTvService.deleteChatMessage(
         widget.roomId,
         message.id,
         expectedVersion: message.version,
@@ -2034,6 +2264,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       if (mounted) MessageUtils.showSuccess(context, '消息已删除');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '删除消息失败: $e');
+    }
+  }
+
+  Future<void> _toggleChatPin(RoomChatMessageInfo message) async {
+    if (message.isDeleted) return;
+    try {
+      final event = message.isPinned
+          ? await SyncTvService.unpinChatMessage(widget.roomId, message.id)
+          : await SyncTvService.pinChatMessage(widget.roomId, message.id);
+      if (!mounted) return;
+      setState(() => _applyChatPinEvent(event));
+      MessageUtils.showSuccess(context, message.isPinned ? '已取消置顶' : '消息已置顶');
+    } catch (e) {
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          message.isPinned ? '取消置顶失败: $e' : '置顶消息失败: $e',
+        );
+      }
     }
   }
 
@@ -2066,16 +2315,57 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildReportsTab(ThemeData theme, bool isDark) {
-    return AdminContentReportsTab(
-      title: '${widget.roomName} 的举报管理',
-      roomScopedRoomId: widget.roomId,
-      showTargetTypeTabs: true,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${widget.roomName} 的举报管理',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              AppActionButton(
+                onPressed: _reportCurrentRoom,
+                icon: Icons.flag_outlined,
+                label: '举报房间',
+                size: AppActionButtonSize.sm,
+                style: AppActionButtonStyle.outlined,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: AdminContentReportsTab(
+            title: '',
+            roomScopedRoomId: widget.roomId,
+            showTargetTypeTabs: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _reportCurrentRoom() async {
+    await _showReportContentDialog(
+      title: '举报房间',
+      targetLabel: widget.roomName,
+      submit: (reasonCode, reason) => SyncTvService.reportRoom(
+        widget.roomId,
+        reasonCode: reasonCode,
+        reason: reason,
+      ),
     );
   }
 
   Future<void> _showChatMessageContext(RoomChatMessageInfo message) async {
     try {
-      final contextInfo = await WatchTogetherService.getChatMessageContext(
+      final contextInfo = await SyncTvService.getChatMessageContext(
         widget.roomId,
         message.id,
         beforeLimit: 10,
@@ -2119,7 +2409,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _moveMedia(WMovie entry) async {
+  Future<void> _moveMedia(SyncTvMovie entry) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
@@ -2132,7 +2422,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _currentPlaylistId.isEmpty ? null : _currentPlaylistId;
     if ((sourcePlaylistId ?? '') == targetPlaylistId) return;
     try {
-      final count = await WatchTogetherService.moveMedia(
+      final count = await SyncTvService.moveMedia(
         widget.roomId,
         mediaIds: [entry.id],
         sourcePlaylistId: sourcePlaylistId,
@@ -2145,13 +2435,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _movePlaylistRelative(WMovie entry, int direction) async {
+  Future<void> _movePlaylistRelative(SyncTvMovie entry, int direction) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
     }
     if (!entry.id.startsWith('pl_')) return;
-    final playlists = _mediaPage?.playlists ?? const <WMovie>[];
+    final playlists = _mediaPage?.playlists ?? const <SyncTvMovie>[];
     final index = playlists.indexWhere((item) => item.id == entry.id);
     if (index < 0) return;
     final isUp = direction < 0;
@@ -2160,13 +2450,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
     try {
       if (isUp) {
-        await WatchTogetherService.movePlaylist(
+        await SyncTvService.movePlaylist(
           widget.roomId,
           entry.id,
           beforePlaylistId: playlists[index - 1].id,
         );
       } else {
-        await WatchTogetherService.movePlaylist(
+        await SyncTvService.movePlaylist(
           widget.roomId,
           entry.id,
           afterPlaylistId: playlists[index + 1].id,
@@ -2179,10 +2469,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<_MediaMoveTarget?> _showMoveMediaTargetDialog(WMovie entry) async {
+  Future<_MediaMoveTarget?> _showMoveMediaTargetDialog(
+      SyncTvMovie entry) async {
     var loading = true;
     var error = '';
-    var playlists = <WMovie>[];
+    var playlists = <SyncTvMovie>[];
 
     Future<void> loadPlaylists(StateSetter setDialogState) async {
       setDialogState(() {
@@ -2190,7 +2481,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         error = '';
       });
       try {
-        final page = await WatchTogetherService.listPlaylistsPage(
+        final page = await SyncTvService.listPlaylistsPage(
           widget.roomId,
           pageSize: 100,
           dynamicOnly: false,
@@ -3176,7 +3467,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (_mediaLoading && page == null) {
       return const AppLoadingIndicator();
     }
-    final entries = page?.entries ?? const <WMovie>[];
+    final entries = page?.entries ?? const <SyncTvMovie>[];
     final canMutateScope = _canMutateCurrentMediaScope;
     return AppRefreshIndicator(
       onRefresh: _loadMediaLibrary,
@@ -3952,6 +4243,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildChatHistoryTab(ThemeData theme, bool isDark) {
+    final searchActive = _chatSearchQuery.isNotEmpty;
+    final nextCursor = searchActive ? _chatSearchCursor : _chatCursor;
     return AppRefreshIndicator(
       onRefresh: _loadChatHistory,
       child: AppListView(
@@ -3963,7 +4256,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             loading: _chatLoading,
             onRefresh: _loadChatHistory,
             theme: theme,
-            action: _chatCursor.isEmpty
+            action: nextCursor.isEmpty
                 ? null
                 : AppIconButton(
                     tooltip: '加载更多',
@@ -3973,8 +4266,47 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     icon: Icons.more_horiz,
                   ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: _buildSearchField(
+              controller: _chatSearchController,
+              label: '搜索聊天内容',
+              onSearch: _searchChatHistory,
+              icon: Icons.manage_search_rounded,
+            ),
+          ),
+          if (searchActive)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '搜索 "$_chatSearchQuery"',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  AppActionButton(
+                    onPressed: _chatLoading
+                        ? null
+                        : () {
+                            _chatSearchController.clear();
+                            _searchChatHistory();
+                          },
+                    icon: Icons.close_rounded,
+                    label: '清除',
+                    style: AppActionButtonStyle.text,
+                  ),
+                ],
+              ),
+            ),
           if (_chatMessages.isEmpty)
-            _buildEmptyState('当前没有聊天历史', theme)
+            _buildEmptyState(searchActive ? '没有匹配的聊天消息' : '当前没有聊天历史', theme)
           else
             ..._chatMessages.reversed.map(
               (message) => _buildChatMessageTile(message, theme, isDark),
@@ -4433,7 +4765,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
-  Widget _buildMediaTile(WMovie entry, ThemeData theme, bool isDark) {
+  Widget _buildMediaTile(SyncTvMovie entry, ThemeData theme, bool isDark) {
     final isPersisted =
         entry.id.startsWith('pl_') || entry.id.startsWith('med_');
     final canMutate = _canMutateCurrentMediaScope &&
@@ -4648,6 +4980,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           ),
                         ),
                       ],
+                      if (message.isPinned && !message.isDeleted) ...[
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.push_pin,
+                          size: 13,
+                          color: scheme.primary,
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -4746,6 +5086,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           targetType: 4,
                           targetChatMessageId: int.tryParse(message.id) ?? 0,
                         ),
+                      ),
+                      _buildChatMessageActionButton(
+                        tooltip: message.isPinned ? '取消置顶' : '置顶',
+                        icon: message.isPinned
+                            ? Icons.push_pin
+                            : Icons.push_pin_outlined,
+                        onPressed: message.isDeleted
+                            ? null
+                            : () => _toggleChatPin(message),
                       ),
                       _buildChatMessageActionButton(
                         tooltip: '编辑',
@@ -4855,19 +5204,41 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       spacing: 5,
       runSpacing: 5,
       children: sorted.take(6).map((reaction) {
-        return AppPanelSurface(
-          color: theme.colorScheme.surface.withValues(alpha: 0.78),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-          child: Text(
-            '${reaction.key} ${reaction.count}',
-            style: theme.textTheme.labelSmall?.copyWith(height: 1.1),
+        return Tooltip(
+          message: '查看回应成员',
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: () => _showChatReactionUsers(message, reaction),
+            child: AppPanelSurface(
+              color: theme.colorScheme.surface.withValues(alpha: 0.78),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              child: Text(
+                '${reaction.key} ${reaction.count}',
+                style: theme.textTheme.labelSmall?.copyWith(height: 1.1),
+              ),
+            ),
           ),
         );
       }).toList(),
+    );
+  }
+
+  Future<void> _showChatReactionUsers(
+    RoomChatMessageInfo message,
+    ChatReactionSummaryInfo reaction,
+  ) async {
+    if (message.id.isEmpty) return;
+    await showAppDialog<void>(
+      context: context,
+      builder: (context) => ChatReactionUsersDialog(
+        roomId: widget.roomId,
+        messageId: message.id,
+        reactionKey: reaction.key,
+      ),
     );
   }
 
@@ -4891,7 +5262,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ? const SizedBox(
                 width: 12,
                 height: 12,
-                child: CircularProgressIndicator(strokeWidth: 1.6),
+                child: AppLoadingIndicator(
+                  size: AppLoadingSize.sm,
+                  centered: false,
+                ),
               )
             : const Icon(Icons.visibility_outlined, size: 15),
         label: Text(text),
@@ -4925,17 +5299,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     return '@ $readCount 已读 · $unreadCount 未读';
   }
 
-  List<WUser> _mentionedUsersForMessage(
+  List<SyncTvUser> _mentionedUsersForMessage(
     RoomChatMessageInfo message,
     ChatMessageReadReceiptsInfo? receipt,
   ) {
     if (message.mentions.isEmpty) return const [];
     final mentionedIds =
         message.mentions.map((mention) => mention.userId).toSet();
-    final users = <String, WUser>{};
+    final users = <String, SyncTvUser>{};
     for (final mention in message.mentions) {
       if (mention.userId.isEmpty || mention.username.trim().isEmpty) continue;
-      users[mention.userId] = WUser(
+      users[mention.userId] = SyncTvUser(
         id: mention.userId,
         username: mention.username,
         role: 0,
@@ -4950,7 +5324,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       }
     } else {
       for (final member in _members) {
-        users[member.userId] = WUser(
+        users[member.userId] = SyncTvUser(
           id: member.userId,
           username: member.username,
           role: member.role,
@@ -4961,7 +5335,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     return mentionedIds
         .map((id) => users[id])
-        .whereType<WUser>()
+        .whereType<SyncTvUser>()
         .where((user) => user.username.trim().isNotEmpty)
         .toList();
   }
@@ -4971,7 +5345,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (receipt == null) {
       setState(() => _chatReceiptLoadingIds.add(message.id));
       try {
-        final loaded = await WatchTogetherService.getChatMessageReadReceipts(
+        final loaded = await SyncTvService.getChatMessageReadReceipts(
           widget.roomId,
           message.id,
         );
@@ -4991,7 +5365,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     final visibleReceipt = receipt;
     if (!mounted) return;
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (context) => ChatReadReceiptsDialog(receipts: visibleReceipt),
     );
@@ -5016,7 +5390,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildChatImageThumb(StoredImageInfo image, ThemeData theme) {
-    final resolved = WatchTogetherService.resolveResourceUrl(image.url);
+    final resolved = SyncTvService.resolveResourceUrl(image.url);
     return AppImageThumbnail(
       url: resolved,
       width: 160,
@@ -5033,7 +5407,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     double borderRadius = 8,
   }) {
     final theme = Theme.of(context);
-    final resolved = WatchTogetherService.resolveResourceUrl(url);
+    final resolved = SyncTvService.resolveResourceUrl(url);
     if (resolved.isEmpty) {
       return AppPanelSurface(
         width: width,
@@ -5093,7 +5467,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
-  String _mediaSubtitle(WMovie entry) {
+  String _mediaSubtitle(SyncTvMovie entry) {
     if (entry.id.startsWith('pl_')) {
       final mode = entry.metadata['is_dynamic'] == true ? '动态播放列表' : '播放列表';
       return '$mode · ${entry.sourceProvider.isEmpty ? 'static' : entry.sourceProvider}';
@@ -5278,6 +5652,20 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     targetMemberUserId: member.userId,
                   ),
                 ),
+                AppIconButton(
+                  tooltip: '举报成员',
+                  icon: Icons.flag_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _reportRoomMember(member),
+                ),
+                AppIconButton(
+                  tooltip: '举报用户',
+                  icon: Icons.person_off_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _reportUser(member),
+                ),
                 AppPopupMenuButton<_MemberAction>(
                   tooltip: '更多成员操作',
                   onSelected: (action) {
@@ -5335,6 +5723,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     targetMemberUserId: member.userId,
                   ),
                 ),
+                const SizedBox(width: 6),
+                AppIconButton(
+                  tooltip: '举报成员',
+                  icon: Icons.flag_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _reportRoomMember(member),
+                ),
+                const SizedBox(width: 6),
+                AppIconButton(
+                  tooltip: '举报用户',
+                  icon: Icons.person_off_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _reportUser(member),
+                ),
               ],
             ),
           ],
@@ -5376,7 +5780,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         ? (creatorId.isEmpty ? '创建者' : creatorId)
         : room!.creator.trim();
     final creatorAvatarUrl =
-        WatchTogetherService.resolveResourceUrl(room?.creatorAvatarUrl ?? '');
+        SyncTvService.resolveResourceUrl(room?.creatorAvatarUrl ?? '');
     return AppListView(
       padding: const EdgeInsets.only(bottom: 32, top: 8),
       children: [

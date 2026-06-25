@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -33,9 +34,7 @@ class LocalImageUpload {
 
   int get sizeBytes => bytes.length;
   String get checksumSha256 => sha256.convert(bytes).toString();
-  List<int> get metadata => utf8.encode(jsonEncode({
-        'file_name': fileName,
-      }));
+  List<int> get metadata => utf8.encode(jsonEncode({'file_name': fileName}));
 }
 
 class _OwnershipProofRange {
@@ -48,12 +47,38 @@ class _OwnershipProofRange {
   final int length;
 }
 
+class _UploadSessionResult<TSession> {
+  const _UploadSessionResult({
+    required this.plan,
+    required this.session,
+    required this.manifestParts,
+    required this.contentManifestSha256,
+  });
+
+  final client.FileUploadPlan plan;
+  final TSession session;
+  final List<client.FileUploadManifestPart> manifestParts;
+  final String contentManifestSha256;
+}
+
+class _UploadedPart {
+  const _UploadedPart({
+    required this.part,
+    required this.checksumSha256,
+    required this.etag,
+  });
+
+  final client.FileUploadManifestPart part;
+  final String checksumSha256;
+  final String etag;
+}
+
 class SyncTvFileUploadDomainService {
   SyncTvFileUploadDomainService(this._api);
 
   final SyncTvApiClient _api;
 
-  Future<client.ChatImage> uploadChatImage(
+  Future<client.ChatAttachmentReference> uploadChatImage(
     String roomId,
     LocalImageUpload upload,
   ) async {
@@ -62,66 +87,121 @@ class SyncTvFileUploadDomainService {
       maxSizeBytes: 20 * 1024 * 1024,
       allowAnyImageMime: true,
     );
-    final response = await _createUploadSession(
-      () => _api.room.createChatImageUploadSession(
+    final result = await _createUploadSession<
+        client.ChatAttachmentUploadSession,
+        client.CreateChatAttachmentUploadSessionResponse>(
+      upload: upload,
+      createRequest: (parts) => _api.room.createChatAttachmentUploadSession(
         roomId,
-        client.CreateChatImageUploadSessionRequest(
-          clientImageId: _clientObjectId(upload),
+        client.CreateChatAttachmentUploadSessionRequest(
+          clientAttachmentId: _clientObjectId(upload),
           mimeType: upload.mimeType,
           sizeBytes: Int64(upload.sizeBytes),
           width: upload.width,
           height: upload.height,
-          checksumSha256: upload.checksumSha256,
+          parts: parts,
           metadata: upload.metadata,
+          filename: upload.fileName,
+        ),
+      ),
+      planOf: (response) => response.plan,
+      sessionOf: (response) => response.session,
+      hasPlan: (response) => response.hasPlan(),
+      hasSession: (response) => response.hasSession(),
+    );
+    final session = result.session;
+    final uploadedParts = await _uploadSessionParts(
+      upload: upload,
+      sessionUploadRequired: session.uploadRequired,
+      uploadUrl: session.uploadUrl,
+      uploadHeaders: session.uploadHeaders,
+      partUrls: session.partUrls,
+      manifestParts: result.manifestParts,
+    );
+    final complete = await _api.room.completeChatAttachmentUploadSession(
+      client.CompleteChatAttachmentUploadSessionRequest(
+        roomId: roomId,
+        encodedObjectKey: session.encodedObjectKey,
+        token: session.uploadToken,
+        uploadId: session.uploadId,
+        parts: uploadedParts.map(_completePart),
+        fileId: session.attachmentReference.id,
+        ownershipProof: _ownershipProof(
+          upload: upload,
+          required: session.ownershipProofRequired,
+          nonce: session.ownershipProofNonce,
+          contentManifestSha256: result.contentManifestSha256,
+          ranges: session.ownershipProofRanges
+              .map((range) => _OwnershipProofRange(
+                    offset: range.offset.toInt(),
+                    length: range.length,
+                  ))
+              .toList(growable: false),
         ),
       ),
     );
-    final session = response.session;
-    if (session.uploadRequired) {
-      await _uploadSessionObject(
-        uploadUrl: session.uploadUrl,
-        headers: session.uploadHeaders,
-        upload: upload,
-      );
+    if (!complete.complete) {
+      throw const SyncTvFileUploadException('图片上传尚未完成，请稍后重试。');
     }
-    _attachOwnershipProofToChatImage(
-      upload: upload,
-      session: session,
-      image: session.image,
-    );
-    return session.image;
+    return session.attachmentReference;
   }
 
   Future<client.User> updateUserAvatar(LocalImageUpload upload) async {
     _validateImageUpload(upload, maxSizeBytes: 5 * 1024 * 1024);
-    final response = await _createUploadSession(
-      () => _api.user.createUserAvatarUploadSession(
+    final result = await _createUploadSession<client.UserAvatarUploadSession,
+        client.CreateUserAvatarUploadSessionResponse>(
+      upload: upload,
+      createRequest: (parts) => _api.user.createUserAvatarUploadSession(
         client.CreateUserAvatarUploadSessionRequest(
           clientAvatarId: _clientObjectId(upload),
           mimeType: upload.mimeType,
           sizeBytes: Int64(upload.sizeBytes),
           width: upload.width,
           height: upload.height,
-          checksumSha256: upload.checksumSha256,
+          parts: parts,
           metadata: upload.metadata,
         ),
       ),
+      planOf: (response) => response.plan,
+      sessionOf: (response) => response.session,
+      hasPlan: (response) => response.hasPlan(),
+      hasSession: (response) => response.hasSession(),
     );
-    final session = response.session;
-    if (session.uploadRequired) {
-      await _uploadSessionObject(
-        uploadUrl: session.uploadUrl,
-        headers: session.uploadHeaders,
-        upload: upload,
-      );
-    }
-    _attachOwnershipProofToUserAvatar(
+    final session = result.session;
+    final uploadedParts = await _uploadSessionParts(
       upload: upload,
-      session: session,
-      avatar: session.avatar,
+      sessionUploadRequired: session.uploadRequired,
+      uploadUrl: session.uploadUrl,
+      uploadHeaders: session.uploadHeaders,
+      partUrls: session.partUrls,
+      manifestParts: result.manifestParts,
     );
+    final complete = await _api.user.completeUserAvatarUploadSession(
+      client.CompleteUserAvatarUploadSessionRequest(
+        encodedObjectKey: session.encodedObjectKey,
+        token: session.uploadToken,
+        uploadId: session.uploadId,
+        parts: uploadedParts.map(_completePart),
+        fileId: session.avatarReference.id,
+        ownershipProof: _ownershipProof(
+          upload: upload,
+          required: session.ownershipProofRequired,
+          nonce: session.ownershipProofNonce,
+          contentManifestSha256: result.contentManifestSha256,
+          ranges: session.ownershipProofRanges
+              .map((range) => _OwnershipProofRange(
+                    offset: range.offset.toInt(),
+                    length: range.length,
+                  ))
+              .toList(growable: false),
+        ),
+      ),
+    );
+    if (!complete.complete) {
+      throw const SyncTvFileUploadException('头像上传尚未完成，请稍后重试。');
+    }
     final updated = await _api.user.updateUserAvatar(
-      client.UpdateUserAvatarRequest(avatar: session.avatar),
+      client.UpdateUserAvatarRequest(avatarReference: session.avatarReference),
     );
     return updated.user;
   }
@@ -137,8 +217,10 @@ class SyncTvFileUploadDomainService {
     LocalImageUpload upload,
   ) async {
     _validateImageUpload(upload, maxSizeBytes: 10 * 1024 * 1024);
-    final response = await _createUploadSession(
-      () => _api.room.createRoomCoverUploadSession(
+    final result = await _createUploadSession<client.RoomCoverUploadSession,
+        client.CreateRoomCoverUploadSessionResponse>(
+      upload: upload,
+      createRequest: (parts) => _api.room.createRoomCoverUploadSession(
         roomId,
         client.CreateRoomCoverUploadSessionRequest(
           roomId: roomId,
@@ -147,27 +229,54 @@ class SyncTvFileUploadDomainService {
           sizeBytes: Int64(upload.sizeBytes),
           width: upload.width,
           height: upload.height,
-          checksumSha256: upload.checksumSha256,
+          parts: parts,
           metadata: upload.metadata,
         ),
       ),
+      planOf: (response) => response.plan,
+      sessionOf: (response) => response.session,
+      hasPlan: (response) => response.hasPlan(),
+      hasSession: (response) => response.hasSession(),
     );
-    final session = response.session;
-    if (session.uploadRequired) {
-      await _uploadSessionObject(
-        uploadUrl: session.uploadUrl,
-        headers: session.uploadHeaders,
-        upload: upload,
-      );
-    }
-    _attachOwnershipProofToRoomCover(
+    final session = result.session;
+    final uploadedParts = await _uploadSessionParts(
       upload: upload,
-      session: session,
-      cover: session.cover,
+      sessionUploadRequired: session.uploadRequired,
+      uploadUrl: session.uploadUrl,
+      uploadHeaders: session.uploadHeaders,
+      partUrls: session.partUrls,
+      manifestParts: result.manifestParts,
     );
+    final complete = await _api.room.completeRoomCoverUploadSession(
+      client.CompleteRoomCoverUploadSessionRequest(
+        encodedObjectKey: session.encodedObjectKey,
+        token: session.uploadToken,
+        uploadId: session.uploadId,
+        parts: uploadedParts.map(_completePart),
+        fileId: session.coverReference.id,
+        ownershipProof: _ownershipProof(
+          upload: upload,
+          required: session.ownershipProofRequired,
+          nonce: session.ownershipProofNonce,
+          contentManifestSha256: result.contentManifestSha256,
+          ranges: session.ownershipProofRanges
+              .map((range) => _OwnershipProofRange(
+                    offset: range.offset.toInt(),
+                    length: range.length,
+                  ))
+              .toList(growable: false),
+        ),
+      ),
+    );
+    if (!complete.complete) {
+      throw const SyncTvFileUploadException('封面上传尚未完成，请稍后重试。');
+    }
     final updated = await _api.room.updateRoomCover(
       roomId,
-      client.UpdateRoomCoverRequest(roomId: roomId, cover: session.cover),
+      client.UpdateRoomCoverRequest(
+        roomId: roomId,
+        coverReference: session.coverReference,
+      ),
     );
     return updated.room;
   }
@@ -186,8 +295,10 @@ class SyncTvFileUploadDomainService {
     LocalImageUpload upload,
   ) async {
     _validateImageUpload(upload, maxSizeBytes: 10 * 1024 * 1024);
-    final response = await _createUploadSession(
-      () => _api.room.createPlaylistCoverUploadSession(
+    final result = await _createUploadSession<client.PlaylistCoverUploadSession,
+        client.CreatePlaylistCoverUploadSessionResponse>(
+      upload: upload,
+      createRequest: (parts) => _api.room.createPlaylistCoverUploadSession(
         roomId,
         client.CreatePlaylistCoverUploadSessionRequest(
           roomId: roomId,
@@ -197,30 +308,54 @@ class SyncTvFileUploadDomainService {
           sizeBytes: Int64(upload.sizeBytes),
           width: upload.width,
           height: upload.height,
-          checksumSha256: upload.checksumSha256,
+          parts: parts,
           metadata: upload.metadata,
         ),
       ),
+      planOf: (response) => response.plan,
+      sessionOf: (response) => response.session,
+      hasPlan: (response) => response.hasPlan(),
+      hasSession: (response) => response.hasSession(),
     );
-    final session = response.session;
-    if (session.uploadRequired) {
-      await _uploadSessionObject(
-        uploadUrl: session.uploadUrl,
-        headers: session.uploadHeaders,
-        upload: upload,
-      );
-    }
-    _attachOwnershipProofToPlaylistCover(
+    final session = result.session;
+    final uploadedParts = await _uploadSessionParts(
       upload: upload,
-      session: session,
-      cover: session.cover,
+      sessionUploadRequired: session.uploadRequired,
+      uploadUrl: session.uploadUrl,
+      uploadHeaders: session.uploadHeaders,
+      partUrls: session.partUrls,
+      manifestParts: result.manifestParts,
     );
+    final complete = await _api.room.completePlaylistCoverUploadSession(
+      client.CompletePlaylistCoverUploadSessionRequest(
+        encodedObjectKey: session.encodedObjectKey,
+        token: session.uploadToken,
+        uploadId: session.uploadId,
+        parts: uploadedParts.map(_completePart),
+        fileId: session.coverReference.id,
+        ownershipProof: _ownershipProof(
+          upload: upload,
+          required: session.ownershipProofRequired,
+          nonce: session.ownershipProofNonce,
+          contentManifestSha256: result.contentManifestSha256,
+          ranges: session.ownershipProofRanges
+              .map((range) => _OwnershipProofRange(
+                    offset: range.offset.toInt(),
+                    length: range.length,
+                  ))
+              .toList(growable: false),
+        ),
+      ),
+    );
+    if (!complete.complete) {
+      throw const SyncTvFileUploadException('封面上传尚未完成，请稍后重试。');
+    }
     final updated = await _api.room.updatePlaylistCover(
       roomId,
       client.UpdatePlaylistCoverRequest(
         roomId: roomId,
         playlistId: playlistId,
-        cover: session.cover,
+        coverReference: session.coverReference,
       ),
     );
     return updated.playlist;
@@ -243,10 +378,12 @@ class SyncTvFileUploadDomainService {
     LocalImageUpload upload,
   ) async {
     _validateImageUpload(upload, maxSizeBytes: 10 * 1024 * 1024);
-    final response = await _createUploadSession(
-      () => _api.room.createVideoCoverUploadSession(
+    final result = await _createUploadSession<client.MediaCoverUploadSession,
+        client.CreateMediaCoverUploadSessionResponse>(
+      upload: upload,
+      createRequest: (parts) => _api.room.createMediaCoverUploadSession(
         roomId,
-        client.CreateVideoCoverUploadSessionRequest(
+        client.CreateMediaCoverUploadSessionRequest(
           roomId: roomId,
           mediaId: mediaId,
           clientCoverId: _clientObjectId(upload),
@@ -254,62 +391,208 @@ class SyncTvFileUploadDomainService {
           sizeBytes: Int64(upload.sizeBytes),
           width: upload.width,
           height: upload.height,
-          checksumSha256: upload.checksumSha256,
+          parts: parts,
           metadata: upload.metadata,
         ),
       ),
+      planOf: (response) => response.plan,
+      sessionOf: (response) => response.session,
+      hasPlan: (response) => response.hasPlan(),
+      hasSession: (response) => response.hasSession(),
     );
-    final session = response.session;
-    if (session.uploadRequired) {
-      await _uploadSessionObject(
-        uploadUrl: session.uploadUrl,
-        headers: session.uploadHeaders,
-        upload: upload,
-      );
-    }
-    _attachOwnershipProofToVideoCover(
+    final session = result.session;
+    final uploadedParts = await _uploadSessionParts(
       upload: upload,
-      session: session,
-      cover: session.cover,
+      sessionUploadRequired: session.uploadRequired,
+      uploadUrl: session.uploadUrl,
+      uploadHeaders: session.uploadHeaders,
+      partUrls: session.partUrls,
+      manifestParts: result.manifestParts,
     );
-    final updated = await _api.room.updateVideoCover(
+    final complete = await _api.room.completeMediaCoverUploadSession(
+      client.CompleteMediaCoverUploadSessionRequest(
+        encodedObjectKey: session.encodedObjectKey,
+        token: session.uploadToken,
+        uploadId: session.uploadId,
+        parts: uploadedParts.map(_completePart),
+        fileId: session.coverReference.id,
+        ownershipProof: _ownershipProof(
+          upload: upload,
+          required: session.ownershipProofRequired,
+          nonce: session.ownershipProofNonce,
+          contentManifestSha256: result.contentManifestSha256,
+          ranges: session.ownershipProofRanges
+              .map((range) => _OwnershipProofRange(
+                    offset: range.offset.toInt(),
+                    length: range.length,
+                  ))
+              .toList(growable: false),
+        ),
+      ),
+    );
+    if (!complete.complete) {
+      throw const SyncTvFileUploadException('封面上传尚未完成，请稍后重试。');
+    }
+    final updated = await _api.room.updateMediaCover(
       roomId,
-      client.UpdateVideoCoverRequest(
+      client.UpdateMediaCoverRequest(
         roomId: roomId,
         mediaId: mediaId,
-        cover: session.cover,
+        coverReference: session.coverReference,
       ),
     );
     return updated.media;
   }
 
   Future<client.Media> clearVideoCover(String roomId, String mediaId) async {
-    final response = await _api.room.clearVideoCover(
+    final response = await _api.room.clearMediaCover(
       roomId,
-      client.ClearVideoCoverRequest(roomId: roomId, mediaId: mediaId),
+      client.ClearMediaCoverRequest(roomId: roomId, mediaId: mediaId),
     );
     return response.media;
   }
 
-  Future<void> _uploadSessionObject({
+  Future<_UploadSessionResult<TSession>>
+      _createUploadSession<TSession, TResponse>({
+    required LocalImageUpload upload,
+    required Future<TResponse> Function(
+      Iterable<client.FileUploadManifestPart> parts,
+    ) createRequest,
+    required client.FileUploadPlan Function(TResponse response) planOf,
+    required TSession Function(TResponse response) sessionOf,
+    required bool Function(TResponse response) hasPlan,
+    required bool Function(TResponse response) hasSession,
+  }) async {
+    try {
+      final planResponse = await createRequest(const []);
+      if (!hasPlan(planResponse)) {
+        throw const SyncTvFileUploadException('图片上传会话缺少分片计划，请重新选择图片。');
+      }
+      final plan = planOf(planResponse);
+      final manifestParts = _manifestPartsForPlan(upload, plan);
+      final sessionResponse = await createRequest(manifestParts);
+      if (!hasSession(sessionResponse)) {
+        throw const SyncTvFileUploadException('图片上传会话创建失败，请重新选择图片。');
+      }
+      return _UploadSessionResult<TSession>(
+        plan: plan,
+        session: sessionOf(sessionResponse),
+        manifestParts: manifestParts,
+        contentManifestSha256: _contentManifestSha256(
+          upload.sizeBytes,
+          plan.partSizeBytes.toInt(),
+          manifestParts,
+        ),
+      );
+    } on SyncTvApiException catch (error) {
+      throw SyncTvFileUploadException(_uploadSessionErrorMessage(error));
+    }
+  }
+
+  List<client.FileUploadManifestPart> _manifestPartsForPlan(
+    LocalImageUpload upload,
+    client.FileUploadPlan plan,
+  ) {
+    if (plan.parts.isEmpty) {
+      throw const SyncTvFileUploadException('图片上传会话缺少分片计划，请重新选择图片。');
+    }
+    return plan.parts.map((part) {
+      final offset = part.offsetBytes.toInt();
+      final size = part.sizeBytes.toInt();
+      final end = offset + size;
+      if (offset < 0 || size <= 0 || end > upload.bytes.length) {
+        throw const SyncTvFileUploadException('图片上传会话分片范围无效，请重新选择图片。');
+      }
+      return client.FileUploadManifestPart(
+        partNumber: part.partNumber,
+        offsetBytes: part.offsetBytes,
+        sizeBytes: part.sizeBytes,
+        checksumSha256: sha256
+            .convert(Uint8List.sublistView(upload.bytes, offset, end))
+            .toString(),
+      );
+    }).toList(growable: false);
+  }
+
+  Future<List<_UploadedPart>> _uploadSessionParts({
+    required LocalImageUpload upload,
+    required bool sessionUploadRequired,
+    required String uploadUrl,
+    required Map<String, String> uploadHeaders,
+    required Iterable<client.FileUploadPartUrl> partUrls,
+    required List<client.FileUploadManifestPart> manifestParts,
+  }) async {
+    final uploaded = <_UploadedPart>[];
+    final partUrlByNumber = {
+      for (final partUrl in partUrls) partUrl.partNumber: partUrl,
+    };
+
+    for (final part in manifestParts) {
+      final checksum = part.checksumSha256;
+      if (!sessionUploadRequired) {
+        uploaded
+            .add(_UploadedPart(part: part, checksumSha256: checksum, etag: ''));
+        continue;
+      }
+      final offset = part.offsetBytes.toInt();
+      final size = part.sizeBytes.toInt();
+      final bytes = Uint8List.sublistView(upload.bytes, offset, offset + size);
+      final wholeObjectUpload =
+          manifestParts.length == 1 && offset == 0 && size == upload.sizeBytes;
+      final specificPartUrl = partUrlByNumber[part.partNumber];
+      final headers = <String, String>{
+        ...uploadHeaders,
+        if (specificPartUrl != null) ...specificPartUrl.uploadHeaders,
+      };
+      final url = specificPartUrl?.uploadUrl.isNotEmpty == true
+          ? specificPartUrl!.uploadUrl
+          : uploadUrl;
+      if (url.trim().isEmpty) {
+        throw const SyncTvFileUploadException('图片上传会话缺少上传地址，请重新选择图片。');
+      }
+      if (partUrls.isEmpty && !wholeObjectUpload) {
+        final endInclusive = offset + size - 1;
+        headers['content-range'] =
+            'bytes $offset-$endInclusive/${upload.sizeBytes}';
+      }
+      final response = await _uploadSessionPart(
+        uploadUrl: url,
+        headers: headers,
+        bytes: bytes,
+        contentType: upload.mimeType,
+      );
+      uploaded.add(
+        _UploadedPart(
+          part: part,
+          checksumSha256: checksum,
+          etag: _responseHeader(response, 'etag'),
+        ),
+      );
+    }
+    return uploaded;
+  }
+
+  Future<http.Response> _uploadSessionPart({
     required String uploadUrl,
     required Map<String, String> headers,
-    required LocalImageUpload upload,
+    required Uint8List bytes,
+    required String contentType,
   }) {
     return _api.uploadRawBytes(
       uploadUrl,
-      upload.bytes,
-      contentType: upload.mimeType,
+      bytes,
+      contentType: contentType,
       headers: headers,
     );
   }
 
-  Future<T> _createUploadSession<T>(Future<T> Function() request) async {
-    try {
-      return await request();
-    } on SyncTvApiException catch (error) {
-      throw SyncTvFileUploadException(_uploadSessionErrorMessage(error));
-    }
+  client.CompleteFileUploadPart _completePart(_UploadedPart uploaded) {
+    return client.CompleteFileUploadPart(
+      partNumber: uploaded.part.partNumber,
+      etag: uploaded.etag,
+      sizeBytes: uploaded.part.sizeBytes,
+      checksumSha256: uploaded.checksumSha256,
+    );
   }
 
   void _validateImageUpload(
@@ -395,126 +678,25 @@ class SyncTvFileUploadDomainService {
     return '${upload.checksumSha256}-$name';
   }
 
-  void _attachOwnershipProofToChatImage({
-    required LocalImageUpload upload,
-    required client.ChatImageUploadSession session,
-    required client.ChatImage image,
-  }) {
-    final proof = _ownershipProof(
-      upload: upload,
-      required: session.ownershipProofRequired,
-      metadataKey: session.ownershipProofMetadataKey,
-      nonce: session.ownershipProofNonce,
-      ranges: session.ownershipProofRanges
-          .map((range) => _OwnershipProofRange(
-                offset: range.offset.toInt(),
-                length: range.length,
-              ))
-          .toList(growable: false),
-    );
-    if (proof == null) return;
-    image.metadata = _metadataWithOwnershipProof(image.metadata, proof);
-  }
-
-  void _attachOwnershipProofToUserAvatar({
-    required LocalImageUpload upload,
-    required client.UserAvatarUploadSession session,
-    required client.UserAvatar avatar,
-  }) {
-    final proof = _ownershipProof(
-      upload: upload,
-      required: session.ownershipProofRequired,
-      metadataKey: session.ownershipProofMetadataKey,
-      nonce: session.ownershipProofNonce,
-      ranges: session.ownershipProofRanges
-          .map((range) => _OwnershipProofRange(
-                offset: range.offset.toInt(),
-                length: range.length,
-              ))
-          .toList(growable: false),
-    );
-    if (proof == null) return;
-    avatar.metadata = _metadataWithOwnershipProof(avatar.metadata, proof);
-  }
-
-  void _attachOwnershipProofToRoomCover({
-    required LocalImageUpload upload,
-    required client.RoomCoverUploadSession session,
-    required client.FileCover cover,
-  }) {
-    final proof = _ownershipProof(
-      upload: upload,
-      required: session.ownershipProofRequired,
-      metadataKey: session.ownershipProofMetadataKey,
-      nonce: session.ownershipProofNonce,
-      ranges: session.ownershipProofRanges
-          .map((range) => _OwnershipProofRange(
-                offset: range.offset.toInt(),
-                length: range.length,
-              ))
-          .toList(growable: false),
-    );
-    if (proof == null) return;
-    cover.metadata = _metadataWithOwnershipProof(cover.metadata, proof);
-  }
-
-  void _attachOwnershipProofToPlaylistCover({
-    required LocalImageUpload upload,
-    required client.PlaylistCoverUploadSession session,
-    required client.FileCover cover,
-  }) {
-    final proof = _ownershipProof(
-      upload: upload,
-      required: session.ownershipProofRequired,
-      metadataKey: session.ownershipProofMetadataKey,
-      nonce: session.ownershipProofNonce,
-      ranges: session.ownershipProofRanges
-          .map((range) => _OwnershipProofRange(
-                offset: range.offset.toInt(),
-                length: range.length,
-              ))
-          .toList(growable: false),
-    );
-    if (proof == null) return;
-    cover.metadata = _metadataWithOwnershipProof(cover.metadata, proof);
-  }
-
-  void _attachOwnershipProofToVideoCover({
-    required LocalImageUpload upload,
-    required client.VideoCoverUploadSession session,
-    required client.VideoCover cover,
-  }) {
-    final proof = _ownershipProof(
-      upload: upload,
-      required: session.ownershipProofRequired,
-      metadataKey: session.ownershipProofMetadataKey,
-      nonce: session.ownershipProofNonce,
-      ranges: session.ownershipProofRanges
-          .map((range) => _OwnershipProofRange(
-                offset: range.offset.toInt(),
-                length: range.length,
-              ))
-          .toList(growable: false),
-    );
-    if (proof == null) return;
-    cover.metadata = _metadataWithOwnershipProof(cover.metadata, proof);
-  }
-
-  MapEntry<String, String>? _ownershipProof({
+  String _ownershipProof({
     required LocalImageUpload upload,
     required bool required,
-    required String metadataKey,
     required String nonce,
+    required String contentManifestSha256,
     required List<_OwnershipProofRange> ranges,
   }) {
-    if (!required) return null;
-    if (metadataKey.trim().isEmpty || nonce.trim().isEmpty) {
+    if (!required) return '';
+    if (nonce.trim().isEmpty || contentManifestSha256.trim().isEmpty) {
       throw const SyncTvFileUploadException('图片上传会话缺少所有权验证信息，请重新选择图片。');
     }
     final proofBytes = BytesBuilder();
     proofBytes.add(utf8.encode('synctv-file-ownership-proof-v1'));
     proofBytes.add([0]);
     proofBytes.add(utf8.encode(nonce));
+    proofBytes.add([0]);
+    proofBytes.add(utf8.encode(contentManifestSha256.trim().toLowerCase()));
+    proofBytes.add(_int64ToBigEndian(upload.sizeBytes));
+    proofBytes.add(_uint64ToBigEndian(ranges.length));
     for (final range in ranges) {
       if (range.offset < 0 || range.length <= 0) {
         throw const SyncTvFileUploadException('图片上传会话包含无效验证范围，请重新选择图片。');
@@ -528,34 +710,45 @@ class SyncTvFileUploadDomainService {
       proofBytes.add(Uint8List.sublistView(upload.bytes, range.offset, end));
     }
 
-    final digest = sha256.convert(proofBytes.toBytes()).toString();
-    return MapEntry(metadataKey, digest);
+    return sha256.convert(proofBytes.toBytes()).toString();
   }
 
-  List<int> _metadataWithOwnershipProof(
-    List<int> metadata,
-    MapEntry<String, String> proof,
+  String _contentManifestSha256(
+    int sizeBytes,
+    int partSizeBytes,
+    List<client.FileUploadManifestPart> parts,
   ) {
-    final value = _decodeMetadata(metadata);
-    value[proof.key] = proof.value;
-    return utf8.encode(jsonEncode(value));
+    final sorted = [...parts]
+      ..sort((a, b) => a.partNumber.compareTo(b.partNumber));
+    final bytes = BytesBuilder();
+    bytes.add(utf8.encode('synctv-file-part-manifest-sha256-v1'));
+    bytes.add([0]);
+    bytes.add(_int64ToBigEndian(sizeBytes));
+    bytes.add(_int64ToBigEndian(partSizeBytes));
+    bytes.add(_uint64ToBigEndian(sorted.length));
+    for (final part in sorted) {
+      bytes.add(_int32ToBigEndian(part.partNumber));
+      bytes.add(_int64ToBigEndian(part.sizeBytes.toInt()));
+      bytes.add(utf8.encode(part.checksumSha256.trim().toLowerCase()));
+    }
+    return sha256.convert(bytes.toBytes()).toString();
   }
 
-  Map<String, dynamic> _decodeMetadata(List<int> metadata) {
-    if (metadata.isEmpty) return <String, dynamic>{};
-    try {
-      final decoded = jsonDecode(utf8.decode(metadata));
-      if (decoded is Map<String, dynamic>) {
-        return Map<String, dynamic>.from(decoded);
-      }
-    } catch (_) {
-      // Fall through and replace malformed optional metadata with proof metadata.
+  String _responseHeader(http.Response response, String name) {
+    final lowerName = name.toLowerCase();
+    for (final entry in response.headers.entries) {
+      if (entry.key.toLowerCase() == lowerName) return entry.value;
     }
-    return <String, dynamic>{};
+    return '';
   }
 
   List<int> _int64ToBigEndian(int value) {
     final data = ByteData(8)..setInt64(0, value, Endian.big);
+    return data.buffer.asUint8List();
+  }
+
+  List<int> _uint64ToBigEndian(int value) {
+    final data = ByteData(8)..setUint64(0, value, Endian.big);
     return data.buffer.asUint8List();
   }
 

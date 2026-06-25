@@ -101,7 +101,15 @@ const ProviderInstance$json = {
     {'1': 'timeout_seconds', '3': 4, '4': 1, '5': 13, '10': 'timeoutSeconds'},
     {'1': 'tls', '3': 5, '4': 1, '5': 8, '10': 'tls'},
     {'1': 'insecure_tls', '3': 6, '4': 1, '5': 8, '10': 'insecureTls'},
-    {'1': 'providers', '3': 7, '4': 3, '5': 9, '8': {}, '10': 'providers'},
+    {
+      '1': 'providers',
+      '3': 7,
+      '4': 3,
+      '5': 14,
+      '6': '.synctv.source_config.SourceProvider',
+      '8': {},
+      '10': 'providers'
+    },
     {'1': 'enabled', '3': 8, '4': 1, '5': 8, '10': 'enabled'},
     {
       '1': 'status',
@@ -121,11 +129,11 @@ final $typed_data.Uint8List providerInstanceDescriptor = $convert.base64Decode(
     'ChBQcm92aWRlckluc3RhbmNlEhIKBG5hbWUYASABKAlSBG5hbWUSGgoIZW5kcG9pbnQYAiABKA'
     'lSCGVuZHBvaW50EhgKB2NvbW1lbnQYAyABKAlSB2NvbW1lbnQSJwoPdGltZW91dF9zZWNvbmRz'
     'GAQgASgNUg50aW1lb3V0U2Vjb25kcxIQCgN0bHMYBSABKAhSA3RscxIhCgxpbnNlY3VyZV90bH'
-    'MYBiABKAhSC2luc2VjdXJlVGxzEkEKCXByb3ZpZGVycxgHIAMoCUIjukggkgEdCAEYASIXchUY'
-    'QDIRXlthLXpdW2EtejAtOV9dKiRSCXByb3ZpZGVycxIYCgdlbmFibGVkGAggASgIUgdlbmFibG'
-    'VkEkYKBnN0YXR1cxgJIAEoDjIuLnN5bmN0di5wcm92aWRlci5jb21tb24uUHJvdmlkZXJJbnN0'
-    'YW5jZVN0YXR1c1IGc3RhdHVzEh0KCmNyZWF0ZWRfYXQYCiABKANSCWNyZWF0ZWRBdBIdCgp1cG'
-    'RhdGVkX2F0GAsgASgDUgl1cGRhdGVkQXQ=');
+    'MYBiABKAhSC2luc2VjdXJlVGxzElcKCXByb3ZpZGVycxgHIAMoDjIkLnN5bmN0di5zb3VyY2Vf'
+    'Y29uZmlnLlNvdXJjZVByb3ZpZGVyQhO6SBCSAQ0IARgBIgeCAQQQASAAUglwcm92aWRlcnMSGA'
+    'oHZW5hYmxlZBgIIAEoCFIHZW5hYmxlZBJGCgZzdGF0dXMYCSABKA4yLi5zeW5jdHYucHJvdmlk'
+    'ZXIuY29tbW9uLlByb3ZpZGVySW5zdGFuY2VTdGF0dXNSBnN0YXR1cxIdCgpjcmVhdGVkX2F0GA'
+    'ogASgDUgljcmVhdGVkQXQSHQoKdXBkYXRlZF9hdBgLIAEoA1IJdXBkYXRlZEF0');
 
 @$core.Deprecated('Use listAvailableProviderInstancesRequestDescriptor instead')
 const ListAvailableProviderInstancesRequest$json = {
@@ -135,7 +143,8 @@ const ListAvailableProviderInstancesRequest$json = {
       '1': 'provider_type',
       '3': 1,
       '4': 1,
-      '5': 9,
+      '5': 14,
+      '6': '.synctv.source_config.SourceProvider',
       '8': {},
       '10': 'providerType'
     },
@@ -145,8 +154,9 @@ const ListAvailableProviderInstancesRequest$json = {
 /// Descriptor for `ListAvailableProviderInstancesRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listAvailableProviderInstancesRequestDescriptor =
     $convert.base64Decode(
-        'CiVMaXN0QXZhaWxhYmxlUHJvdmlkZXJJbnN0YW5jZXNSZXF1ZXN0EkIKDXByb3ZpZGVyX3R5cG'
-        'UYASABKAlCHbpIGnIVGEAyEV5bYS16XVthLXowLTlfXSok2AEBUgxwcm92aWRlclR5cGU=');
+        'CiVMaXN0QXZhaWxhYmxlUHJvdmlkZXJJbnN0YW5jZXNSZXF1ZXN0ElMKDXByb3ZpZGVyX3R5cG'
+        'UYASABKA4yJC5zeW5jdHYuc291cmNlX2NvbmZpZy5Tb3VyY2VQcm92aWRlckIIukgFggECEAFS'
+        'DHByb3ZpZGVyVHlwZQ==');
 
 @$core.Deprecated('Use listProviderInstancesRequestDescriptor instead')
 const ListProviderInstancesRequest$json = {
@@ -158,7 +168,8 @@ const ListProviderInstancesRequest$json = {
       '1': 'provider_type',
       '3': 3,
       '4': 1,
-      '5': 9,
+      '5': 14,
+      '6': '.synctv.source_config.SourceProvider',
       '8': {},
       '10': 'providerType'
     },
@@ -202,19 +213,19 @@ const ListProviderInstancesRequest$json = {
 /// Descriptor for `ListProviderInstancesRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listProviderInstancesRequestDescriptor = $convert.base64Decode(
     'ChxMaXN0UHJvdmlkZXJJbnN0YW5jZXNSZXF1ZXN0EhIKBHBhZ2UYASABKAVSBHBhZ2USGwoJcG'
-    'FnZV9zaXplGAIgASgFUghwYWdlU2l6ZRJCCg1wcm92aWRlcl90eXBlGAMgASgJQh26SBpyFRhA'
-    'MhFeW2Etel1bYS16MC05X10qJNgBAVIMcHJvdmlkZXJUeXBlEh8KBnNlYXJjaBgEIAEoCUIHuk'
-    'gEcgIYZFIGc2VhcmNoEh0KB2VuYWJsZWQYBSABKAhIAFIHZW5hYmxlZIgBARIVCgN0bHMYBiAB'
-    'KAhIAVIDdGxziAEBElUKB3NvcnRfYnkYByABKA4yMi5zeW5jdHYucHJvdmlkZXIuY29tbW9uLl'
-    'Byb3ZpZGVySW5zdGFuY2VMaXN0U29ydEJ5Qgi6SAWCAQIQAVIGc29ydEJ5ElYKDnNvcnRfZGly'
-    'ZWN0aW9uGAggASgOMiUuc3luY3R2LnByb3ZpZGVyLmNvbW1vbi5Tb3J0RGlyZWN0aW9uQgi6SA'
-    'WCAQIQAVINc29ydERpcmVjdGlvbjqpArpIpQIadQolcHJvdmlkZXIubGlzdF9wcm92aWRlcl9p'
-    'bnN0YW5jZXMucGFnZRIqcGFnZSBtdXN0IGJlIDAgKHVzZSBkZWZhdWx0KSBvciBhdCBsZWFzdC'
-    'AxGiB0aGlzLnBhZ2UgPT0gMCB8fCB0aGlzLnBhZ2UgPj0gMRqrAQoqcHJvdmlkZXIubGlzdF9w'
-    'cm92aWRlcl9pbnN0YW5jZXMucGFnZV9zaXplEjZwYWdlX3NpemUgbXVzdCBiZSAwICh1c2UgZG'
-    'VmYXVsdCkgb3IgYmV0d2VlbiAxIGFuZCAxMDAaRXRoaXMucGFnZV9zaXplID09IDAgfHwgKHRo'
-    'aXMucGFnZV9zaXplID49IDEgJiYgdGhpcy5wYWdlX3NpemUgPD0gMTAwKUIKCghfZW5hYmxlZE'
-    'IGCgRfdGxz');
+    'FnZV9zaXplGAIgASgFUghwYWdlU2l6ZRJTCg1wcm92aWRlcl90eXBlGAMgASgOMiQuc3luY3R2'
+    'LnNvdXJjZV9jb25maWcuU291cmNlUHJvdmlkZXJCCLpIBYIBAhABUgxwcm92aWRlclR5cGUSHw'
+    'oGc2VhcmNoGAQgASgJQge6SARyAhhkUgZzZWFyY2gSHQoHZW5hYmxlZBgFIAEoCEgAUgdlbmFi'
+    'bGVkiAEBEhUKA3RscxgGIAEoCEgBUgN0bHOIAQESVQoHc29ydF9ieRgHIAEoDjIyLnN5bmN0di'
+    '5wcm92aWRlci5jb21tb24uUHJvdmlkZXJJbnN0YW5jZUxpc3RTb3J0QnlCCLpIBYIBAhABUgZz'
+    'b3J0QnkSVgoOc29ydF9kaXJlY3Rpb24YCCABKA4yJS5zeW5jdHYucHJvdmlkZXIuY29tbW9uLl'
+    'NvcnREaXJlY3Rpb25CCLpIBYIBAhABUg1zb3J0RGlyZWN0aW9uOqkCukilAhp1CiVwcm92aWRl'
+    'ci5saXN0X3Byb3ZpZGVyX2luc3RhbmNlcy5wYWdlEipwYWdlIG11c3QgYmUgMCAodXNlIGRlZm'
+    'F1bHQpIG9yIGF0IGxlYXN0IDEaIHRoaXMucGFnZSA9PSAwIHx8IHRoaXMucGFnZSA+PSAxGqsB'
+    'Cipwcm92aWRlci5saXN0X3Byb3ZpZGVyX2luc3RhbmNlcy5wYWdlX3NpemUSNnBhZ2Vfc2l6ZS'
+    'BtdXN0IGJlIDAgKHVzZSBkZWZhdWx0KSBvciBiZXR3ZWVuIDEgYW5kIDEwMBpFdGhpcy5wYWdl'
+    'X3NpemUgPT0gMCB8fCAodGhpcy5wYWdlX3NpemUgPj0gMSAmJiB0aGlzLnBhZ2Vfc2l6ZSA8PS'
+    'AxMDApQgoKCF9lbmFibGVkQgYKBF90bHM=');
 
 @$core.Deprecated('Use listProviderInstancesResponseDescriptor instead')
 const ListProviderInstancesResponse$json = {
@@ -249,7 +260,15 @@ const AddProviderInstanceRequest$json = {
     {'1': 'timeout_seconds', '3': 4, '4': 1, '5': 13, '10': 'timeoutSeconds'},
     {'1': 'tls', '3': 5, '4': 1, '5': 8, '10': 'tls'},
     {'1': 'insecure_tls', '3': 6, '4': 1, '5': 8, '10': 'insecureTls'},
-    {'1': 'providers', '3': 7, '4': 3, '5': 9, '8': {}, '10': 'providers'},
+    {
+      '1': 'providers',
+      '3': 7,
+      '4': 3,
+      '5': 14,
+      '6': '.synctv.source_config.SourceProvider',
+      '8': {},
+      '10': 'providers'
+    },
     {
       '1': 'jwt_secret',
       '3': 8,
@@ -281,10 +300,10 @@ final $typed_data.Uint8List addProviderInstanceRequestDescriptor = $convert.base
     '5bQS1aYS16MC05Xy1dKyRSBG5hbWUSGgoIZW5kcG9pbnQYAiABKAlSCGVuZHBvaW50EhgKB2Nv'
     'bW1lbnQYAyABKAlSB2NvbW1lbnQSJwoPdGltZW91dF9zZWNvbmRzGAQgASgNUg50aW1lb3V0U2'
     'Vjb25kcxIQCgN0bHMYBSABKAhSA3RscxIhCgxpbnNlY3VyZV90bHMYBiABKAhSC2luc2VjdXJl'
-    'VGxzEkEKCXByb3ZpZGVycxgHIAMoCUIjukggkgEdCAEYASIXchUYQDIRXlthLXpdW2EtejAtOV'
-    '9dKiRSCXByb3ZpZGVycxIiCgpqd3Rfc2VjcmV0GAggASgJSABSCWp3dFNlY3JldIgBARIgCglj'
-    'dXN0b21fY2EYCSABKAlIAVIIY3VzdG9tQ2GIAQFCDQoLX2p3dF9zZWNyZXRCDAoKX2N1c3RvbV'
-    '9jYQ==');
+    'VGxzElcKCXByb3ZpZGVycxgHIAMoDjIkLnN5bmN0di5zb3VyY2VfY29uZmlnLlNvdXJjZVByb3'
+    'ZpZGVyQhO6SBCSAQ0IARgBIgeCAQQQASAAUglwcm92aWRlcnMSIgoKand0X3NlY3JldBgIIAEo'
+    'CUgAUglqd3RTZWNyZXSIAQESIAoJY3VzdG9tX2NhGAkgASgJSAFSCGN1c3RvbUNhiAEBQg0KC1'
+    '9qd3Rfc2VjcmV0QgwKCl9jdXN0b21fY2E=');
 
 @$core.Deprecated('Use addProviderInstanceResponseDescriptor instead')
 const AddProviderInstanceResponse$json = {
@@ -349,7 +368,15 @@ const UpdateProviderInstanceRequest$json = {
       '10': 'insecureTls',
       '17': true
     },
-    {'1': 'providers', '3': 7, '4': 3, '5': 9, '8': {}, '10': 'providers'},
+    {
+      '1': 'providers',
+      '3': 7,
+      '4': 3,
+      '5': 14,
+      '6': '.synctv.source_config.SourceProvider',
+      '8': {},
+      '10': 'providers'
+    },
     {
       '1': 'jwt_secret',
       '3': 8,
@@ -416,15 +443,15 @@ final $typed_data.Uint8List updateProviderInstanceRequestDescriptor = $convert.b
     'AyEF5bQS1aYS16MC05Xy1dKyRSBG5hbWUSHwoIZW5kcG9pbnQYAiABKAlIAFIIZW5kcG9pbnSI'
     'AQESHQoHY29tbWVudBgDIAEoCUgBUgdjb21tZW50iAEBEiwKD3RpbWVvdXRfc2Vjb25kcxgEIA'
     'EoDUgCUg50aW1lb3V0U2Vjb25kc4gBARIVCgN0bHMYBSABKAhIA1IDdGxziAEBEiYKDGluc2Vj'
-    'dXJlX3RscxgGIAEoCEgEUgtpbnNlY3VyZVRsc4gBARI/Cglwcm92aWRlcnMYByADKAlCIbpIHp'
-    'IBGxgBIhdyFRhAMhFeW2Etel1bYS16MC05X10qJFIJcHJvdmlkZXJzEiIKCmp3dF9zZWNyZXQY'
-    'CCABKAlIBVIJand0U2VjcmV0iAEBEiAKCWN1c3RvbV9jYRgJIAEoCUgGUghjdXN0b21DYYgBAR'
-    'IoCg1jbGVhcl9jb21tZW50GAogASgISAdSDGNsZWFyQ29tbWVudIgBARItChBjbGVhcl9qd3Rf'
-    'c2VjcmV0GAsgASgISAhSDmNsZWFySnd0U2VjcmV0iAEBEisKD2NsZWFyX2N1c3RvbV9jYRgMIA'
-    'EoCEgJUg1jbGVhckN1c3RvbUNhiAEBQgsKCV9lbmRwb2ludEIKCghfY29tbWVudEISChBfdGlt'
-    'ZW91dF9zZWNvbmRzQgYKBF90bHNCDwoNX2luc2VjdXJlX3Rsc0INCgtfand0X3NlY3JldEIMCg'
-    'pfY3VzdG9tX2NhQhAKDl9jbGVhcl9jb21tZW50QhMKEV9jbGVhcl9qd3Rfc2VjcmV0QhIKEF9j'
-    'bGVhcl9jdXN0b21fY2E=');
+    'dXJlX3RscxgGIAEoCEgEUgtpbnNlY3VyZVRsc4gBARJVCglwcm92aWRlcnMYByADKA4yJC5zeW'
+    '5jdHYuc291cmNlX2NvbmZpZy5Tb3VyY2VQcm92aWRlckIRukgOkgELGAEiB4IBBBABIABSCXBy'
+    'b3ZpZGVycxIiCgpqd3Rfc2VjcmV0GAggASgJSAVSCWp3dFNlY3JldIgBARIgCgljdXN0b21fY2'
+    'EYCSABKAlIBlIIY3VzdG9tQ2GIAQESKAoNY2xlYXJfY29tbWVudBgKIAEoCEgHUgxjbGVhckNv'
+    'bW1lbnSIAQESLQoQY2xlYXJfand0X3NlY3JldBgLIAEoCEgIUg5jbGVhckp3dFNlY3JldIgBAR'
+    'IrCg9jbGVhcl9jdXN0b21fY2EYDCABKAhICVINY2xlYXJDdXN0b21DYYgBAUILCglfZW5kcG9p'
+    'bnRCCgoIX2NvbW1lbnRCEgoQX3RpbWVvdXRfc2Vjb25kc0IGCgRfdGxzQg8KDV9pbnNlY3VyZV'
+    '90bHNCDQoLX2p3dF9zZWNyZXRCDAoKX2N1c3RvbV9jYUIQCg5fY2xlYXJfY29tbWVudEITChFf'
+    'Y2xlYXJfand0X3NlY3JldEISChBfY2xlYXJfY3VzdG9tX2Nh');
 
 @$core.Deprecated('Use updateProviderInstanceResponseDescriptor instead')
 const UpdateProviderInstanceResponse$json = {
@@ -588,7 +615,8 @@ const ListProviderBackendsRequest$json = {
       '1': 'provider_type',
       '3': 1,
       '4': 1,
-      '5': 9,
+      '5': 14,
+      '6': '.synctv.source_config.SourceProvider',
       '8': {},
       '10': 'providerType'
     },
@@ -598,33 +626,9 @@ const ListProviderBackendsRequest$json = {
 /// Descriptor for `ListProviderBackendsRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listProviderBackendsRequestDescriptor =
     $convert.base64Decode(
-        'ChtMaXN0UHJvdmlkZXJCYWNrZW5kc1JlcXVlc3QSPwoNcHJvdmlkZXJfdHlwZRgBIAEoCUIauk'
-        'gXchUYQDIRXlthLXpdW2EtejAtOV9dKiRSDHByb3ZpZGVyVHlwZQ==');
-
-@$core.Deprecated('Use providerProxyPathRequestDescriptor instead')
-const ProviderProxyPathRequest$json = {
-  '1': 'ProviderProxyPathRequest',
-  '2': [
-    {
-      '1': 'provider_name',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '8': {},
-      '10': 'providerName'
-    },
-    {'1': 'sub_path', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'subPath'},
-  ],
-};
-
-/// Descriptor for `ProviderProxyPathRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List providerProxyPathRequestDescriptor = $convert.base64Decode(
-    'ChhQcm92aWRlclByb3h5UGF0aFJlcXVlc3QSQQoNcHJvdmlkZXJfbmFtZRgBIAEoCUIcukgZch'
-    'cQARhAMhFeW2Etel1bYS16MC05X10qJFIMcHJvdmlkZXJOYW1lEtYBCghzdWJfcGF0aBgCIAEo'
-    'CUK6AbpItgG6AbIBChxwcm92aWRlcl9wcm94eV9wYXRoLnN1Yl9wYXRoEkBzdWJfcGF0aCBtdX'
-    'N0IGJlIDEtMjA0OCB2aXNpYmxlIGNoYXJhY3RlcnMgd2l0aG91dCBjb250cm9sIGJ5dGVzGlBz'
-    'aXplKHRoaXMpID49IDEgJiYgc2l6ZSh0aGlzKSA8PSAyMDQ4ICYmICF0aGlzLm1hdGNoZXMoJy'
-    '4qW1xceDAwLVxceDFGXFx4N0ZdLionKVIHc3ViUGF0aA==');
+        'ChtMaXN0UHJvdmlkZXJCYWNrZW5kc1JlcXVlc3QSVQoNcHJvdmlkZXJfdHlwZRgBIAEoDjIkLn'
+        'N5bmN0di5zb3VyY2VfY29uZmlnLlNvdXJjZVByb3ZpZGVyQgq6SAeCAQQQASAAUgxwcm92aWRl'
+        'clR5cGU=');
 
 @$core.Deprecated('Use providerInstancesResponseDescriptor instead')
 const ProviderInstancesResponse$json = {

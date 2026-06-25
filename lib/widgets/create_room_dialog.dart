@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/models/public_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/models/synctv_models.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/utils/room_taxonomy.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
 Future<void> showCreateRoomDialog({
   required BuildContext context,
-  required Future<void> Function(WRoom room) onCreated,
+  required Future<void> Function(SyncTvRoom room) onCreated,
   double width = 520,
   String successMessage = '房间创建成功',
 }) {
@@ -32,7 +33,7 @@ enum _RoomAccessMode { public, password }
 
 class _CreateRoomDialogBody extends StatefulWidget {
   final BuildContext pageContext;
-  final Future<void> Function(WRoom room) onCreated;
+  final Future<void> Function(SyncTvRoom room) onCreated;
   final String successMessage;
 
   const _CreateRoomDialogBody({
@@ -53,15 +54,22 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
   final _nameFocus = FocusNode();
 
   PublicSettingsInfo? _settings;
+  List<RoomCategoryInfo> _categories = const [];
+  List<RoomLabelInfo> _labels = const [];
   Object? _settingsError;
+  Object? _taxonomyError;
   bool _loadingSettings = true;
+  bool _loadingTaxonomy = true;
   bool _creating = false;
   _RoomAccessMode _accessMode = _RoomAccessMode.public;
+  String _selectedCategoryId = '';
+  final Set<String> _selectedLabelIds = <String>{};
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _loadTaxonomy();
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _nameFocus.requestFocus());
   }
@@ -77,7 +85,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
 
   Future<void> _loadSettings() async {
     try {
-      final settings = await WatchTogetherService.getPublicSettings(
+      final settings = await SyncTvService.getPublicSettings(
         refresh: true,
       );
       if (!mounted) return;
@@ -98,6 +106,49 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
       setState(() {
         _settingsError = error;
         _loadingSettings = false;
+      });
+    }
+  }
+
+  Future<void> _loadTaxonomy() async {
+    try {
+      final results = await Future.wait([
+        SyncTvService.listRoomCategories(refresh: true),
+        SyncTvService.listRoomLabels(refresh: true),
+      ]);
+      final categories = results[0]
+          .cast<RoomCategoryInfo>()
+          .where((category) => category.isEnabled)
+          .toList()
+        ..sort((a, b) {
+          final order = a.sortOrder.compareTo(b.sortOrder);
+          if (order != 0) return order;
+          return _categoryName(a).compareTo(_categoryName(b));
+        });
+      final labels = results[1]
+          .cast<RoomLabelInfo>()
+          .where((label) => label.isEnabled)
+          .toList()
+        ..sort((a, b) {
+          final order = a.sortOrder.compareTo(b.sortOrder);
+          if (order != 0) return order;
+          return _labelName(a).compareTo(_labelName(b));
+        });
+      if (!mounted) return;
+      setState(() {
+        _categories = categories;
+        _labels = labels;
+        _loadingTaxonomy = false;
+        _selectedLabelIds.removeWhere(
+          (id) => !_availableLabels.any((label) => label.id == id),
+        );
+      });
+    } catch (error) {
+      debugPrint('Failed to load room taxonomy: $error');
+      if (!mounted) return;
+      setState(() {
+        _taxonomyError = error;
+        _loadingTaxonomy = false;
       });
     }
   }
@@ -123,6 +174,31 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
       _settingsError == null &&
       !_creationDisabled;
 
+  List<RoomLabelInfo> get _availableLabels {
+    if (_selectedCategoryId.isEmpty) return _labels;
+    return _labels
+        .where((label) => label.categoryId == _selectedCategoryId)
+        .toList(growable: false);
+  }
+
+  String _categoryName(RoomCategoryInfo category) {
+    final name = category.name.trim();
+    return name.isEmpty ? category.key : name;
+  }
+
+  String _labelName(RoomLabelInfo label) {
+    final name = label.name.trim();
+    return name.isEmpty ? label.key : name;
+  }
+
+  List<String> get _selectedLabelIdList {
+    if (_selectedLabelIds.isEmpty) return const [];
+    return _availableLabels
+        .where((label) => _selectedLabelIds.contains(label.id))
+        .map((label) => label.id)
+        .toList(growable: false);
+  }
+
   Future<void> _submit() async {
     if (!_canSubmit) {
       if (_creationDisabled) {
@@ -134,10 +210,12 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
 
     setState(() => _creating = true);
     try {
-      final room = await WatchTogetherService.createRoom(
+      final room = await SyncTvService.createRoom(
         _nameController.text.trim(),
         password: _needPassword ? _passwordController.text : null,
         description: _descriptionController.text,
+        categoryId: _selectedCategoryId,
+        labelIds: _selectedLabelIdList,
       );
       if (!mounted) return;
       Navigator.pop(context);
@@ -263,6 +341,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                         maxLength: 200,
                       ),
                       const SizedBox(height: 18),
+                      _buildTaxonomySection(theme),
+                      const SizedBox(height: 18),
                       Text(
                         '访问方式',
                         style: theme.textTheme.titleMedium?.copyWith(
@@ -370,6 +450,122 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTaxonomySection(ThemeData theme) {
+    final enabled = !_creating && !_creationDisabled && _settingsError == null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '房间分类',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (_loadingTaxonomy)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: AppLoadingIndicator(
+                size: AppLoadingSize.sm,
+                centered: false,
+              ),
+            ),
+          )
+        else ...[
+          if (_taxonomyError != null) ...[
+            Text(
+              '分类信息读取失败，仍可继续创建房间。',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          AppSelect<String?>(
+            value: _selectedCategoryId.isEmpty ? null : _selectedCategoryId,
+            label: '房间分类',
+            hintText: '不设置分类',
+            prefixIcon: Icons.category_outlined,
+            clearable: true,
+            enabled: enabled && _categories.isNotEmpty,
+            options: {
+              '不设置分类': null,
+              for (final category in _categories)
+                _categoryName(category): category.id,
+            },
+            onChanged: (value) {
+              setState(() {
+                _selectedCategoryId = value ?? '';
+                _selectedLabelIds.removeWhere(
+                  (id) => !_availableLabels.any((label) => label.id == id),
+                );
+              });
+            },
+          ),
+          const SizedBox(height: 14),
+          Text(
+            '房间标签',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (_availableLabels.isEmpty)
+            Text(
+              _selectedCategoryId.isEmpty ? '暂无可用标签' : '当前分类下暂无标签',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _availableLabels.map((label) {
+                final selected = _selectedLabelIds.contains(label.id);
+                final color = parseRoomLabelColor(
+                  label.color,
+                  theme.colorScheme.primary,
+                );
+                return AppChip(
+                  selected: selected,
+                  enabled: enabled,
+                  onSelected: (value) {
+                    setState(() {
+                      if (value) {
+                        _selectedLabelIds.add(label.id);
+                      } else {
+                        _selectedLabelIds.remove(label.id);
+                      }
+                    });
+                  },
+                  style: selected ? AppChipStyle.filled : AppChipStyle.outlined,
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(_labelName(label)),
+                    ],
+                  ),
+                );
+              }).toList(growable: false),
+            ),
+        ],
+      ],
     );
   }
 

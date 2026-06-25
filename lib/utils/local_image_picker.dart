@@ -118,7 +118,7 @@ class _LocalImageEditDialogState extends State<_LocalImageEditDialog> {
                 padding: const EdgeInsets.all(10),
                 child: SizedBox(
                   height: 320,
-                  child: ClipRRect(
+                  child: AppPanelSurface(
                     borderRadius: BorderRadius.circular(8),
                     child: Crop(
                       image: widget.originalBytes,

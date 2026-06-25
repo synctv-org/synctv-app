@@ -1,4 +1,4 @@
-# SyncTV (看搭子) 的一个前端项目，支持全平台。
+# SyncTV 的一个前端项目，支持全平台。
 <p align="center">
   <a href="https://github.com/synctv-org/SyncTV_APP/releases/latest">
     <img src="https://img.shields.io/github/v/release/synctv-org/SyncTV_APP?style=flat-square&logo=github&color=blue" alt="Release"/>
@@ -87,7 +87,7 @@ bash tool/generate_proto.sh
 生成脚本只读取当前项目的 `proto/`，不会引用服务端仓库路径。
 
 ## ⚙️ 隐藏功能
-*   **修改服务器地址**：在首页长按顶部 "看搭子" 标题，即可弹出服务器配置对话框，支持连接到私有部署的 SyncTV 后端。
+*   **修改服务器地址**：在首页长按顶部 "SyncTV" 标题，即可弹出服务器配置对话框，支持连接到私有部署的 SyncTV 后端。
 
 *   **注意**填写服务端根地址即可，例如 `https://tv.example.com`。客户端会根据 protobuf API 自动拼接当前服务端路径；已保存的旧 `/api` 后缀会被自动规范化。
 
@@ -96,7 +96,7 @@ Apache-2.0 license
 
 # 免责声明
 
-- 这个程序是一个免费且开源的项目。它旨在播放网络上的视频文件，方便多人共同观看视频和学习。
+- 这个程序是一个免费且开源的项目。它旨在播放网络上的视频文件，方便多人同步观看视频和学习。
 - 在使用时，请遵守相关法律法规，不要滥用。
 - 该程序仅进行客户端播放视频文件/流量转发，不会拦截、存储或篡改任何用户数据。
 - 在使用该程序之前，您应该了解并承担相应的风险，包括但不限于版权纠纷、法律限制等，这与该程序无关。

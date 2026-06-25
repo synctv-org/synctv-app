@@ -5,7 +5,7 @@ import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/services/opaque_authenticator_service.dart';
 import 'package:synctv_app/services/passkey_authenticator_service.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/user_agreement_dialog.dart';
@@ -91,8 +91,8 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   Future<void> _loadOptions() async {
     try {
       final results = await Future.wait<dynamic>([
-        WatchTogetherService.getPublicSettings(),
-        WatchTogetherService.listOAuth2Providers(),
+        SyncTvService.getPublicSettings(),
+        SyncTvService.listOAuth2Providers(),
         PasskeyAuthenticatorService.isSupported().catchError((_) => false),
       ]);
       if (!mounted) return;
@@ -168,7 +168,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      await WatchTogetherService.requestEmailLogin(email);
+      await SyncTvService.requestEmailLogin(email);
       if (!mounted) return;
       setState(() => _emailTokenRequested = true);
       MessageUtils.showSuccess(context, '验证码已发送');
@@ -184,8 +184,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      final result =
-          await WatchTogetherService.confirmEmailLoginResult(email, token);
+      final result = await SyncTvService.confirmEmailLoginResult(email, token);
       _finishAuth(result);
     });
   }
@@ -198,13 +197,13 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      final start = await WatchTogetherService.startPasskeyLogin(
+      final start = await SyncTvService.startPasskeyLogin(
         email: identifier.contains('@') ? identifier : '',
         username: identifier.contains('@') ? '' : identifier,
       );
       final credential =
           await PasskeyAuthenticatorService.getCredential(start.options);
-      final result = await WatchTogetherService.finishPasskeyLogin(
+      final result = await SyncTvService.finishPasskeyLogin(
         sessionId: start.sessionId,
         credential: credential,
       );
@@ -256,7 +255,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      await WatchTogetherService.requestEmailRegistration(
+      await SyncTvService.requestEmailRegistration(
         username: username,
         email: email,
       );
@@ -274,7 +273,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      final result = await WatchTogetherService.confirmEmailRegistration(
+      final result = await SyncTvService.confirmEmailRegistration(
         emailToken: token,
         password: _registerPasswordController.text,
       );
@@ -300,14 +299,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      final start = await WatchTogetherService.startPasskeyRegistration(
+      final start = await SyncTvService.startPasskeyRegistration(
         username: username,
         email: email,
         name: _passkeyNameController.text.trim(),
       );
       final credential =
           await PasskeyAuthenticatorService.createCredential(start.options);
-      final result = await WatchTogetherService.finishPasskeyRegistration(
+      final result = await SyncTvService.finishPasskeyRegistration(
         sessionId: start.sessionId,
         credential: credential,
       );
@@ -323,7 +322,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      await WatchTogetherService.createGuestToken(roomId);
+      await SyncTvService.createGuestToken(roomId);
       if (mounted) Navigator.pop(context, true);
     });
   }
@@ -332,7 +331,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     await _withLoading(() async {
       final callbackSession = await OAuth2DeepLinkService.createSession();
-      final start = await WatchTogetherService.startOAuth2Login(
+      final start = await SyncTvService.startOAuth2Login(
         provider.name,
         redirectUrl: callbackSession.redirectUrl,
       );
@@ -350,7 +349,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           expectedState: start.state,
         );
         if (!mounted || attempt != _oauthAttempt) return;
-        final result = await WatchTogetherService.finishOAuth2Login(
+        final result = await SyncTvService.finishOAuth2Login(
           provider: provider.name,
           code: parsed.code,
           state: parsed.state,
@@ -371,7 +370,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      await WatchTogetherService.requestMfaEmailCode(challenge.sessionId);
+      await SyncTvService.requestMfaEmailCode(challenge.sessionId);
       if (!mounted) return;
       setState(() => _mfaEmailRequested = true);
       MessageUtils.showSuccess(context, '二次验证码已发送');
@@ -386,7 +385,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      await WatchTogetherService.verifyMfaEmailCode(
+      await SyncTvService.verifyMfaEmailCode(
         mfaSessionId: challenge.sessionId,
         emailToken: token,
       );
@@ -402,12 +401,12 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      final start = await WatchTogetherService.startMfaPasskey(
+      final start = await SyncTvService.startMfaPasskey(
         challenge.sessionId,
       );
       final credential =
           await PasskeyAuthenticatorService.getCredential(start.options);
-      await WatchTogetherService.finishMfaPasskey(
+      await SyncTvService.finishMfaPasskey(
         mfaSessionId: challenge.sessionId,
         passkeySessionId: start.passkeySessionId,
         credential: credential,
@@ -516,14 +515,13 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '连接看搭子',
+                              '连接 SyncTV',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
                             Text(
-                              WatchTogetherService.activeServer?.name ??
-                                  '未连接服务器',
+                              SyncTvService.activeServer?.name ?? '未连接服务器',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -1502,7 +1500,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
     }
     setState(() => _requesting = true);
     try {
-      final message = await WatchTogetherService.requestPasswordReset(email);
+      final message = await SyncTvService.requestPasswordReset(email);
       if (!mounted) return;
       MessageUtils.showSuccess(
         context,
@@ -1609,7 +1607,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
 }
 
 const String _agreementContent = '''
-# 看搭子用户服务协议与隐私政策
+# SyncTV 用户服务协议与隐私政策
 
 本应用是连接用户自有 SyncTV 服务器的客户端工具，不提供公共内容服务器，不存储、审核或运营用户服务器中的内容。
 

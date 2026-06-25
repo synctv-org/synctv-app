@@ -1,10 +1,17 @@
+// ignore_for_file: avoid_print, invalid_use_of_visible_for_testing_member
+
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/room_realtime_connection.dart';
+import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
+    as common_enum;
 
 void main() {
   test('local_backend_smoke', () async {
@@ -22,63 +29,67 @@ Future<void> runSmoke(String baseUrl) async {
   final username = 'smoke_$stamp';
   final password = 'SmokePass_$stamp!';
   final roomName = 'Smoke Room $stamp';
+  const rootPassword = String.fromEnvironment(
+    'SYNCTV_SMOKE_ROOT_PASSWORD',
+    defaultValue: 'LocalDevRootPass2026!',
+  );
 
   SharedPreferences.setMockInitialValues({});
-  await WatchTogetherService.init();
-  await WatchTogetherService.setBaseUrl(baseUrl);
+  await SyncTvService.init();
+  await SyncTvService.setBaseUrl(baseUrl);
 
-  final serverInfo = await WatchTogetherService.getServerInfo(refresh: true);
-  final publicSettings =
-      await WatchTogetherService.getPublicSettings(refresh: true);
+  final serverInfo = await SyncTvService.getServerInfo(refresh: true);
+  final publicSettings = await SyncTvService.getPublicSettings(refresh: true);
   print('server=${serverInfo.serverName} guest=${publicSettings.enableGuest}');
 
-  final auth = await WatchTogetherService.registerWithDirectPassword(
+  await _ensureSmokeUser(
     username: username,
     password: password,
+    publicSettings: publicSettings,
+    rootPassword: rootPassword,
   );
-  print('registered user=${auth.user?.id}');
 
-  final me = await WatchTogetherService.getMe(refresh: true);
+  final me = await SyncTvService.getMe(refresh: true);
   if (me.username != username) {
     throw StateError('profile username mismatch: ${me.username}');
   }
 
-  final room = await WatchTogetherService.createRoom(
+  final room = await SyncTvService.createRoom(
     roomName,
     description: 'local smoke room',
   );
   print('room=${room.roomId}');
 
-  final roomInfo = await WatchTogetherService.getRoomInfo(room.roomId);
-  final members = await WatchTogetherService.getRoomMembers(room.roomId);
+  final roomInfo = await SyncTvService.getRoomInfo(room.roomId);
+  final members = await SyncTvService.getRoomMembers(room.roomId);
   print('room_info=${roomInfo.roomName} members=${members.length}');
 
-  final playlist = await WatchTogetherService.createPlaylist(
+  final playlist = await SyncTvService.createPlaylist(
     room.roomId,
     name: 'Smoke Playlist',
     description: 'created by smoke test',
   );
   print('playlist=${playlist.id}');
 
-  final mediaId = await WatchTogetherService.addDirectUrlMedia(
+  final mediaId = await SyncTvService.addDirectUrlMedia(
     room.roomId,
     playlistId: playlist.id,
     url: 'https://example.com/smoke.mp4',
     name: 'Smoke Direct URL',
   );
-  final mediaPage = await WatchTogetherService.listMediaLibrary(
+  final mediaPage = await SyncTvService.listMediaLibrary(
     room.roomId,
     playlistId: playlist.id,
     refresh: true,
   );
   print('media=$mediaId page_total=${mediaPage.total}');
 
-  await WatchTogetherService.switchMovieAndPlay(room.roomId, mediaId);
-  final playback = await WatchTogetherService.getCurrentMovie(room.roomId);
+  await SyncTvService.switchMovieAndPlay(room.roomId, mediaId);
+  final playback = await SyncTvService.getCurrentMovie(room.roomId);
   if (playback.movie?.id != mediaId) {
     throw StateError('playback media mismatch: ${playback.movie?.id}');
   }
-  await WatchTogetherService.updatePlayback(
+  await SyncTvService.updatePlaybackState(
     room.roomId,
     action: PlaybackControlAction.pause,
     isPlaying: false,
@@ -86,59 +97,68 @@ Future<void> runSmoke(String baseUrl) async {
     speed: 1,
   );
 
-  final message = await WatchTogetherService.sendChatMessage(
-    room.roomId,
-    content: 'hello from smoke $stamp',
-    displayPosition: 'scroll',
-    displayColor: '#00AAFF',
-  );
-  await WatchTogetherService.setChatReaction(
-    room.roomId,
-    message.id,
-    'thumbs_up',
-    enabled: true,
-  );
-  final history = await WatchTogetherService.getChatHistory(room.roomId);
-  final nearby = await WatchTogetherService.getChatPlaybackMessages(
-    room.roomId,
-    playbackMediaId: mediaId,
-    positionSeconds: 2,
-  );
-  print('chat=${message.id} history=${history.messages.length} nearby=${nearby.length}');
+  final realtime = await _verifyRealtime(room.roomId);
+  try {
+    final message = await SyncTvService.sendChatMessage(
+      room.roomId,
+      content: 'hello from smoke $stamp',
+      displayPosition: 'scroll',
+      displayColor: '#00AAFF',
+    );
+    await realtime.expectChat(message.id);
+    await SyncTvService.setChatReaction(
+      room.roomId,
+      message.id,
+      'thumbs_up',
+      enabled: true,
+    );
+    final history = await SyncTvService.getChatHistory(room.roomId);
+    final nearby = await SyncTvService.getChatPlaybackMessages(
+      room.roomId,
+      playbackMediaId: mediaId,
+      positionSeconds: 2,
+    );
+    print(
+      'chat=${message.id} history=${history.messages.length} nearby=${nearby.length}',
+    );
+  } finally {
+    await realtime.close();
+  }
 
-  final rtmpMediaId = await WatchTogetherService.addRtmpMedia(
+  final rtmpMediaId = await SyncTvService.addRtmpMedia(
     room.roomId,
     name: 'Smoke RTMP',
   );
-  final publish = await WatchTogetherService.createRtmpPublishKeyInfo(
+  final publish = await SyncTvService.createRtmpPublishKeyInfo(
     room.roomId,
     rtmpMediaId,
   );
-  final streamInfo = await WatchTogetherService.getRtmpStreamInfo(
+  final streamInfo = await SyncTvService.getRtmpStreamInfo(
     roomId: room.roomId,
     mediaId: rtmpMediaId,
   );
-  print('rtmp=$rtmpMediaId key=${publish.streamKey.isNotEmpty} active=${streamInfo.active}');
+  print(
+      'rtmp=$rtmpMediaId key=${publish.streamKey.isNotEmpty} active=${streamInfo.active}');
 
   final providers = await Future.wait([
-    WatchTogetherService.getAllAlistBindInfos(),
-    WatchTogetherService.getAllEmbyBindInfos(),
-    WatchTogetherService.getAllBilibiliBindInfos(),
+    SyncTvService.getAllAlistBindInfos(),
+    SyncTvService.getAllEmbyBindInfos(),
+    SyncTvService.getAllBilibiliBindInfos(),
   ]);
   print('provider_binds=${providers.map((items) => items.length).join(',')}');
 
-  await WatchTogetherService.logout();
-  await WatchTogetherService.loginWithDirectPassword(
+  await SyncTvService.logout();
+  await SyncTvService.loginWithDirectPassword(
     username: 'root',
-    password: 'LocalDevRootPass2026!',
+    password: rootPassword,
   );
-  final stats = await WatchTogetherService.adminGetSystemStats();
-  final users = await WatchTogetherService.adminListUsersPage(pageSize: 5);
-  final rooms = await WatchTogetherService.adminListRoomsPage(pageSize: 5);
-  final streams = await WatchTogetherService.adminListActiveStreamsPage();
-  final settings = await WatchTogetherService.adminGetAllSettings(refresh: true);
+  final stats = await SyncTvService.adminGetSystemStats();
+  final users = await SyncTvService.adminListUsersPage(pageSize: 5);
+  final rooms = await SyncTvService.adminListRoomsPage(pageSize: 5);
+  final streams = await SyncTvService.adminListActiveStreamsPage();
+  final settings = await SyncTvService.adminGetAllSettings(refresh: true);
   final providerInstances =
-      await WatchTogetherService.adminListProviderInstancesPage();
+      await SyncTvService.adminListProviderInstancesPage();
   print(
     jsonEncode({
       'stats_users': stats.totalUsers,
@@ -150,23 +170,184 @@ Future<void> runSmoke(String baseUrl) async {
     }),
   );
 
-  await WatchTogetherService.adminBanRoom(
+  await SyncTvService.adminBanRoom(
     room.roomId,
     true,
     reason: 'smoke verify ban',
   );
-  await WatchTogetherService.adminBanRoom(room.roomId, false);
-  await WatchTogetherService.adminBanUser(
+  await SyncTvService.adminBanRoom(room.roomId, false);
+  await SyncTvService.adminBanUser(
     me.id,
     true,
     reason: 'smoke verify ban',
   );
-  await WatchTogetherService.adminBanUser(me.id, false);
-  final bans = await WatchTogetherService.adminListBanRecordsPage(
+  await SyncTvService.adminBanUser(me.id, false);
+  final bans = await SyncTvService.adminListBanRecordsPage(
     pageSize: 10,
     active: false,
   );
   print('ban_records=${bans.total}');
 
   print('OK');
+}
+
+Future<_RealtimeSmokeProbe> _verifyRealtime(String roomId) async {
+  final probe = _RealtimeSmokeProbe.connect(roomId);
+  await probe.expectObserved({
+    'playback_state',
+    'playback',
+    'room_settings',
+    'playlist_items',
+    'self_room_member',
+    'online_count',
+  });
+  await probe.expectPlaybackPosition(2);
+  await SyncTvService.updatePlaybackState(
+    roomId,
+    action: PlaybackControlAction.pause,
+    isPlaying: false,
+    position: 3,
+    speed: 1,
+  );
+  await probe.expectPlaybackPosition(3);
+  print('realtime=observed playback');
+  return probe;
+}
+
+class _RealtimeSmokeProbe {
+  _RealtimeSmokeProbe._(
+    this._connection,
+    this._subscription,
+    this._messages,
+    this._errors,
+  );
+
+  final RoomRealtimeConnection _connection;
+  final StreamSubscription<Uint8List> _subscription;
+  final List<RoomRealtimeMessage> _messages;
+  final List<Object> _errors;
+
+  static _RealtimeSmokeProbe connect(String roomId) {
+    final connection = RoomRealtimeConnection.connect(
+      roomId,
+      initialMessages: RoomRealtimeCodec.encodeInitialObservations(),
+    );
+    final messages = <RoomRealtimeMessage>[];
+    final errors = <Object>[];
+    final subscription = connection.stream.listen(
+      (bytes) {
+        try {
+          messages.add(RoomRealtimeCodec.decode(bytes));
+        } catch (error) {
+          errors.add(error);
+        }
+      },
+      onError: errors.add,
+    );
+    return _RealtimeSmokeProbe._(connection, subscription, messages, errors);
+  }
+
+  Future<void> expectObserved(Set<String> observeIds) async {
+    await _waitFor(
+      () {
+        final observed = _messages
+            .where(
+              (message) =>
+                  message.kind == RoomRealtimeMessageKind.checkStatus &&
+                  message.resourceObserveId.isNotEmpty,
+            )
+            .map((message) => message.resourceObserveId)
+            .toSet();
+        return observed.containsAll(observeIds);
+      },
+      'realtime observed ${observeIds.join(', ')}',
+    );
+  }
+
+  Future<void> expectPlaybackPosition(double position) async {
+    await _waitFor(
+      () => _messages.any(
+        (message) =>
+            message.kind == RoomRealtimeMessageKind.status &&
+            ((message.status?.currentTime == position) ||
+                (message.playbackStatus?.currentTime == position)),
+      ),
+      'realtime playback position $position',
+    );
+  }
+
+  Future<void> expectChat(String messageId) async {
+    await _waitFor(
+      () => _messages.any(
+        (message) =>
+            message.kind == RoomRealtimeMessageKind.chat &&
+            message.chatId == messageId &&
+            message.chatEventKind == RoomRealtimeChatEventKind.created,
+      ),
+      'realtime chat message $messageId',
+    );
+  }
+
+  Future<void> close() async {
+    await _subscription.cancel();
+    await _connection.close();
+  }
+
+  Future<void> _waitFor(
+    bool Function() predicate,
+    String label, {
+    Duration timeout = const Duration(seconds: 8),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      if (_errors.isNotEmpty) {
+        throw StateError('$label failed with realtime error: ${_errors.first}');
+      }
+      if (predicate()) return;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    final seen = _messages
+        .map((message) => '${message.kind}:${message.resourceObserveId}')
+        .join(', ');
+    throw StateError('Timed out waiting for $label. Seen: $seen');
+  }
+}
+
+Future<void> _ensureSmokeUser({
+  required String username,
+  required String password,
+  required PublicSettingsInfo publicSettings,
+  required String rootPassword,
+}) async {
+  if (publicSettings.enablePasswordSignup &&
+      !publicSettings.passwordSignupNeedReview) {
+    final auth = await SyncTvService.registerWithDirectPassword(
+      username: username,
+      password: password,
+    );
+    print('registered user=${auth.user?.id}');
+    return;
+  }
+
+  if (rootPassword.trim().isEmpty) {
+    throw StateError(
+      'Password signup is unavailable. Set SYNCTV_SMOKE_ROOT_PASSWORD to let '
+      'the smoke test create its user through the admin API.',
+    );
+  }
+  await SyncTvService.loginWithDirectPassword(
+    username: 'root',
+    password: rootPassword,
+  );
+  await SyncTvService.adminAddUser(
+    username,
+    password,
+    common_enum.UserRole.USER_ROLE_USER.value,
+  );
+  await SyncTvService.logout();
+  await SyncTvService.loginWithDirectPassword(
+    username: username,
+    password: password,
+  );
+  print('created user through admin');
 }

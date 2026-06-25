@@ -316,6 +316,56 @@ class SyncTvUserApi {
     );
   }
 
+  Future<client.UploadUserAvatarObjectResponse> uploadUserAvatarObject(
+    client.UploadUserAvatarObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._uploadFileObject(
+      '/api/user/avatar-objects/$key',
+      token: request.token,
+      data: request.data,
+      contentType: request.contentType,
+      contentRange: request.hasContentRange() ? request.contentRange : null,
+    );
+    return client.UploadUserAvatarObjectResponse(
+      complete: result.complete,
+      uploadedSizeBytes: result.uploadedSizeBytes,
+      uploadedParts: result.uploadedParts,
+    );
+  }
+
+  Future<client.CompleteUserAvatarUploadSessionResponse>
+      completeUserAvatarUploadSession(
+    client.CompleteUserAvatarUploadSessionRequest request,
+  ) {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    return _api._send(
+      'POST',
+      '/api/user/avatar-objects/$key/complete',
+      client.CompleteUserAvatarUploadSessionResponse.create,
+      body: request,
+      auth: false,
+    );
+  }
+
+  Future<client.UserAvatarObjectResponse> getUserAvatarObject(
+    client.GetUserAvatarObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._downloadFileObject(
+      '/api/user/avatar-objects/$key',
+      token: request.token,
+      range: request.hasRange() ? request.range : null,
+    );
+    return client.UserAvatarObjectResponse(
+      mimeType: result.mimeType,
+      contentManifestSha256: result.contentManifestSha256,
+      data: result.data,
+      contentRange: result.contentRange,
+      totalSizeBytes: result.totalSizeBytes,
+    );
+  }
+
   Future<client.GetProfileResponse> updateUserAvatar(
     client.UpdateUserAvatarRequest request,
   ) {
@@ -869,7 +919,12 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/watch/playback',
       client.WatchPlaybackEvent.create,
       query: {
-        ..._api._watchQuery(deliveryMode: request.deliveryMode),
+        ..._api._watchQuery(
+          deliveryMode: request.deliveryMode,
+          afterEventSequence: request.playback.hasAfterEventSequence()
+              ? request.playback.afterEventSequence
+              : null,
+        ),
         ..._api._playbackClientProfileQuery(profile),
       },
     );
@@ -947,6 +1002,24 @@ class SyncTvRoomApi {
     );
   }
 
+  Stream<client.WatchChatPinEventsEvent> watchChatPinEvents(
+    String roomId,
+    client.WatchChatPinEventsRequest request,
+  ) {
+    return _api._watchSse(
+      '/api/rooms/$roomId/watch/chat-pin-events',
+      client.WatchChatPinEventsEvent.create,
+      query: {
+        ..._api._watchQuery(
+          deliveryMode: request.deliveryMode,
+          afterEventSequence: request.chatPinEvents.hasAfterEventSequence()
+              ? request.chatPinEvents.afterEventSequence
+              : null,
+        ),
+      },
+    );
+  }
+
   Future<client.GetChatHistoryResponse> getChatHistory(
     String roomId,
     client.GetChatHistoryRequest request,
@@ -955,6 +1028,18 @@ class SyncTvRoomApi {
       'GET',
       '/api/rooms/$roomId/chat/history',
       client.GetChatHistoryResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.SearchChatMessagesResponse> searchChatMessages(
+    String roomId,
+    client.SearchChatMessagesRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/chat/search',
+      client.SearchChatMessagesResponse.create,
       query: _api._messageQuery(request),
     );
   }
@@ -1027,6 +1112,44 @@ class SyncTvRoomApi {
       'DELETE',
       '/api/rooms/$roomId/chat/messages/${request.messageId}',
       client.ChatMessageEventResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.ListPinnedChatMessagesResponse> listPinnedChatMessages(
+    String roomId,
+    client.ListPinnedChatMessagesRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/chat/pinned-messages',
+      client.ListPinnedChatMessagesResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.ChatPinEventResponse> pinChatMessage(
+    String roomId,
+    client.PinChatMessageRequest request,
+  ) {
+    final messageId = Uri.encodeComponent(request.messageId);
+    return _api._send(
+      'PUT',
+      '/api/rooms/$roomId/chat/messages/$messageId/pin',
+      client.ChatPinEventResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.ChatPinEventResponse> unpinChatMessage(
+    String roomId,
+    client.UnpinChatMessageRequest request,
+  ) {
+    final messageId = Uri.encodeComponent(request.messageId);
+    return _api._send(
+      'DELETE',
+      '/api/rooms/$roomId/chat/messages/$messageId/pin',
+      client.ChatPinEventResponse.create,
       body: request,
     );
   }
@@ -1143,16 +1266,67 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.CreateChatImageUploadSessionResponse>
-      createChatImageUploadSession(
+  Future<client.CreateChatAttachmentUploadSessionResponse>
+      createChatAttachmentUploadSession(
     String roomId,
-    client.CreateChatImageUploadSessionRequest request,
+    client.CreateChatAttachmentUploadSessionRequest request,
   ) {
     return _api._send(
       'POST',
-      '/api/rooms/$roomId/chat/images/upload-session',
-      client.CreateChatImageUploadSessionResponse.create,
+      '/api/rooms/$roomId/chat/attachments/upload-session',
+      client.CreateChatAttachmentUploadSessionResponse.create,
       body: request,
+    );
+  }
+
+  Future<client.UploadChatAttachmentObjectResponse> uploadChatAttachmentObject(
+    client.UploadChatAttachmentObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._uploadFileObject(
+      '/api/chat/attachment-objects/$key',
+      token: request.token,
+      data: request.data,
+      contentType: request.contentType,
+      contentRange: request.hasContentRange() ? request.contentRange : null,
+    );
+    return client.UploadChatAttachmentObjectResponse(
+      complete: result.complete,
+      uploadedSizeBytes: result.uploadedSizeBytes,
+      uploadedParts: result.uploadedParts,
+    );
+  }
+
+  Future<client.ChatAttachmentObjectResponse> getChatAttachmentObject(
+    client.GetChatAttachmentObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._downloadFileObject(
+      '/api/chat/attachment-objects/$key',
+      token: request.token,
+      range: request.hasRange() ? request.range : null,
+    );
+    return client.ChatAttachmentObjectResponse(
+      roomId: request.roomId,
+      mimeType: result.mimeType,
+      contentManifestSha256: result.contentManifestSha256,
+      data: result.data,
+      contentRange: result.contentRange,
+      totalSizeBytes: result.totalSizeBytes,
+    );
+  }
+
+  Future<client.CompleteChatAttachmentUploadSessionResponse>
+      completeChatAttachmentUploadSession(
+    client.CompleteChatAttachmentUploadSessionRequest request,
+  ) {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    return _api._send(
+      'POST',
+      '/api/chat/attachment-objects/$key/complete',
+      client.CompleteChatAttachmentUploadSessionResponse.create,
+      body: request,
+      auth: false,
     );
   }
 
@@ -1189,6 +1363,56 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/cover/upload-session',
       client.CreateRoomCoverUploadSessionResponse.create,
       body: request,
+    );
+  }
+
+  Future<client.UploadRoomCoverObjectResponse> uploadRoomCoverObject(
+    client.UploadRoomCoverObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._uploadFileObject(
+      '/api/room/cover-objects/$key',
+      token: request.token,
+      data: request.data,
+      contentType: request.contentType,
+      contentRange: request.hasContentRange() ? request.contentRange : null,
+    );
+    return client.UploadRoomCoverObjectResponse(
+      complete: result.complete,
+      uploadedSizeBytes: result.uploadedSizeBytes,
+      uploadedParts: result.uploadedParts,
+    );
+  }
+
+  Future<client.RoomCoverObjectResponse> getRoomCoverObject(
+    client.GetRoomCoverObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._downloadFileObject(
+      '/api/room/cover-objects/$key',
+      token: request.token,
+      range: request.hasRange() ? request.range : null,
+    );
+    return client.RoomCoverObjectResponse(
+      mimeType: result.mimeType,
+      contentManifestSha256: result.contentManifestSha256,
+      data: result.data,
+      contentRange: result.contentRange,
+      totalSizeBytes: result.totalSizeBytes,
+    );
+  }
+
+  Future<client.CompleteRoomCoverUploadSessionResponse>
+      completeRoomCoverUploadSession(
+    client.CompleteRoomCoverUploadSessionRequest request,
+  ) {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    return _api._send(
+      'POST',
+      '/api/room/cover-objects/$key/complete',
+      client.CompleteRoomCoverUploadSessionResponse.create,
+      body: request,
+      auth: false,
     );
   }
 
@@ -1248,6 +1472,56 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/playlists/${request.playlistId}/cover/upload-session',
       client.CreatePlaylistCoverUploadSessionResponse.create,
       body: request,
+    );
+  }
+
+  Future<client.UploadPlaylistCoverObjectResponse> uploadPlaylistCoverObject(
+    client.UploadPlaylistCoverObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._uploadFileObject(
+      '/api/playlist/cover-objects/$key',
+      token: request.token,
+      data: request.data,
+      contentType: request.contentType,
+      contentRange: request.hasContentRange() ? request.contentRange : null,
+    );
+    return client.UploadPlaylistCoverObjectResponse(
+      complete: result.complete,
+      uploadedSizeBytes: result.uploadedSizeBytes,
+      uploadedParts: result.uploadedParts,
+    );
+  }
+
+  Future<client.PlaylistCoverObjectResponse> getPlaylistCoverObject(
+    client.GetPlaylistCoverObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._downloadFileObject(
+      '/api/playlist/cover-objects/$key',
+      token: request.token,
+      range: request.hasRange() ? request.range : null,
+    );
+    return client.PlaylistCoverObjectResponse(
+      mimeType: result.mimeType,
+      contentManifestSha256: result.contentManifestSha256,
+      data: result.data,
+      contentRange: result.contentRange,
+      totalSizeBytes: result.totalSizeBytes,
+    );
+  }
+
+  Future<client.CompletePlaylistCoverUploadSessionResponse>
+      completePlaylistCoverUploadSession(
+    client.CompletePlaylistCoverUploadSessionRequest request,
+  ) {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    return _api._send(
+      'POST',
+      '/api/playlist/cover-objects/$key/complete',
+      client.CompletePlaylistCoverUploadSessionResponse.create,
+      body: request,
+      auth: false,
     );
   }
 
@@ -1370,22 +1644,72 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.CreateVideoCoverUploadSessionResponse>
-      createVideoCoverUploadSession(
+  Future<client.CreateMediaCoverUploadSessionResponse>
+      createMediaCoverUploadSession(
     String roomId,
-    client.CreateVideoCoverUploadSessionRequest request,
+    client.CreateMediaCoverUploadSessionRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/media/${request.mediaId}/cover/upload-session',
-      client.CreateVideoCoverUploadSessionResponse.create,
+      client.CreateMediaCoverUploadSessionResponse.create,
       body: request,
     );
   }
 
-  Future<client.EditMediaResponse> updateVideoCover(
+  Future<client.UploadMediaCoverObjectResponse> uploadMediaCoverObject(
+    client.UploadMediaCoverObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._uploadFileObject(
+      '/api/media/cover-objects/$key',
+      token: request.token,
+      data: request.data,
+      contentType: request.contentType,
+      contentRange: request.hasContentRange() ? request.contentRange : null,
+    );
+    return client.UploadMediaCoverObjectResponse(
+      complete: result.complete,
+      uploadedSizeBytes: result.uploadedSizeBytes,
+      uploadedParts: result.uploadedParts,
+    );
+  }
+
+  Future<client.MediaCoverObjectResponse> getMediaCoverObject(
+    client.GetMediaCoverObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._downloadFileObject(
+      '/api/media/cover-objects/$key',
+      token: request.token,
+      range: request.hasRange() ? request.range : null,
+    );
+    return client.MediaCoverObjectResponse(
+      mimeType: result.mimeType,
+      contentManifestSha256: result.contentManifestSha256,
+      data: result.data,
+      contentRange: result.contentRange,
+      totalSizeBytes: result.totalSizeBytes,
+    );
+  }
+
+  Future<client.CompleteMediaCoverUploadSessionResponse>
+      completeMediaCoverUploadSession(
+    client.CompleteMediaCoverUploadSessionRequest request,
+  ) {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    return _api._send(
+      'POST',
+      '/api/media/cover-objects/$key/complete',
+      client.CompleteMediaCoverUploadSessionResponse.create,
+      body: request,
+      auth: false,
+    );
+  }
+
+  Future<client.EditMediaResponse> updateMediaCover(
     String roomId,
-    client.UpdateVideoCoverRequest request,
+    client.UpdateMediaCoverRequest request,
   ) {
     return _api._send(
       'PUT',
@@ -1395,9 +1719,9 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.EditMediaResponse> clearVideoCover(
+  Future<client.EditMediaResponse> clearMediaCover(
     String roomId,
-    client.ClearVideoCoverRequest request,
+    client.ClearMediaCoverRequest request,
   ) {
     return _api._send(
       'DELETE',
@@ -1565,6 +1889,30 @@ class SyncTvPublicApi {
       '/api/public/server-info',
       client.GetServerInfoResponse.create,
       auth: false,
+    );
+  }
+
+  Future<client.ListRoomCategoriesResponse> listRoomCategories(
+    client.ListRoomCategoriesRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/categories',
+      client.ListRoomCategoriesResponse.create,
+      auth: false,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<client.ListRoomLabelsResponse> listRoomLabels(
+    client.ListRoomLabelsRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/labels',
+      client.ListRoomLabelsResponse.create,
+      auth: false,
+      query: _api._messageQuery(request),
     );
   }
 }
@@ -2075,6 +2423,83 @@ class SyncTvAdminApi {
     );
   }
 
+  Future<admin.ListRoomCategoriesResponse> listRoomCategories(
+    admin.ListRoomCategoriesRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/admin/rooms/categories',
+      admin.ListRoomCategoriesResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<admin.UpsertRoomCategoryResponse> upsertRoomCategory(
+    admin.UpsertRoomCategoryRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/admin/rooms/categories',
+      admin.UpsertRoomCategoryResponse.create,
+      body: request,
+    );
+  }
+
+  Future<admin.DeleteRoomCategoryResponse> deleteRoomCategory(
+    admin.DeleteRoomCategoryRequest request,
+  ) {
+    final categoryId = Uri.encodeComponent(request.categoryId);
+    return _api._send(
+      'DELETE',
+      '/api/admin/rooms/categories/$categoryId',
+      admin.DeleteRoomCategoryResponse.create,
+    );
+  }
+
+  Future<admin.ListRoomLabelsResponse> listRoomLabels(
+    admin.ListRoomLabelsRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/admin/rooms/labels',
+      admin.ListRoomLabelsResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<admin.UpsertRoomLabelResponse> upsertRoomLabel(
+    admin.UpsertRoomLabelRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/admin/rooms/labels',
+      admin.UpsertRoomLabelResponse.create,
+      body: request,
+    );
+  }
+
+  Future<admin.DeleteRoomLabelResponse> deleteRoomLabel(
+    admin.DeleteRoomLabelRequest request,
+  ) {
+    final labelId = Uri.encodeComponent(request.labelId);
+    return _api._send(
+      'DELETE',
+      '/api/admin/rooms/labels/$labelId',
+      admin.DeleteRoomLabelResponse.create,
+    );
+  }
+
+  Future<admin.UpdateRoomTaxonomyResponse> updateRoomTaxonomy(
+    admin.UpdateRoomTaxonomyRequest request,
+  ) {
+    return _api._send(
+      'PATCH',
+      '/api/admin/rooms/${request.roomId}/taxonomy',
+      admin.UpdateRoomTaxonomyResponse.create,
+      body: request,
+    );
+  }
+
   Future<admin.BatchBanRoomsResponse> batchBanRooms(
     admin.BatchBanRoomsRequest request,
   ) {
@@ -2312,9 +2737,10 @@ class SyncTvProviderCommonApi {
   Future<provider_common.ProviderBackendsResponse> listProviderBackends(
     provider_common.ListProviderBackendsRequest request,
   ) {
+    final provider = SourceConfigCodec.providerToString(request.providerType);
     return _api._send(
       'GET',
-      '/api/providers/backends/${request.providerType}',
+      '/api/providers/backends/${Uri.encodeComponent(provider)}',
       provider_common.ProviderBackendsResponse.create,
     );
   }

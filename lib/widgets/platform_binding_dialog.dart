@@ -5,7 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/services/bilibili_geetest_service.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pbenum.dart'
     as bilibili_enum;
 import 'package:synctv_app/theme/app_responsive.dart';
@@ -140,19 +140,18 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     if (showLoading) setState(() => _loading[kind] = true);
     try {
       final list = switch (kind) {
-        _ProviderKind.alist =>
-          (await WatchTogetherService.getAllAlistBindInfos())
-              .map(
-                (bind) => _ProviderBindItem(
-                  id: bind.id,
-                  serverId: bind.serverId,
-                  instanceName: bind.providerInstanceName,
-                  title: bind.host.isNotEmpty ? bind.host : bind.username,
-                  subtitle: bind.username,
-                ),
-              )
-              .toList(),
-        _ProviderKind.emby => (await WatchTogetherService.getAllEmbyBindInfos())
+        _ProviderKind.alist => (await SyncTvService.getAllAlistBindInfos())
+            .map(
+              (bind) => _ProviderBindItem(
+                id: bind.id,
+                serverId: bind.serverId,
+                instanceName: bind.providerInstanceName,
+                title: bind.host.isNotEmpty ? bind.host : bind.username,
+                subtitle: bind.username,
+              ),
+            )
+            .toList(),
+        _ProviderKind.emby => (await SyncTvService.getAllEmbyBindInfos())
             .map(
               (bind) => _ProviderBindItem(
                 id: bind.id,
@@ -164,7 +163,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
             )
             .toList(),
         _ProviderKind.bilibili =>
-          (await WatchTogetherService.getAllBilibiliBindInfos())
+          (await SyncTvService.getAllBilibiliBindInfos())
               .map(
                 (bind) => _ProviderBindItem(
                   id: bind.id,
@@ -219,17 +218,17 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     try {
       switch (kind) {
         case _ProviderKind.alist:
-          await WatchTogetherService.logoutAList(
+          await SyncTvService.logoutAList(
             item.serverId,
             instanceName: item.instanceName,
           );
         case _ProviderKind.emby:
-          await WatchTogetherService.logoutEmby(
+          await SyncTvService.logoutEmby(
             item.serverId,
             instanceName: item.instanceName,
           );
         case _ProviderKind.bilibili:
-          await WatchTogetherService.logoutBilibili(
+          await SyncTvService.logoutBilibili(
             instanceName: item.instanceName,
           );
       }
@@ -253,7 +252,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
         iconColor: const Color(0xFFFB7299),
         content: _BilibiliLoginDialog(
           instanceNamesLoader: () =>
-              WatchTogetherService.listAvailableProviderInstances(
+              SyncTvService.listAvailableProviderInstances(
             providerType: _providerType(kind),
           ),
           onSuccess: () => _loadBinds(kind, showLoading: false),
@@ -269,8 +268,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       iconColor: provider.color,
       content: _PasswordAccountDialog(
         kind: kind,
-        instanceNamesLoader: () =>
-            WatchTogetherService.listAvailableProviderInstances(
+        instanceNamesLoader: () => SyncTvService.listAvailableProviderInstances(
           providerType: _providerType(kind),
         ),
         onSuccess: () => _loadBinds(kind, showLoading: false),
@@ -352,7 +350,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
   ) async {
     switch (kind) {
       case _ProviderKind.alist:
-        final info = await WatchTogetherService.getAlistAccount(
+        final info = await SyncTvService.getAlistAccount(
           item.serverId,
           instanceName: item.instanceName,
         );
@@ -363,7 +361,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           ('实例', _providerInstanceLabel(item.instanceName)),
         ];
       case _ProviderKind.emby:
-        final info = await WatchTogetherService.getEmbyAccount(
+        final info = await SyncTvService.getEmbyAccount(
           item.serverId,
           instanceName: item.instanceName,
         );
@@ -374,7 +372,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           ('实例', _providerInstanceLabel(item.instanceName)),
         ];
       case _ProviderKind.bilibili:
-        final info = await WatchTogetherService.getBilibiliAccount(
+        final info = await SyncTvService.getBilibiliAccount(
           instanceName: item.instanceName,
         );
         return [
@@ -894,7 +892,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
     setState(() => _isLoading = true);
     try {
       if (_isAlist) {
-        await WatchTogetherService.loginAList(
+        await SyncTvService.loginAList(
           host,
           username,
           _hashAlistPassword(password),
@@ -903,7 +901,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
           instanceName: _instanceName,
         );
       } else {
-        await WatchTogetherService.loginEmbyInfo(
+        await SyncTvService.loginEmbyInfo(
           host,
           username,
           password,
@@ -1264,7 +1262,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
     });
 
     try {
-      final response = await WatchTogetherService.startBilibiliQrLogin(
+      final response = await SyncTvService.startBilibiliQrLogin(
         instanceName: _instanceName,
       );
       if (!mounted) return;
@@ -1313,7 +1311,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
     }
     _checkingStatus = true;
     try {
-      final status = await WatchTogetherService.checkBilibiliQrLogin(
+      final status = await SyncTvService.checkBilibiliQrLogin(
         _key,
         instanceName: _instanceName,
       );
@@ -1624,7 +1622,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
       _statusText = '正在准备安全验证...';
     });
     try {
-      final session = await WatchTogetherService.startBilibiliSmsLogin(
+      final session = await SyncTvService.startBilibiliSmsLogin(
         instanceName: widget.instanceName,
       );
       if (!mounted) return;
@@ -1667,7 +1665,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
         gt: session.gt,
         challenge: session.challenge,
       );
-      final nextSession = await WatchTogetherService.sendBilibiliSms(
+      final nextSession = await SyncTvService.sendBilibiliSms(
         session: session,
         phone: phone,
         validate: result.validate,
@@ -1712,7 +1710,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
       _statusText = '正在完成 Bilibili 绑定...';
     });
     try {
-      await WatchTogetherService.loginBilibiliSms(
+      await SyncTvService.loginBilibiliSms(
         sessionToken: session.sessionToken,
         code: code,
       );

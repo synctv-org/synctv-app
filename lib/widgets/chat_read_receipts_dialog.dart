@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:synctv_app/models/room_media_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
 class ChatReadReceiptsDialog extends StatelessWidget {
@@ -11,10 +11,9 @@ class ChatReadReceiptsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AlertDialog(
+    return AppDialog(
       title: const Text('消息阅读详情'),
-      contentPadding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
-      content: SizedBox(
+      body: SizedBox(
         width: 620,
         height: 460,
         child: Row(
@@ -30,7 +29,7 @@ class ChatReadReceiptsDialog extends StatelessWidget {
                 },
               ),
             ),
-            VerticalDivider(
+            AppVerticalDivider(
               width: 28,
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
             ),
@@ -44,9 +43,10 @@ class ChatReadReceiptsDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        AppActionButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('关闭'),
+          label: '关闭',
+          style: AppActionButtonStyle.text,
         ),
       ],
     );
@@ -55,7 +55,7 @@ class ChatReadReceiptsDialog extends StatelessWidget {
 
 class _ChatReceiptUserColumn extends StatelessWidget {
   final String title;
-  final List<WUser> users;
+  final List<SyncTvUser> users;
   final Map<String, int> readTimes;
 
   const _ChatReceiptUserColumn({
@@ -87,7 +87,7 @@ class _ChatReceiptUserColumn extends StatelessWidget {
                     ),
                   ),
                 )
-              : ListView.separated(
+              : AppListView.separated(
                   itemCount: users.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {

@@ -168,6 +168,7 @@ class AlistItemInfo {
   final int modified;
   final String thumb;
   final int type;
+  final String sign;
 
   const AlistItemInfo({
     required this.name,
@@ -177,6 +178,7 @@ class AlistItemInfo {
     required this.modified,
     required this.thumb,
     required this.type,
+    this.sign = '',
   });
 }
 
@@ -218,6 +220,7 @@ class EmbyItemInfo {
   final String seriesId;
   final String seasonName;
   final String thumbnail;
+  final String description;
 
   const EmbyItemInfo({
     required this.id,
@@ -229,6 +232,7 @@ class EmbyItemInfo {
     required this.seriesId,
     required this.seasonName,
     required this.thumbnail,
+    this.description = '',
   });
 }
 

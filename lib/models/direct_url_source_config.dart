@@ -27,25 +27,33 @@ class DirectUrlSourceConfig {
 
   final String url;
   final Map<String, String> headers;
+  final bool preferProxy;
 
   const DirectUrlSourceConfig({
     required this.url,
     this.headers = const {},
+    this.preferProxy = false,
   });
 
   factory DirectUrlSourceConfig.fromUserInput({
     required String url,
     Map<String, String> headers = const {},
+    bool preferProxy = false,
   }) {
     final normalizedUrl = validateUrl(url);
     validateHeaders(headers);
-    return DirectUrlSourceConfig(url: normalizedUrl, headers: headers);
+    return DirectUrlSourceConfig(
+      url: normalizedUrl,
+      headers: headers,
+      preferProxy: preferProxy,
+    );
   }
 
   Map<String, Object> toJson() {
     return {
       'url': url,
       'headers': headers,
+      if (preferProxy) 'prefer_proxy': true,
     };
   }
 

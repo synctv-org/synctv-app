@@ -13,7 +13,7 @@ import 'dart:io';
 import 'package:synctv_app/widgets/danmaku_overlay.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/services/dlna.dart';
 import 'package:synctv_app/services/xml_parser.dart';
 import 'package:synctv_app/utils/message_utils.dart';
@@ -27,7 +27,9 @@ class DanmakuController extends ChangeNotifier {
   VideoPlayerController? videoController;
 
   String? _danmakuUrl;
+  Map<String, String> _danmakuHeaders = const {};
   String? _streamDanmakuUrl;
+  Map<String, String> _streamDanmakuHeaders = const {};
 
   @override
   void dispose() {
@@ -38,19 +40,25 @@ class DanmakuController extends ChangeNotifier {
 
   void updateConfig(
       {String? danmakuUrl,
+      Map<String, String> danmakuHeaders = const {},
       String? streamDanmakuUrl,
+      Map<String, String> streamDanmakuHeaders = const {},
       VideoPlayerController? controller}) {
     if (controller != null) {
       videoController = controller;
     }
 
-    if (danmakuUrl != _danmakuUrl) {
+    if (danmakuUrl != _danmakuUrl ||
+        !_sameHeaders(danmakuHeaders, _danmakuHeaders)) {
       _danmakuUrl = danmakuUrl;
+      _danmakuHeaders = Map<String, String>.from(danmakuHeaders);
       _loadDanmaku();
     }
 
-    if (streamDanmakuUrl != _streamDanmakuUrl) {
+    if (streamDanmakuUrl != _streamDanmakuUrl ||
+        !_sameHeaders(streamDanmakuHeaders, _streamDanmakuHeaders)) {
       _streamDanmakuUrl = streamDanmakuUrl;
+      _streamDanmakuHeaders = Map<String, String>.from(streamDanmakuHeaders);
       _connectDanmakuStream();
     }
   }
@@ -85,6 +93,14 @@ class DanmakuController extends ChangeNotifier {
     return '${item.startTime.inMilliseconds}|${item.text}|${item.type.index}';
   }
 
+  bool _sameHeaders(Map<String, String> a, Map<String, String> b) {
+    if (a.length != b.length) return false;
+    for (final entry in a.entries) {
+      if (b[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
+
   void clear() {
     _items.clear();
     notifyListeners();
@@ -96,8 +112,11 @@ class DanmakuController extends ChangeNotifier {
 
     if (_danmakuUrl == null || _danmakuUrl!.isEmpty) return;
     try {
-      final url = WatchTogetherService.resolveResourceUrl(_danmakuUrl!);
-      final response = await http.get(Uri.parse(url));
+      final url = SyncTvService.resolveResourceUrl(_danmakuUrl!);
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _danmakuHeaders,
+      );
       if (response.statusCode == 200) {
         String content;
         try {
@@ -173,6 +192,7 @@ class DanmakuController extends ChangeNotifier {
     _sseClient = http.Client();
     try {
       final request = http.Request('GET', Uri.parse(_streamDanmakuUrl!));
+      request.headers.addAll(_streamDanmakuHeaders);
       request.headers['Accept'] = 'text/event-stream';
 
       final response = await _sseClient!.send(request);
@@ -310,7 +330,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   // Gesture State
   double? _dragStartVolume;
-  double? _dragStartDlnaVolume;
   double? _dragStartBrightness;
   Duration? _dragStartPosition;
   String _dragLabel = '';
@@ -332,6 +351,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   bool _isCasting = false;
   bool _isSearchingDlna = false;
   bool _dlnaIsPlaying = false;
+  bool _dlnaMuted = false;
+  int _dlnaVolume = 50;
   Duration _dlnaPosition = Duration.zero;
   Duration _dlnaDuration = Duration.zero;
   StreamSubscription? _dlnaDevicesSubscription;
@@ -442,7 +463,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
     // If specific URL provided (or null to clear), use it
     if (specificUrl != null) {
-      await _fetchAndParseSubtitles(specificUrl);
+      await _fetchAndParseSubtitles(
+        specificUrl,
+        headers: _subtitleHeadersForUrl(specificUrl),
+      );
       return;
     }
 
@@ -450,6 +474,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (widget.subtitles == null || widget.subtitles!.isEmpty) return;
 
     // Prefer 'zh' or 'chi' or 'Chinese', otherwise first
+    Map<String, dynamic>? selected;
     String? url;
     String? defaultKey;
 
@@ -459,7 +484,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           key.toLowerCase().contains('chi') ||
           key.toLowerCase().contains('中')) {
         if (widget.subtitles![key] is Map) {
-          url = widget.subtitles![key]['url'];
+          selected = Map<String, dynamic>.from(widget.subtitles![key]);
+          url = selected['url'] as String?;
           defaultKey = key;
           break;
         }
@@ -470,7 +496,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (url == null) {
       for (var key in widget.subtitles!.keys) {
         if (widget.subtitles![key] is Map) {
-          url = widget.subtitles![key]['url'];
+          selected = Map<String, dynamic>.from(widget.subtitles![key]);
+          url = selected['url'] as String?;
           defaultKey = key;
           break;
         }
@@ -479,15 +506,21 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
     if (url != null) {
       debugPrint('Loading default subtitle: $defaultKey');
-      await _fetchAndParseSubtitles(url);
+      await _fetchAndParseSubtitles(
+        url,
+        headers: _headersFromDynamicMap(selected?['headers']),
+      );
     }
   }
 
-  Future<void> _fetchAndParseSubtitles(String url) async {
+  Future<void> _fetchAndParseSubtitles(
+    String url, {
+    Map<String, String> headers = const {},
+  }) async {
     try {
-      final uri = Uri.parse(WatchTogetherService.resolveResourceUrl(url));
+      final uri = Uri.parse(SyncTvService.resolveResourceUrl(url));
 
-      final response = await http.get(uri);
+      final response = await http.get(uri, headers: headers);
       if (response.statusCode == 200) {
         // Robust decoding (handles UTF-16 BOM)
         String content = _decodeSubtitleContent(response.bodyBytes);
@@ -510,6 +543,22 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     } catch (e) {
       debugPrint('Failed to load subtitles: $e');
     }
+  }
+
+  Map<String, String> _subtitleHeadersForUrl(String url) {
+    final subtitles = widget.subtitles;
+    if (subtitles == null || subtitles.isEmpty) return const {};
+    for (final value in subtitles.values) {
+      if (value is! Map) continue;
+      if (value['url'] != url) continue;
+      return _headersFromDynamicMap(value['headers']);
+    }
+    return const {};
+  }
+
+  Map<String, String> _headersFromDynamicMap(dynamic value) {
+    if (value is! Map) return const {};
+    return value.map((key, value) => MapEntry('$key', '$value'));
   }
 
   String _decodeSubtitleContent(Uint8List bytes) {
@@ -1093,7 +1142,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (_isCasting) return;
     _dragStartBrightness = null;
     _dragStartVolume = null;
-    _dragStartDlnaVolume = null;
 
     _startHideTimer();
 
@@ -1110,7 +1158,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (_isCasting) return;
     _dragStartBrightness = null;
     _dragStartVolume = null;
-    _dragStartDlnaVolume = null;
 
     _startHideTimer();
 
@@ -1380,17 +1427,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         style: const TextStyle(color: Color(0xFF5D5FEF))),
                     suffix: AppActionButton(
                       onPressed: () {
-                        // Stop casting
-                        _currentDlnaDevice!.stop();
-                        _currentDlnaDevice!.positionPoller.stop();
-                        _dlnaPositionSubscription?.cancel();
-                        setState(() {
-                          _isCasting = false;
-                          _currentDlnaDevice = null;
-                        });
-                        // Resume local player
-                        widget.controller.seekTo(_dlnaPosition);
-                        widget.controller.play();
+                        _stopDlnaCasting();
                         Navigator.pop(context);
                       },
                       label: '退出投屏',
@@ -1445,6 +1482,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       _currentDlnaDevice = device;
       _isCasting = true;
       _dlnaIsPlaying = true;
+      _dlnaMuted = false;
+      _dlnaVolume = 50;
     });
 
     try {
@@ -1473,6 +1512,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       if (currentPos > Duration.zero) {
         await device.seek(_formatDurationDlna(currentPos));
       }
+      _syncDlnaRenderingState(device);
     } catch (e) {
       debugPrint('DLNA Error: $e');
       if (mounted) {
@@ -1483,6 +1523,202 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         });
       }
     }
+  }
+
+  Future<void> _stopDlnaCasting({bool resumeLocal = true}) async {
+    final device = _currentDlnaDevice;
+    final position = _dlnaPosition;
+    if (device != null) {
+      try {
+        await device.stop();
+      } catch (e) {
+        debugPrint('DLNA stop failed: $e');
+      }
+      device.positionPoller.stop();
+    }
+    await _dlnaPositionSubscription?.cancel();
+    if (!mounted) return;
+    setState(() {
+      _isCasting = false;
+      _currentDlnaDevice = null;
+      _dlnaIsPlaying = false;
+      _dlnaMuted = false;
+    });
+    if (resumeLocal) {
+      await widget.controller.seekTo(position);
+      await widget.controller.play();
+    }
+  }
+
+  Future<void> _syncDlnaRenderingState([DLNADevice? target]) async {
+    final device = target ?? _currentDlnaDevice;
+    if (device == null) return;
+    try {
+      final results = await Future.wait([
+        device.getVolume(),
+        device.getMute(),
+        device.getTransportInfo(),
+      ]);
+      final volume = VolumeParser(results[0]).current.clamp(0, 100);
+      final muted = MuteParser(results[1]).muted;
+      final transport = TransportInfoParser(results[2]);
+      final playing =
+          transport.currentTransportState.toUpperCase() == 'PLAYING';
+      if (!mounted || _currentDlnaDevice != device) return;
+      setState(() {
+        _dlnaVolume = volume;
+        _dlnaMuted = muted;
+        _dlnaIsPlaying = playing || _dlnaIsPlaying;
+      });
+    } catch (e) {
+      debugPrint('DLNA state sync failed: $e');
+    }
+  }
+
+  Future<void> _setDlnaVolume(int volume) async {
+    final device = _currentDlnaDevice;
+    if (device == null) return;
+    final nextVolume = volume.clamp(0, 100);
+    setState(() {
+      _dlnaVolume = nextVolume;
+      if (nextVolume > 0) _dlnaMuted = false;
+    });
+    try {
+      await device.volume(nextVolume);
+      if (nextVolume > 0) await device.mute(false);
+    } catch (e) {
+      debugPrint('DLNA volume failed: $e');
+      if (mounted) MessageUtils.showError(context, '调节投屏音量失败: $e');
+    }
+  }
+
+  Future<void> _toggleDlnaMute() async {
+    final device = _currentDlnaDevice;
+    if (device == null) return;
+    final nextMuted = !_dlnaMuted;
+    setState(() => _dlnaMuted = nextMuted);
+    try {
+      await device.mute(nextMuted);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _dlnaMuted = !nextMuted);
+      MessageUtils.showError(context, '切换投屏静音失败: $e');
+    }
+  }
+
+  Future<void> _seekDlnaBy(Duration delta) async {
+    final device = _currentDlnaDevice;
+    if (device == null) return;
+    final upperBound = _dlnaDuration > Duration.zero
+        ? _dlnaDuration
+        : const Duration(hours: 24);
+    final target = _dlnaPosition + delta;
+    final bounded = target < Duration.zero
+        ? Duration.zero
+        : target > upperBound
+            ? upperBound
+            : target;
+    setState(() => _dlnaPosition = bounded);
+    try {
+      await device.seek(_formatDurationDlna(bounded));
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '投屏跳转失败: $e');
+    }
+  }
+
+  Future<void> _runDlnaCommand(
+    Future<String> Function(DLNADevice device) command, {
+    required String successMessage,
+    required String errorPrefix,
+  }) async {
+    final device = _currentDlnaDevice;
+    if (device == null) return;
+    try {
+      await command(device);
+      if (mounted) {
+        MessageUtils.showInfo(
+          context,
+          successMessage,
+          duration: const Duration(seconds: 1),
+        );
+      }
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '$errorPrefix: $e');
+    }
+  }
+
+  Future<void> _showDlnaInfoDialog() async {
+    final device = _currentDlnaDevice;
+    if (device == null) return;
+    try {
+      final results = await Future.wait([
+        device.getTransportInfo(),
+        device.getCurrentTransportActions(),
+        device.getMediaInfo(),
+        device.getDeviceCapabilities(),
+      ]);
+      if (!mounted) return;
+      await showAppDialog<void>(
+        context: context,
+        builder: (dialogContext) => AppDialog(
+          title: const Text('投屏设备信息'),
+          icon: const Icon(Icons.info_outline_rounded),
+          body: SizedBox(
+            width: 560,
+            child: AppSingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DlnaInfoLine(
+                    label: '设备',
+                    value: device.info.friendlyName,
+                  ),
+                  _DlnaInfoLine(
+                    label: '传输状态',
+                    value: TransportInfoParser(results[0])
+                        .currentTransportState
+                        .trim(),
+                  ),
+                  _DlnaInfoLine(
+                    label: '可用动作',
+                    value: _extractDlnaTag(results[1], 'Actions'),
+                  ),
+                  _DlnaInfoLine(
+                    label: '媒体时长',
+                    value: _extractDlnaTag(results[2], 'MediaDuration'),
+                  ),
+                  _DlnaInfoLine(
+                    label: '能力',
+                    value: [
+                      _extractDlnaTag(results[3], 'PlayMedia'),
+                      _extractDlnaTag(results[3], 'RecMedia'),
+                      _extractDlnaTag(results[3], 'RecQualityModes'),
+                    ].where((value) => value.isNotEmpty).join(' / '),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            AppActionButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              label: '关闭',
+              style: AppActionButtonStyle.tonal,
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '读取投屏设备信息失败: $e');
+    }
+  }
+
+  String _extractDlnaTag(String xml, String tagName) {
+    final start = xml.indexOf('<$tagName>');
+    final end = xml.indexOf('</$tagName>');
+    if (start < 0 || end <= start) return '';
+    return xml.substring(start + tagName.length + 2, end).trim();
   }
 
   String _formatDurationDlna(Duration d) {
@@ -1686,24 +1922,66 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                     ],
                   ),
                   const SizedBox(height: 24),
-                  // Controls
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Volume Down
                       AppIconButton(
-                        icon: Icons.volume_down,
-                        tooltip: '降低音量',
-                        onPressed: () {
-                          final newVol = ((_dragStartDlnaVolume ?? 0) - 10)
-                              .clamp(0.0, 100.0);
-                          _dragStartDlnaVolume = newVol;
-                          _currentDlnaDevice?.volume(newVol.toInt());
+                        icon: _dlnaMuted ? Icons.volume_off : Icons.volume_up,
+                        tooltip: _dlnaMuted ? '取消静音' : '静音',
+                        onPressed: () async {
+                          await _toggleDlnaMute();
                           setPanelState(() {});
                         },
                       ),
-                      const SizedBox(width: 24),
-                      // Play/Pause
+                      Expanded(
+                        child: AppSlider(
+                          value: _dlnaVolume.toDouble(),
+                          min: 0,
+                          max: 100,
+                          activeColor: const Color(0xFF5D5FEF),
+                          inactiveColor: Colors.white24,
+                          thumbColor: Colors.white,
+                          onChanged: (value) {
+                            _setDlnaVolume(value.round());
+                            setPanelState(() {});
+                          },
+                        ),
+                      ),
+                      SizedBox(
+                        width: 42,
+                        child: Text(
+                          _dlnaMuted ? '静音' : '$_dlnaVolume',
+                          textAlign: TextAlign.end,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AppIconButton(
+                        icon: Icons.skip_previous_rounded,
+                        tooltip: '上一首',
+                        onPressed: () async {
+                          await _runDlnaCommand(
+                            (device) => device.previous(),
+                            successMessage: '已切换上一首',
+                            errorPrefix: '上一首失败',
+                          );
+                          setPanelState(() {});
+                        },
+                      ),
+                      const SizedBox(width: 16),
+                      AppIconButton(
+                        icon: Icons.replay_10_rounded,
+                        tooltip: '后退 10 秒',
+                        onPressed: () async {
+                          await _seekDlnaBy(const Duration(seconds: -10));
+                          setPanelState(() {});
+                        },
+                      ),
+                      const SizedBox(width: 16),
                       AppIconButton(
                         iconSize: 64,
                         icon: _dlnaIsPlaying
@@ -1722,18 +2000,90 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                           setPanelState(() {});
                         },
                       ),
-                      const SizedBox(width: 24),
-                      // Volume Up
+                      const SizedBox(width: 16),
                       AppIconButton(
-                        icon: Icons.volume_up,
-                        tooltip: '提高音量',
-                        onPressed: () {
-                          final newVol = ((_dragStartDlnaVolume ?? 0) + 10)
-                              .clamp(0.0, 100.0);
-                          _dragStartDlnaVolume = newVol;
-                          _currentDlnaDevice?.volume(newVol.toInt());
+                        icon: Icons.forward_10_rounded,
+                        tooltip: '前进 10 秒',
+                        onPressed: () async {
+                          await _seekDlnaBy(const Duration(seconds: 10));
                           setPanelState(() {});
                         },
+                      ),
+                      const SizedBox(width: 16),
+                      AppIconButton(
+                        icon: Icons.skip_next_rounded,
+                        tooltip: '下一首',
+                        onPressed: () async {
+                          await _runDlnaCommand(
+                            (device) => device.next(),
+                            successMessage: '已切换下一首',
+                            errorPrefix: '下一首失败',
+                          );
+                          setPanelState(() {});
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      AppActionButton(
+                        onPressed: () async {
+                          await _runDlnaCommand(
+                            (device) => device.setPlayMode('NORMAL'),
+                            successMessage: '已设置顺序播放',
+                            errorPrefix: '设置播放模式失败',
+                          );
+                        },
+                        icon: Icons.format_list_numbered_rounded,
+                        label: '顺序',
+                        style: AppActionButtonStyle.outlined,
+                      ),
+                      AppActionButton(
+                        onPressed: () async {
+                          await _runDlnaCommand(
+                            (device) => device.setPlayMode('REPEAT_ALL'),
+                            successMessage: '已设置循环播放',
+                            errorPrefix: '设置播放模式失败',
+                          );
+                        },
+                        icon: Icons.repeat_rounded,
+                        label: '循环',
+                        style: AppActionButtonStyle.outlined,
+                      ),
+                      AppActionButton(
+                        onPressed: _showDlnaInfoDialog,
+                        icon: Icons.info_outline_rounded,
+                        label: '信息',
+                        style: AppActionButtonStyle.outlined,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AppActionButton(
+                        onPressed: () async {
+                          await _syncDlnaRenderingState();
+                          setPanelState(() {});
+                        },
+                        icon: Icons.sync_rounded,
+                        label: '同步状态',
+                        style: AppActionButtonStyle.tonal,
+                      ),
+                      const SizedBox(width: 12),
+                      AppActionButton(
+                        onPressed: () async {
+                          await _stopDlnaCasting();
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                        icon: Icons.cast_connected_rounded,
+                        label: '退出投屏',
+                        style: AppActionButtonStyle.destructive,
                       ),
                     ],
                   ),
@@ -2456,6 +2806,46 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DlnaInfoLine extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _DlnaInfoLine({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final displayValue = value.trim().isEmpty ? '未知' : value.trim();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 84,
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Expanded(
+            child: AppSelectableText(
+              displayValue,
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+        ],
       ),
     );
   }

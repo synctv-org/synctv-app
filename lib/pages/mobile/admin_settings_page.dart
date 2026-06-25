@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/models/synctv_models.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
@@ -15,6 +15,7 @@ import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/chat_reactions.dart';
 import 'package:synctv_app/utils/message_utils.dart';
+import 'package:synctv_app/utils/room_taxonomy.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
@@ -133,10 +134,12 @@ Future<void> _openContentReportsViewer(
 }
 
 const Map<String, String> _providerTypeLabels = {
+  'direct_url': 'Direct URL',
   'alist': 'AList',
   'emby': 'Emby',
   'bilibili': 'Bilibili',
   'rtmp': 'RTMP',
+  'live_proxy': 'Live Proxy',
 };
 
 String _providerTypeLabel(String provider) {
@@ -182,6 +185,11 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
       label: '房间',
       icon: Icons.meeting_room_rounded,
       page: RoomManagementTab(),
+    ),
+    _AdminSection(
+      label: '分类标签',
+      icon: Icons.category_rounded,
+      page: AdminRoomTaxonomyTab(),
     ),
     _AdminSection(
       label: '用户',
@@ -578,7 +586,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
   Future<void> _load({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final stats = await WatchTogetherService.adminGetSystemStats();
+      final stats = await SyncTvService.adminGetSystemStats();
       if (!mounted) return;
       setState(() {
         _stats = stats;
@@ -645,7 +653,7 @@ class AdminAdminsTab extends StatefulWidget {
 }
 
 class _AdminAdminsTabState extends State<AdminAdminsTab> {
-  List<WUser> _admins = const [];
+  List<SyncTvUser> _admins = const [];
   String _currentUserId = '';
   int _adminTotal = 0;
   int _adminPage = 1;
@@ -677,18 +685,18 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     if (!silent) setState(() => _isLoading = true);
     try {
       final results = await Future.wait([
-        WatchTogetherService.adminListAdminsPage(
+        SyncTvService.adminListAdminsPage(
           page: _adminPage,
           pageSize: _adminPageSize,
           search: _adminSearch,
           sortBy: _adminSortBy,
           sortDirection: _adminSortDirection,
         ),
-        WatchTogetherService.getMe(),
+        SyncTvService.getMe(),
       ]);
       if (!mounted) return;
       final adminsPage = results[0] as AdminsPage;
-      final currentUser = results[1] as WUser;
+      final currentUser = results[1] as SyncTvUser;
       setState(() {
         _admins = adminsPage.admins;
         _currentUserId = currentUser.id;
@@ -703,6 +711,39 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
   }
 
   Future<void> _addAdmin() async {
+    final mode = await ChatUtils.showStyledDialog<String>(
+      context: context,
+      title: '添加管理员',
+      icon: const Icon(Icons.admin_panel_settings_rounded,
+          color: Color(0xFF5D5FEF)),
+      content: const SizedBox(
+        width: 420,
+        child: Text('可以创建新的管理员账号，也可以把已有用户提升为管理员。'),
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        AppActionButton(
+          onPressed: () => Navigator.pop(context, 'existing'),
+          icon: Icons.person_search_rounded,
+          label: '提升已有用户',
+          style: AppActionButtonStyle.tonal,
+        ),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, 'new'),
+          text: '新建管理员',
+        ),
+      ],
+    );
+    if (mode == 'existing') {
+      await _promoteExistingUser();
+      return;
+    }
+    if (mode != 'new') return;
+    if (!mounted) return;
+
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
     var disposeScheduled = false;
@@ -724,7 +765,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ChatUtils.createFormField(
-                context: context,
+                context: dialogContext,
                 label: '用户名',
                 controller: usernameController,
                 hintText: '请输入用户名',
@@ -732,7 +773,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
               ),
               const SizedBox(height: 12),
               ChatUtils.createFormField(
-                context: context,
+                context: dialogContext,
                 label: '密码',
                 controller: passwordController,
                 hintText: '请输入密码',
@@ -762,7 +803,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
         MessageUtils.showWarning(context, '请填写用户名和密码');
         return;
       }
-      await WatchTogetherService.adminAddUser(
+      await SyncTvService.adminAddUser(
         username,
         password,
         common_enum.UserRole.USER_ROLE_ADMIN.value,
@@ -776,7 +817,62 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     }
   }
 
-  Future<void> _removeAdmin(WUser user) async {
+  Future<void> _promoteExistingUser() async {
+    final userIdController = TextEditingController();
+    var disposeScheduled = false;
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: '提升已有用户',
+      icon: const Icon(Icons.person_search_rounded, color: Color(0xFF5D5FEF)),
+      content: Builder(
+        builder: (dialogContext) {
+          if (!disposeScheduled) {
+            disposeScheduled = true;
+            _disposeControllersAfterRouteClose(dialogContext, [
+              userIdController,
+            ]);
+          }
+          return SizedBox(
+            width: 420,
+            child: ChatUtils.createFormField(
+              context: dialogContext,
+              label: '用户 ID',
+              controller: userIdController,
+              hintText: '请输入已有用户 ID',
+              prefixIcon: Icons.badge_outlined,
+            ),
+          );
+        },
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '提升',
+        ),
+      ],
+    );
+    if (confirmed != true) return;
+    final userId = userIdController.text.trim();
+    if (userId.isEmpty) {
+      if (!mounted) return;
+      MessageUtils.showWarning(context, '请填写用户 ID');
+      return;
+    }
+    try {
+      await SyncTvService.adminAddAdmin(userId);
+      if (!mounted) return;
+      MessageUtils.showSuccess(context, '管理员已添加');
+      _load(silent: true);
+    } catch (e) {
+      if (!mounted) return;
+      MessageUtils.showError(context, '添加失败: $e');
+    }
+  }
+
+  Future<void> _removeAdmin(SyncTvUser user) async {
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '移除管理员',
@@ -794,7 +890,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     );
     if (confirmed != true) return;
     try {
-      await WatchTogetherService.adminRemoveAdmin(user.id);
+      await SyncTvService.adminRemoveAdmin(user.id);
       if (!mounted) return;
       MessageUtils.showSuccess(context, '管理员已移除');
       _load(silent: true);
@@ -974,7 +1070,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     );
   }
 
-  String? _adminRemoveDisabledReason(WUser admin) {
+  String? _adminRemoveDisabledReason(SyncTvUser admin) {
     if (_currentUserId.isNotEmpty && admin.id == _currentUserId) {
       return '不能移除当前登录账号的管理员权限';
     }
@@ -993,12 +1089,17 @@ class RoomManagementTab extends StatefulWidget {
 }
 
 class _RoomManagementTabState extends State<RoomManagementTab> {
-  List<WRoom> _rooms = [];
+  List<SyncTvRoom> _rooms = [];
+  List<RoomCategoryInfo> _categories = const [];
+  List<RoomLabelInfo> _labels = const [];
   bool _isLoading = true;
+  bool _isLoadingTaxonomy = false;
   int _page = 1;
   int _pageSize = 20;
   int _total = 0;
   String _searchQuery = '';
+  String _categoryFilter = '';
+  final Set<String> _labelFilters = {};
   common_enum.RoomStatus _statusFilter =
       common_enum.RoomStatus.ROOM_STATUS_UNSPECIFIED;
   bool? _bannedFilter;
@@ -1015,6 +1116,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   @override
   void initState() {
     super.initState();
+    _loadTaxonomy();
     _loadRooms();
   }
 
@@ -1027,10 +1129,12 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   Future<void> _loadRooms({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final data = await WatchTogetherService.adminListRoomsPage(
+      final data = await SyncTvService.adminListRoomsPage(
         page: _page,
         pageSize: _pageSize,
         search: _searchQuery,
+        categoryId: _categoryFilter,
+        labelIds: _labelFilters.toList(growable: false),
         status: _statusFilter,
         isBanned: _bannedFilter,
         sortBy: _sortBy,
@@ -1055,7 +1159,157 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     }
   }
 
-  Future<void> _banRoom(WRoom room, bool ban) async {
+  Future<void> _loadTaxonomy() async {
+    if (_isLoadingTaxonomy) return;
+    setState(() => _isLoadingTaxonomy = true);
+    try {
+      final results = await Future.wait([
+        SyncTvService.adminListRoomCategories(
+          includeDisabled: true,
+          refresh: true,
+        ),
+        SyncTvService.adminListRoomLabels(
+          includeDisabled: true,
+          refresh: true,
+        ),
+      ]);
+      if (!mounted) return;
+      final categories = results[0].cast<RoomCategoryInfo>().toList()
+        ..sort((a, b) {
+          final order = a.sortOrder.compareTo(b.sortOrder);
+          if (order != 0) return order;
+          return _roomCategoryDisplay(a).compareTo(_roomCategoryDisplay(b));
+        });
+      final labels = results[1].cast<RoomLabelInfo>().toList()
+        ..sort((a, b) {
+          final order = a.sortOrder.compareTo(b.sortOrder);
+          if (order != 0) return order;
+          return _roomLabelDisplay(a).compareTo(_roomLabelDisplay(b));
+        });
+      setState(() {
+        _categories = categories;
+        _labels = labels;
+        _labelFilters.removeWhere(
+          (id) => !_availableFilterLabels.any((label) => label.id == id),
+        );
+        _isLoadingTaxonomy = false;
+      });
+    } catch (e) {
+      debugPrint('Failed to load admin room taxonomy filters: $e');
+      if (!mounted) return;
+      setState(() => _isLoadingTaxonomy = false);
+    }
+  }
+
+  List<RoomLabelInfo> get _availableFilterLabels {
+    if (_categoryFilter.isEmpty) return _labels;
+    return _labels
+        .where((label) => label.categoryId == _categoryFilter)
+        .toList(growable: false);
+  }
+
+  Future<void> _showRoomLabelFilterDialog() async {
+    if (_labels.isEmpty) {
+      await _loadTaxonomy();
+    }
+    if (!mounted) return;
+    final selectedIds = Set<String>.from(_labelFilters);
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: '筛选标签',
+      icon: const Icon(Icons.sell_outlined, color: Color(0xFF5D5FEF)),
+      content: StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final theme = Theme.of(dialogContext);
+          final labels = _availableFilterLabels;
+          return SizedBox(
+            width: 520,
+            child: AppSingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (labels.isEmpty)
+                    Text(
+                      _categoryFilter.isEmpty ? '暂无可用标签' : '当前分类下暂无标签',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: labels.map((label) {
+                        final selected = selectedIds.contains(label.id);
+                        final color = parseRoomLabelColor(
+                          label.color,
+                          theme.colorScheme.primary,
+                        );
+                        return AppChip(
+                          selected: selected,
+                          style: selected
+                              ? AppChipStyle.filled
+                              : AppChipStyle.outlined,
+                          onSelected: (value) => setDialogState(() {
+                            if (value) {
+                              selectedIds.add(label.id);
+                            } else {
+                              selectedIds.remove(label.id);
+                            }
+                          }),
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(_roomLabelDisplay(label)),
+                            ],
+                          ),
+                        );
+                      }).toList(growable: false),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        AppActionButton(
+          onPressed: () => Navigator.pop(context, false),
+          icon: Icons.filter_alt_off_rounded,
+          label: '清空',
+          style: AppActionButtonStyle.tonal,
+        ),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '应用',
+        ),
+      ],
+    );
+    if (confirmed == null) return;
+    setState(() {
+      _labelFilters
+        ..clear()
+        ..addAll(confirmed ? selectedIds : const <String>{});
+      _page = 1;
+    });
+    _loadRooms();
+  }
+
+  Future<void> _banRoom(SyncTvRoom room, bool ban) async {
     final action = ban ? '封禁' : '解封';
     final reasonController = TextEditingController();
     final confirm = await ChatUtils.showStyledDialog<bool>(
@@ -1090,7 +1344,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
 
     if (confirm == true) {
       try {
-        await WatchTogetherService.adminBanRoom(
+        await SyncTvService.adminBanRoom(
           room.roomId,
           ban,
           reason: reasonController.text.trim(),
@@ -1105,7 +1359,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     }
   }
 
-  Future<void> _deleteRoom(WRoom room) async {
+  Future<void> _deleteRoom(SyncTvRoom room) async {
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '删除房间',
@@ -1129,7 +1383,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
 
     if (confirm == true) {
       try {
-        await WatchTogetherService.adminDeleteRoom(room.roomId);
+        await SyncTvService.adminDeleteRoom(room.roomId);
         if (!mounted) return;
         MessageUtils.showSuccess(context, '房间已删除');
         _loadRooms(silent: true);
@@ -1184,7 +1438,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     );
     if (confirmed != true) return;
     try {
-      final result = await WatchTogetherService.adminBatchBanRooms(
+      final result = await SyncTvService.adminBatchBanRooms(
         _selectedRoomIds.toList(),
         reason: reasonController.text.trim(),
       );
@@ -1224,7 +1478,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     );
     if (confirmed != true) return;
     try {
-      final result = await WatchTogetherService.adminBatchDeleteRooms(
+      final result = await SyncTvService.adminBatchDeleteRooms(
         _selectedRoomIds.toList(),
       );
       if (!mounted) return;
@@ -1292,9 +1546,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     );
   }
 
-  Future<void> _showRoomDetails(WRoom room) async {
+  Future<void> _showRoomDetails(SyncTvRoom room) async {
     try {
-      final detail = await WatchTogetherService.adminGetRoom(room.roomId);
+      final detail = await SyncTvService.adminGetRoom(room.roomId);
       if (!mounted) return;
       final passwordController = TextEditingController();
       var passwordAction = _RoomPasswordAction.keep;
@@ -1360,6 +1614,13 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     ),
                     if (detail.description.isNotEmpty)
                       _InfoLine('描述', detail.description),
+                    if (detail.category != null)
+                      _InfoLine('分类', _roomCategoryDisplay(detail.category!)),
+                    if (detail.labels.isNotEmpty)
+                      _InfoLine(
+                        '标签',
+                        detail.labels.map(_roomLabelDisplay).join('、'),
+                      ),
                     _InfoLine('成员数', detail.memberCount.toString()),
                     _InfoLine('状态', _roomStatusLabel(detail)),
                     _InfoLine('创建者状态', _userStatusText(detail.creatorStatus)),
@@ -1431,12 +1692,12 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     Navigator.pop(context);
                     return;
                   case _RoomPasswordAction.update:
-                    await WatchTogetherService.adminUpdateRoomPassword(
+                    await SyncTvService.adminUpdateRoomPassword(
                       detail.roomId,
                       nextPassword,
                     );
                   case _RoomPasswordAction.clear:
-                    await WatchTogetherService.adminUpdateRoomPassword(
+                    await SyncTvService.adminUpdateRoomPassword(
                       detail.roomId,
                       '',
                     );
@@ -1460,6 +1721,15 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
             },
             icon: Icons.forum_outlined,
             label: '聊天历史',
+            style: AppActionButtonStyle.tonal,
+          ),
+          AppActionButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _editRoomTaxonomy(detail);
+            },
+            icon: Icons.category_outlined,
+            label: '分类标签',
             style: AppActionButtonStyle.tonal,
           ),
           AppActionButton(
@@ -1497,14 +1767,199 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     }
   }
 
-  Future<void> _showRoomChatHistory(WRoom room) async {
+  String _roomCategoryDisplay(RoomCategoryInfo category) {
+    final name = category.name.trim();
+    return name.isEmpty ? category.key : name;
+  }
+
+  String _roomLabelDisplay(RoomLabelInfo label) {
+    final name = label.name.trim();
+    return name.isEmpty ? label.key : name;
+  }
+
+  Future<void> _editRoomTaxonomy(SyncTvRoom room) async {
+    try {
+      final results = await Future.wait([
+        SyncTvService.adminListRoomCategories(
+          includeDisabled: false,
+          refresh: true,
+        ),
+        SyncTvService.adminListRoomLabels(
+          includeDisabled: false,
+          refresh: true,
+        ),
+      ]);
+      if (!mounted) return;
+      final categories = results[0]
+          .cast<RoomCategoryInfo>()
+          .where((category) => category.isEnabled)
+          .toList()
+        ..sort((a, b) {
+          final order = a.sortOrder.compareTo(b.sortOrder);
+          if (order != 0) return order;
+          return _roomCategoryDisplay(a).compareTo(_roomCategoryDisplay(b));
+        });
+      final labels = results[1]
+          .cast<RoomLabelInfo>()
+          .where((label) => label.isEnabled)
+          .toList()
+        ..sort((a, b) {
+          final order = a.sortOrder.compareTo(b.sortOrder);
+          if (order != 0) return order;
+          return _roomLabelDisplay(a).compareTo(_roomLabelDisplay(b));
+        });
+      var selectedCategoryId = room.category?.id ?? '';
+      if (selectedCategoryId.isNotEmpty &&
+          categories.every((category) => category.id != selectedCategoryId)) {
+        selectedCategoryId = '';
+      }
+      final selectedLabelIds = room.labels.map((label) => label.id).toSet();
+
+      List<RoomLabelInfo> availableLabels() {
+        if (selectedCategoryId.isEmpty) return labels;
+        return labels
+            .where((label) => label.categoryId == selectedCategoryId)
+            .toList(growable: false);
+      }
+
+      void pruneSelectedLabels() {
+        final availableIds = availableLabels().map((label) => label.id).toSet();
+        selectedLabelIds.removeWhere((id) => !availableIds.contains(id));
+      }
+
+      pruneSelectedLabels();
+      final confirmed = await ChatUtils.showStyledDialog<bool>(
+        context: context,
+        title: '分类标签',
+        icon: const Icon(Icons.category_outlined, color: Color(0xFF5D5FEF)),
+        content: StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final theme = Theme.of(dialogContext);
+            final visibleLabels = availableLabels();
+            return SizedBox(
+              width: 560,
+              child: AppSingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppSelect<String?>(
+                      value: selectedCategoryId.isEmpty
+                          ? null
+                          : selectedCategoryId,
+                      label: '房间分类',
+                      hintText: '不设置分类',
+                      prefixIcon: Icons.category_outlined,
+                      clearable: true,
+                      options: {
+                        '不设置分类': null,
+                        for (final category in categories)
+                          _roomCategoryDisplay(category): category.id,
+                      },
+                      onChanged: (value) => setDialogState(() {
+                        selectedCategoryId = value ?? '';
+                        pruneSelectedLabels();
+                      }),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '房间标签',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (visibleLabels.isEmpty)
+                      Text(
+                        selectedCategoryId.isEmpty ? '暂无可用标签' : '当前分类下暂无标签',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: visibleLabels.map((label) {
+                          final selected = selectedLabelIds.contains(label.id);
+                          final color = parseRoomLabelColor(
+                            label.color,
+                            theme.colorScheme.primary,
+                          );
+                          return AppChip(
+                            selected: selected,
+                            onSelected: (value) => setDialogState(() {
+                              if (value) {
+                                selectedLabelIds.add(label.id);
+                              } else {
+                                selectedLabelIds.remove(label.id);
+                              }
+                            }),
+                            style: selected
+                                ? AppChipStyle.filled
+                                : AppChipStyle.outlined,
+                            label: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(_roomLabelDisplay(label)),
+                              ],
+                            ),
+                          );
+                        }).toList(growable: false),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        actions: [
+          ChatUtils.createCancelButton(context),
+          const SizedBox(width: 8),
+          ChatUtils.createConfirmButton(
+            context,
+            () => Navigator.pop(context, true),
+            text: '保存',
+          ),
+        ],
+      );
+      if (confirmed != true) return;
+      final labelIds = availableLabels()
+          .where((label) => selectedLabelIds.contains(label.id))
+          .map((label) => label.id)
+          .toList(growable: false);
+      await SyncTvService.adminUpdateRoomTaxonomy(
+        room.roomId,
+        categoryId: selectedCategoryId.isEmpty ? null : selectedCategoryId,
+        clearCategory: selectedCategoryId.isEmpty,
+        labelIds: labelIds,
+      );
+      if (!mounted) return;
+      MessageUtils.showSuccess(context, '分类标签已保存');
+      _loadRooms(silent: true);
+    } catch (e) {
+      if (!mounted) return;
+      MessageUtils.showError(context, '保存分类标签失败: $e');
+    }
+  }
+
+  Future<void> _showRoomChatHistory(SyncTvRoom room) async {
     await showAppDialog<void>(
       context: context,
       builder: (_) => _RoomChatHistoryDialog(room: room),
     );
   }
 
-  Future<void> _showRoomMembers(WRoom room) async {
+  Future<void> _showRoomMembers(SyncTvRoom room) async {
     final searchController = TextEditingController();
     var page = 1;
     var pageSize = 20;
@@ -1514,7 +1969,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     var sortDirection = admin_enum.SortDirection.SORT_DIRECTION_DESC;
 
     try {
-      final data = await WatchTogetherService.adminListRoomMembersPage(
+      final data = await SyncTvService.adminListRoomMembersPage(
         room.roomId,
         page: page,
         pageSize: pageSize,
@@ -1539,8 +1994,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               Future<void> loadMembers() async {
                 setDialogState(() => loading = true);
                 try {
-                  final next =
-                      await WatchTogetherService.adminListRoomMembersPage(
+                  final next = await SyncTvService.adminListRoomMembersPage(
                     room.roomId,
                     page: page,
                     pageSize: pageSize,
@@ -1736,7 +2190,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                                                     .RoomMemberRole
                                                     .ROOM_MEMBER_ROLE_ADMIN
                                                     .value;
-                                            await WatchTogetherService
+                                            await SyncTvService
                                                 .adminSetRoomMemberRole(
                                               room.roomId,
                                               member.userId,
@@ -1764,7 +2218,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                                             final cooldown =
                                                 await _askKickCooldownSeconds();
                                             if (cooldown == null) return;
-                                            await WatchTogetherService
+                                            await SyncTvService
                                                 .adminKickRoomMember(
                                               room.roomId,
                                               member.userId,
@@ -1809,7 +2263,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     }
   }
 
-  Future<void> _addRoomMember(WRoom room) async {
+  Future<void> _addRoomMember(SyncTvRoom room) async {
     final controller = TextEditingController();
     int role = common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value;
     var notify = true;
@@ -1866,7 +2320,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     );
     if (confirmed != true) return;
     try {
-      await WatchTogetherService.adminAddRoomMember(
+      await SyncTvService.adminAddRoomMember(
         room.roomId,
         controller.text.trim(),
         role: role,
@@ -1916,7 +2370,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   }
 
   Future<void> _editRoomMemberPermissionOverrides(
-    WRoom room,
+    SyncTvRoom room,
     AdminRoomMember member,
   ) async {
     final result = await _showPermissionOverrideDialog(member);
@@ -1925,7 +2379,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       return;
     }
     try {
-      await WatchTogetherService.adminUpdateRoomMemberPermissionOverrides(
+      await SyncTvService.adminUpdateRoomMemberPermissionOverrides(
         room.roomId,
         member.userId,
         role: member.role,
@@ -2072,9 +2526,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     );
   }
 
-  Future<void> _editRoomSettings(WRoom room) async {
+  Future<void> _editRoomSettings(SyncTvRoom room) async {
     try {
-      final settings = await WatchTogetherService.adminGetRoomSettings(
+      final settings = await SyncTvService.adminGetRoomSettings(
         room.roomId,
       );
       if (!mounted) return;
@@ -2141,7 +2595,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         actions: [
           AppActionButton(
             onPressed: () async {
-              await WatchTogetherService.adminResetRoomSettings(room.roomId);
+              await SyncTvService.adminResetRoomSettings(room.roomId);
               if (!mounted) return;
               Navigator.pop(context, false);
               MessageUtils.showSuccess(context, '房间设置已重置');
@@ -2167,7 +2621,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       settings.danmakuEnabled = danmakuEnabled;
       settings.maxMembers =
           int.tryParse(maxMembers.text.trim()) ?? settings.maxMembers;
-      await WatchTogetherService.adminUpdateRoomSettings(
+      await SyncTvService.adminUpdateRoomSettings(
         room.roomId,
         settings,
       );
@@ -2202,11 +2656,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     }
   }
 
-  String _roomStatusLabel(WRoom room) {
+  String _roomStatusLabel(SyncTvRoom room) {
     return room.isBanned ? '已封禁' : _getStatusText(room.status);
   }
 
-  Color _roomStatusColorForRoom(WRoom room) {
+  Color _roomStatusColorForRoom(SyncTvRoom room) {
     return room.isBanned ? Colors.red : _getStatusColor(room.status);
   }
 
@@ -2234,6 +2688,47 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                   },
                   hint: '搜索房间',
                   icon: Icons.search,
+                ),
+              ),
+              _AdminToolbarItem(
+                width: 112,
+                child: AppSelect<String?>(
+                  value: _categoryFilter.isEmpty ? null : _categoryFilter,
+                  hintText: '全部分类',
+                  prefixIcon: Icons.category_outlined,
+                  clearable: true,
+                  enabled: !_isLoadingTaxonomy && _categories.isNotEmpty,
+                  options: {
+                    '全部分类': null,
+                    for (final category in _categories)
+                      _roomCategoryDisplay(category): category.id,
+                  },
+                  onChanged: (value) {
+                    setState(() {
+                      _categoryFilter = value ?? '';
+                      _labelFilters.removeWhere(
+                        (id) => !_availableFilterLabels.any(
+                          (label) => label.id == id,
+                        ),
+                      );
+                      _page = 1;
+                    });
+                    _loadRooms();
+                  },
+                ),
+              ),
+              _AdminToolbarItem(
+                width: 112,
+                child: AppActionButton(
+                  onPressed:
+                      _isLoadingTaxonomy ? null : _showRoomLabelFilterDialog,
+                  icon: Icons.sell_outlined,
+                  label: _labelFilters.isEmpty
+                      ? '标签'
+                      : '标签 ${_labelFilters.length}',
+                  style: _labelFilters.isEmpty
+                      ? AppActionButtonStyle.outlined
+                      : AppActionButtonStyle.tonal,
                 ),
               ),
               _AdminToolbarItem(
@@ -2338,6 +2833,23 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                   },
                 ),
               ),
+              if (_categoryFilter.isNotEmpty || _labelFilters.isNotEmpty)
+                _AdminToolbarItem(
+                  width: 44,
+                  child: AppIconButton(
+                    tooltip: '清除分类标签筛选',
+                    icon: Icons.filter_alt_off_rounded,
+                    onPressed: () {
+                      setState(() {
+                        _categoryFilter = '';
+                        _labelFilters.clear();
+                        _page = 1;
+                      });
+                      _loadRooms();
+                    },
+                    style: AppIconButtonStyle.tonal,
+                  ),
+                ),
               _AdminToolbarItem(
                 width: 44,
                 child: AppIconButton(
@@ -2555,6 +3067,944 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   }
 }
 
+class AdminRoomTaxonomyTab extends StatefulWidget {
+  const AdminRoomTaxonomyTab({super.key});
+
+  @override
+  State<AdminRoomTaxonomyTab> createState() => _AdminRoomTaxonomyTabState();
+}
+
+class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
+  bool _isLoading = true;
+  List<RoomCategoryInfo> _categories = const [];
+  List<RoomLabelInfo> _labels = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) setState(() => _isLoading = true);
+    try {
+      final results = await Future.wait([
+        SyncTvService.adminListRoomCategories(
+          includeDisabled: true,
+          refresh: true,
+        ),
+        SyncTvService.adminListRoomLabels(
+          includeDisabled: true,
+          refresh: true,
+        ),
+      ]);
+      if (!mounted) return;
+      final categories = results[0].cast<RoomCategoryInfo>().toList()
+        ..sort(_compareCategories);
+      final labels = results[1].cast<RoomLabelInfo>().toList()
+        ..sort(_compareLabels);
+      setState(() {
+        _categories = categories;
+        _labels = labels;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      MessageUtils.showError(context, '加载分类标签失败: $e');
+    }
+  }
+
+  int _compareCategories(RoomCategoryInfo a, RoomCategoryInfo b) {
+    final order = a.sortOrder.compareTo(b.sortOrder);
+    if (order != 0) return order;
+    return _categoryDisplay(a).compareTo(_categoryDisplay(b));
+  }
+
+  int _compareLabels(RoomLabelInfo a, RoomLabelInfo b) {
+    final category = _categoryDisplayById(a.categoryId)
+        .compareTo(_categoryDisplayById(b.categoryId));
+    if (category != 0) return category;
+    final order = a.sortOrder.compareTo(b.sortOrder);
+    if (order != 0) return order;
+    return _labelDisplay(a).compareTo(_labelDisplay(b));
+  }
+
+  String _categoryDisplay(RoomCategoryInfo category) {
+    final name = category.name.trim();
+    return name.isEmpty ? category.key : name;
+  }
+
+  String _labelDisplay(RoomLabelInfo label) {
+    final name = label.name.trim();
+    return name.isEmpty ? label.key : name;
+  }
+
+  String _categoryDisplayById(String categoryId) {
+    if (categoryId.isEmpty) return '未绑定分类';
+    for (final category in _categories) {
+      if (category.id == categoryId) return _categoryDisplay(category);
+    }
+    return '未知分类';
+  }
+
+  String _normalizeColor(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return '';
+    var hex = trimmed.startsWith('#') ? trimmed.substring(1) : trimmed;
+    hex = hex.replaceAll(RegExp(r'[^0-9a-fA-F]'), '');
+    if (hex.length == 3) {
+      hex = hex.split('').map((part) => '$part$part').join();
+    }
+    if (hex.length != 6) return trimmed;
+    return '#${hex.toUpperCase()}';
+  }
+
+  Future<void> _editCategory([RoomCategoryInfo? category]) async {
+    final keyController = TextEditingController(text: category?.key ?? '');
+    final nameController = TextEditingController(text: category?.name ?? '');
+    final descriptionController =
+        TextEditingController(text: category?.description ?? '');
+    final sortController =
+        TextEditingController(text: '${category?.sortOrder ?? 0}');
+    var enabled = category?.isEnabled ?? true;
+    var disposeScheduled = false;
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: category == null ? '新增分类' : '编辑分类',
+      icon: const Icon(Icons.category_rounded, color: Color(0xFF5D5FEF)),
+      content: StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          if (!disposeScheduled) {
+            disposeScheduled = true;
+            _disposeControllersAfterRouteClose(dialogContext, [
+              keyController,
+              nameController,
+              descriptionController,
+              sortController,
+            ]);
+          }
+          return SizedBox(
+            width: 520,
+            child: AppSingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ChatUtils.createFormField(
+                    context: dialogContext,
+                    label: '标识',
+                    controller: keyController,
+                    hintText: '例如 movie',
+                    prefixIcon: Icons.key_rounded,
+                  ),
+                  const SizedBox(height: 12),
+                  ChatUtils.createFormField(
+                    context: dialogContext,
+                    label: '名称',
+                    controller: nameController,
+                    hintText: '例如 电影',
+                    prefixIcon: Icons.drive_file_rename_outline_rounded,
+                  ),
+                  const SizedBox(height: 12),
+                  ChatUtils.createFormField(
+                    context: dialogContext,
+                    label: '描述',
+                    controller: descriptionController,
+                    hintText: '可选',
+                    prefixIcon: Icons.notes_rounded,
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 12),
+                  ChatUtils.createFormField(
+                    context: dialogContext,
+                    label: '排序',
+                    controller: sortController,
+                    hintText: '数字越小越靠前',
+                    prefixIcon: Icons.sort_rounded,
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 8),
+                  AppSwitchTile(
+                    value: enabled,
+                    onChanged: (value) => setDialogState(() => enabled = value),
+                    title: const Text('启用分类'),
+                    prefix: const Icon(Icons.toggle_on_outlined),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '保存',
+        ),
+      ],
+    );
+    if (confirmed != true) return;
+
+    final key = keyController.text.trim();
+    final name = nameController.text.trim();
+    final sortOrder = int.tryParse(sortController.text.trim());
+    if (key.isEmpty || name.isEmpty) {
+      if (!mounted) return;
+      MessageUtils.showWarning(context, '请填写分类标识和名称');
+      return;
+    }
+    if (sortOrder == null) {
+      if (!mounted) return;
+      MessageUtils.showWarning(context, '排序需要填写整数');
+      return;
+    }
+
+    try {
+      await SyncTvService.adminUpsertRoomCategory(
+        key: key,
+        name: name,
+        description: descriptionController.text.trim(),
+        sortOrder: sortOrder,
+        isEnabled: enabled,
+      );
+      if (!mounted) return;
+      MessageUtils.showSuccess(context, '分类已保存');
+      _load(silent: true);
+    } catch (e) {
+      if (!mounted) return;
+      MessageUtils.showError(context, '保存分类失败: $e');
+    }
+  }
+
+  Future<void> _deleteCategory(RoomCategoryInfo category) async {
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: '删除分类',
+      icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
+      content: _destructiveDialogContent(
+        '将永久删除分类 "${_categoryDisplay(category)}"。',
+        const [
+          '已绑定该分类的房间会失去对应分类。',
+          '后台筛选和房间展示会立即使用最新分类数据。',
+        ],
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '删除',
+        ),
+      ],
+    );
+    if (confirmed != true) return;
+    try {
+      await SyncTvService.adminDeleteRoomCategory(category.id);
+      if (!mounted) return;
+      MessageUtils.showSuccess(context, '分类已删除');
+      _load(silent: true);
+    } catch (e) {
+      if (!mounted) return;
+      MessageUtils.showError(context, '删除分类失败: $e');
+    }
+  }
+
+  Future<void> _editLabel([RoomLabelInfo? label]) async {
+    final keyController = TextEditingController(text: label?.key ?? '');
+    final nameController = TextEditingController(text: label?.name ?? '');
+    final descriptionController =
+        TextEditingController(text: label?.description ?? '');
+    final colorController =
+        TextEditingController(text: _normalizeColor(label?.color ?? ''));
+    final sortController =
+        TextEditingController(text: '${label?.sortOrder ?? 0}');
+    var categoryId = label?.categoryId ?? '';
+    var enabled = label?.isEnabled ?? true;
+    var disposeScheduled = false;
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: label == null ? '新增标签' : '编辑标签',
+      icon: const Icon(Icons.sell_rounded, color: Color(0xFF5D5FEF)),
+      content: StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          if (!disposeScheduled) {
+            disposeScheduled = true;
+            _disposeControllersAfterRouteClose(dialogContext, [
+              keyController,
+              nameController,
+              descriptionController,
+              colorController,
+              sortController,
+            ]);
+          }
+          final previewColor = parseRoomLabelColor(
+            colorController.text,
+            Theme.of(dialogContext).colorScheme.primary,
+          );
+          return SizedBox(
+            width: 520,
+            child: AppSingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ChatUtils.createFormField(
+                    context: dialogContext,
+                    label: '标识',
+                    controller: keyController,
+                    hintText: '例如 hot',
+                    prefixIcon: Icons.key_rounded,
+                  ),
+                  const SizedBox(height: 12),
+                  ChatUtils.createFormField(
+                    context: dialogContext,
+                    label: '名称',
+                    controller: nameController,
+                    hintText: '例如 热门',
+                    prefixIcon: Icons.drive_file_rename_outline_rounded,
+                  ),
+                  const SizedBox(height: 12),
+                  AppSelect<String?>(
+                    value: categoryId.isEmpty ? null : categoryId,
+                    label: '所属分类',
+                    hintText: '不绑定分类',
+                    prefixIcon: Icons.category_outlined,
+                    clearable: true,
+                    options: {
+                      '不绑定分类': null,
+                      for (final category in _categories)
+                        _categoryDisplay(category): category.id,
+                    },
+                    onChanged: (value) =>
+                        setDialogState(() => categoryId = value ?? ''),
+                  ),
+                  const SizedBox(height: 12),
+                  ChatUtils.createFormField(
+                    context: dialogContext,
+                    label: '颜色',
+                    controller: colorController,
+                    hintText: '#5D5FEF',
+                    prefixIcon: Icons.palette_outlined,
+                    suffix: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: previewColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ChatUtils.createFormField(
+                    context: dialogContext,
+                    label: '描述',
+                    controller: descriptionController,
+                    hintText: '可选',
+                    prefixIcon: Icons.notes_rounded,
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 12),
+                  ChatUtils.createFormField(
+                    context: dialogContext,
+                    label: '排序',
+                    controller: sortController,
+                    hintText: '数字越小越靠前',
+                    prefixIcon: Icons.sort_rounded,
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 8),
+                  AppSwitchTile(
+                    value: enabled,
+                    onChanged: (value) => setDialogState(() => enabled = value),
+                    title: const Text('启用标签'),
+                    prefix: const Icon(Icons.toggle_on_outlined),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '保存',
+        ),
+      ],
+    );
+    if (confirmed != true) return;
+
+    final key = keyController.text.trim();
+    final name = nameController.text.trim();
+    final sortOrder = int.tryParse(sortController.text.trim());
+    final color = _normalizeColor(colorController.text);
+    if (key.isEmpty || name.isEmpty) {
+      if (!mounted) return;
+      MessageUtils.showWarning(context, '请填写标签标识和名称');
+      return;
+    }
+    if (sortOrder == null) {
+      if (!mounted) return;
+      MessageUtils.showWarning(context, '排序需要填写整数');
+      return;
+    }
+    if (color.isNotEmpty &&
+        !RegExp(r'^#[0-9A-F]{6}$').hasMatch(color.toUpperCase())) {
+      if (!mounted) return;
+      MessageUtils.showWarning(context, '颜色格式需要类似 #5D5FEF');
+      return;
+    }
+
+    try {
+      await SyncTvService.adminUpsertRoomLabel(
+        key: key,
+        name: name,
+        description: descriptionController.text.trim(),
+        color: color,
+        categoryId: categoryId,
+        sortOrder: sortOrder,
+        isEnabled: enabled,
+      );
+      if (!mounted) return;
+      MessageUtils.showSuccess(context, '标签已保存');
+      _load(silent: true);
+    } catch (e) {
+      if (!mounted) return;
+      MessageUtils.showError(context, '保存标签失败: $e');
+    }
+  }
+
+  Future<void> _deleteLabel(RoomLabelInfo label) async {
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: '删除标签',
+      icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
+      content: _destructiveDialogContent(
+        '将永久删除标签 "${_labelDisplay(label)}"。',
+        const [
+          '已绑定该标签的房间会失去对应标签。',
+          '房间详情、筛选和列表展示会立即使用最新标签数据。',
+        ],
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '删除',
+        ),
+      ],
+    );
+    if (confirmed != true) return;
+    try {
+      await SyncTvService.adminDeleteRoomLabel(label.id);
+      if (!mounted) return;
+      MessageUtils.showSuccess(context, '标签已删除');
+      _load(silent: true);
+    } catch (e) {
+      if (!mounted) return;
+      MessageUtils.showError(context, '删除标签失败: $e');
+    }
+  }
+
+  Widget _destructiveDialogContent(String title, List<String> impacts) {
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...impacts.map(
+          (impact) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 16,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(impact)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AppSingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _AdminToolbarWrap(
+            items: [
+              _AdminToolbarItem(
+                width: 150,
+                child: AppActionButton(
+                  onPressed: () => _editCategory(),
+                  icon: Icons.add_rounded,
+                  label: '新增分类',
+                ),
+              ),
+              _AdminToolbarItem(
+                width: 150,
+                child: AppActionButton(
+                  onPressed: () => _editLabel(),
+                  icon: Icons.add_rounded,
+                  label: '新增标签',
+                  style: AppActionButtonStyle.tonal,
+                ),
+              ),
+              _AdminToolbarItem(
+                width: 112,
+                child: AppActionButton(
+                  onPressed: () => _load(),
+                  icon: Icons.refresh_rounded,
+                  label: '刷新',
+                  style: AppActionButtonStyle.outlined,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_isLoading)
+            const AppLoadingIndicator(padding: EdgeInsets.all(32))
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth >= 900;
+                final panels = [
+                  _buildCategoryPanel(theme),
+                  _buildLabelPanel(theme),
+                ];
+                if (isWide) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: panels[0]),
+                      const SizedBox(width: 16),
+                      Expanded(child: panels[1]),
+                    ],
+                  );
+                }
+                return Column(
+                  children: [
+                    panels[0],
+                    const SizedBox(height: 16),
+                    panels[1],
+                  ],
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryPanel(ThemeData theme) {
+    return AppPanelSurface(
+      padding: const EdgeInsets.all(16),
+      border: Border.all(color: theme.colorScheme.outlineVariant),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _TaxonomyPanelHeader(
+            icon: Icons.category_rounded,
+            title: '房间分类',
+            count: _categories.length,
+          ),
+          const SizedBox(height: 12),
+          if (_categories.isEmpty)
+            const AppEmptyState(
+              icon: Icons.category_outlined,
+              title: '暂无分类',
+              subtitle: '新增分类后可在房间管理中分配',
+            )
+          else
+            ..._categories.map(
+              (category) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _CategoryCard(
+                  category: category,
+                  onEdit: () => _editCategory(category),
+                  onDelete: () => _deleteCategory(category),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabelPanel(ThemeData theme) {
+    return AppPanelSurface(
+      padding: const EdgeInsets.all(16),
+      border: Border.all(color: theme.colorScheme.outlineVariant),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _TaxonomyPanelHeader(
+            icon: Icons.sell_rounded,
+            title: '房间标签',
+            count: _labels.length,
+          ),
+          const SizedBox(height: 12),
+          if (_labels.isEmpty)
+            const AppEmptyState(
+              icon: Icons.sell_outlined,
+              title: '暂无标签',
+              subtitle: '新增标签后可在房间管理中分配',
+            )
+          else
+            ..._labels.map(
+              (label) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _LabelCard(
+                  label: label,
+                  categoryName: _categoryDisplayById(label.categoryId),
+                  onEdit: () => _editLabel(label),
+                  onDelete: () => _deleteLabel(label),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TaxonomyPanelHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final int count;
+
+  const _TaxonomyPanelHeader({
+    required this.icon,
+    required this.title,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(icon, color: theme.colorScheme.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        AppChip(
+          label: Text('$count'),
+          style: AppChipStyle.outlined,
+        ),
+      ],
+    );
+  }
+}
+
+class _CategoryCard extends StatelessWidget {
+  final RoomCategoryInfo category;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _CategoryCard({
+    required this.category,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  String get _displayName {
+    final name = category.name.trim();
+    return name.isEmpty ? category.key : name;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppPanelSurface(
+      padding: const EdgeInsets.all(12),
+      color: theme.colorScheme.surfaceContainerLowest,
+      border: Border.all(color: theme.colorScheme.outlineVariant),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            category.isEnabled
+                ? Icons.category_rounded
+                : Icons.category_outlined,
+            color: category.isEnabled
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    AppChip(
+                      label: Text(category.isEnabled ? '启用' : '停用'),
+                      style: category.isEnabled
+                          ? AppChipStyle.filled
+                          : AppChipStyle.outlined,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _TaxonomyMetaChip(
+                      icon: Icons.key_rounded,
+                      label: category.key,
+                    ),
+                    _TaxonomyMetaChip(
+                      icon: Icons.sort_rounded,
+                      label: '${category.sortOrder}',
+                    ),
+                  ],
+                ),
+                if (category.description.trim().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    category.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppIconButton(
+                onPressed: onEdit,
+                icon: Icons.edit_outlined,
+                tooltip: '编辑分类',
+                style: AppIconButtonStyle.tonal,
+                size: AppIconButtonSize.sm,
+              ),
+              const SizedBox(height: 6),
+              AppIconButton(
+                onPressed: onDelete,
+                icon: Icons.delete_outline_rounded,
+                tooltip: '删除分类',
+                style: AppIconButtonStyle.destructive,
+                size: AppIconButtonSize.sm,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LabelCard extends StatelessWidget {
+  final RoomLabelInfo label;
+  final String categoryName;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _LabelCard({
+    required this.label,
+    required this.categoryName,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  String get _displayName {
+    final name = label.name.trim();
+    return name.isEmpty ? label.key : name;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = parseRoomLabelColor(label.color, theme.colorScheme.primary);
+    return AppPanelSurface(
+      padding: const EdgeInsets.all(12),
+      color: theme.colorScheme.surfaceContainerLowest,
+      border: Border.all(color: theme.colorScheme.outlineVariant),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            margin: const EdgeInsets.only(top: 2),
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    AppChip(
+                      label: Text(label.isEnabled ? '启用' : '停用'),
+                      style: label.isEnabled
+                          ? AppChipStyle.filled
+                          : AppChipStyle.outlined,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _TaxonomyMetaChip(
+                      icon: Icons.key_rounded,
+                      label: label.key,
+                    ),
+                    _TaxonomyMetaChip(
+                      icon: Icons.category_outlined,
+                      label: categoryName,
+                    ),
+                    _TaxonomyMetaChip(
+                      icon: Icons.palette_outlined,
+                      label: label.color.trim().isEmpty
+                          ? '默认颜色'
+                          : label.color.trim(),
+                    ),
+                    _TaxonomyMetaChip(
+                      icon: Icons.sort_rounded,
+                      label: '${label.sortOrder}',
+                    ),
+                  ],
+                ),
+                if (label.description.trim().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    label.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppIconButton(
+                onPressed: onEdit,
+                icon: Icons.edit_outlined,
+                tooltip: '编辑标签',
+                style: AppIconButtonStyle.tonal,
+                size: AppIconButtonSize.sm,
+              ),
+              const SizedBox(height: 6),
+              AppIconButton(
+                onPressed: onDelete,
+                icon: Icons.delete_outline_rounded,
+                tooltip: '删除标签',
+                style: AppIconButtonStyle.destructive,
+                size: AppIconButtonSize.sm,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TaxonomyMetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _TaxonomyMetaChip({
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppChip(
+      style: AppChipStyle.outlined,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class UserManagementTab extends StatefulWidget {
   const UserManagementTab({super.key});
 
@@ -2563,7 +4013,7 @@ class UserManagementTab extends StatefulWidget {
 }
 
 class _UserManagementTabState extends State<UserManagementTab> {
-  List<WUser> _users = [];
+  List<SyncTvUser> _users = [];
   bool _isLoading = true;
   int _page = 1;
   int _pageSize = 20;
@@ -2598,7 +4048,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
   Future<void> _loadUsers({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final data = await WatchTogetherService.adminListUsersPage(
+      final data = await SyncTvService.adminListUsersPage(
         page: _page,
         pageSize: _pageSize,
         search: _searchQuery,
@@ -2701,7 +4151,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
             return;
           }
           try {
-            await WatchTogetherService.adminAddUser(
+            await SyncTvService.adminAddUser(
               usernameController.text,
               passwordController.text,
               role,
@@ -2721,7 +4171,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     );
   }
 
-  Future<void> _deleteUser(WUser user) async {
+  Future<void> _deleteUser(SyncTvUser user) async {
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '删除用户',
@@ -2745,7 +4195,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
 
     if (confirm == true) {
       try {
-        await WatchTogetherService.adminDeleteUser(user.id);
+        await SyncTvService.adminDeleteUser(user.id);
         if (!mounted) return;
         MessageUtils.showSuccess(context, '用户已删除');
         _loadUsers(silent: true);
@@ -2756,7 +4206,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     }
   }
 
-  Future<void> _toggleAdmin(WUser user) async {
+  Future<void> _toggleAdmin(SyncTvUser user) async {
     final isAdmin = user.role == common_enum.UserRole.USER_ROLE_ADMIN.value ||
         user.role == common_enum.UserRole.USER_ROLE_ROOT.value;
     if (user.role == common_enum.UserRole.USER_ROLE_ROOT.value) {
@@ -2781,7 +4231,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
 
     if (confirm == true) {
       try {
-        await WatchTogetherService.adminSetAdmin(user.id, !isAdmin);
+        await SyncTvService.adminSetAdmin(user.id, !isAdmin);
         if (!mounted) return;
         MessageUtils.showSuccess(context, '操作成功');
         _loadUsers(silent: true);
@@ -2792,7 +4242,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     }
   }
 
-  Future<void> _banUser(WUser user, bool ban) async {
+  Future<void> _banUser(SyncTvUser user, bool ban) async {
     final action = ban ? '封禁' : '解封';
     final reasonController = TextEditingController();
     final confirm = await ChatUtils.showStyledDialog<bool>(
@@ -2827,7 +4277,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
 
     if (confirm == true) {
       try {
-        await WatchTogetherService.adminBanUser(
+        await SyncTvService.adminBanUser(
           user.id,
           ban,
           reason: reasonController.text.trim(),
@@ -2886,7 +4336,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     );
     if (confirmed != true) return;
     try {
-      final result = await WatchTogetherService.adminBatchBanUsers(
+      final result = await SyncTvService.adminBatchBanUsers(
         _selectedUserIds.toList(),
         reason: reasonController.text.trim(),
       );
@@ -2926,7 +4376,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     );
     if (confirmed != true) return;
     try {
-      final result = await WatchTogetherService.adminBatchDeleteUsers(
+      final result = await SyncTvService.adminBatchDeleteUsers(
         _selectedUserIds.toList(),
       );
       if (!mounted) return;
@@ -2994,14 +4444,14 @@ class _UserManagementTabState extends State<UserManagementTab> {
     );
   }
 
-  Future<void> _showUserDetails(WUser user) async {
+  Future<void> _showUserDetails(SyncTvUser user) async {
     try {
       final results = await Future.wait([
-        WatchTogetherService.adminGetUser(user.id),
-        WatchTogetherService.adminGetUserPreferences(user.id),
+        SyncTvService.adminGetUser(user.id),
+        SyncTvService.adminGetUserPreferences(user.id),
       ]);
       if (!mounted) return;
-      final detail = results[0] as WUser;
+      final detail = results[0] as SyncTvUser;
       final preferences = results[1] as AccountPreferences;
       await ChatUtils.showStyledDialog(
         context: context,
@@ -3044,7 +4494,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     }
   }
 
-  Widget _buildUserReportsPanel(WUser user) {
+  Widget _buildUserReportsPanel(SyncTvUser user) {
     return AppDefaultTabController(
       length: 2,
       child: Column(
@@ -3079,7 +4529,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     );
   }
 
-  Widget _buildUserProfileDetails(WUser detail) {
+  Widget _buildUserProfileDetails(SyncTvUser detail) {
     return AppListView(
       padding: const EdgeInsets.only(top: 16),
       children: [
@@ -3101,7 +4551,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
   }
 
   Widget _buildUserRoomsPanel(String userId) {
-    var rooms = <WRoom>[];
+    var rooms = <SyncTvRoom>[];
     var total = 0;
     var page = 1;
     var pageSize = 20;
@@ -3119,7 +4569,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
         Future<void> loadRooms() async {
           setDialogState(() => loading = true);
           try {
-            final data = await WatchTogetherService.adminListUserRoomsPage(
+            final data = await SyncTvService.adminListUserRoomsPage(
               userId,
               page: page,
               pageSize: pageSize,
@@ -3332,8 +4782,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
           NotificationPreferences? nextNotifications,
         }) async {
           try {
-            final updated =
-                await WatchTogetherService.adminUpdateUserPreferences(
+            final updated = await SyncTvService.adminUpdateUserPreferences(
               userId,
               twoFactorEnabled: twoFactorEnabled,
               notifications: nextNotifications,
@@ -3417,7 +4866,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     );
   }
 
-  Future<void> _renameUser(WUser user) async {
+  Future<void> _renameUser(SyncTvUser user) async {
     final controller = TextEditingController(text: user.username);
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
@@ -3443,7 +4892,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     );
     if (confirmed != true) return;
     try {
-      await WatchTogetherService.adminUpdateUsername(
+      await SyncTvService.adminUpdateUsername(
         user.id,
         controller.text.trim(),
       );
@@ -3456,7 +4905,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     }
   }
 
-  Future<void> _resetPassword(WUser user) async {
+  Future<void> _resetPassword(SyncTvUser user) async {
     final password = TextEditingController();
     final reason = TextEditingController();
     final confirmed = await ChatUtils.showStyledDialog<bool>(
@@ -3496,7 +4945,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     );
     if (confirmed != true) return;
     try {
-      await WatchTogetherService.adminUpdatePassword(
+      await SyncTvService.adminUpdatePassword(
         user.id,
         password.text,
         reason: reason.text.trim(),
@@ -3962,7 +5411,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
   Future<void> _loadReviews({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final data = await WatchTogetherService.adminListReviewsPage(
+      final data = await SyncTvService.adminListReviewsPage(
         kind: _kind,
         page: _page,
         pageSize: _pageSize,
@@ -3987,7 +5436,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
 
   Future<void> _approve(AdminReviewItem review) async {
     try {
-      await WatchTogetherService.adminApproveReview(_kind, review.id);
+      await SyncTvService.adminApproveReview(_kind, review.id);
       if (!mounted) return;
       MessageUtils.showSuccess(context, '审核已通过');
       _loadReviews(silent: true);
@@ -4022,7 +5471,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
     );
     if (confirmed != true) return;
     try {
-      await WatchTogetherService.adminRejectReview(
+      await SyncTvService.adminRejectReview(
         _kind,
         review.id,
         reason: controller.text.trim(),
@@ -4379,10 +5828,12 @@ class _ProviderTypeSelector extends StatelessWidget {
 
 IconData _providerTypeIcon(String provider) {
   return switch (provider) {
+    'direct_url' => Icons.link_rounded,
     'alist' => Icons.folder_copy_outlined,
     'emby' => Icons.movie_filter_outlined,
     'bilibili' => Icons.live_tv_outlined,
     'rtmp' => Icons.podcasts_outlined,
+    'live_proxy' => Icons.route_rounded,
     _ => Icons.extension_outlined,
   };
 }
@@ -4430,7 +5881,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
     if (!silent) setState(() => _isLoading = true);
     try {
       final results = await Future.wait([
-        WatchTogetherService.adminListProviderInstancesPage(
+        SyncTvService.adminListProviderInstancesPage(
           page: _page,
           pageSize: _pageSize,
           providerType: _providerType,
@@ -4442,7 +5893,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
         ),
         _providerType.isEmpty
             ? Future<List<String>>.value(const [])
-            : WatchTogetherService.listProviderBackends(_providerType),
+            : SyncTvService.listProviderBackends(_providerType),
       ]);
       if (!mounted) return;
       final instancesPage = results[0] as AdminProviderInstancesPage;
@@ -4473,7 +5924,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
 
     try {
       if (editing) {
-        await WatchTogetherService.adminUpdateProviderInstance(
+        await SyncTvService.adminUpdateProviderInstance(
           name: instance.name,
           endpoint: result.endpoint,
           comment: result.clearComment ? null : result.comment,
@@ -4492,7 +5943,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
           clearCustomCa: result.clearCustomCa,
         );
       } else {
-        await WatchTogetherService.adminAddProviderInstance(
+        await SyncTvService.adminAddProviderInstance(
           name: result.name,
           endpoint: result.endpoint,
           providers: result.providers,
@@ -4531,7 +5982,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
     );
     if (confirmed != true) return;
     try {
-      await WatchTogetherService.adminDeleteProviderInstance(instance.name);
+      await SyncTvService.adminDeleteProviderInstance(instance.name);
       if (!mounted) return;
       MessageUtils.showSuccess(context, '实例已删除');
       _loadInstances(silent: true);
@@ -4543,7 +5994,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
 
   Future<void> _toggleEnabled(AdminProviderInstance instance) async {
     try {
-      await WatchTogetherService.adminSetProviderInstanceEnabled(
+      await SyncTvService.adminSetProviderInstanceEnabled(
         instance.name,
         !instance.enabled,
       );
@@ -4557,7 +6008,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
 
   Future<void> _reconnect(AdminProviderInstance instance) async {
     try {
-      await WatchTogetherService.adminReconnectProviderInstance(instance.name);
+      await SyncTvService.adminReconnectProviderInstance(instance.name);
       if (!mounted) return;
       MessageUtils.showSuccess(context, '已发起重连');
       _loadInstances(silent: true);
@@ -4659,10 +6110,12 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                         value: _providerType,
                         options: const {
                           '全部类型': '',
+                          'Direct URL': 'direct_url',
                           'AList': 'alist',
                           'Emby': 'emby',
                           'Bilibili': 'bilibili',
                           'RTMP': 'rtmp',
+                          'Live Proxy': 'live_proxy',
                         },
                         onChanged: (value) {
                           if (value == null) return;
@@ -5716,7 +7169,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
   Future<void> _loadStreams({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final page = await WatchTogetherService.adminListActiveStreamsPage(
+      final page = await SyncTvService.adminListActiveStreamsPage(
         page: _page,
         pageSize: _pageSize,
         search: _search,
@@ -5749,7 +7202,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
 
   Future<void> _kick(AdminActiveStream stream) async {
     try {
-      await WatchTogetherService.adminKickStream(stream);
+      await SyncTvService.adminKickStream(stream);
       if (!mounted) return;
       MessageUtils.showSuccess(context, '流已踢出');
       _loadStreams(silent: true);
@@ -5952,7 +7405,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
   Future<void> _loadRecords({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final data = await WatchTogetherService.adminListBanRecordsPage(
+      final data = await SyncTvService.adminListBanRecordsPage(
         page: _page,
         pageSize: _pageSize,
         targetType: _targetType,
@@ -6014,9 +7467,9 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
 
     try {
       if (isUserBan) {
-        await WatchTogetherService.adminBanUser(targetId, false);
+        await SyncTvService.adminBanUser(targetId, false);
       } else {
-        await WatchTogetherService.adminBanRoom(targetId, false);
+        await SyncTvService.adminBanRoom(targetId, false);
       }
       if (!mounted) return;
       MessageUtils.showSuccess(context, '已解除封禁');
@@ -6309,7 +7762,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = _isRoomScoped
-          ? await WatchTogetherService.listRoomContentReportsPage(
+          ? await SyncTvService.listRoomContentReportsPage(
               widget.roomScopedRoomId,
               page: _page,
               pageSize: _pageSize,
@@ -6319,7 +7772,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
               targetChatMessageId: _targetChatMessageId,
               search: _search,
             )
-          : await WatchTogetherService.adminListContentReportsPage(
+          : await SyncTvService.adminListContentReportsPage(
               page: _page,
               pageSize: _pageSize,
               status: _status,
@@ -6385,11 +7838,11 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
     AdminContentReport detail = report;
     try {
       detail = _isRoomScoped
-          ? await WatchTogetherService.getRoomContentReport(
+          ? await SyncTvService.getRoomContentReport(
               widget.roomScopedRoomId,
               report.id,
             )
-          : await WatchTogetherService.adminGetContentReport(report.id);
+          : await SyncTvService.adminGetContentReport(report.id);
     } catch (_) {
       detail = report;
     }
@@ -6400,7 +7853,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
       icon: const Icon(Icons.report_gmailerrorred_rounded, color: Colors.red),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
-        child: SingleChildScrollView(
+        child: AppSingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -6507,13 +7960,13 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
           () async {
             try {
               final result = _isRoomScoped
-                  ? await WatchTogetherService.updateRoomContentReportStatus(
+                  ? await SyncTvService.updateRoomContentReportStatus(
                       widget.roomScopedRoomId,
                       report.id,
                       nextStatus,
                       resolutionNote: noteController.text,
                     )
-                  : await WatchTogetherService.adminUpdateContentReportStatus(
+                  : await SyncTvService.adminUpdateContentReportStatus(
                       report.id,
                       nextStatus,
                       resolutionNote: noteController.text,
@@ -6833,7 +8286,7 @@ class _ReportDetailRow extends StatelessWidget {
         children: [
           Text(label, style: theme.textTheme.labelMedium),
           const SizedBox(height: 4),
-          SelectableText(value.isEmpty ? '-' : value),
+          AppSelectableText(value.isEmpty ? '-' : value),
         ],
       ),
     );
@@ -6947,8 +8400,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
   }) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final groups =
-          await WatchTogetherService.adminGetAllSettings(refresh: refresh);
+      final groups = await SyncTvService.adminGetAllSettings(refresh: refresh);
       if (!mounted) return;
       setState(() {
         _groups = groups;
@@ -6980,7 +8432,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     if (groupName == null) return;
     if (!silent) setState(() => _isLoadingGroup = true);
     try {
-      final group = await WatchTogetherService.adminGetSettingsGroup(
+      final group = await SyncTvService.adminGetSettingsGroup(
         groupName,
         refresh: refresh,
       );
@@ -7007,7 +8459,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     setState(() => _savingSettings.add(settingId));
 
     try {
-      final updated = await WatchTogetherService.adminUpdateSettingInGroup(
+      final updated = await SyncTvService.adminUpdateSettingInGroup(
         group.name,
         key,
         nextValue,
@@ -7159,7 +8611,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     );
     if (email == null || email.isEmpty) return;
     try {
-      final message = await WatchTogetherService.adminSendTestEmail(email);
+      final message = await SyncTvService.adminSendTestEmail(email);
       if (!mounted) return;
       MessageUtils.showSuccess(
         context,
@@ -9697,7 +11149,7 @@ class _InfoLine extends StatelessWidget {
 class _RoomCoverPreview extends StatelessWidget {
   const _RoomCoverPreview({required this.room});
 
-  final WRoom room;
+  final SyncTvRoom room;
 
   @override
   Widget build(BuildContext context) {
@@ -9709,19 +11161,20 @@ class _RoomCoverPreview extends StatelessWidget {
         color: theme.colorScheme.primary,
       ),
     );
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
+    if (room.coverUrl.isEmpty) {
+      return AppPanelSurface(
         width: 96,
         height: 64,
-        child: room.coverUrl.isEmpty
-            ? fallback
-            : Image.network(
-                WatchTogetherService.resolveResourceUrl(room.coverUrl),
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => fallback,
-              ),
-      ),
+        borderRadius: BorderRadius.circular(8),
+        child: fallback,
+      );
+    }
+    return AppImageThumbnail(
+      url: SyncTvService.resolveResourceUrl(room.coverUrl),
+      width: 96,
+      height: 64,
+      borderRadius: BorderRadius.circular(8),
+      errorChild: fallback,
     );
   }
 }
@@ -9729,7 +11182,7 @@ class _RoomCoverPreview extends StatelessWidget {
 class _RoomChatHistoryDialog extends StatefulWidget {
   const _RoomChatHistoryDialog({required this.room});
 
-  final WRoom room;
+  final SyncTvRoom room;
 
   @override
   State<_RoomChatHistoryDialog> createState() => _RoomChatHistoryDialogState();
@@ -9776,7 +11229,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
 
   Future<void> _loadPage({required String cursor}) async {
     try {
-      final page = await WatchTogetherService.getChatHistory(
+      final page = await SyncTvService.getChatHistory(
         widget.room.roomId,
         limit: 40,
         cursor: cursor,
@@ -9823,7 +11276,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
     );
     if (confirmed != true) return;
     try {
-      final updated = await WatchTogetherService.deleteChatMessage(
+      final updated = await SyncTvService.deleteChatMessage(
         widget.room.roomId,
         message.id,
         expectedVersion: message.version,
@@ -9907,7 +11360,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
     );
     try {
       if (submitted != true) return;
-      await WatchTogetherService.reportChatMessage(
+      await SyncTvService.reportChatMessage(
         widget.room.roomId,
         message.id,
         reasonCode: selectedReason,
@@ -9923,7 +11376,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
 
   Future<void> _showContext(RoomChatMessageInfo message) async {
     try {
-      final contextInfo = await WatchTogetherService.getChatMessageContext(
+      final contextInfo = await SyncTvService.getChatMessageContext(
         widget.room.roomId,
         message.id,
         beforeLimit: 8,
@@ -10080,7 +11533,7 @@ class _RoomChatContextDialog extends StatelessWidget {
     required this.onReport,
   });
 
-  final WRoom room;
+  final SyncTvRoom room;
   final ChatMessageContextInfo contextInfo;
   final Future<void> Function(RoomChatMessageInfo message) onCopy;
   final Future<void> Function(RoomChatMessageInfo message) onDelete;
@@ -10407,23 +11860,18 @@ class _AdminChatImageGrid extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: images.map((image) {
-        final url = WatchTogetherService.resolveResourceUrl(image.url);
-        return ClipRRect(
+        final url = SyncTvService.resolveResourceUrl(image.url);
+        return AppImageThumbnail(
+          url: url,
+          width: 116,
+          height: 86,
           borderRadius: BorderRadius.circular(7),
-          child: SizedBox(
-            width: 116,
-            height: 86,
-            child: Image.network(
-              url,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => ColoredBox(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surfaceContainerHighest
-                    .withValues(alpha: 0.8),
-                child: const Icon(Icons.broken_image_outlined),
-              ),
-            ),
+          errorChild: ColoredBox(
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: 0.8),
+            child: const Icon(Icons.broken_image_outlined),
           ),
         );
       }).toList(),

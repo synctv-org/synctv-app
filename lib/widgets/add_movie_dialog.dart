@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
@@ -136,6 +136,8 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   final _urlController = TextEditingController();
   final _urlFocusNode = FocusNode();
   final _nameController = TextEditingController();
+  final _liveProxyUrlController = TextEditingController();
+  final _liveProxyNameController = TextEditingController();
   final _biliUrlController = TextEditingController();
   final _alistSearchController = TextEditingController();
   final _alistPasswordController = TextEditingController();
@@ -193,10 +195,10 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   Future<void> _checkVendors() async {
     try {
       final results = await Future.wait([
-        WatchTogetherService.getAllAlistBindInfos(),
-        WatchTogetherService.getAllEmbyBindInfos(),
-        WatchTogetherService.getAllBilibiliBindInfos(),
-        WatchTogetherService.getPublicSettings(),
+        SyncTvService.getAllAlistBindInfos(),
+        SyncTvService.getAllEmbyBindInfos(),
+        SyncTvService.getAllBilibiliBindInfos(),
+        SyncTvService.getPublicSettings(),
       ]);
       final alistBinds = results[0] as List<AlistBindInfo>;
       final embyBinds = results[1] as List<EmbyBindInfo>;
@@ -228,6 +230,8 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     _urlController.dispose();
     _urlFocusNode.dispose();
     _nameController.dispose();
+    _liveProxyUrlController.dispose();
+    _liveProxyNameController.dispose();
     for (final header in _directHeaders) {
       header.dispose();
     }
@@ -291,10 +295,12 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       case 1:
         return 'RTMP 推流';
       case 2:
-        return 'Bilibili';
+        return '直播拉流';
       case 3:
-        return 'AList 网盘';
+        return 'Bilibili';
       case 4:
+        return 'AList 网盘';
+      case 5:
         return 'Emby 媒体库';
       default:
         return '';
@@ -316,22 +322,29 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           icon: Icons.upload_rounded,
           color: Colors.deepOrange.shade600,
         ),
-        const _MovieSourceSpec(
+        _MovieSourceSpec(
           index: 2,
+          title: '直播拉流',
+          subtitle: 'RTMP / HTTP-FLV',
+          icon: Icons.sensors_rounded,
+          color: Colors.teal.shade600,
+        ),
+        const _MovieSourceSpec(
+          index: 3,
           title: 'Bilibili',
           subtitle: 'BV / 链接解析',
           icon: Icons.tv_rounded,
           color: Color(0xFFFB7299),
         ),
         _MovieSourceSpec(
-          index: 3,
+          index: 4,
           title: 'AList 网盘',
           subtitle: '挂载目录资源',
           icon: Icons.cloud_circle_rounded,
           color: Colors.amber.shade700,
         ),
         _MovieSourceSpec(
-          index: 4,
+          index: 5,
           title: 'Emby 媒体库',
           subtitle: '个人媒体服务器',
           icon: Icons.video_library_rounded,
@@ -342,17 +355,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   void _selectSource(int index) {
     setState(() {
       _selectedIndex = index;
-      _isProxy = index == 2 || index == 3;
     });
     if (index == 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _urlFocusNode.requestFocus();
       });
     }
-    if (index == 3 && _alistBinds.isNotEmpty && _alistFiles.isEmpty) {
+    if (index == 4 && _alistBinds.isNotEmpty && _alistFiles.isEmpty) {
       _loadAlist('/');
     }
-    if (index == 4 && _embyBinds.isNotEmpty && _embyFiles.isEmpty) {
+    if (index == 5 && _embyBinds.isNotEmpty && _embyFiles.isEmpty) {
       _loadEmby('/');
     }
   }
@@ -524,10 +536,10 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                     );
                     await _checkVendors();
                     if (!mounted) return;
-                    if (_selectedIndex == 3 && _alistBinds.isNotEmpty) {
+                    if (_selectedIndex == 4 && _alistBinds.isNotEmpty) {
                       _loadAlist(_alistPath);
                     }
-                    if (_selectedIndex == 4 && _embyBinds.isNotEmpty) {
+                    if (_selectedIndex == 5 && _embyBinds.isNotEmpty) {
                       _loadEmby(_embyPath);
                     }
                   },
@@ -555,10 +567,12 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       case 1:
         return _buildRtmpPublishContent(theme);
       case 2:
-        return _buildBilibiliContent(theme);
+        return _buildLiveProxyContent(theme);
       case 3:
-        return _buildAlistContent(theme);
+        return _buildBilibiliContent(theme);
       case 4:
+        return _buildAlistContent(theme);
+      case 5:
         return _buildEmbyContent(theme);
       default:
         return const SizedBox();
@@ -599,6 +613,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           ),
           const SizedBox(height: 10),
           _buildDirectHeadersEditor(theme),
+          const SizedBox(height: 12),
+          AppSwitchTile(
+            value: _isProxy,
+            onChanged:
+                _isLoading ? null : (val) => setState(() => _isProxy = val),
+            title: const Text('默认使用代理播放'),
+            subtitle: const Text('由 SyncTV 服务端转发媒体请求'),
+            prefix: const Icon(Icons.route_rounded),
+            semanticsLabel: '默认使用代理播放',
+          ),
           if (_directHeadersContainCredentials())
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -811,6 +835,55 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             _addRtmpPublish,
             color: Colors.deepOrange.shade600,
             icon: Icons.live_tv_rounded,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveProxyContent(ThemeData theme) {
+    return AppSingleChildScrollView(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppTextField(
+            controller: _liveProxyUrlController,
+            label: '源地址',
+            hintText: 'rtmp://example/live/stream 或 https://example/live.flv',
+            prefixIcon: Icons.sensors_rounded,
+            keyboardType: TextInputType.url,
+            textInputAction: TextInputAction.next,
+            autocorrect: false,
+            smartDashesType: SmartDashesType.disabled,
+            smartQuotesType: SmartQuotesType.disabled,
+            enabled: !_isLoading,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 10),
+          AppTextField(
+            controller: _liveProxyNameController,
+            label: '直播名称（可选）',
+            hintText: '例如 上游直播、赛事源',
+            prefixIcon: Icons.title_rounded,
+            textInputAction: TextInputAction.done,
+            enabled: !_isLoading,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 18),
+          _buildInlineNotice(
+            theme,
+            icon: Icons.route_rounded,
+            title: 'SyncTV 服务端会拉取上游直播源',
+            subtitle: '支持 RTMP 和 HTTP-FLV，上游地址只保存在媒体源配置中。',
+            color: Colors.teal.shade600,
+          ),
+          const SizedBox(height: 18),
+          _buildActionButton(
+            '添加直播拉流',
+            _addLiveProxyMedia,
+            color: Colors.teal.shade600,
+            icon: Icons.playlist_add_rounded,
           ),
         ],
       ),
@@ -1159,6 +1232,14 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                             subtitle: file.isDir ? null : 'Emby Media',
                             thumbnailUrl: file.thumbnail,
                             iconColor: Colors.green,
+                            trailing: file.isDir
+                                ? AppIconButton(
+                                    icon: Icons.playlist_add_rounded,
+                                    tooltip: '添加为动态播放列表',
+                                    onPressed: () =>
+                                        _addEmbyDirectoryPlaylist(file),
+                                  )
+                                : null,
                           );
                         },
                       ),
@@ -1254,22 +1335,6 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
               style: const TextStyle(fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis,
             ),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('代理',
-                  style: TextStyle(fontSize: 12, color: theme.hintColor)),
-              const SizedBox(width: 4),
-              Transform.scale(
-                scale: 0.8,
-                child: AppSwitch(
-                  value: _isProxy,
-                  onChanged: (val) => setState(() => _isProxy = val),
-                  semanticsLabel: '代理',
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -1503,9 +1568,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   int? _providerBindingIndex(int selectedIndex) {
     return switch (selectedIndex) {
-      2 => 2,
-      3 => 0,
-      4 => 1,
+      3 => 2,
+      4 => 0,
+      5 => 1,
       _ => null,
     };
   }
@@ -1662,6 +1727,8 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   bool get _hasUnsavedDraft {
     if (_urlController.text.trim().isNotEmpty ||
         _nameController.text.trim().isNotEmpty ||
+        _liveProxyUrlController.text.trim().isNotEmpty ||
+        _liveProxyNameController.text.trim().isNotEmpty ||
         _biliUrlController.text.trim().isNotEmpty ||
         _alistSearchController.text.trim().isNotEmpty ||
         _embySearchController.text.trim().isNotEmpty) {
@@ -1682,7 +1749,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       ),
       iconColor: Theme.of(context).colorScheme.error,
       content: Text(
-        '已填写的影片链接、名称或请求头会被清空。',
+        '已填写的影片链接、直播源、名称或请求头会被清空。',
         style: Theme.of(context).textTheme.bodyMedium,
       ),
       actions: [
@@ -1732,15 +1799,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     try {
       final name = _nameController.text.trim();
       if (urls.length == 1) {
-        await WatchTogetherService.addDirectUrlMedia(
+        await SyncTvService.addDirectUrlMedia(
           widget.roomId,
           playlistId: widget.parentId ?? '',
           url: urls.single,
           name: name.isEmpty ? _directUrlDisplayName(urls.single) : name,
           headers: headers,
+          preferProxy: _isProxy,
         );
       } else {
-        await WatchTogetherService.addMediaBatch(
+        await SyncTvService.addMediaBatch(
           widget.roomId,
           urls
               .map(
@@ -1750,6 +1818,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                   'source_config': DirectUrlSourceConfig.fromUserInput(
                     url: url,
                     headers: headers,
+                    preferProxy: _isProxy,
                   ).toJson(),
                   'name': _directUrlDisplayName(url),
                 },
@@ -1820,16 +1889,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     setState(() => _isLoading = true);
     try {
       final name = _nameController.text.trim();
-      final mediaId = await WatchTogetherService.addRtmpMedia(
+      final mediaId = await SyncTvService.addRtmpMedia(
         widget.roomId,
         playlistId: widget.parentId ?? '',
         name: name.isEmpty ? 'RTMP 直播' : name,
       );
-      final publish = await WatchTogetherService.createRtmpPublishKeyInfo(
+      final publish = await SyncTvService.createRtmpPublishKeyInfo(
         widget.roomId,
         mediaId,
       );
-      final streamInfo = await WatchTogetherService.getRtmpStreamInfo(
+      final streamInfo = await SyncTvService.getRtmpStreamInfo(
         roomId: widget.roomId,
         mediaId: mediaId,
       );
@@ -1845,6 +1914,66 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _addLiveProxyMedia() async {
+    late final String url;
+    try {
+      url = _validateLiveProxyUrl(_liveProxyUrlController.text.trim());
+    } on FormatException catch (e) {
+      MessageUtils.showWarning(context, e.message);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final name = _liveProxyNameController.text.trim();
+      await SyncTvService.addLiveProxyMedia(
+        widget.roomId,
+        playlistId: widget.parentId ?? '',
+        url: url,
+        name: name.isEmpty ? _liveProxyDisplayName(url) : name,
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        MessageUtils.showSuccess(context, '添加成功');
+      }
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '添加直播拉流失败: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _validateLiveProxyUrl(String rawUrl) {
+    if (rawUrl.isEmpty) {
+      throw const FormatException('请输入直播源地址');
+    }
+    final uri = Uri.tryParse(rawUrl);
+    if (uri == null || uri.scheme.isEmpty || uri.host.isEmpty) {
+      throw const FormatException('请输入有效的直播源地址');
+    }
+    final scheme = uri.scheme.toLowerCase();
+    final isRtmp = scheme == 'rtmp';
+    final isFlv = (scheme == 'http' || scheme == 'https') &&
+        uri.path.toLowerCase().endsWith('.flv');
+    if (!isRtmp && !isFlv) {
+      throw const FormatException('直播拉流仅支持 rtmp:// 或 HTTP-FLV .flv 地址');
+    }
+    return rawUrl;
+  }
+
+  String _liveProxyDisplayName(String url) {
+    final uri = Uri.tryParse(url);
+    final segments = uri?.pathSegments
+            .where((segment) => segment.trim().isNotEmpty)
+            .toList(growable: false) ??
+        const <String>[];
+    final lastSegment = segments.isEmpty ? null : segments.last;
+    if (lastSegment == null || lastSegment.isEmpty) {
+      return '直播拉流';
+    }
+    return Uri.decodeComponent(lastSegment);
   }
 
   Future<void> _showRtmpPublishDialog({
@@ -1979,7 +2108,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       _biliInfo = null;
     });
     try {
-      final info = await WatchTogetherService.parseBilibiliInfo(
+      final info = await SyncTvService.parseBilibiliInfo(
         url,
         instanceName: _bilibiliInstanceName,
       );
@@ -2013,7 +2142,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       final title = _biliInfo!.title.isNotEmpty
           ? _biliInfo!.title
           : (selectedVideo.name.isEmpty ? 'Bilibili' : selectedVideo.name);
-      await WatchTogetherService.addBilibiliMedia(
+      await SyncTvService.addBilibiliMedia(
         widget.roomId,
         playlistId: widget.parentId ?? '',
         providerInstanceName: _bilibiliInstanceName,
@@ -2078,7 +2207,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     });
 
     try {
-      final pageInfo = await WatchTogetherService.listAlistPage(
+      final pageInfo = await SyncTvService.listAlistPage(
         path,
         keyword: keyword,
         page: targetPage,
@@ -2193,7 +2322,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     setState(() => _isLoading = true);
     try {
       final password = _alistPasswordController.text;
-      await WatchTogetherService.addAlistMedia(
+      await SyncTvService.addAlistMedia(
         widget.roomId,
         playlistId: widget.parentId ?? '',
         serverId: _alistServerId,
@@ -2226,7 +2355,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         'path': file.path,
       };
       if (password.isNotEmpty) sourceConfig['password'] = password;
-      await WatchTogetherService.createPlaylist(
+      await SyncTvService.createPlaylist(
         widget.roomId,
         parentId: widget.parentId ?? '',
         sourceProvider: 'alist',
@@ -2277,7 +2406,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       }
 
       if (items.isNotEmpty) {
-        await WatchTogetherService.addMediaBatch(widget.roomId, items);
+        await SyncTvService.addMediaBatch(widget.roomId, items);
       }
       for (final directory in directories) {
         final sourceConfig = <String, dynamic>{
@@ -2285,7 +2414,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           'path': directory.path,
         };
         if (password.isNotEmpty) sourceConfig['password'] = password;
-        await WatchTogetherService.createPlaylist(
+        await SyncTvService.createPlaylist(
           widget.roomId,
           parentId: widget.parentId ?? '',
           sourceProvider: 'alist',
@@ -2321,7 +2450,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       }
     });
     try {
-      final pageInfo = await WatchTogetherService.listEmbyPage(
+      final pageInfo = await SyncTvService.listEmbyPage(
         path,
         keyword: keyword,
         page: targetPage,
@@ -2406,7 +2535,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       if (itemId.isEmpty) {
         throw Exception('无法获取 Emby 媒体 ID');
       }
-      await WatchTogetherService.addEmbyMedia(
+      await SyncTvService.addEmbyMedia(
         widget.roomId,
         playlistId: widget.parentId ?? '',
         serverId: _embyServerId,
@@ -2417,6 +2546,39 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       if (mounted) {
         Navigator.pop(context);
         MessageUtils.showSuccess(context, '添加成功');
+      }
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '添加失败: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _addEmbyDirectoryPlaylist(EmbyItemInfo file) async {
+    if (_embyServerId.isEmpty) {
+      MessageUtils.showWarning(context, '请选择已绑定的 Emby 账号');
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      final itemId = file.id;
+      if (itemId.isEmpty) {
+        throw Exception('无法获取 Emby 目录 ID');
+      }
+      await SyncTvService.createPlaylist(
+        widget.roomId,
+        parentId: widget.parentId ?? '',
+        sourceProvider: 'emby',
+        providerInstanceName: _embyInstanceName,
+        sourceConfig: {
+          'server_id': _embyServerId,
+          'item_id': itemId,
+        },
+        name: file.name.isEmpty ? 'Emby Playlist' : file.name,
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        MessageUtils.showSuccess(context, '已添加动态播放列表');
       }
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '添加失败: $e');

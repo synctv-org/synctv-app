@@ -21,13 +21,13 @@ export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
 /// Emby-compatible Provider Service
 ///
-/// Client-facing API for Emby/Jellyfin media server access
+/// Client-facing API for Emby media server access
 class EmbyProviderServiceApi {
   final $pb.RpcClient _client;
 
   EmbyProviderServiceApi(this._client);
 
-  /// Login to Emby/Jellyfin server (validate API key and persist credential)
+  /// Login to Emby server (validate API key and persist credential)
   $async.Future<$0.LoginResponse> login(
           $pb.ClientContext? ctx, $0.LoginRequest request) =>
       _client.invoke<$0.LoginResponse>(

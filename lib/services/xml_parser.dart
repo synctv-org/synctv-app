@@ -168,6 +168,14 @@ class VolumeParser {
   }
 }
 
+class MuteParser {
+  bool muted = false;
+  MuteParser(String text) {
+    final doc = XmlDocument.parse(text);
+    muted = doc.tagVal('CurrentMute') == '1';
+  }
+}
+
 class TransportInfoParser {
   String currentTransportState = '';
   String currentTransportStatus = '';

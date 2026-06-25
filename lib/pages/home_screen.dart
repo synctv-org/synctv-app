@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:synctv_app/models/watch_together_models.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/models/synctv_models.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/pages/room_screen.dart';
-//import 'package:synctv_app/widgets/watch_together_admin_settings.dart';
+//import 'package:synctv_app/widgets/synctv_admin_settings.dart';
 import 'package:synctv_app/pages/mobile/admin_settings_page.dart';
 import 'package:synctv_app/pages/account_center_page.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
+import 'package:synctv_app/utils/room_taxonomy.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
@@ -38,23 +39,28 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   bool _isLoading = true;
-  List<WRoom> _rooms = [];
+  bool _isLoadingTaxonomy = false;
+  List<SyncTvRoom> _rooms = [];
+  List<RoomCategoryInfo> _roomCategories = const [];
+  List<RoomLabelInfo> _roomLabels = const [];
   int _roomsTotal = 0;
   int _roomPage = 1;
   static const int _roomPageSize = 24;
   _RoomFeed _roomFeed = _RoomFeed.public;
   bool _isLoggedIn = false;
-  WUser? _currentUser;
+  SyncTvUser? _currentUser;
   StreamSubscription? _authErrorSubscription;
   final Set<String> _joiningRoomIds = <String>{};
+  final Set<String> _selectedRoomLabelIds = <String>{};
   final TextEditingController _roomSearchController = TextEditingController();
+  String _selectedRoomCategoryId = '';
   bool _modalOpen = false;
   bool _startRoomHandled = false;
 
   @override
   void initState() {
     super.initState();
-    _authErrorSubscription = WatchTogetherService.onAuthError.listen((_) {
+    _authErrorSubscription = SyncTvService.onAuthError.listen((_) {
       if (mounted) {
         setState(() {
           _isLoggedIn = false;
@@ -77,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchUserInfo() async {
     try {
-      final user = await WatchTogetherService.getMe();
+      final user = await SyncTvService.getMe();
       if (mounted) {
         setState(() {
           _currentUser = user;
@@ -89,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkLoginAndLoadData() async {
-    final hasSession = WatchTogetherService.hasRecoverableSession;
+    final hasSession = SyncTvService.hasRecoverableSession;
     if (!hasSession) {
       if (mounted) {
         setState(() {
@@ -108,13 +114,55 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadRoomTaxonomy({bool refresh = false}) async {
+    if (SyncTvService.activeServer == null || _isLoadingTaxonomy) return;
+    setState(() => _isLoadingTaxonomy = true);
+    try {
+      final results = await Future.wait([
+        SyncTvService.listRoomCategories(refresh: refresh),
+        SyncTvService.listRoomLabels(refresh: refresh),
+      ]);
+      final categories = results[0]
+          .cast<RoomCategoryInfo>()
+          .where((category) => category.isEnabled)
+          .toList()
+        ..sort((a, b) {
+          final order = a.sortOrder.compareTo(b.sortOrder);
+          if (order != 0) return order;
+          return _roomCategoryName(a).compareTo(_roomCategoryName(b));
+        });
+      final labels = results[1]
+          .cast<RoomLabelInfo>()
+          .where((label) => label.isEnabled)
+          .toList()
+        ..sort((a, b) {
+          final order = a.sortOrder.compareTo(b.sortOrder);
+          if (order != 0) return order;
+          return _roomLabelName(a).compareTo(_roomLabelName(b));
+        });
+      if (!mounted) return;
+      setState(() {
+        _roomCategories = categories;
+        _roomLabels = labels;
+        _selectedRoomLabelIds.removeWhere(
+          (id) => !_availableRoomLabels.any((label) => label.id == id),
+        );
+        _isLoadingTaxonomy = false;
+      });
+    } catch (e) {
+      debugPrint('Failed to load room taxonomy filters: $e');
+      if (!mounted) return;
+      setState(() => _isLoadingTaxonomy = false);
+    }
+  }
+
   void _openStartRoomIfRequested() {
     final roomId = _startRoomId.trim();
     if (_startRoomHandled || roomId.isEmpty) return;
     _startRoomHandled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
-        final room = await WatchTogetherService.getRoomInfo(roomId);
+        final room = await SyncTvService.getRoomInfo(roomId);
         if (mounted) await _handleJoinRoom(room);
       } catch (e) {
         if (mounted) MessageUtils.showError(context, '打开房间失败: $e');
@@ -123,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadRooms({bool silent = false}) async {
-    if (WatchTogetherService.activeServer == null) {
+    if (SyncTvService.activeServer == null) {
       if (mounted) {
         setState(() {
           _rooms = const [];
@@ -148,15 +196,20 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
     try {
+      if (_roomFeed == _RoomFeed.public && _roomCategories.isEmpty) {
+        unawaited(_loadRoomTaxonomy(refresh: true));
+      }
       final search = _roomSearchController.text.trim();
-      final List<WRoom> rooms;
+      final List<SyncTvRoom> rooms;
       final int total;
       switch (_roomFeed) {
         case _RoomFeed.public:
-          final page = await WatchTogetherService.getRoomsPage(
+          final page = await SyncTvService.getRoomsPage(
             page: _roomPage,
             pageSize: _roomPageSize,
             search: search.isEmpty ? null : search,
+            categoryId: _selectedRoomCategoryId,
+            labelIds: _selectedRoomLabelIds.toList(growable: false),
             sortBy:
                 client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
             sortDirection: client_enum.SortDirection.SORT_DIRECTION_DESC,
@@ -165,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
           total = page.total;
           break;
         case _RoomFeed.mine:
-          final page = await WatchTogetherService.getMyRoomsPage(
+          final page = await SyncTvService.getMyRoomsPage(
             page: _roomPage,
             pageSize: _roomPageSize,
             search: search.isEmpty ? null : search,
@@ -178,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
           total = page.total;
           break;
         case _RoomFeed.hot:
-          rooms = await WatchTogetherService.getHotRooms(limit: _roomPageSize);
+          rooms = await SyncTvService.getHotRooms(limit: _roomPageSize);
           total = rooms.length;
           break;
       }
@@ -213,11 +266,141 @@ class _HomeScreenState extends State<HomeScreen> {
       _roomFeed = feed;
       _roomPage = 1;
     });
+    if (feed != _RoomFeed.public) {
+      _clearRoomTaxonomyFilters(load: false);
+    }
     _loadRooms(silent: false);
   }
 
   void _applyRoomSearch(String value) {
     setState(() => _roomPage = 1);
+    _loadRooms(silent: false);
+  }
+
+  List<RoomLabelInfo> get _availableRoomLabels {
+    if (_selectedRoomCategoryId.isEmpty) return _roomLabels;
+    return _roomLabels
+        .where((label) => label.categoryId == _selectedRoomCategoryId)
+        .toList(growable: false);
+  }
+
+  String _roomCategoryName(RoomCategoryInfo category) {
+    final name = category.name.trim();
+    return name.isEmpty ? category.key : name;
+  }
+
+  String _roomLabelName(RoomLabelInfo label) {
+    final name = label.name.trim();
+    return name.isEmpty ? label.key : name;
+  }
+
+  void _clearRoomTaxonomyFilters({bool load = true}) {
+    setState(() {
+      _selectedRoomCategoryId = '';
+      _selectedRoomLabelIds.clear();
+      _roomPage = 1;
+    });
+    if (load) _loadRooms(silent: false);
+  }
+
+  Future<void> _showRoomLabelFilter() async {
+    if (_roomLabels.isEmpty) {
+      await _loadRoomTaxonomy(refresh: true);
+    }
+    if (!mounted) return;
+    final selectedIds = Set<String>.from(_selectedRoomLabelIds);
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: '筛选标签',
+      icon: const Icon(Icons.sell_outlined, color: Color(0xFF5D5FEF)),
+      content: StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final theme = Theme.of(dialogContext);
+          final labels = _availableRoomLabels;
+          return SizedBox(
+            width: 520,
+            child: AppSingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (labels.isEmpty)
+                    Text(
+                      _selectedRoomCategoryId.isEmpty ? '暂无可用标签' : '当前分类下暂无标签',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: labels.map((label) {
+                        final selected = selectedIds.contains(label.id);
+                        final color = parseRoomLabelColor(
+                          label.color,
+                          theme.colorScheme.primary,
+                        );
+                        return AppChip(
+                          selected: selected,
+                          style: selected
+                              ? AppChipStyle.filled
+                              : AppChipStyle.outlined,
+                          onSelected: (value) => setDialogState(() {
+                            if (value) {
+                              selectedIds.add(label.id);
+                            } else {
+                              selectedIds.remove(label.id);
+                            }
+                          }),
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(_roomLabelName(label)),
+                            ],
+                          ),
+                        );
+                      }).toList(growable: false),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        AppActionButton(
+          onPressed: () => Navigator.pop(context, false),
+          icon: Icons.filter_alt_off_rounded,
+          label: '清空',
+          style: AppActionButtonStyle.tonal,
+        ),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '应用',
+        ),
+      ],
+    );
+    if (confirmed == null) return;
+    setState(() {
+      _selectedRoomLabelIds
+        ..clear()
+        ..addAll(confirmed ? selectedIds : const <String>{});
+      _roomPage = 1;
+    });
     _loadRooms(silent: false);
   }
 
@@ -302,7 +485,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final id = await parseInviteOrShowError(context: context, value: value);
       if (id == null || id.isEmpty) return;
-      final check = await WatchTogetherService.checkRoom(id);
+      final check = await SyncTvService.checkRoom(id);
       if (!check.exists) {
         if (mounted) MessageUtils.showWarning(context, '房间不存在');
         return;
@@ -315,7 +498,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final authenticated = await _showLoginDialog(guestRoomId: id);
         if (!authenticated || !mounted) return;
       }
-      final room = await WatchTogetherService.getRoomInfo(id);
+      final room = await SyncTvService.getRoomInfo(id);
       if (!mounted) return;
       Navigator.pop(context);
       _handleJoinRoom(room);
@@ -364,7 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         final changed = await showServerSettingsDialog(context: context);
         if (!mounted || changed != true) return;
-        final hasSession = WatchTogetherService.hasRecoverableSession;
+        final hasSession = SyncTvService.hasRecoverableSession;
         setState(() {
           _isLoggedIn = hasSession;
           if (!hasSession) _currentUser = null;
@@ -394,7 +577,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (confirm == true) {
-      await WatchTogetherService.logout();
+      await SyncTvService.logout();
       if (mounted) {
         setState(() {
           _isLoggedIn = false;
@@ -410,7 +593,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _handleJoinRoom(WRoom room) async {
+  Future<void> _handleJoinRoom(SyncTvRoom room) async {
     if (_joiningRoomIds.contains(room.roomId)) return;
     _joiningRoomIds.add(room.roomId);
     String password = '';
@@ -435,7 +618,7 @@ class _HomeScreenState extends State<HomeScreen> {
         password = result;
       }
 
-      await WatchTogetherService.joinRoom(room.roomId, password);
+      await SyncTvService.joinRoom(room.roomId, password);
       if (mounted) {
         _navigateToRoom(room);
       }
@@ -446,7 +629,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _navigateToRoom(WRoom room) async {
+  Future<void> _navigateToRoom(SyncTvRoom room) async {
     final deleted = await Navigator.push<bool>(
       context,
       PageRouteBuilder(
@@ -467,7 +650,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _handleDeleteRoom(WRoom room) async {
+  Future<void> _handleDeleteRoom(SyncTvRoom room) async {
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '删除房间',
@@ -484,7 +667,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (confirm == true) {
       try {
-        await WatchTogetherService.deleteRoom(room.roomId);
+        await SyncTvService.deleteRoom(room.roomId);
         if (mounted) {
           MessageUtils.showSuccess(context, '房间已删除');
           _loadRooms(silent: true);
@@ -541,7 +724,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 if (!extraCompact) ...[
                                   const SizedBox(width: 12),
                                   Text(
-                                    '看搭子',
+                                    'SyncTV',
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,
@@ -889,6 +1072,54 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               onSubmitted: _applyRoomSearch,
             ),
+            AppSelect<String?>(
+              value: _selectedRoomCategoryId.isEmpty
+                  ? null
+                  : _selectedRoomCategoryId,
+              width: compact ? constraints.maxWidth : 180,
+              hintText: _roomFeed == _RoomFeed.public ? '全部分类' : '仅公开房间',
+              prefixIcon: Icons.category_outlined,
+              clearable: true,
+              enabled: _roomFeed == _RoomFeed.public &&
+                  !_isLoadingTaxonomy &&
+                  _roomCategories.isNotEmpty,
+              options: {
+                '全部分类': null,
+                for (final category in _roomCategories)
+                  _roomCategoryName(category): category.id,
+              },
+              onChanged: (value) {
+                setState(() {
+                  _selectedRoomCategoryId = value ?? '';
+                  _selectedRoomLabelIds.removeWhere(
+                    (id) =>
+                        !_availableRoomLabels.any((label) => label.id == id),
+                  );
+                  _roomPage = 1;
+                });
+                _loadRooms(silent: false);
+              },
+            ),
+            AppActionButton(
+              onPressed: _roomFeed != _RoomFeed.public || _isLoadingTaxonomy
+                  ? null
+                  : _showRoomLabelFilter,
+              icon: Icons.sell_outlined,
+              label: _selectedRoomLabelIds.isEmpty
+                  ? '标签'
+                  : '标签 ${_selectedRoomLabelIds.length}',
+              style: _selectedRoomLabelIds.isEmpty
+                  ? AppActionButtonStyle.outlined
+                  : AppActionButtonStyle.tonal,
+            ),
+            if (_selectedRoomCategoryId.isNotEmpty ||
+                _selectedRoomLabelIds.isNotEmpty)
+              AppIconButton(
+                tooltip: '清除分类标签筛选',
+                icon: Icons.filter_alt_off_rounded,
+                onPressed: _clearRoomTaxonomyFilters,
+                style: AppIconButtonStyle.tonal,
+              ),
           ],
         );
       },
@@ -942,7 +1173,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildRoomGrid() {
     final theme = Theme.of(context);
-    final hasServer = WatchTogetherService.activeServer != null;
+    final hasServer = SyncTvService.activeServer != null;
     return AppInkSurface(
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(8),
@@ -1007,7 +1238,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRoomCard(WRoom room, int index) {
+  Widget _buildRoomCard(SyncTvRoom room, int index) {
     return CinemaRoomCard(
       roomId: room.roomId,
       roomName: room.roomName,
@@ -1023,6 +1254,8 @@ class _HomeScreenState extends State<HomeScreen> {
       needPassword: room.needPassword,
       hidden: room.hidden,
       createdAt: room.createdAt,
+      categoryName: room.category?.name ?? '',
+      labels: room.labels,
       onTap: () => _handleJoinRoom(room),
       onLongPress: _currentUser != null && _currentUser!.id == room.creatorId
           ? () => _handleDeleteRoom(room)

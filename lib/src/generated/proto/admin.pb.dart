@@ -244,6 +244,8 @@ class AdminRoom extends $pb.GeneratedMessage {
     $0.RoomPresenceStats? presence,
     $core.String? creatorAvatarUrl,
     $1.ResourceCover? cover,
+    $1.RoomCategory? category,
+    $core.Iterable<$1.RoomLabel>? labels,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -262,6 +264,8 @@ class AdminRoom extends $pb.GeneratedMessage {
     if (presence != null) result.presence = presence;
     if (creatorAvatarUrl != null) result.creatorAvatarUrl = creatorAvatarUrl;
     if (cover != null) result.cover = cover;
+    if (category != null) result.category = category;
+    if (labels != null) result.labels.addAll(labels);
     return result;
   }
 
@@ -299,6 +303,10 @@ class AdminRoom extends $pb.GeneratedMessage {
     ..aOS(15, _omitFieldNames ? '' : 'creatorAvatarUrl')
     ..aOM<$1.ResourceCover>(16, _omitFieldNames ? '' : 'cover',
         subBuilder: $1.ResourceCover.create)
+    ..aOM<$1.RoomCategory>(17, _omitFieldNames ? '' : 'category',
+        subBuilder: $1.RoomCategory.create)
+    ..pPM<$1.RoomLabel>(18, _omitFieldNames ? '' : 'labels',
+        subBuilder: $1.RoomLabel.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -466,6 +474,20 @@ class AdminRoom extends $pb.GeneratedMessage {
   void clearCover() => $_clearField(16);
   @$pb.TagNumber(16)
   $1.ResourceCover ensureCover() => $_ensure(15);
+
+  @$pb.TagNumber(17)
+  $1.RoomCategory get category => $_getN(16);
+  @$pb.TagNumber(17)
+  set category($1.RoomCategory value) => $_setField(17, value);
+  @$pb.TagNumber(17)
+  $core.bool hasCategory() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearCategory() => $_clearField(17);
+  @$pb.TagNumber(17)
+  $1.RoomCategory ensureCategory() => $_ensure(16);
+
+  @$pb.TagNumber(18)
+  $pb.PbList<$1.RoomLabel> get labels => $_getList(17);
 }
 
 class SettingsGroup extends $pb.GeneratedMessage {
@@ -814,6 +836,8 @@ class RoomCreationReview extends $pb.GeneratedMessage {
     $fixnum.Int64? reviewedAt,
     $core.String? reviewedBy,
     $core.String? rejectionReason,
+    $1.RoomCategory? category,
+    $core.Iterable<$1.RoomLabel>? labels,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -827,6 +851,8 @@ class RoomCreationReview extends $pb.GeneratedMessage {
     if (reviewedAt != null) result.reviewedAt = reviewedAt;
     if (reviewedBy != null) result.reviewedBy = reviewedBy;
     if (rejectionReason != null) result.rejectionReason = rejectionReason;
+    if (category != null) result.category = category;
+    if (labels != null) result.labels.addAll(labels);
     return result;
   }
 
@@ -854,6 +880,10 @@ class RoomCreationReview extends $pb.GeneratedMessage {
     ..aInt64(8, _omitFieldNames ? '' : 'reviewedAt')
     ..aOS(9, _omitFieldNames ? '' : 'reviewedBy')
     ..aOS(10, _omitFieldNames ? '' : 'rejectionReason')
+    ..aOM<$1.RoomCategory>(11, _omitFieldNames ? '' : 'category',
+        subBuilder: $1.RoomCategory.create)
+    ..pPM<$1.RoomLabel>(12, _omitFieldNames ? '' : 'labels',
+        subBuilder: $1.RoomLabel.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -964,6 +994,20 @@ class RoomCreationReview extends $pb.GeneratedMessage {
   $core.bool hasRejectionReason() => $_has(9);
   @$pb.TagNumber(10)
   void clearRejectionReason() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $1.RoomCategory get category => $_getN(10);
+  @$pb.TagNumber(11)
+  set category($1.RoomCategory value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasCategory() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearCategory() => $_clearField(11);
+  @$pb.TagNumber(11)
+  $1.RoomCategory ensureCategory() => $_ensure(10);
+
+  @$pb.TagNumber(12)
+  $pb.PbList<$1.RoomLabel> get labels => $_getList(11);
 }
 
 class RoomJoinReview extends $pb.GeneratedMessage {
@@ -5313,6 +5357,8 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
     $core.bool? isBanned,
     RoomListSortBy? sortBy,
     SortDirection? sortDirection,
+    $core.String? categoryId,
+    $core.Iterable<$core.String>? labelIds,
   }) {
     final result = create();
     if (page != null) result.page = page;
@@ -5323,6 +5369,8 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
     if (isBanned != null) result.isBanned = isBanned;
     if (sortBy != null) result.sortBy = sortBy;
     if (sortDirection != null) result.sortDirection = sortDirection;
+    if (categoryId != null) result.categoryId = categoryId;
+    if (labelIds != null) result.labelIds.addAll(labelIds);
     return result;
   }
 
@@ -5350,6 +5398,8 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
         enumValues: RoomListSortBy.values)
     ..aE<SortDirection>(8, _omitFieldNames ? '' : 'sortDirection',
         enumValues: SortDirection.values)
+    ..aOS(9, _omitFieldNames ? '' : 'categoryId')
+    ..pPS(10, _omitFieldNames ? '' : 'labelIds')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -5442,6 +5492,18 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
   $core.bool hasSortDirection() => $_has(7);
   @$pb.TagNumber(8)
   void clearSortDirection() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get categoryId => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set categoryId($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasCategoryId() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearCategoryId() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $pb.PbList<$core.String> get labelIds => $_getList(9);
 }
 
 class ListRoomsResponse extends $pb.GeneratedMessage {
@@ -5503,6 +5565,941 @@ class ListRoomsResponse extends $pb.GeneratedMessage {
   $core.bool hasTotal() => $_has(1);
   @$pb.TagNumber(2)
   void clearTotal() => $_clearField(2);
+}
+
+class ListRoomCategoriesRequest extends $pb.GeneratedMessage {
+  factory ListRoomCategoriesRequest({
+    $core.bool? includeDisabled,
+  }) {
+    final result = create();
+    if (includeDisabled != null) result.includeDisabled = includeDisabled;
+    return result;
+  }
+
+  ListRoomCategoriesRequest._();
+
+  factory ListRoomCategoriesRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRoomCategoriesRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRoomCategoriesRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'includeDisabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomCategoriesRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomCategoriesRequest copyWith(
+          void Function(ListRoomCategoriesRequest) updates) =>
+      super.copyWith((message) => updates(message as ListRoomCategoriesRequest))
+          as ListRoomCategoriesRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRoomCategoriesRequest create() => ListRoomCategoriesRequest._();
+  @$core.override
+  ListRoomCategoriesRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRoomCategoriesRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRoomCategoriesRequest>(create);
+  static ListRoomCategoriesRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get includeDisabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set includeDisabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIncludeDisabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIncludeDisabled() => $_clearField(1);
+}
+
+class ListRoomCategoriesResponse extends $pb.GeneratedMessage {
+  factory ListRoomCategoriesResponse({
+    $core.Iterable<$1.RoomCategory>? categories,
+  }) {
+    final result = create();
+    if (categories != null) result.categories.addAll(categories);
+    return result;
+  }
+
+  ListRoomCategoriesResponse._();
+
+  factory ListRoomCategoriesResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRoomCategoriesResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRoomCategoriesResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..pPM<$1.RoomCategory>(1, _omitFieldNames ? '' : 'categories',
+        subBuilder: $1.RoomCategory.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomCategoriesResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomCategoriesResponse copyWith(
+          void Function(ListRoomCategoriesResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ListRoomCategoriesResponse))
+          as ListRoomCategoriesResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRoomCategoriesResponse create() => ListRoomCategoriesResponse._();
+  @$core.override
+  ListRoomCategoriesResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRoomCategoriesResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRoomCategoriesResponse>(create);
+  static ListRoomCategoriesResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$1.RoomCategory> get categories => $_getList(0);
+}
+
+class UpsertRoomCategoryRequest extends $pb.GeneratedMessage {
+  factory UpsertRoomCategoryRequest({
+    $core.String? key,
+    $core.String? name,
+    $core.String? description,
+    $core.int? sortOrder,
+    $core.bool? isEnabled,
+  }) {
+    final result = create();
+    if (key != null) result.key = key;
+    if (name != null) result.name = name;
+    if (description != null) result.description = description;
+    if (sortOrder != null) result.sortOrder = sortOrder;
+    if (isEnabled != null) result.isEnabled = isEnabled;
+    return result;
+  }
+
+  UpsertRoomCategoryRequest._();
+
+  factory UpsertRoomCategoryRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpsertRoomCategoryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpsertRoomCategoryRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'key')
+    ..aOS(2, _omitFieldNames ? '' : 'name')
+    ..aOS(3, _omitFieldNames ? '' : 'description')
+    ..aI(4, _omitFieldNames ? '' : 'sortOrder')
+    ..aOB(5, _omitFieldNames ? '' : 'isEnabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpsertRoomCategoryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpsertRoomCategoryRequest copyWith(
+          void Function(UpsertRoomCategoryRequest) updates) =>
+      super.copyWith((message) => updates(message as UpsertRoomCategoryRequest))
+          as UpsertRoomCategoryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpsertRoomCategoryRequest create() => UpsertRoomCategoryRequest._();
+  @$core.override
+  UpsertRoomCategoryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpsertRoomCategoryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpsertRoomCategoryRequest>(create);
+  static UpsertRoomCategoryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get key => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set key($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get description => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set description($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDescription() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDescription() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.int get sortOrder => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set sortOrder($core.int value) => $_setSignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSortOrder() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSortOrder() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get isEnabled => $_getBF(4);
+  @$pb.TagNumber(5)
+  set isEnabled($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasIsEnabled() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearIsEnabled() => $_clearField(5);
+}
+
+class UpsertRoomCategoryResponse extends $pb.GeneratedMessage {
+  factory UpsertRoomCategoryResponse({
+    $1.RoomCategory? category,
+  }) {
+    final result = create();
+    if (category != null) result.category = category;
+    return result;
+  }
+
+  UpsertRoomCategoryResponse._();
+
+  factory UpsertRoomCategoryResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpsertRoomCategoryResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpsertRoomCategoryResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<$1.RoomCategory>(1, _omitFieldNames ? '' : 'category',
+        subBuilder: $1.RoomCategory.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpsertRoomCategoryResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpsertRoomCategoryResponse copyWith(
+          void Function(UpsertRoomCategoryResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as UpsertRoomCategoryResponse))
+          as UpsertRoomCategoryResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpsertRoomCategoryResponse create() => UpsertRoomCategoryResponse._();
+  @$core.override
+  UpsertRoomCategoryResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpsertRoomCategoryResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpsertRoomCategoryResponse>(create);
+  static UpsertRoomCategoryResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $1.RoomCategory get category => $_getN(0);
+  @$pb.TagNumber(1)
+  set category($1.RoomCategory value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCategory() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCategory() => $_clearField(1);
+  @$pb.TagNumber(1)
+  $1.RoomCategory ensureCategory() => $_ensure(0);
+}
+
+class DeleteRoomCategoryRequest extends $pb.GeneratedMessage {
+  factory DeleteRoomCategoryRequest({
+    $core.String? categoryId,
+  }) {
+    final result = create();
+    if (categoryId != null) result.categoryId = categoryId;
+    return result;
+  }
+
+  DeleteRoomCategoryRequest._();
+
+  factory DeleteRoomCategoryRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeleteRoomCategoryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeleteRoomCategoryRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'categoryId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteRoomCategoryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteRoomCategoryRequest copyWith(
+          void Function(DeleteRoomCategoryRequest) updates) =>
+      super.copyWith((message) => updates(message as DeleteRoomCategoryRequest))
+          as DeleteRoomCategoryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeleteRoomCategoryRequest create() => DeleteRoomCategoryRequest._();
+  @$core.override
+  DeleteRoomCategoryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeleteRoomCategoryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeleteRoomCategoryRequest>(create);
+  static DeleteRoomCategoryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get categoryId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set categoryId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCategoryId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCategoryId() => $_clearField(1);
+}
+
+class DeleteRoomCategoryResponse extends $pb.GeneratedMessage {
+  factory DeleteRoomCategoryResponse({
+    $core.bool? success,
+  }) {
+    final result = create();
+    if (success != null) result.success = success;
+    return result;
+  }
+
+  DeleteRoomCategoryResponse._();
+
+  factory DeleteRoomCategoryResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeleteRoomCategoryResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeleteRoomCategoryResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'success')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteRoomCategoryResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteRoomCategoryResponse copyWith(
+          void Function(DeleteRoomCategoryResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as DeleteRoomCategoryResponse))
+          as DeleteRoomCategoryResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeleteRoomCategoryResponse create() => DeleteRoomCategoryResponse._();
+  @$core.override
+  DeleteRoomCategoryResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeleteRoomCategoryResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeleteRoomCategoryResponse>(create);
+  static DeleteRoomCategoryResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => $_clearField(1);
+}
+
+class ListRoomLabelsRequest extends $pb.GeneratedMessage {
+  factory ListRoomLabelsRequest({
+    $core.bool? includeDisabled,
+    $core.String? categoryId,
+  }) {
+    final result = create();
+    if (includeDisabled != null) result.includeDisabled = includeDisabled;
+    if (categoryId != null) result.categoryId = categoryId;
+    return result;
+  }
+
+  ListRoomLabelsRequest._();
+
+  factory ListRoomLabelsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRoomLabelsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRoomLabelsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'includeDisabled')
+    ..aOS(2, _omitFieldNames ? '' : 'categoryId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomLabelsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomLabelsRequest copyWith(
+          void Function(ListRoomLabelsRequest) updates) =>
+      super.copyWith((message) => updates(message as ListRoomLabelsRequest))
+          as ListRoomLabelsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRoomLabelsRequest create() => ListRoomLabelsRequest._();
+  @$core.override
+  ListRoomLabelsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRoomLabelsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRoomLabelsRequest>(create);
+  static ListRoomLabelsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get includeDisabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set includeDisabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIncludeDisabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIncludeDisabled() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get categoryId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set categoryId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCategoryId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCategoryId() => $_clearField(2);
+}
+
+class ListRoomLabelsResponse extends $pb.GeneratedMessage {
+  factory ListRoomLabelsResponse({
+    $core.Iterable<$1.RoomLabel>? labels,
+  }) {
+    final result = create();
+    if (labels != null) result.labels.addAll(labels);
+    return result;
+  }
+
+  ListRoomLabelsResponse._();
+
+  factory ListRoomLabelsResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListRoomLabelsResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListRoomLabelsResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..pPM<$1.RoomLabel>(1, _omitFieldNames ? '' : 'labels',
+        subBuilder: $1.RoomLabel.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomLabelsResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListRoomLabelsResponse copyWith(
+          void Function(ListRoomLabelsResponse) updates) =>
+      super.copyWith((message) => updates(message as ListRoomLabelsResponse))
+          as ListRoomLabelsResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListRoomLabelsResponse create() => ListRoomLabelsResponse._();
+  @$core.override
+  ListRoomLabelsResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListRoomLabelsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListRoomLabelsResponse>(create);
+  static ListRoomLabelsResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$1.RoomLabel> get labels => $_getList(0);
+}
+
+class UpsertRoomLabelRequest extends $pb.GeneratedMessage {
+  factory UpsertRoomLabelRequest({
+    $core.String? key,
+    $core.String? name,
+    $core.String? description,
+    $core.String? color,
+    $core.String? categoryId,
+    $core.int? sortOrder,
+    $core.bool? isEnabled,
+  }) {
+    final result = create();
+    if (key != null) result.key = key;
+    if (name != null) result.name = name;
+    if (description != null) result.description = description;
+    if (color != null) result.color = color;
+    if (categoryId != null) result.categoryId = categoryId;
+    if (sortOrder != null) result.sortOrder = sortOrder;
+    if (isEnabled != null) result.isEnabled = isEnabled;
+    return result;
+  }
+
+  UpsertRoomLabelRequest._();
+
+  factory UpsertRoomLabelRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpsertRoomLabelRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpsertRoomLabelRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'key')
+    ..aOS(2, _omitFieldNames ? '' : 'name')
+    ..aOS(3, _omitFieldNames ? '' : 'description')
+    ..aOS(4, _omitFieldNames ? '' : 'color')
+    ..aOS(5, _omitFieldNames ? '' : 'categoryId')
+    ..aI(6, _omitFieldNames ? '' : 'sortOrder')
+    ..aOB(7, _omitFieldNames ? '' : 'isEnabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpsertRoomLabelRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpsertRoomLabelRequest copyWith(
+          void Function(UpsertRoomLabelRequest) updates) =>
+      super.copyWith((message) => updates(message as UpsertRoomLabelRequest))
+          as UpsertRoomLabelRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpsertRoomLabelRequest create() => UpsertRoomLabelRequest._();
+  @$core.override
+  UpsertRoomLabelRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpsertRoomLabelRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpsertRoomLabelRequest>(create);
+  static UpsertRoomLabelRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get key => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set key($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get description => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set description($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDescription() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDescription() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get color => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set color($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasColor() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearColor() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get categoryId => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set categoryId($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasCategoryId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearCategoryId() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.int get sortOrder => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set sortOrder($core.int value) => $_setSignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSortOrder() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSortOrder() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get isEnabled => $_getBF(6);
+  @$pb.TagNumber(7)
+  set isEnabled($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasIsEnabled() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearIsEnabled() => $_clearField(7);
+}
+
+class UpsertRoomLabelResponse extends $pb.GeneratedMessage {
+  factory UpsertRoomLabelResponse({
+    $1.RoomLabel? label,
+  }) {
+    final result = create();
+    if (label != null) result.label = label;
+    return result;
+  }
+
+  UpsertRoomLabelResponse._();
+
+  factory UpsertRoomLabelResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpsertRoomLabelResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpsertRoomLabelResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<$1.RoomLabel>(1, _omitFieldNames ? '' : 'label',
+        subBuilder: $1.RoomLabel.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpsertRoomLabelResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpsertRoomLabelResponse copyWith(
+          void Function(UpsertRoomLabelResponse) updates) =>
+      super.copyWith((message) => updates(message as UpsertRoomLabelResponse))
+          as UpsertRoomLabelResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpsertRoomLabelResponse create() => UpsertRoomLabelResponse._();
+  @$core.override
+  UpsertRoomLabelResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpsertRoomLabelResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpsertRoomLabelResponse>(create);
+  static UpsertRoomLabelResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $1.RoomLabel get label => $_getN(0);
+  @$pb.TagNumber(1)
+  set label($1.RoomLabel value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLabel() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLabel() => $_clearField(1);
+  @$pb.TagNumber(1)
+  $1.RoomLabel ensureLabel() => $_ensure(0);
+}
+
+class DeleteRoomLabelRequest extends $pb.GeneratedMessage {
+  factory DeleteRoomLabelRequest({
+    $core.String? labelId,
+  }) {
+    final result = create();
+    if (labelId != null) result.labelId = labelId;
+    return result;
+  }
+
+  DeleteRoomLabelRequest._();
+
+  factory DeleteRoomLabelRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeleteRoomLabelRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeleteRoomLabelRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'labelId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteRoomLabelRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteRoomLabelRequest copyWith(
+          void Function(DeleteRoomLabelRequest) updates) =>
+      super.copyWith((message) => updates(message as DeleteRoomLabelRequest))
+          as DeleteRoomLabelRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeleteRoomLabelRequest create() => DeleteRoomLabelRequest._();
+  @$core.override
+  DeleteRoomLabelRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeleteRoomLabelRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeleteRoomLabelRequest>(create);
+  static DeleteRoomLabelRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get labelId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set labelId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLabelId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLabelId() => $_clearField(1);
+}
+
+class DeleteRoomLabelResponse extends $pb.GeneratedMessage {
+  factory DeleteRoomLabelResponse({
+    $core.bool? success,
+  }) {
+    final result = create();
+    if (success != null) result.success = success;
+    return result;
+  }
+
+  DeleteRoomLabelResponse._();
+
+  factory DeleteRoomLabelResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeleteRoomLabelResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeleteRoomLabelResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'success')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteRoomLabelResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteRoomLabelResponse copyWith(
+          void Function(DeleteRoomLabelResponse) updates) =>
+      super.copyWith((message) => updates(message as DeleteRoomLabelResponse))
+          as DeleteRoomLabelResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeleteRoomLabelResponse create() => DeleteRoomLabelResponse._();
+  @$core.override
+  DeleteRoomLabelResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeleteRoomLabelResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeleteRoomLabelResponse>(create);
+  static DeleteRoomLabelResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => $_clearField(1);
+}
+
+class UpdateRoomTaxonomyRequest extends $pb.GeneratedMessage {
+  factory UpdateRoomTaxonomyRequest({
+    $core.String? roomId,
+    $core.String? categoryId,
+    $core.Iterable<$core.String>? labelIds,
+    $core.bool? clearCategory,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    if (categoryId != null) result.categoryId = categoryId;
+    if (labelIds != null) result.labelIds.addAll(labelIds);
+    if (clearCategory != null) result.clearCategory = clearCategory;
+    return result;
+  }
+
+  UpdateRoomTaxonomyRequest._();
+
+  factory UpdateRoomTaxonomyRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateRoomTaxonomyRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateRoomTaxonomyRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..aOS(2, _omitFieldNames ? '' : 'categoryId')
+    ..pPS(3, _omitFieldNames ? '' : 'labelIds')
+    ..aOB(4, _omitFieldNames ? '' : 'clearCategory')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomTaxonomyRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomTaxonomyRequest copyWith(
+          void Function(UpdateRoomTaxonomyRequest) updates) =>
+      super.copyWith((message) => updates(message as UpdateRoomTaxonomyRequest))
+          as UpdateRoomTaxonomyRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomTaxonomyRequest create() => UpdateRoomTaxonomyRequest._();
+  @$core.override
+  UpdateRoomTaxonomyRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomTaxonomyRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateRoomTaxonomyRequest>(create);
+  static UpdateRoomTaxonomyRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get categoryId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set categoryId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCategoryId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCategoryId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $pb.PbList<$core.String> get labelIds => $_getList(2);
+
+  @$pb.TagNumber(4)
+  $core.bool get clearCategory => $_getBF(3);
+  @$pb.TagNumber(4)
+  set clearCategory($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasClearCategory() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearClearCategory() => $_clearField(4);
+}
+
+class UpdateRoomTaxonomyResponse extends $pb.GeneratedMessage {
+  factory UpdateRoomTaxonomyResponse({
+    AdminRoom? room,
+  }) {
+    final result = create();
+    if (room != null) result.room = room;
+    return result;
+  }
+
+  UpdateRoomTaxonomyResponse._();
+
+  factory UpdateRoomTaxonomyResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateRoomTaxonomyResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateRoomTaxonomyResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<AdminRoom>(1, _omitFieldNames ? '' : 'room',
+        subBuilder: AdminRoom.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomTaxonomyResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomTaxonomyResponse copyWith(
+          void Function(UpdateRoomTaxonomyResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as UpdateRoomTaxonomyResponse))
+          as UpdateRoomTaxonomyResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomTaxonomyResponse create() => UpdateRoomTaxonomyResponse._();
+  @$core.override
+  UpdateRoomTaxonomyResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomTaxonomyResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateRoomTaxonomyResponse>(create);
+  static UpdateRoomTaxonomyResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  AdminRoom get room => $_getN(0);
+  @$pb.TagNumber(1)
+  set room(AdminRoom value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoom() => $_clearField(1);
+  @$pb.TagNumber(1)
+  AdminRoom ensureRoom() => $_ensure(0);
 }
 
 class GetRoomRequest extends $pb.GeneratedMessage {
@@ -9678,6 +10675,34 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, KickMemberRequest request) =>
       _client.invoke<KickMemberResponse>(
           ctx, 'AdminService', 'KickMember', request, KickMemberResponse());
+  $async.Future<ListRoomCategoriesResponse> listRoomCategories(
+          $pb.ClientContext? ctx, ListRoomCategoriesRequest request) =>
+      _client.invoke<ListRoomCategoriesResponse>(ctx, 'AdminService',
+          'ListRoomCategories', request, ListRoomCategoriesResponse());
+  $async.Future<UpsertRoomCategoryResponse> upsertRoomCategory(
+          $pb.ClientContext? ctx, UpsertRoomCategoryRequest request) =>
+      _client.invoke<UpsertRoomCategoryResponse>(ctx, 'AdminService',
+          'UpsertRoomCategory', request, UpsertRoomCategoryResponse());
+  $async.Future<DeleteRoomCategoryResponse> deleteRoomCategory(
+          $pb.ClientContext? ctx, DeleteRoomCategoryRequest request) =>
+      _client.invoke<DeleteRoomCategoryResponse>(ctx, 'AdminService',
+          'DeleteRoomCategory', request, DeleteRoomCategoryResponse());
+  $async.Future<ListRoomLabelsResponse> listRoomLabels(
+          $pb.ClientContext? ctx, ListRoomLabelsRequest request) =>
+      _client.invoke<ListRoomLabelsResponse>(ctx, 'AdminService',
+          'ListRoomLabels', request, ListRoomLabelsResponse());
+  $async.Future<UpsertRoomLabelResponse> upsertRoomLabel(
+          $pb.ClientContext? ctx, UpsertRoomLabelRequest request) =>
+      _client.invoke<UpsertRoomLabelResponse>(ctx, 'AdminService',
+          'UpsertRoomLabel', request, UpsertRoomLabelResponse());
+  $async.Future<DeleteRoomLabelResponse> deleteRoomLabel(
+          $pb.ClientContext? ctx, DeleteRoomLabelRequest request) =>
+      _client.invoke<DeleteRoomLabelResponse>(ctx, 'AdminService',
+          'DeleteRoomLabel', request, DeleteRoomLabelResponse());
+  $async.Future<UpdateRoomTaxonomyResponse> updateRoomTaxonomy(
+          $pb.ClientContext? ctx, UpdateRoomTaxonomyRequest request) =>
+      _client.invoke<UpdateRoomTaxonomyResponse>(ctx, 'AdminService',
+          'UpdateRoomTaxonomy', request, UpdateRoomTaxonomyResponse());
 
   /// =========================
   /// Admin Management (Root Only)

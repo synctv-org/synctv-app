@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:synctv_app/models/room_realtime_codec.dart';
-import 'package:synctv_app/services/watch_together_service.dart';
+import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
 class RoomRealtimeConnection {
@@ -32,7 +32,7 @@ class RoomRealtimeConnection {
     final socket = await _socket;
     final bytes = message.writeToBuffer();
     onOutgoing?.call(bytes, message);
-    socket.add(WatchTogetherService.encodeRealtimeMessageJson(message));
+    socket.add(SyncTvService.encodeRealtimeMessageJson(message));
   }
 
   Future<void> close([int? closeCode, String? closeReason]) async {
@@ -53,7 +53,7 @@ class RoomRealtimeConnection {
     final incoming = StreamController<Uint8List>();
     final outgoing = StreamController<List<int>>();
 
-    final socketFuture = WatchTogetherService.createRoomWebSocketUri(roomId)
+    final socketFuture = SyncTvService.createRoomWebSocketUri(roomId)
         .then((uri) => WebSocket.connect(uri.toString()))
         .then((connected) {
       socket = connected;
@@ -61,7 +61,7 @@ class RoomRealtimeConnection {
         (frame) {
           try {
             if (frame is! String) return;
-            final message = WatchTogetherService.decodeRealtimeMessageJson(
+            final message = SyncTvService.decodeRealtimeMessageJson(
               frame,
             );
             final bytes = Uint8List.fromList(message.writeToBuffer());
@@ -78,7 +78,7 @@ class RoomRealtimeConnection {
           outgoing.stream.where((bytes) => bytes.isNotEmpty).listen((bytes) {
         final message = client.ClientMessage.fromBuffer(bytes);
         onOutgoing?.call(bytes, message);
-        socket.add(WatchTogetherService.encodeRealtimeMessageJson(message));
+        socket.add(SyncTvService.encodeRealtimeMessageJson(message));
       });
       heartbeatTimer = Timer.periodic(const Duration(seconds: 25), (_) {
         if (!outgoing.isClosed) {
