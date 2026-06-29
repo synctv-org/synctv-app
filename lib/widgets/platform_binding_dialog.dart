@@ -826,6 +826,7 @@ class _PasswordAccountDialog extends StatefulWidget {
 
 class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   final _hostController = TextEditingController();
+  final _portController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _secretController = TextEditingController();
@@ -850,6 +851,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   @override
   void dispose() {
     _hostController.dispose();
+    _portController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _secretController.dispose();
@@ -875,7 +877,10 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   }
 
   Future<void> _submit() async {
-    final host = _normalizeProviderHost(_hostController.text);
+    final host = _normalizeProviderHost(
+      _hostController.text,
+      port: _portController.text,
+    );
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
     final apiKey = _secretController.text.trim();
@@ -920,15 +925,23 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
     }
   }
 
-  String _normalizeProviderHost(String value) {
+  String _normalizeProviderHost(String value, {String port = ''}) {
     final trimmed = value.trim();
-    if (trimmed.startsWith('http//')) {
-      return 'http://${trimmed.substring('http//'.length)}';
+    final normalized = switch (trimmed) {
+      final value when value.startsWith('http//') =>
+        'http://${value.substring('http//'.length)}',
+      final value when value.startsWith('https//') =>
+        'https://${value.substring('https//'.length)}',
+      final value when !value.contains('://') && value.isNotEmpty =>
+        'http://$value',
+      _ => trimmed,
+    };
+    final parsed = Uri.tryParse(normalized);
+    final trimmedPort = port.trim();
+    if (trimmedPort.isEmpty || parsed == null || parsed.hasPort) {
+      return normalized;
     }
-    if (trimmed.startsWith('https//')) {
-      return 'https://${trimmed.substring('https//'.length)}';
-    }
-    return trimmed;
+    return parsed.replace(port: int.tryParse(trimmedPort)).toString();
   }
 
   @override
@@ -976,9 +989,22 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                         context: context,
                         label: '$_label 地址',
                         controller: _hostController,
-                        hintText: 'https://example.com',
+                        hintText: '127.0.0.1 或 https://example.com',
                         prefixIcon: Icons.link_rounded,
                         keyboardType: TextInputType.url,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        smartDashesType: SmartDashesType.disabled,
+                        smartQuotesType: SmartQuotesType.disabled,
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: '端口',
+                        controller: _portController,
+                        hintText: _isAlist ? '5244' : '8096',
+                        prefixIcon: Icons.settings_ethernet_rounded,
+                        keyboardType: TextInputType.number,
                         enableSuggestions: false,
                         autocorrect: false,
                         smartDashesType: SmartDashesType.disabled,

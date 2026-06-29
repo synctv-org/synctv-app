@@ -12,6 +12,7 @@ import 'package:synctv_app/managers/webrtc_manager.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/playback_client_profile.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
@@ -38,6 +39,7 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/common.pb.dart' as common_pb;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
 import 'package:synctv_app/src/generated/proto/oauth2.pb.dart' as oauth2;
+import 'package:synctv_app/src/generated/proto/passkey.pb.dart' as passkey;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/src/generated/proto/providers/alist.pb.dart'
@@ -51,6 +53,81 @@ import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
 import 'package:synctv_app/utils/chat_playback_danmaku.dart';
 import 'package:synctv_app/utils/chat_reactions.dart';
 import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
+
+client.ProviderTarget testProviderTarget(String relativePath) {
+  return client.ProviderTarget(
+    alist: client.AlistTarget(relativePath: relativePath),
+  );
+}
+
+Map<String, dynamic> testProviderTargetJson(client.ProviderTarget target) {
+  return providerTargetToJson(target);
+}
+
+String testProviderTargetToken(client.ProviderTarget target) {
+  return providerTargetToBase64(target);
+}
+
+String testBytesJson(String value) => base64Encode(utf8.encode(value));
+
+Map<String, dynamic> testPasskeyRequestOptions({
+  required String challenge,
+  String rpId = '',
+  List<Map<String, dynamic>> allowCredentials = const [],
+}) {
+  return {
+    'publicKey': {
+      'challenge': testBytesJson(challenge),
+      if (rpId.isNotEmpty) 'rpId': rpId,
+      if (allowCredentials.isNotEmpty) 'allowCredentials': allowCredentials,
+    },
+  };
+}
+
+Map<String, dynamic> testPasskeyCreationOptions({
+  required String challenge,
+  required String userId,
+  required String username,
+}) {
+  return {
+    'publicKey': {
+      'challenge': testBytesJson(challenge),
+      'user': {
+        'id': testBytesJson(userId),
+        'name': username,
+      },
+    },
+  };
+}
+
+passkey.PasskeyAuthenticationCredential testPasskeyAuthenticationCredential(
+  String id,
+) {
+  return passkeyAuthenticationCredentialFromJson({
+    'id': id,
+    'rawId': testBytesJson(id),
+    'type': 1,
+    'response': {
+      'authenticatorData': testBytesJson('auth-data'),
+      'clientDataJSON': testBytesJson('{}'),
+      'signature': testBytesJson('sig'),
+    },
+  });
+}
+
+passkey.PasskeyRegistrationCredential testPasskeyRegistrationCredential(
+  String id,
+) {
+  return passkeyRegistrationCredentialFromJson({
+    'id': id,
+    'rawId': testBytesJson(id),
+    'type': 1,
+    'response': {
+      'attestationObject': testBytesJson('attestation'),
+      'clientDataJSON': testBytesJson('{}'),
+    },
+  });
+}
 
 void main() {
   test(
@@ -102,7 +179,7 @@ void main() {
     final observed = client.WatchPlaybackStateEvent()
       ..mergeFromProto3Json(
         observedJson,
-        supportNamesWithUnderscores: true,
+        supportNamesWithUnderscores: false,
         permissiveEnums: true,
         ignoreUnknownFields: true,
       );
@@ -130,7 +207,7 @@ void main() {
     final changed = client.WatchPlaybackStateEvent()
       ..mergeFromProto3Json(
         changedJson,
-        supportNamesWithUnderscores: true,
+        supportNamesWithUnderscores: false,
         permissiveEnums: true,
         ignoreUnknownFields: true,
       );
@@ -418,7 +495,7 @@ void main() {
     final playback = RoomRealtimeCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
-          observeId: 'playback_state',
+          observeId: 'playbackState',
           playbackState: client.PlaybackState(
             isPlaying: true,
             position: 42.5,
@@ -671,13 +748,13 @@ void main() {
               'event': {
                 'id': 'evt_1',
                 'sequence': '8',
-                'room_id': 'room_1',
+                'roomId': 'room_1',
                 'kind': client_enum.ChatMessageEventKind
                     .CHAT_MESSAGE_EVENT_KIND_REACTIONS_CHANGED.value,
                 'message': {
                   'id': 'msg_1',
-                  'room_id': 'room_1',
-                  'user_id': 'usr_sender',
+                  'roomId': 'room_1',
+                  'userId': 'usr_sender',
                   'username': 'sender',
                   'content': 'hello',
                   'timestamp': '1760000100',
@@ -688,10 +765,10 @@ void main() {
                     {
                       'key': '👍',
                       'count': '3',
-                      'reacted_by_me': true,
+                      'reactedByMe': true,
                     }
                   ],
-                  'reaction_count': 3,
+                  'reactionCount': 3,
                 }
               }
             }),
@@ -705,12 +782,12 @@ void main() {
             jsonEncode({
               'users': [
                 {
-                  'user_id': 'usr_1',
+                  'userId': 'usr_1',
                   'username': 'alice',
-                  'reacted_at': '1760000200',
+                  'reactedAt': '1760000200',
                 }
               ],
-              'next_cursor': 'cursor_2',
+              'nextCursor': 'cursor_2',
               'total': '1',
             }),
             200,
@@ -747,8 +824,8 @@ void main() {
 
     expect(requests[1].method, 'GET');
     expect(requests[1].url.queryParameters, {
-      'message_id': 'msg_1',
-      'reaction_key': '👍',
+      'messageId': 'msg_1',
+      'reactionKey': '👍',
       'limit': '25',
       'cursor': 'cursor_1',
     });
@@ -774,8 +851,8 @@ void main() {
                 'messages': [
                   {
                     'id': 'msg_1',
-                    'room_id': 'room_1',
-                    'user_id': 'usr_sender',
+                    'roomId': 'room_1',
+                    'userId': 'usr_sender',
                     'username': 'sender',
                     'content': 'search hit',
                     'timestamp': '1760000100',
@@ -783,15 +860,15 @@ void main() {
                     'status': client_enum
                         .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
                     'pin': {
-                      'pinned_by_user_id': 'usr_mod',
-                      'pinned_by_username': 'mod',
+                      'pinnedByUserId': 'usr_mod',
+                      'pinnedByUsername': 'mod',
                       'note': 'important',
-                      'pinned_at': '1760000200',
+                      'pinnedAt': '1760000200',
                     },
                   }
                 ],
-                'next_cursor': 'cursor_2',
-                'event_cursor': {'sequence': '77'},
+                'nextCursor': 'cursor_2',
+                'eventCursor': {'sequence': '77'},
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -803,8 +880,8 @@ void main() {
                   {
                     'message': {
                       'id': 'msg_1',
-                      'room_id': 'room_1',
-                      'user_id': 'usr_sender',
+                      'roomId': 'room_1',
+                      'userId': 'usr_sender',
                       'username': 'sender',
                       'content': 'pinned',
                       'timestamp': '1760000100',
@@ -812,10 +889,10 @@ void main() {
                       'status': client_enum
                           .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
                     },
-                    'pinned_by_user_id': 'usr_mod',
-                    'pinned_by_username': 'mod',
+                    'pinnedByUserId': 'usr_mod',
+                    'pinnedByUsername': 'mod',
                     'note': 'important',
-                    'pinned_at': '1760000200',
+                    'pinnedAt': '1760000200',
                   }
                 ],
               }),
@@ -827,14 +904,14 @@ void main() {
               return http.Response(
                 jsonEncode({
                   'event': {
-                    'event_id': 'pin_evt_1',
-                    'room_id': 'room_1',
+                    'eventId': 'pin_evt_1',
+                    'roomId': 'room_1',
                     'kind': client_enum
                         .ChatPinEventKind.CHAT_PIN_EVENT_KIND_PINNED.value,
                     'message': {
                       'id': 'msg_1',
-                      'room_id': 'room_1',
-                      'user_id': 'usr_sender',
+                      'roomId': 'room_1',
+                      'userId': 'usr_sender',
                       'username': 'sender',
                       'content': 'pinned',
                       'timestamp': '1760000100',
@@ -843,12 +920,12 @@ void main() {
                           .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
                     },
                     'pin': {
-                      'pinned_by_user_id': 'usr_mod',
-                      'pinned_by_username': 'mod',
+                      'pinnedByUserId': 'usr_mod',
+                      'pinnedByUsername': 'mod',
                       'note': 'important',
-                      'pinned_at': '1760000200',
+                      'pinnedAt': '1760000200',
                     },
-                    'occurred_at': '1760000201',
+                    'occurredAt': '1760000201',
                     'sequence': '78',
                   }
                 }),
@@ -859,14 +936,14 @@ void main() {
             return http.Response(
               jsonEncode({
                 'event': {
-                  'event_id': 'pin_evt_2',
-                  'room_id': 'room_1',
+                  'eventId': 'pin_evt_2',
+                  'roomId': 'room_1',
                   'kind': client_enum
                       .ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED.value,
                   'message': {
                     'id': 'msg_1',
-                    'room_id': 'room_1',
-                    'user_id': 'usr_sender',
+                    'roomId': 'room_1',
+                    'userId': 'usr_sender',
                     'username': 'sender',
                     'content': 'unpinned',
                     'timestamp': '1760000100',
@@ -874,7 +951,7 @@ void main() {
                     'status': client_enum
                         .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
                   },
-                  'occurred_at': '1760000301',
+                  'occurredAt': '1760000301',
                   'sequence': '79',
                 }
               }),
@@ -909,8 +986,8 @@ void main() {
       'query': 'needle',
       'cursor': 'cursor_1',
       'limit': '25',
-      'include_deleted': 'true',
-      'user_id': 'usr_sender',
+      'includeDeleted': 'true',
+      'userId': 'usr_sender',
     });
     expect(search.nextCursor, 'cursor_2');
     expect(search.eventCursor, '77');
@@ -924,12 +1001,12 @@ void main() {
 
     expect(requests[2].method, 'PUT');
     final pinBody = jsonDecode(requests[2].body) as Map<String, dynamic>;
-    expect(pinBody..remove('client_operation_id'), {
-      'message_id': 'msg_1',
+    expect(pinBody..remove('clientOperationId'), {
+      'messageId': 'msg_1',
       'note': 'important',
     });
     expect(jsonDecode(requests[2].body),
-        containsPair('client_operation_id', isA<String>()));
+        containsPair('clientOperationId', isA<String>()));
     expect(pinEvent.eventId, 'pin_evt_1');
     expect(pinEvent.kind,
         client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_PINNED.value);
@@ -937,11 +1014,11 @@ void main() {
 
     expect(requests[3].method, 'DELETE');
     final unpinBody = jsonDecode(requests[3].body) as Map<String, dynamic>;
-    expect(unpinBody..remove('client_operation_id'), {
-      'message_id': 'msg_1',
+    expect(unpinBody..remove('clientOperationId'), {
+      'messageId': 'msg_1',
     });
     expect(jsonDecode(requests[3].body),
-        containsPair('client_operation_id', isA<String>()));
+        containsPair('clientOperationId', isA<String>()));
     expect(unpinEvent.kind,
         client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED.value);
     expect(unpinEvent.pin, isNull);
@@ -952,8 +1029,10 @@ void main() {
     final subscription = server.listen((request) async {
       expect(request.uri.path, '/api/rooms/room_1/watch/chat-pin-events');
       expect(request.uri.queryParameters, {
-        'delivery_mode': 'push_snapshot',
-        'after_event_sequence': '76',
+        'deliveryMode': client_enum
+            .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT.value
+            .toString(),
+        'afterEventSequence': '76',
       });
       request.response
         ..statusCode = 200
@@ -1056,23 +1135,23 @@ void main() {
 
     expect(requests, hasLength(4));
     expect(jsonDecode(requests[0].body), {
-      'room': {'room_id': 'room_1'},
-      'reason_code': 'spam',
+      'room': {'roomId': 'room_1'},
+      'reasonCode': 'spam',
       'reason': 'room reason',
     });
     expect(jsonDecode(requests[1].body), {
-      'user': {'user_id': 'usr_target'},
-      'reason_code': 'abuse',
+      'user': {'userId': 'usr_target'},
+      'reasonCode': 'abuse',
       'reason': 'user reason',
     });
     expect(jsonDecode(requests[2].body), {
-      'room_member': {'room_id': 'room_1', 'user_id': 'usr_member'},
-      'reason_code': 'illegal',
+      'roomMember': {'roomId': 'room_1', 'userId': 'usr_member'},
+      'reasonCode': 'illegal',
       'reason': 'member reason',
     });
     expect(jsonDecode(requests[3].body), {
-      'chat_message': {'room_id': 'room_1', 'message_id': 'msg_1'},
-      'reason_code': 'other',
+      'chatMessage': {'roomId': 'room_1', 'messageId': 'msg_1'},
+      'reasonCode': 'other',
       'reason': 'message reason',
     });
   });
@@ -1089,16 +1168,16 @@ void main() {
           jsonEncode({
             'message': {
               'id': 'msg_42',
-              'room_id': 'room_1',
-              'user_id': 'usr_sender',
+              'roomId': 'room_1',
+              'userId': 'usr_sender',
               'username': 'sender',
               'content': 'single message',
               'timestamp': '1760000300',
               'version': '4',
               'status': client_enum
                   .ChatMessageStatus.CHAT_MESSAGE_STATUS_ACTIVE.value,
-              'display_position': 'top',
-              'display_color': '#ffcc00',
+              'displayPosition': 'top',
+              'displayColor': '#ffcc00',
             }
           }),
           200,
@@ -1118,8 +1197,8 @@ void main() {
     expect(captured!.method, 'GET');
     expect(captured!.url.path, '/api/rooms/room_1/chat/messages/msg_42');
     expect(captured!.url.queryParameters, {
-      'message_id': 'msg_42',
-      'include_deleted': 'true',
+      'messageId': 'msg_42',
+      'includeDeleted': 'true',
     });
     expect(message.id, 'msg_42');
     expect(message.content, 'single message');
@@ -1217,13 +1296,13 @@ void main() {
             return http.Response(
               jsonEncode({
                 'plan': {
-                  'checksum_algorithm': 'sha256',
-                  'part_size_bytes': upload.sizeBytes,
+                  'checksumAlgorithm': 'sha256',
+                  'partSizeBytes': upload.sizeBytes,
                   'parts': [
                     {
-                      'part_number': 1,
-                      'offset_bytes': 0,
-                      'size_bytes': upload.sizeBytes,
+                      'partNumber': 1,
+                      'offsetBytes': 0,
+                      'sizeBytes': upload.sizeBytes,
                     }
                   ],
                 },
@@ -1234,24 +1313,24 @@ void main() {
           }
           expect(parts, [
             {
-              'part_number': 1,
-              'offset_bytes': '0',
-              'size_bytes': upload.sizeBytes.toString(),
-              'checksum_sha256': upload.checksumSha256,
+              'partNumber': 1,
+              'offsetBytes': '0',
+              'sizeBytes': upload.sizeBytes.toString(),
+              'checksumSha256': upload.checksumSha256,
             }
           ]);
           return http.Response(
             jsonEncode({
               'session': {
-                'avatar_reference': {'id': 'avatar_1'},
-                'upload_required': false,
-                'ownership_proof_required': true,
-                'ownership_proof_nonce': 'nonce_1',
-                'ownership_proof_ranges': [
+                'avatarReference': {'id': 'avatar_1'},
+                'uploadRequired': false,
+                'ownershipProofRequired': true,
+                'ownershipProofNonce': 'nonce_1',
+                'ownershipProofRanges': [
                   {'offset': 1, 'length': 3}
                 ],
-                'upload_token': 'upload-token',
-                'encoded_object_key': 'avatar-object-key',
+                'uploadToken': 'upload-token',
+                'encodedObjectKey': 'avatar-object-key',
               }
             }),
             200,
@@ -1265,8 +1344,8 @@ void main() {
           return http.Response(
             jsonEncode({
               'complete': true,
-              'uploaded_size_bytes': upload.sizeBytes,
-              'uploaded_parts': [1],
+              'uploadedSizeBytes': upload.sizeBytes,
+              'uploadedParts': [1],
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -1297,19 +1376,19 @@ void main() {
 
     expect(updated.id, 'usr_1');
     expect(uploadSessionRequests, 2);
-    expect(updateBody?['avatar_reference'], {'id': 'avatar_1'});
-    expect(completeBody?['file_id'], 'avatar_1');
+    expect(updateBody?['avatarReference'], {'id': 'avatar_1'});
+    expect(completeBody?['fileId'], 'avatar_1');
     expect(completeBody?['token'], 'upload-token');
     expect(completeBody?['parts'], [
       {
-        'part_number': 1,
+        'partNumber': 1,
         'etag': '',
-        'size_bytes': upload.sizeBytes.toString(),
-        'checksum_sha256': upload.checksumSha256,
+        'sizeBytes': upload.sizeBytes.toString(),
+        'checksumSha256': upload.checksumSha256,
       }
     ]);
     expect(
-      completeBody?['ownership_proof'],
+      completeBody?['ownershipProof'],
       _expectedOwnershipProof(
         upload.bytes,
         nonce: 'nonce_1',
@@ -1571,13 +1650,13 @@ void main() {
             return http.Response(
               jsonEncode({
                 'plan': {
-                  'checksum_algorithm': 'sha256',
-                  'part_size_bytes': upload.sizeBytes,
+                  'checksumAlgorithm': 'sha256',
+                  'partSizeBytes': upload.sizeBytes,
                   'parts': [
                     {
-                      'part_number': 1,
-                      'offset_bytes': 0,
-                      'size_bytes': upload.sizeBytes,
+                      'partNumber': 1,
+                      'offsetBytes': 0,
+                      'sizeBytes': upload.sizeBytes,
                     }
                   ],
                 },
@@ -1589,15 +1668,15 @@ void main() {
           return http.Response(
             jsonEncode({
               'session': {
-                'avatar_reference': {'id': 'avatar_2'},
-                'upload_required': true,
-                'upload_url': '/api/user/avatar-objects/avatar-object-key',
-                'upload_headers': {
+                'avatarReference': {'id': 'avatar_2'},
+                'uploadRequired': true,
+                'uploadUrl': '/api/user/avatar-objects/avatar-object-key',
+                'uploadHeaders': {
                   'x-synctv-file-upload-token': 'upload-token',
                   'x-upload-extra': '1',
                 },
-                'upload_token': 'upload-token',
-                'encoded_object_key': 'avatar-object-key',
+                'uploadToken': 'upload-token',
+                'encodedObjectKey': 'avatar-object-key',
               }
             }),
             200,
@@ -1617,8 +1696,8 @@ void main() {
           return http.Response(
             jsonEncode({
               'complete': true,
-              'uploaded_size_bytes': upload.sizeBytes,
-              'uploaded_parts': [1],
+              'uploadedSizeBytes': upload.sizeBytes,
+              'uploadedParts': [1],
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -1655,10 +1734,10 @@ void main() {
     expect(uploadedHeaders?.containsKey('content-range'), isFalse);
     expect(completeBody?['parts'], [
       {
-        'part_number': 1,
+        'partNumber': 1,
         'etag': 'etag-1',
-        'size_bytes': upload.sizeBytes.toString(),
-        'checksum_sha256': upload.checksumSha256,
+        'sizeBytes': upload.sizeBytes.toString(),
+        'checksumSha256': upload.checksumSha256,
       }
     ]);
   });
@@ -1688,18 +1767,18 @@ void main() {
             return http.Response(
               jsonEncode({
                 'plan': {
-                  'checksum_algorithm': 'sha256',
-                  'part_size_bytes': 3,
+                  'checksumAlgorithm': 'sha256',
+                  'partSizeBytes': 3,
                   'parts': [
                     {
-                      'part_number': 1,
-                      'offset_bytes': 0,
-                      'size_bytes': 3,
+                      'partNumber': 1,
+                      'offsetBytes': 0,
+                      'sizeBytes': 3,
                     },
                     {
-                      'part_number': 2,
-                      'offset_bytes': 3,
-                      'size_bytes': 3,
+                      'partNumber': 2,
+                      'offsetBytes': 3,
+                      'sizeBytes': 3,
                     }
                   ],
                 },
@@ -1711,14 +1790,14 @@ void main() {
           return http.Response(
             jsonEncode({
               'session': {
-                'avatar_reference': {'id': 'avatar_2'},
-                'upload_required': true,
-                'upload_url': '/api/user/avatar-objects/avatar-object-key',
-                'upload_headers': {
+                'avatarReference': {'id': 'avatar_2'},
+                'uploadRequired': true,
+                'uploadUrl': '/api/user/avatar-objects/avatar-object-key',
+                'uploadHeaders': {
                   'x-synctv-file-upload-token': 'upload-token',
                 },
-                'upload_token': 'upload-token',
-                'encoded_object_key': 'avatar-object-key',
+                'uploadToken': 'upload-token',
+                'encodedObjectKey': 'avatar-object-key',
               }
             }),
             200,
@@ -1740,8 +1819,8 @@ void main() {
           return http.Response(
             jsonEncode({
               'complete': true,
-              'uploaded_size_bytes': upload.sizeBytes,
-              'uploaded_parts': [1, 2],
+              'uploadedSizeBytes': upload.sizeBytes,
+              'uploadedParts': [1, 2],
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -1986,7 +2065,7 @@ void main() {
       requests.add(http.Request(request.method, request.uri));
       request.response.headers.contentType = io.ContentType.json;
 
-      final instanceName = request.uri.queryParameters['instance_name'] ?? '';
+      final instanceName = request.uri.queryParameters['instanceName'] ?? '';
       if (request.uri.path == '/api/providers/instances/available') {
         request.response.write(jsonEncode({
           'instances': ['', 'edge', 'edge'],
@@ -1997,29 +2076,29 @@ void main() {
               ? [
                   {
                     'id': 'alist_edge',
-                    'server_id': 'alist_server_edge',
+                    'serverId': 'alist_server_edge',
                     'host': 'https://alist-edge.example.test',
                     'username': 'edge-user',
-                    'created_at': 2,
-                    'provider_instance_name': 'edge',
+                    'createdAt': 2,
+                    'providerInstanceName': 'edge',
                   }
                 ]
               : [
                   {
                     'id': 'alist_default_a',
-                    'server_id': 'alist_server_default',
+                    'serverId': 'alist_server_default',
                     'host': 'https://alist.example.test',
                     'username': 'default-user',
-                    'created_at': 1,
-                    'provider_instance_name': '',
+                    'createdAt': 1,
+                    'providerInstanceName': '',
                   },
                   {
                     'id': 'alist_default_b',
-                    'server_id': 'alist_server_default',
+                    'serverId': 'alist_server_default',
                     'host': 'https://alist.example.test',
                     'username': 'default-user',
-                    'created_at': 1,
-                    'provider_instance_name': '',
+                    'createdAt': 1,
+                    'providerInstanceName': '',
                   }
                 ],
         }));
@@ -2028,14 +2107,14 @@ void main() {
           'binds': [
             {
               'id': instanceName == 'edge' ? 'emby_edge' : 'emby_default',
-              'server_id':
+              'serverId':
                   instanceName == 'edge' ? 'emby_server_edge' : 'emby_server',
               'host': instanceName == 'edge'
                   ? 'https://emby-edge.example.test'
                   : 'https://emby.example.test',
-              'user_id': instanceName == 'edge' ? 'edge-user' : 'default-user',
-              'created_at': instanceName == 'edge' ? 4 : 3,
-              'provider_instance_name': instanceName,
+              'userId': instanceName == 'edge' ? 'edge-user' : 'default-user',
+              'createdAt': instanceName == 'edge' ? 4 : 3,
+              'providerInstanceName': instanceName,
             }
           ],
         }));
@@ -2044,10 +2123,10 @@ void main() {
           'binds': [
             {
               'id': instanceName == 'edge' ? 'bili_edge' : 'bili_default',
-              'server_id':
+              'serverId':
                   instanceName == 'edge' ? 'bili_server_edge' : 'bili_server',
-              'created_at': instanceName == 'edge' ? 6 : 5,
-              'provider_instance_name': instanceName,
+              'createdAt': instanceName == 'edge' ? 6 : 5,
+              'providerInstanceName': instanceName,
             }
           ],
         }));
@@ -2084,14 +2163,18 @@ void main() {
       );
       expect(
         availableRequests.map(
-          (request) => request.url.queryParameters['provider_type'],
+          (request) => request.url.queryParameters['providerType'],
         ),
-        ['alist', 'emby', 'bilibili'],
+        [
+          source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value.toString(),
+          source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
+          source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI.value.toString(),
+        ],
       );
       expect(
         requests.map(
           (request) =>
-              '${request.url.path}?${request.url.queryParameters['instance_name'] ?? ''}',
+              '${request.url.path}?${request.url.queryParameters['instanceName'] ?? ''}',
         ),
         containsAll([
           '/api/providers/alist/binds?',
@@ -2106,7 +2189,7 @@ void main() {
         requests
             .where((request) =>
                 request.url.path == '/api/providers/alist/binds' &&
-                !request.url.queryParameters.containsKey('instance_name'))
+                !request.url.queryParameters.containsKey('instanceName'))
             .length,
         1,
       );
@@ -2131,11 +2214,11 @@ void main() {
           'binds': [
             {
               'id': 'alist_default',
-              'server_id': 'alist_server_default',
+              'serverId': 'alist_server_default',
               'host': 'https://alist.example.test',
               'username': 'default-user',
-              'created_at': 1,
-              'provider_instance_name': '',
+              'createdAt': 1,
+              'providerInstanceName': '',
             }
           ],
         }));
@@ -2169,7 +2252,7 @@ void main() {
             .single
             .url
             .queryParameters,
-        isNot(contains('instance_name')),
+        isNot(contains('instanceName')),
       );
     } finally {
       await subscription.cancel();
@@ -2211,11 +2294,11 @@ void main() {
           );
         }
         if (request.url.path == '/api/auth/refresh') {
-          expect(jsonDecode(request.body), {'refresh_token': 'refresh-token'});
+          expect(jsonDecode(request.body), {'refreshToken': 'refresh-token'});
           return http.Response(
             jsonEncode({
-              'access_token': 'fresh-access',
-              'refresh_token': 'fresh-refresh',
+              'accessToken': 'fresh-access',
+              'refreshToken': 'fresh-refresh',
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -2250,21 +2333,25 @@ void main() {
         return http.Response(
           jsonEncode({
             'id': 'med_1',
-            'room_id': 'room_1',
-            'source_provider': 'direct_url',
+            'roomId': 'room_1',
+            'sourceProvider':
+                source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
             'name': 'Feature',
-            'creator_id': 'user_1',
-            'provider_instance_name': 'edge',
+            'creatorId': 'user_1',
+            'providerInstanceName': 'edge',
             'position': 12.5,
-            'added_at': '1760000100',
+            'addedAt': '1760000100',
             'availability': client.ResourceAvailability
                 .RESOURCE_AVAILABILITY_CREATOR_INACTIVE.value,
             'version': '91',
-            'metadata': {
-              'url': '/api/providers/proxy/direct/feature.mp4',
-              'headers': {'x-media': '1'},
+            'metadata': {'source': '/api/providers/proxy/direct/feature.mp4'},
+            'sourceConfig': {
+              'directUrl': {
+                'medias': [
+                  {'url': 'https://origin.example/feature.mp4'}
+                ]
+              },
             },
-            'source_config': {'url': 'https://origin.example/feature.mp4'},
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -2283,15 +2370,12 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/room_1/media/med_1');
     expect(media.id, 'med_1');
     expect(media.name, 'Feature');
-    expect(
-      media.url,
-      'https://example.test/api/providers/proxy/direct/feature.mp4',
-    );
+    expect(media.url, 'https://origin.example/feature.mp4');
     expect(media.creator, 'user_1');
     expect(media.roomId, 'room_1');
     expect(media.position, 12.5);
     expect(media.addedAt, 1760000100);
-    expect(media.sourceProvider, 'direct_url');
+    expect(media.sourceProvider, 'directUrl');
     expect(media.providerInstanceName, 'edge');
     expect(
       media.availability,
@@ -2299,8 +2383,12 @@ void main() {
     );
     expect(media.version, 91);
     expect(media.proxy, isFalse);
-    expect(media.headers, {'x-media': '1'});
+    expect(media.headers, isEmpty);
     expect(media.sourceConfig['url'], 'https://origin.example/feature.mp4');
+    expect(
+      media.metadata['source'],
+      '/api/providers/proxy/direct/feature.mp4',
+    );
   });
 
   test('service fetches playlist and media details from protobuf endpoints',
@@ -2314,29 +2402,39 @@ void main() {
         request.response.write(jsonEncode({
           'playlist': {
             'id': 'pl_1',
-            'room_id': 'room_1',
+            'roomId': 'room_1',
             'name': 'Season 1',
-            'parent_id': '',
-            'is_dynamic': true,
-            'source_provider': 'alist',
-            'provider_instance_name': 'alist_main',
-            'source_config': {'path': '/shows/season-1'},
+            'parentId': '',
+            'isDynamic': true,
+            'sourceProvider':
+                source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value,
+            'providerInstanceName': 'alist_main',
+            'sourceConfig': {
+              'alist': {'path': '/shows/season-1'}
+            },
           },
-          'child_folder_count': 2,
-          'media_count': 8,
+          'childFolderCount': 2,
+          'mediaCount': 8,
         }));
       } else if (request.uri.path == '/api/rooms/room_1/media/med_1') {
         request.response.write(jsonEncode({
           'id': 'med_1',
-          'room_id': 'room_1',
-          'source_provider': 'direct_url',
+          'roomId': 'room_1',
+          'sourceProvider':
+              source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
           'name': 'Episode 1',
-          'creator_id': 'usr_creator',
-          'provider_instance_name': 'edge',
+          'creatorId': 'usr_creator',
+          'providerInstanceName': 'edge',
           'metadata': {
             'url': '/api/providers/proxy/direct/episode-1.mp4',
           },
-          'source_config': {'url': 'https://origin.example/episode-1.mp4'},
+          'sourceConfig': {
+            'directUrl': {
+              'medias': [
+                {'url': 'https://origin.example/episode-1.mp4'}
+              ]
+            },
+          },
         }));
       } else {
         request.response.statusCode = 404;
@@ -2362,7 +2460,7 @@ void main() {
       expect(playlist.playlist.name, 'Season 1');
       expect(playlist.playlist.isFolder, isTrue);
       expect(playlist.playlist.playbackPlaylistId, 'pl_1');
-      expect(playlist.playlist.metadata['is_dynamic'], isTrue);
+      expect(playlist.playlist.metadata['isDynamic'], isTrue);
       expect(playlist.playlist.sourceProvider, 'alist');
       expect(playlist.playlist.providerInstanceName, 'alist_main');
       expect(playlist.playlist.sourceConfig['path'], '/shows/season-1');
@@ -2371,6 +2469,7 @@ void main() {
       expect(media.id, 'med_1');
       expect(media.creator, 'usr_creator');
       expect(media.proxy, isFalse);
+      expect(media.url, 'https://origin.example/episode-1.mp4');
       expect(media.sourceConfig['url'], 'https://origin.example/episode-1.mp4');
       expect(requests.map((request) => request.url.path), [
         '/api/rooms/room_1/playlists/pl_1',
@@ -2406,7 +2505,7 @@ void main() {
               afterEventSequence: Int64(7),
               request: client.ListPlaylistItemsRequest(
                 playlistId: 'playlist_1',
-                target: utf8.encode(jsonEncode({'cursor': 'season-1'})),
+                target: testProviderTarget('season-1'),
                 page: 2,
                 pageSize: 25,
                 search: 'matrix',
@@ -2426,33 +2525,41 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/room_1/watch/playlist-items');
     expect(
       requestedUri!.queryParameters,
-      containsPair('after_event_sequence', '7'),
+      containsPair('afterEventSequence', '7'),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('delivery_mode', 'notify_only'),
+      containsPair(
+        'deliveryMode',
+        client_enum
+            .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY.value
+            .toString(),
+      ),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('playlist_id', 'playlist_1'),
+      containsPair('playlistId', 'playlist_1'),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('target', '{"cursor":"season-1"}'),
+      containsPair('target', '{"alist":{"relativePath":"season-1"}}'),
     );
     expect(requestedUri!.queryParameters, containsPair('page', '2'));
-    expect(requestedUri!.queryParameters, containsPair('page_size', '25'));
+    expect(requestedUri!.queryParameters, containsPair('pageSize', '25'));
     expect(requestedUri!.queryParameters, containsPair('search', 'matrix'));
     expect(
       requestedUri!.queryParameters,
-      containsPair('source_provider', 'emby'),
+      containsPair(
+        'sourceProvider',
+        source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
+      ),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('provider_instance_name', 'home'),
+      containsPair('providerInstanceName', 'home'),
     );
-    expect(requestedUri!.queryParameters, containsPair('sort_by', '2'));
-    expect(requestedUri!.queryParameters, containsPair('sort_direction', '2'));
+    expect(requestedUri!.queryParameters, containsPair('sortBy', '2'));
+    expect(requestedUri!.queryParameters, containsPair('sortDirection', '2'));
     expect(requestedUri!.queryParameters, containsPair('availability', '1'));
   });
 
@@ -2468,49 +2575,58 @@ void main() {
         ..write(
           'event: changed\n'
           'data: ${jsonEncode({
-                'observe_id': 'playlist-items',
+                'observeId': 'playlist-items',
                 'version': 'items-v2',
-                'playlist_items': {
+                'playlistItems': {
                   'playlists': [
                     {
                       'id': 'pl_dynamic',
-                      'room_id': 'room_1',
+                      'roomId': 'room_1',
                       'name': 'Season 1',
-                      'source_provider': 'alist',
-                      'provider_instance_name': 'main',
-                      'is_dynamic': true,
-                      'source_config': {'path': '/shows/season-1'},
+                      'sourceProvider': source_enum
+                          .SourceProvider.SOURCE_PROVIDER_ALIST.value,
+                      'providerInstanceName': 'main',
+                      'isDynamic': true,
+                      'sourceConfig': {
+                        'alist': {'path': '/shows/season-1'}
+                      },
                     }
                   ],
                   'media': [
                     {
                       'id': 'med_1',
-                      'room_id': 'room_1',
-                      'source_provider': 'direct_url',
+                      'roomId': 'room_1',
+                      'sourceProvider': source_enum
+                          .SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
                       'name': 'Episode 1',
-                      'creator_id': 'usr_creator',
-                      'metadata': {
-                        'url': '/api/media/med_1/stream',
-                        'headers': {'x-media': '1'},
-                      },
-                      'source_config': {
-                        'url': 'https://origin.example/episode-1.mp4',
+                      'creatorId': 'usr_creator',
+                      'metadata': {'source': '/api/media/med_1/stream'},
+                      'sourceConfig': {
+                        'directUrl': {
+                          'medias': [
+                            {'url': 'https://origin.example/episode-1.mp4'}
+                          ]
+                        },
                       },
                     }
                   ],
-                  'dynamic_items': [
+                  'dynamicItems': [
                     {
                       'name': 'Remote Episode',
                       'item_type': client.ItemType.ITEM_TYPE_MEDIA.value,
-                      'target': {'path': '/remote/episode-1.mkv'},
+                      'target': {
+                        'alist': {'relativePath': '/remote/episode-1.mkv'},
+                      },
                       'size': '123456',
                       'thumbnail': 'https://img.example/ep1.jpg',
                     }
                   ],
-                  'current_path': [
+                  'currentPath': [
                     {
                       'name': 'Season 1',
-                      'target': {'cursor': 'season-1'},
+                      'target': {
+                        'alist': {'relativePath': 'season-1'},
+                      },
                     }
                   ],
                   'version': 'snapshot-v2',
@@ -2549,10 +2665,10 @@ void main() {
         {'path': '/shows/season-1'},
       );
       expect(
-        jsonDecode(utf8.decode(snapshot.media.single.metadata)),
+        resourceMetadataToJson(snapshot.media.single.metadata),
         {
+          'source': '/api/media/med_1/stream',
           'url': '/api/media/med_1/stream',
-          'headers': {'x-media': '1'},
         },
       );
       expect(
@@ -2562,12 +2678,12 @@ void main() {
         {'url': 'https://origin.example/episode-1.mp4'},
       );
       expect(
-        jsonDecode(utf8.decode(snapshot.dynamicItems.single.target)),
-        {'path': '/remote/episode-1.mkv'},
+        testProviderTargetJson(snapshot.dynamicItems.single.target),
+        {'relativePath': '/remote/episode-1.mkv'},
       );
       expect(
-        jsonDecode(utf8.decode(snapshot.currentPath.single.target)),
-        {'cursor': 'season-1'},
+        testProviderTargetJson(snapshot.currentPath.single.target),
+        {'relativePath': 'season-1'},
       );
     } finally {
       await subscription.cancel();
@@ -2588,15 +2704,16 @@ void main() {
           'playlists': [
             {
               'id': 'pl_1',
-              'room_id': 'room_1',
+              'roomId': 'room_1',
               'name': 'Movies',
-              'source_provider': 'emby',
-              'provider_instance_name': 'home',
-              'is_dynamic': true,
+              'sourceProvider':
+                  source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value,
+              'providerInstanceName': 'home',
+              'isDynamic': true,
               'position': 4.5,
-              'item_count': 12,
-              'created_at': '1760000200',
-              'updated_at': '1760000300',
+              'itemCount': 12,
+              'createdAt': '1760000200',
+              'updatedAt': '1760000300',
               'availability': client
                   .ResourceAvailability.RESOURCE_AVAILABILITY_AVAILABLE.value,
               'version': '92',
@@ -2645,24 +2762,26 @@ void main() {
       );
       expect(page.playlists.single.version, 92);
       expect(requestedUri!.path, '/api/rooms/room_1/playlists');
-      expect(requestedUri!.queryParameters,
-          containsPair('parent_id', 'pl_parent'));
+      expect(
+          requestedUri!.queryParameters, containsPair('parentId', 'pl_parent'));
       expect(requestedUri!.queryParameters, containsPair('page', '2'));
-      expect(requestedUri!.queryParameters, containsPair('page_size', '25'));
+      expect(requestedUri!.queryParameters, containsPair('pageSize', '25'));
       expect(requestedUri!.queryParameters, containsPair('search', 'movie'));
       expect(
         requestedUri!.queryParameters,
-        containsPair('source_provider', 'emby'),
+        containsPair(
+          'sourceProvider',
+          source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
+        ),
       );
       expect(
         requestedUri!.queryParameters,
-        containsPair('provider_instance_name', 'home'),
+        containsPair('providerInstanceName', 'home'),
       );
       expect(
-          requestedUri!.queryParameters, containsPair('dynamic_only', 'true'));
-      expect(requestedUri!.queryParameters, containsPair('sort_by', '2'));
-      expect(
-          requestedUri!.queryParameters, containsPair('sort_direction', '2'));
+          requestedUri!.queryParameters, containsPair('dynamicOnly', 'true'));
+      expect(requestedUri!.queryParameters, containsPair('sortBy', '2'));
+      expect(requestedUri!.queryParameters, containsPair('sortDirection', '2'));
       expect(requestedUri!.queryParameters, containsPair('availability', '1'));
     } finally {
       await subscription.cancel();
@@ -2707,8 +2826,8 @@ void main() {
         if (request.url.path == '/api/auth/refresh') {
           return http.Response(
             jsonEncode({
-              'access_token': 'fresh-access',
-              'refresh_token': 'fresh-refresh',
+              'accessToken': 'fresh-access',
+              'refreshToken': 'fresh-refresh',
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -2748,16 +2867,16 @@ void main() {
         ..write(
           'event: changed\n'
           'data: ${jsonEncode({
-                'observe_id': 'room-settings',
-                'event_cursor': {'sequence': 99},
-                'room_settings': {
-                  'room_id': 'room_1',
+                'observeId': 'room-settings',
+                'eventCursor': {'sequence': 99},
+                'roomSettings': {
+                  'roomId': 'room_1',
                   'version': 99,
                   'settings': {
-                    'allow_guest_join': true,
-                    'require_approval': true,
-                    'max_members': 42,
-                    'chat_enabled': false,
+                    'allowGuestJoin': true,
+                    'requireApproval': true,
+                    'maxMembers': 42,
+                    'chatEnabled': false,
                   },
                 },
               })}\n\n',
@@ -2793,7 +2912,8 @@ void main() {
       baseUrl: 'https://example.test/api',
       session: SyncTvSession(),
     );
-    final target = utf8.encode(jsonEncode({'path': '/shows/ep1.mkv'}));
+    final target = testProviderTarget('/shows/ep1.mkv');
+    final encodedTarget = testProviderTargetToken(target);
 
     final movie = api.mapDynamicItem(
       client.PlaylistItem(
@@ -2805,23 +2925,24 @@ void main() {
     );
 
     expect(movie.parentId, 'pl_dynamic');
-    expect(movie.id, base64Url.encode(target));
-    expect(movie.subPath, base64Url.encode(target));
-    expect(movie.metadata['target_json'], {'path': '/shows/ep1.mkv'});
+    expect(movie.id, encodedTarget);
+    expect(movie.subPath, encodedTarget);
+    expect(movie.metadata['target_json'], {'relativePath': '/shows/ep1.mkv'});
   });
 
   test('realtime dynamic playlist items keep observed playlist parent id', () {
-    final target = utf8.encode(jsonEncode({'path': '/shows/ep1.mkv'}));
+    final target = testProviderTarget('/shows/ep1.mkv');
+    final encodedTarget = testProviderTargetToken(target);
     RoomRealtimeCodec.encodePlaylistObservation(
-      observeId: 'playlist_items',
+      observeId: 'playlistItems',
       playlistId: 'pl_dynamic',
-      target: base64Url.encode(utf8.encode(jsonEncode({'path': '/shows'}))),
+      target: testProviderTargetToken(testProviderTarget('/shows')),
     );
 
     final message = RoomRealtimeCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
-          observeId: 'playlist_items',
+          observeId: 'playlistItems',
           playlistItems: client.ListPlaylistItemsResponse(
             dynamicItems: [
               client.PlaylistItem(
@@ -2833,7 +2954,7 @@ void main() {
             currentPath: [
               client.PlaylistBrowsePathNode(
                 name: 'Season 1',
-                target: utf8.encode(jsonEncode({'path': '/shows'})),
+                target: testProviderTarget('/shows'),
               ),
             ],
           ),
@@ -2843,9 +2964,9 @@ void main() {
 
     final movie = message.mediaLibrary!.dynamicItems.single;
     expect(movie.parentId, 'pl_dynamic');
-    expect(movie.subPath, base64Url.encode(target));
+    expect(movie.subPath, encodedTarget);
     expect(movie.playbackPlaylistId, 'pl_dynamic');
-    expect(movie.playbackTarget, base64Url.encode(target));
+    expect(movie.playbackTarget, encodedTarget);
   });
 
   test('dynamic playlist playback sends playlist target protobuf body',
@@ -2863,7 +2984,8 @@ void main() {
         ..write('{}');
       await request.response.close();
     });
-    final target = utf8.encode(jsonEncode({'path': '/shows/ep1.mkv'}));
+    final target = testProviderTarget('/shows/ep1.mkv');
+    final encodedTarget = testProviderTargetToken(target);
 
     try {
       SharedPreferences.setMockInitialValues({});
@@ -2872,8 +2994,8 @@ void main() {
 
       await SyncTvService.switchMovie(
         'room_1',
-        base64Url.encode(target),
-        subPath: base64Url.encode(target),
+        encodedTarget,
+        subPath: encodedTarget,
         playlistId: 'pl_dynamic',
       );
     } finally {
@@ -2883,9 +3005,11 @@ void main() {
 
     expect(requestedUris.first.path, '/api/rooms/room_1/playback/start');
     final body = jsonDecode(requestBodies.first) as Map<String, dynamic>;
-    expect(body['media_id'], '');
-    expect(body['playlist_id'], 'pl_dynamic');
-    expect(body['target'], {'path': '/shows/ep1.mkv'});
+    expect(body['mediaId'], '');
+    expect(body['playlistId'], 'pl_dynamic');
+    expect(body['target'], {
+      'alist': {'relativePath': '/shows/ep1.mkv'}
+    });
   });
 
   test('switch movie and play starts media then sends play state update',
@@ -2910,17 +3034,17 @@ void main() {
               ..statusCode = 200
               ..headers.contentType = io.ContentType.json
               ..write(jsonEncode({
-                'playback_state': {
-                  'room_id': 'room_1',
-                  'playing_media_id': 'med_1',
+                'playbackState': {
+                  'roomId': 'room_1',
+                  'playingMediaId': 'med_1',
                   'position': 0.0,
                   'speed': 1.0,
-                  'is_playing': true,
+                  'isPlaying': true,
                   'version': '8',
                 },
                 'playback': {
-                  'media_id': 'med_1',
-                  'room_id': 'room_1',
+                  'mediaId': 'med_1',
+                  'roomId': 'room_1',
                   'name': 'Episode 1',
                 },
               }));
@@ -2929,12 +3053,12 @@ void main() {
               ..statusCode = 200
               ..headers.contentType = io.ContentType.json
               ..write(jsonEncode({
-                'playback_state': {
-                  'room_id': 'room_1',
-                  'playing_media_id': 'med_1',
+                'playbackState': {
+                  'roomId': 'room_1',
+                  'playingMediaId': 'med_1',
                   'position': 0.0,
                   'speed': 1.0,
-                  'is_playing': true,
+                  'isPlaying': true,
                   'version': '9',
                 },
               }));
@@ -2972,8 +3096,8 @@ void main() {
         ],
       );
       expect(jsonDecode(requestBodies[0]), {
-        'media_id': 'med_1',
-        'playlist_id': '',
+        'mediaId': 'med_1',
+        'playlistId': '',
       });
       expect(jsonDecode(requestBodies[3]), {
         'type': client.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PLAY.value,
@@ -2992,7 +3116,8 @@ void main() {
       baseUrl: 'https://example.test/api',
       session: SyncTvSession(),
     );
-    final target = utf8.encode(jsonEncode({'path': '/shows/ep1.mkv'}));
+    final target = testProviderTarget('/shows/ep1.mkv');
+    final encodedTarget = testProviderTargetToken(target);
 
     final status = api.mapPlayback(
       client.GetPlaybackResponse(
@@ -3027,12 +3152,12 @@ void main() {
     );
 
     final movie = status.movie!;
-    expect(movie.id, base64Url.encode(target));
+    expect(movie.id, encodedTarget);
     expect(movie.parentId, 'pl_dynamic');
-    expect(movie.subPath, base64Url.encode(target));
+    expect(movie.subPath, encodedTarget);
     expect(movie.playbackMediaId, '');
     expect(movie.playbackPlaylistId, 'pl_dynamic');
-    expect(movie.playbackTarget, base64Url.encode(target));
+    expect(movie.playbackTarget, encodedTarget);
     expect(movie.url, 'https://example.test/proxy/episode-1.m3u8');
   });
 
@@ -3043,7 +3168,7 @@ void main() {
         roomId: 'room_1',
         name: 'Multi Source',
         playlistPosition: 3.5,
-        provider: 'alist',
+        provider: source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
         providerInstanceName: 'alist_main',
         isLive: true,
         expiresAt: Int64(1700000000),
@@ -3121,8 +3246,8 @@ void main() {
     expect(movie.live, isTrue);
     expect(movie.sourceProvider, 'alist');
     expect(movie.providerInstanceName, 'alist_main');
-    expect(movie.metadata['expires_at'], 1700000000);
-    expect(movie.metadata['duration_seconds'], 3661.5);
+    expect(movie.metadata['expiresAt'], 1700000000);
+    expect(movie.metadata['durationSeconds'], 3661.5);
     expect(movie.playbackModes, hasLength(2));
     expect(movie.hasPlaybackChoices, isTrue);
     expect(movie.selectedPlaybackMode, 'proxied');
@@ -3231,10 +3356,10 @@ void main() {
   test('playback mapping preserves live proxy HLS and FLV choices', () {
     final movie = SyncTvMovie.fromPlaybackProto(
       client.Playback(
-        mediaId: 'med_live_proxy',
+        mediaId: 'med_liveProxy',
         roomId: 'room_1',
         name: 'Upstream Live',
-        provider: 'live_proxy',
+        provider: source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY,
         isLive: true,
         playbackInfos: [
           MapEntry(
@@ -3269,7 +3394,7 @@ void main() {
     );
 
     expect(movie.live, isTrue);
-    expect(movie.sourceProvider, 'live_proxy');
+    expect(movie.sourceProvider, 'liveProxy');
     expect(movie.type, 'hls');
     expect(
       movie.url,
@@ -3357,15 +3482,17 @@ void main() {
         ..write(
           'event: changed\n'
           'data: ${jsonEncode({
-                'observe_id': 'playback-state',
-                'event_cursor': {'sequence': 100},
-                'playback_state': {
-                  'room_id': 'room_1',
-                  'playing_playlist_id': 'pl_dynamic',
-                  'target': {'path': '/shows/ep1.mkv'},
+                'observeId': 'playback-state',
+                'eventCursor': {'sequence': 100},
+                'playbackState': {
+                  'roomId': 'room_1',
+                  'playingPlaylistId': 'pl_dynamic',
+                  'target': {
+                    'alist': {'relativePath': '/shows/ep1.mkv'},
+                  },
                   'position': 24.5,
                   'speed': 1.25,
-                  'is_playing': true,
+                  'isPlaying': true,
                 },
               })}\n\n',
         );
@@ -3381,7 +3508,7 @@ void main() {
 
       final event = await SyncTvService.watchPlaybackState('room_1')
           .firstWhere((event) => event.kind == RoomResourceWatchKind.changed);
-      final target = utf8.encode(jsonEncode({'path': '/shows/ep1.mkv'}));
+      final target = testProviderTarget('/shows/ep1.mkv');
 
       expect(event.version, '100');
       expect(event.snapshot, isNotNull);
@@ -3389,7 +3516,10 @@ void main() {
       expect(event.snapshot!.currentTime, 24.5);
       expect(event.snapshot!.playbackRate, 1.25);
       expect(event.snapshot!.movie!.parentId, 'pl_dynamic');
-      expect(event.snapshot!.movie!.playbackTarget, base64Url.encode(target));
+      expect(
+        event.snapshot!.movie!.playbackTarget,
+        testProviderTargetToken(target),
+      );
     } finally {
       await subscription.cancel();
       await server.close(force: true);
@@ -3426,31 +3556,46 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/room_1/watch/playback');
     expect(
       requestedUri!.queryParameters,
-      containsPair('stream_preference', 'auto'),
+      containsPair(
+        'streamPreference',
+        client_enum
+            .PlaybackStreamPreference.PLAYBACK_STREAM_PREFERENCE_AUTO.value
+            .toString(),
+      ),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('after_event_sequence', '42'),
+      containsPair('afterEventSequence', '42'),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('max_audio_channels', '2'),
+      containsPair('maxAudioChannels', '2'),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('video_codecs', 'h264,hevc,vp9,av1'),
+      containsPair('videoCodecs', '1,2,3,4'),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('containers', 'mp4,mkv,webm'),
+      containsPair('containers', '1,2,3'),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('audio_capability', 'stereo'),
+      containsPair(
+        'audioCapability',
+        client_enum
+            .PlaybackAudioCapability.PLAYBACK_AUDIO_CAPABILITY_STEREO.value
+            .toString(),
+      ),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('subtitle_preference', 'external'),
+      containsPair(
+        'subtitlePreference',
+        client_enum.PlaybackSubtitlePreference
+            .PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL.value
+            .toString(),
+      ),
     );
   });
 
@@ -3469,12 +3614,12 @@ void main() {
         requestBody = request.body;
         return http.Response(
           jsonEncode({
-            'playback_state': {
-              'room_id': 'room_1',
-              'playing_media_id': 'med_1',
+            'playbackState': {
+              'roomId': 'room_1',
+              'playingMediaId': 'med_1',
               'position': 42.5,
               'speed': 1.25,
-              'is_playing': true,
+              'isPlaying': true,
               'version': '8',
             },
           }),
@@ -3521,12 +3666,13 @@ void main() {
         requestBody = request.body;
         return http.Response(
           jsonEncode({
-            'moved_count': 1,
+            'movedCount': 1,
             'media': [
               {
                 'id': 'med_1',
-                'room_id': 'room_1',
-                'source_provider': 'direct_url',
+                'roomId': 'room_1',
+                'sourceProvider':
+                    source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
                 'name': 'Feature',
               }
             ],
@@ -3550,11 +3696,11 @@ void main() {
     expect(requestMethod, 'POST');
     expect(requestedUri!.path, '/api/rooms/room_1/media/move');
     final body = jsonDecode(requestBody!) as Map<String, dynamic>;
-    expect(body['media_ids'], ['med_1']);
-    expect(body['source_playlist_id'], 'pl_source');
-    expect(body['target_playlist_id'], 'pl_target');
-    expect(body['after_media_id'], 'med_anchor');
-    expect(body.containsKey('before_media_id'), isFalse);
+    expect(body['mediaIds'], ['med_1']);
+    expect(body['sourcePlaylistId'], 'pl_source');
+    expect(body['targetPlaylistId'], 'pl_target');
+    expect(body['afterMediaId'], 'med_anchor');
+    expect(body.containsKey('beforeMediaId'), isFalse);
     expect(response.movedCount, 1);
     expect(response.media.single.id, 'med_1');
   });
@@ -3591,7 +3737,7 @@ void main() {
         'Authorization': 'Bearer token',
         'Cookie': 'session=secret',
       },
-      'prefer_proxy': true,
+      'preferProxy': true,
     });
     expect(
       DirectUrlSourceConfig.credentialHeaderRiskKey(parsed),
@@ -3673,16 +3819,18 @@ void main() {
               {
                 'media': {
                   'id': 'med_1',
-                  'room_id': 'room_1',
-                  'source_provider': 'direct_url',
+                  'roomId': 'room_1',
+                  'sourceProvider': source_enum
+                      .SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
                   'name': 'Episode 1',
                 },
               },
               {
                 'media': {
                   'id': 'med_2',
-                  'room_id': 'room_1',
-                  'source_provider': 'direct_url',
+                  'roomId': 'room_1',
+                  'sourceProvider': source_enum
+                      .SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
                   'name': 'Episode 2',
                 },
               },
@@ -3697,9 +3845,10 @@ void main() {
 
     await domain.addMediaBatch('room_1', [
       {
-        'playlist_id': 'pl_1',
-        'source_provider': 'direct_url',
-        'source_config': {
+        'playlistId': 'pl_1',
+        'sourceProvider':
+            source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
+        'sourceConfig': {
           'url': 'https://media.example.test/episode-1.mp4',
           'headers': {
             'Referer': 'https://media.example.test',
@@ -3710,9 +3859,10 @@ void main() {
         'name': '',
       },
       {
-        'playlist_id': 'pl_1',
-        'source_provider': 'direct_url',
-        'source_config': {
+        'playlistId': 'pl_1',
+        'sourceProvider':
+            source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
+        'sourceConfig': {
           'url': 'https://media.example.test/episode-2.mp4',
           'headers': {
             'Referer': 'https://media.example.test',
@@ -3730,53 +3880,47 @@ void main() {
     final items = body['items'] as List<dynamic>;
     expect(items, hasLength(2));
     expect(items[0], {
-      'playlist_id': 'pl_1',
-      'source_provider': 'direct_url',
-      'provider_instance_name': '',
-      'source_config': {
-        'direct_url': {
+      'playlistId': 'pl_1',
+      'sourceProvider':
+          source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
+      'providerInstanceName': '',
+      'sourceConfig': {
+        'directUrl': {
           'medias': [
             {
+              'name': '',
               'url': 'https://media.example.test/episode-1.mp4',
               'headers': {
                 'Referer': 'https://media.example.test',
                 'Authorization': 'Bearer shared-token',
                 'Cookie': 'sid=shared',
               },
+              'format': '',
             }
           ],
-          'url': 'https://media.example.test/episode-1.mp4',
-          'headers': {
-            'Referer': 'https://media.example.test',
-            'Authorization': 'Bearer shared-token',
-            'Cookie': 'sid=shared',
-          },
         },
       },
       'name': '',
     });
     expect(items[1], {
-      'playlist_id': 'pl_1',
-      'source_provider': 'direct_url',
-      'provider_instance_name': '',
-      'source_config': {
-        'direct_url': {
+      'playlistId': 'pl_1',
+      'sourceProvider':
+          source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
+      'providerInstanceName': '',
+      'sourceConfig': {
+        'directUrl': {
           'medias': [
             {
+              'name': '',
               'url': 'https://media.example.test/episode-2.mp4',
               'headers': {
                 'Referer': 'https://media.example.test',
                 'Authorization': 'Bearer shared-token',
                 'Cookie': 'sid=shared',
               },
+              'format': '',
             }
           ],
-          'url': 'https://media.example.test/episode-2.mp4',
-          'headers': {
-            'Referer': 'https://media.example.test',
-            'Authorization': 'Bearer shared-token',
-            'Cookie': 'sid=shared',
-          },
         },
       },
       'name': '',
@@ -3822,7 +3966,7 @@ void main() {
           jsonEncode({
             'playlist': {
               'id': 'pl_1',
-              'room_id': 'room_1',
+              'roomId': 'room_1',
               'name': 'Moved',
             },
           }),
@@ -3854,14 +3998,14 @@ void main() {
       '/api/rooms/room_1/playlists/pl_1/move',
     );
     final beforeBody = jsonDecode(requests.first.body) as Map<String, dynamic>;
-    expect(beforeBody['playlist_id'], 'pl_1');
-    expect(beforeBody['before_playlist_id'], 'pl_0');
-    expect(beforeBody.containsKey('after_playlist_id'), isFalse);
+    expect(beforeBody['playlistId'], 'pl_1');
+    expect(beforeBody['beforePlaylistId'], 'pl_0');
+    expect(beforeBody.containsKey('afterPlaylistId'), isFalse);
 
     final afterBody = jsonDecode(requests.last.body) as Map<String, dynamic>;
-    expect(afterBody['playlist_id'], 'pl_1');
-    expect(afterBody['after_playlist_id'], 'pl_2');
-    expect(afterBody.containsKey('before_playlist_id'), isFalse);
+    expect(afterBody['playlistId'], 'pl_1');
+    expect(afterBody['afterPlaylistId'], 'pl_2');
+    expect(afterBody.containsKey('beforePlaylistId'), isFalse);
   });
 
   test('delete entries sends media and playlist ids in protobuf body',
@@ -3877,7 +4021,7 @@ void main() {
         requestMethod = request.method;
         requestBody = request.body;
         return http.Response(
-          jsonEncode({'deleted_media': 2, 'deleted_playlists': 1}),
+          jsonEncode({'deletedMedia': 2, 'deletedPlaylists': 1}),
           200,
           headers: {'content-type': 'application/json'},
         );
@@ -3896,8 +4040,8 @@ void main() {
     expect(requestMethod, 'DELETE');
     expect(requestedUri!.path, '/api/rooms/room_1/entries');
     final body = jsonDecode(requestBody!) as Map<String, dynamic>;
-    expect(body['media_ids'], ['med_1', 'med_2']);
-    expect(body['playlist_ids'], ['pl_1']);
+    expect(body['mediaIds'], ['med_1', 'med_2']);
+    expect(body['playlistIds'], ['pl_1']);
     expect(body['force'], isTrue);
     expect(response.deletedMedia, 2);
     expect(response.deletedPlaylists, 1);
@@ -3915,7 +4059,7 @@ void main() {
         requestMethod = request.method;
         requestBody = request.body;
         return http.Response(
-          jsonEncode({'success': true, 'deleted_count': 2}),
+          jsonEncode({'success': true, 'deletedCount': 2}),
           200,
           headers: {'content-type': 'application/json'},
         );
@@ -3949,8 +4093,8 @@ void main() {
         return http.Response(
           jsonEncode({
             'success': true,
-            'deleted_count': 2,
-            'deleted_playlists': 1,
+            'deletedCount': 2,
+            'deletedPlaylists': 1,
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -3966,7 +4110,7 @@ void main() {
     expect(requestMethod, 'DELETE');
     expect(requestedUri!.path, '/api/rooms/room_1/media');
     final body = jsonDecode(requestBody!) as Map<String, dynamic>;
-    expect(body['playlist_id'], 'pl_1');
+    expect(body['playlistId'], 'pl_1');
     expect(response.deletedCount, 2);
     expect(response.deletedPlaylists, 1);
   });
@@ -3994,7 +4138,7 @@ void main() {
     expect(requests.single.method, 'DELETE');
     expect(requests.single.url.path, '/api/rooms/room_1/media');
     final body = jsonDecode(requests.single.body) as Map<String, dynamic>;
-    expect(body, {'playlist_id': 'pl_1'});
+    expect(body, {'playlistId': 'pl_1'});
   });
 
   test('watch room members query uses protobuf enum values', () async {
@@ -4027,11 +4171,16 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/room_1/watch/room-members');
     expect(
       requestedUri!.queryParameters,
-      containsPair('after_event_sequence', '1'),
+      containsPair('afterEventSequence', '1'),
     );
     expect(
       requestedUri!.queryParameters,
-      containsPair('delivery_mode', 'push_snapshot'),
+      containsPair(
+        'deliveryMode',
+        client_enum
+            .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT.value
+            .toString(),
+      ),
     );
   });
 
@@ -4066,13 +4215,13 @@ void main() {
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/admin/users');
     expect(requestedUri!.queryParameters, containsPair('page', '4'));
-    expect(requestedUri!.queryParameters, containsPair('page_size', '30'));
+    expect(requestedUri!.queryParameters, containsPair('pageSize', '30'));
     expect(requestedUri!.queryParameters, containsPair('search', 'alice'));
     expect(requestedUri!.queryParameters, containsPair('status', '1'));
     expect(requestedUri!.queryParameters, containsPair('role', '2'));
-    expect(requestedUri!.queryParameters, containsPair('is_banned', 'false'));
-    expect(requestedUri!.queryParameters, containsPair('sort_by', '3'));
-    expect(requestedUri!.queryParameters, containsPair('sort_direction', '1'));
+    expect(requestedUri!.queryParameters, containsPair('isBanned', 'false'));
+    expect(requestedUri!.queryParameters, containsPair('sortBy', '3'));
+    expect(requestedUri!.queryParameters, containsPair('sortDirection', '1'));
   });
 
   test('admin user service preserves pagination sorting and total', () async {
@@ -4127,13 +4276,13 @@ void main() {
     expect(requestedUri!.path, '/api/admin/users');
     expect(requestedUri!.queryParameters, {
       'page': '2',
-      'page_size': '50',
+      'pageSize': '50',
       'status': '${common.UserStatus.USER_STATUS_ACTIVE.value}',
       'role': '${common.UserRole.USER_ROLE_ADMIN.value}',
       'search': 'alice',
-      'sort_by': '${admin_enum.UserListSortBy.USER_LIST_SORT_BY_EMAIL.value}',
-      'sort_direction': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
-      'is_banned': 'false',
+      'sortBy': '${admin_enum.UserListSortBy.USER_LIST_SORT_BY_EMAIL.value}',
+      'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      'isBanned': 'false',
     });
   });
 
@@ -4196,7 +4345,7 @@ void main() {
                 'username': 'alice',
                 'role': common.UserRole.USER_ROLE_ADMIN.value,
                 'status': common.UserStatus.USER_STATUS_BANNED.value,
-                'is_banned': true,
+                'isBanned': true,
               },
             }),
             200,
@@ -4245,7 +4394,7 @@ void main() {
     expect(requests.last.method, 'POST');
     expect(requests.last.url.path, '/api/admin/users/usr_1/ban');
     expect(jsonDecode(requests.last.body), {
-      'user_id': 'usr_1',
+      'userId': 'usr_1',
       'reason': 'spam',
     });
   });
@@ -4264,7 +4413,7 @@ void main() {
               'username': 'alice',
               'role': common.UserRole.USER_ROLE_USER.value,
               'status': common.UserStatus.USER_STATUS_ACTIVE.value,
-              'is_banned': false,
+              'isBanned': false,
             },
           }),
           200,
@@ -4327,11 +4476,11 @@ void main() {
             {
               'id': 'room_1',
               'name': 'Public Room',
-              'created_by': 'usr_1',
+              'createdBy': 'usr_1',
               'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
               'description': 'Public room description',
-              'updated_at': '1760000020',
-              'is_banned': true,
+              'updatedAt': '1760000020',
+              'isBanned': true,
               'availability': client.ResourceAvailability
                   .RESOURCE_AVAILABILITY_CREATOR_INACTIVE.value,
               'version': '89',
@@ -4381,12 +4530,12 @@ void main() {
     expect(requestedUri!.path, '/api/rooms');
     expect(requestedUri!.queryParameters, {
       'page': '2',
-      'page_size': '30',
+      'pageSize': '30',
       'search': 'Public',
-      'category_id': 'roomcat_anime',
-      'label_ids': '["roomlbl_weekly","roomlbl_friends"]',
-      'sort_by': '${client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME.value}',
-      'sort_direction': '${client_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      'categoryId': 'roomcat_anime',
+      'labelIds': '["roomlbl_weekly","roomlbl_friends"]',
+      'sortBy': '${client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME.value}',
+      'sortDirection': '${client_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
   });
 
@@ -4405,7 +4554,7 @@ void main() {
               'room': {
                 'id': 'room_2',
                 'name': 'Mine',
-                'created_by': 'usr_1',
+                'createdBy': 'usr_1',
                 'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
               },
               'permissions': '7',
@@ -4451,15 +4600,15 @@ void main() {
     expect(requestedUri!.path, '/api/user/rooms');
     expect(requestedUri!.queryParameters, {
       'page': '3',
-      'page_size': '40',
+      'pageSize': '40',
       'status': '${common.RoomStatus.ROOM_STATUS_ACTIVE.value}',
       'search': 'Mine',
-      'is_banned': 'false',
+      'isBanned': 'false',
       'relation':
           '${client_enum.MyRoomRelation.MY_ROOM_RELATION_PARTICIPATING.value}',
-      'sort_by':
+      'sortBy':
           '${client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_NAME.value}',
-      'sort_direction': '${client_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      'sortDirection': '${client_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
   });
 
@@ -4477,9 +4626,9 @@ void main() {
             {
               'id': 'room_1',
               'name': 'Room',
-              'created_by': 'usr_1',
+              'createdBy': 'usr_1',
               'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
-              'is_banned': false,
+              'isBanned': false,
             }
           ],
           'total': 7,
@@ -4517,15 +4666,15 @@ void main() {
     expect(requestedUri!.path, '/api/admin/rooms');
     expect(requestedUri!.queryParameters, {
       'page': '3',
-      'page_size': '50',
+      'pageSize': '50',
       'status': '${common.RoomStatus.ROOM_STATUS_ACTIVE.value}',
       'search': 'Room',
-      'category_id': 'roomcat_anime',
-      'label_ids': '["roomlbl_weekly"]',
-      'is_banned': 'false',
-      'sort_by':
+      'categoryId': 'roomcat_anime',
+      'labelIds': '["roomlbl_weekly"]',
+      'isBanned': 'false',
+      'sortBy':
           '${admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT.value}',
-      'sort_direction': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
   });
 
@@ -4542,9 +4691,9 @@ void main() {
             {
               'id': 'room_2',
               'name': 'Owned Room',
-              'created_by': 'usr_1',
+              'createdBy': 'usr_1',
               'status': common.RoomStatus.ROOM_STATUS_CLOSED.value,
-              'is_banned': true,
+              'isBanned': true,
             }
           ],
           'total': 4,
@@ -4582,12 +4731,12 @@ void main() {
     expect(requestedUri!.path, '/api/admin/users/usr_1/rooms');
     expect(requestedUri!.queryParameters, {
       'page': '2',
-      'page_size': '20',
+      'pageSize': '20',
       'status': '${common.RoomStatus.ROOM_STATUS_CLOSED.value}',
       'search': 'Owned',
-      'is_banned': 'true',
-      'sort_by': '${admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME.value}',
-      'sort_direction': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      'isBanned': 'true',
+      'sortBy': '${admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME.value}',
+      'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
   });
 
@@ -4631,7 +4780,7 @@ void main() {
         ..headers.contentType = io.ContentType.json
         ..write(jsonEncode({
           'preferences': {
-            'two_factor_enabled': true,
+            'twoFactorEnabled': true,
             'notifications': {
               'room_invitation_in_app': true,
               'room_event_in_app': false,
@@ -4641,15 +4790,16 @@ void main() {
               'system_announcement_email': false,
             },
             'settings': {
-              'quiet_hours': {'start': '22:00', 'end': '07:00'},
-              'compact_mode': true,
+              'allowGuestJoin': true,
+              'requireApproval': true,
+              'chatEnabled': true,
             },
           },
-          'auth_factors': {
+          'authFactors': {
             'password': true,
             'webauthn': true,
             'email': false,
-            'eligible_count': 2,
+            'eligibleCount': 2,
           },
         }));
       await request.response.close();
@@ -4673,11 +4823,8 @@ void main() {
     expect(preferences.twoFactorEnabled, isTrue);
     expect(preferences.canUsePasskey, isTrue);
     expect(preferences.eligibleFactorCount, 2);
-    expect(preferences.settings['compact_mode'], isTrue);
-    expect(preferences.settings['quiet_hours'], {
-      'start': '22:00',
-      'end': '07:00',
-    });
+    expect(preferences.settings['allowGuestJoin'], isTrue);
+    expect(preferences.settings['requireApproval'], isTrue);
   });
 
   test('notification detail endpoint maps protobuf response', () async {
@@ -4691,13 +4838,13 @@ void main() {
           jsonEncode({
             'notification': {
               'id': '42',
-              'notification_type': 3,
+              'notificationType': 3,
               'title': 'Room updated',
               'content': 'Playback changed',
-              'data': {'room_id': 'room_1'},
-              'is_read': false,
-              'created_at': '1760000000',
-              'updated_at': '1760000010',
+              'data': {'roomId': 'room_1'},
+              'isRead': false,
+              'createdAt': '1760000000',
+              'updatedAt': '1760000010',
             },
           }),
           200,
@@ -4714,8 +4861,8 @@ void main() {
     expect(requestedUri!.path, '/api/notifications/42');
     expect(response.notification.id, '42');
     expect(response.notification.title, 'Room updated');
-    expect(jsonDecode(utf8.decode(response.notification.data)), {
-      'room_id': 'room_1',
+    expect(notificationDataToJson(response.notification.data), {
+      'roomId': 'room_1',
     });
   });
 
@@ -4734,7 +4881,7 @@ void main() {
         return http.Response(
           jsonEncode({
             'streams': [
-              {'media_id': 'med_1', 'active': true},
+              {'mediaId': 'med_1', 'active': true},
             ],
             'total': 1,
           }),
@@ -4765,17 +4912,17 @@ void main() {
     expect(streams.streams.single.mediaId, 'med_1');
     expect(requests.first.url.path, '/api/rooms/room_1/streams');
     expect(requests.first.url.queryParameters, containsPair('page', '2'));
-    expect(requests.first.url.queryParameters, containsPair('page_size', '20'));
+    expect(requests.first.url.queryParameters, containsPair('pageSize', '20'));
     expect(requests.first.url.queryParameters, containsPair('search', 'med'));
-    expect(requests.first.url.queryParameters, containsPair('sort_by', '1'));
+    expect(requests.first.url.queryParameters, containsPair('sortBy', '1'));
     expect(
       requests.first.url.queryParameters,
-      containsPair('sort_direction', '2'),
+      containsPair('sortDirection', '2'),
     );
     expect(requests.last.method, 'POST');
     expect(requests.last.url.path, '/api/rooms/room_1/streams/med_1/kick');
     expect(jsonDecode(requests.last.body), {
-      'media_id': 'med_1',
+      'mediaId': 'med_1',
       'reason': 'stale publisher',
     });
   });
@@ -4790,15 +4937,15 @@ void main() {
         request.response.write(jsonEncode({
           'active': true,
           'publisher': {
-            'user_id': 'usr_publisher',
-            'started_at': '1760000000',
+            'userId': 'usr_publisher',
+            'startedAt': '1760000000',
           },
         }));
       } else if (request.uri.path == '/api/rooms/room_1/streams') {
         request.response.write(jsonEncode({
           'streams': [
-            {'media_id': 'med_1', 'active': true},
-            {'media_id': 'med_2', 'active': false},
+            {'mediaId': 'med_1', 'active': true},
+            {'mediaId': 'med_2', 'active': false},
           ],
           'total': 12,
         }));
@@ -4844,7 +4991,7 @@ void main() {
       expect(requests.first.url.queryParameters, containsPair('page', '2'));
       expect(
         requests.first.url.queryParameters,
-        containsPair('page_size', '50'),
+        containsPair('pageSize', '50'),
       );
       expect(requests.first.url.queryParameters, containsPair('search', 'med'));
     } finally {
@@ -4863,10 +5010,10 @@ void main() {
         if (request.url.path.contains('/publish-key/')) {
           return http.Response(
             jsonEncode({
-              'publish_key': 'pub_1',
-              'rtmp_url': 'rtmp://example.test/live',
-              'stream_key': 'stream_1',
-              'expires_at': '1760000100',
+              'publishKey': 'pub_1',
+              'rtmpUrl': 'rtmp://example.test/live',
+              'streamKey': 'stream_1',
+              'expiresAt': '1760000100',
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -4875,7 +5022,7 @@ void main() {
         return http.Response(
           jsonEncode({
             'active': true,
-            'publisher': {'user_id': 'user_1', 'started_at': '1760000000'},
+            'publisher': {'userId': 'user_1', 'startedAt': '1760000000'},
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -4918,17 +5065,23 @@ void main() {
         if (request.url.path == '/api/rooms/room_1/media' &&
             request.method == 'POST') {
           final body = jsonDecode(request.body) as Map<String, dynamic>;
-          final provider = body['source_provider']?.toString() ?? '';
+          final provider = body['sourceProvider']?.toString() ?? '';
+          final mediaId = provider ==
+                  source_enum.SourceProvider.SOURCE_PROVIDER_RTMP.value
+                      .toString()
+              ? 'med_rtmp'
+              : provider ==
+                      source_enum
+                          .SourceProvider.SOURCE_PROVIDER_LIVE_PROXY.value
+                          .toString()
+                  ? 'med_liveProxy'
+                  : 'med_direct';
           return http.Response(
             jsonEncode({
               'media': {
-                'id': switch (provider) {
-                  'rtmp' => 'med_rtmp',
-                  'live_proxy' => 'med_live_proxy',
-                  _ => 'med_direct',
-                },
-                'room_id': 'room_1',
-                'source_provider': provider,
+                'id': mediaId,
+                'roomId': 'room_1',
+                'sourceProvider': body['sourceProvider'],
                 'name': body['name'] ?? '',
               },
             }),
@@ -4940,10 +5093,10 @@ void main() {
             '/api/providers/rtmp/rooms/room_1/publish-key/med_rtmp') {
           return http.Response(
             jsonEncode({
-              'publish_key': 'pub_1',
-              'rtmp_url': 'rtmp://example.test/live',
-              'stream_key': 'stream_1',
-              'expires_at': '1760000100',
+              'publishKey': 'pub_1',
+              'rtmpUrl': 'rtmp://example.test/live',
+              'streamKey': 'stream_1',
+              'expiresAt': '1760000100',
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -4977,36 +5130,45 @@ void main() {
 
     expect(directId, 'med_direct');
     expect(rtmpId, 'med_rtmp');
-    expect(liveProxyId, 'med_live_proxy');
+    expect(liveProxyId, 'med_liveProxy');
     expect(publish.streamKey, 'stream_1');
 
     final directBody = jsonDecode(requests[0].body) as Map<String, dynamic>;
-    expect(directBody['source_provider'], 'direct_url');
-    expect(directBody['playlist_id'], 'pl_1');
-    expect(directBody['source_config'], {
-      'direct_url': {
+    expect(
+      directBody['sourceProvider'],
+      source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
+    );
+    expect(directBody['playlistId'], 'pl_1');
+    expect(directBody['sourceConfig'], {
+      'directUrl': {
         'medias': [
           {
+            'name': '',
             'url': 'https://media.example.test/movie.m3u8',
             'headers': {'User-Agent': 'Mozilla/5.0'},
+            'format': '',
           }
         ],
-        'url': 'https://media.example.test/movie.m3u8',
-        'headers': {'User-Agent': 'Mozilla/5.0'},
-        'prefer_proxy': true,
+        'preferProxy': true,
       },
     });
 
     final rtmpBody = jsonDecode(requests[1].body) as Map<String, dynamic>;
-    expect(rtmpBody['source_provider'], 'rtmp');
-    expect(rtmpBody['playlist_id'], 'pl_1');
-    expect(rtmpBody['source_config'], {'rtmp': <String, dynamic>{}});
+    expect(
+      rtmpBody['sourceProvider'],
+      source_enum.SourceProvider.SOURCE_PROVIDER_RTMP.value,
+    );
+    expect(rtmpBody['playlistId'], 'pl_1');
+    expect(rtmpBody['sourceConfig'], {'rtmp': <String, dynamic>{}});
 
     final liveProxyBody = jsonDecode(requests[2].body) as Map<String, dynamic>;
-    expect(liveProxyBody['source_provider'], 'live_proxy');
-    expect(liveProxyBody['playlist_id'], 'pl_1');
-    expect(liveProxyBody['source_config'], {
-      'live_proxy': {'url': 'rtmp://upstream.example.test/live/room'},
+    expect(
+      liveProxyBody['sourceProvider'],
+      source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY.value,
+    );
+    expect(liveProxyBody['playlistId'], 'pl_1');
+    expect(liveProxyBody['sourceConfig'], {
+      'liveProxy': {'url': 'rtmp://upstream.example.test/live/room'},
     });
     expect(
       requests[3].url.path,
@@ -5030,15 +5192,16 @@ void main() {
           jsonEncode({
             'playlist': {
               'id': 'pl_emby',
-              'room_id': 'room_1',
+              'roomId': 'room_1',
               'name': 'Season 1',
-              'is_dynamic': true,
-              'source_provider': 'emby',
-              'provider_instance_name': 'emby_main',
-              'source_config': {
+              'isDynamic': true,
+              'sourceProvider':
+                  source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value,
+              'providerInstanceName': 'emby_main',
+              'sourceConfig': {
                 'emby': {
-                  'server_id': 'server_1',
-                  'item_id': 'folder_1',
+                  'serverId': 'server_1',
+                  'itemId': 'folder_1',
                 },
               },
             },
@@ -5057,8 +5220,8 @@ void main() {
       sourceProvider: 'emby',
       providerInstanceName: 'emby_main',
       sourceConfig: const {
-        'server_id': 'server_1',
-        'item_id': 'folder_1',
+        'serverId': 'server_1',
+        'itemId': 'folder_1',
       },
     );
 
@@ -5066,13 +5229,16 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/room_1/playlists');
     final body = jsonDecode(requestBody!) as Map<String, dynamic>;
     expect(body['name'], 'Season 1');
-    expect(body['parent_id'], 'pl_parent');
-    expect(body['source_provider'], 'emby');
-    expect(body['provider_instance_name'], 'emby_main');
-    expect(body['source_config'], {
+    expect(body['parentId'], 'pl_parent');
+    expect(
+      body['sourceProvider'],
+      source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value,
+    );
+    expect(body['providerInstanceName'], 'emby_main');
+    expect(body['sourceConfig'], {
       'emby': {
-        'server_id': 'server_1',
-        'item_id': 'folder_1',
+        'serverId': 'server_1',
+        'itemId': 'folder_1',
       },
     });
     expect(playlist.id, 'pl_emby');
@@ -5191,12 +5357,10 @@ void main() {
         ..headers.contentType = io.ContentType.json
         ..write(jsonEncode({
           'room': {
-            'room_id': 'room_1',
+            'roomId': 'room_1',
             'room_name': 'Room 1',
-            'creator_id': 'user_1',
-            'settings': utf8.encode(jsonEncode({
-              'allow_guest_join': true,
-            })),
+            'creatorId': 'user_1',
+            'settings': {'allowGuestJoin': true},
           },
         }));
       await request.response.close();
@@ -5226,13 +5390,15 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/room_1/settings');
     final body = jsonDecode(requestBody!) as Map<String, dynamic>;
     final settings = body['settings'] as Map<String, dynamic>;
-    expect(settings['allow_guest_join'], isTrue);
-    expect(settings['require_approval'], isTrue);
-    expect(settings['max_members'], 42);
-    expect(settings['chat_enabled'], isFalse);
-    expect(settings['guest_added_permissions'],
-        RoomGuestPermissions.viewMemberList);
-    expect(body.containsKey('room_id'), isFalse);
+    expect(settings['allowGuestJoin'], isTrue);
+    expect(settings['requireApproval'], isTrue);
+    expect(settings['maxMembers'], '42');
+    expect(settings['chatEnabled'], isFalse);
+    expect(
+      settings['guestAddedPermissions'],
+      RoomGuestPermissions.viewMemberList.toString(),
+    );
+    expect(body.containsKey('roomId'), isFalse);
   });
 
   test('admin settings group reads dedicated protobuf endpoint', () async {
@@ -5246,10 +5412,10 @@ void main() {
         ..write(jsonEncode({
           'group': {
             'name': 'email',
-            'settings': base64Encode(utf8.encode(jsonEncode({
-              'smtp_enabled': true,
-              'smtp_host': 'mail.example.test',
-            }))),
+            'email': {
+              'enabled': true,
+              'smtpHost': 'mail.example.test',
+            },
           },
         }));
       await request.response.close();
@@ -5265,8 +5431,8 @@ void main() {
       final group = await SyncTvService.adminGetSettingsGroup('email');
 
       expect(group.name, 'email');
-      expect(group.settings['smtp_enabled'], isTrue);
-      expect(group.settings['smtp_host'], 'mail.example.test');
+      expect(group.settings['enabled'], isTrue);
+      expect(group.settings['smtpHost'], 'mail.example.test');
     } finally {
       await requests.cancel();
       await server.close(force: true);
@@ -5289,13 +5455,13 @@ void main() {
         ..write(jsonEncode({
           'members': [
             {
-              'room_id': 'room_1',
-              'user_id': 'usr_1',
+              'roomId': 'room_1',
+              'userId': 'usr_1',
               'username': 'alice',
               'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
               'permissions': '7',
-              'joined_at': '1700000000',
-              'is_online': true,
+              'joinedAt': '1700000000',
+              'isOnline': true,
             }
           ],
           'total': 6,
@@ -5337,12 +5503,12 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/room_1/members');
     expect(requestedUri!.queryParameters, {
       'page': '2',
-      'page_size': '25',
+      'pageSize': '25',
       'search': 'alice',
       'role': '${common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value}',
-      'sort_by':
+      'sortBy':
           '${client_enum.RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_USERNAME.value}',
-      'sort_direction': '${client_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      'sortDirection': '${client_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
   });
 
@@ -5359,13 +5525,13 @@ void main() {
           'reviews': [
             {
               'id': 'rev_1',
-              'room_id': 'room_1',
-              'user_id': 'usr_2',
+              'roomId': 'room_1',
+              'userId': 'usr_2',
               'username': 'bob',
-              'requested_role':
+              'requestedRole':
                   common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
               'status': common.ReviewStatus.REVIEW_STATUS_PENDING.value,
-              'requested_at': '1700000001',
+              'requestedAt': '1700000001',
             }
           ],
           'total': 3,
@@ -5402,9 +5568,9 @@ void main() {
     expect(requestedUri!.path, '/api/rooms/room_1/reviews/joins');
     expect(requestedUri!.queryParameters, {
       'page': '4',
-      'page_size': '10',
+      'pageSize': '10',
       'status': '${common.ReviewStatus.REVIEW_STATUS_PENDING.value}',
-      'user_id': 'usr_2',
+      'userId': 'usr_2',
     });
   });
 
@@ -5433,11 +5599,11 @@ void main() {
 
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/rooms/room_1/members/user_1');
-    expect(requestedUri!.queryParameters,
-        isNot(contains('kick_cooldown_seconds')));
+    expect(
+        requestedUri!.queryParameters, isNot(contains('kickCooldownSeconds')));
     expect(jsonDecode(requestBody!), {
-      'user_id': 'user_1',
-      'kick_cooldown_seconds': '120',
+      'userId': 'user_1',
+      'kickCooldownSeconds': '120',
     });
   });
 
@@ -5475,8 +5641,8 @@ void main() {
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/rooms/room_1/members/usr_9');
     expect(jsonDecode(requestBody!), {
-      'user_id': 'usr_9',
-      'kick_cooldown_seconds': '300',
+      'userId': 'usr_9',
+      'kickCooldownSeconds': '300',
     });
   });
 
@@ -5490,8 +5656,8 @@ void main() {
         return http.Response(
           jsonEncode({
             'member': {
-              'room_id': 'room_1',
-              'user_id': 'usr_1',
+              'roomId': 'room_1',
+              'userId': 'usr_1',
               'username': 'alice',
               'role': 3,
             },
@@ -5527,18 +5693,18 @@ void main() {
     expect(requests.first.method, 'PATCH');
     expect(requests.first.url.path, '/api/rooms/room_1/members/usr_1');
     final memberBody = jsonDecode(requests.first.body) as Map<String, dynamic>;
-    expect(memberBody['user_id'], 'usr_1');
-    expect(memberBody['added_permissions'], '1');
-    expect(memberBody['removed_permissions'], '4');
-    expect(memberBody['admin_added_permissions'], '0');
-    expect(memberBody['admin_removed_permissions'], '0');
+    expect(memberBody['userId'], 'usr_1');
+    expect(memberBody['addedPermissions'], '1');
+    expect(memberBody['removedPermissions'], '4');
+    expect(memberBody['adminAddedPermissions'], '0');
+    expect(memberBody['adminRemovedPermissions'], '0');
 
     final adminBody = jsonDecode(requests.last.body) as Map<String, dynamic>;
-    expect(adminBody['user_id'], 'usr_1');
-    expect(adminBody['added_permissions'], '0');
-    expect(adminBody['removed_permissions'], '0');
-    expect(adminBody['admin_added_permissions'], '2');
-    expect(adminBody['admin_removed_permissions'], '8');
+    expect(adminBody['userId'], 'usr_1');
+    expect(adminBody['addedPermissions'], '0');
+    expect(adminBody['removedPermissions'], '0');
+    expect(adminBody['adminAddedPermissions'], '2');
+    expect(adminBody['adminRemovedPermissions'], '8');
   });
 
   test('room lifecycle and member commands use protobuf contract', () async {
@@ -5555,7 +5721,7 @@ void main() {
                 'room': {
                   'id': 'room_1',
                   'name': 'Room',
-                  'created_by': 'usr_2',
+                  'createdBy': 'usr_2',
                   'status': 1,
                 },
               }),
@@ -5566,8 +5732,8 @@ void main() {
             return http.Response(
               jsonEncode({
                 'member': {
-                  'room_id': 'room_1',
-                  'user_id': 'usr_3',
+                  'roomId': 'room_1',
+                  'userId': 'usr_3',
                   'username': 'carol',
                   'role': 3,
                 },
@@ -5619,9 +5785,9 @@ void main() {
       '/api/rooms/room_1/members/@me',
       '/api/rooms/room_1',
     ]);
-    expect(jsonDecode(requests[0].body), {'new_owner_user_id': 'usr_2'});
+    expect(jsonDecode(requests[0].body), {'newOwnerUserId': 'usr_2'});
     expect(jsonDecode(requests[1].body), {
-      'user_id': 'usr_3',
+      'userId': 'usr_3',
       'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
       'notify': false,
     });
@@ -5648,9 +5814,9 @@ void main() {
             'room': {
               'id': 'room_1',
               'name': 'Room',
-              'created_by': 'usr_1',
+              'createdBy': 'usr_1',
               'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
-              'is_banned': true,
+              'isBanned': true,
             },
           }),
           200,
@@ -5670,14 +5836,14 @@ void main() {
     expect(requests.first.method, 'POST');
     expect(requests.first.url.path, '/api/admin/rooms/room_1/ban');
     expect(jsonDecode(requests.first.body), {
-      'room_id': 'room_1',
+      'roomId': 'room_1',
       'reason': 'abuse',
     });
     expect(requests.last.method, 'POST');
     expect(requests.last.url.path, '/api/admin/rooms/room_1/password');
     expect(jsonDecode(requests.last.body), {
-      'room_id': 'room_1',
-      'new_password': '',
+      'roomId': 'room_1',
+      'newPassword': '',
     });
   });
 
@@ -5717,8 +5883,8 @@ void main() {
           case '/api/rooms/room_1/password/opaque/registration/start':
             return http.Response(
               jsonEncode({
-                'session_id': 'room_password_session',
-                'registration_response': base64Encode([9, 8, 7]),
+                'sessionId': 'room_password_session',
+                'registrationResponse': base64Encode([9, 8, 7]),
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -5750,11 +5916,11 @@ void main() {
         .map((request) => jsonDecode(request.body) as Map<String, dynamic>)
         .toList();
     expect(bodies[0], {
-      'registration_request': base64Encode([1, 2, 3]),
+      'registrationRequest': base64Encode([1, 2, 3]),
     });
     expect(bodies[1], {
-      'session_id': 'room_password_session',
-      'registration_upload': base64Encode([4, 5, 6]),
+      'sessionId': 'room_password_session',
+      'registrationUpload': base64Encode([4, 5, 6]),
     });
     for (final body in bodies) {
       expect(body.containsKey('password'), isFalse);
@@ -5774,8 +5940,8 @@ void main() {
           case '/api/rooms/room_1/password/opaque/login/start':
             return http.Response(
               jsonEncode({
-                'session_id': 'room_login_session',
-                'credential_response': base64Encode([30, 31, 32]),
+                'sessionId': 'room_login_session',
+                'credentialResponse': base64Encode([30, 31, 32]),
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -5786,12 +5952,12 @@ void main() {
                 'room': {
                   'id': 'room_1',
                   'name': 'Room',
-                  'created_by': 'usr_1',
+                  'createdBy': 'usr_1',
                   'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
                 },
                 'member': {
-                  'room_id': 'room_1',
-                  'user_id': 'usr_2',
+                  'roomId': 'room_1',
+                  'userId': 'usr_2',
                   'username': 'bob',
                   'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
                 },
@@ -5825,12 +5991,12 @@ void main() {
         .map((request) => jsonDecode(request.body) as Map<String, dynamic>)
         .toList();
     expect(bodies[0], {
-      'room_id': 'room_1',
-      'credential_request': base64Encode([40, 41, 42]),
+      'roomId': 'room_1',
+      'credentialRequest': base64Encode([40, 41, 42]),
     });
     expect(bodies[1], {
-      'session_id': 'room_login_session',
-      'credential_finalization': base64Encode([50, 51, 52]),
+      'sessionId': 'room_login_session',
+      'credentialFinalization': base64Encode([50, 51, 52]),
     });
     for (final body in bodies) {
       expect(body.containsKey('password'), isFalse);
@@ -5851,12 +6017,12 @@ void main() {
             'room': {
               'id': 'room_1',
               'name': 'Room',
-              'created_by': 'usr_1',
+              'createdBy': 'usr_1',
               'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
             },
             'member': {
-              'room_id': 'room_1',
-              'user_id': 'usr_2',
+              'roomId': 'room_1',
+              'userId': 'usr_2',
               'username': 'bob',
               'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
             },
@@ -5881,7 +6047,7 @@ void main() {
     expect(requests, hasLength(1));
     expect(requests.single.method, 'PUT');
     expect(requests.single.url.path, '/api/rooms/room_1/members/@me');
-    expect(jsonDecode(requests.single.body), {'room_id': 'room_1'});
+    expect(jsonDecode(requests.single.body), {'roomId': 'room_1'});
   });
 
   test('admin unban room uses protobuf path command endpoint', () async {
@@ -5896,9 +6062,9 @@ void main() {
             'room': {
               'id': 'room_1',
               'name': 'Room',
-              'created_by': 'usr_1',
+              'createdBy': 'usr_1',
               'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
-              'is_banned': false,
+              'isBanned': false,
             },
           }),
           200,
@@ -5943,12 +6109,12 @@ void main() {
 
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/admin/rooms/room_1/members/user_1');
-    expect(requestedUri!.queryParameters,
-        isNot(contains('kick_cooldown_seconds')));
+    expect(
+        requestedUri!.queryParameters, isNot(contains('kickCooldownSeconds')));
     expect(jsonDecode(requestBody!), {
-      'room_id': 'room_1',
-      'user_id': 'user_1',
-      'kick_cooldown_seconds': '180',
+      'roomId': 'room_1',
+      'userId': 'user_1',
+      'kickCooldownSeconds': '180',
     });
   });
 
@@ -5962,8 +6128,8 @@ void main() {
         return http.Response(
           jsonEncode({
             'member': {
-              'room_id': 'room_1',
-              'user_id': 'usr_1',
+              'roomId': 'room_1',
+              'userId': 'usr_1',
               'username': 'alice',
               'role': 3,
             },
@@ -5995,14 +6161,14 @@ void main() {
     expect(requests.first.method, 'POST');
     expect(requests.first.url.path, '/api/admin/rooms/room_1/members');
     final memberBody = jsonDecode(requests.first.body) as Map<String, dynamic>;
-    expect(memberBody['room_id'], 'room_1');
-    expect(memberBody['user_id'], 'usr_1');
+    expect(memberBody['roomId'], 'room_1');
+    expect(memberBody['userId'], 'usr_1');
     expect(memberBody['role'],
         common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value);
     expect(memberBody['notify'], isTrue);
 
     final adminBody = jsonDecode(requests.last.body) as Map<String, dynamic>;
-    expect(adminBody['user_id'], 'usr_2');
+    expect(adminBody['userId'], 'usr_2');
     expect(
         adminBody['role'], common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value);
     expect(adminBody['notify'], isFalse);
@@ -6022,12 +6188,12 @@ void main() {
         request.response.write(jsonEncode({
           'members': [
             {
-              'room_id': 'room_1',
-              'user_id': 'usr_1',
+              'roomId': 'room_1',
+              'userId': 'usr_1',
               'username': 'alice',
               'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
-              'joined_at': '1700000000',
-              'is_online': true,
+              'joinedAt': '1700000000',
+              'isOnline': true,
             }
           ],
           'total': 1,
@@ -6035,8 +6201,8 @@ void main() {
       } else if (request.method == 'POST') {
         request.response.write(jsonEncode({
           'member': {
-            'room_id': 'room_1',
-            'user_id': 'usr_2',
+            'roomId': 'room_1',
+            'userId': 'usr_2',
             'username': 'bob',
             'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
           },
@@ -6088,23 +6254,23 @@ void main() {
     expect(requests[0].url.path, '/api/admin/rooms/room_1/members');
     expect(requests[0].url.queryParameters, {
       'page': '2',
-      'page_size': '20',
+      'pageSize': '20',
       'search': 'alice',
       'role': '${common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value}',
-      'sort_by':
+      'sortBy':
           '${admin_enum.RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_USERNAME.value}',
-      'sort_direction': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
     expect(jsonDecode(requests[1].body), {
-      'room_id': 'room_1',
-      'user_id': 'usr_2',
+      'roomId': 'room_1',
+      'userId': 'usr_2',
       'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
       'notify': false,
     });
     expect(jsonDecode(requests[2].body), {
-      'room_id': 'room_1',
-      'user_id': 'usr_1',
-      'kick_cooldown_seconds': '900',
+      'roomId': 'room_1',
+      'userId': 'usr_1',
+      'kickCooldownSeconds': '900',
     });
   });
 
@@ -6157,11 +6323,10 @@ void main() {
     expect(requestedUri!.path, '/api/admin/admins');
     expect(requestedUri!.queryParameters, {
       'page': '3',
-      'page_size': '20',
+      'pageSize': '20',
       'search': 'root',
-      'sort_by':
-          '${admin_enum.UserListSortBy.USER_LIST_SORT_BY_USERNAME.value}',
-      'sort_direction': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      'sortBy': '${admin_enum.UserListSortBy.USER_LIST_SORT_BY_USERNAME.value}',
+      'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
   });
 
@@ -6187,7 +6352,7 @@ void main() {
     expect(capturedRequest, isNotNull);
     expect(capturedRequest!.method, 'POST');
     expect(capturedRequest!.url.path, '/api/admin/admins/usr_2');
-    expect(jsonDecode(capturedRequest!.body), {'user_id': 'usr_2'});
+    expect(jsonDecode(capturedRequest!.body), {'userId': 'usr_2'});
   });
 
   test('admin member role and permission overrides use protobuf body',
@@ -6201,8 +6366,8 @@ void main() {
         return http.Response(
           jsonEncode({
             'member': {
-              'room_id': 'room_1',
-              'user_id': 'usr_1',
+              'roomId': 'room_1',
+              'userId': 'usr_1',
               'username': 'alice',
               'role': 2,
             },
@@ -6236,18 +6401,18 @@ void main() {
     expect(requests.first.method, 'PATCH');
     expect(requests.first.url.path, '/api/admin/rooms/room_1/members/usr_1');
     final adminBody = jsonDecode(requests.first.body) as Map<String, dynamic>;
-    expect(adminBody['room_id'], 'room_1');
-    expect(adminBody['user_id'], 'usr_1');
+    expect(adminBody['roomId'], 'room_1');
+    expect(adminBody['userId'], 'usr_1');
     expect(
         adminBody['role'], common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value);
-    expect(adminBody['admin_added_permissions'], '2');
-    expect(adminBody['admin_removed_permissions'], '8');
+    expect(adminBody['adminAddedPermissions'], '2');
+    expect(adminBody['adminRemovedPermissions'], '8');
 
     final memberBody = jsonDecode(requests.last.body) as Map<String, dynamic>;
     expect(memberBody['role'],
         common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value);
-    expect(memberBody['added_permissions'], '1');
-    expect(memberBody['removed_permissions'], '4');
+    expect(memberBody['addedPermissions'], '1');
+    expect(memberBody['removedPermissions'], '4');
   });
 
   test('available provider instances query is generated from protobuf request',
@@ -6274,7 +6439,10 @@ void main() {
     expect(requestedUri!.path, '/api/providers/instances/available');
     expect(
       requestedUri!.queryParameters,
-      containsPair('provider_type', 'emby'),
+      containsPair(
+        'providerType',
+        source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
+      ),
     );
   });
 
@@ -6300,7 +6468,8 @@ void main() {
       );
 
       final instances = await SyncTvService.listAvailableProviderInstances(
-        providerType: 'emby',
+        providerType:
+            source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
       );
 
       expect(instances, ['home', 'edge']);
@@ -6308,7 +6477,10 @@ void main() {
       expect(requestedUri!.path, '/api/providers/instances/available');
       expect(
         requestedUri!.queryParameters,
-        containsPair('provider_type', 'emby'),
+        containsPair(
+          'providerType',
+          source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
+        ),
       );
     } finally {
       await listener.cancel();
@@ -6355,14 +6527,14 @@ void main() {
     expect(requestedUri!.path, '/api/providers/alist/search');
     expect(requestedUri!.queryParameters, isEmpty);
     expect(jsonDecode(requestBody!), {
-      'server_id': 'server_1',
+      'serverId': 'server_1',
       'parent': '/movies',
       'keywords': 'matrix',
       'scope': '2',
       'page': '3',
-      'per_page': '40',
+      'perPage': '40',
       'password': directoryCredential,
-      'instance_name': 'edge',
+      'instanceName': 'edge',
     });
   });
 
@@ -6383,7 +6555,7 @@ void main() {
               {
                 'name': 'movie.mp4',
                 'size': '1024',
-                'is_dir': false,
+                'isDir': false,
                 'modified': '1760000100',
                 'thumb': '/thumb.jpg',
                 'type': '2',
@@ -6414,13 +6586,13 @@ void main() {
     expect(requestedUri!.path, '/api/providers/alist/list');
     expect(requestedUri!.queryParameters, isEmpty);
     expect(jsonDecode(requestBody!), {
-      'server_id': 'server_1',
+      'serverId': 'server_1',
       'path': '/private',
       'password': directoryCredential,
       'page': '2',
-      'per_page': '30',
+      'perPage': '30',
       'refresh': true,
-      'instance_name': 'edge',
+      'instanceName': 'edge',
     });
     expect(response.content.single.sign, 'signed-query-fragment');
   });
@@ -6436,7 +6608,7 @@ void main() {
             {
               'name': 'movie.mp4',
               'size': '1024',
-              'is_dir': false,
+              'isDir': false,
               'modified': '1760000100',
               'thumb': '/thumb.jpg',
               'type': '2',
@@ -6481,7 +6653,7 @@ void main() {
         return http.Response(
           jsonEncode({
             'token': 'alist_token',
-            'server_id': 'server_1',
+            'serverId': 'server_1',
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -6509,9 +6681,9 @@ void main() {
       'host': 'https://alist.example.test',
       'username': 'alice',
       'password': providerCredential,
-      'otp_code': '',
-      'otp_secret': '',
-      'instance_name': 'edge',
+      'otpCode': '',
+      'otpSecret': '',
+      'instanceName': 'edge',
     });
   });
 
@@ -6527,7 +6699,7 @@ void main() {
         requests.add(request);
         if (request.url.path == '/api/providers/alist/login') {
           return http.Response(
-            jsonEncode({'token': 'alist_token', 'server_id': 'alist_server'}),
+            jsonEncode({'token': 'alist_token', 'serverId': 'alist_server'}),
             200,
             headers: {'content-type': 'application/json'},
           );
@@ -6535,10 +6707,10 @@ void main() {
         if (request.url.path == '/api/providers/emby/login') {
           return http.Response(
             jsonEncode({
-              'user_id': 'emby_user',
+              'userId': 'emby_user',
               'username': 'alice',
               'is_admin': true,
-              'server_id': 'emby_server',
+              'serverId': 'emby_server',
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -6586,25 +6758,25 @@ void main() {
       'host': 'https://alist.example.test',
       'username': 'alice',
       'password': providerCredential,
-      'otp_code': '123456',
-      'otp_secret': 'totp-secret',
-      'instance_name': 'alist-edge',
+      'otpCode': '123456',
+      'otpSecret': 'totp-secret',
+      'instanceName': 'alist-edge',
     });
     expect(jsonDecode(requests[1].body), {
       'host': 'https://alist2.example.test',
       'username': 'alice',
-      'hashed_password': 'hashed-password',
-      'otp_code': '',
-      'otp_secret': '',
-      'instance_name': 'alist-hashed',
+      'hashedPassword': 'hashed-password',
+      'otpCode': '',
+      'otpSecret': '',
+      'instanceName': 'alist-hashed',
     });
     expect(
         (jsonDecode(requests[1].body) as Map).containsKey('password'), isFalse);
     expect(jsonDecode(requests[2].body), {
       'host': 'https://jellyfin.example.test',
       'username': 'bob',
-      'api_key': embyCredential,
-      'instance_name': 'emby-edge',
+      'apiKey': embyCredential,
+      'instanceName': 'emby-edge',
     });
     expect(
         (jsonDecode(requests[2].body) as Map).containsKey('password'), isFalse);
@@ -6691,14 +6863,19 @@ void main() {
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/providers/instances');
     expect(requestedUri!.queryParameters, containsPair('page', '2'));
-    expect(requestedUri!.queryParameters, containsPair('page_size', '10'));
+    expect(requestedUri!.queryParameters, containsPair('pageSize', '10'));
     expect(
-        requestedUri!.queryParameters, containsPair('provider_type', 'emby'));
+      requestedUri!.queryParameters,
+      containsPair(
+        'providerType',
+        source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
+      ),
+    );
     expect(requestedUri!.queryParameters, containsPair('search', 'home'));
     expect(requestedUri!.queryParameters, containsPair('enabled', 'true'));
     expect(requestedUri!.queryParameters, containsPair('tls', 'false'));
-    expect(requestedUri!.queryParameters, containsPair('sort_by', '3'));
-    expect(requestedUri!.queryParameters, containsPair('sort_direction', '2'));
+    expect(requestedUri!.queryParameters, containsPair('sortBy', '3'));
+    expect(requestedUri!.queryParameters, containsPair('sortDirection', '2'));
   });
 
   test('provider instance service forwards paging TLS sort filters and total',
@@ -6716,15 +6893,17 @@ void main() {
             {
               'name': 'edge',
               'endpoint': 'https://edge.example.test',
-              'providers': ['alist'],
-              'timeout_seconds': 30,
+              'providers': [
+                source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value,
+              ],
+              'timeoutSeconds': 30,
               'tls': true,
-              'insecure_tls': false,
+              'insecureTls': false,
               'enabled': true,
               'status': provider_common.ProviderInstanceStatus
                   .PROVIDER_INSTANCE_STATUS_CONNECTED.value,
-              'created_at': '1700000000',
-              'updated_at': '1700000100',
+              'createdAt': '1700000000',
+              'updatedAt': '1700000100',
             }
           ],
           'total': 11,
@@ -6740,7 +6919,8 @@ void main() {
       final page = await SyncTvService.adminListProviderInstancesPage(
         page: 3,
         pageSize: 20,
-        providerType: 'alist',
+        providerType:
+            source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value.toString(),
         search: 'edge',
         enabled: true,
         tls: false,
@@ -6759,14 +6939,18 @@ void main() {
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/providers/instances');
     expect(requestedUri!.queryParameters, containsPair('page', '3'));
-    expect(requestedUri!.queryParameters, containsPair('page_size', '20'));
+    expect(requestedUri!.queryParameters, containsPair('pageSize', '20'));
     expect(
-        requestedUri!.queryParameters, containsPair('provider_type', 'alist'));
+        requestedUri!.queryParameters,
+        containsPair(
+          'providerType',
+          source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value.toString(),
+        ));
     expect(requestedUri!.queryParameters, containsPair('search', 'edge'));
     expect(requestedUri!.queryParameters, containsPair('enabled', 'true'));
     expect(requestedUri!.queryParameters, containsPair('tls', 'false'));
-    expect(requestedUri!.queryParameters, containsPair('sort_by', '4'));
-    expect(requestedUri!.queryParameters, containsPair('sort_direction', '2'));
+    expect(requestedUri!.queryParameters, containsPair('sortBy', '4'));
+    expect(requestedUri!.queryParameters, containsPair('sortDirection', '2'));
   });
 
   test('provider backend discovery uses protobuf path request', () async {
@@ -6809,14 +6993,14 @@ void main() {
           'name': name,
           'endpoint': 'https://provider.example.test',
           'comment': 'edge node',
-          'timeout_seconds': 30,
+          'timeoutSeconds': 30,
           'tls': true,
-          'insecure_tls': false,
+          'insecureTls': false,
           'providers': providers,
           'enabled': enabled,
           'status': 1,
-          'created_at': '1760000000',
-          'updated_at': '1760000010',
+          'createdAt': '1760000000',
+          'updatedAt': '1760000010',
         },
       };
     }
@@ -6887,12 +7071,15 @@ void main() {
       'name': 'edge',
       'endpoint': 'https://provider.example.test',
       'comment': 'edge node',
-      'timeout_seconds': 45,
+      'timeoutSeconds': 45,
       'tls': true,
-      'insecure_tls': false,
-      'providers': ['alist', 'emby'],
-      'jwt_secret': 'jwt-secret',
-      'custom_ca': 'pem',
+      'insecureTls': false,
+      'providers': [
+        source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value,
+        source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value,
+      ],
+      'jwtSecret': 'jwt-secret',
+      'customCa': 'pem',
     });
 
     expect(requests[1].method, 'PUT');
@@ -6900,10 +7087,10 @@ void main() {
     expect(jsonDecode(requests[1].body), {
       'name': 'edge',
       'endpoint': 'https://provider2.example.test',
-      'providers': ['alist'],
-      'clear_comment': true,
-      'clear_jwt_secret': true,
-      'clear_custom_ca': true,
+      'providers': [source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value],
+      'clearComment': true,
+      'clearJwtSecret': true,
+      'clearCustomCa': true,
     });
 
     expect(requests[2].method, 'POST');
@@ -6923,7 +7110,7 @@ void main() {
       httpClient: MockClient((request) async {
         requestedUri = request.url;
         return http.Response(
-          jsonEncode({'success': true, 'removed_count': 1}),
+          jsonEncode({'success': true, 'removedCount': 1}),
           200,
           headers: {'content-type': 'application/json'},
         );
@@ -6932,7 +7119,7 @@ void main() {
 
     final response = await api.oauth2Service.unlinkProvider(
       oauth2.UnlinkProviderRequest(
-        provider: 'github',
+        provider: oauth2.OAuth2ProviderType.OAUTH2_PROVIDER_TYPE_GITHUB,
         providerInstanceName: 'github-main',
         providerUserId: 'gh_123',
       ),
@@ -6943,8 +7130,8 @@ void main() {
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/oauth2/type/github/unlink');
     expect(requestedUri!.queryParameters, {
-      'provider_user_id': 'gh_123',
-      'provider_instance_name': 'github-main',
+      'providerUserId': 'gh_123',
+      'providerInstanceName': 'github-main',
     });
   });
 
@@ -6988,13 +7175,13 @@ void main() {
         ..statusCode = 200
         ..headers.contentType = io.ContentType.json
         ..write(jsonEncode({
-          'access_token': '',
-          'refresh_token': '',
-          'expires_in': '600',
-          'redirect_url': 'https://app.example.test/oauth2/done',
-          'is_bind': false,
-          'registration_review_required': true,
-          'registration_review_id': 'rev_oauth2_1',
+          'accessToken': '',
+          'refreshToken': '',
+          'expiresIn': '600',
+          'redirectUrl': 'https://app.example.test/oauth2/done',
+          'isBind': false,
+          'registrationReviewRequired': true,
+          'registrationReviewId': 'rev_oauth2_1',
         }));
       await request.response.close();
     });
@@ -7046,9 +7233,9 @@ void main() {
         expect(request.headers['authorization'], 'Bearer existing-access');
         return http.Response(
           jsonEncode({
-            'access_token': '',
-            'refresh_token': '',
-            'is_bind': true,
+            'accessToken': '',
+            'refreshToken': '',
+            'isBind': true,
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -7091,10 +7278,10 @@ void main() {
         if (request.url.path.endsWith('/login/sms/start')) {
           return http.Response(
             jsonEncode({
-              'session_token': 'sms_session_1',
+              'sessionToken': 'sms_session_1',
               'gt': 'gt_value',
               'challenge': 'challenge_value',
-              'expires_at': 1710000300,
+              'expiresAt': 1710000300,
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -7103,8 +7290,8 @@ void main() {
         if (request.url.path.endsWith('/login/sms/send')) {
           return http.Response(
             jsonEncode({
-              'session_token': 'sms_session_2',
-              'expires_at': 1710000360,
+              'sessionToken': 'sms_session_2',
+              'expiresAt': 1710000360,
             }),
             200,
             headers: {'content-type': 'application/json'},
@@ -7150,18 +7337,18 @@ void main() {
     expect(smsSend.sessionToken, 'sms_session_2');
     expect(smsSend.expiresAt.toInt(), 1710000360);
     expect(requests[0].url.path, '/api/providers/bilibili/login/qr/generate');
-    expect(jsonDecode(requests[0].body), {'instance_name': 'main'});
+    expect(jsonDecode(requests[0].body), {'instanceName': 'main'});
     expect(requests[1].url.path, '/api/providers/bilibili/login/sms/start');
-    expect(jsonDecode(requests[1].body), {'instance_name': 'main'});
+    expect(jsonDecode(requests[1].body), {'instanceName': 'main'});
     expect(requests[2].url.path, '/api/providers/bilibili/login/sms/send');
     expect(jsonDecode(requests[2].body), {
-      'session_token': 'sms_session_1',
+      'sessionToken': 'sms_session_1',
       'phone': '13800138000',
       'validate': 'geetest_validate',
     });
     expect(requests[3].url.path, '/api/providers/bilibili/login/sms/login');
     expect(jsonDecode(requests[3].body), {
-      'session_token': 'sms_session_2',
+      'sessionToken': 'sms_session_2',
       'code': '123456',
     });
   });
@@ -7217,7 +7404,7 @@ void main() {
     expect(requests[0].method, 'POST');
     expect(requests[0].url.path, '/api/notifications/actions/mark-read');
     expect(jsonDecode(requests[0].body), {
-      'notification_ids': ['42', '43'],
+      'notificationIds': ['42', '43'],
     });
     expect(requests[1].method, 'POST');
     expect(requests[1].url.path, '/api/notifications/read-all');
@@ -7259,7 +7446,7 @@ void main() {
       '/api/notifications/actions/mark-read',
     );
     expect(jsonDecode(capturedRequest!.body), {
-      'notification_ids': ['42', '43'],
+      'notificationIds': ['42', '43'],
     });
   });
 
@@ -7276,8 +7463,8 @@ void main() {
         return http.Response(
           jsonEncode({
             'ticket': 'ws_ticket_1',
-            'room_id': 'room_1',
-            'expires_in_secs': '30',
+            'roomId': 'room_1',
+            'expiresInSecs': '30',
             'usage': 'Use in WebSocket URL',
           }),
           200,
@@ -7296,7 +7483,7 @@ void main() {
     expect(requestedUri, isNotNull);
     expect(requestedUri!.path, '/api/tickets');
     expect(requestedUri!.queryParameters, isEmpty);
-    expect(jsonDecode(requestBody!), {'room_id': 'room_1'});
+    expect(jsonDecode(requestBody!), {'roomId': 'room_1'});
   });
 
   test('room facade keeps room path separate from protobuf bodies and queries',
@@ -7319,8 +7506,8 @@ void main() {
             return http.Response(
               jsonEncode({
                 'member': {
-                  'room_id': 'room_1',
-                  'user_id': 'usr_2',
+                  'roomId': 'room_1',
+                  'userId': 'usr_2',
                   'username': 'bob',
                   'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
                 },
@@ -7332,11 +7519,11 @@ void main() {
             return http.Response(
               jsonEncode({
                 'member': {
-                  'room_id': 'room_1',
-                  'user_id': 'usr_2',
+                  'roomId': 'room_1',
+                  'userId': 'usr_2',
                   'username': 'bob',
                   'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
-                  'added_permissions': '7',
+                  'addedPermissions': '7',
                 },
               }),
               200,
@@ -7397,20 +7584,20 @@ void main() {
     expect(requests[0].url.path, '/api/rooms/room_1/members');
     expect(requests[0].url.queryParameters, {
       'page': '2',
-      'page_size': '10',
+      'pageSize': '10',
       'search': 'bob',
       'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value.toString(),
-      'sort_by': client_enum
+      'sortBy': client_enum
           .RoomMemberListSortBy.ROOM_MEMBER_LIST_SORT_BY_USERNAME.value
           .toString(),
-      'sort_direction':
+      'sortDirection':
           client_enum.SortDirection.SORT_DIRECTION_ASC.value.toString(),
     });
 
     expect(requests[1].method, 'POST');
     expect(requests[1].url.path, '/api/rooms/room_1/members');
     expect(jsonDecode(requests[1].body), {
-      'user_id': 'usr_2',
+      'userId': 'usr_2',
       'role': common.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
       'notify': true,
     });
@@ -7418,13 +7605,13 @@ void main() {
     expect(requests[2].method, 'PATCH');
     expect(requests[2].url.path, '/api/rooms/room_1/members/usr_2');
     final permissionBody = jsonDecode(requests[2].body) as Map<String, dynamic>;
-    expect(permissionBody, containsPair('user_id', 'usr_2'));
+    expect(permissionBody, containsPair('userId', 'usr_2'));
     expect(
       permissionBody,
       containsPair('role', common.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value),
     );
-    expect(permissionBody, containsPair('added_permissions', '7'));
-    expect(permissionBody, isNot(contains('room_id')));
+    expect(permissionBody, containsPair('addedPermissions', '7'));
+    expect(permissionBody, isNot(contains('roomId')));
 
     expect(requests[3].method, 'DELETE');
     expect(requests[3].url.path, '/api/rooms/room_1/playlists/pl_1');
@@ -7447,7 +7634,7 @@ void main() {
         return http.Response(
           jsonEncode(<String, dynamic>{
             'ticket': 'ws_ticket',
-            'expires_in_secs': '30',
+            'expiresInSecs': '30',
           }),
           200,
         );
@@ -7563,49 +7750,49 @@ void main() {
     expect(requests[0].url.path, '/api/admin/reviews/user-registrations');
     expect(requests[0].url.queryParameters, {
       'page': '2',
-      'page_size': '30',
+      'pageSize': '30',
       'status': '${common.ReviewStatus.REVIEW_STATUS_APPROVED.value}',
       'search': 'alice',
     });
     expect(
         requests[1].url.path, '/api/admin/reviews/user-registrations/approve');
-    expect(jsonDecode(requests[1].body), {'request_id': 'usr_1'});
+    expect(jsonDecode(requests[1].body), {'requestId': 'usr_1'});
     expect(
         requests[2].url.path, '/api/admin/reviews/user-registrations/reject');
     expect(jsonDecode(requests[2].body), {
-      'request_id': 'usr_2',
+      'requestId': 'usr_2',
       'reason': 'duplicate',
     });
 
     expect(requests[3].url.path, '/api/admin/reviews/room-creations');
     expect(requests[3].url.queryParameters, {
       'page': '3',
-      'page_size': '25',
+      'pageSize': '25',
       'status': '${common.ReviewStatus.REVIEW_STATUS_REJECTED.value}',
-      'requested_by': 'usr_3',
+      'requestedBy': 'usr_3',
       'search': 'movie night',
     });
     expect(requests[4].url.path, '/api/admin/reviews/room-creations/approve');
-    expect(jsonDecode(requests[4].body), {'request_id': 'room_1'});
+    expect(jsonDecode(requests[4].body), {'requestId': 'room_1'});
     expect(requests[5].url.path, '/api/admin/reviews/room-creations/reject');
     expect(jsonDecode(requests[5].body), {
-      'request_id': 'room_2',
+      'requestId': 'room_2',
       'reason': 'policy',
     });
 
     expect(requests[6].url.path, '/api/admin/reviews/room-joins');
     expect(requests[6].url.queryParameters, {
       'page': '4',
-      'page_size': '20',
+      'pageSize': '20',
       'status': '${common.ReviewStatus.REVIEW_STATUS_PENDING.value}',
-      'room_id': 'room_3',
-      'user_id': 'usr_4',
+      'roomId': 'room_3',
+      'userId': 'usr_4',
     });
     expect(requests[7].url.path, '/api/admin/reviews/room-joins/approve');
-    expect(jsonDecode(requests[7].body), {'request_id': 'rev_1'});
+    expect(jsonDecode(requests[7].body), {'requestId': 'rev_1'});
     expect(requests[8].url.path, '/api/admin/reviews/room-joins/reject');
     expect(jsonDecode(requests[8].body), {
-      'request_id': 'rev_2',
+      'requestId': 'rev_2',
       'reason': 'full',
     });
   });
@@ -7624,16 +7811,16 @@ void main() {
               'id': 'usr_review_1',
               'username': 'alice',
               'email': 'alice@example.test',
-              'signup_method': 3,
+              'signupMethod': 3,
               'status': common.ReviewStatus.REVIEW_STATUS_PENDING.value,
-              'requested_at': 1710000000,
-              'oauth2_provider': 'oidc',
-              'oauth2_provider_user_id': 'sub-123',
-              'oauth2_provider_username': 'alice-oidc',
-              'oauth2_avatar_url': 'https://issuer.example.test/a.png',
-              'oauth2_email_trusted': true,
-              'oauth2_provider_instance_name': 'logto-main',
-              'oauth2_provider_issuer': 'https://issuer.example.test',
+              'requestedAt': 1710000000,
+              'oauth2Provider': 'oidc',
+              'oauth2ProviderUserId': 'sub-123',
+              'oauth2ProviderUsername': 'alice-oidc',
+              'oauth2AvatarUrl': 'https://issuer.example.test/a.png',
+              'oauth2EmailTrusted': true,
+              'oauth2ProviderInstanceName': 'logto-main',
+              'oauth2ProviderIssuer': 'https://issuer.example.test',
             }
           ],
           'total': 1,
@@ -7681,11 +7868,11 @@ void main() {
               'id': 'usr_review_2',
               'username': 'bob',
               'email': '',
-              'signup_method': 5,
+              'signupMethod': 5,
               'status': common.ReviewStatus.REVIEW_STATUS_PENDING.value,
-              'requested_at': 1710000300,
-              'webauthn_credential_id': 'Y3JlZGVudGlhbC0x',
-              'webauthn_credential_name': 'MacBook Touch ID',
+              'requestedAt': 1710000300,
+              'webauthnCredentialId': 'Y3JlZGVudGlhbC0x',
+              'webauthnCredentialName': 'MacBook Touch ID',
             }
           ],
           'total': 1,
@@ -7725,11 +7912,11 @@ void main() {
             jsonEncode({
               'streams': [
                 {
-                  'room_id': 'room_1',
-                  'media_id': 'med_1',
-                  'user_id': 'usr_1',
-                  'node_id': 'node_a',
-                  'started_at': '11',
+                  'roomId': 'room_1',
+                  'mediaId': 'med_1',
+                  'userId': 'usr_1',
+                  'nodeId': 'node_a',
+                  'startedAt': '11',
                 }
               ],
               'total': 6,
@@ -7744,8 +7931,8 @@ void main() {
               'bans': [
                 {
                   'id': 'ban_1',
-                  'target_type': admin.BanTargetType.BAN_TARGET_TYPE_ROOM.value,
-                  'room_id': 'room_1',
+                  'targetType': admin.BanTargetType.BAN_TARGET_TYPE_ROOM.value,
+                  'roomId': 'room_1',
                   'room_name': 'Room 1',
                   'banned_by': 'usr_admin',
                   'banned_by_username': 'root',
@@ -7799,24 +7986,24 @@ void main() {
     expect(requests[0].url.path, '/api/admin/streams');
     expect(requests[0].url.queryParameters, {
       'page': '3',
-      'page_size': '40',
-      'room_id': 'room_1',
-      'user_id': 'usr_1',
-      'node_id': 'node_a',
+      'pageSize': '40',
+      'roomId': 'room_1',
+      'userId': 'usr_1',
+      'nodeId': 'node_a',
       'search': 'feature',
-      'sort_by':
+      'sortBy':
           '${admin_enum.ActiveStreamListSortBy.ACTIVE_STREAM_LIST_SORT_BY_NODE_ID.value}',
-      'sort_direction': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
     });
     expect(requests[1].method, 'GET');
     expect(requests[1].url.path, '/api/admin/bans');
     expect(requests[1].url.queryParameters, {
       'page': '2',
-      'page_size': '25',
-      'target_type': '${admin.BanTargetType.BAN_TARGET_TYPE_ROOM.value}',
+      'pageSize': '25',
+      'targetType': '${admin.BanTargetType.BAN_TARGET_TYPE_ROOM.value}',
       'active': 'true',
-      'user_id': 'usr_2',
-      'room_id': 'room_1',
+      'userId': 'usr_2',
+      'roomId': 'room_1',
     });
   });
 
@@ -7831,11 +8018,11 @@ void main() {
         ..write(jsonEncode({
           'streams': [
             {
-              'room_id': 'room_1',
-              'media_id': 'med_1',
-              'user_id': 'usr_1',
-              'node_id': 'node_a',
-              'started_at': '1700000000',
+              'roomId': 'room_1',
+              'mediaId': 'med_1',
+              'userId': 'usr_1',
+              'nodeId': 'node_a',
+              'startedAt': '1700000000',
             }
           ],
           'total': 3,
@@ -7873,14 +8060,14 @@ void main() {
     expect(requestedUri!.path, '/api/admin/streams');
     expect(requestedUri!.queryParameters, {
       'page': '2',
-      'page_size': '20',
-      'room_id': 'room_1',
-      'user_id': 'usr_1',
-      'node_id': 'node_a',
+      'pageSize': '20',
+      'roomId': 'room_1',
+      'userId': 'usr_1',
+      'nodeId': 'node_a',
       'search': 'med_1',
-      'sort_by':
+      'sortBy':
           '${admin_enum.ActiveStreamListSortBy.ACTIVE_STREAM_LIST_SORT_BY_STARTED_AT.value}',
-      'sort_direction': '${admin_enum.SortDirection.SORT_DIRECTION_DESC.value}',
+      'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_DESC.value}',
     });
   });
 
@@ -7891,27 +8078,27 @@ void main() {
       httpClient: MockClient((request) async {
         return http.Response(
           jsonEncode({
-            'allow_room_creation': true,
-            'max_rooms_per_user': 8,
-            'max_members_per_room': 64,
-            'disable_create_room': false,
-            'create_room_need_review': true,
-            'room_password_policy': 'optional',
-            'enable_password_signup': true,
-            'password_signup_need_review': false,
-            'enable_email_signup': true,
-            'enable_email': true,
-            'enable_guest': false,
-            'email_signup_need_review': true,
-            'enable_webauthn': true,
-            'enable_webauthn_signup': true,
-            'webauthn_signup_need_review': false,
-            'movie_proxy': true,
-            'live_proxy': false,
-            'ts_disguised_as_png': true,
-            'custom_publish_host': 'rtmp://publish.example.test/live',
-            'email_whitelist_enabled': true,
-            'email_whitelist_domains': ['example.com', 'corp.test'],
+            'allowRoomCreation': true,
+            'maxRoomsPerUser': 8,
+            'maxMembersPerRoom': 64,
+            'disableCreateRoom': false,
+            'createRoomNeedReview': true,
+            'roomPasswordPolicy': 'optional',
+            'enablePasswordSignup': true,
+            'passwordSignupNeedReview': false,
+            'enableEmailSignup': true,
+            'enableEmail': true,
+            'enableGuest': false,
+            'emailSignupNeedReview': true,
+            'enableWebauthn': true,
+            'enableWebauthnSignup': true,
+            'webauthnSignupNeedReview': false,
+            'movieProxy': true,
+            'liveProxy': false,
+            'tsDisguisedAsPng': true,
+            'customPublishHost': 'rtmp://publish.example.test/live',
+            'emailWhitelistEnabled': true,
+            'emailWhitelistDomains': ['example.com', 'corp.test'],
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -7945,27 +8132,27 @@ void main() {
         ..statusCode = 200
         ..headers.contentType = io.ContentType.json
         ..write(jsonEncode({
-          'allow_room_creation': true,
-          'max_rooms_per_user': 3,
-          'max_members_per_room': 12,
-          'disable_create_room': false,
-          'create_room_need_review': false,
-          'room_password_policy': 'optional',
-          'enable_password_signup': true,
-          'password_signup_need_review': false,
-          'enable_email_signup': true,
-          'enable_email': true,
-          'enable_guest': true,
-          'email_signup_need_review': false,
-          'enable_webauthn': false,
-          'enable_webauthn_signup': true,
-          'webauthn_signup_need_review': true,
-          'movie_proxy': false,
-          'live_proxy': true,
-          'ts_disguised_as_png': true,
-          'custom_publish_host': 'rtmp://publish.example.test/app',
-          'email_whitelist_enabled': false,
-          'email_whitelist_domains': [],
+          'allowRoomCreation': true,
+          'maxRoomsPerUser': 3,
+          'maxMembersPerRoom': 12,
+          'disableCreateRoom': false,
+          'createRoomNeedReview': false,
+          'roomPasswordPolicy': 'optional',
+          'enablePasswordSignup': true,
+          'passwordSignupNeedReview': false,
+          'enableEmailSignup': true,
+          'enableEmail': true,
+          'enableGuest': true,
+          'emailSignupNeedReview': false,
+          'enableWebauthn': false,
+          'enableWebauthnSignup': true,
+          'webauthnSignupNeedReview': true,
+          'movieProxy': false,
+          'liveProxy': true,
+          'tsDisguisedAsPng': true,
+          'customPublishHost': 'rtmp://publish.example.test/app',
+          'emailWhitelistEnabled': false,
+          'emailWhitelistDomains': [],
         }));
       await request.response.close();
     });
@@ -7996,8 +8183,8 @@ void main() {
         requestedUri = request.url;
         return http.Response(
           jsonEncode({
-            'server_id': 'srv_prod',
-            'server_name': 'SyncTV Prod',
+            'serverId': 'srv_prod',
+            'serverName': 'SyncTV Prod',
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -8022,8 +8209,8 @@ void main() {
       requestedUri = request.uri;
       request.response.headers.contentType = io.ContentType.json;
       request.response.write(jsonEncode({
-        'server_id': 'srv_local',
-        'server_name': 'Local Dev',
+        'serverId': 'srv_local',
+        'serverName': 'Local Dev',
       }));
       await request.response.close();
     });
@@ -8064,8 +8251,8 @@ void main() {
                     'key': 'anime',
                     'name': 'Anime',
                     'description': 'Animation rooms',
-                    'sort_order': 10,
-                    'is_enabled': true,
+                    'sortOrder': 10,
+                    'isEnabled': true,
                   }
                 ],
               }),
@@ -8082,9 +8269,9 @@ void main() {
                     'name': 'Weekly',
                     'description': 'Weekly sessions',
                     'color': '#3366ff',
-                    'category_id': 'roomcat_anime',
-                    'sort_order': 20,
-                    'is_enabled': true,
+                    'categoryId': 'roomcat_anime',
+                    'sortOrder': 20,
+                    'isEnabled': true,
                   }
                 ],
               }),
@@ -8116,14 +8303,14 @@ void main() {
     );
 
     expect(requests[0].url.path, '/api/rooms/categories');
-    expect(requests[0].url.queryParameters, {'include_disabled': 'true'});
+    expect(requests[0].url.queryParameters, {'includeDisabled': 'true'});
     expect(categories.single.id, 'roomcat_anime');
     expect(categories.single.sortOrder, 10);
 
     expect(requests[1].url.path, '/api/rooms/labels');
     expect(requests[1].url.queryParameters, {
-      'include_disabled': 'false',
-      'category_id': 'roomcat_anime',
+      'includeDisabled': 'false',
+      'categoryId': 'roomcat_anime',
     });
     expect(labels.single.id, 'roomlbl_weekly');
     expect(labels.single.color, '#3366ff');
@@ -8140,14 +8327,14 @@ void main() {
             'room': {
               'id': 'room_tax',
               'name': 'Taxonomy Room',
-              'created_by': 'usr_owner',
+              'createdBy': 'usr_owner',
               'status': 1,
               'category': {
                 'id': 'roomcat_anime',
                 'key': 'anime',
                 'name': 'Anime',
-                'sort_order': 10,
-                'is_enabled': true,
+                'sortOrder': 10,
+                'isEnabled': true,
               },
               'labels': [
                 {
@@ -8155,9 +8342,9 @@ void main() {
                   'key': 'weekly',
                   'name': 'Weekly',
                   'color': '#3366ff',
-                  'category_id': 'roomcat_anime',
-                  'sort_order': 20,
-                  'is_enabled': true,
+                  'categoryId': 'roomcat_anime',
+                  'sortOrder': 20,
+                  'isEnabled': true,
                 }
               ],
             }
@@ -8249,8 +8436,8 @@ void main() {
         ..statusCode = 200
         ..headers.contentType = io.ContentType.json
         ..write(jsonEncode({
-          'server_id': 'srv_share',
-          'server_name': 'Share',
+          'serverId': 'srv_share',
+          'serverName': 'Share',
         }));
       await request.response.close();
     });
@@ -8290,9 +8477,9 @@ void main() {
             'room': {
               'id': 'room_pending',
               'name': 'Review Room',
-              'created_by': 'usr_1',
+              'createdBy': 'usr_1',
               'status': common.RoomStatus.ROOM_STATUS_UNSPECIFIED.value,
-              'settings': {'require_password': true},
+              'settings': {'allowGuestJoin': true},
               'description': '',
             },
           }),
@@ -8323,12 +8510,12 @@ void main() {
     expect(jsonDecode(capturedRequest!.body), {
       'name': 'Review Room',
       'password': roomCredential,
-      'category_id': 'roomcat_anime',
-      'label_ids': ['roomlbl_weekly'],
+      'categoryId': 'roomcat_anime',
+      'labelIds': ['roomlbl_weekly'],
     });
     expect(room.roomId, 'room_pending');
     expect(room.status, common.RoomStatus.ROOM_STATUS_UNSPECIFIED.value);
-    expect(room.needPassword, isTrue);
+    expect(room.needPassword, isFalse);
   });
 
   test('hot rooms endpoint maps online and total member counts', () async {
@@ -8345,12 +8532,12 @@ void main() {
               'room': {
                 'id': 'room_hot',
                 'name': 'Hot Room',
-                'created_by': 'usr_owner',
+                'createdBy': 'usr_owner',
                 'status': 1,
-                'member_count': 2,
+                'memberCount': 2,
               },
-              'online_count': 7,
-              'total_members': 12,
+              'onlineCount': 7,
+              'totalMembers': 12,
             },
           ],
         }));
@@ -8388,7 +8575,7 @@ void main() {
         return http.Response(
           jsonEncode({
             'exists': true,
-            'requires_password': true,
+            'requiresPassword': true,
             'name': 'Private Room',
             'availability': 1,
           }),
@@ -8423,7 +8610,7 @@ void main() {
         ..headers.contentType = io.ContentType.json
         ..write(jsonEncode({
           'exists': true,
-          'requires_password': false,
+          'requiresPassword': false,
           'name': 'Lobby',
           'availability': 2,
         }));
@@ -8472,8 +8659,8 @@ void main() {
               'username': 'alice',
               'email': 'alice@example.test',
             },
-            'access_token': 'access-token',
-            'refresh_token': 'refresh-token',
+            'accessToken': 'access-token',
+            'refreshToken': 'refresh-token',
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -8493,7 +8680,7 @@ void main() {
     expect(capturedRequest!.url.path, '/api/auth/email/confirm');
     expect(jsonDecode(capturedRequest!.body), {
       'email': 'alice@example.test',
-      'email_token': emailLoginToken,
+      'emailToken': emailLoginToken,
     });
     expect(session.accessToken, 'access-token');
     expect(session.refreshToken, 'refresh-token');
@@ -8517,8 +8704,8 @@ void main() {
                   'username': 'alice',
                   'email': 'alice@example.test',
                 },
-                'access_token': 'register-access',
-                'refresh_token': 'register-refresh',
+                'accessToken': 'register-access',
+                'refreshToken': 'register-refresh',
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -8531,8 +8718,8 @@ void main() {
                   'username': 'alice',
                   'email': 'alice@example.test',
                 },
-                'access_token': 'login-access',
-                'refresh_token': 'login-refresh',
+                'accessToken': 'login-access',
+                'refreshToken': 'login-refresh',
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -8551,8 +8738,8 @@ void main() {
                   'username': 'alice',
                   'email': 'alice@example.test',
                 },
-                'access_token': 'email-access',
-                'refresh_token': 'email-refresh',
+                'accessToken': 'email-access',
+                'refreshToken': 'email-refresh',
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -8608,7 +8795,7 @@ void main() {
       'email': 'alice@example.test',
     });
     expect(jsonDecode(requests[3].body), {
-      'email_token': 'email-register-token',
+      'emailToken': 'email-register-token',
       'password': 'plain-password',
     });
     expect(session.accessToken, 'email-access');
@@ -8633,8 +8820,8 @@ void main() {
                       'id': 'roomcat_anime',
                       'key': 'anime',
                       'name': 'Anime',
-                      'sort_order': 10,
-                      'is_enabled': true,
+                      'sortOrder': 10,
+                      'isEnabled': true,
                     }
                   ],
                 }),
@@ -8649,8 +8836,8 @@ void main() {
                   'key': 'anime',
                   'name': 'Anime',
                   'description': 'Animation rooms',
-                  'sort_order': 10,
-                  'is_enabled': true,
+                  'sortOrder': 10,
+                  'isEnabled': true,
                 }
               }),
               200,
@@ -8672,9 +8859,9 @@ void main() {
                       'key': 'weekly',
                       'name': 'Weekly',
                       'color': '#3366ff',
-                      'category_id': 'roomcat_anime',
-                      'sort_order': 20,
-                      'is_enabled': true,
+                      'categoryId': 'roomcat_anime',
+                      'sortOrder': 20,
+                      'isEnabled': true,
                     }
                   ],
                 }),
@@ -8690,9 +8877,9 @@ void main() {
                   'name': 'Weekly',
                   'description': 'Weekly sessions',
                   'color': '#3366ff',
-                  'category_id': 'roomcat_anime',
-                  'sort_order': 20,
-                  'is_enabled': true,
+                  'categoryId': 'roomcat_anime',
+                  'sortOrder': 20,
+                  'isEnabled': true,
                 }
               }),
               200,
@@ -8710,14 +8897,14 @@ void main() {
                 'room': {
                   'id': 'room_tax',
                   'name': 'Taxonomy Room',
-                  'created_by': 'usr_owner',
+                  'createdBy': 'usr_owner',
                   'status': 1,
                   'category': {
                     'id': 'roomcat_anime',
                     'key': 'anime',
                     'name': 'Anime',
-                    'sort_order': 10,
-                    'is_enabled': true,
+                    'sortOrder': 10,
+                    'isEnabled': true,
                   },
                   'labels': [
                     {
@@ -8725,9 +8912,9 @@ void main() {
                       'key': 'weekly',
                       'name': 'Weekly',
                       'color': '#3366ff',
-                      'category_id': 'roomcat_anime',
-                      'sort_order': 20,
-                      'is_enabled': true,
+                      'categoryId': 'roomcat_anime',
+                      'sortOrder': 20,
+                      'isEnabled': true,
                     }
                   ],
                 }
@@ -8784,19 +8971,19 @@ void main() {
       'DELETE /api/admin/rooms/labels/roomlbl_weekly',
       'PATCH /api/admin/rooms/room_tax/taxonomy',
     ]);
-    expect(requests[0].url.queryParameters, {'include_disabled': 'true'});
+    expect(requests[0].url.queryParameters, {'includeDisabled': 'true'});
     expect(categories.single.id, 'roomcat_anime');
     expect(jsonDecode(requests[1].body), {
       'key': 'anime',
       'name': 'Anime',
       'description': 'Animation rooms',
-      'sort_order': 10,
-      'is_enabled': true,
+      'sortOrder': 10,
+      'isEnabled': true,
     });
     expect(category.id, 'roomcat_anime');
     expect(requests[3].url.queryParameters, {
-      'include_disabled': 'true',
-      'category_id': 'roomcat_anime',
+      'includeDisabled': 'true',
+      'categoryId': 'roomcat_anime',
     });
     expect(labels.single.id, 'roomlbl_weekly');
     expect(jsonDecode(requests[4].body), {
@@ -8804,16 +8991,16 @@ void main() {
       'name': 'Weekly',
       'description': 'Weekly sessions',
       'color': '#3366ff',
-      'category_id': 'roomcat_anime',
-      'sort_order': 20,
-      'is_enabled': true,
+      'categoryId': 'roomcat_anime',
+      'sortOrder': 20,
+      'isEnabled': true,
     });
     expect(label.id, 'roomlbl_weekly');
     expect(jsonDecode(requests[6].body), {
-      'room_id': 'room_tax',
-      'category_id': 'roomcat_anime',
-      'label_ids': ['roomlbl_weekly'],
-      'clear_category': false,
+      'roomId': 'room_tax',
+      'categoryId': 'roomcat_anime',
+      'labelIds': ['roomlbl_weekly'],
+      'clearCategory': false,
     });
     expect(room.category?.id, 'roomcat_anime');
     expect(room.labels.single.id, 'roomlbl_weekly');
@@ -8835,8 +9022,8 @@ void main() {
               'username': 'alice',
               'email': 'alice@example.test',
             },
-            'access_token': 'access',
-            'refresh_token': 'refresh',
+            'accessToken': 'access',
+            'refreshToken': 'refresh',
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -8886,11 +9073,11 @@ void main() {
           case '/api/auth/passkeys/login/start':
             return http.Response(
               jsonEncode({
-                'session_id': 'login_passkey_session',
-                'options': {
-                  'challenge': 'login-challenge',
-                  'rpId': 'example.test',
-                },
+                'sessionId': 'login_passkey_session',
+                'options': testPasskeyRequestOptions(
+                  challenge: 'login-challenge',
+                  rpId: 'example.test',
+                ),
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -8903,8 +9090,8 @@ void main() {
                   'username': 'alice',
                   'email': 'alice@example.test',
                 },
-                'access_token': 'new-access',
-                'refresh_token': 'new-refresh',
+                'accessToken': 'new-access',
+                'refreshToken': 'new-refresh',
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -8912,13 +9099,13 @@ void main() {
           case '/api/auth/mfa/passkeys/start':
             return http.Response(
               jsonEncode({
-                'passkey_session_id': 'mfa_passkey_session',
-                'options': {
-                  'challenge': 'mfa-challenge',
-                  'allowCredentials': [
-                    {'id': 'cred-1', 'type': 'public-key'}
+                'passkeySessionId': 'mfa_passkey_session',
+                'options': testPasskeyRequestOptions(
+                  challenge: 'mfa-challenge',
+                  allowCredentials: [
+                    {'id': testBytesJson('cred-1'), 'type': 1},
                   ],
-                },
+                ),
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -8931,8 +9118,8 @@ void main() {
                   'username': 'alice',
                   'email': 'alice@example.test',
                 },
-                'access_token': 'mfa-access',
-                'refresh_token': 'mfa-refresh',
+                'accessToken': 'mfa-access',
+                'refreshToken': 'mfa-refresh',
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -8940,11 +9127,12 @@ void main() {
           case '/api/user/passkeys/bind/start':
             return http.Response(
               jsonEncode({
-                'session_id': 'bind_session',
-                'options': {
-                  'challenge': 'bind-challenge',
-                  'user': {'id': 'usr_1', 'name': 'alice'},
-                },
+                'sessionId': 'bind_session',
+                'options': testPasskeyCreationOptions(
+                  challenge: 'bind-challenge',
+                  userId: 'usr_1',
+                  username: 'alice',
+                ),
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -8953,9 +9141,9 @@ void main() {
             return http.Response(
               jsonEncode({
                 'credential': {
-                  'credential_id': 'cred_1',
+                  'credentialId': 'cred_1',
                   'name': 'MacBook Touch ID',
-                  'sign_count': '1',
+                  'signCount': '1',
                 },
               }),
               200,
@@ -8972,11 +9160,7 @@ void main() {
     await api.auth.finishPasskeyLogin(
       client.FinishPasskeyLoginRequest(
         sessionId: loginStart.sessionId,
-        credential: utf8.encode(jsonEncode({
-          'id': 'cred-login',
-          'type': 'public-key',
-          'response': {'authenticatorData': 'auth-data'},
-        })),
+        credential: testPasskeyAuthenticationCredential('cred-login'),
       ),
     );
     final mfaStart = await api.auth.startMfaPasskey(
@@ -8986,10 +9170,7 @@ void main() {
       client.FinishMfaPasskeyRequest(
         mfaSessionId: 'mfa_session',
         passkeySessionId: mfaStart.passkeySessionId,
-        credential: utf8.encode(jsonEncode({
-          'id': 'cred-mfa',
-          'type': 'public-key',
-        })),
+        credential: testPasskeyAuthenticationCredential('cred-mfa'),
       ),
     );
     final bindStart = await api.user.startPasskeyBind(
@@ -8998,27 +9179,37 @@ void main() {
     await api.user.finishPasskeyBind(
       client.FinishPasskeyBindRequest(
         sessionId: bindStart.sessionId,
-        credential: utf8.encode(jsonEncode({
-          'id': 'cred-bind',
-          'type': 'public-key',
-        })),
+        credential: testPasskeyRegistrationCredential('cred-bind'),
       ),
     );
 
-    expect(jsonDecode(utf8.decode(loginStart.options)), {
-      'challenge': 'login-challenge',
-      'rpId': 'example.test',
-    });
-    expect(jsonDecode(utf8.decode(mfaStart.options)), {
-      'challenge': 'mfa-challenge',
-      'allowCredentials': [
-        {'id': 'cred-1', 'type': 'public-key'}
-      ],
-    });
-    expect(jsonDecode(utf8.decode(bindStart.options)), {
-      'challenge': 'bind-challenge',
-      'user': {'id': 'usr_1', 'name': 'alice'},
-    });
+    expect(
+      passkeyChallengeToJson(loginStart.options),
+      testPasskeyRequestOptions(
+        challenge: 'login-challenge',
+        rpId: 'example.test',
+      ),
+    );
+    expect(
+      passkeyChallengeToJson(mfaStart.options),
+      testPasskeyRequestOptions(
+        challenge: 'mfa-challenge',
+        allowCredentials: [
+          {
+            'id': testBytesJson('cred-1'),
+            'type': 'PASSKEY_PUBLIC_KEY_CREDENTIAL_TYPE_PUBLIC_KEY',
+          },
+        ],
+      ),
+    );
+    expect(
+      passkeyChallengeToJson(bindStart.options),
+      testPasskeyCreationOptions(
+        challenge: 'bind-challenge',
+        userId: 'usr_1',
+        username: 'alice',
+      ),
+    );
     expect(session.accessToken, 'mfa-access');
     expect(session.refreshToken, 'mfa-refresh');
 
@@ -9027,28 +9218,44 @@ void main() {
         .toList();
     expect(bodies[0], {'username': 'alice'});
     expect(bodies[1], {
-      'session_id': 'login_passkey_session',
+      'sessionId': 'login_passkey_session',
       'credential': {
         'id': 'cred-login',
-        'type': 'public-key',
-        'response': {'authenticatorData': 'auth-data'},
+        'rawId': testBytesJson('cred-login'),
+        'response': {
+          'authenticatorData': testBytesJson('auth-data'),
+          'clientDataJSON': testBytesJson('{}'),
+          'signature': testBytesJson('sig'),
+        },
+        'type': 1,
       },
     });
-    expect(bodies[2], {'mfa_session_id': 'mfa_session'});
+    expect(bodies[2], {'mfaSessionId': 'mfa_session'});
     expect(bodies[3], {
-      'mfa_session_id': 'mfa_session',
-      'passkey_session_id': 'mfa_passkey_session',
+      'mfaSessionId': 'mfa_session',
+      'passkeySessionId': 'mfa_passkey_session',
       'credential': {
         'id': 'cred-mfa',
-        'type': 'public-key',
+        'rawId': testBytesJson('cred-mfa'),
+        'response': {
+          'authenticatorData': testBytesJson('auth-data'),
+          'clientDataJSON': testBytesJson('{}'),
+          'signature': testBytesJson('sig'),
+        },
+        'type': 1,
       },
     });
     expect(bodies[4], {'name': 'MacBook Touch ID'});
     expect(bodies[5], {
-      'session_id': 'bind_session',
+      'sessionId': 'bind_session',
       'credential': {
         'id': 'cred-bind',
-        'type': 'public-key',
+        'rawId': testBytesJson('cred-bind'),
+        'response': {
+          'attestationObject': testBytesJson('attestation'),
+          'clientDataJSON': testBytesJson('{}'),
+        },
+        'type': 1,
       },
     });
   });
@@ -9065,14 +9272,14 @@ void main() {
           case '/api/user/sensitive-verification/start':
             return http.Response(
               jsonEncode({
-                'verification_id': 'verification_1',
+                'verificationId': 'verification_1',
                 'challenge': {
-                  'session_id': 'sensitive_session',
-                  'required_methods': [
+                  'sessionId': 'sensitive_session',
+                  'requiredMethods': [
                     'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN'
                   ],
-                  'completed_methods': [],
-                  'available_methods': [
+                  'completedMethods': [],
+                  'availableMethods': [
                     'SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD',
                     'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN',
                     'SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL'
@@ -9085,8 +9292,10 @@ void main() {
           case '/api/user/sensitive-verification/passkey/start':
             return http.Response(
               jsonEncode({
-                'passkey_session_id': 'passkey_session',
-                'options': {'challenge': 'sensitive-passkey'},
+                'passkeySessionId': 'passkey_session',
+                'options': testPasskeyRequestOptions(
+                  challenge: 'sensitive-passkey',
+                ),
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -9095,7 +9304,7 @@ void main() {
             return http.Response(
               jsonEncode({
                 'message': 'sent',
-                'masked_email': 'a***@example.test',
+                'maskedEmail': 'a***@example.test',
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -9103,16 +9312,16 @@ void main() {
           case '/api/user/sensitive-verification/finish':
             return http.Response(
               jsonEncode({
-                'verification_id': 'verification_1',
+                'verificationId': 'verification_1',
                 'challenge': {
-                  'session_id': 'sensitive_session',
-                  'required_methods': [
+                  'sessionId': 'sensitive_session',
+                  'requiredMethods': [
                     'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN'
                   ],
-                  'completed_methods': [
+                  'completedMethods': [
                     'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN'
                   ],
-                  'available_methods': [
+                  'availableMethods': [
                     'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN'
                   ],
                 },
@@ -9149,9 +9358,10 @@ void main() {
 
     expect(start.verificationId, 'verification_1');
     expect(start.challenge.requiresPasskey, isTrue);
-    expect(jsonDecode(utf8.decode(passkey.options)), {
-      'challenge': 'sensitive-passkey',
-    });
+    expect(
+      jsonDecode(utf8.decode(passkey.options)),
+      testPasskeyRequestOptions(challenge: 'sensitive-passkey'),
+    );
     expect(emailCode.maskedEmail, 'a***@example.test');
     expect(finish.challenge.completedMethods, [
       client.SensitiveOperationVerificationMethod
@@ -9166,21 +9376,20 @@ void main() {
     ]);
     expect(jsonDecode(requests[0].body), <String, dynamic>{});
     expect(jsonDecode(requests[1].body), {
-      'session_id': 'sensitive_session',
+      'sessionId': 'sensitive_session',
     });
     expect(jsonDecode(requests[2].body), {
-      'session_id': 'sensitive_session',
+      'sessionId': 'sensitive_session',
     });
     expect(jsonDecode(requests[3].body), {
-      'session_id': 'sensitive_session',
+      'sessionId': 'sensitive_session',
       'method': client.SensitiveOperationVerificationMethod
           .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN.value,
       'password': '',
-      'email_token': '',
-      'passkey_session_id': 'passkey_session',
-      'passkey_credential': {
+      'emailToken': '',
+      'passkeySessionId': 'passkey_session',
+      'passkeyCredential': {
         'id': 'cred-sensitive',
-        'type': 'public-key',
       },
     });
   });
@@ -9197,8 +9406,8 @@ void main() {
           case '/api/auth/opaque/registration/start':
             return http.Response(
               jsonEncode({
-                'session_id': 'reg_session',
-                'registration_response': base64Encode([9, 8, 7]),
+                'sessionId': 'reg_session',
+                'registrationResponse': base64Encode([9, 8, 7]),
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -9211,8 +9420,8 @@ void main() {
                   'username': 'alice',
                   'email': 'alice@example.test',
                 },
-                'access_token': 'access',
-                'refresh_token': 'refresh',
+                'accessToken': 'access',
+                'refreshToken': 'refresh',
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -9220,8 +9429,8 @@ void main() {
           case '/api/auth/opaque/login/start':
             return http.Response(
               jsonEncode({
-                'session_id': 'login_session',
-                'credential_response': base64Encode([6, 5, 4]),
+                'sessionId': 'login_session',
+                'credentialResponse': base64Encode([6, 5, 4]),
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -9234,8 +9443,8 @@ void main() {
                   'username': 'alice',
                   'email': 'alice@example.test',
                 },
-                'access_token': 'access',
-                'refresh_token': 'refresh',
+                'accessToken': 'access',
+                'refreshToken': 'refresh',
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -9284,19 +9493,19 @@ void main() {
     expect(bodies[0], {
       'username': 'alice',
       'email': 'alice@example.test',
-      'registration_request': base64Encode([1, 2, 3]),
+      'registrationRequest': base64Encode([1, 2, 3]),
     });
     expect(bodies[1], {
-      'session_id': 'reg_session',
-      'registration_upload': base64Encode([4, 5, 6]),
+      'sessionId': 'reg_session',
+      'registrationUpload': base64Encode([4, 5, 6]),
     });
     expect(bodies[2], {
       'username': 'alice',
-      'credential_request': base64Encode([7, 8, 9]),
+      'credentialRequest': base64Encode([7, 8, 9]),
     });
     expect(bodies[3], {
-      'session_id': 'login_session',
-      'credential_finalization': base64Encode([10, 11, 12]),
+      'sessionId': 'login_session',
+      'credentialFinalization': base64Encode([10, 11, 12]),
     });
     for (final body in bodies) {
       expect(body.containsKey('password'), isFalse);
@@ -9313,8 +9522,8 @@ void main() {
         requests.add(request);
         return http.Response(
           jsonEncode({
-            'session_id': 'reg_session',
-            'registration_response': base64Encode([9, 8, 7]),
+            'sessionId': 'reg_session',
+            'registrationResponse': base64Encode([9, 8, 7]),
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -9337,7 +9546,7 @@ void main() {
     expect(requests.single.url.path, '/api/auth/opaque/registration/start');
     expect(jsonDecode(requests.single.body), {
       'username': 'alice',
-      'registration_request': base64Encode([1, 2, 3]),
+      'registrationRequest': base64Encode([1, 2, 3]),
     });
   });
 
@@ -9354,11 +9563,11 @@ void main() {
           case '/api/user/opaque-password/update/start':
             return http.Response(
               jsonEncode({
-                'session_id': 'update_session',
-                'credential_response': base64Encode([9, 8, 7]),
-                'registration_response': base64Encode([6, 5, 4]),
-                'passkey_session_id': 'passkey_session',
-                'passkey_options': {'challenge': 'opaque-update-passkey'},
+                'sessionId': 'update_session',
+                'credentialResponse': base64Encode([9, 8, 7]),
+                'registrationResponse': base64Encode([6, 5, 4]),
+                'passkeySessionId': 'passkey_session',
+                'passkeyOptions': {'challenge': 'opaque-update-passkey'},
               }),
               200,
               headers: {'content-type': 'application/json'},
@@ -9384,15 +9593,15 @@ void main() {
           case '/api/email/password/opaque/start':
             return http.Response(
               jsonEncode({
-                'session_id': 'reset_session',
-                'registration_response': base64Encode([11, 12, 13]),
+                'sessionId': 'reset_session',
+                'registrationResponse': base64Encode([11, 12, 13]),
               }),
               200,
               headers: {'content-type': 'application/json'},
             );
           case '/api/email/password/opaque/finish':
             return http.Response(
-              jsonEncode({'message': 'reset', 'user_id': 'usr_1'}),
+              jsonEncode({'message': 'reset', 'userId': 'usr_1'}),
               200,
               headers: {'content-type': 'application/json'},
             );
@@ -9447,30 +9656,30 @@ void main() {
         .map((request) => jsonDecode(request.body) as Map<String, dynamic>)
         .toList();
     expect(bodies[0], {
-      'credential_request': base64Encode([1, 2, 3]),
-      'registration_request': base64Encode([4, 5, 6]),
-      'verification_method': client_enum
+      'credentialRequest': base64Encode([1, 2, 3]),
+      'registrationRequest': base64Encode([4, 5, 6]),
+      'verificationMethod': client_enum
           .OpaquePasswordUpdateVerificationMethod
           .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_CURRENT_OPAQUE_PASSWORD
           .value,
-      'email_token': '',
+      'emailToken': '',
     });
     expect(bodies[1], {
-      'session_id': 'update_session',
-      'credential_finalization': base64Encode([7, 8, 9]),
-      'registration_upload': base64Encode([10, 11, 12]),
-      'passkey_session_id': '',
+      'sessionId': 'update_session',
+      'credentialFinalization': base64Encode([7, 8, 9]),
+      'registrationUpload': base64Encode([10, 11, 12]),
+      'passkeySessionId': '',
     });
-    expect(bodies[1].containsKey('passkey_credential'), isFalse);
+    expect(bodies[1].containsKey('passkeyCredential'), isFalse);
     expect(bodies[2], {'email': 'alice@example.test'});
     expect(bodies[3], {
       'email': 'alice@example.test',
       'token': emailResetToken,
-      'registration_request': base64Encode([13, 14, 15]),
+      'registrationRequest': base64Encode([13, 14, 15]),
     });
     expect(bodies[4], {
-      'session_id': 'reset_session',
-      'registration_upload': base64Encode([16, 17, 18]),
+      'sessionId': 'reset_session',
+      'registrationUpload': base64Encode([16, 17, 18]),
     });
     for (final body in bodies) {
       expect(body.containsKey('password'), isFalse);

@@ -1,4 +1,5 @@
 import 'package:synctv_app/models/account_models.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
@@ -175,7 +176,7 @@ class SyncTvAuthDomainService {
     );
     return PasskeyChallengeStart(
       sessionId: response.sessionId,
-      options: response.options,
+      options: _api.encodeJsonBytes(passkeyChallengeToJson(response.options)),
     );
   }
 
@@ -186,7 +187,7 @@ class SyncTvAuthDomainService {
     final response = await _api.auth.finishPasskeyRegistration(
       client.FinishPasskeyRegistrationRequest(
         sessionId: sessionId,
-        credential: _api.encodeJsonBytes(credential),
+        credential: passkeyRegistrationCredentialFromJson(credential),
       ),
     );
     return _registerResponseToAuthResult(response);
@@ -201,7 +202,7 @@ class SyncTvAuthDomainService {
     );
     return PasskeyChallengeStart(
       sessionId: response.sessionId,
-      options: response.options,
+      options: _api.encodeJsonBytes(passkeyChallengeToJson(response.options)),
     );
   }
 
@@ -212,7 +213,7 @@ class SyncTvAuthDomainService {
     final response = await _api.auth.finishPasskeyLogin(
       client.FinishPasskeyLoginRequest(
         sessionId: sessionId,
-        credential: _api.encodeJsonBytes(credential),
+        credential: passkeyAuthenticationCredentialFromJson(credential),
       ),
     );
     return _loginResponseToAuthResult(response);
@@ -246,7 +247,7 @@ class SyncTvAuthDomainService {
     );
     return MfaPasskeyChallengeStart(
       passkeySessionId: response.passkeySessionId,
-      options: response.options,
+      options: _api.encodeJsonBytes(passkeyChallengeToJson(response.options)),
     );
   }
 
@@ -259,7 +260,7 @@ class SyncTvAuthDomainService {
       client.FinishMfaPasskeyRequest(
         mfaSessionId: mfaSessionId,
         passkeySessionId: passkeySessionId,
-        credential: _api.encodeJsonBytes(credential),
+        credential: passkeyAuthenticationCredentialFromJson(credential),
       ),
     );
     return _loginResponseToAuthResult(response);
@@ -284,7 +285,7 @@ class SyncTvAuthDomainService {
     );
     return SensitiveOperationPasskeyStart(
       passkeySessionId: response.passkeySessionId,
-      options: response.options,
+      options: _api.encodeJsonBytes(passkeyChallengeToJson(response.options)),
     );
   }
 
@@ -317,7 +318,8 @@ class SyncTvAuthDomainService {
       passkeySessionId: passkeySessionId,
     );
     if (passkeyCredential != null) {
-      request.passkeyCredential = _api.encodeJsonBytes(passkeyCredential);
+      request.passkeyCredential =
+          passkeyAuthenticationCredentialFromJson(passkeyCredential);
     }
     final response = await _api.user.finishSensitiveOperationVerification(
       request,
@@ -390,7 +392,7 @@ class SyncTvAuthDomainService {
         .map(
           (provider) => OAuth2ProviderOption(
             name: provider.name,
-            type: provider.type,
+            type: oauth2ProviderTypeToString(provider.type),
             signupEnabled: provider.signupEnabled,
             signupNeedReview: provider.signupNeedReview,
           ),
@@ -459,7 +461,7 @@ class SyncTvAuthDomainService {
     return response.providers
         .map(
           (provider) => OAuth2LinkedAccount(
-            providerType: provider.providerType,
+            providerType: oauth2ProviderTypeToString(provider.providerType),
             providerUsername: provider.providerUsername,
             providerInstanceName: provider.providerInstanceName,
             providerIssuer: provider.providerIssuer,
@@ -510,7 +512,7 @@ class SyncTvAuthDomainService {
   }) async {
     await _api.oauth2Service.unlinkProvider(
       oauth2.UnlinkProviderRequest(
-        provider: account.providerType,
+        provider: oauth2ProviderTypeFromString(account.providerType),
         providerInstanceName: account.providerInstanceName,
         providerUserId: account.providerUserId,
         verificationId: verificationId,

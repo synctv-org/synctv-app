@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
-import 'package:synctv_app/services/synctv_account_service.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_memory_cache.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -101,7 +101,7 @@ class SyncTvRoomManagementDomainService {
       return RoomResourceWatchEvent<SyncTvRoomSettings>.changed(
         version: _cursorVersion(event.resourceEvent.eventCursor),
         snapshot: SyncTvRoomSettings.fromJson(
-          decodeJsonBytes(event.resourceEvent.roomSettings.settings),
+          roomSettingsToJson(event.resourceEvent.roomSettings.settings),
         ),
       );
     });
@@ -233,7 +233,7 @@ class SyncTvRoomManagementDomainService {
       roomId,
       client.GetRoomSettingsRequest(),
     );
-    return SyncTvRoomSettings.fromJson(decodeJsonBytes(response.settings));
+    return SyncTvRoomSettings.fromJson(roomSettingsToJson(response.settings));
   }
 
   Future<void> updateRoomSettings(
@@ -243,7 +243,7 @@ class SyncTvRoomManagementDomainService {
     await _api.room.updateRoomSettings(
       roomId,
       client.UpdateRoomSettingsRequest(
-        settings: _api.encodeJsonBytes(settings.toJson()),
+        settings: roomSettingsPatchFromJson(settings.toJson()),
       ),
     );
     _cache.put(

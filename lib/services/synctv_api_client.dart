@@ -28,6 +28,7 @@ import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/models/playback_client_profile.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 
@@ -123,51 +124,6 @@ class SyncTvApiClient {
   late final SyncTvBilibiliProviderApi bilibiliProvider =
       SyncTvBilibiliProviderApi._(this);
   late final SyncTvRtmpProviderApi rtmpProvider = SyncTvRtmpProviderApi._(this);
-
-  static const Set<String> _jsonBytesFields = {
-    'synctv.client.CreateRoomRequest.settings',
-    'synctv.client.Room.settings',
-    'synctv.client.Media.metadata',
-    'synctv.client.PlaybackState.target',
-    'synctv.client.UpdateRoomSettingsRequest.settings',
-    'synctv.client.GetRoomSettingsResponse.settings',
-    'synctv.client.ResetRoomSettingsResponse.settings',
-    'synctv.client.UserPreferences.settings',
-    'synctv.client.StartPlaybackRequest.target',
-    'synctv.client.StartPasskeyLoginResponse.options',
-    'synctv.client.FinishPasskeyLoginRequest.credential',
-    'synctv.client.StartPasskeyRegistrationResponse.options',
-    'synctv.client.FinishPasskeyRegistrationRequest.credential',
-    'synctv.client.StartPasskeyBindResponse.options',
-    'synctv.client.FinishPasskeyBindRequest.credential',
-    'synctv.client.NotificationProto.data',
-    'synctv.client.StartMfaPasskeyResponse.options',
-    'synctv.client.FinishMfaPasskeyRequest.credential',
-    'synctv.client.StartSensitiveOperationPasskeyResponse.options',
-    'synctv.client.FinishSensitiveOperationVerificationRequest.passkey_credential',
-    'synctv.client.StartOpaquePasswordUpdateResponse.passkey_options',
-    'synctv.client.FinishOpaquePasswordUpdateRequest.passkey_credential',
-    'synctv.client.ListPlaylistItemsRequest.target',
-    'synctv.client.PlaylistItem.target',
-    'synctv.client.PlaylistBrowsePathNode.target',
-    'synctv.client.ResourceCover.metadata',
-    'synctv.client.ChatAttachment.metadata',
-    'synctv.client.CreateChatAttachmentUploadSessionRequest.metadata',
-    'synctv.client.UserAvatar.metadata',
-    'synctv.client.CreateUserAvatarUploadSessionRequest.metadata',
-    'synctv.client.FileCover.metadata',
-    'synctv.client.MediaCover.metadata',
-    'synctv.client.CreateMediaCoverUploadSessionRequest.metadata',
-    'synctv.client.CreateRoomCoverUploadSessionRequest.metadata',
-    'synctv.client.CreatePlaylistCoverUploadSessionRequest.metadata',
-    'synctv.client.SendChatMessageRequest.metadata',
-    'synctv.client.EditChatMessageRequest.metadata',
-    'synctv.admin.AdminRoom.settings',
-    'synctv.admin.SettingsGroup.settings',
-    'synctv.admin.GetRoomSettingsResponse.settings',
-    'synctv.admin.UpdateRoomSettingsRequest.settings',
-    'synctv.admin.GetSystemStatsResponse.additional_stats',
-  };
 
   String get baseUrl => _baseUri.toString();
 
@@ -551,7 +507,7 @@ class SyncTvApiClient {
     final message = create();
     message.mergeFromProto3Json(
       _normalizeProtoJson(decoded, message),
-      supportNamesWithUnderscores: true,
+      supportNamesWithUnderscores: false,
       permissiveEnums: true,
       ignoreUnknownFields: true,
     );
@@ -568,17 +524,14 @@ class SyncTvApiClient {
     final result = <String, dynamic>{};
     for (final field in message.info_.sortedByTag) {
       if (!message.hasField(field.tagNumber)) continue;
-      final fieldPath =
-          '${message.info_.qualifiedMessageName}.${field.protoName}';
-      result[field.protoName] = _protoFieldValue(
+      result[field.name] = _protoFieldValue(
         message.getField(field.tagNumber),
-        jsonBytes: _jsonBytesFields.contains(fieldPath),
       );
     }
     return result;
   }
 
-  dynamic _protoFieldValue(Object? value, {bool jsonBytes = false}) {
+  dynamic _protoFieldValue(Object? value) {
     if (value == null) return null;
     if (value is source_config.MediaSourceConfig) {
       return SourceConfigCodec.mediaSourceConfigJson(value);
@@ -586,16 +539,20 @@ class SyncTvApiClient {
     if (value is source_config.PlaylistSourceConfig) {
       return SourceConfigCodec.playlistSourceConfigJson(value);
     }
+    if (value is client.ProviderTarget && providerTargetIsEmpty(value)) {
+      return null;
+    }
+    if (value is oauth2.OAuth2ProviderType) {
+      return oauth2ProviderTypeToString(value);
+    }
     if (value is source_enum.SourceProvider) {
-      return SourceConfigCodec.providerToString(value);
+      return value.value;
     }
     if (value is GeneratedMessage) return _protoFieldJson(value);
     if (value is pb.ProtobufEnum) return value.value;
     if (value is Int64) return value.toString();
     if (value is List<int>) {
-      if (!jsonBytes) return base64Encode(value);
-      if (value.isEmpty) return null;
-      return jsonDecode(utf8.decode(value));
+      return base64Encode(value);
     }
     if (value is Iterable) {
       return value.map((entry) => _protoFieldValue(entry)).toList();
@@ -627,7 +584,7 @@ class SyncTvApiClient {
   ) {
     final result = Map<String, dynamic>.from(json);
     for (final field in message.info_.sortedByTag) {
-      final key = result.containsKey(field.name) ? field.name : field.protoName;
+      final key = field.name;
       if (!result.containsKey(key)) continue;
       final fieldPath =
           '${message.info_.qualifiedMessageName}.${field.protoName}';
@@ -654,14 +611,11 @@ class SyncTvApiClient {
     if (_isSourceProviderField(fieldPath)) {
       return _normalizeSourceProviderJson(value);
     }
+    if (fieldPath.endsWith('.oauth2_provider')) {
+      return oauth2ProviderTypeFromString(value?.toString() ?? '').value;
+    }
     if (_isSourceConfigField(fieldPath)) {
       return _normalizeSourceConfigJson(value, fieldPath, parentJson);
-    }
-    if (_jsonBytesFields.contains(fieldPath) && value == null) {
-      return '';
-    }
-    if (_jsonBytesFields.contains(fieldPath) && value is! String) {
-      return base64Encode(utf8.encode(jsonEncode(value)));
     }
     if (isBytes && value is List) {
       return base64Encode(value.cast<int>());
@@ -712,8 +666,7 @@ class SyncTvApiClient {
   ) {
     if (value is! Map<String, dynamic>) return value;
     if (_hasSourceConfigWrapper(value)) return value;
-    final providerValue =
-        parentJson['source_provider'] ?? parentJson['sourceProvider'];
+    final providerValue = parentJson['sourceProvider'];
     final provider = providerValue is source_enum.SourceProvider
         ? providerValue
         : providerValue is int
@@ -742,13 +695,11 @@ class SyncTvApiClient {
   }
 
   bool _hasSourceConfigWrapper(Map<String, dynamic> value) {
-    return value.containsKey('direct_url') ||
-        value.containsKey('directUrl') ||
+    return value.containsKey('directUrl') ||
         value.containsKey('bilibili') ||
         value.containsKey('alist') ||
         value.containsKey('emby') ||
         value.containsKey('rtmp') ||
-        value.containsKey('live_proxy') ||
         value.containsKey('liveProxy');
   }
 
@@ -769,7 +720,7 @@ class SyncTvApiClient {
     final decoded = _normalizeResponseJson(jsonDecode(response.body), message);
     message.mergeFromProto3Json(
       decoded,
-      supportNamesWithUnderscores: true,
+      supportNamesWithUnderscores: false,
       permissiveEnums: true,
       ignoreUnknownFields: true,
     );
@@ -882,7 +833,7 @@ class SyncTvApiClient {
         final observed = client.ResourceObserved()
           ..mergeFromProto3Json(
             normalized,
-            supportNamesWithUnderscores: true,
+            supportNamesWithUnderscores: false,
             permissiveEnums: true,
             ignoreUnknownFields: true,
           );
@@ -896,7 +847,7 @@ class SyncTvApiClient {
         final changed = client.ResourceEvent()
           ..mergeFromProto3Json(
             normalized,
-            supportNamesWithUnderscores: true,
+            supportNamesWithUnderscores: false,
             permissiveEnums: true,
             ignoreUnknownFields: true,
           );
@@ -910,7 +861,7 @@ class SyncTvApiClient {
         final error = client.ResourceObserveError()
           ..mergeFromProto3Json(
             normalized,
-            supportNamesWithUnderscores: true,
+            supportNamesWithUnderscores: false,
             permissiveEnums: true,
             ignoreUnknownFields: true,
           );
@@ -1020,45 +971,27 @@ class SyncTvApiClient {
     return utf8.encode(jsonEncode(value));
   }
 
-  String _lowerEnumSuffix(pb.ProtobufEnum value, String prefix) {
-    final name = value.name;
-    final suffix =
-        name.startsWith(prefix) ? name.substring(prefix.length) : name;
-    return suffix.toLowerCase();
-  }
-
   Map<String, String> _playbackClientProfileQuery(
     client.PlaybackClientProfile profile,
   ) {
     return {
       if (profile.hasStreamPreference())
-        'stream_preference': _lowerEnumSuffix(
-          profile.streamPreference,
-          'PLAYBACK_STREAM_PREFERENCE_',
-        ),
+        'streamPreference': profile.streamPreference.value.toString(),
       if (profile.hasMaxStreamingBitrate())
-        'max_streaming_bitrate': profile.maxStreamingBitrate.toString(),
+        'maxStreamingBitrate': profile.maxStreamingBitrate.toString(),
       if (profile.hasMaxAudioChannels())
-        'max_audio_channels': profile.maxAudioChannels.toString(),
+        'maxAudioChannels': profile.maxAudioChannels.toString(),
       if (profile.supportedVideoCodecs.isNotEmpty)
-        'video_codecs': profile.supportedVideoCodecs
-            .map((codec) => _lowerEnumSuffix(codec, 'PLAYBACK_VIDEO_CODEC_'))
-            .join(','),
+        'videoCodecs':
+            profile.supportedVideoCodecs.map((codec) => codec.value).join(','),
       if (profile.supportedContainers.isNotEmpty)
         'containers': profile.supportedContainers
-            .map((container) =>
-                _lowerEnumSuffix(container, 'PLAYBACK_CONTAINER_'))
+            .map((container) => container.value)
             .join(','),
       if (profile.hasAudioCapability())
-        'audio_capability': _lowerEnumSuffix(
-          profile.audioCapability,
-          'PLAYBACK_AUDIO_CAPABILITY_',
-        ),
+        'audioCapability': profile.audioCapability.value.toString(),
       if (profile.hasSubtitlePreference())
-        'subtitle_preference': _lowerEnumSuffix(
-          profile.subtitlePreference,
-          'PLAYBACK_SUBTITLE_PREFERENCE_',
-        ),
+        'subtitlePreference': profile.subtitlePreference.value.toString(),
     };
   }
 
@@ -1068,12 +1001,9 @@ class SyncTvApiClient {
     Int64? afterEventSequence,
   }) {
     return {
-      'delivery_mode': _lowerEnumSuffix(
-        deliveryMode,
-        'RESOURCE_DELIVERY_MODE_',
-      ),
+      'deliveryMode': deliveryMode.value.toString(),
       if (afterEventSequence != null)
-        'after_event_sequence': afterEventSequence.toString(),
+        'afterEventSequence': afterEventSequence.toString(),
     };
   }
 
@@ -1168,7 +1098,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
   }
 
   SyncTvRoom mapAdminRoom(admin.AdminRoom room) {
-    final settings = _decodeJsonBytes(room.settings);
+    final settings = roomSettingsToJson(room.settings);
     return SyncTvRoom(
       roomId: room.id,
       roomName: room.name,
@@ -1187,8 +1117,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
       version: room.version.toInt(),
       creatorStatus: room.creatorStatus.value,
       coverUrl: resolveResourceUrl(room.hasCover() ? room.cover.url : ''),
-      needPassword: settings['require_password'] == true,
-      needVerify: settings['require_approval'] == true,
+      needPassword: settings['requirePassword'] == true,
+      needVerify: settings['requireApproval'] == true,
       guestCanPause: true,
       guestCanAdd: true,
       category: room.hasCategory() ? mapRoomCategory(room.category) : null,
@@ -1197,7 +1127,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
   }
 
   SyncTvRoom mapRoom(client.Room room) {
-    final settings = _decodeJsonBytes(room.settings);
+    final settings = roomSettingsToJson(room.settings);
     return SyncTvRoom(
       roomId: room.id,
       roomName: room.name,
@@ -1217,8 +1147,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
       isBanned: room.isBanned,
       availability: room.availability.value,
       version: room.version.toInt(),
-      needPassword: settings['require_password'] == true,
-      needVerify: settings['require_approval'] == true,
+      needPassword: settings['requirePassword'] == true,
+      needVerify: settings['requireApproval'] == true,
       guestCanPause: true,
       guestCanAdd: true,
       category: room.hasCategory() ? mapRoomCategory(room.category) : null,
@@ -1257,15 +1187,20 @@ extension SyncTvModelMapping on SyncTvApiClient {
   }
 
   SyncTvMovie mapMedia(client.Media media) {
-    final metadata = _decodeJsonBytes(media.metadata);
+    final metadata = media.hasMetadata()
+        ? resourceMetadataToJson(media.metadata)
+        : <String, dynamic>{};
     final sourceConfig = media.hasSourceConfig()
         ? SourceConfigCodec.mediaSourceConfigToMap(media.sourceConfig)
         : <String, dynamic>{};
     final sourceProvider = media.hasSourceProvider()
         ? SourceConfigCodec.providerToString(media.sourceProvider)
-        : '';
+        : SourceConfigCodec.providerForMediaSourceConfig(media.sourceConfig);
     final url = resolveResourceUrl(
-      (metadata['url'] ?? sourceConfig['url'] ?? '').toString(),
+      SyncTvMovie.playbackUrlFromResource(
+        metadata: metadata,
+        sourceConfig: sourceConfig,
+      ),
     );
     return SyncTvMovie(
       id: media.id,
@@ -1282,7 +1217,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       proxy: metadata['proxy'] == true,
       live: sourceProvider == 'rtmp' ||
           (sourceProvider == 'bilibili' && sourceConfig['type'] == 'live') ||
-          metadata['is_live'] == true,
+          metadata['isLive'] == true,
       sourceProvider: sourceProvider,
       providerInstanceName: media.providerInstanceName,
       sourceConfig: sourceConfig,
@@ -1295,7 +1230,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
   SyncTvMovie mapPlaylist(client.Playlist playlist) {
     final sourceProvider = playlist.hasSourceProvider()
         ? SourceConfigCodec.providerToString(playlist.sourceProvider)
-        : '';
+        : SourceConfigCodec.providerForPlaylistSourceConfig(
+            playlist.sourceConfig,
+          );
     final sourceConfig = playlist.hasSourceConfig()
         ? SourceConfigCodec.playlistSourceConfigToMap(playlist.sourceConfig)
         : <String, dynamic>{};
@@ -1319,13 +1256,13 @@ extension SyncTvModelMapping on SyncTvApiClient {
       sourceProvider: sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
       sourceConfig: sourceConfig,
-      metadata: {'is_dynamic': playlist.isDynamic},
+      metadata: {'isDynamic': playlist.isDynamic},
     );
   }
 
   SyncTvMovie mapDynamicItem(client.PlaylistItem item, {String? playlistId}) {
-    final target = Uint8List.fromList(item.target);
-    final encodedTarget = base64Url.encode(target);
+    final target = item.target;
+    final encodedTarget = providerTargetToBase64(target);
     return SyncTvMovie(
       id: encodedTarget,
       name: item.name,
@@ -1335,7 +1272,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       subPath: encodedTarget,
       metadata: {
         'target': target,
-        'target_json': _decodeJsonBytes(item.target),
+        'target_json': providerTargetToJson(target),
         'thumbnail':
             item.hasThumbnail() ? resolveResourceUrl(item.thumbnail) : '',
         'size': item.hasSize() ? item.size.toInt() : null,
@@ -1346,8 +1283,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
   SyncTvPlaybackStatus mapPlayback(client.GetPlaybackResponse response) {
     final state = response.playbackState;
     final playback = response.playback;
-    final encodedTarget =
-        state.target.isEmpty ? '' : base64Url.encode(state.target);
+    final encodedTarget = providerTargetToBase64(state.target);
     SyncTvMovie? movie;
     if (playback.mediaId.isNotEmpty || playback.playlistId.isNotEmpty) {
       movie = SyncTvMovie.fromPlaybackProto(
@@ -1389,16 +1325,6 @@ extension SyncTvModelMapping on SyncTvApiClient {
       playingPlaylistId: state.playingPlaylistId,
       targetHash: state.targetHash,
     );
-  }
-
-  Map<String, dynamic> _decodeJsonBytes(List<int> bytes) {
-    if (bytes.isEmpty) return <String, dynamic>{};
-    try {
-      final decoded = jsonDecode(utf8.decode(bytes));
-      return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
-    } catch (_) {
-      return <String, dynamic>{};
-    }
   }
 
   Map<String, String> _stringMap(dynamic value) {

@@ -34,7 +34,10 @@ class LocalImageUpload {
 
   int get sizeBytes => bytes.length;
   String get checksumSha256 => sha256.convert(bytes).toString();
-  List<int> get metadata => utf8.encode(jsonEncode({'file_name': fileName}));
+  client.FileMetadata get metadata => client.FileMetadata(
+        width: width == 0 ? null : width,
+        height: height == 0 ? null : height,
+      );
 }
 
 class _OwnershipProofRange {

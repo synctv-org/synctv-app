@@ -181,7 +181,7 @@ class _RoomScreenState extends State<RoomScreen>
         if (_channel != null) {
           try {
             final bytes = RoomRealtimeCodec.encodeWebRtcSignal(type, data);
-            if (bytes.isNotEmpty) _channel!.sink.add(bytes);
+            _sendRealtimeMessage(bytes);
           } catch (e) {
             debugPrint('WebRTC encode error: $e');
           }
@@ -385,6 +385,7 @@ class _RoomScreenState extends State<RoomScreen>
       await _realtimeSubscription?.cancel();
       _realtimeSubscription = null;
       await _channel?.sink.close();
+      _channel = null;
       _channel = RoomRealtimeConnection.connect(
         widget.room.roomId,
         initialMessages: RoomRealtimeCodec.encodeInitialObservations(
@@ -414,10 +415,12 @@ class _RoomScreenState extends State<RoomScreen>
         },
         onError: (error) {
           debugPrint('Realtime stream error: $error');
+          _channel = null;
           _scheduleReconnect();
         },
         onDone: () {
           debugPrint('Realtime stream closed');
+          _channel = null;
           _scheduleReconnect();
         },
       );
@@ -449,7 +452,18 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _sendRealtimeMessage(List<int> bytes) {
     if (bytes.isEmpty) return;
-    _channel?.sink.add(bytes);
+    final channel = _channel;
+    if (channel == null) {
+      _scheduleReconnect();
+      return;
+    }
+    try {
+      channel.sink.add(bytes);
+    } catch (e) {
+      debugPrint('Realtime send error: $e');
+      _channel = null;
+      _scheduleReconnect();
+    }
   }
 
   void _appendRealtimeEvent(RealtimeEventLogEntry entry) {
@@ -1131,14 +1145,14 @@ class _RoomScreenState extends State<RoomScreen>
   ) {
     try {
       final safePosition = _boundedPlaybackTime(position);
-      _channel?.sendMessage(
+      _sendRealtimeMessage(
         RoomRealtimeCodec.buildGuardedPlaybackStateUpdateMessage(
           action,
           _currentStatus,
           isPlaying: isPlaying,
           position: safePosition,
           playbackRate: rate,
-        ),
+        ).writeToBuffer(),
       );
     } catch (e) {
       debugPrint('Realtime playback state update error: $e');
@@ -1149,7 +1163,7 @@ class _RoomScreenState extends State<RoomScreen>
   void _requestPlaybackSnapshot() {
     try {
       for (final bytes in RoomRealtimeCodec.encodePlaybackObservations()) {
-        _channel?.sink.add(bytes);
+        _sendRealtimeMessage(bytes);
       }
     } catch (e) {
       debugPrint('Request playback snapshot error: $e');
@@ -1331,6 +1345,7 @@ class _RoomScreenState extends State<RoomScreen>
   Widget? _buildPlaybackOptionButton({bool compact = false}) {
     final movie = _currentStatus?.movie;
     if (movie == null || !movie.hasPlaybackChoices) return null;
+    final maxLabelWidth = compact ? 0.0 : 170.0;
     return AppPopupMenuButton<String>(
       tooltip: '播放线路',
       color: Colors.black87,
@@ -1394,26 +1409,30 @@ class _RoomScreenState extends State<RoomScreen>
         }
         return items;
       },
-      child: AppBadge(
-        constraints: BoxConstraints(minHeight: compact ? 28 : 32),
-        padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.white24),
-        icon: Icons.route_rounded,
-        iconSize: 18,
-        color: Colors.white,
-        backgroundColor: Colors.white.withValues(alpha: 0.12),
-        textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-        label: compact
-            ? const SizedBox.shrink()
-            : ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 160),
-                child: Text(
-                  movie.playbackChoiceLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+      child: Tooltip(
+        message: movie.playbackChoiceLabel,
+        child: AppBadge(
+          constraints: BoxConstraints(minHeight: compact ? 28 : 32),
+          padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.white24),
+          icon: Icons.route_rounded,
+          iconSize: 18,
+          color: Colors.white,
+          backgroundColor: Colors.white.withValues(alpha: 0.12),
+          textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+          label: compact
+              ? const SizedBox.shrink()
+              : ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxLabelWidth),
+                  child: Text(
+                    movie.playbackChoiceLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }
@@ -1464,6 +1483,7 @@ class _RoomScreenState extends State<RoomScreen>
     _movieScrollController.dispose();
     _webrtcManager?.dispose();
     _danmakuController.dispose();
+    _channel = null;
     _realtimeMessageBus.close();
     _realtimeEventBus.close();
     _realtimeReconnectBus.close();
@@ -1489,7 +1509,7 @@ class _RoomScreenState extends State<RoomScreen>
       return;
     }
     if (_memberEventsObserved) {
-      _channel?.sink.add(
+      _sendRealtimeMessage(
         RoomRealtimeCodec.encodeUnobserveResource('room_member_events'),
       );
       _memberEventsObserved = false;
@@ -1533,15 +1553,20 @@ class _RoomScreenState extends State<RoomScreen>
       resizeToAvoidBottomInset: true,
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppAppBar(
+        leading: AppIconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: Icons.arrow_back_rounded,
+          tooltip: '返回',
+        ),
         title: Text(widget.room.roomName),
         backgroundColor: theme.appBarTheme.backgroundColor,
         actions: [
           if (_currentStatus?.movie != null)
-            AppIconButton(
+            AppActionButton(
               onPressed: _stopPlayback,
               icon: Icons.stop_circle_outlined,
-              tooltip: '停止播放',
-              style: AppIconButtonStyle.destructive,
+              label: compactChrome ? '停止' : '停止播放',
+              style: AppActionButtonStyle.destructive,
             ),
           if (_currentUser != null)
             Padding(
@@ -1577,42 +1602,50 @@ class _RoomScreenState extends State<RoomScreen>
           primary: _buildVideoSurface(),
           secondary: _buildRoomSidePanel(theme),
           collapsedPrimaryAspectRatio: 16 / 9,
+          collapsedSecondaryMinHeight: 520,
         ),
       ),
     );
   }
 
   Widget _buildVideoSurface() {
-    final playbackOptionButton = _buildPlaybackOptionButton();
     return AppPanelSurface(
       color: Colors.black,
       borderRadius: BorderRadius.circular(8),
-      child: Stack(
-        children: [
-          Center(
-            child: _videoPlayerController != null &&
-                    _videoPlayerController!.value.isInitialized
-                ? CustomVideoPlayer(
-                    controller: _videoPlayerController!,
-                    title: _currentStatus?.movie?.name ?? '未知影片',
-                    danmakuController: _danmakuController,
-                    subtitles: _currentStatus?.movie?.subtitles,
-                    onToggleFullScreen: _toggleFullScreen,
-                    onSync: _handleSync,
-                    interactionMode: VideoPlayerInteractionMode.desktop,
-                    extraBottomWidget: _buildPlaybackOptionButton(
-                      compact: true,
-                    ),
-                  )
-                : _buildVideoEmptyState(),
-          ),
-          if (playbackOptionButton != null)
-            Positioned(
-              top: 12,
-              right: 12,
-              child: playbackOptionButton,
-            ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final topOptionCompact = constraints.maxWidth < 760;
+          final playbackOptionButton = _buildPlaybackOptionButton(
+            compact: topOptionCompact,
+          );
+          return Stack(
+            children: [
+              Center(
+                child: _videoPlayerController != null &&
+                        _videoPlayerController!.value.isInitialized
+                    ? CustomVideoPlayer(
+                        controller: _videoPlayerController!,
+                        title: _currentStatus?.movie?.name ?? '未知影片',
+                        danmakuController: _danmakuController,
+                        subtitles: _currentStatus?.movie?.subtitles,
+                        onToggleFullScreen: _toggleFullScreen,
+                        onSync: _handleSync,
+                        interactionMode: VideoPlayerInteractionMode.desktop,
+                        extraBottomWidget: _buildPlaybackOptionButton(
+                          compact: true,
+                        ),
+                      )
+                    : _buildVideoEmptyState(),
+              ),
+              if (playbackOptionButton != null)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: playbackOptionButton,
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1707,7 +1740,7 @@ class _RoomScreenState extends State<RoomScreen>
         });
       }
       if (!_memberEventsObserved) {
-        _channel?.sink.add(RoomRealtimeCodec.encodeRoomMembersObservation());
+        _sendRealtimeMessage(RoomRealtimeCodec.encodeRoomMembersObservation());
         _memberEventsObserved = true;
       }
     } catch (e) {
@@ -1836,7 +1869,7 @@ class _RoomScreenState extends State<RoomScreen>
           displayPosition: 'scroll',
           displayColor: '#ffffff',
         );
-        _channel!.sink.add(bytes);
+        _sendRealtimeMessage(bytes);
       } catch (e) {
         debugPrint('Send danmaku error: $e');
         if (mounted) MessageUtils.showError(context, '弹幕发送失败: $e');
@@ -2477,56 +2510,63 @@ class _RoomScreenState extends State<RoomScreen>
             ? (hasMentions ? '@ 已读' : '已读')
             : '${receipt.readerTotal} 已读 · ${receipt.unreadTotal} 未读');
     final isMentionReceipt = mentionReceipt != null || hasMentions;
+    final label = isMentionReceipt ? '查看 @ 已读详情' : '查看阅读详情';
     return Tooltip(
-      message: isMentionReceipt ? '查看 @ 已读详情' : '查看阅读详情',
-      child: InkWell(
-        borderRadius: BorderRadius.circular(999),
-        onTap: loading ? null : () => _showChatReadReceipts(message),
-        child: AppPanelSurface(
-          color: isMentionReceipt
-              ? scheme.primary.withValues(alpha: 0.11)
-              : scheme.surfaceContainerHighest.withValues(alpha: 0.62),
+      message: label,
+      child: Semantics(
+        button: true,
+        enabled: !loading,
+        label: label,
+        child: InkWell(
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(
+          onTap: loading ? null : () => _showChatReadReceipts(message),
+          child: AppPanelSurface(
+            height: 32,
             color: isMentionReceipt
-                ? scheme.primary.withValues(alpha: 0.28)
-                : scheme.outlineVariant.withValues(alpha: 0.58),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (loading)
-                const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: AppLoadingIndicator(
-                    size: AppLoadingSize.sm,
-                    centered: false,
+                ? scheme.primary.withValues(alpha: 0.11)
+                : scheme.surfaceContainerHighest.withValues(alpha: 0.62),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: isMentionReceipt
+                  ? scheme.primary.withValues(alpha: 0.28)
+                  : scheme.outlineVariant.withValues(alpha: 0.58),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (loading)
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: AppLoadingIndicator(
+                      size: AppLoadingSize.sm,
+                      centered: false,
+                    ),
+                  )
+                else
+                  Icon(
+                    isMentionReceipt
+                        ? Icons.alternate_email_rounded
+                        : Icons.visibility_outlined,
+                    size: 13,
+                    color: isMentionReceipt
+                        ? scheme.primary
+                        : scheme.onSurfaceVariant,
                   ),
-                )
-              else
-                Icon(
-                  isMentionReceipt
-                      ? Icons.alternate_email_rounded
-                      : Icons.visibility_outlined,
-                  size: 13,
-                  color: isMentionReceipt
-                      ? scheme.primary
-                      : scheme.onSurfaceVariant,
+                const SizedBox(width: 4),
+                Text(
+                  text,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: isMentionReceipt
+                        ? scheme.primary
+                        : scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                    height: 1,
+                  ),
                 ),
-              const SizedBox(width: 4),
-              Text(
-                text,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: isMentionReceipt
-                      ? scheme.primary
-                      : scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                  height: 1,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -3679,6 +3719,57 @@ class _RoomScreenState extends State<RoomScreen>
                     isTargetCreator ? 3 : (isTargetAdmin ? 2 : 1);
                 final canKick = viewerLevel > targetLevel;
 
+                final memberActions = <Widget>[
+                  if (!isMe && !isTargetCreator) ...[
+                    if ((viewerIsCreator || viewerIsRoomAdmin) &&
+                        member.role ==
+                            common_enum
+                                .RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value)
+                      AppIconButton(
+                        icon: Icons.admin_panel_settings_outlined,
+                        tooltip: '设为管理',
+                        onPressed: () => _setRoomAdmin(member),
+                        size: AppIconButtonSize.sm,
+                        iconSize: 18,
+                        style: AppIconButtonStyle.tonal,
+                      ),
+                    if (viewerIsCreator && isTargetAdmin)
+                      AppIconButton(
+                        icon: Icons.remove_moderator_outlined,
+                        tooltip: '取消管理',
+                        onPressed: () => _removeRoomAdmin(member),
+                        size: AppIconButtonSize.sm,
+                        iconSize: 18,
+                        style: AppIconButtonStyle.outlined,
+                      ),
+                    if (canKick)
+                      AppIconButton(
+                        icon: Icons.remove_circle_outline,
+                        tooltip: '移除成员',
+                        onPressed: () => _kickMember(member),
+                        size: AppIconButtonSize.sm,
+                        iconSize: 18,
+                        style: AppIconButtonStyle.destructive,
+                      ),
+                    AppIconButton(
+                      icon: Icons.flag_outlined,
+                      tooltip: '举报成员',
+                      onPressed: () => _showReportRoomMemberDialog(member),
+                      size: AppIconButtonSize.sm,
+                      iconSize: 18,
+                      style: AppIconButtonStyle.outlined,
+                    ),
+                    AppIconButton(
+                      icon: Icons.person_off_outlined,
+                      tooltip: '举报用户',
+                      onPressed: () => _showReportUserDialog(member),
+                      size: AppIconButtonSize.sm,
+                      iconSize: 18,
+                      style: AppIconButtonStyle.outlined,
+                    ),
+                  ],
+                ];
+
                 return AppPanelSurface(
                   margin: const EdgeInsets.only(bottom: 8),
                   color: theme.cardColor,
@@ -3686,109 +3777,103 @@ class _RoomScreenState extends State<RoomScreen>
                   border: Border.all(
                     color: theme.dividerColor.withValues(alpha: 0.1),
                   ),
-                  child: AppTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    prefix: Stack(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _RoomAvatarFrame(
-                          highlighted: isTargetCreator,
-                          color: primaryColor,
-                          child: AppAvatar(
-                            name: member.username,
-                            backgroundColor:
-                                primaryColor.withValues(alpha: 0.1),
-                            foregroundColor: primaryColor,
+                        Stack(
+                          children: [
+                            _RoomAvatarFrame(
+                              highlighted: isTargetCreator,
+                              color: primaryColor,
+                              child: AppAvatar(
+                                name: member.username,
+                                backgroundColor:
+                                    primaryColor.withValues(alpha: 0.1),
+                                foregroundColor: primaryColor,
+                              ),
+                            ),
+                            if (isTargetCreator)
+                              const Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Icon(Icons.star,
+                                    size: 14, color: Colors.amber),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth: 132,
+                                    ),
+                                    child: Text(
+                                      member.username,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  if (isMe)
+                                    _RoomMiniBadge(
+                                      label: '我',
+                                      color: theme.primaryColor,
+                                    ),
+                                  if (isTargetAdmin) ...[
+                                    _RoomMiniBadge(
+                                      label: '管理员',
+                                      color: Colors.blue,
+                                      borderSide: BorderSide(
+                                        color:
+                                            Colors.blue.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                member.onlineCount > 0
+                                    ? '在线 · ${member.connectionCount} 连接'
+                                    : '离线 · 加入于 ${DateTime.fromMillisecondsSinceEpoch(member.createdAt * 1000).toString().substring(0, 10)}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: member.onlineCount > 0
+                                      ? Colors.green
+                                      : theme.disabledColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              if (memberActions.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Wrap(
+                                    alignment: WrapAlignment.end,
+                                    spacing: 4,
+                                    runSpacing: 4,
+                                    children: memberActions,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        if (isTargetCreator)
-                          const Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child:
-                                Icon(Icons.star, size: 14, color: Colors.amber),
-                          ),
-                      ],
-                    ),
-                    title: Row(
-                      children: [
-                        Text(member.username,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 8),
-                        if (isMe)
-                          _RoomMiniBadge(
-                            label: '我',
-                            color: theme.primaryColor,
-                          ),
-                        if (isTargetAdmin) ...[
-                          const SizedBox(width: 8),
-                          _RoomMiniBadge(
-                            label: '管理员',
-                            color: Colors.blue,
-                            borderSide: BorderSide(
-                              color: Colors.blue.withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    subtitle: member.onlineCount > 0
-                        ? Text('在线 · ${member.connectionCount} 连接',
-                            style: const TextStyle(
-                                color: Colors.green, fontSize: 12))
-                        : Text(
-                            '离线 · 加入于 ${DateTime.fromMillisecondsSinceEpoch(member.createdAt * 1000).toString().substring(0, 10)}',
-                            style: TextStyle(
-                                color: theme.disabledColor, fontSize: 12)),
-                    suffix: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (!isMe && !isTargetCreator) ...[
-                          if ((viewerIsCreator || viewerIsRoomAdmin) &&
-                              member.role ==
-                                  common_enum.RoomMemberRole
-                                      .ROOM_MEMBER_ROLE_MEMBER.value)
-                            AppIconButton(
-                              icon: Icons.admin_panel_settings_outlined,
-                              tooltip: '设为管理',
-                              onPressed: () => _setRoomAdmin(member),
-                              size: AppIconButtonSize.sm,
-                              style: AppIconButtonStyle.tonal,
-                            ),
-                          if (viewerIsCreator && isTargetAdmin)
-                            AppIconButton(
-                              icon: Icons.remove_moderator_outlined,
-                              tooltip: '取消管理',
-                              onPressed: () => _removeRoomAdmin(member),
-                              size: AppIconButtonSize.sm,
-                              style: AppIconButtonStyle.outlined,
-                            ),
-                          if (canKick)
-                            AppIconButton(
-                              icon: Icons.remove_circle_outline,
-                              tooltip: '移除成员',
-                              onPressed: () => _kickMember(member),
-                              size: AppIconButtonSize.sm,
-                              style: AppIconButtonStyle.destructive,
-                            ),
-                          AppIconButton(
-                            icon: Icons.flag_outlined,
-                            tooltip: '举报成员',
-                            onPressed: () => _showReportRoomMemberDialog(
-                              member,
-                            ),
-                            size: AppIconButtonSize.sm,
-                            style: AppIconButtonStyle.outlined,
-                          ),
-                          AppIconButton(
-                            icon: Icons.person_off_outlined,
-                            tooltip: '举报用户',
-                            onPressed: () => _showReportUserDialog(member),
-                            size: AppIconButtonSize.sm,
-                            style: AppIconButtonStyle.outlined,
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -3823,7 +3908,7 @@ class _RoomScreenState extends State<RoomScreen>
   void _observeCurrentPlaylist() {
     final parentFolder = _folderStack.isNotEmpty ? _folderStack.last : null;
     try {
-      _channel?.sink.add(
+      _sendRealtimeMessage(
         RoomRealtimeCodec.encodePlaylistObservation(
           playlistId: parentFolder?.playbackPlaylistId ?? '',
           target: parentFolder?.playbackTarget,
@@ -4176,7 +4261,7 @@ class _RoomScreenState extends State<RoomScreen>
     final content = text.trim();
     final selectedImage = _selectedChatImage;
     if (content.isEmpty && selectedImage == null) return;
-    if (_channel == null || _sendingChatMessage) return;
+    if (_sendingChatMessage) return;
 
     setState(() => _sendingChatMessage = true);
     try {
@@ -4190,20 +4275,28 @@ class _RoomScreenState extends State<RoomScreen>
           ),
         );
       }
-      final bytes = RoomRealtimeCodec.encodeChatMessage(
+      final message = await SyncTvService.sendChatMessage(
+        widget.room.roomId,
         content: content,
         images: images,
         replyToMessageId: replyToMessageId,
         mentions: _pendingChatMentions,
       );
-      _channel!.sink.add(bytes);
+      final entry = RoomRealtimeChatEntry.fromHistory(message);
       _messageController.clear();
       if (mounted) {
         setState(() {
+          _messages.applyRealtimeEvent(
+            entry,
+            eventKind: RoomRealtimeChatEventKind.created,
+            maxEntries: 100,
+          );
+          _indexChatMessage(entry);
           _selectedChatImage = null;
           _replyingToMessage = null;
           _pendingChatMentions = [];
         });
+        _scrollToBottom();
       }
     } catch (e) {
       debugPrint('Send message error: $e');

@@ -179,13 +179,21 @@ class SyncTvSessionStore {
         current != null &&
         _isFallbackServerId(current.serverId) &&
         current.activeEndpoint == normalizedEndpoint;
-    final existingIndex =
+    var existingIndex =
         servers.indexWhere((server) => server.serverId == serverId);
+    if (existingIndex < 0) {
+      existingIndex = servers.indexWhere(
+        (server) =>
+            server.activeEndpoint == normalizedEndpoint ||
+            server.endpoints.contains(normalizedEndpoint),
+      );
+    }
     final now = DateTime.now().toUtc();
     late final SyncTvServerProfile profile;
     if (existingIndex >= 0) {
       final existing = servers[existingIndex];
-      profile = existing.copyWith(
+      profile = SyncTvServerProfile(
+        serverId: serverId,
         name: resolvedName,
         endpoints: [...existing.endpoints, normalizedEndpoint],
         activeEndpoint: normalizedEndpoint,
@@ -194,6 +202,11 @@ class SyncTvSessionStore {
             ? _currentSessionData()
             : existing.sessionData,
       );
+      _serverSessions[serverId] =
+          _serverSessions.remove(existing.serverId) ?? profile.sessionData;
+      if (activeServerId == existing.serverId) {
+        activeServerId = serverId;
+      }
       servers[existingIndex] = profile;
     } else {
       profile = SyncTvServerProfile(
@@ -514,21 +527,19 @@ class SyncTvSessionStore {
     for (final server in servers) {
       if (server.isPending) continue;
       for (final endpoint in server.endpoints) {
-        identifiedByEndpoint[endpoint] = server;
+        identifiedByEndpoint[endpoint] =
+            _preferredIdentified(identifiedByEndpoint[endpoint], server);
       }
-      identifiedByEndpoint[server.activeEndpoint] = server;
+      identifiedByEndpoint[server.activeEndpoint] = _preferredIdentified(
+          identifiedByEndpoint[server.activeEndpoint], server);
     }
 
     if (identifiedByEndpoint.isEmpty) return false;
 
     var changed = false;
+    final seenIdentifiedIds = <String>{};
     final nextServers = <SyncTvServerProfile>[];
     for (final server in servers) {
-      if (!server.isPending) {
-        nextServers.add(server);
-        continue;
-      }
-
       final identified = identifiedByEndpoint[server.activeEndpoint] ??
           server.endpoints
               .map((endpoint) => identifiedByEndpoint[endpoint])
@@ -536,6 +547,15 @@ class SyncTvSessionStore {
               .firstOrNull;
       if (identified == null) {
         nextServers.add(server);
+        continue;
+      }
+
+      if (!server.isPending && server.serverId == identified.serverId) {
+        if (seenIdentifiedIds.add(server.serverId)) {
+          nextServers.add(server);
+        } else {
+          changed = true;
+        }
         continue;
       }
 
@@ -564,6 +584,7 @@ class SyncTvSessionStore {
         baseUrl = identified.activeEndpoint;
         _loadProfileSession(identified);
       }
+      seenIdentifiedIds.add(identified.serverId);
     }
 
     if (!changed) return false;
@@ -572,6 +593,25 @@ class SyncTvSessionStore {
         .map((server) => identifiedByEndpoint[server.activeEndpoint] ?? server)
         .toList();
     return true;
+  }
+
+  SyncTvServerProfile _preferredIdentified(
+    SyncTvServerProfile? current,
+    SyncTvServerProfile candidate,
+  ) {
+    if (current == null) return candidate;
+    if (!current.sessionData.hasCredentials &&
+        candidate.sessionData.hasCredentials) {
+      return candidate;
+    }
+    final currentSeen = current.lastSeenAt;
+    final candidateSeen = candidate.lastSeenAt;
+    if (currentSeen != null &&
+        candidateSeen != null &&
+        candidateSeen.isAfter(currentSeen)) {
+      return candidate;
+    }
+    return current;
   }
 
   final Map<String, SyncTvServerSessionData> _serverSessions = {};

@@ -1,8 +1,8 @@
-import 'dart:convert';
-
 import 'package:fixnum/fixnum.dart';
+import 'package:protobuf/protobuf.dart' as pb;
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/admin_models.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/models/synctv_models.dart';
@@ -358,7 +358,7 @@ class SyncTvAdminDomainService {
     final response = await _api.adminService.getRoomSettings(
       admin.GetRoomSettingsRequest(roomId: roomId),
     );
-    return SyncTvRoomSettings.fromJson(decodeJsonBytes(response.settings));
+    return SyncTvRoomSettings.fromJson(roomSettingsToJson(response.settings));
   }
 
   Future<void> updateRoomSettings(
@@ -368,7 +368,7 @@ class SyncTvAdminDomainService {
     await _api.adminService.updateRoomSettings(
       admin.UpdateRoomSettingsRequest(
         roomId: roomId,
-        settings: _api.encodeJsonBytes(settings.toJson()),
+        settings: roomSettingsPatchFromJson(settings.toJson()),
       ),
     );
     _cache.put(
@@ -518,10 +518,7 @@ class SyncTvAdminDomainService {
     dynamic value,
   ) async {
     final response = await _api.adminService.updateSettings(
-      admin.UpdateSettingsRequest(
-        group: group,
-        settings: {key: _settingValueToString(value)}.entries,
-      ),
+      _settingsUpdateRequest(group, key, value),
     );
     final updated = _settingsGroupFromProto(response.group);
     _settingsCache[updated.name] = Map<String, dynamic>.from(updated.settings);
@@ -571,7 +568,7 @@ class SyncTvAdminDomainService {
           response.hasPresence() ? response.presence.connectionCount : 0,
       activePresenceRooms:
           response.hasPresence() ? response.presence.activeRoomCount : 0,
-      additionalStats: decodeJsonBytes(response.additionalStats),
+      additionalStats: protoMessageToJsonMap(response.additionalStats),
     );
   }
 
@@ -1264,17 +1261,83 @@ class SyncTvAdminDomainService {
         admin.ContentReportScope.CONTENT_REPORT_SCOPE_UNSPECIFIED;
   }
 
-  String _settingValueToString(dynamic value) {
-    if (value is bool || value is num || value is String) {
-      return value.toString();
+  admin.UpdateSettingsRequest _settingsUpdateRequest(
+    String group,
+    String key,
+    dynamic value,
+  ) {
+    final current = Map<String, dynamic>.from(_settingsCache[group] ?? {});
+    current[key] = value;
+    final request = admin.UpdateSettingsRequest(group: group);
+    void merge(admin.SettingsGroup_Settings kind, pb.GeneratedMessage message) {
+      message.mergeFromProto3Json(
+        current,
+        supportNamesWithUnderscores: false,
+        permissiveEnums: true,
+        ignoreUnknownFields: true,
+      );
+      switch (kind) {
+        case admin.SettingsGroup_Settings.server:
+          request.server = message as admin.ServerSettings;
+        case admin.SettingsGroup_Settings.permissions:
+          request.permissions = message as admin.PermissionSettings;
+        case admin.SettingsGroup_Settings.room:
+          request.room = message as admin.RoomPolicySettings;
+        case admin.SettingsGroup_Settings.user:
+          request.user = message as admin.UserSettings;
+        case admin.SettingsGroup_Settings.oauth2:
+          request.oauth2 = message as admin.OAuth2Settings;
+        case admin.SettingsGroup_Settings.proxy:
+          request.proxy = message as admin.ProxySettings;
+        case admin.SettingsGroup_Settings.rtmp:
+          request.rtmp = message as admin.RtmpSettings;
+        case admin.SettingsGroup_Settings.email:
+          request.email = message as admin.EmailSettings;
+        case admin.SettingsGroup_Settings.webrtc:
+          request.webrtc = message as admin.WebRtcSettings;
+        case admin.SettingsGroup_Settings.chat:
+          request.chat = message as admin.ChatSettings;
+        case admin.SettingsGroup_Settings.cors:
+          request.cors = message as admin.CorsSettings;
+        case admin.SettingsGroup_Settings.notSet:
+          break;
+      }
     }
-    return jsonEncode(value);
+
+    switch (group) {
+      case 'server':
+        merge(admin.SettingsGroup_Settings.server, admin.ServerSettings());
+      case 'permissions':
+        merge(
+          admin.SettingsGroup_Settings.permissions,
+          admin.PermissionSettings(),
+        );
+      case 'room':
+        merge(admin.SettingsGroup_Settings.room, admin.RoomPolicySettings());
+      case 'user':
+        merge(admin.SettingsGroup_Settings.user, admin.UserSettings());
+      case 'oauth2':
+        merge(admin.SettingsGroup_Settings.oauth2, admin.OAuth2Settings());
+      case 'proxy':
+        merge(admin.SettingsGroup_Settings.proxy, admin.ProxySettings());
+      case 'rtmp':
+        merge(admin.SettingsGroup_Settings.rtmp, admin.RtmpSettings());
+      case 'email':
+        merge(admin.SettingsGroup_Settings.email, admin.EmailSettings());
+      case 'webrtc':
+        merge(admin.SettingsGroup_Settings.webrtc, admin.WebRtcSettings());
+      case 'chat':
+        merge(admin.SettingsGroup_Settings.chat, admin.ChatSettings());
+      case 'cors':
+        merge(admin.SettingsGroup_Settings.cors, admin.CorsSettings());
+    }
+    return request;
   }
 
   AdminSettingsGroup _settingsGroupFromProto(admin.SettingsGroup group) {
     return AdminSettingsGroup(
       name: group.name,
-      settings: decodeJsonBytes(group.settings),
+      settings: settingsGroupToJson(group),
     );
   }
 
@@ -1346,7 +1409,7 @@ class SyncTvAdminDomainService {
       targetChatMessagePreview: report.targetChatMessagePreview,
       reasonCode: report.reasonCode,
       reason: report.reason,
-      metadata: _jsonBytesToMap(report.metadata),
+      metadata: protoMessageToJsonMap(report.metadata),
       status: report.status.value,
       reviewedBy: report.reviewedBy,
       reviewedByUsername: report.reviewedByUsername,
@@ -1379,7 +1442,7 @@ class SyncTvAdminDomainService {
       targetChatMessagePreview: report.targetChatMessagePreview,
       reasonCode: report.reasonCode,
       reason: report.reason,
-      metadata: _jsonBytesToMap(report.metadata),
+      metadata: protoMessageToJsonMap(report.metadata),
       status: report.status.value,
       reviewedBy: report.reviewedBy,
       reviewedByUsername: report.reviewedByUsername,
@@ -1388,14 +1451,6 @@ class SyncTvAdminDomainService {
       createdAt: report.createdAt.toInt(),
       updatedAt: report.updatedAt.toInt(),
     );
-  }
-
-  Map<String, dynamic> _jsonBytesToMap(List<int> bytes) {
-    if (bytes.isEmpty) return const {};
-    final decoded = jsonDecode(utf8.decode(bytes));
-    if (decoded is Map<String, dynamic>) return decoded;
-    if (decoded is Map) return decoded.cast<String, dynamic>();
-    return const {};
   }
 
   AdminBatchResult _batchResultFromProto(admin.BatchResultItem item) {
@@ -1410,7 +1465,8 @@ class SyncTvAdminDomainService {
     final details = <String>[
       '注册方式 ${_signupMethodLabel(review.signupMethod)}',
       if (review.email.isNotEmpty) '邮箱 ${review.email}',
-      if (review.oauth2Provider.isNotEmpty) 'OAuth2 ${review.oauth2Provider}',
+      if (oauth2ProviderTypeToString(review.oauth2Provider).isNotEmpty)
+        'OAuth2 ${oauth2ProviderTypeToString(review.oauth2Provider)}',
       if (review.oauth2ProviderInstanceName.isNotEmpty)
         '实例 ${review.oauth2ProviderInstanceName}',
       if (review.oauth2ProviderUsername.isNotEmpty)
@@ -1420,7 +1476,7 @@ class SyncTvAdminDomainService {
       if (review.oauth2ProviderIssuer.isNotEmpty)
         'Issuer ${review.oauth2ProviderIssuer}',
       if (review.oauth2AvatarUrl.isNotEmpty) '头像 ${review.oauth2AvatarUrl}',
-      if (review.oauth2Provider.isNotEmpty)
+      if (oauth2ProviderTypeToString(review.oauth2Provider).isNotEmpty)
         'OAuth2 邮箱${review.oauth2EmailTrusted ? '可信' : '未信任'}',
       if (review.webauthnCredentialName.isNotEmpty)
         'Passkey ${review.webauthnCredentialName}',
@@ -1440,7 +1496,7 @@ class SyncTvAdminDomainService {
       detail: details.join(' · '),
       details: details,
       signupMethod: review.signupMethod,
-      oauth2Provider: review.oauth2Provider,
+      oauth2Provider: oauth2ProviderTypeToString(review.oauth2Provider),
       oauth2ProviderInstanceName: review.oauth2ProviderInstanceName,
       oauth2ProviderIssuer: review.oauth2ProviderIssuer,
       oauth2ProviderUserId: review.oauth2ProviderUserId,

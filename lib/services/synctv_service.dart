@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/admin_models.dart';
 import 'package:synctv_app/models/provider_models.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/room_media_models.dart';
@@ -1102,7 +1103,7 @@ class SyncTvService {
       sizeBytes: upload.sizeBytes,
       width: upload.width,
       height: upload.height,
-      metadata: upload.metadata,
+      metadata: utf8.encode(jsonEncode(fileMetadataToJson(upload.metadata))),
     );
   }
 

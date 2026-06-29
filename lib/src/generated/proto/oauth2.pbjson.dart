@@ -15,6 +15,34 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+@$core.Deprecated('Use oAuth2ProviderTypeDescriptor instead')
+const OAuth2ProviderType$json = {
+  '1': 'OAuth2ProviderType',
+  '2': [
+    {'1': 'OAUTH2_PROVIDER_TYPE_UNSPECIFIED', '2': 0},
+    {'1': 'OAUTH2_PROVIDER_TYPE_QQ', '2': 1},
+    {'1': 'OAUTH2_PROVIDER_TYPE_GITHUB', '2': 2},
+    {'1': 'OAUTH2_PROVIDER_TYPE_GOOGLE', '2': 3},
+    {'1': 'OAUTH2_PROVIDER_TYPE_MICROSOFT', '2': 4},
+    {'1': 'OAUTH2_PROVIDER_TYPE_DISCORD', '2': 5},
+    {'1': 'OAUTH2_PROVIDER_TYPE_CASDOOR', '2': 6},
+    {'1': 'OAUTH2_PROVIDER_TYPE_LOGTO', '2': 7},
+    {'1': 'OAUTH2_PROVIDER_TYPE_OIDC', '2': 8},
+    {'1': 'OAUTH2_PROVIDER_TYPE_FEISHU', '2': 9},
+    {'1': 'OAUTH2_PROVIDER_TYPE_GITEE', '2': 10},
+  ],
+};
+
+/// Descriptor for `OAuth2ProviderType`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List oAuth2ProviderTypeDescriptor = $convert.base64Decode(
+    'ChJPQXV0aDJQcm92aWRlclR5cGUSJAogT0FVVEgyX1BST1ZJREVSX1RZUEVfVU5TUEVDSUZJRU'
+    'QQABIbChdPQVVUSDJfUFJPVklERVJfVFlQRV9RURABEh8KG09BVVRIMl9QUk9WSURFUl9UWVBF'
+    'X0dJVEhVQhACEh8KG09BVVRIMl9QUk9WSURFUl9UWVBFX0dPT0dMRRADEiIKHk9BVVRIMl9QUk'
+    '9WSURFUl9UWVBFX01JQ1JPU09GVBAEEiAKHE9BVVRIMl9QUk9WSURFUl9UWVBFX0RJU0NPUkQQ'
+    'BRIgChxPQVVUSDJfUFJPVklERVJfVFlQRV9DQVNET09SEAYSHgoaT0FVVEgyX1BST1ZJREVSX1'
+    'RZUEVfTE9HVE8QBxIdChlPQVVUSDJfUFJPVklERVJfVFlQRV9PSURDEAgSHwobT0FVVEgyX1BS'
+    'T1ZJREVSX1RZUEVfRkVJU0hVEAkSHgoaT0FVVEgyX1BST1ZJREVSX1RZUEVfR0lURUUQCg==');
+
 @$core.Deprecated('Use oAuth2ProviderInstancePathRequestDescriptor instead')
 const OAuth2ProviderInstancePathRequest$json = {
   '1': 'OAuth2ProviderInstancePathRequest',
@@ -266,7 +294,15 @@ const OAuth2ProviderInstance$json = {
   '1': 'OAuth2ProviderInstance',
   '2': [
     {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'type', '3': 2, '4': 1, '5': 9, '10': 'type'},
+    {
+      '1': 'type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.OAuth2ProviderType',
+      '8': {},
+      '10': 'type'
+    },
     {'1': 'signup_enabled', '3': 3, '4': 1, '5': 8, '10': 'signupEnabled'},
     {
       '1': 'signup_need_review',
@@ -280,15 +316,24 @@ const OAuth2ProviderInstance$json = {
 
 /// Descriptor for `OAuth2ProviderInstance`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2ProviderInstanceDescriptor = $convert.base64Decode(
-    'ChZPQXV0aDJQcm92aWRlckluc3RhbmNlEhIKBG5hbWUYASABKAlSBG5hbWUSEgoEdHlwZRgCIA'
-    'EoCVIEdHlwZRIlCg5zaWdudXBfZW5hYmxlZBgDIAEoCFINc2lnbnVwRW5hYmxlZBIsChJzaWdu'
-    'dXBfbmVlZF9yZXZpZXcYBCABKAhSEHNpZ251cE5lZWRSZXZpZXc=');
+    'ChZPQXV0aDJQcm92aWRlckluc3RhbmNlEhIKBG5hbWUYASABKAlSBG5hbWUSQQoEdHlwZRgCIA'
+    'EoDjIhLnN5bmN0di5jbGllbnQuT0F1dGgyUHJvdmlkZXJUeXBlQgq6SAeCAQQQASAAUgR0eXBl'
+    'EiUKDnNpZ251cF9lbmFibGVkGAMgASgIUg1zaWdudXBFbmFibGVkEiwKEnNpZ251cF9uZWVkX3'
+    'JldmlldxgEIAEoCFIQc2lnbnVwTmVlZFJldmlldw==');
 
 @$core.Deprecated('Use unlinkProviderRequestDescriptor instead')
 const UnlinkProviderRequest$json = {
   '1': 'UnlinkProviderRequest',
   '2': [
-    {'1': 'provider', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'provider'},
+    {
+      '1': 'provider',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.OAuth2ProviderType',
+      '8': {},
+      '10': 'provider'
+    },
     {
       '1': 'provider_user_id',
       '3': 2,
@@ -319,19 +364,19 @@ const UnlinkProviderRequest$json = {
 
 /// Descriptor for `UnlinkProviderRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List unlinkProviderRequestDescriptor = $convert.base64Decode(
-    'ChVVbmxpbmtQcm92aWRlclJlcXVlc3QSbQoIcHJvdmlkZXIYASABKAlCUbpITnJMEAEYIDJGXi'
-    'hxcXxnaXRodWJ8Z29vZ2xlfG1pY3Jvc29mdHxkaXNjb3JkfGNhc2Rvb3J8bG9ndG98b2lkY3xm'
-    'ZWlzaHV8Z2l0ZWUpJFIIcHJvdmlkZXIS7AEKEHByb3ZpZGVyX3VzZXJfaWQYAiABKAlCwQG6SL'
-    '0BugG5AQonb2F1dGgyLnVubGlua19wcm92aWRlci5wcm92aWRlcl91c2VyX2lkEkBwcm92aWRl'
-    'cl91c2VyX2lkIG11c3QgYmUgZW1wdHkgb3IgYXQgbW9zdCAyNTYgdmlzaWJsZSBjaGFyYWN0ZX'
-    'JzGkx0aGlzID09ICcnIHx8IChzaXplKHRoaXMpIDw9IDI1NiAmJiAhdGhpcy5tYXRjaGVzKCcu'
-    'KltcXHgwMC1cXHgxRlxceDdGXS4qJykpUg5wcm92aWRlclVzZXJJZBJSChZwcm92aWRlcl9pbn'
-    'N0YW5jZV9uYW1lGAMgASgJQhy6SBlyFBhAMhBeW0EtWmEtejAtOV8tXSsk2AEBUhRwcm92aWRl'
-    'ckluc3RhbmNlTmFtZRIzCg92ZXJpZmljYXRpb25faWQYBCABKAlCCrpIB3IFEAEYgAFSDnZlcm'
-    'lmaWNhdGlvbklkOsEBuki9ARq6AQo1b2F1dGgyLnVubGlua19wcm92aWRlci5pbnN0YW5jZV9m'
-    'b3Jfc3BlY2lmaWNfaWRlbnRpdHkSP3Byb3ZpZGVyX2luc3RhbmNlX25hbWUgaXMgcmVxdWlyZW'
-    'Qgd2hlbiBwcm92aWRlcl91c2VyX2lkIGlzIHNldBpAdGhpcy5wcm92aWRlcl91c2VyX2lkID09'
-    'ICcnIHx8IHRoaXMucHJvdmlkZXJfaW5zdGFuY2VfbmFtZSAhPSAnJw==');
+    'ChVVbmxpbmtQcm92aWRlclJlcXVlc3QSSQoIcHJvdmlkZXIYASABKA4yIS5zeW5jdHYuY2xpZW'
+    '50Lk9BdXRoMlByb3ZpZGVyVHlwZUIKukgHggEEEAEgAFIIcHJvdmlkZXIS7AEKEHByb3ZpZGVy'
+    'X3VzZXJfaWQYAiABKAlCwQG6SL0BugG5AQonb2F1dGgyLnVubGlua19wcm92aWRlci5wcm92aW'
+    'Rlcl91c2VyX2lkEkBwcm92aWRlcl91c2VyX2lkIG11c3QgYmUgZW1wdHkgb3IgYXQgbW9zdCAy'
+    'NTYgdmlzaWJsZSBjaGFyYWN0ZXJzGkx0aGlzID09ICcnIHx8IChzaXplKHRoaXMpIDw9IDI1Ni'
+    'AmJiAhdGhpcy5tYXRjaGVzKCcuKltcXHgwMC1cXHgxRlxceDdGXS4qJykpUg5wcm92aWRlclVz'
+    'ZXJJZBJSChZwcm92aWRlcl9pbnN0YW5jZV9uYW1lGAMgASgJQhy6SBlyFBhAMhBeW0EtWmEtej'
+    'AtOV8tXSsk2AEBUhRwcm92aWRlckluc3RhbmNlTmFtZRIzCg92ZXJpZmljYXRpb25faWQYBCAB'
+    'KAlCCrpIB3IFEAEYgAFSDnZlcmlmaWNhdGlvbklkOsEBuki9ARq6AQo1b2F1dGgyLnVubGlua1'
+    '9wcm92aWRlci5pbnN0YW5jZV9mb3Jfc3BlY2lmaWNfaWRlbnRpdHkSP3Byb3ZpZGVyX2luc3Rh'
+    'bmNlX25hbWUgaXMgcmVxdWlyZWQgd2hlbiBwcm92aWRlcl91c2VyX2lkIGlzIHNldBpAdGhpcy'
+    '5wcm92aWRlcl91c2VyX2lkID09ICcnIHx8IHRoaXMucHJvdmlkZXJfaW5zdGFuY2VfbmFtZSAh'
+    'PSAnJw==');
 
 @$core.Deprecated('Use unlinkProviderResponseDescriptor instead')
 const UnlinkProviderResponse$json = {
@@ -382,7 +427,15 @@ final $typed_data.Uint8List getLinkedProvidersResponseDescriptor =
 const LinkedProvider$json = {
   '1': 'LinkedProvider',
   '2': [
-    {'1': 'provider_type', '3': 1, '4': 1, '5': 9, '10': 'providerType'},
+    {
+      '1': 'provider_type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.OAuth2ProviderType',
+      '8': {},
+      '10': 'providerType'
+    },
     {
       '1': 'provider_username',
       '3': 2,
@@ -416,12 +469,13 @@ const LinkedProvider$json = {
 
 /// Descriptor for `LinkedProvider`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List linkedProviderDescriptor = $convert.base64Decode(
-    'Cg5MaW5rZWRQcm92aWRlchIjCg1wcm92aWRlcl90eXBlGAEgASgJUgxwcm92aWRlclR5cGUSKw'
-    'oRcHJvdmlkZXJfdXNlcm5hbWUYAiABKAlSEHByb3ZpZGVyVXNlcm5hbWUSGwoJbGlua2VkX2F0'
-    'GAMgASgDUghsaW5rZWRBdBI0ChZwcm92aWRlcl9pbnN0YW5jZV9uYW1lGAQgASgJUhRwcm92aW'
-    'Rlckluc3RhbmNlTmFtZRIsCg9wcm92aWRlcl9pc3N1ZXIYBSABKAlIAFIOcHJvdmlkZXJJc3N1'
-    'ZXKIAQESKAoQcHJvdmlkZXJfdXNlcl9pZBgGIAEoCVIOcHJvdmlkZXJVc2VySWRCEgoQX3Byb3'
-    'ZpZGVyX2lzc3Vlcg==');
+    'Cg5MaW5rZWRQcm92aWRlchJSCg1wcm92aWRlcl90eXBlGAEgASgOMiEuc3luY3R2LmNsaWVudC'
+    '5PQXV0aDJQcm92aWRlclR5cGVCCrpIB4IBBBABIABSDHByb3ZpZGVyVHlwZRIrChFwcm92aWRl'
+    'cl91c2VybmFtZRgCIAEoCVIQcHJvdmlkZXJVc2VybmFtZRIbCglsaW5rZWRfYXQYAyABKANSCG'
+    'xpbmtlZEF0EjQKFnByb3ZpZGVyX2luc3RhbmNlX25hbWUYBCABKAlSFHByb3ZpZGVySW5zdGFu'
+    'Y2VOYW1lEiwKD3Byb3ZpZGVyX2lzc3VlchgFIAEoCUgAUg5wcm92aWRlcklzc3VlcogBARIoCh'
+    'Bwcm92aWRlcl91c2VyX2lkGAYgASgJUg5wcm92aWRlclVzZXJJZEISChBfcHJvdmlkZXJfaXNz'
+    'dWVy');
 
 @$core.Deprecated('Use oAuth2UserInfoDescriptor instead')
 const OAuth2UserInfo$json = {

@@ -3492,25 +3492,21 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
                                 onSubmitted: (_) => _submit(),
                               );
                               final sendButton = AppActionButton(
-                                onPressed: _requestingEmail
-                                    ? null
-                                    : _requestEmailCode,
+                                onPressed:
+                                    _requestingEmail ? null : _requestEmailCode,
                                 loading: _requestingEmail,
                                 icon: Icons.send_rounded,
-                                label:
-                                    _emailCode == null ? '发送验证码' : '重新发送',
+                                label: _emailCode == null ? '发送验证码' : '重新发送',
                                 style: AppActionButtonStyle.outlined,
                               );
-                              final maskedEmail =
-                                  _emailCode?.maskedEmail ?? '';
+                              final maskedEmail = _emailCode?.maskedEmail ?? '';
                               final children = [
                                 Expanded(child: field),
                                 const SizedBox(width: 10),
                                 SizedBox(height: 48, child: sendButton),
                               ];
                               return Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.stretch,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   if (compact) ...[
                                     field,

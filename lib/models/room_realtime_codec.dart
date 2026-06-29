@@ -5,6 +5,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/protobuf.dart';
 import 'package:synctv_app/models/playback_client_profile.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/room_media_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
@@ -520,7 +521,7 @@ class RoomRealtimeCodec {
         return message.chat.content;
       case client.ClientMessage_Message.playbackUpdate:
         final update = message.playbackUpdate;
-        return 'media=${update.mediaId} playlist=${update.playlistId} target=${update.target.length}';
+        return 'media=${update.mediaId} playlist=${update.playlistId} target=${providerTargetToJson(update.target).length}';
       case client.ClientMessage_Message.playbackStateUpdate:
         final update = message.playbackStateUpdate;
         return [
@@ -592,7 +593,8 @@ class RoomRealtimeCodec {
           'playbackUpdate': {
             if (update.mediaId.isNotEmpty) 'mediaId': update.mediaId,
             if (update.playlistId.isNotEmpty) 'playlistId': update.playlistId,
-            if (update.target.isNotEmpty) 'target': update.target.length,
+            if (!providerTargetIsEmpty(update.target))
+              'target': providerTargetToJson(update.target),
           },
         };
       case client.ClientMessage_Message.observeResource:
@@ -793,7 +795,7 @@ class RoomRealtimeCodec {
         afterEventSequence: _watchSequence(version),
         request: client.ListPlaylistItemsRequest(
           playlistId: playlistId,
-          target: _decodeTarget(target) ?? const [],
+          target: providerTargetFromBase64(target),
           page: page,
           pageSize: pageSize,
           search: search,
@@ -1014,15 +1016,6 @@ class RoomRealtimeCodec {
     return encodeWebRTC(messageKind, payload);
   }
 
-  static List<int>? _decodeTarget(String? value) {
-    if (value == null || value.isEmpty) return null;
-    try {
-      return base64Url.decode(value);
-    } catch (_) {
-      return utf8.encode(value);
-    }
-  }
-
   static RoomRealtimeMessage decode(Uint8List data) {
     final message = client.ServerMessage.fromBuffer(data);
     switch (message.whichMessage()) {
@@ -1143,7 +1136,9 @@ class RoomRealtimeCodec {
               sizeBytes: attachment.sizeBytes.toInt(),
               width: attachment.width,
               height: attachment.height,
-              metadata: List<int>.from(attachment.metadata),
+              metadata: utf8.encode(jsonEncode(fileMetadataToJson(
+                attachment.metadata,
+              ))),
             ),
           )
           .toList(),
@@ -1211,7 +1206,7 @@ class RoomRealtimeCodec {
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.roomSettings,
       roomSettings:
-          SyncTvRoomSettings.fromJson(_decodeJsonBytes(changed.settings)),
+          SyncTvRoomSettings.fromJson(roomSettingsToJson(changed.settings)),
       resourceObserveId: observeId,
       resourceVersion: version,
     );
@@ -1389,7 +1384,9 @@ class RoomRealtimeCodec {
               sizeBytes: attachment.sizeBytes.toInt(),
               width: attachment.width,
               height: attachment.height,
-              metadata: List<int>.from(attachment.metadata),
+              metadata: utf8.encode(jsonEncode(fileMetadataToJson(
+                attachment.metadata,
+              ))),
             ),
           )
           .toList(),
@@ -1456,8 +1453,7 @@ class RoomRealtimeCodec {
   static SyncTvPlaybackStatus _playbackStatusFromState(
     client.PlaybackState state,
   ) {
-    final encodedTarget =
-        state.target.isEmpty ? '' : base64Url.encode(state.target);
+    final encodedTarget = providerTargetToBase64(state.target);
     final movie = state.playingMediaId.isEmpty &&
             state.playingPlaylistId.isEmpty
         ? null
@@ -1538,22 +1534,27 @@ class RoomRealtimeCodec {
     return PlaylistBrowsePathInfo(
       playlistId: node.playlistId,
       name: node.name,
-      target: base64Url.encode(node.target),
+      target: providerTargetToBase64(node.target),
     );
   }
 
   static SyncTvMovie _mediaFromProto(client.Media media) {
-    final metadata = _decodeJsonBytes(media.metadata);
+    final metadata = media.hasMetadata()
+        ? resourceMetadataToJson(media.metadata)
+        : <String, dynamic>{};
     final sourceConfig = media.hasSourceConfig()
         ? SourceConfigCodec.mediaSourceConfigToMap(media.sourceConfig)
         : <String, dynamic>{};
     final sourceProvider = media.hasSourceProvider()
         ? SourceConfigCodec.providerToString(media.sourceProvider)
-        : '';
+        : SourceConfigCodec.providerForMediaSourceConfig(media.sourceConfig);
     return SyncTvMovie(
       id: media.id,
       name: media.name,
-      url: (metadata['url'] ?? sourceConfig['url'] ?? '').toString(),
+      url: SyncTvMovie.playbackUrlFromResource(
+        metadata: metadata,
+        sourceConfig: sourceConfig,
+      ),
       creator: media.creatorId,
       roomId: media.roomId,
       position: media.position,
@@ -1565,7 +1566,7 @@ class RoomRealtimeCodec {
       proxy: metadata['proxy'] == true,
       live: sourceProvider == 'rtmp' ||
           (sourceProvider == 'bilibili' && sourceConfig['type'] == 'live') ||
-          metadata['is_live'] == true,
+          metadata['isLive'] == true,
       sourceProvider: sourceProvider,
       providerInstanceName: media.providerInstanceName,
       sourceConfig: sourceConfig,
@@ -1576,7 +1577,9 @@ class RoomRealtimeCodec {
   static SyncTvMovie _playlistFromProto(client.Playlist playlist) {
     final sourceProvider = playlist.hasSourceProvider()
         ? SourceConfigCodec.providerToString(playlist.sourceProvider)
-        : '';
+        : SourceConfigCodec.providerForPlaylistSourceConfig(
+            playlist.sourceConfig,
+          );
     final sourceConfig = playlist.hasSourceConfig()
         ? SourceConfigCodec.playlistSourceConfigToMap(playlist.sourceConfig)
         : <String, dynamic>{};
@@ -1597,7 +1600,7 @@ class RoomRealtimeCodec {
       sourceProvider: sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
       sourceConfig: sourceConfig,
-      metadata: {'is_dynamic': playlist.isDynamic},
+      metadata: {'isDynamic': playlist.isDynamic},
     );
   }
 
@@ -1605,8 +1608,8 @@ class RoomRealtimeCodec {
     client.PlaylistItem item, {
     required String playlistId,
   }) {
-    final target = Uint8List.fromList(item.target);
-    final encodedTarget = base64Url.encode(target);
+    final target = item.target;
+    final encodedTarget = providerTargetToBase64(target);
     return SyncTvMovie(
       id: encodedTarget,
       name: item.name,
@@ -1616,7 +1619,7 @@ class RoomRealtimeCodec {
       subPath: encodedTarget,
       metadata: {
         'target': target,
-        'target_json': _decodeJsonBytes(item.target),
+        'target_json': providerTargetToJson(target),
         'thumbnail': item.hasThumbnail() ? item.thumbnail : '',
         'size': item.hasSize() ? item.size.toInt() : null,
       },
@@ -1648,16 +1651,6 @@ class RoomRealtimeCodec {
       joinedAt: member.joinedAt.toInt(),
       isOnline: member.isOnline,
     );
-  }
-
-  static Map<String, dynamic> _decodeJsonBytes(List<int> bytes) {
-    if (bytes.isEmpty) return <String, dynamic>{};
-    try {
-      final decoded = jsonDecode(utf8.decode(bytes));
-      return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
-    } catch (_) {
-      return <String, dynamic>{};
-    }
   }
 
   static Map<String, String> _stringMap(dynamic value) {

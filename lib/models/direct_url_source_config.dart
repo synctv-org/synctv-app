@@ -1,5 +1,5 @@
 class DirectUrlSourceConfig {
-  static const sourceProvider = 'direct_url';
+  static const sourceProvider = 'directUrl';
 
   static const Set<String> _forbiddenHeaderNames = {
     'host',
@@ -53,7 +53,7 @@ class DirectUrlSourceConfig {
     return {
       'url': url,
       'headers': headers,
-      if (preferProxy) 'prefer_proxy': true,
+      if (preferProxy) 'preferProxy': true,
     };
   }
 

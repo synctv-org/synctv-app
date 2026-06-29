@@ -24,7 +24,7 @@ void main(List<String> args) async {
       android: true,
       iOS: false,
       windows: true,
-      macOS: false,
+      macOS: true,
       linux: true,
     );
   } catch (e) {
@@ -32,6 +32,10 @@ void main(List<String> args) async {
   }
   runApp(const MyApp());
 }
+
+const _enableAccessibilityTools = bool.fromEnvironment(
+  'SYNCTV_ENABLE_ACCESSIBILITY_TOOLS',
+);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -63,9 +67,10 @@ class MyApp extends StatelessWidget {
           breakpoints: AppBreakpoints.values,
           child: appChild,
         );
-        if (kDebugMode) {
+        if (kDebugMode && _enableAccessibilityTools) {
           appChild = AccessibilityTools(
             checkFontOverflows: true,
+            buttonsAlignment: ButtonsAlignment.bottomLeft,
             child: appChild,
           );
         }

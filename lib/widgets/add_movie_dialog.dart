@@ -4,6 +4,8 @@ import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
@@ -164,7 +166,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   final Map<String, AlistItemInfo> _selectedAlistItems = {};
   final List<_DirectHeaderDraft> _directHeaders = [];
 
-  String _embyPath = '/';
+  String _embyPath = '';
   List<EmbyItemInfo> _embyFiles = [];
   bool _embyLoading = false;
   int _embyPage = 1;
@@ -365,7 +367,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       _loadAlist('/');
     }
     if (index == 5 && _embyBinds.isNotEmpty && _embyFiles.isEmpty) {
-      _loadEmby('/');
+      _loadEmby('');
     }
   }
 
@@ -585,7 +587,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppTextField(
+          _buildDirectTextField(
             controller: _urlController,
             focusNode: _urlFocusNode,
             label: '视频链接',
@@ -602,7 +604,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 10),
-          AppTextField(
+          _buildDirectTextField(
             controller: _nameController,
             label: '视频名称（单条可选）',
             hintText: '默认为文件名',
@@ -635,6 +637,54 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             icon: Icons.playlist_add_rounded,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDirectTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hintText,
+    required IconData prefixIcon,
+    FocusNode? focusNode,
+    int? minLines,
+    int? maxLines,
+    TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    bool autocorrect = true,
+    SmartDashesType? smartDashesType,
+    SmartQuotesType? smartQuotesType,
+    required bool enabled,
+    ValueChanged<String>? onChanged,
+  }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return AppTextField(
+      controller: controller,
+      focusNode: focusNode,
+      label: label,
+      hintText: hintText,
+      prefixIcon: prefixIcon,
+      enabled: enabled,
+      filled: true,
+      fillColor: scheme.surfaceContainerHighest,
+      minLines: minLines,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      autocorrect: autocorrect,
+      enableSuggestions: keyboardType != TextInputType.url,
+      smartDashesType: smartDashesType,
+      smartQuotesType: smartQuotesType,
+      onChanged: onChanged,
+      style: theme.textTheme.bodyMedium,
+      borderRadius: BorderRadius.circular(8),
+      enabledBorderSide: BorderSide(
+        color: scheme.outlineVariant.withValues(alpha: 0.7),
+      ),
+      focusedBorderSide: BorderSide(color: scheme.primary, width: 1.4),
+      disabledBorderSide: BorderSide(
+        color: scheme.outlineVariant.withValues(alpha: 0.35),
       ),
     );
   }
@@ -1172,14 +1222,14 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             setState(() {
               _embyServerId = bind.serverId;
               _embyInstanceName = bind.providerInstanceName;
-              _embyPath = '/';
+              _embyPath = '';
               _embyFiles = [];
               _embyPage = 1;
               _embyHasMore = true;
               _embyKeyword = '';
               _embySearchController.clear();
             });
-            _loadEmby('/');
+            _loadEmby('');
           },
         ),
         _buildEmbySearchBar(theme),
@@ -1314,6 +1364,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   Widget _buildPathBar(ThemeData theme, String path, VoidCallback onUp) {
+    final displayPath = path.isEmpty ? '/' : path;
     return AppPanelSurface(
       margin: const EdgeInsets.fromLTRB(0, 0, 0, 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1325,13 +1376,13 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           AppIconButton(
             tooltip: '上级目录',
             icon: Icons.arrow_upward_rounded,
-            onPressed: path == '/' ? null : onUp,
+            onPressed: path.isEmpty || path == '/' ? null : onUp,
             style: AppIconButtonStyle.ghost,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              path,
+              displayPath,
               style: const TextStyle(fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis,
             ),
@@ -1813,9 +1864,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           urls
               .map(
                 (url) => {
-                  'playlist_id': widget.parentId ?? '',
-                  'source_provider': DirectUrlSourceConfig.sourceProvider,
-                  'source_config': DirectUrlSourceConfig.fromUserInput(
+                  'playlistId': widget.parentId ?? '',
+                  'sourceProvider': DirectUrlSourceConfig.sourceProvider,
+                  'sourceConfig': DirectUrlSourceConfig.fromUserInput(
                     url: url,
                     headers: headers,
                     preferProxy: _isProxy,
@@ -1875,7 +1926,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   List<String> _parseDirectUrls(String input) {
     final urls = <String>[];
     for (final rawLine in input.split('\n')) {
-      final url = rawLine.trim();
+      final url = _normalizeDirectUrlInput(rawLine.trim());
       if (url.isEmpty) continue;
       urls.add(DirectUrlSourceConfig.validateUrl(url));
     }
@@ -1883,6 +1934,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       throw const DirectUrlSourceConfigException('请输入 http/https 链接');
     }
     return urls;
+  }
+
+  String _normalizeDirectUrlInput(String value) {
+    if (value.startsWith('http//')) {
+      return 'http://${value.substring('http//'.length)}';
+    }
+    if (value.startsWith('https//')) {
+      return 'https://${value.substring('https//'.length)}';
+    }
+    return value;
   }
 
   Future<void> _addRtmpPublish() async {
@@ -2351,7 +2412,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     try {
       final password = _alistPasswordController.text;
       final sourceConfig = <String, dynamic>{
-        'server_id': _alistServerId,
+        'serverId': _alistServerId,
         'path': file.path,
       };
       if (password.isNotEmpty) sourceConfig['password'] = password;
@@ -2388,7 +2449,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       final password = _alistPasswordController.text;
       for (final file in _selectedAlistItems.values) {
         final sourceConfig = <String, dynamic>{
-          'server_id': _alistServerId,
+          'serverId': _alistServerId,
           'path': file.path,
         };
         if (password.isNotEmpty) sourceConfig['password'] = password;
@@ -2397,10 +2458,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           continue;
         }
         items.add({
-          'playlist_id': widget.parentId ?? '',
-          'source_provider': 'alist',
-          'provider_instance_name': _alistInstanceName,
-          'source_config': sourceConfig,
+          'playlistId': widget.parentId ?? '',
+          'sourceProvider':
+              source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value,
+          'providerInstanceName': _alistInstanceName,
+          'sourceConfig': sourceConfig,
           'name': file.name,
         });
       }
@@ -2410,7 +2472,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       }
       for (final directory in directories) {
         final sourceConfig = <String, dynamic>{
-          'server_id': _alistServerId,
+          'serverId': _alistServerId,
           'path': directory.path,
         };
         if (password.isNotEmpty) sourceConfig['password'] = password;
@@ -2514,14 +2576,14 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   void _goUpEmby() {
-    if (_embyPath == '/') return;
+    if (_embyPath.isEmpty || _embyPath == '/') return;
     if (_embyKeyword.isNotEmpty) {
       _clearEmbySearch();
       return;
     }
     final parts = _embyPath.split('/');
     parts.removeLast();
-    _loadEmby(parts.length == 1 && parts[0] == '' ? '/' : parts.join('/'));
+    _loadEmby(parts.length == 1 && parts[0] == '' ? '' : parts.join('/'));
   }
 
   Future<void> _addEmbyFile(EmbyItemInfo file) async {
@@ -2571,8 +2633,8 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         sourceProvider: 'emby',
         providerInstanceName: _embyInstanceName,
         sourceConfig: {
-          'server_id': _embyServerId,
-          'item_id': itemId,
+          'serverId': _embyServerId,
+          'itemId': itemId,
         },
         name: file.name.isEmpty ? 'Emby Playlist' : file.name,
       );

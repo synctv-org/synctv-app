@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/utils/audio_util.dart';
 
@@ -81,7 +82,7 @@ class WebRTCManager {
                 ),
               );
 
-      await Helper.setSpeakerphoneOn(true);
+      await _setSpeakerphoneOn(true);
 
       onSignalingMessage('join', {});
 
@@ -131,7 +132,7 @@ class WebRTCManager {
     pc.onTrack = (event) {
       if (event.track.kind == 'audio') {
         event.track.enabled = true;
-        Helper.setSpeakerphoneOn(true);
+        unawaited(_setSpeakerphoneOn(true));
       }
     };
 
@@ -239,7 +240,7 @@ class WebRTCManager {
   }
 
   Future<void> leave() async {
-    await Helper.setSpeakerphoneOn(false);
+    await _setSpeakerphoneOn(false);
     await AudioUtil.setVoiceCallMode(false);
     if (_isConnected) {
       onSignalingMessage('leave', {});
@@ -284,5 +285,15 @@ class WebRTCManager {
       return !_localStream!.getAudioTracks().first.enabled;
     }
     return false;
+  }
+
+  Future<void> _setSpeakerphoneOn(bool enabled) async {
+    try {
+      await Helper.setSpeakerphoneOn(enabled);
+    } on MissingPluginException catch (error) {
+      debugPrint('WebRTC speakerphone control is unavailable: $error');
+    } on PlatformException catch (error) {
+      debugPrint('WebRTC speakerphone control failed: $error');
+    }
   }
 }

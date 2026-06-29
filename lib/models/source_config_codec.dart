@@ -1,5 +1,6 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/protobuf.dart' as pb;
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -9,7 +10,13 @@ class SourceConfigCodec {
   const SourceConfigCodec._();
 
   static source_enum.SourceProvider providerFromString(String value) {
-    return switch (value.trim().toLowerCase()) {
+    final normalized = value.trim();
+    final numeric = int.tryParse(normalized);
+    if (numeric != null) {
+      return source_enum.SourceProvider.valueOf(numeric) ??
+          source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED;
+    }
+    return switch (normalized.toLowerCase()) {
       '' ||
       'unspecified' =>
         source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
@@ -29,13 +36,37 @@ class SourceConfigCodec {
 
   static String providerToString(source_enum.SourceProvider value) {
     return switch (value) {
-      source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL => 'direct_url',
+      source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL => 'directUrl',
       source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI => 'bilibili',
       source_enum.SourceProvider.SOURCE_PROVIDER_ALIST => 'alist',
       source_enum.SourceProvider.SOURCE_PROVIDER_EMBY => 'emby',
       source_enum.SourceProvider.SOURCE_PROVIDER_RTMP => 'rtmp',
-      source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY => 'live_proxy',
+      source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY => 'liveProxy',
       _ => '',
+    };
+  }
+
+  static String providerForMediaSourceConfig(
+    source_config.MediaSourceConfig config,
+  ) {
+    return switch (config.whichProvider()) {
+      source_config.MediaSourceConfig_Provider.directUrl => 'directUrl',
+      source_config.MediaSourceConfig_Provider.bilibili => 'bilibili',
+      source_config.MediaSourceConfig_Provider.alist => 'alist',
+      source_config.MediaSourceConfig_Provider.emby => 'emby',
+      source_config.MediaSourceConfig_Provider.rtmp => 'rtmp',
+      source_config.MediaSourceConfig_Provider.liveProxy => 'liveProxy',
+      source_config.MediaSourceConfig_Provider.notSet => '',
+    };
+  }
+
+  static String providerForPlaylistSourceConfig(
+    source_config.PlaylistSourceConfig config,
+  ) {
+    return switch (config.whichProvider()) {
+      source_config.PlaylistSourceConfig_Provider.alist => 'alist',
+      source_config.PlaylistSourceConfig_Provider.emby => 'emby',
+      source_config.PlaylistSourceConfig_Provider.notSet => '',
     };
   }
 
@@ -87,7 +118,7 @@ class SourceConfigCodec {
       source_enum.SourceProvider.SOURCE_PROVIDER_ALIST =>
         source_config.MediaSourceConfig(
           alist: source_config.AlistMediaSourceConfig(
-            serverId: _string(config['server_id']),
+            serverId: _string(config['serverId']),
             path: _string(config['path']),
             password: _optionalString(config['password']),
           ),
@@ -95,8 +126,8 @@ class SourceConfigCodec {
       source_enum.SourceProvider.SOURCE_PROVIDER_EMBY =>
         source_config.MediaSourceConfig(
           emby: source_config.EmbyMediaSourceConfig(
-            serverId: _string(config['server_id']),
-            itemId: _string(config['item_id']),
+            serverId: _string(config['serverId']),
+            itemId: _string(config['itemId']),
           ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_RTMP =>
@@ -127,7 +158,7 @@ class SourceConfigCodec {
       source_enum.SourceProvider.SOURCE_PROVIDER_ALIST =>
         source_config.PlaylistSourceConfig(
           alist: source_config.AlistPlaylistSourceConfig(
-            serverId: _string(config['server_id']),
+            serverId: _string(config['serverId']),
             path: _string(config['path']),
             password: _optionalString(config['password']),
           ),
@@ -135,8 +166,8 @@ class SourceConfigCodec {
       source_enum.SourceProvider.SOURCE_PROVIDER_EMBY =>
         source_config.PlaylistSourceConfig(
           emby: source_config.EmbyPlaylistSourceConfig(
-            serverId: _string(config['server_id']),
-            itemId: _string(config['item_id']),
+            serverId: _string(config['serverId']),
+            itemId: _string(config['itemId']),
           ),
         ),
       _ => null,
@@ -153,14 +184,13 @@ class SourceConfigCodec {
         _bilibiliMediaSourceConfigToMap(config.bilibili),
       source_config.MediaSourceConfig_Provider.alist => {
           if (config.alist.serverId.isNotEmpty)
-            'server_id': config.alist.serverId,
+            'serverId': config.alist.serverId,
           'path': config.alist.path,
           if (config.alist.hasPassword()) 'password': config.alist.password,
         },
       source_config.MediaSourceConfig_Provider.emby => {
-          if (config.emby.serverId.isNotEmpty)
-            'server_id': config.emby.serverId,
-          'item_id': config.emby.itemId,
+          if (config.emby.serverId.isNotEmpty) 'serverId': config.emby.serverId,
+          'itemId': config.emby.itemId,
         },
       source_config.MediaSourceConfig_Provider.rtmp => <String, dynamic>{},
       source_config.MediaSourceConfig_Provider.liveProxy => {
@@ -176,14 +206,13 @@ class SourceConfigCodec {
     return switch (config.whichProvider()) {
       source_config.PlaylistSourceConfig_Provider.alist => {
           if (config.alist.serverId.isNotEmpty)
-            'server_id': config.alist.serverId,
+            'serverId': config.alist.serverId,
           'path': config.alist.path,
           if (config.alist.hasPassword()) 'password': config.alist.password,
         },
       source_config.PlaylistSourceConfig_Provider.emby => {
-          if (config.emby.serverId.isNotEmpty)
-            'server_id': config.emby.serverId,
-          'item_id': config.emby.itemId,
+          if (config.emby.serverId.isNotEmpty) 'serverId': config.emby.serverId,
+          'itemId': config.emby.itemId,
         },
       source_config.PlaylistSourceConfig_Provider.notSet => <String, dynamic>{},
     };
@@ -192,41 +221,13 @@ class SourceConfigCodec {
   static Map<String, dynamic> mediaSourceConfigJson(
     source_config.MediaSourceConfig config,
   ) {
-    return switch (config.whichProvider()) {
-      source_config.MediaSourceConfig_Provider.directUrl => {
-          'direct_url': _directUrlMediaSourceConfigHttpJson(config.directUrl),
-        },
-      source_config.MediaSourceConfig_Provider.bilibili => {
-          'bilibili': _bilibiliMediaSourceConfigHttpJson(config.bilibili),
-        },
-      source_config.MediaSourceConfig_Provider.alist => {
-          'alist': mediaSourceConfigToMap(config),
-        },
-      source_config.MediaSourceConfig_Provider.emby => {
-          'emby': mediaSourceConfigToMap(config),
-        },
-      source_config.MediaSourceConfig_Provider.rtmp => {
-          'rtmp': <String, dynamic>{}
-        },
-      source_config.MediaSourceConfig_Provider.liveProxy => {
-          'live_proxy': mediaSourceConfigToMap(config),
-        },
-      source_config.MediaSourceConfig_Provider.notSet => <String, dynamic>{},
-    };
+    return protoMessageToJsonMap(config);
   }
 
   static Map<String, dynamic> playlistSourceConfigJson(
     source_config.PlaylistSourceConfig config,
   ) {
-    return switch (config.whichProvider()) {
-      source_config.PlaylistSourceConfig_Provider.alist => {
-          'alist': playlistSourceConfigToMap(config),
-        },
-      source_config.PlaylistSourceConfig_Provider.emby => {
-          'emby': playlistSourceConfigToMap(config),
-        },
-      source_config.PlaylistSourceConfig_Provider.notSet => <String, dynamic>{},
-    };
+    return protoMessageToJsonMap(config);
   }
 
   static source_config.DirectUrlMediaSourceConfig _directUrlMediaSourceConfig(
@@ -244,18 +245,18 @@ class SourceConfigCodec {
         : mediaMaps.map(_directUrlMediaResourceConfig).toList();
     return source_config.DirectUrlMediaSourceConfig(
       medias: medias,
-      defaultMediaIndex: _optionalInt(config['default_media_index']),
+      defaultMediaIndex: _optionalInt(config['defaultMediaIndex']),
       subtitles: _listMaps(config['subtitles'])
           .map(_directUrlSubtitleSourceConfig)
           .toList(),
-      defaultSubtitleIndex: _optionalInt(config['default_subtitle_index']),
+      defaultSubtitleIndex: _optionalInt(config['defaultSubtitleIndex']),
       danmakus: _listMaps(config['danmakus'])
           .map(_directUrlDanmakuSourceConfig)
           .toList(),
-      defaultDanmakuIndex: _optionalInt(config['default_danmaku_index']),
-      isLive: _optionalBool(config['is_live']),
-      durationSeconds: _optionalDouble(config['duration_seconds']),
-      preferProxy: _optionalBool(config['prefer_proxy']),
+      defaultDanmakuIndex: _optionalInt(config['defaultDanmakuIndex']),
+      isLive: _optionalBool(config['isLive']),
+      durationSeconds: _optionalDouble(config['durationSeconds']),
+      preferProxy: _optionalBool(config['preferProxy']),
     );
   }
 
@@ -299,7 +300,7 @@ class SourceConfigCodec {
     return switch (kind) {
       'live' => source_config.BilibiliMediaSourceConfig(
           live: source_config.BilibiliLiveSourceConfig(
-            roomId: Int64(_int(config['room_id'])),
+            roomId: Int64(_int(config['roomId'])),
             shared: _bool(config['shared']),
           ),
         ),
@@ -328,19 +329,19 @@ class SourceConfigCodec {
       if (_shouldKeepDirectUrlMediaList(config))
         'medias': config.medias.map(_mediaResourceToMap).toList(),
       if (config.hasDefaultMediaIndex())
-        'default_media_index': config.defaultMediaIndex,
+        'defaultMediaIndex': config.defaultMediaIndex,
       if (config.subtitles.isNotEmpty)
         'subtitles': config.subtitles.map(_subtitleToMap).toList(),
       if (config.hasDefaultSubtitleIndex())
-        'default_subtitle_index': config.defaultSubtitleIndex,
+        'defaultSubtitleIndex': config.defaultSubtitleIndex,
       if (config.danmakus.isNotEmpty)
         'danmakus': config.danmakus.map(_danmakuToMap).toList(),
       if (config.hasDefaultDanmakuIndex())
-        'default_danmaku_index': config.defaultDanmakuIndex,
-      if (config.hasIsLive()) 'is_live': config.isLive,
+        'defaultDanmakuIndex': config.defaultDanmakuIndex,
+      if (config.hasIsLive()) 'isLive': config.isLive,
       if (config.hasDurationSeconds())
-        'duration_seconds': config.durationSeconds,
-      if (config.hasPreferProxy()) 'prefer_proxy': config.preferProxy,
+        'durationSeconds': config.durationSeconds,
+      if (config.hasPreferProxy()) 'preferProxy': config.preferProxy,
     };
     if (config.medias.length == 1) {
       final media = config.medias.single;
@@ -351,14 +352,6 @@ class SourceConfigCodec {
       if (media.name.isNotEmpty) map['name'] = media.name;
       if (media.format.isNotEmpty) map['format'] = media.format;
     }
-    return map;
-  }
-
-  static Map<String, dynamic> _directUrlMediaSourceConfigHttpJson(
-    source_config.DirectUrlMediaSourceConfig config,
-  ) {
-    final map = _directUrlMediaSourceConfigToMap(config);
-    map['medias'] = config.medias.map(_mediaResourceToMap).toList();
     return map;
   }
 
@@ -435,32 +428,8 @@ class SourceConfigCodec {
       source_config.BilibiliMediaSourceConfig_Source.live => {
           'kind': 'live',
           'type': 'live',
-          'room_id': config.live.roomId.toInt(),
+          'roomId': config.live.roomId.toInt(),
           'shared': config.live.shared,
-        },
-      source_config.BilibiliMediaSourceConfig_Source.notSet =>
-        <String, dynamic>{},
-    };
-  }
-
-  static Map<String, dynamic> _bilibiliMediaSourceConfigHttpJson(
-    source_config.BilibiliMediaSourceConfig config,
-  ) {
-    return switch (config.whichSource()) {
-      source_config.BilibiliMediaSourceConfig_Source.video => {
-          'video': _bilibiliMediaSourceConfigToMap(config)
-            ..remove('kind')
-            ..remove('type'),
-        },
-      source_config.BilibiliMediaSourceConfig_Source.pgc => {
-          'pgc': _bilibiliMediaSourceConfigToMap(config)
-            ..remove('kind')
-            ..remove('type'),
-        },
-      source_config.BilibiliMediaSourceConfig_Source.live => {
-          'live': _bilibiliMediaSourceConfigToMap(config)
-            ..remove('kind')
-            ..remove('type'),
         },
       source_config.BilibiliMediaSourceConfig_Source.notSet =>
         <String, dynamic>{},

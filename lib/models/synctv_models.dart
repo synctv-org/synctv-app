@@ -1,3 +1,5 @@
+import 'package:synctv_app/models/proto_mapping.dart';
+import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
 class RoomCategoryInfo {
@@ -388,11 +390,46 @@ class SyncTvMovie {
     this.selectedPlaybackUrlIndex = 0,
   });
 
+  static String playbackUrlFromResource({
+    required Map<String, dynamic> metadata,
+    required Map<String, dynamic> sourceConfig,
+  }) {
+    final directUrl = _stringValue(sourceConfig['url']);
+    if (directUrl.isNotEmpty) return directUrl;
+
+    final medias = sourceConfig['medias'];
+    if (medias is Iterable) {
+      final mediaList = medias.whereType<Map>().toList(growable: false);
+      if (mediaList.isNotEmpty) {
+        final configuredIndex = _intValue(sourceConfig['defaultMediaIndex']);
+        final index = configuredIndex >= 0 && configuredIndex < mediaList.length
+            ? configuredIndex
+            : 0;
+        final mediaUrl = _stringValue(mediaList[index]['url']);
+        if (mediaUrl.isNotEmpty) return mediaUrl;
+      }
+    }
+
+    final metadataUrl = _stringValue(metadata['url']);
+    if (metadataUrl.isNotEmpty) return metadataUrl;
+
+    return _stringValue(metadata['source']);
+  }
+
+  static String _stringValue(Object? value) =>
+      value == null ? '' : value.toString();
+
+  static int _intValue(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
   bool get isStaticMedia => id.startsWith('med_');
 
   bool get isPlaylist => id.startsWith('pl_');
 
-  bool get isDynamicPlaylist => isPlaylist && metadata['is_dynamic'] == true;
+  bool get isDynamicPlaylist => isPlaylist && metadata['isDynamic'] == true;
 
   bool get isProviderDynamicItem => !isStaticMedia && !isPlaylist;
 
@@ -401,8 +438,7 @@ class SyncTvMovie {
   bool get hasPlaybackTarget =>
       (subPath ?? '').isNotEmpty && (parentId ?? '').startsWith('pl_');
 
-  String get playbackMediaId =>
-      isStaticMedia && !hasPlaybackTarget ? id : '';
+  String get playbackMediaId => isStaticMedia && !hasPlaybackTarget ? id : '';
 
   String get playbackPlaylistId =>
       hasPlaybackTarget ? parentId! : (isPlaylist ? id : '');
@@ -624,19 +660,18 @@ class SyncTvMovie {
       danmuHeaders: selectedMode.danmuHeaders,
       streamDanmu: selectedMode.streamDanmu,
       streamDanmuHeaders: selectedMode.streamDanmuHeaders,
-      sourceProvider: playback.provider,
+      sourceProvider: SourceConfigCodec.providerToString(playback.provider),
       providerInstanceName: playback.providerInstanceName,
       playbackModes: modes,
       selectedPlaybackMode: selectedMode.key,
       selectedPlaybackUrlIndex: selectedMode.safeDefaultUrlIndex,
       metadata: {
-        'default_mode': playback.defaultMode,
-        'playback_metadata': Map<String, String>.from(
-          playback.metadata,
-        ),
-        if (playback.hasExpiresAt()) 'expires_at': playback.expiresAt.toInt(),
+        'defaultMode': playback.defaultMode,
+        if (playback.hasMetadata())
+          'playbackMetadata': protoMessageToJsonMap(playback.metadata),
+        if (playback.hasExpiresAt()) 'expiresAt': playback.expiresAt.toInt(),
         if (playback.hasDurationSeconds())
-          'duration_seconds': playback.durationSeconds,
+          'durationSeconds': playback.durationSeconds,
       },
     );
   }
@@ -668,7 +703,8 @@ class SyncTvMovie {
           fps: metadata?.hasFps() == true ? metadata!.fps : null,
           metadata: metadata == null
               ? const {}
-              : Map<String, String>.from(metadata.extra),
+              : protoMessageToJsonMap(metadata)
+                  .map((key, value) => MapEntry(key, value.toString())),
         );
       }).toList();
       final defaultMediaIndex =
@@ -895,19 +931,19 @@ class SyncTvRoomSettings {
 
   factory SyncTvRoomSettings.fromJson(Map<String, dynamic> json) {
     return SyncTvRoomSettings(
-      requirePassword: _readBool(json, 'require_password', false),
-      allowGuestJoin: _readBool(json, 'allow_guest_join', false),
-      requireApproval: _readBool(json, 'require_approval', false),
-      allowAutoJoin: _readBool(json, 'allow_auto_join', true),
-      maxMembers: _readInt(json, 'max_members', 100),
-      chatEnabled: _readBool(json, 'chat_enabled', true),
-      danmakuEnabled: _readBool(json, 'danmaku_enabled', true),
-      adminAddedPermissions: _readInt(json, 'admin_added_permissions', 0),
-      adminRemovedPermissions: _readInt(json, 'admin_removed_permissions', 0),
-      memberAddedPermissions: _readInt(json, 'member_added_permissions', 0),
-      memberRemovedPermissions: _readInt(json, 'member_removed_permissions', 0),
-      guestAddedPermissions: _readInt(json, 'guest_added_permissions', 0),
-      guestRemovedPermissions: _readInt(json, 'guest_removed_permissions', 0),
+      requirePassword: _readBool(json, 'requirePassword', false),
+      allowGuestJoin: _readBool(json, 'allowGuestJoin', false),
+      requireApproval: _readBool(json, 'requireApproval', false),
+      allowAutoJoin: _readBool(json, 'allowAutoJoin', true),
+      maxMembers: _readInt(json, 'maxMembers', 100),
+      chatEnabled: _readBool(json, 'chatEnabled', true),
+      danmakuEnabled: _readBool(json, 'danmakuEnabled', true),
+      adminAddedPermissions: _readInt(json, 'adminAddedPermissions', 0),
+      adminRemovedPermissions: _readInt(json, 'adminRemovedPermissions', 0),
+      memberAddedPermissions: _readInt(json, 'memberAddedPermissions', 0),
+      memberRemovedPermissions: _readInt(json, 'memberRemovedPermissions', 0),
+      guestAddedPermissions: _readInt(json, 'guestAddedPermissions', 0),
+      guestRemovedPermissions: _readInt(json, 'guestRemovedPermissions', 0),
     );
   }
 
@@ -923,18 +959,18 @@ class SyncTvRoomSettings {
   Map<String, dynamic> toJson() {
     return {
       'require_password': requirePassword,
-      'allow_guest_join': allowGuestJoin,
-      'require_approval': requireApproval,
-      'allow_auto_join': allowAutoJoin,
-      'max_members': maxMembers,
-      'chat_enabled': chatEnabled,
-      'danmaku_enabled': danmakuEnabled,
-      'admin_added_permissions': adminAddedPermissions,
-      'admin_removed_permissions': adminRemovedPermissions,
-      'member_added_permissions': memberAddedPermissions,
-      'member_removed_permissions': memberRemovedPermissions,
-      'guest_added_permissions': guestAddedPermissions,
-      'guest_removed_permissions': guestRemovedPermissions,
+      'allowGuestJoin': allowGuestJoin,
+      'requireApproval': requireApproval,
+      'allowAutoJoin': allowAutoJoin,
+      'maxMembers': maxMembers,
+      'chatEnabled': chatEnabled,
+      'danmakuEnabled': danmakuEnabled,
+      'adminAddedPermissions': adminAddedPermissions,
+      'adminRemovedPermissions': adminRemovedPermissions,
+      'memberAddedPermissions': memberAddedPermissions,
+      'memberRemovedPermissions': memberRemovedPermissions,
+      'guestAddedPermissions': guestAddedPermissions,
+      'guestRemovedPermissions': guestRemovedPermissions,
     };
   }
 

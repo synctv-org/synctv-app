@@ -4,6 +4,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/playback_client_profile.dart';
 import 'package:synctv_app/models/room_management_models.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/room_media_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
@@ -124,7 +125,7 @@ class SyncTvRoomMediaDomainService {
           afterEventSequence: _watchSequence(version),
           request: client.ListPlaylistItemsRequest(
             playlistId: playlistId,
-            target: _decodeTarget(target) ?? const [],
+            target: providerTargetFromBase64(target),
             page: page,
             pageSize: pageSize,
             search: search,
@@ -182,7 +183,7 @@ class SyncTvRoomMediaDomainService {
       roomId,
       client.ListPlaylistItemsRequest(
         playlistId: playlistId,
-        target: _decodeTarget(target) ?? const [],
+        target: providerTargetFromBase64(target),
         page: page,
         pageSize: pageSize,
         search: search,
@@ -723,7 +724,12 @@ class SyncTvRoomMediaDomainService {
       client.GetChatPlaybackMessagesRequest(
         playbackMediaId: playbackMediaId,
         playbackPlaylistId: playbackPlaylistId,
-        playbackTarget: playbackTarget,
+        playbackTarget: playbackTarget.isEmpty
+            ? client.ProviderTarget()
+            : providerTargetFromJson(
+                Map<String, dynamic>.from(
+                    jsonDecode(utf8.decode(playbackTarget))),
+              ),
         positionSeconds: positionSeconds,
         beforeSeconds: beforeSeconds,
         afterSeconds: afterSeconds,
@@ -780,7 +786,7 @@ class SyncTvRoomMediaDomainService {
       sizeBytes: image.sizeBytes.toInt(),
       width: image.width,
       height: image.height,
-      metadata: List<int>.from(image.metadata),
+      metadata: utf8.encode(jsonEncode(fileMetadataToJson(image.metadata))),
     );
   }
 
@@ -846,7 +852,7 @@ class SyncTvRoomMediaDomainService {
     String providerInstanceName = '',
   }) {
     final sourceConfig = <String, dynamic>{
-      'server_id': serverId,
+      'serverId': serverId,
       'path': path,
     };
     if (password.isNotEmpty) sourceConfig['password'] = password;
@@ -874,8 +880,8 @@ class SyncTvRoomMediaDomainService {
       sourceProvider: 'emby',
       providerInstanceName: providerInstanceName,
       sourceConfig: {
-        'server_id': serverId,
-        'item_id': itemId,
+        'serverId': serverId,
+        'itemId': itemId,
       },
       name: name,
     );
@@ -904,7 +910,7 @@ class SyncTvRoomMediaDomainService {
     return _addMedia(
       roomId,
       playlistId: playlistId,
-      sourceProvider: 'live_proxy',
+      sourceProvider: 'liveProxy',
       sourceConfig: {'url': url},
       name: name,
     );
@@ -950,18 +956,18 @@ class SyncTvRoomMediaDomainService {
       client.AddMediaBatchRequest(
         items: items.map((item) {
           final description = item['description']?.toString().trim() ?? '';
+          final playlistId = item['playlistId']?.toString() ?? '';
+          final sourceProvider = item['sourceProvider']?.toString() ?? '';
           final request = client.AddMediaRequest(
-            playlistId: item['playlist_id']?.toString().isEmpty ?? true
-                ? null
-                : item['playlist_id']?.toString(),
+            playlistId: playlistId.isEmpty ? null : playlistId,
             sourceProvider: SourceConfigCodec.providerFromString(
-              item['source_provider']?.toString() ?? '',
+              sourceProvider,
             ),
             providerInstanceName:
-                item['provider_instance_name']?.toString() ?? '',
+                item['providerInstanceName']?.toString() ?? '',
             sourceConfig: SourceConfigCodec.mediaSourceConfigFromMap(
-              sourceProvider: item['source_provider']?.toString() ?? '',
-              sourceConfig: _dynamicMap(item['source_config']),
+              sourceProvider: sourceProvider,
+              sourceConfig: _dynamicMap(item['sourceConfig']),
             ),
             name: item['name']?.toString() ?? '',
           );
@@ -1013,18 +1019,19 @@ class SyncTvRoomMediaDomainService {
       await _api.room.stopPlayback(roomId, client.StopPlaybackRequest());
       return SyncTvPlaybackStatus();
     }
-    final target = _decodeTarget(subPath);
+    final target = providerTargetFromBase64(subPath);
+    final hasTarget = !providerTargetIsEmpty(target);
     final dynamicPlaylistId = playlistId ?? '';
     await _api.room.startPlayback(
       roomId,
       client.StartPlaybackRequest(
-        mediaId: target == null && movieId.startsWith('med_') ? movieId : '',
-        playlistId: target != null
+        mediaId: !hasTarget && movieId.startsWith('med_') ? movieId : '',
+        playlistId: hasTarget
             ? dynamicPlaylistId
             : movieId.startsWith('pl_')
                 ? movieId
                 : '',
-        target: target ?? const [],
+        target: target,
       ),
     );
     final current = await getCurrentMovie(roomId);
@@ -1137,15 +1144,6 @@ class SyncTvRoomMediaDomainService {
     };
   }
 
-  List<int>? _decodeTarget(String? value) {
-    if (value == null || value.isEmpty) return null;
-    try {
-      return base64Url.decode(value);
-    } catch (_) {
-      return utf8.encode(value);
-    }
-  }
-
   RoomMediaLibraryPage _mediaLibraryPageFromProto(
     client.ListPlaylistItemsResponse response, {
     String parentId = '',
@@ -1170,7 +1168,7 @@ class SyncTvRoomMediaDomainService {
     return PlaylistBrowsePathInfo(
       playlistId: node.playlistId,
       name: node.name,
-      target: base64Url.encode(node.target),
+      target: providerTargetToBase64(node.target),
     );
   }
 
@@ -1303,8 +1301,7 @@ class SyncTvRoomMediaDomainService {
   SyncTvPlaybackStatus _playbackStatusFromState(
     client.PlaybackState state,
   ) {
-    final encodedTarget =
-        state.target.isEmpty ? '' : base64Url.encode(state.target);
+    final encodedTarget = providerTargetToBase64(state.target);
     final movie = state.playingMediaId.isEmpty &&
             state.playingPlaylistId.isEmpty
         ? null

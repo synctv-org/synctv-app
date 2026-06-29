@@ -35,7 +35,7 @@ void main() {
 
     expect(find.byTooltip('粘贴'), findsNothing);
     expect(find.byTooltip('清空'), findsOneWidget);
-    expect(find.byType(FTextFormField), findsOneWidget);
+    expect(find.byType(TextFormField), findsOneWidget);
 
     await tester.tap(find.byTooltip('清空'));
     await tester.pump(const Duration(milliseconds: 150));
@@ -160,6 +160,37 @@ void main() {
     expect(childWidths, greaterThanOrEqualTo(2));
   });
 
+  testWidgets('AppAdaptiveSplitView keeps collapsed secondary usable',
+      (tester) async {
+    await tester.pumpWidget(
+      _app(
+        const SizedBox(
+          width: 400,
+          height: 600,
+          child: AppAdaptiveSplitView(
+            primary: ColoredBox(
+              key: ValueKey('primary'),
+              color: Colors.black,
+            ),
+            secondary: ColoredBox(
+              key: ValueKey('secondary'),
+              color: Colors.blue,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getSize(find.byKey(const ValueKey('primary'))).height,
+      closeTo(224, 1),
+    );
+    expect(
+      tester.getSize(find.byKey(const ValueKey('secondary'))).height,
+      closeTo(364, 1),
+    );
+  });
+
   testWidgets('AppTextField keeps the default text editing context menu',
       (tester) async {
     final controller = TextEditingController(text: 'room name');
@@ -215,7 +246,7 @@ void main() {
     undoController.dispose();
   });
 
-  testWidgets('AppTextField exposes setText semantics for accessibility',
+  testWidgets('AppTextField exposes one native editable text field',
       (tester) async {
     final semantics = tester.ensureSemantics();
     final controller = TextEditingController(text: 'old');
@@ -231,20 +262,56 @@ void main() {
       ),
     );
 
-    final field = find.semantics.byPredicate(
-      (node) =>
-          node.label == '用户名' &&
-          node.flagsCollection.isTextField &&
-          node.getSemanticsData().hasAction(ui.SemanticsAction.setText),
-      describeMatch: (_) => 'writable AppTextField semantics node',
-    );
-
-    expect(field, findsOne);
-    tester.semantics.setText(field, 'root');
+    expect(find.byType(EditableText), findsOne);
+    await tester.enterText(find.byType(EditableText), 'root');
     await tester.pump(const Duration(milliseconds: 150));
 
     expect(controller.text, 'root');
-    expect(changes, ['root']);
+    expect(changes.last, 'root');
+
+    controller.dispose();
+    semantics.dispose();
+  });
+
+  testWidgets('AppTextField semantic setText updates controller and onChanged',
+      (tester) async {
+    final semantics = tester.ensureSemantics();
+    final controller = TextEditingController();
+    final changes = <String>[];
+
+    await tester.pumpWidget(
+      _app(
+        AppTextField(
+          controller: controller,
+          label: '链接',
+          keyboardType: TextInputType.url,
+          onChanged: changes.add,
+        ),
+      ),
+    );
+
+    expect(
+      find.semantics.byPredicate(
+        (node) =>
+            node.getSemanticsData().hasAction(ui.SemanticsAction.setText),
+        describeMatch: (_) => 'setText action',
+      ),
+      findsWidgets,
+    );
+
+    tester.semantics.setText(
+      find.semantics.byPredicate(
+        (node) => node.getSemanticsData().hasAction(
+              ui.SemanticsAction.setText,
+            ),
+        describeMatch: (_) => 'setText action',
+      ),
+      'http://127.0.0.1:18080/valid-sample.mp4',
+    );
+    await tester.pump();
+
+    expect(controller.text, 'http://127.0.0.1:18080/valid-sample.mp4');
+    expect(changes.last, 'http://127.0.0.1:18080/valid-sample.mp4');
 
     controller.dispose();
     semantics.dispose();
@@ -341,7 +408,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(FTextFormField), findsOneWidget);
+    expect(find.byType(TextFormField), findsOneWidget);
     expect(find.byTooltip('显示'), findsOneWidget);
 
     await tester.tap(find.byTooltip('显示'));
@@ -404,7 +471,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(FTextFormField), findsOneWidget);
+    expect(find.byType(TextFormField), findsOneWidget);
     expect(find.text('GitHub'), findsOneWidget);
     expect(find.byTooltip('清空'), findsNothing);
     expect(find.byTooltip('粘贴'), findsNothing);

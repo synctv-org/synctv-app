@@ -61,6 +61,9 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
   bool _loadingSettings = true;
   bool _loadingTaxonomy = true;
   bool _creating = false;
+  bool _submitted = false;
+  String _nameError = '';
+  String _passwordError = '';
   _RoomAccessMode _accessMode = _RoomAccessMode.public;
   String _selectedCategoryId = '';
   final Set<String> _selectedLabelIds = <String>{};
@@ -206,7 +209,14 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
       }
       return;
     }
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final nameError = _validateName(_nameController.text);
+    final passwordError = _validatePassword(_passwordController.text);
+    setState(() {
+      _submitted = true;
+      _nameError = nameError ?? '';
+      _passwordError = passwordError ?? '';
+    });
+    if (nameError != null || passwordError != null) return;
 
     setState(() => _creating = true);
     try {
@@ -236,6 +246,20 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
         setState(() => _creating = false);
       }
     }
+  }
+
+  String? _validateName(String? value) {
+    final name = value?.trim() ?? '';
+    if (name.isEmpty) return '请输入房间名称';
+    if (name.length > 64) return '房间名称不能超过 64 个字符';
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (_needPassword && (value == null || value.isEmpty)) {
+      return '请输入房间密码';
+    }
+    return null;
   }
 
   @override
@@ -310,6 +334,9 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                         focusNode: _nameFocus,
                         label: '房间名称',
                         hintText: '例如 周末电影夜',
+                        errorText: _submitted && _nameError.isNotEmpty
+                            ? _nameError
+                            : null,
                         prefixIcon: Icons.meeting_room_outlined,
                         enabled: !_creating &&
                             !_creationDisabled &&
@@ -317,15 +344,11 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                         textInputAction: TextInputAction.next,
                         maxLength: 64,
                         counterText: '',
-                        validator: (value) {
-                          final name = value?.trim() ?? '';
-                          if (name.isEmpty) return '请输入房间名称';
-                          if (name.length > 64) {
-                            return '房间名称不能超过 64 个字符';
-                          }
-                          return null;
+                        onChanged: (value) {
+                          if (!_submitted) return;
+                          setState(
+                              () => _nameError = _validateName(value) ?? '');
                         },
-                        onChanged: (_) => _formKey.currentState?.validate(),
                       ),
                       const SizedBox(height: 12),
                       AppTextField(
@@ -379,20 +402,20 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                                     hintText: _passwordRequired
                                         ? '服务器要求设置密码'
                                         : '成员加入时需要输入',
+                                    errorText:
+                                        _submitted && _passwordError.isNotEmpty
+                                            ? _passwordError
+                                            : null,
                                     prefixIcon: Icons.lock_outline_rounded,
                                     enabled: !_creating &&
                                         !_creationDisabled &&
                                         _settingsError == null,
                                     obscureText: true,
-                                    validator: (value) {
-                                      if (_needPassword &&
-                                          (value == null || value.isEmpty)) {
-                                        return '请输入房间密码';
-                                      }
-                                      return null;
+                                    onChanged: (value) {
+                                      if (!_submitted) return;
+                                      setState(() => _passwordError =
+                                          _validatePassword(value) ?? '');
                                     },
-                                    onChanged: (_) =>
-                                        _formKey.currentState?.validate(),
                                   ),
                                 )
                               : const SizedBox.shrink(),

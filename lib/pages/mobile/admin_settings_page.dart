@@ -134,12 +134,12 @@ Future<void> _openContentReportsViewer(
 }
 
 const Map<String, String> _providerTypeLabels = {
-  'direct_url': 'Direct URL',
+  'directUrl': 'Direct URL',
   'alist': 'AList',
   'emby': 'Emby',
   'bilibili': 'Bilibili',
   'rtmp': 'RTMP',
-  'live_proxy': 'Live Proxy',
+  'liveProxy': 'Live Proxy',
 };
 
 String _providerTypeLabel(String provider) {
@@ -5828,12 +5828,12 @@ class _ProviderTypeSelector extends StatelessWidget {
 
 IconData _providerTypeIcon(String provider) {
   return switch (provider) {
-    'direct_url' => Icons.link_rounded,
+    'directUrl' => Icons.link_rounded,
     'alist' => Icons.folder_copy_outlined,
     'emby' => Icons.movie_filter_outlined,
     'bilibili' => Icons.live_tv_outlined,
     'rtmp' => Icons.podcasts_outlined,
-    'live_proxy' => Icons.route_rounded,
+    'liveProxy' => Icons.route_rounded,
     _ => Icons.extension_outlined,
   };
 }
@@ -6110,12 +6110,12 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                         value: _providerType,
                         options: const {
                           '全部类型': '',
-                          'Direct URL': 'direct_url',
+                          'Direct URL': 'directUrl',
                           'AList': 'alist',
                           'Emby': 'emby',
                           'Bilibili': 'bilibili',
                           'RTMP': 'rtmp',
-                          'Live Proxy': 'live_proxy',
+                          'Live Proxy': 'liveProxy',
                         },
                         onChanged: (value) {
                           if (value == null) return;
@@ -8536,7 +8536,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     final next = Map<String, dynamic>.from(providers);
     if (name != null && name != result.name) next.remove(name);
     next[result.name] = result.value;
-    await _updateSetting(group, 'providers', next);
+    await _updateSetting(group, 'providers', _oauth2ProvidersToProtoList(next));
   }
 
   Future<void> _deleteOAuth2Provider(
@@ -8561,7 +8561,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     );
     if (confirmed != true) return;
     final next = Map<String, dynamic>.from(providers)..remove(name);
-    await _updateSetting(group, 'providers', next);
+    await _updateSetting(group, 'providers', _oauth2ProvidersToProtoList(next));
   }
 
   Future<bool> _confirmRiskIfNeeded(_SettingDescriptor descriptor) async {
@@ -8890,7 +8890,13 @@ const List<_SettingChoice> _roomPasswordChoices = [
   _SettingChoice('forbidden', '禁用', '不允许新房间设置密码'),
 ];
 
-const List<String> _oauth2ProviderTypes = ['github', 'google', 'logto', 'oidc'];
+const List<String> _oauth2ProviderTypes = [
+  'github',
+  'google',
+  'logto',
+  'oidc',
+  'casdoor',
+];
 
 const Map<String, String> _oauth2ProviderTypeLabels = {
   'github': 'GitHub',
@@ -8958,115 +8964,115 @@ _SettingDescriptor _settingDescriptor(
 ) {
   final id = '$group.$key';
   final known = <String, _SettingDescriptor>{
-    'server.allow_room_creation': const _SettingDescriptor(
+    'server.allowRoomCreation': const _SettingDescriptor(
       group: 'server',
-      key: 'allow_room_creation',
+      key: 'allowRoomCreation',
       title: '允许创建房间',
       description: '控制普通用户是否可以创建新房间。',
       icon: Icons.add_home_work_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'server.max_rooms_per_user': const _SettingDescriptor(
+    'server.maxRoomsPerUser': const _SettingDescriptor(
       group: 'server',
-      key: 'max_rooms_per_user',
+      key: 'maxRoomsPerUser',
       title: '每个用户最多房间数',
       description: '限制单个用户可拥有的房间数量。',
       icon: Icons.meeting_room_outlined,
       kind: _SettingEditorKind.number,
     ),
-    'server.max_members_per_room': const _SettingDescriptor(
+    'server.maxMembersPerRoom': const _SettingDescriptor(
       group: 'server',
-      key: 'max_members_per_room',
+      key: 'maxMembersPerRoom',
       title: '每个房间最多成员数',
       description: '限制单个房间的成员上限。',
       icon: Icons.groups_2_outlined,
       kind: _SettingEditorKind.number,
     ),
-    'server.max_chat_messages': const _SettingDescriptor(
+    'server.maxChatMessages': const _SettingDescriptor(
       group: 'server',
-      key: 'max_chat_messages',
+      key: 'maxChatMessages',
       title: '房间聊天快照条数',
       description: '服务端保留并推送给客户端的聊天消息上限，0 表示不限制。',
       icon: Icons.forum_outlined,
       kind: _SettingEditorKind.number,
     ),
-    'room.disable_create_room': const _SettingDescriptor(
+    'room.disableCreateRoom': const _SettingDescriptor(
       group: 'room',
-      key: 'disable_create_room',
+      key: 'disableCreateRoom',
       title: '关闭创建房间',
       description: '打开后用户不能创建新房间，适合维护或封闭运营。',
       icon: Icons.block_outlined,
       kind: _SettingEditorKind.boolean,
       warning: '关闭创建房间会立刻影响所有用户的新建房间入口。',
     ),
-    'room.create_room_need_review': const _SettingDescriptor(
+    'room.createRoomNeedReview': const _SettingDescriptor(
       group: 'room',
-      key: 'create_room_need_review',
+      key: 'createRoomNeedReview',
       title: '创建房间需要审核',
       description: '打开后新建房间进入审核流程，通过后才可正常使用。',
       icon: Icons.fact_check_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'room.password_policy': const _SettingDescriptor(
+    'room.passwordPolicy': const _SettingDescriptor(
       group: 'room',
-      key: 'password_policy',
+      key: 'passwordPolicy',
       title: '房间密码策略',
       description: '统一约束新房间是否必须或禁止设置密码。',
       icon: Icons.password_rounded,
       kind: _SettingEditorKind.enumChoice,
       choices: _roomPasswordChoices,
     ),
-    'user.enable_password_signup': const _SettingDescriptor(
+    'user.enablePasswordSignup': const _SettingDescriptor(
       group: 'user',
-      key: 'enable_password_signup',
+      key: 'enablePasswordSignup',
       title: '允许密码注册',
       description: '用户可以使用用户名和密码注册账号。',
       icon: Icons.person_add_alt_1_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.password_signup_need_review': const _SettingDescriptor(
+    'user.passwordSignupNeedReview': const _SettingDescriptor(
       group: 'user',
-      key: 'password_signup_need_review',
+      key: 'passwordSignupNeedReview',
       title: '密码注册需要审核',
       description: '新账号注册后需要管理员审核。',
       icon: Icons.how_to_reg_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.enable_email_signup': const _SettingDescriptor(
+    'user.enableEmailSignup': const _SettingDescriptor(
       group: 'user',
-      key: 'enable_email_signup',
+      key: 'enableEmailSignup',
       title: '允许邮箱注册',
       description: '用户可以通过邮箱验证码注册账号。',
       icon: Icons.alternate_email_rounded,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.email_signup_need_review': const _SettingDescriptor(
+    'user.emailSignupNeedReview': const _SettingDescriptor(
       group: 'user',
-      key: 'email_signup_need_review',
+      key: 'emailSignupNeedReview',
       title: '邮箱注册需要审核',
       description: '邮箱注册完成后仍需管理员审核。',
       icon: Icons.mark_email_read_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.enable_webauthn_signup': const _SettingDescriptor(
+    'user.enableWebauthnSignup': const _SettingDescriptor(
       group: 'user',
-      key: 'enable_webauthn_signup',
+      key: 'enableWebauthnSignup',
       title: '允许 Passkey 注册',
       description: '用户可以使用系统 Passkey 能力创建账号。',
       icon: Icons.fingerprint_rounded,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.webauthn_signup_need_review': const _SettingDescriptor(
+    'user.webauthnSignupNeedReview': const _SettingDescriptor(
       group: 'user',
-      key: 'webauthn_signup_need_review',
+      key: 'webauthnSignupNeedReview',
       title: 'Passkey 注册需要审核',
       description: 'Passkey 注册后需要管理员审核。',
       icon: Icons.verified_user_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.enable_guest': const _SettingDescriptor(
+    'user.enableGuest': const _SettingDescriptor(
       group: 'user',
-      key: 'enable_guest',
+      key: 'enableGuest',
       title: '允许游客',
       description: '未登录用户可以以游客身份进入允许游客的房间。',
       icon: Icons.person_outline_rounded,
@@ -9082,35 +9088,35 @@ _SettingDescriptor _settingDescriptor(
       kind: _SettingEditorKind.oauth2Providers,
       warning: 'OAuth2 配置会影响登录入口。错误的回调地址、密钥或端点会导致第三方登录不可用。',
     ),
-    'proxy.movie_proxy': const _SettingDescriptor(
+    'proxy.movieProxy': const _SettingDescriptor(
       group: 'proxy',
-      key: 'movie_proxy',
+      key: 'movieProxy',
       title: '影片代理',
       description: '允许服务端代理影片资源请求。',
       icon: Icons.movie_filter_outlined,
       kind: _SettingEditorKind.boolean,
       warning: '代理能力可能把用户配置的认证信息发送给目标媒体站点，并随播放资源发布给房间成员。仅在信任成员和媒体来源时启用。',
     ),
-    'proxy.live_proxy': const _SettingDescriptor(
+    'proxy.liveProxy': const _SettingDescriptor(
       group: 'proxy',
-      key: 'live_proxy',
+      key: 'liveProxy',
       title: '直播代理',
       description: '允许服务端代理直播流请求。',
       icon: Icons.live_tv_outlined,
       kind: _SettingEditorKind.boolean,
       warning: '直播代理可能转发敏感请求头或 Cookie，并通过播放信息暴露给房间成员。请确认来源可信。',
     ),
-    'rtmp.custom_publish_host': const _SettingDescriptor(
+    'rtmp.customPublishHost': const _SettingDescriptor(
       group: 'rtmp',
-      key: 'custom_publish_host',
+      key: 'customPublishHost',
       title: '推流发布地址',
       description: '覆盖对外展示的 RTMP 发布主机，留空使用服务端默认地址。',
       icon: Icons.podcasts_outlined,
       kind: _SettingEditorKind.text,
     ),
-    'rtmp.ts_disguised_as_png': const _SettingDescriptor(
+    'rtmp.tsDisguisedAsPng': const _SettingDescriptor(
       group: 'rtmp',
-      key: 'ts_disguised_as_png',
+      key: 'tsDisguisedAsPng',
       title: 'TS 分片伪装为 PNG',
       description: '将 HLS TS 分片以 PNG 后缀暴露，用于部分网络环境兼容。',
       icon: Icons.image_outlined,
@@ -9125,33 +9131,33 @@ _SettingDescriptor _settingDescriptor(
       kind: _SettingEditorKind.boolean,
       warning: '启用前请确认 SMTP 主机、发件地址和认证信息正确，否则邮件登录、邮箱绑定、找回密码和通知会不可用。',
     ),
-    'email.smtp_host': const _SettingDescriptor(
+    'email.smtpHost': const _SettingDescriptor(
       group: 'email',
-      key: 'smtp_host',
+      key: 'smtpHost',
       title: 'SMTP 主机',
       description: '邮件服务器地址。留空表示不配置发信能力。',
       icon: Icons.dns_outlined,
       kind: _SettingEditorKind.text,
     ),
-    'email.smtp_port': const _SettingDescriptor(
+    'email.smtpPort': const _SettingDescriptor(
       group: 'email',
-      key: 'smtp_port',
+      key: 'smtpPort',
       title: 'SMTP 端口',
       description: '常用端口为 587、465 或 25。',
       icon: Icons.numbers_rounded,
       kind: _SettingEditorKind.number,
     ),
-    'email.smtp_username': const _SettingDescriptor(
+    'email.smtpUsername': const _SettingDescriptor(
       group: 'email',
-      key: 'smtp_username',
+      key: 'smtpUsername',
       title: 'SMTP 用户名',
       description: 'SMTP 登录用户名，通常是发件邮箱或服务商生成的账号。',
       icon: Icons.person_outline_rounded,
       kind: _SettingEditorKind.text,
     ),
-    'email.smtp_password': const _SettingDescriptor(
+    'email.smtpPassword': const _SettingDescriptor(
       group: 'email',
-      key: 'smtp_password',
+      key: 'smtpPassword',
       title: 'SMTP 密码',
       description: 'SMTP 登录密码或服务商生成的应用专用密码。',
       icon: Icons.password_rounded,
@@ -9159,34 +9165,34 @@ _SettingDescriptor _settingDescriptor(
       secret: true,
       warning: 'SMTP 密码属于敏感凭据。保存前请确认当前环境和管理员账号可信。',
     ),
-    'email.use_tls': const _SettingDescriptor(
+    'email.useTls': const _SettingDescriptor(
       group: 'email',
-      key: 'use_tls',
+      key: 'useTls',
       title: '使用 TLS',
       description: '启用 SMTP TLS/STARTTLS。除本地调试外通常应保持开启。',
       icon: Icons.enhanced_encryption_outlined,
       kind: _SettingEditorKind.boolean,
       warning: '关闭 TLS 可能导致邮件认证信息明文传输，只应在受控内网或调试环境使用。',
     ),
-    'email.from_email': const _SettingDescriptor(
+    'email.fromEmail': const _SettingDescriptor(
       group: 'email',
-      key: 'from_email',
+      key: 'fromEmail',
       title: '发件邮箱',
       description: '邮件 From 地址。配置 SMTP 时必须是合法邮箱地址。',
       icon: Icons.alternate_email_rounded,
       kind: _SettingEditorKind.text,
     ),
-    'email.from_name': const _SettingDescriptor(
+    'email.fromName': const _SettingDescriptor(
       group: 'email',
-      key: 'from_name',
+      key: 'fromName',
       title: '发件人显示名',
       description: '用户收到邮件时看到的发件人名称。',
       icon: Icons.badge_outlined,
       kind: _SettingEditorKind.text,
     ),
-    'email.whitelist_enabled': const _SettingDescriptor(
+    'email.whitelistEnabled': const _SettingDescriptor(
       group: 'email',
-      key: 'whitelist_enabled',
+      key: 'whitelistEnabled',
       title: '启用邮箱白名单',
       description: '限制邮箱注册只能使用指定域名或邮箱。',
       icon: Icons.mark_email_unread_outlined,
@@ -9200,34 +9206,34 @@ _SettingDescriptor _settingDescriptor(
       icon: Icons.playlist_add_check_rounded,
       kind: _SettingEditorKind.stringList,
     ),
-    'webrtc.external_ice_servers': const _SettingDescriptor(
+    'webrtc.externalIceServers': const _SettingDescriptor(
       group: 'webrtc',
-      key: 'external_ice_servers',
+      key: 'externalIceServers',
       title: '外部 ICE 服务器',
       description: '向客户端下发的 STUN/TURN 服务器列表。',
       icon: Icons.settings_input_antenna_rounded,
       kind: _SettingEditorKind.iceServers,
       warning: 'TURN 用户名和凭据会下发给客户端。请使用最小权限、可轮换的账号。',
     ),
-    'chat.max_messages_per_room': const _SettingDescriptor(
+    'chat.maxMessagesPerRoom': const _SettingDescriptor(
       group: 'chat',
-      key: 'max_messages_per_room',
+      key: 'maxMessagesPerRoom',
       title: '每个房间保留聊天数',
       description: '聊天消息按房间保留的数量上限，0 表示不限制。',
       icon: Icons.chat_bubble_outline_rounded,
       kind: _SettingEditorKind.number,
     ),
-    'chat.message_retention_days': const _SettingDescriptor(
+    'chat.messageRetentionDays': const _SettingDescriptor(
       group: 'chat',
-      key: 'message_retention_days',
+      key: 'messageRetentionDays',
       title: '聊天保留天数',
       description: '聊天消息的最长保留时间。',
       icon: Icons.history_toggle_off_rounded,
       kind: _SettingEditorKind.number,
     ),
-    'cors.allowed_origins': const _SettingDescriptor(
+    'cors.allowedOrigins': const _SettingDescriptor(
       group: 'cors',
-      key: 'allowed_origins',
+      key: 'allowedOrigins',
       title: '允许跨域来源',
       description: '允许访问代理接口的 Web Origin 列表，原生客户端通常不需要配置。',
       icon: Icons.public_rounded,
@@ -9309,12 +9315,14 @@ String _settingSummary(dynamic value, _SettingDescriptor descriptor) {
     case _SettingEditorKind.boolean:
       return value == true ? '已开启' : '已关闭';
     case _SettingEditorKind.oauth2Providers:
-      final map = value is Map ? value : const {};
+      final map = value is Map
+          ? Map<String, dynamic>.from(value)
+          : const <String, dynamic>{};
       if (map.isEmpty) return '未配置第三方登录';
       final enabled = map.values.where((entry) {
         if (entry is! Map) return false;
-        return (entry['config'] is Map) &&
-            (entry['config']['client_id'] ?? '').toString().isNotEmpty;
+        final config = _oauth2ProviderConfig(Map<String, dynamic>.from(entry));
+        return (config['clientId'] ?? '').toString().isNotEmpty;
       }).length;
       return '${map.length} 个实例，$enabled 个已填写 Client ID';
     case _SettingEditorKind.iceServers:
@@ -10160,14 +10168,68 @@ class _PermissionListSettingEditor extends StatelessWidget {
 }
 
 Map<String, dynamic> _oauth2ProvidersFromValue(dynamic value) {
-  if (value is Map) return Map<String, dynamic>.from(value);
+  List<dynamic> list;
+  if (value is Map) {
+    final providers = value['providers'];
+    if (providers is List) return _oauth2ProvidersFromList(providers);
+    return Map<String, dynamic>.from(value);
+  }
   if (value is String && value.trim().isNotEmpty) {
     try {
       final decoded = jsonDecode(value);
-      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      if (decoded is Map) return _oauth2ProvidersFromValue(decoded);
+      if (decoded is List) {
+        list = decoded;
+        return _oauth2ProvidersFromList(list);
+      }
     } catch (_) {}
   }
+  if (value is List) return _oauth2ProvidersFromList(value);
   return <String, dynamic>{};
+}
+
+Map<String, dynamic> _oauth2ProvidersFromList(List<dynamic> providers) {
+  return {
+    for (final provider in providers)
+      if (provider is Map)
+        (provider['instanceName'] ?? '').toString():
+            Map<String, dynamic>.from(provider)
+  }..remove('');
+}
+
+Map<String, dynamic> _oauth2ProviderConfig(Map<String, dynamic> value) {
+  for (final type in _oauth2ProviderTypes) {
+    final config = value[type];
+    if (config is Map) return Map<String, dynamic>.from(config);
+  }
+  return <String, dynamic>{};
+}
+
+String _oauth2ProviderType(Map<String, dynamic> value) {
+  final type = (value['type'] ?? '').toString();
+  if (_oauth2ProviderTypes.contains(type)) return type;
+  for (final candidate in _oauth2ProviderTypes) {
+    if (value[candidate] is Map) return candidate;
+  }
+  return 'oidc';
+}
+
+List<Map<String, dynamic>> _oauth2ProvidersToProtoList(
+  Map<String, dynamic> providers,
+) {
+  return providers.entries.map((entry) {
+    final value = entry.value is Map
+        ? Map<String, dynamic>.from(entry.value)
+        : <String, dynamic>{};
+    final type = _oauth2ProviderType(value);
+    final config = _oauth2ProviderConfig(value);
+    return <String, dynamic>{
+      'instanceName': entry.key,
+      'enableSignup': value['enableSignup'] == true,
+      'signupNeedReview': value['signupNeedReview'] == true,
+      type: config,
+    };
+  }).toList(growable: false);
 }
 
 List<Map<String, dynamic>> _iceServersFromValue(dynamic value) {
@@ -10317,11 +10379,9 @@ class _OAuth2ProviderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final providerType = (value['type'] ?? '').toString();
-    final config = value['config'] is Map
-        ? Map<String, dynamic>.from(value['config'])
-        : const {};
-    final hasClientId = (config['client_id'] ?? '').toString().isNotEmpty;
+    final providerType = _oauth2ProviderType(value);
+    final config = _oauth2ProviderConfig(value);
+    final hasClientId = (config['clientId'] ?? '').toString().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: AppCard(
@@ -10353,13 +10413,12 @@ class _OAuth2ProviderCard extends StatelessWidget {
                     runSpacing: 8,
                     children: [
                       _StatusChip(
-                        label:
-                            value['enable_signup'] == true ? '允许注册' : '仅登录绑定',
-                        icon: value['enable_signup'] == true
+                        label: value['enableSignup'] == true ? '允许注册' : '仅登录绑定',
+                        icon: value['enableSignup'] == true
                             ? Icons.person_add_alt_1_outlined
                             : Icons.login_rounded,
                       ),
-                      if (value['signup_need_review'] == true)
+                      if (value['signupNeedReview'] == true)
                         const _StatusChip(
                             label: '注册需审核', icon: Icons.fact_check_outlined),
                     ],
@@ -10455,31 +10514,29 @@ class _OAuth2ProviderEditorSheetState
   @override
   void initState() {
     super.initState();
-    final config = widget.initialValue['config'] is Map
-        ? Map<String, dynamic>.from(widget.initialValue['config'])
-        : <String, dynamic>{};
-    _type = (widget.initialValue['type'] ?? 'github').toString();
+    final config = _oauth2ProviderConfig(widget.initialValue);
+    _type = _oauth2ProviderType(widget.initialValue);
     if (!_oauth2ProviderTypes.contains(_type)) _type = 'oidc';
-    _enableSignup = widget.initialValue['enable_signup'] == true;
-    _signupNeedReview = widget.initialValue['signup_need_review'] == true;
+    _enableSignup = widget.initialValue['enableSignup'] == true;
+    _signupNeedReview = widget.initialValue['signupNeedReview'] == true;
     _name = TextEditingController(text: widget.initialName ?? _type);
     _clientId =
-        TextEditingController(text: (config['client_id'] ?? '').toString());
+        TextEditingController(text: (config['clientId'] ?? '').toString());
     _clientSecret =
-        TextEditingController(text: (config['client_secret'] ?? '').toString());
+        TextEditingController(text: (config['clientSecret'] ?? '').toString());
     _redirectUrl =
-        TextEditingController(text: (config['redirect_url'] ?? '').toString());
+        TextEditingController(text: (config['redirectUrl'] ?? '').toString());
     _endpoint =
         TextEditingController(text: (config['endpoint'] ?? '').toString());
     _issuer = TextEditingController(text: (config['issuer'] ?? '').toString());
     _authUrl =
-        TextEditingController(text: (config['auth_url'] ?? '').toString());
+        TextEditingController(text: (config['authUrl'] ?? '').toString());
     _tokenUrl =
-        TextEditingController(text: (config['token_url'] ?? '').toString());
+        TextEditingController(text: (config['tokenUrl'] ?? '').toString());
     _userinfoUrl =
-        TextEditingController(text: (config['userinfo_url'] ?? '').toString());
+        TextEditingController(text: (config['userinfoUrl'] ?? '').toString());
     _jwksUrl =
-        TextEditingController(text: (config['jwks_url'] ?? '').toString());
+        TextEditingController(text: (config['jwksUrl'] ?? '').toString());
   }
 
   @override
@@ -10725,9 +10782,9 @@ class _OAuth2ProviderEditorSheetState
   void _save() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final config = <String, dynamic>{
-      'client_id': _clientId.text.trim(),
-      'client_secret': _clientSecret.text,
-      'redirect_url': _redirectUrl.text.trim(),
+      'clientId': _clientId.text.trim(),
+      'clientSecret': _clientSecret.text,
+      'redirectUrl': _redirectUrl.text.trim(),
     };
     if (_type == 'logto') {
       config['endpoint'] = _endpoint.text.trim();
@@ -10735,10 +10792,10 @@ class _OAuth2ProviderEditorSheetState
     if (_type == 'oidc') {
       config['issuer'] = _issuer.text.trim();
       for (final entry in {
-        'auth_url': _authUrl.text.trim(),
-        'token_url': _tokenUrl.text.trim(),
-        'userinfo_url': _userinfoUrl.text.trim(),
-        'jwks_url': _jwksUrl.text.trim(),
+        'authUrl': _authUrl.text.trim(),
+        'tokenUrl': _tokenUrl.text.trim(),
+        'userinfoUrl': _userinfoUrl.text.trim(),
+        'jwksUrl': _jwksUrl.text.trim(),
       }.entries) {
         if (entry.value.isNotEmpty) config[entry.key] = entry.value;
       }
@@ -10749,9 +10806,9 @@ class _OAuth2ProviderEditorSheetState
         _name.text.trim(),
         {
           'type': _type,
-          'enable_signup': _enableSignup,
-          'signup_need_review': _enableSignup && _signupNeedReview,
-          'config': config,
+          'enableSignup': _enableSignup,
+          'signupNeedReview': _enableSignup && _signupNeedReview,
+          _type: config,
         },
       ),
     );

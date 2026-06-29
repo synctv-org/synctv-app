@@ -20,13 +20,14 @@ import 'package:synctv_app/utils/local_image_picker.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/app_responsive_layout.dart';
+import 'package:synctv_app/widgets/add_movie_dialog.dart';
 import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 
 const Map<String, String> _mediaSourceLabels = {
   '': '全部来源',
-  'direct_url': '直链',
+  'directUrl': '直链',
   'bilibili': 'Bilibili',
   'alist': 'AList',
   'emby': 'Emby',
@@ -241,6 +242,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _mediaLoading = false;
   bool _mediaProviderInstancesLoading = false;
   bool _chatLoading = false;
+  bool _reviewsLoaded = false;
   final Set<String> _chatReceiptLoadingIds = {};
   bool _iceLoading = false;
   bool _coverUpdating = false;
@@ -258,7 +260,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 9, vsync: this);
+    _tabController = TabController(length: _sections.length, vsync: this);
+    _tabController.addListener(_handleTabChanged);
     _settings = widget.currentSettings;
     _currentUserId = widget.currentUserId;
     _passwordController = TextEditingController();
@@ -276,7 +279,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     });
     _applySettings(_settings);
     _loadStreams();
-    _loadReviews();
     _loadMembers();
     _loadMediaProviderInstances();
     _loadMediaLibrary();
@@ -312,6 +314,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _realtimeMessageSubscription?.cancel();
     _realtimeEventSubscription?.cancel();
     _realtimeReconnectSubscription?.cancel();
+    _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     _passwordController.dispose();
     _maxMembersController.dispose();
@@ -321,6 +324,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _mediaSearchController.dispose();
     _chatSearchController.dispose();
     super.dispose();
+  }
+
+  void _handleTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    final selected = _sections[_tabController.index].label;
+    if (selected == '审核' && !_reviewsLoaded && !_reviewsLoading) {
+      _loadReviews();
+    }
   }
 
   void _applySettings(SyncTvRoomSettings settings) {
@@ -422,6 +433,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     } finally {
       if (mounted) setState(() => _passwordUpdating = false);
     }
+  }
+
+  bool get _canSubmitPasswordChange {
+    if (_passwordUpdating) return false;
+    final password = _passwordController.text.trim();
+    return password.isNotEmpty || _settings.requirePassword;
+  }
+
+  String get _passwordActionLabel {
+    if (_passwordController.text.trim().isNotEmpty) return '保存密码';
+    return _settings.requirePassword ? '移除密码' : '无需操作';
   }
 
   void _startSettingsWatch() {
@@ -952,6 +974,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _loadReviews() async {
     if (!mounted) return;
+    _reviewsLoaded = true;
     setState(() => _reviewsLoading = true);
     try {
       final page = await SyncTvService.listRoomJoinReviewsPage(
@@ -1906,6 +1929,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
+  Future<void> _addMediaToCurrentScope() async {
+    if (!_canMutateCurrentMediaScope) {
+      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      return;
+    }
+    await AddMovieDialog.show(
+      context,
+      widget.roomId,
+      parentId: _currentPlaylistId.isEmpty ? null : _currentPlaylistId,
+    );
+    await _loadMediaLibrary();
+  }
+
   Future<void> _clearCurrentMediaScope() async {
     if (!_canMutateCurrentMediaScope) {
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
@@ -2071,7 +2107,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     _buildDetailLine(
                       '类型',
                       isPlaylist
-                          ? detail.metadata['is_dynamic'] == true
+                          ? detail.metadata['isDynamic'] == true
                               ? '动态播放列表'
                               : '播放列表'
                           : detail.isFolder
@@ -3493,6 +3529,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 ),
                 if (canMutateScope) ...[
                   AppIconButton(
+                    tooltip: '添加媒体',
+                    onPressed: _mediaLoading ? null : _addMediaToCurrentScope,
+                    icon: Icons.add_to_queue_rounded,
+                    style: AppIconButtonStyle.tonal,
+                  ),
+                  AppIconButton(
                     tooltip: '新建播放列表',
                     onPressed: _createPlaylist,
                     icon: Icons.create_new_folder,
@@ -3807,15 +3849,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         summary: _isSaving ? '正在保存设置' : '监听设置变更',
         stats: _settingsWatchStats,
         details: {
-          'require_password': _settings.requirePassword,
-          'allow_guest_join': _settings.allowGuestJoin,
-          'allow_auto_join': _settings.allowAutoJoin,
-          'require_approval': _settings.requireApproval,
-          'chat_enabled': _settings.chatEnabled,
-          'danmaku_enabled': _settings.danmakuEnabled,
-          'max_members': _settings.maxMembers,
-          'member_permissions': _settings.effectiveMemberPermissions,
-          'guest_permissions': _settings.effectiveGuestPermissions,
+          'requirePassword': _settings.requirePassword,
+          'allowGuestJoin': _settings.allowGuestJoin,
+          'allowAutoJoin': _settings.allowAutoJoin,
+          'requireApproval': _settings.requireApproval,
+          'chatEnabled': _settings.chatEnabled,
+          'danmakuEnabled': _settings.danmakuEnabled,
+          'maxMembers': _settings.maxMembers,
+          'memberPermissions': _settings.effectiveMemberPermissions,
+          'guestPermissions': _settings.effectiveGuestPermissions,
         },
       ),
       _RealtimeResourceDebugInfo(
@@ -3831,14 +3873,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             : '$_membersOnlineCount 在线 / $_membersTotal 总数',
         stats: _membersWatchStats,
         details: {
-          'page_count': _members.length,
+          'pageCount': _members.length,
           'total': _membersTotal,
           'online': _membersOnlineCount,
           'page': _membersPage,
-          'page_size': _membersPageSize,
-          'role_filter': _memberRoleFilter?.name ?? '',
-          'sort_by': _memberSortBy.name,
-          'sort_direction': _memberSortDirection.name,
+          'pageSize': _membersPageSize,
+          'roleFilter': _memberRoleFilter?.name ?? '',
+          'sortBy': _memberSortBy.name,
+          'sortDirection': _memberSortDirection.name,
           'search': _memberSearchController.text.trim(),
         },
       ),
@@ -3857,15 +3899,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         details: {
           'entries': mediaEntries,
           'total': mediaPage?.total ?? 0,
-          'folder_count': mediaPage?.folderCount ?? 0,
-          'file_count': mediaPage?.fileCount ?? 0,
-          'playlist_id': _currentPlaylistId,
+          'folderCount': mediaPage?.folderCount ?? 0,
+          'fileCount': mediaPage?.fileCount ?? 0,
+          'playlistId': _currentPlaylistId,
           'target': _mediaTarget,
-          'source_provider': _mediaSourceProvider,
-          'provider_instance_name': _mediaProviderInstanceName,
+          'sourceProvider': _mediaSourceProvider,
+          'providerInstanceName': _mediaProviderInstanceName,
           'availability': _mediaAvailability.name,
-          'sort_by': _mediaSortBy.name,
-          'sort_direction': _mediaSortDirection.name,
+          'sortBy': _mediaSortBy.name,
+          'sortDirection': _mediaSortDirection.name,
           'search': _mediaSearchController.text.trim(),
         },
       ),
@@ -3885,7 +3927,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           'unread': _chatReadState?.unreadCount ?? 0,
           'last_read_event_sequence':
               _chatReadState?.lastReadEventSequence ?? 0,
-          'chat_enabled': _settings.chatEnabled,
+          'chatEnabled': _settings.chatEnabled,
         },
       ),
     ];
@@ -3925,6 +3967,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       resource.version.isNotEmpty ||
       resource.stats.observed > 0 ||
       resource.stats.changed > 0;
+
+  String _realtimeResourceStatusLabel(_RealtimeResourceDebugInfo resource) {
+    final state = _isRealtimeResourceReady(resource)
+        ? (resource.version.isEmpty ? 'ready' : resource.version)
+        : 'pending';
+    return '${resource.observeId}: $state';
+  }
 
   Widget _buildRealtimeOverview(
     List<_RealtimeResourceDebugInfo> resources,
@@ -4085,10 +4134,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildDebugLine(
               theme,
               '监听状态',
-              resources
-                  .map((item) =>
-                      '${item.observeId}:${_isRealtimeResourceReady(item) ? (item.version.isEmpty ? 'ready' : item.version) : 'pending'}')
-                  .join('  '),
+              resources.map(_realtimeResourceStatusLabel).join('\n'),
             ),
           ],
         ),
@@ -4415,6 +4461,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       child: AppSelect<common_enum.RoomMemberRole?>(
                         value: _memberRoleFilter,
                         label: '角色',
+                        hintText: '全部角色',
                         options: const {
                           '全部角色': null,
                           '房主': common_enum
@@ -5469,7 +5516,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   String _mediaSubtitle(SyncTvMovie entry) {
     if (entry.id.startsWith('pl_')) {
-      final mode = entry.metadata['is_dynamic'] == true ? '动态播放列表' : '播放列表';
+      final mode = entry.metadata['isDynamic'] == true ? '动态播放列表' : '播放列表';
       return '$mode · ${entry.sourceProvider.isEmpty ? 'static' : entry.sourceProvider}';
     }
     if (entry.id.startsWith('med_')) {
@@ -5938,6 +5985,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 label: '新密码',
                 helperText: '留空提交会移除房间密码',
                 obscureText: true,
+                onChanged: (_) => setState(() {}),
                 suffix: AppIconButton(
                   tooltip: '清空',
                   icon: Icons.clear,
@@ -5962,12 +6010,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     ),
                   ),
                   AppActionButton(
-                    onPressed: _passwordUpdating ? null : _updateRoomPassword,
+                    onPressed:
+                        _canSubmitPasswordChange ? _updateRoomPassword : null,
                     loading: _passwordUpdating,
                     icon: Icons.password_rounded,
-                    label: _passwordController.text.trim().isEmpty
-                        ? '移除密码'
-                        : '更新密码',
+                    label: _passwordActionLabel,
                     style: AppActionButtonStyle.tonal,
                   ),
                 ],

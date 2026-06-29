@@ -28,6 +28,13 @@
 	<string>我们需要您的相机权限来进行视频通话。</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>我们需要本地网络权限来发现和连接附近的设备。</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSHumanReadableCopyright</key>
 	<string>$(PRODUCT_COPYRIGHT)</string>
 	<key>NSMainNibFile</key>

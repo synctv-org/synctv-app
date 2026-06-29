@@ -58,6 +58,8 @@ class AppAdaptiveSplitView extends StatelessWidget {
   final double maxSecondaryWidth;
   final double spacing;
   final double collapsedPrimaryAspectRatio;
+  final double collapsedPrimaryMaxHeightFraction;
+  final double? collapsedSecondaryMinHeight;
   final CrossAxisAlignment crossAxisAlignment;
 
   const AppAdaptiveSplitView({
@@ -69,6 +71,8 @@ class AppAdaptiveSplitView extends StatelessWidget {
     this.maxSecondaryWidth = 420,
     this.spacing = 12,
     this.collapsedPrimaryAspectRatio = 16 / 9,
+    this.collapsedPrimaryMaxHeightFraction = 0.56,
+    this.collapsedSecondaryMinHeight,
     this.crossAxisAlignment = CrossAxisAlignment.stretch,
   });
 
@@ -80,15 +84,25 @@ class AppAdaptiveSplitView extends StatelessWidget {
         final canSplit =
             availableWidth >= minPrimaryWidth + minSecondaryWidth + spacing;
         if (!canSplit) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          final aspectHeight = availableWidth / collapsedPrimaryAspectRatio;
+          final primaryHeight = constraints.hasBoundedHeight
+              ? aspectHeight
+                  .clamp(0, constraints.maxHeight * collapsedPrimaryMaxHeightFraction)
+                  .toDouble()
+              : aspectHeight;
+          final remainingHeight =
+              constraints.maxHeight - primaryHeight - spacing;
+          final minSecondaryHeight =
+              collapsedSecondaryMinHeight ?? minSecondaryWidth;
+          final secondaryHeight = remainingHeight >= minSecondaryHeight
+              ? remainingHeight
+              : minSecondaryHeight;
+          return ListView(
+            padding: EdgeInsets.zero,
             children: [
-              AspectRatio(
-                aspectRatio: collapsedPrimaryAspectRatio,
-                child: primary,
-              ),
+              SizedBox(height: primaryHeight, child: primary),
               SizedBox(height: spacing),
-              Expanded(child: secondary),
+              SizedBox(height: secondaryHeight, child: secondary),
             ],
           );
         }

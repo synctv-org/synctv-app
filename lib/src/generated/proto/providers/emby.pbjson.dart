@@ -19,8 +19,8 @@ import 'dart:typed_data' as $typed_data;
 const LoginRequest$json = {
   '1': 'LoginRequest',
   '2': [
-    {'1': 'host', '3': 1, '4': 1, '5': 9, '10': 'host'},
-    {'1': 'username', '3': 2, '4': 1, '5': 9, '10': 'username'},
+    {'1': 'host', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'host'},
+    {'1': 'username', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'username'},
     {'1': 'password', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'password'},
     {'1': 'api_key', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'apiKey'},
     {'1': 'instance_name', '3': 5, '4': 1, '5': 9, '10': 'instanceName'},
@@ -32,10 +32,10 @@ const LoginRequest$json = {
 
 /// Descriptor for `LoginRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List loginRequestDescriptor = $convert.base64Decode(
-    'CgxMb2dpblJlcXVlc3QSEgoEaG9zdBgBIAEoCVIEaG9zdBIaCgh1c2VybmFtZRgCIAEoCVIIdX'
-    'Nlcm5hbWUSHAoIcGFzc3dvcmQYAyABKAlIAFIIcGFzc3dvcmQSGQoHYXBpX2tleRgEIAEoCUgA'
-    'UgZhcGlLZXkSIwoNaW5zdGFuY2VfbmFtZRgFIAEoCVIMaW5zdGFuY2VOYW1lQgwKCmNyZWRlbn'
-    'RpYWw=');
+    'CgxMb2dpblJlcXVlc3QSGwoEaG9zdBgBIAEoCUIHukgEcgIQAVIEaG9zdBIjCgh1c2VybmFtZR'
+    'gCIAEoCUIHukgEcgIQAVIIdXNlcm5hbWUSHAoIcGFzc3dvcmQYAyABKAlIAFIIcGFzc3dvcmQS'
+    'GQoHYXBpX2tleRgEIAEoCUgAUgZhcGlLZXkSIwoNaW5zdGFuY2VfbmFtZRgFIAEoCVIMaW5zdG'
+    'FuY2VOYW1lQgwKCmNyZWRlbnRpYWw=');
 
 @$core.Deprecated('Use loginResponseDescriptor instead')
 const LoginResponse$json = {
@@ -58,7 +58,7 @@ final $typed_data.Uint8List loginResponseDescriptor = $convert.base64Decode(
 const ListRequest$json = {
   '1': 'ListRequest',
   '2': [
-    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '10': 'serverId'},
+    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
     {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
     {'1': 'start_index', '3': 3, '4': 1, '5': 4, '10': 'startIndex'},
     {'1': 'limit', '3': 4, '4': 1, '5': 4, '10': 'limit'},
@@ -69,10 +69,10 @@ const ListRequest$json = {
 
 /// Descriptor for `ListRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listRequestDescriptor = $convert.base64Decode(
-    'CgtMaXN0UmVxdWVzdBIbCglzZXJ2ZXJfaWQYASABKAlSCHNlcnZlcklkEhIKBHBhdGgYAiABKA'
-    'lSBHBhdGgSHwoLc3RhcnRfaW5kZXgYAyABKARSCnN0YXJ0SW5kZXgSFAoFbGltaXQYBCABKARS'
-    'BWxpbWl0Eh8KC3NlYXJjaF90ZXJtGAUgASgJUgpzZWFyY2hUZXJtEiMKDWluc3RhbmNlX25hbW'
-    'UYBiABKAlSDGluc3RhbmNlTmFtZQ==');
+    'CgtMaXN0UmVxdWVzdBIkCglzZXJ2ZXJfaWQYASABKAlCB7pIBHICEAFSCHNlcnZlcklkEhIKBH'
+    'BhdGgYAiABKAlSBHBhdGgSHwoLc3RhcnRfaW5kZXgYAyABKARSCnN0YXJ0SW5kZXgSFAoFbGlt'
+    'aXQYBCABKARSBWxpbWl0Eh8KC3NlYXJjaF90ZXJtGAUgASgJUgpzZWFyY2hUZXJtEiMKDWluc3'
+    'RhbmNlX25hbWUYBiABKAlSDGluc3RhbmNlTmFtZQ==');
 
 @$core.Deprecated('Use listResponseDescriptor instead')
 const ListResponse$json = {
@@ -123,15 +123,15 @@ final $typed_data.Uint8List mediaItemDescriptor = $convert.base64Decode(
 const GetMeRequest$json = {
   '1': 'GetMeRequest',
   '2': [
-    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '10': 'serverId'},
+    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
     {'1': 'instance_name', '3': 2, '4': 1, '5': 9, '10': 'instanceName'},
   ],
 };
 
 /// Descriptor for `GetMeRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getMeRequestDescriptor = $convert.base64Decode(
-    'CgxHZXRNZVJlcXVlc3QSGwoJc2VydmVyX2lkGAEgASgJUghzZXJ2ZXJJZBIjCg1pbnN0YW5jZV'
-    '9uYW1lGAIgASgJUgxpbnN0YW5jZU5hbWU=');
+    'CgxHZXRNZVJlcXVlc3QSJAoJc2VydmVyX2lkGAEgASgJQge6SARyAhABUghzZXJ2ZXJJZBIjCg'
+    '1pbnN0YW5jZV9uYW1lGAIgASgJUgxpbnN0YW5jZU5hbWU=');
 
 @$core.Deprecated('Use getMeResponseDescriptor instead')
 const GetMeResponse$json = {
@@ -150,15 +150,15 @@ final $typed_data.Uint8List getMeResponseDescriptor = $convert.base64Decode(
 const LogoutRequest$json = {
   '1': 'LogoutRequest',
   '2': [
-    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '10': 'serverId'},
+    {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
     {'1': 'instance_name', '3': 2, '4': 1, '5': 9, '10': 'instanceName'},
   ],
 };
 
 /// Descriptor for `LogoutRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List logoutRequestDescriptor = $convert.base64Decode(
-    'Cg1Mb2dvdXRSZXF1ZXN0EhsKCXNlcnZlcl9pZBgBIAEoCVIIc2VydmVySWQSIwoNaW5zdGFuY2'
-    'VfbmFtZRgCIAEoCVIMaW5zdGFuY2VOYW1l');
+    'Cg1Mb2dvdXRSZXF1ZXN0EiQKCXNlcnZlcl9pZBgBIAEoCUIHukgEcgIQAVIIc2VydmVySWQSIw'
+    'oNaW5zdGFuY2VfbmFtZRgCIAEoCVIMaW5zdGFuY2VOYW1l');
 
 @$core.Deprecated('Use logoutResponseDescriptor instead')
 const LogoutResponse$json = {

@@ -38,15 +38,15 @@ final $typed_data.Uint8List qRLoginStatusDescriptor = $convert.base64Decode(
 const ParseRequest$json = {
   '1': 'ParseRequest',
   '2': [
-    {'1': 'url', '3': 1, '4': 1, '5': 9, '10': 'url'},
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'url'},
     {'1': 'instance_name', '3': 2, '4': 1, '5': 9, '10': 'instanceName'},
   ],
 };
 
 /// Descriptor for `ParseRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List parseRequestDescriptor = $convert.base64Decode(
-    'CgxQYXJzZVJlcXVlc3QSEAoDdXJsGAEgASgJUgN1cmwSIwoNaW5zdGFuY2VfbmFtZRgCIAEoCV'
-    'IMaW5zdGFuY2VOYW1l');
+    'CgxQYXJzZVJlcXVlc3QSGQoDdXJsGAEgASgJQge6SARyAhABUgN1cmwSIwoNaW5zdGFuY2Vfbm'
+    'FtZRgCIAEoCVIMaW5zdGFuY2VOYW1l');
 
 @$core.Deprecated('Use parseResponseDescriptor instead')
 const ParseResponse$json = {
@@ -119,15 +119,15 @@ final $typed_data.Uint8List qRCodeResponseDescriptor = $convert.base64Decode(
 const CheckQRRequest$json = {
   '1': 'CheckQRRequest',
   '2': [
-    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'key'},
     {'1': 'instance_name', '3': 2, '4': 1, '5': 9, '10': 'instanceName'},
   ],
 };
 
 /// Descriptor for `CheckQRRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List checkQRRequestDescriptor = $convert.base64Decode(
-    'Cg5DaGVja1FSUmVxdWVzdBIQCgNrZXkYASABKAlSA2tleRIjCg1pbnN0YW5jZV9uYW1lGAIgAS'
-    'gJUgxpbnN0YW5jZU5hbWU=');
+    'Cg5DaGVja1FSUmVxdWVzdBIZCgNrZXkYASABKAlCB7pIBHICEAFSA2tleRIjCg1pbnN0YW5jZV'
+    '9uYW1lGAIgASgJUgxpbnN0YW5jZU5hbWU=');
 
 @$core.Deprecated('Use qRStatusResponseDescriptor instead')
 const QRStatusResponse$json = {

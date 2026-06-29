@@ -152,8 +152,10 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     _normalizeControllerSelection(_loginPasswordController);
     final identifier = _effectiveLoginIdentifier();
     await _withLoading(() async {
-      final result = await _opaqueAuthenticator.login(
-        identifier: identifier,
+      final isEmail = identifier.contains('@');
+      final result = await SyncTvService.loginWithDirectPassword(
+        username: isEmail ? '' : identifier,
+        email: isEmail ? identifier : '',
         password: _loginPasswordController.text,
       );
       _finishAuth(result);

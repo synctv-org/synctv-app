@@ -2086,7 +2086,7 @@ class SyncTvOAuth2Api {
   ) {
     return _api._send(
       'DELETE',
-      '/api/oauth2/type/${request.provider}/unlink',
+      '/api/oauth2/type/${oauth2ProviderTypeToString(request.provider)}/unlink',
       oauth2.UnlinkProviderResponse.create,
       query: _api._messageQuery(request)..remove('provider'),
     );
@@ -2268,7 +2268,7 @@ class SyncTvAdminApi {
       'GET',
       '/api/admin/users/${request.userId}/rooms',
       admin.GetUserRoomsResponse.create,
-      query: _api._messageQuery(request)..remove('user_id'),
+      query: _api._messageQuery(request)..remove('userId'),
     );
   }
 
@@ -2388,7 +2388,7 @@ class SyncTvAdminApi {
       'GET',
       '/api/admin/rooms/${request.roomId}/members',
       admin.GetRoomMembersResponse.create,
-      query: _api._messageQuery(request)..remove('room_id'),
+      query: _api._messageQuery(request)..remove('roomId'),
     );
   }
 

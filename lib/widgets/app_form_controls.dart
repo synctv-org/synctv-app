@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
@@ -650,6 +651,7 @@ class AppTextField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final FormFieldValidator<String>? validator;
+  final AutovalidateMode autovalidateMode;
   final bool? selectAllOnFocus;
   final UndoHistoryController? undoController;
   final SpellCheckConfiguration? spellCheckConfiguration;
@@ -696,6 +698,7 @@ class AppTextField extends StatefulWidget {
     this.onChanged,
     this.onSubmitted,
     this.validator,
+    this.autovalidateMode = AutovalidateMode.disabled,
     this.selectAllOnFocus,
     this.undoController,
     this.spellCheckConfiguration,
@@ -751,11 +754,7 @@ class _AppTextFieldState extends State<AppTextField> {
       composing: TextRange.empty,
     );
     setState(() => widget.controller.value = next);
-  }
-
-  void _requestTextFieldFocus() {
-    if (!widget.enabled) return;
-    _effectiveFocusNode.requestFocus();
+    widget.onChanged?.call(value);
   }
 
   void _clear() {
@@ -766,78 +765,146 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final maxLines = widget.obscureText ? 1 : widget.maxLines;
-    final label = widget.showLabel ? Text(widget.label) : null;
-    final description =
-        widget.helperText == null ? null : Text(widget.helperText!);
+    return _buildNativeTextField(context, maxLines);
+  }
+
+  Widget _buildNativeTextField(BuildContext context, int? maxLines) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final dense = AppMetrics.usesDenseLayout(context);
-    final field = FTextFormField(
-      control: FTextFieldControl.managed(
-        controller: widget.controller,
-        onChange: (value) => widget.onChanged?.call(value.text),
-      ),
-      size: dense ? FTextFieldSizeVariant.sm : FTextFieldSizeVariant.md,
-      label: label,
-      hint: widget.hintText,
-      description: description,
-      forceErrorText: widget.errorText,
-      errorBuilder: (context, message) => Text(message),
-      focusNode: _effectiveFocusNode,
-      enabled: widget.enabled,
-      readOnly: widget.readOnly,
-      autofocus: widget.autofocus,
-      obscureText: _obscure,
-      enableInteractiveSelection: true,
-      selectAllOnFocus: widget.selectAllOnFocus,
-      contextMenuBuilder: (context, editableTextState) {
-        return AdaptiveTextSelectionToolbar.editableText(
-          editableTextState: editableTextState,
-        );
-      },
-      enableSuggestions: widget.obscureText ? false : widget.enableSuggestions,
-      autocorrect: widget.obscureText ? false : widget.autocorrect,
-      minLines: widget.obscureText ? null : widget.minLines,
-      maxLines: maxLines,
-      maxLength: widget.maxLength,
-      keyboardType: widget.keyboardType,
-      textInputAction: widget.textInputAction,
-      inputFormatters: widget.inputFormatters,
-      autofillHints: widget.autofillHints,
-      smartDashesType: widget.smartDashesType,
-      smartQuotesType: widget.smartQuotesType,
-      onTap: widget.onTap,
-      onSubmit: widget.onSubmitted,
-      validator: widget.validator,
-      onTapOutside: (_) => FocusScope.of(context).unfocus(),
-      undoController: widget.undoController,
-      spellCheckConfiguration: widget.spellCheckConfiguration,
-      contentInsertionConfiguration: widget.contentInsertionConfiguration,
-      prefixBuilder: widget.prefixIcon == null
-          ? null
-          : (context, style, variants) => Icon(widget.prefixIcon, size: 18),
-      suffixBuilder: _hasSuffixActions ? _buildSuffix : null,
-      clearable: (_) => false,
-      counterBuilder: widget.counterText == null
-          ? null
-          : (context, currentLength, maxLength, isFocused) {
-              return Text(widget.counterText!);
-            },
+    final borderRadius = widget.borderRadius ?? BorderRadius.circular(8);
+    final enabledBorder = OutlineInputBorder(
+      borderRadius: borderRadius,
+      borderSide: widget.enabledBorderSide ??
+          BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.7)),
     );
+    final focusedBorder = OutlineInputBorder(
+      borderRadius: borderRadius,
+      borderSide: widget.focusedBorderSide ??
+          BorderSide(color: scheme.primary, width: 1.4),
+    );
+    final disabledBorder = OutlineInputBorder(
+      borderRadius: borderRadius,
+      borderSide: widget.disabledBorderSide ??
+          BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+    );
+    final suffix = _hasSuffixActions
+        ? Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: _buildNativeSuffix(context),
+          )
+        : null;
+
+    final textField = ExcludeSemantics(
+      excluding: _enabled,
+      child: TextFormField(
+        controller: widget.controller,
+        focusNode: _effectiveFocusNode,
+        enabled: widget.enabled,
+        readOnly: widget.readOnly,
+        autofocus: widget.autofocus,
+        obscureText: _obscure,
+        enableInteractiveSelection: true,
+        enableSuggestions:
+            widget.obscureText ? false : widget.enableSuggestions,
+        autocorrect: widget.obscureText ? false : widget.autocorrect,
+        minLines: widget.obscureText ? null : widget.minLines,
+        maxLines: maxLines,
+        maxLength: widget.maxLength,
+        keyboardType: widget.keyboardType,
+        textInputAction: widget.textInputAction,
+        inputFormatters: widget.inputFormatters,
+        autofillHints: widget.autofillHints,
+        smartDashesType: widget.smartDashesType,
+        smartQuotesType: widget.smartQuotesType,
+        onTap: widget.onTap,
+        onChanged: widget.onChanged,
+        onFieldSubmitted: widget.onSubmitted,
+        validator: widget.validator,
+        autovalidateMode: widget.autovalidateMode,
+        selectAllOnFocus: widget.selectAllOnFocus,
+        undoController: widget.undoController,
+        spellCheckConfiguration: widget.spellCheckConfiguration,
+        contentInsertionConfiguration: widget.contentInsertionConfiguration,
+        onTapOutside: (_) => FocusScope.of(context).unfocus(),
+        style: widget.style ?? theme.textTheme.bodyMedium,
+        decoration: InputDecoration(
+          isDense: dense,
+          labelText: widget.showLabel ? widget.label : null,
+          hintText: widget.hintText,
+          helperText: widget.helperText,
+          errorText: widget.errorText,
+          counterText: widget.counterText,
+          filled: widget.filled || widget.fillColor != null,
+          fillColor: widget.fillColor ?? scheme.surfaceContainerHighest,
+          prefixIcon: widget.prefixIcon == null
+              ? null
+              : Icon(widget.prefixIcon, size: 18),
+          suffixIcon: suffix,
+          contentPadding: widget.contentPadding ??
+              EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: dense ? 10 : 13,
+              ),
+          border: enabledBorder,
+          enabledBorder: enabledBorder,
+          focusedBorder: focusedBorder,
+          disabledBorder: disabledBorder,
+          errorBorder: enabledBorder.copyWith(
+            borderSide: BorderSide(color: scheme.error),
+          ),
+          focusedErrorBorder: focusedBorder.copyWith(
+            borderSide: BorderSide(color: scheme.error, width: 1.4),
+          ),
+        ),
+      ),
+    );
+    return _withSetTextSemantics(textField);
+  }
+
+  Widget _withSetTextSemantics(Widget child) {
+    if (!_enabled) return child;
     return Semantics(
-      container: true,
       textField: true,
-      enabled: widget.enabled,
-      readOnly: widget.readOnly,
-      focusable: widget.enabled,
-      focused: _effectiveFocusNode.hasFocus,
-      obscured: _obscure,
-      multiline: maxLines != 1,
       label: widget.label,
-      value: _obscure ? '' : widget.controller.text,
-      hint: widget.hintText,
-      onTap: widget.enabled ? _requestTextFieldFocus : null,
-      onFocus: widget.enabled ? _requestTextFieldFocus : null,
-      onSetText: _enabled ? _setText : null,
-      child: field,
+      value: widget.controller.text,
+      onSetText: _setText,
+      child: child,
+    );
+  }
+
+  Widget _buildNativeSuffix(BuildContext context) {
+    final actions = <Widget>[];
+    if (widget.suffix != null) actions.add(widget.suffix!);
+    if (widget.obscureText && widget.showVisibilityToggle) {
+      actions.add(
+        IconButton(
+          tooltip: _obscure ? '显示' : '隐藏',
+          icon: Icon(
+            _obscure
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            size: 18,
+          ),
+          onPressed: widget.enabled
+              ? () => setState(() => _obscure = !_obscure)
+              : null,
+        ),
+      );
+    }
+    if (_enabled &&
+        widget.showClearButton &&
+        widget.controller.text.isNotEmpty) {
+      actions.add(
+        IconButton(
+          tooltip: '清空',
+          icon: const Icon(Icons.close_rounded, size: 18),
+          onPressed: _clear,
+        ),
+      );
+    }
+    return ExcludeFocus(
+      child: Row(mainAxisSize: MainAxisSize.min, children: actions),
     );
   }
 
@@ -849,73 +916,6 @@ class _AppTextFieldState extends State<AppTextField> {
             widget.controller.text.isNotEmpty);
   }
 
-  Widget _buildSuffix(
-    BuildContext context,
-    FTextFieldStyle style,
-    Set<FTextFieldVariant> variants,
-  ) {
-    final dense = AppMetrics.usesDenseLayout(context);
-    final actions = <Widget>[];
-    if (widget.suffix != null) actions.add(widget.suffix!);
-    if (widget.obscureText && widget.showVisibilityToggle) {
-      actions.add(
-        _InputSuffixUtilityAction(
-          message: _obscure ? '显示' : '隐藏',
-          child: FButton.icon(
-            semanticsLabel: _obscure ? '显示' : '隐藏',
-            variant: FButtonVariant.ghost,
-            size: dense ? FButtonSizeVariant.sm : FButtonSizeVariant.md,
-            onPress: widget.enabled
-                ? () => setState(() => _obscure = !_obscure)
-                : null,
-            child: Icon(
-              _obscure
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-              size: 18,
-            ),
-          ),
-        ),
-      );
-    }
-    if (_enabled &&
-        widget.showClearButton &&
-        widget.controller.text.isNotEmpty) {
-      actions.add(
-        _InputSuffixUtilityAction(
-          message: '清空',
-          child: FButton.icon(
-            semanticsLabel: '清空',
-            variant: FButtonVariant.ghost,
-            size: dense ? FButtonSizeVariant.sm : FButtonSizeVariant.md,
-            onPress: _clear,
-            child: const Icon(Icons.close_rounded, size: 18),
-          ),
-        ),
-      );
-    }
-    return Row(mainAxisSize: MainAxisSize.min, children: actions);
-  }
-}
-
-class _InputSuffixUtilityAction extends StatelessWidget {
-  final String message;
-  final Widget child;
-
-  const _InputSuffixUtilityAction({
-    required this.message,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ExcludeFocus(
-      child: Tooltip(
-        message: message,
-        child: child,
-      ),
-    );
-  }
 }
 
 class AppReadOnlyField extends StatefulWidget {
@@ -1064,6 +1064,7 @@ class AppActionButton extends StatelessWidget {
       button: true,
       enabled: effectiveOnPressed != null,
       label: label,
+      onTap: effectiveOnPressed,
       child: FButton(
         onPress: effectiveOnPressed,
         variant: variant,
@@ -1145,12 +1146,17 @@ class AppIconButton extends StatelessWidget {
     if (constraints != null) {
       button = ConstrainedBox(constraints: constraints!, child: button);
     }
+    button = ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+      child: button,
+    );
 
     return Semantics(
       button: true,
       enabled: effectiveOnPressed != null,
       label: tooltip,
       selected: selected,
+      onTap: effectiveOnPressed,
       child: Tooltip(
         message: tooltip,
         child: button,
@@ -1417,7 +1423,7 @@ class AppSegmentedControl<T> extends StatelessWidget {
     required this.segments,
     required this.onChanged,
     this.style,
-    this.showSelectedIcon = true,
+    this.showSelectedIcon = false,
   });
 
   @override
@@ -1755,6 +1761,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final SystemUiOverlayStyle? systemOverlayStyle;
   final PreferredSizeWidget? bottom;
   final bool automaticallyImplyLeading;
+  final bool avoidMacOsTitleBar;
 
   const AppAppBar({
     super.key,
@@ -1767,25 +1774,58 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.systemOverlayStyle,
     this.bottom,
     this.automaticallyImplyLeading = true,
+    this.avoidMacOsTitleBar = true,
   });
+
+  static const double _macOsTitleBarCompensation = 24;
+
+  double get _topCompensation => avoidMacOsTitleBar &&
+          !kIsWeb &&
+          defaultTargetPlatform == TargetPlatform.macOS
+      ? _macOsTitleBarCompensation
+      : 0;
 
   @override
   Size get preferredSize => Size.fromHeight(
-        kToolbarHeight + (bottom?.preferredSize.height ?? 0),
+        kToolbarHeight + _topCompensation + (bottom?.preferredSize.height ?? 0),
       );
 
   @override
   Widget build(BuildContext context) {
+    final compensation = _topCompensation;
+    Widget? offsetTitle = title;
+    Widget? offsetLeading = leading;
+    List<Widget>? offsetActions = actions;
+    if (compensation > 0) {
+      offsetTitle = title == null
+          ? null
+          : Padding(padding: EdgeInsets.only(top: compensation), child: title);
+      offsetLeading = leading == null
+          ? null
+          : Padding(
+              padding: EdgeInsets.only(top: compensation),
+              child: leading,
+            );
+      offsetActions = actions
+          ?.map(
+            (action) => Padding(
+              padding: EdgeInsets.only(top: compensation),
+              child: action,
+            ),
+          )
+          .toList(growable: false);
+    }
     return AppBar(
-      title: title,
-      actions: actions,
-      leading: leading,
+      title: offsetTitle,
+      actions: offsetActions,
+      leading: offsetLeading,
       centerTitle: centerTitle,
       elevation: elevation,
       backgroundColor: backgroundColor,
       systemOverlayStyle: systemOverlayStyle,
       bottom: bottom,
       automaticallyImplyLeading: automaticallyImplyLeading,
+      toolbarHeight: kToolbarHeight + compensation,
     );
   }
 }
@@ -2353,7 +2393,7 @@ class AppBadge extends StatelessWidget {
               Icon(icon, size: iconSize, color: effectiveColor),
               const SizedBox(width: 4),
             ],
-            label,
+            Flexible(child: label),
           ],
         ),
       ),
@@ -2864,6 +2904,7 @@ class AppImageThumbnail extends StatelessWidget {
   final IconData errorIcon;
   final Widget? errorChild;
   final List<BoxShadow>? boxShadow;
+  final String semanticLabel;
 
   const AppImageThumbnail({
     super.key,
@@ -2875,6 +2916,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorIcon = Icons.broken_image_outlined,
     this.errorChild,
     this.boxShadow,
+    this.semanticLabel = '图片',
   })  : assetName = null,
         bytes = null,
         file = null;
@@ -2889,6 +2931,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorIcon = Icons.broken_image_outlined,
     this.errorChild,
     this.boxShadow,
+    this.semanticLabel = '图片',
   })  : url = null,
         bytes = null,
         file = null;
@@ -2903,6 +2946,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorIcon = Icons.broken_image_outlined,
     this.errorChild,
     this.boxShadow,
+    this.semanticLabel = '图片',
   })  : url = null,
         assetName = null,
         file = null;
@@ -2917,6 +2961,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorIcon = Icons.broken_image_outlined,
     this.errorChild,
     this.boxShadow,
+    this.semanticLabel = '图片',
   })  : url = null,
         assetName = null,
         bytes = null;
@@ -2932,6 +2977,7 @@ class AppImageThumbnail extends StatelessWidget {
           width: width,
           height: height,
           fit: fit,
+          semanticLabel: semanticLabel,
           errorBuilder: (context, error, stackTrace) => fallback,
         ),
       (null, final String value, null, null) => Image.asset(
@@ -2939,6 +2985,7 @@ class AppImageThumbnail extends StatelessWidget {
           width: width,
           height: height,
           fit: fit,
+          semanticLabel: semanticLabel,
           errorBuilder: (context, error, stackTrace) => fallback,
         ),
       (null, null, final Uint8List value, null) => Image.memory(
@@ -2946,6 +2993,7 @@ class AppImageThumbnail extends StatelessWidget {
           width: width,
           height: height,
           fit: fit,
+          semanticLabel: semanticLabel,
           errorBuilder: (context, error, stackTrace) => fallback,
         ),
       (null, null, null, final File value) => Image.file(
@@ -2953,6 +3001,7 @@ class AppImageThumbnail extends StatelessWidget {
           width: width,
           height: height,
           fit: fit,
+          semanticLabel: semanticLabel,
           errorBuilder: (context, error, stackTrace) => fallback,
         ),
       _ => fallback,
@@ -3651,7 +3700,7 @@ class AppSelect<T> extends StatelessWidget {
         onChange: _handleChange,
       ),
       label: label == null ? null : Text(label!),
-      hint: hintText,
+      hint: hintText ?? '请选择',
       description: description == null ? null : Text(description!),
       forceErrorText: errorText,
       errorBuilder: (context, message) => Text(message),

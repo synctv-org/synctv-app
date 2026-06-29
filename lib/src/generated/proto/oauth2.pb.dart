@@ -17,8 +17,11 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'common.pbenum.dart' as $0;
+import 'oauth2.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+export 'oauth2.pbenum.dart';
 
 class OAuth2ProviderInstancePathRequest extends $pb.GeneratedMessage {
   factory OAuth2ProviderInstancePathRequest({
@@ -785,7 +788,7 @@ class ListAvailableProvidersResponse extends $pb.GeneratedMessage {
 class OAuth2ProviderInstance extends $pb.GeneratedMessage {
   factory OAuth2ProviderInstance({
     $core.String? name,
-    $core.String? type,
+    OAuth2ProviderType? type,
     $core.bool? signupEnabled,
     $core.bool? signupNeedReview,
   }) {
@@ -811,7 +814,8 @@ class OAuth2ProviderInstance extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..aOS(2, _omitFieldNames ? '' : 'type')
+    ..aE<OAuth2ProviderType>(2, _omitFieldNames ? '' : 'type',
+        enumValues: OAuth2ProviderType.values)
     ..aOB(3, _omitFieldNames ? '' : 'signupEnabled')
     ..aOB(4, _omitFieldNames ? '' : 'signupNeedReview')
     ..hasRequiredFields = false;
@@ -846,11 +850,10 @@ class OAuth2ProviderInstance extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearName() => $_clearField(1);
 
-  /// Provider type (e.g., "github", "google", "oidc", "logto")
   @$pb.TagNumber(2)
-  $core.String get type => $_getSZ(1);
+  OAuth2ProviderType get type => $_getN(1);
   @$pb.TagNumber(2)
-  set type($core.String value) => $_setString(1, value);
+  set type(OAuth2ProviderType value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasType() => $_has(1);
   @$pb.TagNumber(2)
@@ -879,7 +882,7 @@ class OAuth2ProviderInstance extends $pb.GeneratedMessage {
 
 class UnlinkProviderRequest extends $pb.GeneratedMessage {
   factory UnlinkProviderRequest({
-    $core.String? provider,
+    OAuth2ProviderType? provider,
     $core.String? providerUserId,
     $core.String? providerInstanceName,
     $core.String? verificationId,
@@ -906,7 +909,8 @@ class UnlinkProviderRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'UnlinkProviderRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'provider')
+    ..aE<OAuth2ProviderType>(1, _omitFieldNames ? '' : 'provider',
+        enumValues: OAuth2ProviderType.values)
     ..aOS(2, _omitFieldNames ? '' : 'providerUserId')
     ..aOS(3, _omitFieldNames ? '' : 'providerInstanceName')
     ..aOS(4, _omitFieldNames ? '' : 'verificationId')
@@ -932,11 +936,10 @@ class UnlinkProviderRequest extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<UnlinkProviderRequest>(create);
   static UnlinkProviderRequest? _defaultInstance;
 
-  /// Provider type to unlink (e.g., "github", "google")
   @$pb.TagNumber(1)
-  $core.String get provider => $_getSZ(0);
+  OAuth2ProviderType get provider => $_getN(0);
   @$pb.TagNumber(1)
-  set provider($core.String value) => $_setString(0, value);
+  set provider(OAuth2ProviderType value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasProvider() => $_has(0);
   @$pb.TagNumber(1)
@@ -1136,7 +1139,7 @@ class GetLinkedProvidersResponse extends $pb.GeneratedMessage {
 
 class LinkedProvider extends $pb.GeneratedMessage {
   factory LinkedProvider({
-    $core.String? providerType,
+    OAuth2ProviderType? providerType,
     $core.String? providerUsername,
     $fixnum.Int64? linkedAt,
     $core.String? providerInstanceName,
@@ -1167,7 +1170,8 @@ class LinkedProvider extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'LinkedProvider',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'providerType')
+    ..aE<OAuth2ProviderType>(1, _omitFieldNames ? '' : 'providerType',
+        enumValues: OAuth2ProviderType.values)
     ..aOS(2, _omitFieldNames ? '' : 'providerUsername')
     ..aInt64(3, _omitFieldNames ? '' : 'linkedAt')
     ..aOS(4, _omitFieldNames ? '' : 'providerInstanceName')
@@ -1194,11 +1198,10 @@ class LinkedProvider extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<LinkedProvider>(create);
   static LinkedProvider? _defaultInstance;
 
-  /// Provider type (e.g., "github", "google", "oidc")
   @$pb.TagNumber(1)
-  $core.String get providerType => $_getSZ(0);
+  OAuth2ProviderType get providerType => $_getN(0);
   @$pb.TagNumber(1)
-  set providerType($core.String value) => $_setString(0, value);
+  set providerType(OAuth2ProviderType value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasProviderType() => $_has(0);
   @$pb.TagNumber(1)

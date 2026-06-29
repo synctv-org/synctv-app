@@ -14,6 +14,34 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+class PlayMode extends $pb.ProtobufEnum {
+  static const PlayMode PLAY_MODE_UNSPECIFIED =
+      PlayMode._(0, _omitEnumNames ? '' : 'PLAY_MODE_UNSPECIFIED');
+  static const PlayMode PLAY_MODE_SEQUENTIAL =
+      PlayMode._(1, _omitEnumNames ? '' : 'PLAY_MODE_SEQUENTIAL');
+  static const PlayMode PLAY_MODE_REPEAT_ONE =
+      PlayMode._(2, _omitEnumNames ? '' : 'PLAY_MODE_REPEAT_ONE');
+  static const PlayMode PLAY_MODE_REPEAT_ALL =
+      PlayMode._(3, _omitEnumNames ? '' : 'PLAY_MODE_REPEAT_ALL');
+  static const PlayMode PLAY_MODE_SHUFFLE =
+      PlayMode._(4, _omitEnumNames ? '' : 'PLAY_MODE_SHUFFLE');
+
+  static const $core.List<PlayMode> values = <PlayMode>[
+    PLAY_MODE_UNSPECIFIED,
+    PLAY_MODE_SEQUENTIAL,
+    PLAY_MODE_REPEAT_ONE,
+    PLAY_MODE_REPEAT_ALL,
+    PLAY_MODE_SHUFFLE,
+  ];
+
+  static final $core.List<PlayMode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static PlayMode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlayMode._(super.value, super.name);
+}
+
 class ResourceAvailability extends $pb.ProtobufEnum {
   static const ResourceAvailability RESOURCE_AVAILABILITY_UNSPECIFIED =
       ResourceAvailability._(

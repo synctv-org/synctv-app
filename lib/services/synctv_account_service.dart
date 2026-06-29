@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:fixnum/fixnum.dart';
 
 import 'package:synctv_app/models/account_models.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_memory_cache.dart';
@@ -179,7 +180,8 @@ class SyncTvAccountDomainService {
       credentialResponse: response.credentialResponse,
       registrationResponse: response.registrationResponse,
       passkeySessionId: response.passkeySessionId,
-      passkeyOptions: response.passkeyOptions,
+      passkeyOptions:
+          _api.encodeJsonBytes(passkeyChallengeToJson(response.passkeyOptions)),
     );
   }
 
@@ -196,7 +198,9 @@ class SyncTvAccountDomainService {
         credentialFinalization: credentialFinalization,
         registrationUpload: registrationUpload,
         passkeySessionId: passkeySessionId,
-        passkeyCredential: _api.encodeJsonBytes(passkeyCredential),
+        passkeyCredential: passkeyCredential == null
+            ? null
+            : passkeyAuthenticationCredentialFromJson(passkeyCredential),
       ),
     );
     return _api.mapUser(response.user);
@@ -208,7 +212,7 @@ class SyncTvAccountDomainService {
     );
     return PasskeyChallengeStart(
       sessionId: response.sessionId,
-      options: response.options,
+      options: _api.encodeJsonBytes(passkeyChallengeToJson(response.options)),
     );
   }
 
@@ -219,7 +223,7 @@ class SyncTvAccountDomainService {
     final response = await _api.user.finishPasskeyBind(
       client.FinishPasskeyBindRequest(
         sessionId: sessionId,
-        credential: _api.encodeJsonBytes(credential),
+        credential: passkeyRegistrationCredentialFromJson(credential),
       ),
     );
     final passkey = passkeyFromProto(response.credential);
@@ -366,7 +370,7 @@ UserNotificationItem notificationFromProto(
     type: notification.notificationType.value,
     title: notification.title,
     content: notification.content,
-    data: decodeJsonBytes(notification.data),
+    data: notificationDataToJson(notification.data),
     isRead: notification.isRead,
     createdAt: notification.createdAt.toInt(),
     updatedAt: notification.updatedAt.toInt(),
@@ -397,7 +401,7 @@ AccountPreferences accountPreferencesFromProto(
     notifications: NotificationPreferences.fromProto(
       preferences.notifications,
     ),
-    settings: decodeJsonBytes(preferences.settings),
+    settings: roomSettingsToJson(preferences.settings),
   );
 }
 
