@@ -517,6 +517,7 @@ class SyncTvAdminDomainService {
     String key,
     dynamic value,
   ) async {
+    await _ensureSettingsGroupCache(group);
     final response = await _api.adminService.updateSettings(
       _settingsUpdateRequest(group, key, value),
     );
@@ -536,6 +537,11 @@ class SyncTvAdminDomainService {
       _cache.invalidate('public:settings');
     }
     return updated;
+  }
+
+  Future<void> _ensureSettingsGroupCache(String group) async {
+    if (_settingsCache[group]?.isNotEmpty == true) return;
+    await _fetchSettingsGroup(group);
   }
 
   Future<String> sendTestEmail(String to) async {

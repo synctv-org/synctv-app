@@ -1473,6 +1473,7 @@ class RoomRealtimeCodec {
       isPlaying: state.isPlaying,
       currentTime: state.position,
       playbackRate: state.speed == 0 ? 1.0 : state.speed,
+      generatedAtMillis: state.generatedAtMillis.toInt(),
       version: state.version.toInt(),
       playingMediaId: state.playingMediaId,
       playingPlaylistId: state.playingPlaylistId,

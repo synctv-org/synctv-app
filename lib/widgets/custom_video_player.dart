@@ -281,6 +281,9 @@ class CustomVideoPlayer extends StatefulWidget {
   final Map<String, dynamic>? subtitles;
   final VoidCallback? onToggleFullScreen;
   final VoidCallback? onSync;
+  final ValueChanged<bool>? onUserPlaybackStateChanged;
+  final ValueChanged<Duration>? onUserSeek;
+  final ValueChanged<double>? onUserPlaybackSpeedChanged;
   final bool isFullScreen;
   final Function(String)? onSendDanmaku;
   final IconData? fullScreenIcon;
@@ -297,6 +300,9 @@ class CustomVideoPlayer extends StatefulWidget {
     this.subtitles,
     this.onToggleFullScreen,
     this.onSync,
+    this.onUserPlaybackStateChanged,
+    this.onUserSeek,
+    this.onUserPlaybackSpeedChanged,
     this.isFullScreen = false,
     this.onSendDanmaku,
     this.fullScreenIcon,
@@ -954,15 +960,49 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       return;
     }
 
+    final nextIsPlaying = !widget.controller.value.isPlaying;
     if (widget.controller.value.isPlaying) {
       await widget.controller.pause();
     } else {
       await widget.controller.play();
     }
+    widget.onUserPlaybackStateChanged?.call(nextIsPlaying);
     if (mounted) {
       setState(() => _showControls = true);
     }
     _startHideTimer();
+  }
+
+  Future<void> _seekFromUser(Duration target) async {
+    if (_isCasting) return;
+    final duration = widget.controller.value.duration;
+    final clamped = target < Duration.zero
+        ? Duration.zero
+        : duration > Duration.zero && target > duration
+            ? duration
+            : target;
+    await widget.controller.seekTo(clamped);
+    widget.onUserSeek?.call(clamped);
+    _showDesktopControls();
+  }
+
+  Future<void> _setPlaybackSpeedFromUser(double speed) async {
+    if (_isCasting) return;
+    await widget.controller.setPlaybackSpeed(speed);
+    widget.onUserPlaybackSpeedChanged?.call(speed);
+    _startHideTimer();
+    if (mounted) setState(() {});
+  }
+
+  List<_PlaybackSpeedOption> _playbackSpeedOptions() {
+    const speeds = <double>[0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+    return [
+      for (final speed in speeds)
+        _PlaybackSpeedOption(
+          speed: speed,
+          label: '${speed.toStringAsFixed(speed == speed.roundToDouble() ? 0 : 2)}x',
+        ),
+    ];
   }
 
   Future<void> _seekRelative(Duration offset) async {
@@ -976,8 +1016,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         : target > duration
             ? duration
             : target;
-    await widget.controller.seekTo(clamped);
-    _showDesktopControls();
+    await _seekFromUser(clamped);
   }
 
   KeyEventResult _handleDesktopKeyEvent(FocusNode node, KeyEvent event) {
@@ -1054,7 +1093,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (_isCasting) return;
     _isDragging = false;
     if (_dragStartPosition != null) {
-      widget.controller.seekTo(_dragStartPosition!);
+      unawaited(_seekFromUser(_dragStartPosition!));
     }
     _startHideTimer();
     setState(() {
@@ -2318,23 +2357,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  if (widget.onSync != null &&
-                                      !widget.isFullScreen) ...[
-                                    AppOverlayActionButton(
-                                      onPressed: widget.onSync,
-                                      label: '同步',
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      minimumSize: const Size(48, 32),
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.padded,
-                                      backgroundColor: Colors.transparent,
-                                      textStyle: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
                                   if (widget.showCastButton)
                                     AppIconButton(
                                       icon: _isCasting
@@ -2408,19 +2430,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               label: videoValue.isPlaying
                                                   ? '暂停'
                                                   : '播放',
-                                              onTap: () {
-                                                videoValue.isPlaying
-                                                    ? widget.controller.pause()
-                                                    : widget.controller.play();
-                                              },
+                                              onTap: _togglePlayPause,
                                               child: GestureDetector(
-                                                onTap: () {
-                                                  videoValue.isPlaying
-                                                      ? widget.controller
-                                                          .pause()
-                                                      : widget.controller
-                                                          .play();
-                                                },
+                                                onTap: _togglePlayPause,
                                                 child: SizedBox.square(
                                                   dimension: 40,
                                                   child: Icon(
@@ -2516,8 +2528,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                         milliseconds:
                                                             _sliderDragValue
                                                                 .toInt());
-                                                    widget.controller
-                                                        .seekTo(target)
+                                                    _seekFromUser(target)
                                                         .then((_) {
                                                       setState(() {
                                                         _isSliderDragging =
@@ -2558,8 +2569,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                         milliseconds:
                                                             _sliderDragValue
                                                                 .toInt());
-                                                    widget.controller
-                                                        .seekTo(target)
+                                                    _seekFromUser(target)
                                                         .then((_) {
                                                       setState(() {
                                                         _isSliderDragging =
@@ -2573,8 +2583,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                           milliseconds:
                                                               _sliderDragValue
                                                                   .toInt());
-                                                      widget.controller
-                                                          .seekTo(target)
+                                                      _seekFromUser(target)
                                                           .then((_) {
                                                         setState(() {
                                                           _isSliderDragging =
@@ -2726,6 +2735,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   width: widget.isFullScreen
                                                       ? 0
                                                       : 4),
+                                              _PlaybackSpeedMenuButton(
+                                                currentSpeed:
+                                                    videoValue.playbackSpeed,
+                                                options:
+                                                    _playbackSpeedOptions(),
+                                                dimension: widget.isFullScreen
+                                                    ? 40
+                                                    : max(32.0, iconSize + 12),
+                                                iconSize: widget.isFullScreen
+                                                    ? 24
+                                                    : iconSize,
+                                                onSelected:
+                                                    _setPlaybackSpeedFromUser,
+                                              ),
+                                            ],
+                                            if (showSecondaryButtons) ...[
+                                              SizedBox(
+                                                  width: widget.isFullScreen
+                                                      ? 0
+                                                      : 4),
                                               AppIconButton(
                                                 icon: Icons.comment_rounded,
                                                 tooltip: _showDanmaku
@@ -2741,6 +2770,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                         !_showDanmaku;
                                                   });
                                                 },
+                                                padding: widget.isFullScreen
+                                                    ? const EdgeInsets.all(8)
+                                                    : EdgeInsets.zero,
+                                                constraints: widget.isFullScreen
+                                                    ? null
+                                                    : const BoxConstraints(),
+                                                iconSize: widget.isFullScreen
+                                                    ? 24
+                                                    : iconSize,
+                                              ),
+                                            ],
+                                            if (widget.onSync != null) ...[
+                                              SizedBox(
+                                                  width: widget.isFullScreen
+                                                      ? 0
+                                                      : 4),
+                                              AppIconButton(
+                                                icon: Icons.sync_rounded,
+                                                tooltip: '同步',
+                                                onPressed: widget.onSync,
                                                 padding: widget.isFullScreen
                                                     ? const EdgeInsets.all(8)
                                                     : EdgeInsets.zero,
@@ -2768,24 +2817,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                 onPressed: _showDanmakuInput,
                                                 tooltip: '发送弹幕',
                                               ),
-                                            if (widget.onSync != null &&
-                                                widget.isFullScreen) ...[
-                                              const SizedBox(width: 0),
-                                              AppOverlayActionButton(
-                                                onPressed: widget.onSync,
-                                                label: '同步',
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 12),
-                                                minimumSize: const Size(0, 40),
-                                                backgroundColor:
-                                                    Colors.transparent,
-                                                textStyle: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 18,
-                                                ),
-                                              ),
-                                            ],
                                             if (widget.onToggleFullScreen !=
                                                 null) ...[
                                               SizedBox(
@@ -2872,6 +2903,112 @@ class _DlnaInfoLine extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PlaybackSpeedOption {
+  final double speed;
+  final String label;
+
+  const _PlaybackSpeedOption({
+    required this.speed,
+    required this.label,
+  });
+}
+
+class _PlaybackSpeedMenuButton extends StatelessWidget {
+  final double currentSpeed;
+  final List<_PlaybackSpeedOption> options;
+  final double dimension;
+  final double iconSize;
+  final ValueChanged<double> onSelected;
+
+  const _PlaybackSpeedMenuButton({
+    required this.currentSpeed,
+    required this.options,
+    required this.dimension,
+    required this.iconSize,
+    required this.onSelected,
+  });
+
+  Future<void> _openMenu(BuildContext context) async {
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize) return;
+    final overlay = Navigator.of(context)
+        .overlay
+        ?.context
+        .findRenderObject() as RenderBox?;
+    if (overlay == null || !overlay.hasSize) return;
+    final topLeft = renderBox.localToGlobal(Offset.zero, ancestor: overlay);
+    final bottomRight = renderBox.localToGlobal(
+      renderBox.size.bottomRight(Offset.zero),
+      ancestor: overlay,
+    );
+    final selected = await showMenu<double>(
+      context: context,
+      color: Colors.black87,
+      position: RelativeRect.fromLTRB(
+        topLeft.dx,
+        topLeft.dy,
+        overlay.size.width - bottomRight.dx,
+        overlay.size.height - bottomRight.dy,
+      ),
+      items: [
+        for (final option in options)
+          PopupMenuItem<double>(
+            value: option.speed,
+            height: 36,
+            child: Row(
+              children: [
+                Icon(
+                  (currentSpeed - option.speed).abs() < 0.001
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 18,
+                  color: (currentSpeed - option.speed).abs() < 0.001
+                      ? const Color(0xFF7CFFB2)
+                      : Colors.white70,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  option.label,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+    if (selected != null) onSelected(selected);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '倍速',
+      child: Tooltip(
+        message: '倍速 ${currentSpeed.toStringAsFixed(2)}x',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _openMenu(context),
+          child: AppInkSurface(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(dimension / 2),
+            child: SizedBox.square(
+              dimension: dimension,
+              child: Center(
+                child: Icon(
+                  Icons.speed_rounded,
+                  color: Colors.white,
+                  size: iconSize,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

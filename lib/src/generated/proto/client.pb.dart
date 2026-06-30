@@ -2690,6 +2690,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     $core.String? playingPlaylistId,
     ProviderTarget? target,
     $core.String? targetHash,
+    $fixnum.Int64? generatedAtMillis,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
@@ -2702,6 +2703,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     if (playingPlaylistId != null) result.playingPlaylistId = playingPlaylistId;
     if (target != null) result.target = target;
     if (targetHash != null) result.targetHash = targetHash;
+    if (generatedAtMillis != null) result.generatedAtMillis = generatedAtMillis;
     return result;
   }
 
@@ -2729,6 +2731,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     ..aOM<ProviderTarget>(9, _omitFieldNames ? '' : 'target',
         subBuilder: ProviderTarget.create)
     ..aOS(10, _omitFieldNames ? '' : 'targetHash')
+    ..aInt64(11, _omitFieldNames ? '' : 'generatedAtMillis')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2841,6 +2844,15 @@ class PlaybackState extends $pb.GeneratedMessage {
   $core.bool hasTargetHash() => $_has(9);
   @$pb.TagNumber(10)
   void clearTargetHash() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get generatedAtMillis => $_getI64(10);
+  @$pb.TagNumber(11)
+  set generatedAtMillis($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasGeneratedAtMillis() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearGeneratedAtMillis() => $_clearField(11);
 }
 
 class RegisterResponse extends $pb.GeneratedMessage {

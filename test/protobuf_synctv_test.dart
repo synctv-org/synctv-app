@@ -130,6 +130,38 @@ passkey.PasskeyRegistrationCredential testPasskeyRegistrationCredential(
 }
 
 void main() {
+  test('playback status derives current position from generated time', () {
+    final status = SyncTvPlaybackStatus(
+      isPlaying: true,
+      currentTime: 10,
+      playbackRate: 1.5,
+      generatedAtMillis: 1_000,
+    );
+
+    expect(
+      status.derivedCurrentTime(
+        now: DateTime.fromMillisecondsSinceEpoch(3_000),
+      ),
+      13,
+    );
+  });
+
+  test('paused playback status keeps anchor position', () {
+    final status = SyncTvPlaybackStatus(
+      isPlaying: false,
+      currentTime: 10,
+      playbackRate: 2,
+      generatedAtMillis: 1_000,
+    );
+
+    expect(
+      status.derivedCurrentTime(
+        now: DateTime.fromMillisecondsSinceEpoch(5_000),
+      ),
+      10,
+    );
+  });
+
   test(
       'public settings derive user-facing auth policy hints from protobuf fields',
       () {

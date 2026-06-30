@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
+import 'package:synctv_app/models/playback_control_reporter.dart';
+import 'package:synctv_app/models/playback_sync_config.dart';
+import 'package:synctv_app/models/playback_sync_target.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
@@ -51,6 +54,7 @@ class RoomScreen extends StatefulWidget {
 class _RoomScreenState extends State<RoomScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late PlaybackSyncConfig _playbackSyncConfig;
   VideoPlayerController? _videoPlayerController;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
@@ -97,6 +101,7 @@ class _RoomScreenState extends State<RoomScreen>
   bool _isVideoLoading = false;
   String? _videoError;
   String? _roomSessionError;
+  int _videoInitGeneration = 0;
 
   // Pagination
   int _currentPage = 1;
@@ -115,11 +120,6 @@ class _RoomScreenState extends State<RoomScreen>
   // Sync state
   bool _isSyncing = false;
   bool _joiningVoice = false;
-  Timer? _updateDebounce;
-  bool _lastPlaying = false;
-  double _lastRate = 1.0;
-  double _lastPosition = 0.0;
-  DateTime? _lastPlaybackSampleAt;
   final Set<String> _warnedPlaybackCredentialHeaderKeys = {};
   PlaybackDanmakuWindow? _playbackDanmakuWindow;
   bool _loadingPlaybackDanmaku = false;
@@ -159,6 +159,7 @@ class _RoomScreenState extends State<RoomScreen>
   @override
   void initState() {
     super.initState();
+    _playbackSyncConfig = SyncTvService.playbackSyncConfig;
     _chatScrollController.addListener(_handleChatScroll);
     _authErrorSubscription = SyncTvService.onAuthError.listen((_) {
       if (mounted) {
@@ -569,9 +570,14 @@ class _RoomScreenState extends State<RoomScreen>
         type == RoomRealtimeMessageKind.checkStatus) {
       final playbackStatus = message.playbackStatus;
       if (playbackStatus != null) {
+        final shouldLoadSnapshot =
+            _needsPlaybackResourceSnapshot(playbackStatus);
         _applyPlaybackStatus(
           _mergePlaybackStatus(playbackStatus, incomingHasTiming: true),
         );
+        if (shouldLoadSnapshot) {
+          unawaited(_loadCurrentPlayback());
+        }
       } else if (message.status != null) {
         final status = message.status!;
         _applyPlaybackStatus(
@@ -580,6 +586,7 @@ class _RoomScreenState extends State<RoomScreen>
             isPlaying: status.isPlaying,
             currentTime: status.currentTime,
             playbackRate: status.playbackRate,
+            generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
           ),
         );
       }
@@ -946,6 +953,9 @@ class _RoomScreenState extends State<RoomScreen>
       playbackRate: incomingHasTiming
           ? incoming.playbackRate
           : current?.playbackRate ?? incoming.playbackRate,
+      generatedAtMillis: incomingHasTiming
+          ? incoming.generatedAtMillis
+          : current?.generatedAtMillis ?? incoming.generatedAtMillis,
       version: incoming.version ?? current?.version,
       playingMediaId: incoming.playingMediaId.isNotEmpty
           ? incoming.playingMediaId
@@ -957,6 +967,24 @@ class _RoomScreenState extends State<RoomScreen>
           ? incoming.targetHash
           : current?.targetHash ?? incoming.targetHash,
     );
+  }
+
+  bool _needsPlaybackResourceSnapshot(SyncTvPlaybackStatus incoming) {
+    if (incoming.movie != null && incoming.movie!.url.isNotEmpty) {
+      return false;
+    }
+    final current = _currentStatus;
+    final incomingHasTarget = incoming.playingMediaId.isNotEmpty ||
+        incoming.playingPlaylistId.isNotEmpty ||
+        incoming.targetHash.isNotEmpty;
+    if (!incomingHasTarget) return false;
+    if (current == null || current.movie == null) return true;
+    return (incoming.playingMediaId.isNotEmpty &&
+            incoming.playingMediaId != current.playingMediaId) ||
+        (incoming.playingPlaylistId.isNotEmpty &&
+            incoming.playingPlaylistId != current.playingPlaylistId) ||
+        (incoming.targetHash.isNotEmpty &&
+            incoming.targetHash != current.targetHash);
   }
 
   void _applyMediaLibrary(RoomMediaLibraryPage mediaLibrary) {
@@ -988,7 +1016,9 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _performSync(
-      bool isPlaying, double currentTime, double playbackRate) async {
+    SyncTvPlaybackStatus status, {
+    bool forceSeek = false,
+  }) async {
     final controller = _videoPlayerController;
     if (controller == null || !controller.value.isInitialized) {
       return;
@@ -997,33 +1027,39 @@ class _RoomScreenState extends State<RoomScreen>
     _isSyncing = true;
 
     try {
-      if ((controller.value.playbackSpeed - playbackRate).abs() > 0.1) {
-        await controller.setPlaybackSpeed(playbackRate);
+      if (controller.value.playbackSpeed != status.playbackRate) {
+        await controller.setPlaybackSpeed(status.playbackRate);
         if (!mounted || !identical(_videoPlayerController, controller)) return;
-        _lastRate = playbackRate;
+        _refreshPlaybackUi(controller);
       }
 
       final currentPos = controller.value.position.inMilliseconds / 1000.0;
-      final targetTime = _boundedPlaybackTime(currentTime);
-      final shouldStopAtEnd = _isPlaybackTimePastDuration(currentTime);
-      final targetIsPlaying = shouldStopAtEnd ? false : isPlaying;
+      final target = _playbackSyncTarget(status, controller);
+      final targetIsPlaying = target.isAtEnd ? false : status.isPlaying;
       if (!targetIsPlaying && controller.value.isPlaying) {
         await controller.pause();
         if (!mounted || !identical(_videoPlayerController, controller)) return;
-        _lastPlaying = false;
+        _refreshPlaybackUi(controller);
       }
-      if ((currentPos - targetTime).abs() > 1.0) {
-        await controller
-            .seekTo(Duration(milliseconds: (targetTime * 1000).toInt()));
+      final positionDrift = (currentPos - target.positionSeconds).abs();
+      final shouldAutoSeek = _playbackSyncConfig.autoSyncEnabled &&
+          positionDrift > _playbackSyncConfig.autoSeekDriftThresholdSeconds;
+      final shouldManualSeek = forceSeek &&
+          positionDrift >= _playbackSyncConfig.manualSeekDriftThresholdSeconds;
+      if (target.isAtEnd || shouldManualSeek || shouldAutoSeek) {
+        await controller.seekTo(
+          Duration(milliseconds: (target.positionSeconds * 1000).toInt()),
+        );
         if (!mounted || !identical(_videoPlayerController, controller)) return;
-        _lastPosition = targetTime;
+        _refreshPlaybackUi(controller);
       }
 
       if (targetIsPlaying && controller.value.isPlaying == false) {
         await controller.play();
         if (!mounted || !identical(_videoPlayerController, controller)) return;
-        _lastPlaying = true;
+        _refreshPlaybackUi(controller);
       }
+      _refreshPlaybackUi(controller);
     } catch (e) {
       if (!_isDisposedVideoControllerError(e)) {
         debugPrint('Sync execution error: $e');
@@ -1033,6 +1069,21 @@ class _RoomScreenState extends State<RoomScreen>
         if (mounted) _isSyncing = false;
       });
     }
+  }
+
+  PlaybackSyncTarget _playbackSyncTarget(
+    SyncTvPlaybackStatus status,
+    VideoPlayerController controller,
+  ) {
+    return resolvePlaybackSyncTarget(
+      status: status,
+      duration: controller.value.duration,
+    );
+  }
+
+  void _refreshPlaybackUi(VideoPlayerController controller) {
+    if (!mounted || !identical(_videoPlayerController, controller)) return;
+    setState(() {});
   }
 
   bool _isDisposedVideoControllerError(Object error) {
@@ -1047,15 +1098,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (duration == null || duration <= Duration.zero) return currentTime;
     final durationSeconds = duration.inMilliseconds / 1000.0;
     if (durationSeconds <= 0) return currentTime;
-    final maxPlayable = durationSeconds > 0.25 ? durationSeconds - 0.25 : 0.0;
-    return currentTime.clamp(0.0, maxPlayable).toDouble();
-  }
-
-  bool _isPlaybackTimePastDuration(double sourceTime) {
-    final duration = _videoPlayerController?.value.duration;
-    if (duration == null || duration <= Duration.zero) return false;
-    final durationSeconds = duration.inMilliseconds / 1000.0;
-    return durationSeconds > 0 && sourceTime > durationSeconds;
+    return currentTime.clamp(0.0, durationSeconds).toDouble();
   }
 
   void _videoListener() {
@@ -1066,94 +1109,58 @@ class _RoomScreenState extends State<RoomScreen>
     }
 
     final value = _videoPlayerController!.value;
-    final isPlaying = value.isPlaying;
     final position =
         _boundedPlaybackTime(value.position.inMilliseconds / 1000.0);
-    final rate = value.playbackSpeed;
-    final now = DateTime.now();
-    final previousSampleAt = _lastPlaybackSampleAt;
-    final previousPlaying = _lastPlaying;
-    final previousRate = _lastRate;
-    final previousPosition = _lastPosition;
-
-    final isPlayPauseChanged = isPlaying != previousPlaying;
-    final isRateChanged = rate != previousRate;
-    var isSeekChanged = false;
-
-    if (previousSampleAt != null) {
-      final elapsedSeconds =
-          now.difference(previousSampleAt).inMilliseconds / 1000.0;
-      final expectedDelta =
-          previousPlaying ? elapsedSeconds * previousRate : 0.0;
-      final actualDelta = position - previousPosition;
-      isSeekChanged = (actualDelta - expectedDelta).abs() > 2.0;
-    } else if (position > 2.0) {
-      isSeekChanged = true;
-    }
-
-    _lastPlaying = isPlaying;
-    _lastRate = rate;
-    _lastPosition = position;
-    _lastPlaybackSampleAt = now;
-
-    if (isPlayPauseChanged || isRateChanged || isSeekChanged) {
-      if (_updateDebounce?.isActive ?? false) _updateDebounce!.cancel();
-      if (isPlayPauseChanged && mounted && !_isSyncing) {
-        _sendPlaybackUpdate(
-          isPlaying ? PlaybackControlAction.play : PlaybackControlAction.pause,
-          isPlaying,
-          position,
-          rate,
-        );
-        return;
-      }
-
-      if (isRateChanged && mounted && !_isSyncing) {
-        _sendPlaybackUpdate(
-          PlaybackControlAction.speed,
-          isPlaying,
-          position,
-          rate,
-        );
-        return;
-      }
-
-      _updateDebounce = Timer(const Duration(milliseconds: 500), () {
-        if (mounted && !_isSyncing) {
-          final currentValue = _videoPlayerController!.value;
-          _sendPlaybackUpdate(
-              PlaybackControlAction.seek,
-              currentValue.isPlaying,
-              _boundedPlaybackTime(
-                  currentValue.position.inMilliseconds / 1000.0),
-              currentValue.playbackSpeed);
-        }
-      });
-      return;
-    }
-
-    if (isPlaying) {
+    if (value.isPlaying) {
       unawaited(_maybeFetchPlaybackDanmaku(position));
     }
   }
 
-  void _sendPlaybackUpdate(
-    PlaybackControlAction action,
-    bool isPlaying,
-    double position,
-    double rate,
-  ) {
+  void _handleUserPlaybackStateChanged(bool isPlaying) {
+    final value = _videoPlayerController?.value;
+    if (value == null) return;
+    _sendPlaybackControlMessage(
+      _playbackControlReporter().playbackStateChanged(
+        value: value,
+        isPlaying: isPlaying,
+      ),
+    );
+  }
+
+  void _handleUserSeek(Duration position) {
+    final value = _videoPlayerController?.value;
+    if (value == null) return;
+    _sendPlaybackControlMessage(
+      _playbackControlReporter().seek(
+        value: value,
+        position: position,
+      ),
+    );
+  }
+
+  void _handleUserPlaybackSpeedChanged(double speed) {
+    final value = _videoPlayerController?.value;
+    if (value == null) return;
+    _sendPlaybackControlMessage(
+      _playbackControlReporter().playbackSpeedChanged(
+        value: value,
+        speed: speed,
+      ),
+    );
+  }
+
+  PlaybackControlReporter _playbackControlReporter() {
+    return PlaybackControlReporter(
+      currentStatus: _currentStatus,
+      isSyncing: _isSyncing,
+      boundPosition: _boundedPlaybackTime,
+    );
+  }
+
+  void _sendPlaybackControlMessage(client.ClientMessage? message) {
+    if (message == null) return;
     try {
-      final safePosition = _boundedPlaybackTime(position);
-      _sendRealtimeMessage(
-        RoomRealtimeCodec.buildGuardedPlaybackStateUpdateMessage(
-          action,
-          _currentStatus,
-          isPlaying: isPlaying,
-          position: safePosition,
-          playbackRate: rate,
-        ).writeToBuffer(),
-      );
+      _sendRealtimeMessage(message.writeToBuffer());
     } catch (e) {
       debugPrint('Realtime playback state update error: $e');
       if (mounted) MessageUtils.showError(context, '播放状态更新失败');
@@ -1210,6 +1217,7 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() {
       _currentStatus = status;
       if (status.movie == null || status.movie!.url.isEmpty) {
+        _videoInitGeneration++;
         _isVideoLoading = false;
         _videoError = null;
       }
@@ -1224,18 +1232,10 @@ class _RoomScreenState extends State<RoomScreen>
         if (mounted &&
             _videoPlayerController != null &&
             _videoPlayerController!.value.isInitialized) {
-          _performSync(
-            status.isPlaying,
-            status.currentTime,
-            status.playbackRate,
-          );
+          _performSync(status);
         }
       } else {
-        _performSync(
-          status.isPlaying,
-          status.currentTime,
-          status.playbackRate,
-        );
+        _performSync(status);
       }
 
       final streamUrl = status.movie!.streamDanmu == null
@@ -1264,6 +1264,7 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _initVideo(String url, {Map<String, String>? headers}) async {
     if (url.isEmpty) return;
     _warnPlaybackCredentialHeaders(headers ?? const {});
+    final generation = ++_videoInitGeneration;
     if (mounted) {
       setState(() {
         _isVideoLoading = true;
@@ -1279,7 +1280,7 @@ class _RoomScreenState extends State<RoomScreen>
     try {
       await newController.initialize();
 
-      if (!mounted) {
+      if (!mounted || generation != _videoInitGeneration) {
         newController.dispose();
         return;
       }
@@ -1297,7 +1298,7 @@ class _RoomScreenState extends State<RoomScreen>
       }
     } catch (e) {
       newController.dispose();
-      if (mounted) {
+      if (mounted && generation == _videoInitGeneration) {
         final message = playbackLoadErrorMessage(e);
         setState(() {
           _isVideoLoading = false;
@@ -1316,9 +1317,9 @@ class _RoomScreenState extends State<RoomScreen>
     final movie = status?.movie;
     if (status == null || movie == null) return;
     final wasPlaying = _videoPlayerController?.value.isPlaying ?? false;
-    final position =
-        _videoPlayerController?.value.position.inMilliseconds.toDouble() ??
-            status.currentTime;
+    final position = _videoPlayerController == null
+        ? status.derivedCurrentTime()
+        : _videoPlayerController!.value.position.inMilliseconds / 1000.0;
     final selected = movie.selectPlayback(
       modeKey: mode.key,
       urlIndex: urlIndex,
@@ -1330,6 +1331,11 @@ class _RoomScreenState extends State<RoomScreen>
         isPlaying: wasPlaying || status.isPlaying,
         currentTime: position,
         playbackRate: status.playbackRate,
+        generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+        version: status.version,
+        playingMediaId: status.playingMediaId,
+        playingPlaylistId: status.playingPlaylistId,
+        targetHash: status.targetHash,
       );
     });
     await _applyPlaybackStatus(_currentStatus!);
@@ -1345,6 +1351,39 @@ class _RoomScreenState extends State<RoomScreen>
   Widget? _buildPlaybackOptionButton({bool compact = false}) {
     final movie = _currentStatus?.movie;
     if (movie == null || !movie.hasPlaybackChoices) return null;
+    if (compact) {
+      return AppPopupMenuButton<String>(
+        tooltip: '播放线路',
+        color: Colors.black87,
+        onSelected: (value) {
+          final parts = value.split('|');
+          if (parts.length != 2) return;
+          final mode = movie.playbackModes.firstWhere(
+            (entry) => entry.key == parts[0],
+            orElse: () => movie.playbackModes.first,
+          );
+          final index = int.tryParse(parts[1]) ?? mode.safeDefaultUrlIndex;
+          _selectPlaybackOption(mode, index);
+        },
+        itemBuilder: (context) => _buildPlaybackOptionMenuItems(movie),
+        child: Tooltip(
+          message: movie.playbackChoiceLabel,
+          child: AppPanelSurface(
+            width: 32,
+            height: 32,
+            color: Colors.white.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white24),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.route_rounded,
+              size: 18,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
     final maxLabelWidth = compact ? 0.0 : 170.0;
     return AppPopupMenuButton<String>(
       tooltip: '播放线路',
@@ -1359,56 +1398,7 @@ class _RoomScreenState extends State<RoomScreen>
         final index = int.tryParse(parts[1]) ?? mode.safeDefaultUrlIndex;
         _selectPlaybackOption(mode, index);
       },
-      itemBuilder: (context) {
-        final items = <PopupMenuEntry<String>>[];
-        for (final mode in movie.playbackModes) {
-          if (items.isNotEmpty) items.add(const PopupMenuDivider(height: 8));
-          items.add(
-            PopupMenuItem<String>(
-              enabled: false,
-              height: 28,
-              child: Text(
-                mode.label,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          );
-          for (var i = 0; i < mode.urls.length; i++) {
-            final selected = mode.key == movie.selectedPlaybackMode &&
-                i == movie.selectedPlaybackUrlIndex;
-            items.add(
-              PopupMenuItem<String>(
-                value: '${mode.key}|$i',
-                height: 36,
-                child: Row(
-                  children: [
-                    Icon(
-                      selected
-                          ? Icons.radio_button_checked_rounded
-                          : Icons.radio_button_unchecked_rounded,
-                      size: 18,
-                      color:
-                          selected ? const Color(0xFF7CFFB2) : Colors.white70,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        mode.urls[i].label(i),
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-        }
-        return items;
-      },
+      itemBuilder: (context) => _buildPlaybackOptionMenuItems(movie),
       child: Tooltip(
         message: movie.playbackChoiceLabel,
         child: AppBadge(
@@ -1437,6 +1427,58 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
+  List<PopupMenuEntry<String>> _buildPlaybackOptionMenuItems(
+    SyncTvMovie movie,
+  ) {
+    final items = <PopupMenuEntry<String>>[];
+    for (final mode in movie.playbackModes) {
+      if (items.isNotEmpty) items.add(const PopupMenuDivider(height: 8));
+      items.add(
+        PopupMenuItem<String>(
+          enabled: false,
+          height: 28,
+          child: Text(
+            mode.label,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      );
+      for (var i = 0; i < mode.urls.length; i++) {
+        final selected = mode.key == movie.selectedPlaybackMode &&
+            i == movie.selectedPlaybackUrlIndex;
+        items.add(
+          PopupMenuItem<String>(
+            value: '${mode.key}|$i',
+            height: 36,
+            child: Row(
+              children: [
+                Icon(
+                  selected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 18,
+                  color: selected ? const Color(0xFF7CFFB2) : Colors.white70,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    mode.urls[i].label(i),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+    return items;
+  }
+
   Widget _buildVideoEmptyState() {
     final hasPlayback = _currentStatus?.movie?.url.isNotEmpty == true;
     return PlaybackEmptyState(
@@ -1458,10 +1500,10 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _disposeVideoController() {
+    _videoInitGeneration++;
     _videoPlayerController?.removeListener(_videoListener);
     _videoPlayerController?.dispose();
     _videoPlayerController = null;
-    _updateDebounce?.cancel();
   }
 
   @override
@@ -1501,6 +1543,10 @@ class _RoomScreenState extends State<RoomScreen>
     if (index < 0 || index >= _roomTabCount) return;
     if (_roomTabIndex == index && _tabController.index == index) return;
     _tabController.index = index;
+    if (mounted) {
+      setState(() => _roomTabIndex = index);
+    }
+    _syncMemberTabObservation();
   }
 
   void _syncMemberTabObservation() {
@@ -1561,6 +1607,22 @@ class _RoomScreenState extends State<RoomScreen>
         title: Text(widget.room.roomName),
         backgroundColor: theme.appBarTheme.backgroundColor,
         actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: compactChrome
+                ? AppIconButton(
+                    onPressed: _openPlaybackSyncSettings,
+                    icon: Icons.sync_alt_rounded,
+                    tooltip: '同步设置',
+                    style: AppIconButtonStyle.tonal,
+                  )
+                : AppActionButton(
+                    onPressed: _openPlaybackSyncSettings,
+                    icon: Icons.sync_alt_rounded,
+                    label: '同步设置',
+                    style: AppActionButtonStyle.tonal,
+                  ),
+          ),
           if (_currentStatus?.movie != null)
             AppActionButton(
               onPressed: _stopPlayback,
@@ -1614,9 +1676,8 @@ class _RoomScreenState extends State<RoomScreen>
       borderRadius: BorderRadius.circular(8),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final topOptionCompact = constraints.maxWidth < 760;
           final playbackOptionButton = _buildPlaybackOptionButton(
-            compact: topOptionCompact,
+            compact: true,
           );
           return Stack(
             children: [
@@ -1630,6 +1691,11 @@ class _RoomScreenState extends State<RoomScreen>
                         subtitles: _currentStatus?.movie?.subtitles,
                         onToggleFullScreen: _toggleFullScreen,
                         onSync: _handleSync,
+                        onUserPlaybackStateChanged:
+                            _handleUserPlaybackStateChanged,
+                        onUserSeek: _handleUserSeek,
+                        onUserPlaybackSpeedChanged:
+                            _handleUserPlaybackSpeedChanged,
                         interactionMode: VideoPlayerInteractionMode.desktop,
                         extraBottomWidget: _buildPlaybackOptionButton(
                           compact: true,
@@ -1712,15 +1778,126 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _handleSync() {
-    if (_channel == null) return;
-    _requestPlaybackSnapshot();
+    final status = _currentStatus;
+    if (status == null) return;
+    unawaited(_performSync(status, forceSeek: true));
     if (mounted) {
       MessageUtils.showInfo(
         context,
-        '已请求同步',
+        '已同步到最新进度',
         duration: const Duration(seconds: 1),
       );
     }
+  }
+
+  Future<void> _openPlaybackSyncSettings() async {
+    final nextConfig = await showAppDialog<PlaybackSyncConfig>(
+      context: context,
+      builder: (dialogContext) {
+        var draft = _playbackSyncConfig;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final autoThresholdLabel =
+                '${draft.autoSeekDriftThresholdSeconds.toStringAsFixed(1)} 秒';
+            final manualThresholdLabel =
+                '${draft.manualSeekDriftThresholdSeconds.toStringAsFixed(1)} 秒';
+
+            return AppDialog(
+              title: const Text('同步设置'),
+              icon: const Icon(Icons.sync_alt_rounded),
+              body: SizedBox(
+                width: 520,
+                child: AppSingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppSwitchTile(
+                        value: draft.autoSyncEnabled,
+                        onChanged: (value) {
+                          setDialogState(() {
+                            draft = draft.copyWith(autoSyncEnabled: value);
+                          });
+                        },
+                        prefix: const Icon(Icons.auto_mode_rounded),
+                        title: const Text('自动进度纠偏'),
+                        subtitle: const Text('实时状态事件到达后，客户端按本地时钟计算目标进度并自动跳转'),
+                      ),
+                      const SizedBox(height: 18),
+                      _PlaybackSyncSlider(
+                        icon: Icons.linear_scale_rounded,
+                        title: '自动纠偏阈值',
+                        valueLabel: autoThresholdLabel,
+                        value: draft.autoSeekDriftThresholdSeconds,
+                        min: 0.1,
+                        max: 10.0,
+                        divisions: 99,
+                        enabled: draft.autoSyncEnabled,
+                        onChanged: (value) {
+                          setDialogState(() {
+                            draft = draft.copyWith(
+                              autoSeekDriftThresholdSeconds: value,
+                            );
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 18),
+                      _PlaybackSyncSlider(
+                        icon: Icons.touch_app_rounded,
+                        title: '手动同步最小误差',
+                        valueLabel: manualThresholdLabel,
+                        value: draft.manualSeekDriftThresholdSeconds,
+                        min: 0.1,
+                        max: 1.0,
+                        divisions: 18,
+                        enabled: true,
+                        onChanged: (value) {
+                          setDialogState(() {
+                            draft = draft.copyWith(
+                              manualSeekDriftThresholdSeconds: value,
+                            );
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                AppActionButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  label: '取消',
+                  style: AppActionButtonStyle.outlined,
+                ),
+                AppActionButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext, PlaybackSyncConfig.defaults);
+                  },
+                  label: '恢复默认',
+                  style: AppActionButtonStyle.tonal,
+                ),
+                AppActionButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext, draft.normalized());
+                  },
+                  icon: Icons.check_rounded,
+                  label: '保存',
+                  style: AppActionButtonStyle.filled,
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (nextConfig == null) return;
+    await SyncTvService.savePlaybackSyncConfig(nextConfig);
+    if (!mounted) return;
+    setState(() {
+      _playbackSyncConfig = SyncTvService.playbackSyncConfig;
+    });
+    MessageUtils.showSuccess(context, '同步设置已保存');
   }
 
   Future<void> _observeRoomMembers() async {
@@ -1851,6 +2028,9 @@ class _RoomScreenState extends State<RoomScreen>
           subtitles: _currentStatus?.movie?.subtitles,
           onToggleFullScreen: () => Navigator.of(context).pop(),
           onSync: _handleSync,
+          onUserPlaybackStateChanged: _handleUserPlaybackStateChanged,
+          onUserSeek: _handleUserSeek,
+          onUserPlaybackSpeedChanged: _handleUserPlaybackSpeedChanged,
           onSendDanmaku: _sendDanmaku,
           isFullScreen: true,
           interactionMode: VideoPlayerInteractionMode.desktop,
@@ -4328,6 +4508,79 @@ class _RoomMiniBadge extends StatelessWidget {
       borderSide: borderSide,
       textStyle: TextStyle(fontSize: 10, color: color),
       label: Text(label),
+    );
+  }
+}
+
+class _PlaybackSyncSlider extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String valueLabel;
+  final double value;
+  final double min;
+  final double max;
+  final int divisions;
+  final bool enabled;
+  final ValueChanged<double> onChanged;
+
+  const _PlaybackSyncSlider({
+    required this.icon,
+    required this.title,
+    required this.valueLabel,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.divisions,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = enabled
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface.withValues(alpha: 0.38);
+    return AppPanelSurface(
+      padding: const EdgeInsets.all(14),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
+      borderRadius: BorderRadius.circular(8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: color),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                valueLabel,
+                style: theme.textTheme.labelLarge?.copyWith(color: color),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Material(
+            type: MaterialType.transparency,
+            child: AppSlider(
+              value: value.clamp(min, max).toDouble(),
+              min: min,
+              max: max,
+              divisions: divisions,
+              label: valueLabel,
+              onChanged: enabled ? onChanged : null,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

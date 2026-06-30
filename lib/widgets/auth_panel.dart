@@ -1438,6 +1438,7 @@ class _AgreementRow extends StatelessWidget {
     return AppCheckboxTile(
       value: agreed,
       onChanged: onChanged,
+      semanticsLabel: '同意用户协议和隐私政策',
       contentPadding: EdgeInsets.zero,
       title: Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,

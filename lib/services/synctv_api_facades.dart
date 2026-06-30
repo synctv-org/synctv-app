@@ -1064,7 +1064,7 @@ class SyncTvRoomApi {
       'GET',
       '/api/rooms/$roomId/chat/messages/${request.messageId}',
       client.GetChatMessageResponse.create,
-      query: _api._messageQuery(request),
+      query: _api._messageQuery(request)..remove('messageId'),
     );
   }
 
@@ -1076,7 +1076,7 @@ class SyncTvRoomApi {
       'GET',
       '/api/rooms/$roomId/chat/messages/${request.messageId}/context',
       client.GetChatMessageContextResponse.create,
-      query: _api._messageQuery(request),
+      query: _api._messageQuery(request)..remove('messageId'),
     );
   }
 
@@ -1225,7 +1225,9 @@ class SyncTvRoomApi {
       'GET',
       '/api/rooms/$roomId/chat/messages/$messageId/reactions/$reactionKey/users',
       client.ListChatReactionUsersResponse.create,
-      query: _api._messageQuery(request),
+      query: _api._messageQuery(request)
+        ..remove('messageId')
+        ..remove('reactionKey'),
     );
   }
 
@@ -1262,7 +1264,7 @@ class SyncTvRoomApi {
       'GET',
       '/api/rooms/$roomId/chat/messages/$messageId/read-receipts',
       client.GetChatMessageReadReceiptsResponse.create,
-      query: _api._messageQuery(request),
+      query: _api._messageQuery(request)..remove('messageId'),
     );
   }
 
@@ -2753,7 +2755,10 @@ class SyncTvProviderCommonApi {
       'GET',
       '/api/providers/instances/available',
       provider_common.ProviderInstancesResponse.create,
-      query: _api._messageQuery(request),
+      query: {
+        'providerType':
+            SourceConfigCodec.providerToString(request.providerType),
+      },
     );
   }
 
@@ -2764,7 +2769,17 @@ class SyncTvProviderCommonApi {
       'GET',
       '/api/providers/instances',
       provider_common.ListProviderInstancesResponse.create,
-      query: _api._messageQuery(request),
+      query: {
+        'page': request.page.toString(),
+        'pageSize': request.pageSize.toString(),
+        'providerType':
+            SourceConfigCodec.providerToString(request.providerType),
+        'search': request.search,
+        if (request.hasEnabled()) 'enabled': request.enabled.toString(),
+        if (request.hasTls()) 'tls': request.tls.toString(),
+        'sortBy': request.sortBy.value.toString(),
+        'sortDirection': request.sortDirection.value.toString(),
+      },
     );
   }
 

@@ -1040,6 +1040,11 @@ class SyncTvRoomMediaDomainService {
       isPlaying: true,
       currentTime: 0,
       playbackRate: current.playbackRate,
+      generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+      version: current.version,
+      playingMediaId: current.playingMediaId,
+      playingPlaylistId: current.playingPlaylistId,
+      targetHash: current.targetHash,
     );
   }
 
@@ -1321,6 +1326,7 @@ class SyncTvRoomMediaDomainService {
       isPlaying: state.isPlaying,
       currentTime: state.position,
       playbackRate: state.speed == 0 ? 1.0 : state.speed,
+      generatedAtMillis: state.generatedAtMillis.toInt(),
       version: state.version.toInt(),
       playingMediaId: state.playingMediaId,
       playingPlaylistId: state.playingPlaylistId,
@@ -1337,6 +1343,9 @@ class SyncTvRoomMediaDomainService {
             playback,
             resolveUrl: _api.resolveResourceUrl,
           );
-    return SyncTvPlaybackStatus(movie: movie);
+    return SyncTvPlaybackStatus(
+      movie: movie,
+      generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+    );
   }
 }

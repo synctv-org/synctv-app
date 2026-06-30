@@ -1670,6 +1670,13 @@ const PlaybackState$json = {
       '10': 'target'
     },
     {'1': 'target_hash', '3': 10, '4': 1, '5': 9, '10': 'targetHash'},
+    {
+      '1': 'generated_at_millis',
+      '3': 11,
+      '4': 1,
+      '5': 3,
+      '10': 'generatedAtMillis'
+    },
   ],
 };
 
@@ -1681,7 +1688,8 @@ final $typed_data.Uint8List playbackStateDescriptor = $convert.base64Decode(
     'p1cGRhdGVkX2F0GAYgASgDUgl1cGRhdGVkQXQSGAoHdmVyc2lvbhgHIAEoA1IHdmVyc2lvbhIu'
     'ChNwbGF5aW5nX3BsYXlsaXN0X2lkGAggASgJUhFwbGF5aW5nUGxheWxpc3RJZBI1CgZ0YXJnZX'
     'QYCSABKAsyHS5zeW5jdHYuY2xpZW50LlByb3ZpZGVyVGFyZ2V0UgZ0YXJnZXQSHwoLdGFyZ2V0'
-    'X2hhc2gYCiABKAlSCnRhcmdldEhhc2g=');
+    'X2hhc2gYCiABKAlSCnRhcmdldEhhc2gSLgoTZ2VuZXJhdGVkX2F0X21pbGxpcxgLIAEoA1IRZ2'
+    'VuZXJhdGVkQXRNaWxsaXM=');
 
 @$core.Deprecated('Use registerResponseDescriptor instead')
 const RegisterResponse$json = {

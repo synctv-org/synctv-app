@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/admin_models.dart';
 import 'package:synctv_app/models/provider_models.dart';
+import 'package:synctv_app/models/playback_sync_config.dart';
 import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
@@ -32,10 +34,43 @@ export 'package:synctv_app/models/room_media_models.dart';
 export 'package:synctv_app/services/synctv_file_upload_service.dart';
 
 class SyncTvService {
+  static const String _playbackSyncConfigKey = 'synctv.playback.sync.config';
+  static PlaybackSyncConfig _playbackSyncConfig = PlaybackSyncConfig.defaults;
+
   static String get baseUrl => _runtime.baseUrl;
   static List<SyncTvServerProfile> get servers => _runtime.servers;
   static SyncTvServerProfile? get activeServer => _runtime.activeServer;
   static bool get hasRecoverableSession => _runtime.hasRecoverableSession;
+  static PlaybackSyncConfig get playbackSyncConfig => _playbackSyncConfig;
+
+  static void configurePlaybackSync(PlaybackSyncConfig config) {
+    _playbackSyncConfig = config.normalized();
+  }
+
+  static Future<void> loadPlaybackSyncConfig() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_playbackSyncConfigKey);
+    if (raw == null || raw.isEmpty) {
+      _playbackSyncConfig = PlaybackSyncConfig.defaults;
+      return;
+    }
+    final decoded = jsonDecode(raw);
+    if (decoded is Map<String, Object?>) {
+      _playbackSyncConfig = PlaybackSyncConfig.fromJson(decoded);
+    } else {
+      _playbackSyncConfig = PlaybackSyncConfig.defaults;
+    }
+  }
+
+  static Future<void> savePlaybackSyncConfig(PlaybackSyncConfig config) async {
+    _playbackSyncConfig = config.normalized();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _playbackSyncConfigKey,
+      jsonEncode(_playbackSyncConfig.toJson()),
+    );
+  }
+
   static String resolveResourceUrl(String url) =>
       _runtime.resolveResourceUrl(url);
   static String? get guestRoomId => _runtime.guestRoomId;
@@ -48,6 +83,7 @@ class SyncTvService {
   static Stream<void> get onAuthError => _runtime.onAuthError;
 
   static Future<void> init() async {
+    await loadPlaybackSyncConfig();
     await _runtime.init();
     _domains = _createDomains();
   }
@@ -1530,6 +1566,11 @@ class SyncTvService {
             isPlaying: true,
             currentTime: 0,
             playbackRate: playback.playbackRate,
+            generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+            version: playback.version,
+            playingMediaId: playback.playingMediaId,
+            playingPlaylistId: playback.playingPlaylistId,
+            targetHash: playback.targetHash,
           )
         : playback;
   }

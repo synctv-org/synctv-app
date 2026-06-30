@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 class AppResponsiveWrap extends StatelessWidget {
   final List<Widget> children;
@@ -87,7 +88,8 @@ class AppAdaptiveSplitView extends StatelessWidget {
           final aspectHeight = availableWidth / collapsedPrimaryAspectRatio;
           final primaryHeight = constraints.hasBoundedHeight
               ? aspectHeight
-                  .clamp(0, constraints.maxHeight * collapsedPrimaryMaxHeightFraction)
+                  .clamp(0,
+                      constraints.maxHeight * collapsedPrimaryMaxHeightFraction)
                   .toDouble()
               : aspectHeight;
           final remainingHeight =
@@ -97,7 +99,7 @@ class AppAdaptiveSplitView extends StatelessWidget {
           final secondaryHeight = remainingHeight >= minSecondaryHeight
               ? remainingHeight
               : minSecondaryHeight;
-          return ListView(
+          return AppListView(
             padding: EdgeInsets.zero,
             children: [
               SizedBox(height: primaryHeight, child: primary),

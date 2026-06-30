@@ -826,8 +826,11 @@ class RoomCheckInfo {
 class SyncTvPlaybackStatus {
   final SyncTvMovie? movie;
   final bool isPlaying;
+
+  /// Server-generated playback position at [generatedAtMillis].
   final double currentTime;
   final double playbackRate;
+  final int generatedAtMillis;
   final int? version;
   final String playingMediaId;
   final String playingPlaylistId;
@@ -838,17 +841,28 @@ class SyncTvPlaybackStatus {
     this.isPlaying = false,
     this.currentTime = 0,
     this.playbackRate = 1.0,
+    this.generatedAtMillis = 0,
     this.version,
     this.playingMediaId = '',
     this.playingPlaylistId = '',
     this.targetHash = '',
   });
 
+  double derivedCurrentTime({DateTime? now}) {
+    final base = currentTime.isFinite && currentTime > 0 ? currentTime : 0.0;
+    if (!isPlaying || generatedAtMillis <= 0) return base;
+    final elapsedMillis =
+        (now ?? DateTime.now()).millisecondsSinceEpoch - generatedAtMillis;
+    if (elapsedMillis <= 0) return base;
+    return base + elapsedMillis / 1000.0 * playbackRate;
+  }
+
   SyncTvPlaybackStatus copyWith({
     SyncTvMovie? movie,
     bool? isPlaying,
     double? currentTime,
     double? playbackRate,
+    int? generatedAtMillis,
     int? version,
     String? playingMediaId,
     String? playingPlaylistId,
@@ -859,6 +873,7 @@ class SyncTvPlaybackStatus {
       isPlaying: isPlaying ?? this.isPlaying,
       currentTime: currentTime ?? this.currentTime,
       playbackRate: playbackRate ?? this.playbackRate,
+      generatedAtMillis: generatedAtMillis ?? this.generatedAtMillis,
       version: version ?? this.version,
       playingMediaId: playingMediaId ?? this.playingMediaId,
       playingPlaylistId: playingPlaylistId ?? this.playingPlaylistId,

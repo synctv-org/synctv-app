@@ -591,21 +591,26 @@ class AppSelectableText extends StatelessWidget {
             const TextStyle(fontFamily: 'monospace')
         : style;
 
-    return Semantics(
-      label: semanticLabel ?? data,
-      readOnly: true,
-      child: SelectableText(
-        data,
-        style: effectiveStyle,
-        maxLines: maxLines,
-        textAlign: textAlign,
-        autofocus: autofocus,
-        focusNode: focusNode,
-        textScaler: textScaler,
-        strutStyle: strutStyle,
-        textWidthBasis: textWidthBasis,
-        textHeightBehavior: textHeightBehavior,
-        onSelectionChanged: onSelectionChanged,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 28),
+      child: Semantics(
+        label: semanticLabel ?? data,
+        readOnly: true,
+        child: ExcludeSemantics(
+          child: SelectableText(
+            data,
+            style: effectiveStyle,
+            maxLines: maxLines,
+            textAlign: textAlign,
+            autofocus: autofocus,
+            focusNode: focusNode,
+            textScaler: textScaler,
+            strutStyle: strutStyle,
+            textWidthBasis: textWidthBasis,
+            textHeightBehavior: textHeightBehavior,
+            onSelectionChanged: onSelectionChanged,
+          ),
+        ),
       ),
     );
   }
@@ -796,7 +801,6 @@ class _AppTextFieldState extends State<AppTextField> {
         : null;
 
     final textField = ExcludeSemantics(
-      excluding: _enabled,
       child: TextFormField(
         controller: widget.controller,
         focusNode: _effectiveFocusNode,
@@ -863,12 +867,13 @@ class _AppTextFieldState extends State<AppTextField> {
   }
 
   Widget _withSetTextSemantics(Widget child) {
-    if (!_enabled) return child;
     return Semantics(
       textField: true,
+      readOnly: widget.readOnly,
+      enabled: widget.enabled,
       label: widget.label,
       value: widget.controller.text,
-      onSetText: _setText,
+      onSetText: _enabled ? _setText : null,
       child: child,
     );
   }
@@ -915,7 +920,6 @@ class _AppTextFieldState extends State<AppTextField> {
             widget.showClearButton &&
             widget.controller.text.isNotEmpty);
   }
-
 }
 
 class AppReadOnlyField extends StatefulWidget {
@@ -1065,15 +1069,18 @@ class AppActionButton extends StatelessWidget {
       enabled: effectiveOnPressed != null,
       label: label,
       onTap: effectiveOnPressed,
-      child: FButton(
-        onPress: effectiveOnPressed,
-        variant: variant,
-        size: buttonSize,
-        mainAxisSize: MainAxisSize.min,
-        prefix: buttonIcon,
-        focusNode: focusNode,
-        autofocus: autofocus,
-        child: child,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+        child: FButton(
+          onPress: effectiveOnPressed,
+          variant: variant,
+          size: buttonSize,
+          mainAxisSize: MainAxisSize.min,
+          prefix: buttonIcon,
+          focusNode: focusNode,
+          autofocus: autofocus,
+          child: child,
+        ),
       ),
     );
   }
@@ -3585,17 +3592,22 @@ class AppSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FSwitch(
-      value: value,
-      onChange: enabled ? onChanged : null,
+    return Semantics(
+      label: semanticsLabel ?? label ?? '开关',
+      toggled: value,
       enabled: enabled && onChanged != null,
-      label: label == null ? null : Text(label!),
-      description: description == null ? null : Text(description!),
-      error: errorText == null ? null : Text(errorText!),
-      semanticsLabel: semanticsLabel ?? label,
-      leadingLabel: leadingLabel,
-      focusNode: focusNode,
-      autofocus: autofocus,
+      child: FSwitch(
+        value: value,
+        onChange: enabled ? onChanged : null,
+        enabled: enabled && onChanged != null,
+        label: label == null ? null : Text(label!),
+        description: description == null ? null : Text(description!),
+        error: errorText == null ? null : Text(errorText!),
+        semanticsLabel: semanticsLabel ?? label ?? '开关',
+        leadingLabel: leadingLabel,
+        focusNode: focusNode,
+        autofocus: autofocus,
+      ),
     );
   }
 }
