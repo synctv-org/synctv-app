@@ -35,16 +35,13 @@ class LocalImageUpload {
   int get sizeBytes => bytes.length;
   String get checksumSha256 => sha256.convert(bytes).toString();
   client.FileMetadata get metadata => client.FileMetadata(
-        width: width == 0 ? null : width,
-        height: height == 0 ? null : height,
-      );
+    width: width == 0 ? null : width,
+    height: height == 0 ? null : height,
+  );
 }
 
 class _OwnershipProofRange {
-  const _OwnershipProofRange({
-    required this.offset,
-    required this.length,
-  });
+  const _OwnershipProofRange({required this.offset, required this.length});
 
   final int offset;
   final int length;
@@ -90,28 +87,30 @@ class SyncTvFileUploadDomainService {
       maxSizeBytes: 20 * 1024 * 1024,
       allowAnyImageMime: true,
     );
-    final result = await _createUploadSession<
-        client.ChatAttachmentUploadSession,
-        client.CreateChatAttachmentUploadSessionResponse>(
-      upload: upload,
-      createRequest: (parts) => _api.room.createChatAttachmentUploadSession(
-        roomId,
-        client.CreateChatAttachmentUploadSessionRequest(
-          clientAttachmentId: _clientObjectId(upload),
-          mimeType: upload.mimeType,
-          sizeBytes: Int64(upload.sizeBytes),
-          width: upload.width,
-          height: upload.height,
-          parts: parts,
-          metadata: upload.metadata,
-          filename: upload.fileName,
-        ),
-      ),
-      planOf: (response) => response.plan,
-      sessionOf: (response) => response.session,
-      hasPlan: (response) => response.hasPlan(),
-      hasSession: (response) => response.hasSession(),
-    );
+    final result =
+        await _createUploadSession<
+          client.ChatAttachmentUploadSession,
+          client.CreateChatAttachmentUploadSessionResponse
+        >(
+          upload: upload,
+          createRequest: (parts) => _api.room.createChatAttachmentUploadSession(
+            roomId,
+            client.CreateChatAttachmentUploadSessionRequest(
+              clientAttachmentId: _clientObjectId(upload),
+              mimeType: upload.mimeType,
+              sizeBytes: Int64(upload.sizeBytes),
+              width: upload.width,
+              height: upload.height,
+              parts: parts,
+              metadata: upload.metadata,
+              filename: upload.fileName,
+            ),
+          ),
+          planOf: (response) => response.plan,
+          sessionOf: (response) => response.session,
+          hasPlan: (response) => response.hasPlan(),
+          hasSession: (response) => response.hasSession(),
+        );
     final session = result.session;
     final uploadedParts = await _uploadSessionParts(
       upload: upload,
@@ -135,10 +134,12 @@ class SyncTvFileUploadDomainService {
           nonce: session.ownershipProofNonce,
           contentManifestSha256: result.contentManifestSha256,
           ranges: session.ownershipProofRanges
-              .map((range) => _OwnershipProofRange(
-                    offset: range.offset.toInt(),
-                    length: range.length,
-                  ))
+              .map(
+                (range) => _OwnershipProofRange(
+                  offset: range.offset.toInt(),
+                  length: range.length,
+                ),
+              )
               .toList(growable: false),
         ),
       ),
@@ -151,25 +152,28 @@ class SyncTvFileUploadDomainService {
 
   Future<client.User> updateUserAvatar(LocalImageUpload upload) async {
     _validateImageUpload(upload, maxSizeBytes: 5 * 1024 * 1024);
-    final result = await _createUploadSession<client.UserAvatarUploadSession,
-        client.CreateUserAvatarUploadSessionResponse>(
-      upload: upload,
-      createRequest: (parts) => _api.user.createUserAvatarUploadSession(
-        client.CreateUserAvatarUploadSessionRequest(
-          clientAvatarId: _clientObjectId(upload),
-          mimeType: upload.mimeType,
-          sizeBytes: Int64(upload.sizeBytes),
-          width: upload.width,
-          height: upload.height,
-          parts: parts,
-          metadata: upload.metadata,
-        ),
-      ),
-      planOf: (response) => response.plan,
-      sessionOf: (response) => response.session,
-      hasPlan: (response) => response.hasPlan(),
-      hasSession: (response) => response.hasSession(),
-    );
+    final result =
+        await _createUploadSession<
+          client.UserAvatarUploadSession,
+          client.CreateUserAvatarUploadSessionResponse
+        >(
+          upload: upload,
+          createRequest: (parts) => _api.user.createUserAvatarUploadSession(
+            client.CreateUserAvatarUploadSessionRequest(
+              clientAvatarId: _clientObjectId(upload),
+              mimeType: upload.mimeType,
+              sizeBytes: Int64(upload.sizeBytes),
+              width: upload.width,
+              height: upload.height,
+              parts: parts,
+              metadata: upload.metadata,
+            ),
+          ),
+          planOf: (response) => response.plan,
+          sessionOf: (response) => response.session,
+          hasPlan: (response) => response.hasPlan(),
+          hasSession: (response) => response.hasSession(),
+        );
     final session = result.session;
     final uploadedParts = await _uploadSessionParts(
       upload: upload,
@@ -192,10 +196,12 @@ class SyncTvFileUploadDomainService {
           nonce: session.ownershipProofNonce,
           contentManifestSha256: result.contentManifestSha256,
           ranges: session.ownershipProofRanges
-              .map((range) => _OwnershipProofRange(
-                    offset: range.offset.toInt(),
-                    length: range.length,
-                  ))
+              .map(
+                (range) => _OwnershipProofRange(
+                  offset: range.offset.toInt(),
+                  length: range.length,
+                ),
+              )
               .toList(growable: false),
         ),
       ),
@@ -210,8 +216,9 @@ class SyncTvFileUploadDomainService {
   }
 
   Future<client.User> clearUserAvatar() async {
-    final response =
-        await _api.user.clearUserAvatar(client.ClearUserAvatarRequest());
+    final response = await _api.user.clearUserAvatar(
+      client.ClearUserAvatarRequest(),
+    );
     return response.user;
   }
 
@@ -220,27 +227,30 @@ class SyncTvFileUploadDomainService {
     LocalImageUpload upload,
   ) async {
     _validateImageUpload(upload, maxSizeBytes: 10 * 1024 * 1024);
-    final result = await _createUploadSession<client.RoomCoverUploadSession,
-        client.CreateRoomCoverUploadSessionResponse>(
-      upload: upload,
-      createRequest: (parts) => _api.room.createRoomCoverUploadSession(
-        roomId,
-        client.CreateRoomCoverUploadSessionRequest(
-          roomId: roomId,
-          clientCoverId: _clientObjectId(upload),
-          mimeType: upload.mimeType,
-          sizeBytes: Int64(upload.sizeBytes),
-          width: upload.width,
-          height: upload.height,
-          parts: parts,
-          metadata: upload.metadata,
-        ),
-      ),
-      planOf: (response) => response.plan,
-      sessionOf: (response) => response.session,
-      hasPlan: (response) => response.hasPlan(),
-      hasSession: (response) => response.hasSession(),
-    );
+    final result =
+        await _createUploadSession<
+          client.RoomCoverUploadSession,
+          client.CreateRoomCoverUploadSessionResponse
+        >(
+          upload: upload,
+          createRequest: (parts) => _api.room.createRoomCoverUploadSession(
+            roomId,
+            client.CreateRoomCoverUploadSessionRequest(
+              roomId: roomId,
+              clientCoverId: _clientObjectId(upload),
+              mimeType: upload.mimeType,
+              sizeBytes: Int64(upload.sizeBytes),
+              width: upload.width,
+              height: upload.height,
+              parts: parts,
+              metadata: upload.metadata,
+            ),
+          ),
+          planOf: (response) => response.plan,
+          sessionOf: (response) => response.session,
+          hasPlan: (response) => response.hasPlan(),
+          hasSession: (response) => response.hasSession(),
+        );
     final session = result.session;
     final uploadedParts = await _uploadSessionParts(
       upload: upload,
@@ -263,10 +273,12 @@ class SyncTvFileUploadDomainService {
           nonce: session.ownershipProofNonce,
           contentManifestSha256: result.contentManifestSha256,
           ranges: session.ownershipProofRanges
-              .map((range) => _OwnershipProofRange(
-                    offset: range.offset.toInt(),
-                    length: range.length,
-                  ))
+              .map(
+                (range) => _OwnershipProofRange(
+                  offset: range.offset.toInt(),
+                  length: range.length,
+                ),
+              )
               .toList(growable: false),
         ),
       ),
@@ -298,28 +310,31 @@ class SyncTvFileUploadDomainService {
     LocalImageUpload upload,
   ) async {
     _validateImageUpload(upload, maxSizeBytes: 10 * 1024 * 1024);
-    final result = await _createUploadSession<client.PlaylistCoverUploadSession,
-        client.CreatePlaylistCoverUploadSessionResponse>(
-      upload: upload,
-      createRequest: (parts) => _api.room.createPlaylistCoverUploadSession(
-        roomId,
-        client.CreatePlaylistCoverUploadSessionRequest(
-          roomId: roomId,
-          playlistId: playlistId,
-          clientCoverId: _clientObjectId(upload),
-          mimeType: upload.mimeType,
-          sizeBytes: Int64(upload.sizeBytes),
-          width: upload.width,
-          height: upload.height,
-          parts: parts,
-          metadata: upload.metadata,
-        ),
-      ),
-      planOf: (response) => response.plan,
-      sessionOf: (response) => response.session,
-      hasPlan: (response) => response.hasPlan(),
-      hasSession: (response) => response.hasSession(),
-    );
+    final result =
+        await _createUploadSession<
+          client.PlaylistCoverUploadSession,
+          client.CreatePlaylistCoverUploadSessionResponse
+        >(
+          upload: upload,
+          createRequest: (parts) => _api.room.createPlaylistCoverUploadSession(
+            roomId,
+            client.CreatePlaylistCoverUploadSessionRequest(
+              roomId: roomId,
+              playlistId: playlistId,
+              clientCoverId: _clientObjectId(upload),
+              mimeType: upload.mimeType,
+              sizeBytes: Int64(upload.sizeBytes),
+              width: upload.width,
+              height: upload.height,
+              parts: parts,
+              metadata: upload.metadata,
+            ),
+          ),
+          planOf: (response) => response.plan,
+          sessionOf: (response) => response.session,
+          hasPlan: (response) => response.hasPlan(),
+          hasSession: (response) => response.hasSession(),
+        );
     final session = result.session;
     final uploadedParts = await _uploadSessionParts(
       upload: upload,
@@ -342,10 +357,12 @@ class SyncTvFileUploadDomainService {
           nonce: session.ownershipProofNonce,
           contentManifestSha256: result.contentManifestSha256,
           ranges: session.ownershipProofRanges
-              .map((range) => _OwnershipProofRange(
-                    offset: range.offset.toInt(),
-                    length: range.length,
-                  ))
+              .map(
+                (range) => _OwnershipProofRange(
+                  offset: range.offset.toInt(),
+                  length: range.length,
+                ),
+              )
               .toList(growable: false),
         ),
       ),
@@ -381,28 +398,31 @@ class SyncTvFileUploadDomainService {
     LocalImageUpload upload,
   ) async {
     _validateImageUpload(upload, maxSizeBytes: 10 * 1024 * 1024);
-    final result = await _createUploadSession<client.MediaCoverUploadSession,
-        client.CreateMediaCoverUploadSessionResponse>(
-      upload: upload,
-      createRequest: (parts) => _api.room.createMediaCoverUploadSession(
-        roomId,
-        client.CreateMediaCoverUploadSessionRequest(
-          roomId: roomId,
-          mediaId: mediaId,
-          clientCoverId: _clientObjectId(upload),
-          mimeType: upload.mimeType,
-          sizeBytes: Int64(upload.sizeBytes),
-          width: upload.width,
-          height: upload.height,
-          parts: parts,
-          metadata: upload.metadata,
-        ),
-      ),
-      planOf: (response) => response.plan,
-      sessionOf: (response) => response.session,
-      hasPlan: (response) => response.hasPlan(),
-      hasSession: (response) => response.hasSession(),
-    );
+    final result =
+        await _createUploadSession<
+          client.MediaCoverUploadSession,
+          client.CreateMediaCoverUploadSessionResponse
+        >(
+          upload: upload,
+          createRequest: (parts) => _api.room.createMediaCoverUploadSession(
+            roomId,
+            client.CreateMediaCoverUploadSessionRequest(
+              roomId: roomId,
+              mediaId: mediaId,
+              clientCoverId: _clientObjectId(upload),
+              mimeType: upload.mimeType,
+              sizeBytes: Int64(upload.sizeBytes),
+              width: upload.width,
+              height: upload.height,
+              parts: parts,
+              metadata: upload.metadata,
+            ),
+          ),
+          planOf: (response) => response.plan,
+          sessionOf: (response) => response.session,
+          hasPlan: (response) => response.hasPlan(),
+          hasSession: (response) => response.hasSession(),
+        );
     final session = result.session;
     final uploadedParts = await _uploadSessionParts(
       upload: upload,
@@ -425,10 +445,12 @@ class SyncTvFileUploadDomainService {
           nonce: session.ownershipProofNonce,
           contentManifestSha256: result.contentManifestSha256,
           ranges: session.ownershipProofRanges
-              .map((range) => _OwnershipProofRange(
-                    offset: range.offset.toInt(),
-                    length: range.length,
-                  ))
+              .map(
+                (range) => _OwnershipProofRange(
+                  offset: range.offset.toInt(),
+                  length: range.length,
+                ),
+              )
               .toList(growable: false),
         ),
       ),
@@ -456,11 +478,12 @@ class SyncTvFileUploadDomainService {
   }
 
   Future<_UploadSessionResult<TSession>>
-      _createUploadSession<TSession, TResponse>({
+  _createUploadSession<TSession, TResponse>({
     required LocalImageUpload upload,
     required Future<TResponse> Function(
       Iterable<client.FileUploadManifestPart> parts,
-    ) createRequest,
+    )
+    createRequest,
     required client.FileUploadPlan Function(TResponse response) planOf,
     required TSession Function(TResponse response) sessionOf,
     required bool Function(TResponse response) hasPlan,
@@ -499,22 +522,24 @@ class SyncTvFileUploadDomainService {
     if (plan.parts.isEmpty) {
       throw const SyncTvFileUploadException('图片上传会话缺少分片计划，请重新选择图片。');
     }
-    return plan.parts.map((part) {
-      final offset = part.offsetBytes.toInt();
-      final size = part.sizeBytes.toInt();
-      final end = offset + size;
-      if (offset < 0 || size <= 0 || end > upload.bytes.length) {
-        throw const SyncTvFileUploadException('图片上传会话分片范围无效，请重新选择图片。');
-      }
-      return client.FileUploadManifestPart(
-        partNumber: part.partNumber,
-        offsetBytes: part.offsetBytes,
-        sizeBytes: part.sizeBytes,
-        checksumSha256: sha256
-            .convert(Uint8List.sublistView(upload.bytes, offset, end))
-            .toString(),
-      );
-    }).toList(growable: false);
+    return plan.parts
+        .map((part) {
+          final offset = part.offsetBytes.toInt();
+          final size = part.sizeBytes.toInt();
+          final end = offset + size;
+          if (offset < 0 || size <= 0 || end > upload.bytes.length) {
+            throw const SyncTvFileUploadException('图片上传会话分片范围无效，请重新选择图片。');
+          }
+          return client.FileUploadManifestPart(
+            partNumber: part.partNumber,
+            offsetBytes: part.offsetBytes,
+            sizeBytes: part.sizeBytes,
+            checksumSha256: sha256
+                .convert(Uint8List.sublistView(upload.bytes, offset, end))
+                .toString(),
+          );
+        })
+        .toList(growable: false);
   }
 
   Future<List<_UploadedPart>> _uploadSessionParts({
@@ -533,8 +558,9 @@ class SyncTvFileUploadDomainService {
     for (final part in manifestParts) {
       final checksum = part.checksumSha256;
       if (!sessionUploadRequired) {
-        uploaded
-            .add(_UploadedPart(part: part, checksumSha256: checksum, etag: ''));
+        uploaded.add(
+          _UploadedPart(part: part, checksumSha256: checksum, etag: ''),
+        );
         continue;
       }
       final offset = part.offsetBytes.toInt();

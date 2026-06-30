@@ -36,32 +36,34 @@ class SyncTvRoomMediaDomainService {
   }) {
     return _api.room
         .watchPlaybackState(
-      roomId,
-      client.WatchPlaybackStateRequest(
-        deliveryMode: _watchDeliveryMode,
-        playbackState: client.ObservePlaybackState(
-          afterEventSequence: _watchSequence(version),
-        ),
-      ),
-    )
+          roomId,
+          client.WatchPlaybackStateRequest(
+            deliveryMode: _watchDeliveryMode,
+            playbackState: client.ObservePlaybackState(
+              afterEventSequence: _watchSequence(version),
+            ),
+          ),
+        )
         .map((event) {
-      if (event.hasObserved()) {
-        return RoomResourceWatchEvent<SyncTvPlaybackStatus>.observed(
-          version: _cursorVersion(event.observed.eventCursor),
-          changed: event.observed.changed,
-        );
-      }
-      if (event.hasError()) {
-        return RoomResourceWatchEvent<SyncTvPlaybackStatus>.error(
-          message: event.error.hasError() ? event.error.error.message : '',
-          code: event.error.hasError() ? event.error.error.code : 0,
-        );
-      }
-      return RoomResourceWatchEvent<SyncTvPlaybackStatus>.changed(
-        version: _cursorVersion(event.resourceEvent.eventCursor),
-        snapshot: _playbackStatusFromState(event.resourceEvent.playbackState),
-      );
-    });
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<SyncTvPlaybackStatus>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<SyncTvPlaybackStatus>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<SyncTvPlaybackStatus>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: _playbackStatusFromState(
+              event.resourceEvent.playbackState,
+            ),
+          );
+        });
   }
 
   Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>> watchPlaybackSnapshot(
@@ -70,33 +72,33 @@ class SyncTvRoomMediaDomainService {
   }) {
     return _api.room
         .watchPlayback(
-      roomId,
-      client.WatchPlaybackRequest(
-        deliveryMode: _watchDeliveryMode,
-        playback: client.ObservePlayback(
-          playbackClientProfile: defaultPlaybackClientProfile(),
-          afterEventSequence: _watchSequence(version),
-        ),
-      ),
-    )
+          roomId,
+          client.WatchPlaybackRequest(
+            deliveryMode: _watchDeliveryMode,
+            playback: client.ObservePlayback(
+              playbackClientProfile: defaultPlaybackClientProfile(),
+              afterEventSequence: _watchSequence(version),
+            ),
+          ),
+        )
         .map((event) {
-      if (event.hasObserved()) {
-        return RoomResourceWatchEvent<SyncTvPlaybackStatus>.observed(
-          version: _cursorVersion(event.observed.eventCursor),
-          changed: event.observed.changed,
-        );
-      }
-      if (event.hasError()) {
-        return RoomResourceWatchEvent<SyncTvPlaybackStatus>.error(
-          message: event.error.hasError() ? event.error.error.message : '',
-          code: event.error.hasError() ? event.error.error.code : 0,
-        );
-      }
-      return RoomResourceWatchEvent<SyncTvPlaybackStatus>.changed(
-        version: _cursorVersion(event.resourceEvent.eventCursor),
-        snapshot: _playbackStatusFromPlayback(event.resourceEvent.playback),
-      );
-    });
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<SyncTvPlaybackStatus>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<SyncTvPlaybackStatus>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<SyncTvPlaybackStatus>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: _playbackStatusFromPlayback(event.resourceEvent.playback),
+          );
+        });
   }
 
   Stream<RoomResourceWatchEvent<RoomMediaLibraryPage>> watchPlaylistItems(
@@ -118,48 +120,49 @@ class SyncTvRoomMediaDomainService {
   }) {
     return _api.room
         .watchPlaylistItems(
-      roomId,
-      client.WatchPlaylistItemsRequest(
-        deliveryMode: _watchDeliveryMode,
-        playlistItems: client.ObservePlaylistItems(
-          afterEventSequence: _watchSequence(version),
-          request: client.ListPlaylistItemsRequest(
-            playlistId: playlistId,
-            target: providerTargetFromBase64(target),
-            page: page,
-            pageSize: pageSize,
-            search: search,
-            sourceProvider:
-                SourceConfigCodec.providerFromString(sourceProvider),
-            providerInstanceName: providerInstanceName,
-            sortBy: sortBy,
-            sortDirection: sortDirection,
-            availability: availability,
+          roomId,
+          client.WatchPlaylistItemsRequest(
+            deliveryMode: _watchDeliveryMode,
+            playlistItems: client.ObservePlaylistItems(
+              afterEventSequence: _watchSequence(version),
+              request: client.ListPlaylistItemsRequest(
+                playlistId: playlistId,
+                target: providerTargetFromBase64(target),
+                page: page,
+                pageSize: pageSize,
+                search: search,
+                sourceProvider: SourceConfigCodec.providerFromString(
+                  sourceProvider,
+                ),
+                providerInstanceName: providerInstanceName,
+                sortBy: sortBy,
+                sortDirection: sortDirection,
+                availability: availability,
+              ),
+            ),
           ),
-        ),
-      ),
-    )
+        )
         .map((event) {
-      if (event.hasObserved()) {
-        return RoomResourceWatchEvent<RoomMediaLibraryPage>.observed(
-          version: _cursorVersion(event.observed.eventCursor),
-          changed: event.observed.changed,
-        );
-      }
-      if (event.hasError()) {
-        return RoomResourceWatchEvent<RoomMediaLibraryPage>.error(
-          message: event.error.hasError() ? event.error.error.message : '',
-          code: event.error.hasError() ? event.error.error.code : 0,
-        );
-      }
-      return RoomResourceWatchEvent<RoomMediaLibraryPage>.changed(
-        version: _cursorVersion(event.resourceEvent.eventCursor),
-        snapshot: _mediaLibraryPageFromProto(
-          event.resourceEvent.playlistItems,
-          parentId: playlistId,
-        ),
-      );
-    });
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<RoomMediaLibraryPage>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<RoomMediaLibraryPage>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<RoomMediaLibraryPage>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: _mediaLibraryPageFromProto(
+              event.resourceEvent.playlistItems,
+              parentId: playlistId,
+            ),
+          );
+        });
   }
 
   Future<RoomMediaLibraryPage> listMediaLibrary(
@@ -493,32 +496,32 @@ class SyncTvRoomMediaDomainService {
   }) {
     return _api.room
         .watchChatPinEvents(
-      roomId,
-      client.WatchChatPinEventsRequest(
-        deliveryMode: _watchDeliveryMode,
-        chatPinEvents: client.ObserveChatPinEvents(
-          afterEventSequence: _watchSequence(version),
-        ),
-      ),
-    )
+          roomId,
+          client.WatchChatPinEventsRequest(
+            deliveryMode: _watchDeliveryMode,
+            chatPinEvents: client.ObserveChatPinEvents(
+              afterEventSequence: _watchSequence(version),
+            ),
+          ),
+        )
         .map((event) {
-      if (event.hasObserved()) {
-        return RoomResourceWatchEvent<ChatPinEventInfo>.observed(
-          version: _cursorVersion(event.observed.eventCursor),
-          changed: event.observed.changed,
-        );
-      }
-      if (event.hasError()) {
-        return RoomResourceWatchEvent<ChatPinEventInfo>.error(
-          message: event.error.hasError() ? event.error.error.message : '',
-          code: event.error.hasError() ? event.error.error.code : 0,
-        );
-      }
-      return RoomResourceWatchEvent<ChatPinEventInfo>.changed(
-        version: _cursorVersion(event.resourceEvent.eventCursor),
-        snapshot: _chatPinEventFromProto(event.resourceEvent.chatPinEvent),
-      );
-    });
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<ChatPinEventInfo>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<ChatPinEventInfo>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<ChatPinEventInfo>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: _chatPinEventFromProto(event.resourceEvent.chatPinEvent),
+          );
+        });
   }
 
   Future<RoomChatMessageInfo> editChatMessage(
@@ -728,7 +731,8 @@ class SyncTvRoomMediaDomainService {
             ? client.ProviderTarget()
             : providerTargetFromJson(
                 Map<String, dynamic>.from(
-                    jsonDecode(utf8.decode(playbackTarget))),
+                  jsonDecode(utf8.decode(playbackTarget)),
+                ),
               ),
         positionSeconds: positionSeconds,
         beforeSeconds: beforeSeconds,
@@ -797,9 +801,11 @@ class SyncTvRoomMediaDomainService {
       id: image.id,
       kind: image.uploadReference
           ? client_enum
-              .ChatAttachmentReferenceKind.CHAT_ATTACHMENT_REFERENCE_KIND_UPLOAD
+                .ChatAttachmentReferenceKind
+                .CHAT_ATTACHMENT_REFERENCE_KIND_UPLOAD
           : client_enum
-              .ChatAttachmentReferenceKind.CHAT_ATTACHMENT_REFERENCE_KIND_REUSE,
+                .ChatAttachmentReferenceKind
+                .CHAT_ATTACHMENT_REFERENCE_KIND_REUSE,
     );
   }
 
@@ -851,10 +857,7 @@ class SyncTvRoomMediaDomainService {
     String name = '',
     String providerInstanceName = '',
   }) {
-    final sourceConfig = <String, dynamic>{
-      'serverId': serverId,
-      'path': path,
-    };
+    final sourceConfig = <String, dynamic>{'serverId': serverId, 'path': path};
     if (password.isNotEmpty) sourceConfig['password'] = password;
     return _addMedia(
       roomId,
@@ -879,10 +882,7 @@ class SyncTvRoomMediaDomainService {
       playlistId: playlistId,
       sourceProvider: 'emby',
       providerInstanceName: providerInstanceName,
-      sourceConfig: {
-        'serverId': serverId,
-        'itemId': itemId,
-      },
+      sourceConfig: {'serverId': serverId, 'itemId': itemId},
       name: name,
     );
   }
@@ -942,15 +942,13 @@ class SyncTvRoomMediaDomainService {
       mediaId: mediaId,
       active: response.active,
       publisherUserId: response.hasPublisher() ? response.publisher.userId : '',
-      startedAt:
-          response.hasPublisher() ? response.publisher.startedAt.toInt() : 0,
+      startedAt: response.hasPublisher()
+          ? response.publisher.startedAt.toInt()
+          : 0,
     );
   }
 
-  Future<void> addMediaBatch(
-    String roomId,
-    List<Map<String, dynamic>> items,
-  ) {
+  Future<void> addMediaBatch(String roomId, List<Map<String, dynamic>> items) {
     return _api.room.addMediaBatch(
       roomId,
       client.AddMediaBatchRequest(
@@ -1029,8 +1027,8 @@ class SyncTvRoomMediaDomainService {
         playlistId: hasTarget
             ? dynamicPlaylistId
             : movieId.startsWith('pl_')
-                ? movieId
-                : '',
+            ? movieId
+            : '',
         target: target,
       ),
     );
@@ -1121,8 +1119,9 @@ class SyncTvRoomMediaDomainService {
   Map<String, dynamic> _dynamicMap(Object? value) {
     if (value is Map<String, dynamic>) return value;
     if (value is Map) {
-      return value
-          .map((key, entryValue) => MapEntry(key.toString(), entryValue));
+      return value.map(
+        (key, entryValue) => MapEntry(key.toString(), entryValue),
+      );
     }
     return const {};
   }
@@ -1141,11 +1140,12 @@ class SyncTvRoomMediaDomainService {
         client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SEEK,
       PlaybackControlAction.speed =>
         client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SPEED,
-      null => position != null
-          ? client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SEEK
-          : isPlaying
-              ? client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PLAY
-              : client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PAUSE,
+      null =>
+        position != null
+            ? client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SEEK
+            : isPlaying
+            ? client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PLAY
+            : client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PAUSE,
     };
   }
 
@@ -1177,9 +1177,7 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
-  RoomChatMessageInfo _chatMessageFromProto(
-    client.ChatMessageReceive message,
-  ) {
+  RoomChatMessageInfo _chatMessageFromProto(client.ChatMessageReceive message) {
     return RoomChatMessageInfo(
       id: message.id,
       roomId: message.roomId,
@@ -1303,19 +1301,17 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
-  SyncTvPlaybackStatus _playbackStatusFromState(
-    client.PlaybackState state,
-  ) {
+  SyncTvPlaybackStatus _playbackStatusFromState(client.PlaybackState state) {
     final encodedTarget = providerTargetToBase64(state.target);
-    final movie = state.playingMediaId.isEmpty &&
-            state.playingPlaylistId.isEmpty
+    final movie =
+        state.playingMediaId.isEmpty && state.playingPlaylistId.isEmpty
         ? null
         : SyncTvMovie(
             id: encodedTarget.isNotEmpty
                 ? encodedTarget
                 : state.playingMediaId.isNotEmpty
-                    ? state.playingMediaId
-                    : state.playingPlaylistId,
+                ? state.playingMediaId
+                : state.playingPlaylistId,
             name: '',
             url: '',
             subPath: encodedTarget.isEmpty ? null : encodedTarget,
@@ -1334,9 +1330,7 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
-  SyncTvPlaybackStatus _playbackStatusFromPlayback(
-    client.Playback playback,
-  ) {
+  SyncTvPlaybackStatus _playbackStatusFromPlayback(client.Playback playback) {
     final movie = playback.mediaId.isEmpty && playback.playlistId.isEmpty
         ? null
         : SyncTvMovie.fromPlaybackProto(

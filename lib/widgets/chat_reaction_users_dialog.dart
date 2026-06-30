@@ -85,57 +85,55 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
               child: _loading && _users.isEmpty
                   ? const AppLoadingIndicator()
                   : _users.isEmpty
-                      ? Center(
-                          child: Text(
-                            '暂无成员',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        )
-                      : AppListView.separated(
-                          itemCount: _users.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final user = _users[index];
-                            final name = user.username.isEmpty
-                                ? user.userId
-                                : user.username;
-                            return Row(
-                              children: [
-                                AppAvatar(name: name, radius: 18),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      if (user.reactedAt > 0)
-                                        Text(
-                                          _formatTime(user.reactedAt),
-                                          style: theme.textTheme.labelSmall
-                                              ?.copyWith(
-                                            color: theme
-                                                .colorScheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                  ? Center(
+                      child: Text(
+                        '暂无成员',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
+                      ),
+                    )
+                  : AppListView.separated(
+                      itemCount: _users.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final user = _users[index];
+                        final name = user.username.isEmpty
+                            ? user.userId
+                            : user.username;
+                        return Row(
+                          children: [
+                            AppAvatar(name: name, radius: 18),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (user.reactedAt > 0)
+                                    Text(
+                                      _formatTime(user.reactedAt),
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
             ),
             if (_nextCursor.isNotEmpty) ...[
               const SizedBox(height: 12),

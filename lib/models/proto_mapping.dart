@@ -48,15 +48,17 @@ client.RoomSettings roomSettingsFromJson(Map<String, dynamic> json) {
     adminAddedPermissions: Int64(_intValue(json['adminAddedPermissions'])),
     adminRemovedPermissions: Int64(_intValue(json['adminRemovedPermissions'])),
     memberAddedPermissions: Int64(_intValue(json['memberAddedPermissions'])),
-    memberRemovedPermissions:
-        Int64(_intValue(json['memberRemovedPermissions'])),
+    memberRemovedPermissions: Int64(
+      _intValue(json['memberRemovedPermissions']),
+    ),
     guestAddedPermissions: Int64(_intValue(json['guestAddedPermissions'])),
     guestRemovedPermissions: Int64(_intValue(json['guestRemovedPermissions'])),
   );
   if (autoPlay is Map) {
     settings.autoPlay = client.AutoPlaySettings(
       enabled: autoPlay['enabled'] == true,
-      mode: client.PlayMode.valueOf(_intValue(autoPlay['mode'])) ??
+      mode:
+          client.PlayMode.valueOf(_intValue(autoPlay['mode'])) ??
           client.PlayMode.PLAY_MODE_UNSPECIFIED,
       delay: _intValue(autoPlay['delay']),
     );
@@ -88,7 +90,7 @@ client.RoomSettingsPatch roomSettingsPatchFromJson(Map<String, dynamic> json) {
     if (autoPlay.containsKey('mode')) {
       autoPlayPatch.mode =
           client.PlayMode.valueOf(_intValue(autoPlay['mode'])) ??
-              client.PlayMode.PLAY_MODE_UNSPECIFIED;
+          client.PlayMode.PLAY_MODE_UNSPECIFIED;
     }
     if (autoPlay.containsKey('delay')) {
       autoPlayPatch.delay = _intValue(autoPlay['delay']);
@@ -96,17 +98,29 @@ client.RoomSettingsPatch roomSettingsPatchFromJson(Map<String, dynamic> json) {
     patch.autoPlay = autoPlayPatch;
   }
   setInt64(
-      'adminAddedPermissions', (value) => patch.adminAddedPermissions = value);
-  setInt64('adminRemovedPermissions',
-      (value) => patch.adminRemovedPermissions = value);
-  setInt64('memberAddedPermissions',
-      (value) => patch.memberAddedPermissions = value);
-  setInt64('memberRemovedPermissions',
-      (value) => patch.memberRemovedPermissions = value);
+    'adminAddedPermissions',
+    (value) => patch.adminAddedPermissions = value,
+  );
   setInt64(
-      'guestAddedPermissions', (value) => patch.guestAddedPermissions = value);
-  setInt64('guestRemovedPermissions',
-      (value) => patch.guestRemovedPermissions = value);
+    'adminRemovedPermissions',
+    (value) => patch.adminRemovedPermissions = value,
+  );
+  setInt64(
+    'memberAddedPermissions',
+    (value) => patch.memberAddedPermissions = value,
+  );
+  setInt64(
+    'memberRemovedPermissions',
+    (value) => patch.memberRemovedPermissions = value,
+  );
+  setInt64(
+    'guestAddedPermissions',
+    (value) => patch.guestAddedPermissions = value,
+  );
+  setInt64(
+    'guestRemovedPermissions',
+    (value) => patch.guestRemovedPermissions = value,
+  );
   return patch;
 }
 
@@ -138,18 +152,17 @@ bool providerTargetIsEmpty(client.ProviderTarget target) {
 
 String providerTargetToBase64(client.ProviderTarget target) {
   if (providerTargetIsEmpty(target)) return '';
-  return base64Url
-      .encode(utf8.encode(jsonEncode(providerTargetToJson(target))));
+  return base64Url.encode(
+    utf8.encode(jsonEncode(providerTargetToJson(target))),
+  );
 }
 
 Map<String, dynamic> providerTargetToJson(client.ProviderTarget target) {
   return switch (target.whichTarget()) {
     client.ProviderTarget_Target.alist => {
-        'relativePath': target.alist.relativePath,
-      },
-    client.ProviderTarget_Target.emby => {
-        'itemId': target.emby.itemId,
-      },
+      'relativePath': target.alist.relativePath,
+    },
+    client.ProviderTarget_Target.emby => {'itemId': target.emby.itemId},
     client.ProviderTarget_Target.notSet => <String, dynamic>{},
   };
 }
@@ -193,8 +206,9 @@ Map<String, dynamic> notificationDataToJson(client.NotificationData data) {
 Map<String, dynamic> settingsGroupToJson(admin.SettingsGroup group) {
   return switch (group.whichSettings()) {
     admin.SettingsGroup_Settings.server => protoMessageToJsonMap(group.server),
-    admin.SettingsGroup_Settings.permissions =>
-      protoMessageToJsonMap(group.permissions),
+    admin.SettingsGroup_Settings.permissions => protoMessageToJsonMap(
+      group.permissions,
+    ),
     admin.SettingsGroup_Settings.room => protoMessageToJsonMap(group.room),
     admin.SettingsGroup_Settings.user => protoMessageToJsonMap(group.user),
     admin.SettingsGroup_Settings.oauth2 => protoMessageToJsonMap(group.oauth2),

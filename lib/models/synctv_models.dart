@@ -302,8 +302,9 @@ class SyncTvPlaybackModeOption {
       'mp4' => 'MP4',
       _ when lower.endsWith('_transcode') =>
         '${key.substring(0, key.length - '_transcode'.length)} 转码',
-      _ when lower.startsWith('transcoded_') =>
-        key.substring('transcoded_'.length),
+      _ when lower.startsWith('transcoded_') => key.substring(
+        'transcoded_'.length,
+      ),
       _ => key,
     };
     if (format.trim().isEmpty) return display;
@@ -312,8 +313,8 @@ class SyncTvPlaybackModeOption {
 
   int get safeDefaultUrlIndex =>
       defaultUrlIndex >= 0 && defaultUrlIndex < urls.length
-          ? defaultUrlIndex
-          : 0;
+      ? defaultUrlIndex
+      : 0;
 
   SyncTvPlaybackUrlOption? get defaultUrl =>
       urls.isEmpty ? null : urls[safeDefaultUrlIndex];
@@ -460,7 +461,8 @@ class SyncTvMovie {
   SyncTvPlaybackUrlOption? get selectedPlaybackUrlOption {
     final mode = selectedPlaybackModeOption;
     if (mode == null || mode.urls.isEmpty) return null;
-    final index = selectedPlaybackUrlIndex >= 0 &&
+    final index =
+        selectedPlaybackUrlIndex >= 0 &&
             selectedPlaybackUrlIndex < mode.urls.length
         ? selectedPlaybackUrlIndex
         : mode.safeDefaultUrlIndex;
@@ -471,8 +473,9 @@ class SyncTvMovie {
     final mode = selectedPlaybackModeOption;
     if (mode == null) return '';
     final url = selectedPlaybackUrlOption;
-    final urlLabel =
-        url == null ? '' : url.label(selectedPlaybackUrlIndex).trim();
+    final urlLabel = url == null
+        ? ''
+        : url.label(selectedPlaybackUrlIndex).trim();
     return urlLabel.isEmpty ? mode.label : '${mode.label} · $urlLabel';
   }
 
@@ -631,8 +634,8 @@ class SyncTvMovie {
     final defaultMode = modes.any((mode) => mode.key == playback.defaultMode)
         ? playback.defaultMode
         : modes.isEmpty
-            ? ''
-            : modes.first.key;
+        ? ''
+        : modes.first.key;
     final selectedMode = modes.firstWhere(
       (mode) => mode.key == defaultMode,
       orElse: () =>
@@ -644,8 +647,8 @@ class SyncTvMovie {
       id: id.isNotEmpty
           ? id
           : playback.mediaId.isNotEmpty
-              ? playback.mediaId
-              : playback.playlistId,
+          ? playback.mediaId
+          : playback.playlistId,
       name: playback.name,
       url: selectedUrlValue,
       live: playback.isLive,
@@ -697,24 +700,28 @@ class SyncTvMovie {
           headers: Map<String, String>.from(media.headers),
           expireAt: media.hasExpireAt() ? media.expireAt.toInt() : null,
           resolution: metadata?.resolution ?? '',
-          bitrate:
-              metadata?.hasBitrate() == true ? metadata!.bitrate.toInt() : null,
+          bitrate: metadata?.hasBitrate() == true
+              ? metadata!.bitrate.toInt()
+              : null,
           codec: metadata?.codec ?? '',
           fps: metadata?.hasFps() == true ? metadata!.fps : null,
           metadata: metadata == null
               ? const {}
-              : protoMessageToJsonMap(metadata)
-                  .map((key, value) => MapEntry(key, value.toString())),
+              : protoMessageToJsonMap(
+                  metadata,
+                ).map((key, value) => MapEntry(key, value.toString())),
         );
       }).toList();
-      final defaultMediaIndex =
-          info.hasDefaultMediaIndex() ? info.defaultMediaIndex : 0;
+      final defaultMediaIndex = info.hasDefaultMediaIndex()
+          ? info.defaultMediaIndex
+          : 0;
       final formatMediaIndex =
           defaultMediaIndex >= 0 && defaultMediaIndex < info.medias.length
-              ? defaultMediaIndex
-              : 0;
-      final format =
-          info.medias.isEmpty ? '' : info.medias[formatMediaIndex].format;
+          ? defaultMediaIndex
+          : 0;
+      final format = info.medias.isEmpty
+          ? ''
+          : info.medias[formatMediaIndex].format;
 
       return SyncTvPlaybackModeOption(
         key: entry.key,
@@ -730,19 +737,13 @@ class SyncTvMovie {
           stream: false,
           resolveUrl: resolveUrl,
         ),
-        danmuHeaders: _danmuHeadersFromProto(
-          info.danmakus,
-          stream: false,
-        ),
+        danmuHeaders: _danmuHeadersFromProto(info.danmakus, stream: false),
         streamDanmu: _danmuUrlFromProto(
           info.danmakus,
           stream: true,
           resolveUrl: resolveUrl,
         ),
-        streamDanmuHeaders: _danmuHeadersFromProto(
-          info.danmakus,
-          stream: true,
-        ),
+        streamDanmuHeaders: _danmuHeadersFromProto(info.danmakus, stream: true),
       );
     }).toList();
   }
@@ -759,8 +760,8 @@ class SyncTvMovie {
       final name = subtitle.name.trim().isNotEmpty
           ? subtitle.name.trim()
           : subtitle.language.trim().isNotEmpty
-              ? subtitle.language.trim()
-              : '字幕 ${index + 1}';
+          ? subtitle.language.trim()
+          : '字幕 ${index + 1}';
       result['sub_$index'] = {
         'name': name,
         'language': subtitle.language,
@@ -889,7 +890,8 @@ class RoomMemberPermissions {
   static const int viewMemberList = 1 << 3;
   static const int viewChatHistory = 1 << 4;
   static const int useWebRTC = 1 << 5;
-  static const int all = chat |
+  static const int all =
+      chat |
       createMediaResource |
       viewMediaResources |
       viewMemberList |
@@ -1000,11 +1002,7 @@ class SyncTvRoomSettings {
     return defaultValue;
   }
 
-  static int _readInt(
-    Map<String, dynamic> json,
-    String key,
-    int defaultValue,
-  ) {
+  static int _readInt(Map<String, dynamic> json, String key, int defaultValue) {
     final value = json[key];
     if (value is int) return value;
     if (value is num) return value.toInt();

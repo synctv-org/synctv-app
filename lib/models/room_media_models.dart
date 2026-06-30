@@ -195,10 +195,7 @@ class ChatReactionUsersPage {
 }
 
 class ChatReadReceiptUserInfo {
-  const ChatReadReceiptUserInfo({
-    required this.user,
-    required this.readAt,
-  });
+  const ChatReadReceiptUserInfo({required this.user, required this.readAt});
 
   final SyncTvUser user;
   final int readAt;
@@ -233,10 +230,7 @@ class ChatPinInfo {
 }
 
 class ChatPinnedMessageInfo {
-  const ChatPinnedMessageInfo({
-    required this.message,
-    required this.pin,
-  });
+  const ChatPinnedMessageInfo({required this.message, required this.pin});
 
   final RoomChatMessageInfo message;
   final ChatPinInfo pin;

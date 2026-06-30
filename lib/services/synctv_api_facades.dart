@@ -297,15 +297,11 @@ class SyncTvUserApi {
   Future<client.GetProfileResponse> getProfile(
     client.GetProfileRequest request,
   ) {
-    return _api._send(
-      'GET',
-      '/api/user',
-      client.GetProfileResponse.create,
-    );
+    return _api._send('GET', '/api/user', client.GetProfileResponse.create);
   }
 
   Future<client.CreateUserAvatarUploadSessionResponse>
-      createUserAvatarUploadSession(
+  createUserAvatarUploadSession(
     client.CreateUserAvatarUploadSessionRequest request,
   ) {
     return _api._send(
@@ -335,7 +331,7 @@ class SyncTvUserApi {
   }
 
   Future<client.CompleteUserAvatarUploadSessionResponse>
-      completeUserAvatarUploadSession(
+  completeUserAvatarUploadSession(
     client.CompleteUserAvatarUploadSessionRequest request,
   ) {
     final key = Uri.encodeComponent(request.encodedObjectKey);
@@ -454,7 +450,7 @@ class SyncTvUserApi {
   }
 
   Future<client.StartSensitiveOperationVerificationResponse>
-      startSensitiveOperationVerification(
+  startSensitiveOperationVerification(
     client.StartSensitiveOperationVerificationRequest request,
   ) {
     return _api._send(
@@ -466,7 +462,7 @@ class SyncTvUserApi {
   }
 
   Future<client.StartSensitiveOperationPasskeyResponse>
-      startSensitiveOperationPasskey(
+  startSensitiveOperationPasskey(
     client.StartSensitiveOperationPasskeyRequest request,
   ) {
     return _api._send(
@@ -478,7 +474,7 @@ class SyncTvUserApi {
   }
 
   Future<client.RequestSensitiveOperationEmailCodeResponse>
-      requestSensitiveOperationEmailCode(
+  requestSensitiveOperationEmailCode(
     client.RequestSensitiveOperationEmailCodeRequest request,
   ) {
     return _api._send(
@@ -490,7 +486,7 @@ class SyncTvUserApi {
   }
 
   Future<client.FinishSensitiveOperationVerificationResponse>
-      finishSensitiveOperationVerification(
+  finishSensitiveOperationVerification(
     client.FinishSensitiveOperationVerificationRequest request,
   ) {
     return _api._send(
@@ -738,7 +734,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.StartRoomPasswordRegistrationResponse>
-      startRoomPasswordRegistration(
+  startRoomPasswordRegistration(
     String roomId,
     client.StartRoomPasswordRegistrationRequest request,
   ) {
@@ -1203,7 +1199,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.UpdateRoomContentReportStatusResponse>
-      updateRoomContentReportStatus(
+  updateRoomContentReportStatus(
     String roomId,
     client.UpdateRoomContentReportStatusRequest request,
   ) {
@@ -1269,7 +1265,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.CreateChatAttachmentUploadSessionResponse>
-      createChatAttachmentUploadSession(
+  createChatAttachmentUploadSession(
     String roomId,
     client.CreateChatAttachmentUploadSessionRequest request,
   ) {
@@ -1319,7 +1315,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.CompleteChatAttachmentUploadSessionResponse>
-      completeChatAttachmentUploadSession(
+  completeChatAttachmentUploadSession(
     client.CompleteChatAttachmentUploadSessionRequest request,
   ) {
     final key = Uri.encodeComponent(request.encodedObjectKey);
@@ -1356,7 +1352,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.CreateRoomCoverUploadSessionResponse>
-      createRoomCoverUploadSession(
+  createRoomCoverUploadSession(
     String roomId,
     client.CreateRoomCoverUploadSessionRequest request,
   ) {
@@ -1405,7 +1401,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.CompleteRoomCoverUploadSessionResponse>
-      completeRoomCoverUploadSession(
+  completeRoomCoverUploadSession(
     client.CompleteRoomCoverUploadSessionRequest request,
   ) {
     final key = Uri.encodeComponent(request.encodedObjectKey);
@@ -1465,7 +1461,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.CreatePlaylistCoverUploadSessionResponse>
-      createPlaylistCoverUploadSession(
+  createPlaylistCoverUploadSession(
     String roomId,
     client.CreatePlaylistCoverUploadSessionRequest request,
   ) {
@@ -1514,7 +1510,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.CompletePlaylistCoverUploadSessionResponse>
-      completePlaylistCoverUploadSession(
+  completePlaylistCoverUploadSession(
     client.CompletePlaylistCoverUploadSessionRequest request,
   ) {
     final key = Uri.encodeComponent(request.encodedObjectKey);
@@ -1570,8 +1566,9 @@ class SyncTvRoomApi {
       'DELETE',
       '/api/rooms/$roomId/playlists/${request.playlistId}',
       client.DeletePlaylistResponse.create,
-      query:
-          _api._messageQuery(client.DeletePlaylistQuery(force: request.force)),
+      query: _api._messageQuery(
+        client.DeletePlaylistQuery(force: request.force),
+      ),
     );
   }
 
@@ -1599,10 +1596,7 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.Media> getMedia(
-    String roomId,
-    client.GetMediaRequest request,
-  ) {
+  Future<client.Media> getMedia(String roomId, client.GetMediaRequest request) {
     return _api._send(
       'GET',
       '/api/rooms/$roomId/media/${request.mediaId}',
@@ -1647,7 +1641,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.CreateMediaCoverUploadSessionResponse>
-      createMediaCoverUploadSession(
+  createMediaCoverUploadSession(
     String roomId,
     client.CreateMediaCoverUploadSessionRequest request,
   ) {
@@ -1696,7 +1690,7 @@ class SyncTvRoomApi {
   }
 
   Future<client.CompleteMediaCoverUploadSessionResponse>
-      completeMediaCoverUploadSession(
+  completeMediaCoverUploadSession(
     client.CompleteMediaCoverUploadSessionRequest request,
   ) {
     final key = Uri.encodeComponent(request.encodedObjectKey);
@@ -1837,9 +1831,7 @@ class SyncTvPublicApi {
 
   final SyncTvApiClient _api;
 
-  Future<client.CheckRoomResponse> checkRoom(
-    client.CheckRoomRequest request,
-  ) {
+  Future<client.CheckRoomResponse> checkRoom(client.CheckRoomRequest request) {
     return _api._send(
       'GET',
       '/api/rooms/${request.roomId}/check',
@@ -1848,9 +1840,7 @@ class SyncTvPublicApi {
     );
   }
 
-  Future<client.ListRoomsResponse> listRooms(
-    client.ListRoomsRequest request,
-  ) {
+  Future<client.ListRoomsResponse> listRooms(client.ListRoomsRequest request) {
     return _api._send(
       'GET',
       '/api/rooms',
@@ -2152,9 +2142,7 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.CreateUserResponse> createUser(
-    admin.CreateUserRequest request,
-  ) {
+  Future<admin.CreateUserResponse> createUser(admin.CreateUserRequest request) {
     return _api._send(
       'POST',
       '/api/admin/users',
@@ -2163,9 +2151,7 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.DeleteUserResponse> deleteUser(
-    admin.DeleteUserRequest request,
-  ) {
+  Future<admin.DeleteUserResponse> deleteUser(admin.DeleteUserRequest request) {
     return _api._send(
       'DELETE',
       '/api/admin/users/${request.userId}',
@@ -2173,9 +2159,7 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.ListUsersResponse> listUsers(
-    admin.ListUsersRequest request,
-  ) {
+  Future<admin.ListUsersResponse> listUsers(admin.ListUsersRequest request) {
     return _api._send(
       'GET',
       '/api/admin/users',
@@ -2305,9 +2289,7 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.DeleteRoomResponse> deleteRoom(
-    admin.DeleteRoomRequest request,
-  ) {
+  Future<admin.DeleteRoomResponse> deleteRoom(admin.DeleteRoomRequest request) {
     return _api._send(
       'DELETE',
       '/api/admin/rooms/${request.roomId}',
@@ -2414,9 +2396,7 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.KickMemberResponse> kickMember(
-    admin.KickMemberRequest request,
-  ) {
+  Future<admin.KickMemberResponse> kickMember(admin.KickMemberRequest request) {
     return _api._send(
       'DELETE',
       '/api/admin/rooms/${request.roomId}/members/${request.userId}',
@@ -2543,9 +2523,7 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.ListAdminsResponse> listAdmins(
-    admin.ListAdminsRequest request,
-  ) {
+  Future<admin.ListAdminsResponse> listAdmins(admin.ListAdminsRequest request) {
     return _api._send(
       'GET',
       '/api/admin/admins',
@@ -2575,9 +2553,7 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.KickStreamResponse> kickStream(
-    admin.KickStreamRequest request,
-  ) {
+  Future<admin.KickStreamResponse> kickStream(admin.KickStreamRequest request) {
     return _api._send(
       'POST',
       '/api/admin/streams/kick',
@@ -2598,7 +2574,7 @@ class SyncTvAdminApi {
   }
 
   Future<admin.ApproveUserRegistrationReviewResponse>
-      approveUserRegistrationReview(
+  approveUserRegistrationReview(
     admin.ApproveUserRegistrationReviewRequest request,
   ) {
     return _api._send(
@@ -2610,7 +2586,7 @@ class SyncTvAdminApi {
   }
 
   Future<admin.RejectUserRegistrationReviewResponse>
-      rejectUserRegistrationReview(
+  rejectUserRegistrationReview(
     admin.RejectUserRegistrationReviewRequest request,
   ) {
     return _api._send(
@@ -2748,7 +2724,7 @@ class SyncTvProviderCommonApi {
   }
 
   Future<provider_common.ProviderInstancesResponse>
-      listAvailableProviderInstances(
+  listAvailableProviderInstances(
     provider_common.ListAvailableProviderInstancesRequest request,
   ) {
     return _api._send(
@@ -2756,8 +2732,9 @@ class SyncTvProviderCommonApi {
       '/api/providers/instances/available',
       provider_common.ProviderInstancesResponse.create,
       query: {
-        'providerType':
-            SourceConfigCodec.providerToString(request.providerType),
+        'providerType': SourceConfigCodec.providerToString(
+          request.providerType,
+        ),
       },
     );
   }
@@ -2772,8 +2749,9 @@ class SyncTvProviderCommonApi {
       query: {
         'page': request.page.toString(),
         'pageSize': request.pageSize.toString(),
-        'providerType':
-            SourceConfigCodec.providerToString(request.providerType),
+        'providerType': SourceConfigCodec.providerToString(
+          request.providerType,
+        ),
         'search': request.search,
         if (request.hasEnabled()) 'enabled': request.enabled.toString(),
         if (request.hasTls()) 'tls': request.tls.toString(),
@@ -2816,7 +2794,7 @@ class SyncTvProviderCommonApi {
   }
 
   Future<provider_common.ReconnectProviderInstanceResponse>
-      reconnectProviderInstance(
+  reconnectProviderInstance(
     provider_common.ReconnectProviderInstanceRequest request,
   ) {
     return _api._send(
@@ -2837,7 +2815,7 @@ class SyncTvProviderCommonApi {
   }
 
   Future<provider_common.DisableProviderInstanceResponse>
-      disableProviderInstance(
+  disableProviderInstance(
     provider_common.DisableProviderInstanceRequest request,
   ) {
     return _api._send(
@@ -2979,9 +2957,7 @@ class SyncTvBilibiliProviderApi {
     );
   }
 
-  Future<bilibili.QRCodeResponse> loginQR(
-    bilibili.LoginQRRequest request,
-  ) {
+  Future<bilibili.QRCodeResponse> loginQR(bilibili.LoginQRRequest request) {
     return _api._send(
       'POST',
       '/api/providers/bilibili/login/qr/generate',
@@ -2990,9 +2966,7 @@ class SyncTvBilibiliProviderApi {
     );
   }
 
-  Future<bilibili.QRStatusResponse> checkQR(
-    bilibili.CheckQRRequest request,
-  ) {
+  Future<bilibili.QRStatusResponse> checkQR(bilibili.CheckQRRequest request) {
     return _api._send(
       'POST',
       '/api/providers/bilibili/login/qr/check',
@@ -3012,9 +2986,7 @@ class SyncTvBilibiliProviderApi {
     );
   }
 
-  Future<bilibili.SendSMSResponse> sendSMS(
-    bilibili.SendSMSRequest request,
-  ) {
+  Future<bilibili.SendSMSResponse> sendSMS(bilibili.SendSMSRequest request) {
     return _api._send(
       'POST',
       '/api/providers/bilibili/login/sms/send',
@@ -3023,9 +2995,7 @@ class SyncTvBilibiliProviderApi {
     );
   }
 
-  Future<bilibili.LoginSMSResponse> loginSMS(
-    bilibili.LoginSMSRequest request,
-  ) {
+  Future<bilibili.LoginSMSResponse> loginSMS(bilibili.LoginSMSRequest request) {
     return _api._send(
       'POST',
       '/api/providers/bilibili/login/sms/login',
@@ -3054,9 +3024,7 @@ class SyncTvBilibiliProviderApi {
     );
   }
 
-  Future<bilibili.GetBindsResponse> getBinds(
-    bilibili.GetBindsRequest request,
-  ) {
+  Future<bilibili.GetBindsResponse> getBinds(bilibili.GetBindsRequest request) {
     return _api._send(
       'GET',
       '/api/providers/bilibili/binds',

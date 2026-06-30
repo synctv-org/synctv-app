@@ -34,7 +34,8 @@ Future<PickedLocalImage?> pickLocalImageUpload(
   final file = result?.files.single;
   if (file == null) return null;
 
-  final originalBytes = file.bytes ??
+  final originalBytes =
+      file.bytes ??
       (file.path == null ? null : await File(file.path!).readAsBytes());
   if (originalBytes == null || originalBytes.isEmpty) return null;
 
@@ -62,16 +63,14 @@ Future<PickedLocalImage?> pickLocalImageUpload(
   return PickedLocalImage(
     upload: upload,
     previewBytes: bytes,
-    previewFile:
-        file.path != null && file.path!.isNotEmpty ? File(file.path!) : null,
+    previewFile: file.path != null && file.path!.isNotEmpty
+        ? File(file.path!)
+        : null,
   );
 }
 
 class _PreparedLocalImage {
-  const _PreparedLocalImage({
-    required this.bytes,
-    required this.mimeType,
-  });
+  const _PreparedLocalImage({required this.bytes, required this.mimeType});
 
   final Uint8List bytes;
   final String mimeType;
@@ -203,14 +202,10 @@ class _LocalImageEditDialogState extends State<_LocalImageEditDialog> {
         const SizedBox(width: 8),
         _cropping
             ? const AppLoadingIndicator()
-            : ChatUtils.createConfirmButton(
-                context,
-                () {
-                  setState(() => _cropping = true);
-                  _controller.crop();
-                },
-                text: '使用编辑',
-              ),
+            : ChatUtils.createConfirmButton(context, () {
+                setState(() => _cropping = true);
+                _controller.crop();
+              }, text: '使用编辑'),
       ],
     );
   }
@@ -230,8 +225,9 @@ Future<({int width, int height})?> _decodeImageDimensions(
   Uint8List bytes,
 ) async {
   try {
-    final descriptor = await ui.ImmutableBuffer.fromUint8List(bytes)
-        .then(ui.ImageDescriptor.encoded);
+    final descriptor = await ui.ImmutableBuffer.fromUint8List(
+      bytes,
+    ).then(ui.ImageDescriptor.encoded);
     final width = descriptor.width;
     final height = descriptor.height;
     descriptor.dispose();

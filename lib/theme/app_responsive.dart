@@ -22,11 +22,7 @@ class AppBreakpoints {
   static const double wideStart = 1600;
 
   static const values = <Breakpoint>[
-    Breakpoint(
-      start: 0,
-      end: compactEnd,
-      name: AppBreakpointNames.compact,
-    ),
+    Breakpoint(start: 0, end: compactEnd, name: AppBreakpointNames.compact),
     Breakpoint(
       start: mediumStart,
       end: mediumEnd,
@@ -172,7 +168,9 @@ class AppMetrics {
   }
 
   static double dialogMaxHeight(
-      BuildContext context, double? requestedMaxHeight) {
+    BuildContext context,
+    double? requestedMaxHeight,
+  ) {
     final size = MediaQuery.sizeOf(context);
     final verticalMargin = size.height < 720 ? 20.0 : 48.0;
     final available = math.max(320.0, size.height - verticalMargin);

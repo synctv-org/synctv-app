@@ -122,24 +122,26 @@ class _HomeScreenState extends State<HomeScreen> {
         SyncTvService.listRoomCategories(refresh: refresh),
         SyncTvService.listRoomLabels(refresh: refresh),
       ]);
-      final categories = results[0]
-          .cast<RoomCategoryInfo>()
-          .where((category) => category.isEnabled)
-          .toList()
-        ..sort((a, b) {
-          final order = a.sortOrder.compareTo(b.sortOrder);
-          if (order != 0) return order;
-          return _roomCategoryName(a).compareTo(_roomCategoryName(b));
-        });
-      final labels = results[1]
-          .cast<RoomLabelInfo>()
-          .where((label) => label.isEnabled)
-          .toList()
-        ..sort((a, b) {
-          final order = a.sortOrder.compareTo(b.sortOrder);
-          if (order != 0) return order;
-          return _roomLabelName(a).compareTo(_roomLabelName(b));
-        });
+      final categories =
+          results[0]
+              .cast<RoomCategoryInfo>()
+              .where((category) => category.isEnabled)
+              .toList()
+            ..sort((a, b) {
+              final order = a.sortOrder.compareTo(b.sortOrder);
+              if (order != 0) return order;
+              return _roomCategoryName(a).compareTo(_roomCategoryName(b));
+            });
+      final labels =
+          results[1]
+              .cast<RoomLabelInfo>()
+              .where((label) => label.isEnabled)
+              .toList()
+            ..sort((a, b) {
+              final order = a.sortOrder.compareTo(b.sortOrder);
+              if (order != 0) return order;
+              return _roomLabelName(a).compareTo(_roomLabelName(b));
+            });
       if (!mounted) return;
       setState(() {
         _roomCategories = categories;
@@ -224,7 +226,8 @@ class _HomeScreenState extends State<HomeScreen> {
             search: search.isEmpty ? null : search,
             relation: client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL,
             sortBy: client_enum
-                .MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+                .MyRoomListSortBy
+                .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
             sortDirection: client_enum.SortDirection.SORT_DIRECTION_DESC,
           );
           rooms = page.rooms;
@@ -335,41 +338,43 @@ class _HomeScreenState extends State<HomeScreen> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: labels.map((label) {
-                        final selected = selectedIds.contains(label.id);
-                        final color = parseRoomLabelColor(
-                          label.color,
-                          theme.colorScheme.primary,
-                        );
-                        return AppChip(
-                          selected: selected,
-                          style: selected
-                              ? AppChipStyle.filled
-                              : AppChipStyle.outlined,
-                          onSelected: (value) => setDialogState(() {
-                            if (value) {
-                              selectedIds.add(label.id);
-                            } else {
-                              selectedIds.remove(label.id);
-                            }
-                          }),
-                          label: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  shape: BoxShape.circle,
-                                ),
+                      children: labels
+                          .map((label) {
+                            final selected = selectedIds.contains(label.id);
+                            final color = parseRoomLabelColor(
+                              label.color,
+                              theme.colorScheme.primary,
+                            );
+                            return AppChip(
+                              selected: selected,
+                              style: selected
+                                  ? AppChipStyle.filled
+                                  : AppChipStyle.outlined,
+                              onSelected: (value) => setDialogState(() {
+                                if (value) {
+                                  selectedIds.add(label.id);
+                                } else {
+                                  selectedIds.remove(label.id);
+                                }
+                              }),
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(_roomLabelName(label)),
+                                ],
                               ),
-                              const SizedBox(width: 6),
-                              Text(_roomLabelName(label)),
-                            ],
-                          ),
-                        );
-                      }).toList(growable: false),
+                            );
+                          })
+                          .toList(growable: false),
                     ),
                 ],
               ),
@@ -467,10 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _modalOpen = true;
     () async {
       try {
-        await showJoinRoomDialog(
-          context: context,
-          onSubmitted: _joinRoomById,
-        );
+        await showJoinRoomDialog(context: context, onSubmitted: _joinRoomById);
       } finally {
         _modalOpen = false;
       }
@@ -510,9 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showAdminSettingsPage() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const AdminSettingsPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const AdminSettingsPage()),
     ).then((_) {
       _loadRooms(silent: true);
     });
@@ -571,8 +571,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
-            context, () => Navigator.pop(context, true),
-            text: '退出'),
+          context,
+          () => Navigator.pop(context, true),
+          text: '退出',
+        ),
       ],
     );
 
@@ -660,8 +662,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
-            context, () => Navigator.pop(context, true),
-            text: '删除'),
+          context,
+          () => Navigator.pop(context, true),
+          text: '删除',
+        ),
       ],
     );
 
@@ -684,7 +688,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final isAdmin =
         _currentUser?.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
-            _currentUser?.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
+        _currentUser?.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
 
     return AppScaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -703,8 +707,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: horizontalPadding),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                      ),
                       child: Row(
                         children: [
                           AppInkSurface(
@@ -904,8 +909,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: AppInkSurface(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        borderSide:
-            BorderSide(color: theme.dividerColor.withValues(alpha: 0.7)),
+        borderSide: BorderSide(
+          color: theme.dividerColor.withValues(alpha: 0.7),
+        ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           child: Row(
@@ -1080,7 +1086,8 @@ class _HomeScreenState extends State<HomeScreen> {
               hintText: _roomFeed == _RoomFeed.public ? '全部分类' : '仅公开房间',
               prefixIcon: Icons.category_outlined,
               clearable: true,
-              enabled: _roomFeed == _RoomFeed.public &&
+              enabled:
+                  _roomFeed == _RoomFeed.public &&
                   !_isLoadingTaxonomy &&
                   _roomCategories.isNotEmpty,
               options: {
@@ -1147,8 +1154,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: EdgeInsets.zero,
                   label: summary,
                   labelStyle: summaryStyle,
-                  onPrevious:
-                      _roomPage <= 1 ? null : () => _goRoomPage(_roomPage - 1),
+                  onPrevious: _roomPage <= 1
+                      ? null
+                      : () => _goRoomPage(_roomPage - 1),
                   onNext: _roomPage >= _roomPageCount
                       ? null
                       : () => _goRoomPage(_roomPage + 1),
@@ -1199,12 +1207,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     hasServer
                         ? (_roomFeed == _RoomFeed.mine
-                            ? '加入或创建房间后会出现在这里'
-                            : '当前筛选下没有可显示的房间')
+                              ? '加入或创建房间后会出现在这里'
+                              : '当前筛选下没有可显示的房间')
                         : '输入服务器地址即可浏览公开房间、登录账号和加入观影房间。',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.58),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.58,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),

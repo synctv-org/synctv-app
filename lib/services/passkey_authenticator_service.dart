@@ -41,9 +41,7 @@ class PasskeyAuthenticatorService {
     List<int> optionsJson,
   ) async {
     await _ensureSupported();
-    final request = RegisterRequestType.fromJson(
-      _decodeOptions(optionsJson),
-    );
+    final request = RegisterRequestType.fromJson(_decodeOptions(optionsJson));
     return _wrapAuthenticatorErrors(() async {
       final response = await _authenticator.register(request);
       return response.toJson();
@@ -89,19 +87,16 @@ class PasskeyAuthenticatorService {
   static Future<T> _wrapAuthenticatorErrors<T>(Future<T> Function() action) {
     return action()
         .onError<PasskeyAuthCancelledException>(
-          (error, stackTrace) => throw const PasskeyUnavailableException(
-            '已取消 Passkey 验证',
-          ),
+          (error, stackTrace) =>
+              throw const PasskeyUnavailableException('已取消 Passkey 验证'),
         )
         .onError<NoCredentialsAvailableException>(
-          (error, stackTrace) => throw const PasskeyUnavailableException(
-            '没有可用的 Passkey',
-          ),
+          (error, stackTrace) =>
+              throw const PasskeyUnavailableException('没有可用的 Passkey'),
         )
         .onError<ExcludeCredentialsCanNotBeRegisteredException>(
-          (error, stackTrace) => throw const PasskeyUnavailableException(
-            '此设备已经绑定过 Passkey',
-          ),
+          (error, stackTrace) =>
+              throw const PasskeyUnavailableException('此设备已经绑定过 Passkey'),
         )
         .onError<MissingGoogleSignInException>(
           (error, stackTrace) => throw const PasskeyUnavailableException(
@@ -109,9 +104,8 @@ class PasskeyAuthenticatorService {
           ),
         )
         .onError<SyncAccountNotAvailableException>(
-          (error, stackTrace) => throw const PasskeyUnavailableException(
-            '系统暂时无法访问 Passkey 同步账号',
-          ),
+          (error, stackTrace) =>
+              throw const PasskeyUnavailableException('系统暂时无法访问 Passkey 同步账号'),
         )
         .onError<DomainNotAssociatedException>(
           (error, stackTrace) => throw PasskeyUnavailableException(
@@ -119,9 +113,8 @@ class PasskeyAuthenticatorService {
           ),
         )
         .onError<DeviceNotSupportedException>(
-          (error, stackTrace) => throw const PasskeyUnavailableException(
-            '当前设备暂不支持 Passkey',
-          ),
+          (error, stackTrace) =>
+              throw const PasskeyUnavailableException('当前设备暂不支持 Passkey'),
         )
         .onError<PasskeyUnsupportedException>(
           (error, stackTrace) => throw PasskeyUnavailableException(
@@ -138,9 +131,8 @@ class PasskeyAuthenticatorService {
           ),
         )
         .onError<TimeoutException>(
-          (error, stackTrace) => throw const PasskeyUnavailableException(
-            'Passkey 验证超时，请重试',
-          ),
+          (error, stackTrace) =>
+              throw const PasskeyUnavailableException('Passkey 验证超时，请重试'),
         )
         .onError<MalformedBase64Url>(
           (error, stackTrace) => throw const PasskeyUnavailableException(
@@ -148,9 +140,8 @@ class PasskeyAuthenticatorService {
           ),
         )
         .onError<PlatformException>(
-          (error, stackTrace) => throw PasskeyUnavailableException(
-            _platformErrorMessage(error),
-          ),
+          (error, stackTrace) =>
+              throw PasskeyUnavailableException(_platformErrorMessage(error)),
         );
   }
 

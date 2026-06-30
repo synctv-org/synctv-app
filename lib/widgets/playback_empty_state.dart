@@ -22,8 +22,8 @@ class PlaybackEmptyState extends StatelessWidget {
     final icon = error != null
         ? Icons.error_outline_rounded
         : hasPlayback
-            ? Icons.hourglass_top_rounded
-            : Icons.ondemand_video_rounded;
+        ? Icons.hourglass_top_rounded
+        : Icons.ondemand_video_rounded;
     final message = error ?? (loading || hasPlayback ? '正在加载视频' : '等待播放');
 
     return Center(

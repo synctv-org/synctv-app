@@ -86,11 +86,7 @@ class RoomMembersPage {
   });
 }
 
-enum RoomResourceWatchKind {
-  observed,
-  changed,
-  error,
-}
+enum RoomResourceWatchKind { observed, changed, error }
 
 class RoomResourceWatchEvent<T> {
   final RoomResourceWatchKind kind;

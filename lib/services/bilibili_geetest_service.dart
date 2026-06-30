@@ -11,9 +11,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 class BilibiliGeetestResult {
   final String validate;
 
-  const BilibiliGeetestResult({
-    required this.validate,
-  });
+  const BilibiliGeetestResult({required this.validate});
 }
 
 class BilibiliGeetestService {
@@ -388,10 +386,7 @@ class _BilibiliGeetestDialogState extends State<_BilibiliGeetestDialog> {
         onMessageReceived: _handleMessage,
       )
       ..loadHtmlString(
-        buildBilibiliGeetestHtml(
-          gt: widget.gt,
-          challenge: widget.challenge,
-        ),
+        buildBilibiliGeetestHtml(gt: widget.gt, challenge: widget.challenge),
         baseUrl: 'https://passport.bilibili.com/',
       );
 

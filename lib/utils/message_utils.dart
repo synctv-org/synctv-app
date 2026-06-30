@@ -6,10 +6,7 @@ class _ToastAction {
   final String label;
   final VoidCallback onPressed;
 
-  const _ToastAction({
-    required this.label,
-    required this.onPressed,
-  });
+  const _ToastAction({required this.label, required this.onPressed});
 }
 
 /// 统一的系统消息工具类
@@ -115,10 +112,7 @@ class MessageUtils {
                 final animationValue = value.clamp(0.0, 1.0);
                 return Transform.translate(
                   offset: Offset(0, 16 * (1 - animationValue)),
-                  child: Opacity(
-                    opacity: animationValue,
-                    child: child,
-                  ),
+                  child: Opacity(opacity: animationValue, child: child),
                 );
               },
               child: ConstrainedBox(
@@ -135,7 +129,9 @@ class MessageUtils {
                   ],
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -204,10 +200,7 @@ class MessageUtils {
 
   static _ToastAction? _actionFromSnackBarAction(SnackBarAction? action) {
     if (action == null) return null;
-    return _ToastAction(
-      label: action.label,
-      onPressed: action.onPressed,
-    );
+    return _ToastAction(label: action.label, onPressed: action.onPressed);
   }
 
   /// 显示删除操作消息（带撤销功能）
@@ -258,8 +251,9 @@ class MessageUtils {
     showCustom(
       context,
       message,
-      backgroundColor:
-          isEnabled ? Colors.green.shade600 : Colors.orange.shade600,
+      backgroundColor: isEnabled
+          ? Colors.green.shade600
+          : Colors.orange.shade600,
       duration: duration,
     );
   }

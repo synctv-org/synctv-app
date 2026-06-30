@@ -14,18 +14,20 @@ class AudioUtil {
     try {
       final session = await AudioSession.instance;
       if (enabled) {
-        await session.configure(const AudioSessionConfiguration(
-          avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
-          avAudioSessionCategoryOptions:
-              AVAudioSessionCategoryOptions.defaultToSpeaker,
-          avAudioSessionMode: AVAudioSessionMode.voiceChat,
-          androidAudioAttributes: AndroidAudioAttributes(
-            contentType: AndroidAudioContentType.speech,
-            usage: AndroidAudioUsage.voiceCommunication,
-            flags: AndroidAudioFlags.audibilityEnforced,
+        await session.configure(
+          const AudioSessionConfiguration(
+            avAudioSessionCategory: AVAudioSessionCategory.playAndRecord,
+            avAudioSessionCategoryOptions:
+                AVAudioSessionCategoryOptions.defaultToSpeaker,
+            avAudioSessionMode: AVAudioSessionMode.voiceChat,
+            androidAudioAttributes: AndroidAudioAttributes(
+              contentType: AndroidAudioContentType.speech,
+              usage: AndroidAudioUsage.voiceCommunication,
+              flags: AndroidAudioFlags.audibilityEnforced,
+            ),
+            androidAudioFocusGainType: AndroidAudioFocusGainType.gainTransient,
           ),
-          androidAudioFocusGainType: AndroidAudioFocusGainType.gainTransient,
-        ));
+        );
       } else {
         await session.configure(const AudioSessionConfiguration.music());
       }

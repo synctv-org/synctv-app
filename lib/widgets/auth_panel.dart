@@ -203,8 +203,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         email: identifier.contains('@') ? identifier : '',
         username: identifier.contains('@') ? '' : identifier,
       );
-      final credential =
-          await PasskeyAuthenticatorService.getCredential(start.options);
+      final credential = await PasskeyAuthenticatorService.getCredential(
+        start.options,
+      );
       final result = await SyncTvService.finishPasskeyLogin(
         sessionId: start.sessionId,
         credential: credential,
@@ -221,8 +222,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     final registerByEmail = input.contains('@');
-    final username =
-        registerByEmail ? _registerUsernameController.text.trim() : input;
+    final username = registerByEmail
+        ? _registerUsernameController.text.trim()
+        : input;
     final email = registerByEmail
         ? input
         : (_registerIncludeEmail ? _registerEmailController.text.trim() : '');
@@ -248,10 +250,12 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     final registerByEmail = input.contains('@');
-    final username =
-        registerByEmail ? _registerUsernameController.text.trim() : input;
-    final email =
-        registerByEmail ? input : _registerEmailController.text.trim();
+    final username = registerByEmail
+        ? _registerUsernameController.text.trim()
+        : input;
+    final email = registerByEmail
+        ? input
+        : _registerEmailController.text.trim();
     if (username.isEmpty || email.isEmpty) {
       MessageUtils.showWarning(context, '请输入用户名和邮箱');
       return;
@@ -291,8 +295,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     final registerByEmail = input.contains('@');
-    final username =
-        registerByEmail ? _registerUsernameController.text.trim() : input;
+    final username = registerByEmail
+        ? _registerUsernameController.text.trim()
+        : input;
     final email = registerByEmail
         ? input
         : (_registerIncludeEmail ? _registerEmailController.text.trim() : '');
@@ -306,8 +311,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         email: email,
         name: _passkeyNameController.text.trim(),
       );
-      final credential =
-          await PasskeyAuthenticatorService.createCredential(start.options);
+      final credential = await PasskeyAuthenticatorService.createCredential(
+        start.options,
+      );
       final result = await SyncTvService.finishPasskeyRegistration(
         sessionId: start.sessionId,
         credential: credential,
@@ -344,7 +350,8 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         });
         final attempt = _oauthAttempt;
         final uri = Uri.parse(start.authorizationUrl);
-        final opened = await canLaunchUrl(uri) &&
+        final opened =
+            await canLaunchUrl(uri) &&
             await launchUrl(uri, mode: LaunchMode.externalApplication);
         if (!opened) throw StateError('无法打开授权页面');
         final parsed = await callbackSession.waitForCallback(
@@ -403,11 +410,10 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     await _withLoading(() async {
-      final start = await SyncTvService.startMfaPasskey(
-        challenge.sessionId,
+      final start = await SyncTvService.startMfaPasskey(challenge.sessionId);
+      final credential = await PasskeyAuthenticatorService.getCredential(
+        start.options,
       );
-      final credential =
-          await PasskeyAuthenticatorService.getCredential(start.options);
       await SyncTvService.finishMfaPasskey(
         mfaSessionId: challenge.sessionId,
         passkeySessionId: start.passkeySessionId,
@@ -421,11 +427,11 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     final reset =
         await showAppDialog<({String email, String token, String password})>(
-      context: context,
-      builder: (context) => _PasswordResetDialog(
-        initialEmail: _loginIdentifierController.text.trim(),
-      ),
-    );
+          context: context,
+          builder: (context) => _PasswordResetDialog(
+            initialEmail: _loginIdentifierController.text.trim(),
+          ),
+        );
     if (reset == null) return;
     await _withLoading(() async {
       await _opaqueAuthenticator.resetWithEmailToken(
@@ -442,9 +448,8 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   Future<void> _showUserAgreement() async {
     await showAppDialog<void>(
       context: context,
-      builder: (context) => const UserAgreementDialog(
-        agreementContent: _agreementContent,
-      ),
+      builder: (context) =>
+          const UserAgreementDialog(agreementContent: _agreementContent),
     );
   }
 
@@ -699,7 +704,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 width: 18,
                 height: 18,
                 child: AppLoadingIndicator(
-                    size: AppLoadingSize.sm, centered: false),
+                  size: AppLoadingSize.sm,
+                  centered: false,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(child: Text('等待 $_oauthProvider 授权完成')),
@@ -891,11 +898,16 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return const SizedBox.shrink();
     }
 
-    final currentDomain =
-        controller.text.split('@').skip(1).join('@').trim().toLowerCase();
+    final currentDomain = controller.text
+        .split('@')
+        .skip(1)
+        .join('@')
+        .trim()
+        .toLowerCase();
     final domains = settings.emailWhitelistDomains
-        .where((domain) =>
-            currentDomain.isEmpty || domain.startsWith(currentDomain))
+        .where(
+          (domain) => currentDomain.isEmpty || domain.startsWith(currentDomain),
+        )
         .take(8)
         .toList(growable: false);
     if (domains.isEmpty) return const SizedBox.shrink();
@@ -930,7 +942,8 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final passwordSignupEnabled = _settings?.enablePasswordSignup == true;
     final emailSignupEnabled =
         _settings?.enableEmail == true && _settings?.enableEmailSignup == true;
-    final passkeySignupEnabled = _passkeyAvailable &&
+    final passkeySignupEnabled =
+        _passkeyAvailable &&
         _settings?.enableWebauthn == true &&
         _settings?.enableWebauthnSignup == true;
     final oauthSignupProviders = _oauth2Providers
@@ -978,8 +991,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             controller: _registerIdentifierController,
             label: emailSignupEnabled ? '用户名或邮箱' : '用户名',
             icon: Icons.person_outline_rounded,
-            keyboardType:
-                emailSignupEnabled ? TextInputType.emailAddress : null,
+            keyboardType: emailSignupEnabled
+                ? TextInputType.emailAddress
+                : null,
             textInputAction: TextInputAction.done,
             enabled: !_registerIdentifierConfirmed,
             onChanged: (_) {
@@ -1128,11 +1142,11 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 onPressed: _loading
                     ? null
                     : () => setState(() {
-                          _registerIdentifierConfirmed = false;
-                          _registerIncludeEmail = false;
-                          _registerEmailTokenRequested = false;
-                          _registerEmailTokenController.clear();
-                        }),
+                        _registerIdentifierConfirmed = false;
+                        _registerIncludeEmail = false;
+                        _registerEmailTokenRequested = false;
+                        _registerEmailTokenController.clear();
+                      }),
                 icon: Icons.edit_outlined,
                 label: '修改',
                 style: AppActionButtonStyle.text,
@@ -1250,7 +1264,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           onPressed: _loading
               ? null
               : () =>
-                  setState(() => _showOAuthProviders = !_showOAuthProviders),
+                    setState(() => _showOAuthProviders = !_showOAuthProviders),
           icon: _showOAuthProviders
               ? Icons.expand_less_rounded
               : Icons.expand_more_rounded,
@@ -1303,8 +1317,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   String _oauth2ProviderLabel(OAuth2ProviderOption provider) {
-    final display =
-        provider.type.trim().isEmpty ? provider.name : provider.type;
+    final display = provider.type.trim().isEmpty
+        ? provider.name
+        : provider.type;
     if (provider.signupNeedReview) return '$display（注册需审核）';
     if (!provider.signupEnabled) return '$display（仅登录）';
     return display;
@@ -1411,9 +1426,9 @@ class _SectionLabel extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     );

@@ -25,10 +25,7 @@ class PlaybackDanmakuWindow {
 }
 
 class PlaybackDanmakuFetchResult {
-  const PlaybackDanmakuFetchResult({
-    required this.window,
-    required this.items,
-  });
+  const PlaybackDanmakuFetchResult({required this.window, required this.items});
 
   final PlaybackDanmakuWindow window;
   final List<DanmakuItem> items;
@@ -40,11 +37,7 @@ String playbackDanmakuSourceKey(SyncTvMovie? movie) {
   final mediaId = movie.playbackMediaId;
   final playlistId = movie.playbackPlaylistId;
   if (mediaId.isEmpty && playlistId.isEmpty && target.isEmpty) return '';
-  return [
-    mediaId,
-    playlistId,
-    target,
-  ].join('|');
+  return [mediaId, playlistId, target].join('|');
 }
 
 Future<PlaybackDanmakuFetchResult?> fetchPlaybackDanmakuWindow({
@@ -60,8 +53,9 @@ Future<PlaybackDanmakuFetchResult?> fetchPlaybackDanmakuWindow({
   if (sourceKey.isEmpty) return null;
 
   final target = movie.playbackTarget;
-  final playbackTarget =
-      target == null ? const <int>[] : base64Url.decode(target);
+  final playbackTarget = target == null
+      ? const <int>[]
+      : base64Url.decode(target);
   final messages = await SyncTvService.getChatPlaybackMessages(
     roomId,
     playbackMediaId: movie.playbackMediaId,
@@ -81,8 +75,9 @@ Future<PlaybackDanmakuFetchResult?> fetchPlaybackDanmakuWindow({
       endSeconds: positionSeconds + afterSeconds,
     ),
     items: messages
-        .where((message) =>
-            !message.isDeleted && message.content.trim().isNotEmpty)
+        .where(
+          (message) => !message.isDeleted && message.content.trim().isNotEmpty,
+        )
         .map(chatMessageToDanmaku)
         .toList(growable: false),
   );

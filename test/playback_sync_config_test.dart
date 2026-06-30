@@ -55,23 +55,22 @@ void main() {
     await SyncTvService.loadPlaybackSyncConfig();
 
     expect(
-        SyncTvService.playbackSyncConfig.autoSeekDriftThresholdSeconds, 0.05);
+      SyncTvService.playbackSyncConfig.autoSeekDriftThresholdSeconds,
+      0.05,
+    );
     expect(
-        SyncTvService.playbackSyncConfig.manualSeekDriftThresholdSeconds, 0.1);
+      SyncTvService.playbackSyncConfig.manualSeekDriftThresholdSeconds,
+      0.1,
+    );
     expect(SyncTvService.playbackSyncConfig.autoSyncEnabled, isFalse);
   });
 
   test('manual sync uses 0.2 second minimum seek drift by default', () {
-    expect(
-      PlaybackSyncConfig.defaults.manualSeekDriftThresholdSeconds,
-      0.2,
-    );
+    expect(PlaybackSyncConfig.defaults.manualSeekDriftThresholdSeconds, 0.2);
   });
 
   test('manual sync minimum seek drift is capped at 5 seconds', () {
-    const config = PlaybackSyncConfig(
-      manualSeekDriftThresholdSeconds: 10,
-    );
+    const config = PlaybackSyncConfig(manualSeekDriftThresholdSeconds: 10);
 
     expect(config.normalized().manualSeekDriftThresholdSeconds, 5);
   });
@@ -94,10 +93,7 @@ void main() {
       playbackSpeed: 1.5,
     );
 
-    final play = reporter.playbackStateChanged(
-      value: value,
-      isPlaying: true,
-    )!;
+    final play = reporter.playbackStateChanged(value: value, isPlaying: true)!;
     expect(
       play.playbackStateUpdate.type,
       client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PLAY,
@@ -119,10 +115,7 @@ void main() {
     );
     expect(seek.playbackStateUpdate.position, 10.0);
 
-    final speed = reporter.playbackSpeedChanged(
-      value: value,
-      speed: 2.0,
-    )!;
+    final speed = reporter.playbackSpeedChanged(value: value, speed: 2.0)!;
     expect(
       speed.playbackStateUpdate.type,
       client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SPEED,
@@ -153,10 +146,7 @@ void main() {
       reporter.seek(value: value, position: const Duration(seconds: 8)),
       isNull,
     );
-    expect(
-      reporter.playbackSpeedChanged(value: value, speed: 1.25),
-      isNull,
-    );
+    expect(reporter.playbackSpeedChanged(value: value, speed: 1.25), isNull);
   });
 
   test('sync target clamps past-duration playback to video end', () {
@@ -189,18 +179,20 @@ void main() {
     expect(target.isAtEnd, isFalse);
   });
 
-  test('sync target preserves derived playback position without known duration',
-      () {
-    final target = resolvePlaybackSyncTarget(
-      status: SyncTvPlaybackStatus(
-        isPlaying: true,
-        currentTime: 12.5,
-        playbackRate: 1.0,
-      ),
-      duration: Duration.zero,
-    );
+  test(
+    'sync target preserves derived playback position without known duration',
+    () {
+      final target = resolvePlaybackSyncTarget(
+        status: SyncTvPlaybackStatus(
+          isPlaying: true,
+          currentTime: 12.5,
+          playbackRate: 1.0,
+        ),
+        duration: Duration.zero,
+      );
 
-    expect(target.positionSeconds, 12.5);
-    expect(target.isAtEnd, isFalse);
-  });
+      expect(target.positionSeconds, 12.5);
+      expect(target.isAtEnd, isFalse);
+    },
+  );
 }

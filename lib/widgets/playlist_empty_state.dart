@@ -5,11 +5,7 @@ class PlaylistEmptyState extends StatelessWidget {
   final VoidCallback? onAdd;
   final bool compact;
 
-  const PlaylistEmptyState({
-    super.key,
-    this.onAdd,
-    this.compact = false,
-  });
+  const PlaylistEmptyState({super.key, this.onAdd, this.compact = false});
 
   @override
   Widget build(BuildContext context) {

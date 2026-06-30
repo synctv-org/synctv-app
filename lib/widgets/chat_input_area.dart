@@ -82,21 +82,20 @@ class _ChatInputAreaState extends State<ChatInputArea>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _switchAnimationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _switchAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _switchAnimationController,
-      curve: Curves.elasticOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _switchAnimationController,
+            curve: Curves.elasticOut,
+          ),
+        );
 
     _switchAnimationController.forward();
 
@@ -203,9 +202,12 @@ class _ChatInputAreaState extends State<ChatInputArea>
 
         return LayoutBuilder(
           builder: (context, constraints) {
-            final availableWidth =
-                (constraints.maxWidth - 32).clamp(buttonSize, 640.0);
-            final currentWidth = availableWidth * (1 - widthProgress) +
+            final availableWidth = (constraints.maxWidth - 32).clamp(
+              buttonSize,
+              640.0,
+            );
+            final currentWidth =
+                availableWidth * (1 - widthProgress) +
                 buttonSize * widthProgress;
             final finalWidth = currentWidth.clamp(buttonSize, availableWidth);
 
@@ -336,8 +338,10 @@ class _TextInputAreaState extends State<TextInputArea> {
     final text = widget.textController.text;
     _mentions.removeWhere((mention) {
       final startCodeUnit = _codeUnitOffsetForRuneOffset(text, mention.start);
-      final endCodeUnit =
-          _codeUnitOffsetForRuneOffset(text, mention.start + mention.length);
+      final endCodeUnit = _codeUnitOffsetForRuneOffset(
+        text,
+        mention.start + mention.length,
+      );
       if (startCodeUnit < 0 ||
           endCodeUnit > text.length ||
           endCodeUnit <= startCodeUnit) {
@@ -419,13 +423,16 @@ class _TextInputAreaState extends State<TextInputArea> {
       ),
     );
     _mentions.removeWhere(
-        (mention) => mention.start == startRune || mention.userId == user.id);
-    _mentions.add(ChatMentionInfo(
-      userId: user.id,
-      username: user.username,
-      start: startRune,
-      length: lengthRune,
-    ));
+      (mention) => mention.start == startRune || mention.userId == user.id,
+    );
+    _mentions.add(
+      ChatMentionInfo(
+        userId: user.id,
+        username: user.username,
+        start: startRune,
+        length: lengthRune,
+      ),
+    );
     _mentions.sort((a, b) => a.start.compareTo(b.start));
     widget.onMentionsChanged?.call(List.unmodifiable(_mentions));
     _mentionTokenStart = -1;
@@ -571,8 +578,9 @@ class _TextInputAreaState extends State<TextInputArea> {
                       keyboardType: TextInputType.multiline,
                       textInputAction: TextInputAction.send,
                       showClearButton: false,
-                      onSubmitted:
-                          canSend ? (_) => widget.onSendMessage() : null,
+                      onSubmitted: canSend
+                          ? (_) => widget.onSendMessage()
+                          : null,
                       onChanged: (_) => _refreshInputState(),
                       onTap: widget.onInputFocused,
                       enabled: !widget.isLoading,
@@ -852,8 +860,9 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
             borderRadius: const BorderRadius.all(Radius.circular(1.5)),
             boxShadow: [
               BoxShadow(
-                color: (isDark ? Colors.white : Colors.blue)
-                    .withValues(alpha: 0.3),
+                color: (isDark ? Colors.white : Colors.blue).withValues(
+                  alpha: 0.3,
+                ),
                 blurRadius: 2,
                 spreadRadius: 0,
               ),
@@ -941,19 +950,19 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
                           child: Text(
                             _isRecording
                                 ? _isCancelling
-                                    ? "松开手指，取消发送"
-                                    : "松开发送，上滑取消"
+                                      ? "松开手指，取消发送"
+                                      : "松开发送，上滑取消"
                                 : "按住说话",
                             style: TextStyle(
                               color: _isRecording
                                   ? _isCancelling
-                                      ? Colors.red.shade300
-                                      : (isDark
-                                          ? Colors.blue.shade300
-                                          : Colors.blue.shade700)
+                                        ? Colors.red.shade300
+                                        : (isDark
+                                              ? Colors.blue.shade300
+                                              : Colors.blue.shade700)
                                   : (isDark
-                                      ? Colors.white.withValues(alpha: 0.9)
-                                      : Colors.black.withValues(alpha: 0.9)),
+                                        ? Colors.white.withValues(alpha: 0.9)
+                                        : Colors.black.withValues(alpha: 0.9)),
                               fontSize: 16,
                               fontWeight: _isRecording
                                   ? FontWeight.w600

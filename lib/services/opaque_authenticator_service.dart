@@ -10,7 +10,7 @@ import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
 
 class OpaqueAuthenticatorService {
   OpaqueAuthenticatorService({opaque.SyncTvOpaqueClient? client})
-      : _client = client ?? opaque.SyncTvOpaqueClient();
+    : _client = client ?? opaque.SyncTvOpaqueClient();
 
   final opaque.SyncTvOpaqueClient _client;
 
@@ -115,8 +115,10 @@ class OpaqueAuthenticatorService {
     final registrationStart = _client.startRegistration(newPassword);
     final challenge = await SyncTvService.startOpaquePasswordUpdate(
       registrationRequest: registrationStart.registrationRequest,
-      verificationMethod: client_enum.OpaquePasswordUpdateVerificationMethod
-          .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_EMAIL_TOKEN.value,
+      verificationMethod: client_enum
+          .OpaquePasswordUpdateVerificationMethod
+          .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_EMAIL_TOKEN
+          .value,
       emailToken: normalizedToken,
     );
     final registrationFinish = _client.finishRegistration(
@@ -138,8 +140,10 @@ class OpaqueAuthenticatorService {
     final registrationStart = _client.startRegistration(newPassword);
     final challenge = await SyncTvService.startOpaquePasswordUpdate(
       registrationRequest: registrationStart.registrationRequest,
-      verificationMethod: client_enum.OpaquePasswordUpdateVerificationMethod
-          .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_PASSKEY.value,
+      verificationMethod: client_enum
+          .OpaquePasswordUpdateVerificationMethod
+          .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_PASSKEY
+          .value,
     );
     if (challenge.passkeySessionId.isEmpty ||
         challenge.passkeyOptions.isEmpty) {

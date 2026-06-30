@@ -41,20 +41,16 @@ class SyncTvProviderDomainService {
     return AlistLoginInfo(token: response.token, serverId: response.serverId);
   }
 
-  Future<void> logoutAList(
-    String serverId, {
-    String instanceName = '',
-  }) {
+  Future<void> logoutAList(String serverId, {String instanceName = ''}) {
     return _api.alistProvider.logout(
-        alist.LogoutRequest(serverId: serverId, instanceName: instanceName));
+      alist.LogoutRequest(serverId: serverId, instanceName: instanceName),
+    );
   }
 
-  Future<void> logoutEmby(
-    String serverId, {
-    String instanceName = '',
-  }) {
+  Future<void> logoutEmby(String serverId, {String instanceName = ''}) {
     return _api.embyProvider.logout(
-        emby.LogoutRequest(serverId: serverId, instanceName: instanceName));
+      emby.LogoutRequest(serverId: serverId, instanceName: instanceName),
+    );
   }
 
   Future<void> logoutBilibili({String instanceName = ''}) async {
@@ -133,10 +129,7 @@ class SyncTvProviderDomainService {
     required String code,
   }) async {
     await _api.bilibiliProvider.loginSMS(
-      bilibili.LoginSMSRequest(
-        sessionToken: sessionToken,
-        code: code,
-      ),
+      bilibili.LoginSMSRequest(sessionToken: sessionToken, code: code),
     );
   }
 
@@ -226,10 +219,7 @@ class SyncTvProviderDomainService {
     final response = await _api.embyProvider.getMe(
       emby.GetMeRequest(serverId: serverId, instanceName: instanceName),
     );
-    return EmbyAccountInfo(
-      id: response.id,
-      name: response.name,
-    );
+    return EmbyAccountInfo(id: response.id, name: response.name);
   }
 
   Future<BilibiliParseInfo> parseBilibiliInfo(
@@ -383,9 +373,7 @@ class SyncTvProviderDomainService {
     );
   }
 
-  BilibiliParseInfo _bilibiliParseFromProto(
-    bilibili.ParseResponse response,
-  ) {
+  BilibiliParseInfo _bilibiliParseFromProto(bilibili.ParseResponse response) {
     return BilibiliParseInfo(
       title: response.title,
       actors: response.actors.toList(),
@@ -406,8 +394,9 @@ class SyncTvProviderDomainService {
     alist.FileItem item, {
     required String parentPath,
   }) {
-    final normalizedParent =
-        parentPath.isEmpty || parentPath == '/' ? '' : parentPath;
+    final normalizedParent = parentPath.isEmpty || parentPath == '/'
+        ? ''
+        : parentPath;
     final path = item.name.isEmpty
         ? normalizedParent
         : '$normalizedParent/${item.name}'.replaceFirst(RegExp(r'^//+'), '/');
@@ -424,8 +413,9 @@ class SyncTvProviderDomainService {
   }
 
   AlistItemInfo _alistSearchItemFromProto(alist.SearchItem item) {
-    final normalizedParent =
-        item.parent.isEmpty || item.parent == '/' ? '' : item.parent;
+    final normalizedParent = item.parent.isEmpty || item.parent == '/'
+        ? ''
+        : item.parent;
     final path = item.name.isEmpty
         ? normalizedParent
         : '$normalizedParent/${item.name}'.replaceFirst(RegExp(r'^//+'), '/');
@@ -452,8 +442,9 @@ class SyncTvProviderDomainService {
       seriesName: item.seriesName,
       seriesId: item.seriesId,
       seasonName: item.seasonName,
-      thumbnail:
-          item.thumbnail.isEmpty ? '' : _api.resolveResourceUrl(item.thumbnail),
+      thumbnail: item.thumbnail.isEmpty
+          ? ''
+          : _api.resolveResourceUrl(item.thumbnail),
       description: item.description,
     );
   }

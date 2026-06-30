@@ -119,7 +119,8 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
       // 检查是否到了显示时间
       if (danmaku.shouldShowAt(currentPosition)) {
         debugPrint(
-            'DanmakuOverlay: 显示弹幕 [${danmaku.text}] at ${currentPosition.inSeconds}s (start: ${danmaku.startTime.inSeconds}s)');
+          'DanmakuOverlay: 显示弹幕 [${danmaku.text}] at ${currentPosition.inSeconds}s (start: ${danmaku.startTime.inSeconds}s)',
+        );
         _addDanmakuToScreen(danmaku);
         _processedDanmakuIndices.add(i);
         addedCount++;
@@ -141,10 +142,7 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
         case local.DanmakuType.floating:
           // 滚动弹幕
           _danmakuController!.addDanmaku(
-            DanmakuContentItem(
-              danmaku.text,
-              color: danmaku.color,
-            ),
+            DanmakuContentItem(danmaku.text, color: danmaku.color),
           );
           break;
 

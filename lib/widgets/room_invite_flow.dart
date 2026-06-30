@@ -38,22 +38,18 @@ Future<bool?> _showMissingServerDialog(BuildContext context) {
   return ChatUtils.showStyledDialog<bool>(
     context: context,
     title: '需要添加服务器',
-    icon: Icon(Icons.travel_explore_rounded,
-        color: Theme.of(context).primaryColor),
-    content: const Text(
-      '这个邀请来自另一个 SyncTV 服务器。请先添加该服务器地址，客户端会自动识别身份后继续加入房间。',
+    icon: Icon(
+      Icons.travel_explore_rounded,
+      color: Theme.of(context).primaryColor,
     ),
+    content: const Text('这个邀请来自另一个 SyncTV 服务器。请先添加该服务器地址，客户端会自动识别身份后继续加入房间。'),
     actions: [
       ChatUtils.createCancelButton(context),
       const SizedBox(width: 8),
-      ChatUtils.createConfirmButton(
-        context,
-        () async {
-          final changed = await showServerSettingsDialog(context: context);
-          if (context.mounted) Navigator.pop(context, changed == true);
-        },
-        text: '添加服务器',
-      ),
+      ChatUtils.createConfirmButton(context, () async {
+        final changed = await showServerSettingsDialog(context: context);
+        if (context.mounted) Navigator.pop(context, changed == true);
+      }, text: '添加服务器'),
     ],
   );
 }
@@ -89,9 +85,9 @@ Future<String?> _chooseEndpoint(
         children: [
           Text(
             profile.name,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           ...profile.endpoints.map(
@@ -112,9 +108,7 @@ Future<String?> _chooseEndpoint(
         ],
       ),
     ),
-    actions: [
-      ChatUtils.createCancelButton(context),
-    ],
+    actions: [ChatUtils.createCancelButton(context)],
   );
 }
 

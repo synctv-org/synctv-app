@@ -73,8 +73,9 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
     super.initState();
     _loadSettings();
     _loadTaxonomy();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _nameFocus.requestFocus());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _nameFocus.requestFocus(),
+    );
   }
 
   @override
@@ -88,9 +89,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
 
   Future<void> _loadSettings() async {
     try {
-      final settings = await SyncTvService.getPublicSettings(
-        refresh: true,
-      );
+      final settings = await SyncTvService.getPublicSettings(refresh: true);
       if (!mounted) return;
       setState(() {
         _settings = settings;
@@ -119,24 +118,26 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
         SyncTvService.listRoomCategories(refresh: true),
         SyncTvService.listRoomLabels(refresh: true),
       ]);
-      final categories = results[0]
-          .cast<RoomCategoryInfo>()
-          .where((category) => category.isEnabled)
-          .toList()
-        ..sort((a, b) {
-          final order = a.sortOrder.compareTo(b.sortOrder);
-          if (order != 0) return order;
-          return _categoryName(a).compareTo(_categoryName(b));
-        });
-      final labels = results[1]
-          .cast<RoomLabelInfo>()
-          .where((label) => label.isEnabled)
-          .toList()
-        ..sort((a, b) {
-          final order = a.sortOrder.compareTo(b.sortOrder);
-          if (order != 0) return order;
-          return _labelName(a).compareTo(_labelName(b));
-        });
+      final categories =
+          results[0]
+              .cast<RoomCategoryInfo>()
+              .where((category) => category.isEnabled)
+              .toList()
+            ..sort((a, b) {
+              final order = a.sortOrder.compareTo(b.sortOrder);
+              if (order != 0) return order;
+              return _categoryName(a).compareTo(_categoryName(b));
+            });
+      final labels =
+          results[1]
+              .cast<RoomLabelInfo>()
+              .where((label) => label.isEnabled)
+              .toList()
+            ..sort((a, b) {
+              final order = a.sortOrder.compareTo(b.sortOrder);
+              if (order != 0) return order;
+              return _labelName(a).compareTo(_labelName(b));
+            });
       if (!mounted) return;
       setState(() {
         _categories = categories;
@@ -230,7 +231,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
       if (!mounted) return;
       Navigator.pop(context);
       await widget.onCreated(room);
-      final pendingReview = _settings?.createRoomNeedReview == true ||
+      final pendingReview =
+          _settings?.createRoomNeedReview == true ||
           room.status != common_enum.RoomStatus.ROOM_STATUS_ACTIVE.value;
       if (!widget.pageContext.mounted) return;
       MessageUtils.showSuccess(
@@ -274,10 +276,12 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
       },
       child: Actions(
         actions: {
-          _SubmitIntent: CallbackAction<_SubmitIntent>(onInvoke: (_) {
-            _submit();
-            return null;
-          }),
+          _SubmitIntent: CallbackAction<_SubmitIntent>(
+            onInvoke: (_) {
+              _submit();
+              return null;
+            },
+          ),
         },
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -338,7 +342,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                             ? _nameError
                             : null,
                         prefixIcon: Icons.meeting_room_outlined,
-                        enabled: !_creating &&
+                        enabled:
+                            !_creating &&
                             !_creationDisabled &&
                             _settingsError == null,
                         textInputAction: TextInputAction.next,
@@ -347,7 +352,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                         onChanged: (value) {
                           if (!_submitted) return;
                           setState(
-                              () => _nameError = _validateName(value) ?? '');
+                            () => _nameError = _validateName(value) ?? '',
+                          );
                         },
                       ),
                       const SizedBox(height: 12),
@@ -356,7 +362,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                         label: '房间简介',
                         hintText: '可选，帮助成员理解这个房间的用途',
                         prefixIcon: Icons.notes_outlined,
-                        enabled: !_creating &&
+                        enabled:
+                            !_creating &&
                             !_creationDisabled &&
                             _settingsError == null,
                         minLines: 2,
@@ -377,7 +384,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                         value: _accessMode,
                         passwordRequired: _passwordRequired,
                         passwordForbidden: _passwordForbidden,
-                        enabled: !_creating &&
+                        enabled:
+                            !_creating &&
                             !_creationDisabled &&
                             _settingsError == null,
                         onChanged: (value) {
@@ -404,17 +412,20 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                                         : '成员加入时需要输入',
                                     errorText:
                                         _submitted && _passwordError.isNotEmpty
-                                            ? _passwordError
-                                            : null,
+                                        ? _passwordError
+                                        : null,
                                     prefixIcon: Icons.lock_outline_rounded,
-                                    enabled: !_creating &&
+                                    enabled:
+                                        !_creating &&
                                         !_creationDisabled &&
                                         _settingsError == null,
                                     obscureText: true,
                                     onChanged: (value) {
                                       if (!_submitted) return;
-                                      setState(() => _passwordError =
-                                          _validatePassword(value) ?? '');
+                                      setState(
+                                        () => _passwordError =
+                                            _validatePassword(value) ?? '',
+                                      );
                                     },
                                   ),
                                 )
@@ -550,42 +561,46 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _availableLabels.map((label) {
-                final selected = _selectedLabelIds.contains(label.id);
-                final color = parseRoomLabelColor(
-                  label.color,
-                  theme.colorScheme.primary,
-                );
-                return AppChip(
-                  selected: selected,
-                  enabled: enabled,
-                  onSelected: (value) {
-                    setState(() {
-                      if (value) {
-                        _selectedLabelIds.add(label.id);
-                      } else {
-                        _selectedLabelIds.remove(label.id);
-                      }
-                    });
-                  },
-                  style: selected ? AppChipStyle.filled : AppChipStyle.outlined,
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                        ),
+              children: _availableLabels
+                  .map((label) {
+                    final selected = _selectedLabelIds.contains(label.id);
+                    final color = parseRoomLabelColor(
+                      label.color,
+                      theme.colorScheme.primary,
+                    );
+                    return AppChip(
+                      selected: selected,
+                      enabled: enabled,
+                      onSelected: (value) {
+                        setState(() {
+                          if (value) {
+                            _selectedLabelIds.add(label.id);
+                          } else {
+                            _selectedLabelIds.remove(label.id);
+                          }
+                        });
+                      },
+                      style: selected
+                          ? AppChipStyle.filled
+                          : AppChipStyle.outlined,
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(_labelName(label)),
+                        ],
                       ),
-                      const SizedBox(width: 6),
-                      Text(_labelName(label)),
-                    ],
-                  ),
-                );
-              }).toList(growable: false),
+                    );
+                  })
+                  .toList(growable: false),
             ),
         ],
       ],
@@ -609,10 +624,7 @@ class _CreateRoomHeader extends StatelessWidget {
   final bool loading;
   final VoidCallback? onClose;
 
-  const _CreateRoomHeader({
-    required this.loading,
-    required this.onClose,
-  });
+  const _CreateRoomHeader({required this.loading, required this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -713,11 +725,7 @@ class _AccessModeSelector extends StatelessWidget {
 
         if (stacked) {
           return Column(
-            children: [
-              publicCard,
-              const SizedBox(height: 12),
-              passwordCard,
-            ],
+            children: [publicCard, const SizedBox(height: 12), passwordCard],
           );
         }
 
@@ -844,10 +852,7 @@ class _CreateRoomPolicyBanner extends StatelessWidget {
       iconSize: 18,
       title: Text(
         text,
-        style: theme.textTheme.bodySmall?.copyWith(
-          height: 1.35,
-          color: color,
-        ),
+        style: theme.textTheme.bodySmall?.copyWith(height: 1.35, color: color),
       ),
     );
   }

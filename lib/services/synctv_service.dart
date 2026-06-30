@@ -89,10 +89,7 @@ class SyncTvService {
   }
 
   static SyncTvDomainServices _createDomains() {
-    return SyncTvDomainServices(
-      api: _api,
-      sessionStore: _runtime.sessionStore,
-    );
+    return SyncTvDomainServices(api: _api, sessionStore: _runtime.sessionStore);
   }
 
   static Future<void> setBaseUrl(String url) async {
@@ -190,7 +187,9 @@ class SyncTvService {
   }
 
   static Future<AuthResult> confirmEmailLoginResult(
-      String email, String token) async {
+    String email,
+    String token,
+  ) async {
     return _domains.auth.confirmEmailLoginResult(email, token);
   }
 
@@ -268,10 +267,7 @@ class SyncTvService {
     String username = '',
     String email = '',
   }) async {
-    return _domains.auth.startPasskeyLogin(
-      username: username,
-      email: email,
-    );
+    return _domains.auth.startPasskeyLogin(username: username, email: email);
   }
 
   static Future<AuthResult> finishPasskeyLogin({
@@ -317,7 +313,7 @@ class SyncTvService {
   }
 
   static Future<SensitiveOperationVerificationInfo>
-      startSensitiveOperationVerification() async {
+  startSensitiveOperationVerification() async {
     return _domains.auth.startSensitiveOperationVerification();
   }
 
@@ -328,14 +324,12 @@ class SyncTvService {
   }
 
   static Future<SensitiveOperationEmailCodeInfo>
-      requestSensitiveOperationEmailCode(
-    String sessionId,
-  ) async {
+  requestSensitiveOperationEmailCode(String sessionId) async {
     return _domains.auth.requestSensitiveOperationEmailCode(sessionId);
   }
 
   static Future<SensitiveOperationVerificationInfo>
-      finishSensitiveOperationVerification({
+  finishSensitiveOperationVerification({
     required String sessionId,
     required client.SensitiveOperationVerificationMethod method,
     String password = '',
@@ -401,17 +395,13 @@ class SyncTvService {
     String provider, {
     String redirectUrl = '',
   }) async {
-    return _domains.auth.startOAuth2Login(
-      provider,
-      redirectUrl: redirectUrl,
-    );
+    return _domains.auth.startOAuth2Login(provider, redirectUrl: redirectUrl);
   }
 
   static OAuth2CallbackPayload parseOAuth2Callback(
     Uri uri, {
     String expectedState = '',
-  }) =>
-      OAuth2CallbackParser.parse(uri, expectedState: expectedState);
+  }) => OAuth2CallbackParser.parse(uri, expectedState: expectedState);
 
   static Future<AuthResult> finishOAuth2Login({
     required String provider,
@@ -436,22 +426,14 @@ class SyncTvService {
   static Future<SyncTvUser> updateUserAvatar(LocalImageUpload upload) async {
     final user = await _domains.fileUploads.updateUserAvatar(upload);
     final mapped = _api.mapUser(user);
-    _domains.cache.put(
-      'account:me',
-      mapped,
-      ttl: const Duration(minutes: 2),
-    );
+    _domains.cache.put('account:me', mapped, ttl: const Duration(minutes: 2));
     return mapped;
   }
 
   static Future<SyncTvUser> clearUserAvatar() async {
     final user = await _domains.fileUploads.clearUserAvatar();
     final mapped = _api.mapUser(user);
-    _domains.cache.put(
-      'account:me',
-      mapped,
-      ttl: const Duration(minutes: 2),
-    );
+    _domains.cache.put('account:me', mapped, ttl: const Duration(minutes: 2));
     return mapped;
   }
 
@@ -471,8 +453,9 @@ class SyncTvService {
     );
   }
 
-  static Future<SyncTvUser> unbindEmail(
-      {required String verificationId}) async {
+  static Future<SyncTvUser> unbindEmail({
+    required String verificationId,
+  }) async {
     return _domains.account.unbindEmail(verificationId: verificationId);
   }
 
@@ -521,7 +504,8 @@ class SyncTvService {
   }
 
   static Future<UserNotificationItem> getNotification(
-      int notificationId) async {
+    int notificationId,
+  ) async {
     return _domains.notifications.getNotification(notificationId);
   }
 
@@ -803,22 +787,13 @@ class SyncTvService {
   }
 
   static Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>>
-      watchPlaybackState(
-    String roomId, {
-    String version = '',
-  }) {
+  watchPlaybackState(String roomId, {String version = ''}) {
     return _domains.roomMedia.watchPlaybackState(roomId, version: version);
   }
 
   static Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>>
-      watchPlaybackSnapshot(
-    String roomId, {
-    String version = '',
-  }) {
-    return _domains.roomMedia.watchPlaybackSnapshot(
-      roomId,
-      version: version,
-    );
+  watchPlaybackSnapshot(String roomId, {String version = ''}) {
+    return _domains.roomMedia.watchPlaybackSnapshot(roomId, version: version);
   }
 
   static Stream<RoomResourceWatchEvent<SyncTvRoomSettings>> watchRoomSettings(
@@ -829,7 +804,7 @@ class SyncTvService {
   }
 
   static Stream<RoomResourceWatchEvent<RoomMediaLibraryPage>>
-      watchPlaylistItems(
+  watchPlaylistItems(
     String roomId, {
     String version = '',
     String playlistId = '',
@@ -999,8 +974,11 @@ class SyncTvService {
     String playlistId,
     LocalImageUpload upload,
   ) async {
-    final playlist = await _domains.fileUploads
-        .updatePlaylistCover(roomId, playlistId, upload);
+    final playlist = await _domains.fileUploads.updatePlaylistCover(
+      roomId,
+      playlistId,
+      upload,
+    );
     return _api.mapPlaylist(playlist);
   }
 
@@ -1008,8 +986,10 @@ class SyncTvService {
     String roomId,
     String playlistId,
   ) async {
-    final playlist =
-        await _domains.fileUploads.clearPlaylistCover(roomId, playlistId);
+    final playlist = await _domains.fileUploads.clearPlaylistCover(
+      roomId,
+      playlistId,
+    );
     return _api.mapPlaylist(playlist);
   }
 
@@ -1054,13 +1034,18 @@ class SyncTvService {
     String mediaId,
     LocalImageUpload upload,
   ) async {
-    final media =
-        await _domains.fileUploads.updateVideoCover(roomId, mediaId, upload);
+    final media = await _domains.fileUploads.updateVideoCover(
+      roomId,
+      mediaId,
+      upload,
+    );
     return _api.mapMedia(media);
   }
 
   static Future<SyncTvMovie> clearVideoCover(
-      String roomId, String mediaId) async {
+    String roomId,
+    String mediaId,
+  ) async {
     final media = await _domains.fileUploads.clearVideoCover(roomId, mediaId);
     return _api.mapMedia(media);
   }
@@ -1127,8 +1112,10 @@ class SyncTvService {
     String roomId,
     LocalImageUpload upload,
   ) async {
-    final reference =
-        await _domains.fileUploads.uploadChatImage(roomId, upload);
+    final reference = await _domains.fileUploads.uploadChatImage(
+      roomId,
+      upload,
+    );
     return StoredImageInfo(
       id: reference.id,
       uploadReference: true,
@@ -1175,11 +1162,7 @@ class SyncTvService {
     String messageId, {
     String note = '',
   }) {
-    return _domains.roomMedia.pinChatMessage(
-      roomId,
-      messageId,
-      note: note,
-    );
+    return _domains.roomMedia.pinChatMessage(roomId, messageId, note: note);
   }
 
   static Future<ChatPinEventInfo> unpinChatMessage(
@@ -1625,24 +1608,12 @@ class SyncTvService {
     );
   }
 
-  static Future<void> logoutAList(
-    String serverId, {
-    String instanceName = '',
-  }) {
-    return _domains.providers.logoutAList(
-      serverId,
-      instanceName: instanceName,
-    );
+  static Future<void> logoutAList(String serverId, {String instanceName = ''}) {
+    return _domains.providers.logoutAList(serverId, instanceName: instanceName);
   }
 
-  static Future<void> logoutEmby(
-    String serverId, {
-    String instanceName = '',
-  }) {
-    return _domains.providers.logoutEmby(
-      serverId,
-      instanceName: instanceName,
-    );
+  static Future<void> logoutEmby(String serverId, {String instanceName = ''}) {
+    return _domains.providers.logoutEmby(serverId, instanceName: instanceName);
   }
 
   static Future<void> logoutBilibili({String instanceName = ''}) async {
@@ -1674,9 +1645,7 @@ class SyncTvService {
   static Future<BilibiliSmsLoginInfo> startBilibiliSmsLogin({
     String instanceName = '',
   }) async {
-    return _domains.providers.startBilibiliSmsLogin(
-      instanceName: instanceName,
-    );
+    return _domains.providers.startBilibiliSmsLogin(instanceName: instanceName);
   }
 
   static Future<BilibiliSmsLoginInfo> sendBilibiliSms({
@@ -2412,7 +2381,8 @@ class SyncTvService {
     bool? tls,
     provider_common_enum.ProviderInstanceListSortBy sortBy =
         provider_common_enum
-            .ProviderInstanceListSortBy.PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
+            .ProviderInstanceListSortBy
+            .PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
     provider_common_enum.SortDirection sortDirection =
         provider_common_enum.SortDirection.SORT_DIRECTION_ASC,
   }) {
@@ -2435,7 +2405,8 @@ class SyncTvService {
     bool? tls,
     provider_common_enum.ProviderInstanceListSortBy sortBy =
         provider_common_enum
-            .ProviderInstanceListSortBy.PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
+            .ProviderInstanceListSortBy
+            .PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
     provider_common_enum.SortDirection sortDirection =
         provider_common_enum.SortDirection.SORT_DIRECTION_ASC,
   }) {

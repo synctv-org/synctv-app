@@ -18,8 +18,9 @@ Widget _app(Widget child) {
 }
 
 void main() {
-  testWidgets('AppTextField clear keeps controller and onChanged in sync',
-      (tester) async {
+  testWidgets('AppTextField clear keeps controller and onChanged in sync', (
+    tester,
+  ) async {
     final controller = TextEditingController(text: 'ab');
     final changes = <String>[];
 
@@ -46,8 +47,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('AppTextField skips clear action during Tab traversal',
-      (tester) async {
+  testWidgets('AppTextField skips clear action during Tab traversal', (
+    tester,
+  ) async {
     final firstController = TextEditingController(text: 'room');
     final secondController = TextEditingController();
     final firstFocus = FocusNode();
@@ -85,8 +87,9 @@ void main() {
     secondFocus.dispose();
   });
 
-  testWidgets('AppSearchField exposes clear control without paste button',
-      (tester) async {
+  testWidgets('AppSearchField exposes clear control without paste button', (
+    tester,
+  ) async {
     final controller = TextEditingController(text: 'alist');
 
     await tester.pumpWidget(
@@ -110,8 +113,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('AppSearchField accepts typing and submits query',
-      (tester) async {
+  testWidgets('AppSearchField accepts typing and submits query', (
+    tester,
+  ) async {
     final controller = TextEditingController();
     final submitted = <String>[];
 
@@ -136,18 +140,16 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('AppResponsiveWrap keeps children within narrow constraints',
-      (tester) async {
+  testWidgets('AppResponsiveWrap keeps children within narrow constraints', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const SizedBox(
           width: 180,
           child: AppResponsiveWrap(
             minItemWidth: 280,
-            children: [
-              Text('A'),
-              Text('B'),
-            ],
+            children: [Text('A'), Text('B')],
           ),
         ),
       ),
@@ -160,18 +162,16 @@ void main() {
     expect(childWidths, greaterThanOrEqualTo(2));
   });
 
-  testWidgets('AppAdaptiveSplitView keeps collapsed secondary usable',
-      (tester) async {
+  testWidgets('AppAdaptiveSplitView keeps collapsed secondary usable', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const SizedBox(
           width: 400,
           height: 600,
           child: AppAdaptiveSplitView(
-            primary: ColoredBox(
-              key: ValueKey('primary'),
-              color: Colors.black,
-            ),
+            primary: ColoredBox(key: ValueKey('primary'), color: Colors.black),
             secondary: ColoredBox(
               key: ValueKey('secondary'),
               color: Colors.blue,
@@ -191,24 +191,22 @@ void main() {
     );
   });
 
-  testWidgets('AppTextField keeps the default text editing context menu',
-      (tester) async {
+  testWidgets('AppTextField keeps the default text editing context menu', (
+    tester,
+  ) async {
     final controller = TextEditingController(text: 'room name');
 
     await tester.pumpWidget(
-      _app(
-        AppTextField(
-          controller: controller,
-          label: '房间名',
-        ),
-      ),
+      _app(AppTextField(controller: controller, label: '房间名')),
     );
 
     final editable = tester.widget<EditableText>(find.byType(EditableText));
     expect(editable.contextMenuBuilder, isNotNull);
     final state = tester.state<EditableTextState>(find.byType(EditableText));
     final menu = editable.contextMenuBuilder!(
-        tester.element(find.byType(EditableText)), state);
+      tester.element(find.byType(EditableText)),
+      state,
+    );
     expect(menu, isA<AdaptiveTextSelectionToolbar>());
     expect(state.contextMenuButtonItems, isNotEmpty);
     expect(
@@ -246,8 +244,9 @@ void main() {
     undoController.dispose();
   });
 
-  testWidgets('AppTextField exposes one native editable text field',
-      (tester) async {
+  testWidgets('AppTextField exposes one native editable text field', (
+    tester,
+  ) async {
     final semantics = tester.ensureSemantics();
     final controller = TextEditingController(text: 'old');
     final changes = <String>[];
@@ -273,63 +272,59 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('AppTextField semantic setText updates controller and onChanged',
-      (tester) async {
-    final semantics = tester.ensureSemantics();
-    final controller = TextEditingController();
-    final changes = <String>[];
+  testWidgets(
+    'AppTextField semantic setText updates controller and onChanged',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      final controller = TextEditingController();
+      final changes = <String>[];
 
-    await tester.pumpWidget(
-      _app(
-        AppTextField(
-          controller: controller,
-          label: '链接',
-          keyboardType: TextInputType.url,
-          onChanged: changes.add,
+      await tester.pumpWidget(
+        _app(
+          AppTextField(
+            controller: controller,
+            label: '链接',
+            keyboardType: TextInputType.url,
+            onChanged: changes.add,
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(
-      find.semantics.byPredicate(
-        (node) =>
-            node.getSemanticsData().hasAction(ui.SemanticsAction.setText),
-        describeMatch: (_) => 'setText action',
-      ),
-      findsWidgets,
-    );
+      expect(
+        find.semantics.byPredicate(
+          (node) =>
+              node.getSemanticsData().hasAction(ui.SemanticsAction.setText),
+          describeMatch: (_) => 'setText action',
+        ),
+        findsWidgets,
+      );
 
-    tester.semantics.setText(
-      find.semantics.byPredicate(
-        (node) => node.getSemanticsData().hasAction(
-              ui.SemanticsAction.setText,
-            ),
-        describeMatch: (_) => 'setText action',
-      ),
-      'http://127.0.0.1:18080/valid-sample.mp4',
-    );
-    await tester.pump();
+      tester.semantics.setText(
+        find.semantics.byPredicate(
+          (node) =>
+              node.getSemanticsData().hasAction(ui.SemanticsAction.setText),
+          describeMatch: (_) => 'setText action',
+        ),
+        'http://127.0.0.1:18080/valid-sample.mp4',
+      );
+      await tester.pump();
 
-    expect(controller.text, 'http://127.0.0.1:18080/valid-sample.mp4');
-    expect(changes.last, 'http://127.0.0.1:18080/valid-sample.mp4');
+      expect(controller.text, 'http://127.0.0.1:18080/valid-sample.mp4');
+      expect(changes.last, 'http://127.0.0.1:18080/valid-sample.mp4');
 
-    controller.dispose();
-    semantics.dispose();
-  });
+      controller.dispose();
+      semantics.dispose();
+    },
+  );
 
-  testWidgets('AppTextField read-only semantics cannot set text',
-      (tester) async {
+  testWidgets('AppTextField read-only semantics cannot set text', (
+    tester,
+  ) async {
     final semantics = tester.ensureSemantics();
     final controller = TextEditingController(text: 'locked');
 
     await tester.pumpWidget(
-      _app(
-        AppTextField(
-          controller: controller,
-          label: '只读',
-          readOnly: true,
-        ),
-      ),
+      _app(AppTextField(controller: controller, label: '只读', readOnly: true)),
     );
 
     expect(
@@ -346,8 +341,9 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('AppTextField form fields submit and keep native edit menu',
-      (tester) async {
+  testWidgets('AppTextField form fields submit and keep native edit menu', (
+    tester,
+  ) async {
     final serverController = TextEditingController();
     final passwordController = TextEditingController();
     final submitted = <String>[];
@@ -383,8 +379,9 @@ void main() {
     expect(submitted, ['http://127.0.0.1']);
     expect(find.byTooltip('粘贴'), findsNothing);
 
-    final editables =
-        tester.widgetList<EditableText>(find.byType(EditableText));
+    final editables = tester.widgetList<EditableText>(
+      find.byType(EditableText),
+    );
     expect(
       editables.every((editable) => editable.contextMenuBuilder != null),
       isTrue,
@@ -394,17 +391,14 @@ void main() {
     passwordController.dispose();
   });
 
-  testWidgets('AppTextField password reveal uses component-library action',
-      (tester) async {
+  testWidgets('AppTextField password reveal uses component-library action', (
+    tester,
+  ) async {
     final controller = TextEditingController(text: 'secret');
 
     await tester.pumpWidget(
       _app(
-        AppTextField(
-          controller: controller,
-          label: '密码',
-          obscureText: true,
-        ),
+        AppTextField(controller: controller, label: '密码', obscureText: true),
       ),
     );
 
@@ -419,8 +413,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('AppTextField skips password reveal during Tab traversal',
-      (tester) async {
+  testWidgets('AppTextField skips password reveal during Tab traversal', (
+    tester,
+  ) async {
     final passwordController = TextEditingController(text: 'secret');
     final nextController = TextEditingController();
     final passwordFocus = FocusNode();
@@ -459,8 +454,9 @@ void main() {
     nextFocus.dispose();
   });
 
-  testWidgets('AppReadOnlyField uses app text field chrome without actions',
-      (tester) async {
+  testWidgets('AppReadOnlyField uses app text field chrome without actions', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const AppReadOnlyField(
@@ -480,8 +476,9 @@ void main() {
     expect(editable.readOnly, isTrue);
   });
 
-  testWidgets('AppSelectableText keeps native selectable text behavior',
-      (tester) async {
+  testWidgets('AppSelectableText keeps native selectable text behavior', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const AppSelectableText(
@@ -492,67 +489,71 @@ void main() {
       ),
     );
 
-    final selectable =
-        tester.widget<SelectableText>(find.byType(SelectableText));
+    final selectable = tester.widget<SelectableText>(
+      find.byType(SelectableText),
+    );
     expect(selectable.data, '{"type":"room.updated"}');
     expect(selectable.maxLines, 2);
     expect(selectable.style?.fontFamily, 'monospace');
   });
 
-  testWidgets('AppActionButton uses ForUI button variants and disables loading',
-      (tester) async {
-    var presses = 0;
+  testWidgets(
+    'AppActionButton uses ForUI button variants and disables loading',
+    (tester) async {
+      var presses = 0;
 
-    await tester.pumpWidget(
-      _app(
-        AppActionButton(
-          onPressed: () => presses += 1,
-          icon: Icons.save_outlined,
-          label: '保存',
+      await tester.pumpWidget(
+        _app(
+          AppActionButton(
+            onPressed: () => presses += 1,
+            icon: Icons.save_outlined,
+            label: '保存',
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(FButton), findsOneWidget);
-    await tester.tap(find.text('保存'));
-    await tester.pump(const Duration(milliseconds: 150));
-    expect(presses, 1);
+      expect(find.byType(FButton), findsOneWidget);
+      await tester.tap(find.text('保存'));
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(presses, 1);
 
-    await tester.pumpWidget(
-      _app(
-        AppActionButton(
-          onPressed: () => presses += 1,
-          icon: Icons.delete_outline,
-          label: '删除',
-          style: AppActionButtonStyle.destructive,
-          size: AppActionButtonSize.sm,
+      await tester.pumpWidget(
+        _app(
+          AppActionButton(
+            onPressed: () => presses += 1,
+            icon: Icons.delete_outline,
+            label: '删除',
+            style: AppActionButtonStyle.destructive,
+            size: AppActionButtonSize.sm,
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(FButton), findsOneWidget);
-    await tester.tap(find.text('删除'));
-    await tester.pump(const Duration(milliseconds: 150));
-    expect(presses, 2);
+      expect(find.byType(FButton), findsOneWidget);
+      await tester.tap(find.text('删除'));
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(presses, 2);
 
-    await tester.pumpWidget(
-      _app(
-        AppActionButton(
-          onPressed: () => presses += 1,
-          label: '保存',
-          loading: true,
+      await tester.pumpWidget(
+        _app(
+          AppActionButton(
+            onPressed: () => presses += 1,
+            label: '保存',
+            loading: true,
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(FCircularProgress), findsOneWidget);
-    await tester.tap(find.text('保存'));
-    await tester.pump(const Duration(milliseconds: 150));
-    expect(presses, 2);
-  });
+      expect(find.byType(FCircularProgress), findsOneWidget);
+      await tester.tap(find.text('保存'));
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(presses, 2);
+    },
+  );
 
-  testWidgets('AppIconButton uses ForUI icon button and disables loading',
-      (tester) async {
+  testWidgets('AppIconButton uses ForUI icon button and disables loading', (
+    tester,
+  ) async {
     var presses = 0;
 
     await tester.pumpWidget(
@@ -632,8 +633,9 @@ void main() {
     expect(presses, 1);
   });
 
-  testWidgets('AppOverlayActionButton keeps overlay actions tappable',
-      (tester) async {
+  testWidgets('AppOverlayActionButton keeps overlay actions tappable', (
+    tester,
+  ) async {
     var presses = 0;
 
     await tester.pumpWidget(
@@ -705,30 +707,30 @@ void main() {
     expect(selected, 'mine');
   });
 
-  testWidgets('AppLoadingIndicator and AppLinearProgress wrap progress states',
-      (tester) async {
-    await tester.pumpWidget(
-      _app(
-        const Column(
-          children: [
-            AppLoadingIndicator(),
-            AppLoadingIndicator(size: AppLoadingSize.sm, centered: false),
-            AppLinearProgress(),
-          ],
+  testWidgets(
+    'AppLoadingIndicator and AppLinearProgress wrap progress states',
+    (tester) async {
+      await tester.pumpWidget(
+        _app(
+          const Column(
+            children: [
+              AppLoadingIndicator(),
+              AppLoadingIndicator(size: AppLoadingSize.sm, centered: false),
+              AppLinearProgress(),
+            ],
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byType(FCircularProgress), findsNWidgets(2));
-    expect(find.byType(LinearProgressIndicator), findsOneWidget);
-  });
+      expect(find.byType(FCircularProgress), findsNWidgets(2));
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    },
+  );
 
-  testWidgets('App tab wrappers keep controller-based navigation',
-      (tester) async {
-    final controller = TabController(
-      length: 2,
-      vsync: const TestVSync(),
-    );
+  testWidgets('App tab wrappers keep controller-based navigation', (
+    tester,
+  ) async {
+    final controller = TabController(length: 2, vsync: const TestVSync());
 
     await tester.pumpWidget(
       _app(
@@ -744,10 +746,7 @@ void main() {
             Expanded(
               child: AppTabBarView(
                 controller: controller,
-                children: const [
-                  Text('资料内容'),
-                  Text('偏好内容'),
-                ],
+                children: const [Text('资料内容'), Text('偏好内容')],
               ),
             ),
           ],
@@ -768,8 +767,9 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('AppDefaultTabController provides inherited tab state',
-      (tester) async {
+  testWidgets('AppDefaultTabController provides inherited tab state', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const AppDefaultTabController(
@@ -783,12 +783,7 @@ void main() {
                 ],
               ),
               Expanded(
-                child: AppTabBarView(
-                  children: [
-                    Text('房间列表'),
-                    Text('成员列表'),
-                  ],
-                ),
+                child: AppTabBarView(children: [Text('房间列表'), Text('成员列表')]),
               ),
             ],
           ),
@@ -804,8 +799,9 @@ void main() {
     expect(find.text('成员列表'), findsOneWidget);
   });
 
-  testWidgets('AppPopupMenuButton and AppMenuAnchor expose menu actions',
-      (tester) async {
+  testWidgets('AppPopupMenuButton and AppMenuAnchor expose menu actions', (
+    tester,
+  ) async {
     var selected = 0;
 
     await tester.pumpWidget(
@@ -853,19 +849,15 @@ void main() {
     expect(selected, 100);
   });
 
-  testWidgets('AppDialog and AppConfirmDialog render app actions',
-      (tester) async {
+  testWidgets('AppDialog and AppConfirmDialog render app actions', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         AppDialog(
           title: const Text('标题'),
           body: const Text('内容'),
-          actions: [
-            AppActionButton(
-              onPressed: () {},
-              label: '确定',
-            ),
-          ],
+          actions: [AppActionButton(onPressed: () {}, label: '确定')],
         ),
       ),
     );
@@ -890,8 +882,9 @@ void main() {
     expect(find.text('确认删除？'), findsOneWidget);
   });
 
-  testWidgets('showAppDialog renders AppDialogFrame and returns a value',
-      (tester) async {
+  testWidgets('showAppDialog renders AppDialogFrame and returns a value', (
+    tester,
+  ) async {
     String? result;
 
     await tester.pumpWidget(
@@ -928,45 +921,47 @@ void main() {
   });
 
   testWidgets(
-      'showAppBottomSheet renders AppBottomSheetFrame and returns value',
-      (tester) async {
-    String? result;
+    'showAppBottomSheet renders AppBottomSheetFrame and returns value',
+    (tester) async {
+      String? result;
 
-    await tester.pumpWidget(
-      _app(
-        Builder(
-          builder: (context) => AppActionButton(
-            onPressed: () async {
-              result = await showAppBottomSheet<String>(
-                context: context,
-                builder: (context) => AppBottomSheetFrame(
-                  child: AppActionButton(
-                    onPressed: () => Navigator.pop(context, 'selected'),
-                    label: '选择',
+      await tester.pumpWidget(
+        _app(
+          Builder(
+            builder: (context) => AppActionButton(
+              onPressed: () async {
+                result = await showAppBottomSheet<String>(
+                  context: context,
+                  builder: (context) => AppBottomSheetFrame(
+                    child: AppActionButton(
+                      onPressed: () => Navigator.pop(context, 'selected'),
+                      label: '选择',
+                    ),
                   ),
-                ),
-              );
-            },
-            label: '打开面板',
+                );
+              },
+              label: '打开面板',
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.tap(find.text('打开面板'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('打开面板'));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(AppBottomSheetFrame), findsOneWidget);
-    expect(find.text('选择'), findsOneWidget);
+      expect(find.byType(AppBottomSheetFrame), findsOneWidget);
+      expect(find.text('选择'), findsOneWidget);
 
-    await tester.tap(find.text('选择'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('选择'));
+      await tester.pumpAndSettle();
 
-    expect(result, 'selected');
-  });
+      expect(result, 'selected');
+    },
+  );
 
-  testWidgets('AppCard and AppTile use ForUI structure components',
-      (tester) async {
+  testWidgets('AppCard and AppTile use ForUI structure components', (
+    tester,
+  ) async {
     var tapped = false;
 
     await tester.pumpWidget(
@@ -990,8 +985,9 @@ void main() {
     expect(tapped, isTrue);
   });
 
-  testWidgets('AppInkSurface centralizes tappable material surfaces',
-      (tester) async {
+  testWidgets('AppInkSurface centralizes tappable material surfaces', (
+    tester,
+  ) async {
     var tapped = false;
     var longPressed = false;
 
@@ -1026,11 +1022,7 @@ void main() {
     await tester.pumpWidget(
       _app(
         const AppScaffold(
-          appBar: AppAppBar(
-            title: Text('页面'),
-            centerTitle: true,
-            elevation: 0,
-          ),
+          appBar: AppAppBar(title: Text('页面'), centerTitle: true, elevation: 0),
           body: Center(child: Text('内容')),
           backgroundColor: Colors.white,
         ),
@@ -1044,14 +1036,11 @@ void main() {
     expect(find.text('内容'), findsOneWidget);
   });
 
-  testWidgets('AppTransparentRouteSurface keeps transparent material route',
-      (tester) async {
+  testWidgets('AppTransparentRouteSurface keeps transparent material route', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _app(
-        const AppTransparentRouteSurface(
-          child: Text('登录'),
-        ),
-      ),
+      _app(const AppTransparentRouteSurface(child: Text('登录'))),
     );
 
     final material = tester.widget<Material>(
@@ -1064,8 +1053,9 @@ void main() {
     expect(find.text('登录'), findsOneWidget);
   });
 
-  testWidgets('AppOverlaySurface wraps overlay material settings',
-      (tester) async {
+  testWidgets('AppOverlaySurface wraps overlay material settings', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const AppOverlaySurface(
@@ -1087,8 +1077,9 @@ void main() {
     expect(find.text('覆盖层'), findsOneWidget);
   });
 
-  testWidgets('AppBlurSurface wraps blur and decorated content',
-      (tester) async {
+  testWidgets('AppBlurSurface wraps blur and decorated content', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const AppBlurSurface(
@@ -1127,14 +1118,11 @@ void main() {
     expect(find.text('面板'), findsOneWidget);
   });
 
-  testWidgets('AppFloatingInputSurface applies input shell chrome',
-      (tester) async {
+  testWidgets('AppFloatingInputSurface applies input shell chrome', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _app(
-        const AppFloatingInputSurface(
-          child: Text('输入'),
-        ),
-      ),
+      _app(const AppFloatingInputSurface(child: Text('输入'))),
     );
 
     final panel = tester.widget<Container>(find.byType(Container).last);
@@ -1145,21 +1133,15 @@ void main() {
     expect(find.text('输入'), findsOneWidget);
   });
 
-  testWidgets('AppBadge and AppIconBadge centralize compact indicators',
-      (tester) async {
+  testWidgets('AppBadge and AppIconBadge centralize compact indicators', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const Column(
           children: [
-            AppBadge(
-              icon: Icons.lock,
-              color: Colors.blue,
-              label: Text('密码'),
-            ),
-            AppIconBadge(
-              icon: Icons.meeting_room,
-              color: Colors.green,
-            ),
+            AppBadge(icon: Icons.lock, color: Colors.blue, label: Text('密码')),
+            AppIconBadge(icon: Icons.meeting_room, color: Colors.green),
           ],
         ),
       ),
@@ -1176,8 +1158,9 @@ void main() {
     );
   });
 
-  testWidgets('AppInfoBanner renders icon, content, and trailing actions',
-      (tester) async {
+  testWidgets('AppInfoBanner renders icon, content, and trailing actions', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const AppInfoBanner(
@@ -1197,8 +1180,9 @@ void main() {
     expect(find.byType(AppIconBadge), findsOneWidget);
   });
 
-  testWidgets('AppEmptyState and AppImageThumbnail render reusable states',
-      (tester) async {
+  testWidgets('AppEmptyState and AppImageThumbnail render reusable states', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const Column(
@@ -1248,8 +1232,9 @@ void main() {
     expect(find.text('安全区'), findsOneWidget);
   });
 
-  testWidgets('AppSliverAppBar wraps SliverAppBar configuration',
-      (tester) async {
+  testWidgets('AppSliverAppBar wraps SliverAppBar configuration', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         CustomScrollView(
@@ -1272,15 +1257,11 @@ void main() {
     expect(appBar.automaticallyImplyLeading, isFalse);
   });
 
-  testWidgets('AppAccordionItem uses ForUI accordion and reveals content',
-      (tester) async {
+  testWidgets('AppAccordionItem uses ForUI accordion and reveals content', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _app(
-        const AppAccordionItem(
-          title: Text('事件分组'),
-          child: Text('分组内容'),
-        ),
-      ),
+      _app(const AppAccordionItem(title: Text('事件分组'), child: Text('分组内容'))),
     );
 
     expect(find.byType(FAccordion), findsOneWidget);
@@ -1327,8 +1308,9 @@ void main() {
     expect(checkboxValue, isTrue);
   });
 
-  testWidgets('AppSwitchTile and AppCheckboxTile toggle from tile presses',
-      (tester) async {
+  testWidgets('AppSwitchTile and AppCheckboxTile toggle from tile presses', (
+    tester,
+  ) async {
     var switchValue = false;
     var checkboxValue = false;
 
@@ -1370,8 +1352,9 @@ void main() {
     expect(checkboxValue, isTrue);
   });
 
-  testWidgets('AppChip supports selection, press, delete, and static states',
-      (tester) async {
+  testWidgets('AppChip supports selection, press, delete, and static states', (
+    tester,
+  ) async {
     var selected = false;
     var pressed = false;
     var deleted = false;
@@ -1390,10 +1373,7 @@ void main() {
               avatar: const Icon(Icons.flash_on_rounded),
               onPressed: () => pressed = true,
             ),
-            AppChip(
-              label: const Text('删除'),
-              onDeleted: () => deleted = true,
-            ),
+            AppChip(label: const Text('删除'), onDeleted: () => deleted = true),
             const AppChip(label: Text('状态')),
           ],
         ),
@@ -1417,8 +1397,9 @@ void main() {
     expect(deleted, isFalse);
   });
 
-  testWidgets('AppFloatingActionButton wraps Material FAB behavior',
-      (tester) async {
+  testWidgets('AppFloatingActionButton wraps Material FAB behavior', (
+    tester,
+  ) async {
     var pressed = false;
 
     await tester.pumpWidget(
@@ -1438,8 +1419,9 @@ void main() {
     expect(pressed, isTrue);
   });
 
-  testWidgets('AppSelect uses ForUI select and reports changes',
-      (tester) async {
+  testWidgets('AppSelect uses ForUI select and reports changes', (
+    tester,
+  ) async {
     var selected = 'created';
 
     await tester.pumpWidget(
@@ -1447,10 +1429,7 @@ void main() {
         AppSelect<String>(
           value: selected,
           label: '排序',
-          options: const {
-            '创建时间': 'created',
-            '更新时间': 'updated',
-          },
+          options: const {'创建时间': 'created', '更新时间': 'updated'},
           onChanged: (value) {
             if (value != null) selected = value;
           },
@@ -1480,11 +1459,7 @@ void main() {
             return AppSelect<bool?>(
               value: selected,
               label: '封禁状态',
-              options: const {
-                '全部': null,
-                '已封禁': true,
-                '未封禁': false,
-              },
+              options: const {'全部': null, '已封禁': true, '未封禁': false},
               onChanged: (value) {
                 changes.add(value);
                 setState(() => selected = value);
@@ -1522,10 +1497,7 @@ void main() {
                 value: selected,
                 label: '角色',
                 prefixIcon: Icons.admin_panel_settings_outlined,
-                options: const {
-                  '管理员': 2,
-                  '成员': 3,
-                },
+                options: const {'管理员': 2, '成员': 3},
                 validator: (value) => value == 2 ? null : '请选择管理员',
                 onSaved: (value) => saved = value,
                 onChanged: (value) {
@@ -1552,8 +1524,9 @@ void main() {
     expect(saved, 2);
   });
 
-  testWidgets('AppRefreshIndicator wraps pull to refresh behavior',
-      (tester) async {
+  testWidgets('AppRefreshIndicator wraps pull to refresh behavior', (
+    tester,
+  ) async {
     var refreshed = false;
 
     await tester.pumpWidget(
@@ -1562,9 +1535,7 @@ void main() {
           onRefresh: () async => refreshed = true,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            children: const [
-              SizedBox(height: 600, child: Text('列表')),
-            ],
+            children: const [SizedBox(height: 600, child: Text('列表'))],
           ),
         ),
       ),
@@ -1579,8 +1550,9 @@ void main() {
     expect(refreshed, isTrue);
   });
 
-  testWidgets('AppAvatar renders initials and fallback consistently',
-      (tester) async {
+  testWidgets('AppAvatar renders initials and fallback consistently', (
+    tester,
+  ) async {
     var pressed = false;
 
     await tester.pumpWidget(
@@ -1597,11 +1569,7 @@ void main() {
               name: '',
               fallbackIcon: Icons.person_outline_rounded,
             ),
-            const AppAvatar(
-              name: 'bob',
-              size: 40,
-              shape: BoxShape.rectangle,
-            ),
+            const AppAvatar(name: 'bob', size: 40, shape: BoxShape.rectangle),
           ],
         ),
       ),
@@ -1617,17 +1585,11 @@ void main() {
     expect(pressed, isTrue);
   });
 
-  testWidgets('AppListView supports children, builder, and separators',
-      (tester) async {
+  testWidgets('AppListView supports children, builder, and separators', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _app(
-        const AppListView(
-          shrinkWrap: true,
-          children: [
-            Text('静态列表'),
-          ],
-        ),
-      ),
+      _app(const AppListView(shrinkWrap: true, children: [Text('静态列表')])),
     );
     expect(find.byType(ListView), findsOneWidget);
     expect(find.text('静态列表'), findsOneWidget);
@@ -1658,8 +1620,9 @@ void main() {
     expect(find.byType(Divider), findsOneWidget);
   });
 
-  testWidgets('AppSingleChildScrollView wraps single child scrolling',
-      (tester) async {
+  testWidgets('AppSingleChildScrollView wraps single child scrolling', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const AppSingleChildScrollView(
@@ -1695,17 +1658,16 @@ void main() {
         const AppGridView.count(
           shrinkWrap: true,
           crossAxisCount: 2,
-          children: [
-            Text('固定网格'),
-          ],
+          children: [Text('固定网格')],
         ),
       ),
     );
     expect(find.text('固定网格'), findsOneWidget);
   });
 
-  testWidgets('AppDivider wraps themed horizontal and vertical dividers',
-      (tester) async {
+  testWidgets('AppDivider wraps themed horizontal and vertical dividers', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const Row(
@@ -1723,20 +1685,16 @@ void main() {
 
   testWidgets('AppEmptyMessage renders compact empty states', (tester) async {
     await tester.pumpWidget(
-      _app(
-        const AppEmptyMessage(
-          message: '暂无内容',
-          icon: Icons.inbox_outlined,
-        ),
-      ),
+      _app(const AppEmptyMessage(message: '暂无内容', icon: Icons.inbox_outlined)),
     );
 
     expect(find.text('暂无内容'), findsOneWidget);
     expect(find.byIcon(Icons.inbox_outlined), findsOneWidget);
   });
 
-  testWidgets('AppEmptyState supports constrained branded states',
-      (tester) async {
+  testWidgets('AppEmptyState supports constrained branded states', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         const AppEmptyState(
@@ -1756,26 +1714,23 @@ void main() {
   });
 
   testWidgets(
-      'PlaylistEmptyState hides add action when mutation is unavailable',
-      (tester) async {
-    await tester.pumpWidget(_app(const PlaylistEmptyState(compact: true)));
+    'PlaylistEmptyState hides add action when mutation is unavailable',
+    (tester) async {
+      await tester.pumpWidget(_app(const PlaylistEmptyState(compact: true)));
 
-    expect(find.text('播放列表为空'), findsOneWidget);
-    expect(find.text('添加影片'), findsNothing);
-    expect(find.byIcon(Icons.add_rounded), findsNothing);
-  });
+      expect(find.text('播放列表为空'), findsOneWidget);
+      expect(find.text('添加影片'), findsNothing);
+      expect(find.byIcon(Icons.add_rounded), findsNothing);
+    },
+  );
 
-  testWidgets('PlaylistEmptyState shows add action for editable playlists',
-      (tester) async {
+  testWidgets('PlaylistEmptyState shows add action for editable playlists', (
+    tester,
+  ) async {
     var added = false;
 
     await tester.pumpWidget(
-      _app(
-        PlaylistEmptyState(
-          compact: true,
-          onAdd: () => added = true,
-        ),
-      ),
+      _app(PlaylistEmptyState(compact: true, onAdd: () => added = true)),
     );
 
     expect(find.text('添加影片'), findsOneWidget);
@@ -1784,8 +1739,9 @@ void main() {
     expect(added, isTrue);
   });
 
-  testWidgets('AppPaginationBar renders label and page actions',
-      (tester) async {
+  testWidgets('AppPaginationBar renders label and page actions', (
+    tester,
+  ) async {
     var previous = 0;
     var next = 0;
 
@@ -1811,8 +1767,9 @@ void main() {
     expect(next, 1);
   });
 
-  testWidgets('AppPaginationBar supports shrink-wrapped horizontal toolbars',
-      (tester) async {
+  testWidgets('AppPaginationBar supports shrink-wrapped horizontal toolbars', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _app(
         Row(
@@ -1839,8 +1796,9 @@ void main() {
     expect(find.text('共 42 个 · 第 2 / 3 页'), findsOneWidget);
   });
 
-  testWidgets('AppDataToolbar renders count, actions, and compact layout',
-      (tester) async {
+  testWidgets('AppDataToolbar renders count, actions, and compact layout', (
+    tester,
+  ) async {
     var refreshes = 0;
     var actions = 0;
 
@@ -1891,17 +1849,13 @@ void main() {
     expect(find.byType(FCircularProgress), findsOneWidget);
   });
 
-  testWidgets('AppLoadMoreFooter switches between action and loading',
-      (tester) async {
+  testWidgets('AppLoadMoreFooter switches between action and loading', (
+    tester,
+  ) async {
     var presses = 0;
 
     await tester.pumpWidget(
-      _app(
-        AppLoadMoreFooter(
-          loading: false,
-          onPressed: () => presses += 1,
-        ),
-      ),
+      _app(AppLoadMoreFooter(loading: false, onPressed: () => presses += 1)),
     );
 
     expect(find.text('加载更多'), findsOneWidget);
@@ -1910,12 +1864,7 @@ void main() {
     expect(presses, 1);
 
     await tester.pumpWidget(
-      _app(
-        const AppLoadMoreFooter(
-          loading: true,
-          onPressed: null,
-        ),
-      ),
+      _app(const AppLoadMoreFooter(loading: true, onPressed: null)),
     );
 
     expect(find.byType(FCircularProgress), findsOneWidget);

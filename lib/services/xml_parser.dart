@@ -214,8 +214,10 @@ class DeviceInfoParser {
     }
     final deviceType = doc.tagVal('deviceType');
     final friendlyName = doc.tagVal('friendlyName');
-    final serviceList =
-        doc.findAllElements('serviceList').first.findAllElements('service');
+    final serviceList = doc
+        .findAllElements('serviceList')
+        .first
+        .findAllElements('service');
     final serviceListItems = [];
     for (final service in serviceList) {
       final serviceType = service.tagVal('serviceType');

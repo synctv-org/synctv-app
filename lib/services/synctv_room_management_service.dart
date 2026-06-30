@@ -19,8 +19,8 @@ class SyncTvRoomManagementDomainService {
     this._api, {
     SyncTvMemoryCache? cache,
     opaque.SyncTvOpaqueClient? opaqueClient,
-  })  : _cache = cache ?? SyncTvMemoryCache(),
-        _opaqueClient = opaqueClient ?? opaque.SyncTvOpaqueClient();
+  }) : _cache = cache ?? SyncTvMemoryCache(),
+       _opaqueClient = opaqueClient ?? opaque.SyncTvOpaqueClient();
 
   final SyncTvApiClient _api;
   final SyncTvMemoryCache _cache;
@@ -57,13 +57,16 @@ class SyncTvRoomManagementDomainService {
       ),
     );
     return RoomMembersPage(
-      members:
-          response.members.map(roomMemberFromProto).toList(growable: false),
+      members: response.members
+          .map(roomMemberFromProto)
+          .toList(growable: false),
       total: response.total,
-      onlineCount:
-          response.hasPresence() ? response.presence.onlineUserCount : 0,
-      connectionCount:
-          response.hasPresence() ? response.presence.connectionCount : 0,
+      onlineCount: response.hasPresence()
+          ? response.presence.onlineUserCount
+          : 0,
+      connectionCount: response.hasPresence()
+          ? response.presence.connectionCount
+          : 0,
       page: page,
       pageSize: pageSize,
       version: response.version,
@@ -76,35 +79,36 @@ class SyncTvRoomManagementDomainService {
   }) {
     return _api.room
         .watchRoomSettings(
-      roomId,
-      client.WatchRoomSettingsRequest(
-        deliveryMode: client_enum
-            .ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
-        roomSettings: client.ObserveRoomSettings(
-          afterEventSequence: _watchSequence(version),
-        ),
-      ),
-    )
+          roomId,
+          client.WatchRoomSettingsRequest(
+            deliveryMode: client_enum
+                .ResourceDeliveryMode
+                .RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
+            roomSettings: client.ObserveRoomSettings(
+              afterEventSequence: _watchSequence(version),
+            ),
+          ),
+        )
         .map((event) {
-      if (event.hasObserved()) {
-        return RoomResourceWatchEvent<SyncTvRoomSettings>.observed(
-          version: _cursorVersion(event.observed.eventCursor),
-          changed: event.observed.changed,
-        );
-      }
-      if (event.hasError()) {
-        return RoomResourceWatchEvent<SyncTvRoomSettings>.error(
-          message: event.error.hasError() ? event.error.error.message : '',
-          code: event.error.hasError() ? event.error.error.code : 0,
-        );
-      }
-      return RoomResourceWatchEvent<SyncTvRoomSettings>.changed(
-        version: _cursorVersion(event.resourceEvent.eventCursor),
-        snapshot: SyncTvRoomSettings.fromJson(
-          roomSettingsToJson(event.resourceEvent.roomSettings.settings),
-        ),
-      );
-    });
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<SyncTvRoomSettings>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<SyncTvRoomSettings>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<SyncTvRoomSettings>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: SyncTvRoomSettings.fromJson(
+              roomSettingsToJson(event.resourceEvent.roomSettings.settings),
+            ),
+          );
+        });
   }
 
   Stream<RoomResourceWatchEvent<List<AdminRoomMember>>> watchRoomMembers(
@@ -113,33 +117,34 @@ class SyncTvRoomManagementDomainService {
   }) {
     return _api.room
         .watchRoomMemberEvents(
-      roomId,
-      client.WatchRoomMemberEventsRequest(
-        deliveryMode:
-            client_enum.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
-        roomMemberEvents: client.ObserveRoomMemberEvents(
-          afterEventSequence: _watchSequence(version),
-        ),
-      ),
-    )
+          roomId,
+          client.WatchRoomMemberEventsRequest(
+            deliveryMode: client_enum
+                .ResourceDeliveryMode
+                .RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
+            roomMemberEvents: client.ObserveRoomMemberEvents(
+              afterEventSequence: _watchSequence(version),
+            ),
+          ),
+        )
         .map((event) {
-      if (event.hasObserved()) {
-        return RoomResourceWatchEvent<List<AdminRoomMember>>.observed(
-          version: _cursorVersion(event.observed.eventCursor),
-          changed: event.observed.changed,
-        );
-      }
-      if (event.hasError()) {
-        return RoomResourceWatchEvent<List<AdminRoomMember>>.error(
-          message: event.error.hasError() ? event.error.error.message : '',
-          code: event.error.hasError() ? event.error.error.code : 0,
-        );
-      }
-      return RoomResourceWatchEvent<List<AdminRoomMember>>.changed(
-        version: _cursorVersion(event.resourceEvent.eventCursor),
-        snapshot: const <AdminRoomMember>[],
-      );
-    });
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<List<AdminRoomMember>>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<List<AdminRoomMember>>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<List<AdminRoomMember>>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: const <AdminRoomMember>[],
+          );
+        });
   }
 
   Stream<RoomResourceWatchEvent<List<SyncTvUser>>> watchRoomUsers(
@@ -156,8 +161,9 @@ class SyncTvRoomManagementDomainService {
         case RoomResourceWatchKind.changed:
           return RoomResourceWatchEvent<List<SyncTvUser>>.changed(
             version: event.version,
-            snapshot:
-                event.snapshot?.map(roomMemberToUser).toList(growable: false),
+            snapshot: event.snapshot
+                ?.map(roomMemberToUser)
+                .toList(growable: false),
           );
         case RoomResourceWatchKind.error:
           return RoomResourceWatchEvent<List<SyncTvUser>>.error(
@@ -179,8 +185,10 @@ class SyncTvRoomManagementDomainService {
   Future<void> updateRoomPassword(String roomId, String? password) async {
     final newPassword = password ?? '';
     if (newPassword.isEmpty) {
-      await _api.room
-          .clearRoomPassword(roomId, client.ClearRoomPasswordRequest());
+      await _api.room.clearRoomPassword(
+        roomId,
+        client.ClearRoomPasswordRequest(),
+      );
       return;
     }
 
@@ -323,8 +331,9 @@ class SyncTvRoomManagementDomainService {
       mediaId: mediaId,
       active: response.active,
       publisherUserId: response.hasPublisher() ? response.publisher.userId : '',
-      startedAt:
-          response.hasPublisher() ? response.publisher.startedAt.toInt() : 0,
+      startedAt: response.hasPublisher()
+          ? response.publisher.startedAt.toInt()
+          : 0,
     );
   }
 
@@ -357,8 +366,9 @@ class SyncTvRoomManagementDomainService {
       ),
     );
     return RoomJoinReviewsPage(
-      reviews:
-          response.reviews.map(roomJoinReviewFromProto).toList(growable: false),
+      reviews: response.reviews
+          .map(roomJoinReviewFromProto)
+          .toList(growable: false),
       total: response.total,
       page: page,
       pageSize: pageSize,
@@ -399,11 +409,7 @@ class SyncTvRoomManagementDomainService {
     );
   }
 
-  Future<void> setRoomMemberRole(
-    String roomId,
-    String userId,
-    int role,
-  ) async {
+  Future<void> setRoomMemberRole(String roomId, String userId, int role) async {
     await _api.room.updateMemberPermissions(
       roomId,
       client.UpdateMemberPermissionsRequest(

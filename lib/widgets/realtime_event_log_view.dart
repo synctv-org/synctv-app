@@ -8,11 +8,7 @@ import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
-enum _RealtimeEventLogMenuAction {
-  toggleGrouping,
-  copy,
-  clear,
-}
+enum _RealtimeEventLogMenuAction { toggleGrouping, copy, clear }
 
 class RealtimeEventLogView extends StatefulWidget {
   final List<RealtimeEventLogEntry> events;
@@ -51,9 +47,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
   }
 
   Future<void> _copy(BuildContext context) async {
-    final text = const JsonEncoder.withIndent('  ').convert(
-      events.map((event) => event.toJson()).toList(growable: false),
-    );
+    final text = const JsonEncoder.withIndent(
+      '  ',
+    ).convert(events.map((event) => event.toJson()).toList(growable: false));
     await Clipboard.setData(ClipboardData(text: text));
     if (context.mounted) MessageUtils.showSuccess(context, '实时事件已复制');
   }
@@ -64,7 +60,8 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
       final controller = TextEditingController(
         text: RealtimeEventLogPreferences.maxEntries.value.toString(),
       );
-      nextValue = await showAppDialog<int>(
+      nextValue =
+          await showAppDialog<int>(
             context: context,
             builder: (dialogContext) {
               return AppDialog(
@@ -294,12 +291,11 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
         }
       }
     }
-    return options.values.toList(growable: false)
-      ..sort((a, b) {
-        final labelCompare = a.label.compareTo(b.label);
-        if (labelCompare != 0) return labelCompare;
-        return a.direction.compareTo(b.direction);
-      });
+    return options.values.toList(growable: false)..sort((a, b) {
+      final labelCompare = a.label.compareTo(b.label);
+      if (labelCompare != 0) return labelCompare;
+      return a.direction.compareTo(b.direction);
+    });
   }
 
   AppIconButton _buildFilterButton(
@@ -313,8 +309,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
       selectedIcon: Icons.filter_alt_rounded,
       icon: Icons.filter_alt_outlined,
       style: active ? AppIconButtonStyle.tonal : AppIconButtonStyle.ghost,
-      onPressed:
-          options.isEmpty ? null : () => _showFilterSheet(context, options),
+      onPressed: options.isEmpty
+          ? null
+          : () => _showFilterSheet(context, options),
     );
   }
 
@@ -323,8 +320,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
     List<_RealtimeEventFilterOption> options,
   ) async {
     final optionKeys = options.map((option) => option.key).toSet();
-    var draftHidden =
-        _hiddenGroupKeys.where((key) => optionKeys.contains(key)).toSet();
+    var draftHidden = _hiddenGroupKeys
+        .where((key) => optionKeys.contains(key))
+        .toSet();
     final nextHidden = await showAppBottomSheet<Set<String>>(
       context: context,
       builder: (sheetContext) {
@@ -351,9 +349,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                               children: [
                                 Text(
                                   '事件类型过滤',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
+                                  style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(fontWeight: FontWeight.w800),
                                 ),
                                 const SizedBox(height: 2),
@@ -401,9 +397,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                                 draftHidden.add(option.key);
                               }
                             }),
-                            suffix: _DirectionPill(
-                              direction: option.direction,
-                            ),
+                            suffix: _DirectionPill(direction: option.direction),
                             title: Text(
                               option.label,
                               maxLines: 1,
@@ -463,8 +457,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
           child: ValueListenableBuilder<bool>(
             valueListenable: RealtimeEventLogPreferences.grouped,
             builder: (context, grouped, _) {
-              final groupCount =
-                  grouped ? _buildGroups(filteredEvents).length : 0;
+              final groupCount = grouped
+                  ? _buildGroups(filteredEvents).length
+                  : 0;
               return ValueListenableBuilder<int>(
                 valueListenable: RealtimeEventLogPreferences.maxEntries,
                 builder: (context, maxEntries, _) {
@@ -490,8 +485,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       ),
                       borderRadius: BorderRadius.circular(999),
                       color: theme.colorScheme.primary,
-                      backgroundColor:
-                          theme.colorScheme.primary.withValues(alpha: 0.10),
+                      backgroundColor: theme.colorScheme.primary.withValues(
+                        alpha: 0.10,
+                      ),
                       textStyle: TextStyle(
                         color: theme.colorScheme.primary,
                         fontSize: 12,
@@ -556,8 +552,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                           _buildGroupingButton(grouped),
                           AppIconButton(
                             tooltip: '复制',
-                            onPressed:
-                                events.isEmpty ? null : () => _copy(context),
+                            onPressed: events.isEmpty
+                                ? null
+                                : () => _copy(context),
                             icon: Icons.copy_all_rounded,
                           ),
                           AppIconButton(
@@ -584,46 +581,44 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                   ),
                 )
               : filteredEvents.isEmpty
-                  ? const Center(
-                      child: AppEmptyState(
-                        icon: Icons.filter_alt_off_outlined,
-                        title: '当前过滤条件下暂无实时事件',
-                      ),
-                    )
-                  : ValueListenableBuilder<bool>(
-                      valueListenable: RealtimeEventLogPreferences.grouped,
-                      builder: (context, grouped, _) {
-                        if (grouped) {
-                          final groups =
-                              _buildGroups(filteredEvents).reversed.toList();
-                          return AppListView.separated(
-                            padding: padding,
-                            itemCount: groups.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                              return _RealtimeEventGroupTile(
-                                group: groups[index],
-                                isDark: isDark,
-                              );
-                            },
+              ? const Center(
+                  child: AppEmptyState(
+                    icon: Icons.filter_alt_off_outlined,
+                    title: '当前过滤条件下暂无实时事件',
+                  ),
+                )
+              : ValueListenableBuilder<bool>(
+                  valueListenable: RealtimeEventLogPreferences.grouped,
+                  builder: (context, grouped, _) {
+                    if (grouped) {
+                      final groups = _buildGroups(
+                        filteredEvents,
+                      ).reversed.toList();
+                      return AppListView.separated(
+                        padding: padding,
+                        itemCount: groups.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          return _RealtimeEventGroupTile(
+                            group: groups[index],
+                            isDark: isDark,
                           );
-                        }
-                        return AppListView.separated(
-                          padding: padding,
-                          reverse: true,
-                          itemCount: filteredEvents.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final event = filteredEvents[
-                                filteredEvents.length - 1 - index];
-                            return _RealtimeEventTile(
-                                event: event, isDark: isDark);
-                          },
-                        );
+                        },
+                      );
+                    }
+                    return AppListView.separated(
+                      padding: padding,
+                      reverse: true,
+                      itemCount: filteredEvents.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final event =
+                            filteredEvents[filteredEvents.length - 1 - index];
+                        return _RealtimeEventTile(event: event, isDark: isDark);
                       },
-                    ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -694,9 +689,7 @@ class _DirectionPill extends StatelessWidget {
         fontSize: 12,
         fontWeight: FontWeight.w800,
       ),
-      label: Text(
-        outgoing ? '发出' : '收到',
-      ),
+      label: Text(outgoing ? '发出' : '收到'),
     );
   }
 }
@@ -705,10 +698,7 @@ class _RealtimeEventGroupTile extends StatelessWidget {
   final _RealtimeEventGroup group;
   final bool isDark;
 
-  const _RealtimeEventGroupTile({
-    required this.group,
-    required this.isDark,
-  });
+  const _RealtimeEventGroupTile({required this.group, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -837,10 +827,7 @@ class _GroupMeta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Text(
-      label,
-      style: TextStyle(color: theme.hintColor, fontSize: 12),
-    );
+    return Text(label, style: TextStyle(color: theme.hintColor, fontSize: 12));
   }
 }
 
@@ -848,10 +835,7 @@ class _RealtimeEventTile extends StatelessWidget {
   final RealtimeEventLogEntry event;
   final bool isDark;
 
-  const _RealtimeEventTile({
-    required this.event,
-    required this.isDark,
-  });
+  const _RealtimeEventTile({required this.event, required this.isDark});
 
   @override
   Widget build(BuildContext context) {

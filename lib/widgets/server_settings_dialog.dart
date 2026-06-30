@@ -7,9 +7,7 @@ import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
-Future<bool?> showServerSettingsDialog({
-  required BuildContext context,
-}) {
+Future<bool?> showServerSettingsDialog({required BuildContext context}) {
   return showAppBottomSheet<bool>(
     context: context,
     constraints: const BoxConstraints(maxWidth: 720),
@@ -196,8 +194,9 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                   child: Text(
                     '添加地址后会自动识别服务器，不需要填写回调地址、Code 或 server_id。',
                     style: TextStyle(
-                      color:
-                          isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
                       fontSize: 12,
                       height: 1.35,
                     ),
@@ -258,8 +257,9 @@ class _EmptyServerState extends StatelessWidget {
           ),
         ),
         padding: const EdgeInsets.all(16),
-        backgroundColor:
-            isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
+        backgroundColor: isDark
+            ? Colors.white10
+            : Colors.black.withValues(alpha: 0.04),
         border: Border.all(color: Colors.transparent),
       ),
     );
@@ -312,7 +312,9 @@ class _CurrentServerInfoCard extends StatelessWidget {
                   child: const Padding(
                     padding: EdgeInsets.all(8),
                     child: AppLoadingIndicator(
-                        size: AppLoadingSize.sm, centered: false),
+                      size: AppLoadingSize.sm,
+                      centered: false,
+                    ),
                   ),
                 )
               : AppIconBadge(
@@ -396,8 +398,8 @@ class _ServerProfileTile extends StatelessWidget {
     final background = active
         ? primary.withValues(alpha: isDark ? 0.18 : 0.10)
         : isDark
-            ? Colors.white.withValues(alpha: 0.06)
-            : Colors.black.withValues(alpha: 0.035);
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.black.withValues(alpha: 0.035);
 
     return AppPanelSurface(
       margin: const EdgeInsets.only(bottom: 10),
@@ -417,8 +419,8 @@ class _ServerProfileTile extends StatelessWidget {
                 color: active
                     ? primary
                     : isDark
-                        ? Colors.grey.shade400
-                        : Colors.grey.shade600,
+                    ? Colors.grey.shade400
+                    : Colors.grey.shade600,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -460,10 +462,7 @@ class _ServerProfileTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _MetaLine(
-            icon: Icons.fingerprint_rounded,
-            text: profile.serverId,
-          ),
+          _MetaLine(icon: Icons.fingerprint_rounded, text: profile.serverId),
           const SizedBox(height: 6),
           ...profile.endpoints.map(
             (endpoint) => Padding(
@@ -483,10 +482,7 @@ class _ServerProfileTile extends StatelessWidget {
 }
 
 class _ServerBadge extends StatelessWidget {
-  const _ServerBadge({
-    required this.label,
-    required this.color,
-  });
+  const _ServerBadge({required this.label, required this.color});
 
   final String label;
   final Color color;
@@ -511,10 +507,7 @@ class _ServerBadge extends StatelessWidget {
 }
 
 class _MetaLine extends StatelessWidget {
-  const _MetaLine({
-    required this.icon,
-    required this.text,
-  });
+  const _MetaLine({required this.icon, required this.text});
 
   final IconData icon;
   final String text;

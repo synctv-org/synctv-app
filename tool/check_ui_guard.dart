@@ -28,9 +28,13 @@ final _guardedPatterns = <_GuardedPattern>[
   _GuardedPattern('OutlinedButton', RegExp(r'\bOutlinedButton\s*\(')),
   _GuardedPattern('IconButton', RegExp(r'\bIconButton\s*\(')),
   _GuardedPattern(
-      'FloatingActionButton', RegExp(r'\bFloatingActionButton\s*\(')),
+    'FloatingActionButton',
+    RegExp(r'\bFloatingActionButton\s*\('),
+  ),
   _GuardedPattern(
-      'DropdownButton', RegExp(r'\bDropdownButton(?:HideUnderline)?\s*\(')),
+    'DropdownButton',
+    RegExp(r'\bDropdownButton(?:HideUnderline)?\s*\('),
+  ),
   _GuardedPattern('PopupMenuButton', RegExp(r'\bPopupMenuButton\s*\(')),
   _GuardedPattern('Checkbox', RegExp(r'\bCheckbox\s*\(')),
   _GuardedPattern('Switch', RegExp(r'\bSwitch\s*\(')),
@@ -40,19 +44,33 @@ final _guardedPatterns = <_GuardedPattern>[
   _GuardedPattern('showDialog', RegExp(r'\bshowDialog\s*<')),
   _GuardedPattern('showDialog', RegExp(r'\bshowDialog\s*\(')),
   _GuardedPattern(
-      'showModalBottomSheet', RegExp(r'\bshowModalBottomSheet\s*<')),
+    'showModalBottomSheet',
+    RegExp(r'\bshowModalBottomSheet\s*<'),
+  ),
   _GuardedPattern(
-      'showModalBottomSheet', RegExp(r'\bshowModalBottomSheet\s*\(')),
-  _GuardedPattern('ListView',
-      RegExp(r'\bListView(?:\.(?:builder|separated|custom))?\s*\(')),
-  _GuardedPattern('GridView',
-      RegExp(r'\bGridView(?:\.(?:builder|count|custom|extent))?\s*\(')),
+    'showModalBottomSheet',
+    RegExp(r'\bshowModalBottomSheet\s*\('),
+  ),
   _GuardedPattern(
-      'SingleChildScrollView', RegExp(r'\bSingleChildScrollView\s*\(')),
+    'ListView',
+    RegExp(r'\bListView(?:\.(?:builder|separated|custom))?\s*\('),
+  ),
   _GuardedPattern(
-      'CircularProgressIndicator', RegExp(r'\bCircularProgressIndicator\s*\(')),
+    'GridView',
+    RegExp(r'\bGridView(?:\.(?:builder|count|custom|extent))?\s*\('),
+  ),
   _GuardedPattern(
-      'LinearProgressIndicator', RegExp(r'\bLinearProgressIndicator\s*\(')),
+    'SingleChildScrollView',
+    RegExp(r'\bSingleChildScrollView\s*\('),
+  ),
+  _GuardedPattern(
+    'CircularProgressIndicator',
+    RegExp(r'\bCircularProgressIndicator\s*\('),
+  ),
+  _GuardedPattern(
+    'LinearProgressIndicator',
+    RegExp(r'\bLinearProgressIndicator\s*\('),
+  ),
   _GuardedPattern('Divider', RegExp(r'\bDivider\s*\(')),
   _GuardedPattern('VerticalDivider', RegExp(r'\bVerticalDivider\s*\(')),
 ];
@@ -67,11 +85,12 @@ int checkUiGuard([List<String> args = const <String>[]]) {
       stderr.writeln('UI guard: 路径不存在: $root');
       return 2;
     }
-    for (final file in entity
-        .listSync(recursive: true, followLinks: false)
-        .whereType<File>()
-        .where((file) => file.path.endsWith('.dart'))
-        .where(_shouldScan)) {
+    for (final file
+        in entity
+            .listSync(recursive: true, followLinks: false)
+            .whereType<File>()
+            .where((file) => file.path.endsWith('.dart'))
+            .where(_shouldScan)) {
       violations.addAll(_scanFile(file));
     }
   }
@@ -82,7 +101,8 @@ int checkUiGuard([List<String> args = const <String>[]]) {
   }
 
   stderr.writeln(
-      'UI guard found ${violations.length} direct UI primitive use(s):');
+    'UI guard found ${violations.length} direct UI primitive use(s):',
+  );
   for (final violation in violations) {
     stderr.writeln(
       '${violation.path}:${violation.line}: ${violation.patternName}: ${violation.source.trim()}',

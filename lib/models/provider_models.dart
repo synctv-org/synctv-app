@@ -52,30 +52,21 @@ class AlistAccountInfo {
   final String username;
   final String basePath;
 
-  const AlistAccountInfo({
-    required this.username,
-    required this.basePath,
-  });
+  const AlistAccountInfo({required this.username, required this.basePath});
 }
 
 class AlistLoginInfo {
   final String token;
   final String serverId;
 
-  const AlistLoginInfo({
-    required this.token,
-    required this.serverId,
-  });
+  const AlistLoginInfo({required this.token, required this.serverId});
 }
 
 class EmbyAccountInfo {
   final String id;
   final String name;
 
-  const EmbyAccountInfo({
-    required this.id,
-    required this.name,
-  });
+  const EmbyAccountInfo({required this.id, required this.name});
 }
 
 class BilibiliAccountInfo {
@@ -96,10 +87,7 @@ class BilibiliQrLoginInfo {
   final String url;
   final String key;
 
-  const BilibiliQrLoginInfo({
-    required this.url,
-    required this.key,
-  });
+  const BilibiliQrLoginInfo({required this.url, required this.key});
 }
 
 class BilibiliSmsLoginInfo {

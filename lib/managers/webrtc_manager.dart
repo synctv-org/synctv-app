@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/utils/audio_util.dart';
 
-typedef SignalingCallback = void Function(
-    String type, Map<String, dynamic> data);
+typedef SignalingCallback =
+    void Function(String type, Map<String, dynamic> data);
 typedef IceServersLoader = Future<List<IceServerInfo>> Function();
 
 class WebRTCManager {
@@ -68,19 +68,17 @@ class WebRTCManager {
 
       await AudioUtil.setVoiceCallMode(true);
 
-      final mediaConstraints = {
-        'audio': true,
-        'video': false,
-      };
+      final mediaConstraints = {'audio': true, 'video': false};
 
-      _localStream =
-          await navigator.mediaDevices.getUserMedia(mediaConstraints).timeout(
-                _getUserMediaTimeout,
-                onTimeout: () => throw TimeoutException(
-                  '获取麦克风权限超时，请检查系统麦克风权限',
-                  _getUserMediaTimeout,
-                ),
-              );
+      _localStream = await navigator.mediaDevices
+          .getUserMedia(mediaConstraints)
+          .timeout(
+            _getUserMediaTimeout,
+            onTimeout: () => throw TimeoutException(
+              '获取麦克风权限超时，请检查系统麦克风权限',
+              _getUserMediaTimeout,
+            ),
+          );
 
       await _setSpeakerphoneOn(true);
 
@@ -96,9 +94,7 @@ class WebRTCManager {
   }
 
   Future<RTCPeerConnection> _createPeerConnection(String remoteId) async {
-    final configuration = {
-      'iceServers': await _loadIceServerConfiguration(),
-    };
+    final configuration = {'iceServers': await _loadIceServerConfiguration()};
 
     final pc = await createPeerConnection(configuration);
 
@@ -147,13 +143,14 @@ class WebRTCManager {
     final mapped = (await loadIceServers())
         .where((server) => server.urls.isNotEmpty)
         .map((server) {
-      final entry = <String, dynamic>{'urls': server.urls};
-      if (server.username.isNotEmpty) entry['username'] = server.username;
-      if (server.credential.isNotEmpty) {
-        entry['credential'] = server.credential;
-      }
-      return entry;
-    }).toList(growable: false);
+          final entry = <String, dynamic>{'urls': server.urls};
+          if (server.username.isNotEmpty) entry['username'] = server.username;
+          if (server.credential.isNotEmpty) {
+            entry['credential'] = server.credential;
+          }
+          return entry;
+        })
+        .toList(growable: false);
 
     if (mapped.isEmpty) {
       throw StateError('服务端未提供可用的 WebRTC ICE 服务器');

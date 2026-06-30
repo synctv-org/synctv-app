@@ -33,10 +33,7 @@ class OAuth2CallbackPayload {
   final String code;
   final String state;
 
-  const OAuth2CallbackPayload({
-    required this.code,
-    required this.state,
-  });
+  const OAuth2CallbackPayload({required this.code, required this.state});
 }
 
 class OAuth2LinkedAccount {
@@ -110,19 +107,25 @@ class SensitiveOperationVerificationChallengeInfo {
   });
 
   bool get requiresPassword => requiredMethods.contains(
-        client_enum.SensitiveOperationVerificationMethod
-            .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD.value,
-      );
+    client_enum
+        .SensitiveOperationVerificationMethod
+        .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD
+        .value,
+  );
 
   bool get requiresPasskey => requiredMethods.contains(
-        client_enum.SensitiveOperationVerificationMethod
-            .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN.value,
-      );
+    client_enum
+        .SensitiveOperationVerificationMethod
+        .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN
+        .value,
+  );
 
   bool get requiresEmail => requiredMethods.contains(
-        client_enum.SensitiveOperationVerificationMethod
-            .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL.value,
-      );
+    client_enum
+        .SensitiveOperationVerificationMethod
+        .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL
+        .value,
+  );
 }
 
 class SensitiveOperationPasskeyStart {
@@ -158,13 +161,12 @@ class MfaChallengeInfo {
     required this.expiresAt,
   });
 
-  bool get supportsEmail => availableMethods.contains(
-        client_enum.MfaMethod.MFA_METHOD_EMAIL.value,
-      );
+  bool get supportsEmail =>
+      availableMethods.contains(client_enum.MfaMethod.MFA_METHOD_EMAIL.value);
 
   bool get supportsPasskey => availableMethods.contains(
-        client_enum.MfaMethod.MFA_METHOD_WEBAUTHN.value,
-      );
+    client_enum.MfaMethod.MFA_METHOD_WEBAUTHN.value,
+  );
 }
 
 class OpaqueRegistrationStart {
@@ -207,10 +209,7 @@ class PasskeyChallengeStart {
   final String sessionId;
   final List<int> options;
 
-  const PasskeyChallengeStart({
-    required this.sessionId,
-    required this.options,
-  });
+  const PasskeyChallengeStart({required this.sessionId, required this.options});
 }
 
 class MfaPasskeyChallengeStart {

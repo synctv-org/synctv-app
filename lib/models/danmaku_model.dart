@@ -37,7 +37,8 @@ class DanmakuItem {
       return -1000; // 不在显示时间范围内
     }
 
-    final progress = (currentTime.inMilliseconds - startTime.inMilliseconds) /
+    final progress =
+        (currentTime.inMilliseconds - startTime.inMilliseconds) /
         (endTime.inMilliseconds - startTime.inMilliseconds);
 
     final startX = moveStartX ?? screenWidth;

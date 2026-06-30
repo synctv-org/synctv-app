@@ -40,19 +40,9 @@ enum RoomRealtimeMessageKind {
   webrtcLeave,
 }
 
-enum RoomRealtimeChatEventKind {
-  created,
-  edited,
-  deleted,
-  reactionsChanged,
-}
+enum RoomRealtimeChatEventKind { created, edited, deleted, reactionsChanged }
 
-enum PlaybackControlAction {
-  play,
-  pause,
-  seek,
-  speed,
-}
+enum PlaybackControlAction { play, pause, seek, speed }
 
 class RoomRealtimePlaybackStatus {
   const RoomRealtimePlaybackStatus({
@@ -256,8 +246,9 @@ class RoomRealtimeChatEntry {
     return RoomRealtimeChatEntry(
       id: message.chatId,
       userId: message.senderUserId,
-      username:
-          message.senderUsername.isEmpty ? 'Unknown' : message.senderUsername,
+      username: message.senderUsername.isEmpty
+          ? 'Unknown'
+          : message.senderUsername,
       content: message.chatContent,
       images: message.images,
       reactions: message.reactions,
@@ -373,10 +364,7 @@ extension RoomRealtimeChatEntries on List<RoomRealtimeChatEntry> {
     trimToLatest(maxEntries);
   }
 
-  void appendUnique(
-    RoomRealtimeChatEntry entry, {
-    required int maxEntries,
-  }) {
+  void appendUnique(RoomRealtimeChatEntry entry, {required int maxEntries}) {
     if (any((message) => message.dedupeKey == entry.dedupeKey)) return;
     add(entry);
     trimToLatest(maxEntries);
@@ -495,10 +483,12 @@ class RoomRealtimeCodec {
           (image) => client.ChatAttachmentReference(
             id: image.id,
             kind: image.uploadReference
-                ? client_enum.ChatAttachmentReferenceKind
-                    .CHAT_ATTACHMENT_REFERENCE_KIND_UPLOAD
-                : client_enum.ChatAttachmentReferenceKind
-                    .CHAT_ATTACHMENT_REFERENCE_KIND_REUSE,
+                ? client_enum
+                      .ChatAttachmentReferenceKind
+                      .CHAT_ATTACHMENT_REFERENCE_KIND_UPLOAD
+                : client_enum
+                      .ChatAttachmentReferenceKind
+                      .CHAT_ATTACHMENT_REFERENCE_KIND_REUSE,
           ),
         ),
       ),
@@ -617,9 +607,7 @@ class RoomRealtimeCodec {
             'roles': observe.onlineCount.roles.map(realtimeEnumName).toList(),
           };
         }
-        return {
-          'observeResource': payload,
-        };
+        return {'observeResource': payload};
       case client.ClientMessage_Message.unobserveResource:
         return {
           'unobserveResource': {
@@ -754,10 +742,7 @@ class RoomRealtimeCodec {
 
   static List<List<int>> encodePlaybackObservations() {
     return [
-      _observe(
-        'playback_state',
-        playbackState: client.ObservePlaybackState(),
-      ),
+      _observe('playback_state', playbackState: client.ObservePlaybackState()),
       _observe(
         'playback',
         playback: client.ObservePlayback(
@@ -1090,10 +1075,12 @@ class RoomRealtimeCodec {
       senderUsername: chat.username,
       chatEventId: eventId,
       chatEventKind: eventKind,
-      chatDeleted: chat.deletedAt.toInt() > 0 ||
+      chatDeleted:
+          chat.deletedAt.toInt() > 0 ||
           chat.status ==
               client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_DELETED,
-      chatEdited: chat.editedAt.toInt() > 0 ||
+      chatEdited:
+          chat.editedAt.toInt() > 0 ||
           chat.status ==
               client_enum.ChatMessageStatus.CHAT_MESSAGE_STATUS_EDITED,
       chatVersion: chat.version.toInt(),
@@ -1136,9 +1123,9 @@ class RoomRealtimeCodec {
               sizeBytes: attachment.sizeBytes.toInt(),
               width: attachment.width,
               height: attachment.height,
-              metadata: utf8.encode(jsonEncode(fileMetadataToJson(
-                attachment.metadata,
-              ))),
+              metadata: utf8.encode(
+                jsonEncode(fileMetadataToJson(attachment.metadata)),
+              ),
             ),
           )
           .toList(),
@@ -1154,7 +1141,8 @@ class RoomRealtimeCodec {
       client_enum.ChatMessageEventKind.CHAT_MESSAGE_EVENT_KIND_DELETED =>
         RoomRealtimeChatEventKind.deleted,
       client_enum
-            .ChatMessageEventKind.CHAT_MESSAGE_EVENT_KIND_REACTIONS_CHANGED =>
+          .ChatMessageEventKind
+          .CHAT_MESSAGE_EVENT_KIND_REACTIONS_CHANGED =>
         RoomRealtimeChatEventKind.reactionsChanged,
       _ => RoomRealtimeChatEventKind.created,
     };
@@ -1173,9 +1161,7 @@ class RoomRealtimeCodec {
     );
   }
 
-  static RoomRealtimeMessage _playback(
-    client.Playback playback,
-  ) {
+  static RoomRealtimeMessage _playback(client.Playback playback) {
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.current,
       playbackStatus: _playbackStatusFromPlayback(playback),
@@ -1205,8 +1191,9 @@ class RoomRealtimeCodec {
   }) {
     return RoomRealtimeMessage(
       kind: RoomRealtimeMessageKind.roomSettings,
-      roomSettings:
-          SyncTvRoomSettings.fromJson(roomSettingsToJson(changed.settings)),
+      roomSettings: SyncTvRoomSettings.fromJson(
+        roomSettingsToJson(changed.settings),
+      ),
       resourceObserveId: observeId,
       resourceVersion: version,
     );
@@ -1233,9 +1220,7 @@ class RoomRealtimeCodec {
     );
   }
 
-  static RoomRealtimeMessage _resourceEvent(
-    client.ResourceEvent changed,
-  ) {
+  static RoomRealtimeMessage _resourceEvent(client.ResourceEvent changed) {
     switch (changed.whichPayload()) {
       case client.ResourceEvent_Payload.playbackState:
         return _playbackState(changed.playbackState);
@@ -1384,9 +1369,9 @@ class RoomRealtimeCodec {
               sizeBytes: attachment.sizeBytes.toInt(),
               width: attachment.width,
               height: attachment.height,
-              metadata: utf8.encode(jsonEncode(fileMetadataToJson(
-                attachment.metadata,
-              ))),
+              metadata: utf8.encode(
+                jsonEncode(fileMetadataToJson(attachment.metadata)),
+              ),
             ),
           )
           .toList(),
@@ -1454,15 +1439,15 @@ class RoomRealtimeCodec {
     client.PlaybackState state,
   ) {
     final encodedTarget = providerTargetToBase64(state.target);
-    final movie = state.playingMediaId.isEmpty &&
-            state.playingPlaylistId.isEmpty
+    final movie =
+        state.playingMediaId.isEmpty && state.playingPlaylistId.isEmpty
         ? null
         : SyncTvMovie(
             id: encodedTarget.isNotEmpty
                 ? encodedTarget
                 : state.playingMediaId.isNotEmpty
-                    ? state.playingMediaId
-                    : state.playingPlaylistId,
+                ? state.playingMediaId
+                : state.playingPlaylistId,
             name: '',
             url: '',
             subPath: encodedTarget.isEmpty ? null : encodedTarget,
@@ -1508,17 +1493,14 @@ class RoomRealtimeCodec {
     final resolvedParentId = parentId.isNotEmpty
         ? parentId
         : response.currentPath.isEmpty
-            ? ''
-            : response.currentPath.last.playlistId;
+        ? ''
+        : response.currentPath.last.playlistId;
     return RoomMediaLibraryPage(
       playlists: response.playlists.map(_playlistFromProto).toList(),
       media: response.media.map(_mediaFromProto).toList(),
       dynamicItems: response.dynamicItems
           .map(
-            (item) => _dynamicItemFromProto(
-              item,
-              playlistId: resolvedParentId,
-            ),
+            (item) => _dynamicItemFromProto(item, playlistId: resolvedParentId),
           )
           .toList(),
       currentPath: response.currentPath.map(_browsePathFromProto).toList(),
@@ -1565,7 +1547,8 @@ class RoomRealtimeCodec {
       type: sourceProvider,
       headers: _stringMap(metadata['headers']),
       proxy: metadata['proxy'] == true,
-      live: sourceProvider == 'rtmp' ||
+      live:
+          sourceProvider == 'rtmp' ||
           (sourceProvider == 'bilibili' && sourceConfig['type'] == 'live') ||
           metadata['isLive'] == true,
       sourceProvider: sourceProvider,
@@ -1656,8 +1639,9 @@ class RoomRealtimeCodec {
 
   static Map<String, String> _stringMap(dynamic value) {
     if (value is! Map) return const {};
-    return value
-        .map((key, value) => MapEntry(key.toString(), value.toString()));
+    return value.map(
+      (key, value) => MapEntry(key.toString(), value.toString()),
+    );
   }
 
   static RoomRealtimeMessage _webrtc(

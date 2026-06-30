@@ -38,12 +38,13 @@ class DanmakuController extends ChangeNotifier {
     super.dispose();
   }
 
-  void updateConfig(
-      {String? danmakuUrl,
-      Map<String, String> danmakuHeaders = const {},
-      String? streamDanmakuUrl,
-      Map<String, String> streamDanmakuHeaders = const {},
-      VideoPlayerController? controller}) {
+  void updateConfig({
+    String? danmakuUrl,
+    Map<String, String> danmakuHeaders = const {},
+    String? streamDanmakuUrl,
+    Map<String, String> streamDanmakuHeaders = const {},
+    VideoPlayerController? controller,
+  }) {
     if (controller != null) {
       videoController = controller;
     }
@@ -113,10 +114,7 @@ class DanmakuController extends ChangeNotifier {
     if (_danmakuUrl == null || _danmakuUrl!.isEmpty) return;
     try {
       final url = SyncTvService.resolveResourceUrl(_danmakuUrl!);
-      final response = await http.get(
-        Uri.parse(url),
-        headers: _danmakuHeaders,
-      );
+      final response = await http.get(Uri.parse(url), headers: _danmakuHeaders);
       if (response.statusCode == 200) {
         String content;
         try {
@@ -169,13 +167,15 @@ class DanmakuController extends ChangeNotifier {
             .replaceAll('&lt;', '<')
             .replaceAll('&gt;', '>');
 
-        newItems.add(DanmakuItem(
-          text: text,
-          startTime: startTime,
-          endTime: startTime + duration,
-          color: color,
-          type: type,
-        ));
+        newItems.add(
+          DanmakuItem(
+            text: text,
+            startTime: startTime,
+            endTime: startTime + duration,
+            color: color,
+            type: type,
+          ),
+        );
       }
     }
 
@@ -201,18 +201,22 @@ class DanmakuController extends ChangeNotifier {
         response.stream
             .transform(utf8.decoder)
             .transform(const LineSplitter())
-            .listen((line) {
-          if (line.startsWith('data: ')) {
-            final data = line.substring(6);
-            _handleRealtimeDanmaku(data);
-          }
-        }, onError: (e) {
-          debugPrint('SSE Error: $e');
-          _scheduleReconnect();
-        }, onDone: () {
-          debugPrint('SSE Done');
-          _scheduleReconnect();
-        });
+            .listen(
+              (line) {
+                if (line.startsWith('data: ')) {
+                  final data = line.substring(6);
+                  _handleRealtimeDanmaku(data);
+                }
+              },
+              onError: (e) {
+                debugPrint('SSE Error: $e');
+                _scheduleReconnect();
+              },
+              onDone: () {
+                debugPrint('SSE Done');
+                _scheduleReconnect();
+              },
+            );
       } else {
         debugPrint('SSE Failed: ${response.statusCode}');
         _scheduleReconnect();
@@ -316,10 +320,7 @@ class CustomVideoPlayer extends StatefulWidget {
   State<CustomVideoPlayer> createState() => _CustomVideoPlayerState();
 }
 
-enum VideoPlayerInteractionMode {
-  mobile,
-  desktop,
-}
+enum VideoPlayerInteractionMode { mobile, desktop }
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     with SingleTickerProviderStateMixin {
@@ -446,8 +447,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       _rememberAudibleVolume();
       setState(() {});
       if (_subtitleItems.isNotEmpty) {
-        final position =
-            _isCasting ? _dlnaPosition : widget.controller.value.position;
+        final position = _isCasting
+            ? _dlnaPosition
+            : widget.controller.value.position;
         try {
           final current = _subtitleItems.firstWhere(
             (item) => item.start <= position && item.end >= position,
@@ -533,7 +535,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
         // Debug content header
         debugPrint(
-            'Subtitle Content Start: ${content.substring(0, min(200, content.length)).replaceAll('\n', '\\n')}');
+          'Subtitle Content Start: ${content.substring(0, min(200, content.length)).replaceAll('\n', '\\n')}',
+        );
 
         // Determine format
         if (content.contains('[Script Info]') || content.contains('[Events]')) {
@@ -629,8 +632,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
       if (line.startsWith('Format:')) {
         final formatStr = line.substring(7).trim();
-        formatFields =
-            formatStr.split(',').map((e) => e.trim().toLowerCase()).toList();
+        formatFields = formatStr
+            .split(',')
+            .map((e) => e.trim().toLowerCase())
+            .toList();
         debugPrint('ASS Format: $formatFields');
         continue;
       }
@@ -647,7 +652,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             'marginr',
             'marginv',
             'effect',
-            'text'
+            'text',
           ];
         }
 
@@ -716,8 +721,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
       if (line.startsWith('Format:')) {
         final formatStr = line.substring(7).trim();
-        formatFields =
-            formatStr.split(',').map((e) => e.trim().toLowerCase()).toList();
+        formatFields = formatStr
+            .split(',')
+            .map((e) => e.trim().toLowerCase())
+            .toList();
         continue;
       }
 
@@ -733,7 +740,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             'marginr',
             'marginv',
             'effect',
-            'text'
+            'text',
           ];
         }
 
@@ -767,8 +774,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
               // Extract color from tags if present {\c&HBBGGRR&}
               Color color = Colors.white;
-              final colorMatch =
-                  RegExp(r'\\c&H([0-9a-fA-F]{6})&').firstMatch(rawText);
+              final colorMatch = RegExp(
+                r'\\c&H([0-9a-fA-F]{6})&',
+              ).firstMatch(rawText);
               if (colorMatch != null) {
                 final hex = colorMatch.group(1)!; // BBGGRR
                 final b = int.parse(hex.substring(0, 2), radix: 16);
@@ -792,14 +800,16 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                   type = DanmakuType.bottom;
                 }
 
-                danmakuItems.add(DanmakuItem(
-                  text: text,
-                  startTime: start,
-                  endTime:
-                      end, // DanmakuOverlay uses internal duration usually, but we can pass it
-                  color: color,
-                  type: type,
-                ));
+                danmakuItems.add(
+                  DanmakuItem(
+                    text: text,
+                    startTime: start,
+                    endTime:
+                        end, // DanmakuOverlay uses internal duration usually, but we can pass it
+                    color: color,
+                    type: type,
+                  ),
+                );
               }
             }
           } catch (e) {
@@ -815,7 +825,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     widget.danmakuController!.clear();
     widget.danmakuController!.addItems(danmakuItems);
     debugPrint(
-        'Parsed and added ${danmakuItems.length} danmaku items from ASS');
+      'Parsed and added ${danmakuItems.length} danmaku items from ASS',
+    );
 
     // Enable danmaku if not already
     if (!_showDanmaku) {
@@ -847,7 +858,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _subtitleItems.clear();
     final lines = LineSplitter.split(content).toList();
     final regex = RegExp(
-        r'((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3}) --> ((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3})');
+      r'((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3}) --> ((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3})',
+    );
 
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
@@ -979,8 +991,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     final clamped = target < Duration.zero
         ? Duration.zero
         : duration > Duration.zero && target > duration
-            ? duration
-            : target;
+        ? duration
+        : target;
     await widget.controller.seekTo(clamped);
     widget.onUserSeek?.call(clamped);
     _showDesktopControls();
@@ -1000,7 +1012,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       for (final speed in speeds)
         _PlaybackSpeedOption(
           speed: speed,
-          label: '${speed.toStringAsFixed(speed == speed.roundToDouble() ? 0 : 2)}x',
+          label:
+              '${speed.toStringAsFixed(speed == speed.roundToDouble() ? 0 : 2)}x',
         ),
     ];
   }
@@ -1014,8 +1027,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     final clamped = target < Duration.zero
         ? Duration.zero
         : target > duration
-            ? duration
-            : target;
+        ? duration
+        : target;
     await _seekFromUser(clamped);
   }
 
@@ -1083,8 +1096,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     setState(() {
       _dragLabel =
           '${_formatDuration(_dragStartPosition!)} / ${_formatDuration(widget.controller.value.duration)}';
-      _dragIcon =
-          details.primaryDelta! > 0 ? Icons.fast_forward : Icons.fast_rewind;
+      _dragIcon = details.primaryDelta! > 0
+          ? Icons.fast_forward
+          : Icons.fast_rewind;
     });
   }
 
@@ -1280,9 +1294,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       _lastAudibleVolume = currentVolume.clamp(0.0, 1.0).toDouble();
       await _setPlayerVolume(0);
     } else {
-      await _setPlayerVolume(_lastAudibleVolume <= 0.01
-          ? 1.0
-          : _lastAudibleVolume.clamp(0.0, 1.0).toDouble());
+      await _setPlayerVolume(
+        _lastAudibleVolume <= 0.01
+            ? 1.0
+            : _lastAudibleVolume.clamp(0.0, 1.0).toDouble(),
+      );
     }
   }
 
@@ -1369,8 +1385,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         activeTrackColor: const Color(0xFF5D5FEF),
                         inactiveTrackColor: Colors.white24,
                         thumbColor: Colors.white,
-                        overlayShape:
-                            const RoundSliderOverlayShape(overlayRadius: 18),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 18,
+                        ),
                       ),
                       child: AppSlider(
                         value: volume.toDouble(),
@@ -1440,11 +1457,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('投屏设备',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold)),
+                      const Text(
+                        '投屏设备',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       if (_isSearchingDlna)
                         const AppLoadingIndicator(
                           size: AppLoadingSize.sm,
@@ -1457,11 +1477,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 const AppDivider(color: Colors.white24, height: 1),
                 if (_isCasting && _currentDlnaDevice != null)
                   AppTile(
-                    prefix: const Icon(Icons.cast_connected,
-                        color: Color(0xFF5D5FEF)),
+                    prefix: const Icon(
+                      Icons.cast_connected,
+                      color: Color(0xFF5D5FEF),
+                    ),
                     title: Text(
-                        '正在投屏: ${_currentDlnaDevice!.info.friendlyName}',
-                        style: const TextStyle(color: Color(0xFF5D5FEF))),
+                      '正在投屏: ${_currentDlnaDevice!.info.friendlyName}',
+                      style: const TextStyle(color: Color(0xFF5D5FEF)),
+                    ),
                     suffix: AppActionButton(
                       onPressed: () {
                         _stopDlnaCasting();
@@ -1474,8 +1497,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 if (_dlnaDevices.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(32),
-                    child: Text('正在搜索设备...',
-                        style: TextStyle(color: Colors.white54)),
+                    child: Text(
+                      '正在搜索设备...',
+                      style: TextStyle(color: Colors.white54),
+                    ),
                   ),
                 Flexible(
                   child: AppSingleChildScrollView(
@@ -1483,15 +1508,20 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       children: _dlnaDevices.values.map((device) {
                         final isSelected = _currentDlnaDevice == device;
                         return AppTile(
-                          prefix: Icon(Icons.tv,
+                          prefix: Icon(
+                            Icons.tv,
+                            color: isSelected
+                                ? const Color(0xFF5D5FEF)
+                                : Colors.white,
+                          ),
+                          title: Text(
+                            device.info.friendlyName,
+                            style: TextStyle(
                               color: isSelected
                                   ? const Color(0xFF5D5FEF)
-                                  : Colors.white),
-                          title: Text(device.info.friendlyName,
-                              style: TextStyle(
-                                  color: isSelected
-                                      ? const Color(0xFF5D5FEF)
-                                      : Colors.white)),
+                                  : Colors.white,
+                            ),
+                          ),
                           onPressed: () async {
                             Navigator.pop(context);
                             _connectToDlnaDevice(device);
@@ -1653,8 +1683,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     final bounded = target < Duration.zero
         ? Duration.zero
         : target > upperBound
-            ? upperBound
-            : target;
+        ? upperBound
+        : target;
     setState(() => _dlnaPosition = bounded);
     try {
       await device.seek(_formatDurationDlna(bounded));
@@ -1707,15 +1737,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DlnaInfoLine(
-                    label: '设备',
-                    value: device.info.friendlyName,
-                  ),
+                  _DlnaInfoLine(label: '设备', value: device.info.friendlyName),
                   _DlnaInfoLine(
                     label: '传输状态',
-                    value: TransportInfoParser(results[0])
-                        .currentTransportState
-                        .trim(),
+                    value: TransportInfoParser(
+                      results[0],
+                    ).currentTransportState.trim(),
                   ),
                   _DlnaInfoLine(
                     label: '可用动作',
@@ -1783,11 +1810,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           children: [
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Text('选择字幕',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
+              child: Text(
+                '选择字幕',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             AppTile(
               prefix: const Icon(Icons.close, color: Colors.white),
@@ -1808,8 +1838,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                     final label = e.key;
                     final url = e.value is Map ? e.value['url'] : null;
                     return AppTile(
-                      title: Text(label,
-                          style: const TextStyle(color: Colors.white)),
+                      title: Text(
+                        label,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                       onPressed: () {
                         if (url != null) _loadSubtitles(url);
                         Navigator.pop(context);
@@ -1901,236 +1933,246 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => StatefulBuilder(builder: (context, setPanelState) {
-        // Listen to DLNA updates to refresh this panel
-        final subscription =
-            _currentDlnaDevice?.currPosition.stream.listen((_) {
-          if (mounted) setPanelState(() {});
-        });
+      builder: (context) => StatefulBuilder(
+        builder: (context, setPanelState) {
+          // Listen to DLNA updates to refresh this panel
+          final subscription = _currentDlnaDevice?.currPosition.stream.listen((
+            _,
+          ) {
+            if (mounted) setPanelState(() {});
+          });
 
-        return PopScope(
-          onPopInvokedWithResult: (_, __) {
-            subscription?.cancel();
-          },
-          child: AppSafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _currentDlnaDevice?.info.friendlyName ?? '未知设备',
-                    style: const TextStyle(
+          return PopScope(
+            onPopInvokedWithResult: (_, __) {
+              subscription?.cancel();
+            },
+            child: AppSafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _currentDlnaDevice?.info.friendlyName ?? '未知设备',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 32),
-                  // Progress
-                  Row(
-                    children: [
-                      Text(_formatDuration(_dlnaPosition),
-                          style: const TextStyle(color: Colors.white70)),
-                      Expanded(
-                        child: AppSlider(
-                          value: _dlnaPosition.inSeconds
-                              .toDouble()
-                              .clamp(0, _dlnaDuration.inSeconds.toDouble()),
-                          min: 0,
-                          max: _dlnaDuration.inSeconds.toDouble() > 0
-                              ? _dlnaDuration.inSeconds.toDouble()
-                              : 1.0,
-                          activeColor: const Color(0xFF5D5FEF),
-                          inactiveColor: Colors.white24,
-                          thumbColor: Colors.white,
-                          onChanged: (val) {
-                            final target = Duration(seconds: val.toInt());
-                            _currentDlnaDevice
-                                ?.seek(_formatDurationDlna(target));
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    // Progress
+                    Row(
+                      children: [
+                        Text(
+                          _formatDuration(_dlnaPosition),
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        Expanded(
+                          child: AppSlider(
+                            value: _dlnaPosition.inSeconds.toDouble().clamp(
+                              0,
+                              _dlnaDuration.inSeconds.toDouble(),
+                            ),
+                            min: 0,
+                            max: _dlnaDuration.inSeconds.toDouble() > 0
+                                ? _dlnaDuration.inSeconds.toDouble()
+                                : 1.0,
+                            activeColor: const Color(0xFF5D5FEF),
+                            inactiveColor: Colors.white24,
+                            thumbColor: Colors.white,
+                            onChanged: (val) {
+                              final target = Duration(seconds: val.toInt());
+                              _currentDlnaDevice?.seek(
+                                _formatDurationDlna(target),
+                              );
+                              setState(() {
+                                _dlnaPosition = target;
+                              });
+                              setPanelState(() {});
+                            },
+                          ),
+                        ),
+                        Text(
+                          _formatDuration(_dlnaDuration),
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        AppIconButton(
+                          icon: _dlnaMuted ? Icons.volume_off : Icons.volume_up,
+                          tooltip: _dlnaMuted ? '取消静音' : '静音',
+                          onPressed: () async {
+                            await _toggleDlnaMute();
+                            setPanelState(() {});
+                          },
+                        ),
+                        Expanded(
+                          child: AppSlider(
+                            value: _dlnaVolume.toDouble(),
+                            min: 0,
+                            max: 100,
+                            activeColor: const Color(0xFF5D5FEF),
+                            inactiveColor: Colors.white24,
+                            thumbColor: Colors.white,
+                            onChanged: (value) {
+                              _setDlnaVolume(value.round());
+                              setPanelState(() {});
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: 42,
+                          child: Text(
+                            _dlnaMuted ? '静音' : '$_dlnaVolume',
+                            textAlign: TextAlign.end,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AppIconButton(
+                          icon: Icons.skip_previous_rounded,
+                          tooltip: '上一首',
+                          onPressed: () async {
+                            await _runDlnaCommand(
+                              (device) => device.previous(),
+                              successMessage: '已切换上一首',
+                              errorPrefix: '上一首失败',
+                            );
+                            setPanelState(() {});
+                          },
+                        ),
+                        const SizedBox(width: 16),
+                        AppIconButton(
+                          icon: Icons.replay_10_rounded,
+                          tooltip: '后退 10 秒',
+                          onPressed: () async {
+                            await _seekDlnaBy(const Duration(seconds: -10));
+                            setPanelState(() {});
+                          },
+                        ),
+                        const SizedBox(width: 16),
+                        AppIconButton(
+                          iconSize: 64,
+                          icon: _dlnaIsPlaying
+                              ? Icons.pause_circle_filled
+                              : Icons.play_circle_filled,
+                          tooltip: _dlnaIsPlaying ? '暂停' : '播放',
+                          onPressed: () {
+                            if (_dlnaIsPlaying) {
+                              _currentDlnaDevice?.pause();
+                            } else {
+                              _currentDlnaDevice?.play();
+                            }
                             setState(() {
-                              _dlnaPosition = target;
+                              _dlnaIsPlaying = !_dlnaIsPlaying;
                             });
                             setPanelState(() {});
                           },
                         ),
-                      ),
-                      Text(_formatDuration(_dlnaDuration),
-                          style: const TextStyle(color: Colors.white70)),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      AppIconButton(
-                        icon: _dlnaMuted ? Icons.volume_off : Icons.volume_up,
-                        tooltip: _dlnaMuted ? '取消静音' : '静音',
-                        onPressed: () async {
-                          await _toggleDlnaMute();
-                          setPanelState(() {});
-                        },
-                      ),
-                      Expanded(
-                        child: AppSlider(
-                          value: _dlnaVolume.toDouble(),
-                          min: 0,
-                          max: 100,
-                          activeColor: const Color(0xFF5D5FEF),
-                          inactiveColor: Colors.white24,
-                          thumbColor: Colors.white,
-                          onChanged: (value) {
-                            _setDlnaVolume(value.round());
+                        const SizedBox(width: 16),
+                        AppIconButton(
+                          icon: Icons.forward_10_rounded,
+                          tooltip: '前进 10 秒',
+                          onPressed: () async {
+                            await _seekDlnaBy(const Duration(seconds: 10));
                             setPanelState(() {});
                           },
                         ),
-                      ),
-                      SizedBox(
-                        width: 42,
-                        child: Text(
-                          _dlnaMuted ? '静音' : '$_dlnaVolume',
-                          textAlign: TextAlign.end,
-                          style: const TextStyle(color: Colors.white70),
+                        const SizedBox(width: 16),
+                        AppIconButton(
+                          icon: Icons.skip_next_rounded,
+                          tooltip: '下一首',
+                          onPressed: () async {
+                            await _runDlnaCommand(
+                              (device) => device.next(),
+                              successMessage: '已切换下一首',
+                              errorPrefix: '下一首失败',
+                            );
+                            setPanelState(() {});
+                          },
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AppIconButton(
-                        icon: Icons.skip_previous_rounded,
-                        tooltip: '上一首',
-                        onPressed: () async {
-                          await _runDlnaCommand(
-                            (device) => device.previous(),
-                            successMessage: '已切换上一首',
-                            errorPrefix: '上一首失败',
-                          );
-                          setPanelState(() {});
-                        },
-                      ),
-                      const SizedBox(width: 16),
-                      AppIconButton(
-                        icon: Icons.replay_10_rounded,
-                        tooltip: '后退 10 秒',
-                        onPressed: () async {
-                          await _seekDlnaBy(const Duration(seconds: -10));
-                          setPanelState(() {});
-                        },
-                      ),
-                      const SizedBox(width: 16),
-                      AppIconButton(
-                        iconSize: 64,
-                        icon: _dlnaIsPlaying
-                            ? Icons.pause_circle_filled
-                            : Icons.play_circle_filled,
-                        tooltip: _dlnaIsPlaying ? '暂停' : '播放',
-                        onPressed: () {
-                          if (_dlnaIsPlaying) {
-                            _currentDlnaDevice?.pause();
-                          } else {
-                            _currentDlnaDevice?.play();
-                          }
-                          setState(() {
-                            _dlnaIsPlaying = !_dlnaIsPlaying;
-                          });
-                          setPanelState(() {});
-                        },
-                      ),
-                      const SizedBox(width: 16),
-                      AppIconButton(
-                        icon: Icons.forward_10_rounded,
-                        tooltip: '前进 10 秒',
-                        onPressed: () async {
-                          await _seekDlnaBy(const Duration(seconds: 10));
-                          setPanelState(() {});
-                        },
-                      ),
-                      const SizedBox(width: 16),
-                      AppIconButton(
-                        icon: Icons.skip_next_rounded,
-                        tooltip: '下一首',
-                        onPressed: () async {
-                          await _runDlnaCommand(
-                            (device) => device.next(),
-                            successMessage: '已切换下一首',
-                            errorPrefix: '下一首失败',
-                          );
-                          setPanelState(() {});
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      AppActionButton(
-                        onPressed: () async {
-                          await _runDlnaCommand(
-                            (device) => device.setPlayMode('NORMAL'),
-                            successMessage: '已设置顺序播放',
-                            errorPrefix: '设置播放模式失败',
-                          );
-                        },
-                        icon: Icons.format_list_numbered_rounded,
-                        label: '顺序',
-                        style: AppActionButtonStyle.outlined,
-                      ),
-                      AppActionButton(
-                        onPressed: () async {
-                          await _runDlnaCommand(
-                            (device) => device.setPlayMode('REPEAT_ALL'),
-                            successMessage: '已设置循环播放',
-                            errorPrefix: '设置播放模式失败',
-                          );
-                        },
-                        icon: Icons.repeat_rounded,
-                        label: '循环',
-                        style: AppActionButtonStyle.outlined,
-                      ),
-                      AppActionButton(
-                        onPressed: _showDlnaInfoDialog,
-                        icon: Icons.info_outline_rounded,
-                        label: '信息',
-                        style: AppActionButtonStyle.outlined,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AppActionButton(
-                        onPressed: () async {
-                          await _syncDlnaRenderingState();
-                          setPanelState(() {});
-                        },
-                        icon: Icons.sync_rounded,
-                        label: '同步状态',
-                        style: AppActionButtonStyle.tonal,
-                      ),
-                      const SizedBox(width: 12),
-                      AppActionButton(
-                        onPressed: () async {
-                          await _stopDlnaCasting();
-                          if (context.mounted) Navigator.pop(context);
-                        },
-                        icon: Icons.cast_connected_rounded,
-                        label: '退出投屏',
-                        style: AppActionButtonStyle.destructive,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        AppActionButton(
+                          onPressed: () async {
+                            await _runDlnaCommand(
+                              (device) => device.setPlayMode('NORMAL'),
+                              successMessage: '已设置顺序播放',
+                              errorPrefix: '设置播放模式失败',
+                            );
+                          },
+                          icon: Icons.format_list_numbered_rounded,
+                          label: '顺序',
+                          style: AppActionButtonStyle.outlined,
+                        ),
+                        AppActionButton(
+                          onPressed: () async {
+                            await _runDlnaCommand(
+                              (device) => device.setPlayMode('REPEAT_ALL'),
+                              successMessage: '已设置循环播放',
+                              errorPrefix: '设置播放模式失败',
+                            );
+                          },
+                          icon: Icons.repeat_rounded,
+                          label: '循环',
+                          style: AppActionButtonStyle.outlined,
+                        ),
+                        AppActionButton(
+                          onPressed: _showDlnaInfoDialog,
+                          icon: Icons.info_outline_rounded,
+                          label: '信息',
+                          style: AppActionButtonStyle.outlined,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AppActionButton(
+                          onPressed: () async {
+                            await _syncDlnaRenderingState();
+                            setPanelState(() {});
+                          },
+                          icon: Icons.sync_rounded,
+                          label: '同步状态',
+                          style: AppActionButtonStyle.tonal,
+                        ),
+                        const SizedBox(width: 12),
+                        AppActionButton(
+                          onPressed: () async {
+                            await _stopDlnaCasting();
+                            if (context.mounted) Navigator.pop(context);
+                          },
+                          icon: Icons.cast_connected_rounded,
+                          label: '退出投屏',
+                          style: AppActionButtonStyle.destructive,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 
@@ -2150,10 +2192,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             behavior: HitTestBehavior.opaque,
             onTap: _isDesktopMode ? _togglePlayPause : _toggleControls,
             onDoubleTap: _isDesktopMode ? null : _togglePlayPause,
-            onHorizontalDragStart:
-                _isDesktopMode ? null : _onHorizontalDragStart,
-            onHorizontalDragUpdate:
-                _isDesktopMode ? null : _onHorizontalDragUpdate,
+            onHorizontalDragStart: _isDesktopMode
+                ? null
+                : _onHorizontalDragStart,
+            onHorizontalDragUpdate: _isDesktopMode
+                ? null
+                : _onHorizontalDragUpdate,
             onHorizontalDragEnd: _isDesktopMode ? null : _onHorizontalDragEnd,
             onVerticalDragStart: _isDesktopMode ? null : _onVerticalDragStart,
             onVerticalDragUpdate: _isDesktopMode ? null : _onVerticalDragUpdate,
@@ -2192,25 +2236,32 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.cast_connected,
-                                    color: Colors.white54, size: 48),
+                                const Icon(
+                                  Icons.cast_connected,
+                                  color: Colors.white54,
+                                  size: 48,
+                                ),
                                 const SizedBox(height: 16),
                                 const Text(
                                   '正在投屏中',
                                   style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 24),
+                                    horizontal: 24,
+                                  ),
                                   child: Text(
                                     _currentDlnaDevice?.info.friendlyName ??
                                         '未知设备',
                                     style: const TextStyle(
-                                        color: Colors.white70, fontSize: 14),
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
                                     textAlign: TextAlign.center,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -2224,7 +2275,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   label: '遥控器',
                                   backgroundColor: Colors.white10,
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 8),
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   textStyle: const TextStyle(fontSize: 14),
                                 ),
                               ],
@@ -2257,7 +2310,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                     right: 16,
                     child: AppPanelSurface(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       color: Colors.transparent,
                       borderRadius: BorderRadius.zero,
                       clipBehavior: Clip.none,
@@ -2305,7 +2360,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         Text(
                           _dragLabel,
                           style: const TextStyle(
-                              color: Colors.white, fontSize: 16),
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),
@@ -2339,7 +2396,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                       end: Alignment.bottomCenter,
                                       colors: [
                                         Colors.black87,
-                                        Colors.transparent
+                                        Colors.transparent,
                                       ],
                                     )
                                   : null,
@@ -2347,13 +2404,16 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                 children: [
                                   if (widget.isFullScreen)
                                     BackButton(
-                                        color: Colors.white,
-                                        onPressed: widget.onToggleFullScreen),
+                                      color: Colors.white,
+                                      onPressed: widget.onToggleFullScreen,
+                                    ),
                                   Expanded(
                                     child: Text(
                                       widget.title,
                                       style: const TextStyle(
-                                          color: Colors.white, fontSize: 16),
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -2376,8 +2436,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
                           // Bottom Bar
                           Positioned(
-                            bottom:
-                                widget.isFullScreen ? 24 : 0, // 全屏模式下抬高 24 像素
+                            bottom: widget.isFullScreen
+                                ? 24
+                                : 0, // 全屏模式下抬高 24 像素
                             left: 0,
                             right: 0,
                             child: AppSafeArea(
@@ -2386,7 +2447,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   false, // 无论是全屏还是非全屏，都禁用 SafeArea 的底部填充，完全由 Positioned 控制
                               child: AppPanelSurface(
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 8, horizontal: 16),
+                                  vertical: 8,
+                                  horizontal: 16,
+                                ),
                                 color: Colors.transparent,
                                 borderRadius: BorderRadius.zero,
                                 clipBehavior: Clip.none,
@@ -2396,7 +2459,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                         end: Alignment.topCenter,
                                         colors: [
                                           Colors.black87,
-                                          Colors.transparent
+                                          Colors.transparent,
                                         ],
                                       )
                                     : null,
@@ -2408,17 +2471,20 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                         controlsWidth >= 360;
                                     final showInlineVolume =
                                         controlsWidth >= 520 &&
-                                            (widget.isFullScreen ||
-                                                Platform.isMacOS ||
-                                                Platform.isWindows ||
-                                                Platform.isLinux ||
-                                                controlsWidth >= 720);
-                                    final iconSize =
-                                        controlsWidth < 360 ? 18.0 : 20.0;
-                                    final playIconSize =
-                                        controlsWidth < 360 ? 28.0 : 32.0;
-                                    final horizontalGap =
-                                        controlsWidth < 360 ? 4.0 : 8.0;
+                                        (widget.isFullScreen ||
+                                            Platform.isMacOS ||
+                                            Platform.isWindows ||
+                                            Platform.isLinux ||
+                                            controlsWidth >= 720);
+                                    final iconSize = controlsWidth < 360
+                                        ? 18.0
+                                        : 20.0;
+                                    final playIconSize = controlsWidth < 360
+                                        ? 28.0
+                                        : 32.0;
+                                    final horizontalGap = controlsWidth < 360
+                                        ? 4.0
+                                        : 8.0;
 
                                     return Column(
                                       mainAxisSize: MainAxisSize.min,
@@ -2439,7 +2505,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                     videoValue.isPlaying
                                                         ? Icons.pause_rounded
                                                         : Icons
-                                                            .play_arrow_rounded,
+                                                              .play_arrow_rounded,
                                                     color: Colors.white,
                                                     size: playIconSize,
                                                   ),
@@ -2450,10 +2516,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             if (showTime) ...[
                                               Text(
                                                 _formatDuration(
-                                                    videoValue.position),
+                                                  videoValue.position,
+                                                ),
                                                 style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 12),
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                ),
                                               ),
                                               SizedBox(width: horizontalGap),
                                             ],
@@ -2466,17 +2534,17 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                 child: GestureDetector(
                                                   behavior:
                                                       HitTestBehavior.opaque,
-                                                  onHorizontalDragStart:
-                                                      (details) {
+                                                  onHorizontalDragStart: (details) {
                                                     _startHideTimer();
-                                                    final RenderBox box = context
-                                                            .findRenderObject()
-                                                        as RenderBox;
+                                                    final RenderBox box =
+                                                        context.findRenderObject()
+                                                            as RenderBox;
                                                     final double
-                                                        relativePosition =
-                                                        details.localPosition
-                                                                .dx /
-                                                            box.size.width;
+                                                    relativePosition =
+                                                        details
+                                                            .localPosition
+                                                            .dx /
+                                                        box.size.width;
                                                     final double value =
                                                         (relativePosition *
                                                                 videoValue
@@ -2484,27 +2552,28 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                                     .inMilliseconds
                                                                     .toDouble())
                                                             .clamp(
-                                                                0,
-                                                                videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble());
+                                                              0,
+                                                              videoValue
+                                                                  .duration
+                                                                  .inMilliseconds
+                                                                  .toDouble(),
+                                                            );
                                                     setState(() {
                                                       _isSliderDragging = true;
                                                       _sliderDragValue = value;
                                                     });
                                                   },
-                                                  onHorizontalDragUpdate:
-                                                      (details) {
+                                                  onHorizontalDragUpdate: (details) {
                                                     _startHideTimer();
-                                                    final RenderBox box = context
-                                                            .findRenderObject()
-                                                        as RenderBox;
+                                                    final RenderBox box =
+                                                        context.findRenderObject()
+                                                            as RenderBox;
                                                     final double
-                                                        relativePosition =
-                                                        details.localPosition
-                                                                .dx /
-                                                            box.size.width;
+                                                    relativePosition =
+                                                        details
+                                                            .localPosition
+                                                            .dx /
+                                                        box.size.width;
                                                     final double value =
                                                         (relativePosition *
                                                                 videoValue
@@ -2512,40 +2581,44 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                                     .inMilliseconds
                                                                     .toDouble())
                                                             .clamp(
-                                                                0,
-                                                                videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble());
+                                                              0,
+                                                              videoValue
+                                                                  .duration
+                                                                  .inMilliseconds
+                                                                  .toDouble(),
+                                                            );
                                                     setState(() {
                                                       _sliderDragValue = value;
                                                     });
                                                   },
                                                   onHorizontalDragEnd:
                                                       (details) {
-                                                    _startHideTimer();
-                                                    final target = Duration(
-                                                        milliseconds:
-                                                            _sliderDragValue
-                                                                .toInt());
-                                                    _seekFromUser(target)
-                                                        .then((_) {
-                                                      setState(() {
-                                                        _isSliderDragging =
-                                                            false;
-                                                      });
-                                                    });
-                                                  },
+                                                        _startHideTimer();
+                                                        final target = Duration(
+                                                          milliseconds:
+                                                              _sliderDragValue
+                                                                  .toInt(),
+                                                        );
+                                                        _seekFromUser(
+                                                          target,
+                                                        ).then((_) {
+                                                          setState(() {
+                                                            _isSliderDragging =
+                                                                false;
+                                                          });
+                                                        });
+                                                      },
                                                   onTapDown: (details) {
                                                     _startHideTimer();
-                                                    final RenderBox box = context
-                                                            .findRenderObject()
-                                                        as RenderBox;
+                                                    final RenderBox box =
+                                                        context.findRenderObject()
+                                                            as RenderBox;
                                                     final double
-                                                        relativePosition =
-                                                        details.localPosition
-                                                                .dx /
-                                                            box.size.width;
+                                                    relativePosition =
+                                                        details
+                                                            .localPosition
+                                                            .dx /
+                                                        box.size.width;
                                                     final double value =
                                                         (relativePosition *
                                                                 videoValue
@@ -2553,11 +2626,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                                     .inMilliseconds
                                                                     .toDouble())
                                                             .clamp(
-                                                                0,
-                                                                videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble());
+                                                              0,
+                                                              videoValue
+                                                                  .duration
+                                                                  .inMilliseconds
+                                                                  .toDouble(),
+                                                            );
                                                     setState(() {
                                                       _isSliderDragging = true;
                                                       _sliderDragValue = value;
@@ -2566,11 +2640,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   onTapUp: (details) {
                                                     _startHideTimer();
                                                     final target = Duration(
-                                                        milliseconds:
-                                                            _sliderDragValue
-                                                                .toInt());
-                                                    _seekFromUser(target)
-                                                        .then((_) {
+                                                      milliseconds:
+                                                          _sliderDragValue
+                                                              .toInt(),
+                                                    );
+                                                    _seekFromUser(target).then((
+                                                      _,
+                                                    ) {
                                                       setState(() {
                                                         _isSliderDragging =
                                                             false;
@@ -2580,11 +2656,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   onTapCancel: () {
                                                     if (_isSliderDragging) {
                                                       final target = Duration(
-                                                          milliseconds:
-                                                              _sliderDragValue
-                                                                  .toInt());
-                                                      _seekFromUser(target)
-                                                          .then((_) {
+                                                        milliseconds:
+                                                            _sliderDragValue
+                                                                .toInt(),
+                                                      );
+                                                      _seekFromUser(
+                                                        target,
+                                                      ).then((_) {
                                                         setState(() {
                                                           _isSliderDragging =
                                                               false;
@@ -2598,38 +2676,34 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                       alignment:
                                                           Alignment.center,
                                                       child: SliderTheme(
-                                                        data: SliderTheme.of(
-                                                                context)
-                                                            .copyWith(
-                                                          thumbShape:
-                                                              RoundSliderThumbShape(
+                                                        data: SliderTheme.of(context).copyWith(
+                                                          thumbShape: RoundSliderThumbShape(
                                                             enabledThumbRadius:
                                                                 _isSliderDragging
-                                                                    ? (widget
-                                                                            .isFullScreen
-                                                                        ? 8
-                                                                        : 10)
-                                                                    : (widget
-                                                                            .isFullScreen
-                                                                        ? 6
-                                                                        : 8),
+                                                                ? (widget.isFullScreen
+                                                                      ? 8
+                                                                      : 10)
+                                                                : (widget.isFullScreen
+                                                                      ? 6
+                                                                      : 8),
                                                           ),
-                                                          trackHeight: _isSliderDragging
-                                                              ? (widget
-                                                                      .isFullScreen
-                                                                  ? 4
-                                                                  : 6)
-                                                              : (widget
-                                                                      .isFullScreen
-                                                                  ? 2
-                                                                  : 4),
+                                                          trackHeight:
+                                                              _isSliderDragging
+                                                              ? (widget.isFullScreen
+                                                                    ? 4
+                                                                    : 6)
+                                                              : (widget.isFullScreen
+                                                                    ? 2
+                                                                    : 4),
                                                           overlayShape:
                                                               const RoundSliderOverlayShape(
-                                                                  overlayRadius:
-                                                                      24),
+                                                                overlayRadius:
+                                                                    24,
+                                                              ),
                                                           activeTrackColor:
                                                               const Color(
-                                                                  0xFF5D5FEF),
+                                                                0xFF5D5FEF,
+                                                              ),
                                                           inactiveTrackColor:
                                                               Colors.white24,
                                                           thumbColor:
@@ -2640,34 +2714,36 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                         child: IgnorePointer(
                                                           // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
                                                           child: AppSlider(
-                                                            value: (_isSliderDragging
-                                                                    ? _sliderDragValue
-                                                                    : videoValue
-                                                                        .position
-                                                                        .inMilliseconds
-                                                                        .toDouble())
-                                                                .clamp(
-                                                                    0,
-                                                                    videoValue.duration.inMilliseconds.toDouble() >
-                                                                            0
-                                                                        ? videoValue
-                                                                            .duration
-                                                                            .inMilliseconds
-                                                                            .toDouble()
-                                                                        : 1.0),
+                                                            value:
+                                                                (_isSliderDragging
+                                                                        ? _sliderDragValue
+                                                                        : videoValue
+                                                                              .position
+                                                                              .inMilliseconds
+                                                                              .toDouble())
+                                                                    .clamp(
+                                                                      0,
+                                                                      videoValue.duration.inMilliseconds.toDouble() >
+                                                                              0
+                                                                          ? videoValue.duration.inMilliseconds.toDouble()
+                                                                          : 1.0,
+                                                                    ),
                                                             min: 0,
-                                                            max: videoValue
+                                                            max:
+                                                                videoValue
                                                                         .duration
                                                                         .inMilliseconds
                                                                         .toDouble() >
                                                                     0
                                                                 ? videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble()
+                                                                      .duration
+                                                                      .inMilliseconds
+                                                                      .toDouble()
                                                                 : 1.0,
                                                             onChanged:
-                                                                (value) {}, // 忽略，由外层接管
+                                                                (
+                                                                  value,
+                                                                ) {}, // 忽略，由外层接管
                                                           ),
                                                         ),
                                                       ),
@@ -2680,10 +2756,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               SizedBox(width: horizontalGap),
                                               Text(
                                                 _formatDuration(
-                                                    videoValue.duration),
+                                                  videoValue.duration,
+                                                ),
                                                 style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 12),
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                ),
                                               ),
                                             ],
                                             SizedBox(width: horizontalGap),
@@ -2702,10 +2780,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               AppIconButton(
                                                 tooltip:
                                                     videoValue.volume <= 0.01
-                                                        ? '取消静音'
-                                                        : '音量',
+                                                    ? '取消静音'
+                                                    : '音量',
                                                 icon: _volumeIcon(
-                                                    videoValue.volume),
+                                                  videoValue.volume,
+                                                ),
                                                 padding: EdgeInsets.zero,
                                                 constraints:
                                                     const BoxConstraints(),
@@ -2732,9 +2811,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               ),
                                             if (showSecondaryButtons) ...[
                                               SizedBox(
-                                                  width: widget.isFullScreen
-                                                      ? 0
-                                                      : 4),
+                                                width: widget.isFullScreen
+                                                    ? 0
+                                                    : 4,
+                                              ),
                                               _PlaybackSpeedMenuButton(
                                                 currentSpeed:
                                                     videoValue.playbackSpeed,
@@ -2752,9 +2832,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             ],
                                             if (showSecondaryButtons) ...[
                                               SizedBox(
-                                                  width: widget.isFullScreen
-                                                      ? 0
-                                                      : 4),
+                                                width: widget.isFullScreen
+                                                    ? 0
+                                                    : 4,
+                                              ),
                                               AppIconButton(
                                                 icon: Icons.comment_rounded,
                                                 tooltip: _showDanmaku
@@ -2783,9 +2864,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             ],
                                             if (widget.onSync != null) ...[
                                               SizedBox(
-                                                  width: widget.isFullScreen
-                                                      ? 0
-                                                      : 4),
+                                                width: widget.isFullScreen
+                                                    ? 0
+                                                    : 4,
+                                              ),
                                               AppIconButton(
                                                 icon: Icons.sync_rounded,
                                                 tooltip: '同步',
@@ -2805,9 +2887,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                 widget.extraBottomWidget !=
                                                     null) ...[
                                               SizedBox(
-                                                  width: widget.isFullScreen
-                                                      ? 0
-                                                      : 4),
+                                                width: widget.isFullScreen
+                                                    ? 0
+                                                    : 4,
+                                              ),
                                               widget.extraBottomWidget!,
                                             ],
                                             if (widget.isFullScreen &&
@@ -2820,16 +2903,16 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             if (widget.onToggleFullScreen !=
                                                 null) ...[
                                               SizedBox(
-                                                  width: widget.isFullScreen
-                                                      ? 0
-                                                      : 4),
+                                                width: widget.isFullScreen
+                                                    ? 0
+                                                    : 4,
+                                              ),
                                               AppIconButton(
                                                 icon: widget.isFullScreen
-                                                    ? (widget
-                                                            .exitFullScreenIcon ??
-                                                        Icons.fullscreen_exit)
+                                                    ? (widget.exitFullScreenIcon ??
+                                                          Icons.fullscreen_exit)
                                                     : (widget.fullScreenIcon ??
-                                                        Icons.fullscreen),
+                                                          Icons.fullscreen),
                                                 tooltip: widget.isFullScreen
                                                     ? '退出全屏'
                                                     : '全屏',
@@ -2872,10 +2955,7 @@ class _DlnaInfoLine extends StatelessWidget {
   final String label;
   final String value;
 
-  const _DlnaInfoLine({
-    required this.label,
-    required this.value,
-  });
+  const _DlnaInfoLine({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -2912,10 +2992,7 @@ class _PlaybackSpeedOption {
   final double speed;
   final String label;
 
-  const _PlaybackSpeedOption({
-    required this.speed,
-    required this.label,
-  });
+  const _PlaybackSpeedOption({required this.speed, required this.label});
 }
 
 class _PlaybackSpeedMenuButton extends StatelessWidget {
@@ -2936,10 +3013,8 @@ class _PlaybackSpeedMenuButton extends StatelessWidget {
   Future<void> _openMenu(BuildContext context) async {
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null || !renderBox.hasSize) return;
-    final overlay = Navigator.of(context)
-        .overlay
-        ?.context
-        .findRenderObject() as RenderBox?;
+    final overlay =
+        Navigator.of(context).overlay?.context.findRenderObject() as RenderBox?;
     if (overlay == null || !overlay.hasSize) return;
     final topLeft = renderBox.localToGlobal(Offset.zero, ancestor: overlay);
     final bottomRight = renderBox.localToGlobal(
@@ -2972,10 +3047,7 @@ class _PlaybackSpeedMenuButton extends StatelessWidget {
                       : Colors.white70,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  option.label,
-                  style: const TextStyle(color: Colors.white),
-                ),
+                Text(option.label, style: const TextStyle(color: Colors.white)),
               ],
             ),
           ),

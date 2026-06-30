@@ -8,8 +8,9 @@ class RealtimeEventLogPreferences {
   static const String _maxEntriesKey = 'realtime_event_log.max_entries';
   static const String _groupedKey = 'realtime_event_log.grouped';
 
-  static final ValueNotifier<int> maxEntries =
-      ValueNotifier<int>(defaultMaxEntries);
+  static final ValueNotifier<int> maxEntries = ValueNotifier<int>(
+    defaultMaxEntries,
+  );
   static final ValueNotifier<bool> grouped = ValueNotifier<bool>(false);
 
   static bool _loaded = false;
@@ -20,12 +21,15 @@ class RealtimeEventLogPreferences {
     if (_loaded && loading == null) return Future.value();
     if (loading != null) return loading;
 
-    _loading = SharedPreferences.getInstance().then((prefs) {
-      maxEntries.value = normalizeMaxEntries(
-          prefs.getInt(_maxEntriesKey) ?? defaultMaxEntries);
-      grouped.value = prefs.getBool(_groupedKey) ?? false;
-      _loaded = true;
-    }).whenComplete(() => _loading = null);
+    _loading = SharedPreferences.getInstance()
+        .then((prefs) {
+          maxEntries.value = normalizeMaxEntries(
+            prefs.getInt(_maxEntriesKey) ?? defaultMaxEntries,
+          );
+          grouped.value = prefs.getBool(_groupedKey) ?? false;
+          _loaded = true;
+        })
+        .whenComplete(() => _loading = null);
 
     return _loading!;
   }

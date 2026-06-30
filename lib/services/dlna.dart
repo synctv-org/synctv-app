@@ -695,7 +695,8 @@ class DLNAManager {
 
     for (int i = 0; i < stList.length; i++) {
       final st = stList[i];
-      final msg = 'M-SEARCH * HTTP/1.1\r\n'
+      final msg =
+          'M-SEARCH * HTTP/1.1\r\n'
           'HOST: 239.255.255.250:1900\r\n'
           'ST: $st\r\n'
           'MX: ${_searchCount == 0 ? 1 : 3}\r\n'

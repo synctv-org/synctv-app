@@ -15,20 +15,20 @@ class PlaybackSyncConfig {
     return PlaybackSyncConfig(
       autoSeekDriftThresholdSeconds:
           (json['autoSeekDriftThresholdSeconds'] as num?)?.toDouble() ??
-              defaults.autoSeekDriftThresholdSeconds,
+          defaults.autoSeekDriftThresholdSeconds,
       manualSeekDriftThresholdSeconds:
           (json['manualSeekDriftThresholdSeconds'] as num?)?.toDouble() ??
-              defaults.manualSeekDriftThresholdSeconds,
+          defaults.manualSeekDriftThresholdSeconds,
       autoSyncEnabled:
           json['autoSyncEnabled'] as bool? ?? defaults.autoSyncEnabled,
     ).normalized();
   }
 
   Map<String, Object?> toJson() => {
-        'autoSeekDriftThresholdSeconds': autoSeekDriftThresholdSeconds,
-        'manualSeekDriftThresholdSeconds': manualSeekDriftThresholdSeconds,
-        'autoSyncEnabled': autoSyncEnabled,
-      };
+    'autoSeekDriftThresholdSeconds': autoSeekDriftThresholdSeconds,
+    'manualSeekDriftThresholdSeconds': manualSeekDriftThresholdSeconds,
+    'autoSyncEnabled': autoSyncEnabled,
+  };
 
   PlaybackSyncConfig copyWith({
     double? autoSeekDriftThresholdSeconds,
@@ -38,7 +38,8 @@ class PlaybackSyncConfig {
     return PlaybackSyncConfig(
       autoSeekDriftThresholdSeconds:
           autoSeekDriftThresholdSeconds ?? this.autoSeekDriftThresholdSeconds,
-      manualSeekDriftThresholdSeconds: manualSeekDriftThresholdSeconds ??
+      manualSeekDriftThresholdSeconds:
+          manualSeekDriftThresholdSeconds ??
           this.manualSeekDriftThresholdSeconds,
       autoSyncEnabled: autoSyncEnabled ?? this.autoSyncEnabled,
     );
@@ -46,10 +47,12 @@ class PlaybackSyncConfig {
 
   PlaybackSyncConfig normalized() {
     return PlaybackSyncConfig(
-      autoSeekDriftThresholdSeconds:
-          autoSeekDriftThresholdSeconds.clamp(0.05, 30.0).toDouble(),
-      manualSeekDriftThresholdSeconds:
-          manualSeekDriftThresholdSeconds.clamp(0.1, 5.0).toDouble(),
+      autoSeekDriftThresholdSeconds: autoSeekDriftThresholdSeconds
+          .clamp(0.05, 30.0)
+          .toDouble(),
+      manualSeekDriftThresholdSeconds: manualSeekDriftThresholdSeconds
+          .clamp(0.1, 5.0)
+          .toDouble(),
       autoSyncEnabled: autoSyncEnabled,
     );
   }

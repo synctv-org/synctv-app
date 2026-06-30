@@ -4,10 +4,7 @@ import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 
 class RoomInvite {
-  const RoomInvite({
-    required this.roomId,
-    this.serverId,
-  });
+  const RoomInvite({required this.roomId, this.serverId});
 
   final String roomId;
   final String? serverId;
@@ -39,15 +36,18 @@ class RoomInviteService {
 
     final uri = Uri.tryParse(value);
     if (uri != null && uri.hasScheme) {
-      final roomId = uri.queryParameters['room_id'] ??
+      final roomId =
+          uri.queryParameters['room_id'] ??
           uri.queryParameters['roomId'] ??
           uri.queryParameters['r'];
       if (roomId != null && roomId.trim().isNotEmpty) {
         return RoomInvite(
           roomId: roomId.trim(),
-          serverId: _clean(uri.queryParameters['server_id'] ??
-              uri.queryParameters['serverId'] ??
-              uri.queryParameters['s']),
+          serverId: _clean(
+            uri.queryParameters['server_id'] ??
+                uri.queryParameters['serverId'] ??
+                uri.queryParameters['s'],
+          ),
         );
       }
 
@@ -55,9 +55,11 @@ class RoomInviteService {
       if (segments.length >= 2 && segments[0] == 'rooms') {
         return RoomInvite(
           roomId: segments.last,
-          serverId: _clean(uri.queryParameters['server_id'] ??
-              uri.queryParameters['serverId'] ??
-              uri.queryParameters['s']),
+          serverId: _clean(
+            uri.queryParameters['server_id'] ??
+                uri.queryParameters['serverId'] ??
+                uri.queryParameters['s'],
+          ),
         );
       }
     }

@@ -148,7 +148,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (user.id.isNotEmpty && user.id == widget.room.creatorId) return true;
     final isSystemAdmin =
         user.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
-            user.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
+        user.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
     if (isSystemAdmin) return true;
     final selfRole = _selfMember?.role;
     return selfRole ==
@@ -272,15 +272,16 @@ class _RoomScreenState extends State<RoomScreen>
         widget.room.roomId,
         limit: 20,
       );
-      final entries = pinned
-          .map(
-            (entry) => RoomRealtimeChatEntry.fromHistory(
-              entry.message.copyWith(pin: entry.pin),
-            ),
-          )
-          .where((entry) => !entry.isDeleted && entry.isPinned)
-          .toList()
-        ..sort(_comparePinnedMessages);
+      final entries =
+          pinned
+              .map(
+                (entry) => RoomRealtimeChatEntry.fromHistory(
+                  entry.message.copyWith(pin: entry.pin),
+                ),
+              )
+              .where((entry) => !entry.isDeleted && entry.isPinned)
+              .toList()
+            ..sort(_comparePinnedMessages);
       if (!mounted) return;
       setState(() {
         _pinnedMessages
@@ -297,9 +298,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _loadCurrentPlayback() async {
     try {
-      final status = await SyncTvService.getCurrentMovie(
-        widget.room.roomId,
-      );
+      final status = await SyncTvService.getCurrentMovie(widget.room.roomId);
       if (!mounted) return;
       await _applyPlaybackStatus(
         _mergePlaybackStatus(
@@ -348,11 +347,13 @@ class _RoomScreenState extends State<RoomScreen>
 
     try {
       final parentFolder = _folderStack.isNotEmpty ? _folderStack.last : null;
-      final result = await SyncTvService.listMediaLibrary(widget.room.roomId,
-          playlistId: parentFolder?.playbackPlaylistId ?? '',
-          target: parentFolder?.playbackTarget,
-          page: _currentPage + 1,
-          pageSize: _pageSize);
+      final result = await SyncTvService.listMediaLibrary(
+        widget.room.roomId,
+        playlistId: parentFolder?.playbackPlaylistId ?? '',
+        target: parentFolder?.playbackTarget,
+        page: _currentPage + 1,
+        pageSize: _pageSize,
+      );
 
       final movies = result.entries;
       final total = result.total;
@@ -438,8 +439,10 @@ class _RoomScreenState extends State<RoomScreen>
     _appendRealtimeEvent(entry);
   }
 
-  void _recordRealtimeOutgoing(List<int> bytes,
-      [client.ClientMessage? message]) {
+  void _recordRealtimeOutgoing(
+    List<int> bytes, [
+    client.ClientMessage? message,
+  ]) {
     final entry = message == null
         ? RoomRealtimeCodec.describeOutgoing(bytes)
         : RoomRealtimeCodec.describeOutgoingMessage(
@@ -495,7 +498,8 @@ class _RoomScreenState extends State<RoomScreen>
     _reconnectAttempts++;
     final delay = Duration(seconds: _reconnectAttempts * 2);
     debugPrint(
-        'Scheduling reconnect attempt $_reconnectAttempts in ${delay.inSeconds}s');
+      'Scheduling reconnect attempt $_reconnectAttempts in ${delay.inSeconds}s',
+    );
 
     _reconnectTimer = Timer(delay, () {
       if (mounted) {
@@ -570,8 +574,9 @@ class _RoomScreenState extends State<RoomScreen>
         type == RoomRealtimeMessageKind.checkStatus) {
       final playbackStatus = message.playbackStatus;
       if (playbackStatus != null) {
-        final shouldLoadSnapshot =
-            _needsPlaybackResourceSnapshot(playbackStatus);
+        final shouldLoadSnapshot = _needsPlaybackResourceSnapshot(
+          playbackStatus,
+        );
         _applyPlaybackStatus(
           _mergePlaybackStatus(playbackStatus, incomingHasTiming: true),
         );
@@ -674,14 +679,15 @@ class _RoomScreenState extends State<RoomScreen>
     RoomRealtimeMessage message,
   ) {
     final currentUser = _currentUser;
-    final isCurrentUserMessage = currentUser != null &&
+    final isCurrentUserMessage =
+        currentUser != null &&
         message.senderUserId.isNotEmpty &&
         message.senderUserId == currentUser.id;
     final username = message.senderUsername.isNotEmpty
         ? message.senderUsername
         : isCurrentUserMessage
-            ? currentUser.username
-            : 'Unknown';
+        ? currentUser.username
+        : 'Unknown';
     return RoomRealtimeChatEntry(
       id: message.chatId,
       userId: message.senderUserId,
@@ -719,11 +725,14 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _applyChatPinEvent(ChatPinEventInfo event) {
-    final clearPin = event.kind ==
+    final clearPin =
+        event.kind ==
             client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED.value ||
         event.kind ==
             client_enum
-                .ChatPinEventKind.CHAT_PIN_EVENT_KIND_MESSAGE_DELETED.value;
+                .ChatPinEventKind
+                .CHAT_PIN_EVENT_KIND_MESSAGE_DELETED
+                .value;
     final pin = clearPin ? null : event.pin;
     final eventEntry = RoomRealtimeChatEntry.fromHistory(
       event.message.copyWith(pin: pin, clearPin: clearPin),
@@ -738,8 +747,10 @@ class _RoomScreenState extends State<RoomScreen>
     }
     final cached = _chatMessageCache[event.message.id];
     if (cached != null) {
-      _chatMessageCache[event.message.id] =
-          cached.copyWith(pin: pin, clearPin: clearPin);
+      _chatMessageCache[event.message.id] = cached.copyWith(
+        pin: pin,
+        clearPin: clearPin,
+      );
     }
     _applyPinnedChatEntry(eventEntry, clearPin: clearPin);
   }
@@ -758,18 +769,16 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _syncPinnedChatEntryFromRealtime(RoomRealtimeChatEntry entry) {
     if (entry.id.isEmpty) return;
-    final index =
-        _pinnedMessages.indexWhere((message) => message.id == entry.id);
+    final index = _pinnedMessages.indexWhere(
+      (message) => message.id == entry.id,
+    );
     if (index < 0) return;
     final pinned = _pinnedMessages[index];
     _pinnedMessages[index] = entry.copyWith(pin: pinned.pin);
     _pinnedMessages.sort(_comparePinnedMessages);
   }
 
-  int _comparePinnedMessages(
-    RoomRealtimeChatEntry a,
-    RoomRealtimeChatEntry b,
-  ) {
+  int _comparePinnedMessages(RoomRealtimeChatEntry a, RoomRealtimeChatEntry b) {
     final pinnedAtCompare =
         b.pin?.pinnedAt.compareTo(a.pin?.pinnedAt ?? 0) ?? 0;
     if (pinnedAtCompare != 0) return pinnedAtCompare;
@@ -866,13 +875,10 @@ class _RoomScreenState extends State<RoomScreen>
         afterLimit: 30,
         includeDeleted: true,
       );
-      final entries = [
-        ...contextInfo.before,
-        contextInfo.message,
-        ...contextInfo.after,
-      ].map(RoomRealtimeChatEntry.fromHistory).where(
-            (entry) => !entry.isDeleted,
-          );
+      final entries =
+          [...contextInfo.before, contextInfo.message, ...contextInfo.after]
+              .map(RoomRealtimeChatEntry.fromHistory)
+              .where((entry) => !entry.isDeleted);
       if (!mounted) return;
       setState(() {
         for (final entry in entries) {
@@ -883,8 +889,9 @@ class _RoomScreenState extends State<RoomScreen>
           );
           _indexChatMessage(entry);
         }
-        _messages
-            .sort((a, b) => a.timestampMillis.compareTo(b.timestampMillis));
+        _messages.sort(
+          (a, b) => a.timestampMillis.compareTo(b.timestampMillis),
+        );
       });
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '加载引用上下文失败: $e');
@@ -925,23 +932,24 @@ class _RoomScreenState extends State<RoomScreen>
     final current = _currentStatus;
     final incomingMovie = incoming.movie;
     final currentMovie = current?.movie;
-    final hasSameMovie = currentMovie != null &&
+    final hasSameMovie =
+        currentMovie != null &&
         incomingMovie != null &&
         currentMovie.hasSamePlaybackIdentity(incomingMovie);
     final mergedMovie = incomingMovie == null
         ? incomingHasTiming
-            ? null
-            : currentMovie
+              ? null
+              : currentMovie
         : incomingMovie.url.isEmpty &&
-                currentMovie != null &&
-                currentMovie.url.isNotEmpty &&
-                hasSameMovie
-            ? currentMovie
-            : hasSameMovie
-                ? incomingMovie.url.isEmpty
-                    ? currentMovie
-                    : incomingMovie.withPlaybackIdentityFrom(currentMovie)
-                : incomingMovie;
+              currentMovie != null &&
+              currentMovie.url.isNotEmpty &&
+              hasSameMovie
+        ? currentMovie
+        : hasSameMovie
+        ? incomingMovie.url.isEmpty
+              ? currentMovie
+              : incomingMovie.withPlaybackIdentityFrom(currentMovie)
+        : incomingMovie;
     return SyncTvPlaybackStatus(
       movie: mergedMovie,
       isPlaying: incomingHasTiming
@@ -974,7 +982,8 @@ class _RoomScreenState extends State<RoomScreen>
       return false;
     }
     final current = _currentStatus;
-    final incomingHasTarget = incoming.playingMediaId.isNotEmpty ||
+    final incomingHasTarget =
+        incoming.playingMediaId.isNotEmpty ||
         incoming.playingPlaylistId.isNotEmpty ||
         incoming.targetHash.isNotEmpty;
     if (!incomingHasTarget) return false;
@@ -1042,9 +1051,11 @@ class _RoomScreenState extends State<RoomScreen>
         _refreshPlaybackUi(controller);
       }
       final positionDrift = (currentPos - target.positionSeconds).abs();
-      final shouldAutoSeek = _playbackSyncConfig.autoSyncEnabled &&
+      final shouldAutoSeek =
+          _playbackSyncConfig.autoSyncEnabled &&
           positionDrift > _playbackSyncConfig.autoSeekDriftThresholdSeconds;
-      final shouldManualSeek = forceSeek &&
+      final shouldManualSeek =
+          forceSeek &&
           positionDrift >= _playbackSyncConfig.manualSeekDriftThresholdSeconds;
       if (target.isAtEnd || shouldManualSeek || shouldAutoSeek) {
         await controller.seekTo(
@@ -1087,9 +1098,9 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   bool _isDisposedVideoControllerError(Object error) {
-    return error
-        .toString()
-        .contains('VideoPlayerController was used after being disposed');
+    return error.toString().contains(
+      'VideoPlayerController was used after being disposed',
+    );
   }
 
   double _boundedPlaybackTime(double currentTime) {
@@ -1109,8 +1120,9 @@ class _RoomScreenState extends State<RoomScreen>
     }
 
     final value = _videoPlayerController!.value;
-    final position =
-        _boundedPlaybackTime(value.position.inMilliseconds / 1000.0);
+    final position = _boundedPlaybackTime(
+      value.position.inMilliseconds / 1000.0,
+    );
     if (value.isPlaying) {
       unawaited(_maybeFetchPlaybackDanmaku(position));
     }
@@ -1131,10 +1143,7 @@ class _RoomScreenState extends State<RoomScreen>
     final value = _videoPlayerController?.value;
     if (value == null) return;
     _sendPlaybackControlMessage(
-      _playbackControlReporter().seek(
-        value: value,
-        position: position,
-      ),
+      _playbackControlReporter().seek(value: value, position: position),
     );
   }
 
@@ -1177,8 +1186,10 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Future<void> _maybeFetchPlaybackDanmaku(double positionSeconds,
-      {bool force = false}) async {
+  Future<void> _maybeFetchPlaybackDanmaku(
+    double positionSeconds, {
+    bool force = false,
+  }) async {
     final movie = _currentStatus?.movie;
     final sourceKey = playbackDanmakuSourceKey(movie);
     if (sourceKey.isEmpty || _loadingPlaybackDanmaku) return;
@@ -1448,7 +1459,8 @@ class _RoomScreenState extends State<RoomScreen>
         ),
       );
       for (var i = 0; i < mode.urls.length; i++) {
-        final selected = mode.key == movie.selectedPlaybackMode &&
+        final selected =
+            mode.key == movie.selectedPlaybackMode &&
             i == movie.selectedPlaybackUrlIndex;
         items.add(
           PopupMenuItem<String>(
@@ -1491,8 +1503,9 @@ class _RoomScreenState extends State<RoomScreen>
   void _warnPlaybackCredentialHeaders(Map<String, String> headers) {
     final key = DirectUrlSourceConfig.credentialHeaderRiskKey(headers);
     if (key.isEmpty || !_warnedPlaybackCredentialHeaderKeys.add(key)) return;
-    final names =
-        DirectUrlSourceConfig.credentialHeaderNames(headers).join('、');
+    final names = DirectUrlSourceConfig.credentialHeaderNames(
+      headers,
+    ).join('、');
     MessageUtils.showWarning(
       context,
       '当前播放地址携带 $names。此类凭据来自播放信息，房间成员可能获取并用于请求媒体资源。',
@@ -1682,7 +1695,8 @@ class _RoomScreenState extends State<RoomScreen>
           return Stack(
             children: [
               Center(
-                child: _videoPlayerController != null &&
+                child:
+                    _videoPlayerController != null &&
                         _videoPlayerController!.value.isInitialized
                     ? CustomVideoPlayer(
                         controller: _videoPlayerController!,
@@ -1704,11 +1718,7 @@ class _RoomScreenState extends State<RoomScreen>
                     : _buildVideoEmptyState(),
               ),
               if (playbackOptionButton != null)
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: playbackOptionButton,
-                ),
+                Positioned(top: 12, right: 12, child: playbackOptionButton),
             ],
           );
         },
@@ -1771,10 +1781,7 @@ class _RoomScreenState extends State<RoomScreen>
       if (_showRealtimeDebugTab) _buildRealtimeEventsTab(),
     ];
     final index = _roomTabIndex.clamp(0, children.length - 1);
-    return IndexedStack(
-      index: index,
-      children: children,
-    );
+    return IndexedStack(index: index, children: children);
   }
 
   void _handleSync() {
@@ -2058,12 +2065,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Widget _buildTabBar(ThemeData theme) {
-    final labels = [
-      '聊天',
-      '列表',
-      '成员',
-      if (_showRealtimeDebugTab) '实时',
-    ];
+    final labels = ['聊天', '列表', '成员', if (_showRealtimeDebugTab) '实时'];
     final icons = [
       Icons.chat_bubble_rounded,
       Icons.playlist_play_rounded,
@@ -2284,9 +2286,7 @@ class _RoomScreenState extends State<RoomScreen>
         child: AppPanelSurface(
           color: scheme.surface.withValues(alpha: 0.78),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: scheme.primary.withValues(alpha: 0.22),
-          ),
+          border: Border.all(color: scheme.primary.withValues(alpha: 0.22)),
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -2322,8 +2322,10 @@ class _RoomScreenState extends State<RoomScreen>
               const SizedBox(width: 6),
               AppIconButton(
                 tooltip: '取消置顶',
-                constraints:
-                    const BoxConstraints.tightFor(width: 28, height: 28),
+                constraints: const BoxConstraints.tightFor(
+                  width: 28,
+                  height: 28,
+                ),
                 padding: EdgeInsets.zero,
                 iconSize: 15,
                 size: AppIconButtonSize.sm,
@@ -2462,12 +2464,14 @@ class _RoomScreenState extends State<RoomScreen>
 
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final isMine = _currentUser != null &&
+    final isMine =
+        _currentUser != null &&
         message.userId.isNotEmpty &&
         message.userId == _currentUser!.id;
     final alignment = isMine ? Alignment.centerRight : Alignment.centerLeft;
     final messageKey = message.dedupeKey;
-    final actionsVisible = message.id.isNotEmpty &&
+    final actionsVisible =
+        message.id.isNotEmpty &&
         (_hoveredChatMessageId == messageKey ||
             _activeChatMessageId == messageKey);
     final reactionsVisible =
@@ -2563,20 +2567,21 @@ class _RoomScreenState extends State<RoomScreen>
                                       message.username,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style:
-                                          theme.textTheme.labelMedium?.copyWith(
-                                        color: authorColor,
-                                        fontWeight: FontWeight.w700,
-                                        height: 1.15,
-                                      ),
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(
+                                            color: authorColor,
+                                            fontWeight: FontWeight.w700,
+                                            height: 1.15,
+                                          ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     message.timeLabel,
                                     style: theme.textTheme.labelSmall?.copyWith(
-                                      color: scheme.onSurfaceVariant
-                                          .withValues(alpha: 0.68),
+                                      color: scheme.onSurfaceVariant.withValues(
+                                        alpha: 0.68,
+                                      ),
                                       height: 1.15,
                                     ),
                                   ),
@@ -2584,12 +2589,12 @@ class _RoomScreenState extends State<RoomScreen>
                                     const SizedBox(width: 6),
                                     Text(
                                       '已编辑',
-                                      style:
-                                          theme.textTheme.labelSmall?.copyWith(
-                                        color: scheme.onSurfaceVariant
-                                            .withValues(alpha: 0.62),
-                                        height: 1.15,
-                                      ),
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: scheme.onSurfaceVariant
+                                                .withValues(alpha: 0.62),
+                                            height: 1.15,
+                                          ),
                                     ),
                                   ],
                                 ],
@@ -2682,10 +2687,12 @@ class _RoomScreenState extends State<RoomScreen>
     final scheme = theme.colorScheme;
     final receipt = _chatReceiptCache[message.id];
     final loading = _chatReceiptLoadingIds.contains(message.id);
-    final mentionReceipt =
-        receipt == null ? null : _mentionReadReceiptSummary(message, receipt);
+    final mentionReceipt = receipt == null
+        ? null
+        : _mentionReadReceiptSummary(message, receipt);
     final hasMentions = _mentionedUsersForMessage(message, receipt).isNotEmpty;
-    final text = mentionReceipt ??
+    final text =
+        mentionReceipt ??
         (receipt == null
             ? (hasMentions ? '@ 已读' : '已读')
             : '${receipt.readerTotal} 已读 · ${receipt.unreadTotal} 未读');
@@ -2780,8 +2787,9 @@ class _RoomScreenState extends State<RoomScreen>
     ChatMessageReadReceiptsInfo? receipt,
   ) {
     if (message.mentions.isEmpty) return const [];
-    final mentionedIds =
-        message.mentions.map((mention) => mention.userId).toSet();
+    final mentionedIds = message.mentions
+        .map((mention) => mention.userId)
+        .toSet();
     final users = <String, SyncTvUser>{};
     for (final mention in message.mentions) {
       if (mention.userId.isEmpty || mention.username.trim().isEmpty) continue;
@@ -2995,8 +3003,9 @@ class _RoomScreenState extends State<RoomScreen>
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(7),
         child: Column(
-          crossAxisAlignment:
-              isMine ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          crossAxisAlignment: isMine
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
           children: [
             AppPanelSurface(
@@ -3033,8 +3042,9 @@ class _RoomScreenState extends State<RoomScreen>
         keepExpanded: true,
         onPressed: () => setState(() {
           final key = message.dedupeKey;
-          _expandedChatActionMessageId =
-              _expandedChatActionMessageId == key ? null : key;
+          _expandedChatActionMessageId = _expandedChatActionMessageId == key
+              ? null
+              : key;
           _hoveredChatMessageId = key;
         }),
       ),
@@ -3112,9 +3122,7 @@ class _RoomScreenState extends State<RoomScreen>
         child: SizedBox(
           width: 28,
           height: 28,
-          child: Center(
-            child: Text(key, style: const TextStyle(fontSize: 16)),
-          ),
+          child: Center(child: Text(key, style: const TextStyle(fontSize: 16))),
         ),
       ),
     );
@@ -3137,9 +3145,7 @@ class _RoomScreenState extends State<RoomScreen>
         child: SizedBox(
           width: 28,
           height: 28,
-          child: Center(
-            child: Text(key, style: const TextStyle(fontSize: 17)),
-          ),
+          child: Center(child: Text(key, style: const TextStyle(fontSize: 17))),
         ),
       ),
     );
@@ -3218,8 +3224,10 @@ class _RoomScreenState extends State<RoomScreen>
     final panelHeight = isMine || _canManageRoom ? 122.0 : 92.0;
     final maxLeft = math.max(12.0, screen.width - panelWidth - 12);
     final maxTop = math.max(12.0, screen.height - panelHeight - 12);
-    final left =
-        math.min(math.max(12.0, position.dx - panelWidth / 2), maxLeft);
+    final left = math.min(
+      math.max(12.0, position.dx - panelWidth / 2),
+      maxLeft,
+    );
     final top = math.min(math.max(12.0, position.dy - 10), maxTop);
     await showGeneralDialog<void>(
       context: context,
@@ -3401,14 +3409,8 @@ class _RoomScreenState extends State<RoomScreen>
     if (message.id.isEmpty || message.isDeleted) return;
     try {
       final event = message.isPinned
-          ? await SyncTvService.unpinChatMessage(
-              widget.room.roomId,
-              message.id,
-            )
-          : await SyncTvService.pinChatMessage(
-              widget.room.roomId,
-              message.id,
-            );
+          ? await SyncTvService.unpinChatMessage(widget.room.roomId, message.id)
+          : await SyncTvService.pinChatMessage(widget.room.roomId, message.id);
       if (!mounted) return;
       setState(() => _applyChatPinEvent(event));
       MessageUtils.showSuccess(context, message.isPinned ? '已取消置顶' : '消息已置顶');
@@ -3610,12 +3612,12 @@ class _RoomScreenState extends State<RoomScreen>
       title: Text(
         _webrtcManager!.isConnected
             ? (_webrtcManager!.hasPeersConnected
-                ? (_webrtcManager!.isMuted
-                    ? '语音已连接 (${_webrtcManager!.participantCount}人) (静音)'
-                    : '语音已连接 (${_webrtcManager!.participantCount}人)')
-                : (_webrtcManager!.isMuted
-                    ? '等待加入... (1人) (静音)'
-                    : '等待加入... (1人)'))
+                  ? (_webrtcManager!.isMuted
+                        ? '语音已连接 (${_webrtcManager!.participantCount}人) (静音)'
+                        : '语音已连接 (${_webrtcManager!.participantCount}人)')
+                  : (_webrtcManager!.isMuted
+                        ? '等待加入... (1人) (静音)'
+                        : '等待加入... (1人)'))
             : '语音聊天',
         style: TextStyle(
           color: theme.textTheme.bodyMedium?.color,
@@ -3668,9 +3670,9 @@ class _RoomScreenState extends State<RoomScreen>
     });
     try {
       await manager.join().timeout(
-            const Duration(seconds: 15),
-            onTimeout: () => throw TimeoutException('加入语音超时，请检查麦克风权限'),
-          );
+        const Duration(seconds: 15),
+        onTimeout: () => throw TimeoutException('加入语音超时，请检查麦克风权限'),
+      );
     } catch (e, stackTrace) {
       debugPrint('WebRTC voice join failed: $e');
       debugPrint('$stackTrace');
@@ -3746,8 +3748,9 @@ class _RoomScreenState extends State<RoomScreen>
                 ),
                 const Spacer(),
                 AppActionButton(
-                  onPressed:
-                      _selectedMovieIds.isEmpty ? null : _deleteSelectedMovies,
+                  onPressed: _selectedMovieIds.isEmpty
+                      ? null
+                      : _deleteSelectedMovies,
                   label: '删除',
                   style: AppActionButtonStyle.tonal,
                 ),
@@ -3758,69 +3761,71 @@ class _RoomScreenState extends State<RoomScreen>
           child: _isLoadingMovies
               ? const AppLoadingIndicator()
               : _movies.isEmpty
-                  ? PlaylistEmptyState(
-                      onAdd: canMutatePlaylist ? _showAddMovieDialog : null,
-                      compact: true,
-                    )
-                  : AppListView.builder(
-                      controller: _movieScrollController,
-                      itemCount: _movies.length + (_hasMoreMovies ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _movies.length) {
-                          return const Center(
-                              child: Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: AppLoadingIndicator(centered: false)));
-                        }
-                        final movie = _movies[index];
-                        final isCurrent = _currentStatus?.movie?.id == movie.id;
-                        final isFolder = movie.isFolder;
-                        final isSelected = _selectedMovieIds.contains(movie.id);
+              ? PlaylistEmptyState(
+                  onAdd: canMutatePlaylist ? _showAddMovieDialog : null,
+                  compact: true,
+                )
+              : AppListView.builder(
+                  controller: _movieScrollController,
+                  itemCount: _movies.length + (_hasMoreMovies ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _movies.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: AppLoadingIndicator(centered: false),
+                        ),
+                      );
+                    }
+                    final movie = _movies[index];
+                    final isCurrent = _currentStatus?.movie?.id == movie.id;
+                    final isFolder = movie.isFolder;
+                    final isSelected = _selectedMovieIds.contains(movie.id);
 
-                        return AppTile(
-                          selected: isSelected,
-                          prefix: Icon(
-                            isFolder ? Icons.folder : Icons.movie,
-                            color: isFolder
-                                ? Colors.amber
-                                : (isCurrent ? primaryColor : null),
-                          ),
-                          title: Text(
-                            movie.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: isCurrent ? primaryColor : null,
-                              fontWeight: isCurrent ? FontWeight.bold : null,
-                            ),
-                          ),
-                          suffix: selectionMode
-                              ? Icon(
-                                  isSelected
-                                      ? Icons.check_circle
-                                      : Icons.radio_button_unchecked,
-                                  color:
-                                      isSelected ? primaryColor : Colors.grey)
-                              : null,
-                          onPressed: () {
-                            if (selectionMode) {
-                              _toggleSelection(movie);
-                            } else if (isFolder) {
-                              _enterFolder(movie);
-                            } else {
-                              _switchMovie(movie);
-                            }
-                          },
-                          onLongPress: () {
-                            if (canMutatePlaylist &&
-                                !selectionMode &&
-                                _isPersistedLibraryEntry(movie)) {
-                              _enterSelectionMode(movie);
-                            }
-                          },
-                        );
+                    return AppTile(
+                      selected: isSelected,
+                      prefix: Icon(
+                        isFolder ? Icons.folder : Icons.movie,
+                        color: isFolder
+                            ? Colors.amber
+                            : (isCurrent ? primaryColor : null),
+                      ),
+                      title: Text(
+                        movie.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: isCurrent ? primaryColor : null,
+                          fontWeight: isCurrent ? FontWeight.bold : null,
+                        ),
+                      ),
+                      suffix: selectionMode
+                          ? Icon(
+                              isSelected
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color: isSelected ? primaryColor : Colors.grey,
+                            )
+                          : null,
+                      onPressed: () {
+                        if (selectionMode) {
+                          _toggleSelection(movie);
+                        } else if (isFolder) {
+                          _enterFolder(movie);
+                        } else {
+                          _switchMovie(movie);
+                        }
                       },
-                    ),
+                      onLongPress: () {
+                        if (canMutatePlaylist &&
+                            !selectionMode &&
+                            _isPersistedLibraryEntry(movie)) {
+                          _enterSelectionMode(movie);
+                        }
+                      },
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -3836,13 +3841,19 @@ class _RoomScreenState extends State<RoomScreen>
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              Text('在线成员 ($_roomOnlineCount)',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(
+                '在线成员 ($_roomOnlineCount)',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               const Spacer(),
               AppBadge(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 borderRadius: BorderRadius.circular(20),
                 icon: Icons.circle,
                 iconSize: 8,
@@ -3867,14 +3878,17 @@ class _RoomScreenState extends State<RoomScreen>
               itemBuilder: (context, index) {
                 final member = _members[index];
 
-                final myMemberInfo =
-                    _members.where((m) => m.id == _currentUser?.id).firstOrNull;
+                final myMemberInfo = _members
+                    .where((m) => m.id == _currentUser?.id)
+                    .firstOrNull;
 
                 final viewerIsCreator =
                     _currentUser?.username == widget.room.creator;
-                final viewerIsRoomAdmin = myMemberInfo?.role ==
+                final viewerIsRoomAdmin =
+                    myMemberInfo?.role ==
                     common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
-                final viewerIsSysAdmin = _currentUser?.role ==
+                final viewerIsSysAdmin =
+                    _currentUser?.role ==
                         common_enum.UserRole.USER_ROLE_ROOT.value ||
                     _currentUser?.role ==
                         common_enum.UserRole.USER_ROLE_ADMIN.value;
@@ -3888,15 +3902,20 @@ class _RoomScreenState extends State<RoomScreen>
                   viewerLevel = 4;
                 }
 
-                final isTargetCreator = member.role ==
+                final isTargetCreator =
+                    member.role ==
                         common_enum
-                            .RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value ||
+                            .RoomMemberRole
+                            .ROOM_MEMBER_ROLE_CREATOR
+                            .value ||
                     member.username == widget.room.creator;
-                final isTargetAdmin = member.role ==
+                final isTargetAdmin =
+                    member.role ==
                     common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
                 final isMe = _currentUser?.id == member.id;
-                final targetLevel =
-                    isTargetCreator ? 3 : (isTargetAdmin ? 2 : 1);
+                final targetLevel = isTargetCreator
+                    ? 3
+                    : (isTargetAdmin ? 2 : 1);
                 final canKick = viewerLevel > targetLevel;
 
                 final memberActions = <Widget>[
@@ -3904,7 +3923,9 @@ class _RoomScreenState extends State<RoomScreen>
                     if ((viewerIsCreator || viewerIsRoomAdmin) &&
                         member.role ==
                             common_enum
-                                .RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value)
+                                .RoomMemberRole
+                                .ROOM_MEMBER_ROLE_MEMBER
+                                .value)
                       AppIconButton(
                         icon: Icons.admin_panel_settings_outlined,
                         tooltip: '设为管理',
@@ -3959,7 +3980,9 @@ class _RoomScreenState extends State<RoomScreen>
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -3970,8 +3993,9 @@ class _RoomScreenState extends State<RoomScreen>
                               color: primaryColor,
                               child: AppAvatar(
                                 name: member.username,
-                                backgroundColor:
-                                    primaryColor.withValues(alpha: 0.1),
+                                backgroundColor: primaryColor.withValues(
+                                  alpha: 0.1,
+                                ),
                                 foregroundColor: primaryColor,
                               ),
                             ),
@@ -3979,8 +4003,11 @@ class _RoomScreenState extends State<RoomScreen>
                               const Positioned(
                                 right: 0,
                                 bottom: 0,
-                                child: Icon(Icons.star,
-                                    size: 14, color: Colors.amber),
+                                child: Icon(
+                                  Icons.star,
+                                  size: 14,
+                                  color: Colors.amber,
+                                ),
                               ),
                           ],
                         ),
@@ -4018,8 +4045,9 @@ class _RoomScreenState extends State<RoomScreen>
                                       label: '管理员',
                                       color: Colors.blue,
                                       borderSide: BorderSide(
-                                        color:
-                                            Colors.blue.withValues(alpha: 0.5),
+                                        color: Colors.blue.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -4105,8 +4133,11 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _switchMovie(SyncTvMovie movie) async {
     try {
       final playback = await SyncTvService.switchMovieAndPlay(
-          widget.room.roomId, movie.id,
-          subPath: movie.subPath, playlistId: movie.parentId);
+        widget.room.roomId,
+        movie.id,
+        subPath: movie.subPath,
+        playlistId: movie.parentId,
+      );
       await _applyPlaybackStatus(playback);
       _requestPlaybackSnapshot();
       if (mounted) MessageUtils.showSuccess(context, '已切换并播放');
@@ -4142,8 +4173,10 @@ class _RoomScreenState extends State<RoomScreen>
   void _selectAll() {
     if (!_canMutateCurrentPlaylist) return;
     setState(() {
-      final selectable =
-          _movies.where(_isPersistedLibraryEntry).map((m) => m.id).toList();
+      final selectable = _movies
+          .where(_isPersistedLibraryEntry)
+          .map((m) => m.id)
+          .toList();
       if (_selectedMovieIds.length == selectable.length) {
         _selectedMovieIds.clear();
       } else {
@@ -4178,38 +4211,43 @@ class _RoomScreenState extends State<RoomScreen>
     if (_selectedMovieIds.isEmpty) return;
 
     final confirmed = await ChatUtils.showStyledDialog<bool>(
-        context: context,
-        title: '删除影片',
-        icon: const Icon(Icons.delete_outline, color: Colors.red),
-        content: Text('确定要删除选中的 ${_selectedMovieIds.length} 个影片吗？'),
-        actions: [
-          ChatUtils.createCancelButton(context),
-          const SizedBox(width: 8),
-          ChatUtils.createConfirmButton(
-            context,
-            () => Navigator.pop(context, true),
-            text: '删除',
-          ),
-        ]);
+      context: context,
+      title: '删除影片',
+      icon: const Icon(Icons.delete_outline, color: Colors.red),
+      content: Text('确定要删除选中的 ${_selectedMovieIds.length} 个影片吗？'),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(
+          context,
+          () => Navigator.pop(context, true),
+          text: '删除',
+        ),
+      ],
+    );
 
     if (confirmed == true) {
       try {
         final canClearScope = _canMutateCurrentPlaylist;
         final selectableCount = _movies.where(_isPersistedLibraryEntry).length;
         final isAllLoadedSelected = _selectedMovieIds.length == selectableCount;
-        final mediaIds =
-            _selectedMovieIds.where((id) => id.startsWith('med_')).toList();
-        final playlistIds =
-            _selectedMovieIds.where((id) => id.startsWith('pl_')).toList();
+        final mediaIds = _selectedMovieIds
+            .where((id) => id.startsWith('med_'))
+            .toList();
+        final playlistIds = _selectedMovieIds
+            .where((id) => id.startsWith('pl_'))
+            .toList();
         if (mediaIds.isEmpty && playlistIds.isEmpty) {
           if (mounted) MessageUtils.showInfo(context, '动态目录内容不能在房间内删除');
           return;
         }
         if (isAllLoadedSelected && !_hasMoreMovies && canClearScope) {
-          await SyncTvService.clearMovies(widget.room.roomId,
-              parentId: _currentPersistedPlaylistId.isEmpty
-                  ? null
-                  : _currentPersistedPlaylistId);
+          await SyncTvService.clearMovies(
+            widget.room.roomId,
+            parentId: _currentPersistedPlaylistId.isEmpty
+                ? null
+                : _currentPersistedPlaylistId,
+          );
         } else {
           await SyncTvService.deleteMediaLibraryEntries(
             widget.room.roomId,
@@ -4317,8 +4355,10 @@ class _RoomScreenState extends State<RoomScreen>
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
-            context, () => Navigator.pop(context, true),
-            text: '确定'),
+          context,
+          () => Navigator.pop(context, true),
+          text: '确定',
+        ),
       ],
     );
 
@@ -4345,8 +4385,10 @@ class _RoomScreenState extends State<RoomScreen>
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
-            context, () => Navigator.pop(context, true),
-            text: '确定'),
+          context,
+          () => Navigator.pop(context, true),
+          text: '确定',
+        ),
       ],
     );
 

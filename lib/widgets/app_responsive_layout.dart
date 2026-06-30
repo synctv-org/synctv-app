@@ -28,13 +28,14 @@ class AppResponsiveWrap extends StatelessWidget {
         final availableWidth = constraints.maxWidth;
         final effectiveSpacing = spacing ?? 10;
         final effectiveRunSpacing = runSpacing ?? 10;
-        final possibleColumns = ((availableWidth + effectiveSpacing) /
-                (minItemWidth + effectiveSpacing))
-            .floor()
-            .clamp(1, maxColumns);
+        final possibleColumns =
+            ((availableWidth + effectiveSpacing) /
+                    (minItemWidth + effectiveSpacing))
+                .floor()
+                .clamp(1, maxColumns);
         final itemWidth =
             (availableWidth - effectiveSpacing * (possibleColumns - 1)) /
-                possibleColumns;
+            possibleColumns;
 
         return Wrap(
           spacing: effectiveSpacing,
@@ -88,9 +89,11 @@ class AppAdaptiveSplitView extends StatelessWidget {
           final aspectHeight = availableWidth / collapsedPrimaryAspectRatio;
           final primaryHeight = constraints.hasBoundedHeight
               ? aspectHeight
-                  .clamp(0,
-                      constraints.maxHeight * collapsedPrimaryMaxHeightFraction)
-                  .toDouble()
+                    .clamp(
+                      0,
+                      constraints.maxHeight * collapsedPrimaryMaxHeightFraction,
+                    )
+                    .toDouble()
               : aspectHeight;
           final remainingHeight =
               constraints.maxHeight - primaryHeight - spacing;

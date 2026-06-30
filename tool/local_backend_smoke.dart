@@ -138,7 +138,8 @@ Future<void> runSmoke(String baseUrl) async {
     mediaId: rtmpMediaId,
   );
   print(
-      'rtmp=$rtmpMediaId key=${publish.streamKey.isNotEmpty} active=${streamInfo.active}');
+    'rtmp=$rtmpMediaId key=${publish.streamKey.isNotEmpty} active=${streamInfo.active}',
+  );
 
   final providers = await Future.wait([
     SyncTvService.getAllAlistBindInfos(),
@@ -176,11 +177,7 @@ Future<void> runSmoke(String baseUrl) async {
     reason: 'smoke verify ban',
   );
   await SyncTvService.adminBanRoom(room.roomId, false);
-  await SyncTvService.adminBanUser(
-    me.id,
-    true,
-    reason: 'smoke verify ban',
-  );
+  await SyncTvService.adminBanUser(me.id, true, reason: 'smoke verify ban');
   await SyncTvService.adminBanUser(me.id, false);
   final bans = await SyncTvService.adminListBanRecordsPage(
     pageSize: 10,
@@ -234,34 +231,28 @@ class _RealtimeSmokeProbe {
     );
     final messages = <RoomRealtimeMessage>[];
     final errors = <Object>[];
-    final subscription = connection.stream.listen(
-      (bytes) {
-        try {
-          messages.add(RoomRealtimeCodec.decode(bytes));
-        } catch (error) {
-          errors.add(error);
-        }
-      },
-      onError: errors.add,
-    );
+    final subscription = connection.stream.listen((bytes) {
+      try {
+        messages.add(RoomRealtimeCodec.decode(bytes));
+      } catch (error) {
+        errors.add(error);
+      }
+    }, onError: errors.add);
     return _RealtimeSmokeProbe._(connection, subscription, messages, errors);
   }
 
   Future<void> expectObserved(Set<String> observeIds) async {
-    await _waitFor(
-      () {
-        final observed = _messages
-            .where(
-              (message) =>
-                  message.kind == RoomRealtimeMessageKind.checkStatus &&
-                  message.resourceObserveId.isNotEmpty,
-            )
-            .map((message) => message.resourceObserveId)
-            .toSet();
-        return observed.containsAll(observeIds);
-      },
-      'realtime observed ${observeIds.join(', ')}',
-    );
+    await _waitFor(() {
+      final observed = _messages
+          .where(
+            (message) =>
+                message.kind == RoomRealtimeMessageKind.checkStatus &&
+                message.resourceObserveId.isNotEmpty,
+          )
+          .map((message) => message.resourceObserveId)
+          .toSet();
+      return observed.containsAll(observeIds);
+    }, 'realtime observed ${observeIds.join(', ')}');
   }
 
   Future<void> expectPlaybackPosition(double position) async {

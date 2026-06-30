@@ -7,8 +7,9 @@ void main() {
   test('native OPAQUE client creates protocol messages', () {
     final client = SyncTvOpaqueClient();
 
-    final registration =
-        client.startRegistration('correct horse battery staple');
+    final registration = client.startRegistration(
+      'correct horse battery staple',
+    );
     final login = client.startLogin('correct horse battery staple');
 
     expect(registration.registrationRequest, isA<Uint8List>());

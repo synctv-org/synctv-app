@@ -27,10 +27,7 @@ PlaybackSyncTarget resolvePlaybackSyncTarget({
     return PlaybackSyncTarget(positionSeconds: computedTime);
   }
   if (computedTime >= durationSeconds) {
-    return PlaybackSyncTarget(
-      positionSeconds: durationSeconds,
-      isAtEnd: true,
-    );
+    return PlaybackSyncTarget(positionSeconds: durationSeconds, isAtEnd: true);
   }
   return PlaybackSyncTarget(positionSeconds: computedTime);
 }

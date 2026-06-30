@@ -86,8 +86,9 @@ class ChatUtils {
                   borderRadius: const BorderRadius.all(Radius.circular(16)),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.2 : 0.06,
+                      ),
                       blurRadius: 10,
                       spreadRadius: 0,
                       offset: const Offset(0, 2),
@@ -100,8 +101,9 @@ class ChatUtils {
                     ),
                     prefix: AppIconBadge(
                       icon: Icons.photo_library,
-                      color:
-                          isDark ? Colors.blue.shade300 : Colors.blue.shade600,
+                      color: isDark
+                          ? Colors.blue.shade300
+                          : Colors.blue.shade600,
                       backgroundColor: isDark
                           ? Colors.blue.shade900.withValues(alpha: 0.3)
                           : Colors.blue.shade50,
@@ -142,8 +144,9 @@ class ChatUtils {
                   borderRadius: const BorderRadius.all(Radius.circular(16)),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.2 : 0.06,
+                      ),
                       blurRadius: 10,
                       spreadRadius: 0,
                       offset: const Offset(0, 2),
@@ -226,16 +229,10 @@ class ChatUtils {
               Flexible(
                 child: AppSingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: content,
-                  ),
+                  child: Align(alignment: Alignment.centerLeft, child: content),
                 ),
               ),
-              _DialogActionBar(
-                actions: actions,
-                topBorder: true,
-              ),
+              _DialogActionBar(actions: actions, topBorder: true),
             ],
           ),
         );
@@ -258,10 +255,7 @@ class ChatUtils {
     VoidCallback onTap, {
     String text = '确定',
   }) {
-    return AppActionButton(
-      onPressed: onTap,
-      label: text,
-    );
+    return AppActionButton(onPressed: onTap, label: text);
   }
 
   /// 显示温度调整对话框 (使用新的统一风格)
@@ -588,8 +582,9 @@ class ChatUtils {
                     Icon(
                       Icons.tune,
                       size: 14,
-                      color:
-                          isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+                      color: isDark
+                          ? Colors.grey.shade500
+                          : Colors.grey.shade600,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -607,9 +602,7 @@ class ChatUtils {
                 // 添加自定义变量按钮
                 AppInkSurface(
                   onTap: () async {
-                    final newVar = await _showAddCustomVariableDialog(
-                      context,
-                    );
+                    final newVar = await _showAddCustomVariableDialog(context);
                     if (newVar != null) {
                       customVariables.add(newVar);
 
@@ -704,10 +697,7 @@ class ChatUtils {
                       userName = newName.trim();
                       // 保存到SharedPreferences
                       final prefs = await SharedPreferences.getInstance();
-                      await prefs.setString(
-                        'prompt_variable_name',
-                        userName,
-                      );
+                      await prefs.setString('prompt_variable_name', userName);
                       setState(() {});
                     }
                   },
@@ -1132,10 +1122,7 @@ class _DialogActionBar extends StatelessWidget {
   final List<Widget> actions;
   final bool topBorder;
 
-  const _DialogActionBar({
-    required this.actions,
-    this.topBorder = false,
-  });
+  const _DialogActionBar({required this.actions, this.topBorder = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1153,11 +1140,7 @@ class _DialogActionBar extends StatelessWidget {
           : null,
       child: Align(
         alignment: Alignment.centerRight,
-        child: Wrap(
-          spacing: 10,
-          runSpacing: 8,
-          children: actions,
-        ),
+        child: Wrap(spacing: 10, runSpacing: 8, children: actions),
       ),
     );
   }

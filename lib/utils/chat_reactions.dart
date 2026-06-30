@@ -19,9 +19,10 @@ String chatReactionSummarySuffix(
   Iterable<ChatReactionSummaryInfo> reactions, {
   int limit = 2,
 }) {
-  final summary = topChatReactions(reactions, limit: limit)
-      .map((reaction) => '${reaction.key}${reaction.count}')
-      .join(' ');
+  final summary = topChatReactions(
+    reactions,
+    limit: limit,
+  ).map((reaction) => '${reaction.key}${reaction.count}').join(' ');
   return summary.isEmpty ? '' : '  $summary';
 }
 

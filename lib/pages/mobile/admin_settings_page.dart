@@ -35,10 +35,7 @@ class _AdminToolbarItem {
   final Widget child;
   final double width;
 
-  const _AdminToolbarItem({
-    required this.child,
-    required this.width,
-  });
+  const _AdminToolbarItem({required this.child, required this.width});
 }
 
 class _AdminToolbarWrap extends StatelessWidget {
@@ -272,20 +269,25 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final systemUiOverlayStyle =
-        isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
+    final systemUiOverlayStyle = isDark
+        ? SystemUiOverlayStyle.light
+        : SystemUiOverlayStyle.dark;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: systemUiOverlayStyle,
       child: AppScaffold(
-        backgroundColor:
-            isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FC),
+        backgroundColor: isDark
+            ? const Color(0xFF121212)
+            : const Color(0xFFF7F7FC),
         appBar: AppAppBar(
-          title: const Text('管理员设置',
-              style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text(
+            '管理员设置',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           elevation: 0,
-          backgroundColor:
-              isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FC),
+          backgroundColor: isDark
+              ? const Color(0xFF121212)
+              : const Color(0xFFF7F7FC),
           centerTitle: true,
           systemOverlayStyle: systemUiOverlayStyle,
         ),
@@ -366,8 +368,9 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                         '系统管理',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.68),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.68,
+                          ),
                         ),
                       ),
                     ),
@@ -428,34 +431,37 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                           _selectSection(index, syncController: false),
                       dividerColor: Colors.transparent,
                       indicator: appTabPillIndicator(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.10),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.10,
+                        ),
                       ),
                       labelColor: theme.colorScheme.primary,
-                      unselectedLabelColor:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                      unselectedLabelColor: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.62),
                       labelStyle: theme.textTheme.labelMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                       unselectedLabelStyle: theme.textTheme.labelMedium
                           ?.copyWith(fontWeight: FontWeight.w500),
                       tabs: _sections
-                          .map((section) => Tab(
-                                height: 42,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(section.icon, size: 18),
-                                      const SizedBox(width: 6),
-                                      Text(section.label),
-                                    ],
-                                  ),
+                          .map(
+                            (section) => Tab(
+                              height: 42,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
                                 ),
-                              ))
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(section.icon, size: 18),
+                                    const SizedBox(width: 6),
+                                    Text(section.label),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
                           .toList(),
                     ),
             ),
@@ -488,8 +494,9 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
             return AppInkSurface(
               color: selected
                   ? theme.colorScheme.primary.withValues(alpha: 0.12)
-                  : theme.colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.42),
+                  : theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.42,
+                    ),
               borderRadius: BorderRadius.circular(8),
               onTap: () => _selectSection(index),
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -506,8 +513,9 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: foreground,
-                        fontWeight:
-                            selected ? FontWeight.w800 : FontWeight.w600,
+                        fontWeight: selected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
                       ),
                     ),
                   ),
@@ -537,8 +545,9 @@ class _SettingsNavTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final foreground =
-        selected ? theme.colorScheme.primary : theme.colorScheme.onSurface;
+    final foreground = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface;
     return AppInkSurface(
       color: selected
           ? theme.colorScheme.primary.withValues(alpha: 0.10)
@@ -617,26 +626,76 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
               spacing: 12,
               runSpacing: 12,
               children: [
-                _StatTile('用户', stats.totalUsers, Icons.people_alt_rounded,
-                    Colors.blue, isDark),
-                _StatTile('活跃用户', stats.activeUsers,
-                    Icons.person_pin_circle_rounded, Colors.green, isDark),
-                _StatTile('在线用户', stats.onlineUsers,
-                    Icons.online_prediction_rounded, Colors.lightGreen, isDark),
-                _StatTile('在线连接', stats.onlineConnections, Icons.link_rounded,
-                    Colors.cyan, isDark),
-                _StatTile('封禁用户', stats.bannedUsers, Icons.block_rounded,
-                    Colors.red, isDark),
-                _StatTile('房间', stats.totalRooms, Icons.meeting_room_rounded,
-                    Colors.indigo, isDark),
-                _StatTile('活跃房间', stats.activeRooms, Icons.sensors_rounded,
-                    Colors.teal, isDark),
-                _StatTile('在线房间', stats.activePresenceRooms,
-                    Icons.wifi_tethering_rounded, Colors.blueGrey, isDark),
-                _StatTile('媒体', stats.totalMedia, Icons.video_library_rounded,
-                    Colors.deepPurple, isDark),
-                _StatTile('Provider', stats.providerInstances,
-                    Icons.hub_rounded, Colors.orange, isDark),
+                _StatTile(
+                  '用户',
+                  stats.totalUsers,
+                  Icons.people_alt_rounded,
+                  Colors.blue,
+                  isDark,
+                ),
+                _StatTile(
+                  '活跃用户',
+                  stats.activeUsers,
+                  Icons.person_pin_circle_rounded,
+                  Colors.green,
+                  isDark,
+                ),
+                _StatTile(
+                  '在线用户',
+                  stats.onlineUsers,
+                  Icons.online_prediction_rounded,
+                  Colors.lightGreen,
+                  isDark,
+                ),
+                _StatTile(
+                  '在线连接',
+                  stats.onlineConnections,
+                  Icons.link_rounded,
+                  Colors.cyan,
+                  isDark,
+                ),
+                _StatTile(
+                  '封禁用户',
+                  stats.bannedUsers,
+                  Icons.block_rounded,
+                  Colors.red,
+                  isDark,
+                ),
+                _StatTile(
+                  '房间',
+                  stats.totalRooms,
+                  Icons.meeting_room_rounded,
+                  Colors.indigo,
+                  isDark,
+                ),
+                _StatTile(
+                  '活跃房间',
+                  stats.activeRooms,
+                  Icons.sensors_rounded,
+                  Colors.teal,
+                  isDark,
+                ),
+                _StatTile(
+                  '在线房间',
+                  stats.activePresenceRooms,
+                  Icons.wifi_tethering_rounded,
+                  Colors.blueGrey,
+                  isDark,
+                ),
+                _StatTile(
+                  '媒体',
+                  stats.totalMedia,
+                  Icons.video_library_rounded,
+                  Colors.deepPurple,
+                  isDark,
+                ),
+                _StatTile(
+                  'Provider',
+                  stats.providerInstances,
+                  Icons.hub_rounded,
+                  Colors.orange,
+                  isDark,
+                ),
               ],
             ),
         ],
@@ -714,8 +773,10 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     final mode = await ChatUtils.showStyledDialog<String>(
       context: context,
       title: '添加管理员',
-      icon: const Icon(Icons.admin_panel_settings_rounded,
-          color: Color(0xFF5D5FEF)),
+      icon: const Icon(
+        Icons.admin_panel_settings_rounded,
+        color: Color(0xFF5D5FEF),
+      ),
       content: const SizedBox(
         width: 420,
         child: Text('可以创建新的管理员账号，也可以把已有用户提升为管理员。'),
@@ -750,8 +811,10 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '添加管理员',
-      icon: const Icon(Icons.admin_panel_settings_rounded,
-          color: Color(0xFF5D5FEF)),
+      icon: const Icon(
+        Icons.admin_panel_settings_rounded,
+        color: Color(0xFF5D5FEF),
+      ),
       content: Builder(
         builder: (dialogContext) {
           if (!disposeScheduled) {
@@ -925,8 +988,9 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                   ),
                 ),
                 AppDivider(
-                    height: 1,
-                    color: theme.dividerColor.withValues(alpha: 0.08)),
+                  height: 1,
+                  color: theme.dividerColor.withValues(alpha: 0.08),
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                   child: Wrap(
@@ -961,11 +1025,14 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                         value: _adminSortBy,
                         options: const {
                           '创建时间': admin_enum
-                              .UserListSortBy.USER_LIST_SORT_BY_CREATED_AT,
+                              .UserListSortBy
+                              .USER_LIST_SORT_BY_CREATED_AT,
                           '更新时间': admin_enum
-                              .UserListSortBy.USER_LIST_SORT_BY_UPDATED_AT,
+                              .UserListSortBy
+                              .USER_LIST_SORT_BY_UPDATED_AT,
                           '用户名': admin_enum
-                              .UserListSortBy.USER_LIST_SORT_BY_USERNAME,
+                              .UserListSortBy
+                              .USER_LIST_SORT_BY_USERNAME,
                           '邮箱':
                               admin_enum.UserListSortBy.USER_LIST_SORT_BY_EMAIL,
                         },
@@ -979,17 +1046,20 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                         },
                       ),
                       AppIconButton(
-                        tooltip: _adminSortDirection ==
+                        tooltip:
+                            _adminSortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
                             ? '降序'
                             : '升序',
-                        icon: _adminSortDirection ==
+                        icon:
+                            _adminSortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
                             ? Icons.south_rounded
                             : Icons.north_rounded,
                         onPressed: () {
                           setState(() {
-                            _adminSortDirection = _adminSortDirection ==
+                            _adminSortDirection =
+                                _adminSortDirection ==
                                     admin_enum.SortDirection.SORT_DIRECTION_DESC
                                 ? admin_enum.SortDirection.SORT_DIRECTION_ASC
                                 : admin_enum.SortDirection.SORT_DIRECTION_DESC;
@@ -1028,8 +1098,9 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                   for (final admin in _admins)
                     Builder(
                       builder: (context) {
-                        final removeDisabledReason =
-                            _adminRemoveDisabledReason(admin);
+                        final removeDisabledReason = _adminRemoveDisabledReason(
+                          admin,
+                        );
                         return AppTile(
                           prefix: AppAvatar(name: admin.username),
                           title: Text(admin.username),
@@ -1168,10 +1239,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
           includeDisabled: true,
           refresh: true,
         ),
-        SyncTvService.adminListRoomLabels(
-          includeDisabled: true,
-          refresh: true,
-        ),
+        SyncTvService.adminListRoomLabels(includeDisabled: true, refresh: true),
       ]);
       if (!mounted) return;
       final categories = results[0].cast<RoomCategoryInfo>().toList()
@@ -1240,41 +1308,43 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: labels.map((label) {
-                        final selected = selectedIds.contains(label.id);
-                        final color = parseRoomLabelColor(
-                          label.color,
-                          theme.colorScheme.primary,
-                        );
-                        return AppChip(
-                          selected: selected,
-                          style: selected
-                              ? AppChipStyle.filled
-                              : AppChipStyle.outlined,
-                          onSelected: (value) => setDialogState(() {
-                            if (value) {
-                              selectedIds.add(label.id);
-                            } else {
-                              selectedIds.remove(label.id);
-                            }
-                          }),
-                          label: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: color,
-                                  shape: BoxShape.circle,
-                                ),
+                      children: labels
+                          .map((label) {
+                            final selected = selectedIds.contains(label.id);
+                            final color = parseRoomLabelColor(
+                              label.color,
+                              theme.colorScheme.primary,
+                            );
+                            return AppChip(
+                              selected: selected,
+                              style: selected
+                                  ? AppChipStyle.filled
+                                  : AppChipStyle.outlined,
+                              onSelected: (value) => setDialogState(() {
+                                if (value) {
+                                  selectedIds.add(label.id);
+                                } else {
+                                  selectedIds.remove(label.id);
+                                }
+                              }),
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(_roomLabelDisplay(label)),
+                                ],
                               ),
-                              const SizedBox(width: 6),
-                              Text(_roomLabelDisplay(label)),
-                            ],
-                          ),
-                        );
-                      }).toList(growable: false),
+                            );
+                          })
+                          .toList(growable: false),
                     ),
                 ],
               ),
@@ -1315,8 +1385,10 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '$action房间',
-      icon: Icon(ban ? Icons.block : Icons.check_circle,
-          color: ban ? Colors.red : Colors.green),
+      icon: Icon(
+        ban ? Icons.block : Icons.check_circle,
+        color: ban ? Colors.red : Colors.green,
+      ),
       content: ban
           ? Column(
               mainAxisSize: MainAxisSize.min,
@@ -1337,8 +1409,10 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
-            context, () => Navigator.pop(context, true),
-            text: action),
+          context,
+          () => Navigator.pop(context, true),
+          text: action,
+        ),
       ],
     );
 
@@ -1364,20 +1438,19 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       context: context,
       title: '删除房间',
       icon: const Icon(Icons.delete_forever, color: Colors.red),
-      content: _destructiveDialogContent(
-        '将永久删除房间 "${room.roomName}"。',
-        const [
-          '所有成员会立即失去访问权限。',
-          '房间设置、成员关系、播放列表、聊天记录和实时状态会同步清除。',
-          '正在观看的成员会收到房间数据变更并退出当前协作流程。',
-        ],
-      ),
+      content: _destructiveDialogContent('将永久删除房间 "${room.roomName}"。', const [
+        '所有成员会立即失去访问权限。',
+        '房间设置、成员关系、播放列表、聊天记录和实时状态会同步清除。',
+        '正在观看的成员会收到房间数据变更并退出当前协作流程。',
+      ]),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
-            context, () => Navigator.pop(context, true),
-            text: '删除'),
+          context,
+          () => Navigator.pop(context, true),
+          text: '删除',
+        ),
       ],
     );
 
@@ -1532,12 +1605,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                   color: theme.colorScheme.error,
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    impact,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
+                Expanded(child: Text(impact, style: theme.textTheme.bodySmall)),
               ],
             ),
           ),
@@ -1578,9 +1646,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                                 detail.roomName,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
+                                style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w800),
                               ),
                               const SizedBox(height: 4),
@@ -1634,16 +1700,16 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       _InfoLine('版本', detail.version.toString()),
                     const SizedBox(height: 16),
                     AppDivider(
-                      color: Theme.of(context)
-                          .dividerColor
-                          .withValues(alpha: 0.65),
+                      color: Theme.of(
+                        context,
+                      ).dividerColor.withValues(alpha: 0.65),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       '房间密码',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     AppSelect<_RoomPasswordAction>(
@@ -1741,7 +1807,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 targetType: 1,
                 targetRoomId: detail.roomId,
                 scope: admin_enum
-                    .ContentReportScope.CONTENT_REPORT_SCOPE_TARGET_ROOM.value,
+                    .ContentReportScope
+                    .CONTENT_REPORT_SCOPE_TARGET_ROOM
+                    .value,
               );
             },
             icon: Icons.report_gmailerrorred_outlined,
@@ -1790,24 +1858,26 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         ),
       ]);
       if (!mounted) return;
-      final categories = results[0]
-          .cast<RoomCategoryInfo>()
-          .where((category) => category.isEnabled)
-          .toList()
-        ..sort((a, b) {
-          final order = a.sortOrder.compareTo(b.sortOrder);
-          if (order != 0) return order;
-          return _roomCategoryDisplay(a).compareTo(_roomCategoryDisplay(b));
-        });
-      final labels = results[1]
-          .cast<RoomLabelInfo>()
-          .where((label) => label.isEnabled)
-          .toList()
-        ..sort((a, b) {
-          final order = a.sortOrder.compareTo(b.sortOrder);
-          if (order != 0) return order;
-          return _roomLabelDisplay(a).compareTo(_roomLabelDisplay(b));
-        });
+      final categories =
+          results[0]
+              .cast<RoomCategoryInfo>()
+              .where((category) => category.isEnabled)
+              .toList()
+            ..sort((a, b) {
+              final order = a.sortOrder.compareTo(b.sortOrder);
+              if (order != 0) return order;
+              return _roomCategoryDisplay(a).compareTo(_roomCategoryDisplay(b));
+            });
+      final labels =
+          results[1]
+              .cast<RoomLabelInfo>()
+              .where((label) => label.isEnabled)
+              .toList()
+            ..sort((a, b) {
+              final order = a.sortOrder.compareTo(b.sortOrder);
+              if (order != 0) return order;
+              return _roomLabelDisplay(a).compareTo(_roomLabelDisplay(b));
+            });
       var selectedCategoryId = room.category?.id ?? '';
       if (selectedCategoryId.isNotEmpty &&
           categories.every((category) => category.id != selectedCategoryId)) {
@@ -1880,41 +1950,45 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: visibleLabels.map((label) {
-                          final selected = selectedLabelIds.contains(label.id);
-                          final color = parseRoomLabelColor(
-                            label.color,
-                            theme.colorScheme.primary,
-                          );
-                          return AppChip(
-                            selected: selected,
-                            onSelected: (value) => setDialogState(() {
-                              if (value) {
-                                selectedLabelIds.add(label.id);
-                              } else {
-                                selectedLabelIds.remove(label.id);
-                              }
-                            }),
-                            style: selected
-                                ? AppChipStyle.filled
-                                : AppChipStyle.outlined,
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                  ),
+                        children: visibleLabels
+                            .map((label) {
+                              final selected = selectedLabelIds.contains(
+                                label.id,
+                              );
+                              final color = parseRoomLabelColor(
+                                label.color,
+                                theme.colorScheme.primary,
+                              );
+                              return AppChip(
+                                selected: selected,
+                                onSelected: (value) => setDialogState(() {
+                                  if (value) {
+                                    selectedLabelIds.add(label.id);
+                                  } else {
+                                    selectedLabelIds.remove(label.id);
+                                  }
+                                }),
+                                style: selected
+                                    ? AppChipStyle.filled
+                                    : AppChipStyle.outlined,
+                                label: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: color,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(_roomLabelDisplay(label)),
+                                  ],
                                 ),
-                                const SizedBox(width: 6),
-                                Text(_roomLabelDisplay(label)),
-                              ],
-                            ),
-                          );
-                        }).toList(growable: false),
+                              );
+                            })
+                            .toList(growable: false),
                       ),
                   ],
                 ),
@@ -1999,9 +2073,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     page: page,
                     pageSize: pageSize,
                     search: searchController.text.trim(),
-                    role: roleFilter ==
+                    role:
+                        roleFilter ==
                             common_enum
-                                .RoomMemberRole.ROOM_MEMBER_ROLE_UNSPECIFIED
+                                .RoomMemberRole
+                                .ROOM_MEMBER_ROLE_UNSPECIFIED
                         ? null
                         : roleFilter,
                     sortBy: sortBy,
@@ -2054,13 +2130,16 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                         value: roleFilter,
                         options: const {
                           '全部角色': common_enum
-                              .RoomMemberRole.ROOM_MEMBER_ROLE_UNSPECIFIED,
+                              .RoomMemberRole
+                              .ROOM_MEMBER_ROLE_UNSPECIFIED,
                           '创建者': common_enum
-                              .RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR,
+                              .RoomMemberRole
+                              .ROOM_MEMBER_ROLE_CREATOR,
                           '管理员':
                               common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
                           '成员': common_enum
-                              .RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+                              .RoomMemberRole
+                              .ROOM_MEMBER_ROLE_MEMBER,
                           '访客':
                               common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
                         },
@@ -2074,11 +2153,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       AppSelect<admin_enum.RoomMemberListSortBy>(
                         value: sortBy,
                         options: const {
-                          '加入时间': admin_enum.RoomMemberListSortBy
+                          '加入时间': admin_enum
+                              .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_JOINED_AT,
-                          '用户名': admin_enum.RoomMemberListSortBy
+                          '用户名': admin_enum
+                              .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_USERNAME,
-                          '角色': admin_enum.RoomMemberListSortBy
+                          '角色': admin_enum
+                              .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_ROLE,
                         },
                         onChanged: (value) {
@@ -2089,16 +2171,19 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                         },
                       ),
                       AppIconButton(
-                        tooltip: sortDirection ==
+                        tooltip:
+                            sortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
                             ? '降序'
                             : '升序',
-                        icon: sortDirection ==
+                        icon:
+                            sortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
                             ? Icons.south_rounded
                             : Icons.north_rounded,
                         onPressed: () {
-                          sortDirection = sortDirection ==
+                          sortDirection =
+                              sortDirection ==
                                   admin_enum.SortDirection.SORT_DIRECTION_DESC
                               ? admin_enum.SortDirection.SORT_DIRECTION_ASC
                               : admin_enum.SortDirection.SORT_DIRECTION_DESC;
@@ -2142,9 +2227,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     child: Text(
                       '总数 $total · 在线 $onlineCount · 连接 $connectionCount',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).hintColor,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: Theme.of(context).hintColor,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -2152,86 +2237,83 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     child: loading
                         ? const AppLoadingIndicator()
                         : members.isEmpty
-                            ? const AppEmptyMessage(message: '暂无成员')
-                            : AppListView.builder(
-                                itemCount: members.length,
-                                itemBuilder: (context, index) {
-                                  final member = members[index];
-                                  return AppTile(
-                                    prefix: Icon(
-                                      member.isOnline
-                                          ? Icons.radio_button_checked
-                                          : Icons.radio_button_unchecked,
-                                      color:
-                                          member.isOnline ? Colors.green : null,
-                                    ),
-                                    title: Text(member.username),
-                                    subtitle: Text(
-                                      '${member.userId} · ${_roomMemberRoleText(member.role)} · ${member.isOnline ? '${member.connectionCount} 连接' : '离线'} · ${_formatTimestamp(member.joinedAt)}',
-                                    ),
-                                    suffix: Wrap(
-                                      spacing: 4,
-                                      children: [
-                                        AppIconButton(
-                                          tooltip: '切换管理员',
-                                          icon: Icons
-                                              .admin_panel_settings_outlined,
-                                          onPressed: () async {
-                                            final nextRole = member.role ==
-                                                    common_enum
-                                                        .RoomMemberRole
-                                                        .ROOM_MEMBER_ROLE_ADMIN
-                                                        .value
-                                                ? common_enum
-                                                    .RoomMemberRole
-                                                    .ROOM_MEMBER_ROLE_MEMBER
-                                                    .value
-                                                : common_enum
+                        ? const AppEmptyMessage(message: '暂无成员')
+                        : AppListView.builder(
+                            itemCount: members.length,
+                            itemBuilder: (context, index) {
+                              final member = members[index];
+                              return AppTile(
+                                prefix: Icon(
+                                  member.isOnline
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: member.isOnline ? Colors.green : null,
+                                ),
+                                title: Text(member.username),
+                                subtitle: Text(
+                                  '${member.userId} · ${_roomMemberRoleText(member.role)} · ${member.isOnline ? '${member.connectionCount} 连接' : '离线'} · ${_formatTimestamp(member.joinedAt)}',
+                                ),
+                                suffix: Wrap(
+                                  spacing: 4,
+                                  children: [
+                                    AppIconButton(
+                                      tooltip: '切换管理员',
+                                      icon: Icons.admin_panel_settings_outlined,
+                                      onPressed: () async {
+                                        final nextRole =
+                                            member.role ==
+                                                common_enum
                                                     .RoomMemberRole
                                                     .ROOM_MEMBER_ROLE_ADMIN
-                                                    .value;
-                                            await SyncTvService
-                                                .adminSetRoomMemberRole(
-                                              room.roomId,
-                                              member.userId,
-                                              nextRole,
-                                            );
-                                            await loadMembers();
-                                          },
-                                        ),
-                                        AppIconButton(
-                                          tooltip: '权限覆盖',
-                                          icon: Icons.tune_rounded,
-                                          onPressed: () async {
-                                            Navigator.pop(context);
-                                            await _editRoomMemberPermissionOverrides(
-                                              room,
-                                              member,
-                                            );
-                                          },
-                                        ),
-                                        AppIconButton(
-                                          tooltip: '踢出',
-                                          icon: Icons.logout_rounded,
-                                          style: AppIconButtonStyle.destructive,
-                                          onPressed: () async {
-                                            final cooldown =
-                                                await _askKickCooldownSeconds();
-                                            if (cooldown == null) return;
-                                            await SyncTvService
-                                                .adminKickRoomMember(
-                                              room.roomId,
-                                              member.userId,
-                                              kickCooldownSeconds: cooldown,
-                                            );
-                                            await loadMembers();
-                                          },
-                                        ),
-                                      ],
+                                                    .value
+                                            ? common_enum
+                                                  .RoomMemberRole
+                                                  .ROOM_MEMBER_ROLE_MEMBER
+                                                  .value
+                                            : common_enum
+                                                  .RoomMemberRole
+                                                  .ROOM_MEMBER_ROLE_ADMIN
+                                                  .value;
+                                        await SyncTvService.adminSetRoomMemberRole(
+                                          room.roomId,
+                                          member.userId,
+                                          nextRole,
+                                        );
+                                        await loadMembers();
+                                      },
                                     ),
-                                  );
-                                },
-                              ),
+                                    AppIconButton(
+                                      tooltip: '权限覆盖',
+                                      icon: Icons.tune_rounded,
+                                      onPressed: () async {
+                                        Navigator.pop(context);
+                                        await _editRoomMemberPermissionOverrides(
+                                          room,
+                                          member,
+                                        );
+                                      },
+                                    ),
+                                    AppIconButton(
+                                      tooltip: '踢出',
+                                      icon: Icons.logout_rounded,
+                                      style: AppIconButtonStyle.destructive,
+                                      onPressed: () async {
+                                        final cooldown =
+                                            await _askKickCooldownSeconds();
+                                        if (cooldown == null) return;
+                                        await SyncTvService.adminKickRoomMember(
+                                          room.roomId,
+                                          member.userId,
+                                          kickCooldownSeconds: cooldown,
+                                        );
+                                        await loadMembers();
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                   ),
                   const SizedBox(height: 8),
                   AppPaginationBar(
@@ -2294,7 +2376,8 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
                 },
                 onChanged: (value) => setDialogState(
-                  () => role = value ??
+                  () => role =
+                      value ??
                       common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
                 ),
               ),
@@ -2352,18 +2435,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(
-          context,
-          () {
-            final seconds = int.tryParse(controller.text.trim());
-            if (seconds == null || seconds < 1 || seconds > 2592000) {
-              MessageUtils.showWarning(context, '请输入 1 到 2592000 之间的秒数');
-              return;
-            }
-            Navigator.pop(context, seconds);
-          },
-          text: '踢出',
-        ),
+        ChatUtils.createConfirmButton(context, () {
+          final seconds = int.tryParse(controller.text.trim());
+          if (seconds == null || seconds < 1 || seconds > 2592000) {
+            MessageUtils.showWarning(context, '请输入 1 到 2592000 之间的秒数');
+            return;
+          }
+          Navigator.pop(context, seconds);
+        }, text: '踢出'),
       ],
     );
     return value;
@@ -2403,10 +2482,12 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   ) {
     final isAdmin =
         member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
-    var added =
-        isAdmin ? member.adminAddedPermissions : member.addedPermissions;
-    var removed =
-        isAdmin ? member.adminRemovedPermissions : member.removedPermissions;
+    var added = isAdmin
+        ? member.adminAddedPermissions
+        : member.addedPermissions;
+    var removed = isAdmin
+        ? member.adminRemovedPermissions
+        : member.removedPermissions;
 
     return ChatUtils.showStyledDialog<_PermissionOverrideResult>(
       context: context,
@@ -2467,21 +2548,17 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
           style: AppActionButtonStyle.text,
         ),
         const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(
-          context,
-          () {
-            Navigator.pop(
-              context,
-              _PermissionOverrideResult(
-                addedPermissions: isAdmin ? 0 : added,
-                removedPermissions: isAdmin ? 0 : removed,
-                adminAddedPermissions: isAdmin ? added : 0,
-                adminRemovedPermissions: isAdmin ? removed : 0,
-              ),
-            );
-          },
-          text: '保存',
-        ),
+        ChatUtils.createConfirmButton(context, () {
+          Navigator.pop(
+            context,
+            _PermissionOverrideResult(
+              addedPermissions: isAdmin ? 0 : added,
+              removedPermissions: isAdmin ? 0 : removed,
+              adminAddedPermissions: isAdmin ? added : 0,
+              adminRemovedPermissions: isAdmin ? removed : 0,
+            ),
+          );
+        }, text: '保存'),
       ],
     );
   }
@@ -2496,8 +2573,8 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     final mode = (added & flag) != 0
         ? _PermissionOverrideMode.allow
         : (removed & flag) != 0
-            ? _PermissionOverrideMode.deny
-            : _PermissionOverrideMode.inherit;
+        ? _PermissionOverrideMode.deny
+        : _PermissionOverrideMode.inherit;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -2528,12 +2605,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
 
   Future<void> _editRoomSettings(SyncTvRoom room) async {
     try {
-      final settings = await SyncTvService.adminGetRoomSettings(
-        room.roomId,
-      );
+      final settings = await SyncTvService.adminGetRoomSettings(room.roomId);
       if (!mounted) return;
-      final maxMembers =
-          TextEditingController(text: settings.maxMembers.toString());
+      final maxMembers = TextEditingController(
+        text: settings.maxMembers.toString(),
+      );
       bool requirePassword = settings.requirePassword;
       bool requireApproval = settings.requireApproval;
       bool allowGuestJoin = settings.allowGuestJoin;
@@ -2621,10 +2697,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       settings.danmakuEnabled = danmakuEnabled;
       settings.maxMembers =
           int.tryParse(maxMembers.text.trim()) ?? settings.maxMembers;
-      await SyncTvService.adminUpdateRoomSettings(
-        room.roomId,
-        settings,
-      );
+      await SyncTvService.adminUpdateRoomSettings(room.roomId, settings);
       if (!mounted) return;
       MessageUtils.showSuccess(context, '房间设置已保存');
       _loadRooms(silent: true);
@@ -2720,8 +2793,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               _AdminToolbarItem(
                 width: 112,
                 child: AppActionButton(
-                  onPressed:
-                      _isLoadingTaxonomy ? null : _showRoomLabelFilterDialog,
+                  onPressed: _isLoadingTaxonomy
+                      ? null
+                      : _showRoomLabelFilterDialog,
                   icon: Icons.sell_outlined,
                   label: _labelFilters.isEmpty
                       ? '标签'
@@ -2754,11 +2828,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 width: 112,
                 child: AppSelect<bool?>(
                   value: _bannedFilter,
-                  options: const {
-                    '全部封禁': null,
-                    '仅封禁': true,
-                    '未封禁': false,
-                  },
+                  options: const {'全部封禁': null, '仅封禁': true, '未封禁': false},
                   onChanged: (value) {
                     setState(() {
                       _bannedFilter = value;
@@ -2778,7 +2848,8 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     '更新时间':
                         admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_UPDATED_AT,
                     '最近活跃': admin_enum
-                        .RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+                        .RoomListSortBy
+                        .ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
                     '房间名': admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME,
                   },
                   onChanged: (value) {
@@ -2794,17 +2865,20 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               _AdminToolbarItem(
                 width: 44,
                 child: AppIconButton(
-                  tooltip: _sortDirection ==
+                  tooltip:
+                      _sortDirection ==
                           admin_enum.SortDirection.SORT_DIRECTION_DESC
                       ? '降序'
                       : '升序',
-                  icon: _sortDirection ==
+                  icon:
+                      _sortDirection ==
                           admin_enum.SortDirection.SORT_DIRECTION_DESC
                       ? Icons.south_rounded
                       : Icons.north_rounded,
                   onPressed: () {
                     setState(() {
-                      _sortDirection = _sortDirection ==
+                      _sortDirection =
+                          _sortDirection ==
                               admin_enum.SortDirection.SORT_DIRECTION_DESC
                           ? admin_enum.SortDirection.SORT_DIRECTION_ASC
                           : admin_enum.SortDirection.SORT_DIRECTION_DESC;
@@ -2818,11 +2892,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 width: 96,
                 child: AppSelect<int>(
                   value: _pageSize,
-                  options: const {
-                    '20 / 页': 20,
-                    '50 / 页': 50,
-                    '100 / 页': 100,
-                  },
+                  options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() {
@@ -2891,124 +2961,138 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
           child: _isLoading
               ? const AppLoadingIndicator()
               : _rooms.isEmpty
-                  ? const AppEmptyMessage(message: '暂无房间')
-                  : AppListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      itemCount: _rooms.length,
-                      itemBuilder: (context, index) {
-                        final room = _rooms[index];
-                        final statusColor = _roomStatusColorForRoom(room);
-                        return _AdminPanelCard(
-                          isDark: isDark,
-                          child: AppTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            prefix: AppCheckbox(
-                              value: _selectedRoomIds.contains(room.roomId),
-                              semanticsLabel: '选择房间',
-                              onChanged: (value) => _toggleRoomSelection(
-                                room.roomId,
-                                value,
-                              ),
-                            ),
-                            title: Text(room.roomName,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 16)),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Row(
-                                children: [
-                                  AppBadge(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    borderRadius: BorderRadius.circular(6),
-                                    color: statusColor,
-                                    borderSide: BorderSide(
-                                      color:
-                                          statusColor.withValues(alpha: 0.50),
-                                    ),
-                                    label: Text(
-                                      _roomStatusLabel(room),
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: statusColor,
-                                          fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                      child: Text('ID: ${room.roomId}',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                              fontSize: 12,
-                                              color: theme.hintColor))),
-                                ],
-                              ),
-                            ),
-                            suffix: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (!room.isBanned)
-                                  AppIconButton(
-                                    icon: Icons.block,
-                                    iconSize: 22,
-                                    tooltip: '封禁',
-                                    style: AppIconButtonStyle.destructive,
-                                    onPressed: () => _banRoom(room, true),
-                                  )
-                                else
-                                  AppIconButton(
-                                    icon: Icons.check_circle,
-                                    iconSize: 22,
-                                    tooltip: '解封',
-                                    onPressed: () => _banRoom(room, false),
-                                  ),
-                                AppActionButton(
-                                  icon: Icons.info_outline_rounded,
-                                  label: '房间信息',
-                                  size: AppActionButtonSize.sm,
-                                  style: AppActionButtonStyle.tonal,
-                                  onPressed: () => _showRoomDetails(room),
-                                ),
-                                AppIconButton(
-                                  icon: Icons.group_outlined,
-                                  iconSize: 22,
-                                  tooltip: '成员',
-                                  onPressed: () => _showRoomMembers(room),
-                                ),
-                                AppIconButton(
-                                  icon: Icons.forum_outlined,
-                                  iconSize: 22,
-                                  tooltip: '聊天历史',
-                                  onPressed: () => _showRoomChatHistory(room),
-                                ),
-                                AppIconButton(
-                                  icon: Icons.report_gmailerrorred_outlined,
-                                  iconSize: 22,
-                                  tooltip: '举报',
-                                  onPressed: () => _openContentReportsViewer(
-                                    context,
-                                    title: '${room.roomName} 的举报',
-                                    targetType: 1,
-                                    targetRoomId: room.roomId,
-                                    scope: admin_enum.ContentReportScope
-                                        .CONTENT_REPORT_SCOPE_TARGET_ROOM.value,
-                                  ),
-                                ),
-                                AppIconButton(
-                                  icon: Icons.tune_rounded,
-                                  iconSize: 22,
-                                  tooltip: '设置',
-                                  onPressed: () => _editRoomSettings(room),
-                                ),
-                              ],
-                            ),
+              ? const AppEmptyMessage(message: '暂无房间')
+              : AppListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  itemCount: _rooms.length,
+                  itemBuilder: (context, index) {
+                    final room = _rooms[index];
+                    final statusColor = _roomStatusColorForRoom(room);
+                    return _AdminPanelCard(
+                      isDark: isDark,
+                      child: AppTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        prefix: AppCheckbox(
+                          value: _selectedRoomIds.contains(room.roomId),
+                          semanticsLabel: '选择房间',
+                          onChanged: (value) =>
+                              _toggleRoomSelection(room.roomId, value),
+                        ),
+                        title: Text(
+                          room.roomName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              AppBadge(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                color: statusColor,
+                                borderSide: BorderSide(
+                                  color: statusColor.withValues(alpha: 0.50),
+                                ),
+                                label: Text(
+                                  _roomStatusLabel(room),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: statusColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'ID: ${room.roomId}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.hintColor,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        suffix: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (!room.isBanned)
+                              AppIconButton(
+                                icon: Icons.block,
+                                iconSize: 22,
+                                tooltip: '封禁',
+                                style: AppIconButtonStyle.destructive,
+                                onPressed: () => _banRoom(room, true),
+                              )
+                            else
+                              AppIconButton(
+                                icon: Icons.check_circle,
+                                iconSize: 22,
+                                tooltip: '解封',
+                                onPressed: () => _banRoom(room, false),
+                              ),
+                            AppActionButton(
+                              icon: Icons.info_outline_rounded,
+                              label: '房间信息',
+                              size: AppActionButtonSize.sm,
+                              style: AppActionButtonStyle.tonal,
+                              onPressed: () => _showRoomDetails(room),
+                            ),
+                            AppIconButton(
+                              icon: Icons.group_outlined,
+                              iconSize: 22,
+                              tooltip: '成员',
+                              onPressed: () => _showRoomMembers(room),
+                            ),
+                            AppIconButton(
+                              icon: Icons.forum_outlined,
+                              iconSize: 22,
+                              tooltip: '聊天历史',
+                              onPressed: () => _showRoomChatHistory(room),
+                            ),
+                            AppIconButton(
+                              icon: Icons.report_gmailerrorred_outlined,
+                              iconSize: 22,
+                              tooltip: '举报',
+                              onPressed: () => _openContentReportsViewer(
+                                context,
+                                title: '${room.roomName} 的举报',
+                                targetType: 1,
+                                targetRoomId: room.roomId,
+                                scope: admin_enum
+                                    .ContentReportScope
+                                    .CONTENT_REPORT_SCOPE_TARGET_ROOM
+                                    .value,
+                              ),
+                            ),
+                            AppIconButton(
+                              icon: Icons.tune_rounded,
+                              iconSize: 22,
+                              tooltip: '设置',
+                              onPressed: () => _editRoomSettings(room),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -3020,9 +3104,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       color: isDark ? Colors.grey.shade900 : Colors.white,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: theme.dividerColor.withValues(alpha: 0.12),
-      ),
+      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
       child: Row(
         children: [
           Icon(Icons.checklist_rounded, color: theme.colorScheme.primary),
@@ -3093,10 +3175,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
           includeDisabled: true,
           refresh: true,
         ),
-        SyncTvService.adminListRoomLabels(
-          includeDisabled: true,
-          refresh: true,
-        ),
+        SyncTvService.adminListRoomLabels(includeDisabled: true, refresh: true),
       ]);
       if (!mounted) return;
       final categories = results[0].cast<RoomCategoryInfo>().toList()
@@ -3122,8 +3201,9 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
   }
 
   int _compareLabels(RoomLabelInfo a, RoomLabelInfo b) {
-    final category = _categoryDisplayById(a.categoryId)
-        .compareTo(_categoryDisplayById(b.categoryId));
+    final category = _categoryDisplayById(
+      a.categoryId,
+    ).compareTo(_categoryDisplayById(b.categoryId));
     if (category != 0) return category;
     final order = a.sortOrder.compareTo(b.sortOrder);
     if (order != 0) return order;
@@ -3163,10 +3243,12 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
   Future<void> _editCategory([RoomCategoryInfo? category]) async {
     final keyController = TextEditingController(text: category?.key ?? '');
     final nameController = TextEditingController(text: category?.name ?? '');
-    final descriptionController =
-        TextEditingController(text: category?.description ?? '');
-    final sortController =
-        TextEditingController(text: '${category?.sortOrder ?? 0}');
+    final descriptionController = TextEditingController(
+      text: category?.description ?? '',
+    );
+    final sortController = TextEditingController(
+      text: '${category?.sortOrder ?? 0}',
+    );
     var enabled = category?.isEnabled ?? true;
     var disposeScheduled = false;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
@@ -3286,10 +3368,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
       icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
       content: _destructiveDialogContent(
         '将永久删除分类 "${_categoryDisplay(category)}"。',
-        const [
-          '已绑定该分类的房间会失去对应分类。',
-          '后台筛选和房间展示会立即使用最新分类数据。',
-        ],
+        const ['已绑定该分类的房间会失去对应分类。', '后台筛选和房间展示会立即使用最新分类数据。'],
       ),
       actions: [
         ChatUtils.createCancelButton(context),
@@ -3316,12 +3395,15 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
   Future<void> _editLabel([RoomLabelInfo? label]) async {
     final keyController = TextEditingController(text: label?.key ?? '');
     final nameController = TextEditingController(text: label?.name ?? '');
-    final descriptionController =
-        TextEditingController(text: label?.description ?? '');
-    final colorController =
-        TextEditingController(text: _normalizeColor(label?.color ?? ''));
-    final sortController =
-        TextEditingController(text: '${label?.sortOrder ?? 0}');
+    final descriptionController = TextEditingController(
+      text: label?.description ?? '',
+    );
+    final colorController = TextEditingController(
+      text: _normalizeColor(label?.color ?? ''),
+    );
+    final sortController = TextEditingController(
+      text: '${label?.sortOrder ?? 0}',
+    );
     var categoryId = label?.categoryId ?? '';
     var enabled = label?.isEnabled ?? true;
     var disposeScheduled = false;
@@ -3487,10 +3569,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
       icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
       content: _destructiveDialogContent(
         '将永久删除标签 "${_labelDisplay(label)}"。',
-        const [
-          '已绑定该标签的房间会失去对应标签。',
-          '房间详情、筛选和列表展示会立即使用最新标签数据。',
-        ],
+        const ['已绑定该标签的房间会失去对应标签。', '房间详情、筛选和列表展示会立即使用最新标签数据。'],
       ),
       actions: [
         ChatUtils.createCancelButton(context),
@@ -3609,11 +3688,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                   );
                 }
                 return Column(
-                  children: [
-                    panels[0],
-                    const SizedBox(height: 16),
-                    panels[1],
-                  ],
+                  children: [panels[0], const SizedBox(height: 16), panels[1]],
                 );
               },
             ),
@@ -3720,10 +3795,7 @@ class _TaxonomyPanelHeader extends StatelessWidget {
             ),
           ),
         ),
-        AppChip(
-          label: Text('$count'),
-          style: AppChipStyle.outlined,
-        ),
+        AppChip(label: Text('$count'), style: AppChipStyle.outlined),
       ],
     );
   }
@@ -3978,10 +4050,7 @@ class _TaxonomyMetaChip extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _TaxonomyMetaChip({
-    required this.icon,
-    required this.label,
-  });
+  const _TaxonomyMetaChip({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -3993,12 +4062,7 @@ class _TaxonomyMetaChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
         ],
       ),
     );
@@ -4176,20 +4240,19 @@ class _UserManagementTabState extends State<UserManagementTab> {
       context: context,
       title: '删除用户',
       icon: const Icon(Icons.warning, color: Colors.red),
-      content: _destructiveDialogContent(
-        '将永久删除用户 "${user.username}"。',
-        const [
-          '该用户的登录会话、第三方绑定和个人资料会被清除。',
-          '该用户创建或参与的房间关系、聊天记录归属和权限状态会受到影响。',
-          '在线客户端会立即失去当前账号访问能力。',
-        ],
-      ),
+      content: _destructiveDialogContent('将永久删除用户 "${user.username}"。', const [
+        '该用户的登录会话、第三方绑定和个人资料会被清除。',
+        '该用户创建或参与的房间关系、聊天记录归属和权限状态会受到影响。',
+        '在线客户端会立即失去当前账号访问能力。',
+      ]),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
-            context, () => Navigator.pop(context, true),
-            text: '删除'),
+          context,
+          () => Navigator.pop(context, true),
+          text: '删除',
+        ),
       ],
     );
 
@@ -4207,7 +4270,8 @@ class _UserManagementTabState extends State<UserManagementTab> {
   }
 
   Future<void> _toggleAdmin(SyncTvUser user) async {
-    final isAdmin = user.role == common_enum.UserRole.USER_ROLE_ADMIN.value ||
+    final isAdmin =
+        user.role == common_enum.UserRole.USER_ROLE_ADMIN.value ||
         user.role == common_enum.UserRole.USER_ROLE_ROOT.value;
     if (user.role == common_enum.UserRole.USER_ROLE_ROOT.value) {
       MessageUtils.showWarning(context, 'Root 用户不能在这里降级');
@@ -4224,8 +4288,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
-            context, () => Navigator.pop(context, true),
-            text: '确定'),
+          context,
+          () => Navigator.pop(context, true),
+          text: '确定',
+        ),
       ],
     );
 
@@ -4248,8 +4314,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '$action用户',
-      icon: Icon(ban ? Icons.block : Icons.check_circle,
-          color: ban ? Colors.red : Colors.green),
+      icon: Icon(
+        ban ? Icons.block : Icons.check_circle,
+        color: ban ? Colors.red : Colors.green,
+      ),
       content: ban
           ? Column(
               mainAxisSize: MainAxisSize.min,
@@ -4270,8 +4338,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
-            context, () => Navigator.pop(context, true),
-            text: '确定'),
+          context,
+          () => Navigator.pop(context, true),
+          text: '确定',
+        ),
       ],
     );
 
@@ -4430,12 +4500,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   color: theme.colorScheme.error,
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    impact,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
+                Expanded(child: Text(impact, style: theme.textTheme.bodySmall)),
               ],
             ),
           ),
@@ -4512,8 +4577,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   title: '',
                   initialTargetType: 2,
                   initialTargetUserId: user.id,
-                  initialScope: admin_enum.ContentReportScope
-                      .CONTENT_REPORT_SCOPE_TARGET_USER.value,
+                  initialScope: admin_enum
+                      .ContentReportScope
+                      .CONTENT_REPORT_SCOPE_TARGET_USER
+                      .value,
                   showTargetTypeTabs: false,
                 ),
                 AdminContentReportsTab(
@@ -4644,11 +4711,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   const SizedBox(width: 12),
                   AppSelect<bool?>(
                     value: isBanned,
-                    options: const {
-                      '全部封禁': null,
-                      '仅封禁': true,
-                      '未封禁': false,
-                    },
+                    options: const {'全部封禁': null, '仅封禁': true, '未封禁': false},
                     onChanged: (value) {
                       isBanned = value;
                       page = 1;
@@ -4660,11 +4723,14 @@ class _UserManagementTabState extends State<UserManagementTab> {
                     value: sortBy,
                     options: const {
                       '创建时间': admin_enum
-                          .RoomListSortBy.ROOM_LIST_SORT_BY_CREATED_AT,
+                          .RoomListSortBy
+                          .ROOM_LIST_SORT_BY_CREATED_AT,
                       '更新时间': admin_enum
-                          .RoomListSortBy.ROOM_LIST_SORT_BY_UPDATED_AT,
+                          .RoomListSortBy
+                          .ROOM_LIST_SORT_BY_UPDATED_AT,
                       '最近活跃': admin_enum
-                          .RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+                          .RoomListSortBy
+                          .ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
                       '房间名': admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME,
                     },
                     onChanged: (value) {
@@ -4675,16 +4741,19 @@ class _UserManagementTabState extends State<UserManagementTab> {
                     },
                   ),
                   AppIconButton(
-                    tooltip: sortDirection ==
+                    tooltip:
+                        sortDirection ==
                             admin_enum.SortDirection.SORT_DIRECTION_DESC
                         ? '降序'
                         : '升序',
-                    icon: sortDirection ==
+                    icon:
+                        sortDirection ==
                             admin_enum.SortDirection.SORT_DIRECTION_DESC
                         ? Icons.south_rounded
                         : Icons.north_rounded,
                     onPressed: () {
-                      sortDirection = sortDirection ==
+                      sortDirection =
+                          sortDirection ==
                               admin_enum.SortDirection.SORT_DIRECTION_DESC
                           ? admin_enum.SortDirection.SORT_DIRECTION_ASC
                           : admin_enum.SortDirection.SORT_DIRECTION_DESC;
@@ -4694,11 +4763,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   ),
                   AppSelect<int>(
                     value: pageSize,
-                    options: const {
-                      '20 / 页': 20,
-                      '50 / 页': 50,
-                      '100 / 页': 100,
-                    },
+                    options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
                     onChanged: (value) {
                       if (value == null) return;
                       pageSize = value;
@@ -4735,32 +4800,32 @@ class _UserManagementTabState extends State<UserManagementTab> {
               child: loading
                   ? const AppLoadingIndicator()
                   : rooms.isEmpty
-                      ? const AppEmptyMessage(message: '暂无房间')
-                      : AppListView.builder(
-                          padding: const EdgeInsets.only(top: 8),
-                          itemCount: rooms.length,
-                          itemBuilder: (context, index) {
-                            final room = rooms[index];
-                            return AppTile(
-                              prefix: Icon(
-                                Icons.meeting_room_outlined,
-                                color: room.isBanned
-                                    ? Colors.red
-                                    : _roomStatusColor(room.status),
-                              ),
-                              title: Text(
-                                room.roomName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                '${room.roomId} · ${room.isBanned ? '已封禁' : _roomStatusText(room.status)}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          },
-                        ),
+                  ? const AppEmptyMessage(message: '暂无房间')
+                  : AppListView.builder(
+                      padding: const EdgeInsets.only(top: 8),
+                      itemCount: rooms.length,
+                      itemBuilder: (context, index) {
+                        final room = rooms[index];
+                        return AppTile(
+                          prefix: Icon(
+                            Icons.meeting_room_outlined,
+                            color: room.isBanned
+                                ? Colors.red
+                                : _roomStatusColor(room.status),
+                          ),
+                          title: Text(
+                            room.roomName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(
+                            '${room.roomId} · ${room.isBanned ? '已封禁' : _roomStatusText(room.status)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         );
@@ -4871,8 +4936,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '修改用户名',
-      icon: const Icon(Icons.drive_file_rename_outline_rounded,
-          color: Color(0xFF5D5FEF)),
+      icon: const Icon(
+        Icons.drive_file_rename_outline_rounded,
+        color: Color(0xFF5D5FEF),
+      ),
       content: ChatUtils.createFormField(
         context: context,
         label: '新用户名',
@@ -4892,10 +4959,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     );
     if (confirmed != true) return;
     try {
-      await SyncTvService.adminUpdateUsername(
-        user.id,
-        controller.text.trim(),
-      );
+      await SyncTvService.adminUpdateUsername(user.id, controller.text.trim());
       if (!mounted) return;
       MessageUtils.showSuccess(context, '用户名已更新');
       _loadUsers(silent: true);
@@ -4997,20 +5061,28 @@ class _UserManagementTabState extends State<UserManagementTab> {
                         onTap: _addUser,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           child: Align(
                             alignment: Alignment.center,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.person_add_rounded,
-                                    color: theme.primaryColor, size: 20),
+                                Icon(
+                                  Icons.person_add_rounded,
+                                  color: theme.primaryColor,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
-                                Text('新增',
-                                    style: TextStyle(
-                                        color: theme.primaryColor,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14)),
+                                Text(
+                                  '新增',
+                                  style: TextStyle(
+                                    color: theme.primaryColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -5104,15 +5176,19 @@ class _UserManagementTabState extends State<UserManagementTab> {
                         value: _sortBy,
                         options: const {
                           '创建时间': admin_enum
-                              .UserListSortBy.USER_LIST_SORT_BY_CREATED_AT,
+                              .UserListSortBy
+                              .USER_LIST_SORT_BY_CREATED_AT,
                           '更新时间': admin_enum
-                              .UserListSortBy.USER_LIST_SORT_BY_UPDATED_AT,
+                              .UserListSortBy
+                              .USER_LIST_SORT_BY_UPDATED_AT,
                           '用户名': admin_enum
-                              .UserListSortBy.USER_LIST_SORT_BY_USERNAME,
+                              .UserListSortBy
+                              .USER_LIST_SORT_BY_USERNAME,
                           '邮箱':
                               admin_enum.UserListSortBy.USER_LIST_SORT_BY_EMAIL,
                           '状态': admin_enum
-                              .UserListSortBy.USER_LIST_SORT_BY_STATUS,
+                              .UserListSortBy
+                              .USER_LIST_SORT_BY_STATUS,
                           '角色':
                               admin_enum.UserListSortBy.USER_LIST_SORT_BY_ROLE,
                         },
@@ -5129,17 +5205,20 @@ class _UserManagementTabState extends State<UserManagementTab> {
                     _AdminToolbarItem(
                       width: 44,
                       child: AppIconButton(
-                        tooltip: _sortDirection ==
+                        tooltip:
+                            _sortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
                             ? '降序'
                             : '升序',
-                        icon: _sortDirection ==
+                        icon:
+                            _sortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
                             ? Icons.south_rounded
                             : Icons.north_rounded,
                         onPressed: () {
                           setState(() {
-                            _sortDirection = _sortDirection ==
+                            _sortDirection =
+                                _sortDirection ==
                                     admin_enum.SortDirection.SORT_DIRECTION_DESC
                                 ? admin_enum.SortDirection.SORT_DIRECTION_ASC
                                 : admin_enum.SortDirection.SORT_DIRECTION_DESC;
@@ -5196,32 +5275,36 @@ class _UserManagementTabState extends State<UserManagementTab> {
           child: _isLoading
               ? const AppLoadingIndicator()
               : AppListView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   itemCount: _users.length,
                   itemBuilder: (context, index) {
                     final user = _users[index];
-                    final isAdmin = user.role ==
+                    final isAdmin =
+                        user.role ==
                             common_enum.UserRole.USER_ROLE_ADMIN.value ||
                         user.role == common_enum.UserRole.USER_ROLE_ROOT.value;
-                    final isBanned = user.status ==
+                    final isBanned =
+                        user.status ==
                         common_enum.UserStatus.USER_STATUS_BANNED.value;
 
                     return _AdminPanelCard(
                       isDark: isDark,
                       child: AppTile(
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         prefix: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             AppCheckbox(
                               value: _selectedUserIds.contains(user.id),
                               semanticsLabel: '选择用户',
-                              onChanged: (value) => _toggleUserSelection(
-                                user.id,
-                                value,
-                              ),
+                              onChanged: (value) =>
+                                  _toggleUserSelection(user.id, value),
                             ),
                             AppAvatar(
                               name: user.username,
@@ -5236,15 +5319,22 @@ class _UserManagementTabState extends State<UserManagementTab> {
                             ),
                           ],
                         ),
-                        title: Text(user.username,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        title: Text(
+                          user.username,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                              'ID: ${user.id} · ${_systemRoleText(user.role)} · ${_userStatusText(user.status)} · ${user.connectionCount > 0 ? '${user.connectionCount} 连接' : '离线'}',
-                              style: TextStyle(
-                                  fontSize: 12, color: theme.hintColor)),
+                            'ID: ${user.id} · ${_systemRoleText(user.role)} · ${_userStatusText(user.status)} · ${user.connectionCount > 0 ? '${user.connectionCount} 连接' : '离线'}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.hintColor,
+                            ),
+                          ),
                         ),
                         suffix: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -5272,8 +5362,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
                                   title: '${user.username} 的举报',
                                   targetType: 2,
                                   targetUserId: user.id,
-                                  scope: admin_enum.ContentReportScope
-                                      .CONTENT_REPORT_SCOPE_TARGET_USER.value,
+                                  scope: admin_enum
+                                      .ContentReportScope
+                                      .CONTENT_REPORT_SCOPE_TARGET_USER
+                                      .value,
                                 ),
                               ),
                               AppIconButton(
@@ -5328,9 +5420,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       color: isDark ? Colors.grey.shade900 : Colors.white,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: theme.dividerColor.withValues(alpha: 0.12),
-      ),
+      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
       child: Row(
         children: [
           Icon(Icons.checklist_rounded, color: theme.colorScheme.primary),
@@ -5489,12 +5579,15 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
     final normalized = value.trim();
     setState(() {
       _search = normalized;
-      _requestedBy =
-          _kind == 'room' && normalized.startsWith('usr_') ? normalized : '';
-      _roomId =
-          _kind == 'join' && normalized.startsWith('room_') ? normalized : '';
-      _userId =
-          _kind == 'join' && normalized.startsWith('usr_') ? normalized : '';
+      _requestedBy = _kind == 'room' && normalized.startsWith('usr_')
+          ? normalized
+          : '';
+      _roomId = _kind == 'join' && normalized.startsWith('room_')
+          ? normalized
+          : '';
+      _userId = _kind == 'join' && normalized.startsWith('usr_')
+          ? normalized
+          : '';
       _page = 1;
     });
     _loadReviews();
@@ -5554,11 +5647,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
               ),
               AppSelect<int>(
                 value: _pageSize,
-                options: const {
-                  '20 / 页': 20,
-                  '50 / 页': 50,
-                  '100 / 页': 100,
-                },
+                options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -5608,60 +5697,61 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
           child: _isLoading
               ? const AppLoadingIndicator()
               : _reviews.isEmpty
-                  ? Center(
-                      child: Text('暂无审核记录',
-                          style: TextStyle(color: theme.hintColor)))
-                  : AppListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      itemCount: _reviews.length,
-                      itemBuilder: (context, index) {
-                        final review = _reviews[index];
-                        final pending = review.status ==
-                            common_enum
-                                .ReviewStatus.REVIEW_STATUS_PENDING.value;
-                        return _AdminPanelCard(
-                          isDark: isDark,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: _buildReviewSummary(review, theme),
-                                ),
-                                const SizedBox(width: 8),
-                                pending
-                                    ? Wrap(
-                                        spacing: 4,
-                                        children: [
-                                          AppIconButton(
-                                            tooltip: '通过',
-                                            icon: Icons.check_circle_outline,
-                                            onPressed: () => _approve(review),
-                                          ),
-                                          AppIconButton(
-                                            tooltip: '拒绝',
-                                            icon: Icons.cancel_outlined,
-                                            style:
-                                                AppIconButtonStyle.destructive,
-                                            onPressed: () => _reject(review),
-                                          ),
-                                        ],
-                                      )
-                                    : Padding(
-                                        padding: const EdgeInsets.only(top: 2),
-                                        child: Text(
-                                            _reviewStatusText(review.status)),
+              ? Center(
+                  child: Text(
+                    '暂无审核记录',
+                    style: TextStyle(color: theme.hintColor),
+                  ),
+                )
+              : AppListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  itemCount: _reviews.length,
+                  itemBuilder: (context, index) {
+                    final review = _reviews[index];
+                    final pending =
+                        review.status ==
+                        common_enum.ReviewStatus.REVIEW_STATUS_PENDING.value;
+                    return _AdminPanelCard(
+                      isDark: isDark,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildReviewSummary(review, theme)),
+                            const SizedBox(width: 8),
+                            pending
+                                ? Wrap(
+                                    spacing: 4,
+                                    children: [
+                                      AppIconButton(
+                                        tooltip: '通过',
+                                        icon: Icons.check_circle_outline,
+                                        onPressed: () => _approve(review),
                                       ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                                      AppIconButton(
+                                        tooltip: '拒绝',
+                                        icon: Icons.cancel_outlined,
+                                        style: AppIconButtonStyle.destructive,
+                                        onPressed: () => _reject(review),
+                                      ),
+                                    ],
+                                  )
+                                : Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      _reviewStatusText(review.status),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -5729,12 +5819,11 @@ class _ReviewInfoChip extends StatelessWidget {
     return AppBadge(
       constraints: const BoxConstraints(maxWidth: 280),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      backgroundColor:
-          theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.7),
-      color: theme.colorScheme.onSurface,
-      borderSide: BorderSide(
-        color: theme.dividerColor.withValues(alpha: 0.08),
+      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.7,
       ),
+      color: theme.colorScheme.onSurface,
+      borderSide: BorderSide(color: theme.dividerColor.withValues(alpha: 0.08)),
       label: Text(
         label,
         maxLines: 1,
@@ -5776,11 +5865,13 @@ class _ProviderTypeSelector extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.category_outlined,
-                  size: 18,
-                  color: hasError
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.primary),
+              Icon(
+                Icons.category_outlined,
+                size: 18,
+                color: hasError
+                    ? theme.colorScheme.error
+                    : theme.colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Provider 类型',
@@ -5805,10 +5896,7 @@ class _ProviderTypeSelector extends StatelessWidget {
                   showCheckmark: true,
                 ),
               if (options.isEmpty)
-                Text(
-                  '暂无可选类型',
-                  style: TextStyle(color: theme.hintColor),
-                ),
+                Text('暂无可选类型', style: TextStyle(color: theme.hintColor)),
             ],
           ),
           if (hasError) ...[
@@ -5855,7 +5943,8 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
   bool? _enabledFilter;
   bool? _tlsFilter;
   provider_common_enum.ProviderInstanceListSortBy _sortBy = provider_common_enum
-      .ProviderInstanceListSortBy.PROVIDER_INSTANCE_LIST_SORT_BY_NAME;
+      .ProviderInstanceListSortBy
+      .PROVIDER_INSTANCE_LIST_SORT_BY_NAME;
   provider_common_enum.SortDirection _sortDirection =
       provider_common_enum.SortDirection.SORT_DIRECTION_ASC;
   List<AdminProviderInstance> _instances = const [];
@@ -6129,52 +6218,65 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                     ),
                     _AdminToolbarItem(
                       width: 126,
-                      child: AppSelect<
-                          provider_common_enum.ProviderInstanceListSortBy>(
-                        value: _sortBy,
-                        options: const {
-                          '按名称': provider_common_enum.ProviderInstanceListSortBy
-                              .PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
-                          '按 Endpoint': provider_common_enum
-                              .ProviderInstanceListSortBy
-                              .PROVIDER_INSTANCE_LIST_SORT_BY_ENDPOINT,
-                          '按创建': provider_common_enum.ProviderInstanceListSortBy
-                              .PROVIDER_INSTANCE_LIST_SORT_BY_CREATED_AT,
-                          '按更新': provider_common_enum.ProviderInstanceListSortBy
-                              .PROVIDER_INSTANCE_LIST_SORT_BY_UPDATED_AT,
-                        },
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() {
-                            _sortBy = value;
-                            _page = 1;
-                          });
-                          _loadInstances();
-                        },
-                      ),
+                      child:
+                          AppSelect<
+                            provider_common_enum.ProviderInstanceListSortBy
+                          >(
+                            value: _sortBy,
+                            options: const {
+                              '按名称': provider_common_enum
+                                  .ProviderInstanceListSortBy
+                                  .PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
+                              '按 Endpoint': provider_common_enum
+                                  .ProviderInstanceListSortBy
+                                  .PROVIDER_INSTANCE_LIST_SORT_BY_ENDPOINT,
+                              '按创建': provider_common_enum
+                                  .ProviderInstanceListSortBy
+                                  .PROVIDER_INSTANCE_LIST_SORT_BY_CREATED_AT,
+                              '按更新': provider_common_enum
+                                  .ProviderInstanceListSortBy
+                                  .PROVIDER_INSTANCE_LIST_SORT_BY_UPDATED_AT,
+                            },
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setState(() {
+                                _sortBy = value;
+                                _page = 1;
+                              });
+                              _loadInstances();
+                            },
+                          ),
                     ),
                     _AdminToolbarItem(
                       width: 44,
                       child: AppIconButton(
-                        tooltip: _sortDirection ==
+                        tooltip:
+                            _sortDirection ==
                                 provider_common_enum
-                                    .SortDirection.SORT_DIRECTION_DESC
+                                    .SortDirection
+                                    .SORT_DIRECTION_DESC
                             ? '降序'
                             : '升序',
-                        icon: _sortDirection ==
+                        icon:
+                            _sortDirection ==
                                 provider_common_enum
-                                    .SortDirection.SORT_DIRECTION_DESC
+                                    .SortDirection
+                                    .SORT_DIRECTION_DESC
                             ? Icons.south_rounded
                             : Icons.north_rounded,
                         onPressed: () {
                           setState(() {
-                            _sortDirection = _sortDirection ==
+                            _sortDirection =
+                                _sortDirection ==
                                     provider_common_enum
-                                        .SortDirection.SORT_DIRECTION_DESC
+                                        .SortDirection
+                                        .SORT_DIRECTION_DESC
                                 ? provider_common_enum
-                                    .SortDirection.SORT_DIRECTION_ASC
+                                      .SortDirection
+                                      .SORT_DIRECTION_ASC
                                 : provider_common_enum
-                                    .SortDirection.SORT_DIRECTION_DESC;
+                                      .SortDirection
+                                      .SORT_DIRECTION_DESC;
                             _page = 1;
                           });
                           _loadInstances();
@@ -6228,26 +6330,29 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
           child: _isLoading
               ? const AppLoadingIndicator()
               : _instances.isEmpty
-                  ? Center(
-                      child: Text('暂无 Provider 实例',
-                          style: TextStyle(color: theme.hintColor)))
-                  : AppListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      itemCount: _instances.length,
-                      itemBuilder: (context, index) {
-                        final instance = _instances[index];
-                        return _AdminPanelCard(
-                          isDark: isDark,
-                          child: _ProviderInstanceTile(
-                            instance: instance,
-                            onToggleEnabled: () => _toggleEnabled(instance),
-                            onEdit: () => _editInstance(instance),
-                            onReconnect: () => _reconnect(instance),
-                            onDelete: () => _deleteInstance(instance),
-                          ),
-                        );
-                      },
-                    ),
+              ? Center(
+                  child: Text(
+                    '暂无 Provider 实例',
+                    style: TextStyle(color: theme.hintColor),
+                  ),
+                )
+              : AppListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  itemCount: _instances.length,
+                  itemBuilder: (context, index) {
+                    final instance = _instances[index];
+                    return _AdminPanelCard(
+                      isDark: isDark,
+                      child: _ProviderInstanceTile(
+                        instance: instance,
+                        onToggleEnabled: () => _toggleEnabled(instance),
+                        onEdit: () => _editInstance(instance),
+                        onReconnect: () => _reconnect(instance),
+                        onDelete: () => _deleteInstance(instance),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -6259,9 +6364,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       color: isDark ? Colors.grey.shade900 : Colors.white,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: theme.dividerColor.withValues(alpha: 0.12),
-      ),
+      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -6322,9 +6425,10 @@ class _ProviderInstanceTile extends StatelessWidget {
     final tlsText = !instance.tls
         ? 'TLS 关闭'
         : instance.insecureTls
-            ? 'TLS 不校验'
-            : 'TLS 校验';
-    final timeText = '创建 ${_formatTimestamp(instance.createdAt)}'
+        ? 'TLS 不校验'
+        : 'TLS 校验';
+    final timeText =
+        '创建 ${_formatTimestamp(instance.createdAt)}'
         ' · 更新 ${_formatTimestamp(instance.updatedAt)}';
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
@@ -6636,24 +6740,18 @@ class _ProviderInstanceEditorDialogState
                 24,
               ),
               child: isCompact
-                  ? Column(
-                      children: _editorSections(theme, compact: true),
-                    )
+                  ? Column(children: _editorSections(theme, compact: true))
                   : Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
                           flex: 6,
-                          child: Column(
-                            children: _primarySections(theme),
-                          ),
+                          child: Column(children: _primarySections(theme)),
                         ),
                         const SizedBox(width: 18),
                         Expanded(
                           flex: 5,
-                          child: Column(
-                            children: _secondarySections(theme),
-                          ),
+                          child: Column(children: _secondarySections(theme)),
                         ),
                       ],
                     ),
@@ -6670,187 +6768,185 @@ class _ProviderInstanceEditorDialogState
   }
 
   List<Widget> _editorSections(ThemeData theme, {required bool compact}) => [
-        ..._primarySections(theme),
-        ..._secondarySections(theme),
-      ];
+    ..._primarySections(theme),
+    ..._secondarySections(theme),
+  ];
 
   List<Widget> _primarySections(ThemeData theme) => [
-        _ProviderEditorSection(
-          icon: Icons.badge_outlined,
-          title: '基础信息',
-          children: [
-            AppTextField(
-              controller: _nameController,
-              label: '实例名称',
-              hintText: 'provider_main',
-              prefixIcon: Icons.badge_outlined,
-              enabled: !_editing,
-              errorText:
-                  _submitted && !_editing && _nameController.text.trim().isEmpty
-                      ? '请输入实例名称'
-                      : null,
-              autocorrect: false,
-              smartDashesType: SmartDashesType.disabled,
-              smartQuotesType: SmartQuotesType.disabled,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _endpointController,
-              label: 'Endpoint',
-              hintText: 'https://provider.example.com',
-              prefixIcon: Icons.link_rounded,
-              keyboardType: TextInputType.url,
-              errorText: _submitted && _endpointController.text.trim().isEmpty
-                  ? '请输入 Endpoint'
-                  : null,
-              autocorrect: false,
-              smartDashesType: SmartDashesType.disabled,
-              smartQuotesType: SmartQuotesType.disabled,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _timeoutController,
-              label: '请求超时',
-              prefixIcon: Icons.timer_outlined,
-              suffix: const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: Center(
-                  widthFactor: 1,
-                  child: Text('秒'),
-                ),
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              errorText: _submitted &&
-                      ((int.tryParse(_timeoutController.text.trim()) ?? 0) <= 0)
-                  ? '请输入大于 0 的整数'
-                  : null,
-            ),
-          ],
+    _ProviderEditorSection(
+      icon: Icons.badge_outlined,
+      title: '基础信息',
+      children: [
+        AppTextField(
+          controller: _nameController,
+          label: '实例名称',
+          hintText: 'provider_main',
+          prefixIcon: Icons.badge_outlined,
+          enabled: !_editing,
+          errorText:
+              _submitted && !_editing && _nameController.text.trim().isEmpty
+              ? '请输入实例名称'
+              : null,
+          autocorrect: false,
+          smartDashesType: SmartDashesType.disabled,
+          smartQuotesType: SmartQuotesType.disabled,
         ),
-        const SizedBox(height: 16),
-        _ProviderEditorSection(
-          icon: Icons.category_outlined,
-          title: '能力类型',
-          description: '一个实例可以同时承载多个 Provider 类型。',
-          children: [
-            _ProviderTypeSelector(
-              selectedProviders: _selectedProviders,
-              options: _providerTypeOptions(
-                selectedFilter: widget.selectedFilter,
-                selectedProviders: _selectedProviders,
-              ),
-              hasError: _submitted && _selectedProviders.isEmpty,
-              onChanged: (provider, selected) => setState(() {
-                if (selected) {
-                  _selectedProviders.add(provider);
-                } else {
-                  _selectedProviders.remove(provider);
-                }
-              }),
-            ),
-          ],
+        const SizedBox(height: 12),
+        AppTextField(
+          controller: _endpointController,
+          label: 'Endpoint',
+          hintText: 'https://provider.example.com',
+          prefixIcon: Icons.link_rounded,
+          keyboardType: TextInputType.url,
+          errorText: _submitted && _endpointController.text.trim().isEmpty
+              ? '请输入 Endpoint'
+              : null,
+          autocorrect: false,
+          smartDashesType: SmartDashesType.disabled,
+          smartQuotesType: SmartQuotesType.disabled,
         ),
-        const SizedBox(height: 16),
-      ];
+        const SizedBox(height: 12),
+        AppTextField(
+          controller: _timeoutController,
+          label: '请求超时',
+          prefixIcon: Icons.timer_outlined,
+          suffix: const Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(widthFactor: 1, child: Text('秒')),
+          ),
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          errorText:
+              _submitted &&
+                  ((int.tryParse(_timeoutController.text.trim()) ?? 0) <= 0)
+              ? '请输入大于 0 的整数'
+              : null,
+        ),
+      ],
+    ),
+    const SizedBox(height: 16),
+    _ProviderEditorSection(
+      icon: Icons.category_outlined,
+      title: '能力类型',
+      description: '一个实例可以同时承载多个 Provider 类型。',
+      children: [
+        _ProviderTypeSelector(
+          selectedProviders: _selectedProviders,
+          options: _providerTypeOptions(
+            selectedFilter: widget.selectedFilter,
+            selectedProviders: _selectedProviders,
+          ),
+          hasError: _submitted && _selectedProviders.isEmpty,
+          onChanged: (provider, selected) => setState(() {
+            if (selected) {
+              _selectedProviders.add(provider);
+            } else {
+              _selectedProviders.remove(provider);
+            }
+          }),
+        ),
+      ],
+    ),
+    const SizedBox(height: 16),
+  ];
 
   List<Widget> _secondarySections(ThemeData theme) => [
-        _ProviderEditorSection(
-          icon: Icons.security_rounded,
-          title: '连接安全',
-          description: '不安全 TLS 只应用于受控内网或测试环境。',
-          children: [
-            _ProviderOptionSwitch(
-              icon: Icons.verified_user_outlined,
-              title: '启用 TLS',
-              subtitle: _tls ? '使用 HTTPS/TLS 连接 Provider' : '使用非 TLS 连接',
-              value: _tls,
-              onChanged: (value) => setState(() {
-                _tls = value;
-                if (!_tls) _insecureTls = false;
-              }),
-            ),
-            const SizedBox(height: 10),
-            _ProviderOptionSwitch(
-              icon: Icons.warning_amber_rounded,
-              title: '允许不安全 TLS',
-              subtitle: '跳过证书校验，可能被中间人攻击',
-              value: _insecureTls,
-              enabled: _tls,
-              danger: true,
-              onChanged: (value) => setState(() => _insecureTls = value),
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _jwtSecretController,
-              label: 'JWT Secret',
-              hintText: _editing ? '留空则不修改' : '可选',
-              prefixIcon: Icons.key_rounded,
-              enabled: !_clearJwtSecret,
-              obscureText: true,
-              autocorrect: false,
-              smartDashesType: SmartDashesType.disabled,
-              smartQuotesType: SmartQuotesType.disabled,
-            ),
-            if (_editing)
-              AppCheckboxTile(
-                value: _clearJwtSecret,
-                onChanged: (value) => setState(() {
-                  _clearJwtSecret = value;
-                  if (_clearJwtSecret) _jwtSecretController.clear();
-                }),
-                title: const Text('清除 JWT Secret'),
-              ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _customCaController,
-              label: 'Custom CA',
-              hintText: _editing ? 'PEM 内容，留空则不修改' : 'PEM 内容，可选',
-              prefixIcon: Icons.verified_outlined,
-              enabled: !_clearCustomCa,
-              minLines: 4,
-              maxLines: 7,
-              autocorrect: false,
-              smartDashesType: SmartDashesType.disabled,
-              smartQuotesType: SmartQuotesType.disabled,
-            ),
-            if (_editing)
-              AppCheckboxTile(
-                value: _clearCustomCa,
-                onChanged: (value) => setState(() {
-                  _clearCustomCa = value;
-                  if (_clearCustomCa) _customCaController.clear();
-                }),
-                title: const Text('清除 Custom CA'),
-              ),
-          ],
+    _ProviderEditorSection(
+      icon: Icons.security_rounded,
+      title: '连接安全',
+      description: '不安全 TLS 只应用于受控内网或测试环境。',
+      children: [
+        _ProviderOptionSwitch(
+          icon: Icons.verified_user_outlined,
+          title: '启用 TLS',
+          subtitle: _tls ? '使用 HTTPS/TLS 连接 Provider' : '使用非 TLS 连接',
+          value: _tls,
+          onChanged: (value) => setState(() {
+            _tls = value;
+            if (!_tls) _insecureTls = false;
+          }),
         ),
-        const SizedBox(height: 16),
-        _ProviderEditorSection(
-          icon: Icons.notes_rounded,
-          title: '备注',
-          children: [
-            AppTextField(
-              controller: _commentController,
-              label: '备注',
-              hintText: '可选，用于标记部署位置、用途或维护信息',
-              prefixIcon: Icons.notes_rounded,
-              enabled: !_clearComment,
-              minLines: 2,
-              maxLines: 4,
-            ),
-            if (_editing)
-              AppCheckboxTile(
-                value: _clearComment,
-                onChanged: (value) => setState(() {
-                  _clearComment = value;
-                  if (_clearComment) _commentController.clear();
-                }),
-                title: const Text('清除备注'),
-              ),
-          ],
+        const SizedBox(height: 10),
+        _ProviderOptionSwitch(
+          icon: Icons.warning_amber_rounded,
+          title: '允许不安全 TLS',
+          subtitle: '跳过证书校验，可能被中间人攻击',
+          value: _insecureTls,
+          enabled: _tls,
+          danger: true,
+          onChanged: (value) => setState(() => _insecureTls = value),
         ),
-      ];
+        const SizedBox(height: 12),
+        AppTextField(
+          controller: _jwtSecretController,
+          label: 'JWT Secret',
+          hintText: _editing ? '留空则不修改' : '可选',
+          prefixIcon: Icons.key_rounded,
+          enabled: !_clearJwtSecret,
+          obscureText: true,
+          autocorrect: false,
+          smartDashesType: SmartDashesType.disabled,
+          smartQuotesType: SmartQuotesType.disabled,
+        ),
+        if (_editing)
+          AppCheckboxTile(
+            value: _clearJwtSecret,
+            onChanged: (value) => setState(() {
+              _clearJwtSecret = value;
+              if (_clearJwtSecret) _jwtSecretController.clear();
+            }),
+            title: const Text('清除 JWT Secret'),
+          ),
+        const SizedBox(height: 12),
+        AppTextField(
+          controller: _customCaController,
+          label: 'Custom CA',
+          hintText: _editing ? 'PEM 内容，留空则不修改' : 'PEM 内容，可选',
+          prefixIcon: Icons.verified_outlined,
+          enabled: !_clearCustomCa,
+          minLines: 4,
+          maxLines: 7,
+          autocorrect: false,
+          smartDashesType: SmartDashesType.disabled,
+          smartQuotesType: SmartQuotesType.disabled,
+        ),
+        if (_editing)
+          AppCheckboxTile(
+            value: _clearCustomCa,
+            onChanged: (value) => setState(() {
+              _clearCustomCa = value;
+              if (_clearCustomCa) _customCaController.clear();
+            }),
+            title: const Text('清除 Custom CA'),
+          ),
+      ],
+    ),
+    const SizedBox(height: 16),
+    _ProviderEditorSection(
+      icon: Icons.notes_rounded,
+      title: '备注',
+      children: [
+        AppTextField(
+          controller: _commentController,
+          label: '备注',
+          hintText: '可选，用于标记部署位置、用途或维护信息',
+          prefixIcon: Icons.notes_rounded,
+          enabled: !_clearComment,
+          minLines: 2,
+          maxLines: 4,
+        ),
+        if (_editing)
+          AppCheckboxTile(
+            value: _clearComment,
+            onChanged: (value) => setState(() {
+              _clearComment = value;
+              if (_clearComment) _commentController.clear();
+            }),
+            title: const Text('清除备注'),
+          ),
+      ],
+    ),
+  ];
 }
 
 class _ProviderEditorHeader extends StatelessWidget {
@@ -7009,9 +7105,7 @@ class _ProviderOptionSwitch extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       color: color.withValues(alpha: danger && value ? 0.09 : 0.04),
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: color.withValues(alpha: 0.14),
-      ),
+      border: Border.all(color: color.withValues(alpha: 0.14)),
       child: Row(
         children: [
           Icon(icon, color: enabled ? color : theme.disabledColor),
@@ -7176,13 +7270,13 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
         roomId: _roomId.isNotEmpty
             ? _roomId
             : _search.startsWith('room_')
-                ? _search
-                : '',
+            ? _search
+            : '',
         userId: _userId.isNotEmpty
             ? _userId
             : _search.startsWith('usr_')
-                ? _search
-                : '',
+            ? _search
+            : '',
         nodeId: _nodeId,
         sortBy: _sortBy,
         sortDirection: _sortDirection,
@@ -7252,11 +7346,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
               ),
               AppSelect<int>(
                 value: _pageSize,
-                options: const {
-                  '20 / 页': 20,
-                  '50 / 页': 50,
-                  '100 / 页': 100,
-                },
+                options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -7269,15 +7359,20 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
               AppSelect<admin_enum.ActiveStreamListSortBy>(
                 value: _sortBy,
                 options: const {
-                  '开始时间': admin_enum.ActiveStreamListSortBy
+                  '开始时间': admin_enum
+                      .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_STARTED_AT,
-                  '房间': admin_enum.ActiveStreamListSortBy
+                  '房间': admin_enum
+                      .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_ROOM_ID,
-                  '媒体': admin_enum.ActiveStreamListSortBy
+                  '媒体': admin_enum
+                      .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_MEDIA_ID,
-                  '用户': admin_enum.ActiveStreamListSortBy
+                  '用户': admin_enum
+                      .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_USER_ID,
-                  '节点': admin_enum.ActiveStreamListSortBy
+                  '节点': admin_enum
+                      .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_NODE_ID,
                 },
                 onChanged: (value) {
@@ -7290,17 +7385,20 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
                 },
               ),
               AppIconButton(
-                tooltip: _sortDirection ==
+                tooltip:
+                    _sortDirection ==
                         admin_enum.SortDirection.SORT_DIRECTION_DESC
                     ? '降序'
                     : '升序',
-                icon: _sortDirection ==
+                icon:
+                    _sortDirection ==
                         admin_enum.SortDirection.SORT_DIRECTION_DESC
                     ? Icons.south_rounded
                     : Icons.north_rounded,
                 onPressed: () {
                   setState(() {
-                    _sortDirection = _sortDirection ==
+                    _sortDirection =
+                        _sortDirection ==
                             admin_enum.SortDirection.SORT_DIRECTION_DESC
                         ? admin_enum.SortDirection.SORT_DIRECTION_ASC
                         : admin_enum.SortDirection.SORT_DIRECTION_DESC;
@@ -7338,32 +7436,35 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
           child: _isLoading
               ? const AppLoadingIndicator()
               : _streams.isEmpty
-                  ? Center(
-                      child: Text('暂无活跃流',
-                          style: TextStyle(color: theme.hintColor)))
-                  : AppListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      itemCount: _streams.length,
-                      itemBuilder: (context, index) {
-                        final stream = _streams[index];
-                        return _AdminPanelCard(
-                          isDark: isDark,
-                          child: AppTile(
-                            prefix: const Icon(Icons.podcasts_rounded),
-                            title: Text(stream.mediaId),
-                            subtitle: Text(
-                              '${stream.roomId} · ${stream.userId}\nNode: ${stream.nodeId} · ${_formatTimestamp(stream.startedAt)}',
-                            ),
-                            suffix: AppIconButton(
-                              tooltip: '踢出流',
-                              icon: Icons.power_settings_new_rounded,
-                              style: AppIconButtonStyle.destructive,
-                              onPressed: () => _kick(stream),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+              ? Center(
+                  child: Text(
+                    '暂无活跃流',
+                    style: TextStyle(color: theme.hintColor),
+                  ),
+                )
+              : AppListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  itemCount: _streams.length,
+                  itemBuilder: (context, index) {
+                    final stream = _streams[index];
+                    return _AdminPanelCard(
+                      isDark: isDark,
+                      child: AppTile(
+                        prefix: const Icon(Icons.podcasts_rounded),
+                        title: Text(stream.mediaId),
+                        subtitle: Text(
+                          '${stream.roomId} · ${stream.userId}\nNode: ${stream.nodeId} · ${_formatTimestamp(stream.startedAt)}',
+                        ),
+                        suffix: AppIconButton(
+                          tooltip: '踢出流',
+                          icon: Icons.power_settings_new_rounded,
+                          style: AppIconButtonStyle.destructive,
+                          onPressed: () => _kick(stream),
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -7499,11 +7600,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
             children: [
               AppSelect<int>(
                 value: _targetType,
-                options: const {
-                  '全部对象': 0,
-                  '用户': 1,
-                  '房间': 2,
-                },
+                options: const {'全部对象': 0, '用户': 1, '房间': 2},
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -7515,11 +7612,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
               ),
               AppSelect<bool?>(
                 value: _active,
-                options: const {
-                  '全部状态': null,
-                  '生效中': true,
-                  '已撤销/过期': false,
-                },
+                options: const {'全部状态': null, '生效中': true, '已撤销/过期': false},
                 onChanged: (value) {
                   setState(() {
                     _active = value;
@@ -7530,11 +7623,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
               ),
               AppSelect<int>(
                 value: _pageSize,
-                options: const {
-                  '20 / 页': 20,
-                  '50 / 页': 50,
-                  '100 / 页': 100,
-                },
+                options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -7595,42 +7684,44 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
           child: _isLoading
               ? const AppLoadingIndicator()
               : _records.isEmpty
-                  ? Center(
-                      child: Text('暂无封禁记录',
-                          style: TextStyle(color: theme.hintColor)))
-                  : AppListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      itemCount: _records.length,
-                      itemBuilder: (context, index) {
-                        final record = _records[index];
-                        final target = record.targetType == 1
-                            ? '${record.username} (${record.userId})'
-                            : '${record.roomName} (${record.roomId})';
-                        return _AdminPanelCard(
-                          isDark: isDark,
-                          child: AppTile(
-                            prefix: Icon(
-                              record.isActive
-                                  ? Icons.block_rounded
-                                  : Icons.check_circle_outline,
-                              color:
-                                  record.isActive ? Colors.red : Colors.green,
-                            ),
-                            title: Text(target),
-                            subtitle: Text(
-                              '${record.reason.isEmpty ? '无原因' : record.reason}\n操作者: ${record.bannedByUsername} · ${_formatTimestamp(record.startsAt)}',
-                            ),
-                            suffix: record.isActive
-                                ? AppIconButton(
-                                    tooltip: '解除封禁',
-                                    icon: Icons.lock_open_rounded,
-                                    onPressed: () => _unbanRecord(record),
-                                  )
-                                : const Text('已结束'),
-                          ),
-                        );
-                      },
-                    ),
+              ? Center(
+                  child: Text(
+                    '暂无封禁记录',
+                    style: TextStyle(color: theme.hintColor),
+                  ),
+                )
+              : AppListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  itemCount: _records.length,
+                  itemBuilder: (context, index) {
+                    final record = _records[index];
+                    final target = record.targetType == 1
+                        ? '${record.username} (${record.userId})'
+                        : '${record.roomName} (${record.roomId})';
+                    return _AdminPanelCard(
+                      isDark: isDark,
+                      child: AppTile(
+                        prefix: Icon(
+                          record.isActive
+                              ? Icons.block_rounded
+                              : Icons.check_circle_outline,
+                          color: record.isActive ? Colors.red : Colors.green,
+                        ),
+                        title: Text(target),
+                        subtitle: Text(
+                          '${record.reason.isEmpty ? '无原因' : record.reason}\n操作者: ${record.bannedByUsername} · ${_formatTimestamp(record.startsAt)}',
+                        ),
+                        suffix: record.isActive
+                            ? AppIconButton(
+                                tooltip: '解除封禁',
+                                icon: Icons.lock_open_rounded,
+                                onPressed: () => _unbanRecord(record),
+                              )
+                            : const Text('已结束'),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -7807,26 +7898,26 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
       _reporterUserId = _isRoomScoped
           ? ''
           : normalized.startsWith('usr_')
-              ? normalized
-              : '';
+          ? normalized
+          : '';
       if (!_isRoomScoped && widget.initialRoomId.isEmpty) {
         _roomId = normalized.startsWith('room_') ? normalized : '';
       }
       _targetRoomId = _isRoomScoped
           ? ''
           : normalized.startsWith('room_')
-              ? normalized
-              : '';
+          ? normalized
+          : '';
       _targetUserId = _isRoomScoped
           ? ''
           : normalized.startsWith('usr_')
-              ? normalized
-              : '';
+          ? normalized
+          : '';
       _targetMemberRoomId = _isRoomScoped
           ? ''
           : normalized.startsWith('room_')
-              ? normalized
-              : '';
+          ? normalized
+          : '';
       _targetMemberUserId = normalized.startsWith('usr_') ? normalized : '';
       _targetChatMessageId = int.tryParse(normalized) ?? 0;
       _page = 1;
@@ -7859,7 +7950,9 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _ReportDetailRow(
-                  label: '状态', value: _reportStatusText(detail.status)),
+                label: '状态',
+                value: _reportStatusText(detail.status),
+              ),
               _ReportDetailRow(label: '目标', value: _reportTargetText(detail)),
               _ReportDetailRow(label: '举报人', value: _reporterText(detail)),
               _ReportDetailRow(label: '原因', value: _reportReasonText(detail)),
@@ -7869,7 +7962,9 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                   value: detail.targetChatMessagePreview,
                 ),
               _ReportDetailRow(
-                  label: '创建时间', value: _formatTimestamp(detail.createdAt)),
+                label: '创建时间',
+                value: _formatTimestamp(detail.createdAt),
+              ),
               if (detail.reviewedByUsername.isNotEmpty ||
                   detail.reviewedBy.isNotEmpty)
                 _ReportDetailRow(
@@ -7880,14 +7975,17 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 ),
               if (detail.reviewedAt > 0)
                 _ReportDetailRow(
-                    label: '处理时间', value: _formatTimestamp(detail.reviewedAt)),
+                  label: '处理时间',
+                  value: _formatTimestamp(detail.reviewedAt),
+                ),
               if (detail.resolutionNote.isNotEmpty)
                 _ReportDetailRow(label: '处置说明', value: detail.resolutionNote),
               if (detail.metadata.isNotEmpty)
                 _ReportDetailRow(
                   label: '元数据',
-                  value: const JsonEncoder.withIndent('  ')
-                      .convert(detail.metadata),
+                  value: const JsonEncoder.withIndent(
+                    '  ',
+                  ).convert(detail.metadata),
                 ),
             ],
           ),
@@ -7896,20 +7994,17 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(
-          context,
-          () {
-            Navigator.pop(context);
-            _openDisposition(detail);
-          },
-          text: '处置',
-        ),
+        ChatUtils.createConfirmButton(context, () {
+          Navigator.pop(context);
+          _openDisposition(detail);
+        }, text: '处置'),
       ],
     );
   }
 
   Future<void> _openDisposition(AdminContentReport report) async {
-    int nextStatus = report.status ==
+    int nextStatus =
+        report.status ==
             admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN.value
         ? admin_enum.ContentReportStatus.CONTENT_REPORT_STATUS_REVIEWING.value
         : report.status;
@@ -7930,12 +8025,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 const SizedBox(height: 12),
                 AppSelect<int>(
                   value: nextStatus,
-                  options: const {
-                    '处理中': 2,
-                    '已处理': 3,
-                    '已驳回': 4,
-                    '待处理': 1,
-                  },
+                  options: const {'处理中': 2, '已处理': 3, '已驳回': 4, '待处理': 1},
                   onChanged: (value) {
                     if (value == null) return;
                     setDialogState(() => nextStatus = value);
@@ -7955,31 +8045,27 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(
-          context,
-          () async {
-            try {
-              final result = _isRoomScoped
-                  ? await SyncTvService.updateRoomContentReportStatus(
-                      widget.roomScopedRoomId,
-                      report.id,
-                      nextStatus,
-                      resolutionNote: noteController.text,
-                    )
-                  : await SyncTvService.adminUpdateContentReportStatus(
-                      report.id,
-                      nextStatus,
-                      resolutionNote: noteController.text,
-                    );
-              if (!mounted) return;
-              Navigator.pop(context, result);
-            } catch (e) {
-              if (!mounted) return;
-              MessageUtils.showError(context, '处置失败: $e');
-            }
-          },
-          text: '保存',
-        ),
+        ChatUtils.createConfirmButton(context, () async {
+          try {
+            final result = _isRoomScoped
+                ? await SyncTvService.updateRoomContentReportStatus(
+                    widget.roomScopedRoomId,
+                    report.id,
+                    nextStatus,
+                    resolutionNote: noteController.text,
+                  )
+                : await SyncTvService.adminUpdateContentReportStatus(
+                    report.id,
+                    nextStatus,
+                    resolutionNote: noteController.text,
+                  );
+            if (!mounted) return;
+            Navigator.pop(context, result);
+          } catch (e) {
+            if (!mounted) return;
+            MessageUtils.showError(context, '处置失败: $e');
+          }
+        }, text: '保存'),
       ],
     );
     noteController.dispose();
@@ -8008,8 +8094,10 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: Row(
               children: [
-                Icon(Icons.report_gmailerrorred_rounded,
-                    color: theme.colorScheme.error),
+                Icon(
+                  Icons.report_gmailerrorred_rounded,
+                  color: theme.colorScheme.error,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -8071,17 +8159,8 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 AppSelect<int>(
                   value: _targetType,
                   options: _isRoomScoped
-                      ? const {
-                          '成员': 3,
-                          '消息': 4,
-                        }
-                      : const {
-                          '全部对象': 0,
-                          '房间': 1,
-                          '用户': 2,
-                          '成员': 3,
-                          '消息': 4,
-                        },
+                      ? const {'成员': 3, '消息': 4}
+                      : const {'全部对象': 0, '房间': 1, '用户': 2, '成员': 3, '消息': 4},
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() {
@@ -8093,11 +8172,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 ),
               AppSelect<int>(
                 value: _pageSize,
-                options: const {
-                  '20 / 页': 20,
-                  '50 / 页': 50,
-                  '100 / 页': 100,
-                },
+                options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -8159,35 +8234,38 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
           child: _isLoading
               ? const AppLoadingIndicator()
               : _reports.isEmpty
-                  ? Center(
-                      child: Text('暂无举报记录',
-                          style: TextStyle(color: theme.hintColor)))
-                  : AppListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      itemCount: _reports.length,
-                      itemBuilder: (context, index) {
-                        final report = _reports[index];
-                        return _AdminPanelCard(
-                          isDark: isDark,
-                          child: AppTile(
-                            onPressed: () => _openReport(report),
-                            prefix: Icon(
-                              _reportStatusIcon(report.status),
-                              color: _reportStatusColor(report.status),
-                            ),
-                            title: Text(_reportTargetText(report)),
-                            subtitle: Text(
-                              '${_reportReasonText(report)}\n举报人: ${_reporterText(report)} · ${_formatTimestamp(report.createdAt)}',
-                            ),
-                            suffix: AppIconButton(
-                              tooltip: '处置',
-                              icon: Icons.rule_rounded,
-                              onPressed: () => _openDisposition(report),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+              ? Center(
+                  child: Text(
+                    '暂无举报记录',
+                    style: TextStyle(color: theme.hintColor),
+                  ),
+                )
+              : AppListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  itemCount: _reports.length,
+                  itemBuilder: (context, index) {
+                    final report = _reports[index];
+                    return _AdminPanelCard(
+                      isDark: isDark,
+                      child: AppTile(
+                        onPressed: () => _openReport(report),
+                        prefix: Icon(
+                          _reportStatusIcon(report.status),
+                          color: _reportStatusColor(report.status),
+                        ),
+                        title: Text(_reportTargetText(report)),
+                        subtitle: Text(
+                          '${_reportReasonText(report)}\n举报人: ${_reporterText(report)} · ${_formatTimestamp(report.createdAt)}',
+                        ),
+                        suffix: AppIconButton(
+                          tooltip: '处置',
+                          icon: Icons.rule_rounded,
+                          onPressed: () => _openDisposition(report),
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -8300,10 +8378,14 @@ String _reportTargetText(AdminContentReport report) {
     case 2:
       return '用户 ${_nameOrId(report.targetUsername, report.targetUserId)}';
     case 3:
-      final room =
-          _nameOrId(report.targetMemberRoomName, report.targetMemberRoomId);
-      final user =
-          _nameOrId(report.targetMemberUsername, report.targetMemberUserId);
+      final room = _nameOrId(
+        report.targetMemberRoomName,
+        report.targetMemberRoomId,
+      );
+      final user = _nameOrId(
+        report.targetMemberUsername,
+        report.targetMemberUserId,
+      );
       return '成员 $user · $room';
     case 4:
       final room = _nameOrId(report.roomName, report.roomId);
@@ -8613,10 +8695,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     try {
       final message = await SyncTvService.adminSendTestEmail(email);
       if (!mounted) return;
-      MessageUtils.showSuccess(
-        context,
-        message.isEmpty ? '测试邮件已发送' : message,
-      );
+      MessageUtils.showSuccess(context, message.isEmpty ? '测试邮件已发送' : message);
     } catch (e) {
       if (!mounted) return;
       MessageUtils.showError(context, '发送测试邮件失败: $e');
@@ -8629,16 +8708,18 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     final isDark = theme.brightness == Brightness.dark;
     if (_isLoading) return const AppLoadingIndicator();
 
-    final selected =
-        _groups.where((group) => group.name == _selectedGroup).firstOrNull;
+    final selected = _groups
+        .where((group) => group.name == _selectedGroup)
+        .firstOrNull;
     final entries = selected == null
         ? <MapEntry<String, dynamic>>[]
         : (selected.settings.entries.toList()
-          ..sort((a, b) => a.key.compareTo(b.key)));
+            ..sort((a, b) => a.key.compareTo(b.key)));
     final useTwoPane =
         AppBreakpoints.widthOf(context) >= AppBreakpoints.expandedStart;
 
-    final isOAuth2Group = selected?.name == 'oauth2' &&
+    final isOAuth2Group =
+        selected?.name == 'oauth2' &&
         selected!.settings.containsKey('providers');
     final oauth2Providers = isOAuth2Group
         ? _oauth2ProvidersFromValue(
@@ -8653,75 +8734,83 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     final settingsList = selected == null || entries.isEmpty
         ? const AppEmptyMessage(message: '暂无设置')
         : isOAuth2Group
-            ? AppListView(
-                padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
-                children: [
-                  _SettingsGroupHeader(
-                    groupName: selected.name,
-                    entryCount: oauth2Providers.length,
-                    isLoading: _isLoadingGroup,
-                    action: AppActionButton(
-                      icon: Icons.add_rounded,
-                      label: '添加登录提供方',
-                      onPressed: _savingSettings.contains('oauth2.providers')
-                          ? null
-                          : () => _editOAuth2Provider(
-                              selected, oauth2Providers, null),
-                    ),
-                    onRefresh: _isLoadingGroup
-                        ? null
-                        : () => _refreshSelectedGroup(refresh: true),
-                  ),
-                  _OAuth2ProvidersList(
-                    providers: oauth2Providers,
-                    saving: _savingSettings.contains('oauth2.providers'),
-                    onEdit: (name) =>
-                        _editOAuth2Provider(selected, oauth2Providers, name),
-                    onDelete: (name) =>
-                        _deleteOAuth2Provider(selected, oauth2Providers, name),
-                  ),
-                ],
-              )
-            : AppListView.builder(
-                padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
-                itemCount: entries.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return _SettingsGroupHeader(
-                      groupName: selected.name,
-                      entryCount: entries.length,
-                      isLoading: _isLoadingGroup,
-                      action: selected.name == 'email'
-                          ? AppActionButton(
-                              icon: Icons.outgoing_mail,
-                              label: '发送测试邮件',
-                              onPressed: _sendTestEmail,
-                              style: AppActionButtonStyle.tonal,
-                            )
-                          : null,
-                      onRefresh: _isLoadingGroup
-                          ? null
-                          : () => _refreshSelectedGroup(refresh: true),
-                    );
-                  }
-                  final entry = entries[index - 1];
-                  final normalized = _normalizedSettingValue(
-                      selected.name, entry.key, entry.value);
-                  final descriptor =
-                      _settingDescriptor(selected.name, entry.key, normalized);
-                  final settingId = '${selected.name}.${entry.key}';
-                  return _AdminPanelCard(
-                    isDark: isDark,
-                    child: _SettingTile(
-                      descriptor: descriptor,
-                      value: normalized,
-                      saving: _savingSettings.contains(settingId),
-                      onEdit: () =>
-                          _editSetting(selected, entry.key, normalized),
-                    ),
-                  );
-                },
+        ? AppListView(
+            padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
+            children: [
+              _SettingsGroupHeader(
+                groupName: selected.name,
+                entryCount: oauth2Providers.length,
+                isLoading: _isLoadingGroup,
+                action: AppActionButton(
+                  icon: Icons.add_rounded,
+                  label: '添加登录提供方',
+                  onPressed: _savingSettings.contains('oauth2.providers')
+                      ? null
+                      : () => _editOAuth2Provider(
+                          selected,
+                          oauth2Providers,
+                          null,
+                        ),
+                ),
+                onRefresh: _isLoadingGroup
+                    ? null
+                    : () => _refreshSelectedGroup(refresh: true),
+              ),
+              _OAuth2ProvidersList(
+                providers: oauth2Providers,
+                saving: _savingSettings.contains('oauth2.providers'),
+                onEdit: (name) =>
+                    _editOAuth2Provider(selected, oauth2Providers, name),
+                onDelete: (name) =>
+                    _deleteOAuth2Provider(selected, oauth2Providers, name),
+              ),
+            ],
+          )
+        : AppListView.builder(
+            padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
+            itemCount: entries.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _SettingsGroupHeader(
+                  groupName: selected.name,
+                  entryCount: entries.length,
+                  isLoading: _isLoadingGroup,
+                  action: selected.name == 'email'
+                      ? AppActionButton(
+                          icon: Icons.outgoing_mail,
+                          label: '发送测试邮件',
+                          onPressed: _sendTestEmail,
+                          style: AppActionButtonStyle.tonal,
+                        )
+                      : null,
+                  onRefresh: _isLoadingGroup
+                      ? null
+                      : () => _refreshSelectedGroup(refresh: true),
+                );
+              }
+              final entry = entries[index - 1];
+              final normalized = _normalizedSettingValue(
+                selected.name,
+                entry.key,
+                entry.value,
               );
+              final descriptor = _settingDescriptor(
+                selected.name,
+                entry.key,
+                normalized,
+              );
+              final settingId = '${selected.name}.${entry.key}';
+              return _AdminPanelCard(
+                isDark: isDark,
+                child: _SettingTile(
+                  descriptor: descriptor,
+                  value: normalized,
+                  saving: _savingSettings.contains(settingId),
+                  onEdit: () => _editSetting(selected, entry.key, normalized),
+                ),
+              );
+            },
+          );
 
     return Column(
       children: [
@@ -8957,11 +9046,7 @@ const Map<String, String> _permissionLabels = {
   'delete_room': '删除房间',
 };
 
-_SettingDescriptor _settingDescriptor(
-  String group,
-  String key,
-  dynamic value,
-) {
+_SettingDescriptor _settingDescriptor(String group, String key, dynamic value) {
   final id = '$group.$key';
   final known = <String, _SettingDescriptor>{
     'server.allowRoomCreation': const _SettingDescriptor(
@@ -9495,10 +9580,7 @@ class _SettingsGroupHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (action != null) ...[
-            const SizedBox(width: 12),
-            action!,
-          ],
+          if (action != null) ...[const SizedBox(width: 12), action!],
           const SizedBox(width: 8),
           AppIconButton(
             tooltip: '刷新当前组',
@@ -9539,8 +9621,9 @@ class _SettingTile extends StatelessWidget {
           AppIconBadge(
             icon: descriptor.icon,
             color: theme.colorScheme.primary,
-            backgroundColor:
-                theme.colorScheme.primaryContainer.withValues(alpha: 0.65),
+            backgroundColor: theme.colorScheme.primaryContainer.withValues(
+              alpha: 0.65,
+            ),
             size: 42,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -9580,8 +9663,10 @@ class _SettingTile extends StatelessWidget {
           if (saving)
             const SizedBox.square(
               dimension: 22,
-              child:
-                  AppLoadingIndicator(size: AppLoadingSize.sm, centered: false),
+              child: AppLoadingIndicator(
+                size: AppLoadingSize.sm,
+                centered: false,
+              ),
             )
           else if (isBool)
             AppSwitch(
@@ -9623,8 +9708,9 @@ class _InlineWarning extends StatelessWidget {
       iconSize: 18,
       title: Text(
         text,
-        style:
-            theme.textTheme.bodySmall?.copyWith(color: const Color(0xFF6B4E00)),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: const Color(0xFF6B4E00),
+        ),
       ),
     );
   }
@@ -9662,8 +9748,9 @@ class _SettingsDialogHeader extends StatelessWidget {
           AppIconBadge(
             icon: icon,
             color: theme.colorScheme.primary,
-            backgroundColor:
-                theme.colorScheme.primaryContainer.withValues(alpha: 0.78),
+            backgroundColor: theme.colorScheme.primaryContainer.withValues(
+              alpha: 0.78,
+            ),
             size: 44,
             borderRadius: BorderRadius.circular(14),
           ),
@@ -9789,7 +9876,9 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
 
   TextEditingController _controller(String id, [String initial = '']) {
     return _controllers.putIfAbsent(
-        id, () => TextEditingController(text: initial));
+      id,
+      () => TextEditingController(text: initial),
+    );
   }
 
   @override
@@ -9970,10 +10059,7 @@ class _TextSettingEditor extends StatefulWidget {
   final TextEditingController controller;
   final bool secret;
 
-  const _TextSettingEditor({
-    required this.controller,
-    required this.secret,
-  });
+  const _TextSettingEditor({required this.controller, required this.secret});
 
   @override
   State<_TextSettingEditor> createState() => _TextSettingEditorState();
@@ -10192,8 +10278,9 @@ Map<String, dynamic> _oauth2ProvidersFromList(List<dynamic> providers) {
   return {
     for (final provider in providers)
       if (provider is Map)
-        (provider['instanceName'] ?? '').toString():
-            Map<String, dynamic>.from(provider)
+        (provider['instanceName'] ?? '').toString(): Map<String, dynamic>.from(
+          provider,
+        ),
   }..remove('');
 }
 
@@ -10217,19 +10304,21 @@ String _oauth2ProviderType(Map<String, dynamic> value) {
 List<Map<String, dynamic>> _oauth2ProvidersToProtoList(
   Map<String, dynamic> providers,
 ) {
-  return providers.entries.map((entry) {
-    final value = entry.value is Map
-        ? Map<String, dynamic>.from(entry.value)
-        : <String, dynamic>{};
-    final type = _oauth2ProviderType(value);
-    final config = _oauth2ProviderConfig(value);
-    return <String, dynamic>{
-      'instanceName': entry.key,
-      'enableSignup': value['enableSignup'] == true,
-      'signupNeedReview': value['signupNeedReview'] == true,
-      type: config,
-    };
-  }).toList(growable: false);
+  return providers.entries
+      .map((entry) {
+        final value = entry.value is Map
+            ? Map<String, dynamic>.from(entry.value)
+            : <String, dynamic>{};
+        final type = _oauth2ProviderType(value);
+        final config = _oauth2ProviderConfig(value);
+        return <String, dynamic>{
+          'instanceName': entry.key,
+          'enableSignup': value['enableSignup'] == true,
+          'signupNeedReview': value['signupNeedReview'] == true,
+          type: config,
+        };
+      })
+      .toList(growable: false);
 }
 
 List<Map<String, dynamic>> _iceServersFromValue(dynamic value) {
@@ -10397,8 +10486,9 @@ class _OAuth2ProviderCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -10420,7 +10510,9 @@ class _OAuth2ProviderCard extends StatelessWidget {
                       ),
                       if (value['signupNeedReview'] == true)
                         const _StatusChip(
-                            label: '注册需审核', icon: Icons.fact_check_outlined),
+                          label: '注册需审核',
+                          icon: Icons.fact_check_outlined,
+                        ),
                     ],
                   ),
                 ],
@@ -10459,8 +10551,9 @@ class _StatusChip extends StatelessWidget {
       icon: icon,
       iconSize: 14,
       color: theme.colorScheme.onSecondaryContainer,
-      backgroundColor:
-          theme.colorScheme.secondaryContainer.withValues(alpha: 0.7),
+      backgroundColor: theme.colorScheme.secondaryContainer.withValues(
+        alpha: 0.7,
+      ),
       label: Text(
         label,
         style: theme.textTheme.labelSmall?.copyWith(
@@ -10520,23 +10613,31 @@ class _OAuth2ProviderEditorSheetState
     _enableSignup = widget.initialValue['enableSignup'] == true;
     _signupNeedReview = widget.initialValue['signupNeedReview'] == true;
     _name = TextEditingController(text: widget.initialName ?? _type);
-    _clientId =
-        TextEditingController(text: (config['clientId'] ?? '').toString());
-    _clientSecret =
-        TextEditingController(text: (config['clientSecret'] ?? '').toString());
-    _redirectUrl =
-        TextEditingController(text: (config['redirectUrl'] ?? '').toString());
-    _endpoint =
-        TextEditingController(text: (config['endpoint'] ?? '').toString());
+    _clientId = TextEditingController(
+      text: (config['clientId'] ?? '').toString(),
+    );
+    _clientSecret = TextEditingController(
+      text: (config['clientSecret'] ?? '').toString(),
+    );
+    _redirectUrl = TextEditingController(
+      text: (config['redirectUrl'] ?? '').toString(),
+    );
+    _endpoint = TextEditingController(
+      text: (config['endpoint'] ?? '').toString(),
+    );
     _issuer = TextEditingController(text: (config['issuer'] ?? '').toString());
-    _authUrl =
-        TextEditingController(text: (config['authUrl'] ?? '').toString());
-    _tokenUrl =
-        TextEditingController(text: (config['tokenUrl'] ?? '').toString());
-    _userinfoUrl =
-        TextEditingController(text: (config['userinfoUrl'] ?? '').toString());
-    _jwksUrl =
-        TextEditingController(text: (config['jwksUrl'] ?? '').toString());
+    _authUrl = TextEditingController(
+      text: (config['authUrl'] ?? '').toString(),
+    );
+    _tokenUrl = TextEditingController(
+      text: (config['tokenUrl'] ?? '').toString(),
+    );
+    _userinfoUrl = TextEditingController(
+      text: (config['userinfoUrl'] ?? '').toString(),
+    );
+    _jwksUrl = TextEditingController(
+      text: (config['jwksUrl'] ?? '').toString(),
+    );
   }
 
   @override
@@ -10604,8 +10705,9 @@ class _OAuth2ProviderEditorSheetState
                             _type = value;
                             if (widget.initialName == null &&
                                 (_name.text.trim().isEmpty ||
-                                    _oauth2ProviderTypes
-                                        .contains(_name.text.trim()))) {
+                                    _oauth2ProviderTypes.contains(
+                                      _name.text.trim(),
+                                    ))) {
                               _name.text = value;
                             }
                           });
@@ -10626,8 +10728,8 @@ class _OAuth2ProviderEditorSheetState
                         obscureText: true,
                         validator: (value) =>
                             (value == null || value.trim().isEmpty)
-                                ? '请输入 Client Secret'
-                                : null,
+                            ? '请输入 Client Secret'
+                            : null,
                         autocorrect: false,
                         smartDashesType: SmartDashesType.disabled,
                         smartQuotesType: SmartQuotesType.disabled,
@@ -10707,7 +10809,7 @@ class _OAuth2ProviderEditorSheetState
                         value: _signupNeedReview,
                         onChanged: _enableSignup
                             ? (value) =>
-                                setState(() => _signupNeedReview = value)
+                                  setState(() => _signupNeedReview = value)
                             : null,
                         title: const Text('注册后需要审核'),
                       ),
@@ -10740,10 +10842,12 @@ class _OAuth2ProviderEditorSheetState
       label: label,
       hintText: hintText,
       prefixIcon: icon,
-      validator: validator ??
+      validator:
+          validator ??
           (required
-              ? (value) =>
-                  (value == null || value.trim().isEmpty) ? '请输入 $label' : null
+              ? (value) => (value == null || value.trim().isEmpty)
+                    ? '请输入 $label'
+                    : null
               : null),
       autocorrect: false,
       smartDashesType: SmartDashesType.disabled,
@@ -10802,15 +10906,12 @@ class _OAuth2ProviderEditorSheetState
     }
     Navigator.pop(
       context,
-      _OAuth2ProviderEditResult(
-        _name.text.trim(),
-        {
-          'type': _type,
-          'enableSignup': _enableSignup,
-          'signupNeedReview': _enableSignup && _signupNeedReview,
-          _type: config,
-        },
-      ),
+      _OAuth2ProviderEditResult(_name.text.trim(), {
+        'type': _type,
+        'enableSignup': _enableSignup,
+        'signupNeedReview': _enableSignup && _signupNeedReview,
+        _type: config,
+      }),
     );
   }
 }
@@ -10819,10 +10920,7 @@ class _IceServersEditor extends StatelessWidget {
   final List<Map<String, dynamic>> servers;
   final ValueChanged<List<Map<String, dynamic>>> onChanged;
 
-  const _IceServersEditor({
-    required this.servers,
-    required this.onChanged,
-  });
+  const _IceServersEditor({required this.servers, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -10901,9 +10999,11 @@ class _IceServerCardState extends State<_IceServerCard> {
       text: urls is List ? urls.map((item) => item.toString()).join('\n') : '',
     );
     _username = TextEditingController(
-        text: (widget.value['username'] ?? '').toString());
+      text: (widget.value['username'] ?? '').toString(),
+    );
     _credential = TextEditingController(
-        text: (widget.value['credential'] ?? '').toString());
+      text: (widget.value['credential'] ?? '').toString(),
+    );
   }
 
   @override
@@ -10943,8 +11043,9 @@ class _IceServerCardState extends State<_IceServerCard> {
                 Expanded(
                   child: Text(
                     'ICE 服务器 ${widget.index + 1}',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 AppIconButton(
@@ -10967,16 +11068,20 @@ class _IceServerCardState extends State<_IceServerCard> {
               smartDashesType: SmartDashesType.disabled,
               smartQuotesType: SmartQuotesType.disabled,
               validator: (value) {
-                final urls = value
+                final urls =
+                    value
                         ?.split(RegExp(r'[\n,]'))
                         .map((url) => url.trim())
                         .where((url) => url.isNotEmpty)
                         .toList() ??
                     const [];
                 if (urls.isEmpty) return '至少填写一个 URL';
-                final invalid = urls.where((url) => !(url.startsWith('stun:') ||
-                    url.startsWith('turn:') ||
-                    url.startsWith('turns:')));
+                final invalid = urls.where(
+                  (url) =>
+                      !(url.startsWith('stun:') ||
+                          url.startsWith('turn:') ||
+                          url.startsWith('turns:')),
+                );
                 return invalid.isNotEmpty ? '只支持 stun:/turn:/turns: URL' : null;
               },
             ),
@@ -11006,10 +11111,7 @@ class _StructuredValueEditor extends StatelessWidget {
   final Map<String, dynamic> value;
   final ValueChanged<Map<String, dynamic>> onChanged;
 
-  const _StructuredValueEditor({
-    required this.value,
-    required this.onChanged,
-  });
+  const _StructuredValueEditor({required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -11120,10 +11222,7 @@ class _AdminPanelCard extends StatelessWidget {
   final bool isDark;
   final Widget child;
 
-  const _AdminPanelCard({
-    required this.isDark,
-    required this.child,
-  });
+  const _AdminPanelCard({required this.isDark, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -11499,8 +11598,8 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -11535,43 +11634,41 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
                 child: _loading
                     ? const AppLoadingIndicator()
                     : _messages.isEmpty
-                        ? const AppEmptyMessage(message: '暂无聊天消息')
-                        : AppListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                            itemCount: _messages.length +
-                                (_nextCursor.isEmpty ? 0 : 1),
-                            itemBuilder: (context, index) {
-                              if (index >= _messages.length) {
-                                return Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                    ),
-                                    child: AppActionButton(
-                                      onPressed:
-                                          _loadingMore ? null : _loadMore,
-                                      icon: Icons.history_rounded,
-                                      label: _loadingMore ? '加载中' : '加载更早消息',
-                                      style: AppActionButtonStyle.outlined,
-                                    ),
-                                  ),
-                                );
-                              }
-                              final message = _messages[index];
-                              return _AdminChatMessageCard(
-                                message: message,
-                                quoted: _messageIndex[message.replyToMessageId],
-                                highlighted:
-                                    _highlightedMessageId == message.id,
-                                onCopy: () => _copyMessage(message),
-                                onDelete: () => _deleteMessage(message),
-                                onReport: () => _reportMessage(message),
-                                onContext: () => _showContext(message),
-                                onJumpToReply: () => _jumpToReply(message),
-                              );
-                            },
-                          ),
+                    ? const AppEmptyMessage(message: '暂无聊天消息')
+                    : AppListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                        itemCount:
+                            _messages.length + (_nextCursor.isEmpty ? 0 : 1),
+                        itemBuilder: (context, index) {
+                          if (index >= _messages.length) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                child: AppActionButton(
+                                  onPressed: _loadingMore ? null : _loadMore,
+                                  icon: Icons.history_rounded,
+                                  label: _loadingMore ? '加载中' : '加载更早消息',
+                                  style: AppActionButtonStyle.outlined,
+                                ),
+                              ),
+                            );
+                          }
+                          final message = _messages[index];
+                          return _AdminChatMessageCard(
+                            message: message,
+                            quoted: _messageIndex[message.replyToMessageId],
+                            highlighted: _highlightedMessageId == message.id,
+                            onCopy: () => _copyMessage(message),
+                            onDelete: () => _deleteMessage(message),
+                            onReport: () => _reportMessage(message),
+                            onContext: () => _showContext(message),
+                            onJumpToReply: () => _jumpToReply(message),
+                          );
+                        },
+                      ),
               ),
             ),
           ],
@@ -11622,8 +11719,8 @@ class _RoomChatContextDialog extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -11737,10 +11834,7 @@ class _AdminChatMessageCard extends StatelessWidget {
                   ),
                 ),
                 if (message.isEdited && !isDeleted)
-                  const AppBadge(
-                    icon: Icons.edit_outlined,
-                    label: Text('已编辑'),
-                  ),
+                  const AppBadge(icon: Icons.edit_outlined, label: Text('已编辑')),
                 if (isDeleted)
                   AppBadge(
                     icon: Icons.delete_outline_rounded,
@@ -11852,8 +11946,9 @@ class _AdminQuotedMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final title =
-        quoted?.username.trim().isNotEmpty == true ? quoted!.username : '引用消息';
+    final title = quoted?.username.trim().isNotEmpty == true
+        ? quoted!.username
+        : '引用消息';
     final preview = quoted == null ? '点击查看上下文' : _messagePreview(quoted!);
     return InkWell(
       onTap: onTap,
@@ -11924,10 +12019,9 @@ class _AdminChatImageGrid extends StatelessWidget {
           height: 86,
           borderRadius: BorderRadius.circular(7),
           errorChild: ColoredBox(
-            color: Theme.of(context)
-                .colorScheme
-                .surfaceContainerHighest
-                .withValues(alpha: 0.8),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
             child: const Icon(Icons.broken_image_outlined),
           ),
         );
@@ -11952,13 +12046,7 @@ class _StatTile extends StatelessWidget {
   final Color color;
   final bool isDark;
 
-  const _StatTile(
-    this.label,
-    this.value,
-    this.icon,
-    this.color,
-    this.isDark,
-  );
+  const _StatTile(this.label, this.value, this.icon, this.color, this.isDark);
 
   @override
   Widget build(BuildContext context) {

@@ -2,25 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-const _watchRoots = [
-  'lib',
-  'assets',
-  'pubspec.yaml',
-];
+const _watchRoots = ['lib', 'assets', 'pubspec.yaml'];
 
-const _restartSuffixes = {
-  'pubspec.yaml',
-  'pubspec.lock',
-};
+const _restartSuffixes = {'pubspec.yaml', 'pubspec.lock'};
 
 Future<void> main(List<String> args) async {
   final device = args.isEmpty ? 'macos' : args.first;
-  final flutterArgs = [
-    'run',
-    '-d',
-    device,
-    ...args.skip(1),
-  ];
+  final flutterArgs = ['run', '-d', device, ...args.skip(1)];
 
   stdout.writeln('Starting: flutter ${flutterArgs.join(' ')}');
   final process = await Process.start(
@@ -45,13 +33,13 @@ Future<void> main(List<String> args) async {
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen((line) {
-      stdout.writeln(line);
-      if (!ready.isCompleted &&
-          (line.contains('Flutter run key commands') ||
-              line.contains('To hot reload changes'))) {
-        ready.complete();
-      }
-    }),
+          stdout.writeln(line);
+          if (!ready.isCompleted &&
+              (line.contains('Flutter run key commands') ||
+                  line.contains('To hot reload changes'))) {
+            ready.complete();
+          }
+        }),
   );
   subscriptions.add(
     process.stderr
@@ -60,9 +48,11 @@ Future<void> main(List<String> args) async {
         .listen(stderr.writeln),
   );
 
-  subscriptions.add(stdin.listen((data) {
-    inputSink.add(data);
-  }));
+  subscriptions.add(
+    stdin.listen((data) {
+      inputSink.add(data);
+    }),
+  );
 
   final watcher = _HotReloadWatcher(
     onReload: () => send('r'),
@@ -70,28 +60,24 @@ Future<void> main(List<String> args) async {
   );
   await watcher.start();
 
-  unawaited(process.exitCode.then((code) async {
-    for (final subscription in subscriptions) {
-      await subscription.cancel();
-    }
-    await watcher.dispose();
-    stdin.lineMode = true;
-    stdin.echoMode = true;
-    exit(code);
-  }));
-
-  await ready.future.timeout(
-    const Duration(seconds: 90),
-    onTimeout: () {},
+  unawaited(
+    process.exitCode.then((code) async {
+      for (final subscription in subscriptions) {
+        await subscription.cancel();
+      }
+      await watcher.dispose();
+      stdin.lineMode = true;
+      stdin.echoMode = true;
+      exit(code);
+    }),
   );
+
+  await ready.future.timeout(const Duration(seconds: 90), onTimeout: () {});
   stdout.writeln('Auto reload watcher is active.');
 }
 
 class _HotReloadWatcher {
-  _HotReloadWatcher({
-    required this.onReload,
-    required this.onRestart,
-  });
+  _HotReloadWatcher({required this.onReload, required this.onRestart});
 
   final VoidCallback onReload;
   final VoidCallback onRestart;

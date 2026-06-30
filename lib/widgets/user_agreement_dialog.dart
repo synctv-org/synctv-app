@@ -70,26 +70,31 @@ class _UserAgreementDialogState extends State<UserAgreementDialog> {
                   color: isDark ? const Color(0xFF2C2C2C) : Colors.grey[100],
                   borderRadius: const BorderRadius.all(Radius.circular(8)),
                   border: Border.all(
-                      color: isDark ? Colors.grey[800]! : Colors.grey[300]!),
+                    color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                  ),
                   padding: const EdgeInsets.all(12),
                   child: Markdown(
                     controller: _scrollController,
                     data: widget.agreementContent,
                     styleSheet: MarkdownStyleSheet(
                       h1: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                       h2: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                       p: TextStyle(
-                          fontSize: 14,
-                          height: 1.5,
-                          color: isDark ? Colors.grey[300] : Colors.black87),
+                        fontSize: 14,
+                        height: 1.5,
+                        color: isDark ? Colors.grey[300] : Colors.black87,
+                      ),
                       listBullet: TextStyle(
-                          color: isDark ? Colors.grey[300] : Colors.black87),
+                        color: isDark ? Colors.grey[300] : Colors.black87,
+                      ),
                     ),
                   ),
                 ),

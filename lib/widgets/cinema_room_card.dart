@@ -53,16 +53,18 @@ class CinemaRoomCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isUnavailable = isBanned || availability == 2;
     final statusLabel = isBanned ? '已封禁' : (availability == 2 ? '不可用' : '可加入');
-    final statusColor =
-        isUnavailable ? theme.colorScheme.error : theme.colorScheme.primary;
+    final statusColor = isUnavailable
+        ? theme.colorScheme.error
+        : theme.colorScheme.primary;
     final audienceText = memberCount > 0
         ? '在线 $viewerCount / 成员 $memberCount'
         : '在线 $viewerCount';
     final connectionText = connectionCount > 0 ? '$connectionCount 连接' : '暂无连接';
     final hasTaxonomy = categoryName.trim().isNotEmpty || labels.isNotEmpty;
     final dateStr = createdAt > 0
-        ? DateFormat('MM-dd HH:mm')
-            .format(DateTime.fromMillisecondsSinceEpoch(createdAt))
+        ? DateFormat(
+            'MM-dd HH:mm',
+          ).format(DateTime.fromMillisecondsSinceEpoch(createdAt))
         : '';
 
     final card = AppInkSurface(
@@ -100,8 +102,9 @@ class CinemaRoomCard extends StatelessWidget {
                   backgroundColor: statusColor.withValues(
                     alpha: isUnavailable ? 0.14 : 0.10,
                   ),
-                  borderSide:
-                      BorderSide(color: statusColor.withValues(alpha: 0.26)),
+                  borderSide: BorderSide(
+                    color: statusColor.withValues(alpha: 0.26),
+                  ),
                   textStyle: const TextStyle(fontSize: 12),
                 ),
               ],
@@ -143,10 +146,7 @@ class CinemaRoomCard extends StatelessWidget {
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-            child: _RoomCreator(
-              name: creatorName,
-              avatarUrl: creatorAvatarUrl,
-            ),
+            child: _RoomCreator(name: creatorName, avatarUrl: creatorAvatarUrl),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -158,25 +158,16 @@ class CinemaRoomCard extends StatelessWidget {
                   icon: Icons.people_alt_rounded,
                   label: audienceText,
                 ),
-                _RoomMetric(
-                  icon: Icons.link_rounded,
-                  label: connectionText,
-                ),
+                _RoomMetric(icon: Icons.link_rounded, label: connectionText),
                 if (needPassword)
-                  const _RoomMetric(
-                    icon: Icons.lock_rounded,
-                    label: '密码',
-                  ),
+                  const _RoomMetric(icon: Icons.lock_rounded, label: '密码'),
                 if (hidden)
                   const _RoomMetric(
                     icon: Icons.visibility_off_rounded,
                     label: '隐藏',
                   ),
                 if (dateStr.isNotEmpty)
-                  _RoomMetric(
-                    icon: Icons.schedule_rounded,
-                    label: dateStr,
-                  ),
+                  _RoomMetric(icon: Icons.schedule_rounded, label: dateStr),
               ],
             ),
           ),
@@ -200,8 +191,9 @@ class CinemaRoomCard extends StatelessWidget {
               color: Colors.transparent,
               borderRadius: const BorderRadius.all(Radius.circular(8)),
               border: Border.all(
-                color:
-                    hasFocus ? theme.colorScheme.primary : Colors.transparent,
+                color: hasFocus
+                    ? theme.colorScheme.primary
+                    : Colors.transparent,
                 width: 2,
               ),
               child: card,
@@ -214,10 +206,7 @@ class CinemaRoomCard extends StatelessWidget {
 }
 
 class _RoomCreator extends StatelessWidget {
-  const _RoomCreator({
-    required this.name,
-    required this.avatarUrl,
-  });
+  const _RoomCreator({required this.name, required this.avatarUrl});
 
   final String name;
   final String avatarUrl;
@@ -257,10 +246,7 @@ class _RoomCreator extends StatelessWidget {
 }
 
 class _RoomTaxonomyRow extends StatelessWidget {
-  const _RoomTaxonomyRow({
-    required this.categoryName,
-    required this.labels,
-  });
+  const _RoomTaxonomyRow({required this.categoryName, required this.labels});
 
   final String categoryName;
   final List<RoomLabelInfo> labels;
@@ -286,11 +272,7 @@ class _RoomTaxonomyRow extends StatelessWidget {
               color: theme.colorScheme.primary.withValues(alpha: 0.24),
             ),
             constraints: const BoxConstraints(maxWidth: 150),
-            label: Text(
-              category,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            label: Text(category, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         for (final label in visibleLabels) _RoomLabelBadge(label: label),
         if (overflowCount > 0)
@@ -314,10 +296,7 @@ class _RoomLabelBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = parseRoomLabelColor(
-      label.color,
-      theme.colorScheme.secondary,
-    );
+    final color = parseRoomLabelColor(label.color, theme.colorScheme.secondary);
     final text = label.name.trim().isEmpty ? label.key : label.name.trim();
     return AppBadge(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -325,11 +304,7 @@ class _RoomLabelBadge extends StatelessWidget {
       backgroundColor: color.withValues(alpha: 0.11),
       borderSide: BorderSide(color: color.withValues(alpha: 0.24)),
       constraints: const BoxConstraints(maxWidth: 126),
-      label: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      label: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
   }
 }
@@ -352,8 +327,9 @@ class _RoomCover extends StatelessWidget {
       color: statusColor.withValues(alpha: 0.12),
       child: Center(
         child: AppIconBadge(
-          icon:
-              isUnavailable ? Icons.block_rounded : Icons.meeting_room_rounded,
+          icon: isUnavailable
+              ? Icons.block_rounded
+              : Icons.meeting_room_rounded,
           color: statusColor,
         ),
       ),
@@ -401,10 +377,7 @@ class _RoomMetric extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _RoomMetric({
-    required this.icon,
-    required this.label,
-  });
+  const _RoomMetric({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -413,8 +386,9 @@ class _RoomMetric extends StatelessWidget {
       icon: icon,
       iconSize: 14,
       color: theme.colorScheme.onSurface.withValues(alpha: 0.64),
-      backgroundColor:
-          theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.62),
+      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.62,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       textStyle: theme.textTheme.labelMedium?.copyWith(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.70),

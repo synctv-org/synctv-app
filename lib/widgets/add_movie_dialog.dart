@@ -18,8 +18,11 @@ class AddMovieDialog extends StatefulWidget {
 
   const AddMovieDialog({super.key, required this.roomId, this.parentId});
 
-  static Future<void> show(BuildContext context, String roomId,
-      {String? parentId}) {
+  static Future<void> show(
+    BuildContext context,
+    String roomId, {
+    String? parentId,
+  }) {
     final dialogKey = GlobalKey<_AddMovieDialogState>();
     return showAppDialog<bool>(
       context: context,
@@ -118,9 +121,9 @@ class _MovieSourceSpec {
 
 class _DirectHeaderDraft {
   _DirectHeaderDraft({String name = '', String value = ''})
-      : key = UniqueKey(),
-        nameController = TextEditingController(text: name),
-        valueController = TextEditingController(text: value);
+    : key = UniqueKey(),
+      nameController = TextEditingController(text: name),
+      valueController = TextEditingController(text: value);
 
   final Key key;
   final TextEditingController nameController;
@@ -274,14 +277,12 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
             : Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    width: 236,
-                    child: _buildSourceRail(theme),
-                  ),
+                  SizedBox(width: 236, child: _buildSourceRail(theme)),
                   AppVerticalDivider(
                     width: 1,
-                    color:
-                        theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.7,
+                    ),
                   ),
                   Expanded(child: _buildSourcePanel(theme)),
                 ],
@@ -310,49 +311,49 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   List<_MovieSourceSpec> get _sourceSpecs => [
-        const _MovieSourceSpec(
-          index: 0,
-          title: '直链',
-          subtitle: 'HTTP / HTTPS / HLS',
-          icon: Icons.link_rounded,
-          color: Color(0xFF5D5FEF),
-        ),
-        _MovieSourceSpec(
-          index: 1,
-          title: 'RTMP 推流',
-          subtitle: '生成推流地址',
-          icon: Icons.upload_rounded,
-          color: Colors.deepOrange.shade600,
-        ),
-        _MovieSourceSpec(
-          index: 2,
-          title: '直播拉流',
-          subtitle: 'RTMP / HTTP-FLV',
-          icon: Icons.sensors_rounded,
-          color: Colors.teal.shade600,
-        ),
-        const _MovieSourceSpec(
-          index: 3,
-          title: 'Bilibili',
-          subtitle: 'BV / 链接解析',
-          icon: Icons.tv_rounded,
-          color: Color(0xFFFB7299),
-        ),
-        _MovieSourceSpec(
-          index: 4,
-          title: 'AList 网盘',
-          subtitle: '挂载目录资源',
-          icon: Icons.cloud_circle_rounded,
-          color: Colors.amber.shade700,
-        ),
-        _MovieSourceSpec(
-          index: 5,
-          title: 'Emby 媒体库',
-          subtitle: '个人媒体服务器',
-          icon: Icons.video_library_rounded,
-          color: Colors.green.shade600,
-        ),
-      ];
+    const _MovieSourceSpec(
+      index: 0,
+      title: '直链',
+      subtitle: 'HTTP / HTTPS / HLS',
+      icon: Icons.link_rounded,
+      color: Color(0xFF5D5FEF),
+    ),
+    _MovieSourceSpec(
+      index: 1,
+      title: 'RTMP 推流',
+      subtitle: '生成推流地址',
+      icon: Icons.upload_rounded,
+      color: Colors.deepOrange.shade600,
+    ),
+    _MovieSourceSpec(
+      index: 2,
+      title: '直播拉流',
+      subtitle: 'RTMP / HTTP-FLV',
+      icon: Icons.sensors_rounded,
+      color: Colors.teal.shade600,
+    ),
+    const _MovieSourceSpec(
+      index: 3,
+      title: 'Bilibili',
+      subtitle: 'BV / 链接解析',
+      icon: Icons.tv_rounded,
+      color: Color(0xFFFB7299),
+    ),
+    _MovieSourceSpec(
+      index: 4,
+      title: 'AList 网盘',
+      subtitle: '挂载目录资源',
+      icon: Icons.cloud_circle_rounded,
+      color: Colors.amber.shade700,
+    ),
+    _MovieSourceSpec(
+      index: 5,
+      title: 'Emby 媒体库',
+      subtitle: '个人媒体服务器',
+      icon: Icons.video_library_rounded,
+      color: Colors.green.shade600,
+    ),
+  ];
 
   void _selectSource(int index) {
     setState(() {
@@ -618,8 +619,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           const SizedBox(height: 12),
           AppSwitchTile(
             value: _isProxy,
-            onChanged:
-                _isLoading ? null : (val) => setState(() => _isProxy = val),
+            onChanged: _isLoading
+                ? null
+                : (val) => setState(() => _isProxy = val),
             title: const Text('默认使用代理播放'),
             subtitle: const Text('由 SyncTV 服务端转发媒体请求'),
             prefix: const Icon(Icons.route_rounded),
@@ -710,8 +712,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   Widget _buildDirectHeadersEditor(ThemeData theme) {
-    final borderColor =
-        theme.colorScheme.outlineVariant.withValues(alpha: 0.45);
+    final borderColor = theme.colorScheme.outlineVariant.withValues(
+      alpha: 0.45,
+    );
     final validationMessage = _directHeaderError;
     return AppPanelSurface(
       padding: const EdgeInsets.all(12),
@@ -783,10 +786,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       title: Text(
         message,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: color,
-          height: 1.35,
-        ),
+        style: theme.textTheme.bodySmall?.copyWith(color: color, height: 1.35),
       ),
     );
   }
@@ -976,8 +976,13 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           child: Row(
             children: [
               Expanded(
-                child: _buildTextField(theme, _biliUrlController, '视频链接 / BV号',
-                    '粘贴链接自动解析', Icons.search),
+                child: _buildTextField(
+                  theme,
+                  _biliUrlController,
+                  '视频链接 / BV号',
+                  '粘贴链接自动解析',
+                  Icons.search,
+                ),
               ),
               const SizedBox(width: 12),
               SizedBox.square(
@@ -1021,7 +1026,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                                 color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
-                              )
+                              ),
                             ],
                           ),
                         ),
@@ -1029,15 +1034,19 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                       Text(
                         title,
                         style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       if (desc.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Text(
                           desc,
-                          style:
-                              TextStyle(fontSize: 13, color: theme.hintColor),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: theme.hintColor,
+                          ),
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
@@ -1116,67 +1125,63 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                   ),
                 )
               : _alistLoading && _alistFiles.isEmpty
-                  ? const AppLoadingIndicator()
-                  : NotificationListener<ScrollNotification>(
-                      onNotification: (ScrollNotification scrollInfo) {
-                        if (!_alistLoading &&
-                            _alistHasMore &&
-                            scrollInfo.metrics.pixels >=
-                                scrollInfo.metrics.maxScrollExtent - 200) {
-                          _loadAlist(_alistPath, loadMore: true);
-                        }
-                        return false;
-                      },
-                      child: AppListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        itemCount: _alistFiles.length + (_alistHasMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == _alistFiles.length) {
-                            return AppLoadMoreFooter(
-                              loading: _alistLoading,
-                              onPressed: () => _loadAlist(
-                                _alistPath,
-                                loadMore: true,
-                              ),
-                            );
-                          }
+              ? const AppLoadingIndicator()
+              : NotificationListener<ScrollNotification>(
+                  onNotification: (ScrollNotification scrollInfo) {
+                    if (!_alistLoading &&
+                        _alistHasMore &&
+                        scrollInfo.metrics.pixels >=
+                            scrollInfo.metrics.maxScrollExtent - 200) {
+                      _loadAlist(_alistPath, loadMore: true);
+                    }
+                    return false;
+                  },
+                  child: AppListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    itemCount: _alistFiles.length + (_alistHasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _alistFiles.length) {
+                        return AppLoadMoreFooter(
+                          loading: _alistLoading,
+                          onPressed: () =>
+                              _loadAlist(_alistPath, loadMore: true),
+                        );
+                      }
 
-                          final file = _alistFiles[index];
-                          final path = file.path;
-                          final isSelected =
-                              _selectedAlistItems.containsKey(path);
+                      final file = _alistFiles[index];
+                      final path = file.path;
+                      final isSelected = _selectedAlistItems.containsKey(path);
 
-                          return _buildFileItem(
-                            theme,
-                            file.name,
-                            file.isDir,
-                            () => file.isDir
-                                ? _openAlistDirectory(file.path)
-                                : _addAlistFile(file),
-                            subtitle:
-                                file.isDir ? null : _formatSize(file.size),
-                            isSelected: isSelected,
-                            trailing: file.isDir
-                                ? AppIconButton(
-                                    icon: Icons.playlist_add_rounded,
-                                    tooltip: '添加为动态播放列表',
-                                    onPressed: () =>
-                                        _addAlistDirectoryPlaylist(file),
-                                  )
-                                : null,
-                            onSelectionChanged: (val) {
-                              setState(() {
-                                if (val == true) {
-                                  _selectedAlistItems[path] = file;
-                                } else {
-                                  _selectedAlistItems.remove(path);
-                                }
-                              });
-                            },
-                          );
+                      return _buildFileItem(
+                        theme,
+                        file.name,
+                        file.isDir,
+                        () => file.isDir
+                            ? _openAlistDirectory(file.path)
+                            : _addAlistFile(file),
+                        subtitle: file.isDir ? null : _formatSize(file.size),
+                        isSelected: isSelected,
+                        trailing: file.isDir
+                            ? AppIconButton(
+                                icon: Icons.playlist_add_rounded,
+                                tooltip: '添加为动态播放列表',
+                                onPressed: () =>
+                                    _addAlistDirectoryPlaylist(file),
+                              )
+                            : null,
+                        onSelectionChanged: (val) {
+                          setState(() {
+                            if (val == true) {
+                              _selectedAlistItems[path] = file;
+                            } else {
+                              _selectedAlistItems.remove(path);
+                            }
+                          });
                         },
-                      ),
-                    ),
+                      );
+                    },
+                  ),
+                ),
         ),
         if (_selectedAlistItems.isNotEmpty)
           AppPanelSurface(
@@ -1247,60 +1252,62 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                   ),
                 )
               : _embyLoading && _embyFiles.isEmpty
-                  ? const AppLoadingIndicator()
-                  : NotificationListener<ScrollNotification>(
-                      onNotification: (scrollInfo) {
-                        if (!_embyLoading &&
-                            _embyHasMore &&
-                            scrollInfo.metrics.pixels >=
-                                scrollInfo.metrics.maxScrollExtent - 200) {
-                          _loadEmby(_embyPath, loadMore: true);
-                        }
-                        return false;
-                      },
-                      child: AppListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        itemCount: _embyFiles.length + (_embyHasMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == _embyFiles.length) {
-                            return AppLoadMoreFooter(
-                              loading: _embyLoading,
-                              onPressed: () => _loadEmby(
-                                _embyPath,
-                                loadMore: true,
-                              ),
-                            );
-                          }
-                          final file = _embyFiles[index];
-                          return _buildFileItem(
-                            theme,
-                            file.name.isEmpty ? 'Unknown' : file.name,
-                            file.isDir,
-                            () => file.isDir
-                                ? _enterEmbyDir(file.name, file.id)
-                                : _addEmbyFile(file),
-                            subtitle: file.isDir ? null : 'Emby Media',
-                            thumbnailUrl: file.thumbnail,
-                            iconColor: Colors.green,
-                            trailing: file.isDir
-                                ? AppIconButton(
-                                    icon: Icons.playlist_add_rounded,
-                                    tooltip: '添加为动态播放列表',
-                                    onPressed: () =>
-                                        _addEmbyDirectoryPlaylist(file),
-                                  )
-                                : null,
-                          );
-                        },
-                      ),
-                    ),
+              ? const AppLoadingIndicator()
+              : NotificationListener<ScrollNotification>(
+                  onNotification: (scrollInfo) {
+                    if (!_embyLoading &&
+                        _embyHasMore &&
+                        scrollInfo.metrics.pixels >=
+                            scrollInfo.metrics.maxScrollExtent - 200) {
+                      _loadEmby(_embyPath, loadMore: true);
+                    }
+                    return false;
+                  },
+                  child: AppListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: _embyFiles.length + (_embyHasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _embyFiles.length) {
+                        return AppLoadMoreFooter(
+                          loading: _embyLoading,
+                          onPressed: () => _loadEmby(_embyPath, loadMore: true),
+                        );
+                      }
+                      final file = _embyFiles[index];
+                      return _buildFileItem(
+                        theme,
+                        file.name.isEmpty ? 'Unknown' : file.name,
+                        file.isDir,
+                        () => file.isDir
+                            ? _enterEmbyDir(file.name, file.id)
+                            : _addEmbyFile(file),
+                        subtitle: file.isDir ? null : 'Emby Media',
+                        thumbnailUrl: file.thumbnail,
+                        iconColor: Colors.green,
+                        trailing: file.isDir
+                            ? AppIconButton(
+                                icon: Icons.playlist_add_rounded,
+                                tooltip: '添加为动态播放列表',
+                                onPressed: () =>
+                                    _addEmbyDirectoryPlaylist(file),
+                              )
+                            : null,
+                      );
+                    },
+                  ),
+                ),
         ),
       ],
     );
   }
 
-  Widget _buildTextField(ThemeData theme, TextEditingController controller,
-      String label, String hint, IconData icon) {
+  Widget _buildTextField(
+    ThemeData theme,
+    TextEditingController controller,
+    String label,
+    String hint,
+    IconData icon,
+  ) {
     final isUrlLike = label.contains('链接') || hint.contains('https');
     return AppTextField(
       controller: controller,
@@ -1310,15 +1317,21 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       enabled: !_isLoading,
       keyboardType: isUrlLike ? TextInputType.url : null,
       autocorrect: false,
-      smartDashesType:
-          isUrlLike ? SmartDashesType.disabled : SmartDashesType.enabled,
-      smartQuotesType:
-          isUrlLike ? SmartQuotesType.disabled : SmartQuotesType.enabled,
+      smartDashesType: isUrlLike
+          ? SmartDashesType.disabled
+          : SmartDashesType.enabled,
+      smartQuotesType: isUrlLike
+          ? SmartQuotesType.disabled
+          : SmartQuotesType.enabled,
     );
   }
 
-  Widget _buildActionButton(String text, VoidCallback onPressed,
-      {Color? color, IconData? icon}) {
+  Widget _buildActionButton(
+    String text,
+    VoidCallback onPressed, {
+    Color? color,
+    IconData? icon,
+  }) {
     return Align(
       alignment: Alignment.centerRight,
       child: ConstrainedBox(
@@ -1410,9 +1423,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         value: value,
         label: '媒体源账号',
         prefixIcon: Icons.account_tree_rounded,
-        options: {
-          for (final item in items) labelOf(item): keyOf(item),
-        },
+        options: {for (final item in items) labelOf(item): keyOf(item)},
         onChanged: (key) {
           if (key == null) return;
           onChanged(items.firstWhere((item) => keyOf(item) == key));
@@ -1476,8 +1487,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     ThemeData theme,
     List<BilibiliVideoItemInfo> videos,
   ) {
-    final selectedIndex =
-        _biliSelectedIndex.clamp(0, videos.length - 1).toInt();
+    final selectedIndex = _biliSelectedIndex
+        .clamp(0, videos.length - 1)
+        .toInt();
     return AppPanelSurface(
       constraints: const BoxConstraints(maxHeight: 220),
       border: Border.all(color: theme.dividerColor.withValues(alpha: 0.15)),
@@ -1486,7 +1498,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         shrinkWrap: true,
         itemCount: videos.length,
         separatorBuilder: (_, __) => AppDivider(
-            height: 1, color: theme.dividerColor.withValues(alpha: 0.08)),
+          height: 1,
+          color: theme.dividerColor.withValues(alpha: 0.08),
+        ),
         itemBuilder: (context, index) {
           final video = videos[index];
           final selected = index == selectedIndex;
@@ -1494,21 +1508,24 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           final subtitle = video.isLive
               ? '直播间 ${video.cid > 0 ? video.cid : video.epid}'
               : video.epid > 0
-                  ? 'EP ${video.epid} · CID ${video.cid}'
-                  : '${video.bvid} · CID ${video.cid}';
+              ? 'EP ${video.epid} · CID ${video.cid}'
+              : '${video.bvid} · CID ${video.cid}';
           return AppTile(
             selected: selected,
             prefix: Icon(
               video.isLive
                   ? Icons.live_tv_rounded
                   : selected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_unchecked_rounded,
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_unchecked_rounded,
               color: selected ? const Color(0xFFFB7299) : theme.hintColor,
             ),
             title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-            subtitle:
-                Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             onPressed: () => setState(() => _biliSelectedIndex = index),
           );
         },
@@ -1517,13 +1534,17 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   Widget _buildFileItem(
-      ThemeData theme, String name, bool isDir, VoidCallback onTap,
-      {String? subtitle,
-      String? thumbnailUrl,
-      Color? iconColor,
-      bool? isSelected,
-      ValueChanged<bool?>? onSelectionChanged,
-      Widget? trailing}) {
+    ThemeData theme,
+    String name,
+    bool isDir,
+    VoidCallback onTap, {
+    String? subtitle,
+    String? thumbnailUrl,
+    Color? iconColor,
+    bool? isSelected,
+    ValueChanged<bool?>? onSelectionChanged,
+    Widget? trailing,
+  }) {
     final hasThumbnail = thumbnailUrl != null && thumbnailUrl.isNotEmpty;
     return AppPanelSurface(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1531,9 +1552,10 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       borderRadius: BorderRadius.circular(8),
       boxShadow: [
         BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2))
+          color: Colors.black.withValues(alpha: 0.02),
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
       ],
       child: AppTile(
         onPressed: onTap,
@@ -1559,19 +1581,24 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
                     url: thumbnailUrl,
                     width: 40,
                     height: 40,
-                    errorIcon:
-                        isDir ? Icons.folder_rounded : Icons.movie_rounded,
+                    errorIcon: isDir
+                        ? Icons.folder_rounded
+                        : Icons.movie_rounded,
                   )
                 : _buildFileIcon(isDir, iconColor),
           ],
         ),
-        title: Text(name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        title: Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        ),
         subtitle: subtitle != null
-            ? Text(subtitle,
-                style: TextStyle(fontSize: 12, color: theme.hintColor))
+            ? Text(
+                subtitle,
+                style: TextStyle(fontSize: 12, color: theme.hintColor),
+              )
             : null,
         suffix: trailing,
       ),
@@ -1592,12 +1619,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.link_off_rounded,
-              size: 64, color: theme.disabledColor.withValues(alpha: 0.5)),
+          Icon(
+            Icons.link_off_rounded,
+            size: 64,
+            color: theme.disabledColor.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
-          Text('未绑定 $name',
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            '未绑定 $name',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Text('请先绑定账号以访问资源', style: TextStyle(color: theme.hintColor)),
           const SizedBox(height: 24),
@@ -1636,17 +1667,21 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   void _applyDefaultProviderBindings() {
     if (_alistBinds.isNotEmpty &&
-        !_alistBinds.any((bind) =>
-            bind.serverId == _alistServerId &&
-            bind.providerInstanceName == _alistInstanceName)) {
+        !_alistBinds.any(
+          (bind) =>
+              bind.serverId == _alistServerId &&
+              bind.providerInstanceName == _alistInstanceName,
+        )) {
       final bind = _alistBinds.first;
       _alistServerId = bind.serverId;
       _alistInstanceName = bind.providerInstanceName;
     }
     if (_embyBinds.isNotEmpty &&
-        !_embyBinds.any((bind) =>
-            bind.serverId == _embyServerId &&
-            bind.providerInstanceName == _embyInstanceName)) {
+        !_embyBinds.any(
+          (bind) =>
+              bind.serverId == _embyServerId &&
+              bind.providerInstanceName == _embyInstanceName,
+        )) {
       final bind = _embyBinds.first;
       _embyServerId = bind.serverId;
       _embyInstanceName = bind.providerInstanceName;
@@ -1684,7 +1719,8 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   String _directUrlDisplayName(String url) {
     final parsed = Uri.tryParse(url);
-    final segments = parsed?.pathSegments
+    final segments =
+        parsed?.pathSegments
             .where((segment) => segment.trim().isNotEmpty)
             .toList(growable: false) ??
         const <String>[];
@@ -1696,9 +1732,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   }
 
   void _addDirectHeaderRow() {
-    final hasBlank = _directHeaders.any((header) =>
-        header.nameController.text.trim().isEmpty &&
-        header.valueController.text.trim().isEmpty);
+    final hasBlank = _directHeaders.any(
+      (header) =>
+          header.nameController.text.trim().isEmpty &&
+          header.valueController.text.trim().isEmpty,
+    );
     if (hasBlank) {
       setState(() => _directHeaderError = '请先填写当前空白请求头');
       return;
@@ -1735,14 +1773,13 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     return DirectUrlSourceConfig.hasCredentialHeaders(
       _directHeaders
           .where((header) => header.nameController.text.trim().isNotEmpty)
-          .fold<Map<String, String>>(
-        {},
-        (headers, header) {
-          headers[header.nameController.text.trim()] =
-              header.valueController.text.trim();
-          return headers;
-        },
-      ),
+          .fold<Map<String, String>>({}, (headers, header) {
+            headers[header.nameController.text.trim()] = header
+                .valueController
+                .text
+                .trim();
+            return headers;
+          }),
     );
   }
 
@@ -1785,9 +1822,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         _embySearchController.text.trim().isNotEmpty) {
       return true;
     }
-    return _directHeaders.any((header) =>
-        header.nameController.text.trim().isNotEmpty ||
-        header.valueController.text.trim().isNotEmpty);
+    return _directHeaders.any(
+      (header) =>
+          header.nameController.text.trim().isNotEmpty ||
+          header.valueController.text.trim().isNotEmpty,
+    );
   }
 
   Future<bool> _confirmDiscardDraft() async {
@@ -1894,15 +1933,13 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   Future<bool> _confirmDirectCredentialHeaders(
     Map<String, String> headers,
   ) async {
-    final names =
-        DirectUrlSourceConfig.credentialHeaderNames(headers).join('、');
+    final names = DirectUrlSourceConfig.credentialHeaderNames(
+      headers,
+    ).join('、');
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '确认共享凭据请求头',
-      icon: Icon(
-        Icons.warning_amber_rounded,
-        color: Colors.orange.shade700,
-      ),
+      icon: Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
       iconColor: Colors.orange.shade700,
       content: Text(
         '$names 会随播放信息提供给房间成员，用于请求媒体资源。继续添加前请确认房间成员可信，且这些凭据泄漏不会影响你的账号安全。',
@@ -1955,10 +1992,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       );
       if (mounted) {
         Navigator.pop(context);
-        await _showRtmpPublishDialog(
-          publish: publish,
-          streamInfo: streamInfo,
-        );
+        await _showRtmpPublishDialog(publish: publish, streamInfo: streamInfo);
       }
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '创建推流入口失败: $e');
@@ -2006,7 +2040,8 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     }
     final scheme = uri.scheme.toLowerCase();
     final isRtmp = scheme == 'rtmp';
-    final isFlv = (scheme == 'http' || scheme == 'https') &&
+    final isFlv =
+        (scheme == 'http' || scheme == 'https') &&
         uri.path.toLowerCase().endsWith('.flv');
     if (!isRtmp && !isFlv) {
       throw const FormatException('直播拉流仅支持 rtmp:// 或 HTTP-FLV .flv 地址');
@@ -2016,7 +2051,8 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   String _liveProxyDisplayName(String url) {
     final uri = Uri.tryParse(url);
-    final segments = uri?.pathSegments
+    final segments =
+        uri?.pathSegments
             .where((segment) => segment.trim().isNotEmpty)
             .toList(growable: false) ??
         const <String>[];
@@ -2044,8 +2080,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
           children: [
             _buildRtmpInfoRow('推流地址', publish.rtmpUrl, copyable: true),
             _buildRtmpInfoRow('Stream Key', publish.streamKey, copyable: true),
-            _buildRtmpInfoRow('Publish Key', publish.publishKey,
-                copyable: true),
+            _buildRtmpInfoRow(
+              'Publish Key',
+              publish.publishKey,
+              copyable: true,
+            ),
             if (publicSettings?.customPublishHost.isNotEmpty == true)
               _buildRtmpInfoRow(
                 '发布主机',
@@ -2185,8 +2224,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       if (videos.isEmpty) {
         throw Exception('无法获取 Bilibili 视频信息');
       }
-      final selectedIndex =
-          _biliSelectedIndex.clamp(0, videos.length - 1).toInt();
+      final selectedIndex = _biliSelectedIndex
+          .clamp(0, videos.length - 1)
+          .toInt();
       final selectedVideo = videos[selectedIndex];
 
       final sourceConfig = _bilibiliSourceConfig(selectedVideo);
@@ -2215,27 +2255,16 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     if (video.isLive) {
       final roomId = video.cid > 0 ? video.cid : video.epid;
       if (roomId <= 0) throw Exception('无法获取 Bilibili 直播间 ID');
-      return {
-        'type': 'live',
-        'room_id': roomId,
-      };
+      return {'type': 'live', 'room_id': roomId};
     }
     if (video.epid > 0) {
       if (video.cid <= 0) throw Exception('无法获取 Bilibili CID');
-      return {
-        'type': 'pgc',
-        'epid': video.epid,
-        'cid': video.cid,
-      };
+      return {'type': 'pgc', 'epid': video.epid, 'cid': video.cid};
     }
     if (video.bvid.isEmpty || video.cid <= 0) {
       throw Exception('无法获取 BVID 或 CID');
     }
-    return {
-      'type': 'video',
-      'bvid': video.bvid,
-      'cid': video.cid,
-    };
+    return {'type': 'video', 'bvid': video.bvid, 'cid': video.cid};
   }
 
   Future<void> _loadAlist(String path, {bool loadMore = false}) async {
@@ -2479,7 +2508,9 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       if (mounted) {
         Navigator.pop(context);
         MessageUtils.showSuccess(
-            context, '已添加 ${_selectedAlistItems.length} 项');
+          context,
+          '已添加 ${_selectedAlistItems.length} 项',
+        );
       }
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '批量添加失败: $e');
@@ -2560,9 +2591,11 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       _embySearchController.clear();
       setState(() => _embyKeyword = '');
     }
-    _loadEmby((pathOrId.contains('/') || pathOrId.length > 20)
-        ? pathOrId
-        : (_embyPath.endsWith('/') ? '$_embyPath$name' : '$_embyPath/$name'));
+    _loadEmby(
+      (pathOrId.contains('/') || pathOrId.length > 20)
+          ? pathOrId
+          : (_embyPath.endsWith('/') ? '$_embyPath$name' : '$_embyPath/$name'),
+    );
   }
 
   void _goUpEmby() {
@@ -2622,10 +2655,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
         parentId: widget.parentId ?? '',
         sourceProvider: 'emby',
         providerInstanceName: _embyInstanceName,
-        sourceConfig: {
-          'serverId': _embyServerId,
-          'itemId': itemId,
-        },
+        sourceConfig: {'serverId': _embyServerId, 'itemId': itemId},
         name: file.name.isEmpty ? 'Emby Playlist' : file.name,
       );
       if (mounted) {

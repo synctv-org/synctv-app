@@ -48,14 +48,12 @@ class SyncTvRuntimeService {
 
   Future<SyncTvServerProfile> addServer(String url) async {
     final serverClient = _createClient(url);
-    final info = await serverClient.publicService
-        .getServerInfo(client.GetServerInfoRequest());
+    final info = await serverClient.publicService.getServerInfo(
+      client.GetServerInfoRequest(),
+    );
     final serverId = info.serverId.trim();
     if (serverId.isEmpty) {
-      throw SyncTvApiException(
-        '服务器未返回 server_id',
-        statusCode: 500,
-      );
+      throw SyncTvApiException('服务器未返回 server_id', statusCode: 500);
     }
     final profile = await sessionStore.addOrUpdateServer(
       serverId: serverId,
@@ -162,8 +160,9 @@ class SyncTvRuntimeService {
     final active = sessionStore.activeServer;
     if (active == null || !active.isPending) return;
     try {
-      final info =
-          await _api.publicService.getServerInfo(client.GetServerInfoRequest());
+      final info = await _api.publicService.getServerInfo(
+        client.GetServerInfoRequest(),
+      );
       final serverId = info.serverId.trim();
       if (serverId.isEmpty) return;
       await sessionStore.addOrUpdateServer(

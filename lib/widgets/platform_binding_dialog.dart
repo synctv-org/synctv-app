@@ -133,36 +133,35 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     super.dispose();
   }
 
-  Future<void> _loadBinds(
-    _ProviderKind kind, {
-    bool showLoading = true,
-  }) async {
+  Future<void> _loadBinds(_ProviderKind kind, {bool showLoading = true}) async {
     if (!mounted) return;
     if (showLoading) setState(() => _loading[kind] = true);
     try {
       final list = switch (kind) {
-        _ProviderKind.alist => (await SyncTvService.getAllAlistBindInfos())
-            .map(
-              (bind) => _ProviderBindItem(
-                id: bind.id,
-                serverId: bind.serverId,
-                instanceName: bind.providerInstanceName,
-                title: bind.host.isNotEmpty ? bind.host : bind.username,
-                subtitle: bind.username,
-              ),
-            )
-            .toList(),
-        _ProviderKind.emby => (await SyncTvService.getAllEmbyBindInfos())
-            .map(
-              (bind) => _ProviderBindItem(
-                id: bind.id,
-                serverId: bind.serverId,
-                instanceName: bind.providerInstanceName,
-                title: bind.host,
-                subtitle: bind.userId,
-              ),
-            )
-            .toList(),
+        _ProviderKind.alist =>
+          (await SyncTvService.getAllAlistBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.host.isNotEmpty ? bind.host : bind.username,
+                  subtitle: bind.username,
+                ),
+              )
+              .toList(),
+        _ProviderKind.emby =>
+          (await SyncTvService.getAllEmbyBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.host,
+                  subtitle: bind.userId,
+                ),
+              )
+              .toList(),
         _ProviderKind.bilibili =>
           (await SyncTvService.getAllBilibiliBindInfos())
               .map(
@@ -229,9 +228,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
             instanceName: item.instanceName,
           );
         case _ProviderKind.bilibili:
-          await SyncTvService.logoutBilibili(
-            instanceName: item.instanceName,
-          );
+          await SyncTvService.logoutBilibili(instanceName: item.instanceName);
       }
       if (!mounted) return;
       MessageUtils.showSuccess(context, '解绑成功');
@@ -254,8 +251,8 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
         content: _BilibiliLoginDialog(
           instanceNamesLoader: () =>
               SyncTvService.listAvailableProviderInstances(
-            providerType: _providerType(kind),
-          ),
+                providerType: _providerType(kind),
+              ),
           onSuccess: () => _loadBinds(kind, showLoading: false),
         ),
       );
@@ -291,8 +288,10 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
         return AppDialogFrame(
           maxWidth: 520,
           maxHeight: size.height * 0.94,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: 520,
@@ -535,18 +534,21 @@ class _ProviderBindList extends StatelessWidget {
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final item = items[index];
-                    final serverId =
-                        item.serverId.isNotEmpty ? item.serverId : item.id;
+                    final serverId = item.serverId.isNotEmpty
+                        ? item.serverId
+                        : item.id;
                     final title = _itemTitle(item, serverId);
-                    final instanceLabel =
-                        _providerInstanceLabel(item.instanceName);
+                    final instanceLabel = _providerInstanceLabel(
+                      item.instanceName,
+                    );
                     return AppPanelSurface(
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: theme.colorScheme.outlineVariant
-                            .withValues(alpha: 0.72),
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.72,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -664,9 +666,7 @@ class _BilibiliSingleBindView extends StatelessWidget {
               padding: const EdgeInsets.all(18),
               color: provider.color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: provider.color.withValues(alpha: 0.2),
-              ),
+              border: Border.all(color: provider.color.withValues(alpha: 0.2)),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -800,11 +800,7 @@ class _ProviderTinyChip extends StatelessWidget {
       ),
       label: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 180),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
     );
   }
@@ -1136,9 +1132,9 @@ class _ProviderNotice extends StatelessWidget {
       title: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -1436,11 +1432,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
                       icon: Icon(Icons.qr_code_2_rounded),
                       text: '扫码',
                     ),
-                    Tab(
-                      height: 48,
-                      icon: Icon(Icons.sms_rounded),
-                      text: '验证码',
-                    ),
+                    Tab(height: 48, icon: Icon(Icons.sms_rounded), text: '验证码'),
                   ],
                 ),
               ),
@@ -1500,7 +1492,9 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
                     width: 22,
                     height: 22,
                     child: AppLoadingIndicator(
-                        size: AppLoadingSize.sm, centered: false),
+                      size: AppLoadingSize.sm,
+                      centered: false,
+                    ),
                   )
                 : null,
           ),
@@ -1787,7 +1781,9 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
                     width: 22,
                     height: 22,
                     child: AppLoadingIndicator(
-                        size: AppLoadingSize.sm, centered: false),
+                      size: AppLoadingSize.sm,
+                      centered: false,
+                    ),
                   )
                 : null,
           ),
@@ -1879,9 +1875,7 @@ class _ProviderInstanceSelector extends StatelessWidget {
 class _AccountInfoView extends StatelessWidget {
   final List<(String, String)> rows;
 
-  const _AccountInfoView({
-    required this.rows,
-  });
+  const _AccountInfoView({required this.rows});
 
   @override
   Widget build(BuildContext context) {
@@ -1948,7 +1942,9 @@ class _DialogActions extends StatelessWidget {
                 width: 24,
                 height: 24,
                 child: AppLoadingIndicator(
-                    size: AppLoadingSize.sm, centered: false),
+                  size: AppLoadingSize.sm,
+                  centered: false,
+                ),
               )
             : ChatUtils.createConfirmButton(
                 context,

@@ -22,7 +22,7 @@ import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
 
 class SyncTvAdminDomainService {
   SyncTvAdminDomainService(this._api, {SyncTvMemoryCache? cache})
-      : _cache = cache ?? SyncTvMemoryCache();
+    : _cache = cache ?? SyncTvMemoryCache();
 
   final SyncTvApiClient _api;
   final SyncTvMemoryCache _cache;
@@ -71,7 +71,8 @@ class SyncTvAdminDomainService {
         username: username,
         password: password,
         email: email,
-        role: common_enum.UserRole.valueOf(role) ??
+        role:
+            common_enum.UserRole.valueOf(role) ??
             common_enum.UserRole.USER_ROLE_USER,
         status: status,
       ),
@@ -224,19 +225,13 @@ class SyncTvAdminDomainService {
     return settingsGroup;
   }
 
-  Future<void> banUser(
-    String userId,
-    bool ban, {
-    String reason = '',
-  }) async {
+  Future<void> banUser(String userId, bool ban, {String reason = ''}) async {
     if (ban) {
       await _api.adminService.banUser(
         admin.BanUserRequest(userId: userId, reason: reason),
       );
     } else {
-      await _api.adminService.unbanUser(
-        admin.UnbanUserRequest(userId: userId),
-      );
+      await _api.adminService.unbanUser(admin.UnbanUserRequest(userId: userId));
     }
   }
 
@@ -248,7 +243,10 @@ class SyncTvAdminDomainService {
       admin.BatchBanUsersRequest(userIds: userIds, reason: reason),
     );
     return _batchOperationResult(
-        response.results, response.succeeded, response.failed);
+      response.results,
+      response.succeeded,
+      response.failed,
+    );
   }
 
   Future<AdminBatchOperationResult> batchDeleteUsers(
@@ -258,7 +256,10 @@ class SyncTvAdminDomainService {
       admin.BatchDeleteUsersRequest(userIds: userIds),
     );
     return _batchOperationResult(
-        response.results, response.succeeded, response.failed);
+      response.results,
+      response.succeeded,
+      response.failed,
+    );
   }
 
   Future<AdminRoomsPage> listRoomsPage({
@@ -294,19 +295,13 @@ class SyncTvAdminDomainService {
     );
   }
 
-  Future<void> banRoom(
-    String roomId,
-    bool ban, {
-    String reason = '',
-  }) async {
+  Future<void> banRoom(String roomId, bool ban, {String reason = ''}) async {
     if (ban) {
       await _api.adminService.banRoom(
         admin.BanRoomRequest(roomId: roomId, reason: reason),
       );
     } else {
-      await _api.adminService.unbanRoom(
-        admin.UnbanRoomRequest(roomId: roomId),
-      );
+      await _api.adminService.unbanRoom(admin.UnbanRoomRequest(roomId: roomId));
     }
   }
 
@@ -318,7 +313,10 @@ class SyncTvAdminDomainService {
       admin.BatchBanRoomsRequest(roomIds: roomIds, reason: reason),
     );
     return _batchOperationResult(
-        response.results, response.succeeded, response.failed);
+      response.results,
+      response.succeeded,
+      response.failed,
+    );
   }
 
   Future<AdminBatchOperationResult> batchDeleteRooms(
@@ -328,7 +326,10 @@ class SyncTvAdminDomainService {
       admin.BatchDeleteRoomsRequest(roomIds: roomIds),
     );
     return _batchOperationResult(
-        response.results, response.succeeded, response.failed);
+      response.results,
+      response.succeeded,
+      response.failed,
+    );
   }
 
   Future<void> deleteRoom(String roomId) async {
@@ -401,9 +402,7 @@ class SyncTvAdminDomainService {
       refresh: refresh,
       loader: () async {
         final response = await _api.adminService.listRoomCategories(
-          admin.ListRoomCategoriesRequest(
-            includeDisabled: includeDisabled,
-          ),
+          admin.ListRoomCategoriesRequest(includeDisabled: includeDisabled),
         );
         return response.categories
             .map(_api.mapRoomCategory)
@@ -550,7 +549,8 @@ class SyncTvAdminDomainService {
     );
     if (!response.success) {
       throw StateError(
-          response.message.isEmpty ? '测试邮件发送失败' : response.message);
+        response.message.isEmpty ? '测试邮件发送失败' : response.message,
+      );
     }
     return response.message;
   }
@@ -568,12 +568,15 @@ class SyncTvAdminDomainService {
       bannedRooms: response.bannedRooms,
       totalMedia: response.totalMedia,
       providerInstances: response.providerInstances,
-      onlineUsers:
-          response.hasPresence() ? response.presence.onlineUserCount : 0,
-      onlineConnections:
-          response.hasPresence() ? response.presence.connectionCount : 0,
-      activePresenceRooms:
-          response.hasPresence() ? response.presence.activeRoomCount : 0,
+      onlineUsers: response.hasPresence()
+          ? response.presence.onlineUserCount
+          : 0,
+      onlineConnections: response.hasPresence()
+          ? response.presence.connectionCount
+          : 0,
+      activePresenceRooms: response.hasPresence()
+          ? response.presence.activeRoomCount
+          : 0,
       additionalStats: protoMessageToJsonMap(response.additionalStats),
     );
   }
@@ -603,11 +606,7 @@ class SyncTvAdminDomainService {
   }
 
   Future<List<SyncTvUser>> listAdmins({String search = ''}) async {
-    final page = await listAdminsPage(
-      page: 1,
-      pageSize: 100,
-      search: search,
-    );
+    final page = await listAdminsPage(page: 1, pageSize: 100, search: search);
     return page.admins;
   }
 
@@ -646,10 +645,12 @@ class SyncTvAdminDomainService {
     return AdminRoomMembersPage(
       members: response.members.map(roomMemberFromProto).toList(),
       total: response.total,
-      onlineCount:
-          response.hasPresence() ? response.presence.onlineUserCount : 0,
-      connectionCount:
-          response.hasPresence() ? response.presence.connectionCount : 0,
+      onlineCount: response.hasPresence()
+          ? response.presence.onlineUserCount
+          : 0,
+      connectionCount: response.hasPresence()
+          ? response.presence.connectionCount
+          : 0,
     );
   }
 
@@ -669,11 +670,7 @@ class SyncTvAdminDomainService {
     );
   }
 
-  Future<void> setRoomMemberRole(
-    String roomId,
-    String userId,
-    int role,
-  ) async {
+  Future<void> setRoomMemberRole(String roomId, String userId, int role) async {
     await _api.adminService.updateMemberPermissions(
       admin.UpdateMemberPermissionsRequest(
         roomId: roomId,
@@ -728,7 +725,8 @@ class SyncTvAdminDomainService {
     bool? tls,
     provider_common_enum.ProviderInstanceListSortBy sortBy =
         provider_common_enum
-            .ProviderInstanceListSortBy.PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
+            .ProviderInstanceListSortBy
+            .PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
     provider_common_enum.SortDirection sortDirection =
         provider_common_enum.SortDirection.SORT_DIRECTION_ASC,
   }) async {
@@ -757,7 +755,8 @@ class SyncTvAdminDomainService {
     bool? tls,
     provider_common_enum.ProviderInstanceListSortBy sortBy =
         provider_common_enum
-            .ProviderInstanceListSortBy.PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
+            .ProviderInstanceListSortBy
+            .PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
     provider_common_enum.SortDirection sortDirection =
         provider_common_enum.SortDirection.SORT_DIRECTION_ASC,
   }) async {
@@ -1046,11 +1045,14 @@ class SyncTvAdminDomainService {
       client.ListRoomContentReportsRequest(
         page: page,
         pageSize: pageSize,
-        status: client.ContentReportStatus.valueOf(status) ??
+        status:
+            client.ContentReportStatus.valueOf(status) ??
             client.ContentReportStatus.CONTENT_REPORT_STATUS_UNSPECIFIED,
-        targetType: client.ContentReportTargetType.valueOf(targetType) ??
+        targetType:
+            client.ContentReportTargetType.valueOf(targetType) ??
             client
-                .ContentReportTargetType.CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
+                .ContentReportTargetType
+                .CONTENT_REPORT_TARGET_TYPE_UNSPECIFIED,
         targetMemberUserId: targetMemberUserId,
         targetChatMessageId: Int64(targetChatMessageId),
         search: search,
@@ -1085,7 +1087,8 @@ class SyncTvAdminDomainService {
       roomId,
       client.UpdateRoomContentReportStatusRequest(
         reportId: reportId,
-        status: client.ContentReportStatus.valueOf(status) ??
+        status:
+            client.ContentReportStatus.valueOf(status) ??
             client.ContentReportStatus.CONTENT_REPORT_STATUS_OPEN,
         resolutionNote: resolutionNote,
       ),
@@ -1145,13 +1148,13 @@ class SyncTvAdminDomainService {
             roomId: roomId.isNotEmpty
                 ? roomId
                 : search.startsWith('room_')
-                    ? search
-                    : '',
+                ? search
+                : '',
             userId: userId.isNotEmpty
                 ? userId
                 : search.startsWith('usr_')
-                    ? search
-                    : '',
+                ? search
+                : '',
           ),
         );
         return AdminReviewsPage(
@@ -1427,7 +1430,8 @@ class SyncTvAdminDomainService {
   }
 
   AdminContentReport _clientContentReportFromProto(
-      client.ContentReport report) {
+    client.ContentReport report,
+  ) {
     return AdminContentReport(
       id: report.id,
       reporterUserId: report.reporterUserId,
@@ -1535,9 +1539,7 @@ class SyncTvAdminDomainService {
     );
   }
 
-  AdminReviewItem _adminRoomJoinReviewFromProto(
-    admin.RoomJoinReview review,
-  ) {
+  AdminReviewItem _adminRoomJoinReviewFromProto(admin.RoomJoinReview review) {
     return AdminReviewItem(
       kind: 'join',
       id: review.id,

@@ -31,10 +31,7 @@ class _AccountSection {
   final String label;
   final IconData icon;
 
-  const _AccountSection({
-    required this.label,
-    required this.icon,
-  });
+  const _AccountSection({required this.label, required this.icon});
 }
 
 class _AccountModuleInfo {
@@ -410,8 +407,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       final user = await SyncTvService.unbindEmail(
         verificationId: verificationId,
       );
-      final preferences =
-          await SyncTvService.getAccountPreferences(refresh: true);
+      final preferences = await SyncTvService.getAccountPreferences(
+        refresh: true,
+      );
       if (!mounted) return;
       setState(() {
         _user = user;
@@ -431,9 +429,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     if (!_emailFeatureEnabled) return;
     final user = await showAppDialog<SyncTvUser>(
       context: context,
-      builder: (context) => _EmailBindDialog(
-        verifySensitiveOperation: _verifySensitiveOperation,
-      ),
+      builder: (context) =>
+          _EmailBindDialog(verifySensitiveOperation: _verifySensitiveOperation),
     );
     if (user == null || !mounted) return;
     final preferences = await SyncTvService.getAccountPreferences();
@@ -527,16 +524,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _deletePasskey(PasskeyCredentialInfo credential) async {
-    final label =
-        credential.name.isEmpty ? credential.credentialId : credential.name;
+    final label = credential.name.isEmpty
+        ? credential.credentialId
+        : credential.name;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: '删除 Passkey',
       icon: const Icon(Icons.fingerprint_rounded),
       iconColor: Theme.of(context).colorScheme.error,
-      content: Text(
-        '确定删除「$label」吗？删除后这台设备将不能继续使用该 Passkey 登录。',
-      ),
+      content: Text('确定删除「$label」吗？删除后这台设备将不能继续使用该 Passkey 登录。'),
       actions: [
         ChatUtils.createCancelButton(context),
         AppActionButton(
@@ -551,8 +547,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     try {
       await SyncTvService.deletePasskey(credential.credentialId);
       final passkeys = await SyncTvService.listPasskeys(refresh: true);
-      final preferences =
-          await SyncTvService.getAccountPreferences(refresh: true);
+      final preferences = await SyncTvService.getAccountPreferences(
+        refresh: true,
+      );
       if (!mounted) return;
       setState(() {
         _passkeys = passkeys;
@@ -695,10 +692,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     }
   }
 
-  Future<void> _reloadNotifications({
-    int? page,
-    bool refresh = true,
-  }) async {
+  Future<void> _reloadNotifications({int? page, bool refresh = true}) async {
     var targetPage = page ?? _notificationPage;
     if (targetPage < 1) targetPage = 1;
     setState(() => _loadingNotifications = true);
@@ -782,8 +776,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         });
         final attempt = _bindAttempt;
         final uri = Uri.parse(start.authorizationUrl);
-        final opened =
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
+        final opened = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
         if (!opened && mounted) {
           MessageUtils.showError(context, '无法打开授权链接');
           return;
@@ -867,10 +863,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   String? _loadError(String label) => _loadErrors[label];
 
   void _setLoadError(String label, Object error) {
-    _loadErrors = Map.unmodifiable({
-      ..._loadErrors,
-      label: error.toString(),
-    });
+    _loadErrors = Map.unmodifiable({..._loadErrors, label: error.toString()});
   }
 
   void _clearLoadError(String label) {
@@ -906,9 +899,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       if (!mounted) return;
       await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => RoomScreen(room: latest),
-        ),
+        MaterialPageRoute(builder: (context) => RoomScreen(room: latest)),
       );
       if (mounted) await _reloadRooms();
     } catch (e) {
@@ -1072,8 +1063,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     return AppScaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF121212) : const Color(0xFFF4F6FA),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF4F6FA),
       appBar: AppAppBar(
         title: const Text(
           '账号中心',
@@ -1091,8 +1083,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       body: LayoutBuilder(
         builder: (context, constraints) {
           final useRail = constraints.maxWidth >= 900;
-          final content =
-              _loading ? const AppLoadingIndicator() : _buildTabView(theme);
+          final content = _loading
+              ? const AppLoadingIndicator()
+              : _buildTabView(theme);
 
           if (!useRail) {
             return Column(
@@ -1169,8 +1162,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withValues(alpha: 0.58),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.58,
+                                ),
                               ),
                             ),
                         ],
@@ -1229,26 +1223,29 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               borderRadius: BorderRadius.circular(8),
             ),
             labelColor: theme.colorScheme.primary,
-            unselectedLabelColor:
-                theme.colorScheme.onSurface.withValues(alpha: 0.62),
+            unselectedLabelColor: theme.colorScheme.onSurface.withValues(
+              alpha: 0.62,
+            ),
             labelStyle: theme.textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
             tabs: _sections
-                .map((section) => Tab(
-                      height: 42,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(section.icon, size: 18),
-                            const SizedBox(width: 6),
-                            Text(section.label),
-                          ],
-                        ),
+                .map(
+                  (section) => Tab(
+                    height: 42,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(section.icon, size: 18),
+                          const SizedBox(width: 6),
+                          Text(section.label),
+                        ],
                       ),
-                    ))
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ),
@@ -1265,8 +1262,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         final maxWidth = constraints.maxWidth >= 1180
             ? 1040.0
             : constraints.maxWidth >= 760
-                ? 860.0
-                : double.infinity;
+            ? 860.0
+            : double.infinity;
         return AppListView(
           padding: padding,
           children: [
@@ -1349,8 +1346,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             final columns = constraints.maxWidth >= 820
                 ? tiles.length.clamp(1, 4)
                 : tiles.length == 1
-                    ? 1
-                    : 2;
+                ? 1
+                : 2;
             return AppGridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -1459,8 +1456,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     Text(
                       _user.hasEmail ? _user.email! : '未绑定邮箱',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                     ),
                   ],
@@ -1529,10 +1527,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   onChanged: _savingPreferences
                       ? null
                       : (value) => _updateNotifications(
-                            notifications.copyWith(
-                              roomInvitationInApp: value,
-                            ),
-                          ),
+                          notifications.copyWith(roomInvitationInApp: value),
+                        ),
                 ),
                 _PreferenceSwitch(
                   title: '房间事件站内通知',
@@ -1540,8 +1536,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   onChanged: _savingPreferences
                       ? null
                       : (value) => _updateNotifications(
-                            notifications.copyWith(roomEventInApp: value),
-                          ),
+                          notifications.copyWith(roomEventInApp: value),
+                        ),
                 ),
                 _PreferenceSwitch(
                   title: '系统公告站内通知',
@@ -1549,10 +1545,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   onChanged: _savingPreferences
                       ? null
                       : (value) => _updateNotifications(
-                            notifications.copyWith(
-                              systemAnnouncementInApp: value,
-                            ),
+                          notifications.copyWith(
+                            systemAnnouncementInApp: value,
                           ),
+                        ),
                 ),
                 if (_user.hasEmail && _emailFeatureEnabled)
                   _PreferenceSwitch(
@@ -1561,10 +1557,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     onChanged: _savingPreferences
                         ? null
                         : (value) => _updateNotifications(
-                              notifications.copyWith(
-                                roomInvitationEmail: value,
-                              ),
-                            ),
+                            notifications.copyWith(roomInvitationEmail: value),
+                          ),
                   ),
                 if (_user.hasEmail && _emailFeatureEnabled)
                   _PreferenceSwitch(
@@ -1573,8 +1567,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     onChanged: _savingPreferences
                         ? null
                         : (value) => _updateNotifications(
-                              notifications.copyWith(roomEventEmail: value),
-                            ),
+                            notifications.copyWith(roomEventEmail: value),
+                          ),
                   ),
                 if (_user.hasEmail && _emailFeatureEnabled)
                   _PreferenceSwitch(
@@ -1583,10 +1577,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     onChanged: _savingPreferences
                         ? null
                         : (value) => _updateNotifications(
-                              notifications.copyWith(
-                                systemAnnouncementEmail: value,
-                              ),
+                            notifications.copyWith(
+                              systemAnnouncementEmail: value,
                             ),
+                          ),
                   ),
               ],
             ),
@@ -1609,8 +1603,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final total = page?.total ?? 0;
     final maxPage = _roomsMaxPage(total);
     final pageStart = total == 0 ? 0 : ((_roomsPage - 1) * _roomsPageSize) + 1;
-    final pageEnd =
-        total == 0 ? 0 : (_roomsPage * _roomsPageSize).clamp(0, total);
+    final pageEnd = total == 0
+        ? 0
+        : (_roomsPage * _roomsPageSize).clamp(0, total);
 
     return Column(
       children: [
@@ -1678,28 +1673,34 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           _RelationChip(
                             label: '我创建的',
                             value: client_enum
-                                .MyRoomRelation.MY_ROOM_RELATION_CREATED,
+                                .MyRoomRelation
+                                .MY_ROOM_RELATION_CREATED,
                             groupValue: _roomRelationFilter,
                             onSelected: _setRoomRelationFilter,
                           ),
                           _RelationChip(
                             label: '我加入的',
                             value: client_enum
-                                .MyRoomRelation.MY_ROOM_RELATION_PARTICIPATING,
+                                .MyRoomRelation
+                                .MY_ROOM_RELATION_PARTICIPATING,
                             groupValue: _roomRelationFilter,
                             onSelected: _setRoomRelationFilter,
                           ),
                           AppSelect<client_enum.MyRoomListSortBy>(
                             value: _roomSortBy,
                             options: const {
-                              '最近活跃': client_enum.MyRoomListSortBy
+                              '最近活跃': client_enum
+                                  .MyRoomListSortBy
                                   .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-                              '更新时间': client_enum.MyRoomListSortBy
+                              '更新时间': client_enum
+                                  .MyRoomListSortBy
                                   .MY_ROOM_LIST_SORT_BY_UPDATED_AT,
-                              '创建时间': client_enum.MyRoomListSortBy
+                              '创建时间': client_enum
+                                  .MyRoomListSortBy
                                   .MY_ROOM_LIST_SORT_BY_CREATED_AT,
                               '名称': client_enum
-                                  .MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_NAME,
+                                  .MyRoomListSortBy
+                                  .MY_ROOM_LIST_SORT_BY_NAME,
                             },
                             onChanged: (value) {
                               if (value == null) return;
@@ -1765,49 +1766,47 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ),
                 )
               : rooms.isEmpty
-                  ? const AppEmptyMessage(message: '没有匹配的房间')
-                  : AppRefreshIndicator(
-                      onRefresh: _reloadRooms,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final maxWidth = constraints.maxWidth >= 1180
-                              ? 1040.0
-                              : constraints.maxWidth >= 760
-                                  ? 900.0
-                                  : double.infinity;
-                          return AppListView.separated(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-                            itemCount: rooms.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 10),
-                            itemBuilder: (context, index) {
-                              final room = rooms[index];
-                              return Center(
-                                child: ConstrainedBox(
-                                  constraints:
-                                      BoxConstraints(maxWidth: maxWidth),
-                                  child: _RoomManagementTile(
-                                    room: room,
-                                    roleLabel: _roomRoleLabel(room.myRole),
-                                    relationLabel:
-                                        _roomRelationLabel(room.myRelation),
-                                    updatedAtLabel:
-                                        _formatTimestamp(room.updatedAt),
-                                    isOwner: _isMyCreatedRoom(room),
-                                    canManage:
-                                        _canManageRoomFromListEntry(room),
-                                    onOpen: () => _openRoom(room),
-                                    onManage: () => _manageRoom(room),
-                                    onLeaveOrDelete: () =>
-                                        _leaveOrDeleteRoom(room),
-                                  ),
+              ? const AppEmptyMessage(message: '没有匹配的房间')
+              : AppRefreshIndicator(
+                  onRefresh: _reloadRooms,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final maxWidth = constraints.maxWidth >= 1180
+                          ? 1040.0
+                          : constraints.maxWidth >= 760
+                          ? 900.0
+                          : double.infinity;
+                      return AppListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+                        itemCount: rooms.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final room = rooms[index];
+                          return Center(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: maxWidth),
+                              child: _RoomManagementTile(
+                                room: room,
+                                roleLabel: _roomRoleLabel(room.myRole),
+                                relationLabel: _roomRelationLabel(
+                                  room.myRelation,
                                 ),
-                              );
-                            },
+                                updatedAtLabel: _formatTimestamp(
+                                  room.updatedAt,
+                                ),
+                                isOwner: _isMyCreatedRoom(room),
+                                canManage: _canManageRoomFromListEntry(room),
+                                onOpen: () => _openRoom(room),
+                                onManage: () => _manageRoom(room),
+                                onLeaveOrDelete: () => _leaveOrDeleteRoom(room),
+                              ),
+                            ),
                           );
                         },
-                      ),
-                    ),
+                      );
+                    },
+                  ),
+                ),
         ),
       ],
     );
@@ -1817,8 +1816,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final preferences = _preferences;
     final emailStatus = _emailStatusView(theme);
     final preferencesError = _loadError('账号偏好');
-    final passkeyErrorKey =
-        _loadError('Passkey') != null ? 'Passkey' : '本机 Passkey';
+    final passkeyErrorKey = _loadError('Passkey') != null
+        ? 'Passkey'
+        : '本机 Passkey';
     final passkeyError = _loadError(passkeyErrorKey);
     return _responsiveList(
       children: [
@@ -1883,10 +1883,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           label: '邮件重置',
                           style: AppActionButtonStyle.outlined,
                         ),
-                      AppActionButton(
-                        onPressed: _changePassword,
-                        label: '修改',
-                      ),
+                      AppActionButton(onPressed: _changePassword, label: '修改'),
                     ],
                   ),
                 ),
@@ -1979,10 +1976,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           danger: true,
           child: AppTile(
             contentPadding: EdgeInsets.zero,
-            prefix: const Icon(
-              Icons.person_off_rounded,
-              color: Colors.red,
-            ),
+            prefix: const Icon(Icons.person_off_rounded, color: Colors.red),
             title: const Text('关闭账户'),
             subtitle: const Text('永久关闭当前账户，并清除本机登录状态'),
             suffix: AppActionButton(
@@ -2005,12 +1999,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         .where((item) => !item.isRead && item.numericId > 0)
         .map((item) => item.numericId)
         .toSet();
-    final selectedUnreadCount =
-        _selectedNotificationIds.where(unreadSelectableIds.contains).length;
+    final selectedUnreadCount = _selectedNotificationIds
+        .where(unreadSelectableIds.contains)
+        .length;
     final total = page?.total ?? 0;
     final maxPage = _notificationMaxPage(total);
-    final pageStart =
-        total == 0 ? 0 : ((_notificationPage - 1) * _notificationPageSize) + 1;
+    final pageStart = total == 0
+        ? 0
+        : ((_notificationPage - 1) * _notificationPageSize) + 1;
     final pageEnd = total == 0
         ? 0
         : (_notificationPage * _notificationPageSize).clamp(0, total);
@@ -2031,7 +2027,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         width: 16,
                         height: 16,
                         child: AppLoadingIndicator(
-                            size: AppLoadingSize.sm, centered: false),
+                          size: AppLoadingSize.sm,
+                          centered: false,
+                        ),
                       ),
                     ),
                   if (_selectedNotificationIds.isNotEmpty) ...[
@@ -2043,8 +2041,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       style: AppActionButtonStyle.text,
                     ),
                     AppIconButton(
-                      onPressed:
-                          selectedUnreadCount == 0 ? null : _markSelectedRead,
+                      onPressed: selectedUnreadCount == 0
+                          ? null
+                          : _markSelectedRead,
                       icon: Icons.mark_email_read_rounded,
                       tooltip: '标记所选未读通知',
                     ),
@@ -2053,10 +2052,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       onPressed: unreadSelectableIds.isEmpty
                           ? null
                           : () => setState(() {
-                                _selectedNotificationIds
-                                  ..clear()
-                                  ..addAll(unreadSelectableIds);
-                              }),
+                              _selectedNotificationIds
+                                ..clear()
+                                ..addAll(unreadSelectableIds);
+                            }),
                       icon: Icons.select_all_rounded,
                       tooltip: '选择当前未读通知',
                     ),
@@ -2118,16 +2117,21 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     options: {
                       '全部类型': null,
                       '房间邀请': client_enum
-                          .NotificationType.NOTIFICATION_TYPE_ROOM_INVITATION,
-                      '系统公告': client_enum.NotificationType
+                          .NotificationType
+                          .NOTIFICATION_TYPE_ROOM_INVITATION,
+                      '系统公告': client_enum
+                          .NotificationType
                           .NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
                       '房间事件': client_enum
-                          .NotificationType.NOTIFICATION_TYPE_ROOM_EVENT,
+                          .NotificationType
+                          .NOTIFICATION_TYPE_ROOM_EVENT,
                       '密码重置': client_enum
-                          .NotificationType.NOTIFICATION_TYPE_PASSWORD_RESET,
+                          .NotificationType
+                          .NOTIFICATION_TYPE_PASSWORD_RESET,
                       if (_showEmailBindingControls)
                         '邮箱绑定': client_enum
-                            .NotificationType.NOTIFICATION_TYPE_EMAIL_BIND,
+                            .NotificationType
+                            .NOTIFICATION_TYPE_EMAIL_BIND,
                     },
                     onChanged: (value) {
                       setState(() => _notificationTypeFilter = value);
@@ -2137,11 +2141,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   AppSelect<client_enum.NotificationListSortBy>(
                     value: _notificationSortBy,
                     options: const {
-                      '创建时间': client_enum.NotificationListSortBy
+                      '创建时间': client_enum
+                          .NotificationListSortBy
                           .NOTIFICATION_LIST_SORT_BY_CREATED_AT,
-                      '更新时间': client_enum.NotificationListSortBy
+                      '更新时间': client_enum
+                          .NotificationListSortBy
                           .NOTIFICATION_LIST_SORT_BY_UPDATED_AT,
-                      '标题': client_enum.NotificationListSortBy
+                      '标题': client_enum
+                          .NotificationListSortBy
                           .NOTIFICATION_LIST_SORT_BY_TITLE,
                     },
                     onChanged: (value) {
@@ -2155,18 +2162,19 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       setState(() {
                         _notificationSortDirection =
                             _notificationSortDirection ==
-                                    client_enum
-                                        .SortDirection.SORT_DIRECTION_DESC
-                                ? client_enum.SortDirection.SORT_DIRECTION_ASC
-                                : client_enum.SortDirection.SORT_DIRECTION_DESC;
+                                client_enum.SortDirection.SORT_DIRECTION_DESC
+                            ? client_enum.SortDirection.SORT_DIRECTION_ASC
+                            : client_enum.SortDirection.SORT_DIRECTION_DESC;
                       });
                       _reloadNotificationsFromFirstPage();
                     },
-                    icon: _notificationSortDirection ==
+                    icon:
+                        _notificationSortDirection ==
                             client_enum.SortDirection.SORT_DIRECTION_DESC
                         ? Icons.south_rounded
                         : Icons.north_rounded,
-                    tooltip: _notificationSortDirection ==
+                    tooltip:
+                        _notificationSortDirection ==
                             client_enum.SortDirection.SORT_DIRECTION_DESC
                         ? '降序'
                         : '升序',
@@ -2181,14 +2189,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     '第 $_notificationPage / $maxPage 页 · $pageStart-$pageEnd',
                 onPrevious: _loadingNotifications || _notificationPage <= 1
                     ? null
-                    : () => _reloadNotifications(
-                          page: _notificationPage - 1,
-                        ),
+                    : () => _reloadNotifications(page: _notificationPage - 1),
                 onNext: _loadingNotifications || _notificationPage >= maxPage
                     ? null
-                    : () => _reloadNotifications(
-                          page: _notificationPage + 1,
-                        ),
+                    : () => _reloadNotifications(page: _notificationPage + 1),
               ),
             ],
           ),
@@ -2207,118 +2211,123 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ),
                 )
               : items.isEmpty
-                  ? const AppEmptyMessage(message: '暂无通知')
-                  : AppRefreshIndicator(
-                      onRefresh: _reloadNotifications,
-                      child: AppListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        itemCount: items.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final item = items[index];
-                          final selected =
-                              _selectedNotificationIds.contains(item.numericId);
-                          final selectable = item.numericId > 0;
-                          return _Section(
-                            child: AppTile(
-                              contentPadding: EdgeInsets.zero,
-                              selected: selected,
-                              onPressed: selected
-                                  ? () {
-                                      if (!selectable) return;
-                                      setState(() {
-                                        _selectedNotificationIds
-                                            .remove(item.numericId);
-                                      });
+              ? const AppEmptyMessage(message: '暂无通知')
+              : AppRefreshIndicator(
+                  onRefresh: _reloadNotifications,
+                  child: AppListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final selected = _selectedNotificationIds.contains(
+                        item.numericId,
+                      );
+                      final selectable = item.numericId > 0;
+                      return _Section(
+                        child: AppTile(
+                          contentPadding: EdgeInsets.zero,
+                          selected: selected,
+                          onPressed: selected
+                              ? () {
+                                  if (!selectable) return;
+                                  setState(() {
+                                    _selectedNotificationIds.remove(
+                                      item.numericId,
+                                    );
+                                  });
+                                }
+                              : () => _openNotification(item),
+                          onLongPress: selectable
+                              ? () => setState(() {
+                                  if (selected) {
+                                    _selectedNotificationIds.remove(
+                                      item.numericId,
+                                    );
+                                  } else {
+                                    _selectedNotificationIds.add(
+                                      item.numericId,
+                                    );
+                                  }
+                                })
+                              : null,
+                          prefix: AppCheckbox(
+                            value: selected,
+                            semanticsLabel: '选择通知',
+                            onChanged: selectable
+                                ? (value) => setState(() {
+                                    if (value) {
+                                      _selectedNotificationIds.add(
+                                        item.numericId,
+                                      );
+                                    } else {
+                                      _selectedNotificationIds.remove(
+                                        item.numericId,
+                                      );
                                     }
-                                  : () => _openNotification(item),
-                              onLongPress: selectable
-                                  ? () => setState(() {
-                                        if (selected) {
-                                          _selectedNotificationIds
-                                              .remove(item.numericId);
-                                        } else {
-                                          _selectedNotificationIds
-                                              .add(item.numericId);
-                                        }
-                                      })
-                                  : null,
-                              prefix: AppCheckbox(
-                                value: selected,
-                                semanticsLabel: '选择通知',
-                                onChanged: selectable
-                                    ? (value) => setState(() {
-                                          if (value) {
-                                            _selectedNotificationIds
-                                                .add(item.numericId);
-                                          } else {
-                                            _selectedNotificationIds
-                                                .remove(item.numericId);
-                                          }
-                                        })
-                                    : null,
-                              ),
-                              title: Text(
-                                item.title.isEmpty
-                                    ? _notificationType(item.type)
-                                    : item.title,
+                                  })
+                                : null,
+                          ),
+                          title: Text(
+                            item.title.isEmpty
+                                ? _notificationType(item.type)
+                                : item.title,
+                            style: TextStyle(
+                              fontWeight: item.isRead
+                                  ? FontWeight.w500
+                                  : FontWeight.w700,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (item.content.isNotEmpty) Text(item.content),
+                              const SizedBox(height: 4),
+                              Text(
+                                _formatTimestamp(item.createdAt),
                                 style: TextStyle(
-                                  fontWeight: item.isRead
-                                      ? FontWeight.w500
-                                      : FontWeight.w700,
+                                  fontSize: 12,
+                                  color: theme.hintColor,
                                 ),
                               ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (item.content.isNotEmpty)
-                                    Text(item.content),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _formatTimestamp(item.createdAt),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: theme.hintColor,
-                                    ),
-                                  ),
-                                ],
+                            ],
+                          ),
+                          suffix: Wrap(
+                            spacing: 2,
+                            children: [
+                              AppIconButton(
+                                onPressed: selected
+                                    ? null
+                                    : () => _openNotification(item),
+                                icon: Icons.open_in_new_rounded,
+                                tooltip: '查看详情',
+                                size: AppIconButtonSize.sm,
                               ),
-                              suffix: Wrap(
-                                spacing: 2,
-                                children: [
-                                  AppIconButton(
-                                    onPressed: selected
-                                        ? null
-                                        : () => _openNotification(item),
-                                    icon: Icons.open_in_new_rounded,
-                                    tooltip: '查看详情',
-                                    size: AppIconButtonSize.sm,
-                                  ),
-                                  if (!item.isRead)
-                                    AppIconButton(
-                                      onPressed: selected
-                                          ? null
-                                          : () => _markRead(item),
-                                      icon: Icons.mark_email_read_rounded,
-                                      tooltip: '标记已读',
-                                      size: AppIconButtonSize.sm,
-                                    ),
-                                  AppIconButton(
-                                    onPressed: selected
-                                        ? null
-                                        : () => _deleteNotification(item),
-                                    icon: Icons.delete_outline_rounded,
-                                    tooltip: '删除',
-                                    size: AppIconButtonSize.sm,
-                                    style: AppIconButtonStyle.destructive,
-                                  ),
-                                ],
+                              if (!item.isRead)
+                                AppIconButton(
+                                  onPressed: selected
+                                      ? null
+                                      : () => _markRead(item),
+                                  icon: Icons.mark_email_read_rounded,
+                                  tooltip: '标记已读',
+                                  size: AppIconButtonSize.sm,
+                                ),
+                              AppIconButton(
+                                onPressed: selected
+                                    ? null
+                                    : () => _deleteNotification(item),
+                                icon: Icons.delete_outline_rounded,
+                                tooltip: '删除',
+                                size: AppIconButtonSize.sm,
+                                style: AppIconButtonStyle.destructive,
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
         ),
       ],
     );
@@ -2348,30 +2357,24 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   description: '个人网盘与目录资源',
                   icon: Icons.cloud_circle_rounded,
                   color: Colors.amber,
-                  onTap: () => PlatformBindingDialog.show(
-                    context,
-                    initialIndex: 0,
-                  ),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 0),
                 ),
                 _MediaProviderBindCard(
                   label: 'Emby',
                   description: '个人媒体库与影视资源',
                   icon: Icons.video_library_rounded,
                   color: Colors.green,
-                  onTap: () => PlatformBindingDialog.show(
-                    context,
-                    initialIndex: 1,
-                  ),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 1),
                 ),
                 _MediaProviderBindCard(
                   label: 'Bilibili',
                   description: 'Bilibili 账号与收藏资源',
                   icon: Icons.tv_rounded,
                   color: const Color(0xFFFB7299),
-                  onTap: () => PlatformBindingDialog.show(
-                    context,
-                    initialIndex: 2,
-                  ),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 2),
                 ),
               ];
               if (compact) {
@@ -2449,8 +2452,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('绑定新账号',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  const Text(
+                    '绑定新账号',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 8),
                   if (providersError != null)
                     _InlineModuleError(
@@ -2489,7 +2494,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           width: 18,
                           height: 18,
                           child: AppLoadingIndicator(
-                              size: AppLoadingSize.sm, centered: false),
+                            size: AppLoadingSize.sm,
+                            centered: false,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -2721,9 +2728,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   String _formatTimestamp(int seconds) {
     if (seconds <= 0) return '-';
-    return DateFormat('yyyy-MM-dd HH:mm').format(
-      DateTime.fromMillisecondsSinceEpoch(seconds * 1000),
-    );
+    return DateFormat(
+      'yyyy-MM-dd HH:mm',
+    ).format(DateTime.fromMillisecondsSinceEpoch(seconds * 1000));
   }
 }
 
@@ -2751,10 +2758,7 @@ class _PasswordResetInput {
   final String token;
   final String newPassword;
 
-  const _PasswordResetInput({
-    required this.token,
-    required this.newPassword,
-  });
+  const _PasswordResetInput({required this.token, required this.newPassword});
 }
 
 class _PasswordUpdateDialog extends StatefulWidget {
@@ -2785,8 +2789,8 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
     _method = widget.canUseCurrentPassword
         ? _PasswordUpdateMethod.currentPassword
         : widget.canUseEmail
-            ? _PasswordUpdateMethod.emailToken
-            : _PasswordUpdateMethod.passkey;
+        ? _PasswordUpdateMethod.emailToken
+        : _PasswordUpdateMethod.passkey;
   }
 
   @override
@@ -2967,9 +2971,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
     if (_requesting) return;
     setState(() => _requesting = true);
     try {
-      final message = await SyncTvService.requestPasswordReset(
-        widget.email,
-      );
+      final message = await SyncTvService.requestPasswordReset(widget.email);
       if (!mounted) return;
       MessageUtils.showSuccess(
         context,
@@ -3314,15 +3316,18 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
     _SensitiveOperationMethod method,
   ) {
     return switch (method) {
-      _SensitiveOperationMethod.password => client_enum
-          .SensitiveOperationVerificationMethod
-          .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD,
-      _SensitiveOperationMethod.email => client_enum
-          .SensitiveOperationVerificationMethod
-          .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL,
-      _SensitiveOperationMethod.passkey => client_enum
-          .SensitiveOperationVerificationMethod
-          .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
+      _SensitiveOperationMethod.password =>
+        client_enum
+            .SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD,
+      _SensitiveOperationMethod.email =>
+        client_enum
+            .SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL,
+      _SensitiveOperationMethod.passkey =>
+        client_enum
+            .SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
     };
   }
 
@@ -3438,108 +3443,109 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
               child: Center(child: AppLoadingIndicator()),
             )
           : challenge == null || method == null || segments.isEmpty
-              ? const _DialogNotice(
-                  icon: Icons.error_outline_rounded,
-                  title: '没有可用验证方式',
-                  message: '当前账号缺少密码、邮箱或 Passkey 验证能力。',
-                )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _DialogFieldGroup(
-                      title: '验证方式',
-                      child: AppSingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: AppSegmentedControl<_SensitiveOperationMethod>(
-                          segments: segments,
-                          value: method,
-                          onChanged: (selected) =>
-                              setState(() => _method = selected),
-                        ),
-                      ),
+          ? const _DialogNotice(
+              icon: Icons.error_outline_rounded,
+              title: '没有可用验证方式',
+              message: '当前账号缺少密码、邮箱或 Passkey 验证能力。',
+            )
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _DialogFieldGroup(
+                  title: '验证方式',
+                  child: AppSingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: AppSegmentedControl<_SensitiveOperationMethod>(
+                      segments: segments,
+                      value: method,
+                      onChanged: (selected) =>
+                          setState(() => _method = selected),
                     ),
-                    const SizedBox(height: 16),
-                    _DialogFieldGroup(
-                      title: '验证信息',
-                      children: [
-                        if (method == _SensitiveOperationMethod.password)
-                          _DialogTextField(
-                            controller: _passwordController,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _DialogFieldGroup(
+                  title: '验证信息',
+                  children: [
+                    if (method == _SensitiveOperationMethod.password)
+                      _DialogTextField(
+                        controller: _passwordController,
+                        autofocus: true,
+                        obscureText: true,
+                        label: '当前密码',
+                        icon: Icons.lock_outline_rounded,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _submit(),
+                      ),
+                    if (method == _SensitiveOperationMethod.passkey)
+                      const _DialogNotice(
+                        icon: Icons.fingerprint_rounded,
+                        title: 'Passkey 验证',
+                        message: '点击验证后会弹出系统验证窗口。',
+                      ),
+                    if (method == _SensitiveOperationMethod.email)
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final compact = constraints.maxWidth < 420;
+                          final field = _DialogTextField(
+                            controller: _emailTokenController,
                             autofocus: true,
-                            obscureText: true,
-                            label: '当前密码',
-                            icon: Icons.lock_outline_rounded,
+                            label: '邮箱验证码',
+                            icon: Icons.mark_email_read_outlined,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _submit(),
-                          ),
-                        if (method == _SensitiveOperationMethod.passkey)
-                          const _DialogNotice(
-                            icon: Icons.fingerprint_rounded,
-                            title: 'Passkey 验证',
-                            message: '点击验证后会弹出系统验证窗口。',
-                          ),
-                        if (method == _SensitiveOperationMethod.email)
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              final compact = constraints.maxWidth < 420;
-                              final field = _DialogTextField(
-                                controller: _emailTokenController,
-                                autofocus: true,
-                                label: '邮箱验证码',
-                                icon: Icons.mark_email_read_outlined,
-                                textInputAction: TextInputAction.done,
-                                onSubmitted: (_) => _submit(),
-                              );
-                              final sendButton = AppActionButton(
-                                onPressed:
-                                    _requestingEmail ? null : _requestEmailCode,
-                                loading: _requestingEmail,
-                                icon: Icons.send_rounded,
-                                label: _emailCode == null ? '发送验证码' : '重新发送',
-                                style: AppActionButtonStyle.outlined,
-                              );
-                              final maskedEmail = _emailCode?.maskedEmail ?? '';
-                              final children = [
-                                Expanded(child: field),
-                                const SizedBox(width: 10),
-                                SizedBox(height: 48, child: sendButton),
-                              ];
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  if (compact) ...[
-                                    field,
-                                    const SizedBox(height: 10),
-                                    sendButton,
-                                  ] else
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: children,
-                                    ),
-                                  if (maskedEmail.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      '验证码已发送至 $maskedEmail',
-                                      style: TextStyle(
-                                        color: Theme.of(context).hintColor,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              );
-                            },
-                          ),
-                      ],
-                    ),
+                          );
+                          final sendButton = AppActionButton(
+                            onPressed: _requestingEmail
+                                ? null
+                                : _requestEmailCode,
+                            loading: _requestingEmail,
+                            icon: Icons.send_rounded,
+                            label: _emailCode == null ? '发送验证码' : '重新发送',
+                            style: AppActionButtonStyle.outlined,
+                          );
+                          final maskedEmail = _emailCode?.maskedEmail ?? '';
+                          final children = [
+                            Expanded(child: field),
+                            const SizedBox(width: 10),
+                            SizedBox(height: 48, child: sendButton),
+                          ];
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (compact) ...[
+                                field,
+                                const SizedBox(height: 10),
+                                sendButton,
+                              ] else
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: children,
+                                ),
+                              if (maskedEmail.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  '验证码已发送至 $maskedEmail',
+                                  style: TextStyle(
+                                    color: Theme.of(context).hintColor,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        },
+                      ),
                   ],
                 ),
+              ],
+            ),
       primaryLabel: '验证',
       primaryLoading: _submitting,
-      onPrimary:
-          _loading || challenge == null || method == null ? null : _submit,
+      onPrimary: _loading || challenge == null || method == null
+          ? null
+          : _submit,
     );
   }
 }
@@ -3624,10 +3630,7 @@ class _NotificationDetailSheet extends StatelessWidget {
                 ),
                 if (notification.content.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  Text(
-                    notification.content,
-                    style: theme.textTheme.bodyLarge,
-                  ),
+                  Text(notification.content, style: theme.textTheme.bodyLarge),
                 ],
                 if (dataText.isNotEmpty) ...[
                   const SizedBox(height: 16),
@@ -3659,9 +3662,9 @@ class _NotificationDetailSheet extends StatelessWidget {
                         onPressed: notification.isRead
                             ? null
                             : () => Navigator.pop(
-                                  context,
-                                  _NotificationDetailAction.markRead,
-                                ),
+                                context,
+                                _NotificationDetailAction.markRead,
+                              ),
                         icon: Icons.mark_email_read_rounded,
                         label: '标记已读',
                         style: AppActionButtonStyle.outlined,
@@ -3752,8 +3755,9 @@ class _AccountActionDialog extends StatelessWidget {
                         Text(
                           subtitle,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.62),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.62,
+                            ),
                           ),
                         ),
                       ],
@@ -3775,21 +3779,24 @@ class _AccountActionDialog extends StatelessWidget {
             ),
             AppPanelSurface(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.42),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.42,
+              ),
               borderRadius: BorderRadius.zero,
               border: Border(
                 top: BorderSide(
-                  color:
-                      theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.6,
+                  ),
                 ),
               ),
               child: Row(
                 children: [
                   const Spacer(),
                   AppActionButton(
-                    onPressed:
-                        primaryLoading ? null : () => Navigator.pop(context),
+                    onPressed: primaryLoading
+                        ? null
+                        : () => Navigator.pop(context),
                     label: '取消',
                     style: AppActionButtonStyle.text,
                   ),
@@ -3887,7 +3894,8 @@ class _DialogFieldGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final body = child ??
+    final body =
+        child ??
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: children ?? const [],
@@ -3980,11 +3988,7 @@ class _DialogReadOnlyField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppReadOnlyField(
-      label: label,
-      value: value,
-      prefixIcon: icon,
-    );
+    return AppReadOnlyField(label: label, value: value, prefixIcon: icon);
   }
 }
 
@@ -4062,10 +4066,11 @@ class _SectionHeader extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: (dense
-                        ? theme.textTheme.titleMedium
-                        : theme.textTheme.titleLarge)
-                    ?.copyWith(fontWeight: FontWeight.w800),
+                style:
+                    (dense
+                            ? theme.textTheme.titleMedium
+                            : theme.textTheme.titleLarge)
+                        ?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 2),
               Text(
@@ -4128,8 +4133,9 @@ class _Section extends StatelessWidget {
                     Text(
                       subtitle!,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.62,
+                        ),
                       ),
                     ),
                   ],
@@ -4597,8 +4603,9 @@ class _AccountNavTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final foreground =
-        selected ? theme.colorScheme.primary : theme.colorScheme.onSurface;
+    final foreground = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface;
     return AppInkSurface(
       color: selected
           ? theme.colorScheme.primary.withValues(alpha: 0.10)
@@ -4677,8 +4684,9 @@ class _AccountHero extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.66),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.66,
+                            ),
                           ),
                         ),
                       ],
@@ -4691,18 +4699,12 @@ class _AccountHero extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _StatusPill(
-                  icon: Icons.dns_outlined,
-                  label: activeServerName,
-                ),
+                _StatusPill(icon: Icons.dns_outlined, label: activeServerName),
                 _StatusPill(
                   icon: Icons.admin_panel_settings_outlined,
                   label: roleLabel,
                 ),
-                _StatusPill(
-                  icon: Icons.circle_outlined,
-                  label: statusLabel,
-                ),
+                _StatusPill(icon: Icons.circle_outlined, label: statusLabel),
                 _StatusPill(
                   icon: Icons.calendar_month_outlined,
                   label: createdAtLabel,
@@ -4712,11 +4714,7 @@ class _AccountHero extends StatelessWidget {
             if (!wide) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  identity,
-                  const SizedBox(height: 14),
-                  metadata,
-                ],
+                children: [identity, const SizedBox(height: 14), metadata],
               );
             }
             return Row(
@@ -4926,12 +4924,11 @@ class _RoomManagementTile extends StatelessWidget {
               _StatusPill(icon: Icons.group_outlined, label: relationLabel),
               if (room.needPassword)
                 const _StatusPill(
-                    icon: Icons.lock_outline_rounded, label: '密码'),
-              if (room.needVerify)
-                const _StatusPill(
-                  icon: Icons.fact_check_outlined,
-                  label: '审核',
+                  icon: Icons.lock_outline_rounded,
+                  label: '密码',
                 ),
+              if (room.needVerify)
+                const _StatusPill(icon: Icons.fact_check_outlined, label: '审核'),
               if (room.isBanned)
                 const _StatusPill(
                   icon: Icons.block_rounded,
@@ -5027,8 +5024,9 @@ class _RoomCreatorLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final creatorName =
-        room.creator.trim().isEmpty ? '未知创建者' : room.creator.trim();
+    final creatorName = room.creator.trim().isEmpty
+        ? '未知创建者'
+        : room.creator.trim();
     return Row(
       children: [
         AppAvatar(

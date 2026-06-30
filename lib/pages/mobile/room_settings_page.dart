@@ -286,10 +286,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _loadChatHistory();
     _loadIceServers();
     _loadCurrentUserIfNeeded();
-    _realtimeMessageSubscription =
-        widget.realtime.messages.listen(_handleRealtimeMessage);
-    _realtimeEventSubscription =
-        widget.realtime.events.listen(_handleRealtimeEvent);
+    _realtimeMessageSubscription = widget.realtime.messages.listen(
+      _handleRealtimeMessage,
+    );
+    _realtimeEventSubscription = widget.realtime.events.listen(
+      _handleRealtimeEvent,
+    );
     _realtimeReconnectSubscription = widget.realtime.reconnects.listen((_) {
       if (!mounted) return;
       _chatHistoryLoaded = false;
@@ -305,10 +307,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       _handleRealtimeLogMaxEntriesChanged,
     );
     _sendRealtime(
-        RoomRealtimeCodec.encodeUnobserveResource(_settingsObserveId));
+      RoomRealtimeCodec.encodeUnobserveResource(_settingsObserveId),
+    );
     _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_membersObserveId));
-    _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(
-        _membersOnlineCountObserveId));
+    _sendRealtime(
+      RoomRealtimeCodec.encodeUnobserveResource(_membersOnlineCountObserveId),
+    );
     _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_mediaObserveId));
     _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_chatObserveId));
     _realtimeMessageSubscription?.cancel();
@@ -535,8 +539,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   void _handleRealtimeEvent(RealtimeEventLogEntry entry) {
     final payload = entry.payload;
-    final observeId =
-        payload is Map ? payload['observeId']?.toString() ?? '' : '';
+    final observeId = payload is Map
+        ? payload['observeId']?.toString() ?? ''
+        : '';
     if (!_managementObserveIds.contains(observeId)) return;
     _appendRealtimeEvent(entry);
   }
@@ -632,9 +637,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     if (message.kind == RoomRealtimeMessageKind.viewerCount) {
       _membersWatchStats.record(
-        RoomResourceWatchEvent<void>.changed(
-          version: message.resourceVersion,
-        ),
+        RoomResourceWatchEvent<void>.changed(version: message.resourceVersion),
       );
       if (mounted) {
         setState(() => _membersOnlineCount = message.resourceTotal);
@@ -643,9 +646,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     if (message.kind == RoomRealtimeMessageKind.onlineEvent) {
       _membersWatchStats.record(
-        RoomResourceWatchEvent<void>.changed(
-          version: message.resourceVersion,
-        ),
+        RoomResourceWatchEvent<void>.changed(version: message.resourceVersion),
       );
       _applyMemberOnlineEvent(message.onlineEvent);
       return;
@@ -778,8 +779,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ..clear()
             ..addAll(snapshot);
           _membersTotal = total ?? snapshot.length;
-          _membersOnlineCount =
-              snapshot.where((member) => member.isOnline).length;
+          _membersOnlineCount = snapshot
+              .where((member) => member.isOnline)
+              .length;
         });
         _startMembersOnlineWatches();
         break;
@@ -794,8 +796,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   void _applyMemberOnlineEvent(RoomRealtimeOnlineEvent? event) {
     if (!mounted || event == null || event.userId.isEmpty) return;
-    final index =
-        _members.indexWhere((member) => member.userId == event.userId);
+    final index = _members.indexWhere(
+      (member) => member.userId == event.userId,
+    );
     if (index < 0) return;
     final member = _members[index];
     final updated = member.copyWith(
@@ -886,15 +889,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   void _setMemberPermission(int flag, bool enabled) {
     setState(() {
-      _memberPermissions =
-          enabled ? (_memberPermissions | flag) : (_memberPermissions & ~flag);
+      _memberPermissions = enabled
+          ? (_memberPermissions | flag)
+          : (_memberPermissions & ~flag);
     });
   }
 
   void _setGuestPermission(int flag, bool enabled) {
     setState(() {
-      _guestPermissions =
-          enabled ? (_guestPermissions | flag) : (_guestPermissions & ~flag);
+      _guestPermissions = enabled
+          ? (_guestPermissions | flag)
+          : (_guestPermissions & ~flag);
     });
   }
 
@@ -927,10 +932,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         guestRemovedPermissions: _guestRemovedPermissions(),
       );
 
-      await SyncTvService.updateRoomSettings(
-        widget.roomId,
-        settings,
-      );
+      await SyncTvService.updateRoomSettings(widget.roomId, settings);
       final freshSettings = await SyncTvService.getRoomSettings(widget.roomId);
       if (!mounted) return;
       setState(() {
@@ -1181,9 +1183,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         } catch (e) {
           debugPrint('Mark chat read failed: $e');
           try {
-            readState = await SyncTvService.getChatReadState(
-              widget.roomId,
-            );
+            readState = await SyncTvService.getChatReadState(widget.roomId);
           } catch (_) {}
         }
       }
@@ -1305,16 +1305,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   void _applyChatPinEvent(ChatPinEventInfo event) {
-    final clearPin = event.kind ==
+    final clearPin =
+        event.kind ==
             client_enum.ChatPinEventKind.CHAT_PIN_EVENT_KIND_UNPINNED.value ||
         event.kind ==
             client_enum
-                .ChatPinEventKind.CHAT_PIN_EVENT_KIND_MESSAGE_DELETED.value;
-    final index =
-        _chatMessages.indexWhere((item) => item.id == event.message.id);
+                .ChatPinEventKind
+                .CHAT_PIN_EVENT_KIND_MESSAGE_DELETED
+                .value;
+    final index = _chatMessages.indexWhere(
+      (item) => item.id == event.message.id,
+    );
     if (index >= 0) {
-      _chatMessages[index] =
-          _chatMessages[index].copyWith(pin: event.pin, clearPin: clearPin);
+      _chatMessages[index] = _chatMessages[index].copyWith(
+        pin: event.pin,
+        clearPin: clearPin,
+      );
     }
   }
 
@@ -1338,74 +1344,80 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   int get _streamPageCount {
     if (_streamsTotal <= 0) return 1;
-    return ((_streamsTotal + _streamsPageSize - 1) ~/ _streamsPageSize)
-        .clamp(1, 1 << 31);
+    return ((_streamsTotal + _streamsPageSize - 1) ~/ _streamsPageSize).clamp(
+      1,
+      1 << 31,
+    );
   }
 
   int get _reviewPageCount {
     if (_reviewsTotal <= 0) return 1;
-    return ((_reviewsTotal + _reviewsPageSize - 1) ~/ _reviewsPageSize)
-        .clamp(1, 1 << 31);
+    return ((_reviewsTotal + _reviewsPageSize - 1) ~/ _reviewsPageSize).clamp(
+      1,
+      1 << 31,
+    );
   }
 
   int get _memberPageCount {
     if (_membersTotal <= 0) return 1;
-    return ((_membersTotal + _membersPageSize - 1) ~/ _membersPageSize)
-        .clamp(1, 1 << 31);
+    return ((_membersTotal + _membersPageSize - 1) ~/ _membersPageSize).clamp(
+      1,
+      1 << 31,
+    );
   }
 
   List<_RoomSettingsSection> get _sections => [
-        _RoomSettingsSection(
-          label: '信息',
-          icon: Icons.info_outline_rounded,
-          builder: _buildRoomInfoTab,
-        ),
-        _RoomSettingsSection(
-          label: '设置',
-          icon: Icons.tune_rounded,
-          builder: _buildSettingsTab,
-        ),
-        _RoomSettingsSection(
-          label: '成员',
-          icon: Icons.group_rounded,
-          builder: _buildMembersTab,
-        ),
-        _RoomSettingsSection(
-          label: '媒体',
-          icon: Icons.video_library_rounded,
-          builder: _buildMediaTab,
-        ),
-        _RoomSettingsSection(
-          label: '实时',
-          icon: Icons.sensors_rounded,
-          builder: _buildRealtimeTab,
-        ),
-        _RoomSettingsSection(
-          label: '聊天',
-          icon: Icons.forum_rounded,
-          builder: _buildChatHistoryTab,
-        ),
-        _RoomSettingsSection(
-          label: '举报',
-          icon: Icons.report_gmailerrorred_rounded,
-          builder: _buildReportsTab,
-        ),
-        _RoomSettingsSection(
-          label: '网络',
-          icon: Icons.hub_rounded,
-          builder: _buildNetworkTab,
-        ),
-        _RoomSettingsSection(
-          label: '推流',
-          icon: Icons.podcasts_rounded,
-          builder: _buildStreamsTab,
-        ),
-        _RoomSettingsSection(
-          label: '审核',
-          icon: Icons.fact_check_rounded,
-          builder: _buildReviewsTab,
-        ),
-      ];
+    _RoomSettingsSection(
+      label: '信息',
+      icon: Icons.info_outline_rounded,
+      builder: _buildRoomInfoTab,
+    ),
+    _RoomSettingsSection(
+      label: '设置',
+      icon: Icons.tune_rounded,
+      builder: _buildSettingsTab,
+    ),
+    _RoomSettingsSection(
+      label: '成员',
+      icon: Icons.group_rounded,
+      builder: _buildMembersTab,
+    ),
+    _RoomSettingsSection(
+      label: '媒体',
+      icon: Icons.video_library_rounded,
+      builder: _buildMediaTab,
+    ),
+    _RoomSettingsSection(
+      label: '实时',
+      icon: Icons.sensors_rounded,
+      builder: _buildRealtimeTab,
+    ),
+    _RoomSettingsSection(
+      label: '聊天',
+      icon: Icons.forum_rounded,
+      builder: _buildChatHistoryTab,
+    ),
+    _RoomSettingsSection(
+      label: '举报',
+      icon: Icons.report_gmailerrorred_rounded,
+      builder: _buildReportsTab,
+    ),
+    _RoomSettingsSection(
+      label: '网络',
+      icon: Icons.hub_rounded,
+      builder: _buildNetworkTab,
+    ),
+    _RoomSettingsSection(
+      label: '推流',
+      icon: Icons.podcasts_rounded,
+      builder: _buildStreamsTab,
+    ),
+    _RoomSettingsSection(
+      label: '审核',
+      icon: Icons.fact_check_rounded,
+      builder: _buildReviewsTab,
+    ),
+  ];
 
   String get _currentPlaylistId =>
       _mediaPlaylistStack.isEmpty ? '' : _mediaPlaylistStack.last;
@@ -1499,8 +1511,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     children: [
                       Icon(
                         detail.active ? Icons.sensors : Icons.sensors_off,
-                        color:
-                            detail.active ? Colors.green : theme.disabledColor,
+                        color: detail.active
+                            ? Colors.green
+                            : theme.disabledColor,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -1656,10 +1669,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
     if (!confirmed) return;
     try {
-      await SyncTvService.transferRoomOwnership(
-        widget.roomId,
-        member.userId,
-      );
+      await SyncTvService.transferRoomOwnership(widget.roomId, member.userId);
       await _loadMembers();
       if (mounted) MessageUtils.showSuccess(context, '房主已转让');
     } catch (e) {
@@ -2055,7 +2065,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         builder: (context) {
           final theme = Theme.of(context);
           final isPlaylist = detail.id.startsWith('pl_');
-          final canMutate = _canMutateCurrentMediaScope &&
+          final canMutate =
+              _canMutateCurrentMediaScope &&
               (detail.id.startsWith('pl_') || detail.id.startsWith('med_')) &&
               !detail.isProviderDynamicEntry;
           return AppSafeArea(
@@ -2072,8 +2083,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       fallbackIcon: isPlaylist
                           ? Icons.folder_rounded
                           : detail.live
-                              ? Icons.live_tv
-                              : Icons.movie_creation_outlined,
+                          ? Icons.live_tv
+                          : Icons.movie_creation_outlined,
                       height: 180,
                     ),
                     const SizedBox(height: 16),
@@ -2083,8 +2094,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           isPlaylist
                               ? Icons.folder
                               : detail.live
-                                  ? Icons.live_tv
-                                  : Icons.movie,
+                              ? Icons.live_tv
+                              : Icons.movie,
                           color: isPlaylist
                               ? Colors.amber.shade700
                               : theme.colorScheme.primary,
@@ -2108,13 +2119,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       '类型',
                       isPlaylist
                           ? detail.metadata['isDynamic'] == true
-                              ? '动态播放列表'
-                              : '播放列表'
+                                ? '动态播放列表'
+                                : '播放列表'
                           : detail.isFolder
-                              ? '动态目录'
-                              : detail.live
-                                  ? '直播媒体'
-                                  : '媒体',
+                          ? '动态目录'
+                          : detail.live
+                          ? '直播媒体'
+                          : '媒体',
                     ),
                     _buildDetailLine(
                       'Provider',
@@ -2344,9 +2355,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           showTargetTypeTabs: targetType == 0,
         ),
       ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-      ],
+      actions: [ChatUtils.createCancelButton(context)],
     );
   }
 
@@ -2454,8 +2463,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final target = await _showMoveMediaTargetDialog(entry);
     if (target == null) return;
     final targetPlaylistId = target.playlistId;
-    final sourcePlaylistId =
-        _currentPlaylistId.isEmpty ? null : _currentPlaylistId;
+    final sourcePlaylistId = _currentPlaylistId.isEmpty
+        ? null
+        : _currentPlaylistId;
     if ((sourcePlaylistId ?? '') == targetPlaylistId) return;
     try {
       final count = await SyncTvService.moveMedia(
@@ -2506,7 +2516,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<_MediaMoveTarget?> _showMoveMediaTargetDialog(
-      SyncTvMovie entry) async {
+    SyncTvMovie entry,
+  ) async {
     var loading = true;
     var error = '';
     var playlists = <SyncTvMovie>[];
@@ -2575,9 +2586,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       onPressed: _currentPlaylistId.isEmpty
                           ? null
                           : () => Navigator.pop(
-                                context,
-                                const _MediaMoveTarget('', '根目录'),
-                              ),
+                              context,
+                              const _MediaMoveTarget('', '根目录'),
+                            ),
                     ),
                     if (loading)
                       const Padding(
@@ -2629,8 +2640,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   style: AppActionButtonStyle.text,
                 ),
                 AppActionButton(
-                  onPressed:
-                      loading ? null : () => loadPlaylists(setDialogState),
+                  onPressed: loading
+                      ? null
+                      : () => loadPlaylists(setDialogState),
                   icon: Icons.refresh,
                   label: '刷新',
                   style: AppActionButtonStyle.text,
@@ -2674,8 +2686,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     String initialDescription = '',
   }) {
     final nameController = TextEditingController(text: initialName);
-    final descriptionController =
-        TextEditingController(text: initialDescription);
+    final descriptionController = TextEditingController(
+      text: initialDescription,
+    );
     return ChatUtils.showStyledDialog<_EntryEditResult>(
       context: context,
       title: title,
@@ -2755,11 +2768,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 value: role,
                 label: '角色',
                 prefixIcon: Icons.admin_panel_settings_outlined,
-                options: const {
-                  '管理员': 2,
-                  '成员': 3,
-                  '访客': 4,
-                },
+                options: const {'管理员': 2, '成员': 3, '访客': 4},
                 onChanged: (value) {
                   if (value != null) setDialogState(() => role = value);
                 },
@@ -2776,21 +2785,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       ),
       actions: [
         ChatUtils.createCancelButton(context),
-        ChatUtils.createConfirmButton(
-          context,
-          () {
-            final userId = userIdController.text.trim();
-            if (userId.isEmpty) return;
-            Navigator.pop(
-              context,
-              _MemberEditResult(userId, role, notify),
-            );
-          },
-          text: '添加',
-        ),
+        ChatUtils.createConfirmButton(context, () {
+          final userId = userIdController.text.trim();
+          if (userId.isEmpty) return;
+          Navigator.pop(context, _MemberEditResult(userId, role, notify));
+        }, text: '添加'),
       ],
     ).whenComplete(
-        () => _disposeTextControllersAfterDialog([userIdController]));
+      () => _disposeTextControllersAfterDialog([userIdController]),
+    );
   }
 
   void _disposeTextControllersAfterDialog(
@@ -2815,11 +2818,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             value: role,
             label: '角色',
             prefixIcon: Icons.admin_panel_settings_outlined,
-            options: const {
-              '管理员': 2,
-              '成员': 3,
-              '访客': 4,
-            },
+            options: const {'管理员': 2, '成员': 3, '访客': 4},
             onChanged: (value) {
               if (value != null) setDialogState(() => role = value);
             },
@@ -2842,10 +2841,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     final isAdmin =
         member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
-    var added =
-        isAdmin ? member.adminAddedPermissions : member.addedPermissions;
-    var removed =
-        isAdmin ? member.adminRemovedPermissions : member.removedPermissions;
+    var added = isAdmin
+        ? member.adminAddedPermissions
+        : member.addedPermissions;
+    var removed = isAdmin
+        ? member.adminRemovedPermissions
+        : member.removedPermissions;
 
     return showAppDialog<_MemberPermissionOverrideResult>(
       context: context,
@@ -2934,8 +2935,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final mode = (added & flag) != 0
         ? _PermissionOverrideMode.allow
         : (removed & flag) != 0
-            ? _PermissionOverrideMode.deny
-            : _PermissionOverrideMode.inherit;
+        ? _PermissionOverrideMode.deny
+        : _PermissionOverrideMode.inherit;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -3065,10 +3066,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
-  Widget _buildSurface({
-    required List<Widget> children,
-    required bool isDark,
-  }) {
+  Widget _buildSurface({required List<Widget> children, required bool isDark}) {
     return AppPanelSurface(
       margin: const EdgeInsets.symmetric(horizontal: 12),
       color: _settingsSurfaceColor(isDark),
@@ -3082,9 +3080,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Border _settingsSurfaceBorder(bool isDark) {
-    return Border.all(
-      color: isDark ? Colors.white10 : const Color(0xFFE6E7EE),
-    );
+    return Border.all(color: isDark ? Colors.white10 : const Color(0xFFE6E7EE));
   }
 
   Widget _buildDivider(ThemeData theme) {
@@ -3228,10 +3224,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               '查看成员列表',
               _memberPermissions,
               RoomMemberPermissions.viewMemberList,
-              (v) => _setMemberPermission(
-                RoomMemberPermissions.viewMemberList,
-                v,
-              ),
+              (v) =>
+                  _setMemberPermission(RoomMemberPermissions.viewMemberList, v),
               theme,
               isDark,
             ),
@@ -3363,7 +3357,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 AppIconButton(
                   onPressed: () {
                     setState(() {
-                      _streamSortDirection = _streamSortDirection ==
+                      _streamSortDirection =
+                          _streamSortDirection ==
                               client_enum.SortDirection.SORT_DIRECTION_ASC
                           ? client_enum.SortDirection.SORT_DIRECTION_DESC
                           : client_enum.SortDirection.SORT_DIRECTION_ASC;
@@ -3371,11 +3366,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     });
                     _loadStreams();
                   },
-                  icon: _streamSortDirection ==
+                  icon:
+                      _streamSortDirection ==
                           client_enum.SortDirection.SORT_DIRECTION_ASC
                       ? Icons.north_rounded
                       : Icons.south_rounded,
-                  tooltip: _streamSortDirection ==
+                  tooltip:
+                      _streamSortDirection ==
                           client_enum.SortDirection.SORT_DIRECTION_ASC
                       ? '媒体 ID 升序'
                       : '媒体 ID 降序',
@@ -3523,8 +3520,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   tooltip: '返回上级',
                   onPressed:
                       _mediaTarget.isNotEmpty || _mediaPlaylistStack.isNotEmpty
-                          ? _handleMediaBack
-                          : null,
+                      ? _handleMediaBack
+                      : null,
                   icon: Icons.arrow_upward,
                 ),
                 if (canMutateScope) ...[
@@ -3590,8 +3587,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           '$_mediaProviderInstanceName-'
                           '${_mediaProviderInstances.join('|')}',
                         ),
-                        value: _mediaProviderInstances
-                                .contains(_mediaProviderInstanceName)
+                        value:
+                            _mediaProviderInstances.contains(
+                              _mediaProviderInstanceName,
+                            )
                             ? _mediaProviderInstanceName
                             : '',
                         label: '实例',
@@ -3599,11 +3598,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           for (final instance in _mediaProviderInstances)
                             _providerInstanceLabel(instance): instance,
                         },
-                        enabled: _mediaSourcesWithProviderInstances.contains(
+                        enabled:
+                            _mediaSourcesWithProviderInstances.contains(
                               _mediaSourceProvider,
                             ) &&
                             !_mediaProviderInstancesLoading,
-                        onChanged: _mediaSourcesWithProviderInstances.contains(
+                        onChanged:
+                            _mediaSourcesWithProviderInstances.contains(
                                   _mediaSourceProvider,
                                 ) &&
                                 !_mediaProviderInstancesLoading
@@ -3624,11 +3625,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         value: _mediaAvailability,
                         label: '可用性',
                         options: const {
-                          '全部': client_enum.ResourceAvailabilityFilter
+                          '全部': client_enum
+                              .ResourceAvailabilityFilter
                               .RESOURCE_AVAILABILITY_FILTER_ALL,
-                          '可用': client_enum.ResourceAvailabilityFilter
+                          '可用': client_enum
+                              .ResourceAvailabilityFilter
                               .RESOURCE_AVAILABILITY_FILTER_AVAILABLE,
-                          '不可用': client_enum.ResourceAvailabilityFilter
+                          '不可用': client_enum
+                              .ResourceAvailabilityFilter
                               .RESOURCE_AVAILABILITY_FILTER_UNAVAILABLE,
                         },
                         onChanged: (value) {
@@ -3645,16 +3649,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         label: '排序',
                         options: const {
                           '位置': client_enum
-                              .MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
+                              .MediaListSortBy
+                              .MEDIA_LIST_SORT_BY_POSITION,
                           '名称': client_enum
-                              .MediaListSortBy.MEDIA_LIST_SORT_BY_NAME,
+                              .MediaListSortBy
+                              .MEDIA_LIST_SORT_BY_NAME,
                           '添加时间': client_enum
-                              .MediaListSortBy.MEDIA_LIST_SORT_BY_ADDED_AT,
+                              .MediaListSortBy
+                              .MEDIA_LIST_SORT_BY_ADDED_AT,
                           '更新时间': client_enum
-                              .MediaListSortBy.MEDIA_LIST_SORT_BY_UPDATED_AT,
-                          '来源': client_enum.MediaListSortBy
+                              .MediaListSortBy
+                              .MEDIA_LIST_SORT_BY_UPDATED_AT,
+                          '来源': client_enum
+                              .MediaListSortBy
                               .MEDIA_LIST_SORT_BY_SOURCE_PROVIDER,
-                          '实例': client_enum.MediaListSortBy
+                          '实例': client_enum
+                              .MediaListSortBy
                               .MEDIA_LIST_SORT_BY_PROVIDER_INSTANCE_NAME,
                         },
                         onChanged: (value) {
@@ -3668,18 +3678,21 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     AppIconButton(
                       onPressed: () {
                         setState(() {
-                          _mediaSortDirection = _mediaSortDirection ==
+                          _mediaSortDirection =
+                              _mediaSortDirection ==
                                   client_enum.SortDirection.SORT_DIRECTION_ASC
                               ? client_enum.SortDirection.SORT_DIRECTION_DESC
                               : client_enum.SortDirection.SORT_DIRECTION_ASC;
                         });
                         _reloadMediaLibrary();
                       },
-                      icon: _mediaSortDirection ==
+                      icon:
+                          _mediaSortDirection ==
                               client_enum.SortDirection.SORT_DIRECTION_ASC
                           ? Icons.north_rounded
                           : Icons.south_rounded,
-                      tooltip: _mediaSortDirection ==
+                      tooltip:
+                          _mediaSortDirection ==
                               client_enum.SortDirection.SORT_DIRECTION_ASC
                           ? '升序'
                           : '降序',
@@ -3731,9 +3744,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
         ),
         _buildRealtimePaneSelector(theme),
-        Expanded(
-          child: _buildRealtimePaneBody(resources, theme, isDark),
-        ),
+        Expanded(child: _buildRealtimePaneBody(resources, theme, isDark)),
       ],
     );
   }
@@ -3805,9 +3816,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           onRefresh: _refreshRealtimeDiagnostics,
           child: AppListView(
             padding: const EdgeInsets.only(bottom: 32),
-            children: [
-              _buildRealtimeDetails(resources, theme, isDark),
-            ],
+            children: [_buildRealtimeDetails(resources, theme, isDark)],
           ),
         );
       case _RealtimeDiagnosticsPane.events:
@@ -3820,9 +3829,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: AppPanelSurface(
         color: theme.colorScheme.surface,
-        border: Border.all(
-          color: theme.dividerColor.withValues(alpha: 0.55),
-        ),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.55)),
         child: RealtimeEventLogView(
           events: _realtimeEvents,
           padding: const EdgeInsets.all(12),
@@ -3982,11 +3989,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   ) {
     final watched = resources.where(_isRealtimeResourceReady).length;
     final eventCount = _realtimeEvents.length;
-    final outgoingCount =
-        _realtimeEvents.where((event) => event.direction == 'out').length;
+    final outgoingCount = _realtimeEvents
+        .where((event) => event.direction == 'out')
+        .length;
     final incomingCount = eventCount - outgoingCount;
-    final errorCount =
-        resources.fold<int>(0, (total, item) => total + item.stats.errors);
+    final errorCount = resources.fold<int>(
+      0,
+      (total, item) => total + item.stats.errors,
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: LayoutBuilder(
@@ -4110,8 +4120,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           children: [
             Row(
               children: [
-                Icon(Icons.data_object_rounded,
-                    color: theme.colorScheme.primary),
+                Icon(
+                  Icons.data_object_rounded,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -4126,11 +4138,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             const SizedBox(height: 12),
             _buildDebugLine(theme, '房间', widget.roomName),
             _buildDebugLine(theme, '房间 ID', widget.roomId),
-            _buildDebugLine(
-              theme,
-              '当前目录',
-              _mediaScopeLabel(_mediaPage),
-            ),
+            _buildDebugLine(theme, '当前目录', _mediaScopeLabel(_mediaPage)),
             _buildDebugLine(
               theme,
               '监听状态',
@@ -4156,11 +4164,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         runSpacing: 10,
         children: [
           for (final resource in resources)
-            _buildRealtimeResourceCard(
-              resource,
-              theme,
-              isDark,
-            ),
+            _buildRealtimeResourceCard(resource, theme, isDark),
         ],
       ),
     );
@@ -4175,8 +4179,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final tone = resource.stats.errors > 0
         ? Colors.redAccent
         : ready
-            ? Colors.green
-            : Colors.orange;
+        ? Colors.green
+        : Colors.orange;
     return AppPanelSurface(
       padding: const EdgeInsets.all(14),
       color: _settingsSurfaceColor(isDark),
@@ -4217,7 +4221,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 const SizedBox.square(
                   dimension: 18,
                   child: AppLoadingIndicator(
-                      size: AppLoadingSize.sm, centered: false),
+                    size: AppLoadingSize.sm,
+                    centered: false,
+                  ),
                 )
               else
                 Icon(
@@ -4228,11 +4234,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           const SizedBox(height: 14),
           _buildDebugLine(
-              theme,
-              '版本',
-              resource.version.isEmpty
-                  ? (ready ? '未提供' : '等待')
-                  : resource.version),
+            theme,
+            '版本',
+            resource.version.isEmpty
+                ? (ready ? '未提供' : '等待')
+                : resource.version,
+          ),
           _buildDebugLine(theme, '本地条目', resource.localCount.toString()),
           _buildDebugLine(theme, '状态', resource.summary),
           _buildDebugLine(theme, '最近事件', resource.stats.lastKind),
@@ -4250,11 +4257,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildDebugLine(theme, '错误', resource.stats.lastError),
           const AppDivider(height: 20),
           ...resource.details.entries.map(
-            (entry) => _buildDebugLine(
-              theme,
-              entry.key,
-              _debugValue(entry.value),
-            ),
+            (entry) =>
+                _buildDebugLine(theme, entry.key, _debugValue(entry.value)),
           ),
         ],
       ),
@@ -4465,11 +4469,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         options: const {
                           '全部角色': null,
                           '房主': common_enum
-                              .RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR,
+                              .RoomMemberRole
+                              .ROOM_MEMBER_ROLE_CREATOR,
                           '管理员':
                               common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
                           '成员': common_enum
-                              .RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER,
+                              .RoomMemberRole
+                              .ROOM_MEMBER_ROLE_MEMBER,
                           '访客':
                               common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
                         },
@@ -4489,11 +4495,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         value: _memberSortBy,
                         label: '排序',
                         options: const {
-                          '加入时间': client_enum.RoomMemberListSortBy
+                          '加入时间': client_enum
+                              .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_JOINED_AT,
-                          '用户名': client_enum.RoomMemberListSortBy
+                          '用户名': client_enum
+                              .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_USERNAME,
-                          '角色': client_enum.RoomMemberListSortBy
+                          '角色': client_enum
+                              .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_ROLE,
                         },
                         onChanged: (value) {
@@ -4511,7 +4520,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     AppIconButton(
                       onPressed: () {
                         setState(() {
-                          _memberSortDirection = _memberSortDirection ==
+                          _memberSortDirection =
+                              _memberSortDirection ==
                                   client_enum.SortDirection.SORT_DIRECTION_ASC
                               ? client_enum.SortDirection.SORT_DIRECTION_DESC
                               : client_enum.SortDirection.SORT_DIRECTION_ASC;
@@ -4520,11 +4530,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         _refreshMembersRealtimeQuery();
                         _loadMembers();
                       },
-                      icon: _memberSortDirection ==
+                      icon:
+                          _memberSortDirection ==
                               client_enum.SortDirection.SORT_DIRECTION_ASC
                           ? Icons.north_rounded
                           : Icons.south_rounded,
-                      tooltip: _memberSortDirection ==
+                      tooltip:
+                          _memberSortDirection ==
                               client_enum.SortDirection.SORT_DIRECTION_ASC
                           ? '升序'
                           : '降序',
@@ -4586,8 +4598,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Widget _buildMemberPresenceSummary(ThemeData theme, bool isDark) {
-    final connectionCount =
-        _members.fold<int>(0, (sum, member) => sum + member.connectionCount);
+    final connectionCount = _members.fold<int>(
+      0,
+      (sum, member) => sum + member.connectionCount,
+    );
     final totalConnections = connectionCount > 0
         ? connectionCount
         : _members.where((member) => member.isOnline).length;
@@ -4815,7 +4829,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Widget _buildMediaTile(SyncTvMovie entry, ThemeData theme, bool isDark) {
     final isPersisted =
         entry.id.startsWith('pl_') || entry.id.startsWith('med_');
-    final canMutate = _canMutateCurrentMediaScope &&
+    final canMutate =
+        _canMutateCurrentMediaScope &&
         isPersisted &&
         !entry.isProviderDynamicEntry;
     final playlistIndex = entry.id.startsWith('pl_')
@@ -4832,8 +4847,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             fallbackIcon: entry.isFolder
                 ? Icons.folder_rounded
                 : entry.live
-                    ? Icons.live_tv
-                    : Icons.movie_creation_outlined,
+                ? Icons.live_tv
+                : Icons.movie_creation_outlined,
             width: 68,
             height: 68,
             borderRadius: 0,
@@ -4965,23 +4980,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final isReceiptLoading = _chatReceiptLoadingIds.contains(message.id);
     final bubbleColor = isMine
         ? scheme.primary.withValues(alpha: 0.12)
-        : scheme.surfaceContainerHighest
-            .withValues(alpha: isDark ? 0.54 : 0.72);
+        : scheme.surfaceContainerHighest.withValues(
+            alpha: isDark ? 0.54 : 0.72,
+          );
     final borderColor = isMine
         ? scheme.primary.withValues(alpha: 0.25)
         : scheme.outlineVariant.withValues(alpha: 0.55);
     final content = message.isDeleted
         ? '这条消息已删除'
         : message.content.trim().isEmpty && message.images.isNotEmpty
-            ? '图片消息'
-            : message.content;
+        ? '图片消息'
+        : message.content;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment:
-            isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMine
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (!isMine) ...[
             AppAvatar(name: title, radius: 17),
@@ -4991,8 +5008,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),
               child: Column(
-                crossAxisAlignment:
-                    isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment: isMine
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 children: [
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -5022,18 +5040,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         Text(
                           '已编辑',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color:
-                                scheme.onSurfaceVariant.withValues(alpha: 0.64),
+                            color: scheme.onSurfaceVariant.withValues(
+                              alpha: 0.64,
+                            ),
                           ),
                         ),
                       ],
                       if (message.isPinned && !message.isDeleted) ...[
                         const SizedBox(width: 6),
-                        Icon(
-                          Icons.push_pin,
-                          size: 13,
-                          color: scheme.primary,
-                        ),
+                        Icon(Icons.push_pin, size: 13, color: scheme.primary),
                       ],
                     ],
                   ),
@@ -5065,8 +5080,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             style: theme.textTheme.bodyMedium?.copyWith(
                               height: 1.32,
                               color: message.isDeleted
-                                  ? scheme.onSurfaceVariant
-                                      .withValues(alpha: 0.72)
+                                  ? scheme.onSurfaceVariant.withValues(
+                                      alpha: 0.72,
+                                    )
                                   : scheme.onSurface,
                               fontStyle: message.isDeleted
                                   ? FontStyle.italic
@@ -5080,8 +5096,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             spacing: 8,
                             runSpacing: 8,
                             children: message.images
-                                .map((image) =>
-                                    _buildChatImageThumb(image, theme))
+                                .map(
+                                  (image) => _buildChatImageThumb(image, theme),
+                                )
                                 .toList(),
                           ),
                         ],
@@ -5101,8 +5118,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                                 message.color!,
                             ].join(' · '),
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant
-                                  .withValues(alpha: 0.7),
+                              color: scheme.onSurfaceVariant.withValues(
+                                alpha: 0.7,
+                              ),
                             ),
                           ),
                         ],
@@ -5188,10 +5206,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final preview = quoted == null
         ? '点击查看上下文'
         : quoted.isDeleted
-            ? '这条消息已删除'
-            : quoted.content.trim().isEmpty
-                ? '图片消息'
-                : quoted.content.trim();
+        ? '这条消息已删除'
+        : quoted.content.trim().isEmpty
+        ? '图片消息'
+        : quoted.content.trim();
     return AppInkSurface(
       onTap: () => _showChatMessageContext(message),
       borderRadius: BorderRadius.circular(7),
@@ -5295,12 +5313,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     bool loading,
     ThemeData theme,
   ) {
-    final mentionSummary =
-        receipt == null ? null : _mentionReadReceiptSummary(message, receipt);
+    final mentionSummary = receipt == null
+        ? null
+        : _mentionReadReceiptSummary(message, receipt);
     final text = receipt == null
         ? '已读'
         : mentionSummary ??
-            '已读 ${receipt.readerTotal} · 未读 ${receipt.unreadTotal}';
+              '已读 ${receipt.readerTotal} · 未读 ${receipt.unreadTotal}';
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 4),
       child: TextButton.icon(
@@ -5351,8 +5370,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     ChatMessageReadReceiptsInfo? receipt,
   ) {
     if (message.mentions.isEmpty) return const [];
-    final mentionedIds =
-        message.mentions.map((mention) => mention.userId).toSet();
+    final mentionedIds = message.mentions
+        .map((mention) => mention.userId)
+        .toSet();
     final users = <String, SyncTvUser>{};
     for (final mention in message.mentions) {
       if (mention.userId.isEmpty || mention.username.trim().isEmpty) continue;
@@ -5531,7 +5551,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   String _compactMap(Map<String, dynamic> value) {
     final entries = value.entries
         .where(
-            (entry) => entry.value != null && entry.value.toString().isNotEmpty)
+          (entry) => entry.value != null && entry.value.toString().isNotEmpty,
+        )
         .take(6)
         .map((entry) => '${entry.key}: ${entry.value}')
         .join('\n');
@@ -5554,17 +5575,21 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     ThemeData theme,
     bool isDark,
   ) {
-    final isCreator = member.role ==
+    final isCreator =
+        member.role ==
         common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value;
     final isCurrentUser =
         _currentUserId.isNotEmpty && member.userId == _currentUserId;
     final canManageMember = !isCreator && !isCurrentUser;
-    final connectionText =
-        member.connectionCount > 0 ? '${member.connectionCount} 个连接' : '0 个连接';
-    final presenceColor =
-        member.isOnline ? const Color(0xFF16A34A) : theme.hintColor;
-    final displayName =
-        member.username.isEmpty ? member.userId : member.username;
+    final connectionText = member.connectionCount > 0
+        ? '${member.connectionCount} 个连接'
+        : '0 个连接';
+    final presenceColor = member.isOnline
+        ? const Color(0xFF16A34A)
+        : theme.hintColor;
+    final displayName = member.username.isEmpty
+        ? member.userId
+        : member.username;
     return _buildManagementTileSurface(
       theme,
       isDark,
@@ -5574,10 +5599,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppAvatar(
-                name: displayName,
-                radius: 18,
-              ),
+              AppAvatar(name: displayName, radius: 18),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -5811,11 +5833,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         fontSize: 12,
         fontWeight: FontWeight.w700,
       ),
-      label: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
   }
 
@@ -5826,8 +5844,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final creatorName = (room?.creator ?? '').trim().isEmpty
         ? (creatorId.isEmpty ? '创建者' : creatorId)
         : room!.creator.trim();
-    final creatorAvatarUrl =
-        SyncTvService.resolveResourceUrl(room?.creatorAvatarUrl ?? '');
+    final creatorAvatarUrl = SyncTvService.resolveResourceUrl(
+      room?.creatorAvatarUrl ?? '',
+    );
     return AppListView(
       padding: const EdgeInsets.only(bottom: 32, top: 8),
       children: [
@@ -5935,8 +5954,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     children: [
                       AppAvatar(
                         name: creatorName,
-                        imageUrl:
-                            creatorAvatarUrl.isEmpty ? null : creatorAvatarUrl,
+                        imageUrl: creatorAvatarUrl.isEmpty
+                            ? null
+                            : creatorAvatarUrl,
                         radius: 18,
                       ),
                       const SizedBox(width: 12),
@@ -5948,8 +5968,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                               creatorName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -5976,10 +5997,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           isDark: isDark,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: AppTextField(
                 controller: _passwordController,
                 label: '新密码',
@@ -6010,8 +6028,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     ),
                   ),
                   AppActionButton(
-                    onPressed:
-                        _canSubmitPasswordChange ? _updateRoomPassword : null,
+                    onPressed: _canSubmitPasswordChange
+                        ? _updateRoomPassword
+                        : null,
                     loading: _passwordUpdating,
                     icon: Icons.password_rounded,
                     label: _passwordActionLabel,
@@ -6043,8 +6062,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   _buildDivider(theme),
                 ],
                 AppTile(
-                  prefix: Icon(Icons.delete_forever_rounded,
-                      color: theme.colorScheme.error),
+                  prefix: Icon(
+                    Icons.delete_forever_rounded,
+                    color: theme.colorScheme.error,
+                  ),
                   title: Text(
                     '删除房间',
                     style: TextStyle(color: theme.colorScheme.error),
@@ -6062,8 +6083,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   String _streamSubtitle(RoomStreamEntryInfo stream) {
     if (!stream.active) return '未活跃';
-    final publisher =
-        stream.publisherUserId.isEmpty ? '未知发布者' : stream.publisherUserId;
+    final publisher = stream.publisherUserId.isEmpty
+        ? '未知发布者'
+        : stream.publisherUserId;
     return '$publisher · ${_formatTimestamp(stream.startedAt)}';
   }
 
@@ -6088,8 +6110,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   String _formatTimestamp(int timestamp) {
     if (timestamp <= 0) return '时间未知';
-    final normalized =
-        timestamp > 100000000000 ? (timestamp / 1000).round() : timestamp;
+    final normalized = timestamp > 100000000000
+        ? (timestamp / 1000).round()
+        : timestamp;
     final time = DateTime.fromMillisecondsSinceEpoch(normalized * 1000);
     return '${time.year.toString().padLeft(4, '0')}-'
         '${time.month.toString().padLeft(2, '0')}-'
@@ -6117,22 +6140,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final systemUiOverlayStyle =
-        isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
+    final systemUiOverlayStyle = isDark
+        ? SystemUiOverlayStyle.light
+        : SystemUiOverlayStyle.dark;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: systemUiOverlayStyle,
       child: AppScaffold(
-        backgroundColor:
-            isDark ? const Color(0xFF121214) : const Color(0xFFF6F7FB),
+        backgroundColor: isDark
+            ? const Color(0xFF121214)
+            : const Color(0xFFF6F7FB),
         appBar: AppAppBar(
           title: Text(
             widget.roomName,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           elevation: 0,
-          backgroundColor:
-              isDark ? const Color(0xFF121214) : const Color(0xFFF6F7FB),
+          backgroundColor: isDark
+              ? const Color(0xFF121214)
+              : const Color(0xFFF6F7FB),
           centerTitle: true,
           systemOverlayStyle: systemUiOverlayStyle,
         ),
@@ -6196,20 +6222,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         labelPadding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16),
         indicatorSize: TabBarIndicatorSize.label,
         tabs: _sections
-            .map((section) => Tab(
-                  height: compact ? 44 : 64,
-                  icon: compact ? null : Icon(section.icon),
-                  child: compact
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(section.icon, size: 18),
-                            const SizedBox(width: 6),
-                            Text(section.label),
-                          ],
-                        )
-                      : Text(section.label),
-                ))
+            .map(
+              (section) => Tab(
+                height: compact ? 44 : 64,
+                icon: compact ? null : Icon(section.icon),
+                child: compact
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(section.icon, size: 18),
+                          const SizedBox(width: 6),
+                          Text(section.label),
+                        ],
+                      )
+                    : Text(section.label),
+              ),
+            )
             .toList(growable: false),
       ),
     );
@@ -6237,8 +6265,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         '房间管理',
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.68),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.68,
+                          ),
                         ),
                       ),
                     ),
@@ -6288,8 +6317,9 @@ class _RoomSettingsNavTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final foreground =
-        selected ? theme.colorScheme.primary : theme.colorScheme.onSurface;
+    final foreground = selected
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface;
     return AppInkSurface(
       color: selected
           ? theme.colorScheme.primary.withValues(alpha: 0.10)
@@ -6380,11 +6410,7 @@ class _ChatMessageEditFormState extends State<_ChatMessageEditForm> {
           children: [
             ChatUtils.createCancelButton(context),
             const SizedBox(width: 8),
-            ChatUtils.createConfirmButton(
-              context,
-              _submit,
-              text: '保存',
-            ),
+            ChatUtils.createConfirmButton(context, _submit, text: '保存'),
           ],
         ),
       ],

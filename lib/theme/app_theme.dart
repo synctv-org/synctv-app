@@ -110,9 +110,7 @@ class AppTheme {
       shape: WidgetStatePropertyAll(
         RoundedRectangleBorder(borderRadius: _controlRadius),
       ),
-      textStyle: WidgetStatePropertyAll(
-        TextStyle(fontWeight: FontWeight.w700),
-      ),
+      textStyle: WidgetStatePropertyAll(TextStyle(fontWeight: FontWeight.w700)),
     );
   }
 

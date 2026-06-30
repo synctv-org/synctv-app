@@ -4,10 +4,7 @@ class ServerInfo {
   final String serverId;
   final String serverName;
 
-  const ServerInfo({
-    required this.serverId,
-    required this.serverName,
-  });
+  const ServerInfo({required this.serverId, required this.serverName});
 }
 
 class PublicSettingsInfo {

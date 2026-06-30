@@ -63,10 +63,79 @@ Future<void> runExtendedSmoke(String baseUrl, String rootPassword) async {
   // ---- File-upload pipeline: avatar ----
   // A real 2x2 PNG (random bytes fail the server's image-format validation).
   final avatarBytes = Uint8List.fromList(const [
-    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 2,
-    0, 0, 0, 2, 8, 2, 0, 0, 0, 253, 212, 154, 115, 0, 0, 0, 16, 73, 68, 65,
-    84, 120, 156, 99, 248, 207, 192, 0, 68, 12, 16, 10, 0, 31, 238, 3, 253,
-    139, 95, 20, 212, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
+    137,
+    80,
+    78,
+    71,
+    13,
+    10,
+    26,
+    10,
+    0,
+    0,
+    0,
+    13,
+    73,
+    72,
+    68,
+    82,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    2,
+    8,
+    2,
+    0,
+    0,
+    0,
+    253,
+    212,
+    154,
+    115,
+    0,
+    0,
+    0,
+    16,
+    73,
+    68,
+    65,
+    84,
+    120,
+    156,
+    99,
+    248,
+    207,
+    192,
+    0,
+    68,
+    12,
+    16,
+    10,
+    0,
+    31,
+    238,
+    3,
+    253,
+    139,
+    95,
+    20,
+    212,
+    0,
+    0,
+    0,
+    0,
+    73,
+    69,
+    78,
+    68,
+    174,
+    66,
+    96,
+    130,
   ]);
   await SyncTvService.updateUserAvatar(
     LocalImageUpload(
@@ -195,9 +264,7 @@ Future<void> runExtendedSmoke(String baseUrl, String rootPassword) async {
     beforeLimit: 5,
     afterLimit: 5,
   );
-  print(
-    'chat_context=${context.before.length}+${context.after.length}',
-  );
+  print('chat_context=${context.before.length}+${context.after.length}');
 
   final readState = await SyncTvService.markChatRead(roomId, editedMsg.id);
   print('chat_read_state=${readState.lastReadMessageId}');
@@ -234,7 +301,10 @@ Future<void> runExtendedSmoke(String baseUrl, String rootPassword) async {
   final before = settings.chatEnabled;
   settings.chatEnabled = !before;
   await SyncTvService.updateRoomSettings(roomId, settings);
-  final settingsAfter = await SyncTvService.getRoomSettings(roomId, refresh: true);
+  final settingsAfter = await SyncTvService.getRoomSettings(
+    roomId,
+    refresh: true,
+  );
   if (settingsAfter.chatEnabled == before) {
     throw StateError('room settings update did not persist chatEnabled');
   }

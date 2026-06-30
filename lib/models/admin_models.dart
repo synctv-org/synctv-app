@@ -62,10 +62,7 @@ class AdminSettingsGroup {
   final String name;
   final Map<String, dynamic> settings;
 
-  const AdminSettingsGroup({
-    required this.name,
-    required this.settings,
-  });
+  const AdminSettingsGroup({required this.name, required this.settings});
 }
 
 class AdminActiveStream {
@@ -88,10 +85,7 @@ class AdminActiveStreamsPage {
   final List<AdminActiveStream> streams;
   final int total;
 
-  const AdminActiveStreamsPage({
-    required this.streams,
-    required this.total,
-  });
+  const AdminActiveStreamsPage({required this.streams, required this.total});
 }
 
 class AdminProviderInstancesPage {
@@ -142,30 +136,21 @@ class AdminUsersPage {
   final List<SyncTvUser> users;
   final int total;
 
-  const AdminUsersPage({
-    required this.users,
-    required this.total,
-  });
+  const AdminUsersPage({required this.users, required this.total});
 }
 
 class AdminRoomsPage {
   final List<SyncTvRoom> rooms;
   final int total;
 
-  const AdminRoomsPage({
-    required this.rooms,
-    required this.total,
-  });
+  const AdminRoomsPage({required this.rooms, required this.total});
 }
 
 class AdminsPage {
   final List<SyncTvUser> admins;
   final int total;
 
-  const AdminsPage({
-    required this.admins,
-    required this.total,
-  });
+  const AdminsPage({required this.admins, required this.total});
 }
 
 class AdminBanRecordsPage {

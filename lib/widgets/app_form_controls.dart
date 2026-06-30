@@ -134,12 +134,10 @@ class AppAvatar extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       border: border,
       boxShadow: boxShadow,
-      child: image ??
+      child:
+          image ??
           (_hasName
-              ? Text(
-                  _initial,
-                  style: effectiveTextStyle,
-                )
+              ? Text(_initial, style: effectiveTextStyle)
               : Icon(
                   fallbackIcon,
                   color: effectiveForeground,
@@ -206,9 +204,9 @@ class AppListView extends StatelessWidget {
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.onDrag,
     this.dragStartBehavior = DragStartBehavior.start,
     this.restorationId,
-  })  : itemBuilder = null,
-        separatorBuilder = null,
-        itemCount = null;
+  }) : itemBuilder = null,
+       separatorBuilder = null,
+       itemCount = null;
 
   const AppListView.builder({
     super.key,
@@ -230,8 +228,8 @@ class AppListView extends StatelessWidget {
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.onDrag,
     this.dragStartBehavior = DragStartBehavior.start,
     this.restorationId,
-  })  : children = null,
-        separatorBuilder = null;
+  }) : children = null,
+       separatorBuilder = null;
 
   const AppListView.separated({
     super.key,
@@ -252,9 +250,9 @@ class AppListView extends StatelessWidget {
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.onDrag,
     this.dragStartBehavior = DragStartBehavior.start,
     this.restorationId,
-  })  : children = null,
-        itemExtent = null,
-        prototypeItem = null;
+  }) : children = null,
+       itemExtent = null,
+       prototypeItem = null;
 
   @override
   Widget build(BuildContext context) {
@@ -413,12 +411,12 @@ class AppGridView extends StatelessWidget {
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.onDrag,
     this.dragStartBehavior = DragStartBehavior.start,
     this.restorationId,
-  })  : children = null,
-        crossAxisCount = null,
-        mainAxisSpacing = 0,
-        crossAxisSpacing = 0,
-        childAspectRatio = 1,
-        mainAxisExtent = null;
+  }) : children = null,
+       crossAxisCount = null,
+       mainAxisSpacing = 0,
+       crossAxisSpacing = 0,
+       childAspectRatio = 1,
+       mainAxisExtent = null;
 
   const AppGridView.count({
     super.key,
@@ -442,9 +440,9 @@ class AppGridView extends StatelessWidget {
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.onDrag,
     this.dragStartBehavior = DragStartBehavior.start,
     this.restorationId,
-  })  : gridDelegate = null,
-        itemBuilder = null,
-        itemCount = null;
+  }) : gridDelegate = null,
+       itemBuilder = null,
+       itemCount = null;
 
   @override
   Widget build(BuildContext context) {
@@ -588,7 +586,7 @@ class AppSelectableText extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveStyle = monospace && style?.fontFamily == null
         ? style?.copyWith(fontFamily: 'monospace') ??
-            const TextStyle(fontFamily: 'monospace')
+              const TextStyle(fontFamily: 'monospace')
         : style;
 
     return ConstrainedBox(
@@ -780,17 +778,20 @@ class _AppTextFieldState extends State<AppTextField> {
     final borderRadius = widget.borderRadius ?? BorderRadius.circular(8);
     final enabledBorder = OutlineInputBorder(
       borderRadius: borderRadius,
-      borderSide: widget.enabledBorderSide ??
+      borderSide:
+          widget.enabledBorderSide ??
           BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.7)),
     );
     final focusedBorder = OutlineInputBorder(
       borderRadius: borderRadius,
-      borderSide: widget.focusedBorderSide ??
+      borderSide:
+          widget.focusedBorderSide ??
           BorderSide(color: scheme.primary, width: 1.4),
     );
     final disabledBorder = OutlineInputBorder(
       borderRadius: borderRadius,
-      borderSide: widget.disabledBorderSide ??
+      borderSide:
+          widget.disabledBorderSide ??
           BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.35)),
     );
     final suffix = _hasSuffixActions
@@ -809,8 +810,9 @@ class _AppTextFieldState extends State<AppTextField> {
         autofocus: widget.autofocus,
         obscureText: _obscure,
         enableInteractiveSelection: true,
-        enableSuggestions:
-            widget.obscureText ? false : widget.enableSuggestions,
+        enableSuggestions: widget.obscureText
+            ? false
+            : widget.enableSuggestions,
         autocorrect: widget.obscureText ? false : widget.autocorrect,
         minLines: widget.obscureText ? null : widget.minLines,
         maxLines: maxLines,
@@ -845,11 +847,9 @@ class _AppTextFieldState extends State<AppTextField> {
               ? null
               : Icon(widget.prefixIcon, size: 18),
           suffixIcon: suffix,
-          contentPadding: widget.contentPadding ??
-              EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: dense ? 10 : 13,
-              ),
+          contentPadding:
+              widget.contentPadding ??
+              EdgeInsets.symmetric(horizontal: 12, vertical: dense ? 10 : 13),
           border: enabledBorder,
           enabledBorder: enabledBorder,
           focusedBorder: focusedBorder,
@@ -1049,8 +1049,8 @@ class AppActionButton extends StatelessWidget {
     final buttonIcon = loading
         ? const FCircularProgress(size: FCircularProgressSizeVariant.sm)
         : icon == null
-            ? null
-            : Icon(icon, size: 18);
+        ? null
+        : Icon(icon, size: 18);
     final child = Text(label, overflow: TextOverflow.ellipsis);
     final variant = switch (style) {
       AppActionButtonStyle.filled => FButtonVariant.primary,
@@ -1130,8 +1130,10 @@ class AppIconButton extends StatelessWidget {
     };
     final child = loading
         ? const FCircularProgress(size: FCircularProgressSizeVariant.sm)
-        : Icon(selected && selectedIcon != null ? selectedIcon : icon,
-            size: iconSize);
+        : Icon(
+            selected && selectedIcon != null ? selectedIcon : icon,
+            size: iconSize,
+          );
     final buttonSize = switch (size) {
       AppIconButtonSize.sm => FButtonSizeVariant.sm,
       AppIconButtonSize.md => FButtonSizeVariant.md,
@@ -1164,10 +1166,7 @@ class AppIconButton extends StatelessWidget {
       label: tooltip,
       selected: selected,
       onTap: effectiveOnPressed,
-      child: Tooltip(
-        message: tooltip,
-        child: button,
-      ),
+      child: Tooltip(message: tooltip, child: button),
     );
   }
 }
@@ -1213,8 +1212,9 @@ class AppChip extends StatelessWidget {
           ? scheme.primary.withValues(alpha: 0.55)
           : scheme.outlineVariant.withValues(alpha: 0.82),
     );
-    final shape =
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8));
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    );
     final labelStyle = theme.textTheme.labelLarge?.copyWith(
       color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
       fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
@@ -1522,9 +1522,11 @@ class AppTabBar extends StatelessWidget {
       labelColor: labelColor ?? theme.colorScheme.primary,
       unselectedLabelColor:
           unselectedLabelColor ?? theme.colorScheme.onSurfaceVariant,
-      labelStyle: labelStyle ??
+      labelStyle:
+          labelStyle ??
           theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
-      unselectedLabelStyle: unselectedLabelStyle ??
+      unselectedLabelStyle:
+          unselectedLabelStyle ??
           theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500),
       physics: physics,
       onTap: onTap,
@@ -1534,8 +1536,9 @@ class AppTabBar extends StatelessWidget {
 
 Decoration appTabPillIndicator({
   required Color color,
-  BorderRadiusGeometry borderRadius =
-      const BorderRadius.all(Radius.circular(8)),
+  BorderRadiusGeometry borderRadius = const BorderRadius.all(
+    Radius.circular(8),
+  ),
   List<BoxShadow>? boxShadow,
 }) {
   return BoxDecoration(
@@ -1673,7 +1676,8 @@ class AppInkSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveBorderRadius =
         borderRadius ?? const BorderRadius.all(Radius.circular(8));
-    final effectiveShape = shape ??
+    final effectiveShape =
+        shape ??
         RoundedRectangleBorder(
           borderRadius: effectiveBorderRadius,
           side: borderSide ?? BorderSide.none,
@@ -1786,7 +1790,8 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   static const double _macOsTitleBarCompensation = 24;
 
-  double get _topCompensation => avoidMacOsTitleBar &&
+  double get _topCompensation =>
+      avoidMacOsTitleBar &&
           !kIsWeb &&
           defaultTargetPlatform == TargetPlatform.macOS
       ? _macOsTitleBarCompensation
@@ -1794,8 +1799,8 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-        kToolbarHeight + _topCompensation + (bottom?.preferredSize.height ?? 0),
-      );
+    kToolbarHeight + _topCompensation + (bottom?.preferredSize.height ?? 0),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -1806,7 +1811,10 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     if (compensation > 0) {
       offsetTitle = title == null
           ? null
-          : Padding(padding: EdgeInsets.only(top: compensation), child: title);
+          : Padding(
+              padding: EdgeInsets.only(top: compensation),
+              child: title,
+            );
       offsetLeading = leading == null
           ? null
           : Padding(
@@ -1928,11 +1936,7 @@ class AppOverlaySurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      type: type,
-      color: color,
-      child: child,
-    );
+    return Material(type: type, color: color, child: child);
   }
 }
 
@@ -1987,10 +1991,7 @@ class AppBlurSurface extends StatelessWidget {
       return ClipOval(child: blurredSurface);
     }
 
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: blurredSurface,
-    );
+    return ClipRRect(borderRadius: borderRadius, child: blurredSurface);
   }
 }
 
@@ -2042,13 +2043,9 @@ class _AppGlassIconButtonState extends State<AppGlassIconButton>
       duration: widget.scaleDuration,
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(
-      begin: 1,
-      end: widget.pressedScale,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.easeInOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1, end: widget.pressedScale).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+    );
     _configureRotation();
   }
 
@@ -2059,13 +2056,10 @@ class _AppGlassIconButtonState extends State<AppGlassIconButton>
       _scaleController.duration = widget.scaleDuration;
     }
     if (oldWidget.pressedScale != widget.pressedScale) {
-      _scaleAnimation = Tween<double>(
-        begin: 1,
-        end: widget.pressedScale,
-      ).animate(CurvedAnimation(
-        parent: _scaleController,
-        curve: Curves.easeInOut,
-      ));
+      _scaleAnimation = Tween<double>(begin: 1, end: widget.pressedScale)
+          .animate(
+            CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
+          );
     }
     if (oldWidget.rotateOnPressed != widget.rotateOnPressed ||
         oldWidget.rotationDuration != widget.rotationDuration ||
@@ -2138,7 +2132,8 @@ class _AppGlassIconButtonState extends State<AppGlassIconButton>
     final animation = widget.rotateOnPressed && _rotationAnimation != null
         ? Listenable.merge([_scaleAnimation, _rotationAnimation!])
         : _scaleAnimation;
-    final background = widget.color ??
+    final background =
+        widget.color ??
         (widget.isDark
             ? Colors.grey.shade800.withValues(alpha: 0.5)
             : Colors.grey.shade100.withValues(alpha: 0.8));
@@ -2449,7 +2444,8 @@ class AppDataToolbar extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: titleStyle ??
+            style:
+                titleStyle ??
                 theme.textTheme.titleSmall?.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -2463,7 +2459,8 @@ class AppDataToolbar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             label: Text(
               count.toString(),
-              style: countStyle ??
+              style:
+                  countStyle ??
                   TextStyle(
                     color: theme.colorScheme.primary,
                     fontSize: 12,
@@ -2639,10 +2636,7 @@ class AppInfoBanner extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) ...[
-            SizedBox(width: spacing),
-            trailing!,
-          ],
+          if (trailing != null) ...[SizedBox(width: spacing), trailing!],
         ],
       ),
     );
@@ -2676,8 +2670,9 @@ class AppEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveIconSize =
-        iconSize > 0 ? iconSize : AppMetrics.emptyStateIconSize(context);
+    final effectiveIconSize = iconSize > 0
+        ? iconSize
+        : AppMetrics.emptyStateIconSize(context);
     Widget content = Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -2698,7 +2693,8 @@ class AppEmptyState extends StatelessWidget {
           Text(
             subtitle!,
             textAlign: TextAlign.center,
-            style: subtitleStyle ??
+            style:
+                subtitleStyle ??
                 theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor.withValues(alpha: 0.78),
                 ),
@@ -2798,8 +2794,8 @@ class AppPaginationBar extends StatelessWidget {
     final label = pageSize == null
         ? '第 $page 页${total == null ? '' : ' · 共 $total 条'}'
         : total == null
-            ? '第 $page 页 · 每页 $pageSize'
-            : '第 $page 页 · 每页 $pageSize · 共 $total 条';
+        ? '第 $page 页 · 每页 $pageSize'
+        : '第 $page 页 · 每页 $pageSize · 共 $total 条';
     return AppPaginationBar(
       key: key,
       label: label,
@@ -2833,15 +2829,9 @@ class AppPaginationBar extends StatelessWidget {
           child: Row(
             mainAxisSize: bounded ? MainAxisSize.max : MainAxisSize.min,
             children: [
-              if (leading != null) ...[
-                leading!,
-                const SizedBox(width: 8),
-              ],
+              if (leading != null) ...[leading!, const SizedBox(width: 8)],
               flexibleLabel,
-              if (trailing != null) ...[
-                const SizedBox(width: 8),
-                trailing!,
-              ],
+              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
               AppIconButton(
                 tooltip: '上一页',
                 icon: Icons.chevron_left_rounded,
@@ -2924,9 +2914,9 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorChild,
     this.boxShadow,
     this.semanticLabel = '图片',
-  })  : assetName = null,
-        bytes = null,
-        file = null;
+  }) : assetName = null,
+       bytes = null,
+       file = null;
 
   const AppImageThumbnail.asset({
     super.key,
@@ -2939,9 +2929,9 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorChild,
     this.boxShadow,
     this.semanticLabel = '图片',
-  })  : url = null,
-        bytes = null,
-        file = null;
+  }) : url = null,
+       bytes = null,
+       file = null;
 
   const AppImageThumbnail.memory({
     super.key,
@@ -2954,9 +2944,9 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorChild,
     this.boxShadow,
     this.semanticLabel = '图片',
-  })  : url = null,
-        assetName = null,
-        file = null;
+  }) : url = null,
+       assetName = null,
+       file = null;
 
   const AppImageThumbnail.file({
     super.key,
@@ -2969,48 +2959,46 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorChild,
     this.boxShadow,
     this.semanticLabel = '图片',
-  })  : url = null,
-        assetName = null,
-        bytes = null;
+  }) : url = null,
+       assetName = null,
+       bytes = null;
 
   @override
   Widget build(BuildContext context) {
-    final fallback = Center(
-      child: errorChild ?? Icon(errorIcon),
-    );
+    final fallback = Center(child: errorChild ?? Icon(errorIcon));
     final image = switch ((url, assetName, bytes, file)) {
       (final String value, null, null, null) => Image.network(
-          value,
-          width: width,
-          height: height,
-          fit: fit,
-          semanticLabel: semanticLabel,
-          errorBuilder: (context, error, stackTrace) => fallback,
-        ),
+        value,
+        width: width,
+        height: height,
+        fit: fit,
+        semanticLabel: semanticLabel,
+        errorBuilder: (context, error, stackTrace) => fallback,
+      ),
       (null, final String value, null, null) => Image.asset(
-          value,
-          width: width,
-          height: height,
-          fit: fit,
-          semanticLabel: semanticLabel,
-          errorBuilder: (context, error, stackTrace) => fallback,
-        ),
+        value,
+        width: width,
+        height: height,
+        fit: fit,
+        semanticLabel: semanticLabel,
+        errorBuilder: (context, error, stackTrace) => fallback,
+      ),
       (null, null, final Uint8List value, null) => Image.memory(
-          value,
-          width: width,
-          height: height,
-          fit: fit,
-          semanticLabel: semanticLabel,
-          errorBuilder: (context, error, stackTrace) => fallback,
-        ),
+        value,
+        width: width,
+        height: height,
+        fit: fit,
+        semanticLabel: semanticLabel,
+        errorBuilder: (context, error, stackTrace) => fallback,
+      ),
       (null, null, null, final File value) => Image.file(
-          value,
-          width: width,
-          height: height,
-          fit: fit,
-          semanticLabel: semanticLabel,
-          errorBuilder: (context, error, stackTrace) => fallback,
-        ),
+        value,
+        width: width,
+        height: height,
+        fit: fit,
+        semanticLabel: semanticLabel,
+        errorBuilder: (context, error, stackTrace) => fallback,
+      ),
       _ => fallback,
     };
 
@@ -3028,10 +3016,7 @@ class AppImageThumbnail extends StatelessWidget {
 class AppTransparentRouteSurface extends StatelessWidget {
   final Widget child;
 
-  const AppTransparentRouteSurface({
-    super.key,
-    required this.child,
-  });
+  const AppTransparentRouteSurface({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -3085,7 +3070,8 @@ class AppMenuAnchor extends StatelessWidget {
     BuildContext context,
     MenuController controller,
     Widget? child,
-  ) builder;
+  )
+  builder;
 
   const AppMenuAnchor({
     super.key,
@@ -3095,10 +3081,7 @@ class AppMenuAnchor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MenuAnchor(
-      menuChildren: menuChildren,
-      builder: builder,
-    );
+    return MenuAnchor(menuChildren: menuChildren, builder: builder);
   }
 }
 
@@ -3527,7 +3510,8 @@ Future<T?> showAppBottomSheet<T>({
     barrierColor: barrierColor ?? Colors.black.withValues(alpha: 0.5),
     constraints: constraints,
     backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.surface,
-    shape: shape ??
+    shape:
+        shape ??
         const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -3707,10 +3691,7 @@ class AppSelect<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final field = FSelect<T>(
       items: options,
-      control: FSelectControl<T>.lifted(
-        value: value,
-        onChange: _handleChange,
-      ),
+      control: FSelectControl<T>.lifted(value: value, onChange: _handleChange),
       label: label == null ? null : Text(label!),
       hint: hintText ?? '请选择',
       description: description == null ? null : Text(description!),
@@ -3757,8 +3738,9 @@ class AppSelect<T> extends StatelessWidget {
     if (options.isEmpty) return null;
 
     final maxLabelLength = options.keys.fold<int>(
-        hintText?.characters.length ?? 0,
-        (max, label) => math.max(max, label.characters.length));
+      hintText?.characters.length ?? 0,
+      (max, label) => math.max(max, label.characters.length),
+    );
     final textWidth = maxLabelLength * 14.0;
     final chromeWidth = prefixIcon == null ? 52.0 : 76.0;
     final width = textWidth + chromeWidth;

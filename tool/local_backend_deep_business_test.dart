@@ -13,18 +13,22 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 
 void main() {
-  test('local_backend_deep_business_test', () async {
-    await runDeepBusinessTest(
-      const String.fromEnvironment(
-        'SYNCTV_SMOKE_BASE_URL',
-        defaultValue: 'http://127.0.0.1:8080',
-      ),
-      const String.fromEnvironment(
-        'SYNCTV_SMOKE_ROOT_PASSWORD',
-        defaultValue: 'LocalDevRootPass2026!',
-      ),
-    );
-  }, timeout: const Timeout(Duration(minutes: 5)));
+  test(
+    'local_backend_deep_business_test',
+    () async {
+      await runDeepBusinessTest(
+        const String.fromEnvironment(
+          'SYNCTV_SMOKE_BASE_URL',
+          defaultValue: 'http://127.0.0.1:8080',
+        ),
+        const String.fromEnvironment(
+          'SYNCTV_SMOKE_ROOT_PASSWORD',
+          defaultValue: 'LocalDevRootPass2026!',
+        ),
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 5)),
+  );
 }
 
 Future<void> runDeepBusinessTest(String baseUrl, String rootPassword) async {
@@ -107,26 +111,36 @@ Future<void> _exerciseWatchers(String roomId, int stamp) async {
   final pinEvents = <RoomResourceWatchEvent<ChatPinEventInfo>>[];
 
   final subs = <StreamSubscription<dynamic>>[
-    SyncTvService.watchRoomSettings(roomId).listen(settingsEvents.add,
-        onError: (Object error) {
-      throw StateError('watchRoomSettings error: $error');
-    }),
-    SyncTvService.watchPlaybackState(roomId).listen(playbackEvents.add,
-        onError: (Object error) {
-      throw StateError('watchPlaybackState error: $error');
-    }),
-    SyncTvService.watchPlaylistItems(roomId).listen(playlistEvents.add,
-        onError: (Object error) {
-      throw StateError('watchPlaylistItems error: $error');
-    }),
-    SyncTvService.watchRoomMembers(roomId).listen(memberEvents.add,
-        onError: (Object error) {
-      throw StateError('watchRoomMembers error: $error');
-    }),
-    SyncTvService.watchChatPinEvents(roomId).listen(pinEvents.add,
-        onError: (Object error) {
-      throw StateError('watchChatPinEvents error: $error');
-    }),
+    SyncTvService.watchRoomSettings(roomId).listen(
+      settingsEvents.add,
+      onError: (Object error) {
+        throw StateError('watchRoomSettings error: $error');
+      },
+    ),
+    SyncTvService.watchPlaybackState(roomId).listen(
+      playbackEvents.add,
+      onError: (Object error) {
+        throw StateError('watchPlaybackState error: $error');
+      },
+    ),
+    SyncTvService.watchPlaylistItems(roomId).listen(
+      playlistEvents.add,
+      onError: (Object error) {
+        throw StateError('watchPlaylistItems error: $error');
+      },
+    ),
+    SyncTvService.watchRoomMembers(roomId).listen(
+      memberEvents.add,
+      onError: (Object error) {
+        throw StateError('watchRoomMembers error: $error');
+      },
+    ),
+    SyncTvService.watchChatPinEvents(roomId).listen(
+      pinEvents.add,
+      onError: (Object error) {
+        throw StateError('watchChatPinEvents error: $error');
+      },
+    ),
   ];
 
   print('watchers_wait_initial');
@@ -162,18 +176,21 @@ Future<void> _exerciseWatchers(String roomId, int stamp) async {
   await SyncTvService.updateRoomSettings(roomId, settings);
 
   await _waitFor(
-    () => playlistEvents
-        .any((event) => event.kind == RoomResourceWatchKind.changed),
+    () => playlistEvents.any(
+      (event) => event.kind == RoomResourceWatchKind.changed,
+    ),
     'playlist changed watch',
   );
   await _waitFor(
-    () => playbackEvents
-        .any((event) => event.kind == RoomResourceWatchKind.changed),
+    () => playbackEvents.any(
+      (event) => event.kind == RoomResourceWatchKind.changed,
+    ),
     'playback changed watch',
   );
   await _waitFor(
-    () => settingsEvents
-        .any((event) => event.kind == RoomResourceWatchKind.changed),
+    () => settingsEvents.any(
+      (event) => event.kind == RoomResourceWatchKind.changed,
+    ),
     'settings changed watch',
   );
   await _waitFor(
@@ -214,18 +231,14 @@ Future<void> _exerciseMediaAndRealtime(
     {
       'playlistId': nested.id,
       'sourceProvider': 'directUrl',
-      'sourceConfig': {
-        'url': batchUrl,
-      },
+      'sourceConfig': {'url': batchUrl},
       'name': 'batch direct $stamp',
       'description': 'batch insert',
     },
     {
       'playlistId': nested.id,
       'sourceProvider': 'liveProxy',
-      'sourceConfig': {
-        'url': 'http://127.0.0.1:18081/live.flv',
-      },
+      'sourceConfig': {'url': 'http://127.0.0.1:18081/live.flv'},
       'name': 'batch live proxy $stamp',
     },
   ]);
@@ -340,10 +353,7 @@ Future<void> _exerciseMediaAndRealtime(
   );
 
   await _login(owner);
-  await SyncTvService.deleteMediaLibraryEntries(
-    roomId,
-    playlistIds: [root.id],
-  );
+  await SyncTvService.deleteMediaLibraryEntries(roomId, playlistIds: [root.id]);
   print('media_realtime=ok');
 }
 
@@ -460,10 +470,9 @@ Future<void> _exerciseAdminLifecycle({
   await SyncTvService.adminBanUser(memberUser.id, true, reason: 'deep ban');
   await SyncTvService.adminBanUser(memberUser.id, false);
 
-  final banBatch = await SyncTvService.adminBatchBanUsers(
-    [memberUser.id],
-    reason: 'deep batch ban',
-  );
+  final banBatch = await SyncTvService.adminBatchBanUsers([
+    memberUser.id,
+  ], reason: 'deep batch ban');
   if (banBatch.succeeded < 1) {
     throw StateError('batch user ban failed');
   }
@@ -471,30 +480,26 @@ Future<void> _exerciseAdminLifecycle({
 
   await SyncTvService.adminBanRoom(roomId, true, reason: 'deep room ban');
   await SyncTvService.adminBanRoom(roomId, false);
-  final roomBatch = await SyncTvService.adminBatchBanRooms(
-    [roomId],
-    reason: 'deep batch room ban',
-  );
+  final roomBatch = await SyncTvService.adminBatchBanRooms([
+    roomId,
+  ], reason: 'deep batch room ban');
   if (roomBatch.succeeded < 1) {
     throw StateError('batch room ban failed');
   }
   await SyncTvService.adminBanRoom(roomId, false);
 
   final providerName = 'deep-provider-$stamp';
-  await _expectApiFailure(
-    () async {
-      await SyncTvService.adminAddProviderInstance(
-        name: providerName,
-        endpoint: 'http://127.0.0.1:65535',
-        providers: const ['alist'],
-        comment: 'deep generated',
-        timeoutSeconds: 1,
-        tls: false,
-        jwtSecret: 'deep-provider-secret',
-      );
-    },
-    'provider_create_unreachable',
-  );
+  await _expectApiFailure(() async {
+    await SyncTvService.adminAddProviderInstance(
+      name: providerName,
+      endpoint: 'http://127.0.0.1:65535',
+      providers: const ['alist'],
+      comment: 'deep generated',
+      timeoutSeconds: 1,
+      tls: false,
+      jwtSecret: 'deep-provider-secret',
+    );
+  }, 'provider_create_unreachable');
   await _expectApiFailure(
     () => SyncTvService.adminReconnectProviderInstance(providerName),
     'provider_reconnect_missing',
@@ -511,8 +516,10 @@ Future<void> _exerciseAdminLifecycle({
     'provider_instances=${listed.length} alist_available=$availableAlist alist_backends=$alistBackends',
   );
 
-  final settings =
-      await SyncTvService.adminGetSettingsGroup('room', refresh: true);
+  final settings = await SyncTvService.adminGetSettingsGroup(
+    'room',
+    refresh: true,
+  );
   final disableCreateRoom = settings.settings['disableCreateRoom'] == true;
   await SyncTvService.adminUpdateSettingInGroup(
     'room',
@@ -541,8 +548,9 @@ Future<void> _exerciseAdminLifecycle({
     throw StateError('admin stats incomplete');
   }
 
-  final ownerRows =
-      await SyncTvService.adminListUsersPage(search: owner.username);
+  final ownerRows = await SyncTvService.adminListUsersPage(
+    search: owner.username,
+  );
   if (ownerRows.users.isEmpty) {
     throw StateError('owner missing from admin search');
   }

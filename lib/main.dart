@@ -47,22 +47,19 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      localizationsDelegates: const [
-        FLocalizations.delegate,
-      ],
+      localizationsDelegates: const [FLocalizations.delegate],
       builder: (context, child) {
         final mediaQueryData = MediaQuery.of(context);
         final newMediaQueryData = mediaQueryData.copyWith(
-          textScaler: mediaQueryData.textScaler
-              .clamp(minScaleFactor: 0.85, maxScaleFactor: 1.3),
+          textScaler: mediaQueryData.textScaler.clamp(
+            minScaleFactor: 0.85,
+            maxScaleFactor: 1.3,
+          ),
         );
         final foruiTheme = Theme.of(context).brightness == Brightness.dark
             ? FThemes.blue.dark.desktop
             : FThemes.blue.light.desktop;
-        Widget appChild = MediaQuery(
-          data: newMediaQueryData,
-          child: child!,
-        );
+        Widget appChild = MediaQuery(data: newMediaQueryData, child: child!);
         appChild = ResponsiveBreakpoints.builder(
           breakpoints: AppBreakpoints.values,
           child: appChild,
@@ -75,10 +72,7 @@ class MyApp extends StatelessWidget {
           );
         }
 
-        return FTheme(
-          data: foruiTheme,
-          child: appChild,
-        );
+        return FTheme(data: foruiTheme, child: appChild);
       },
       home: const ResponsiveHome(),
     );

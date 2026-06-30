@@ -21,6 +21,7 @@ client.PlaybackClientProfile defaultPlaybackClientProfile() {
     audioCapability:
         client_enum.PlaybackAudioCapability.PLAYBACK_AUDIO_CAPABILITY_STEREO,
     subtitlePreference: client_enum
-        .PlaybackSubtitlePreference.PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL,
+        .PlaybackSubtitlePreference
+        .PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL,
   );
 }

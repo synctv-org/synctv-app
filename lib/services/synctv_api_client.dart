@@ -97,8 +97,8 @@ class SyncTvApiClient {
     this.onAuthError,
     this.onTokenRefresh,
     http.Client? httpClient,
-  })  : _http = httpClient ?? http.Client(),
-        _baseUri = _normalizeBaseUri(baseUrl);
+  }) : _http = httpClient ?? http.Client(),
+       _baseUri = _normalizeBaseUri(baseUrl);
 
   final http.Client _http;
   final SyncTvSession session;
@@ -112,14 +112,17 @@ class SyncTvApiClient {
   late final SyncTvRoomApi room = SyncTvRoomApi._(this);
   late final SyncTvPublicApi publicService = SyncTvPublicApi._(this);
   late final SyncTvEmailApi emailService = SyncTvEmailApi._(this);
-  late final SyncTvNotificationApi notifications =
-      SyncTvNotificationApi._(this);
+  late final SyncTvNotificationApi notifications = SyncTvNotificationApi._(
+    this,
+  );
   late final SyncTvOAuth2Api oauth2Service = SyncTvOAuth2Api._(this);
   late final SyncTvAdminApi adminService = SyncTvAdminApi._(this);
-  late final SyncTvProviderCommonApi providerCommon =
-      SyncTvProviderCommonApi._(this);
-  late final SyncTvAlistProviderApi alistProvider =
-      SyncTvAlistProviderApi._(this);
+  late final SyncTvProviderCommonApi providerCommon = SyncTvProviderCommonApi._(
+    this,
+  );
+  late final SyncTvAlistProviderApi alistProvider = SyncTvAlistProviderApi._(
+    this,
+  );
   late final SyncTvEmbyProviderApi embyProvider = SyncTvEmbyProviderApi._(this);
   late final SyncTvBilibiliProviderApi bilibiliProvider =
       SyncTvBilibiliProviderApi._(this);
@@ -145,11 +148,7 @@ class SyncTvApiClient {
       ...headers,
       if (contentType.isNotEmpty) 'content-type': contentType,
     };
-    final response = await _http.put(
-      uri,
-      headers: requestHeaders,
-      body: data,
-    );
+    final response = await _http.put(uri, headers: requestHeaders, body: data);
     if (response.statusCode == 401) {
       onAuthError?.call();
     }
@@ -173,11 +172,7 @@ class SyncTvApiClient {
       if (contentRange != null)
         'content-range': _contentRangeHeader(contentRange),
     };
-    final response = await _http.put(
-      _uri(path),
-      headers: headers,
-      body: data,
-    );
+    final response = await _http.put(_uri(path), headers: headers, body: data);
     if (response.statusCode == 401) {
       onAuthError?.call();
     }
@@ -185,14 +180,18 @@ class SyncTvApiClient {
       throw _apiException(response);
     }
     return _FileObjectUploadResult(
-      complete: _responseHeader(response, 'x-synctv-upload-complete')
-              .toLowerCase()
-              .trim() ==
+      complete:
+          _responseHeader(
+            response,
+            'x-synctv-upload-complete',
+          ).toLowerCase().trim() ==
           'true',
       uploadedSizeBytes: _parseInt64(
-          _responseHeader(response, 'x-synctv-uploaded-size-bytes')),
+        _responseHeader(response, 'x-synctv-uploaded-size-bytes'),
+      ),
       uploadedParts: _parseIntListHeader(
-          _responseHeader(response, 'x-synctv-uploaded-parts')),
+        _responseHeader(response, 'x-synctv-uploaded-parts'),
+      ),
     );
   }
 
@@ -222,13 +221,18 @@ class SyncTvApiClient {
     );
     return _FileObjectDownloadResult(
       mimeType: _responseHeader(response, 'content-type'),
-      contentManifestSha256:
-          _responseHeader(response, 'x-synctv-content-manifest-sha256'),
+      contentManifestSha256: _responseHeader(
+        response,
+        'x-synctv-content-manifest-sha256',
+      ),
       data: response.bodyBytes,
       contentRange: parsedRange?.range,
-      totalSizeBytes: parsedRange?.totalSize ??
-          _parseInt64(_responseHeader(response, 'content-length'),
-              fallback: response.bodyBytes.length),
+      totalSizeBytes:
+          parsedRange?.totalSize ??
+          _parseInt64(
+            _responseHeader(response, 'content-length'),
+            fallback: response.bodyBytes.length,
+          ),
     );
   }
 
@@ -312,8 +316,9 @@ class SyncTvApiClient {
     final basePath = _baseUri.path.endsWith('/')
         ? _baseUri.path.substring(0, _baseUri.path.length - 1)
         : _baseUri.path;
-    final requestPath =
-        relative.path.startsWith('/') ? relative.path : '/${relative.path}';
+    final requestPath = relative.path.startsWith('/')
+        ? relative.path
+        : '/${relative.path}';
 
     return _baseUri
         .replace(
@@ -515,18 +520,16 @@ class SyncTvApiClient {
   }
 
   Map<String, String?> _messageQuery(GeneratedMessage message) {
-    return _messageJson(message).map(
-      (key, value) => MapEntry(key, _queryValue(value)),
-    );
+    return _messageJson(
+      message,
+    ).map((key, value) => MapEntry(key, _queryValue(value)));
   }
 
   Map<String, dynamic> _protoFieldJson(GeneratedMessage message) {
     final result = <String, dynamic>{};
     for (final field in message.info_.sortedByTag) {
       if (!message.hasField(field.tagNumber)) continue;
-      result[field.name] = _protoFieldValue(
-        message.getField(field.tagNumber),
-      );
+      result[field.name] = _protoFieldValue(message.getField(field.tagNumber));
     }
     return result;
   }
@@ -624,9 +627,11 @@ class SyncTvApiClient {
     if (subBuilder == null) return value;
     if (value is List) {
       return value
-          .map((entry) => entry is Map<String, dynamic>
-              ? _normalizeMessageJson(entry, subBuilder())
-              : entry)
+          .map(
+            (entry) => entry is Map<String, dynamic>
+                ? _normalizeMessageJson(entry, subBuilder())
+                : entry,
+          )
           .toList();
     }
     if (value is Map<String, dynamic>) {
@@ -670,10 +675,9 @@ class SyncTvApiClient {
     final provider = providerValue is source_enum.SourceProvider
         ? providerValue
         : providerValue is int
-            ? source_enum.SourceProvider.valueOf(providerValue) ??
-                source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED
-            : SourceConfigCodec.providerFromString(
-                providerValue?.toString() ?? '');
+        ? source_enum.SourceProvider.valueOf(providerValue) ??
+              source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED
+        : SourceConfigCodec.providerFromString(providerValue?.toString() ?? '');
     final config = Map<String, dynamic>.from(value);
     if (fieldPath.contains('Playlist') ||
         fieldPath.contains('CreatePlaylistRequest')) {
@@ -734,8 +738,8 @@ class SyncTvApiClient {
     try {
       final decoded = jsonDecode(response.body);
       if (decoded is Map<String, dynamic>) {
-        message =
-            (decoded['error'] ?? decoded['message'] ?? message).toString();
+        message = (decoded['error'] ?? decoded['message'] ?? message)
+            .toString();
         final rawCode = decoded['code'];
         if (rawCode is int) code = rawCode;
         requestId = decoded['request_id']?.toString();
@@ -982,8 +986,9 @@ class SyncTvApiClient {
       if (profile.hasMaxAudioChannels())
         'maxAudioChannels': profile.maxAudioChannels.toString(),
       if (profile.supportedVideoCodecs.isNotEmpty)
-        'videoCodecs':
-            profile.supportedVideoCodecs.map((codec) => codec.value).join(','),
+        'videoCodecs': profile.supportedVideoCodecs
+            .map((codec) => codec.value)
+            .join(','),
       if (profile.supportedContainers.isNotEmpty)
         'containers': profile.supportedContainers
             .map((container) => container.value)
@@ -1013,10 +1018,7 @@ class SyncTvApiClient {
     return _baseUri.replace(
       scheme: wsScheme,
       path: '/ws/rooms/$encodedRoomId',
-      queryParameters: {
-        'ticket': ticket,
-        'format': 'json',
-      },
+      queryParameters: {'ticket': ticket, 'format': 'json'},
     );
   }
 
@@ -1038,8 +1040,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
         user.avatarUrl.isNotEmpty
             ? user.avatarUrl
             : user.hasAvatar()
-                ? user.avatar.url
-                : '',
+            ? user.avatar.url
+            : '',
       ),
       role: user.role.value,
       status: user.status.value,
@@ -1056,8 +1058,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
         user.avatarUrl.isNotEmpty
             ? user.avatarUrl
             : user.hasAvatar()
-                ? user.avatar.url
-                : '',
+            ? user.avatar.url
+            : '',
       ),
       role: user.role.value,
       createdAt: user.createdAt.toInt(),
@@ -1087,8 +1089,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
       status: user.isBanned
           ? common_enum.UserStatus.USER_STATUS_BANNED.value
           : user.status.value,
-      onlineCount:
-          user.hasPresence() && user.presence.connectionCount > 0 ? 1 : 0,
+      onlineCount: user.hasPresence() && user.presence.connectionCount > 0
+          ? 1
+          : 0,
       connectionCount: user.hasPresence() ? user.presence.connectionCount : 0,
       isBanned: user.isBanned,
       bannedAt: user.bannedAt.toInt(),
@@ -1103,8 +1106,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
       roomId: room.id,
       roomName: room.name,
       description: room.description,
-      viewerCount:
-          room.hasPresence() ? room.presence.onlineUserCount : room.memberCount,
+      viewerCount: room.hasPresence()
+          ? room.presence.onlineUserCount
+          : room.memberCount,
       connectionCount: room.hasPresence() ? room.presence.connectionCount : 0,
       memberCount: room.memberCount,
       creator: room.creatorUsername,
@@ -1132,14 +1136,16 @@ extension SyncTvModelMapping on SyncTvApiClient {
       roomId: room.id,
       roomName: room.name,
       description: room.description,
-      viewerCount:
-          room.hasPresence() ? room.presence.onlineUserCount : room.memberCount,
+      viewerCount: room.hasPresence()
+          ? room.presence.onlineUserCount
+          : room.memberCount,
       connectionCount: room.hasPresence() ? room.presence.connectionCount : 0,
       memberCount: room.memberCount,
       creator: room.hasCreator() ? room.creator.username : '',
       creatorId: room.hasCreator() ? room.creator.id : room.createdBy,
-      creatorAvatarUrl:
-          resolveResourceUrl(room.hasCreator() ? room.creator.avatarUrl : ''),
+      creatorAvatarUrl: resolveResourceUrl(
+        room.hasCreator() ? room.creator.avatarUrl : '',
+      ),
       coverUrl: resolveResourceUrl(room.hasCover() ? room.cover.url : ''),
       createdAt: room.createdAt.toInt(),
       updatedAt: room.updatedAt.toInt(),
@@ -1157,10 +1163,10 @@ extension SyncTvModelMapping on SyncTvApiClient {
   }
 
   SyncTvRoom mapMyRoom(client.MyRoom myRoom) => mapRoom(myRoom.room).copyWith(
-        myPermissions: myRoom.permissions.toInt(),
-        myRole: myRoom.role.value,
-        myRelation: myRoom.relation.value,
-      );
+    myPermissions: myRoom.permissions.toInt(),
+    myRole: myRoom.role.value,
+    myRelation: myRoom.relation.value,
+  );
 
   RoomCategoryInfo mapRoomCategory(client.RoomCategory category) {
     return RoomCategoryInfo(
@@ -1215,7 +1221,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
       type: sourceProvider,
       headers: _stringMap(metadata['headers']),
       proxy: metadata['proxy'] == true,
-      live: sourceProvider == 'rtmp' ||
+      live:
+          sourceProvider == 'rtmp' ||
           (sourceProvider == 'bilibili' && sourceConfig['type'] == 'live') ||
           metadata['isLive'] == true,
       sourceProvider: sourceProvider,
@@ -1250,8 +1257,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
       availability: playlist.availability.value,
       version: playlist.version.toInt(),
       description: playlist.description,
-      coverUrl:
-          resolveResourceUrl(playlist.hasCover() ? playlist.cover.url : ''),
+      coverUrl: resolveResourceUrl(
+        playlist.hasCover() ? playlist.cover.url : '',
+      ),
       type: playlist.isDynamic ? sourceProvider : 'playlist',
       sourceProvider: sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
@@ -1273,8 +1281,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
       metadata: {
         'target': target,
         'target_json': providerTargetToJson(target),
-        'thumbnail':
-            item.hasThumbnail() ? resolveResourceUrl(item.thumbnail) : '',
+        'thumbnail': item.hasThumbnail()
+            ? resolveResourceUrl(item.thumbnail)
+            : '',
         'size': item.hasSize() ? item.size.toInt() : null,
       },
     );
@@ -1291,8 +1300,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
         id: encodedTarget.isNotEmpty
             ? encodedTarget
             : playback.mediaId.isNotEmpty
-                ? playback.mediaId
-                : playback.playlistId,
+            ? playback.mediaId
+            : playback.playlistId,
         subPath: encodedTarget.isEmpty ? null : encodedTarget,
         parentId: encodedTarget.isEmpty ? null : state.playingPlaylistId,
         resolveUrl: resolveResourceUrl,
@@ -1331,7 +1340,8 @@ extension SyncTvModelMapping on SyncTvApiClient {
 
   Map<String, String> _stringMap(dynamic value) {
     if (value is! Map) return const {};
-    return value
-        .map((key, value) => MapEntry(key.toString(), value.toString()));
+    return value.map(
+      (key, value) => MapEntry(key.toString(), value.toString()),
+    );
   }
 }

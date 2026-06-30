@@ -18,18 +18,15 @@ class SourceConfigCodec {
     }
     return switch (normalized.toLowerCase()) {
       '' ||
-      'unspecified' =>
-        source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
+      'unspecified' => source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
       'direct_url' ||
-      'directurl' =>
-        source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL,
+      'directurl' => source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL,
       'bilibili' => source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI,
       'alist' => source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
       'emby' => source_enum.SourceProvider.SOURCE_PROVIDER_EMBY,
       'rtmp' => source_enum.SourceProvider.SOURCE_PROVIDER_RTMP,
       'live_proxy' ||
-      'liveproxy' =>
-        source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY,
+      'liveproxy' => source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY,
       _ => source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     };
   }
@@ -132,11 +129,13 @@ class SourceConfigCodec {
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_RTMP =>
         source_config.MediaSourceConfig(
-            rtmp: source_config.RtmpMediaSourceConfig()),
+          rtmp: source_config.RtmpMediaSourceConfig(),
+        ),
       source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY =>
         source_config.MediaSourceConfig(
           liveProxy: source_config.LiveProxyMediaSourceConfig(
-              url: _string(config['url'])),
+            url: _string(config['url']),
+          ),
         ),
       _ => null,
     };
@@ -183,19 +182,18 @@ class SourceConfigCodec {
       source_config.MediaSourceConfig_Provider.bilibili =>
         _bilibiliMediaSourceConfigToMap(config.bilibili),
       source_config.MediaSourceConfig_Provider.alist => {
-          if (config.alist.serverId.isNotEmpty)
-            'serverId': config.alist.serverId,
-          'path': config.alist.path,
-          if (config.alist.hasPassword()) 'password': config.alist.password,
-        },
+        if (config.alist.serverId.isNotEmpty) 'serverId': config.alist.serverId,
+        'path': config.alist.path,
+        if (config.alist.hasPassword()) 'password': config.alist.password,
+      },
       source_config.MediaSourceConfig_Provider.emby => {
-          if (config.emby.serverId.isNotEmpty) 'serverId': config.emby.serverId,
-          'itemId': config.emby.itemId,
-        },
+        if (config.emby.serverId.isNotEmpty) 'serverId': config.emby.serverId,
+        'itemId': config.emby.itemId,
+      },
       source_config.MediaSourceConfig_Provider.rtmp => <String, dynamic>{},
       source_config.MediaSourceConfig_Provider.liveProxy => {
-          'url': config.liveProxy.url,
-        },
+        'url': config.liveProxy.url,
+      },
       source_config.MediaSourceConfig_Provider.notSet => <String, dynamic>{},
     };
   }
@@ -205,15 +203,14 @@ class SourceConfigCodec {
   ) {
     return switch (config.whichProvider()) {
       source_config.PlaylistSourceConfig_Provider.alist => {
-          if (config.alist.serverId.isNotEmpty)
-            'serverId': config.alist.serverId,
-          'path': config.alist.path,
-          if (config.alist.hasPassword()) 'password': config.alist.password,
-        },
+        if (config.alist.serverId.isNotEmpty) 'serverId': config.alist.serverId,
+        'path': config.alist.path,
+        if (config.alist.hasPassword()) 'password': config.alist.password,
+      },
       source_config.PlaylistSourceConfig_Provider.emby => {
-          if (config.emby.serverId.isNotEmpty) 'serverId': config.emby.serverId,
-          'itemId': config.emby.itemId,
-        },
+        if (config.emby.serverId.isNotEmpty) 'serverId': config.emby.serverId,
+        'itemId': config.emby.itemId,
+      },
       source_config.PlaylistSourceConfig_Provider.notSet => <String, dynamic>{},
     };
   }
@@ -231,7 +228,8 @@ class SourceConfigCodec {
   }
 
   static source_config.DirectUrlMediaSourceConfig _directUrlMediaSourceConfig(
-      Map<String, dynamic> config) {
+    Map<String, dynamic> config,
+  ) {
     final mediaMaps = _listMaps(config['medias']);
     final medias = mediaMaps.isEmpty
         ? [
@@ -246,13 +244,13 @@ class SourceConfigCodec {
     return source_config.DirectUrlMediaSourceConfig(
       medias: medias,
       defaultMediaIndex: _optionalInt(config['defaultMediaIndex']),
-      subtitles: _listMaps(config['subtitles'])
-          .map(_directUrlSubtitleSourceConfig)
-          .toList(),
+      subtitles: _listMaps(
+        config['subtitles'],
+      ).map(_directUrlSubtitleSourceConfig).toList(),
       defaultSubtitleIndex: _optionalInt(config['defaultSubtitleIndex']),
-      danmakus: _listMaps(config['danmakus'])
-          .map(_directUrlDanmakuSourceConfig)
-          .toList(),
+      danmakus: _listMaps(
+        config['danmakus'],
+      ).map(_directUrlDanmakuSourceConfig).toList(),
       defaultDanmakuIndex: _optionalInt(config['defaultDanmakuIndex']),
       isLive: _optionalBool(config['isLive']),
       durationSeconds: _optionalDouble(config['durationSeconds']),
@@ -261,7 +259,7 @@ class SourceConfigCodec {
   }
 
   static source_config.DirectUrlMediaResourceConfig
-      _directUrlMediaResourceConfig(Map<String, dynamic> config) {
+  _directUrlMediaResourceConfig(Map<String, dynamic> config) {
     return source_config.DirectUrlMediaResourceConfig(
       name: _string(config['name']),
       url: _string(config['url']),
@@ -271,7 +269,7 @@ class SourceConfigCodec {
   }
 
   static source_config.DirectUrlSubtitleSourceConfig
-      _directUrlSubtitleSourceConfig(Map<String, dynamic> config) {
+  _directUrlSubtitleSourceConfig(Map<String, dynamic> config) {
     return source_config.DirectUrlSubtitleSourceConfig(
       name: _string(config['name']),
       language: _string(config['language']),
@@ -282,7 +280,7 @@ class SourceConfigCodec {
   }
 
   static source_config.DirectUrlDanmakuSourceConfig
-      _directUrlDanmakuSourceConfig(Map<String, dynamic> config) {
+  _directUrlDanmakuSourceConfig(Map<String, dynamic> config) {
     return source_config.DirectUrlDanmakuSourceConfig(
       name: _string(config['name']),
       url: _string(config['url']),
@@ -299,26 +297,26 @@ class SourceConfigCodec {
         : _string(config['kind']);
     return switch (kind) {
       'live' => source_config.BilibiliMediaSourceConfig(
-          live: source_config.BilibiliLiveSourceConfig(
-            roomId: Int64(_int(config['roomId'])),
-            shared: _bool(config['shared']),
-          ),
+        live: source_config.BilibiliLiveSourceConfig(
+          roomId: Int64(_int(config['roomId'])),
+          shared: _bool(config['shared']),
         ),
+      ),
       'pgc' => source_config.BilibiliMediaSourceConfig(
-          pgc: source_config.BilibiliPgcSourceConfig(
-            epid: Int64(_int(config['epid'])),
-            cid: Int64(_int(config['cid'])),
-            shared: _bool(config['shared']),
-          ),
+        pgc: source_config.BilibiliPgcSourceConfig(
+          epid: Int64(_int(config['epid'])),
+          cid: Int64(_int(config['cid'])),
+          shared: _bool(config['shared']),
         ),
+      ),
       _ => source_config.BilibiliMediaSourceConfig(
-          video: source_config.BilibiliVideoSourceConfig(
-            bvid: _optionalString(config['bvid']),
-            aid: _optionalInt64(config['aid']),
-            cid: Int64(_int(config['cid'])),
-            shared: _bool(config['shared']),
-          ),
+        video: source_config.BilibiliVideoSourceConfig(
+          bvid: _optionalString(config['bvid']),
+          aid: _optionalInt64(config['aid']),
+          cid: Int64(_int(config['cid'])),
+          shared: _bool(config['shared']),
         ),
+      ),
     };
   }
 
@@ -411,26 +409,26 @@ class SourceConfigCodec {
   ) {
     return switch (config.whichSource()) {
       source_config.BilibiliMediaSourceConfig_Source.video => {
-          'kind': 'video',
-          'type': 'video',
-          if (config.video.hasBvid()) 'bvid': config.video.bvid,
-          if (config.video.hasAid()) 'aid': config.video.aid.toInt(),
-          'cid': config.video.cid.toInt(),
-          'shared': config.video.shared,
-        },
+        'kind': 'video',
+        'type': 'video',
+        if (config.video.hasBvid()) 'bvid': config.video.bvid,
+        if (config.video.hasAid()) 'aid': config.video.aid.toInt(),
+        'cid': config.video.cid.toInt(),
+        'shared': config.video.shared,
+      },
       source_config.BilibiliMediaSourceConfig_Source.pgc => {
-          'kind': 'pgc',
-          'type': 'pgc',
-          'epid': config.pgc.epid.toInt(),
-          'cid': config.pgc.cid.toInt(),
-          'shared': config.pgc.shared,
-        },
+        'kind': 'pgc',
+        'type': 'pgc',
+        'epid': config.pgc.epid.toInt(),
+        'cid': config.pgc.cid.toInt(),
+        'shared': config.pgc.shared,
+      },
       source_config.BilibiliMediaSourceConfig_Source.live => {
-          'kind': 'live',
-          'type': 'live',
-          'roomId': config.live.roomId.toInt(),
-          'shared': config.live.shared,
-        },
+        'kind': 'live',
+        'type': 'live',
+        'roomId': config.live.roomId.toInt(),
+        'shared': config.live.shared,
+      },
       source_config.BilibiliMediaSourceConfig_Source.notSet =>
         <String, dynamic>{},
     };
@@ -440,8 +438,9 @@ class SourceConfigCodec {
     if (value is! Iterable) return const [];
     return value
         .whereType<Map>()
-        .map((entry) =>
-            entry.map((key, value) => MapEntry(key.toString(), value)))
+        .map(
+          (entry) => entry.map((key, value) => MapEntry(key.toString(), value)),
+        )
         .toList();
   }
 

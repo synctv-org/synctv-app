@@ -40,8 +40,9 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _focusNode.requestFocus());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _focusNode.requestFocus(),
+    );
   }
 
   @override
@@ -79,10 +80,12 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
           },
           child: Actions(
             actions: {
-              _SubmitIntent: CallbackAction<_SubmitIntent>(onInvoke: (_) {
-                _submit();
-                return null;
-              }),
+              _SubmitIntent: CallbackAction<_SubmitIntent>(
+                onInvoke: (_) {
+                  _submit();
+                  return null;
+                },
+              ),
             },
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -104,8 +107,9 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
                         color: theme.colorScheme.surfaceContainerHighest
                             .withValues(alpha: 0.58),
                         border: Border.all(
-                          color: theme.colorScheme.outlineVariant
-                              .withValues(alpha: 0.7),
+                          color: theme.colorScheme.outlineVariant.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -179,8 +183,9 @@ class _RoomPasswordDialogState extends State<_RoomPasswordDialog> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _focusNode.requestFocus());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _focusNode.requestFocus(),
+    );
   }
 
   @override
