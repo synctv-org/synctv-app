@@ -20,10 +20,7 @@ class DirectUrlSourceConfig {
     'priority',
   };
 
-  static const Set<String> _credentialHeaderNames = {
-    'authorization',
-    'cookie',
-  };
+  static const Set<String> _credentialHeaderNames = {'authorization', 'cookie'};
 
   final String url;
   final Map<String, String> headers;
@@ -58,7 +55,7 @@ class DirectUrlSourceConfig {
   }
 
   static String validateUrl(String value) {
-    final url = value.trim();
+    final url = normalizeUrlInput(value);
     final uri = Uri.tryParse(url);
     if (uri == null ||
         (uri.scheme != 'http' && uri.scheme != 'https') ||
@@ -66,6 +63,17 @@ class DirectUrlSourceConfig {
       throw const DirectUrlSourceConfigException('请输入有效的 http/https 链接');
     }
     return url;
+  }
+
+  static String normalizeUrlInput(String value) {
+    final trimmed = value.trim();
+    if (trimmed.startsWith('http//')) {
+      return 'http://${trimmed.substring('http//'.length)}';
+    }
+    if (trimmed.startsWith('https//')) {
+      return 'https://${trimmed.substring('https//'.length)}';
+    }
+    return trimmed;
   }
 
   static Map<String, String> parseHeaderLines(String input) {
@@ -99,25 +107,26 @@ class DirectUrlSourceConfig {
 
   static Set<String> credentialHeaderNames(Map<String, String> headers) {
     return headers.keys
-        .where((name) => _credentialHeaderNames.contains(name.toLowerCase()))
+        .where((name) => _credentialHeaderNames.contains(_normalizeName(name)))
         .toSet();
   }
 
   static String credentialHeaderRiskKey(Map<String, String> headers) {
-    final names = headers.keys
-        .map((name) => name.trim().toLowerCase())
-        .where(_credentialHeaderNames.contains)
-        .toSet()
-        .toList(growable: false)
-      ..sort();
+    final names =
+        headers.keys
+            .map(_normalizeName)
+            .where(_credentialHeaderNames.contains)
+            .toSet()
+            .toList(growable: false)
+          ..sort();
     return names.join('|');
   }
 
   static bool hasCredentialHeaderLines(String input) {
     for (final rawLine in input.split('\n')) {
       final separator = rawLine.indexOf(':');
-      final name =
-          (separator == -1 ? rawLine : rawLine.substring(0, separator)).trim();
+      final name = (separator == -1 ? rawLine : rawLine.substring(0, separator))
+          .trim();
       if (_credentialHeaderNames.contains(name.toLowerCase())) {
         return true;
       }
@@ -126,7 +135,7 @@ class DirectUrlSourceConfig {
   }
 
   static void validateHeaderName(String name) {
-    final normalized = name.trim().toLowerCase();
+    final normalized = _normalizeName(name);
     if (normalized.isEmpty || normalized.contains(RegExp(r'[\r\n:]'))) {
       throw const DirectUrlSourceConfigException('请求头名称无效');
     }
@@ -135,6 +144,8 @@ class DirectUrlSourceConfig {
       throw DirectUrlSourceConfigException('请求头 $name 不允许用于直链媒体');
     }
   }
+
+  static String _normalizeName(String name) => name.trim().toLowerCase();
 }
 
 class DirectUrlSourceConfigException implements Exception {

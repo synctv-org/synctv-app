@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
-const _assetId = 'package:synctv_opaque/synctv_opaque.dylib';
+const _assetId = 'package:synctv_opaque/synctv_opaque.dart';
 
 final class _NativeBuffer extends Struct {
   external Pointer<Uint8> ptr;

@@ -55,13 +55,13 @@ class SyncTvServerProfile {
   }
 
   Map<String, dynamic> toJson() => {
-        'server_id': serverId,
-        'name': name,
-        'endpoints': endpoints,
-        'active_endpoint': activeEndpoint,
-        'session': sessionData.toJson(),
-        if (lastSeenAt != null) 'last_seen_at': lastSeenAt!.toIso8601String(),
-      };
+    'server_id': serverId,
+    'name': name,
+    'endpoints': endpoints,
+    'active_endpoint': activeEndpoint,
+    'session': sessionData.toJson(),
+    if (lastSeenAt != null) 'last_seen_at': lastSeenAt!.toIso8601String(),
+  };
 
   static SyncTvServerProfile? fromJson(Map<String, dynamic> json) {
     final endpoints = (json['endpoints'] as List? ?? const [])
@@ -70,8 +70,9 @@ class SyncTvServerProfile {
         .toList();
     final rawActiveEndpoint = json['active_endpoint']?.toString().trim() ?? '';
     if (endpoints.isEmpty && rawActiveEndpoint.isEmpty) return null;
-    final activeEndpoint =
-        rawActiveEndpoint.isNotEmpty ? rawActiveEndpoint : endpoints.first;
+    final activeEndpoint = rawActiveEndpoint.isNotEmpty
+        ? rawActiveEndpoint
+        : endpoints.first;
     return SyncTvServerProfile(
       serverId: json['server_id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
@@ -98,12 +99,6 @@ class SyncTvServerProfile {
 class SyncTvSessionStore {
   SyncTvSessionStore(this.session);
 
-  static const String tokenKey = 'synctv_token';
-  static const String refreshTokenKey = 'synctv_refresh_token';
-  static const String guestTokenKey = 'synctv_guest_token';
-  static const String guestRoomKey = 'synctv_guest_room_id';
-  static const String guestDisplayNameKey = 'synctv_guest_display_name';
-  static const String baseUrlKey = 'synctv_base_url';
   static const String configuredDefaultBaseUrl = String.fromEnvironment(
     'SYNCTV_DEFAULT_SERVER_URL',
     defaultValue: '',
@@ -152,7 +147,6 @@ class SyncTvSessionStore {
       } else {
         activeServerId = null;
         await _persistServers(prefs);
-        await prefs.remove(baseUrlKey);
       }
     } else if (_serverById(activeServerId) == null) {
       activeServerId = servers.first.serverId;
@@ -160,7 +154,7 @@ class SyncTvSessionStore {
     }
 
     baseUrl = activeServer?.activeEndpoint ?? initialClientBaseUrl;
-    _loadSessionFromPrefs(prefs);
+    _loadSessionFromActiveServer();
     if (_removePendingServersCoveredByIdentifiedServers()) {
       await _persistServers(prefs);
     }
@@ -175,12 +169,14 @@ class SyncTvSessionStore {
     final normalizedEndpoint = SyncTvApiClient.normalizeBaseUrl(endpoint);
     final resolvedName = name.trim().isEmpty ? normalizedEndpoint : name.trim();
     final current = activeServer;
-    final shouldCarryCurrentSession = activate &&
+    final shouldCarryCurrentSession =
+        activate &&
         current != null &&
         _isFallbackServerId(current.serverId) &&
         current.activeEndpoint == normalizedEndpoint;
-    var existingIndex =
-        servers.indexWhere((server) => server.serverId == serverId);
+    var existingIndex = servers.indexWhere(
+      (server) => server.serverId == serverId,
+    );
     if (existingIndex < 0) {
       existingIndex = servers.indexWhere(
         (server) =>
@@ -260,12 +256,12 @@ class SyncTvSessionStore {
       servers = [fallback];
       activeServerId = fallback.serverId;
     } else {
-      final index =
-          servers.indexWhere((server) => server.serverId == current.serverId);
+      final index = servers.indexWhere(
+        (server) => server.serverId == current.serverId,
+      );
       servers[index] = current.copyWith(activeEndpoint: endpoint);
     }
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(baseUrlKey, baseUrl);
     await _persistServers(prefs);
   }
 
@@ -332,17 +328,6 @@ class SyncTvSessionStore {
     _captureSessionToActiveServer();
     final prefs = await SharedPreferences.getInstance();
     await _persistServers(prefs);
-    if (activeServer == null) {
-      await prefs.remove(baseUrlKey);
-    } else {
-      await prefs.setString(baseUrlKey, baseUrl);
-    }
-
-    await prefs.remove(tokenKey);
-    await prefs.remove(refreshTokenKey);
-    await prefs.remove(guestTokenKey);
-    await prefs.remove(guestRoomKey);
-    await prefs.remove(guestDisplayNameKey);
   }
 
   Future<void> clearGuestContextAndPersist() async {
@@ -400,14 +385,18 @@ class SyncTvSessionStore {
     if (decoded is! List) return [];
     return decoded
         .whereType<Map>()
-        .map((entry) => SyncTvServerProfile.fromJson(
-              entry.map((key, value) => MapEntry(key.toString(), value)),
-            ))
+        .map(
+          (entry) => SyncTvServerProfile.fromJson(
+            entry.map((key, value) => MapEntry(key.toString(), value)),
+          ),
+        )
         .whereType<SyncTvServerProfile>()
-        .where((server) =>
-            server.serverId.isNotEmpty &&
-            server.activeEndpoint.trim().isNotEmpty &&
-            server.endpoints.isNotEmpty)
+        .where(
+          (server) =>
+              server.serverId.isNotEmpty &&
+              server.activeEndpoint.trim().isNotEmpty &&
+              server.endpoints.isNotEmpty,
+        )
         .toList();
   }
 
@@ -423,49 +412,13 @@ class SyncTvSessionStore {
     }
   }
 
-  void _loadSessionFromPrefs(SharedPreferences prefs) {
+  void _loadSessionFromActiveServer() {
     final current = activeServer;
     if (current == null) {
       _clearInMemorySession();
       return;
     }
-    if (current.sessionData.hasCredentials) {
-      _loadProfileSession(current);
-      return;
-    }
-
-    if (!_isFallbackServerId(current.serverId)) {
-      _loadProfileSession(current);
-      return;
-    }
-
-    _loadLegacySessionFromPrefs(prefs);
-  }
-
-  void _loadLegacySessionFromPrefs(SharedPreferences prefs) {
-    final guestToken = prefs.getString(guestTokenKey);
-    final legacyAccessToken =
-        prefs.getString(tokenKey) ?? prefs.getString('synctv_access_token');
-    final legacyRefreshToken = prefs.getString(refreshTokenKey);
-
-    if (guestToken != null && guestToken.isNotEmpty) {
-      session.accessToken = guestToken;
-      session.refreshToken = null;
-      session.isGuest = true;
-      guestRoomId = prefs.getString(guestRoomKey);
-      guestDisplayName = prefs.getString(guestDisplayNameKey);
-    } else {
-      session.accessToken = legacyAccessToken;
-      session.refreshToken = legacyRefreshToken;
-      session.isGuest = false;
-      guestRoomId = null;
-      guestDisplayName = null;
-    }
-
-    if ((session.accessToken?.isNotEmpty ?? false) ||
-        (session.refreshToken?.isNotEmpty ?? false)) {
-      _captureSessionToActiveServer();
-    }
+    _loadProfileSession(current);
   }
 
   void _clearInMemorySession() {
@@ -488,8 +441,9 @@ class SyncTvSessionStore {
   void _captureSessionToActiveServer() {
     final current = activeServer;
     if (current == null) return;
-    final index =
-        servers.indexWhere((server) => server.serverId == current.serverId);
+    final index = servers.indexWhere(
+      (server) => server.serverId == current.serverId,
+    );
     if (index < 0) return;
     final data = _currentSessionData();
     servers[index] = current.copyWith(sessionData: data);
@@ -527,11 +481,15 @@ class SyncTvSessionStore {
     for (final server in servers) {
       if (server.isPending) continue;
       for (final endpoint in server.endpoints) {
-        identifiedByEndpoint[endpoint] =
-            _preferredIdentified(identifiedByEndpoint[endpoint], server);
+        identifiedByEndpoint[endpoint] = _preferredIdentified(
+          identifiedByEndpoint[endpoint],
+          server,
+        );
       }
       identifiedByEndpoint[server.activeEndpoint] = _preferredIdentified(
-          identifiedByEndpoint[server.activeEndpoint], server);
+        identifiedByEndpoint[server.activeEndpoint],
+        server,
+      );
     }
 
     if (identifiedByEndpoint.isEmpty) return false;
@@ -540,7 +498,8 @@ class SyncTvSessionStore {
     final seenIdentifiedIds = <String>{};
     final nextServers = <SyncTvServerProfile>[];
     for (final server in servers) {
-      final identified = identifiedByEndpoint[server.activeEndpoint] ??
+      final identified =
+          identifiedByEndpoint[server.activeEndpoint] ??
           server.endpoints
               .map((endpoint) => identifiedByEndpoint[endpoint])
               .whereType<SyncTvServerProfile>()
@@ -645,12 +604,12 @@ class SyncTvServerSessionData {
       (guestDisplayName?.isNotEmpty ?? false);
 
   Map<String, dynamic> toJson() => {
-        if (accessToken != null) 'access_token': accessToken,
-        if (refreshToken != null) 'refresh_token': refreshToken,
-        'is_guest': isGuest,
-        if (guestRoomId != null) 'guest_room_id': guestRoomId,
-        if (guestDisplayName != null) 'guest_display_name': guestDisplayName,
-      };
+    if (accessToken != null) 'access_token': accessToken,
+    if (refreshToken != null) 'refresh_token': refreshToken,
+    'is_guest': isGuest,
+    if (guestRoomId != null) 'guest_room_id': guestRoomId,
+    if (guestDisplayName != null) 'guest_display_name': guestDisplayName,
+  };
 
   static SyncTvServerSessionData fromJson(Map<dynamic, dynamic> json) {
     return SyncTvServerSessionData(

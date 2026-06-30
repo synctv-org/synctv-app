@@ -4,6 +4,7 @@ import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 
 const assetName = 'synctv_opaque';
+const assetIdName = 'synctv_opaque.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
@@ -78,7 +79,7 @@ void main(List<String> args) async {
     output.assets.code.add(
       CodeAsset(
         package: input.packageName,
-        name: '$assetName.$extension',
+        name: assetIdName,
         file: outputFile.uri,
         linkMode: DynamicLoadingBundled(),
       ),

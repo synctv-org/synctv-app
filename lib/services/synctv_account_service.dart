@@ -16,12 +16,10 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
 
 class SyncTvAccountDomainService {
   SyncTvAccountDomainService({
-    required SyncTvApiClient api,
-    required SyncTvSessionStore sessionStore,
+    required this._api,
+    required this._sessionStore,
     SyncTvMemoryCache? cache,
-  })  : _api = api,
-        _sessionStore = sessionStore,
-        _cache = cache ?? SyncTvMemoryCache();
+  }) : _cache = cache ?? SyncTvMemoryCache();
 
   final SyncTvApiClient _api;
   final SyncTvSessionStore _sessionStore;
@@ -49,9 +47,9 @@ class SyncTvAccountDomainService {
   }
 
   Future<SyncTvUser> updateUsername(String username) async {
-    await _api.user.setUsername(client.SetUsernameRequest(
-      newUsername: username,
-    ));
+    await _api.user.setUsername(
+      client.SetUsernameRequest(newUsername: username),
+    );
     final user = await _fetchMe();
     _cache.put('account:me', user, ttl: const Duration(minutes: 2));
     return user;
@@ -171,7 +169,8 @@ class SyncTvAccountDomainService {
         credentialRequest: credentialRequest,
         registrationRequest: registrationRequest,
         verificationMethod: _opaquePasswordUpdateVerificationMethodFromValue(
-            verificationMethod),
+          verificationMethod,
+        ),
         emailToken: emailToken,
       ),
     );
@@ -180,8 +179,9 @@ class SyncTvAccountDomainService {
       credentialResponse: response.credentialResponse,
       registrationResponse: response.registrationResponse,
       passkeySessionId: response.passkeySessionId,
-      passkeyOptions:
-          _api.encodeJsonBytes(passkeyChallengeToJson(response.passkeyOptions)),
+      passkeyOptions: _api.encodeJsonBytes(
+        passkeyChallengeToJson(response.passkeyOptions),
+      ),
     );
   }
 
@@ -233,16 +233,17 @@ class SyncTvAccountDomainService {
   }
 
   client_enum.OpaquePasswordUpdateVerificationMethod
-      _opaquePasswordUpdateVerificationMethodFromValue(int value) {
+  _opaquePasswordUpdateVerificationMethodFromValue(int value) {
     return client_enum.OpaquePasswordUpdateVerificationMethod.valueOf(value) ??
-        client_enum.OpaquePasswordUpdateVerificationMethod
+        client_enum
+            .OpaquePasswordUpdateVerificationMethod
             .OPAQUE_PASSWORD_UPDATE_VERIFICATION_METHOD_UNSPECIFIED;
   }
 }
 
 class SyncTvNotificationDomainService {
   SyncTvNotificationDomainService(this._api, {SyncTvMemoryCache? cache})
-      : _cache = cache ?? SyncTvMemoryCache();
+    : _cache = cache ?? SyncTvMemoryCache();
 
   final SyncTvApiClient _api;
   final SyncTvMemoryCache _cache;
@@ -348,9 +349,7 @@ class SyncTvNotificationDomainService {
   Future<void> deleteNotification(UserNotificationItem item) async {
     if (item.numericId <= 0) return;
     await _api.notifications.deleteNotification(
-      client.DeleteNotificationRequest(
-        notificationId: Int64(item.numericId),
-      ),
+      client.DeleteNotificationRequest(notificationId: Int64(item.numericId)),
     );
     _cache.invalidatePrefix('account:notifications');
   }
@@ -398,9 +397,7 @@ AccountPreferences accountPreferencesFromProto(
     canUsePasskey: authFactors.webauthn,
     canUseEmail: authFactors.email,
     eligibleFactorCount: authFactors.eligibleCount,
-    notifications: NotificationPreferences.fromProto(
-      preferences.notifications,
-    ),
+    notifications: NotificationPreferences.fromProto(preferences.notifications),
     settings: roomSettingsToJson(preferences.settings),
   );
 }

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/services/bilibili_geetest_service.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pbenum.dart'
@@ -926,15 +927,11 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   }
 
   String _normalizeProviderHost(String value, {String port = ''}) {
-    final trimmed = value.trim();
-    final normalized = switch (trimmed) {
-      final value when value.startsWith('http//') =>
-        'http://${value.substring('http//'.length)}',
-      final value when value.startsWith('https//') =>
-        'https://${value.substring('https//'.length)}',
+    final normalizedUrl = DirectUrlSourceConfig.normalizeUrlInput(value);
+    final normalized = switch (normalizedUrl) {
       final value when !value.contains('://') && value.isNotEmpty =>
         'http://$value',
-      _ => trimmed,
+      _ => normalizedUrl,
     };
     final parsed = Uri.tryParse(normalized);
     final trimmedPort = port.trim();

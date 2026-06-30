@@ -15,16 +15,13 @@ import 'package:synctv_opaque/synctv_opaque.dart' as opaque;
 
 class SyncTvPublicRoomDomainService {
   SyncTvPublicRoomDomainService({
-    required SyncTvApiClient api,
-    required SyncTvSessionStore sessionStore,
-    required SyncTvAuthDomainService authService,
+    required this._api,
+    required this._sessionStore,
+    required this._authService,
     SyncTvMemoryCache? cache,
     opaque.SyncTvOpaqueClient? opaqueClient,
-  })  : _api = api,
-        _sessionStore = sessionStore,
-        _authService = authService,
-        _cache = cache ?? SyncTvMemoryCache(),
-        _opaqueClient = opaqueClient ?? opaque.SyncTvOpaqueClient();
+  }) : _cache = cache ?? SyncTvMemoryCache(),
+       _opaqueClient = opaqueClient ?? opaque.SyncTvOpaqueClient();
 
   final SyncTvApiClient _api;
   final SyncTvSessionStore _sessionStore;
@@ -60,9 +57,7 @@ class SyncTvPublicRoomDomainService {
       refresh: refresh,
       loader: () async {
         final response = await _api.publicService.listRoomCategories(
-          client.ListRoomCategoriesRequest(
-            includeDisabled: includeDisabled,
-          ),
+          client.ListRoomCategoriesRequest(includeDisabled: includeDisabled),
         );
         return response.categories
             .map(_api.mapRoomCategory)
@@ -125,8 +120,9 @@ class SyncTvPublicRoomDomainService {
       movieProxy: settings.movieProxy,
       liveProxy: settings.liveProxy,
       emailWhitelistEnabled: settings.emailWhitelistEnabled,
-      emailWhitelistDomains:
-          settings.emailWhitelistDomains.toList(growable: false),
+      emailWhitelistDomains: settings.emailWhitelistDomains.toList(
+        growable: false,
+      ),
       tsDisguisedAsPng: settings.tsDisguisedAsPng,
       customPublishHost: settings.customPublishHost,
     );
@@ -220,14 +216,17 @@ class SyncTvPublicRoomDomainService {
     final response = await _api.publicService.getHotRooms(
       client.GetHotRoomsRequest(limit: limit),
     );
-    return response.rooms.map((item) {
-      final room = _api.mapRoom(item.room);
-      return room.copyWith(
-        viewerCount:
-            item.room.hasPresence() ? room.viewerCount : item.onlineCount,
-        memberCount: item.totalMembers,
-      );
-    }).toList(growable: false);
+    return response.rooms
+        .map((item) {
+          final room = _api.mapRoom(item.room);
+          return room.copyWith(
+            viewerCount: item.room.hasPresence()
+                ? room.viewerCount
+                : item.onlineCount,
+            memberCount: item.totalMembers,
+          );
+        })
+        .toList(growable: false);
   }
 
   Future<RoomCheckInfo> checkRoom(String roomId) async {
@@ -285,13 +284,13 @@ class SyncTvPublicRoomDomainService {
       await _joinRoomWithOpaquePassword(roomId, password);
       return;
     }
-    await _api.user.joinRoom(client.JoinRoomRequest(
-      roomId: roomId,
-    ));
+    await _api.user.joinRoom(client.JoinRoomRequest(roomId: roomId));
   }
 
   Future<void> _joinRoomWithOpaquePassword(
-      String roomId, String password) async {
+    String roomId,
+    String password,
+  ) async {
     final start = _opaqueClient.startLogin(password);
     final challenge = await _api.user.startRoomPasswordLogin(
       roomId,

@@ -19,7 +19,7 @@ class SyncTvMemoryCache {
     }
 
     final future = loader().then<Object?>((value) {
-      _entries[key] = _CacheEntry<Object?>(value, now.add(ttl));
+      _entries[key] = _CacheEntry<Object?>(value, DateTime.now().add(ttl));
       return value;
     });
     _inFlight[key] = future;

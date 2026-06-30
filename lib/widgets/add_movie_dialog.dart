@@ -1926,7 +1926,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
   List<String> _parseDirectUrls(String input) {
     final urls = <String>[];
     for (final rawLine in input.split('\n')) {
-      final url = _normalizeDirectUrlInput(rawLine.trim());
+      final url = DirectUrlSourceConfig.normalizeUrlInput(rawLine);
       if (url.isEmpty) continue;
       urls.add(DirectUrlSourceConfig.validateUrl(url));
     }
@@ -1934,16 +1934,6 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       throw const DirectUrlSourceConfigException('请输入 http/https 链接');
     }
     return urls;
-  }
-
-  String _normalizeDirectUrlInput(String value) {
-    if (value.startsWith('http//')) {
-      return 'http://${value.substring('http//'.length)}';
-    }
-    if (value.startsWith('https//')) {
-      return 'https://${value.substring('https//'.length)}';
-    }
-    return value;
   }
 
   Future<void> _addRtmpPublish() async {

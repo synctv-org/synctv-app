@@ -11,15 +11,13 @@ import 'package:synctv_app/services/oauth2_callback_parser.dart';
 class OAuth2CallbackSession {
   OAuth2CallbackSession._({
     required this.redirectUrl,
-    required Future<OAuth2CallbackPayload> Function(String, Duration)
-        waitForCallback,
-    required Future<void> Function() close,
-  })  : _waitForCallback = waitForCallback,
-        _close = close;
+    required this._waitForCallback,
+    required this._close,
+  });
 
   final String redirectUrl;
   final Future<OAuth2CallbackPayload> Function(String, Duration)
-      _waitForCallback;
+  _waitForCallback;
   final Future<void> Function() _close;
 
   Future<OAuth2CallbackPayload> waitForCallback({
@@ -68,10 +66,7 @@ class OAuth2DeepLinkService {
     return OAuth2CallbackSession._(
       redirectUrl: mobileCallbackUrl,
       waitForCallback: (expectedState, timeout) {
-        return waitForCallback(
-          expectedState: expectedState,
-          timeout: timeout,
-        );
+        return waitForCallback(expectedState: expectedState, timeout: timeout);
       },
       close: () async {},
     );
@@ -163,7 +158,9 @@ class OAuth2DeepLinkService {
     }
 
     Future<void> finish(
-        HttpRequest request, OAuth2CallbackPayload payload) async {
+      HttpRequest request,
+      OAuth2CallbackPayload payload,
+    ) async {
       if (completer.isCompleted) return;
       timer?.cancel();
       await _writeLoopbackResponse(request, success: true);

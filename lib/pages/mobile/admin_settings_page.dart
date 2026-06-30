@@ -8030,7 +8030,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
               child: AppPanelSurface(
                 borderRadius: BorderRadius.circular(8),
                 padding: const EdgeInsets.all(3),
-                child: TabBar(
+                child: AppTabBar(
                   controller: _targetTypeTabController!,
                   isScrollable: true,
                   tabAlignment: TabAlignment.start,

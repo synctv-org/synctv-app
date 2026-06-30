@@ -70,6 +70,29 @@ String testProviderTargetToken(client.ProviderTarget target) {
 
 String testBytesJson(String value) => base64Encode(utf8.encode(value));
 
+Map<String, Object> testActiveServerPreferences({
+  required String baseUrl,
+  String accessToken = 'token',
+  String refreshToken = '',
+}) {
+  return {
+    SyncTvSessionStore.serversKey: jsonEncode([
+      {
+        'server_id': 'srv_test',
+        'name': 'Test Server',
+        'endpoints': [baseUrl],
+        'active_endpoint': baseUrl,
+        'session': {
+          if (accessToken.isNotEmpty) 'access_token': accessToken,
+          if (refreshToken.isNotEmpty) 'refresh_token': refreshToken,
+          'is_guest': false,
+        },
+      },
+    ]),
+    SyncTvSessionStore.activeServerKey: 'srv_test',
+  };
+}
+
 Map<String, dynamic> testPasskeyRequestOptions({
   required String challenge,
   String rpId = '',
@@ -1888,13 +1911,22 @@ void main() {
   test('OAuth2 callback parser accepts callback URLs and validates state', () {
     final parsed = OAuth2CallbackParser.parse(
       Uri.parse(
-        'http://127.0.0.1:49152/oauth2/callback?code=abc123._+-&state=AbCdEfGh1234567890aBcDeFgHiJkLm',
+        'http://127.0.0.1:49152/oauth2/callback?code=abc123._%2B-&state=AbCdEfGh1234567890aBcDeFgHiJkLm',
       ),
       expectedState: 'AbCdEfGh1234567890aBcDeFgHiJkLm',
     );
 
     expect(parsed.code, 'abc123._+-');
     expect(parsed.state, 'AbCdEfGh1234567890aBcDeFgHiJkLm');
+
+    final encoded = OAuth2CallbackParser.parse(
+      Uri.parse(
+        'http://127.0.0.1:49152/oauth2/callback?code=abc+def&state=state%20value',
+      ),
+      expectedState: 'state value',
+    );
+    expect(encoded.code, 'abc def');
+    expect(encoded.state, 'state value');
 
     final loopback = OAuth2CallbackParser.parse(
       Uri.parse(
@@ -3778,7 +3810,7 @@ void main() {
     expect(
       DirectUrlSourceConfig.credentialHeaderRiskKey({
         'cookie': 'session=secret',
-        'AUTHORIZATION': 'Bearer token',
+        ' AUTHORIZATION ': 'Bearer token',
         'User-Agent': 'SyncTV',
       }),
       'authorization|cookie',
@@ -3789,6 +3821,14 @@ void main() {
         'User-Agent': 'SyncTV',
       }),
       isEmpty,
+    );
+    expect(
+      DirectUrlSourceConfig.validateUrl('http//media.example.test/file.mp4'),
+      'http://media.example.test/file.mp4',
+    );
+    expect(
+      DirectUrlSourceConfig.validateUrl('https//media.example.test/file.mp4'),
+      'https://media.example.test/file.mp4',
     );
 
     expect(
@@ -4599,14 +4639,12 @@ void main() {
     });
 
     try {
-      SharedPreferences.setMockInitialValues({
-        'synctv_access_token': 'access',
-        'synctv_refresh_token': 'refresh',
-      });
+      SharedPreferences.setMockInitialValues(testActiveServerPreferences(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+        accessToken: 'access',
+        refreshToken: 'refresh',
+      ));
       await SyncTvService.init();
-      await SyncTvService.setBaseUrl(
-        'http://${server.address.host}:${server.port}',
-      );
 
       final page = await SyncTvService.getMyRoomsPage(
         page: 3,
@@ -7830,7 +7868,6 @@ void main() {
   });
 
   test('admin registration review maps OAuth2 protobuf details', () async {
-    SharedPreferences.setMockInitialValues({'synctv_token': 'token'});
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final requests = server.listen((request) async {
       expect(request.uri.path, '/api/admin/reviews/user-registrations');
@@ -7861,10 +7898,10 @@ void main() {
     });
 
     try {
+      SharedPreferences.setMockInitialValues(testActiveServerPreferences(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+      ));
       await SyncTvService.init();
-      await SyncTvService.setBaseUrl(
-        'http://${server.address.host}:${server.port}',
-      );
       final page = await SyncTvService.adminListReviewsPage(kind: 'user');
       expect(page.total, 1);
       final review = page.reviews.single;
@@ -7887,7 +7924,6 @@ void main() {
   });
 
   test('admin registration review maps Passkey protobuf details', () async {
-    SharedPreferences.setMockInitialValues({'synctv_token': 'token'});
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final requests = server.listen((request) async {
       expect(request.uri.path, '/api/admin/reviews/user-registrations');
@@ -7913,10 +7949,10 @@ void main() {
     });
 
     try {
+      SharedPreferences.setMockInitialValues(testActiveServerPreferences(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+      ));
       await SyncTvService.init();
-      await SyncTvService.setBaseUrl(
-        'http://${server.address.host}:${server.port}',
-      );
       final page = await SyncTvService.adminListReviewsPage(kind: 'user');
       expect(page.total, 1);
       final review = page.reviews.single;
@@ -9040,6 +9076,7 @@ void main() {
 
   test('direct password domain selects one populated login identifier',
       () async {
+    SharedPreferences.setMockInitialValues({});
     final requests = <http.Request>[];
     final session = SyncTvSession();
     final api = SyncTvApiClient(

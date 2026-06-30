@@ -66,8 +66,8 @@ SyncTV 是一款跨平台的视频同步观看应用，允许用户创建或加�
 ## 🚀 快速开始
 
 ### 1. 环境要求
-*   Flutter SDK >= 3.10.0
-*   Dart SDK >= 3.0.0
+*   Flutter SDK >= 3.44.0
+*   Dart SDK >= 3.12.0
 *   `protoc` 与 Dart `protoc_plugin`
 
 ### 2. 获取代码
