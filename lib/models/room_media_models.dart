@@ -15,9 +15,9 @@ class RtmpPublishKeyInfo {
 }
 
 class RoomMediaLibraryPage {
-  final List<SyncTvMovie> playlists;
-  final List<SyncTvMovie> media;
-  final List<SyncTvMovie> dynamicItems;
+  final List<RoomPlaylistItem> playlists;
+  final List<RoomMediaItem> media;
+  final List<RoomDynamicMediaEntry> dynamicItems;
   final List<PlaylistBrowsePathInfo> currentPath;
   final int total;
   final int folderCount;
@@ -35,11 +35,11 @@ class RoomMediaLibraryPage {
     required this.version,
   });
 
-  List<SyncTvMovie> get entries => [...playlists, ...media, ...dynamicItems];
+  List<RoomMediaEntry> get entries => [...playlists, ...media, ...dynamicItems];
 }
 
 class RoomPlaylistsPage {
-  final List<SyncTvMovie> playlists;
+  final List<RoomPlaylistItem> playlists;
   final int total;
   final int page;
   final int pageSize;
@@ -65,7 +65,7 @@ class PlaylistBrowsePathInfo {
 }
 
 class PlaylistDetailInfo {
-  final SyncTvMovie playlist;
+  final RoomPlaylistItem playlist;
   final int childFolderCount;
   final int mediaCount;
 

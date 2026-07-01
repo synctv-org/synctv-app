@@ -516,15 +516,15 @@ Future<void> _exerciseAdminLifecycle({
     'provider_instances=${listed.length} alist_available=$availableAlist alist_backends=$alistBackends',
   );
 
-  final settings = await SyncTvService.adminGetSettingsGroup(
-    'room',
-    refresh: true,
-  );
-  final disableCreateRoom = settings.settings['disableCreateRoom'] == true;
-  await SyncTvService.adminUpdateSettingInGroup(
-    'room',
-    'disableCreateRoom',
-    disableCreateRoom,
+  final settings = await SyncTvService.runtimeGetSettings(refresh: true);
+  final roomSettings =
+      settings.section('roomCreation') ??
+      const RuntimeSettingsSection(name: 'roomCreation', settings: {});
+  final roomCreationEnabled = roomSettings.settings['enabled'] == true;
+  await SyncTvService.runtimeUpdateSettingInSection(
+    'roomCreation',
+    'enabled',
+    roomCreationEnabled,
   );
 
   final reportPage = await SyncTvService.adminListContentReportsPage(

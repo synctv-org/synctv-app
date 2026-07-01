@@ -669,215 +669,6 @@ class RoomSettings extends $pb.GeneratedMessage {
   void clearGuestRemovedPermissions() => $_clearField(12);
 }
 
-class RoomSettingsPatch extends $pb.GeneratedMessage {
-  factory RoomSettingsPatch({
-    $core.bool? allowGuestJoin,
-    $fixnum.Int64? maxMembers,
-    $core.bool? requireApproval,
-    $core.bool? allowAutoJoin,
-    $core.bool? chatEnabled,
-    AutoPlaySettingsPatch? autoPlay,
-    $fixnum.Int64? adminAddedPermissions,
-    $fixnum.Int64? adminRemovedPermissions,
-    $fixnum.Int64? memberAddedPermissions,
-    $fixnum.Int64? memberRemovedPermissions,
-    $fixnum.Int64? guestAddedPermissions,
-    $fixnum.Int64? guestRemovedPermissions,
-  }) {
-    final result = create();
-    if (allowGuestJoin != null) result.allowGuestJoin = allowGuestJoin;
-    if (maxMembers != null) result.maxMembers = maxMembers;
-    if (requireApproval != null) result.requireApproval = requireApproval;
-    if (allowAutoJoin != null) result.allowAutoJoin = allowAutoJoin;
-    if (chatEnabled != null) result.chatEnabled = chatEnabled;
-    if (autoPlay != null) result.autoPlay = autoPlay;
-    if (adminAddedPermissions != null)
-      result.adminAddedPermissions = adminAddedPermissions;
-    if (adminRemovedPermissions != null)
-      result.adminRemovedPermissions = adminRemovedPermissions;
-    if (memberAddedPermissions != null)
-      result.memberAddedPermissions = memberAddedPermissions;
-    if (memberRemovedPermissions != null)
-      result.memberRemovedPermissions = memberRemovedPermissions;
-    if (guestAddedPermissions != null)
-      result.guestAddedPermissions = guestAddedPermissions;
-    if (guestRemovedPermissions != null)
-      result.guestRemovedPermissions = guestRemovedPermissions;
-    return result;
-  }
-
-  RoomSettingsPatch._();
-
-  factory RoomSettingsPatch.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory RoomSettingsPatch.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RoomSettingsPatch',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'allowGuestJoin')
-    ..a<$fixnum.Int64>(
-        2, _omitFieldNames ? '' : 'maxMembers', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOB(3, _omitFieldNames ? '' : 'requireApproval')
-    ..aOB(4, _omitFieldNames ? '' : 'allowAutoJoin')
-    ..aOB(5, _omitFieldNames ? '' : 'chatEnabled')
-    ..aOM<AutoPlaySettingsPatch>(6, _omitFieldNames ? '' : 'autoPlay',
-        subBuilder: AutoPlaySettingsPatch.create)
-    ..a<$fixnum.Int64>(
-        7, _omitFieldNames ? '' : 'adminAddedPermissions', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(8, _omitFieldNames ? '' : 'adminRemovedPermissions',
-        $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        9, _omitFieldNames ? '' : 'memberAddedPermissions', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(10, _omitFieldNames ? '' : 'memberRemovedPermissions',
-        $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        11, _omitFieldNames ? '' : 'guestAddedPermissions', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(12, _omitFieldNames ? '' : 'guestRemovedPermissions',
-        $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomSettingsPatch clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomSettingsPatch copyWith(void Function(RoomSettingsPatch) updates) =>
-      super.copyWith((message) => updates(message as RoomSettingsPatch))
-          as RoomSettingsPatch;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static RoomSettingsPatch create() => RoomSettingsPatch._();
-  @$core.override
-  RoomSettingsPatch createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static RoomSettingsPatch getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RoomSettingsPatch>(create);
-  static RoomSettingsPatch? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.bool get allowGuestJoin => $_getBF(0);
-  @$pb.TagNumber(1)
-  set allowGuestJoin($core.bool value) => $_setBool(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasAllowGuestJoin() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearAllowGuestJoin() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $fixnum.Int64 get maxMembers => $_getI64(1);
-  @$pb.TagNumber(2)
-  set maxMembers($fixnum.Int64 value) => $_setInt64(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasMaxMembers() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearMaxMembers() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.bool get requireApproval => $_getBF(2);
-  @$pb.TagNumber(3)
-  set requireApproval($core.bool value) => $_setBool(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasRequireApproval() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearRequireApproval() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.bool get allowAutoJoin => $_getBF(3);
-  @$pb.TagNumber(4)
-  set allowAutoJoin($core.bool value) => $_setBool(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasAllowAutoJoin() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearAllowAutoJoin() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $core.bool get chatEnabled => $_getBF(4);
-  @$pb.TagNumber(5)
-  set chatEnabled($core.bool value) => $_setBool(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasChatEnabled() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearChatEnabled() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  AutoPlaySettingsPatch get autoPlay => $_getN(5);
-  @$pb.TagNumber(6)
-  set autoPlay(AutoPlaySettingsPatch value) => $_setField(6, value);
-  @$pb.TagNumber(6)
-  $core.bool hasAutoPlay() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearAutoPlay() => $_clearField(6);
-  @$pb.TagNumber(6)
-  AutoPlaySettingsPatch ensureAutoPlay() => $_ensure(5);
-
-  @$pb.TagNumber(7)
-  $fixnum.Int64 get adminAddedPermissions => $_getI64(6);
-  @$pb.TagNumber(7)
-  set adminAddedPermissions($fixnum.Int64 value) => $_setInt64(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasAdminAddedPermissions() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearAdminAddedPermissions() => $_clearField(7);
-
-  @$pb.TagNumber(8)
-  $fixnum.Int64 get adminRemovedPermissions => $_getI64(7);
-  @$pb.TagNumber(8)
-  set adminRemovedPermissions($fixnum.Int64 value) => $_setInt64(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasAdminRemovedPermissions() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearAdminRemovedPermissions() => $_clearField(8);
-
-  @$pb.TagNumber(9)
-  $fixnum.Int64 get memberAddedPermissions => $_getI64(8);
-  @$pb.TagNumber(9)
-  set memberAddedPermissions($fixnum.Int64 value) => $_setInt64(8, value);
-  @$pb.TagNumber(9)
-  $core.bool hasMemberAddedPermissions() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearMemberAddedPermissions() => $_clearField(9);
-
-  @$pb.TagNumber(10)
-  $fixnum.Int64 get memberRemovedPermissions => $_getI64(9);
-  @$pb.TagNumber(10)
-  set memberRemovedPermissions($fixnum.Int64 value) => $_setInt64(9, value);
-  @$pb.TagNumber(10)
-  $core.bool hasMemberRemovedPermissions() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearMemberRemovedPermissions() => $_clearField(10);
-
-  @$pb.TagNumber(11)
-  $fixnum.Int64 get guestAddedPermissions => $_getI64(10);
-  @$pb.TagNumber(11)
-  set guestAddedPermissions($fixnum.Int64 value) => $_setInt64(10, value);
-  @$pb.TagNumber(11)
-  $core.bool hasGuestAddedPermissions() => $_has(10);
-  @$pb.TagNumber(11)
-  void clearGuestAddedPermissions() => $_clearField(11);
-
-  @$pb.TagNumber(12)
-  $fixnum.Int64 get guestRemovedPermissions => $_getI64(11);
-  @$pb.TagNumber(12)
-  set guestRemovedPermissions($fixnum.Int64 value) => $_setInt64(11, value);
-  @$pb.TagNumber(12)
-  $core.bool hasGuestRemovedPermissions() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearGuestRemovedPermissions() => $_clearField(12);
-}
-
 class AlistTarget extends $pb.GeneratedMessage {
   factory AlistTarget({
     $core.String? relativePath,
@@ -2378,6 +2169,7 @@ class Playlist extends $pb.GeneratedMessage {
     $core.String? providerInstanceName,
     $core.String? description,
     ResourceCover? cover,
+    $core.String? creatorId,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -2397,6 +2189,7 @@ class Playlist extends $pb.GeneratedMessage {
       result.providerInstanceName = providerInstanceName;
     if (description != null) result.description = description;
     if (cover != null) result.cover = cover;
+    if (creatorId != null) result.creatorId = creatorId;
     return result;
   }
 
@@ -2433,6 +2226,7 @@ class Playlist extends $pb.GeneratedMessage {
     ..aOS(15, _omitFieldNames ? '' : 'description')
     ..aOM<ResourceCover>(16, _omitFieldNames ? '' : 'cover',
         subBuilder: ResourceCover.create)
+    ..aOS(17, _omitFieldNames ? '' : 'creatorId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2600,6 +2394,15 @@ class Playlist extends $pb.GeneratedMessage {
   void clearCover() => $_clearField(16);
   @$pb.TagNumber(16)
   ResourceCover ensureCover() => $_ensure(15);
+
+  @$pb.TagNumber(17)
+  $core.String get creatorId => $_getSZ(16);
+  @$pb.TagNumber(17)
+  set creatorId($core.String value) => $_setString(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasCreatorId() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearCreatorId() => $_clearField(17);
 }
 
 class ResourceCover extends $pb.GeneratedMessage {
@@ -9147,10 +8950,38 @@ class DeleteRoomResponse extends $pb.GeneratedMessage {
 
 class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
   factory UpdateRoomSettingsRequest({
-    RoomSettingsPatch? settings,
+    $core.bool? allowGuestJoin,
+    $fixnum.Int64? maxMembers,
+    $core.bool? requireApproval,
+    $core.bool? allowAutoJoin,
+    $core.bool? chatEnabled,
+    AutoPlaySettingsPatch? autoPlay,
+    $fixnum.Int64? adminAddedPermissions,
+    $fixnum.Int64? adminRemovedPermissions,
+    $fixnum.Int64? memberAddedPermissions,
+    $fixnum.Int64? memberRemovedPermissions,
+    $fixnum.Int64? guestAddedPermissions,
+    $fixnum.Int64? guestRemovedPermissions,
   }) {
     final result = create();
-    if (settings != null) result.settings = settings;
+    if (allowGuestJoin != null) result.allowGuestJoin = allowGuestJoin;
+    if (maxMembers != null) result.maxMembers = maxMembers;
+    if (requireApproval != null) result.requireApproval = requireApproval;
+    if (allowAutoJoin != null) result.allowAutoJoin = allowAutoJoin;
+    if (chatEnabled != null) result.chatEnabled = chatEnabled;
+    if (autoPlay != null) result.autoPlay = autoPlay;
+    if (adminAddedPermissions != null)
+      result.adminAddedPermissions = adminAddedPermissions;
+    if (adminRemovedPermissions != null)
+      result.adminRemovedPermissions = adminRemovedPermissions;
+    if (memberAddedPermissions != null)
+      result.memberAddedPermissions = memberAddedPermissions;
+    if (memberRemovedPermissions != null)
+      result.memberRemovedPermissions = memberRemovedPermissions;
+    if (guestAddedPermissions != null)
+      result.guestAddedPermissions = guestAddedPermissions;
+    if (guestRemovedPermissions != null)
+      result.guestRemovedPermissions = guestRemovedPermissions;
     return result;
   }
 
@@ -9167,8 +8998,33 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'UpdateRoomSettingsRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOM<RoomSettingsPatch>(1, _omitFieldNames ? '' : 'settings',
-        subBuilder: RoomSettingsPatch.create)
+    ..aOB(1, _omitFieldNames ? '' : 'allowGuestJoin')
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'maxMembers', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(3, _omitFieldNames ? '' : 'requireApproval')
+    ..aOB(4, _omitFieldNames ? '' : 'allowAutoJoin')
+    ..aOB(5, _omitFieldNames ? '' : 'chatEnabled')
+    ..aOM<AutoPlaySettingsPatch>(6, _omitFieldNames ? '' : 'autoPlay',
+        subBuilder: AutoPlaySettingsPatch.create)
+    ..a<$fixnum.Int64>(
+        7, _omitFieldNames ? '' : 'adminAddedPermissions', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(8, _omitFieldNames ? '' : 'adminRemovedPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        9, _omitFieldNames ? '' : 'memberAddedPermissions', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(10, _omitFieldNames ? '' : 'memberRemovedPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        11, _omitFieldNames ? '' : 'guestAddedPermissions', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(12, _omitFieldNames ? '' : 'guestRemovedPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -9192,73 +9048,114 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
   static UpdateRoomSettingsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  RoomSettingsPatch get settings => $_getN(0);
+  $core.bool get allowGuestJoin => $_getBF(0);
   @$pb.TagNumber(1)
-  set settings(RoomSettingsPatch value) => $_setField(1, value);
+  set allowGuestJoin($core.bool value) => $_setBool(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasSettings() => $_has(0);
+  $core.bool hasAllowGuestJoin() => $_has(0);
   @$pb.TagNumber(1)
-  void clearSettings() => $_clearField(1);
-  @$pb.TagNumber(1)
-  RoomSettingsPatch ensureSettings() => $_ensure(0);
-}
+  void clearAllowGuestJoin() => $_clearField(1);
 
-class UpdateRoomSettingsResponse extends $pb.GeneratedMessage {
-  factory UpdateRoomSettingsResponse({
-    Room? room,
-  }) {
-    final result = create();
-    if (room != null) result.room = room;
-    return result;
-  }
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get maxMembers => $_getI64(1);
+  @$pb.TagNumber(2)
+  set maxMembers($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMaxMembers() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMaxMembers() => $_clearField(2);
 
-  UpdateRoomSettingsResponse._();
+  @$pb.TagNumber(3)
+  $core.bool get requireApproval => $_getBF(2);
+  @$pb.TagNumber(3)
+  set requireApproval($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRequireApproval() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRequireApproval() => $_clearField(3);
 
-  factory UpdateRoomSettingsResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpdateRoomSettingsResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+  @$pb.TagNumber(4)
+  $core.bool get allowAutoJoin => $_getBF(3);
+  @$pb.TagNumber(4)
+  set allowAutoJoin($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAllowAutoJoin() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAllowAutoJoin() => $_clearField(4);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateRoomSettingsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
-    ..hasRequiredFields = false;
+  @$pb.TagNumber(5)
+  $core.bool get chatEnabled => $_getBF(4);
+  @$pb.TagNumber(5)
+  set chatEnabled($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasChatEnabled() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearChatEnabled() => $_clearField(5);
 
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateRoomSettingsResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateRoomSettingsResponse copyWith(
-          void Function(UpdateRoomSettingsResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as UpdateRoomSettingsResponse))
-          as UpdateRoomSettingsResponse;
+  @$pb.TagNumber(6)
+  AutoPlaySettingsPatch get autoPlay => $_getN(5);
+  @$pb.TagNumber(6)
+  set autoPlay(AutoPlaySettingsPatch value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasAutoPlay() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearAutoPlay() => $_clearField(6);
+  @$pb.TagNumber(6)
+  AutoPlaySettingsPatch ensureAutoPlay() => $_ensure(5);
 
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get adminAddedPermissions => $_getI64(6);
+  @$pb.TagNumber(7)
+  set adminAddedPermissions($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasAdminAddedPermissions() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearAdminAddedPermissions() => $_clearField(7);
 
-  @$core.pragma('dart2js:noInline')
-  static UpdateRoomSettingsResponse create() => UpdateRoomSettingsResponse._();
-  @$core.override
-  UpdateRoomSettingsResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpdateRoomSettingsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateRoomSettingsResponse>(create);
-  static UpdateRoomSettingsResponse? _defaultInstance;
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get adminRemovedPermissions => $_getI64(7);
+  @$pb.TagNumber(8)
+  set adminRemovedPermissions($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasAdminRemovedPermissions() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearAdminRemovedPermissions() => $_clearField(8);
 
-  @$pb.TagNumber(1)
-  Room get room => $_getN(0);
-  @$pb.TagNumber(1)
-  set room(Room value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoom() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoom() => $_clearField(1);
-  @$pb.TagNumber(1)
-  Room ensureRoom() => $_ensure(0);
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get memberAddedPermissions => $_getI64(8);
+  @$pb.TagNumber(9)
+  set memberAddedPermissions($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasMemberAddedPermissions() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearMemberAddedPermissions() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get memberRemovedPermissions => $_getI64(9);
+  @$pb.TagNumber(10)
+  set memberRemovedPermissions($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMemberRemovedPermissions() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMemberRemovedPermissions() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get guestAddedPermissions => $_getI64(10);
+  @$pb.TagNumber(11)
+  set guestAddedPermissions($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasGuestAddedPermissions() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearGuestAddedPermissions() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $fixnum.Int64 get guestRemovedPermissions => $_getI64(11);
+  @$pb.TagNumber(12)
+  set guestRemovedPermissions($fixnum.Int64 value) => $_setInt64(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasGuestRemovedPermissions() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearGuestRemovedPermissions() => $_clearField(12);
 }
 
 /// Get room settings
@@ -17288,11 +17185,10 @@ class UnobserveResource extends $pb.GeneratedMessage {
 
 class ObservePlaybackState extends $pb.GeneratedMessage {
   factory ObservePlaybackState({
-    $fixnum.Int64? afterEventSequence,
+    $fixnum.Int64? eventSequence,
   }) {
     final result = create();
-    if (afterEventSequence != null)
-      result.afterEventSequence = afterEventSequence;
+    if (eventSequence != null) result.eventSequence = eventSequence;
     return result;
   }
 
@@ -17309,7 +17205,7 @@ class ObservePlaybackState extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ObservePlaybackState',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'afterEventSequence')
+    ..aInt64(1, _omitFieldNames ? '' : 'eventSequence')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -17332,27 +17228,26 @@ class ObservePlaybackState extends $pb.GeneratedMessage {
   static ObservePlaybackState? _defaultInstance;
 
   /// Current room playback control state: playing media, playlist, target, position and speed.
-  /// Unset starts from the current state and live changes.
+  /// Client's latest known playback-state event sequence.
+  /// When it differs from the server's latest sequence, the server sends the current state snapshot
+  /// with the latest cursor and then continues with live changes.
   @$pb.TagNumber(1)
-  $fixnum.Int64 get afterEventSequence => $_getI64(0);
+  $fixnum.Int64 get eventSequence => $_getI64(0);
   @$pb.TagNumber(1)
-  set afterEventSequence($fixnum.Int64 value) => $_setInt64(0, value);
+  set eventSequence($fixnum.Int64 value) => $_setInt64(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasAfterEventSequence() => $_has(0);
+  $core.bool hasEventSequence() => $_has(0);
   @$pb.TagNumber(1)
-  void clearAfterEventSequence() => $_clearField(1);
+  void clearEventSequence() => $_clearField(1);
 }
 
 class ObservePlayback extends $pb.GeneratedMessage {
   factory ObservePlayback({
     PlaybackClientProfile? playbackClientProfile,
-    $fixnum.Int64? afterEventSequence,
   }) {
     final result = create();
     if (playbackClientProfile != null)
       result.playbackClientProfile = playbackClientProfile;
-    if (afterEventSequence != null)
-      result.afterEventSequence = afterEventSequence;
     return result;
   }
 
@@ -17372,7 +17267,6 @@ class ObservePlayback extends $pb.GeneratedMessage {
     ..aOM<PlaybackClientProfile>(
         4, _omitFieldNames ? '' : 'playbackClientProfile',
         subBuilder: PlaybackClientProfile.create)
-    ..aInt64(5, _omitFieldNames ? '' : 'afterEventSequence')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -17406,16 +17300,6 @@ class ObservePlayback extends $pb.GeneratedMessage {
   void clearPlaybackClientProfile() => $_clearField(4);
   @$pb.TagNumber(4)
   PlaybackClientProfile ensurePlaybackClientProfile() => $_ensure(0);
-
-  /// Unset starts from the current snapshot and live changes.
-  @$pb.TagNumber(5)
-  $fixnum.Int64 get afterEventSequence => $_getI64(1);
-  @$pb.TagNumber(5)
-  set afterEventSequence($fixnum.Int64 value) => $_setInt64(1, value);
-  @$pb.TagNumber(5)
-  $core.bool hasAfterEventSequence() => $_has(1);
-  @$pb.TagNumber(5)
-  void clearAfterEventSequence() => $_clearField(5);
 }
 
 class ObserveRoomSettings extends $pb.GeneratedMessage {
@@ -35126,11 +35010,10 @@ class GetPublicSettingsRequest extends $pb.GeneratedMessage {
 
 class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   factory GetPublicSettingsResponse({
-    $core.bool? allowRoomCreation,
+    $core.bool? roomCreationEnabled,
     $fixnum.Int64? maxRoomsPerUser,
-    $fixnum.Int64? maxMembersPerRoom,
-    $core.bool? disableCreateRoom,
-    $core.bool? createRoomNeedReview,
+    $fixnum.Int64? defaultMaxMembers,
+    $core.bool? roomCreationApprovalRequired,
     $core.String? roomPasswordPolicy,
     $core.bool? enablePasswordSignup,
     $core.bool? movieProxy,
@@ -35150,12 +35033,12 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? maxPinnedChatMessagesPerRoom,
   }) {
     final result = create();
-    if (allowRoomCreation != null) result.allowRoomCreation = allowRoomCreation;
+    if (roomCreationEnabled != null)
+      result.roomCreationEnabled = roomCreationEnabled;
     if (maxRoomsPerUser != null) result.maxRoomsPerUser = maxRoomsPerUser;
-    if (maxMembersPerRoom != null) result.maxMembersPerRoom = maxMembersPerRoom;
-    if (disableCreateRoom != null) result.disableCreateRoom = disableCreateRoom;
-    if (createRoomNeedReview != null)
-      result.createRoomNeedReview = createRoomNeedReview;
+    if (defaultMaxMembers != null) result.defaultMaxMembers = defaultMaxMembers;
+    if (roomCreationApprovalRequired != null)
+      result.roomCreationApprovalRequired = roomCreationApprovalRequired;
     if (roomPasswordPolicy != null)
       result.roomPasswordPolicy = roomPasswordPolicy;
     if (enablePasswordSignup != null)
@@ -35198,11 +35081,10 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'GetPublicSettingsResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOB(2, _omitFieldNames ? '' : 'allowRoomCreation')
+    ..aOB(2, _omitFieldNames ? '' : 'roomCreationEnabled')
     ..aInt64(3, _omitFieldNames ? '' : 'maxRoomsPerUser')
-    ..aInt64(4, _omitFieldNames ? '' : 'maxMembersPerRoom')
-    ..aOB(5, _omitFieldNames ? '' : 'disableCreateRoom')
-    ..aOB(6, _omitFieldNames ? '' : 'createRoomNeedReview')
+    ..aInt64(4, _omitFieldNames ? '' : 'defaultMaxMembers')
+    ..aOB(6, _omitFieldNames ? '' : 'roomCreationApprovalRequired')
     ..aOS(8, _omitFieldNames ? '' : 'roomPasswordPolicy')
     ..aOB(10, _omitFieldNames ? '' : 'enablePasswordSignup')
     ..aOB(11, _omitFieldNames ? '' : 'movieProxy')
@@ -35247,13 +35129,13 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   static GetPublicSettingsResponse? _defaultInstance;
 
   @$pb.TagNumber(2)
-  $core.bool get allowRoomCreation => $_getBF(0);
+  $core.bool get roomCreationEnabled => $_getBF(0);
   @$pb.TagNumber(2)
-  set allowRoomCreation($core.bool value) => $_setBool(0, value);
+  set roomCreationEnabled($core.bool value) => $_setBool(0, value);
   @$pb.TagNumber(2)
-  $core.bool hasAllowRoomCreation() => $_has(0);
+  $core.bool hasRoomCreationEnabled() => $_has(0);
   @$pb.TagNumber(2)
-  void clearAllowRoomCreation() => $_clearField(2);
+  void clearRoomCreationEnabled() => $_clearField(2);
 
   @$pb.TagNumber(3)
   $fixnum.Int64 get maxRoomsPerUser => $_getI64(1);
@@ -35265,182 +35147,173 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   void clearMaxRoomsPerUser() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $fixnum.Int64 get maxMembersPerRoom => $_getI64(2);
+  $fixnum.Int64 get defaultMaxMembers => $_getI64(2);
   @$pb.TagNumber(4)
-  set maxMembersPerRoom($fixnum.Int64 value) => $_setInt64(2, value);
+  set defaultMaxMembers($fixnum.Int64 value) => $_setInt64(2, value);
   @$pb.TagNumber(4)
-  $core.bool hasMaxMembersPerRoom() => $_has(2);
+  $core.bool hasDefaultMaxMembers() => $_has(2);
   @$pb.TagNumber(4)
-  void clearMaxMembersPerRoom() => $_clearField(4);
+  void clearDefaultMaxMembers() => $_clearField(4);
 
   /// Room settings
-  @$pb.TagNumber(5)
-  $core.bool get disableCreateRoom => $_getBF(3);
-  @$pb.TagNumber(5)
-  set disableCreateRoom($core.bool value) => $_setBool(3, value);
-  @$pb.TagNumber(5)
-  $core.bool hasDisableCreateRoom() => $_has(3);
-  @$pb.TagNumber(5)
-  void clearDisableCreateRoom() => $_clearField(5);
-
   @$pb.TagNumber(6)
-  $core.bool get createRoomNeedReview => $_getBF(4);
+  $core.bool get roomCreationApprovalRequired => $_getBF(3);
   @$pb.TagNumber(6)
-  set createRoomNeedReview($core.bool value) => $_setBool(4, value);
+  set roomCreationApprovalRequired($core.bool value) => $_setBool(3, value);
   @$pb.TagNumber(6)
-  $core.bool hasCreateRoomNeedReview() => $_has(4);
+  $core.bool hasRoomCreationApprovalRequired() => $_has(3);
   @$pb.TagNumber(6)
-  void clearCreateRoomNeedReview() => $_clearField(6);
+  void clearRoomCreationApprovalRequired() => $_clearField(6);
 
   @$pb.TagNumber(8)
-  $core.String get roomPasswordPolicy => $_getSZ(5);
+  $core.String get roomPasswordPolicy => $_getSZ(4);
   @$pb.TagNumber(8)
-  set roomPasswordPolicy($core.String value) => $_setString(5, value);
+  set roomPasswordPolicy($core.String value) => $_setString(4, value);
   @$pb.TagNumber(8)
-  $core.bool hasRoomPasswordPolicy() => $_has(5);
+  $core.bool hasRoomPasswordPolicy() => $_has(4);
   @$pb.TagNumber(8)
   void clearRoomPasswordPolicy() => $_clearField(8);
 
   /// User settings
   @$pb.TagNumber(10)
-  $core.bool get enablePasswordSignup => $_getBF(6);
+  $core.bool get enablePasswordSignup => $_getBF(5);
   @$pb.TagNumber(10)
-  set enablePasswordSignup($core.bool value) => $_setBool(6, value);
+  set enablePasswordSignup($core.bool value) => $_setBool(5, value);
   @$pb.TagNumber(10)
-  $core.bool hasEnablePasswordSignup() => $_has(6);
+  $core.bool hasEnablePasswordSignup() => $_has(5);
   @$pb.TagNumber(10)
   void clearEnablePasswordSignup() => $_clearField(10);
 
   /// Proxy settings
   @$pb.TagNumber(11)
-  $core.bool get movieProxy => $_getBF(7);
+  $core.bool get movieProxy => $_getBF(6);
   @$pb.TagNumber(11)
-  set movieProxy($core.bool value) => $_setBool(7, value);
+  set movieProxy($core.bool value) => $_setBool(6, value);
   @$pb.TagNumber(11)
-  $core.bool hasMovieProxy() => $_has(7);
+  $core.bool hasMovieProxy() => $_has(6);
   @$pb.TagNumber(11)
   void clearMovieProxy() => $_clearField(11);
 
   @$pb.TagNumber(12)
-  $core.bool get liveProxy => $_getBF(8);
+  $core.bool get liveProxy => $_getBF(7);
   @$pb.TagNumber(12)
-  set liveProxy($core.bool value) => $_setBool(8, value);
+  set liveProxy($core.bool value) => $_setBool(7, value);
   @$pb.TagNumber(12)
-  $core.bool hasLiveProxy() => $_has(8);
+  $core.bool hasLiveProxy() => $_has(7);
   @$pb.TagNumber(12)
   void clearLiveProxy() => $_clearField(12);
 
   /// RTMP settings
   @$pb.TagNumber(13)
-  $core.bool get tsDisguisedAsPng => $_getBF(9);
+  $core.bool get tsDisguisedAsPng => $_getBF(8);
   @$pb.TagNumber(13)
-  set tsDisguisedAsPng($core.bool value) => $_setBool(9, value);
+  set tsDisguisedAsPng($core.bool value) => $_setBool(8, value);
   @$pb.TagNumber(13)
-  $core.bool hasTsDisguisedAsPng() => $_has(9);
+  $core.bool hasTsDisguisedAsPng() => $_has(8);
   @$pb.TagNumber(13)
   void clearTsDisguisedAsPng() => $_clearField(13);
 
   @$pb.TagNumber(14)
-  $core.String get customPublishHost => $_getSZ(10);
+  $core.String get customPublishHost => $_getSZ(9);
   @$pb.TagNumber(14)
-  set customPublishHost($core.String value) => $_setString(10, value);
+  set customPublishHost($core.String value) => $_setString(9, value);
   @$pb.TagNumber(14)
-  $core.bool hasCustomPublishHost() => $_has(10);
+  $core.bool hasCustomPublishHost() => $_has(9);
   @$pb.TagNumber(14)
   void clearCustomPublishHost() => $_clearField(14);
 
   /// Email settings
   @$pb.TagNumber(15)
-  $core.bool get emailWhitelistEnabled => $_getBF(11);
+  $core.bool get emailWhitelistEnabled => $_getBF(10);
   @$pb.TagNumber(15)
-  set emailWhitelistEnabled($core.bool value) => $_setBool(11, value);
+  set emailWhitelistEnabled($core.bool value) => $_setBool(10, value);
   @$pb.TagNumber(15)
-  $core.bool hasEmailWhitelistEnabled() => $_has(11);
+  $core.bool hasEmailWhitelistEnabled() => $_has(10);
   @$pb.TagNumber(15)
   void clearEmailWhitelistEnabled() => $_clearField(15);
 
   @$pb.TagNumber(16)
-  $core.bool get passwordSignupNeedReview => $_getBF(12);
+  $core.bool get passwordSignupNeedReview => $_getBF(11);
   @$pb.TagNumber(16)
-  set passwordSignupNeedReview($core.bool value) => $_setBool(12, value);
+  set passwordSignupNeedReview($core.bool value) => $_setBool(11, value);
   @$pb.TagNumber(16)
-  $core.bool hasPasswordSignupNeedReview() => $_has(12);
+  $core.bool hasPasswordSignupNeedReview() => $_has(11);
   @$pb.TagNumber(16)
   void clearPasswordSignupNeedReview() => $_clearField(16);
 
   @$pb.TagNumber(17)
-  $core.bool get enableEmailSignup => $_getBF(13);
+  $core.bool get enableEmailSignup => $_getBF(12);
   @$pb.TagNumber(17)
-  set enableEmailSignup($core.bool value) => $_setBool(13, value);
+  set enableEmailSignup($core.bool value) => $_setBool(12, value);
   @$pb.TagNumber(17)
-  $core.bool hasEnableEmailSignup() => $_has(13);
+  $core.bool hasEnableEmailSignup() => $_has(12);
   @$pb.TagNumber(17)
   void clearEnableEmailSignup() => $_clearField(17);
 
   @$pb.TagNumber(18)
-  $core.bool get enableGuest => $_getBF(14);
+  $core.bool get enableGuest => $_getBF(13);
   @$pb.TagNumber(18)
-  set enableGuest($core.bool value) => $_setBool(14, value);
+  set enableGuest($core.bool value) => $_setBool(13, value);
   @$pb.TagNumber(18)
-  $core.bool hasEnableGuest() => $_has(14);
+  $core.bool hasEnableGuest() => $_has(13);
   @$pb.TagNumber(18)
   void clearEnableGuest() => $_clearField(18);
 
   @$pb.TagNumber(19)
-  $core.bool get emailSignupNeedReview => $_getBF(15);
+  $core.bool get emailSignupNeedReview => $_getBF(14);
   @$pb.TagNumber(19)
-  set emailSignupNeedReview($core.bool value) => $_setBool(15, value);
+  set emailSignupNeedReview($core.bool value) => $_setBool(14, value);
   @$pb.TagNumber(19)
-  $core.bool hasEmailSignupNeedReview() => $_has(15);
+  $core.bool hasEmailSignupNeedReview() => $_has(14);
   @$pb.TagNumber(19)
   void clearEmailSignupNeedReview() => $_clearField(19);
 
   @$pb.TagNumber(22)
-  $core.bool get enableWebauthnSignup => $_getBF(16);
+  $core.bool get enableWebauthnSignup => $_getBF(15);
   @$pb.TagNumber(22)
-  set enableWebauthnSignup($core.bool value) => $_setBool(16, value);
+  set enableWebauthnSignup($core.bool value) => $_setBool(15, value);
   @$pb.TagNumber(22)
-  $core.bool hasEnableWebauthnSignup() => $_has(16);
+  $core.bool hasEnableWebauthnSignup() => $_has(15);
   @$pb.TagNumber(22)
   void clearEnableWebauthnSignup() => $_clearField(22);
 
   @$pb.TagNumber(23)
-  $core.bool get webauthnSignupNeedReview => $_getBF(17);
+  $core.bool get webauthnSignupNeedReview => $_getBF(16);
   @$pb.TagNumber(23)
-  set webauthnSignupNeedReview($core.bool value) => $_setBool(17, value);
+  set webauthnSignupNeedReview($core.bool value) => $_setBool(16, value);
   @$pb.TagNumber(23)
-  $core.bool hasWebauthnSignupNeedReview() => $_has(17);
+  $core.bool hasWebauthnSignupNeedReview() => $_has(16);
   @$pb.TagNumber(23)
   void clearWebauthnSignupNeedReview() => $_clearField(23);
 
   @$pb.TagNumber(24)
-  $core.bool get enableEmail => $_getBF(18);
+  $core.bool get enableEmail => $_getBF(17);
   @$pb.TagNumber(24)
-  set enableEmail($core.bool value) => $_setBool(18, value);
+  set enableEmail($core.bool value) => $_setBool(17, value);
   @$pb.TagNumber(24)
-  $core.bool hasEnableEmail() => $_has(18);
+  $core.bool hasEnableEmail() => $_has(17);
   @$pb.TagNumber(24)
   void clearEnableEmail() => $_clearField(24);
 
   @$pb.TagNumber(25)
-  $core.bool get enableWebauthn => $_getBF(19);
+  $core.bool get enableWebauthn => $_getBF(18);
   @$pb.TagNumber(25)
-  set enableWebauthn($core.bool value) => $_setBool(19, value);
+  set enableWebauthn($core.bool value) => $_setBool(18, value);
   @$pb.TagNumber(25)
-  $core.bool hasEnableWebauthn() => $_has(19);
+  $core.bool hasEnableWebauthn() => $_has(18);
   @$pb.TagNumber(25)
   void clearEnableWebauthn() => $_clearField(25);
 
   @$pb.TagNumber(26)
-  $pb.PbList<$core.String> get emailWhitelistDomains => $_getList(20);
+  $pb.PbList<$core.String> get emailWhitelistDomains => $_getList(19);
 
   @$pb.TagNumber(27)
-  $fixnum.Int64 get maxPinnedChatMessagesPerRoom => $_getI64(21);
+  $fixnum.Int64 get maxPinnedChatMessagesPerRoom => $_getI64(20);
   @$pb.TagNumber(27)
   set maxPinnedChatMessagesPerRoom($fixnum.Int64 value) =>
-      $_setInt64(21, value);
+      $_setInt64(20, value);
   @$pb.TagNumber(27)
-  $core.bool hasMaxPinnedChatMessagesPerRoom() => $_has(21);
+  $core.bool hasMaxPinnedChatMessagesPerRoom() => $_has(20);
   @$pb.TagNumber(27)
   void clearMaxPinnedChatMessagesPerRoom() => $_clearField(27);
 }
@@ -37936,96 +37809,6 @@ class MarkAllAsReadResponse extends $pb.GeneratedMessage {
   static MarkAllAsReadResponse? _defaultInstance;
 }
 
-class ApiErrorResponse extends $pb.GeneratedMessage {
-  factory ApiErrorResponse({
-    $core.String? error,
-    $core.int? status,
-    $core.int? code,
-    $core.String? requestId,
-  }) {
-    final result = create();
-    if (error != null) result.error = error;
-    if (status != null) result.status = status;
-    if (code != null) result.code = code;
-    if (requestId != null) result.requestId = requestId;
-    return result;
-  }
-
-  ApiErrorResponse._();
-
-  factory ApiErrorResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ApiErrorResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApiErrorResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'error')
-    ..aI(2, _omitFieldNames ? '' : 'status', fieldType: $pb.PbFieldType.OU3)
-    ..aI(3, _omitFieldNames ? '' : 'code')
-    ..aOS(4, _omitFieldNames ? '' : 'requestId')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApiErrorResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ApiErrorResponse copyWith(void Function(ApiErrorResponse) updates) =>
-      super.copyWith((message) => updates(message as ApiErrorResponse))
-          as ApiErrorResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApiErrorResponse create() => ApiErrorResponse._();
-  @$core.override
-  ApiErrorResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ApiErrorResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApiErrorResponse>(create);
-  static ApiErrorResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get error => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set error($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasError() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearError() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.int get status => $_getIZ(1);
-  @$pb.TagNumber(2)
-  set status($core.int value) => $_setUnsignedInt32(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasStatus() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearStatus() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.int get code => $_getIZ(2);
-  @$pb.TagNumber(3)
-  set code($core.int value) => $_setSignedInt32(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasCode() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearCode() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.String get requestId => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set requestId($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasRequestId() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearRequestId() => $_clearField(4);
-}
-
 class DeleteNotificationRequest extends $pb.GeneratedMessage {
   factory DeleteNotificationRequest({
     $fixnum.Int64? notificationId,
@@ -38494,10 +38277,10 @@ class RoomServiceApi {
           $pb.ClientContext? ctx, GetRoomSettingsRequest request) =>
       _client.invoke<GetRoomSettingsResponse>(ctx, 'RoomService',
           'GetRoomSettings', request, GetRoomSettingsResponse());
-  $async.Future<UpdateRoomSettingsResponse> updateRoomSettings(
+  $async.Future<Room> updateRoomSettings(
           $pb.ClientContext? ctx, UpdateRoomSettingsRequest request) =>
-      _client.invoke<UpdateRoomSettingsResponse>(ctx, 'RoomService',
-          'UpdateRoomSettings', request, UpdateRoomSettingsResponse());
+      _client.invoke<Room>(
+          ctx, 'RoomService', 'UpdateRoomSettings', request, Room());
   $async.Future<ResetRoomSettingsResponse> resetRoomSettings(
           $pb.ClientContext? ctx, ResetRoomSettingsRequest request) =>
       _client.invoke<ResetRoomSettingsResponse>(ctx, 'RoomService',

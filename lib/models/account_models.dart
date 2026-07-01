@@ -2,6 +2,8 @@ import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
+import 'package:synctv_app/src/generated/proto/oauth2.pbenum.dart'
+    as oauth2_enum;
 
 class OAuth2ProviderOption {
   final String name;
@@ -21,11 +23,13 @@ class OAuth2AuthorizationStart {
   final String provider;
   final String authorizationUrl;
   final String state;
+  final oauth2_enum.OAuth2Operation operation;
 
   const OAuth2AuthorizationStart({
     required this.provider,
     required this.authorizationUrl,
     required this.state,
+    required this.operation,
   });
 }
 
@@ -67,7 +71,7 @@ class AuthResult {
   final String registrationReviewId;
   final String redirectUrl;
   final int expiresIn;
-  final bool oauth2Bind;
+  final oauth2_enum.OAuth2Operation oauth2Operation;
 
   const AuthResult({
     this.user,
@@ -76,11 +80,14 @@ class AuthResult {
     this.registrationReviewId = '',
     this.redirectUrl = '',
     this.expiresIn = 0,
-    this.oauth2Bind = false,
+    this.oauth2Operation =
+        oauth2_enum.OAuth2Operation.OAUTH2_OPERATION_UNSPECIFIED,
   });
 
   bool get authenticated => user != null;
   bool get requiresMfa => mfa != null;
+  bool get oauth2Bind =>
+      oauth2Operation == oauth2_enum.OAuth2Operation.OAUTH2_OPERATION_BIND;
 }
 
 class SensitiveOperationVerificationInfo {

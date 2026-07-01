@@ -102,11 +102,10 @@ class SyncTvPublicRoomDomainService {
       client.GetPublicSettingsRequest(),
     );
     return PublicSettingsInfo(
-      allowRoomCreation: settings.allowRoomCreation,
+      roomCreationEnabled: settings.roomCreationEnabled,
       maxRoomsPerUser: settings.maxRoomsPerUser.toInt(),
-      maxMembersPerRoom: settings.maxMembersPerRoom.toInt(),
-      disableCreateRoom: settings.disableCreateRoom,
-      createRoomNeedReview: settings.createRoomNeedReview,
+      defaultMaxMembers: settings.defaultMaxMembers.toInt(),
+      roomCreationApprovalRequired: settings.roomCreationApprovalRequired,
       roomPasswordPolicy: settings.roomPasswordPolicy,
       enablePasswordSignup: settings.enablePasswordSignup,
       passwordSignupNeedReview: settings.passwordSignupNeedReview,

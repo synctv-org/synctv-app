@@ -23,7 +23,7 @@ import 'package:synctv_app/utils/chat_playback_danmaku.dart';
 import 'package:synctv_app/utils/playback_error_messages.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/pages/mobile/room_settings_page.dart';
-import 'package:synctv_app/widgets/add_movie_dialog.dart';
+import 'package:synctv_app/widgets/add_media_dialog.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
@@ -96,8 +96,8 @@ class _RoomScreenState extends State<RoomScreen>
   String _mentionCandidateQuery = '';
   int _mentionCandidatePage = 0;
   bool _mentionCandidatesHasMore = true;
-  List<SyncTvMovie> _movies = [];
-  bool _isLoadingMovies = true;
+  List<RoomMediaEntry> _mediaEntries = [];
+  bool _isLoadingMediaEntries = true;
   bool _isVideoLoading = false;
   String? _videoError;
   String? _roomSessionError;
@@ -106,12 +106,12 @@ class _RoomScreenState extends State<RoomScreen>
   // Pagination
   int _currentPage = 1;
   final int _pageSize = 20;
-  bool _hasMoreMovies = true;
-  bool _isLoadingMoreMovies = false;
-  final ScrollController _movieScrollController = ScrollController();
+  bool _hasMoreMediaEntries = true;
+  bool _isLoadingMoreMediaEntries = false;
+  final ScrollController _mediaEntryScrollController = ScrollController();
 
   // Folder navigation
-  final List<SyncTvMovie> _folderStack = [];
+  final List<RoomMediaEntry> _folderStack = [];
   final List<String> _folderNameStack = ['根目录'];
 
   SyncTvUser? _currentUser;
@@ -137,7 +137,7 @@ class _RoomScreenState extends State<RoomScreen>
   final DanmakuController _danmakuController = DanmakuController();
 
   bool _isSelectionMode = false;
-  final Set<String> _selectedMovieIds = {};
+  final Set<String> _selectedMediaEntryIds = {};
   int _roomTabIndex = 0;
 
   bool get _showRealtimeDebugTab => kDebugMode;
@@ -193,7 +193,7 @@ class _RoomScreenState extends State<RoomScreen>
       },
     );
 
-    _movieScrollController.addListener(_onMovieScroll);
+    _mediaEntryScrollController.addListener(_onMediaEntryScroll);
     _joinRoom();
   }
 
@@ -298,12 +298,12 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _loadCurrentPlayback() async {
     try {
-      final status = await SyncTvService.getCurrentMovie(widget.room.roomId);
+      final status = await SyncTvService.getCurrentMedia(widget.room.roomId);
       if (!mounted) return;
       await _applyPlaybackStatus(
         _mergePlaybackStatus(
           status,
-          incomingHasTiming: status.movie?.url.isEmpty != true,
+          incomingHasTiming: status.entry?.url.isEmpty != true,
         ),
       );
     } catch (e) {
@@ -329,20 +329,20 @@ class _RoomScreenState extends State<RoomScreen>
     return SyncTvService.getIceServers(widget.room.roomId);
   }
 
-  void _onMovieScroll() {
-    if (_movieScrollController.position.pixels >=
-        _movieScrollController.position.maxScrollExtent - 200) {
-      if (!_isLoadingMoreMovies && _hasMoreMovies) {
-        _loadMoreMovies();
+  void _onMediaEntryScroll() {
+    if (_mediaEntryScrollController.position.pixels >=
+        _mediaEntryScrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMoreMediaEntries && _hasMoreMediaEntries) {
+        _loadMoreMediaEntries();
       }
     }
   }
 
-  Future<void> _loadMoreMovies() async {
-    if (_isLoadingMoreMovies) return;
+  Future<void> _loadMoreMediaEntries() async {
+    if (_isLoadingMoreMediaEntries) return;
 
     setState(() {
-      _isLoadingMoreMovies = true;
+      _isLoadingMoreMediaEntries = true;
     });
 
     try {
@@ -355,26 +355,26 @@ class _RoomScreenState extends State<RoomScreen>
         pageSize: _pageSize,
       );
 
-      final movies = result.entries;
+      final entries = result.entries;
       final total = result.total;
 
       if (mounted) {
         setState(() {
-          if (movies.isNotEmpty) {
-            _movies.addAll(movies);
+          if (entries.isNotEmpty) {
+            _mediaEntries.addAll(entries);
             _currentPage++;
-            _hasMoreMovies = _movies.length < total;
+            _hasMoreMediaEntries = _mediaEntries.length < total;
           } else {
-            _hasMoreMovies = false;
+            _hasMoreMediaEntries = false;
           }
-          _isLoadingMoreMovies = false;
+          _isLoadingMoreMediaEntries = false;
         });
       }
     } catch (e) {
-      debugPrint('Load more movies error: $e');
+      debugPrint('Load more media entries error: $e');
       if (mounted) {
         setState(() {
-          _isLoadingMoreMovies = false;
+          _isLoadingMoreMediaEntries = false;
         });
       }
     }
@@ -587,7 +587,7 @@ class _RoomScreenState extends State<RoomScreen>
         final status = message.status!;
         _applyPlaybackStatus(
           SyncTvPlaybackStatus(
-            movie: _currentStatus?.movie,
+            entry: _currentStatus?.entry,
             isPlaying: status.isPlaying,
             currentTime: status.currentTime,
             playbackRate: status.playbackRate,
@@ -618,7 +618,7 @@ class _RoomScreenState extends State<RoomScreen>
         _observeRoomMembers();
       }
       return;
-    } else if (type == RoomRealtimeMessageKind.movies) {
+    } else if (type == RoomRealtimeMessageKind.mediaLibrary) {
       if (!_isPrimaryResourceMessage(message, 'playlist_items')) return;
       final mediaLibrary = message.mediaLibrary;
       if (mediaLibrary == null) {
@@ -930,28 +930,28 @@ class _RoomScreenState extends State<RoomScreen>
     required bool incomingHasTiming,
   }) {
     final current = _currentStatus;
-    final incomingMovie = incoming.movie;
-    final currentMovie = current?.movie;
-    final hasSameMovie =
-        currentMovie != null &&
-        incomingMovie != null &&
-        currentMovie.hasSamePlaybackIdentity(incomingMovie);
-    final mergedMovie = incomingMovie == null
+    final incomingEntry = incoming.entry;
+    final currentEntry = current?.entry;
+    final hasSameEntry =
+        currentEntry != null &&
+        incomingEntry != null &&
+        currentEntry.hasSamePlaybackIdentity(incomingEntry);
+    final mergedEntry = incomingEntry == null
         ? incomingHasTiming
               ? null
-              : currentMovie
-        : incomingMovie.url.isEmpty &&
-              currentMovie != null &&
-              currentMovie.url.isNotEmpty &&
-              hasSameMovie
-        ? currentMovie
-        : hasSameMovie
-        ? incomingMovie.url.isEmpty
-              ? currentMovie
-              : incomingMovie.withPlaybackIdentityFrom(currentMovie)
-        : incomingMovie;
+              : currentEntry
+        : incomingEntry.url.isEmpty &&
+              currentEntry != null &&
+              currentEntry.url.isNotEmpty &&
+              hasSameEntry
+        ? currentEntry
+        : hasSameEntry
+        ? incomingEntry.url.isEmpty
+              ? currentEntry
+              : incomingEntry.withPlaybackIdentityFrom(currentEntry)
+        : incomingEntry;
     return SyncTvPlaybackStatus(
-      movie: mergedMovie,
+      entry: mergedEntry,
       isPlaying: incomingHasTiming
           ? incoming.isPlaying
           : current?.isPlaying ?? incoming.isPlaying,
@@ -978,7 +978,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   bool _needsPlaybackResourceSnapshot(SyncTvPlaybackStatus incoming) {
-    if (incoming.movie != null && incoming.movie!.url.isNotEmpty) {
+    if (incoming.entry != null && incoming.entry!.url.isNotEmpty) {
       return false;
     }
     final current = _currentStatus;
@@ -987,7 +987,7 @@ class _RoomScreenState extends State<RoomScreen>
         incoming.playingPlaylistId.isNotEmpty ||
         incoming.targetHash.isNotEmpty;
     if (!incomingHasTarget) return false;
-    if (current == null || current.movie == null) return true;
+    if (current == null || current.entry == null) return true;
     return (incoming.playingMediaId.isNotEmpty &&
             incoming.playingMediaId != current.playingMediaId) ||
         (incoming.playingPlaylistId.isNotEmpty &&
@@ -999,14 +999,14 @@ class _RoomScreenState extends State<RoomScreen>
   void _applyMediaLibrary(RoomMediaLibraryPage mediaLibrary) {
     if (!mounted) return;
     setState(() {
-      _movies = mediaLibrary.entries;
+      _mediaEntries = mediaLibrary.entries;
       _currentPage = 1;
-      _hasMoreMovies = mediaLibrary.total > _movies.length;
-      _isLoadingMovies = false;
-      _selectedMovieIds.removeWhere(
-        (id) => !_movies.any((movie) => movie.id == id),
+      _hasMoreMediaEntries = mediaLibrary.total > _mediaEntries.length;
+      _isLoadingMediaEntries = false;
+      _selectedMediaEntryIds.removeWhere(
+        (id) => !_mediaEntries.any((entry) => entry.id == id),
       );
-      if (_selectedMovieIds.isEmpty) _isSelectionMode = false;
+      if (_selectedMediaEntryIds.isEmpty) _isSelectionMode = false;
     });
   }
 
@@ -1190,8 +1190,8 @@ class _RoomScreenState extends State<RoomScreen>
     double positionSeconds, {
     bool force = false,
   }) async {
-    final movie = _currentStatus?.movie;
-    final sourceKey = playbackDanmakuSourceKey(movie);
+    final entry = _currentStatus?.entry;
+    final sourceKey = playbackDanmakuSourceKey(entry);
     if (sourceKey.isEmpty || _loadingPlaybackDanmaku) return;
     if (!force &&
         _playbackDanmakuWindow?.covers(sourceKey, positionSeconds, 20) ==
@@ -1203,7 +1203,7 @@ class _RoomScreenState extends State<RoomScreen>
     try {
       final result = await fetchPlaybackDanmakuWindow(
         roomId: widget.room.roomId,
-        movie: movie,
+        entry: entry,
         positionSeconds: positionSeconds,
       );
       if (!mounted || result == null) return;
@@ -1218,8 +1218,8 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _applyPlaybackStatus(SyncTvPlaybackStatus status) async {
     if (!mounted) return;
-    final oldMovieId = _currentStatus?.movie?.id;
-    final nextMovieId = status.movie?.id;
+    final oldMovieId = _currentStatus?.entry?.id;
+    final nextMovieId = status.entry?.id;
     if (oldMovieId != nextMovieId) {
       _danmakuController.clear();
       _playbackDanmakuWindow = null;
@@ -1227,19 +1227,19 @@ class _RoomScreenState extends State<RoomScreen>
 
     setState(() {
       _currentStatus = status;
-      if (status.movie == null || status.movie!.url.isEmpty) {
+      if (status.entry == null || status.entry!.url.isEmpty) {
         _videoInitGeneration++;
         _isVideoLoading = false;
         _videoError = null;
       }
     });
 
-    if (status.movie != null && status.movie!.url.isNotEmpty) {
-      final newUrl = SyncTvService.resolveResourceUrl(status.movie!.url);
+    if (status.entry != null && status.entry!.url.isNotEmpty) {
+      final newUrl = SyncTvService.resolveResourceUrl(status.entry!.url);
 
       if (_videoPlayerController == null ||
           _videoPlayerController!.dataSource != newUrl) {
-        await _initVideo(newUrl, headers: status.movie!.headers);
+        await _initVideo(newUrl, headers: status.entry!.headers);
         if (mounted &&
             _videoPlayerController != null &&
             _videoPlayerController!.value.isInitialized) {
@@ -1249,18 +1249,18 @@ class _RoomScreenState extends State<RoomScreen>
         _performSync(status);
       }
 
-      final streamUrl = status.movie!.streamDanmu == null
+      final streamUrl = status.entry!.streamDanmu == null
           ? null
-          : SyncTvService.resolveResourceUrl(status.movie!.streamDanmu!);
-      final danmuUrl = status.movie!.danmu == null
+          : SyncTvService.resolveResourceUrl(status.entry!.streamDanmu!);
+      final danmuUrl = status.entry!.danmu == null
           ? null
-          : SyncTvService.resolveResourceUrl(status.movie!.danmu!);
+          : SyncTvService.resolveResourceUrl(status.entry!.danmu!);
 
       _danmakuController.updateConfig(
         danmakuUrl: danmuUrl,
-        danmakuHeaders: status.movie!.danmuHeaders,
+        danmakuHeaders: status.entry!.danmuHeaders,
         streamDanmakuUrl: streamUrl,
-        streamDanmakuHeaders: status.movie!.streamDanmuHeaders,
+        streamDanmakuHeaders: status.entry!.streamDanmuHeaders,
         controller: _videoPlayerController,
       );
       unawaited(_maybeFetchPlaybackDanmaku(status.currentTime));
@@ -1325,20 +1325,20 @@ class _RoomScreenState extends State<RoomScreen>
     int urlIndex,
   ) async {
     final status = _currentStatus;
-    final movie = status?.movie;
-    if (status == null || movie == null) return;
+    final entry = status?.entry;
+    if (status == null || entry == null) return;
     final wasPlaying = _videoPlayerController?.value.isPlaying ?? false;
     final position = _videoPlayerController == null
         ? status.derivedCurrentTime()
         : _videoPlayerController!.value.position.inMilliseconds / 1000.0;
-    final selected = movie.selectPlayback(
+    final selected = entry.selectPlayback(
       modeKey: mode.key,
       urlIndex: urlIndex,
       resolveUrl: SyncTvService.resolveResourceUrl,
     );
     setState(() {
       _currentStatus = SyncTvPlaybackStatus(
-        movie: selected,
+        entry: selected,
         isPlaying: wasPlaying || status.isPlaying,
         currentTime: position,
         playbackRate: status.playbackRate,
@@ -1360,8 +1360,8 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Widget? _buildPlaybackOptionButton({bool compact = false}) {
-    final movie = _currentStatus?.movie;
-    if (movie == null || !movie.hasPlaybackChoices) return null;
+    final entry = _currentStatus?.entry;
+    if (entry == null || !entry.hasPlaybackChoices) return null;
     if (compact) {
       return AppPopupMenuButton<String>(
         tooltip: '播放线路',
@@ -1369,16 +1369,16 @@ class _RoomScreenState extends State<RoomScreen>
         onSelected: (value) {
           final parts = value.split('|');
           if (parts.length != 2) return;
-          final mode = movie.playbackModes.firstWhere(
+          final mode = entry.playbackModes.firstWhere(
             (entry) => entry.key == parts[0],
-            orElse: () => movie.playbackModes.first,
+            orElse: () => entry.playbackModes.first,
           );
           final index = int.tryParse(parts[1]) ?? mode.safeDefaultUrlIndex;
           _selectPlaybackOption(mode, index);
         },
-        itemBuilder: (context) => _buildPlaybackOptionMenuItems(movie),
+        itemBuilder: (context) => _buildPlaybackOptionMenuItems(entry),
         child: Tooltip(
-          message: movie.playbackChoiceLabel,
+          message: entry.playbackChoiceLabel,
           child: AppPanelSurface(
             width: 32,
             height: 32,
@@ -1402,16 +1402,16 @@ class _RoomScreenState extends State<RoomScreen>
       onSelected: (value) {
         final parts = value.split('|');
         if (parts.length != 2) return;
-        final mode = movie.playbackModes.firstWhere(
+        final mode = entry.playbackModes.firstWhere(
           (entry) => entry.key == parts[0],
-          orElse: () => movie.playbackModes.first,
+          orElse: () => entry.playbackModes.first,
         );
         final index = int.tryParse(parts[1]) ?? mode.safeDefaultUrlIndex;
         _selectPlaybackOption(mode, index);
       },
-      itemBuilder: (context) => _buildPlaybackOptionMenuItems(movie),
+      itemBuilder: (context) => _buildPlaybackOptionMenuItems(entry),
       child: Tooltip(
-        message: movie.playbackChoiceLabel,
+        message: entry.playbackChoiceLabel,
         child: AppBadge(
           constraints: BoxConstraints(minHeight: compact ? 28 : 32),
           padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
@@ -1427,7 +1427,7 @@ class _RoomScreenState extends State<RoomScreen>
               : ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: maxLabelWidth),
                   child: Text(
-                    movie.playbackChoiceLabel,
+                    entry.playbackChoiceLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     softWrap: false,
@@ -1439,10 +1439,10 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   List<PopupMenuEntry<String>> _buildPlaybackOptionMenuItems(
-    SyncTvMovie movie,
+    RoomMediaEntry entry,
   ) {
     final items = <PopupMenuEntry<String>>[];
-    for (final mode in movie.playbackModes) {
+    for (final mode in entry.playbackModes) {
       if (items.isNotEmpty) items.add(const PopupMenuDivider(height: 8));
       items.add(
         PopupMenuItem<String>(
@@ -1460,8 +1460,8 @@ class _RoomScreenState extends State<RoomScreen>
       );
       for (var i = 0; i < mode.urls.length; i++) {
         final selected =
-            mode.key == movie.selectedPlaybackMode &&
-            i == movie.selectedPlaybackUrlIndex;
+            mode.key == entry.selectedPlaybackMode &&
+            i == entry.selectedPlaybackUrlIndex;
         items.add(
           PopupMenuItem<String>(
             value: '${mode.key}|$i',
@@ -1492,7 +1492,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Widget _buildVideoEmptyState() {
-    final hasPlayback = _currentStatus?.movie?.url.isNotEmpty == true;
+    final hasPlayback = _currentStatus?.entry?.url.isNotEmpty == true;
     return PlaybackEmptyState(
       error: _roomSessionError ?? _videoError,
       loading: _isVideoLoading,
@@ -1535,7 +1535,7 @@ class _RoomScreenState extends State<RoomScreen>
     _channel?.sink.close();
     _messageController.dispose();
     _chatScrollController.dispose();
-    _movieScrollController.dispose();
+    _mediaEntryScrollController.dispose();
     _webrtcManager?.dispose();
     _danmakuController.dispose();
     _channel = null;
@@ -1636,7 +1636,7 @@ class _RoomScreenState extends State<RoomScreen>
                     style: AppActionButtonStyle.tonal,
                   ),
           ),
-          if (_currentStatus?.movie != null)
+          if (_currentStatus?.entry != null)
             AppActionButton(
               onPressed: _stopPlayback,
               icon: Icons.stop_circle_outlined,
@@ -1700,9 +1700,9 @@ class _RoomScreenState extends State<RoomScreen>
                         _videoPlayerController!.value.isInitialized
                     ? CustomVideoPlayer(
                         controller: _videoPlayerController!,
-                        title: _currentStatus?.movie?.name ?? '未知影片',
+                        title: _currentStatus?.entry?.name ?? '未知影片',
                         danmakuController: _danmakuController,
-                        subtitles: _currentStatus?.movie?.subtitles,
+                        subtitles: _currentStatus?.entry?.subtitles,
                         onToggleFullScreen: _toggleFullScreen,
                         onSync: _handleSync,
                         onUserPlaybackStateChanged:
@@ -2030,9 +2030,9 @@ class _RoomScreenState extends State<RoomScreen>
       MaterialPageRoute(
         builder: (context) => CustomVideoPlayer(
           controller: _videoPlayerController!,
-          title: _currentStatus?.movie?.name ?? '未知影片',
+          title: _currentStatus?.entry?.name ?? '未知影片',
           danmakuController: _danmakuController,
-          subtitles: _currentStatus?.movie?.subtitles,
+          subtitles: _currentStatus?.entry?.subtitles,
           onToggleFullScreen: () => Navigator.of(context).pop(),
           onSync: _handleSync,
           onUserPlaybackStateChanged: _handleUserPlaybackStateChanged,
@@ -3716,7 +3716,7 @@ class _RoomScreenState extends State<RoomScreen>
                 AppActionButton(
                   icon: Icons.add,
                   label: '添加',
-                  onPressed: _showAddMovieDialog,
+                  onPressed: _showAddMediaDialog,
                   style: AppActionButtonStyle.text,
                 ),
                 AppIconButton(
@@ -3724,7 +3724,7 @@ class _RoomScreenState extends State<RoomScreen>
                   onPressed: () {
                     setState(() {
                       _isSelectionMode = !_isSelectionMode;
-                      _selectedMovieIds.clear();
+                      _selectedMediaEntryIds.clear();
                     });
                   },
                   tooltip: selectionMode ? '取消选择' : '批量管理',
@@ -3748,9 +3748,9 @@ class _RoomScreenState extends State<RoomScreen>
                 ),
                 const Spacer(),
                 AppActionButton(
-                  onPressed: _selectedMovieIds.isEmpty
+                  onPressed: _selectedMediaEntryIds.isEmpty
                       ? null
-                      : _deleteSelectedMovies,
+                      : _deleteSelectedMediaEntries,
                   label: '删除',
                   style: AppActionButtonStyle.tonal,
                 ),
@@ -3758,18 +3758,19 @@ class _RoomScreenState extends State<RoomScreen>
             ),
           ),
         Expanded(
-          child: _isLoadingMovies
+          child: _isLoadingMediaEntries
               ? const AppLoadingIndicator()
-              : _movies.isEmpty
+              : _mediaEntries.isEmpty
               ? PlaylistEmptyState(
-                  onAdd: canMutatePlaylist ? _showAddMovieDialog : null,
+                  onAdd: canMutatePlaylist ? _showAddMediaDialog : null,
                   compact: true,
                 )
               : AppListView.builder(
-                  controller: _movieScrollController,
-                  itemCount: _movies.length + (_hasMoreMovies ? 1 : 0),
+                  controller: _mediaEntryScrollController,
+                  itemCount:
+                      _mediaEntries.length + (_hasMoreMediaEntries ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (index == _movies.length) {
+                    if (index == _mediaEntries.length) {
                       return const Center(
                         child: Padding(
                           padding: EdgeInsets.all(8.0),
@@ -3777,10 +3778,12 @@ class _RoomScreenState extends State<RoomScreen>
                         ),
                       );
                     }
-                    final movie = _movies[index];
-                    final isCurrent = _currentStatus?.movie?.id == movie.id;
-                    final isFolder = movie.isFolder;
-                    final isSelected = _selectedMovieIds.contains(movie.id);
+                    final entry = _mediaEntries[index];
+                    final isCurrent = _currentStatus?.entry?.id == entry.id;
+                    final isFolder = entry.isFolder;
+                    final isSelected = _selectedMediaEntryIds.contains(
+                      entry.id,
+                    );
 
                     return AppTile(
                       selected: isSelected,
@@ -3791,7 +3794,7 @@ class _RoomScreenState extends State<RoomScreen>
                             : (isCurrent ? primaryColor : null),
                       ),
                       title: Text(
-                        movie.name,
+                        entry.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -3809,18 +3812,18 @@ class _RoomScreenState extends State<RoomScreen>
                           : null,
                       onPressed: () {
                         if (selectionMode) {
-                          _toggleSelection(movie);
+                          _toggleSelection(entry);
                         } else if (isFolder) {
-                          _enterFolder(movie);
+                          _enterFolder(entry);
                         } else {
-                          _switchMovie(movie);
+                          _switchMedia(entry);
                         }
                       },
                       onLongPress: () {
                         if (canMutatePlaylist &&
                             !selectionMode &&
-                            _isPersistedLibraryEntry(movie)) {
-                          _enterSelectionMode(movie);
+                            _isPersistedLibraryEntry(entry)) {
+                          _enterSelectionMode(entry);
                         }
                       },
                     );
@@ -4094,11 +4097,11 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  void _enterFolder(SyncTvMovie folder) {
+  void _enterFolder(RoomMediaEntry folder) {
     setState(() {
       _folderStack.add(folder);
       _folderNameStack.add(folder.name);
-      _isLoadingMovies = true;
+      _isLoadingMediaEntries = true;
     });
     _observeCurrentPlaylist();
   }
@@ -4108,7 +4111,7 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() {
       _folderStack.removeLast();
       _folderNameStack.removeLast();
-      _isLoadingMovies = true;
+      _isLoadingMediaEntries = true;
     });
     _observeCurrentPlaylist();
   }
@@ -4130,13 +4133,13 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Future<void> _switchMovie(SyncTvMovie movie) async {
+  Future<void> _switchMedia(RoomMediaEntry entry) async {
     try {
-      final playback = await SyncTvService.switchMovieAndPlay(
+      final playback = await SyncTvService.switchMediaAndPlay(
         widget.room.roomId,
-        movie.id,
-        subPath: movie.subPath,
-        playlistId: movie.parentId,
+        entry.id,
+        subPath: entry.subPath,
+        playlistId: entry.parentId,
       );
       await _applyPlaybackStatus(playback);
       _requestPlaybackSnapshot();
@@ -4146,26 +4149,26 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  void _enterSelectionMode(SyncTvMovie movie) {
+  void _enterSelectionMode(RoomMediaEntry entry) {
     if (!_canMutateCurrentPlaylist) return;
     setState(() {
       _isSelectionMode = true;
-      _selectedMovieIds.clear();
-      _selectedMovieIds.add(movie.id);
+      _selectedMediaEntryIds.clear();
+      _selectedMediaEntryIds.add(entry.id);
     });
   }
 
-  void _toggleSelection(SyncTvMovie movie) {
+  void _toggleSelection(RoomMediaEntry entry) {
     if (!_canMutateCurrentPlaylist) return;
-    if (!_isPersistedLibraryEntry(movie)) return;
+    if (!_isPersistedLibraryEntry(entry)) return;
     setState(() {
-      if (_selectedMovieIds.contains(movie.id)) {
-        _selectedMovieIds.remove(movie.id);
-        if (_selectedMovieIds.isEmpty) {
+      if (_selectedMediaEntryIds.contains(entry.id)) {
+        _selectedMediaEntryIds.remove(entry.id);
+        if (_selectedMediaEntryIds.isEmpty) {
           _isSelectionMode = false;
         }
       } else {
-        _selectedMovieIds.add(movie.id);
+        _selectedMediaEntryIds.add(entry.id);
       }
     });
   }
@@ -4173,22 +4176,22 @@ class _RoomScreenState extends State<RoomScreen>
   void _selectAll() {
     if (!_canMutateCurrentPlaylist) return;
     setState(() {
-      final selectable = _movies
+      final selectable = _mediaEntries
           .where(_isPersistedLibraryEntry)
-          .map((m) => m.id)
+          .map((entry) => entry.id)
           .toList();
-      if (_selectedMovieIds.length == selectable.length) {
-        _selectedMovieIds.clear();
+      if (_selectedMediaEntryIds.length == selectable.length) {
+        _selectedMediaEntryIds.clear();
       } else {
-        _selectedMovieIds.clear();
-        _selectedMovieIds.addAll(selectable);
+        _selectedMediaEntryIds.clear();
+        _selectedMediaEntryIds.addAll(selectable);
       }
     });
   }
 
-  bool _isPersistedLibraryEntry(SyncTvMovie movie) {
-    return !movie.isProviderDynamicEntry &&
-        (movie.id.startsWith('med_') || movie.id.startsWith('pl_'));
+  bool _isPersistedLibraryEntry(RoomMediaEntry entry) {
+    return !entry.isProviderDynamicEntry &&
+        (entry.id.startsWith('med_') || entry.id.startsWith('pl_'));
   }
 
   bool get _isInsideProviderTargetScope {
@@ -4206,15 +4209,15 @@ class _RoomScreenState extends State<RoomScreen>
 
   bool get _canMutateCurrentPlaylist => !_isInsideProviderTargetScope;
 
-  Future<void> _deleteSelectedMovies() async {
+  Future<void> _deleteSelectedMediaEntries() async {
     if (!_canMutateCurrentPlaylist) return;
-    if (_selectedMovieIds.isEmpty) return;
+    if (_selectedMediaEntryIds.isEmpty) return;
 
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除影片',
+      title: '删除条目',
       icon: const Icon(Icons.delete_outline, color: Colors.red),
-      content: Text('确定要删除选中的 ${_selectedMovieIds.length} 个影片吗？'),
+      content: Text('确定要删除选中的 ${_selectedMediaEntryIds.length} 个媒体条目吗？'),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
@@ -4229,20 +4232,23 @@ class _RoomScreenState extends State<RoomScreen>
     if (confirmed == true) {
       try {
         final canClearScope = _canMutateCurrentPlaylist;
-        final selectableCount = _movies.where(_isPersistedLibraryEntry).length;
-        final isAllLoadedSelected = _selectedMovieIds.length == selectableCount;
-        final mediaIds = _selectedMovieIds
+        final selectableCount = _mediaEntries
+            .where(_isPersistedLibraryEntry)
+            .length;
+        final isAllLoadedSelected =
+            _selectedMediaEntryIds.length == selectableCount;
+        final mediaIds = _selectedMediaEntryIds
             .where((id) => id.startsWith('med_'))
             .toList();
-        final playlistIds = _selectedMovieIds
+        final playlistIds = _selectedMediaEntryIds
             .where((id) => id.startsWith('pl_'))
             .toList();
         if (mediaIds.isEmpty && playlistIds.isEmpty) {
           if (mounted) MessageUtils.showInfo(context, '动态目录内容不能在房间内删除');
           return;
         }
-        if (isAllLoadedSelected && !_hasMoreMovies && canClearScope) {
-          await SyncTvService.clearMovies(
+        if (isAllLoadedSelected && !_hasMoreMediaEntries && canClearScope) {
+          await SyncTvService.clearMediaLibrary(
             widget.room.roomId,
             parentId: _currentPersistedPlaylistId.isEmpty
                 ? null
@@ -4258,7 +4264,7 @@ class _RoomScreenState extends State<RoomScreen>
 
         setState(() {
           _isSelectionMode = false;
-          _selectedMovieIds.clear();
+          _selectedMediaEntryIds.clear();
         });
         _observeCurrentPlaylist();
         if (mounted) MessageUtils.showInfo(context, '已删除');
@@ -4270,7 +4276,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _stopPlayback() async {
     try {
-      await SyncTvService.switchMovie(widget.room.roomId, '', subPath: '');
+      await SyncTvService.switchMedia(widget.room.roomId, '', subPath: '');
       if (mounted) {
         MessageUtils.showSuccess(context, '已停止播放');
         _disposeVideoController();
@@ -4333,9 +4339,9 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Future<void> _showAddMovieDialog() async {
+  Future<void> _showAddMediaDialog() async {
     if (!_canMutateCurrentPlaylist) return;
-    await AddMovieDialog.show(
+    await AddMediaDialog.show(
       context,
       widget.room.roomId,
       parentId: _currentPersistedPlaylistId.isEmpty

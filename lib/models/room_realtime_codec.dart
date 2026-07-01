@@ -26,7 +26,7 @@ enum RoomRealtimeMessageKind {
   expired,
   current,
   roomSettings,
-  movies,
+  mediaLibrary,
   viewerCount,
   memberEvent,
   onlineEvent,
@@ -1174,7 +1174,7 @@ class RoomRealtimeCodec {
     String version = '',
   }) {
     return RoomRealtimeMessage(
-      kind: RoomRealtimeMessageKind.movies,
+      kind: RoomRealtimeMessageKind.mediaLibrary,
       mediaLibrary: _mediaLibraryPageFromProto(
         response,
         parentId: _playlistObserveParents[observeId] ?? '',
@@ -1439,10 +1439,10 @@ class RoomRealtimeCodec {
     client.PlaybackState state,
   ) {
     final encodedTarget = providerTargetToBase64(state.target);
-    final movie =
+    final entry =
         state.playingMediaId.isEmpty && state.playingPlaylistId.isEmpty
         ? null
-        : SyncTvMovie(
+        : RoomPlaybackEntry(
             id: encodedTarget.isNotEmpty
                 ? encodedTarget
                 : state.playingMediaId.isNotEmpty
@@ -1454,7 +1454,7 @@ class RoomRealtimeCodec {
             parentId: encodedTarget.isEmpty ? null : state.playingPlaylistId,
           );
     return SyncTvPlaybackStatus(
-      movie: movie,
+      entry: entry,
       isPlaying: state.isPlaying,
       currentTime: state.position,
       playbackRate: state.speed == 0 ? 1.0 : state.speed,
@@ -1469,10 +1469,10 @@ class RoomRealtimeCodec {
   static SyncTvPlaybackStatus _playbackStatusFromPlayback(
     client.Playback playback,
   ) {
-    final movie = playback.mediaId.isEmpty && playback.playlistId.isEmpty
+    final entry = playback.mediaId.isEmpty && playback.playlistId.isEmpty
         ? null
-        : SyncTvMovie.fromPlaybackProto(playback);
-    return SyncTvPlaybackStatus(movie: movie);
+        : RoomMediaEntry.fromPlaybackProto(playback);
+    return SyncTvPlaybackStatus(entry: entry);
   }
 
   static Int64? _watchSequence(String version) {
@@ -1521,7 +1521,7 @@ class RoomRealtimeCodec {
     );
   }
 
-  static SyncTvMovie _mediaFromProto(client.Media media) {
+  static RoomMediaItem _mediaFromProto(client.Media media) {
     final metadata = media.hasMetadata()
         ? resourceMetadataToJson(media.metadata)
         : <String, dynamic>{};
@@ -1531,10 +1531,10 @@ class RoomRealtimeCodec {
     final sourceProvider = media.hasSourceProvider()
         ? SourceConfigCodec.providerToString(media.sourceProvider)
         : SourceConfigCodec.providerForMediaSourceConfig(media.sourceConfig);
-    return SyncTvMovie(
+    return RoomMediaItem(
       id: media.id,
       name: media.name,
-      url: SyncTvMovie.playbackUrlFromResource(
+      url: RoomMediaEntry.playbackUrlFromResource(
         metadata: metadata,
         sourceConfig: sourceConfig,
       ),
@@ -1555,10 +1555,12 @@ class RoomRealtimeCodec {
       providerInstanceName: media.providerInstanceName,
       sourceConfig: sourceConfig,
       metadata: metadata,
+      description: media.description,
+      coverUrl: media.hasCover() ? media.cover.url : '',
     );
   }
 
-  static SyncTvMovie _playlistFromProto(client.Playlist playlist) {
+  static RoomPlaylistItem _playlistFromProto(client.Playlist playlist) {
     final sourceProvider = playlist.hasSourceProvider()
         ? SourceConfigCodec.providerToString(playlist.sourceProvider)
         : SourceConfigCodec.providerForPlaylistSourceConfig(
@@ -1567,11 +1569,10 @@ class RoomRealtimeCodec {
     final sourceConfig = playlist.hasSourceConfig()
         ? SourceConfigCodec.playlistSourceConfigToMap(playlist.sourceConfig)
         : <String, dynamic>{};
-    return SyncTvMovie(
+    return RoomPlaylistItem(
       id: playlist.id,
       name: playlist.name,
-      url: '',
-      isFolder: true,
+      creator: playlist.creatorId,
       roomId: playlist.roomId,
       parentId: playlist.parentId.isEmpty ? null : playlist.parentId,
       position: playlist.position,
@@ -1580,6 +1581,8 @@ class RoomRealtimeCodec {
       itemCount: playlist.itemCount,
       availability: playlist.availability.value,
       version: playlist.version.toInt(),
+      description: playlist.description,
+      coverUrl: playlist.hasCover() ? playlist.cover.url : '',
       type: playlist.isDynamic ? sourceProvider : 'playlist',
       sourceProvider: sourceProvider,
       providerInstanceName: playlist.providerInstanceName,
@@ -1588,23 +1591,24 @@ class RoomRealtimeCodec {
     );
   }
 
-  static SyncTvMovie _dynamicItemFromProto(
+  static RoomDynamicMediaEntry _dynamicItemFromProto(
     client.PlaylistItem item, {
     required String playlistId,
   }) {
     final target = item.target;
     final encodedTarget = providerTargetToBase64(target);
-    return SyncTvMovie(
+    final thumbnailUrl = item.hasThumbnail() ? item.thumbnail : '';
+    return RoomDynamicMediaEntry(
       id: encodedTarget,
       name: item.name,
-      url: '',
       isFolder: item.itemType == client_enum.ItemType.ITEM_TYPE_PLAYLIST,
       parentId: playlistId,
       subPath: encodedTarget,
+      coverUrl: thumbnailUrl,
       metadata: {
         'target': target,
         'target_json': providerTargetToJson(target),
-        'thumbnail': item.hasThumbnail() ? item.thumbnail : '',
+        'thumbnail': thumbnailUrl,
         'size': item.hasSize() ? item.size.toInt() : null,
       },
     );

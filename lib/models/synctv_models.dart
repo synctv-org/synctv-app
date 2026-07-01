@@ -320,7 +320,7 @@ class SyncTvPlaybackModeOption {
       urls.isEmpty ? null : urls[safeDefaultUrlIndex];
 }
 
-class SyncTvMovie {
+class RoomMediaEntry {
   final String id;
   final String name;
   final String url;
@@ -355,7 +355,7 @@ class SyncTvMovie {
   final String selectedPlaybackMode;
   final int selectedPlaybackUrlIndex;
 
-  SyncTvMovie({
+  RoomMediaEntry({
     required this.id,
     required this.name,
     required this.url,
@@ -426,13 +426,14 @@ class SyncTvMovie {
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
-  bool get isStaticMedia => id.startsWith('med_');
+  bool get isStaticMedia => this is RoomMediaItem || id.startsWith('med_');
 
-  bool get isPlaylist => id.startsWith('pl_');
+  bool get isPlaylist => this is RoomPlaylistItem || id.startsWith('pl_');
 
-  bool get isDynamicPlaylist => isPlaylist && metadata['isDynamic'] == true;
+  bool get isDynamicPlaylist =>
+      this is RoomPlaylistItem && metadata['isDynamic'] == true;
 
-  bool get isProviderDynamicItem => !isStaticMedia && !isPlaylist;
+  bool get isProviderDynamicItem => this is RoomDynamicMediaEntry;
 
   bool get isProviderDynamicEntry => isDynamicPlaylist || isProviderDynamicItem;
 
@@ -479,7 +480,7 @@ class SyncTvMovie {
     return urlLabel.isEmpty ? mode.label : '${mode.label} · $urlLabel';
   }
 
-  SyncTvMovie selectPlayback({
+  RoomMediaEntry selectPlayback({
     required String modeKey,
     required int urlIndex,
     String Function(String url)? resolveUrl,
@@ -512,7 +513,7 @@ class SyncTvMovie {
     );
   }
 
-  bool hasSamePlaybackIdentity(SyncTvMovie other) {
+  bool hasSamePlaybackIdentity(RoomMediaEntry other) {
     final mediaId = playbackMediaId;
     final otherMediaId = other.playbackMediaId;
     if (mediaId.isNotEmpty || otherMediaId.isNotEmpty) {
@@ -528,7 +529,7 @@ class SyncTvMovie {
     return target.isEmpty || otherTarget.isEmpty || target == otherTarget;
   }
 
-  SyncTvMovie copyWith({
+  RoomMediaEntry copyWith({
     String? id,
     String? name,
     String? url,
@@ -566,7 +567,7 @@ class SyncTvMovie {
     String? selectedPlaybackMode,
     int? selectedPlaybackUrlIndex,
   }) {
-    return SyncTvMovie(
+    return RoomMediaEntry(
       id: id ?? this.id,
       name: name ?? this.name,
       url: url ?? this.url,
@@ -606,7 +607,7 @@ class SyncTvMovie {
     );
   }
 
-  SyncTvMovie withPlaybackIdentityFrom(SyncTvMovie? source) {
+  RoomMediaEntry withPlaybackIdentityFrom(RoomMediaEntry? source) {
     if (source == null || !source.hasPlaybackTarget || id != source.parentId) {
       return this;
     }
@@ -620,7 +621,7 @@ class SyncTvMovie {
     );
   }
 
-  static SyncTvMovie fromPlaybackProto(
+  static RoomMediaEntry fromPlaybackProto(
     client.Playback playback, {
     String id = '',
     String? subPath,
@@ -643,7 +644,7 @@ class SyncTvMovie {
     );
     final selectedUrl = selectedMode.defaultUrl;
     final selectedUrlValue = selectedUrl?.url ?? '';
-    return SyncTvMovie(
+    return RoomPlaybackEntry(
       id: id.isNotEmpty
           ? id
           : playback.mediaId.isNotEmpty
@@ -808,6 +809,91 @@ class SyncTvMovie {
   }
 }
 
+class RoomMediaItem extends RoomMediaEntry {
+  RoomMediaItem({
+    required super.id,
+    required super.name,
+    required super.url,
+    super.live,
+    super.proxy,
+    super.type,
+    super.creator,
+    super.roomId,
+    super.position,
+    super.addedAt,
+    super.availability,
+    super.version,
+    super.headers,
+    super.sourceProvider,
+    super.providerInstanceName,
+    super.sourceConfig,
+    super.metadata,
+    super.description,
+    super.coverUrl,
+  });
+}
+
+class RoomPlaylistItem extends RoomMediaEntry {
+  RoomPlaylistItem({
+    required super.id,
+    required super.name,
+    super.creator,
+    super.roomId,
+    super.parentId,
+    super.position,
+    super.createdAt,
+    super.updatedAt,
+    super.itemCount,
+    super.availability,
+    super.version,
+    super.description,
+    super.coverUrl,
+    super.type,
+    super.sourceProvider,
+    super.providerInstanceName,
+    super.sourceConfig,
+    super.metadata,
+  }) : super(url: '', isFolder: true);
+}
+
+class RoomDynamicMediaEntry extends RoomMediaEntry {
+  RoomDynamicMediaEntry({
+    required super.id,
+    required super.name,
+    required super.parentId,
+    required super.subPath,
+    required bool isFolder,
+    super.coverUrl,
+    super.metadata,
+  }) : super(url: '', isFolder: isFolder);
+}
+
+class RoomPlaybackEntry extends RoomMediaEntry {
+  RoomPlaybackEntry({
+    required super.id,
+    required super.name,
+    required super.url,
+    super.live,
+    super.headers,
+    super.type,
+    super.roomId,
+    super.position,
+    super.subPath,
+    super.parentId,
+    super.subtitles,
+    super.danmu,
+    super.danmuHeaders,
+    super.streamDanmu,
+    super.streamDanmuHeaders,
+    super.sourceProvider,
+    super.providerInstanceName,
+    super.playbackModes,
+    super.selectedPlaybackMode,
+    super.selectedPlaybackUrlIndex,
+    super.metadata,
+  });
+}
+
 class RoomCheckInfo {
   final bool exists;
   final bool requiresPassword;
@@ -825,7 +911,7 @@ class RoomCheckInfo {
 }
 
 class SyncTvPlaybackStatus {
-  final SyncTvMovie? movie;
+  final RoomMediaEntry? entry;
   final bool isPlaying;
 
   /// Server-generated playback position at [generatedAtMillis].
@@ -838,7 +924,7 @@ class SyncTvPlaybackStatus {
   final String targetHash;
 
   SyncTvPlaybackStatus({
-    this.movie,
+    this.entry,
     this.isPlaying = false,
     this.currentTime = 0,
     this.playbackRate = 1.0,
@@ -859,7 +945,7 @@ class SyncTvPlaybackStatus {
   }
 
   SyncTvPlaybackStatus copyWith({
-    SyncTvMovie? movie,
+    RoomMediaEntry? entry,
     bool? isPlaying,
     double? currentTime,
     double? playbackRate,
@@ -870,7 +956,7 @@ class SyncTvPlaybackStatus {
     String? targetHash,
   }) {
     return SyncTvPlaybackStatus(
-      movie: movie ?? this.movie,
+      entry: entry ?? this.entry,
       isPlaying: isPlaying ?? this.isPlaying,
       currentTime: currentTime ?? this.currentTime,
       playbackRate: playbackRate ?? this.playbackRate,

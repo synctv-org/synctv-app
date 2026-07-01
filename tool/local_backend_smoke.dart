@@ -157,7 +157,7 @@ Future<void> runSmoke(String baseUrl) async {
   final users = await SyncTvService.adminListUsersPage(pageSize: 5);
   final rooms = await SyncTvService.adminListRoomsPage(pageSize: 5);
   final streams = await SyncTvService.adminListActiveStreamsPage();
-  final settings = await SyncTvService.adminGetAllSettings(refresh: true);
+  final settings = await SyncTvService.runtimeGetSettings(refresh: true);
   final providerInstances =
       await SyncTvService.adminListProviderInstancesPage();
   print(
@@ -166,7 +166,7 @@ Future<void> runSmoke(String baseUrl) async {
       'users_page': users.total,
       'rooms_page': rooms.total,
       'active_streams': streams.total,
-      'settings_groups': settings.length,
+      'settings_sections': settings.sections.length,
       'provider_instances': providerInstances.total,
     }),
   );

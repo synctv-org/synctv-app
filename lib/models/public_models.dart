@@ -8,11 +8,10 @@ class ServerInfo {
 }
 
 class PublicSettingsInfo {
-  final bool allowRoomCreation;
+  final bool roomCreationEnabled;
   final int maxRoomsPerUser;
-  final int maxMembersPerRoom;
-  final bool disableCreateRoom;
-  final bool createRoomNeedReview;
+  final int defaultMaxMembers;
+  final bool roomCreationApprovalRequired;
   final String roomPasswordPolicy;
   final bool enablePasswordSignup;
   final bool passwordSignupNeedReview;
@@ -31,11 +30,10 @@ class PublicSettingsInfo {
   final String customPublishHost;
 
   const PublicSettingsInfo({
-    required this.allowRoomCreation,
+    required this.roomCreationEnabled,
     required this.maxRoomsPerUser,
-    required this.maxMembersPerRoom,
-    required this.disableCreateRoom,
-    required this.createRoomNeedReview,
+    required this.defaultMaxMembers,
+    required this.roomCreationApprovalRequired,
     required this.roomPasswordPolicy,
     required this.enablePasswordSignup,
     required this.passwordSignupNeedReview,

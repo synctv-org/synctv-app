@@ -186,11 +186,10 @@ void main() {
     'public settings derive user-facing auth policy hints from protobuf fields',
     () {
       const settings = PublicSettingsInfo(
-        allowRoomCreation: true,
+        roomCreationEnabled: true,
         maxRoomsPerUser: 3,
-        maxMembersPerRoom: 12,
-        disableCreateRoom: false,
-        createRoomNeedReview: true,
+        defaultMaxMembers: 12,
+        roomCreationApprovalRequired: true,
         roomPasswordPolicy: 'required',
         enablePasswordSignup: true,
         passwordSignupNeedReview: true,
@@ -887,8 +886,6 @@ void main() {
 
     expect(requests[1].method, 'GET');
     expect(requests[1].url.queryParameters, {
-      'messageId': 'msg_1',
-      'reactionKey': '👍',
       'limit': '25',
       'cursor': 'cursor_1',
     });
@@ -1279,10 +1276,7 @@ void main() {
       expect(captured, isNotNull);
       expect(captured!.method, 'GET');
       expect(captured!.url.path, '/api/rooms/room_1/chat/messages/msg_42');
-      expect(captured!.url.queryParameters, {
-        'messageId': 'msg_42',
-        'includeDeleted': 'true',
-      });
+      expect(captured!.url.queryParameters, {'includeDeleted': 'true'});
       expect(message.id, 'msg_42');
       expect(message.content, 'single message');
       expect(message.version, 4);
@@ -2130,16 +2124,16 @@ void main() {
     expect(api.baseUrl, 'https://example.test/synctv');
 
     expect(
-      api.resolveResourceUrl('/api/providers/proxy/emby/movie.mp4?token=abc'),
-      'https://example.test/synctv/api/providers/proxy/emby/movie.mp4?token=abc',
+      api.resolveResourceUrl('/api/providers/proxy/emby/entry.mp4?token=abc'),
+      'https://example.test/synctv/api/providers/proxy/emby/entry.mp4?token=abc',
     );
     expect(
       api.resolveResourceUrl('api/providers/emby/thumbnail/item_1'),
       'https://example.test/synctv/api/providers/emby/thumbnail/item_1',
     );
     expect(
-      api.resolveResourceUrl('https://cdn.example.test/movie.mp4'),
-      'https://cdn.example.test/movie.mp4',
+      api.resolveResourceUrl('https://cdn.example.test/entry.mp4'),
+      'https://cdn.example.test/entry.mp4',
     );
   });
 
@@ -2272,12 +2266,7 @@ void main() {
           availableRequests.map(
             (request) => request.url.queryParameters['providerType'],
           ),
-          [
-            source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value.toString(),
-            source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
-            source_enum.SourceProvider.SOURCE_PROVIDER_BILIBILI.value
-                .toString(),
-          ],
+          ['alist', 'emby', 'bilibili'],
         );
         expect(
           requests.map(
@@ -3078,19 +3067,21 @@ void main() {
       final target = testProviderTarget('/shows/ep1.mkv');
       final encodedTarget = testProviderTargetToken(target);
 
-      final movie = api.mapDynamicItem(
+      final entry = api.mapDynamicItem(
         client.PlaylistItem(
           name: 'Episode 1',
           itemType: client.ItemType.ITEM_TYPE_MEDIA,
           target: target,
+          thumbnail: '/covers/ep1.jpg',
         ),
         playlistId: 'pl_dynamic',
       );
 
-      expect(movie.parentId, 'pl_dynamic');
-      expect(movie.id, encodedTarget);
-      expect(movie.subPath, encodedTarget);
-      expect(movie.metadata['target_json'], {'relativePath': '/shows/ep1.mkv'});
+      expect(entry.parentId, 'pl_dynamic');
+      expect(entry.id, encodedTarget);
+      expect(entry.subPath, encodedTarget);
+      expect(entry.coverUrl, 'https://example.test/covers/ep1.jpg');
+      expect(entry.metadata['target_json'], {'relativePath': '/shows/ep1.mkv'});
     },
   );
 
@@ -3126,11 +3117,11 @@ void main() {
       ).writeToBuffer(),
     );
 
-    final movie = message.mediaLibrary!.dynamicItems.single;
-    expect(movie.parentId, 'pl_dynamic');
-    expect(movie.subPath, encodedTarget);
-    expect(movie.playbackPlaylistId, 'pl_dynamic');
-    expect(movie.playbackTarget, encodedTarget);
+    final entry = message.mediaLibrary!.dynamicItems.single;
+    expect(entry.parentId, 'pl_dynamic');
+    expect(entry.subPath, encodedTarget);
+    expect(entry.playbackPlaylistId, 'pl_dynamic');
+    expect(entry.playbackTarget, encodedTarget);
   });
 
   test(
@@ -3160,7 +3151,7 @@ void main() {
         await SyncTvService.init();
         await SyncTvService.setBaseUrl(origin);
 
-        await SyncTvService.switchMovie(
+        await SyncTvService.switchMedia(
           'room_1',
           encodedTarget,
           subPath: encodedTarget,
@@ -3182,7 +3173,7 @@ void main() {
   );
 
   test(
-    'switch movie and play starts media then sends play state update',
+    'switch playback entry and play starts media then sends play state update',
     () async {
       final requestUris = <Uri>[];
       final requestBodies = <String>[];
@@ -3255,12 +3246,12 @@ void main() {
           'http://${server.address.host}:${server.port}',
         );
 
-        final playback = await SyncTvService.switchMovieAndPlay(
+        final playback = await SyncTvService.switchMediaAndPlay(
           'room_1',
           'med_1',
         );
 
-        expect(playback.movie?.id, 'med_1');
+        expect(playback.entry?.id, 'med_1');
         expect(playback.isPlaying, isTrue);
         expect(
           List.generate(
@@ -3331,18 +3322,18 @@ void main() {
       ),
     );
 
-    final movie = status.movie!;
-    expect(movie.id, encodedTarget);
-    expect(movie.parentId, 'pl_dynamic');
-    expect(movie.subPath, encodedTarget);
-    expect(movie.playbackMediaId, '');
-    expect(movie.playbackPlaylistId, 'pl_dynamic');
-    expect(movie.playbackTarget, encodedTarget);
-    expect(movie.url, 'https://example.test/proxy/episode-1.m3u8');
+    final entry = status.entry!;
+    expect(entry.id, encodedTarget);
+    expect(entry.parentId, 'pl_dynamic');
+    expect(entry.subPath, encodedTarget);
+    expect(entry.playbackMediaId, '');
+    expect(entry.playbackPlaylistId, 'pl_dynamic');
+    expect(entry.playbackTarget, encodedTarget);
+    expect(entry.url, 'https://example.test/proxy/episode-1.m3u8');
   });
 
   test('playback mapping preserves mode and url choices', () {
-    final movie = SyncTvMovie.fromPlaybackProto(
+    final entry = RoomMediaEntry.fromPlaybackProto(
       client.Playback(
         mediaId: 'med_1',
         roomId: 'room_1',
@@ -3420,21 +3411,21 @@ void main() {
           url.startsWith('/') ? 'https://example.test$url' : url,
     );
 
-    expect(movie.url, 'https://example.test/proxy/video-1080.m3u8');
-    expect(movie.roomId, 'room_1');
-    expect(movie.position, 3.5);
-    expect(movie.live, isTrue);
-    expect(movie.sourceProvider, 'alist');
-    expect(movie.providerInstanceName, 'alist_main');
-    expect(movie.metadata['expiresAt'], 1700000000);
-    expect(movie.metadata['durationSeconds'], 3661.5);
-    expect(movie.playbackModes, hasLength(2));
-    expect(movie.hasPlaybackChoices, isTrue);
-    expect(movie.selectedPlaybackMode, 'proxied');
-    expect(movie.selectedPlaybackUrlIndex, 1);
-    expect(movie.playbackModes.first.key, 'proxied');
+    expect(entry.url, 'https://example.test/proxy/video-1080.m3u8');
+    expect(entry.roomId, 'room_1');
+    expect(entry.position, 3.5);
+    expect(entry.live, isTrue);
+    expect(entry.sourceProvider, 'alist');
+    expect(entry.providerInstanceName, 'alist_main');
+    expect(entry.metadata['expiresAt'], 1700000000);
+    expect(entry.metadata['durationSeconds'], 3661.5);
+    expect(entry.playbackModes, hasLength(2));
+    expect(entry.hasPlaybackChoices, isTrue);
+    expect(entry.selectedPlaybackMode, 'proxied');
+    expect(entry.selectedPlaybackUrlIndex, 1);
+    expect(entry.playbackModes.first.key, 'proxied');
 
-    final switched = movie.selectPlayback(
+    final switched = entry.selectPlayback(
       modeKey: 'direct',
       urlIndex: 0,
       resolveUrl: (url) => url,
@@ -3452,7 +3443,7 @@ void main() {
   });
 
   test('playback mapping routes live danmaku to stream channel', () {
-    final movie = SyncTvMovie.fromPlaybackProto(
+    final entry = RoomMediaEntry.fromPlaybackProto(
       client.Playback(
         mediaId: 'med_1',
         name: 'Bilibili Live Source',
@@ -3504,14 +3495,14 @@ void main() {
           url.startsWith('/') ? 'https://example.test$url' : url,
     );
 
-    expect(movie.danmu, 'http://origin.test/danmaku.xml');
-    expect(movie.streamDanmu, isNull);
+    expect(entry.danmu, 'http://origin.test/danmaku.xml');
+    expect(entry.streamDanmu, isNull);
     expect(
-      movie.playbackModes.singleWhere((mode) => mode.key == 'direct').danmu,
+      entry.playbackModes.singleWhere((mode) => mode.key == 'direct').danmu,
       'http://origin.test/danmaku.xml',
     );
 
-    final live = movie.selectPlayback(
+    final live = entry.selectPlayback(
       modeKey: 'bilibili_live',
       urlIndex: 0,
       resolveUrl: (url) => url,
@@ -3535,7 +3526,7 @@ void main() {
   });
 
   test('playback mapping preserves live proxy HLS and FLV choices', () {
-    final movie = SyncTvMovie.fromPlaybackProto(
+    final entry = RoomMediaEntry.fromPlaybackProto(
       client.Playback(
         mediaId: 'med_liveProxy',
         roomId: 'room_1',
@@ -3574,15 +3565,15 @@ void main() {
           url.startsWith('/') ? 'https://example.test$url' : url,
     );
 
-    expect(movie.live, isTrue);
-    expect(movie.sourceProvider, 'liveProxy');
-    expect(movie.type, 'hls');
+    expect(entry.live, isTrue);
+    expect(entry.sourceProvider, 'liveProxy');
+    expect(entry.type, 'hls');
     expect(
-      movie.url,
+      entry.url,
       'https://example.test/api/playback-providers/live-proxy/ver_1/hls-playlist',
     );
 
-    final flv = movie.selectPlayback(
+    final flv = entry.selectPlayback(
       modeKey: 'flv',
       urlIndex: 0,
       resolveUrl: (url) => url,
@@ -3596,7 +3587,7 @@ void main() {
   });
 
   test('playback mapping resolves nested playback resources', () {
-    final movie = SyncTvMovie.fromPlaybackProto(
+    final entry = RoomMediaEntry.fromPlaybackProto(
       client.Playback(
         mediaId: 'med_1',
         name: 'AList Source',
@@ -3635,19 +3626,19 @@ void main() {
     );
 
     expect(
-      movie.url,
+      entry.url,
       'https://example.test/api/providers/proxy/alist/item/stream?token=abc',
     );
     expect(
-      movie.playbackModes.single.urls.single.url,
+      entry.playbackModes.single.urls.single.url,
       'https://example.test/api/providers/proxy/alist/item/stream?token=abc',
     );
     expect(
-      movie.subtitles?['sub_0']['url'],
+      entry.subtitles?['sub_0']['url'],
       'https://example.test/api/providers/proxy/alist/subtitle.srt',
     );
     expect(
-      movie.danmu,
+      entry.danmu,
       'https://example.test/api/providers/proxy/alist/danmaku.xml',
     );
   });
@@ -3700,15 +3691,50 @@ void main() {
       expect(event.snapshot!.isPlaying, isTrue);
       expect(event.snapshot!.currentTime, 24.5);
       expect(event.snapshot!.playbackRate, 1.25);
-      expect(event.snapshot!.movie!.parentId, 'pl_dynamic');
+      expect(event.snapshot!.entry!.parentId, 'pl_dynamic');
       expect(
-        event.snapshot!.movie!.playbackTarget,
+        event.snapshot!.entry!.playbackTarget,
         testProviderTargetToken(target),
       );
     } finally {
       await subscription.cancel();
       await server.close(force: true);
     }
+  });
+
+  test('watch playback state query uses known event sequence', () async {
+    Uri? requestedUri;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requestedUri = request.url;
+        return http.Response(
+          '',
+          200,
+          headers: {'content-type': 'text/event-stream'},
+        );
+      }),
+    );
+
+    await api.room
+        .watchPlaybackState(
+          'room_1',
+          client.WatchPlaybackStateRequest(
+            playbackState: client.ObservePlaybackState(
+              eventSequence: Int64(42),
+            ),
+          ),
+        )
+        .drain<void>();
+
+    expect(requestedUri, isNotNull);
+    expect(requestedUri!.path, '/api/rooms/room_1/watch/playback-state');
+    expect(requestedUri!.queryParameters, containsPair('eventSequence', '42'));
+    expect(
+      requestedUri!.queryParameters,
+      isNot(contains('afterEventSequence')),
+    );
   });
 
   test(
@@ -3734,7 +3760,6 @@ void main() {
             client.WatchPlaybackRequest(
               playback: client.ObservePlayback(
                 playbackClientProfile: defaultPlaybackClientProfile(),
-                afterEventSequence: Int64(42),
               ),
             ),
           )
@@ -3755,7 +3780,7 @@ void main() {
       );
       expect(
         requestedUri!.queryParameters,
-        containsPair('afterEventSequence', '42'),
+        isNot(contains('afterEventSequence')),
       );
       expect(
         requestedUri!.queryParameters,
@@ -4003,7 +4028,7 @@ void main() {
       await expectLater(
         domain.addDirectUrlMedia(
           'room_1',
-          url: 'https://media.example.test/movie.mp4',
+          url: 'https://media.example.test/entry.mp4',
           headers: const {'Host': 'internal.example.test'},
         ),
         throwsA(isA<DirectUrlSourceConfigException>()),
@@ -4322,7 +4347,7 @@ void main() {
   });
 
   test(
-    'clear movies keeps playlist scope through ClearPlaylist protobuf',
+    'clear media library keeps playlist scope through ClearPlaylist protobuf',
     () async {
       final requests = <http.Request>[];
       final api = SyncTvApiClient(
@@ -4339,7 +4364,7 @@ void main() {
       );
       final media = SyncTvRoomMediaDomainService(api);
 
-      await media.clearMovies('room_1', parentId: 'pl_1');
+      await media.clearMediaLibrary('room_1', parentId: 'pl_1');
 
       expect(requests, hasLength(1));
       expect(requests.single.method, 'DELETE');
@@ -4653,7 +4678,7 @@ void main() {
       session: SyncTvSession(),
     );
     final room = api.mapAdminRoom(
-      admin.AdminRoom(
+      admin.Room(
         id: 'room_1',
         name: 'The Room',
         creatorId: 'usr_1',
@@ -5345,7 +5370,7 @@ void main() {
       final directId = await domain.addDirectUrlMedia(
         'room_1',
         playlistId: 'pl_1',
-        url: 'https://media.example.test/movie.m3u8',
+        url: 'https://media.example.test/entry.m3u8',
         headers: const {'User-Agent': 'Mozilla/5.0'},
         name: 'Direct HLS',
         preferProxy: true,
@@ -5379,7 +5404,7 @@ void main() {
           'medias': [
             {
               'name': '',
-              'url': 'https://media.example.test/movie.m3u8',
+              'url': 'https://media.example.test/entry.m3u8',
               'headers': {'User-Agent': 'Mozilla/5.0'},
               'format': '',
             },
@@ -5621,20 +5646,19 @@ void main() {
       expect(requestedUri, isNotNull);
       expect(requestedUri!.path, '/api/rooms/room_1/settings');
       final body = jsonDecode(requestBody!) as Map<String, dynamic>;
-      final settings = body['settings'] as Map<String, dynamic>;
-      expect(settings['allowGuestJoin'], isTrue);
-      expect(settings['requireApproval'], isTrue);
-      expect(settings['maxMembers'], '42');
-      expect(settings['chatEnabled'], isFalse);
+      expect(body['allowGuestJoin'], isTrue);
+      expect(body['requireApproval'], isTrue);
+      expect(body['maxMembers'], '42');
+      expect(body['chatEnabled'], isFalse);
       expect(
-        settings['guestAddedPermissions'],
+        body['guestAddedPermissions'],
         RoomGuestPermissions.viewMemberList.toString(),
       );
       expect(body.containsKey('roomId'), isFalse);
     },
   );
 
-  test('admin settings group reads dedicated protobuf endpoint', () async {
+  test('admin settings reads typed protobuf endpoint', () async {
     Uri? requestedUri;
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final requests = server.listen((request) async {
@@ -5644,9 +5668,73 @@ void main() {
         ..headers.contentType = io.ContentType.json
         ..write(
           jsonEncode({
-            'group': {
-              'name': 'email',
-              'email': {'enabled': true, 'smtpHost': 'mail.example.test'},
+            'roomDefaults': {},
+            'permissions': {},
+            'roomCreation': {},
+            'user': {},
+            'oauth2': {},
+            'proxy': {},
+            'rtmp': {},
+            'email': {'enabled': true, 'smtpHost': 'mail.example.test'},
+            'webrtc': {},
+            'chat': {},
+            'cors': {},
+          }),
+        );
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      final settings = await SyncTvService.runtimeGetSettings();
+      final section = settings.section('email');
+
+      expect(section, isNotNull);
+      expect(section!.name, 'email');
+      expect(section.settings['enabled'], isTrue);
+      expect(section.settings['smtpHost'], 'mail.example.test');
+    } finally {
+      await requests.cancel();
+      await server.close(force: true);
+    }
+
+    expect(requestedUri, isNotNull);
+    expect(requestedUri!.path, '/api/admin/settings');
+    expect(requestedUri!.queryParameters, isEmpty);
+  });
+
+  test('admin settings update sends typed runtime patch body', () async {
+    final requestedBodies = <Map<String, dynamic>>[];
+    final requestedUris = <Uri>[];
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final requests = server.listen((request) async {
+      requestedUris.add(request.uri);
+      requestedBodies.add(
+        jsonDecode(await utf8.decoder.bind(request).join())
+            as Map<String, dynamic>,
+      );
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType.json
+        ..write(
+          jsonEncode({
+            'roomDefaults': {'defaultMaxMembers': '100'},
+            'roomCreation': {'maxRoomsPerUser': '42', 'enabled': true},
+            'permissions': {},
+            'user': {},
+            'oauth2': {},
+            'proxy': {},
+            'rtmp': {},
+            'email': {},
+            'webrtc': {},
+            'chat': {},
+            'cors': {
+              'allowedOrigins': ['https://app.example.test'],
             },
           }),
         );
@@ -5660,19 +5748,49 @@ void main() {
         'http://${server.address.host}:${server.port}',
       );
 
-      final group = await SyncTvService.adminGetSettingsGroup('email');
-
-      expect(group.name, 'email');
-      expect(group.settings['enabled'], isTrue);
-      expect(group.settings['smtpHost'], 'mail.example.test');
+      await SyncTvService.runtimeUpdateSettingInSection(
+        'roomCreation',
+        'maxRoomsPerUser',
+        42,
+      );
+      await SyncTvService.runtimeUpdateSettingInSection(
+        'roomCreation',
+        'enabled',
+        false,
+      );
+      await SyncTvService.runtimeUpdateSettingInSection(
+        'cors',
+        'allowedOrigins',
+        ['https://app.example.test'],
+      );
     } finally {
       await requests.cancel();
       await server.close(force: true);
     }
 
-    expect(requestedUri, isNotNull);
-    expect(requestedUri!.path, '/api/admin/settings/email');
-    expect(requestedUri!.queryParameters, isEmpty);
+    expect(
+      requestedUris.map((uri) => uri.path).toList(),
+      everyElement('/api/admin/settings'),
+    );
+    expect(requestedBodies, [
+      {
+        'roomCreation': {'maxRoomsPerUser': '42'},
+      },
+      {
+        'roomCreation': {'enabled': false},
+      },
+      {
+        'cors': {
+          'allowedOrigins': {
+            'values': ['https://app.example.test'],
+          },
+        },
+      },
+    ]);
+    expect(
+      requestedBodies.every((body) => body.containsKey('settings')),
+      isFalse,
+    );
   });
 
   test('room member service preserves pagination filters and version', () async {
@@ -6719,10 +6837,7 @@ void main() {
       expect(requestedUri!.path, '/api/providers/instances/available');
       expect(
         requestedUri!.queryParameters,
-        containsPair(
-          'providerType',
-          source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
-        ),
+        containsPair('providerType', 'emby'),
       );
     },
   );
@@ -6760,10 +6875,7 @@ void main() {
       expect(requestedUri!.path, '/api/providers/instances/available');
       expect(
         requestedUri!.queryParameters,
-        containsPair(
-          'providerType',
-          source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
-        ),
+        containsPair('providerType', 'emby'),
       );
     } finally {
       await listener.cancel();
@@ -6834,7 +6946,7 @@ void main() {
             jsonEncode({
               'content': [
                 {
-                  'name': 'movie.mp4',
+                  'name': 'entry.mp4',
                   'size': '1024',
                   'isDir': false,
                   'modified': '1760000100',
@@ -6889,7 +7001,7 @@ void main() {
           jsonEncode({
             'content': [
               {
-                'name': 'movie.mp4',
+                'name': 'entry.mp4',
                 'size': '1024',
                 'isDir': false,
                 'modified': '1760000100',
@@ -7160,13 +7272,7 @@ void main() {
     expect(requestedUri!.path, '/api/providers/instances');
     expect(requestedUri!.queryParameters, containsPair('page', '2'));
     expect(requestedUri!.queryParameters, containsPair('pageSize', '10'));
-    expect(
-      requestedUri!.queryParameters,
-      containsPair(
-        'providerType',
-        source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value.toString(),
-      ),
-    );
+    expect(requestedUri!.queryParameters, containsPair('providerType', 'emby'));
     expect(requestedUri!.queryParameters, containsPair('search', 'home'));
     expect(requestedUri!.queryParameters, containsPair('enabled', 'true'));
     expect(requestedUri!.queryParameters, containsPair('tls', 'false'));
@@ -7247,10 +7353,7 @@ void main() {
       expect(requestedUri!.queryParameters, containsPair('pageSize', '20'));
       expect(
         requestedUri!.queryParameters,
-        containsPair(
-          'providerType',
-          source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value.toString(),
-        ),
+        containsPair('providerType', 'alist'),
       );
       expect(requestedUri!.queryParameters, containsPair('search', 'edge'));
       expect(requestedUri!.queryParameters, containsPair('enabled', 'true'));
@@ -7494,7 +7597,7 @@ void main() {
               'refreshToken': '',
               'expiresIn': '600',
               'redirectUrl': 'https://app.example.test/oauth2/done',
-              'isBind': false,
+              'operation': 'OAUTH2_OPERATION_LOGIN',
               'registrationReviewRequired': true,
               'registrationReviewId': 'rev_oauth2_1',
             }),
@@ -7511,7 +7614,6 @@ void main() {
 
         expect(await SyncTvService.getToken(), isNull);
         final result = await SyncTvService.finishOAuth2Login(
-          provider: 'github-main',
           code: 'abc123',
           state: 'AbCdEfGh1234567890aBcDeFgHiJkLm',
         );
@@ -7529,9 +7631,8 @@ void main() {
       }
 
       expect(requestedUri, isNotNull);
-      expect(requestedUri!.path, '/api/oauth2/github-main/exchange');
+      expect(requestedUri!.path, '/api/oauth2/exchange');
       expect(jsonDecode(requestBody!), {
-        'provider': 'github-main',
         'code': 'abc123',
         'state': 'AbCdEfGh1234567890aBcDeFgHiJkLm',
       });
@@ -7550,7 +7651,11 @@ void main() {
         httpClient: MockClient((request) async {
           expect(request.headers['authorization'], 'Bearer existing-access');
           return http.Response(
-            jsonEncode({'accessToken': '', 'refreshToken': '', 'isBind': true}),
+            jsonEncode({
+              'accessToken': '',
+              'refreshToken': '',
+              'operation': 'OAUTH2_OPERATION_BIND',
+            }),
             200,
             headers: {'content-type': 'application/json'},
           );
@@ -7559,13 +7664,12 @@ void main() {
 
       final response = await api.oauth2Service.exchangeAuthorizationCode(
         oauth2.ExchangeAuthorizationCodeRequest(
-          provider: 'github-main',
           code: 'abc123',
           state: 'AbCdEfGh1234567890aBcDeFgHiJkLm',
         ),
       );
 
-      expect(response.isBind, isTrue);
+      expect(response.operation, oauth2.OAuth2Operation.OAUTH2_OPERATION_BIND);
       expect(session.accessToken, 'existing-access');
       expect(session.refreshToken, 'existing-refresh');
       expect(session.isGuest, isFalse);
@@ -8414,11 +8518,10 @@ void main() {
       httpClient: MockClient((request) async {
         return http.Response(
           jsonEncode({
-            'allowRoomCreation': true,
+            'roomCreationEnabled': true,
             'maxRoomsPerUser': 8,
-            'maxMembersPerRoom': 64,
-            'disableCreateRoom': false,
-            'createRoomNeedReview': true,
+            'defaultMaxMembers': 64,
+            'roomCreationApprovalRequired': true,
             'roomPasswordPolicy': 'optional',
             'enablePasswordSignup': true,
             'passwordSignupNeedReview': false,
@@ -8469,11 +8572,10 @@ void main() {
         ..headers.contentType = io.ContentType.json
         ..write(
           jsonEncode({
-            'allowRoomCreation': true,
+            'roomCreationEnabled': true,
             'maxRoomsPerUser': 3,
-            'maxMembersPerRoom': 12,
-            'disableCreateRoom': false,
-            'createRoomNeedReview': false,
+            'defaultMaxMembers': 12,
+            'roomCreationApprovalRequired': false,
             'roomPasswordPolicy': 'optional',
             'enablePasswordSignup': true,
             'passwordSignupNeedReview': false,

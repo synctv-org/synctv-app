@@ -791,7 +791,6 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         );
         if (!mounted || attempt != _bindAttempt) return;
         await SyncTvService.finishOAuth2Bind(
-          provider: provider.name,
           code: parsed.code,
           state: parsed.state,
         );

@@ -656,14 +656,14 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.UpdateRoomSettingsResponse> updateRoomSettings(
+  Future<client.Room> updateRoomSettings(
     String roomId,
     client.UpdateRoomSettingsRequest request,
   ) {
     return _api._send(
       'PATCH',
       '/api/rooms/$roomId/settings',
-      client.UpdateRoomSettingsResponse.create,
+      client.Room.create,
       body: request,
     );
   }
@@ -895,12 +895,11 @@ class SyncTvRoomApi {
     return _api._watchSse(
       '/api/rooms/$roomId/watch/playback-state',
       client.WatchPlaybackStateEvent.create,
-      query: _api._watchQuery(
-        deliveryMode: request.deliveryMode,
-        afterEventSequence: request.playbackState.hasAfterEventSequence()
-            ? request.playbackState.afterEventSequence
-            : null,
-      ),
+      query: {
+        ..._api._watchQuery(deliveryMode: request.deliveryMode),
+        if (request.playbackState.hasEventSequence())
+          'eventSequence': request.playbackState.eventSequence.toString(),
+      },
     );
   }
 
@@ -915,12 +914,7 @@ class SyncTvRoomApi {
       '/api/rooms/$roomId/watch/playback',
       client.WatchPlaybackEvent.create,
       query: {
-        ..._api._watchQuery(
-          deliveryMode: request.deliveryMode,
-          afterEventSequence: request.playback.hasAfterEventSequence()
-              ? request.playback.afterEventSequence
-              : null,
-        ),
+        ..._api._watchQuery(deliveryMode: request.deliveryMode),
         ..._api._playbackClientProfileQuery(profile),
       },
     );
@@ -2053,7 +2047,7 @@ class SyncTvOAuth2Api {
   ) async {
     final response = await _api._send(
       'POST',
-      '/api/oauth2/${request.provider}/exchange',
+      '/api/oauth2/exchange',
       oauth2.ExchangeAuthorizationCodeResponse.create,
       auth: _api.session.hasAccessToken,
       body: request,
@@ -2100,33 +2094,21 @@ class SyncTvAdminApi {
 
   final SyncTvApiClient _api;
 
-  Future<admin.GetSettingsResponse> getSettings(
-    admin.GetSettingsRequest request,
-  ) {
+  Future<admin.RuntimeSettings> getSettings(admin.GetSettingsRequest request) {
     return _api._send(
       'GET',
       '/api/admin/settings',
-      admin.GetSettingsResponse.create,
+      admin.RuntimeSettings.create,
     );
   }
 
-  Future<admin.GetSettingsGroupResponse> getSettingsGroup(
-    admin.GetSettingsGroupRequest request,
-  ) {
-    return _api._send(
-      'GET',
-      '/api/admin/settings/${request.group}',
-      admin.GetSettingsGroupResponse.create,
-    );
-  }
-
-  Future<admin.UpdateSettingsResponse> updateSettings(
+  Future<admin.RuntimeSettings> updateSettings(
     admin.UpdateSettingsRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/admin/settings',
-      admin.UpdateSettingsResponse.create,
+      admin.RuntimeSettings.create,
       body: request,
     );
   }
@@ -2315,13 +2297,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.UpdateRoomSettingsResponse> updateRoomSettings(
+  Future<admin.Room> updateRoomSettings(
     admin.UpdateRoomSettingsRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/admin/rooms/${request.roomId}/settings',
-      admin.UpdateRoomSettingsResponse.create,
+      admin.Room.create,
       body: request,
     );
   }

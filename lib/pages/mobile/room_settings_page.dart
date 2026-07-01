@@ -20,7 +20,7 @@ import 'package:synctv_app/utils/local_image_picker.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/app_responsive_layout.dart';
-import 'package:synctv_app/widgets/add_movie_dialog.dart';
+import 'package:synctv_app/widgets/add_media_dialog.dart';
 import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
@@ -180,7 +180,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   final List<IceServerInfo> _iceServers = [];
   final List<RealtimeEventLogEntry> _realtimeEvents = [];
   final List<String> _mediaPlaylistStack = [];
-  final List<SyncTvMovie> _mediaPlaylistEntryStack = [];
+  final List<RoomMediaEntry> _mediaPlaylistEntryStack = [];
   final List<String> _mediaTargetStack = [];
   StreamSubscription<RoomRealtimeMessage>? _realtimeMessageSubscription;
   StreamSubscription<RealtimeEventLogEntry>? _realtimeEventSubscription;
@@ -679,7 +679,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       );
       return;
     }
-    if (message.kind == RoomRealtimeMessageKind.movies) {
+    if (message.kind == RoomRealtimeMessageKind.mediaLibrary) {
       _handleMediaWatchEvent(
         RoomResourceWatchEvent<RoomMediaLibraryPage>.changed(
           version: message.resourceVersion,
@@ -1431,8 +1431,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool get _canMutateCurrentMediaScope =>
       _mediaTarget.isEmpty && !_isInsideDynamicMediaPlaylist;
 
-  Future<void> _openMediaEntry(SyncTvMovie entry) async {
-    if (!entry.isFolder) return;
+  bool _canOpenMediaEntry(RoomMediaEntry entry) {
+    if (!entry.isFolder) return false;
+    final isPersistedPlaylist = entry.id.startsWith('pl_');
+    if (isPersistedPlaylist && entry.isDynamicPlaylist) {
+      return entry.creator.isNotEmpty && entry.creator == _currentUserId;
+    }
+    return true;
+  }
+
+  Future<void> _openMediaEntry(RoomMediaEntry entry) async {
+    if (!_canOpenMediaEntry(entry)) {
+      if (entry.isDynamicPlaylist) {
+        MessageUtils.showError(context, '仅创建者可查看动态播放列表');
+      }
+      return;
+    }
     final isPersistedPlaylist = entry.id.startsWith('pl_');
     final target = isPersistedPlaylist ? '' : entry.playbackTarget ?? '';
     if (!isPersistedPlaylist && target.isEmpty) return;
@@ -1944,7 +1958,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
     }
-    await AddMovieDialog.show(
+    await AddMediaDialog.show(
       context,
       widget.roomId,
       parentId: _currentPlaylistId.isEmpty ? null : _currentPlaylistId,
@@ -1968,7 +1982,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (!confirmed) return;
 
     try {
-      await SyncTvService.clearMovies(
+      await SyncTvService.clearMediaLibrary(
         widget.roomId,
         parentId: playlistId.isEmpty ? null : playlistId,
       );
@@ -1979,7 +1993,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _renameEntry(SyncTvMovie entry) async {
+  Future<void> _renameEntry(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
@@ -2016,7 +2030,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _deleteEntry(SyncTvMovie entry) async {
+  Future<void> _deleteEntry(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
@@ -2037,7 +2051,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           force: true,
         );
       } else if (entry.id.startsWith('med_')) {
-        await SyncTvService.deleteMovie(widget.roomId, entry.id);
+        await SyncTvService.deleteMedia(widget.roomId, entry.id);
       }
       await _loadMediaLibrary();
       if (mounted) MessageUtils.showSuccess(context, '条目已删除');
@@ -2046,7 +2060,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _showMediaEntryDetails(SyncTvMovie entry) async {
+  Future<void> _showMediaEntryDetails(RoomMediaEntry entry) async {
     try {
       var detail = entry;
       PlaylistDetailInfo? playlistDetail;
@@ -2214,7 +2228,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _updateEntryCover(SyncTvMovie entry) async {
+  Future<void> _updateEntryCover(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope ||
         entry.isProviderDynamicEntry ||
         (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_'))) {
@@ -2243,7 +2257,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _clearEntryCover(SyncTvMovie entry) async {
+  Future<void> _clearEntryCover(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope ||
         entry.isProviderDynamicEntry ||
         (!entry.id.startsWith('pl_') && !entry.id.startsWith('med_'))) {
@@ -2454,7 +2468,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _moveMedia(SyncTvMovie entry) async {
+  Future<void> _moveMedia(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
@@ -2481,13 +2495,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
   }
 
-  Future<void> _movePlaylistRelative(SyncTvMovie entry, int direction) async {
+  Future<void> _movePlaylistRelative(
+    RoomMediaEntry entry,
+    int direction,
+  ) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
       MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
       return;
     }
     if (!entry.id.startsWith('pl_')) return;
-    final playlists = _mediaPage?.playlists ?? const <SyncTvMovie>[];
+    final playlists = _mediaPage?.playlists ?? const <RoomMediaEntry>[];
     final index = playlists.indexWhere((item) => item.id == entry.id);
     if (index < 0) return;
     final isUp = direction < 0;
@@ -2516,11 +2533,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   Future<_MediaMoveTarget?> _showMoveMediaTargetDialog(
-    SyncTvMovie entry,
+    RoomMediaEntry entry,
   ) async {
     var loading = true;
     var error = '';
-    var playlists = <SyncTvMovie>[];
+    var playlists = <RoomMediaEntry>[];
 
     Future<void> loadPlaylists(StateSetter setDialogState) async {
       setDialogState(() {
@@ -3500,7 +3517,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (_mediaLoading && page == null) {
       return const AppLoadingIndicator();
     }
-    final entries = page?.entries ?? const <SyncTvMovie>[];
+    final entries = page?.entries ?? const <RoomMediaEntry>[];
     final canMutateScope = _canMutateCurrentMediaScope;
     return AppRefreshIndicator(
       onRefresh: _loadMediaLibrary,
@@ -4826,7 +4843,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
-  Widget _buildMediaTile(SyncTvMovie entry, ThemeData theme, bool isDark) {
+  Widget _buildMediaTile(RoomMediaEntry entry, ThemeData theme, bool isDark) {
     final isPersisted =
         entry.id.startsWith('pl_') || entry.id.startsWith('med_');
     final canMutate =
@@ -4837,6 +4854,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         ? _mediaPage?.playlists.indexWhere((item) => item.id == entry.id) ?? -1
         : -1;
     final playlistCount = _mediaPage?.playlists.length ?? 0;
+    final canOpen = _canOpenMediaEntry(entry);
     return _buildManagementTileSurface(
       theme,
       isDark,
@@ -4856,7 +4874,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           const SizedBox(width: 12),
           Expanded(
             child: AppInkSurface(
-              onTap: entry.isFolder ? () => _openMediaEntry(entry) : null,
+              onTap: canOpen ? () => _openMediaEntry(entry) : null,
               color: Colors.transparent,
               borderRadius: BorderRadius.zero,
               child: Column(
@@ -4922,7 +4940,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               ),
               PopupMenuItem(
                 value: _MediaAction.open,
-                enabled: entry.isFolder,
+                enabled: canOpen,
                 child: const Text('打开'),
               ),
               if (canMutate) ...[
@@ -5534,9 +5552,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
-  String _mediaSubtitle(SyncTvMovie entry) {
+  String _mediaSubtitle(RoomMediaEntry entry) {
     if (entry.id.startsWith('pl_')) {
       final mode = entry.metadata['isDynamic'] == true ? '动态播放列表' : '播放列表';
+      if (entry.isDynamicPlaylist && !_canOpenMediaEntry(entry)) {
+        return '$mode · 仅创建者可查看';
+      }
       return '$mode · ${entry.sourceProvider.isEmpty ? 'static' : entry.sourceProvider}';
     }
     if (entry.id.startsWith('med_')) {

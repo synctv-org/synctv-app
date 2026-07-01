@@ -359,7 +359,6 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         );
         if (!mounted || attempt != _oauthAttempt) return;
         final result = await SyncTvService.finishOAuth2Login(
-          provider: provider.name,
           code: parsed.code,
           state: parsed.state,
         );

@@ -404,15 +404,10 @@ class SyncTvService {
   }) => OAuth2CallbackParser.parse(uri, expectedState: expectedState);
 
   static Future<AuthResult> finishOAuth2Login({
-    required String provider,
     required String code,
     required String state,
   }) async {
-    return _domains.auth.finishOAuth2Login(
-      provider: provider,
-      code: code,
-      state: state,
-    );
+    return _domains.auth.finishOAuth2Login(code: code, state: state);
   }
 
   static Future<SyncTvUser> getMe({bool refresh = false}) async {
@@ -628,15 +623,10 @@ class SyncTvService {
   }
 
   static Future<void> finishOAuth2Bind({
-    required String provider,
     required String code,
     required String state,
   }) async {
-    await _domains.auth.finishOAuth2Bind(
-      provider: provider,
-      code: code,
-      state: state,
-    );
+    await _domains.auth.finishOAuth2Bind(code: code, state: state);
     _domains.cache.invalidate('account:oauth2:linked');
   }
 
@@ -782,8 +772,8 @@ class SyncTvService {
     );
   }
 
-  static Future<SyncTvPlaybackStatus> getCurrentMovie(String roomId) async {
-    return _domains.roomMedia.getCurrentMovie(roomId);
+  static Future<SyncTvPlaybackStatus> getCurrentMedia(String roomId) async {
+    return _domains.roomMedia.getCurrentMedia(roomId);
   }
 
   static Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>>
@@ -792,8 +782,8 @@ class SyncTvService {
   }
 
   static Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>>
-  watchPlaybackSnapshot(String roomId, {String version = ''}) {
-    return _domains.roomMedia.watchPlaybackSnapshot(roomId, version: version);
+  watchPlaybackSnapshot(String roomId) {
+    return _domains.roomMedia.watchPlaybackSnapshot(roomId);
   }
 
   static Stream<RoomResourceWatchEvent<SyncTvRoomSettings>> watchRoomSettings(
@@ -922,7 +912,7 @@ class SyncTvService {
     );
   }
 
-  static Future<SyncTvMovie> createPlaylist(
+  static Future<RoomPlaylistItem> createPlaylist(
     String roomId, {
     required String name,
     String parentId = '',
@@ -942,7 +932,7 @@ class SyncTvService {
     );
   }
 
-  static Future<SyncTvMovie> updatePlaylist(
+  static Future<RoomPlaylistItem> updatePlaylist(
     String roomId,
     String playlistId, {
     required String name,
@@ -969,7 +959,7 @@ class SyncTvService {
     return _api.mapRoom(room);
   }
 
-  static Future<SyncTvMovie> updatePlaylistCover(
+  static Future<RoomPlaylistItem> updatePlaylistCover(
     String roomId,
     String playlistId,
     LocalImageUpload upload,
@@ -982,7 +972,7 @@ class SyncTvService {
     return _api.mapPlaylist(playlist);
   }
 
-  static Future<SyncTvMovie> clearPlaylistCover(
+  static Future<RoomPlaylistItem> clearPlaylistCover(
     String roomId,
     String playlistId,
   ) async {
@@ -993,7 +983,7 @@ class SyncTvService {
     return _api.mapPlaylist(playlist);
   }
 
-  static Future<SyncTvMovie> movePlaylist(
+  static Future<RoomPlaylistItem> movePlaylist(
     String roomId,
     String playlistId, {
     String? beforePlaylistId,
@@ -1015,7 +1005,7 @@ class SyncTvService {
     await _domains.roomMedia.deletePlaylist(roomId, playlistId, force: force);
   }
 
-  static Future<SyncTvMovie> editMedia(
+  static Future<RoomMediaItem> editMedia(
     String roomId,
     String mediaId, {
     required String name,
@@ -1029,7 +1019,7 @@ class SyncTvService {
     );
   }
 
-  static Future<SyncTvMovie> updateVideoCover(
+  static Future<RoomMediaItem> updateVideoCover(
     String roomId,
     String mediaId,
     LocalImageUpload upload,
@@ -1042,7 +1032,7 @@ class SyncTvService {
     return _api.mapMedia(media);
   }
 
-  static Future<SyncTvMovie> clearVideoCover(
+  static Future<RoomMediaItem> clearVideoCover(
     String roomId,
     String mediaId,
   ) async {
@@ -1050,7 +1040,7 @@ class SyncTvService {
     return _api.mapMedia(media);
   }
 
-  static Future<SyncTvMovie> getMedia(String roomId, String mediaId) async {
+  static Future<RoomMediaItem> getMedia(String roomId, String mediaId) async {
     return _domains.roomMedia.getMedia(roomId, mediaId);
   }
 
@@ -1490,8 +1480,8 @@ class SyncTvService {
     return _domains.roomMedia.addMediaBatch(roomId, items);
   }
 
-  static Future<void> deleteMovie(String roomId, String movieId) async {
-    await _domains.roomMedia.deleteMovie(roomId, movieId);
+  static Future<void> deleteMedia(String roomId, String mediaId) async {
+    await _domains.roomMedia.deleteMedia(roomId, mediaId);
   }
 
   static Future<void> deleteMediaLibraryEntries(
@@ -1506,33 +1496,36 @@ class SyncTvService {
     );
   }
 
-  static Future<void> clearMovies(String roomId, {String? parentId}) async {
-    await _domains.roomMedia.clearMovies(roomId, parentId: parentId);
+  static Future<void> clearMediaLibrary(
+    String roomId, {
+    String? parentId,
+  }) async {
+    await _domains.roomMedia.clearMediaLibrary(roomId, parentId: parentId);
   }
 
-  static Future<SyncTvPlaybackStatus> switchMovie(
+  static Future<SyncTvPlaybackStatus> switchMedia(
     String roomId,
-    String movieId, {
+    String entryId, {
     String? subPath,
     String? playlistId,
   }) async {
-    return _domains.roomMedia.switchMovie(
+    return _domains.roomMedia.switchMedia(
       roomId,
-      movieId,
+      entryId,
       subPath: subPath,
       playlistId: playlistId,
     );
   }
 
-  static Future<SyncTvPlaybackStatus> switchMovieAndPlay(
+  static Future<SyncTvPlaybackStatus> switchMediaAndPlay(
     String roomId,
-    String movieId, {
+    String entryId, {
     String? subPath,
     String? playlistId,
   }) async {
-    final switched = await switchMovie(
+    final switched = await switchMedia(
       roomId,
-      movieId,
+      entryId,
       subPath: subPath,
       playlistId: playlistId,
     );
@@ -1543,9 +1536,9 @@ class SyncTvService {
       position: 0,
       speed: 1,
     );
-    return playback.movie == null && switched.movie != null
+    return playback.entry == null && switched.entry != null
         ? SyncTvPlaybackStatus(
-            movie: switched.movie,
+            entry: switched.entry,
             isPlaying: true,
             currentTime: 0,
             playbackRate: playback.playbackRate,
@@ -2058,17 +2051,10 @@ class SyncTvService {
     return _domains.admin.setAdmin(userId, isAdmin);
   }
 
-  static Future<List<AdminSettingsGroup>> adminGetAllSettings({
+  static Future<RuntimeSettingsModel> runtimeGetSettings({
     bool refresh = false,
   }) {
-    return _domains.admin.getAllSettings(refresh: refresh);
-  }
-
-  static Future<AdminSettingsGroup> adminGetSettingsGroup(
-    String group, {
-    bool refresh = false,
-  }) {
-    return _domains.admin.getSettingsGroup(group, refresh: refresh);
+    return _domains.admin.getSettings(refresh: refresh);
   }
 
   static Future<void> adminBanUser(
@@ -2250,12 +2236,12 @@ class SyncTvService {
     );
   }
 
-  static Future<AdminSettingsGroup> adminUpdateSettingInGroup(
-    String group,
+  static Future<RuntimeSettingsSection> runtimeUpdateSettingInSection(
+    String section,
     String key,
     dynamic value,
   ) {
-    return _domains.admin.updateSettingInGroup(group, key, value);
+    return _domains.admin.updateSettingInSection(section, key, value);
   }
 
   static Future<String> adminSendTestEmail(String to) {

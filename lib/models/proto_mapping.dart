@@ -66,8 +66,10 @@ client.RoomSettings roomSettingsFromJson(Map<String, dynamic> json) {
   return settings;
 }
 
-client.RoomSettingsPatch roomSettingsPatchFromJson(Map<String, dynamic> json) {
-  final patch = client.RoomSettingsPatch();
+client.UpdateRoomSettingsRequest roomSettingsPatchFromJson(
+  Map<String, dynamic> json,
+) {
+  final patch = client.UpdateRoomSettingsRequest();
   void setBool(String key, void Function(bool) set) {
     if (json.containsKey(key)) set(json[key] == true);
   }
@@ -203,22 +205,56 @@ Map<String, dynamic> notificationDataToJson(client.NotificationData data) {
   return protoMessageToJsonMap(data);
 }
 
-Map<String, dynamic> settingsGroupToJson(admin.SettingsGroup group) {
-  return switch (group.whichSettings()) {
-    admin.SettingsGroup_Settings.server => protoMessageToJsonMap(group.server),
-    admin.SettingsGroup_Settings.permissions => protoMessageToJsonMap(
-      group.permissions,
-    ),
-    admin.SettingsGroup_Settings.room => protoMessageToJsonMap(group.room),
-    admin.SettingsGroup_Settings.user => protoMessageToJsonMap(group.user),
-    admin.SettingsGroup_Settings.oauth2 => protoMessageToJsonMap(group.oauth2),
-    admin.SettingsGroup_Settings.proxy => protoMessageToJsonMap(group.proxy),
-    admin.SettingsGroup_Settings.rtmp => protoMessageToJsonMap(group.rtmp),
-    admin.SettingsGroup_Settings.email => protoMessageToJsonMap(group.email),
-    admin.SettingsGroup_Settings.webrtc => protoMessageToJsonMap(group.webrtc),
-    admin.SettingsGroup_Settings.chat => protoMessageToJsonMap(group.chat),
-    admin.SettingsGroup_Settings.cors => protoMessageToJsonMap(group.cors),
-    admin.SettingsGroup_Settings.notSet => <String, dynamic>{},
+Map<String, dynamic> runtimeSettingsSectionToJson(
+  admin.RuntimeSettings settings,
+  String section,
+) {
+  return switch (section) {
+    'roomDefaults' =>
+      settings.hasRoomDefaults()
+          ? protoMessageToJsonMap(settings.roomDefaults)
+          : <String, dynamic>{},
+    'permissions' =>
+      settings.hasPermissions()
+          ? protoMessageToJsonMap(settings.permissions)
+          : <String, dynamic>{},
+    'roomCreation' =>
+      settings.hasRoomCreation()
+          ? protoMessageToJsonMap(settings.roomCreation)
+          : <String, dynamic>{},
+    'user' =>
+      settings.hasUser()
+          ? protoMessageToJsonMap(settings.user)
+          : <String, dynamic>{},
+    'oauth2' =>
+      settings.hasOauth2()
+          ? protoMessageToJsonMap(settings.oauth2)
+          : <String, dynamic>{},
+    'proxy' =>
+      settings.hasProxy()
+          ? protoMessageToJsonMap(settings.proxy)
+          : <String, dynamic>{},
+    'rtmp' =>
+      settings.hasRtmp()
+          ? protoMessageToJsonMap(settings.rtmp)
+          : <String, dynamic>{},
+    'email' =>
+      settings.hasEmail()
+          ? protoMessageToJsonMap(settings.email)
+          : <String, dynamic>{},
+    'webrtc' =>
+      settings.hasWebrtc()
+          ? protoMessageToJsonMap(settings.webrtc)
+          : <String, dynamic>{},
+    'chat' =>
+      settings.hasChat()
+          ? protoMessageToJsonMap(settings.chat)
+          : <String, dynamic>{},
+    'cors' =>
+      settings.hasCors()
+          ? protoMessageToJsonMap(settings.cors)
+          : <String, dynamic>{},
+    _ => <String, dynamic>{},
   };
 }
 

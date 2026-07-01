@@ -31,35 +31,35 @@ class PlaybackDanmakuFetchResult {
   final List<DanmakuItem> items;
 }
 
-String playbackDanmakuSourceKey(SyncTvMovie? movie) {
-  if (movie == null) return '';
-  final target = movie.playbackTarget ?? '';
-  final mediaId = movie.playbackMediaId;
-  final playlistId = movie.playbackPlaylistId;
+String playbackDanmakuSourceKey(RoomMediaEntry? entry) {
+  if (entry == null) return '';
+  final target = entry.playbackTarget ?? '';
+  final mediaId = entry.playbackMediaId;
+  final playlistId = entry.playbackPlaylistId;
   if (mediaId.isEmpty && playlistId.isEmpty && target.isEmpty) return '';
   return [mediaId, playlistId, target].join('|');
 }
 
 Future<PlaybackDanmakuFetchResult?> fetchPlaybackDanmakuWindow({
   required String roomId,
-  required SyncTvMovie? movie,
+  required RoomMediaEntry? entry,
   required double positionSeconds,
   double beforeSeconds = 5,
   double afterSeconds = 90,
   int limit = 300,
 }) async {
-  if (movie == null) return null;
-  final sourceKey = playbackDanmakuSourceKey(movie);
+  if (entry == null) return null;
+  final sourceKey = playbackDanmakuSourceKey(entry);
   if (sourceKey.isEmpty) return null;
 
-  final target = movie.playbackTarget;
+  final target = entry.playbackTarget;
   final playbackTarget = target == null
       ? const <int>[]
       : base64Url.decode(target);
   final messages = await SyncTvService.getChatPlaybackMessages(
     roomId,
-    playbackMediaId: movie.playbackMediaId,
-    playbackPlaylistId: movie.playbackPlaylistId,
+    playbackMediaId: entry.playbackMediaId,
+    playbackPlaylistId: entry.playbackPlaylistId,
     playbackTarget: playbackTarget,
     positionSeconds: positionSeconds < 0 ? 0 : positionSeconds,
     beforeSeconds: beforeSeconds,

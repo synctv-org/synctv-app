@@ -215,10 +215,12 @@ class GetAuthorizationUrlResponse extends $pb.GeneratedMessage {
   factory GetAuthorizationUrlResponse({
     $core.String? authorizationUrl,
     $core.String? state,
+    OAuth2Operation? operation,
   }) {
     final result = create();
     if (authorizationUrl != null) result.authorizationUrl = authorizationUrl;
     if (state != null) result.state = state;
+    if (operation != null) result.operation = operation;
     return result;
   }
 
@@ -237,6 +239,8 @@ class GetAuthorizationUrlResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'authorizationUrl')
     ..aOS(2, _omitFieldNames ? '' : 'state')
+    ..aE<OAuth2Operation>(3, _omitFieldNames ? '' : 'operation',
+        enumValues: OAuth2Operation.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -283,6 +287,15 @@ class GetAuthorizationUrlResponse extends $pb.GeneratedMessage {
   $core.bool hasState() => $_has(1);
   @$pb.TagNumber(2)
   void clearState() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  OAuth2Operation get operation => $_getN(2);
+  @$pb.TagNumber(3)
+  set operation(OAuth2Operation value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasOperation() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearOperation() => $_clearField(3);
 }
 
 class GetAuthorizationUrlForBindRequest extends $pb.GeneratedMessage {
@@ -376,10 +389,12 @@ class GetAuthorizationUrlForBindResponse extends $pb.GeneratedMessage {
   factory GetAuthorizationUrlForBindResponse({
     $core.String? authorizationUrl,
     $core.String? state,
+    OAuth2Operation? operation,
   }) {
     final result = create();
     if (authorizationUrl != null) result.authorizationUrl = authorizationUrl;
     if (state != null) result.state = state;
+    if (operation != null) result.operation = operation;
     return result;
   }
 
@@ -399,6 +414,8 @@ class GetAuthorizationUrlForBindResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'authorizationUrl')
     ..aOS(2, _omitFieldNames ? '' : 'state')
+    ..aE<OAuth2Operation>(3, _omitFieldNames ? '' : 'operation',
+        enumValues: OAuth2Operation.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -443,16 +460,23 @@ class GetAuthorizationUrlForBindResponse extends $pb.GeneratedMessage {
   $core.bool hasState() => $_has(1);
   @$pb.TagNumber(2)
   void clearState() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  OAuth2Operation get operation => $_getN(2);
+  @$pb.TagNumber(3)
+  set operation(OAuth2Operation value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasOperation() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearOperation() => $_clearField(3);
 }
 
 class ExchangeAuthorizationCodeRequest extends $pb.GeneratedMessage {
   factory ExchangeAuthorizationCodeRequest({
-    $core.String? provider,
     $core.String? code,
     $core.String? state,
   }) {
     final result = create();
-    if (provider != null) result.provider = provider;
     if (code != null) result.code = code;
     if (state != null) result.state = state;
     return result;
@@ -472,9 +496,8 @@ class ExchangeAuthorizationCodeRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ExchangeAuthorizationCodeRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'provider')
-    ..aOS(2, _omitFieldNames ? '' : 'code')
-    ..aOS(3, _omitFieldNames ? '' : 'state')
+    ..aOS(1, _omitFieldNames ? '' : 'code')
+    ..aOS(2, _omitFieldNames ? '' : 'state')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -500,37 +523,28 @@ class ExchangeAuthorizationCodeRequest extends $pb.GeneratedMessage {
           create);
   static ExchangeAuthorizationCodeRequest? _defaultInstance;
 
-  /// OAuth2 provider instance name (must match the provider used in GetAuthorizationUrl)
-  @$pb.TagNumber(1)
-  $core.String get provider => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set provider($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasProvider() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearProvider() => $_clearField(1);
-
   /// Authorization code received from OAuth2 provider redirect
   /// Frontend extracts this from the callback URL query parameter
-  @$pb.TagNumber(2)
-  $core.String get code => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set code($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasCode() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearCode() => $_clearField(2);
+  @$pb.TagNumber(1)
+  $core.String get code => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set code($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCode() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCode() => $_clearField(1);
 
   /// State token received from OAuth2 provider redirect
-  /// Must match the state returned by GetAuthorizationUrl
-  @$pb.TagNumber(3)
-  $core.String get state => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set state($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasState() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearState() => $_clearField(3);
+  /// The server uses this opaque token to recover the provider instance,
+  /// redirect URL, PKCE verifier, OIDC nonce, and bind/login context.
+  @$pb.TagNumber(2)
+  $core.String get state => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set state($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasState() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearState() => $_clearField(2);
 }
 
 class ExchangeAuthorizationCodeResponse extends $pb.GeneratedMessage {
@@ -540,7 +554,7 @@ class ExchangeAuthorizationCodeResponse extends $pb.GeneratedMessage {
     $fixnum.Int64? expiresIn,
     OAuth2UserInfo? userInfo,
     $core.String? redirectUrl,
-    $core.bool? isBind,
+    OAuth2Operation? operation,
     $core.bool? registrationReviewRequired,
     $core.String? registrationReviewId,
   }) {
@@ -550,7 +564,7 @@ class ExchangeAuthorizationCodeResponse extends $pb.GeneratedMessage {
     if (expiresIn != null) result.expiresIn = expiresIn;
     if (userInfo != null) result.userInfo = userInfo;
     if (redirectUrl != null) result.redirectUrl = redirectUrl;
-    if (isBind != null) result.isBind = isBind;
+    if (operation != null) result.operation = operation;
     if (registrationReviewRequired != null)
       result.registrationReviewRequired = registrationReviewRequired;
     if (registrationReviewId != null)
@@ -578,7 +592,8 @@ class ExchangeAuthorizationCodeResponse extends $pb.GeneratedMessage {
     ..aOM<OAuth2UserInfo>(4, _omitFieldNames ? '' : 'userInfo',
         subBuilder: OAuth2UserInfo.create)
     ..aOS(5, _omitFieldNames ? '' : 'redirectUrl')
-    ..aOB(6, _omitFieldNames ? '' : 'isBind')
+    ..aE<OAuth2Operation>(6, _omitFieldNames ? '' : 'operation',
+        enumValues: OAuth2Operation.values)
     ..aOB(7, _omitFieldNames ? '' : 'registrationReviewRequired')
     ..aOS(8, _omitFieldNames ? '' : 'registrationReviewId')
     ..hasRequiredFields = false;
@@ -660,15 +675,14 @@ class ExchangeAuthorizationCodeResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearRedirectUrl() => $_clearField(5);
 
-  /// Whether this was a bind operation (true) or login operation (false)
   @$pb.TagNumber(6)
-  $core.bool get isBind => $_getBF(5);
+  OAuth2Operation get operation => $_getN(5);
   @$pb.TagNumber(6)
-  set isBind($core.bool value) => $_setBool(5, value);
+  set operation(OAuth2Operation value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasIsBind() => $_has(5);
+  $core.bool hasOperation() => $_has(5);
   @$pb.TagNumber(6)
-  void clearIsBind() => $_clearField(6);
+  void clearOperation() => $_clearField(6);
 
   /// True when a first-time OAuth2 signup was accepted but requires admin review.
   @$pb.TagNumber(7)

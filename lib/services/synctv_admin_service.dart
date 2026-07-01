@@ -26,7 +26,6 @@ class SyncTvAdminDomainService {
 
   final SyncTvApiClient _api;
   final SyncTvMemoryCache _cache;
-  final Map<String, Map<String, dynamic>> _settingsCache = {};
 
   Future<AdminUsersPage> listUsersPage({
     int page = 1,
@@ -180,49 +179,20 @@ class SyncTvAdminDomainService {
     );
   }
 
-  Future<List<AdminSettingsGroup>> getAllSettings({
-    bool refresh = false,
-  }) async {
-    return _cache.get<List<AdminSettingsGroup>>(
-      'admin:settings:all',
+  Future<RuntimeSettingsModel> getSettings({bool refresh = false}) async {
+    return _cache.get<RuntimeSettingsModel>(
+      'admin:settings',
       ttl: const Duration(minutes: 2),
       refresh: refresh,
-      loader: _fetchAllSettings,
+      loader: _fetchSettings,
     );
   }
 
-  Future<List<AdminSettingsGroup>> _fetchAllSettings() async {
+  Future<RuntimeSettingsModel> _fetchSettings() async {
     final response = await _api.adminService.getSettings(
       admin.GetSettingsRequest(),
     );
-    final groups = response.groups.map(_settingsGroupFromProto).toList();
-    for (final group in groups) {
-      _settingsCache[group.name] = Map<String, dynamic>.from(group.settings);
-    }
-    return groups;
-  }
-
-  Future<AdminSettingsGroup> getSettingsGroup(
-    String group, {
-    bool refresh = false,
-  }) async {
-    return _cache.get<AdminSettingsGroup>(
-      'admin:settings:group:$group',
-      ttl: const Duration(minutes: 2),
-      refresh: refresh,
-      loader: () => _fetchSettingsGroup(group),
-    );
-  }
-
-  Future<AdminSettingsGroup> _fetchSettingsGroup(String group) async {
-    final response = await _api.adminService.getSettingsGroup(
-      admin.GetSettingsGroupRequest(group: group),
-    );
-    final settingsGroup = _settingsGroupFromProto(response.group);
-    _settingsCache[settingsGroup.name] = Map<String, dynamic>.from(
-      settingsGroup.settings,
-    );
-    return settingsGroup;
+    return _settingsModelFromProto(response);
   }
 
   Future<void> banUser(String userId, bool ban, {String reason = ''}) async {
@@ -367,10 +337,14 @@ class SyncTvAdminDomainService {
     SyncTvRoomSettings settings,
   ) async {
     await _api.adminService.updateRoomSettings(
-      admin.UpdateRoomSettingsRequest(
-        roomId: roomId,
-        settings: roomSettingsPatchFromJson(settings.toJson()),
-      ),
+      admin.UpdateRoomSettingsRequest()
+        ..roomId = roomId
+        ..mergeFromProto3Json(
+          roomSettingsPatchFromJson(settings.toJson()).toProto3Json(),
+          supportNamesWithUnderscores: false,
+          permissiveEnums: true,
+          ignoreUnknownFields: true,
+        ),
     );
     _cache.put(
       'admin:room:$roomId:settings',
@@ -511,36 +485,28 @@ class SyncTvAdminDomainService {
     return _api.mapAdminRoom(response.room);
   }
 
-  Future<AdminSettingsGroup> updateSettingInGroup(
-    String group,
+  Future<RuntimeSettingsSection> updateSettingInSection(
+    String section,
     String key,
     dynamic value,
   ) async {
-    await _ensureSettingsGroupCache(group);
     final response = await _api.adminService.updateSettings(
-      _settingsUpdateRequest(group, key, value),
+      _settingsUpdateRequest(section, key, value),
     );
-    final updated = _settingsGroupFromProto(response.group);
-    _settingsCache[updated.name] = Map<String, dynamic>.from(updated.settings);
-    _cache.put(
-      'admin:settings:group:${updated.name}',
-      updated,
-      ttl: const Duration(minutes: 2),
-    );
-    _cache.invalidate('admin:settings:all');
-    if (updated.name == 'user' ||
-        updated.name == 'room' ||
-        updated.name == 'proxy' ||
-        updated.name == 'rtmp' ||
-        updated.name == 'email') {
+    final updatedModel = _settingsModelFromProto(response);
+    _cache.put('admin:settings', updatedModel, ttl: const Duration(minutes: 2));
+    final updated =
+        updatedModel.section(section) ??
+        RuntimeSettingsSection(name: section, settings: const {});
+    if (section == 'user' ||
+        section == 'roomDefaults' ||
+        section == 'roomCreation' ||
+        section == 'proxy' ||
+        section == 'rtmp' ||
+        section == 'email') {
       _cache.invalidate('public:settings');
     }
     return updated;
-  }
-
-  Future<void> _ensureSettingsGroupCache(String group) async {
-    if (_settingsCache[group]?.isNotEmpty == true) return;
-    await _fetchSettingsGroup(group);
   }
 
   Future<String> sendTestEmail(String to) async {
@@ -1271,82 +1237,142 @@ class SyncTvAdminDomainService {
   }
 
   admin.UpdateSettingsRequest _settingsUpdateRequest(
-    String group,
+    String sectionName,
     String key,
     dynamic value,
   ) {
-    final current = Map<String, dynamic>.from(_settingsCache[group] ?? {});
-    current[key] = value;
-    final request = admin.UpdateSettingsRequest(group: group);
-    void merge(admin.SettingsGroup_Settings kind, pb.GeneratedMessage message) {
+    final patch = admin.UpdateSettingsRequest();
+
+    T patchSection<T extends pb.GeneratedMessage>(
+      T message,
+      Map<String, dynamic> data,
+    ) {
       message.mergeFromProto3Json(
-        current,
+        data,
         supportNamesWithUnderscores: false,
         permissiveEnums: true,
         ignoreUnknownFields: true,
       );
-      switch (kind) {
-        case admin.SettingsGroup_Settings.server:
-          request.server = message as admin.ServerSettings;
-        case admin.SettingsGroup_Settings.permissions:
-          request.permissions = message as admin.PermissionSettings;
-        case admin.SettingsGroup_Settings.room:
-          request.room = message as admin.RoomPolicySettings;
-        case admin.SettingsGroup_Settings.user:
-          request.user = message as admin.UserSettings;
-        case admin.SettingsGroup_Settings.oauth2:
-          request.oauth2 = message as admin.OAuth2Settings;
-        case admin.SettingsGroup_Settings.proxy:
-          request.proxy = message as admin.ProxySettings;
-        case admin.SettingsGroup_Settings.rtmp:
-          request.rtmp = message as admin.RtmpSettings;
-        case admin.SettingsGroup_Settings.email:
-          request.email = message as admin.EmailSettings;
-        case admin.SettingsGroup_Settings.webrtc:
-          request.webrtc = message as admin.WebRtcSettings;
-        case admin.SettingsGroup_Settings.chat:
-          request.chat = message as admin.ChatSettings;
-        case admin.SettingsGroup_Settings.cors:
-          request.cors = message as admin.CorsSettings;
-        case admin.SettingsGroup_Settings.notSet:
-          break;
-      }
+      return message;
     }
 
-    switch (group) {
-      case 'server':
-        merge(admin.SettingsGroup_Settings.server, admin.ServerSettings());
+    switch (sectionName) {
+      case 'roomDefaults':
+        patch.roomDefaults = patchSection(admin.RoomDefaultsSettingsPatch(), {
+          key: value,
+        });
+        break;
       case 'permissions':
-        merge(
-          admin.SettingsGroup_Settings.permissions,
-          admin.PermissionSettings(),
-        );
-      case 'room':
-        merge(admin.SettingsGroup_Settings.room, admin.RoomPolicySettings());
+        patch.permissions = patchSection(admin.PermissionSettingsPatch(), {
+          key: value,
+        });
+        break;
+      case 'roomCreation':
+        patch.roomCreation = patchSection(admin.RoomCreationSettingsPatch(), {
+          key: value,
+        });
+        break;
       case 'user':
-        merge(admin.SettingsGroup_Settings.user, admin.UserSettings());
+        patch.user = patchSection(admin.UserSettingsPatch(), {key: value});
+        break;
       case 'oauth2':
-        merge(admin.SettingsGroup_Settings.oauth2, admin.OAuth2Settings());
+        if (key != 'providers') {
+          throw ArgumentError.value(key, 'key', 'unsupported oauth2 setting');
+        }
+        final providers = admin.OAuth2ProviderList();
+        providers.mergeFromProto3Json(
+          {'providers': value},
+          supportNamesWithUnderscores: false,
+          permissiveEnums: true,
+          ignoreUnknownFields: true,
+        );
+        patch.oauth2 = admin.OAuth2SettingsPatch(providers: providers);
+        break;
       case 'proxy':
-        merge(admin.SettingsGroup_Settings.proxy, admin.ProxySettings());
+        patch.proxy = patchSection(admin.ProxySettingsPatch(), {key: value});
+        break;
       case 'rtmp':
-        merge(admin.SettingsGroup_Settings.rtmp, admin.RtmpSettings());
+        patch.rtmp = patchSection(admin.RtmpSettingsPatch(), {key: value});
+        break;
       case 'email':
-        merge(admin.SettingsGroup_Settings.email, admin.EmailSettings());
+        if (key == 'whitelistDomains') {
+          patch.email = admin.EmailSettingsPatch(
+            whitelistDomains: admin.StringList(values: _stringListValue(value)),
+          );
+        } else {
+          patch.email = patchSection(admin.EmailSettingsPatch(), {key: value});
+        }
+        break;
       case 'webrtc':
-        merge(admin.SettingsGroup_Settings.webrtc, admin.WebRtcSettings());
+        if (key != 'externalIceServers') {
+          throw ArgumentError.value(key, 'key', 'unsupported webrtc setting');
+        }
+        final servers = admin.IceServerList();
+        servers.mergeFromProto3Json(
+          {'values': value},
+          supportNamesWithUnderscores: false,
+          permissiveEnums: true,
+          ignoreUnknownFields: true,
+        );
+        patch.webrtc = admin.WebRtcSettingsPatch(externalIceServers: servers);
+        break;
       case 'chat':
-        merge(admin.SettingsGroup_Settings.chat, admin.ChatSettings());
+        patch.chat = patchSection(admin.ChatSettingsPatch(), {key: value});
+        break;
       case 'cors':
-        merge(admin.SettingsGroup_Settings.cors, admin.CorsSettings());
+        if (key != 'allowedOrigins') {
+          throw ArgumentError.value(key, 'key', 'unsupported cors setting');
+        }
+        patch.cors = admin.CorsSettingsPatch(
+          allowedOrigins: admin.StringList(values: _stringListValue(value)),
+        );
+        break;
+      default:
+        throw ArgumentError.value(sectionName, 'sectionName');
     }
-    return request;
+
+    return patch;
   }
 
-  AdminSettingsGroup _settingsGroupFromProto(admin.SettingsGroup group) {
-    return AdminSettingsGroup(
-      name: group.name,
-      settings: settingsGroupToJson(group),
+  List<String> _stringListValue(dynamic value) {
+    if (value is Iterable) {
+      return value
+          .map((item) => item.toString())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+    if (value is String) {
+      return value
+          .split(RegExp(r'[\n,]'))
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+    return const [];
+  }
+
+  RuntimeSettingsModel _settingsModelFromProto(admin.RuntimeSettings settings) {
+    const names = [
+      'roomDefaults',
+      'permissions',
+      'roomCreation',
+      'user',
+      'oauth2',
+      'proxy',
+      'rtmp',
+      'email',
+      'webrtc',
+      'chat',
+      'cors',
+    ];
+    return RuntimeSettingsModel(
+      sections: [
+        for (final name in names)
+          RuntimeSettingsSection(
+            name: name,
+            settings: runtimeSettingsSectionToJson(settings, name),
+          ),
+      ],
     );
   }
 

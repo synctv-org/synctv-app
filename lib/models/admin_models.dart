@@ -58,11 +58,40 @@ class AdminSystemStats {
   });
 }
 
-class AdminSettingsGroup {
+class RuntimeSettingsSection {
   final String name;
   final Map<String, dynamic> settings;
 
-  const AdminSettingsGroup({required this.name, required this.settings});
+  const RuntimeSettingsSection({required this.name, required this.settings});
+
+  RuntimeSettingsSection copyWith({Map<String, dynamic>? settings}) {
+    return RuntimeSettingsSection(
+      name: name,
+      settings: settings ?? this.settings,
+    );
+  }
+}
+
+class RuntimeSettingsModel {
+  final List<RuntimeSettingsSection> sections;
+
+  const RuntimeSettingsModel({required this.sections});
+
+  RuntimeSettingsSection? section(String name) {
+    for (final section in sections) {
+      if (section.name == name) return section;
+    }
+    return null;
+  }
+
+  RuntimeSettingsModel replaceSection(RuntimeSettingsSection next) {
+    return RuntimeSettingsModel(
+      sections: [
+        for (final section in sections)
+          section.name == next.name ? next : section,
+      ],
+    );
+  }
 }
 
 class AdminActiveStream {

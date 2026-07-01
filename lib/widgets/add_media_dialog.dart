@@ -12,18 +12,18 @@ import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'platform_binding_dialog.dart';
 
-class AddMovieDialog extends StatefulWidget {
+class AddMediaDialog extends StatefulWidget {
   final String roomId;
   final String? parentId;
 
-  const AddMovieDialog({super.key, required this.roomId, this.parentId});
+  const AddMediaDialog({super.key, required this.roomId, this.parentId});
 
   static Future<void> show(
     BuildContext context,
     String roomId, {
     String? parentId,
   }) {
-    final dialogKey = GlobalKey<_AddMovieDialogState>();
+    final dialogKey = GlobalKey<_AddMediaDialogState>();
     return showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -34,11 +34,11 @@ class AddMovieDialog extends StatefulWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _AddMovieDialogHeader(
+              _AddMediaDialogHeader(
                 onClose: () => dialogKey.currentState?._requestClose(),
               ),
               Flexible(
-                child: AddMovieDialog(
+                child: AddMediaDialog(
                   key: dialogKey,
                   roomId: roomId,
                   parentId: parentId,
@@ -52,11 +52,11 @@ class AddMovieDialog extends StatefulWidget {
   }
 
   @override
-  State<AddMovieDialog> createState() => _AddMovieDialogState();
+  State<AddMediaDialog> createState() => _AddMediaDialogState();
 }
 
-class _AddMovieDialogHeader extends StatelessWidget {
-  const _AddMovieDialogHeader({required this.onClose});
+class _AddMediaDialogHeader extends StatelessWidget {
+  const _AddMediaDialogHeader({required this.onClose});
 
   final VoidCallback onClose;
 
@@ -86,7 +86,7 @@ class _AddMovieDialogHeader extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '添加影片',
+              '添加媒体',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -103,8 +103,8 @@ class _AddMovieDialogHeader extends StatelessWidget {
   }
 }
 
-class _MovieSourceSpec {
-  const _MovieSourceSpec({
+class _MediaSourceSpec {
+  const _MediaSourceSpec({
     required this.index,
     required this.title,
     required this.subtitle,
@@ -135,7 +135,7 @@ class _DirectHeaderDraft {
   }
 }
 
-class _AddMovieDialogState extends State<AddMovieDialog> {
+class _AddMediaDialogState extends State<AddMediaDialog> {
   int _selectedIndex = 0;
 
   final _urlController = TextEditingController();
@@ -310,43 +310,43 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
     }
   }
 
-  List<_MovieSourceSpec> get _sourceSpecs => [
-    const _MovieSourceSpec(
+  List<_MediaSourceSpec> get _sourceSpecs => [
+    const _MediaSourceSpec(
       index: 0,
       title: '直链',
       subtitle: 'HTTP / HTTPS / HLS',
       icon: Icons.link_rounded,
       color: Color(0xFF5D5FEF),
     ),
-    _MovieSourceSpec(
+    _MediaSourceSpec(
       index: 1,
       title: 'RTMP 推流',
       subtitle: '生成推流地址',
       icon: Icons.upload_rounded,
       color: Colors.deepOrange.shade600,
     ),
-    _MovieSourceSpec(
+    _MediaSourceSpec(
       index: 2,
       title: '直播拉流',
       subtitle: 'RTMP / HTTP-FLV',
       icon: Icons.sensors_rounded,
       color: Colors.teal.shade600,
     ),
-    const _MovieSourceSpec(
+    const _MediaSourceSpec(
       index: 3,
       title: 'Bilibili',
       subtitle: 'BV / 链接解析',
       icon: Icons.tv_rounded,
       color: Color(0xFFFB7299),
     ),
-    _MovieSourceSpec(
+    _MediaSourceSpec(
       index: 4,
       title: 'AList 网盘',
       subtitle: '挂载目录资源',
       icon: Icons.cloud_circle_rounded,
       color: Colors.amber.shade700,
     ),
-    _MovieSourceSpec(
+    _MediaSourceSpec(
       index: 5,
       title: 'Emby 媒体库',
       subtitle: '个人媒体服务器',
@@ -440,7 +440,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
 
   Widget _buildSourceTile(
     ThemeData theme,
-    _MovieSourceSpec spec, {
+    _MediaSourceSpec spec, {
     bool compact = false,
   }) {
     final selected = _selectedIndex == spec.index;
@@ -1839,7 +1839,7 @@ class _AddMovieDialogState extends State<AddMovieDialog> {
       ),
       iconColor: Theme.of(context).colorScheme.error,
       content: Text(
-        '已填写的影片链接、直播源、名称或请求头会被清空。',
+        '已填写的媒体链接、直播源、名称或请求头会被清空。',
         style: Theme.of(context).textTheme.bodyMedium,
       ),
       actions: [

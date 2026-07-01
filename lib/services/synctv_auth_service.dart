@@ -399,20 +399,16 @@ class SyncTvAuthDomainService {
       provider: provider,
       authorizationUrl: response.authorizationUrl,
       state: response.state,
+      operation: response.operation,
     );
   }
 
   Future<AuthResult> finishOAuth2Login({
-    required String provider,
     required String code,
     required String state,
   }) async {
     final response = await _api.oauth2Service.exchangeAuthorizationCode(
-      oauth2.ExchangeAuthorizationCodeRequest(
-        provider: provider,
-        code: code,
-        state: state,
-      ),
+      oauth2.ExchangeAuthorizationCodeRequest(code: code, state: state),
     );
     await _sessionStore.persistTokens();
     if (response.registrationReviewRequired) {
@@ -421,7 +417,7 @@ class SyncTvAuthDomainService {
         registrationReviewId: response.registrationReviewId,
         redirectUrl: response.redirectUrl,
         expiresIn: response.expiresIn.toInt(),
-        oauth2Bind: response.isBind,
+        oauth2Operation: response.operation,
       );
     }
     return AuthResult(
@@ -435,7 +431,7 @@ class SyncTvAuthDomainService {
       ),
       redirectUrl: response.redirectUrl,
       expiresIn: response.expiresIn.toInt(),
-      oauth2Bind: response.isBind,
+      oauth2Operation: response.operation,
     );
   }
 
@@ -473,20 +469,16 @@ class SyncTvAuthDomainService {
       provider: provider,
       authorizationUrl: response.authorizationUrl,
       state: response.state,
+      operation: response.operation,
     );
   }
 
   Future<void> finishOAuth2Bind({
-    required String provider,
     required String code,
     required String state,
   }) async {
     await _api.oauth2Service.exchangeAuthorizationCode(
-      oauth2.ExchangeAuthorizationCodeRequest(
-        provider: provider,
-        code: code,
-        state: state,
-      ),
+      oauth2.ExchangeAuthorizationCodeRequest(code: code, state: state),
     );
     await _sessionStore.persistTokens();
   }

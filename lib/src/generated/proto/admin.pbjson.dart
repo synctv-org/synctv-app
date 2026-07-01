@@ -260,9 +260,9 @@ final $typed_data.Uint8List adminUserDescriptor = $convert.base64Decode(
     'JsEjwKCHByZXNlbmNlGA0gASgLMiAuc3luY3R2LmNvbW1vbi5Vc2VyUHJlc2VuY2VTdGF0c1II'
     'cHJlc2VuY2U=');
 
-@$core.Deprecated('Use adminRoomDescriptor instead')
-const AdminRoom$json = {
-  '1': 'AdminRoom',
+@$core.Deprecated('Use roomDescriptor instead')
+const Room$json = {
+  '1': 'Room',
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
@@ -340,183 +340,172 @@ const AdminRoom$json = {
   ],
 };
 
-/// Descriptor for `AdminRoom`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List adminRoomDescriptor = $convert.base64Decode(
-    'CglBZG1pblJvb20SDgoCaWQYASABKAlSAmlkEhIKBG5hbWUYAiABKAlSBG5hbWUSHQoKY3JlYX'
-    'Rvcl9pZBgDIAEoCVIJY3JlYXRvcklkEikKEGNyZWF0b3JfdXNlcm5hbWUYBCABKAlSD2NyZWF0'
-    'b3JVc2VybmFtZRIxCgZzdGF0dXMYBSABKA4yGS5zeW5jdHYuY29tbW9uLlJvb21TdGF0dXNSBn'
-    'N0YXR1cxI3CghzZXR0aW5ncxgGIAEoCzIbLnN5bmN0di5jbGllbnQuUm9vbVNldHRpbmdzUghz'
-    'ZXR0aW5ncxIhCgxtZW1iZXJfY291bnQYByABKAVSC21lbWJlckNvdW50Eh0KCmNyZWF0ZWRfYX'
-    'QYCCABKANSCWNyZWF0ZWRBdBIdCgp1cGRhdGVkX2F0GAkgASgDUgl1cGRhdGVkQXQSIAoLZGVz'
-    'Y3JpcHRpb24YCiABKAlSC2Rlc2NyaXB0aW9uEhsKCWlzX2Jhbm5lZBgLIAEoCFIIaXNCYW5uZW'
-    'QSQAoOY3JlYXRvcl9zdGF0dXMYDCABKA4yGS5zeW5jdHYuY29tbW9uLlVzZXJTdGF0dXNSDWNy'
-    'ZWF0b3JTdGF0dXMSGAoHdmVyc2lvbhgNIAEoA1IHdmVyc2lvbhI8CghwcmVzZW5jZRgOIAEoCz'
-    'IgLnN5bmN0di5jb21tb24uUm9vbVByZXNlbmNlU3RhdHNSCHByZXNlbmNlEiwKEmNyZWF0b3Jf'
-    'YXZhdGFyX3VybBgPIAEoCVIQY3JlYXRvckF2YXRhclVybBIyCgVjb3ZlchgQIAEoCzIcLnN5bm'
-    'N0di5jbGllbnQuUmVzb3VyY2VDb3ZlclIFY292ZXISNwoIY2F0ZWdvcnkYESABKAsyGy5zeW5j'
-    'dHYuY2xpZW50LlJvb21DYXRlZ29yeVIIY2F0ZWdvcnkSMAoGbGFiZWxzGBIgAygLMhguc3luY3'
-    'R2LmNsaWVudC5Sb29tTGFiZWxSBmxhYmVscw==');
+/// Descriptor for `Room`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List roomDescriptor = $convert.base64Decode(
+    'CgRSb29tEg4KAmlkGAEgASgJUgJpZBISCgRuYW1lGAIgASgJUgRuYW1lEh0KCmNyZWF0b3JfaW'
+    'QYAyABKAlSCWNyZWF0b3JJZBIpChBjcmVhdG9yX3VzZXJuYW1lGAQgASgJUg9jcmVhdG9yVXNl'
+    'cm5hbWUSMQoGc3RhdHVzGAUgASgOMhkuc3luY3R2LmNvbW1vbi5Sb29tU3RhdHVzUgZzdGF0dX'
+    'MSNwoIc2V0dGluZ3MYBiABKAsyGy5zeW5jdHYuY2xpZW50LlJvb21TZXR0aW5nc1IIc2V0dGlu'
+    'Z3MSIQoMbWVtYmVyX2NvdW50GAcgASgFUgttZW1iZXJDb3VudBIdCgpjcmVhdGVkX2F0GAggAS'
+    'gDUgljcmVhdGVkQXQSHQoKdXBkYXRlZF9hdBgJIAEoA1IJdXBkYXRlZEF0EiAKC2Rlc2NyaXB0'
+    'aW9uGAogASgJUgtkZXNjcmlwdGlvbhIbCglpc19iYW5uZWQYCyABKAhSCGlzQmFubmVkEkAKDm'
+    'NyZWF0b3Jfc3RhdHVzGAwgASgOMhkuc3luY3R2LmNvbW1vbi5Vc2VyU3RhdHVzUg1jcmVhdG9y'
+    'U3RhdHVzEhgKB3ZlcnNpb24YDSABKANSB3ZlcnNpb24SPAoIcHJlc2VuY2UYDiABKAsyIC5zeW'
+    '5jdHYuY29tbW9uLlJvb21QcmVzZW5jZVN0YXRzUghwcmVzZW5jZRIsChJjcmVhdG9yX2F2YXRh'
+    'cl91cmwYDyABKAlSEGNyZWF0b3JBdmF0YXJVcmwSMgoFY292ZXIYECABKAsyHC5zeW5jdHYuY2'
+    'xpZW50LlJlc291cmNlQ292ZXJSBWNvdmVyEjcKCGNhdGVnb3J5GBEgASgLMhsuc3luY3R2LmNs'
+    'aWVudC5Sb29tQ2F0ZWdvcnlSCGNhdGVnb3J5EjAKBmxhYmVscxgSIAMoCzIYLnN5bmN0di5jbG'
+    'llbnQuUm9vbUxhYmVsUgZsYWJlbHM=');
 
-@$core.Deprecated('Use settingsGroupDescriptor instead')
-const SettingsGroup$json = {
-  '1': 'SettingsGroup',
+@$core.Deprecated('Use runtimeSettingsDescriptor instead')
+const RuntimeSettings$json = {
+  '1': 'RuntimeSettings',
   '2': [
-    {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
     {
-      '1': 'server',
-      '3': 2,
+      '1': 'room_defaults',
+      '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.ServerSettings',
-      '9': 0,
-      '10': 'server'
+      '6': '.synctv.admin.RoomDefaultsSettings',
+      '8': {},
+      '10': 'roomDefaults'
     },
     {
       '1': 'permissions',
-      '3': 3,
+      '3': 2,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.PermissionSettings',
-      '9': 0,
+      '8': {},
       '10': 'permissions'
     },
     {
-      '1': 'room',
-      '3': 4,
+      '1': 'room_creation',
+      '3': 3,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.RoomPolicySettings',
-      '9': 0,
-      '10': 'room'
+      '6': '.synctv.admin.RoomCreationSettings',
+      '8': {},
+      '10': 'roomCreation'
     },
     {
       '1': 'user',
-      '3': 5,
+      '3': 4,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.UserSettings',
-      '9': 0,
+      '8': {},
       '10': 'user'
     },
     {
       '1': 'oauth2',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.OAuth2Settings',
-      '9': 0,
+      '8': {},
       '10': 'oauth2'
     },
     {
       '1': 'proxy',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.ProxySettings',
-      '9': 0,
+      '8': {},
       '10': 'proxy'
     },
     {
       '1': 'rtmp',
-      '3': 8,
+      '3': 7,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.RtmpSettings',
-      '9': 0,
+      '8': {},
       '10': 'rtmp'
     },
     {
       '1': 'email',
-      '3': 9,
+      '3': 8,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.EmailSettings',
-      '9': 0,
+      '8': {},
       '10': 'email'
     },
     {
       '1': 'webrtc',
-      '3': 10,
+      '3': 9,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.WebRtcSettings',
-      '9': 0,
+      '8': {},
       '10': 'webrtc'
     },
     {
       '1': 'chat',
-      '3': 11,
+      '3': 10,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.ChatSettings',
-      '9': 0,
+      '8': {},
       '10': 'chat'
     },
     {
       '1': 'cors',
-      '3': 12,
+      '3': 11,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.CorsSettings',
-      '9': 0,
+      '8': {},
       '10': 'cors'
     },
   ],
-  '8': [
-    {'1': 'settings'},
-  ],
 };
 
-/// Descriptor for `SettingsGroup`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List settingsGroupDescriptor = $convert.base64Decode(
-    'Cg1TZXR0aW5nc0dyb3VwEhIKBG5hbWUYASABKAlSBG5hbWUSNgoGc2VydmVyGAIgASgLMhwuc3'
-    'luY3R2LmFkbWluLlNlcnZlclNldHRpbmdzSABSBnNlcnZlchJECgtwZXJtaXNzaW9ucxgDIAEo'
-    'CzIgLnN5bmN0di5hZG1pbi5QZXJtaXNzaW9uU2V0dGluZ3NIAFILcGVybWlzc2lvbnMSNgoEcm'
-    '9vbRgEIAEoCzIgLnN5bmN0di5hZG1pbi5Sb29tUG9saWN5U2V0dGluZ3NIAFIEcm9vbRIwCgR1'
-    'c2VyGAUgASgLMhouc3luY3R2LmFkbWluLlVzZXJTZXR0aW5nc0gAUgR1c2VyEjYKBm9hdXRoMh'
-    'gGIAEoCzIcLnN5bmN0di5hZG1pbi5PQXV0aDJTZXR0aW5nc0gAUgZvYXV0aDISMwoFcHJveHkY'
-    'ByABKAsyGy5zeW5jdHYuYWRtaW4uUHJveHlTZXR0aW5nc0gAUgVwcm94eRIwCgRydG1wGAggAS'
-    'gLMhouc3luY3R2LmFkbWluLlJ0bXBTZXR0aW5nc0gAUgRydG1wEjMKBWVtYWlsGAkgASgLMhsu'
-    'c3luY3R2LmFkbWluLkVtYWlsU2V0dGluZ3NIAFIFZW1haWwSNgoGd2VicnRjGAogASgLMhwuc3'
-    'luY3R2LmFkbWluLldlYlJ0Y1NldHRpbmdzSABSBndlYnJ0YxIwCgRjaGF0GAsgASgLMhouc3lu'
-    'Y3R2LmFkbWluLkNoYXRTZXR0aW5nc0gAUgRjaGF0EjAKBGNvcnMYDCABKAsyGi5zeW5jdHYuYW'
-    'RtaW4uQ29yc1NldHRpbmdzSABSBGNvcnNCCgoIc2V0dGluZ3M=');
+/// Descriptor for `RuntimeSettings`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List runtimeSettingsDescriptor = $convert.base64Decode(
+    'Cg9SdW50aW1lU2V0dGluZ3MSTwoNcm9vbV9kZWZhdWx0cxgBIAEoCzIiLnN5bmN0di5hZG1pbi'
+    '5Sb29tRGVmYXVsdHNTZXR0aW5nc0IGukgDyAEBUgxyb29tRGVmYXVsdHMSSgoLcGVybWlzc2lv'
+    'bnMYAiABKAsyIC5zeW5jdHYuYWRtaW4uUGVybWlzc2lvblNldHRpbmdzQga6SAPIAQFSC3Blcm'
+    '1pc3Npb25zEk8KDXJvb21fY3JlYXRpb24YAyABKAsyIi5zeW5jdHYuYWRtaW4uUm9vbUNyZWF0'
+    'aW9uU2V0dGluZ3NCBrpIA8gBAVIMcm9vbUNyZWF0aW9uEjYKBHVzZXIYBCABKAsyGi5zeW5jdH'
+    'YuYWRtaW4uVXNlclNldHRpbmdzQga6SAPIAQFSBHVzZXISPAoGb2F1dGgyGAUgASgLMhwuc3lu'
+    'Y3R2LmFkbWluLk9BdXRoMlNldHRpbmdzQga6SAPIAQFSBm9hdXRoMhI5CgVwcm94eRgGIAEoCz'
+    'IbLnN5bmN0di5hZG1pbi5Qcm94eVNldHRpbmdzQga6SAPIAQFSBXByb3h5EjYKBHJ0bXAYByAB'
+    'KAsyGi5zeW5jdHYuYWRtaW4uUnRtcFNldHRpbmdzQga6SAPIAQFSBHJ0bXASOQoFZW1haWwYCC'
+    'ABKAsyGy5zeW5jdHYuYWRtaW4uRW1haWxTZXR0aW5nc0IGukgDyAEBUgVlbWFpbBI8CgZ3ZWJy'
+    'dGMYCSABKAsyHC5zeW5jdHYuYWRtaW4uV2ViUnRjU2V0dGluZ3NCBrpIA8gBAVIGd2VicnRjEj'
+    'YKBGNoYXQYCiABKAsyGi5zeW5jdHYuYWRtaW4uQ2hhdFNldHRpbmdzQga6SAPIAQFSBGNoYXQS'
+    'NgoEY29ycxgLIAEoCzIaLnN5bmN0di5hZG1pbi5Db3JzU2V0dGluZ3NCBrpIA8gBAVIEY29ycw'
+    '==');
 
-@$core.Deprecated('Use serverSettingsDescriptor instead')
-const ServerSettings$json = {
-  '1': 'ServerSettings',
+@$core.Deprecated('Use roomDefaultsSettingsDescriptor instead')
+const RoomDefaultsSettings$json = {
+  '1': 'RoomDefaultsSettings',
   '2': [
     {
-      '1': 'allow_room_creation',
+      '1': 'default_max_members',
       '3': 1,
       '4': 1,
-      '5': 8,
-      '10': 'allowRoomCreation'
+      '5': 3,
+      '10': 'defaultMaxMembers'
     },
     {
-      '1': 'max_rooms_per_user',
+      '1': 'default_max_chat_messages',
       '3': 2,
       '4': 1,
-      '5': 3,
-      '10': 'maxRoomsPerUser'
+      '5': 4,
+      '10': 'defaultMaxChatMessages'
     },
-    {
-      '1': 'max_members_per_room',
-      '3': 3,
-      '4': 1,
-      '5': 3,
-      '10': 'maxMembersPerRoom'
-    },
-    {'1': 'max_chat_messages', '3': 4, '4': 1, '5': 4, '10': 'maxChatMessages'},
   ],
 };
 
-/// Descriptor for `ServerSettings`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List serverSettingsDescriptor = $convert.base64Decode(
-    'Cg5TZXJ2ZXJTZXR0aW5ncxIuChNhbGxvd19yb29tX2NyZWF0aW9uGAEgASgIUhFhbGxvd1Jvb2'
-    '1DcmVhdGlvbhIrChJtYXhfcm9vbXNfcGVyX3VzZXIYAiABKANSD21heFJvb21zUGVyVXNlchIv'
-    'ChRtYXhfbWVtYmVyc19wZXJfcm9vbRgDIAEoA1IRbWF4TWVtYmVyc1BlclJvb20SKgoRbWF4X2'
-    'NoYXRfbWVzc2FnZXMYBCABKARSD21heENoYXRNZXNzYWdlcw==');
+/// Descriptor for `RoomDefaultsSettings`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List roomDefaultsSettingsDescriptor = $convert.base64Decode(
+    'ChRSb29tRGVmYXVsdHNTZXR0aW5ncxIuChNkZWZhdWx0X21heF9tZW1iZXJzGAEgASgDUhFkZW'
+    'ZhdWx0TWF4TWVtYmVycxI5ChlkZWZhdWx0X21heF9jaGF0X21lc3NhZ2VzGAIgASgEUhZkZWZh'
+    'dWx0TWF4Q2hhdE1lc3NhZ2Vz');
 
 @$core.Deprecated('Use permissionSettingsDescriptor instead')
 const PermissionSettings$json = {
@@ -553,23 +542,17 @@ final $typed_data.Uint8List permissionSettingsDescriptor = $convert.base64Decode
     'AiABKARSGG1lbWJlckRlZmF1bHRQZXJtaXNzaW9ucxI6ChlndWVzdF9kZWZhdWx0X3Blcm1pc3'
     'Npb25zGAMgASgEUhdndWVzdERlZmF1bHRQZXJtaXNzaW9ucw==');
 
-@$core.Deprecated('Use roomPolicySettingsDescriptor instead')
-const RoomPolicySettings$json = {
-  '1': 'RoomPolicySettings',
+@$core.Deprecated('Use roomCreationSettingsDescriptor instead')
+const RoomCreationSettings$json = {
+  '1': 'RoomCreationSettings',
   '2': [
+    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
     {
-      '1': 'disable_create_room',
-      '3': 1,
-      '4': 1,
-      '5': 8,
-      '10': 'disableCreateRoom'
-    },
-    {
-      '1': 'create_room_need_review',
+      '1': 'approval_required',
       '3': 2,
       '4': 1,
       '5': 8,
-      '10': 'createRoomNeedReview'
+      '10': 'approvalRequired'
     },
     {
       '1': 'password_policy',
@@ -580,15 +563,23 @@ const RoomPolicySettings$json = {
       '8': {},
       '10': 'passwordPolicy'
     },
+    {
+      '1': 'max_rooms_per_user',
+      '3': 4,
+      '4': 1,
+      '5': 3,
+      '10': 'maxRoomsPerUser'
+    },
   ],
 };
 
-/// Descriptor for `RoomPolicySettings`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List roomPolicySettingsDescriptor = $convert.base64Decode(
-    'ChJSb29tUG9saWN5U2V0dGluZ3MSLgoTZGlzYWJsZV9jcmVhdGVfcm9vbRgBIAEoCFIRZGlzYW'
-    'JsZUNyZWF0ZVJvb20SNQoXY3JlYXRlX3Jvb21fbmVlZF9yZXZpZXcYAiABKAhSFGNyZWF0ZVJv'
-    'b21OZWVkUmV2aWV3ElMKD3Bhc3N3b3JkX3BvbGljeRgDIAEoDjIgLnN5bmN0di5hZG1pbi5Sb2'
-    '9tUGFzc3dvcmRQb2xpY3lCCLpIBYIBAhABUg5wYXNzd29yZFBvbGljeQ==');
+/// Descriptor for `RoomCreationSettings`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List roomCreationSettingsDescriptor = $convert.base64Decode(
+    'ChRSb29tQ3JlYXRpb25TZXR0aW5ncxIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkEisKEWFwcH'
+    'JvdmFsX3JlcXVpcmVkGAIgASgIUhBhcHByb3ZhbFJlcXVpcmVkElMKD3Bhc3N3b3JkX3BvbGlj'
+    'eRgDIAEoDjIgLnN5bmN0di5hZG1pbi5Sb29tUGFzc3dvcmRQb2xpY3lCCLpIBYIBAhABUg5wYX'
+    'Nzd29yZFBvbGljeRIrChJtYXhfcm9vbXNfcGVyX3VzZXIYBCABKANSD21heFJvb21zUGVyVXNl'
+    'cg==');
 
 @$core.Deprecated('Use userSettingsDescriptor instead')
 const UserSettings$json = {
@@ -675,14 +666,7 @@ final $typed_data.Uint8List oAuth2SettingsDescriptor = $convert.base64Decode(
 const OAuth2ProviderSettings$json = {
   '1': 'OAuth2ProviderSettings',
   '2': [
-    {
-      '1': 'instance_name',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '8': {},
-      '10': 'instanceName'
-    },
+    {'1': 'name', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'name'},
     {'1': 'enable_signup', '3': 2, '4': 1, '5': 8, '10': 'enableSignup'},
     {
       '1': 'signup_need_review',
@@ -696,7 +680,7 @@ const OAuth2ProviderSettings$json = {
       '3': 4,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.OAuth2BasicProviderConfig',
+      '6': '.synctv.admin.OAuth2GithubProviderConfig',
       '9': 0,
       '10': 'github'
     },
@@ -705,7 +689,7 @@ const OAuth2ProviderSettings$json = {
       '3': 5,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.OAuth2BasicProviderConfig',
+      '6': '.synctv.admin.OAuth2GoogleProviderConfig',
       '9': 0,
       '10': 'google'
     },
@@ -732,32 +716,32 @@ const OAuth2ProviderSettings$json = {
       '3': 8,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.OAuth2OidcProviderConfig',
+      '6': '.synctv.admin.OAuth2CasdoorProviderConfig',
       '9': 0,
       '10': 'casdoor'
     },
   ],
   '8': [
-    {'1': 'config'},
+    {'1': 'config', '2': {}},
   ],
 };
 
 /// Descriptor for `OAuth2ProviderSettings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2ProviderSettingsDescriptor = $convert.base64Decode(
-    'ChZPQXV0aDJQcm92aWRlclNldHRpbmdzEkAKDWluc3RhbmNlX25hbWUYASABKAlCG7pIGHIWEA'
-    'EYQDIQXltBLVphLXowLTlfLV0rJFIMaW5zdGFuY2VOYW1lEiMKDWVuYWJsZV9zaWdudXAYAiAB'
-    'KAhSDGVuYWJsZVNpZ251cBIsChJzaWdudXBfbmVlZF9yZXZpZXcYAyABKAhSEHNpZ251cE5lZW'
-    'RSZXZpZXcSQQoGZ2l0aHViGAQgASgLMicuc3luY3R2LmFkbWluLk9BdXRoMkJhc2ljUHJvdmlk'
-    'ZXJDb25maWdIAFIGZ2l0aHViEkEKBmdvb2dsZRgFIAEoCzInLnN5bmN0di5hZG1pbi5PQXV0aD'
-    'JCYXNpY1Byb3ZpZGVyQ29uZmlnSABSBmdvb2dsZRI/CgVsb2d0bxgGIAEoCzInLnN5bmN0di5h'
-    'ZG1pbi5PQXV0aDJMb2d0b1Byb3ZpZGVyQ29uZmlnSABSBWxvZ3RvEjwKBG9pZGMYByABKAsyJi'
-    '5zeW5jdHYuYWRtaW4uT0F1dGgyT2lkY1Byb3ZpZGVyQ29uZmlnSABSBG9pZGMSQgoHY2FzZG9v'
-    'chgIIAEoCzImLnN5bmN0di5hZG1pbi5PQXV0aDJPaWRjUHJvdmlkZXJDb25maWdIAFIHY2FzZG'
-    '9vckIICgZjb25maWc=');
+    'ChZPQXV0aDJQcm92aWRlclNldHRpbmdzEi8KBG5hbWUYASABKAlCG7pIGHIWEAEYQDIQXltBLV'
+    'phLXowLTlfLV0rJFIEbmFtZRIjCg1lbmFibGVfc2lnbnVwGAIgASgIUgxlbmFibGVTaWdudXAS'
+    'LAoSc2lnbnVwX25lZWRfcmV2aWV3GAMgASgIUhBzaWdudXBOZWVkUmV2aWV3EkIKBmdpdGh1Yh'
+    'gEIAEoCzIoLnN5bmN0di5hZG1pbi5PQXV0aDJHaXRodWJQcm92aWRlckNvbmZpZ0gAUgZnaXRo'
+    'dWISQgoGZ29vZ2xlGAUgASgLMiguc3luY3R2LmFkbWluLk9BdXRoMkdvb2dsZVByb3ZpZGVyQ2'
+    '9uZmlnSABSBmdvb2dsZRI/CgVsb2d0bxgGIAEoCzInLnN5bmN0di5hZG1pbi5PQXV0aDJMb2d0'
+    'b1Byb3ZpZGVyQ29uZmlnSABSBWxvZ3RvEjwKBG9pZGMYByABKAsyJi5zeW5jdHYuYWRtaW4uT0'
+    'F1dGgyT2lkY1Byb3ZpZGVyQ29uZmlnSABSBG9pZGMSRQoHY2FzZG9vchgIIAEoCzIpLnN5bmN0'
+    'di5hZG1pbi5PQXV0aDJDYXNkb29yUHJvdmlkZXJDb25maWdIAFIHY2FzZG9vckIPCgZjb25maW'
+    'cSBbpIAggB');
 
-@$core.Deprecated('Use oAuth2BasicProviderConfigDescriptor instead')
-const OAuth2BasicProviderConfig$json = {
-  '1': 'OAuth2BasicProviderConfig',
+@$core.Deprecated('Use oAuth2GithubProviderConfigDescriptor instead')
+const OAuth2GithubProviderConfig$json = {
+  '1': 'OAuth2GithubProviderConfig',
   '2': [
     {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
     {'1': 'client_secret', '3': 2, '4': 1, '5': 9, '10': 'clientSecret'},
@@ -765,11 +749,29 @@ const OAuth2BasicProviderConfig$json = {
   ],
 };
 
-/// Descriptor for `OAuth2BasicProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List oAuth2BasicProviderConfigDescriptor = $convert.base64Decode(
-    'ChlPQXV0aDJCYXNpY1Byb3ZpZGVyQ29uZmlnEhsKCWNsaWVudF9pZBgBIAEoCVIIY2xpZW50SW'
-    'QSIwoNY2xpZW50X3NlY3JldBgCIAEoCVIMY2xpZW50U2VjcmV0EiEKDHJlZGlyZWN0X3VybBgD'
-    'IAEoCVILcmVkaXJlY3RVcmw=');
+/// Descriptor for `OAuth2GithubProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2GithubProviderConfigDescriptor =
+    $convert.base64Decode(
+        'ChpPQXV0aDJHaXRodWJQcm92aWRlckNvbmZpZxIbCgljbGllbnRfaWQYASABKAlSCGNsaWVudE'
+        'lkEiMKDWNsaWVudF9zZWNyZXQYAiABKAlSDGNsaWVudFNlY3JldBIhCgxyZWRpcmVjdF91cmwY'
+        'AyABKAlSC3JlZGlyZWN0VXJs');
+
+@$core.Deprecated('Use oAuth2GoogleProviderConfigDescriptor instead')
+const OAuth2GoogleProviderConfig$json = {
+  '1': 'OAuth2GoogleProviderConfig',
+  '2': [
+    {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
+    {'1': 'client_secret', '3': 2, '4': 1, '5': 9, '10': 'clientSecret'},
+    {'1': 'redirect_url', '3': 3, '4': 1, '5': 9, '10': 'redirectUrl'},
+  ],
+};
+
+/// Descriptor for `OAuth2GoogleProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2GoogleProviderConfigDescriptor =
+    $convert.base64Decode(
+        'ChpPQXV0aDJHb29nbGVQcm92aWRlckNvbmZpZxIbCgljbGllbnRfaWQYASABKAlSCGNsaWVudE'
+        'lkEiMKDWNsaWVudF9zZWNyZXQYAiABKAlSDGNsaWVudFNlY3JldBIhCgxyZWRpcmVjdF91cmwY'
+        'AyABKAlSC3JlZGlyZWN0VXJs');
 
 @$core.Deprecated('Use oAuth2LogtoProviderConfigDescriptor instead')
 const OAuth2LogtoProviderConfig$json = {
@@ -851,6 +853,69 @@ final $typed_data.Uint8List oAuth2OidcProviderConfigDescriptor = $convert.base64
     'IHandrc1VybIgBAUILCglfYXV0aF91cmxCDAoKX3Rva2VuX3VybEIPCg1fdXNlcmluZm9fdXJs'
     'QgsKCV9qd2tzX3VybA==');
 
+@$core.Deprecated('Use oAuth2CasdoorProviderConfigDescriptor instead')
+const OAuth2CasdoorProviderConfig$json = {
+  '1': 'OAuth2CasdoorProviderConfig',
+  '2': [
+    {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
+    {'1': 'client_secret', '3': 2, '4': 1, '5': 9, '10': 'clientSecret'},
+    {'1': 'redirect_url', '3': 3, '4': 1, '5': 9, '10': 'redirectUrl'},
+    {'1': 'issuer', '3': 4, '4': 1, '5': 9, '10': 'issuer'},
+    {
+      '1': 'auth_url',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'authUrl',
+      '17': true
+    },
+    {
+      '1': 'token_url',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'tokenUrl',
+      '17': true
+    },
+    {
+      '1': 'userinfo_url',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'userinfoUrl',
+      '17': true
+    },
+    {
+      '1': 'jwks_url',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'jwksUrl',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_auth_url'},
+    {'1': '_token_url'},
+    {'1': '_userinfo_url'},
+    {'1': '_jwks_url'},
+  ],
+};
+
+/// Descriptor for `OAuth2CasdoorProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2CasdoorProviderConfigDescriptor = $convert.base64Decode(
+    'ChtPQXV0aDJDYXNkb29yUHJvdmlkZXJDb25maWcSGwoJY2xpZW50X2lkGAEgASgJUghjbGllbn'
+    'RJZBIjCg1jbGllbnRfc2VjcmV0GAIgASgJUgxjbGllbnRTZWNyZXQSIQoMcmVkaXJlY3RfdXJs'
+    'GAMgASgJUgtyZWRpcmVjdFVybBIWCgZpc3N1ZXIYBCABKAlSBmlzc3VlchIeCghhdXRoX3VybB'
+    'gFIAEoCUgAUgdhdXRoVXJsiAEBEiAKCXRva2VuX3VybBgGIAEoCUgBUgh0b2tlblVybIgBARIm'
+    'Cgx1c2VyaW5mb191cmwYByABKAlIAlILdXNlcmluZm9VcmyIAQESHgoIandrc191cmwYCCABKA'
+    'lIA1IHandrc1VybIgBAUILCglfYXV0aF91cmxCDAoKX3Rva2VuX3VybEIPCg1fdXNlcmluZm9f'
+    'dXJsQgsKCV9qd2tzX3VybA==');
+
 @$core.Deprecated('Use proxySettingsDescriptor instead')
 const ProxySettings$json = {
   '1': 'ProxySettings',
@@ -899,7 +964,15 @@ const EmailSettings$json = {
     {'1': 'smtp_host', '3': 2, '4': 1, '5': 9, '10': 'smtpHost'},
     {'1': 'smtp_port', '3': 3, '4': 1, '5': 13, '10': 'smtpPort'},
     {'1': 'smtp_username', '3': 4, '4': 1, '5': 9, '10': 'smtpUsername'},
-    {'1': 'smtp_password', '3': 5, '4': 1, '5': 9, '10': 'smtpPassword'},
+    {
+      '1': 'smtp_password',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'smtpPassword',
+      '17': true
+    },
     {'1': 'use_tls', '3': 6, '4': 1, '5': 8, '10': 'useTls'},
     {'1': 'from_email', '3': 7, '4': 1, '5': 9, '10': 'fromEmail'},
     {'1': 'from_name', '3': 8, '4': 1, '5': 9, '10': 'fromName'},
@@ -918,17 +991,20 @@ const EmailSettings$json = {
       '10': 'whitelistDomains'
     },
   ],
+  '8': [
+    {'1': '_smtp_password'},
+  ],
 };
 
 /// Descriptor for `EmailSettings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List emailSettingsDescriptor = $convert.base64Decode(
     'Cg1FbWFpbFNldHRpbmdzEhgKB2VuYWJsZWQYASABKAhSB2VuYWJsZWQSGwoJc210cF9ob3N0GA'
     'IgASgJUghzbXRwSG9zdBIbCglzbXRwX3BvcnQYAyABKA1SCHNtdHBQb3J0EiMKDXNtdHBfdXNl'
-    'cm5hbWUYBCABKAlSDHNtdHBVc2VybmFtZRIjCg1zbXRwX3Bhc3N3b3JkGAUgASgJUgxzbXRwUG'
-    'Fzc3dvcmQSFwoHdXNlX3RscxgGIAEoCFIGdXNlVGxzEh0KCmZyb21fZW1haWwYByABKAlSCWZy'
-    'b21FbWFpbBIbCglmcm9tX25hbWUYCCABKAlSCGZyb21OYW1lEisKEXdoaXRlbGlzdF9lbmFibG'
-    'VkGAkgASgIUhB3aGl0ZWxpc3RFbmFibGVkEisKEXdoaXRlbGlzdF9kb21haW5zGAogAygJUhB3'
-    'aGl0ZWxpc3REb21haW5z');
+    'cm5hbWUYBCABKAlSDHNtdHBVc2VybmFtZRIoCg1zbXRwX3Bhc3N3b3JkGAUgASgJSABSDHNtdH'
+    'BQYXNzd29yZIgBARIXCgd1c2VfdGxzGAYgASgIUgZ1c2VUbHMSHQoKZnJvbV9lbWFpbBgHIAEo'
+    'CVIJZnJvbUVtYWlsEhsKCWZyb21fbmFtZRgIIAEoCVIIZnJvbU5hbWUSKwoRd2hpdGVsaXN0X2'
+    'VuYWJsZWQYCSABKAhSEHdoaXRlbGlzdEVuYWJsZWQSKwoRd2hpdGVsaXN0X2RvbWFpbnMYCiAD'
+    'KAlSEHdoaXRlbGlzdERvbWFpbnNCEAoOX3NtdHBfcGFzc3dvcmQ=');
 
 @$core.Deprecated('Use webRtcSettingsDescriptor instead')
 const WebRtcSettings$json = {
@@ -997,6 +1073,707 @@ const CorsSettings$json = {
 final $typed_data.Uint8List corsSettingsDescriptor = $convert.base64Decode(
     'CgxDb3JzU2V0dGluZ3MSJwoPYWxsb3dlZF9vcmlnaW5zGAEgAygJUg5hbGxvd2VkT3JpZ2lucw'
     '==');
+
+@$core.Deprecated('Use updateSettingsRequestDescriptor instead')
+const UpdateSettingsRequest$json = {
+  '1': 'UpdateSettingsRequest',
+  '2': [
+    {
+      '1': 'room_defaults',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.RoomDefaultsSettingsPatch',
+      '10': 'roomDefaults'
+    },
+    {
+      '1': 'permissions',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.PermissionSettingsPatch',
+      '10': 'permissions'
+    },
+    {
+      '1': 'room_creation',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.RoomCreationSettingsPatch',
+      '10': 'roomCreation'
+    },
+    {
+      '1': 'user',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.UserSettingsPatch',
+      '10': 'user'
+    },
+    {
+      '1': 'oauth2',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.OAuth2SettingsPatch',
+      '10': 'oauth2'
+    },
+    {
+      '1': 'proxy',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.ProxySettingsPatch',
+      '10': 'proxy'
+    },
+    {
+      '1': 'rtmp',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.RtmpSettingsPatch',
+      '10': 'rtmp'
+    },
+    {
+      '1': 'email',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.EmailSettingsPatch',
+      '10': 'email'
+    },
+    {
+      '1': 'webrtc',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.WebRtcSettingsPatch',
+      '10': 'webrtc'
+    },
+    {
+      '1': 'chat',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.ChatSettingsPatch',
+      '10': 'chat'
+    },
+    {
+      '1': 'cors',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.CorsSettingsPatch',
+      '10': 'cors'
+    },
+  ],
+};
+
+/// Descriptor for `UpdateSettingsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Decode(
+    'ChVVcGRhdGVTZXR0aW5nc1JlcXVlc3QSTAoNcm9vbV9kZWZhdWx0cxgBIAEoCzInLnN5bmN0di'
+    '5hZG1pbi5Sb29tRGVmYXVsdHNTZXR0aW5nc1BhdGNoUgxyb29tRGVmYXVsdHMSRwoLcGVybWlz'
+    'c2lvbnMYAiABKAsyJS5zeW5jdHYuYWRtaW4uUGVybWlzc2lvblNldHRpbmdzUGF0Y2hSC3Blcm'
+    '1pc3Npb25zEkwKDXJvb21fY3JlYXRpb24YAyABKAsyJy5zeW5jdHYuYWRtaW4uUm9vbUNyZWF0'
+    'aW9uU2V0dGluZ3NQYXRjaFIMcm9vbUNyZWF0aW9uEjMKBHVzZXIYBCABKAsyHy5zeW5jdHYuYW'
+    'RtaW4uVXNlclNldHRpbmdzUGF0Y2hSBHVzZXISOQoGb2F1dGgyGAUgASgLMiEuc3luY3R2LmFk'
+    'bWluLk9BdXRoMlNldHRpbmdzUGF0Y2hSBm9hdXRoMhI2CgVwcm94eRgGIAEoCzIgLnN5bmN0di'
+    '5hZG1pbi5Qcm94eVNldHRpbmdzUGF0Y2hSBXByb3h5EjMKBHJ0bXAYByABKAsyHy5zeW5jdHYu'
+    'YWRtaW4uUnRtcFNldHRpbmdzUGF0Y2hSBHJ0bXASNgoFZW1haWwYCCABKAsyIC5zeW5jdHYuYW'
+    'RtaW4uRW1haWxTZXR0aW5nc1BhdGNoUgVlbWFpbBI5CgZ3ZWJydGMYCSABKAsyIS5zeW5jdHYu'
+    'YWRtaW4uV2ViUnRjU2V0dGluZ3NQYXRjaFIGd2VicnRjEjMKBGNoYXQYCiABKAsyHy5zeW5jdH'
+    'YuYWRtaW4uQ2hhdFNldHRpbmdzUGF0Y2hSBGNoYXQSMwoEY29ycxgLIAEoCzIfLnN5bmN0di5h'
+    'ZG1pbi5Db3JzU2V0dGluZ3NQYXRjaFIEY29ycw==');
+
+@$core.Deprecated('Use roomDefaultsSettingsPatchDescriptor instead')
+const RoomDefaultsSettingsPatch$json = {
+  '1': 'RoomDefaultsSettingsPatch',
+  '2': [
+    {
+      '1': 'default_max_members',
+      '3': 1,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'defaultMaxMembers',
+      '17': true
+    },
+    {
+      '1': 'default_max_chat_messages',
+      '3': 2,
+      '4': 1,
+      '5': 4,
+      '9': 1,
+      '10': 'defaultMaxChatMessages',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_default_max_members'},
+    {'1': '_default_max_chat_messages'},
+  ],
+};
+
+/// Descriptor for `RoomDefaultsSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List roomDefaultsSettingsPatchDescriptor = $convert.base64Decode(
+    'ChlSb29tRGVmYXVsdHNTZXR0aW5nc1BhdGNoEjMKE2RlZmF1bHRfbWF4X21lbWJlcnMYASABKA'
+    'NIAFIRZGVmYXVsdE1heE1lbWJlcnOIAQESPgoZZGVmYXVsdF9tYXhfY2hhdF9tZXNzYWdlcxgC'
+    'IAEoBEgBUhZkZWZhdWx0TWF4Q2hhdE1lc3NhZ2VziAEBQhYKFF9kZWZhdWx0X21heF9tZW1iZX'
+    'JzQhwKGl9kZWZhdWx0X21heF9jaGF0X21lc3NhZ2Vz');
+
+@$core.Deprecated('Use permissionSettingsPatchDescriptor instead')
+const PermissionSettingsPatch$json = {
+  '1': 'PermissionSettingsPatch',
+  '2': [
+    {
+      '1': 'admin_default_permissions',
+      '3': 1,
+      '4': 1,
+      '5': 4,
+      '9': 0,
+      '10': 'adminDefaultPermissions',
+      '17': true
+    },
+    {
+      '1': 'member_default_permissions',
+      '3': 2,
+      '4': 1,
+      '5': 4,
+      '9': 1,
+      '10': 'memberDefaultPermissions',
+      '17': true
+    },
+    {
+      '1': 'guest_default_permissions',
+      '3': 3,
+      '4': 1,
+      '5': 4,
+      '9': 2,
+      '10': 'guestDefaultPermissions',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_admin_default_permissions'},
+    {'1': '_member_default_permissions'},
+    {'1': '_guest_default_permissions'},
+  ],
+};
+
+/// Descriptor for `PermissionSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List permissionSettingsPatchDescriptor = $convert.base64Decode(
+    'ChdQZXJtaXNzaW9uU2V0dGluZ3NQYXRjaBI/ChlhZG1pbl9kZWZhdWx0X3Blcm1pc3Npb25zGA'
+    'EgASgESABSF2FkbWluRGVmYXVsdFBlcm1pc3Npb25ziAEBEkEKGm1lbWJlcl9kZWZhdWx0X3Bl'
+    'cm1pc3Npb25zGAIgASgESAFSGG1lbWJlckRlZmF1bHRQZXJtaXNzaW9uc4gBARI/ChlndWVzdF'
+    '9kZWZhdWx0X3Blcm1pc3Npb25zGAMgASgESAJSF2d1ZXN0RGVmYXVsdFBlcm1pc3Npb25ziAEB'
+    'QhwKGl9hZG1pbl9kZWZhdWx0X3Blcm1pc3Npb25zQh0KG19tZW1iZXJfZGVmYXVsdF9wZXJtaX'
+    'NzaW9uc0IcChpfZ3Vlc3RfZGVmYXVsdF9wZXJtaXNzaW9ucw==');
+
+@$core.Deprecated('Use roomCreationSettingsPatchDescriptor instead')
+const RoomCreationSettingsPatch$json = {
+  '1': 'RoomCreationSettingsPatch',
+  '2': [
+    {
+      '1': 'enabled',
+      '3': 1,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'enabled',
+      '17': true
+    },
+    {
+      '1': 'approval_required',
+      '3': 2,
+      '4': 1,
+      '5': 8,
+      '9': 1,
+      '10': 'approvalRequired',
+      '17': true
+    },
+    {
+      '1': 'password_policy',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.admin.RoomPasswordPolicy',
+      '8': {},
+      '9': 2,
+      '10': 'passwordPolicy',
+      '17': true
+    },
+    {
+      '1': 'max_rooms_per_user',
+      '3': 4,
+      '4': 1,
+      '5': 3,
+      '9': 3,
+      '10': 'maxRoomsPerUser',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_enabled'},
+    {'1': '_approval_required'},
+    {'1': '_password_policy'},
+    {'1': '_max_rooms_per_user'},
+  ],
+};
+
+/// Descriptor for `RoomCreationSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List roomCreationSettingsPatchDescriptor = $convert.base64Decode(
+    'ChlSb29tQ3JlYXRpb25TZXR0aW5nc1BhdGNoEh0KB2VuYWJsZWQYASABKAhIAFIHZW5hYmxlZI'
+    'gBARIwChFhcHByb3ZhbF9yZXF1aXJlZBgCIAEoCEgBUhBhcHByb3ZhbFJlcXVpcmVkiAEBElgK'
+    'D3Bhc3N3b3JkX3BvbGljeRgDIAEoDjIgLnN5bmN0di5hZG1pbi5Sb29tUGFzc3dvcmRQb2xpY3'
+    'lCCLpIBYIBAhABSAJSDnBhc3N3b3JkUG9saWN5iAEBEjAKEm1heF9yb29tc19wZXJfdXNlchgE'
+    'IAEoA0gDUg9tYXhSb29tc1BlclVzZXKIAQFCCgoIX2VuYWJsZWRCFAoSX2FwcHJvdmFsX3JlcX'
+    'VpcmVkQhIKEF9wYXNzd29yZF9wb2xpY3lCFQoTX21heF9yb29tc19wZXJfdXNlcg==');
+
+@$core.Deprecated('Use userSettingsPatchDescriptor instead')
+const UserSettingsPatch$json = {
+  '1': 'UserSettingsPatch',
+  '2': [
+    {
+      '1': 'enable_password_signup',
+      '3': 1,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'enablePasswordSignup',
+      '17': true
+    },
+    {
+      '1': 'password_signup_need_review',
+      '3': 2,
+      '4': 1,
+      '5': 8,
+      '9': 1,
+      '10': 'passwordSignupNeedReview',
+      '17': true
+    },
+    {
+      '1': 'enable_email_signup',
+      '3': 3,
+      '4': 1,
+      '5': 8,
+      '9': 2,
+      '10': 'enableEmailSignup',
+      '17': true
+    },
+    {
+      '1': 'email_signup_need_review',
+      '3': 4,
+      '4': 1,
+      '5': 8,
+      '9': 3,
+      '10': 'emailSignupNeedReview',
+      '17': true
+    },
+    {
+      '1': 'enable_webauthn_signup',
+      '3': 5,
+      '4': 1,
+      '5': 8,
+      '9': 4,
+      '10': 'enableWebauthnSignup',
+      '17': true
+    },
+    {
+      '1': 'webauthn_signup_need_review',
+      '3': 6,
+      '4': 1,
+      '5': 8,
+      '9': 5,
+      '10': 'webauthnSignupNeedReview',
+      '17': true
+    },
+    {
+      '1': 'enable_guest',
+      '3': 7,
+      '4': 1,
+      '5': 8,
+      '9': 6,
+      '10': 'enableGuest',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_enable_password_signup'},
+    {'1': '_password_signup_need_review'},
+    {'1': '_enable_email_signup'},
+    {'1': '_email_signup_need_review'},
+    {'1': '_enable_webauthn_signup'},
+    {'1': '_webauthn_signup_need_review'},
+    {'1': '_enable_guest'},
+  ],
+};
+
+/// Descriptor for `UserSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List userSettingsPatchDescriptor = $convert.base64Decode(
+    'ChFVc2VyU2V0dGluZ3NQYXRjaBI5ChZlbmFibGVfcGFzc3dvcmRfc2lnbnVwGAEgASgISABSFG'
+    'VuYWJsZVBhc3N3b3JkU2lnbnVwiAEBEkIKG3Bhc3N3b3JkX3NpZ251cF9uZWVkX3JldmlldxgC'
+    'IAEoCEgBUhhwYXNzd29yZFNpZ251cE5lZWRSZXZpZXeIAQESMwoTZW5hYmxlX2VtYWlsX3NpZ2'
+    '51cBgDIAEoCEgCUhFlbmFibGVFbWFpbFNpZ251cIgBARI8ChhlbWFpbF9zaWdudXBfbmVlZF9y'
+    'ZXZpZXcYBCABKAhIA1IVZW1haWxTaWdudXBOZWVkUmV2aWV3iAEBEjkKFmVuYWJsZV93ZWJhdX'
+    'Robl9zaWdudXAYBSABKAhIBFIUZW5hYmxlV2ViYXV0aG5TaWdudXCIAQESQgobd2ViYXV0aG5f'
+    'c2lnbnVwX25lZWRfcmV2aWV3GAYgASgISAVSGHdlYmF1dGhuU2lnbnVwTmVlZFJldmlld4gBAR'
+    'ImCgxlbmFibGVfZ3Vlc3QYByABKAhIBlILZW5hYmxlR3Vlc3SIAQFCGQoXX2VuYWJsZV9wYXNz'
+    'd29yZF9zaWdudXBCHgocX3Bhc3N3b3JkX3NpZ251cF9uZWVkX3Jldmlld0IWChRfZW5hYmxlX2'
+    'VtYWlsX3NpZ251cEIbChlfZW1haWxfc2lnbnVwX25lZWRfcmV2aWV3QhkKF19lbmFibGVfd2Vi'
+    'YXV0aG5fc2lnbnVwQh4KHF93ZWJhdXRobl9zaWdudXBfbmVlZF9yZXZpZXdCDwoNX2VuYWJsZV'
+    '9ndWVzdA==');
+
+@$core.Deprecated('Use oAuth2ProviderListDescriptor instead')
+const OAuth2ProviderList$json = {
+  '1': 'OAuth2ProviderList',
+  '2': [
+    {
+      '1': 'providers',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.admin.OAuth2ProviderSettings',
+      '10': 'providers'
+    },
+  ],
+};
+
+/// Descriptor for `OAuth2ProviderList`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2ProviderListDescriptor = $convert.base64Decode(
+    'ChJPQXV0aDJQcm92aWRlckxpc3QSQgoJcHJvdmlkZXJzGAEgAygLMiQuc3luY3R2LmFkbWluLk'
+    '9BdXRoMlByb3ZpZGVyU2V0dGluZ3NSCXByb3ZpZGVycw==');
+
+@$core.Deprecated('Use oAuth2SettingsPatchDescriptor instead')
+const OAuth2SettingsPatch$json = {
+  '1': 'OAuth2SettingsPatch',
+  '2': [
+    {
+      '1': 'providers',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.OAuth2ProviderList',
+      '10': 'providers'
+    },
+  ],
+};
+
+/// Descriptor for `OAuth2SettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2SettingsPatchDescriptor = $convert.base64Decode(
+    'ChNPQXV0aDJTZXR0aW5nc1BhdGNoEj4KCXByb3ZpZGVycxgBIAEoCzIgLnN5bmN0di5hZG1pbi'
+    '5PQXV0aDJQcm92aWRlckxpc3RSCXByb3ZpZGVycw==');
+
+@$core.Deprecated('Use proxySettingsPatchDescriptor instead')
+const ProxySettingsPatch$json = {
+  '1': 'ProxySettingsPatch',
+  '2': [
+    {
+      '1': 'movie_proxy',
+      '3': 1,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'movieProxy',
+      '17': true
+    },
+    {
+      '1': 'live_proxy',
+      '3': 2,
+      '4': 1,
+      '5': 8,
+      '9': 1,
+      '10': 'liveProxy',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_movie_proxy'},
+    {'1': '_live_proxy'},
+  ],
+};
+
+/// Descriptor for `ProxySettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List proxySettingsPatchDescriptor = $convert.base64Decode(
+    'ChJQcm94eVNldHRpbmdzUGF0Y2gSJAoLbW92aWVfcHJveHkYASABKAhIAFIKbW92aWVQcm94eY'
+    'gBARIiCgpsaXZlX3Byb3h5GAIgASgISAFSCWxpdmVQcm94eYgBAUIOCgxfbW92aWVfcHJveHlC'
+    'DQoLX2xpdmVfcHJveHk=');
+
+@$core.Deprecated('Use rtmpSettingsPatchDescriptor instead')
+const RtmpSettingsPatch$json = {
+  '1': 'RtmpSettingsPatch',
+  '2': [
+    {
+      '1': 'custom_publish_host',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'customPublishHost',
+      '17': true
+    },
+    {
+      '1': 'ts_disguised_as_png',
+      '3': 2,
+      '4': 1,
+      '5': 8,
+      '9': 1,
+      '10': 'tsDisguisedAsPng',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_custom_publish_host'},
+    {'1': '_ts_disguised_as_png'},
+  ],
+};
+
+/// Descriptor for `RtmpSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List rtmpSettingsPatchDescriptor = $convert.base64Decode(
+    'ChFSdG1wU2V0dGluZ3NQYXRjaBIzChNjdXN0b21fcHVibGlzaF9ob3N0GAEgASgJSABSEWN1c3'
+    'RvbVB1Ymxpc2hIb3N0iAEBEjIKE3RzX2Rpc2d1aXNlZF9hc19wbmcYAiABKAhIAVIQdHNEaXNn'
+    'dWlzZWRBc1BuZ4gBAUIWChRfY3VzdG9tX3B1Ymxpc2hfaG9zdEIWChRfdHNfZGlzZ3Vpc2VkX2'
+    'FzX3BuZw==');
+
+@$core.Deprecated('Use stringListDescriptor instead')
+const StringList$json = {
+  '1': 'StringList',
+  '2': [
+    {'1': 'values', '3': 1, '4': 3, '5': 9, '10': 'values'},
+  ],
+};
+
+/// Descriptor for `StringList`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List stringListDescriptor =
+    $convert.base64Decode('CgpTdHJpbmdMaXN0EhYKBnZhbHVlcxgBIAMoCVIGdmFsdWVz');
+
+@$core.Deprecated('Use emailSettingsPatchDescriptor instead')
+const EmailSettingsPatch$json = {
+  '1': 'EmailSettingsPatch',
+  '2': [
+    {
+      '1': 'enabled',
+      '3': 1,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'enabled',
+      '17': true
+    },
+    {
+      '1': 'smtp_host',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'smtpHost',
+      '17': true
+    },
+    {
+      '1': 'smtp_port',
+      '3': 3,
+      '4': 1,
+      '5': 13,
+      '9': 2,
+      '10': 'smtpPort',
+      '17': true
+    },
+    {
+      '1': 'smtp_username',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'smtpUsername',
+      '17': true
+    },
+    {
+      '1': 'smtp_password',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'smtpPassword',
+      '17': true
+    },
+    {
+      '1': 'use_tls',
+      '3': 6,
+      '4': 1,
+      '5': 8,
+      '9': 5,
+      '10': 'useTls',
+      '17': true
+    },
+    {
+      '1': 'from_email',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '9': 6,
+      '10': 'fromEmail',
+      '17': true
+    },
+    {
+      '1': 'from_name',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 7,
+      '10': 'fromName',
+      '17': true
+    },
+    {
+      '1': 'whitelist_enabled',
+      '3': 9,
+      '4': 1,
+      '5': 8,
+      '9': 8,
+      '10': 'whitelistEnabled',
+      '17': true
+    },
+    {
+      '1': 'whitelist_domains',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.StringList',
+      '10': 'whitelistDomains'
+    },
+  ],
+  '8': [
+    {'1': '_enabled'},
+    {'1': '_smtp_host'},
+    {'1': '_smtp_port'},
+    {'1': '_smtp_username'},
+    {'1': '_smtp_password'},
+    {'1': '_use_tls'},
+    {'1': '_from_email'},
+    {'1': '_from_name'},
+    {'1': '_whitelist_enabled'},
+  ],
+};
+
+/// Descriptor for `EmailSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List emailSettingsPatchDescriptor = $convert.base64Decode(
+    'ChJFbWFpbFNldHRpbmdzUGF0Y2gSHQoHZW5hYmxlZBgBIAEoCEgAUgdlbmFibGVkiAEBEiAKCX'
+    'NtdHBfaG9zdBgCIAEoCUgBUghzbXRwSG9zdIgBARIgCglzbXRwX3BvcnQYAyABKA1IAlIIc210'
+    'cFBvcnSIAQESKAoNc210cF91c2VybmFtZRgEIAEoCUgDUgxzbXRwVXNlcm5hbWWIAQESKAoNc2'
+    '10cF9wYXNzd29yZBgFIAEoCUgEUgxzbXRwUGFzc3dvcmSIAQESHAoHdXNlX3RscxgGIAEoCEgF'
+    'UgZ1c2VUbHOIAQESIgoKZnJvbV9lbWFpbBgHIAEoCUgGUglmcm9tRW1haWyIAQESIAoJZnJvbV'
+    '9uYW1lGAggASgJSAdSCGZyb21OYW1liAEBEjAKEXdoaXRlbGlzdF9lbmFibGVkGAkgASgISAhS'
+    'EHdoaXRlbGlzdEVuYWJsZWSIAQESRQoRd2hpdGVsaXN0X2RvbWFpbnMYCiABKAsyGC5zeW5jdH'
+    'YuYWRtaW4uU3RyaW5nTGlzdFIQd2hpdGVsaXN0RG9tYWluc0IKCghfZW5hYmxlZEIMCgpfc210'
+    'cF9ob3N0QgwKCl9zbXRwX3BvcnRCEAoOX3NtdHBfdXNlcm5hbWVCEAoOX3NtdHBfcGFzc3dvcm'
+    'RCCgoIX3VzZV90bHNCDQoLX2Zyb21fZW1haWxCDAoKX2Zyb21fbmFtZUIUChJfd2hpdGVsaXN0'
+    'X2VuYWJsZWQ=');
+
+@$core.Deprecated('Use iceServerListDescriptor instead')
+const IceServerList$json = {
+  '1': 'IceServerList',
+  '2': [
+    {
+      '1': 'values',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.IceServer',
+      '10': 'values'
+    },
+  ],
+};
+
+/// Descriptor for `IceServerList`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List iceServerListDescriptor = $convert.base64Decode(
+    'Cg1JY2VTZXJ2ZXJMaXN0EjAKBnZhbHVlcxgBIAMoCzIYLnN5bmN0di5jbGllbnQuSWNlU2Vydm'
+    'VyUgZ2YWx1ZXM=');
+
+@$core.Deprecated('Use webRtcSettingsPatchDescriptor instead')
+const WebRtcSettingsPatch$json = {
+  '1': 'WebRtcSettingsPatch',
+  '2': [
+    {
+      '1': 'external_ice_servers',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.IceServerList',
+      '10': 'externalIceServers'
+    },
+  ],
+};
+
+/// Descriptor for `WebRtcSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRtcSettingsPatchDescriptor = $convert.base64Decode(
+    'ChNXZWJSdGNTZXR0aW5nc1BhdGNoEk0KFGV4dGVybmFsX2ljZV9zZXJ2ZXJzGAEgASgLMhsuc3'
+    'luY3R2LmFkbWluLkljZVNlcnZlckxpc3RSEmV4dGVybmFsSWNlU2VydmVycw==');
+
+@$core.Deprecated('Use chatSettingsPatchDescriptor instead')
+const ChatSettingsPatch$json = {
+  '1': 'ChatSettingsPatch',
+  '2': [
+    {
+      '1': 'max_messages_per_room',
+      '3': 1,
+      '4': 1,
+      '5': 4,
+      '9': 0,
+      '10': 'maxMessagesPerRoom',
+      '17': true
+    },
+    {
+      '1': 'max_pinned_messages_per_room',
+      '3': 2,
+      '4': 1,
+      '5': 4,
+      '9': 1,
+      '10': 'maxPinnedMessagesPerRoom',
+      '17': true
+    },
+    {
+      '1': 'message_retention_days',
+      '3': 3,
+      '4': 1,
+      '5': 3,
+      '9': 2,
+      '10': 'messageRetentionDays',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_max_messages_per_room'},
+    {'1': '_max_pinned_messages_per_room'},
+    {'1': '_message_retention_days'},
+  ],
+};
+
+/// Descriptor for `ChatSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List chatSettingsPatchDescriptor = $convert.base64Decode(
+    'ChFDaGF0U2V0dGluZ3NQYXRjaBI2ChVtYXhfbWVzc2FnZXNfcGVyX3Jvb20YASABKARIAFISbW'
+    'F4TWVzc2FnZXNQZXJSb29tiAEBEkMKHG1heF9waW5uZWRfbWVzc2FnZXNfcGVyX3Jvb20YAiAB'
+    'KARIAVIYbWF4UGlubmVkTWVzc2FnZXNQZXJSb29tiAEBEjkKFm1lc3NhZ2VfcmV0ZW50aW9uX2'
+    'RheXMYAyABKANIAlIUbWVzc2FnZVJldGVudGlvbkRheXOIAQFCGAoWX21heF9tZXNzYWdlc19w'
+    'ZXJfcm9vbUIfCh1fbWF4X3Bpbm5lZF9tZXNzYWdlc19wZXJfcm9vbUIZChdfbWVzc2FnZV9yZX'
+    'RlbnRpb25fZGF5cw==');
+
+@$core.Deprecated('Use corsSettingsPatchDescriptor instead')
+const CorsSettingsPatch$json = {
+  '1': 'CorsSettingsPatch',
+  '2': [
+    {
+      '1': 'allowed_origins',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.StringList',
+      '10': 'allowedOrigins'
+    },
+  ],
+};
+
+/// Descriptor for `CorsSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List corsSettingsPatchDescriptor = $convert.base64Decode(
+    'ChFDb3JzU2V0dGluZ3NQYXRjaBJBCg9hbGxvd2VkX29yaWdpbnMYASABKAsyGC5zeW5jdHYuYW'
+    'RtaW4uU3RyaW5nTGlzdFIOYWxsb3dlZE9yaWdpbnM=');
 
 @$core.Deprecated('Use userRegistrationReviewDescriptor instead')
 const UserRegistrationReview$json = {
@@ -1483,207 +2260,6 @@ const GetSettingsRequest$json = {
 /// Descriptor for `GetSettingsRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getSettingsRequestDescriptor =
     $convert.base64Decode('ChJHZXRTZXR0aW5nc1JlcXVlc3Q=');
-
-@$core.Deprecated('Use getSettingsResponseDescriptor instead')
-const GetSettingsResponse$json = {
-  '1': 'GetSettingsResponse',
-  '2': [
-    {
-      '1': 'groups',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.synctv.admin.SettingsGroup',
-      '10': 'groups'
-    },
-  ],
-};
-
-/// Descriptor for `GetSettingsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSettingsResponseDescriptor = $convert.base64Decode(
-    'ChNHZXRTZXR0aW5nc1Jlc3BvbnNlEjMKBmdyb3VwcxgBIAMoCzIbLnN5bmN0di5hZG1pbi5TZX'
-    'R0aW5nc0dyb3VwUgZncm91cHM=');
-
-@$core.Deprecated('Use getSettingsGroupRequestDescriptor instead')
-const GetSettingsGroupRequest$json = {
-  '1': 'GetSettingsGroupRequest',
-  '2': [
-    {'1': 'group', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'group'},
-  ],
-};
-
-/// Descriptor for `GetSettingsGroupRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSettingsGroupRequestDescriptor =
-    $convert.base64Decode(
-        'ChdHZXRTZXR0aW5nc0dyb3VwUmVxdWVzdBIxCgVncm91cBgBIAEoCUIbukgYchYQARhAMhBeW0'
-        'EtWmEtejAtOV8tXSskUgVncm91cA==');
-
-@$core.Deprecated('Use getSettingsGroupResponseDescriptor instead')
-const GetSettingsGroupResponse$json = {
-  '1': 'GetSettingsGroupResponse',
-  '2': [
-    {
-      '1': 'group',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.SettingsGroup',
-      '10': 'group'
-    },
-  ],
-};
-
-/// Descriptor for `GetSettingsGroupResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSettingsGroupResponseDescriptor =
-    $convert.base64Decode(
-        'ChhHZXRTZXR0aW5nc0dyb3VwUmVzcG9uc2USMQoFZ3JvdXAYASABKAsyGy5zeW5jdHYuYWRtaW'
-        '4uU2V0dGluZ3NHcm91cFIFZ3JvdXA=');
-
-@$core.Deprecated('Use updateSettingsRequestDescriptor instead')
-const UpdateSettingsRequest$json = {
-  '1': 'UpdateSettingsRequest',
-  '2': [
-    {'1': 'group', '3': 1, '4': 1, '5': 9, '10': 'group'},
-    {
-      '1': 'server',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.ServerSettings',
-      '9': 0,
-      '10': 'server'
-    },
-    {
-      '1': 'permissions',
-      '3': 3,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.PermissionSettings',
-      '9': 0,
-      '10': 'permissions'
-    },
-    {
-      '1': 'room',
-      '3': 4,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.RoomPolicySettings',
-      '9': 0,
-      '10': 'room'
-    },
-    {
-      '1': 'user',
-      '3': 5,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.UserSettings',
-      '9': 0,
-      '10': 'user'
-    },
-    {
-      '1': 'oauth2',
-      '3': 6,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.OAuth2Settings',
-      '9': 0,
-      '10': 'oauth2'
-    },
-    {
-      '1': 'proxy',
-      '3': 7,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.ProxySettings',
-      '9': 0,
-      '10': 'proxy'
-    },
-    {
-      '1': 'rtmp',
-      '3': 8,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.RtmpSettings',
-      '9': 0,
-      '10': 'rtmp'
-    },
-    {
-      '1': 'email',
-      '3': 9,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.EmailSettings',
-      '9': 0,
-      '10': 'email'
-    },
-    {
-      '1': 'webrtc',
-      '3': 10,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.WebRtcSettings',
-      '9': 0,
-      '10': 'webrtc'
-    },
-    {
-      '1': 'chat',
-      '3': 11,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.ChatSettings',
-      '9': 0,
-      '10': 'chat'
-    },
-    {
-      '1': 'cors',
-      '3': 12,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.CorsSettings',
-      '9': 0,
-      '10': 'cors'
-    },
-  ],
-  '8': [
-    {'1': 'settings'},
-  ],
-};
-
-/// Descriptor for `UpdateSettingsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Decode(
-    'ChVVcGRhdGVTZXR0aW5nc1JlcXVlc3QSFAoFZ3JvdXAYASABKAlSBWdyb3VwEjYKBnNlcnZlch'
-    'gCIAEoCzIcLnN5bmN0di5hZG1pbi5TZXJ2ZXJTZXR0aW5nc0gAUgZzZXJ2ZXISRAoLcGVybWlz'
-    'c2lvbnMYAyABKAsyIC5zeW5jdHYuYWRtaW4uUGVybWlzc2lvblNldHRpbmdzSABSC3Blcm1pc3'
-    'Npb25zEjYKBHJvb20YBCABKAsyIC5zeW5jdHYuYWRtaW4uUm9vbVBvbGljeVNldHRpbmdzSABS'
-    'BHJvb20SMAoEdXNlchgFIAEoCzIaLnN5bmN0di5hZG1pbi5Vc2VyU2V0dGluZ3NIAFIEdXNlch'
-    'I2CgZvYXV0aDIYBiABKAsyHC5zeW5jdHYuYWRtaW4uT0F1dGgyU2V0dGluZ3NIAFIGb2F1dGgy'
-    'EjMKBXByb3h5GAcgASgLMhsuc3luY3R2LmFkbWluLlByb3h5U2V0dGluZ3NIAFIFcHJveHkSMA'
-    'oEcnRtcBgIIAEoCzIaLnN5bmN0di5hZG1pbi5SdG1wU2V0dGluZ3NIAFIEcnRtcBIzCgVlbWFp'
-    'bBgJIAEoCzIbLnN5bmN0di5hZG1pbi5FbWFpbFNldHRpbmdzSABSBWVtYWlsEjYKBndlYnJ0Yx'
-    'gKIAEoCzIcLnN5bmN0di5hZG1pbi5XZWJSdGNTZXR0aW5nc0gAUgZ3ZWJydGMSMAoEY2hhdBgL'
-    'IAEoCzIaLnN5bmN0di5hZG1pbi5DaGF0U2V0dGluZ3NIAFIEY2hhdBIwCgRjb3JzGAwgASgLMh'
-    'ouc3luY3R2LmFkbWluLkNvcnNTZXR0aW5nc0gAUgRjb3JzQgoKCHNldHRpbmdz');
-
-@$core.Deprecated('Use updateSettingsResponseDescriptor instead')
-const UpdateSettingsResponse$json = {
-  '1': 'UpdateSettingsResponse',
-  '2': [
-    {
-      '1': 'group',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.SettingsGroup',
-      '10': 'group'
-    },
-  ],
-};
-
-/// Descriptor for `UpdateSettingsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateSettingsResponseDescriptor =
-    $convert.base64Decode(
-        'ChZVcGRhdGVTZXR0aW5nc1Jlc3BvbnNlEjEKBWdyb3VwGAEgASgLMhsuc3luY3R2LmFkbWluLl'
-        'NldHRpbmdzR3JvdXBSBWdyb3Vw');
 
 @$core.Deprecated('Use sendTestEmailRequestDescriptor instead')
 const SendTestEmailRequest$json = {
@@ -2322,7 +2898,7 @@ const GetUserRoomsResponse$json = {
       '3': 1,
       '4': 3,
       '5': 11,
-      '6': '.synctv.admin.AdminRoom',
+      '6': '.synctv.admin.Room',
       '10': 'rooms'
     },
     {'1': 'total', '3': 2, '4': 1, '5': 5, '10': 'total'},
@@ -2331,8 +2907,8 @@ const GetUserRoomsResponse$json = {
 
 /// Descriptor for `GetUserRoomsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getUserRoomsResponseDescriptor = $convert.base64Decode(
-    'ChRHZXRVc2VyUm9vbXNSZXNwb25zZRItCgVyb29tcxgBIAMoCzIXLnN5bmN0di5hZG1pbi5BZG'
-    '1pblJvb21SBXJvb21zEhQKBXRvdGFsGAIgASgFUgV0b3RhbA==');
+    'ChRHZXRVc2VyUm9vbXNSZXNwb25zZRIoCgVyb29tcxgBIAMoCzISLnN5bmN0di5hZG1pbi5Sb2'
+    '9tUgVyb29tcxIUCgV0b3RhbBgCIAEoBVIFdG90YWw=');
 
 @$core.Deprecated('Use listUserRegistrationReviewsRequestDescriptor instead')
 const ListUserRegistrationReviewsRequest$json = {
@@ -2560,7 +3136,7 @@ const ApproveRoomCreationReviewResponse$json = {
       '3': 2,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.AdminRoom',
+      '6': '.synctv.admin.Room',
       '10': 'room'
     },
   ],
@@ -2570,8 +3146,8 @@ const ApproveRoomCreationReviewResponse$json = {
 final $typed_data.Uint8List approveRoomCreationReviewResponseDescriptor =
     $convert.base64Decode(
         'CiFBcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USOAoGcmV2aWV3GAEgASgLMiAuc3'
-        'luY3R2LmFkbWluLlJvb21DcmVhdGlvblJldmlld1IGcmV2aWV3EisKBHJvb20YAiABKAsyFy5z'
-        'eW5jdHYuYWRtaW4uQWRtaW5Sb29tUgRyb29t');
+        'luY3R2LmFkbWluLlJvb21DcmVhdGlvblJldmlld1IGcmV2aWV3EiYKBHJvb20YAiABKAsyEi5z'
+        'eW5jdHYuYWRtaW4uUm9vbVIEcm9vbQ==');
 
 @$core.Deprecated('Use rejectRoomCreationReviewRequestDescriptor instead')
 const RejectRoomCreationReviewRequest$json = {
@@ -2833,7 +3409,7 @@ const ListRoomsResponse$json = {
       '3': 1,
       '4': 3,
       '5': 11,
-      '6': '.synctv.admin.AdminRoom',
+      '6': '.synctv.admin.Room',
       '10': 'rooms'
     },
     {'1': 'total', '3': 2, '4': 1, '5': 5, '10': 'total'},
@@ -2842,8 +3418,8 @@ const ListRoomsResponse$json = {
 
 /// Descriptor for `ListRoomsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listRoomsResponseDescriptor = $convert.base64Decode(
-    'ChFMaXN0Um9vbXNSZXNwb25zZRItCgVyb29tcxgBIAMoCzIXLnN5bmN0di5hZG1pbi5BZG1pbl'
-    'Jvb21SBXJvb21zEhQKBXRvdGFsGAIgASgFUgV0b3RhbA==');
+    'ChFMaXN0Um9vbXNSZXNwb25zZRIoCgVyb29tcxgBIAMoCzISLnN5bmN0di5hZG1pbi5Sb29tUg'
+    'Vyb29tcxIUCgV0b3RhbBgCIAEoBVIFdG90YWw=');
 
 @$core.Deprecated('Use listRoomCategoriesRequestDescriptor instead')
 const ListRoomCategoriesRequest$json = {
@@ -3117,7 +3693,7 @@ const UpdateRoomTaxonomyResponse$json = {
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.AdminRoom',
+      '6': '.synctv.admin.Room',
       '10': 'room'
     },
   ],
@@ -3126,8 +3702,8 @@ const UpdateRoomTaxonomyResponse$json = {
 /// Descriptor for `UpdateRoomTaxonomyResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateRoomTaxonomyResponseDescriptor =
     $convert.base64Decode(
-        'ChpVcGRhdGVSb29tVGF4b25vbXlSZXNwb25zZRIrCgRyb29tGAEgASgLMhcuc3luY3R2LmFkbW'
-        'luLkFkbWluUm9vbVIEcm9vbQ==');
+        'ChpVcGRhdGVSb29tVGF4b25vbXlSZXNwb25zZRImCgRyb29tGAEgASgLMhIuc3luY3R2LmFkbW'
+        'luLlJvb21SBHJvb20=');
 
 @$core.Deprecated('Use getRoomRequestDescriptor instead')
 const GetRoomRequest$json = {
@@ -3164,7 +3740,7 @@ const GetRoomResponse$json = {
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.AdminRoom',
+      '6': '.synctv.admin.Room',
       '10': 'room'
     },
   ],
@@ -3172,8 +3748,8 @@ const GetRoomResponse$json = {
 
 /// Descriptor for `GetRoomResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getRoomResponseDescriptor = $convert.base64Decode(
-    'Cg9HZXRSb29tUmVzcG9uc2USKwoEcm9vbRgBIAEoCzIXLnN5bmN0di5hZG1pbi5BZG1pblJvb2'
-    '1SBHJvb20=');
+    'Cg9HZXRSb29tUmVzcG9uc2USJgoEcm9vbRgBIAEoCzISLnN5bmN0di5hZG1pbi5Sb29tUgRyb2'
+    '9t');
 
 @$core.Deprecated('Use getRoomSettingsRequestDescriptor instead')
 const GetRoomSettingsRequest$json = {
@@ -3216,43 +3792,149 @@ const UpdateRoomSettingsRequest$json = {
   '2': [
     {'1': 'room_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'roomId'},
     {
-      '1': 'settings',
+      '1': 'allow_guest_join',
       '3': 2,
       '4': 1,
-      '5': 11,
-      '6': '.synctv.client.RoomSettingsPatch',
-      '8': {},
-      '10': 'settings'
+      '5': 8,
+      '9': 0,
+      '10': 'allowGuestJoin',
+      '17': true
     },
+    {
+      '1': 'max_members',
+      '3': 3,
+      '4': 1,
+      '5': 4,
+      '9': 1,
+      '10': 'maxMembers',
+      '17': true
+    },
+    {
+      '1': 'require_approval',
+      '3': 4,
+      '4': 1,
+      '5': 8,
+      '9': 2,
+      '10': 'requireApproval',
+      '17': true
+    },
+    {
+      '1': 'allow_auto_join',
+      '3': 5,
+      '4': 1,
+      '5': 8,
+      '9': 3,
+      '10': 'allowAutoJoin',
+      '17': true
+    },
+    {
+      '1': 'chat_enabled',
+      '3': 6,
+      '4': 1,
+      '5': 8,
+      '9': 4,
+      '10': 'chatEnabled',
+      '17': true
+    },
+    {
+      '1': 'auto_play',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.AutoPlaySettingsPatch',
+      '10': 'autoPlay'
+    },
+    {
+      '1': 'admin_added_permissions',
+      '3': 8,
+      '4': 1,
+      '5': 4,
+      '9': 5,
+      '10': 'adminAddedPermissions',
+      '17': true
+    },
+    {
+      '1': 'admin_removed_permissions',
+      '3': 9,
+      '4': 1,
+      '5': 4,
+      '9': 6,
+      '10': 'adminRemovedPermissions',
+      '17': true
+    },
+    {
+      '1': 'member_added_permissions',
+      '3': 10,
+      '4': 1,
+      '5': 4,
+      '9': 7,
+      '10': 'memberAddedPermissions',
+      '17': true
+    },
+    {
+      '1': 'member_removed_permissions',
+      '3': 11,
+      '4': 1,
+      '5': 4,
+      '9': 8,
+      '10': 'memberRemovedPermissions',
+      '17': true
+    },
+    {
+      '1': 'guest_added_permissions',
+      '3': 12,
+      '4': 1,
+      '5': 4,
+      '9': 9,
+      '10': 'guestAddedPermissions',
+      '17': true
+    },
+    {
+      '1': 'guest_removed_permissions',
+      '3': 13,
+      '4': 1,
+      '5': 4,
+      '9': 10,
+      '10': 'guestRemovedPermissions',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_allow_guest_join'},
+    {'1': '_max_members'},
+    {'1': '_require_approval'},
+    {'1': '_allow_auto_join'},
+    {'1': '_chat_enabled'},
+    {'1': '_admin_added_permissions'},
+    {'1': '_admin_removed_permissions'},
+    {'1': '_member_added_permissions'},
+    {'1': '_member_removed_permissions'},
+    {'1': '_guest_added_permissions'},
+    {'1': '_guest_removed_permissions'},
   ],
 };
 
 /// Descriptor for `UpdateRoomSettingsRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateRoomSettingsRequestDescriptor = $convert.base64Decode(
     'ChlVcGRhdGVSb29tU2V0dGluZ3NSZXF1ZXN0EjcKB3Jvb21faWQYASABKAlCHrpIG3IZEAEYQD'
-    'ITXnJvb21fW0EtWmEtejAtOV0rJFIGcm9vbUlkEkQKCHNldHRpbmdzGAIgASgLMiAuc3luY3R2'
-    'LmNsaWVudC5Sb29tU2V0dGluZ3NQYXRjaEIGukgDyAEBUghzZXR0aW5ncw==');
-
-@$core.Deprecated('Use updateRoomSettingsResponseDescriptor instead')
-const UpdateRoomSettingsResponse$json = {
-  '1': 'UpdateRoomSettingsResponse',
-  '2': [
-    {
-      '1': 'room',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.AdminRoom',
-      '10': 'room'
-    },
-  ],
-};
-
-/// Descriptor for `UpdateRoomSettingsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateRoomSettingsResponseDescriptor =
-    $convert.base64Decode(
-        'ChpVcGRhdGVSb29tU2V0dGluZ3NSZXNwb25zZRIrCgRyb29tGAEgASgLMhcuc3luY3R2LmFkbW'
-        'luLkFkbWluUm9vbVIEcm9vbQ==');
+    'ITXnJvb21fW0EtWmEtejAtOV0rJFIGcm9vbUlkEi0KEGFsbG93X2d1ZXN0X2pvaW4YAiABKAhI'
+    'AFIOYWxsb3dHdWVzdEpvaW6IAQESJAoLbWF4X21lbWJlcnMYAyABKARIAVIKbWF4TWVtYmVyc4'
+    'gBARIuChByZXF1aXJlX2FwcHJvdmFsGAQgASgISAJSD3JlcXVpcmVBcHByb3ZhbIgBARIrCg9h'
+    'bGxvd19hdXRvX2pvaW4YBSABKAhIA1INYWxsb3dBdXRvSm9pbogBARImCgxjaGF0X2VuYWJsZW'
+    'QYBiABKAhIBFILY2hhdEVuYWJsZWSIAQESQQoJYXV0b19wbGF5GAcgASgLMiQuc3luY3R2LmNs'
+    'aWVudC5BdXRvUGxheVNldHRpbmdzUGF0Y2hSCGF1dG9QbGF5EjsKF2FkbWluX2FkZGVkX3Blcm'
+    '1pc3Npb25zGAggASgESAVSFWFkbWluQWRkZWRQZXJtaXNzaW9uc4gBARI/ChlhZG1pbl9yZW1v'
+    'dmVkX3Blcm1pc3Npb25zGAkgASgESAZSF2FkbWluUmVtb3ZlZFBlcm1pc3Npb25ziAEBEj0KGG'
+    '1lbWJlcl9hZGRlZF9wZXJtaXNzaW9ucxgKIAEoBEgHUhZtZW1iZXJBZGRlZFBlcm1pc3Npb25z'
+    'iAEBEkEKGm1lbWJlcl9yZW1vdmVkX3Blcm1pc3Npb25zGAsgASgESAhSGG1lbWJlclJlbW92ZW'
+    'RQZXJtaXNzaW9uc4gBARI7ChdndWVzdF9hZGRlZF9wZXJtaXNzaW9ucxgMIAEoBEgJUhVndWVz'
+    'dEFkZGVkUGVybWlzc2lvbnOIAQESPwoZZ3Vlc3RfcmVtb3ZlZF9wZXJtaXNzaW9ucxgNIAEoBE'
+    'gKUhdndWVzdFJlbW92ZWRQZXJtaXNzaW9uc4gBAUITChFfYWxsb3dfZ3Vlc3Rfam9pbkIOCgxf'
+    'bWF4X21lbWJlcnNCEwoRX3JlcXVpcmVfYXBwcm92YWxCEgoQX2FsbG93X2F1dG9fam9pbkIPCg'
+    '1fY2hhdF9lbmFibGVkQhoKGF9hZG1pbl9hZGRlZF9wZXJtaXNzaW9uc0IcChpfYWRtaW5fcmVt'
+    'b3ZlZF9wZXJtaXNzaW9uc0IbChlfbWVtYmVyX2FkZGVkX3Blcm1pc3Npb25zQh0KG19tZW1iZX'
+    'JfcmVtb3ZlZF9wZXJtaXNzaW9uc0IaChhfZ3Vlc3RfYWRkZWRfcGVybWlzc2lvbnNCHAoaX2d1'
+    'ZXN0X3JlbW92ZWRfcGVybWlzc2lvbnM=');
 
 @$core.Deprecated('Use resetRoomSettingsRequestDescriptor instead')
 const ResetRoomSettingsRequest$json = {
@@ -3277,7 +3959,7 @@ const ResetRoomSettingsResponse$json = {
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.AdminRoom',
+      '6': '.synctv.admin.Room',
       '10': 'room'
     },
   ],
@@ -3286,8 +3968,8 @@ const ResetRoomSettingsResponse$json = {
 /// Descriptor for `ResetRoomSettingsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List resetRoomSettingsResponseDescriptor =
     $convert.base64Decode(
-        'ChlSZXNldFJvb21TZXR0aW5nc1Jlc3BvbnNlEisKBHJvb20YASABKAsyFy5zeW5jdHYuYWRtaW'
-        '4uQWRtaW5Sb29tUgRyb29t');
+        'ChlSZXNldFJvb21TZXR0aW5nc1Jlc3BvbnNlEiYKBHJvb20YASABKAsyEi5zeW5jdHYuYWRtaW'
+        '4uUm9vbVIEcm9vbQ==');
 
 @$core.Deprecated('Use updateRoomPasswordRequestDescriptor instead')
 const UpdateRoomPasswordRequest$json = {
@@ -3366,7 +4048,7 @@ const BanRoomResponse$json = {
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.AdminRoom',
+      '6': '.synctv.admin.Room',
       '10': 'room'
     },
   ],
@@ -3374,8 +4056,8 @@ const BanRoomResponse$json = {
 
 /// Descriptor for `BanRoomResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List banRoomResponseDescriptor = $convert.base64Decode(
-    'Cg9CYW5Sb29tUmVzcG9uc2USKwoEcm9vbRgBIAEoCzIXLnN5bmN0di5hZG1pbi5BZG1pblJvb2'
-    '1SBHJvb20=');
+    'Cg9CYW5Sb29tUmVzcG9uc2USJgoEcm9vbRgBIAEoCzISLnN5bmN0di5hZG1pbi5Sb29tUgRyb2'
+    '9t');
 
 @$core.Deprecated('Use unbanRoomRequestDescriptor instead')
 const UnbanRoomRequest$json = {
@@ -3399,7 +4081,7 @@ const UnbanRoomResponse$json = {
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.AdminRoom',
+      '6': '.synctv.admin.Room',
       '10': 'room'
     },
   ],
@@ -3407,8 +4089,8 @@ const UnbanRoomResponse$json = {
 
 /// Descriptor for `UnbanRoomResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List unbanRoomResponseDescriptor = $convert.base64Decode(
-    'ChFVbmJhblJvb21SZXNwb25zZRIrCgRyb29tGAEgASgLMhcuc3luY3R2LmFkbWluLkFkbWluUm'
-    '9vbVIEcm9vbQ==');
+    'ChFVbmJhblJvb21SZXNwb25zZRImCgRyb29tGAEgASgLMhIuc3luY3R2LmFkbWluLlJvb21SBH'
+    'Jvb20=');
 
 @$core.Deprecated('Use getRoomMembersRequestDescriptor instead')
 const GetRoomMembersRequest$json = {
@@ -4421,17 +5103,12 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'GetSettings',
       '2': '.synctv.admin.GetSettingsRequest',
-      '3': '.synctv.admin.GetSettingsResponse'
-    },
-    {
-      '1': 'GetSettingsGroup',
-      '2': '.synctv.admin.GetSettingsGroupRequest',
-      '3': '.synctv.admin.GetSettingsGroupResponse'
+      '3': '.synctv.admin.RuntimeSettings'
     },
     {
       '1': 'UpdateSettings',
       '2': '.synctv.admin.UpdateSettingsRequest',
-      '3': '.synctv.admin.UpdateSettingsResponse'
+      '3': '.synctv.admin.RuntimeSettings'
     },
     {
       '1': 'SendTestEmail',
@@ -4536,7 +5213,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'UpdateRoomSettings',
       '2': '.synctv.admin.UpdateRoomSettingsRequest',
-      '3': '.synctv.admin.UpdateRoomSettingsResponse'
+      '3': '.synctv.admin.Room'
     },
     {
       '1': 'ResetRoomSettings',
@@ -4720,17 +5397,18 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
 const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
     AdminServiceBase$messageJson = {
   '.synctv.admin.GetSettingsRequest': GetSettingsRequest$json,
-  '.synctv.admin.GetSettingsResponse': GetSettingsResponse$json,
-  '.synctv.admin.SettingsGroup': SettingsGroup$json,
-  '.synctv.admin.ServerSettings': ServerSettings$json,
+  '.synctv.admin.RuntimeSettings': RuntimeSettings$json,
+  '.synctv.admin.RoomDefaultsSettings': RoomDefaultsSettings$json,
   '.synctv.admin.PermissionSettings': PermissionSettings$json,
-  '.synctv.admin.RoomPolicySettings': RoomPolicySettings$json,
+  '.synctv.admin.RoomCreationSettings': RoomCreationSettings$json,
   '.synctv.admin.UserSettings': UserSettings$json,
   '.synctv.admin.OAuth2Settings': OAuth2Settings$json,
   '.synctv.admin.OAuth2ProviderSettings': OAuth2ProviderSettings$json,
-  '.synctv.admin.OAuth2BasicProviderConfig': OAuth2BasicProviderConfig$json,
+  '.synctv.admin.OAuth2GithubProviderConfig': OAuth2GithubProviderConfig$json,
+  '.synctv.admin.OAuth2GoogleProviderConfig': OAuth2GoogleProviderConfig$json,
   '.synctv.admin.OAuth2LogtoProviderConfig': OAuth2LogtoProviderConfig$json,
   '.synctv.admin.OAuth2OidcProviderConfig': OAuth2OidcProviderConfig$json,
+  '.synctv.admin.OAuth2CasdoorProviderConfig': OAuth2CasdoorProviderConfig$json,
   '.synctv.admin.ProxySettings': ProxySettings$json,
   '.synctv.admin.RtmpSettings': RtmpSettings$json,
   '.synctv.admin.EmailSettings': EmailSettings$json,
@@ -4738,10 +5416,21 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.IceServer': $1.IceServer$json,
   '.synctv.admin.ChatSettings': ChatSettings$json,
   '.synctv.admin.CorsSettings': CorsSettings$json,
-  '.synctv.admin.GetSettingsGroupRequest': GetSettingsGroupRequest$json,
-  '.synctv.admin.GetSettingsGroupResponse': GetSettingsGroupResponse$json,
   '.synctv.admin.UpdateSettingsRequest': UpdateSettingsRequest$json,
-  '.synctv.admin.UpdateSettingsResponse': UpdateSettingsResponse$json,
+  '.synctv.admin.RoomDefaultsSettingsPatch': RoomDefaultsSettingsPatch$json,
+  '.synctv.admin.PermissionSettingsPatch': PermissionSettingsPatch$json,
+  '.synctv.admin.RoomCreationSettingsPatch': RoomCreationSettingsPatch$json,
+  '.synctv.admin.UserSettingsPatch': UserSettingsPatch$json,
+  '.synctv.admin.OAuth2SettingsPatch': OAuth2SettingsPatch$json,
+  '.synctv.admin.OAuth2ProviderList': OAuth2ProviderList$json,
+  '.synctv.admin.ProxySettingsPatch': ProxySettingsPatch$json,
+  '.synctv.admin.RtmpSettingsPatch': RtmpSettingsPatch$json,
+  '.synctv.admin.EmailSettingsPatch': EmailSettingsPatch$json,
+  '.synctv.admin.StringList': StringList$json,
+  '.synctv.admin.WebRtcSettingsPatch': WebRtcSettingsPatch$json,
+  '.synctv.admin.IceServerList': IceServerList$json,
+  '.synctv.admin.ChatSettingsPatch': ChatSettingsPatch$json,
+  '.synctv.admin.CorsSettingsPatch': CorsSettingsPatch$json,
   '.synctv.admin.SendTestEmailRequest': SendTestEmailRequest$json,
   '.synctv.admin.SendTestEmailResponse': SendTestEmailResponse$json,
   '.synctv.admin.CreateUserRequest': CreateUserRequest$json,
@@ -4779,7 +5468,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.UnbanUserResponse': UnbanUserResponse$json,
   '.synctv.admin.GetUserRoomsRequest': GetUserRoomsRequest$json,
   '.synctv.admin.GetUserRoomsResponse': GetUserRoomsResponse$json,
-  '.synctv.admin.AdminRoom': AdminRoom$json,
+  '.synctv.admin.Room': Room$json,
   '.synctv.common.RoomPresenceStats': $0.RoomPresenceStats$json,
   '.synctv.client.ResourceCover': $1.ResourceCover$json,
   '.synctv.client.FileMetadata': $1.FileMetadata$json,
@@ -4802,9 +5491,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.GetRoomSettingsRequest': GetRoomSettingsRequest$json,
   '.synctv.admin.GetRoomSettingsResponse': GetRoomSettingsResponse$json,
   '.synctv.admin.UpdateRoomSettingsRequest': UpdateRoomSettingsRequest$json,
-  '.synctv.client.RoomSettingsPatch': $1.RoomSettingsPatch$json,
   '.synctv.client.AutoPlaySettingsPatch': $1.AutoPlaySettingsPatch$json,
-  '.synctv.admin.UpdateRoomSettingsResponse': UpdateRoomSettingsResponse$json,
   '.synctv.admin.ResetRoomSettingsRequest': ResetRoomSettingsRequest$json,
   '.synctv.admin.ResetRoomSettingsResponse': ResetRoomSettingsResponse$json,
   '.synctv.admin.UpdateRoomPasswordRequest': UpdateRoomPasswordRequest$json,
@@ -4909,107 +5596,104 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
 
 /// Descriptor for `AdminService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
 final $typed_data.Uint8List adminServiceDescriptor = $convert.base64Decode(
-    'CgxBZG1pblNlcnZpY2USUgoLR2V0U2V0dGluZ3MSIC5zeW5jdHYuYWRtaW4uR2V0U2V0dGluZ3'
-    'NSZXF1ZXN0GiEuc3luY3R2LmFkbWluLkdldFNldHRpbmdzUmVzcG9uc2USYQoQR2V0U2V0dGlu'
-    'Z3NHcm91cBIlLnN5bmN0di5hZG1pbi5HZXRTZXR0aW5nc0dyb3VwUmVxdWVzdBomLnN5bmN0di'
-    '5hZG1pbi5HZXRTZXR0aW5nc0dyb3VwUmVzcG9uc2USWwoOVXBkYXRlU2V0dGluZ3MSIy5zeW5j'
-    'dHYuYWRtaW4uVXBkYXRlU2V0dGluZ3NSZXF1ZXN0GiQuc3luY3R2LmFkbWluLlVwZGF0ZVNldH'
-    'RpbmdzUmVzcG9uc2USWAoNU2VuZFRlc3RFbWFpbBIiLnN5bmN0di5hZG1pbi5TZW5kVGVzdEVt'
-    'YWlsUmVxdWVzdBojLnN5bmN0di5hZG1pbi5TZW5kVGVzdEVtYWlsUmVzcG9uc2USTwoKQ3JlYX'
-    'RlVXNlchIfLnN5bmN0di5hZG1pbi5DcmVhdGVVc2VyUmVxdWVzdBogLnN5bmN0di5hZG1pbi5D'
-    'cmVhdGVVc2VyUmVzcG9uc2USTwoKRGVsZXRlVXNlchIfLnN5bmN0di5hZG1pbi5EZWxldGVVc2'
-    'VyUmVxdWVzdBogLnN5bmN0di5hZG1pbi5EZWxldGVVc2VyUmVzcG9uc2USTAoJTGlzdFVzZXJz'
-    'Eh4uc3luY3R2LmFkbWluLkxpc3RVc2Vyc1JlcXVlc3QaHy5zeW5jdHYuYWRtaW4uTGlzdFVzZX'
-    'JzUmVzcG9uc2USRgoHR2V0VXNlchIcLnN5bmN0di5hZG1pbi5HZXRVc2VyUmVxdWVzdBodLnN5'
-    'bmN0di5hZG1pbi5HZXRVc2VyUmVzcG9uc2USZwoSR2V0VXNlclByZWZlcmVuY2VzEicuc3luY3'
-    'R2LmFkbWluLkdldFVzZXJQcmVmZXJlbmNlc1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uR2V0VXNl'
-    'clByZWZlcmVuY2VzUmVzcG9uc2UScAoVVXBkYXRlVXNlclByZWZlcmVuY2VzEiouc3luY3R2Lm'
-    'FkbWluLlVwZGF0ZVVzZXJQcmVmZXJlbmNlc1JlcXVlc3QaKy5zeW5jdHYuYWRtaW4uVXBkYXRl'
-    'VXNlclByZWZlcmVuY2VzUmVzcG9uc2USXgoPU2V0VXNlclBhc3N3b3JkEiQuc3luY3R2LmFkbW'
-    'luLlNldFVzZXJQYXNzd29yZFJlcXVlc3QaJS5zeW5jdHYuYWRtaW4uU2V0VXNlclBhc3N3b3Jk'
-    'UmVzcG9uc2USZwoSVXBkYXRlVXNlclVzZXJuYW1lEicuc3luY3R2LmFkbWluLlVwZGF0ZVVzZX'
-    'JVc2VybmFtZVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlVXNlclVzZXJuYW1lUmVzcG9u'
-    'c2USWwoOVXBkYXRlVXNlclJvbGUSIy5zeW5jdHYuYWRtaW4uVXBkYXRlVXNlclJvbGVSZXF1ZX'
-    'N0GiQuc3luY3R2LmFkbWluLlVwZGF0ZVVzZXJSb2xlUmVzcG9uc2USRgoHQmFuVXNlchIcLnN5'
-    'bmN0di5hZG1pbi5CYW5Vc2VyUmVxdWVzdBodLnN5bmN0di5hZG1pbi5CYW5Vc2VyUmVzcG9uc2'
-    'USTAoJVW5iYW5Vc2VyEh4uc3luY3R2LmFkbWluLlVuYmFuVXNlclJlcXVlc3QaHy5zeW5jdHYu'
-    'YWRtaW4uVW5iYW5Vc2VyUmVzcG9uc2USVQoMR2V0VXNlclJvb21zEiEuc3luY3R2LmFkbWluLk'
-    'dldFVzZXJSb29tc1JlcXVlc3QaIi5zeW5jdHYuYWRtaW4uR2V0VXNlclJvb21zUmVzcG9uc2US'
-    'WAoNQmF0Y2hCYW5Vc2VycxIiLnN5bmN0di5hZG1pbi5CYXRjaEJhblVzZXJzUmVxdWVzdBojLn'
-    'N5bmN0di5hZG1pbi5CYXRjaEJhblVzZXJzUmVzcG9uc2USYQoQQmF0Y2hEZWxldGVVc2VycxIl'
-    'LnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVVzZXJzUmVxdWVzdBomLnN5bmN0di5hZG1pbi5CYX'
-    'RjaERlbGV0ZVVzZXJzUmVzcG9uc2USWAoNQmF0Y2hCYW5Sb29tcxIiLnN5bmN0di5hZG1pbi5C'
-    'YXRjaEJhblJvb21zUmVxdWVzdBojLnN5bmN0di5hZG1pbi5CYXRjaEJhblJvb21zUmVzcG9uc2'
-    'USYQoQQmF0Y2hEZWxldGVSb29tcxIlLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVJvb21zUmVx'
-    'dWVzdBomLnN5bmN0di5hZG1pbi5CYXRjaERlbGV0ZVJvb21zUmVzcG9uc2USTAoJTGlzdFJvb2'
-    '1zEh4uc3luY3R2LmFkbWluLkxpc3RSb29tc1JlcXVlc3QaHy5zeW5jdHYuYWRtaW4uTGlzdFJv'
-    'b21zUmVzcG9uc2USRgoHR2V0Um9vbRIcLnN5bmN0di5hZG1pbi5HZXRSb29tUmVxdWVzdBodLn'
-    'N5bmN0di5hZG1pbi5HZXRSb29tUmVzcG9uc2USXgoPR2V0Um9vbVNldHRpbmdzEiQuc3luY3R2'
-    'LmFkbWluLkdldFJvb21TZXR0aW5nc1JlcXVlc3QaJS5zeW5jdHYuYWRtaW4uR2V0Um9vbVNldH'
-    'RpbmdzUmVzcG9uc2USZwoSVXBkYXRlUm9vbVNldHRpbmdzEicuc3luY3R2LmFkbWluLlVwZGF0'
-    'ZVJvb21TZXR0aW5nc1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVNldHRpbmdzUm'
-    'VzcG9uc2USZAoRUmVzZXRSb29tU2V0dGluZ3MSJi5zeW5jdHYuYWRtaW4uUmVzZXRSb29tU2V0'
-    'dGluZ3NSZXF1ZXN0Gicuc3luY3R2LmFkbWluLlJlc2V0Um9vbVNldHRpbmdzUmVzcG9uc2USZw'
-    'oSVXBkYXRlUm9vbVBhc3N3b3JkEicuc3luY3R2LmFkbWluLlVwZGF0ZVJvb21QYXNzd29yZFJl'
-    'cXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVBhc3N3b3JkUmVzcG9uc2USTwoKRGVsZX'
-    'RlUm9vbRIfLnN5bmN0di5hZG1pbi5EZWxldGVSb29tUmVxdWVzdBogLnN5bmN0di5hZG1pbi5E'
-    'ZWxldGVSb29tUmVzcG9uc2USRgoHQmFuUm9vbRIcLnN5bmN0di5hZG1pbi5CYW5Sb29tUmVxdW'
-    'VzdBodLnN5bmN0di5hZG1pbi5CYW5Sb29tUmVzcG9uc2USTAoJVW5iYW5Sb29tEh4uc3luY3R2'
-    'LmFkbWluLlVuYmFuUm9vbVJlcXVlc3QaHy5zeW5jdHYuYWRtaW4uVW5iYW5Sb29tUmVzcG9uc2'
-    'USWwoOR2V0Um9vbU1lbWJlcnMSIy5zeW5jdHYuYWRtaW4uR2V0Um9vbU1lbWJlcnNSZXF1ZXN0'
-    'GiQuc3luY3R2LmFkbWluLkdldFJvb21NZW1iZXJzUmVzcG9uc2USTAoJQWRkTWVtYmVyEh4uc3'
-    'luY3R2LmFkbWluLkFkZE1lbWJlclJlcXVlc3QaHy5zeW5jdHYuYWRtaW4uQWRkTWVtYmVyUmVz'
-    'cG9uc2USdgoXVXBkYXRlTWVtYmVyUGVybWlzc2lvbnMSLC5zeW5jdHYuYWRtaW4uVXBkYXRlTW'
-    'VtYmVyUGVybWlzc2lvbnNSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLlVwZGF0ZU1lbWJlclBlcm1p'
-    'c3Npb25zUmVzcG9uc2USTwoKS2lja01lbWJlchIfLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUm'
-    'VxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUmVzcG9uc2USZwoSTGlzdFJvb21DYXRl'
-    'Z29yaWVzEicuc3luY3R2LmFkbWluLkxpc3RSb29tQ2F0ZWdvcmllc1JlcXVlc3QaKC5zeW5jdH'
-    'YuYWRtaW4uTGlzdFJvb21DYXRlZ29yaWVzUmVzcG9uc2USZwoSVXBzZXJ0Um9vbUNhdGVnb3J5'
-    'Eicuc3luY3R2LmFkbWluLlVwc2VydFJvb21DYXRlZ29yeVJlcXVlc3QaKC5zeW5jdHYuYWRtaW'
-    '4uVXBzZXJ0Um9vbUNhdGVnb3J5UmVzcG9uc2USZwoSRGVsZXRlUm9vbUNhdGVnb3J5Eicuc3lu'
-    'Y3R2LmFkbWluLkRlbGV0ZVJvb21DYXRlZ29yeVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uRGVsZX'
-    'RlUm9vbUNhdGVnb3J5UmVzcG9uc2USWwoOTGlzdFJvb21MYWJlbHMSIy5zeW5jdHYuYWRtaW4u'
-    'TGlzdFJvb21MYWJlbHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkxpc3RSb29tTGFiZWxzUmVzcG'
-    '9uc2USXgoPVXBzZXJ0Um9vbUxhYmVsEiQuc3luY3R2LmFkbWluLlVwc2VydFJvb21MYWJlbFJl'
-    'cXVlc3QaJS5zeW5jdHYuYWRtaW4uVXBzZXJ0Um9vbUxhYmVsUmVzcG9uc2USXgoPRGVsZXRlUm'
-    '9vbUxhYmVsEiQuc3luY3R2LmFkbWluLkRlbGV0ZVJvb21MYWJlbFJlcXVlc3QaJS5zeW5jdHYu'
-    'YWRtaW4uRGVsZXRlUm9vbUxhYmVsUmVzcG9uc2USZwoSVXBkYXRlUm9vbVRheG9ub215Eicuc3'
-    'luY3R2LmFkbWluLlVwZGF0ZVJvb21UYXhvbm9teVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBk'
-    'YXRlUm9vbVRheG9ub215UmVzcG9uc2USSQoIQWRkQWRtaW4SHS5zeW5jdHYuYWRtaW4uQWRkQW'
-    'RtaW5SZXF1ZXN0Gh4uc3luY3R2LmFkbWluLkFkZEFkbWluUmVzcG9uc2USUgoLUmVtb3ZlQWRt'
-    'aW4SIC5zeW5jdHYuYWRtaW4uUmVtb3ZlQWRtaW5SZXF1ZXN0GiEuc3luY3R2LmFkbWluLlJlbW'
-    '92ZUFkbWluUmVzcG9uc2USTwoKTGlzdEFkbWlucxIfLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5z'
-    'UmVxdWVzdBogLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5zUmVzcG9uc2USWwoOR2V0U3lzdGVtU3'
-    'RhdHMSIy5zeW5jdHYuYWRtaW4uR2V0U3lzdGVtU3RhdHNSZXF1ZXN0GiQuc3luY3R2LmFkbWlu'
-    'LkdldFN5c3RlbVN0YXRzUmVzcG9uc2USZAoRTGlzdEFjdGl2ZVN0cmVhbXMSJi5zeW5jdHYuYW'
-    'RtaW4uTGlzdEFjdGl2ZVN0cmVhbXNSZXF1ZXN0Gicuc3luY3R2LmFkbWluLkxpc3RBY3RpdmVT'
-    'dHJlYW1zUmVzcG9uc2USTwoKS2lja1N0cmVhbRIfLnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUm'
-    'VxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUmVzcG9uc2USggEKG0xpc3RVc2VyUmVn'
-    'aXN0cmF0aW9uUmV2aWV3cxIwLnN5bmN0di5hZG1pbi5MaXN0VXNlclJlZ2lzdHJhdGlvblJldm'
-    'lld3NSZXF1ZXN0GjEuc3luY3R2LmFkbWluLkxpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3c1Jl'
-    'c3BvbnNlEogBCh1BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmlldxIyLnN5bmN0di5hZG1pbi'
-    '5BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmlld1JlcXVlc3QaMy5zeW5jdHYuYWRtaW4uQXBw'
-    'cm92ZVVzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXNwb25zZRKFAQocUmVqZWN0VXNlclJlZ2lzdH'
-    'JhdGlvblJldmlldxIxLnN5bmN0di5hZG1pbi5SZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3'
-    'UmVxdWVzdBoyLnN5bmN0di5hZG1pbi5SZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVzcG'
-    '9uc2USdgoXTGlzdFJvb21DcmVhdGlvblJldmlld3MSLC5zeW5jdHYuYWRtaW4uTGlzdFJvb21D'
-    'cmVhdGlvblJldmlld3NSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLkxpc3RSb29tQ3JlYXRpb25SZX'
-    'ZpZXdzUmVzcG9uc2USfAoZQXBwcm92ZVJvb21DcmVhdGlvblJldmlldxIuLnN5bmN0di5hZG1p'
-    'bi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVxdWVzdBovLnN5bmN0di5hZG1pbi5BcHByb3'
-    'ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USeQoYUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3'
-    'Ei0uc3luY3R2LmFkbWluLlJlamVjdFJvb21DcmVhdGlvblJldmlld1JlcXVlc3QaLi5zeW5jdH'
-    'YuYWRtaW4uUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USagoTTGlzdFJvb21Kb2lu'
-    'UmV2aWV3cxIoLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZpZXdzUmVxdWVzdBopLnN5bm'
-    'N0di5hZG1pbi5MaXN0Um9vbUpvaW5SZXZpZXdzUmVzcG9uc2UScAoVQXBwcm92ZVJvb21Kb2lu'
-    'UmV2aWV3Eiouc3luY3R2LmFkbWluLkFwcHJvdmVSb29tSm9pblJldmlld1JlcXVlc3QaKy5zeW'
-    '5jdHYuYWRtaW4uQXBwcm92ZVJvb21Kb2luUmV2aWV3UmVzcG9uc2USbQoUUmVqZWN0Um9vbUpv'
-    'aW5SZXZpZXcSKS5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUpvaW5SZXZpZXdSZXF1ZXN0Giouc3'
-    'luY3R2LmFkbWluLlJlamVjdFJvb21Kb2luUmV2aWV3UmVzcG9uc2USWwoOTGlzdEJhblJlY29y'
-    'ZHMSIy5zeW5jdHYuYWRtaW4uTGlzdEJhblJlY29yZHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLk'
-    'xpc3RCYW5SZWNvcmRzUmVzcG9uc2USZwoSTGlzdENvbnRlbnRSZXBvcnRzEicuc3luY3R2LmFk'
-    'bWluLkxpc3RDb250ZW50UmVwb3J0c1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uTGlzdENvbnRlbn'
-    'RSZXBvcnRzUmVzcG9uc2USYQoQR2V0Q29udGVudFJlcG9ydBIlLnN5bmN0di5hZG1pbi5HZXRD'
-    'b250ZW50UmVwb3J0UmVxdWVzdBomLnN5bmN0di5hZG1pbi5HZXRDb250ZW50UmVwb3J0UmVzcG'
-    '9uc2USfAoZVXBkYXRlQ29udGVudFJlcG9ydFN0YXR1cxIuLnN5bmN0di5hZG1pbi5VcGRhdGVD'
-    'b250ZW50UmVwb3J0U3RhdHVzUmVxdWVzdBovLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50Um'
-    'Vwb3J0U3RhdHVzUmVzcG9uc2U=');
+    'CgxBZG1pblNlcnZpY2USTgoLR2V0U2V0dGluZ3MSIC5zeW5jdHYuYWRtaW4uR2V0U2V0dGluZ3'
+    'NSZXF1ZXN0Gh0uc3luY3R2LmFkbWluLlJ1bnRpbWVTZXR0aW5ncxJUCg5VcGRhdGVTZXR0aW5n'
+    'cxIjLnN5bmN0di5hZG1pbi5VcGRhdGVTZXR0aW5nc1JlcXVlc3QaHS5zeW5jdHYuYWRtaW4uUn'
+    'VudGltZVNldHRpbmdzElgKDVNlbmRUZXN0RW1haWwSIi5zeW5jdHYuYWRtaW4uU2VuZFRlc3RF'
+    'bWFpbFJlcXVlc3QaIy5zeW5jdHYuYWRtaW4uU2VuZFRlc3RFbWFpbFJlc3BvbnNlEk8KCkNyZW'
+    'F0ZVVzZXISHy5zeW5jdHYuYWRtaW4uQ3JlYXRlVXNlclJlcXVlc3QaIC5zeW5jdHYuYWRtaW4u'
+    'Q3JlYXRlVXNlclJlc3BvbnNlEk8KCkRlbGV0ZVVzZXISHy5zeW5jdHYuYWRtaW4uRGVsZXRlVX'
+    'NlclJlcXVlc3QaIC5zeW5jdHYuYWRtaW4uRGVsZXRlVXNlclJlc3BvbnNlEkwKCUxpc3RVc2Vy'
+    'cxIeLnN5bmN0di5hZG1pbi5MaXN0VXNlcnNSZXF1ZXN0Gh8uc3luY3R2LmFkbWluLkxpc3RVc2'
+    'Vyc1Jlc3BvbnNlEkYKB0dldFVzZXISHC5zeW5jdHYuYWRtaW4uR2V0VXNlclJlcXVlc3QaHS5z'
+    'eW5jdHYuYWRtaW4uR2V0VXNlclJlc3BvbnNlEmcKEkdldFVzZXJQcmVmZXJlbmNlcxInLnN5bm'
+    'N0di5hZG1pbi5HZXRVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0Giguc3luY3R2LmFkbWluLkdldFVz'
+    'ZXJQcmVmZXJlbmNlc1Jlc3BvbnNlEnAKFVVwZGF0ZVVzZXJQcmVmZXJlbmNlcxIqLnN5bmN0di'
+    '5hZG1pbi5VcGRhdGVVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0Gisuc3luY3R2LmFkbWluLlVwZGF0'
+    'ZVVzZXJQcmVmZXJlbmNlc1Jlc3BvbnNlEl4KD1NldFVzZXJQYXNzd29yZBIkLnN5bmN0di5hZG'
+    '1pbi5TZXRVc2VyUGFzc3dvcmRSZXF1ZXN0GiUuc3luY3R2LmFkbWluLlNldFVzZXJQYXNzd29y'
+    'ZFJlc3BvbnNlEmcKElVwZGF0ZVVzZXJVc2VybmFtZRInLnN5bmN0di5hZG1pbi5VcGRhdGVVc2'
+    'VyVXNlcm5hbWVSZXF1ZXN0Giguc3luY3R2LmFkbWluLlVwZGF0ZVVzZXJVc2VybmFtZVJlc3Bv'
+    'bnNlElsKDlVwZGF0ZVVzZXJSb2xlEiMuc3luY3R2LmFkbWluLlVwZGF0ZVVzZXJSb2xlUmVxdW'
+    'VzdBokLnN5bmN0di5hZG1pbi5VcGRhdGVVc2VyUm9sZVJlc3BvbnNlEkYKB0JhblVzZXISHC5z'
+    'eW5jdHYuYWRtaW4uQmFuVXNlclJlcXVlc3QaHS5zeW5jdHYuYWRtaW4uQmFuVXNlclJlc3Bvbn'
+    'NlEkwKCVVuYmFuVXNlchIeLnN5bmN0di5hZG1pbi5VbmJhblVzZXJSZXF1ZXN0Gh8uc3luY3R2'
+    'LmFkbWluLlVuYmFuVXNlclJlc3BvbnNlElUKDEdldFVzZXJSb29tcxIhLnN5bmN0di5hZG1pbi'
+    '5HZXRVc2VyUm9vbXNSZXF1ZXN0GiIuc3luY3R2LmFkbWluLkdldFVzZXJSb29tc1Jlc3BvbnNl'
+    'ElgKDUJhdGNoQmFuVXNlcnMSIi5zeW5jdHYuYWRtaW4uQmF0Y2hCYW5Vc2Vyc1JlcXVlc3QaIy'
+    '5zeW5jdHYuYWRtaW4uQmF0Y2hCYW5Vc2Vyc1Jlc3BvbnNlEmEKEEJhdGNoRGVsZXRlVXNlcnMS'
+    'JS5zeW5jdHYuYWRtaW4uQmF0Y2hEZWxldGVVc2Vyc1JlcXVlc3QaJi5zeW5jdHYuYWRtaW4uQm'
+    'F0Y2hEZWxldGVVc2Vyc1Jlc3BvbnNlElgKDUJhdGNoQmFuUm9vbXMSIi5zeW5jdHYuYWRtaW4u'
+    'QmF0Y2hCYW5Sb29tc1JlcXVlc3QaIy5zeW5jdHYuYWRtaW4uQmF0Y2hCYW5Sb29tc1Jlc3Bvbn'
+    'NlEmEKEEJhdGNoRGVsZXRlUm9vbXMSJS5zeW5jdHYuYWRtaW4uQmF0Y2hEZWxldGVSb29tc1Jl'
+    'cXVlc3QaJi5zeW5jdHYuYWRtaW4uQmF0Y2hEZWxldGVSb29tc1Jlc3BvbnNlEkwKCUxpc3RSb2'
+    '9tcxIeLnN5bmN0di5hZG1pbi5MaXN0Um9vbXNSZXF1ZXN0Gh8uc3luY3R2LmFkbWluLkxpc3RS'
+    'b29tc1Jlc3BvbnNlEkYKB0dldFJvb20SHC5zeW5jdHYuYWRtaW4uR2V0Um9vbVJlcXVlc3QaHS'
+    '5zeW5jdHYuYWRtaW4uR2V0Um9vbVJlc3BvbnNlEl4KD0dldFJvb21TZXR0aW5ncxIkLnN5bmN0'
+    'di5hZG1pbi5HZXRSb29tU2V0dGluZ3NSZXF1ZXN0GiUuc3luY3R2LmFkbWluLkdldFJvb21TZX'
+    'R0aW5nc1Jlc3BvbnNlElEKElVwZGF0ZVJvb21TZXR0aW5ncxInLnN5bmN0di5hZG1pbi5VcGRh'
+    'dGVSb29tU2V0dGluZ3NSZXF1ZXN0GhIuc3luY3R2LmFkbWluLlJvb20SZAoRUmVzZXRSb29tU2'
+    'V0dGluZ3MSJi5zeW5jdHYuYWRtaW4uUmVzZXRSb29tU2V0dGluZ3NSZXF1ZXN0Gicuc3luY3R2'
+    'LmFkbWluLlJlc2V0Um9vbVNldHRpbmdzUmVzcG9uc2USZwoSVXBkYXRlUm9vbVBhc3N3b3JkEi'
+    'cuc3luY3R2LmFkbWluLlVwZGF0ZVJvb21QYXNzd29yZFJlcXVlc3QaKC5zeW5jdHYuYWRtaW4u'
+    'VXBkYXRlUm9vbVBhc3N3b3JkUmVzcG9uc2USTwoKRGVsZXRlUm9vbRIfLnN5bmN0di5hZG1pbi'
+    '5EZWxldGVSb29tUmVxdWVzdBogLnN5bmN0di5hZG1pbi5EZWxldGVSb29tUmVzcG9uc2USRgoH'
+    'QmFuUm9vbRIcLnN5bmN0di5hZG1pbi5CYW5Sb29tUmVxdWVzdBodLnN5bmN0di5hZG1pbi5CYW'
+    '5Sb29tUmVzcG9uc2USTAoJVW5iYW5Sb29tEh4uc3luY3R2LmFkbWluLlVuYmFuUm9vbVJlcXVl'
+    'c3QaHy5zeW5jdHYuYWRtaW4uVW5iYW5Sb29tUmVzcG9uc2USWwoOR2V0Um9vbU1lbWJlcnMSIy'
+    '5zeW5jdHYuYWRtaW4uR2V0Um9vbU1lbWJlcnNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkdldFJv'
+    'b21NZW1iZXJzUmVzcG9uc2USTAoJQWRkTWVtYmVyEh4uc3luY3R2LmFkbWluLkFkZE1lbWJlcl'
+    'JlcXVlc3QaHy5zeW5jdHYuYWRtaW4uQWRkTWVtYmVyUmVzcG9uc2USdgoXVXBkYXRlTWVtYmVy'
+    'UGVybWlzc2lvbnMSLC5zeW5jdHYuYWRtaW4uVXBkYXRlTWVtYmVyUGVybWlzc2lvbnNSZXF1ZX'
+    'N0Gi0uc3luY3R2LmFkbWluLlVwZGF0ZU1lbWJlclBlcm1pc3Npb25zUmVzcG9uc2USTwoKS2lj'
+    'a01lbWJlchIfLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUmVxdWVzdBogLnN5bmN0di5hZG1pbi'
+    '5LaWNrTWVtYmVyUmVzcG9uc2USZwoSTGlzdFJvb21DYXRlZ29yaWVzEicuc3luY3R2LmFkbWlu'
+    'Lkxpc3RSb29tQ2F0ZWdvcmllc1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uTGlzdFJvb21DYXRlZ2'
+    '9yaWVzUmVzcG9uc2USZwoSVXBzZXJ0Um9vbUNhdGVnb3J5Eicuc3luY3R2LmFkbWluLlVwc2Vy'
+    'dFJvb21DYXRlZ29yeVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBzZXJ0Um9vbUNhdGVnb3J5Um'
+    'VzcG9uc2USZwoSRGVsZXRlUm9vbUNhdGVnb3J5Eicuc3luY3R2LmFkbWluLkRlbGV0ZVJvb21D'
+    'YXRlZ29yeVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uRGVsZXRlUm9vbUNhdGVnb3J5UmVzcG9uc2'
+    'USWwoOTGlzdFJvb21MYWJlbHMSIy5zeW5jdHYuYWRtaW4uTGlzdFJvb21MYWJlbHNSZXF1ZXN0'
+    'GiQuc3luY3R2LmFkbWluLkxpc3RSb29tTGFiZWxzUmVzcG9uc2USXgoPVXBzZXJ0Um9vbUxhYm'
+    'VsEiQuc3luY3R2LmFkbWluLlVwc2VydFJvb21MYWJlbFJlcXVlc3QaJS5zeW5jdHYuYWRtaW4u'
+    'VXBzZXJ0Um9vbUxhYmVsUmVzcG9uc2USXgoPRGVsZXRlUm9vbUxhYmVsEiQuc3luY3R2LmFkbW'
+    'luLkRlbGV0ZVJvb21MYWJlbFJlcXVlc3QaJS5zeW5jdHYuYWRtaW4uRGVsZXRlUm9vbUxhYmVs'
+    'UmVzcG9uc2USZwoSVXBkYXRlUm9vbVRheG9ub215Eicuc3luY3R2LmFkbWluLlVwZGF0ZVJvb2'
+    '1UYXhvbm9teVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVRheG9ub215UmVzcG9u'
+    'c2USSQoIQWRkQWRtaW4SHS5zeW5jdHYuYWRtaW4uQWRkQWRtaW5SZXF1ZXN0Gh4uc3luY3R2Lm'
+    'FkbWluLkFkZEFkbWluUmVzcG9uc2USUgoLUmVtb3ZlQWRtaW4SIC5zeW5jdHYuYWRtaW4uUmVt'
+    'b3ZlQWRtaW5SZXF1ZXN0GiEuc3luY3R2LmFkbWluLlJlbW92ZUFkbWluUmVzcG9uc2USTwoKTG'
+    'lzdEFkbWlucxIfLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5zUmVxdWVzdBogLnN5bmN0di5hZG1p'
+    'bi5MaXN0QWRtaW5zUmVzcG9uc2USWwoOR2V0U3lzdGVtU3RhdHMSIy5zeW5jdHYuYWRtaW4uR2'
+    'V0U3lzdGVtU3RhdHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkdldFN5c3RlbVN0YXRzUmVzcG9u'
+    'c2USZAoRTGlzdEFjdGl2ZVN0cmVhbXMSJi5zeW5jdHYuYWRtaW4uTGlzdEFjdGl2ZVN0cmVhbX'
+    'NSZXF1ZXN0Gicuc3luY3R2LmFkbWluLkxpc3RBY3RpdmVTdHJlYW1zUmVzcG9uc2USTwoKS2lj'
+    'a1N0cmVhbRIfLnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUmVxdWVzdBogLnN5bmN0di5hZG1pbi'
+    '5LaWNrU3RyZWFtUmVzcG9uc2USggEKG0xpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3cxIwLnN5'
+    'bmN0di5hZG1pbi5MaXN0VXNlclJlZ2lzdHJhdGlvblJldmlld3NSZXF1ZXN0GjEuc3luY3R2Lm'
+    'FkbWluLkxpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3c1Jlc3BvbnNlEogBCh1BcHByb3ZlVXNl'
+    'clJlZ2lzdHJhdGlvblJldmlldxIyLnN5bmN0di5hZG1pbi5BcHByb3ZlVXNlclJlZ2lzdHJhdG'
+    'lvblJldmlld1JlcXVlc3QaMy5zeW5jdHYuYWRtaW4uQXBwcm92ZVVzZXJSZWdpc3RyYXRpb25S'
+    'ZXZpZXdSZXNwb25zZRKFAQocUmVqZWN0VXNlclJlZ2lzdHJhdGlvblJldmlldxIxLnN5bmN0di'
+    '5hZG1pbi5SZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVxdWVzdBoyLnN5bmN0di5hZG1p'
+    'bi5SZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVzcG9uc2USdgoXTGlzdFJvb21DcmVhdG'
+    'lvblJldmlld3MSLC5zeW5jdHYuYWRtaW4uTGlzdFJvb21DcmVhdGlvblJldmlld3NSZXF1ZXN0'
+    'Gi0uc3luY3R2LmFkbWluLkxpc3RSb29tQ3JlYXRpb25SZXZpZXdzUmVzcG9uc2USfAoZQXBwcm'
+    '92ZVJvb21DcmVhdGlvblJldmlldxIuLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9u'
+    'UmV2aWV3UmVxdWVzdBovLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3Um'
+    'VzcG9uc2USeQoYUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3Ei0uc3luY3R2LmFkbWluLlJlamVj'
+    'dFJvb21DcmVhdGlvblJldmlld1JlcXVlc3QaLi5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUNyZW'
+    'F0aW9uUmV2aWV3UmVzcG9uc2USagoTTGlzdFJvb21Kb2luUmV2aWV3cxIoLnN5bmN0di5hZG1p'
+    'bi5MaXN0Um9vbUpvaW5SZXZpZXdzUmVxdWVzdBopLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW'
+    '5SZXZpZXdzUmVzcG9uc2UScAoVQXBwcm92ZVJvb21Kb2luUmV2aWV3Eiouc3luY3R2LmFkbWlu'
+    'LkFwcHJvdmVSb29tSm9pblJldmlld1JlcXVlc3QaKy5zeW5jdHYuYWRtaW4uQXBwcm92ZVJvb2'
+    '1Kb2luUmV2aWV3UmVzcG9uc2USbQoUUmVqZWN0Um9vbUpvaW5SZXZpZXcSKS5zeW5jdHYuYWRt'
+    'aW4uUmVqZWN0Um9vbUpvaW5SZXZpZXdSZXF1ZXN0Giouc3luY3R2LmFkbWluLlJlamVjdFJvb2'
+    '1Kb2luUmV2aWV3UmVzcG9uc2USWwoOTGlzdEJhblJlY29yZHMSIy5zeW5jdHYuYWRtaW4uTGlz'
+    'dEJhblJlY29yZHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkxpc3RCYW5SZWNvcmRzUmVzcG9uc2'
+    'USZwoSTGlzdENvbnRlbnRSZXBvcnRzEicuc3luY3R2LmFkbWluLkxpc3RDb250ZW50UmVwb3J0'
+    'c1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uTGlzdENvbnRlbnRSZXBvcnRzUmVzcG9uc2USYQoQR2'
+    'V0Q29udGVudFJlcG9ydBIlLnN5bmN0di5hZG1pbi5HZXRDb250ZW50UmVwb3J0UmVxdWVzdBom'
+    'LnN5bmN0di5hZG1pbi5HZXRDb250ZW50UmVwb3J0UmVzcG9uc2USfAoZVXBkYXRlQ29udGVudF'
+    'JlcG9ydFN0YXR1cxIuLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVx'
+    'dWVzdBovLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVzcG9uc2U=');

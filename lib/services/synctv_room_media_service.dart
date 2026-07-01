@@ -22,7 +22,7 @@ class SyncTvRoomMediaDomainService {
 
   final SyncTvApiClient _api;
 
-  Future<SyncTvPlaybackStatus> getCurrentMovie(String roomId) async {
+  Future<SyncTvPlaybackStatus> getCurrentMedia(String roomId) async {
     final response = await _api.room.getPlayback(
       roomId,
       client.GetPlaybackRequest(),
@@ -40,7 +40,7 @@ class SyncTvRoomMediaDomainService {
           client.WatchPlaybackStateRequest(
             deliveryMode: _watchDeliveryMode,
             playbackState: client.ObservePlaybackState(
-              afterEventSequence: _watchSequence(version),
+              eventSequence: _watchSequence(version),
             ),
           ),
         )
@@ -67,9 +67,8 @@ class SyncTvRoomMediaDomainService {
   }
 
   Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>> watchPlaybackSnapshot(
-    String roomId, {
-    String version = '',
-  }) {
+    String roomId,
+  ) {
     return _api.room
         .watchPlayback(
           roomId,
@@ -77,7 +76,6 @@ class SyncTvRoomMediaDomainService {
             deliveryMode: _watchDeliveryMode,
             playback: client.ObservePlayback(
               playbackClientProfile: defaultPlaybackClientProfile(),
-              afterEventSequence: _watchSequence(version),
             ),
           ),
         )
@@ -255,7 +253,7 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
-  Future<SyncTvMovie> createPlaylist(
+  Future<RoomPlaylistItem> createPlaylist(
     String roomId, {
     required String name,
     String parentId = '',
@@ -281,7 +279,7 @@ class SyncTvRoomMediaDomainService {
     return _api.mapPlaylist(response.playlist);
   }
 
-  Future<SyncTvMovie> updatePlaylist(
+  Future<RoomPlaylistItem> updatePlaylist(
     String roomId,
     String playlistId, {
     required String name,
@@ -298,7 +296,7 @@ class SyncTvRoomMediaDomainService {
     return _api.mapPlaylist(response.playlist);
   }
 
-  Future<SyncTvMovie> movePlaylist(
+  Future<RoomPlaylistItem> movePlaylist(
     String roomId,
     String playlistId, {
     String? beforePlaylistId,
@@ -326,7 +324,7 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
-  Future<SyncTvMovie> editMedia(
+  Future<RoomMediaItem> editMedia(
     String roomId,
     String mediaId, {
     required String name,
@@ -343,7 +341,7 @@ class SyncTvRoomMediaDomainService {
     return _api.mapMedia(response.media);
   }
 
-  Future<SyncTvMovie> getMedia(String roomId, String mediaId) async {
+  Future<RoomMediaItem> getMedia(String roomId, String mediaId) async {
     final media = await _api.room.getMedia(
       roomId,
       client.GetMediaRequest(mediaId: mediaId),
@@ -978,10 +976,10 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
-  Future<void> deleteMovie(String roomId, String movieId) async {
+  Future<void> deleteMedia(String roomId, String mediaId) async {
     await _api.room.deleteMedia(
       roomId,
-      client.DeleteMediaRequest(mediaId: movieId, force: true),
+      client.DeleteMediaRequest(mediaId: mediaId, force: true),
     );
   }
 
@@ -1000,20 +998,20 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
-  Future<void> clearMovies(String roomId, {String? parentId}) async {
+  Future<void> clearMediaLibrary(String roomId, {String? parentId}) async {
     await _api.room.clearPlaylist(
       roomId,
       client.ClearPlaylistRequest(playlistId: parentId ?? ''),
     );
   }
 
-  Future<SyncTvPlaybackStatus> switchMovie(
+  Future<SyncTvPlaybackStatus> switchMedia(
     String roomId,
-    String movieId, {
+    String entryId, {
     String? subPath,
     String? playlistId,
   }) async {
-    if (movieId.isEmpty) {
+    if (entryId.isEmpty) {
       await _api.room.stopPlayback(roomId, client.StopPlaybackRequest());
       return SyncTvPlaybackStatus();
     }
@@ -1023,18 +1021,18 @@ class SyncTvRoomMediaDomainService {
     await _api.room.startPlayback(
       roomId,
       client.StartPlaybackRequest(
-        mediaId: !hasTarget && movieId.startsWith('med_') ? movieId : '',
+        mediaId: !hasTarget && entryId.startsWith('med_') ? entryId : '',
         playlistId: hasTarget
             ? dynamicPlaylistId
-            : movieId.startsWith('pl_')
-            ? movieId
+            : entryId.startsWith('pl_')
+            ? entryId
             : '',
         target: target,
       ),
     );
-    final current = await getCurrentMovie(roomId);
+    final current = await getCurrentMedia(roomId);
     return SyncTvPlaybackStatus(
-      movie: current.movie,
+      entry: current.entry,
       isPlaying: true,
       currentTime: 0,
       playbackRate: current.playbackRate,
@@ -1054,7 +1052,7 @@ class SyncTvRoomMediaDomainService {
     double speed = 1.0,
     int? version,
   }) async {
-    final current = await getCurrentMovie(roomId);
+    final current = await getCurrentMedia(roomId);
     final response = await _api.room.updatePlaybackState(
       roomId,
       client.UpdatePlaybackStateRequest(
@@ -1065,7 +1063,7 @@ class SyncTvRoomMediaDomainService {
         version: version == null ? null : Int64(version),
       ),
     );
-    return _api.mapPlaybackState(response, movie: current.movie);
+    return _api.mapPlaybackState(response, entry: current.entry);
   }
 
   Future<String> _addMedia(
@@ -1303,10 +1301,10 @@ class SyncTvRoomMediaDomainService {
 
   SyncTvPlaybackStatus _playbackStatusFromState(client.PlaybackState state) {
     final encodedTarget = providerTargetToBase64(state.target);
-    final movie =
+    final entry =
         state.playingMediaId.isEmpty && state.playingPlaylistId.isEmpty
         ? null
-        : SyncTvMovie(
+        : RoomPlaybackEntry(
             id: encodedTarget.isNotEmpty
                 ? encodedTarget
                 : state.playingMediaId.isNotEmpty
@@ -1318,7 +1316,7 @@ class SyncTvRoomMediaDomainService {
             parentId: encodedTarget.isEmpty ? null : state.playingPlaylistId,
           );
     return SyncTvPlaybackStatus(
-      movie: movie,
+      entry: entry,
       isPlaying: state.isPlaying,
       currentTime: state.position,
       playbackRate: state.speed == 0 ? 1.0 : state.speed,
@@ -1331,14 +1329,14 @@ class SyncTvRoomMediaDomainService {
   }
 
   SyncTvPlaybackStatus _playbackStatusFromPlayback(client.Playback playback) {
-    final movie = playback.mediaId.isEmpty && playback.playlistId.isEmpty
+    final entry = playback.mediaId.isEmpty && playback.playlistId.isEmpty
         ? null
-        : SyncTvMovie.fromPlaybackProto(
+        : RoomMediaEntry.fromPlaybackProto(
             playback,
             resolveUrl: _api.resolveResourceUrl,
           );
     return SyncTvPlaybackStatus(
-      movie: movie,
+      entry: entry,
       generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
     );
   }

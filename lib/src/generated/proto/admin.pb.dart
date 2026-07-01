@@ -227,8 +227,8 @@ class AdminUser extends $pb.GeneratedMessage {
   $0.UserPresenceStats ensurePresence() => $_ensure(12);
 }
 
-class AdminRoom extends $pb.GeneratedMessage {
-  factory AdminRoom({
+class Room extends $pb.GeneratedMessage {
+  factory Room({
     $core.String? id,
     $core.String? name,
     $core.String? creatorId,
@@ -270,17 +270,17 @@ class AdminRoom extends $pb.GeneratedMessage {
     return result;
   }
 
-  AdminRoom._();
+  Room._();
 
-  factory AdminRoom.fromBuffer($core.List<$core.int> data,
+  factory Room.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory AdminRoom.fromJson($core.String json,
+  factory Room.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'AdminRoom',
+      _omitMessageNames ? '' : 'Room',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'id')
@@ -311,22 +311,22 @@ class AdminRoom extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AdminRoom clone() => deepCopy();
+  Room clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AdminRoom copyWith(void Function(AdminRoom) updates) =>
-      super.copyWith((message) => updates(message as AdminRoom)) as AdminRoom;
+  Room copyWith(void Function(Room) updates) =>
+      super.copyWith((message) => updates(message as Room)) as Room;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static AdminRoom create() => AdminRoom._();
+  static Room create() => Room._();
   @$core.override
-  AdminRoom createEmptyInstance() => create();
+  Room createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static AdminRoom getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AdminRoom>(create);
-  static AdminRoom? _defaultInstance;
+  static Room getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Room>(create);
+  static Room? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get id => $_getSZ(0);
@@ -493,27 +493,11 @@ class AdminRoom extends $pb.GeneratedMessage {
   $pb.PbList<$1.RoomLabel> get labels => $_getList(17);
 }
 
-enum SettingsGroup_Settings {
-  server,
-  permissions,
-  room,
-  user,
-  oauth2,
-  proxy,
-  rtmp,
-  email,
-  webrtc,
-  chat,
-  cors,
-  notSet
-}
-
-class SettingsGroup extends $pb.GeneratedMessage {
-  factory SettingsGroup({
-    $core.String? name,
-    ServerSettings? server,
+class RuntimeSettings extends $pb.GeneratedMessage {
+  factory RuntimeSettings({
+    RoomDefaultsSettings? roomDefaults,
     PermissionSettings? permissions,
-    RoomPolicySettings? room,
+    RoomCreationSettings? roomCreation,
     UserSettings? user,
     OAuth2Settings? oauth2,
     ProxySettings? proxy,
@@ -524,10 +508,9 @@ class SettingsGroup extends $pb.GeneratedMessage {
     CorsSettings? cors,
   }) {
     final result = create();
-    if (name != null) result.name = name;
-    if (server != null) result.server = server;
+    if (roomDefaults != null) result.roomDefaults = roomDefaults;
     if (permissions != null) result.permissions = permissions;
-    if (room != null) result.room = room;
+    if (roomCreation != null) result.roomCreation = roomCreation;
     if (user != null) result.user = user;
     if (oauth2 != null) result.oauth2 = oauth2;
     if (proxy != null) result.proxy = proxy;
@@ -539,326 +522,251 @@ class SettingsGroup extends $pb.GeneratedMessage {
     return result;
   }
 
-  SettingsGroup._();
+  RuntimeSettings._();
 
-  factory SettingsGroup.fromBuffer($core.List<$core.int> data,
+  factory RuntimeSettings.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory SettingsGroup.fromJson($core.String json,
+  factory RuntimeSettings.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, SettingsGroup_Settings>
-      _SettingsGroup_SettingsByTag = {
-    2: SettingsGroup_Settings.server,
-    3: SettingsGroup_Settings.permissions,
-    4: SettingsGroup_Settings.room,
-    5: SettingsGroup_Settings.user,
-    6: SettingsGroup_Settings.oauth2,
-    7: SettingsGroup_Settings.proxy,
-    8: SettingsGroup_Settings.rtmp,
-    9: SettingsGroup_Settings.email,
-    10: SettingsGroup_Settings.webrtc,
-    11: SettingsGroup_Settings.chat,
-    12: SettingsGroup_Settings.cors,
-    0: SettingsGroup_Settings.notSet
-  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'SettingsGroup',
+      _omitMessageNames ? '' : 'RuntimeSettings',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-    ..aOS(1, _omitFieldNames ? '' : 'name')
-    ..aOM<ServerSettings>(2, _omitFieldNames ? '' : 'server',
-        subBuilder: ServerSettings.create)
-    ..aOM<PermissionSettings>(3, _omitFieldNames ? '' : 'permissions',
+    ..aOM<RoomDefaultsSettings>(1, _omitFieldNames ? '' : 'roomDefaults',
+        subBuilder: RoomDefaultsSettings.create)
+    ..aOM<PermissionSettings>(2, _omitFieldNames ? '' : 'permissions',
         subBuilder: PermissionSettings.create)
-    ..aOM<RoomPolicySettings>(4, _omitFieldNames ? '' : 'room',
-        subBuilder: RoomPolicySettings.create)
-    ..aOM<UserSettings>(5, _omitFieldNames ? '' : 'user',
+    ..aOM<RoomCreationSettings>(3, _omitFieldNames ? '' : 'roomCreation',
+        subBuilder: RoomCreationSettings.create)
+    ..aOM<UserSettings>(4, _omitFieldNames ? '' : 'user',
         subBuilder: UserSettings.create)
-    ..aOM<OAuth2Settings>(6, _omitFieldNames ? '' : 'oauth2',
+    ..aOM<OAuth2Settings>(5, _omitFieldNames ? '' : 'oauth2',
         subBuilder: OAuth2Settings.create)
-    ..aOM<ProxySettings>(7, _omitFieldNames ? '' : 'proxy',
+    ..aOM<ProxySettings>(6, _omitFieldNames ? '' : 'proxy',
         subBuilder: ProxySettings.create)
-    ..aOM<RtmpSettings>(8, _omitFieldNames ? '' : 'rtmp',
+    ..aOM<RtmpSettings>(7, _omitFieldNames ? '' : 'rtmp',
         subBuilder: RtmpSettings.create)
-    ..aOM<EmailSettings>(9, _omitFieldNames ? '' : 'email',
+    ..aOM<EmailSettings>(8, _omitFieldNames ? '' : 'email',
         subBuilder: EmailSettings.create)
-    ..aOM<WebRtcSettings>(10, _omitFieldNames ? '' : 'webrtc',
+    ..aOM<WebRtcSettings>(9, _omitFieldNames ? '' : 'webrtc',
         subBuilder: WebRtcSettings.create)
-    ..aOM<ChatSettings>(11, _omitFieldNames ? '' : 'chat',
+    ..aOM<ChatSettings>(10, _omitFieldNames ? '' : 'chat',
         subBuilder: ChatSettings.create)
-    ..aOM<CorsSettings>(12, _omitFieldNames ? '' : 'cors',
+    ..aOM<CorsSettings>(11, _omitFieldNames ? '' : 'cors',
         subBuilder: CorsSettings.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SettingsGroup clone() => deepCopy();
+  RuntimeSettings clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SettingsGroup copyWith(void Function(SettingsGroup) updates) =>
-      super.copyWith((message) => updates(message as SettingsGroup))
-          as SettingsGroup;
+  RuntimeSettings copyWith(void Function(RuntimeSettings) updates) =>
+      super.copyWith((message) => updates(message as RuntimeSettings))
+          as RuntimeSettings;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static SettingsGroup create() => SettingsGroup._();
+  static RuntimeSettings create() => RuntimeSettings._();
   @$core.override
-  SettingsGroup createEmptyInstance() => create();
+  RuntimeSettings createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static SettingsGroup getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<SettingsGroup>(create);
-  static SettingsGroup? _defaultInstance;
-
-  @$pb.TagNumber(2)
-  @$pb.TagNumber(3)
-  @$pb.TagNumber(4)
-  @$pb.TagNumber(5)
-  @$pb.TagNumber(6)
-  @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
-  @$pb.TagNumber(12)
-  SettingsGroup_Settings whichSettings() =>
-      _SettingsGroup_SettingsByTag[$_whichOneof(0)]!;
-  @$pb.TagNumber(2)
-  @$pb.TagNumber(3)
-  @$pb.TagNumber(4)
-  @$pb.TagNumber(5)
-  @$pb.TagNumber(6)
-  @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
-  @$pb.TagNumber(12)
-  void clearSettings() => $_clearField($_whichOneof(0));
+  static RuntimeSettings getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RuntimeSettings>(create);
+  static RuntimeSettings? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get name => $_getSZ(0);
+  RoomDefaultsSettings get roomDefaults => $_getN(0);
   @$pb.TagNumber(1)
-  set name($core.String value) => $_setString(0, value);
+  set roomDefaults(RoomDefaultsSettings value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasName() => $_has(0);
+  $core.bool hasRoomDefaults() => $_has(0);
   @$pb.TagNumber(1)
-  void clearName() => $_clearField(1);
+  void clearRoomDefaults() => $_clearField(1);
+  @$pb.TagNumber(1)
+  RoomDefaultsSettings ensureRoomDefaults() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  ServerSettings get server => $_getN(1);
+  PermissionSettings get permissions => $_getN(1);
   @$pb.TagNumber(2)
-  set server(ServerSettings value) => $_setField(2, value);
+  set permissions(PermissionSettings value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasServer() => $_has(1);
+  $core.bool hasPermissions() => $_has(1);
   @$pb.TagNumber(2)
-  void clearServer() => $_clearField(2);
+  void clearPermissions() => $_clearField(2);
   @$pb.TagNumber(2)
-  ServerSettings ensureServer() => $_ensure(1);
+  PermissionSettings ensurePermissions() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  PermissionSettings get permissions => $_getN(2);
+  RoomCreationSettings get roomCreation => $_getN(2);
   @$pb.TagNumber(3)
-  set permissions(PermissionSettings value) => $_setField(3, value);
+  set roomCreation(RoomCreationSettings value) => $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasPermissions() => $_has(2);
+  $core.bool hasRoomCreation() => $_has(2);
   @$pb.TagNumber(3)
-  void clearPermissions() => $_clearField(3);
+  void clearRoomCreation() => $_clearField(3);
   @$pb.TagNumber(3)
-  PermissionSettings ensurePermissions() => $_ensure(2);
+  RoomCreationSettings ensureRoomCreation() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  RoomPolicySettings get room => $_getN(3);
+  UserSettings get user => $_getN(3);
   @$pb.TagNumber(4)
-  set room(RoomPolicySettings value) => $_setField(4, value);
+  set user(UserSettings value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasRoom() => $_has(3);
+  $core.bool hasUser() => $_has(3);
   @$pb.TagNumber(4)
-  void clearRoom() => $_clearField(4);
+  void clearUser() => $_clearField(4);
   @$pb.TagNumber(4)
-  RoomPolicySettings ensureRoom() => $_ensure(3);
+  UserSettings ensureUser() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  UserSettings get user => $_getN(4);
+  OAuth2Settings get oauth2 => $_getN(4);
   @$pb.TagNumber(5)
-  set user(UserSettings value) => $_setField(5, value);
+  set oauth2(OAuth2Settings value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasUser() => $_has(4);
+  $core.bool hasOauth2() => $_has(4);
   @$pb.TagNumber(5)
-  void clearUser() => $_clearField(5);
+  void clearOauth2() => $_clearField(5);
   @$pb.TagNumber(5)
-  UserSettings ensureUser() => $_ensure(4);
+  OAuth2Settings ensureOauth2() => $_ensure(4);
 
   @$pb.TagNumber(6)
-  OAuth2Settings get oauth2 => $_getN(5);
+  ProxySettings get proxy => $_getN(5);
   @$pb.TagNumber(6)
-  set oauth2(OAuth2Settings value) => $_setField(6, value);
+  set proxy(ProxySettings value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasOauth2() => $_has(5);
+  $core.bool hasProxy() => $_has(5);
   @$pb.TagNumber(6)
-  void clearOauth2() => $_clearField(6);
+  void clearProxy() => $_clearField(6);
   @$pb.TagNumber(6)
-  OAuth2Settings ensureOauth2() => $_ensure(5);
+  ProxySettings ensureProxy() => $_ensure(5);
 
   @$pb.TagNumber(7)
-  ProxySettings get proxy => $_getN(6);
+  RtmpSettings get rtmp => $_getN(6);
   @$pb.TagNumber(7)
-  set proxy(ProxySettings value) => $_setField(7, value);
+  set rtmp(RtmpSettings value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasProxy() => $_has(6);
+  $core.bool hasRtmp() => $_has(6);
   @$pb.TagNumber(7)
-  void clearProxy() => $_clearField(7);
+  void clearRtmp() => $_clearField(7);
   @$pb.TagNumber(7)
-  ProxySettings ensureProxy() => $_ensure(6);
+  RtmpSettings ensureRtmp() => $_ensure(6);
 
   @$pb.TagNumber(8)
-  RtmpSettings get rtmp => $_getN(7);
+  EmailSettings get email => $_getN(7);
   @$pb.TagNumber(8)
-  set rtmp(RtmpSettings value) => $_setField(8, value);
+  set email(EmailSettings value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasRtmp() => $_has(7);
+  $core.bool hasEmail() => $_has(7);
   @$pb.TagNumber(8)
-  void clearRtmp() => $_clearField(8);
+  void clearEmail() => $_clearField(8);
   @$pb.TagNumber(8)
-  RtmpSettings ensureRtmp() => $_ensure(7);
+  EmailSettings ensureEmail() => $_ensure(7);
 
   @$pb.TagNumber(9)
-  EmailSettings get email => $_getN(8);
+  WebRtcSettings get webrtc => $_getN(8);
   @$pb.TagNumber(9)
-  set email(EmailSettings value) => $_setField(9, value);
+  set webrtc(WebRtcSettings value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasEmail() => $_has(8);
+  $core.bool hasWebrtc() => $_has(8);
   @$pb.TagNumber(9)
-  void clearEmail() => $_clearField(9);
+  void clearWebrtc() => $_clearField(9);
   @$pb.TagNumber(9)
-  EmailSettings ensureEmail() => $_ensure(8);
+  WebRtcSettings ensureWebrtc() => $_ensure(8);
 
   @$pb.TagNumber(10)
-  WebRtcSettings get webrtc => $_getN(9);
+  ChatSettings get chat => $_getN(9);
   @$pb.TagNumber(10)
-  set webrtc(WebRtcSettings value) => $_setField(10, value);
+  set chat(ChatSettings value) => $_setField(10, value);
   @$pb.TagNumber(10)
-  $core.bool hasWebrtc() => $_has(9);
+  $core.bool hasChat() => $_has(9);
   @$pb.TagNumber(10)
-  void clearWebrtc() => $_clearField(10);
+  void clearChat() => $_clearField(10);
   @$pb.TagNumber(10)
-  WebRtcSettings ensureWebrtc() => $_ensure(9);
+  ChatSettings ensureChat() => $_ensure(9);
 
   @$pb.TagNumber(11)
-  ChatSettings get chat => $_getN(10);
+  CorsSettings get cors => $_getN(10);
   @$pb.TagNumber(11)
-  set chat(ChatSettings value) => $_setField(11, value);
+  set cors(CorsSettings value) => $_setField(11, value);
   @$pb.TagNumber(11)
-  $core.bool hasChat() => $_has(10);
+  $core.bool hasCors() => $_has(10);
   @$pb.TagNumber(11)
-  void clearChat() => $_clearField(11);
+  void clearCors() => $_clearField(11);
   @$pb.TagNumber(11)
-  ChatSettings ensureChat() => $_ensure(10);
-
-  @$pb.TagNumber(12)
-  CorsSettings get cors => $_getN(11);
-  @$pb.TagNumber(12)
-  set cors(CorsSettings value) => $_setField(12, value);
-  @$pb.TagNumber(12)
-  $core.bool hasCors() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearCors() => $_clearField(12);
-  @$pb.TagNumber(12)
-  CorsSettings ensureCors() => $_ensure(11);
+  CorsSettings ensureCors() => $_ensure(10);
 }
 
-class ServerSettings extends $pb.GeneratedMessage {
-  factory ServerSettings({
-    $core.bool? allowRoomCreation,
-    $fixnum.Int64? maxRoomsPerUser,
-    $fixnum.Int64? maxMembersPerRoom,
-    $fixnum.Int64? maxChatMessages,
+class RoomDefaultsSettings extends $pb.GeneratedMessage {
+  factory RoomDefaultsSettings({
+    $fixnum.Int64? defaultMaxMembers,
+    $fixnum.Int64? defaultMaxChatMessages,
   }) {
     final result = create();
-    if (allowRoomCreation != null) result.allowRoomCreation = allowRoomCreation;
-    if (maxRoomsPerUser != null) result.maxRoomsPerUser = maxRoomsPerUser;
-    if (maxMembersPerRoom != null) result.maxMembersPerRoom = maxMembersPerRoom;
-    if (maxChatMessages != null) result.maxChatMessages = maxChatMessages;
+    if (defaultMaxMembers != null) result.defaultMaxMembers = defaultMaxMembers;
+    if (defaultMaxChatMessages != null)
+      result.defaultMaxChatMessages = defaultMaxChatMessages;
     return result;
   }
 
-  ServerSettings._();
+  RoomDefaultsSettings._();
 
-  factory ServerSettings.fromBuffer($core.List<$core.int> data,
+  factory RoomDefaultsSettings.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory ServerSettings.fromJson($core.String json,
+  factory RoomDefaultsSettings.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ServerSettings',
+      _omitMessageNames ? '' : 'RoomDefaultsSettings',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'allowRoomCreation')
-    ..aInt64(2, _omitFieldNames ? '' : 'maxRoomsPerUser')
-    ..aInt64(3, _omitFieldNames ? '' : 'maxMembersPerRoom')
+    ..aInt64(1, _omitFieldNames ? '' : 'defaultMaxMembers')
     ..a<$fixnum.Int64>(
-        4, _omitFieldNames ? '' : 'maxChatMessages', $pb.PbFieldType.OU6,
+        2, _omitFieldNames ? '' : 'defaultMaxChatMessages', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ServerSettings clone() => deepCopy();
+  RoomDefaultsSettings clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ServerSettings copyWith(void Function(ServerSettings) updates) =>
-      super.copyWith((message) => updates(message as ServerSettings))
-          as ServerSettings;
+  RoomDefaultsSettings copyWith(void Function(RoomDefaultsSettings) updates) =>
+      super.copyWith((message) => updates(message as RoomDefaultsSettings))
+          as RoomDefaultsSettings;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ServerSettings create() => ServerSettings._();
+  static RoomDefaultsSettings create() => RoomDefaultsSettings._();
   @$core.override
-  ServerSettings createEmptyInstance() => create();
+  RoomDefaultsSettings createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ServerSettings getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ServerSettings>(create);
-  static ServerSettings? _defaultInstance;
+  static RoomDefaultsSettings getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RoomDefaultsSettings>(create);
+  static RoomDefaultsSettings? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.bool get allowRoomCreation => $_getBF(0);
+  $fixnum.Int64 get defaultMaxMembers => $_getI64(0);
   @$pb.TagNumber(1)
-  set allowRoomCreation($core.bool value) => $_setBool(0, value);
+  set defaultMaxMembers($fixnum.Int64 value) => $_setInt64(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasAllowRoomCreation() => $_has(0);
+  $core.bool hasDefaultMaxMembers() => $_has(0);
   @$pb.TagNumber(1)
-  void clearAllowRoomCreation() => $_clearField(1);
+  void clearDefaultMaxMembers() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $fixnum.Int64 get maxRoomsPerUser => $_getI64(1);
+  $fixnum.Int64 get defaultMaxChatMessages => $_getI64(1);
   @$pb.TagNumber(2)
-  set maxRoomsPerUser($fixnum.Int64 value) => $_setInt64(1, value);
+  set defaultMaxChatMessages($fixnum.Int64 value) => $_setInt64(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasMaxRoomsPerUser() => $_has(1);
+  $core.bool hasDefaultMaxChatMessages() => $_has(1);
   @$pb.TagNumber(2)
-  void clearMaxRoomsPerUser() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $fixnum.Int64 get maxMembersPerRoom => $_getI64(2);
-  @$pb.TagNumber(3)
-  set maxMembersPerRoom($fixnum.Int64 value) => $_setInt64(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasMaxMembersPerRoom() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearMaxMembersPerRoom() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $fixnum.Int64 get maxChatMessages => $_getI64(3);
-  @$pb.TagNumber(4)
-  set maxChatMessages($fixnum.Int64 value) => $_setInt64(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasMaxChatMessages() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearMaxChatMessages() => $_clearField(4);
+  void clearDefaultMaxChatMessages() => $_clearField(2);
 }
 
 class PermissionSettings extends $pb.GeneratedMessage {
@@ -948,75 +856,77 @@ class PermissionSettings extends $pb.GeneratedMessage {
   void clearGuestDefaultPermissions() => $_clearField(3);
 }
 
-class RoomPolicySettings extends $pb.GeneratedMessage {
-  factory RoomPolicySettings({
-    $core.bool? disableCreateRoom,
-    $core.bool? createRoomNeedReview,
+class RoomCreationSettings extends $pb.GeneratedMessage {
+  factory RoomCreationSettings({
+    $core.bool? enabled,
+    $core.bool? approvalRequired,
     RoomPasswordPolicy? passwordPolicy,
+    $fixnum.Int64? maxRoomsPerUser,
   }) {
     final result = create();
-    if (disableCreateRoom != null) result.disableCreateRoom = disableCreateRoom;
-    if (createRoomNeedReview != null)
-      result.createRoomNeedReview = createRoomNeedReview;
+    if (enabled != null) result.enabled = enabled;
+    if (approvalRequired != null) result.approvalRequired = approvalRequired;
     if (passwordPolicy != null) result.passwordPolicy = passwordPolicy;
+    if (maxRoomsPerUser != null) result.maxRoomsPerUser = maxRoomsPerUser;
     return result;
   }
 
-  RoomPolicySettings._();
+  RoomCreationSettings._();
 
-  factory RoomPolicySettings.fromBuffer($core.List<$core.int> data,
+  factory RoomCreationSettings.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory RoomPolicySettings.fromJson($core.String json,
+  factory RoomCreationSettings.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RoomPolicySettings',
+      _omitMessageNames ? '' : 'RoomCreationSettings',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'disableCreateRoom')
-    ..aOB(2, _omitFieldNames ? '' : 'createRoomNeedReview')
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..aOB(2, _omitFieldNames ? '' : 'approvalRequired')
     ..aE<RoomPasswordPolicy>(3, _omitFieldNames ? '' : 'passwordPolicy',
         enumValues: RoomPasswordPolicy.values)
+    ..aInt64(4, _omitFieldNames ? '' : 'maxRoomsPerUser')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomPolicySettings clone() => deepCopy();
+  RoomCreationSettings clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomPolicySettings copyWith(void Function(RoomPolicySettings) updates) =>
-      super.copyWith((message) => updates(message as RoomPolicySettings))
-          as RoomPolicySettings;
+  RoomCreationSettings copyWith(void Function(RoomCreationSettings) updates) =>
+      super.copyWith((message) => updates(message as RoomCreationSettings))
+          as RoomCreationSettings;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static RoomPolicySettings create() => RoomPolicySettings._();
+  static RoomCreationSettings create() => RoomCreationSettings._();
   @$core.override
-  RoomPolicySettings createEmptyInstance() => create();
+  RoomCreationSettings createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static RoomPolicySettings getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RoomPolicySettings>(create);
-  static RoomPolicySettings? _defaultInstance;
+  static RoomCreationSettings getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RoomCreationSettings>(create);
+  static RoomCreationSettings? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.bool get disableCreateRoom => $_getBF(0);
+  $core.bool get enabled => $_getBF(0);
   @$pb.TagNumber(1)
-  set disableCreateRoom($core.bool value) => $_setBool(0, value);
+  set enabled($core.bool value) => $_setBool(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasDisableCreateRoom() => $_has(0);
+  $core.bool hasEnabled() => $_has(0);
   @$pb.TagNumber(1)
-  void clearDisableCreateRoom() => $_clearField(1);
+  void clearEnabled() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.bool get createRoomNeedReview => $_getBF(1);
+  $core.bool get approvalRequired => $_getBF(1);
   @$pb.TagNumber(2)
-  set createRoomNeedReview($core.bool value) => $_setBool(1, value);
+  set approvalRequired($core.bool value) => $_setBool(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasCreateRoomNeedReview() => $_has(1);
+  $core.bool hasApprovalRequired() => $_has(1);
   @$pb.TagNumber(2)
-  void clearCreateRoomNeedReview() => $_clearField(2);
+  void clearApprovalRequired() => $_clearField(2);
 
   @$pb.TagNumber(3)
   RoomPasswordPolicy get passwordPolicy => $_getN(2);
@@ -1026,6 +936,15 @@ class RoomPolicySettings extends $pb.GeneratedMessage {
   $core.bool hasPasswordPolicy() => $_has(2);
   @$pb.TagNumber(3)
   void clearPasswordPolicy() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get maxRoomsPerUser => $_getI64(3);
+  @$pb.TagNumber(4)
+  set maxRoomsPerUser($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMaxRoomsPerUser() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMaxRoomsPerUser() => $_clearField(4);
 }
 
 class UserSettings extends $pb.GeneratedMessage {
@@ -1219,17 +1138,17 @@ enum OAuth2ProviderSettings_Config {
 
 class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   factory OAuth2ProviderSettings({
-    $core.String? instanceName,
+    $core.String? name,
     $core.bool? enableSignup,
     $core.bool? signupNeedReview,
-    OAuth2BasicProviderConfig? github,
-    OAuth2BasicProviderConfig? google,
+    OAuth2GithubProviderConfig? github,
+    OAuth2GoogleProviderConfig? google,
     OAuth2LogtoProviderConfig? logto,
     OAuth2OidcProviderConfig? oidc,
-    OAuth2OidcProviderConfig? casdoor,
+    OAuth2CasdoorProviderConfig? casdoor,
   }) {
     final result = create();
-    if (instanceName != null) result.instanceName = instanceName;
+    if (name != null) result.name = name;
     if (enableSignup != null) result.enableSignup = enableSignup;
     if (signupNeedReview != null) result.signupNeedReview = signupNeedReview;
     if (github != null) result.github = github;
@@ -1263,19 +1182,19 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..oo(0, [4, 5, 6, 7, 8])
-    ..aOS(1, _omitFieldNames ? '' : 'instanceName')
+    ..aOS(1, _omitFieldNames ? '' : 'name')
     ..aOB(2, _omitFieldNames ? '' : 'enableSignup')
     ..aOB(3, _omitFieldNames ? '' : 'signupNeedReview')
-    ..aOM<OAuth2BasicProviderConfig>(4, _omitFieldNames ? '' : 'github',
-        subBuilder: OAuth2BasicProviderConfig.create)
-    ..aOM<OAuth2BasicProviderConfig>(5, _omitFieldNames ? '' : 'google',
-        subBuilder: OAuth2BasicProviderConfig.create)
+    ..aOM<OAuth2GithubProviderConfig>(4, _omitFieldNames ? '' : 'github',
+        subBuilder: OAuth2GithubProviderConfig.create)
+    ..aOM<OAuth2GoogleProviderConfig>(5, _omitFieldNames ? '' : 'google',
+        subBuilder: OAuth2GoogleProviderConfig.create)
     ..aOM<OAuth2LogtoProviderConfig>(6, _omitFieldNames ? '' : 'logto',
         subBuilder: OAuth2LogtoProviderConfig.create)
     ..aOM<OAuth2OidcProviderConfig>(7, _omitFieldNames ? '' : 'oidc',
         subBuilder: OAuth2OidcProviderConfig.create)
-    ..aOM<OAuth2OidcProviderConfig>(8, _omitFieldNames ? '' : 'casdoor',
-        subBuilder: OAuth2OidcProviderConfig.create)
+    ..aOM<OAuth2CasdoorProviderConfig>(8, _omitFieldNames ? '' : 'casdoor',
+        subBuilder: OAuth2CasdoorProviderConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1313,13 +1232,13 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   void clearConfig() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
-  $core.String get instanceName => $_getSZ(0);
+  $core.String get name => $_getSZ(0);
   @$pb.TagNumber(1)
-  set instanceName($core.String value) => $_setString(0, value);
+  set name($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasInstanceName() => $_has(0);
+  $core.bool hasName() => $_has(0);
   @$pb.TagNumber(1)
-  void clearInstanceName() => $_clearField(1);
+  void clearName() => $_clearField(1);
 
   @$pb.TagNumber(2)
   $core.bool get enableSignup => $_getBF(1);
@@ -1340,26 +1259,26 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   void clearSignupNeedReview() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  OAuth2BasicProviderConfig get github => $_getN(3);
+  OAuth2GithubProviderConfig get github => $_getN(3);
   @$pb.TagNumber(4)
-  set github(OAuth2BasicProviderConfig value) => $_setField(4, value);
+  set github(OAuth2GithubProviderConfig value) => $_setField(4, value);
   @$pb.TagNumber(4)
   $core.bool hasGithub() => $_has(3);
   @$pb.TagNumber(4)
   void clearGithub() => $_clearField(4);
   @$pb.TagNumber(4)
-  OAuth2BasicProviderConfig ensureGithub() => $_ensure(3);
+  OAuth2GithubProviderConfig ensureGithub() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  OAuth2BasicProviderConfig get google => $_getN(4);
+  OAuth2GoogleProviderConfig get google => $_getN(4);
   @$pb.TagNumber(5)
-  set google(OAuth2BasicProviderConfig value) => $_setField(5, value);
+  set google(OAuth2GoogleProviderConfig value) => $_setField(5, value);
   @$pb.TagNumber(5)
   $core.bool hasGoogle() => $_has(4);
   @$pb.TagNumber(5)
   void clearGoogle() => $_clearField(5);
   @$pb.TagNumber(5)
-  OAuth2BasicProviderConfig ensureGoogle() => $_ensure(4);
+  OAuth2GoogleProviderConfig ensureGoogle() => $_ensure(4);
 
   @$pb.TagNumber(6)
   OAuth2LogtoProviderConfig get logto => $_getN(5);
@@ -1384,19 +1303,19 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   OAuth2OidcProviderConfig ensureOidc() => $_ensure(6);
 
   @$pb.TagNumber(8)
-  OAuth2OidcProviderConfig get casdoor => $_getN(7);
+  OAuth2CasdoorProviderConfig get casdoor => $_getN(7);
   @$pb.TagNumber(8)
-  set casdoor(OAuth2OidcProviderConfig value) => $_setField(8, value);
+  set casdoor(OAuth2CasdoorProviderConfig value) => $_setField(8, value);
   @$pb.TagNumber(8)
   $core.bool hasCasdoor() => $_has(7);
   @$pb.TagNumber(8)
   void clearCasdoor() => $_clearField(8);
   @$pb.TagNumber(8)
-  OAuth2OidcProviderConfig ensureCasdoor() => $_ensure(7);
+  OAuth2CasdoorProviderConfig ensureCasdoor() => $_ensure(7);
 }
 
-class OAuth2BasicProviderConfig extends $pb.GeneratedMessage {
-  factory OAuth2BasicProviderConfig({
+class OAuth2GithubProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2GithubProviderConfig({
     $core.String? clientId,
     $core.String? clientSecret,
     $core.String? redirectUrl,
@@ -1408,17 +1327,17 @@ class OAuth2BasicProviderConfig extends $pb.GeneratedMessage {
     return result;
   }
 
-  OAuth2BasicProviderConfig._();
+  OAuth2GithubProviderConfig._();
 
-  factory OAuth2BasicProviderConfig.fromBuffer($core.List<$core.int> data,
+  factory OAuth2GithubProviderConfig.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory OAuth2BasicProviderConfig.fromJson($core.String json,
+  factory OAuth2GithubProviderConfig.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'OAuth2BasicProviderConfig',
+      _omitMessageNames ? '' : 'OAuth2GithubProviderConfig',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'clientId')
@@ -1427,24 +1346,105 @@ class OAuth2BasicProviderConfig extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  OAuth2BasicProviderConfig clone() => deepCopy();
+  OAuth2GithubProviderConfig clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  OAuth2BasicProviderConfig copyWith(
-          void Function(OAuth2BasicProviderConfig) updates) =>
-      super.copyWith((message) => updates(message as OAuth2BasicProviderConfig))
-          as OAuth2BasicProviderConfig;
+  OAuth2GithubProviderConfig copyWith(
+          void Function(OAuth2GithubProviderConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as OAuth2GithubProviderConfig))
+          as OAuth2GithubProviderConfig;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static OAuth2BasicProviderConfig create() => OAuth2BasicProviderConfig._();
+  static OAuth2GithubProviderConfig create() => OAuth2GithubProviderConfig._();
   @$core.override
-  OAuth2BasicProviderConfig createEmptyInstance() => create();
+  OAuth2GithubProviderConfig createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static OAuth2BasicProviderConfig getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<OAuth2BasicProviderConfig>(create);
-  static OAuth2BasicProviderConfig? _defaultInstance;
+  static OAuth2GithubProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2GithubProviderConfig>(create);
+  static OAuth2GithubProviderConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get clientSecret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set clientSecret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasClientSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearClientSecret() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get redirectUrl => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set redirectUrl($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRedirectUrl() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRedirectUrl() => $_clearField(3);
+}
+
+class OAuth2GoogleProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2GoogleProviderConfig({
+    $core.String? clientId,
+    $core.String? clientSecret,
+    $core.String? redirectUrl,
+  }) {
+    final result = create();
+    if (clientId != null) result.clientId = clientId;
+    if (clientSecret != null) result.clientSecret = clientSecret;
+    if (redirectUrl != null) result.redirectUrl = redirectUrl;
+    return result;
+  }
+
+  OAuth2GoogleProviderConfig._();
+
+  factory OAuth2GoogleProviderConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2GoogleProviderConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2GoogleProviderConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientId')
+    ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
+    ..aOS(3, _omitFieldNames ? '' : 'redirectUrl')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2GoogleProviderConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2GoogleProviderConfig copyWith(
+          void Function(OAuth2GoogleProviderConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as OAuth2GoogleProviderConfig))
+          as OAuth2GoogleProviderConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2GoogleProviderConfig create() => OAuth2GoogleProviderConfig._();
+  @$core.override
+  OAuth2GoogleProviderConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2GoogleProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2GoogleProviderConfig>(create);
+  static OAuth2GoogleProviderConfig? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get clientId => $_getSZ(0);
@@ -1630,6 +1630,147 @@ class OAuth2OidcProviderConfig extends $pb.GeneratedMessage {
   static OAuth2OidcProviderConfig getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<OAuth2OidcProviderConfig>(create);
   static OAuth2OidcProviderConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get clientSecret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set clientSecret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasClientSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearClientSecret() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get redirectUrl => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set redirectUrl($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRedirectUrl() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRedirectUrl() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get issuer => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set issuer($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasIssuer() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearIssuer() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get authUrl => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set authUrl($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasAuthUrl() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearAuthUrl() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get tokenUrl => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set tokenUrl($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTokenUrl() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTokenUrl() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get userinfoUrl => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set userinfoUrl($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasUserinfoUrl() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearUserinfoUrl() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get jwksUrl => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set jwksUrl($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasJwksUrl() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearJwksUrl() => $_clearField(8);
+}
+
+class OAuth2CasdoorProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2CasdoorProviderConfig({
+    $core.String? clientId,
+    $core.String? clientSecret,
+    $core.String? redirectUrl,
+    $core.String? issuer,
+    $core.String? authUrl,
+    $core.String? tokenUrl,
+    $core.String? userinfoUrl,
+    $core.String? jwksUrl,
+  }) {
+    final result = create();
+    if (clientId != null) result.clientId = clientId;
+    if (clientSecret != null) result.clientSecret = clientSecret;
+    if (redirectUrl != null) result.redirectUrl = redirectUrl;
+    if (issuer != null) result.issuer = issuer;
+    if (authUrl != null) result.authUrl = authUrl;
+    if (tokenUrl != null) result.tokenUrl = tokenUrl;
+    if (userinfoUrl != null) result.userinfoUrl = userinfoUrl;
+    if (jwksUrl != null) result.jwksUrl = jwksUrl;
+    return result;
+  }
+
+  OAuth2CasdoorProviderConfig._();
+
+  factory OAuth2CasdoorProviderConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2CasdoorProviderConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2CasdoorProviderConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientId')
+    ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
+    ..aOS(3, _omitFieldNames ? '' : 'redirectUrl')
+    ..aOS(4, _omitFieldNames ? '' : 'issuer')
+    ..aOS(5, _omitFieldNames ? '' : 'authUrl')
+    ..aOS(6, _omitFieldNames ? '' : 'tokenUrl')
+    ..aOS(7, _omitFieldNames ? '' : 'userinfoUrl')
+    ..aOS(8, _omitFieldNames ? '' : 'jwksUrl')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2CasdoorProviderConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2CasdoorProviderConfig copyWith(
+          void Function(OAuth2CasdoorProviderConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as OAuth2CasdoorProviderConfig))
+          as OAuth2CasdoorProviderConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2CasdoorProviderConfig create() =>
+      OAuth2CasdoorProviderConfig._();
+  @$core.override
+  OAuth2CasdoorProviderConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2CasdoorProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2CasdoorProviderConfig>(create);
+  static OAuth2CasdoorProviderConfig? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get clientId => $_getSZ(0);
@@ -2174,6 +2315,1294 @@ class CorsSettings extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<$core.String> get allowedOrigins => $_getList(0);
+}
+
+class UpdateSettingsRequest extends $pb.GeneratedMessage {
+  factory UpdateSettingsRequest({
+    RoomDefaultsSettingsPatch? roomDefaults,
+    PermissionSettingsPatch? permissions,
+    RoomCreationSettingsPatch? roomCreation,
+    UserSettingsPatch? user,
+    OAuth2SettingsPatch? oauth2,
+    ProxySettingsPatch? proxy,
+    RtmpSettingsPatch? rtmp,
+    EmailSettingsPatch? email,
+    WebRtcSettingsPatch? webrtc,
+    ChatSettingsPatch? chat,
+    CorsSettingsPatch? cors,
+  }) {
+    final result = create();
+    if (roomDefaults != null) result.roomDefaults = roomDefaults;
+    if (permissions != null) result.permissions = permissions;
+    if (roomCreation != null) result.roomCreation = roomCreation;
+    if (user != null) result.user = user;
+    if (oauth2 != null) result.oauth2 = oauth2;
+    if (proxy != null) result.proxy = proxy;
+    if (rtmp != null) result.rtmp = rtmp;
+    if (email != null) result.email = email;
+    if (webrtc != null) result.webrtc = webrtc;
+    if (chat != null) result.chat = chat;
+    if (cors != null) result.cors = cors;
+    return result;
+  }
+
+  UpdateSettingsRequest._();
+
+  factory UpdateSettingsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateSettingsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateSettingsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<RoomDefaultsSettingsPatch>(1, _omitFieldNames ? '' : 'roomDefaults',
+        subBuilder: RoomDefaultsSettingsPatch.create)
+    ..aOM<PermissionSettingsPatch>(2, _omitFieldNames ? '' : 'permissions',
+        subBuilder: PermissionSettingsPatch.create)
+    ..aOM<RoomCreationSettingsPatch>(3, _omitFieldNames ? '' : 'roomCreation',
+        subBuilder: RoomCreationSettingsPatch.create)
+    ..aOM<UserSettingsPatch>(4, _omitFieldNames ? '' : 'user',
+        subBuilder: UserSettingsPatch.create)
+    ..aOM<OAuth2SettingsPatch>(5, _omitFieldNames ? '' : 'oauth2',
+        subBuilder: OAuth2SettingsPatch.create)
+    ..aOM<ProxySettingsPatch>(6, _omitFieldNames ? '' : 'proxy',
+        subBuilder: ProxySettingsPatch.create)
+    ..aOM<RtmpSettingsPatch>(7, _omitFieldNames ? '' : 'rtmp',
+        subBuilder: RtmpSettingsPatch.create)
+    ..aOM<EmailSettingsPatch>(8, _omitFieldNames ? '' : 'email',
+        subBuilder: EmailSettingsPatch.create)
+    ..aOM<WebRtcSettingsPatch>(9, _omitFieldNames ? '' : 'webrtc',
+        subBuilder: WebRtcSettingsPatch.create)
+    ..aOM<ChatSettingsPatch>(10, _omitFieldNames ? '' : 'chat',
+        subBuilder: ChatSettingsPatch.create)
+    ..aOM<CorsSettingsPatch>(11, _omitFieldNames ? '' : 'cors',
+        subBuilder: CorsSettingsPatch.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateSettingsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateSettingsRequest copyWith(
+          void Function(UpdateSettingsRequest) updates) =>
+      super.copyWith((message) => updates(message as UpdateSettingsRequest))
+          as UpdateSettingsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateSettingsRequest create() => UpdateSettingsRequest._();
+  @$core.override
+  UpdateSettingsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateSettingsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateSettingsRequest>(create);
+  static UpdateSettingsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  RoomDefaultsSettingsPatch get roomDefaults => $_getN(0);
+  @$pb.TagNumber(1)
+  set roomDefaults(RoomDefaultsSettingsPatch value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomDefaults() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomDefaults() => $_clearField(1);
+  @$pb.TagNumber(1)
+  RoomDefaultsSettingsPatch ensureRoomDefaults() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  PermissionSettingsPatch get permissions => $_getN(1);
+  @$pb.TagNumber(2)
+  set permissions(PermissionSettingsPatch value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPermissions() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPermissions() => $_clearField(2);
+  @$pb.TagNumber(2)
+  PermissionSettingsPatch ensurePermissions() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  RoomCreationSettingsPatch get roomCreation => $_getN(2);
+  @$pb.TagNumber(3)
+  set roomCreation(RoomCreationSettingsPatch value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRoomCreation() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRoomCreation() => $_clearField(3);
+  @$pb.TagNumber(3)
+  RoomCreationSettingsPatch ensureRoomCreation() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  UserSettingsPatch get user => $_getN(3);
+  @$pb.TagNumber(4)
+  set user(UserSettingsPatch value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasUser() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearUser() => $_clearField(4);
+  @$pb.TagNumber(4)
+  UserSettingsPatch ensureUser() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  OAuth2SettingsPatch get oauth2 => $_getN(4);
+  @$pb.TagNumber(5)
+  set oauth2(OAuth2SettingsPatch value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasOauth2() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearOauth2() => $_clearField(5);
+  @$pb.TagNumber(5)
+  OAuth2SettingsPatch ensureOauth2() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  ProxySettingsPatch get proxy => $_getN(5);
+  @$pb.TagNumber(6)
+  set proxy(ProxySettingsPatch value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasProxy() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearProxy() => $_clearField(6);
+  @$pb.TagNumber(6)
+  ProxySettingsPatch ensureProxy() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  RtmpSettingsPatch get rtmp => $_getN(6);
+  @$pb.TagNumber(7)
+  set rtmp(RtmpSettingsPatch value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasRtmp() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRtmp() => $_clearField(7);
+  @$pb.TagNumber(7)
+  RtmpSettingsPatch ensureRtmp() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  EmailSettingsPatch get email => $_getN(7);
+  @$pb.TagNumber(8)
+  set email(EmailSettingsPatch value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasEmail() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearEmail() => $_clearField(8);
+  @$pb.TagNumber(8)
+  EmailSettingsPatch ensureEmail() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  WebRtcSettingsPatch get webrtc => $_getN(8);
+  @$pb.TagNumber(9)
+  set webrtc(WebRtcSettingsPatch value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasWebrtc() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearWebrtc() => $_clearField(9);
+  @$pb.TagNumber(9)
+  WebRtcSettingsPatch ensureWebrtc() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  ChatSettingsPatch get chat => $_getN(9);
+  @$pb.TagNumber(10)
+  set chat(ChatSettingsPatch value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasChat() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearChat() => $_clearField(10);
+  @$pb.TagNumber(10)
+  ChatSettingsPatch ensureChat() => $_ensure(9);
+
+  @$pb.TagNumber(11)
+  CorsSettingsPatch get cors => $_getN(10);
+  @$pb.TagNumber(11)
+  set cors(CorsSettingsPatch value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasCors() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearCors() => $_clearField(11);
+  @$pb.TagNumber(11)
+  CorsSettingsPatch ensureCors() => $_ensure(10);
+}
+
+class RoomDefaultsSettingsPatch extends $pb.GeneratedMessage {
+  factory RoomDefaultsSettingsPatch({
+    $fixnum.Int64? defaultMaxMembers,
+    $fixnum.Int64? defaultMaxChatMessages,
+  }) {
+    final result = create();
+    if (defaultMaxMembers != null) result.defaultMaxMembers = defaultMaxMembers;
+    if (defaultMaxChatMessages != null)
+      result.defaultMaxChatMessages = defaultMaxChatMessages;
+    return result;
+  }
+
+  RoomDefaultsSettingsPatch._();
+
+  factory RoomDefaultsSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RoomDefaultsSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RoomDefaultsSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'defaultMaxMembers')
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'defaultMaxChatMessages', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RoomDefaultsSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RoomDefaultsSettingsPatch copyWith(
+          void Function(RoomDefaultsSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as RoomDefaultsSettingsPatch))
+          as RoomDefaultsSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RoomDefaultsSettingsPatch create() => RoomDefaultsSettingsPatch._();
+  @$core.override
+  RoomDefaultsSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RoomDefaultsSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RoomDefaultsSettingsPatch>(create);
+  static RoomDefaultsSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get defaultMaxMembers => $_getI64(0);
+  @$pb.TagNumber(1)
+  set defaultMaxMembers($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDefaultMaxMembers() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDefaultMaxMembers() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get defaultMaxChatMessages => $_getI64(1);
+  @$pb.TagNumber(2)
+  set defaultMaxChatMessages($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDefaultMaxChatMessages() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDefaultMaxChatMessages() => $_clearField(2);
+}
+
+class PermissionSettingsPatch extends $pb.GeneratedMessage {
+  factory PermissionSettingsPatch({
+    $fixnum.Int64? adminDefaultPermissions,
+    $fixnum.Int64? memberDefaultPermissions,
+    $fixnum.Int64? guestDefaultPermissions,
+  }) {
+    final result = create();
+    if (adminDefaultPermissions != null)
+      result.adminDefaultPermissions = adminDefaultPermissions;
+    if (memberDefaultPermissions != null)
+      result.memberDefaultPermissions = memberDefaultPermissions;
+    if (guestDefaultPermissions != null)
+      result.guestDefaultPermissions = guestDefaultPermissions;
+    return result;
+  }
+
+  PermissionSettingsPatch._();
+
+  factory PermissionSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PermissionSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PermissionSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'adminDefaultPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'memberDefaultPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'guestDefaultPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PermissionSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PermissionSettingsPatch copyWith(
+          void Function(PermissionSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as PermissionSettingsPatch))
+          as PermissionSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PermissionSettingsPatch create() => PermissionSettingsPatch._();
+  @$core.override
+  PermissionSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PermissionSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PermissionSettingsPatch>(create);
+  static PermissionSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get adminDefaultPermissions => $_getI64(0);
+  @$pb.TagNumber(1)
+  set adminDefaultPermissions($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAdminDefaultPermissions() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAdminDefaultPermissions() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get memberDefaultPermissions => $_getI64(1);
+  @$pb.TagNumber(2)
+  set memberDefaultPermissions($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMemberDefaultPermissions() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMemberDefaultPermissions() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get guestDefaultPermissions => $_getI64(2);
+  @$pb.TagNumber(3)
+  set guestDefaultPermissions($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasGuestDefaultPermissions() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearGuestDefaultPermissions() => $_clearField(3);
+}
+
+class RoomCreationSettingsPatch extends $pb.GeneratedMessage {
+  factory RoomCreationSettingsPatch({
+    $core.bool? enabled,
+    $core.bool? approvalRequired,
+    RoomPasswordPolicy? passwordPolicy,
+    $fixnum.Int64? maxRoomsPerUser,
+  }) {
+    final result = create();
+    if (enabled != null) result.enabled = enabled;
+    if (approvalRequired != null) result.approvalRequired = approvalRequired;
+    if (passwordPolicy != null) result.passwordPolicy = passwordPolicy;
+    if (maxRoomsPerUser != null) result.maxRoomsPerUser = maxRoomsPerUser;
+    return result;
+  }
+
+  RoomCreationSettingsPatch._();
+
+  factory RoomCreationSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RoomCreationSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RoomCreationSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..aOB(2, _omitFieldNames ? '' : 'approvalRequired')
+    ..aE<RoomPasswordPolicy>(3, _omitFieldNames ? '' : 'passwordPolicy',
+        enumValues: RoomPasswordPolicy.values)
+    ..aInt64(4, _omitFieldNames ? '' : 'maxRoomsPerUser')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RoomCreationSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RoomCreationSettingsPatch copyWith(
+          void Function(RoomCreationSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as RoomCreationSettingsPatch))
+          as RoomCreationSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RoomCreationSettingsPatch create() => RoomCreationSettingsPatch._();
+  @$core.override
+  RoomCreationSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RoomCreationSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RoomCreationSettingsPatch>(create);
+  static RoomCreationSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get approvalRequired => $_getBF(1);
+  @$pb.TagNumber(2)
+  set approvalRequired($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasApprovalRequired() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearApprovalRequired() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  RoomPasswordPolicy get passwordPolicy => $_getN(2);
+  @$pb.TagNumber(3)
+  set passwordPolicy(RoomPasswordPolicy value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPasswordPolicy() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPasswordPolicy() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get maxRoomsPerUser => $_getI64(3);
+  @$pb.TagNumber(4)
+  set maxRoomsPerUser($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMaxRoomsPerUser() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMaxRoomsPerUser() => $_clearField(4);
+}
+
+class UserSettingsPatch extends $pb.GeneratedMessage {
+  factory UserSettingsPatch({
+    $core.bool? enablePasswordSignup,
+    $core.bool? passwordSignupNeedReview,
+    $core.bool? enableEmailSignup,
+    $core.bool? emailSignupNeedReview,
+    $core.bool? enableWebauthnSignup,
+    $core.bool? webauthnSignupNeedReview,
+    $core.bool? enableGuest,
+  }) {
+    final result = create();
+    if (enablePasswordSignup != null)
+      result.enablePasswordSignup = enablePasswordSignup;
+    if (passwordSignupNeedReview != null)
+      result.passwordSignupNeedReview = passwordSignupNeedReview;
+    if (enableEmailSignup != null) result.enableEmailSignup = enableEmailSignup;
+    if (emailSignupNeedReview != null)
+      result.emailSignupNeedReview = emailSignupNeedReview;
+    if (enableWebauthnSignup != null)
+      result.enableWebauthnSignup = enableWebauthnSignup;
+    if (webauthnSignupNeedReview != null)
+      result.webauthnSignupNeedReview = webauthnSignupNeedReview;
+    if (enableGuest != null) result.enableGuest = enableGuest;
+    return result;
+  }
+
+  UserSettingsPatch._();
+
+  factory UserSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UserSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UserSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enablePasswordSignup')
+    ..aOB(2, _omitFieldNames ? '' : 'passwordSignupNeedReview')
+    ..aOB(3, _omitFieldNames ? '' : 'enableEmailSignup')
+    ..aOB(4, _omitFieldNames ? '' : 'emailSignupNeedReview')
+    ..aOB(5, _omitFieldNames ? '' : 'enableWebauthnSignup')
+    ..aOB(6, _omitFieldNames ? '' : 'webauthnSignupNeedReview')
+    ..aOB(7, _omitFieldNames ? '' : 'enableGuest')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UserSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UserSettingsPatch copyWith(void Function(UserSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as UserSettingsPatch))
+          as UserSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UserSettingsPatch create() => UserSettingsPatch._();
+  @$core.override
+  UserSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UserSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UserSettingsPatch>(create);
+  static UserSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enablePasswordSignup => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enablePasswordSignup($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnablePasswordSignup() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnablePasswordSignup() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get passwordSignupNeedReview => $_getBF(1);
+  @$pb.TagNumber(2)
+  set passwordSignupNeedReview($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPasswordSignupNeedReview() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPasswordSignupNeedReview() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get enableEmailSignup => $_getBF(2);
+  @$pb.TagNumber(3)
+  set enableEmailSignup($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEnableEmailSignup() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEnableEmailSignup() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get emailSignupNeedReview => $_getBF(3);
+  @$pb.TagNumber(4)
+  set emailSignupNeedReview($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasEmailSignupNeedReview() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearEmailSignupNeedReview() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get enableWebauthnSignup => $_getBF(4);
+  @$pb.TagNumber(5)
+  set enableWebauthnSignup($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasEnableWebauthnSignup() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearEnableWebauthnSignup() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get webauthnSignupNeedReview => $_getBF(5);
+  @$pb.TagNumber(6)
+  set webauthnSignupNeedReview($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasWebauthnSignupNeedReview() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearWebauthnSignupNeedReview() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get enableGuest => $_getBF(6);
+  @$pb.TagNumber(7)
+  set enableGuest($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasEnableGuest() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearEnableGuest() => $_clearField(7);
+}
+
+class OAuth2ProviderList extends $pb.GeneratedMessage {
+  factory OAuth2ProviderList({
+    $core.Iterable<OAuth2ProviderSettings>? providers,
+  }) {
+    final result = create();
+    if (providers != null) result.providers.addAll(providers);
+    return result;
+  }
+
+  OAuth2ProviderList._();
+
+  factory OAuth2ProviderList.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2ProviderList.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2ProviderList',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..pPM<OAuth2ProviderSettings>(1, _omitFieldNames ? '' : 'providers',
+        subBuilder: OAuth2ProviderSettings.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2ProviderList clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2ProviderList copyWith(void Function(OAuth2ProviderList) updates) =>
+      super.copyWith((message) => updates(message as OAuth2ProviderList))
+          as OAuth2ProviderList;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2ProviderList create() => OAuth2ProviderList._();
+  @$core.override
+  OAuth2ProviderList createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2ProviderList getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2ProviderList>(create);
+  static OAuth2ProviderList? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<OAuth2ProviderSettings> get providers => $_getList(0);
+}
+
+class OAuth2SettingsPatch extends $pb.GeneratedMessage {
+  factory OAuth2SettingsPatch({
+    OAuth2ProviderList? providers,
+  }) {
+    final result = create();
+    if (providers != null) result.providers = providers;
+    return result;
+  }
+
+  OAuth2SettingsPatch._();
+
+  factory OAuth2SettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2SettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2SettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<OAuth2ProviderList>(1, _omitFieldNames ? '' : 'providers',
+        subBuilder: OAuth2ProviderList.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2SettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2SettingsPatch copyWith(void Function(OAuth2SettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as OAuth2SettingsPatch))
+          as OAuth2SettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2SettingsPatch create() => OAuth2SettingsPatch._();
+  @$core.override
+  OAuth2SettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2SettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2SettingsPatch>(create);
+  static OAuth2SettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  OAuth2ProviderList get providers => $_getN(0);
+  @$pb.TagNumber(1)
+  set providers(OAuth2ProviderList value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasProviders() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearProviders() => $_clearField(1);
+  @$pb.TagNumber(1)
+  OAuth2ProviderList ensureProviders() => $_ensure(0);
+}
+
+class ProxySettingsPatch extends $pb.GeneratedMessage {
+  factory ProxySettingsPatch({
+    $core.bool? movieProxy,
+    $core.bool? liveProxy,
+  }) {
+    final result = create();
+    if (movieProxy != null) result.movieProxy = movieProxy;
+    if (liveProxy != null) result.liveProxy = liveProxy;
+    return result;
+  }
+
+  ProxySettingsPatch._();
+
+  factory ProxySettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ProxySettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ProxySettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'movieProxy')
+    ..aOB(2, _omitFieldNames ? '' : 'liveProxy')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ProxySettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ProxySettingsPatch copyWith(void Function(ProxySettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as ProxySettingsPatch))
+          as ProxySettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ProxySettingsPatch create() => ProxySettingsPatch._();
+  @$core.override
+  ProxySettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ProxySettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ProxySettingsPatch>(create);
+  static ProxySettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get movieProxy => $_getBF(0);
+  @$pb.TagNumber(1)
+  set movieProxy($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMovieProxy() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMovieProxy() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get liveProxy => $_getBF(1);
+  @$pb.TagNumber(2)
+  set liveProxy($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLiveProxy() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLiveProxy() => $_clearField(2);
+}
+
+class RtmpSettingsPatch extends $pb.GeneratedMessage {
+  factory RtmpSettingsPatch({
+    $core.String? customPublishHost,
+    $core.bool? tsDisguisedAsPng,
+  }) {
+    final result = create();
+    if (customPublishHost != null) result.customPublishHost = customPublishHost;
+    if (tsDisguisedAsPng != null) result.tsDisguisedAsPng = tsDisguisedAsPng;
+    return result;
+  }
+
+  RtmpSettingsPatch._();
+
+  factory RtmpSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RtmpSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RtmpSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'customPublishHost')
+    ..aOB(2, _omitFieldNames ? '' : 'tsDisguisedAsPng')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtmpSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtmpSettingsPatch copyWith(void Function(RtmpSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as RtmpSettingsPatch))
+          as RtmpSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RtmpSettingsPatch create() => RtmpSettingsPatch._();
+  @$core.override
+  RtmpSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RtmpSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RtmpSettingsPatch>(create);
+  static RtmpSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get customPublishHost => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set customPublishHost($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCustomPublishHost() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCustomPublishHost() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get tsDisguisedAsPng => $_getBF(1);
+  @$pb.TagNumber(2)
+  set tsDisguisedAsPng($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTsDisguisedAsPng() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTsDisguisedAsPng() => $_clearField(2);
+}
+
+class StringList extends $pb.GeneratedMessage {
+  factory StringList({
+    $core.Iterable<$core.String>? values,
+  }) {
+    final result = create();
+    if (values != null) result.values.addAll(values);
+    return result;
+  }
+
+  StringList._();
+
+  factory StringList.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StringList.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StringList',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..pPS(1, _omitFieldNames ? '' : 'values')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StringList clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StringList copyWith(void Function(StringList) updates) =>
+      super.copyWith((message) => updates(message as StringList)) as StringList;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StringList create() => StringList._();
+  @$core.override
+  StringList createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StringList getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StringList>(create);
+  static StringList? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$core.String> get values => $_getList(0);
+}
+
+class EmailSettingsPatch extends $pb.GeneratedMessage {
+  factory EmailSettingsPatch({
+    $core.bool? enabled,
+    $core.String? smtpHost,
+    $core.int? smtpPort,
+    $core.String? smtpUsername,
+    $core.String? smtpPassword,
+    $core.bool? useTls,
+    $core.String? fromEmail,
+    $core.String? fromName,
+    $core.bool? whitelistEnabled,
+    StringList? whitelistDomains,
+  }) {
+    final result = create();
+    if (enabled != null) result.enabled = enabled;
+    if (smtpHost != null) result.smtpHost = smtpHost;
+    if (smtpPort != null) result.smtpPort = smtpPort;
+    if (smtpUsername != null) result.smtpUsername = smtpUsername;
+    if (smtpPassword != null) result.smtpPassword = smtpPassword;
+    if (useTls != null) result.useTls = useTls;
+    if (fromEmail != null) result.fromEmail = fromEmail;
+    if (fromName != null) result.fromName = fromName;
+    if (whitelistEnabled != null) result.whitelistEnabled = whitelistEnabled;
+    if (whitelistDomains != null) result.whitelistDomains = whitelistDomains;
+    return result;
+  }
+
+  EmailSettingsPatch._();
+
+  factory EmailSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EmailSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EmailSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..aOS(2, _omitFieldNames ? '' : 'smtpHost')
+    ..aI(3, _omitFieldNames ? '' : 'smtpPort', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(4, _omitFieldNames ? '' : 'smtpUsername')
+    ..aOS(5, _omitFieldNames ? '' : 'smtpPassword')
+    ..aOB(6, _omitFieldNames ? '' : 'useTls')
+    ..aOS(7, _omitFieldNames ? '' : 'fromEmail')
+    ..aOS(8, _omitFieldNames ? '' : 'fromName')
+    ..aOB(9, _omitFieldNames ? '' : 'whitelistEnabled')
+    ..aOM<StringList>(10, _omitFieldNames ? '' : 'whitelistDomains',
+        subBuilder: StringList.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmailSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmailSettingsPatch copyWith(void Function(EmailSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as EmailSettingsPatch))
+          as EmailSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EmailSettingsPatch create() => EmailSettingsPatch._();
+  @$core.override
+  EmailSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EmailSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EmailSettingsPatch>(create);
+  static EmailSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get smtpHost => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set smtpHost($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSmtpHost() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSmtpHost() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get smtpPort => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set smtpPort($core.int value) => $_setUnsignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSmtpPort() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSmtpPort() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get smtpUsername => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set smtpUsername($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSmtpUsername() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSmtpUsername() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get smtpPassword => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set smtpPassword($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSmtpPassword() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSmtpPassword() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get useTls => $_getBF(5);
+  @$pb.TagNumber(6)
+  set useTls($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasUseTls() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearUseTls() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get fromEmail => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set fromEmail($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasFromEmail() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearFromEmail() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get fromName => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set fromName($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasFromName() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearFromName() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.bool get whitelistEnabled => $_getBF(8);
+  @$pb.TagNumber(9)
+  set whitelistEnabled($core.bool value) => $_setBool(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasWhitelistEnabled() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearWhitelistEnabled() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  StringList get whitelistDomains => $_getN(9);
+  @$pb.TagNumber(10)
+  set whitelistDomains(StringList value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasWhitelistDomains() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearWhitelistDomains() => $_clearField(10);
+  @$pb.TagNumber(10)
+  StringList ensureWhitelistDomains() => $_ensure(9);
+}
+
+class IceServerList extends $pb.GeneratedMessage {
+  factory IceServerList({
+    $core.Iterable<$1.IceServer>? values,
+  }) {
+    final result = create();
+    if (values != null) result.values.addAll(values);
+    return result;
+  }
+
+  IceServerList._();
+
+  factory IceServerList.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory IceServerList.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'IceServerList',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..pPM<$1.IceServer>(1, _omitFieldNames ? '' : 'values',
+        subBuilder: $1.IceServer.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  IceServerList clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  IceServerList copyWith(void Function(IceServerList) updates) =>
+      super.copyWith((message) => updates(message as IceServerList))
+          as IceServerList;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static IceServerList create() => IceServerList._();
+  @$core.override
+  IceServerList createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static IceServerList getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<IceServerList>(create);
+  static IceServerList? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$1.IceServer> get values => $_getList(0);
+}
+
+class WebRtcSettingsPatch extends $pb.GeneratedMessage {
+  factory WebRtcSettingsPatch({
+    IceServerList? externalIceServers,
+  }) {
+    final result = create();
+    if (externalIceServers != null)
+      result.externalIceServers = externalIceServers;
+    return result;
+  }
+
+  WebRtcSettingsPatch._();
+
+  factory WebRtcSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRtcSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRtcSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<IceServerList>(1, _omitFieldNames ? '' : 'externalIceServers',
+        subBuilder: IceServerList.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRtcSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRtcSettingsPatch copyWith(void Function(WebRtcSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as WebRtcSettingsPatch))
+          as WebRtcSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRtcSettingsPatch create() => WebRtcSettingsPatch._();
+  @$core.override
+  WebRtcSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRtcSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRtcSettingsPatch>(create);
+  static WebRtcSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  IceServerList get externalIceServers => $_getN(0);
+  @$pb.TagNumber(1)
+  set externalIceServers(IceServerList value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasExternalIceServers() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearExternalIceServers() => $_clearField(1);
+  @$pb.TagNumber(1)
+  IceServerList ensureExternalIceServers() => $_ensure(0);
+}
+
+class ChatSettingsPatch extends $pb.GeneratedMessage {
+  factory ChatSettingsPatch({
+    $fixnum.Int64? maxMessagesPerRoom,
+    $fixnum.Int64? maxPinnedMessagesPerRoom,
+    $fixnum.Int64? messageRetentionDays,
+  }) {
+    final result = create();
+    if (maxMessagesPerRoom != null)
+      result.maxMessagesPerRoom = maxMessagesPerRoom;
+    if (maxPinnedMessagesPerRoom != null)
+      result.maxPinnedMessagesPerRoom = maxPinnedMessagesPerRoom;
+    if (messageRetentionDays != null)
+      result.messageRetentionDays = messageRetentionDays;
+    return result;
+  }
+
+  ChatSettingsPatch._();
+
+  factory ChatSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ChatSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ChatSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..a<$fixnum.Int64>(
+        1, _omitFieldNames ? '' : 'maxMessagesPerRoom', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'maxPinnedMessagesPerRoom',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aInt64(3, _omitFieldNames ? '' : 'messageRetentionDays')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatSettingsPatch copyWith(void Function(ChatSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as ChatSettingsPatch))
+          as ChatSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ChatSettingsPatch create() => ChatSettingsPatch._();
+  @$core.override
+  ChatSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ChatSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ChatSettingsPatch>(create);
+  static ChatSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get maxMessagesPerRoom => $_getI64(0);
+  @$pb.TagNumber(1)
+  set maxMessagesPerRoom($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMaxMessagesPerRoom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMaxMessagesPerRoom() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get maxPinnedMessagesPerRoom => $_getI64(1);
+  @$pb.TagNumber(2)
+  set maxPinnedMessagesPerRoom($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMaxPinnedMessagesPerRoom() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMaxPinnedMessagesPerRoom() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get messageRetentionDays => $_getI64(2);
+  @$pb.TagNumber(3)
+  set messageRetentionDays($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMessageRetentionDays() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMessageRetentionDays() => $_clearField(3);
+}
+
+class CorsSettingsPatch extends $pb.GeneratedMessage {
+  factory CorsSettingsPatch({
+    StringList? allowedOrigins,
+  }) {
+    final result = create();
+    if (allowedOrigins != null) result.allowedOrigins = allowedOrigins;
+    return result;
+  }
+
+  CorsSettingsPatch._();
+
+  factory CorsSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CorsSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CorsSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<StringList>(1, _omitFieldNames ? '' : 'allowedOrigins',
+        subBuilder: StringList.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CorsSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CorsSettingsPatch copyWith(void Function(CorsSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as CorsSettingsPatch))
+          as CorsSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CorsSettingsPatch create() => CorsSettingsPatch._();
+  @$core.override
+  CorsSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CorsSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CorsSettingsPatch>(create);
+  static CorsSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  StringList get allowedOrigins => $_getN(0);
+  @$pb.TagNumber(1)
+  set allowedOrigins(StringList value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAllowedOrigins() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAllowedOrigins() => $_clearField(1);
+  @$pb.TagNumber(1)
+  StringList ensureAllowedOrigins() => $_ensure(0);
 }
 
 class UserRegistrationReview extends $pb.GeneratedMessage {
@@ -3431,503 +4860,6 @@ class GetSettingsRequest extends $pb.GeneratedMessage {
   static GetSettingsRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<GetSettingsRequest>(create);
   static GetSettingsRequest? _defaultInstance;
-}
-
-class GetSettingsResponse extends $pb.GeneratedMessage {
-  factory GetSettingsResponse({
-    $core.Iterable<SettingsGroup>? groups,
-  }) {
-    final result = create();
-    if (groups != null) result.groups.addAll(groups);
-    return result;
-  }
-
-  GetSettingsResponse._();
-
-  factory GetSettingsResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetSettingsResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetSettingsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..pPM<SettingsGroup>(1, _omitFieldNames ? '' : 'groups',
-        subBuilder: SettingsGroup.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSettingsResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSettingsResponse copyWith(void Function(GetSettingsResponse) updates) =>
-      super.copyWith((message) => updates(message as GetSettingsResponse))
-          as GetSettingsResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetSettingsResponse create() => GetSettingsResponse._();
-  @$core.override
-  GetSettingsResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static GetSettingsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetSettingsResponse>(create);
-  static GetSettingsResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $pb.PbList<SettingsGroup> get groups => $_getList(0);
-}
-
-class GetSettingsGroupRequest extends $pb.GeneratedMessage {
-  factory GetSettingsGroupRequest({
-    $core.String? group,
-  }) {
-    final result = create();
-    if (group != null) result.group = group;
-    return result;
-  }
-
-  GetSettingsGroupRequest._();
-
-  factory GetSettingsGroupRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetSettingsGroupRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetSettingsGroupRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'group')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSettingsGroupRequest clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSettingsGroupRequest copyWith(
-          void Function(GetSettingsGroupRequest) updates) =>
-      super.copyWith((message) => updates(message as GetSettingsGroupRequest))
-          as GetSettingsGroupRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetSettingsGroupRequest create() => GetSettingsGroupRequest._();
-  @$core.override
-  GetSettingsGroupRequest createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static GetSettingsGroupRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetSettingsGroupRequest>(create);
-  static GetSettingsGroupRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get group => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set group($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasGroup() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearGroup() => $_clearField(1);
-}
-
-class GetSettingsGroupResponse extends $pb.GeneratedMessage {
-  factory GetSettingsGroupResponse({
-    SettingsGroup? group,
-  }) {
-    final result = create();
-    if (group != null) result.group = group;
-    return result;
-  }
-
-  GetSettingsGroupResponse._();
-
-  factory GetSettingsGroupResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetSettingsGroupResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetSettingsGroupResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<SettingsGroup>(1, _omitFieldNames ? '' : 'group',
-        subBuilder: SettingsGroup.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSettingsGroupResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSettingsGroupResponse copyWith(
-          void Function(GetSettingsGroupResponse) updates) =>
-      super.copyWith((message) => updates(message as GetSettingsGroupResponse))
-          as GetSettingsGroupResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetSettingsGroupResponse create() => GetSettingsGroupResponse._();
-  @$core.override
-  GetSettingsGroupResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static GetSettingsGroupResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetSettingsGroupResponse>(create);
-  static GetSettingsGroupResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  SettingsGroup get group => $_getN(0);
-  @$pb.TagNumber(1)
-  set group(SettingsGroup value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasGroup() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearGroup() => $_clearField(1);
-  @$pb.TagNumber(1)
-  SettingsGroup ensureGroup() => $_ensure(0);
-}
-
-enum UpdateSettingsRequest_Settings {
-  server,
-  permissions,
-  room,
-  user,
-  oauth2,
-  proxy,
-  rtmp,
-  email,
-  webrtc,
-  chat,
-  cors,
-  notSet
-}
-
-class UpdateSettingsRequest extends $pb.GeneratedMessage {
-  factory UpdateSettingsRequest({
-    $core.String? group,
-    ServerSettings? server,
-    PermissionSettings? permissions,
-    RoomPolicySettings? room,
-    UserSettings? user,
-    OAuth2Settings? oauth2,
-    ProxySettings? proxy,
-    RtmpSettings? rtmp,
-    EmailSettings? email,
-    WebRtcSettings? webrtc,
-    ChatSettings? chat,
-    CorsSettings? cors,
-  }) {
-    final result = create();
-    if (group != null) result.group = group;
-    if (server != null) result.server = server;
-    if (permissions != null) result.permissions = permissions;
-    if (room != null) result.room = room;
-    if (user != null) result.user = user;
-    if (oauth2 != null) result.oauth2 = oauth2;
-    if (proxy != null) result.proxy = proxy;
-    if (rtmp != null) result.rtmp = rtmp;
-    if (email != null) result.email = email;
-    if (webrtc != null) result.webrtc = webrtc;
-    if (chat != null) result.chat = chat;
-    if (cors != null) result.cors = cors;
-    return result;
-  }
-
-  UpdateSettingsRequest._();
-
-  factory UpdateSettingsRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpdateSettingsRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static const $core.Map<$core.int, UpdateSettingsRequest_Settings>
-      _UpdateSettingsRequest_SettingsByTag = {
-    2: UpdateSettingsRequest_Settings.server,
-    3: UpdateSettingsRequest_Settings.permissions,
-    4: UpdateSettingsRequest_Settings.room,
-    5: UpdateSettingsRequest_Settings.user,
-    6: UpdateSettingsRequest_Settings.oauth2,
-    7: UpdateSettingsRequest_Settings.proxy,
-    8: UpdateSettingsRequest_Settings.rtmp,
-    9: UpdateSettingsRequest_Settings.email,
-    10: UpdateSettingsRequest_Settings.webrtc,
-    11: UpdateSettingsRequest_Settings.chat,
-    12: UpdateSettingsRequest_Settings.cors,
-    0: UpdateSettingsRequest_Settings.notSet
-  };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateSettingsRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
-    ..aOS(1, _omitFieldNames ? '' : 'group')
-    ..aOM<ServerSettings>(2, _omitFieldNames ? '' : 'server',
-        subBuilder: ServerSettings.create)
-    ..aOM<PermissionSettings>(3, _omitFieldNames ? '' : 'permissions',
-        subBuilder: PermissionSettings.create)
-    ..aOM<RoomPolicySettings>(4, _omitFieldNames ? '' : 'room',
-        subBuilder: RoomPolicySettings.create)
-    ..aOM<UserSettings>(5, _omitFieldNames ? '' : 'user',
-        subBuilder: UserSettings.create)
-    ..aOM<OAuth2Settings>(6, _omitFieldNames ? '' : 'oauth2',
-        subBuilder: OAuth2Settings.create)
-    ..aOM<ProxySettings>(7, _omitFieldNames ? '' : 'proxy',
-        subBuilder: ProxySettings.create)
-    ..aOM<RtmpSettings>(8, _omitFieldNames ? '' : 'rtmp',
-        subBuilder: RtmpSettings.create)
-    ..aOM<EmailSettings>(9, _omitFieldNames ? '' : 'email',
-        subBuilder: EmailSettings.create)
-    ..aOM<WebRtcSettings>(10, _omitFieldNames ? '' : 'webrtc',
-        subBuilder: WebRtcSettings.create)
-    ..aOM<ChatSettings>(11, _omitFieldNames ? '' : 'chat',
-        subBuilder: ChatSettings.create)
-    ..aOM<CorsSettings>(12, _omitFieldNames ? '' : 'cors',
-        subBuilder: CorsSettings.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateSettingsRequest clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateSettingsRequest copyWith(
-          void Function(UpdateSettingsRequest) updates) =>
-      super.copyWith((message) => updates(message as UpdateSettingsRequest))
-          as UpdateSettingsRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UpdateSettingsRequest create() => UpdateSettingsRequest._();
-  @$core.override
-  UpdateSettingsRequest createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpdateSettingsRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateSettingsRequest>(create);
-  static UpdateSettingsRequest? _defaultInstance;
-
-  @$pb.TagNumber(2)
-  @$pb.TagNumber(3)
-  @$pb.TagNumber(4)
-  @$pb.TagNumber(5)
-  @$pb.TagNumber(6)
-  @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
-  @$pb.TagNumber(12)
-  UpdateSettingsRequest_Settings whichSettings() =>
-      _UpdateSettingsRequest_SettingsByTag[$_whichOneof(0)]!;
-  @$pb.TagNumber(2)
-  @$pb.TagNumber(3)
-  @$pb.TagNumber(4)
-  @$pb.TagNumber(5)
-  @$pb.TagNumber(6)
-  @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
-  @$pb.TagNumber(9)
-  @$pb.TagNumber(10)
-  @$pb.TagNumber(11)
-  @$pb.TagNumber(12)
-  void clearSettings() => $_clearField($_whichOneof(0));
-
-  @$pb.TagNumber(1)
-  $core.String get group => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set group($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasGroup() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearGroup() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  ServerSettings get server => $_getN(1);
-  @$pb.TagNumber(2)
-  set server(ServerSettings value) => $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasServer() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearServer() => $_clearField(2);
-  @$pb.TagNumber(2)
-  ServerSettings ensureServer() => $_ensure(1);
-
-  @$pb.TagNumber(3)
-  PermissionSettings get permissions => $_getN(2);
-  @$pb.TagNumber(3)
-  set permissions(PermissionSettings value) => $_setField(3, value);
-  @$pb.TagNumber(3)
-  $core.bool hasPermissions() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearPermissions() => $_clearField(3);
-  @$pb.TagNumber(3)
-  PermissionSettings ensurePermissions() => $_ensure(2);
-
-  @$pb.TagNumber(4)
-  RoomPolicySettings get room => $_getN(3);
-  @$pb.TagNumber(4)
-  set room(RoomPolicySettings value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasRoom() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearRoom() => $_clearField(4);
-  @$pb.TagNumber(4)
-  RoomPolicySettings ensureRoom() => $_ensure(3);
-
-  @$pb.TagNumber(5)
-  UserSettings get user => $_getN(4);
-  @$pb.TagNumber(5)
-  set user(UserSettings value) => $_setField(5, value);
-  @$pb.TagNumber(5)
-  $core.bool hasUser() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearUser() => $_clearField(5);
-  @$pb.TagNumber(5)
-  UserSettings ensureUser() => $_ensure(4);
-
-  @$pb.TagNumber(6)
-  OAuth2Settings get oauth2 => $_getN(5);
-  @$pb.TagNumber(6)
-  set oauth2(OAuth2Settings value) => $_setField(6, value);
-  @$pb.TagNumber(6)
-  $core.bool hasOauth2() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearOauth2() => $_clearField(6);
-  @$pb.TagNumber(6)
-  OAuth2Settings ensureOauth2() => $_ensure(5);
-
-  @$pb.TagNumber(7)
-  ProxySettings get proxy => $_getN(6);
-  @$pb.TagNumber(7)
-  set proxy(ProxySettings value) => $_setField(7, value);
-  @$pb.TagNumber(7)
-  $core.bool hasProxy() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearProxy() => $_clearField(7);
-  @$pb.TagNumber(7)
-  ProxySettings ensureProxy() => $_ensure(6);
-
-  @$pb.TagNumber(8)
-  RtmpSettings get rtmp => $_getN(7);
-  @$pb.TagNumber(8)
-  set rtmp(RtmpSettings value) => $_setField(8, value);
-  @$pb.TagNumber(8)
-  $core.bool hasRtmp() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearRtmp() => $_clearField(8);
-  @$pb.TagNumber(8)
-  RtmpSettings ensureRtmp() => $_ensure(7);
-
-  @$pb.TagNumber(9)
-  EmailSettings get email => $_getN(8);
-  @$pb.TagNumber(9)
-  set email(EmailSettings value) => $_setField(9, value);
-  @$pb.TagNumber(9)
-  $core.bool hasEmail() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearEmail() => $_clearField(9);
-  @$pb.TagNumber(9)
-  EmailSettings ensureEmail() => $_ensure(8);
-
-  @$pb.TagNumber(10)
-  WebRtcSettings get webrtc => $_getN(9);
-  @$pb.TagNumber(10)
-  set webrtc(WebRtcSettings value) => $_setField(10, value);
-  @$pb.TagNumber(10)
-  $core.bool hasWebrtc() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearWebrtc() => $_clearField(10);
-  @$pb.TagNumber(10)
-  WebRtcSettings ensureWebrtc() => $_ensure(9);
-
-  @$pb.TagNumber(11)
-  ChatSettings get chat => $_getN(10);
-  @$pb.TagNumber(11)
-  set chat(ChatSettings value) => $_setField(11, value);
-  @$pb.TagNumber(11)
-  $core.bool hasChat() => $_has(10);
-  @$pb.TagNumber(11)
-  void clearChat() => $_clearField(11);
-  @$pb.TagNumber(11)
-  ChatSettings ensureChat() => $_ensure(10);
-
-  @$pb.TagNumber(12)
-  CorsSettings get cors => $_getN(11);
-  @$pb.TagNumber(12)
-  set cors(CorsSettings value) => $_setField(12, value);
-  @$pb.TagNumber(12)
-  $core.bool hasCors() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearCors() => $_clearField(12);
-  @$pb.TagNumber(12)
-  CorsSettings ensureCors() => $_ensure(11);
-}
-
-class UpdateSettingsResponse extends $pb.GeneratedMessage {
-  factory UpdateSettingsResponse({
-    SettingsGroup? group,
-  }) {
-    final result = create();
-    if (group != null) result.group = group;
-    return result;
-  }
-
-  UpdateSettingsResponse._();
-
-  factory UpdateSettingsResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpdateSettingsResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateSettingsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<SettingsGroup>(1, _omitFieldNames ? '' : 'group',
-        subBuilder: SettingsGroup.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateSettingsResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateSettingsResponse copyWith(
-          void Function(UpdateSettingsResponse) updates) =>
-      super.copyWith((message) => updates(message as UpdateSettingsResponse))
-          as UpdateSettingsResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UpdateSettingsResponse create() => UpdateSettingsResponse._();
-  @$core.override
-  UpdateSettingsResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpdateSettingsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateSettingsResponse>(create);
-  static UpdateSettingsResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  SettingsGroup get group => $_getN(0);
-  @$pb.TagNumber(1)
-  set group(SettingsGroup value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasGroup() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearGroup() => $_clearField(1);
-  @$pb.TagNumber(1)
-  SettingsGroup ensureGroup() => $_ensure(0);
 }
 
 class SendTestEmailRequest extends $pb.GeneratedMessage {
@@ -5786,7 +6718,7 @@ class GetUserRoomsRequest extends $pb.GeneratedMessage {
 
 class GetUserRoomsResponse extends $pb.GeneratedMessage {
   factory GetUserRoomsResponse({
-    $core.Iterable<AdminRoom>? rooms,
+    $core.Iterable<Room>? rooms,
     $core.int? total,
   }) {
     final result = create();
@@ -5808,8 +6740,7 @@ class GetUserRoomsResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'GetUserRoomsResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..pPM<AdminRoom>(1, _omitFieldNames ? '' : 'rooms',
-        subBuilder: AdminRoom.create)
+    ..pPM<Room>(1, _omitFieldNames ? '' : 'rooms', subBuilder: Room.create)
     ..aI(2, _omitFieldNames ? '' : 'total')
     ..hasRequiredFields = false;
 
@@ -5833,7 +6764,7 @@ class GetUserRoomsResponse extends $pb.GeneratedMessage {
   static GetUserRoomsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbList<AdminRoom> get rooms => $_getList(0);
+  $pb.PbList<Room> get rooms => $_getList(0);
 
   @$pb.TagNumber(2)
   $core.int get total => $_getIZ(1);
@@ -6521,7 +7452,7 @@ class ApproveRoomCreationReviewRequest extends $pb.GeneratedMessage {
 class ApproveRoomCreationReviewResponse extends $pb.GeneratedMessage {
   factory ApproveRoomCreationReviewResponse({
     RoomCreationReview? review,
-    AdminRoom? room,
+    Room? room,
   }) {
     final result = create();
     if (review != null) result.review = review;
@@ -6545,8 +7476,7 @@ class ApproveRoomCreationReviewResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<RoomCreationReview>(1, _omitFieldNames ? '' : 'review',
         subBuilder: RoomCreationReview.create)
-    ..aOM<AdminRoom>(2, _omitFieldNames ? '' : 'room',
-        subBuilder: AdminRoom.create)
+    ..aOM<Room>(2, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6584,15 +7514,15 @@ class ApproveRoomCreationReviewResponse extends $pb.GeneratedMessage {
   RoomCreationReview ensureReview() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  AdminRoom get room => $_getN(1);
+  Room get room => $_getN(1);
   @$pb.TagNumber(2)
-  set room(AdminRoom value) => $_setField(2, value);
+  set room(Room value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasRoom() => $_has(1);
   @$pb.TagNumber(2)
   void clearRoom() => $_clearField(2);
   @$pb.TagNumber(2)
-  AdminRoom ensureRoom() => $_ensure(1);
+  Room ensureRoom() => $_ensure(1);
 }
 
 class RejectRoomCreationReviewRequest extends $pb.GeneratedMessage {
@@ -7342,7 +8272,7 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
 
 class ListRoomsResponse extends $pb.GeneratedMessage {
   factory ListRoomsResponse({
-    $core.Iterable<AdminRoom>? rooms,
+    $core.Iterable<Room>? rooms,
     $core.int? total,
   }) {
     final result = create();
@@ -7364,8 +8294,7 @@ class ListRoomsResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ListRoomsResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..pPM<AdminRoom>(1, _omitFieldNames ? '' : 'rooms',
-        subBuilder: AdminRoom.create)
+    ..pPM<Room>(1, _omitFieldNames ? '' : 'rooms', subBuilder: Room.create)
     ..aI(2, _omitFieldNames ? '' : 'total')
     ..hasRequiredFields = false;
 
@@ -7389,7 +8318,7 @@ class ListRoomsResponse extends $pb.GeneratedMessage {
   static ListRoomsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbList<AdminRoom> get rooms => $_getList(0);
+  $pb.PbList<Room> get rooms => $_getList(0);
 
   @$pb.TagNumber(2)
   $core.int get total => $_getIZ(1);
@@ -8279,7 +9208,7 @@ class UpdateRoomTaxonomyRequest extends $pb.GeneratedMessage {
 
 class UpdateRoomTaxonomyResponse extends $pb.GeneratedMessage {
   factory UpdateRoomTaxonomyResponse({
-    AdminRoom? room,
+    Room? room,
   }) {
     final result = create();
     if (room != null) result.room = room;
@@ -8299,8 +9228,7 @@ class UpdateRoomTaxonomyResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'UpdateRoomTaxonomyResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<AdminRoom>(1, _omitFieldNames ? '' : 'room',
-        subBuilder: AdminRoom.create)
+    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8325,15 +9253,15 @@ class UpdateRoomTaxonomyResponse extends $pb.GeneratedMessage {
   static UpdateRoomTaxonomyResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  AdminRoom get room => $_getN(0);
+  Room get room => $_getN(0);
   @$pb.TagNumber(1)
-  set room(AdminRoom value) => $_setField(1, value);
+  set room(Room value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasRoom() => $_has(0);
   @$pb.TagNumber(1)
   void clearRoom() => $_clearField(1);
   @$pb.TagNumber(1)
-  AdminRoom ensureRoom() => $_ensure(0);
+  Room ensureRoom() => $_ensure(0);
 }
 
 class GetRoomRequest extends $pb.GeneratedMessage {
@@ -8446,7 +9374,7 @@ class RoomPathRequest extends $pb.GeneratedMessage {
 
 class GetRoomResponse extends $pb.GeneratedMessage {
   factory GetRoomResponse({
-    AdminRoom? room,
+    Room? room,
   }) {
     final result = create();
     if (room != null) result.room = room;
@@ -8466,8 +9394,7 @@ class GetRoomResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'GetRoomResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<AdminRoom>(1, _omitFieldNames ? '' : 'room',
-        subBuilder: AdminRoom.create)
+    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8490,15 +9417,15 @@ class GetRoomResponse extends $pb.GeneratedMessage {
   static GetRoomResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  AdminRoom get room => $_getN(0);
+  Room get room => $_getN(0);
   @$pb.TagNumber(1)
-  set room(AdminRoom value) => $_setField(1, value);
+  set room(Room value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasRoom() => $_has(0);
   @$pb.TagNumber(1)
   void clearRoom() => $_clearField(1);
   @$pb.TagNumber(1)
-  AdminRoom ensureRoom() => $_ensure(0);
+  Room ensureRoom() => $_ensure(0);
 }
 
 class GetRoomSettingsRequest extends $pb.GeneratedMessage {
@@ -8629,11 +9556,39 @@ class GetRoomSettingsResponse extends $pb.GeneratedMessage {
 class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
   factory UpdateRoomSettingsRequest({
     $core.String? roomId,
-    $1.RoomSettingsPatch? settings,
+    $core.bool? allowGuestJoin,
+    $fixnum.Int64? maxMembers,
+    $core.bool? requireApproval,
+    $core.bool? allowAutoJoin,
+    $core.bool? chatEnabled,
+    $1.AutoPlaySettingsPatch? autoPlay,
+    $fixnum.Int64? adminAddedPermissions,
+    $fixnum.Int64? adminRemovedPermissions,
+    $fixnum.Int64? memberAddedPermissions,
+    $fixnum.Int64? memberRemovedPermissions,
+    $fixnum.Int64? guestAddedPermissions,
+    $fixnum.Int64? guestRemovedPermissions,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
-    if (settings != null) result.settings = settings;
+    if (allowGuestJoin != null) result.allowGuestJoin = allowGuestJoin;
+    if (maxMembers != null) result.maxMembers = maxMembers;
+    if (requireApproval != null) result.requireApproval = requireApproval;
+    if (allowAutoJoin != null) result.allowAutoJoin = allowAutoJoin;
+    if (chatEnabled != null) result.chatEnabled = chatEnabled;
+    if (autoPlay != null) result.autoPlay = autoPlay;
+    if (adminAddedPermissions != null)
+      result.adminAddedPermissions = adminAddedPermissions;
+    if (adminRemovedPermissions != null)
+      result.adminRemovedPermissions = adminRemovedPermissions;
+    if (memberAddedPermissions != null)
+      result.memberAddedPermissions = memberAddedPermissions;
+    if (memberRemovedPermissions != null)
+      result.memberRemovedPermissions = memberRemovedPermissions;
+    if (guestAddedPermissions != null)
+      result.guestAddedPermissions = guestAddedPermissions;
+    if (guestRemovedPermissions != null)
+      result.guestRemovedPermissions = guestRemovedPermissions;
     return result;
   }
 
@@ -8651,8 +9606,33 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOM<$1.RoomSettingsPatch>(2, _omitFieldNames ? '' : 'settings',
-        subBuilder: $1.RoomSettingsPatch.create)
+    ..aOB(2, _omitFieldNames ? '' : 'allowGuestJoin')
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'maxMembers', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(4, _omitFieldNames ? '' : 'requireApproval')
+    ..aOB(5, _omitFieldNames ? '' : 'allowAutoJoin')
+    ..aOB(6, _omitFieldNames ? '' : 'chatEnabled')
+    ..aOM<$1.AutoPlaySettingsPatch>(7, _omitFieldNames ? '' : 'autoPlay',
+        subBuilder: $1.AutoPlaySettingsPatch.create)
+    ..a<$fixnum.Int64>(
+        8, _omitFieldNames ? '' : 'adminAddedPermissions', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(9, _omitFieldNames ? '' : 'adminRemovedPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(10, _omitFieldNames ? '' : 'memberAddedPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(11, _omitFieldNames ? '' : 'memberRemovedPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        12, _omitFieldNames ? '' : 'guestAddedPermissions', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(13, _omitFieldNames ? '' : 'guestRemovedPermissions',
+        $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8685,74 +9665,114 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
   void clearRoomId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $1.RoomSettingsPatch get settings => $_getN(1);
+  $core.bool get allowGuestJoin => $_getBF(1);
   @$pb.TagNumber(2)
-  set settings($1.RoomSettingsPatch value) => $_setField(2, value);
+  set allowGuestJoin($core.bool value) => $_setBool(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasSettings() => $_has(1);
+  $core.bool hasAllowGuestJoin() => $_has(1);
   @$pb.TagNumber(2)
-  void clearSettings() => $_clearField(2);
-  @$pb.TagNumber(2)
-  $1.RoomSettingsPatch ensureSettings() => $_ensure(1);
-}
+  void clearAllowGuestJoin() => $_clearField(2);
 
-class UpdateRoomSettingsResponse extends $pb.GeneratedMessage {
-  factory UpdateRoomSettingsResponse({
-    AdminRoom? room,
-  }) {
-    final result = create();
-    if (room != null) result.room = room;
-    return result;
-  }
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get maxMembers => $_getI64(2);
+  @$pb.TagNumber(3)
+  set maxMembers($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMaxMembers() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMaxMembers() => $_clearField(3);
 
-  UpdateRoomSettingsResponse._();
+  @$pb.TagNumber(4)
+  $core.bool get requireApproval => $_getBF(3);
+  @$pb.TagNumber(4)
+  set requireApproval($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRequireApproval() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRequireApproval() => $_clearField(4);
 
-  factory UpdateRoomSettingsResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpdateRoomSettingsResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+  @$pb.TagNumber(5)
+  $core.bool get allowAutoJoin => $_getBF(4);
+  @$pb.TagNumber(5)
+  set allowAutoJoin($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasAllowAutoJoin() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearAllowAutoJoin() => $_clearField(5);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateRoomSettingsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<AdminRoom>(1, _omitFieldNames ? '' : 'room',
-        subBuilder: AdminRoom.create)
-    ..hasRequiredFields = false;
+  @$pb.TagNumber(6)
+  $core.bool get chatEnabled => $_getBF(5);
+  @$pb.TagNumber(6)
+  set chatEnabled($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasChatEnabled() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearChatEnabled() => $_clearField(6);
 
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateRoomSettingsResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateRoomSettingsResponse copyWith(
-          void Function(UpdateRoomSettingsResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as UpdateRoomSettingsResponse))
-          as UpdateRoomSettingsResponse;
+  @$pb.TagNumber(7)
+  $1.AutoPlaySettingsPatch get autoPlay => $_getN(6);
+  @$pb.TagNumber(7)
+  set autoPlay($1.AutoPlaySettingsPatch value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasAutoPlay() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearAutoPlay() => $_clearField(7);
+  @$pb.TagNumber(7)
+  $1.AutoPlaySettingsPatch ensureAutoPlay() => $_ensure(6);
 
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get adminAddedPermissions => $_getI64(7);
+  @$pb.TagNumber(8)
+  set adminAddedPermissions($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasAdminAddedPermissions() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearAdminAddedPermissions() => $_clearField(8);
 
-  @$core.pragma('dart2js:noInline')
-  static UpdateRoomSettingsResponse create() => UpdateRoomSettingsResponse._();
-  @$core.override
-  UpdateRoomSettingsResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpdateRoomSettingsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateRoomSettingsResponse>(create);
-  static UpdateRoomSettingsResponse? _defaultInstance;
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get adminRemovedPermissions => $_getI64(8);
+  @$pb.TagNumber(9)
+  set adminRemovedPermissions($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasAdminRemovedPermissions() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearAdminRemovedPermissions() => $_clearField(9);
 
-  @$pb.TagNumber(1)
-  AdminRoom get room => $_getN(0);
-  @$pb.TagNumber(1)
-  set room(AdminRoom value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoom() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoom() => $_clearField(1);
-  @$pb.TagNumber(1)
-  AdminRoom ensureRoom() => $_ensure(0);
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get memberAddedPermissions => $_getI64(9);
+  @$pb.TagNumber(10)
+  set memberAddedPermissions($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMemberAddedPermissions() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMemberAddedPermissions() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get memberRemovedPermissions => $_getI64(10);
+  @$pb.TagNumber(11)
+  set memberRemovedPermissions($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasMemberRemovedPermissions() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearMemberRemovedPermissions() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $fixnum.Int64 get guestAddedPermissions => $_getI64(11);
+  @$pb.TagNumber(12)
+  set guestAddedPermissions($fixnum.Int64 value) => $_setInt64(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasGuestAddedPermissions() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearGuestAddedPermissions() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $fixnum.Int64 get guestRemovedPermissions => $_getI64(12);
+  @$pb.TagNumber(13)
+  set guestRemovedPermissions($fixnum.Int64 value) => $_setInt64(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasGuestRemovedPermissions() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearGuestRemovedPermissions() => $_clearField(13);
 }
 
 class ResetRoomSettingsRequest extends $pb.GeneratedMessage {
@@ -8812,7 +9832,7 @@ class ResetRoomSettingsRequest extends $pb.GeneratedMessage {
 
 class ResetRoomSettingsResponse extends $pb.GeneratedMessage {
   factory ResetRoomSettingsResponse({
-    AdminRoom? room,
+    Room? room,
   }) {
     final result = create();
     if (room != null) result.room = room;
@@ -8832,8 +9852,7 @@ class ResetRoomSettingsResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ResetRoomSettingsResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<AdminRoom>(1, _omitFieldNames ? '' : 'room',
-        subBuilder: AdminRoom.create)
+    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8857,15 +9876,15 @@ class ResetRoomSettingsResponse extends $pb.GeneratedMessage {
   static ResetRoomSettingsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  AdminRoom get room => $_getN(0);
+  Room get room => $_getN(0);
   @$pb.TagNumber(1)
-  set room(AdminRoom value) => $_setField(1, value);
+  set room(Room value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasRoom() => $_has(0);
   @$pb.TagNumber(1)
   void clearRoom() => $_clearField(1);
   @$pb.TagNumber(1)
-  AdminRoom ensureRoom() => $_ensure(0);
+  Room ensureRoom() => $_ensure(0);
 }
 
 class UpdateRoomPasswordRequest extends $pb.GeneratedMessage {
@@ -9167,7 +10186,7 @@ class BanRoomRequest extends $pb.GeneratedMessage {
 
 class BanRoomResponse extends $pb.GeneratedMessage {
   factory BanRoomResponse({
-    AdminRoom? room,
+    Room? room,
   }) {
     final result = create();
     if (room != null) result.room = room;
@@ -9187,8 +10206,7 @@ class BanRoomResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'BanRoomResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<AdminRoom>(1, _omitFieldNames ? '' : 'room',
-        subBuilder: AdminRoom.create)
+    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -9211,15 +10229,15 @@ class BanRoomResponse extends $pb.GeneratedMessage {
   static BanRoomResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  AdminRoom get room => $_getN(0);
+  Room get room => $_getN(0);
   @$pb.TagNumber(1)
-  set room(AdminRoom value) => $_setField(1, value);
+  set room(Room value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasRoom() => $_has(0);
   @$pb.TagNumber(1)
   void clearRoom() => $_clearField(1);
   @$pb.TagNumber(1)
-  AdminRoom ensureRoom() => $_ensure(0);
+  Room ensureRoom() => $_ensure(0);
 }
 
 class UnbanRoomRequest extends $pb.GeneratedMessage {
@@ -9278,7 +10296,7 @@ class UnbanRoomRequest extends $pb.GeneratedMessage {
 
 class UnbanRoomResponse extends $pb.GeneratedMessage {
   factory UnbanRoomResponse({
-    AdminRoom? room,
+    Room? room,
   }) {
     final result = create();
     if (room != null) result.room = room;
@@ -9298,8 +10316,7 @@ class UnbanRoomResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'UnbanRoomResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<AdminRoom>(1, _omitFieldNames ? '' : 'room',
-        subBuilder: AdminRoom.create)
+    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -9322,15 +10339,15 @@ class UnbanRoomResponse extends $pb.GeneratedMessage {
   static UnbanRoomResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  AdminRoom get room => $_getN(0);
+  Room get room => $_getN(0);
   @$pb.TagNumber(1)
-  set room(AdminRoom value) => $_setField(1, value);
+  set room(Room value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasRoom() => $_has(0);
   @$pb.TagNumber(1)
   void clearRoom() => $_clearField(1);
   @$pb.TagNumber(1)
-  AdminRoom ensureRoom() => $_ensure(0);
+  Room ensureRoom() => $_ensure(0);
 }
 
 class GetRoomMembersRequest extends $pb.GeneratedMessage {
@@ -12434,18 +13451,14 @@ class AdminServiceApi {
   /// =========================
   /// System Settings Management
   /// =========================
-  $async.Future<GetSettingsResponse> getSettings(
+  $async.Future<RuntimeSettings> getSettings(
           $pb.ClientContext? ctx, GetSettingsRequest request) =>
-      _client.invoke<GetSettingsResponse>(
-          ctx, 'AdminService', 'GetSettings', request, GetSettingsResponse());
-  $async.Future<GetSettingsGroupResponse> getSettingsGroup(
-          $pb.ClientContext? ctx, GetSettingsGroupRequest request) =>
-      _client.invoke<GetSettingsGroupResponse>(ctx, 'AdminService',
-          'GetSettingsGroup', request, GetSettingsGroupResponse());
-  $async.Future<UpdateSettingsResponse> updateSettings(
+      _client.invoke<RuntimeSettings>(
+          ctx, 'AdminService', 'GetSettings', request, RuntimeSettings());
+  $async.Future<RuntimeSettings> updateSettings(
           $pb.ClientContext? ctx, UpdateSettingsRequest request) =>
-      _client.invoke<UpdateSettingsResponse>(ctx, 'AdminService',
-          'UpdateSettings', request, UpdateSettingsResponse());
+      _client.invoke<RuntimeSettings>(
+          ctx, 'AdminService', 'UpdateSettings', request, RuntimeSettings());
   $async.Future<SendTestEmailResponse> sendTestEmail(
           $pb.ClientContext? ctx, SendTestEmailRequest request) =>
       _client.invoke<SendTestEmailResponse>(ctx, 'AdminService',
@@ -12538,10 +13551,10 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, GetRoomSettingsRequest request) =>
       _client.invoke<GetRoomSettingsResponse>(ctx, 'AdminService',
           'GetRoomSettings', request, GetRoomSettingsResponse());
-  $async.Future<UpdateRoomSettingsResponse> updateRoomSettings(
+  $async.Future<Room> updateRoomSettings(
           $pb.ClientContext? ctx, UpdateRoomSettingsRequest request) =>
-      _client.invoke<UpdateRoomSettingsResponse>(ctx, 'AdminService',
-          'UpdateRoomSettings', request, UpdateRoomSettingsResponse());
+      _client.invoke<Room>(
+          ctx, 'AdminService', 'UpdateRoomSettings', request, Room());
   $async.Future<ResetRoomSettingsResponse> resetRoomSettings(
           $pb.ClientContext? ctx, ResetRoomSettingsRequest request) =>
       _client.invoke<ResetRoomSettingsResponse>(ctx, 'AdminService',

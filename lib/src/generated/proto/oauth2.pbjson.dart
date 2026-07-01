@@ -43,6 +43,21 @@ final $typed_data.Uint8List oAuth2ProviderTypeDescriptor = $convert.base64Decode
     'RZUEVfTE9HVE8QBxIdChlPQVVUSDJfUFJPVklERVJfVFlQRV9PSURDEAgSHwobT0FVVEgyX1BS'
     'T1ZJREVSX1RZUEVfRkVJU0hVEAkSHgoaT0FVVEgyX1BST1ZJREVSX1RZUEVfR0lURUUQCg==');
 
+@$core.Deprecated('Use oAuth2OperationDescriptor instead')
+const OAuth2Operation$json = {
+  '1': 'OAuth2Operation',
+  '2': [
+    {'1': 'OAUTH2_OPERATION_UNSPECIFIED', '2': 0},
+    {'1': 'OAUTH2_OPERATION_LOGIN', '2': 1},
+    {'1': 'OAUTH2_OPERATION_BIND', '2': 2},
+  ],
+};
+
+/// Descriptor for `OAuth2Operation`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List oAuth2OperationDescriptor = $convert.base64Decode(
+    'Cg9PQXV0aDJPcGVyYXRpb24SIAocT0FVVEgyX09QRVJBVElPTl9VTlNQRUNJRklFRBAAEhoKFk'
+    '9BVVRIMl9PUEVSQVRJT05fTE9HSU4QARIZChVPQVVUSDJfT1BFUkFUSU9OX0JJTkQQAg==');
+
 @$core.Deprecated('Use oAuth2ProviderInstancePathRequestDescriptor instead')
 const OAuth2ProviderInstancePathRequest$json = {
   '1': 'OAuth2ProviderInstancePathRequest',
@@ -104,14 +119,24 @@ const GetAuthorizationUrlResponse$json = {
       '10': 'authorizationUrl'
     },
     {'1': 'state', '3': 2, '4': 1, '5': 9, '10': 'state'},
+    {
+      '1': 'operation',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.OAuth2Operation',
+      '8': {},
+      '10': 'operation'
+    },
   ],
 };
 
 /// Descriptor for `GetAuthorizationUrlResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getAuthorizationUrlResponseDescriptor =
-    $convert.base64Decode(
-        'ChtHZXRBdXRob3JpemF0aW9uVXJsUmVzcG9uc2USKwoRYXV0aG9yaXphdGlvbl91cmwYASABKA'
-        'lSEGF1dGhvcml6YXRpb25VcmwSFAoFc3RhdGUYAiABKAlSBXN0YXRl');
+final $typed_data.Uint8List getAuthorizationUrlResponseDescriptor = $convert.base64Decode(
+    'ChtHZXRBdXRob3JpemF0aW9uVXJsUmVzcG9uc2USKwoRYXV0aG9yaXphdGlvbl91cmwYASABKA'
+    'lSEGF1dGhvcml6YXRpb25VcmwSFAoFc3RhdGUYAiABKAlSBXN0YXRlEkgKCW9wZXJhdGlvbhgD'
+    'IAEoDjIeLnN5bmN0di5jbGllbnQuT0F1dGgyT3BlcmF0aW9uQgq6SAeCAQQQASAAUglvcGVyYX'
+    'Rpb24=');
 
 @$core.Deprecated('Use getAuthorizationUrlForBindRequestDescriptor instead')
 const GetAuthorizationUrlForBindRequest$json = {
@@ -154,6 +179,15 @@ const GetAuthorizationUrlForBindResponse$json = {
       '10': 'authorizationUrl'
     },
     {'1': 'state', '3': 2, '4': 1, '5': 9, '10': 'state'},
+    {
+      '1': 'operation',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.OAuth2Operation',
+      '8': {},
+      '10': 'operation'
+    },
   ],
 };
 
@@ -161,25 +195,25 @@ const GetAuthorizationUrlForBindResponse$json = {
 final $typed_data.Uint8List getAuthorizationUrlForBindResponseDescriptor =
     $convert.base64Decode(
         'CiJHZXRBdXRob3JpemF0aW9uVXJsRm9yQmluZFJlc3BvbnNlEisKEWF1dGhvcml6YXRpb25fdX'
-        'JsGAEgASgJUhBhdXRob3JpemF0aW9uVXJsEhQKBXN0YXRlGAIgASgJUgVzdGF0ZQ==');
+        'JsGAEgASgJUhBhdXRob3JpemF0aW9uVXJsEhQKBXN0YXRlGAIgASgJUgVzdGF0ZRJICglvcGVy'
+        'YXRpb24YAyABKA4yHi5zeW5jdHYuY2xpZW50Lk9BdXRoMk9wZXJhdGlvbkIKukgHggEEEAEgAF'
+        'IJb3BlcmF0aW9u');
 
 @$core.Deprecated('Use exchangeAuthorizationCodeRequestDescriptor instead')
 const ExchangeAuthorizationCodeRequest$json = {
   '1': 'ExchangeAuthorizationCodeRequest',
   '2': [
-    {'1': 'provider', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'provider'},
-    {'1': 'code', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'code'},
-    {'1': 'state', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'state'},
+    {'1': 'code', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'code'},
+    {'1': 'state', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'state'},
   ],
 };
 
 /// Descriptor for `ExchangeAuthorizationCodeRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List exchangeAuthorizationCodeRequestDescriptor =
     $convert.base64Decode(
-        'CiBFeGNoYW5nZUF1dGhvcml6YXRpb25Db2RlUmVxdWVzdBI3Cghwcm92aWRlchgBIAEoCUIbuk'
-        'gYchYQARhAMhBeW0EtWmEtejAtOV8tXSskUghwcm92aWRlchIyCgRjb2RlGAIgASgJQh66SBty'
-        'GRABGIACMhJeW0EtWmEtejAtOS5fKy1dKyRSBGNvZGUSLgoFc3RhdGUYAyABKAlCGLpIFXITMg'
-        '5eW0EtWmEtejAtOV0rJJgBIFIFc3RhdGU=');
+        'CiBFeGNoYW5nZUF1dGhvcml6YXRpb25Db2RlUmVxdWVzdBIyCgRjb2RlGAEgASgJQh66SBtyGR'
+        'ABGIACMhJeW0EtWmEtejAtOS5fKy1dKyRSBGNvZGUSLgoFc3RhdGUYAiABKAlCGLpIFXITMg5e'
+        'W0EtWmEtejAtOV0rJJgBIFIFc3RhdGU=');
 
 @$core.Deprecated('Use exchangeAuthorizationCodeResponseDescriptor instead')
 const ExchangeAuthorizationCodeResponse$json = {
@@ -221,7 +255,15 @@ const ExchangeAuthorizationCodeResponse$json = {
       '10': 'redirectUrl',
       '17': true
     },
-    {'1': 'is_bind', '3': 6, '4': 1, '5': 8, '10': 'isBind'},
+    {
+      '1': 'operation',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.OAuth2Operation',
+      '8': {},
+      '10': 'operation'
+    },
     {
       '1': 'registration_review_required',
       '3': 7,
@@ -253,11 +295,12 @@ final $typed_data.Uint8List exchangeAuthorizationCodeResponseDescriptor = $conve
     'gJSABSC2FjY2Vzc1Rva2VuiAEBEigKDXJlZnJlc2hfdG9rZW4YAiABKAlIAVIMcmVmcmVzaFRv'
     'a2VuiAEBEh0KCmV4cGlyZXNfaW4YAyABKANSCWV4cGlyZXNJbhI6Cgl1c2VyX2luZm8YBCABKA'
     'syHS5zeW5jdHYuY2xpZW50Lk9BdXRoMlVzZXJJbmZvUgh1c2VySW5mbxImCgxyZWRpcmVjdF91'
-    'cmwYBSABKAlIAlILcmVkaXJlY3RVcmyIAQESFwoHaXNfYmluZBgGIAEoCFIGaXNCaW5kEkAKHH'
-    'JlZ2lzdHJhdGlvbl9yZXZpZXdfcmVxdWlyZWQYByABKAhSGnJlZ2lzdHJhdGlvblJldmlld1Jl'
-    'cXVpcmVkEjkKFnJlZ2lzdHJhdGlvbl9yZXZpZXdfaWQYCCABKAlIA1IUcmVnaXN0cmF0aW9uUm'
-    'V2aWV3SWSIAQFCDwoNX2FjY2Vzc190b2tlbkIQCg5fcmVmcmVzaF90b2tlbkIPCg1fcmVkaXJl'
-    'Y3RfdXJsQhkKF19yZWdpc3RyYXRpb25fcmV2aWV3X2lk');
+    'cmwYBSABKAlIAlILcmVkaXJlY3RVcmyIAQESSAoJb3BlcmF0aW9uGAYgASgOMh4uc3luY3R2Lm'
+    'NsaWVudC5PQXV0aDJPcGVyYXRpb25CCrpIB4IBBBABIABSCW9wZXJhdGlvbhJAChxyZWdpc3Ry'
+    'YXRpb25fcmV2aWV3X3JlcXVpcmVkGAcgASgIUhpyZWdpc3RyYXRpb25SZXZpZXdSZXF1aXJlZB'
+    'I5ChZyZWdpc3RyYXRpb25fcmV2aWV3X2lkGAggASgJSANSFHJlZ2lzdHJhdGlvblJldmlld0lk'
+    'iAEBQg8KDV9hY2Nlc3NfdG9rZW5CEAoOX3JlZnJlc2hfdG9rZW5CDwoNX3JlZGlyZWN0X3VybE'
+    'IZChdfcmVnaXN0cmF0aW9uX3Jldmlld19pZA==');
 
 @$core.Deprecated('Use listAvailableProvidersRequestDescriptor instead')
 const ListAvailableProvidersRequest$json = {

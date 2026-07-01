@@ -15,6 +15,8 @@ import 'package:synctv_app/src/generated/proto/common.pb.dart' as common;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/oauth2.pb.dart' as oauth2;
+import 'package:synctv_app/src/generated/proto/oauth2.pbenum.dart'
+    as oauth2_enum;
 import 'package:synctv_app/src/generated/proto/providers/alist.pb.dart'
     as alist;
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pb.dart'
@@ -69,13 +71,17 @@ class SyncTvApiException implements Exception {
   final int statusCode;
   final String message;
   final int? code;
+  final int? grpcCode;
   final String? requestId;
+  final oauth2_enum.OAuth2Operation? oauth2Operation;
 
   SyncTvApiException(
     this.message, {
     required this.statusCode,
     this.code,
+    this.grpcCode,
     this.requestId,
+    this.oauth2Operation,
   });
 
   @override
@@ -734,15 +740,29 @@ class SyncTvApiClient {
   SyncTvApiException _apiException(http.Response response) {
     var message = response.body;
     int? code;
+    int? grpcCode;
     String? requestId;
+    oauth2_enum.OAuth2Operation? oauth2Operation;
     try {
       final decoded = jsonDecode(response.body);
       if (decoded is Map<String, dynamic>) {
-        message = (decoded['error'] ?? decoded['message'] ?? message)
-            .toString();
-        final rawCode = decoded['code'];
-        if (rawCode is int) code = rawCode;
-        requestId = decoded['request_id']?.toString();
+        message = _stringValue(decoded['message']) ?? message;
+        grpcCode = _intValue(decoded['code']);
+
+        final details = decoded['details'];
+        if (details is List) {
+          for (final detail in details) {
+            if (detail is! Map<String, dynamic>) continue;
+            final metadata = detail['metadata'];
+            if (metadata is Map<String, dynamic>) {
+              requestId ??= _stringValue(metadata['requestId']);
+              code ??= _intValue(metadata['errorCode']);
+              oauth2Operation ??= _oauth2OperationValue(
+                metadata['oauth2Operation'],
+              );
+            }
+          }
+        }
       }
     } catch (e) {
       debugPrint('API error response parse failed: $e');
@@ -751,8 +771,36 @@ class SyncTvApiClient {
       message,
       statusCode: response.statusCode,
       code: code,
+      grpcCode: grpcCode,
       requestId: requestId,
+      oauth2Operation: oauth2Operation,
     );
+  }
+
+  String? _stringValue(Object? value) {
+    if (value == null) return null;
+    final text = value.toString();
+    return text.isEmpty ? null : text;
+  }
+
+  int? _intValue(Object? value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  oauth2_enum.OAuth2Operation? _oauth2OperationValue(Object? value) {
+    if (value is int) return oauth2_enum.OAuth2Operation.valueOf(value);
+    if (value is String) {
+      final numeric = int.tryParse(value);
+      if (numeric != null) {
+        return oauth2_enum.OAuth2Operation.valueOf(numeric);
+      }
+      for (final operation in oauth2_enum.OAuth2Operation.values) {
+        if (operation.name == value) return operation;
+      }
+    }
+    return null;
   }
 
   Stream<T> _watchSse<T extends GeneratedMessage>(
@@ -774,10 +822,12 @@ class SyncTvApiClient {
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final body = await response.stream.bytesToString();
-      throw SyncTvApiException(
-        body.isEmpty ? 'SSE watch failed' : body,
-        statusCode: response.statusCode,
+      final errorResponse = http.Response(
+        body.isEmpty ? '{"message":"SSE watch failed"}' : body,
+        response.statusCode,
+        headers: response.headers,
       );
+      throw _apiException(errorResponse);
     }
 
     yield* _decodeSseStream(response.stream, create);
@@ -1100,7 +1150,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
     );
   }
 
-  SyncTvRoom mapAdminRoom(admin.AdminRoom room) {
+  SyncTvRoom mapAdminRoom(admin.Room room) {
     final settings = roomSettingsToJson(room.settings);
     return SyncTvRoom(
       roomId: room.id,
@@ -1192,7 +1242,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
     );
   }
 
-  SyncTvMovie mapMedia(client.Media media) {
+  RoomMediaItem mapMedia(client.Media media) {
     final metadata = media.hasMetadata()
         ? resourceMetadataToJson(media.metadata)
         : <String, dynamic>{};
@@ -1203,12 +1253,12 @@ extension SyncTvModelMapping on SyncTvApiClient {
         ? SourceConfigCodec.providerToString(media.sourceProvider)
         : SourceConfigCodec.providerForMediaSourceConfig(media.sourceConfig);
     final url = resolveResourceUrl(
-      SyncTvMovie.playbackUrlFromResource(
+      RoomMediaEntry.playbackUrlFromResource(
         metadata: metadata,
         sourceConfig: sourceConfig,
       ),
     );
-    return SyncTvMovie(
+    return RoomMediaItem(
       id: media.id,
       name: media.name,
       url: url,
@@ -1234,7 +1284,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
     );
   }
 
-  SyncTvMovie mapPlaylist(client.Playlist playlist) {
+  RoomPlaylistItem mapPlaylist(client.Playlist playlist) {
     final sourceProvider = playlist.hasSourceProvider()
         ? SourceConfigCodec.providerToString(playlist.sourceProvider)
         : SourceConfigCodec.providerForPlaylistSourceConfig(
@@ -1243,11 +1293,10 @@ extension SyncTvModelMapping on SyncTvApiClient {
     final sourceConfig = playlist.hasSourceConfig()
         ? SourceConfigCodec.playlistSourceConfigToMap(playlist.sourceConfig)
         : <String, dynamic>{};
-    return SyncTvMovie(
+    return RoomPlaylistItem(
       id: playlist.id,
       name: playlist.name,
-      url: '',
-      isFolder: true,
+      creator: playlist.creatorId,
       roomId: playlist.roomId,
       parentId: playlist.parentId.isEmpty ? null : playlist.parentId,
       position: playlist.position,
@@ -1268,22 +1317,26 @@ extension SyncTvModelMapping on SyncTvApiClient {
     );
   }
 
-  SyncTvMovie mapDynamicItem(client.PlaylistItem item, {String? playlistId}) {
+  RoomDynamicMediaEntry mapDynamicItem(
+    client.PlaylistItem item, {
+    String? playlistId,
+  }) {
     final target = item.target;
     final encodedTarget = providerTargetToBase64(target);
-    return SyncTvMovie(
+    final thumbnailUrl = item.hasThumbnail()
+        ? resolveResourceUrl(item.thumbnail)
+        : '';
+    return RoomDynamicMediaEntry(
       id: encodedTarget,
       name: item.name,
-      url: '',
       isFolder: item.itemType == client_enum.ItemType.ITEM_TYPE_PLAYLIST,
       parentId: playlistId,
       subPath: encodedTarget,
+      coverUrl: thumbnailUrl,
       metadata: {
         'target': target,
         'target_json': providerTargetToJson(target),
-        'thumbnail': item.hasThumbnail()
-            ? resolveResourceUrl(item.thumbnail)
-            : '',
+        'thumbnail': thumbnailUrl,
         'size': item.hasSize() ? item.size.toInt() : null,
       },
     );
@@ -1293,9 +1346,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
     final state = response.playbackState;
     final playback = response.playback;
     final encodedTarget = providerTargetToBase64(state.target);
-    SyncTvMovie? movie;
+    RoomMediaEntry? entry;
     if (playback.mediaId.isNotEmpty || playback.playlistId.isNotEmpty) {
-      movie = SyncTvMovie.fromPlaybackProto(
+      entry = RoomMediaEntry.fromPlaybackProto(
         playback,
         id: encodedTarget.isNotEmpty
             ? encodedTarget
@@ -1308,7 +1361,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       );
     }
     return SyncTvPlaybackStatus(
-      movie: movie,
+      entry: entry,
       isPlaying: state.isPlaying,
       currentTime: state.position,
       playbackRate: state.speed == 0 ? 1.0 : state.speed,
@@ -1322,11 +1375,11 @@ extension SyncTvModelMapping on SyncTvApiClient {
 
   SyncTvPlaybackStatus mapPlaybackState(
     client.UpdatePlaybackStateResponse response, {
-    SyncTvMovie? movie,
+    RoomMediaEntry? entry,
   }) {
     final state = response.playbackState;
     return SyncTvPlaybackStatus(
-      movie: movie,
+      entry: entry,
       isPlaying: state.isPlaying,
       currentTime: state.position,
       playbackRate: state.speed == 0 ? 1.0 : state.speed,

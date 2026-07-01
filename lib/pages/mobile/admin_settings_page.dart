@@ -221,7 +221,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
     _AdminSection(
       label: '设置',
       icon: Icons.tune_rounded,
-      page: AdminSettingsGroupsTab(),
+      page: RuntimeSettingsSectionsTab(),
     ),
   ];
 
@@ -8456,18 +8456,20 @@ Color _reportStatusColor(int status) {
   }
 }
 
-class AdminSettingsGroupsTab extends StatefulWidget {
-  const AdminSettingsGroupsTab({super.key});
+class RuntimeSettingsSectionsTab extends StatefulWidget {
+  const RuntimeSettingsSectionsTab({super.key});
 
   @override
-  State<AdminSettingsGroupsTab> createState() => _AdminSettingsGroupsTabState();
+  State<RuntimeSettingsSectionsTab> createState() =>
+      _RuntimeSettingsSectionsTabState();
 }
 
-class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
+class _RuntimeSettingsSectionsTabState
+    extends State<RuntimeSettingsSectionsTab> {
   bool _isLoading = true;
-  bool _isLoadingGroup = false;
-  List<AdminSettingsGroup> _groups = const [];
-  String? _selectedGroup;
+  bool _isLoadingSection = false;
+  RuntimeSettingsModel? _settings;
+  String? _selectedSection;
   final Set<String> _savingSettings = <String>{};
 
   @override
@@ -8482,13 +8484,15 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
   }) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final groups = await SyncTvService.adminGetAllSettings(refresh: refresh);
+      final settings = await SyncTvService.runtimeGetSettings(refresh: refresh);
       if (!mounted) return;
       setState(() {
-        _groups = groups;
-        _selectedGroup =
-            _selectedGroup ?? (groups.isEmpty ? null : groups.first.name);
+        _settings = settings;
+        _selectedSection =
+            _selectedSection ??
+            (settings.sections.isEmpty ? null : settings.sections.first.name);
         _isLoading = false;
+        _isLoadingSection = false;
       });
     } catch (e) {
       if (!mounted) return;
@@ -8497,61 +8501,53 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     }
   }
 
-  Future<void> _selectGroup(String? groupName) async {
-    if (groupName == null || groupName == _selectedGroup) return;
+  Future<void> _selectSection(String? sectionName) async {
+    if (sectionName == null || sectionName == _selectedSection) return;
     setState(() {
-      _selectedGroup = groupName;
-      _isLoadingGroup = true;
+      _selectedSection = sectionName;
     });
-    await _refreshSelectedGroup(silent: true, refresh: false);
   }
 
-  Future<void> _refreshSelectedGroup({
+  Future<void> _refreshSelectedSection({
     bool silent = false,
     bool refresh = true,
   }) async {
-    final groupName = _selectedGroup;
-    if (groupName == null) return;
-    if (!silent) setState(() => _isLoadingGroup = true);
+    final sectionName = _selectedSection;
+    if (sectionName == null) return;
+    if (!silent) setState(() => _isLoadingSection = true);
     try {
-      final group = await SyncTvService.adminGetSettingsGroup(
-        groupName,
-        refresh: refresh,
-      );
+      final settings = await SyncTvService.runtimeGetSettings(refresh: refresh);
       if (!mounted) return;
       setState(() {
-        _groups = [
-          for (final item in _groups) item.name == group.name ? group : item,
-        ];
-        _isLoadingGroup = false;
+        _settings = settings;
+        _isLoadingSection = false;
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _isLoadingGroup = false);
-      MessageUtils.showError(context, '刷新设置组失败: $e');
+      setState(() => _isLoadingSection = false);
+      MessageUtils.showError(context, '刷新设置失败: $e');
     }
   }
 
   Future<void> _updateSetting(
-    AdminSettingsGroup group,
+    RuntimeSettingsSection section,
     String key,
     dynamic nextValue,
   ) async {
-    final settingId = '${group.name}.$key';
+    final settingId = '${section.name}.$key';
     setState(() => _savingSettings.add(settingId));
 
     try {
-      final updated = await SyncTvService.adminUpdateSettingInGroup(
-        group.name,
+      final current = _settings;
+      if (current == null) throw StateError('settings are not loaded');
+      final updated = await SyncTvService.runtimeUpdateSettingInSection(
+        section.name,
         key,
         nextValue,
       );
       if (!mounted) return;
       setState(() {
-        _groups = [
-          for (final item in _groups)
-            item.name == updated.name ? updated : item,
-        ];
+        _settings = current.replaceSection(updated);
         _savingSettings.remove(settingId);
       });
       MessageUtils.showSuccess(context, '设置已更新');
@@ -8563,17 +8559,17 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
   }
 
   Future<void> _editSetting(
-    AdminSettingsGroup group,
+    RuntimeSettingsSection section,
     String key,
     dynamic value,
   ) async {
-    final descriptor = _settingDescriptor(group.name, key, value);
-    final normalizedValue = _normalizedSettingValue(group.name, key, value);
+    final descriptor = _settingDescriptor(section.name, key, value);
+    final normalizedValue = _normalizedSettingValue(section.name, key, value);
 
     if (normalizedValue is bool) {
       final confirmed = await _confirmRiskIfNeeded(descriptor);
       if (!confirmed) return;
-      await _updateSetting(group, key, !normalizedValue);
+      await _updateSetting(section, key, !normalizedValue);
       return;
     }
 
@@ -8581,7 +8577,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
       context: context,
       builder: (context) => _SettingEditorSheet(
         descriptor: descriptor,
-        groupName: group.name,
+        sectionName: section.name,
         settingKey: key,
         value: normalizedValue,
       ),
@@ -8590,11 +8586,11 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
 
     final confirmed = await _confirmRiskIfNeeded(descriptor);
     if (!confirmed) return;
-    await _updateSetting(group, key, nextValue);
+    await _updateSetting(section, key, nextValue);
   }
 
   Future<void> _editOAuth2Provider(
-    AdminSettingsGroup group,
+    RuntimeSettingsSection section,
     Map<String, dynamic> providers,
     String? name,
   ) async {
@@ -8618,11 +8614,15 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     final next = Map<String, dynamic>.from(providers);
     if (name != null && name != result.name) next.remove(name);
     next[result.name] = result.value;
-    await _updateSetting(group, 'providers', _oauth2ProvidersToProtoList(next));
+    await _updateSetting(
+      section,
+      'providers',
+      _oauth2ProvidersToProtoList(next),
+    );
   }
 
   Future<void> _deleteOAuth2Provider(
-    AdminSettingsGroup group,
+    RuntimeSettingsSection section,
     Map<String, dynamic> providers,
     String name,
   ) async {
@@ -8643,7 +8643,11 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     );
     if (confirmed != true) return;
     final next = Map<String, dynamic>.from(providers)..remove(name);
-    await _updateSetting(group, 'providers', _oauth2ProvidersToProtoList(next));
+    await _updateSetting(
+      section,
+      'providers',
+      _oauth2ProvidersToProtoList(next),
+    );
   }
 
   Future<bool> _confirmRiskIfNeeded(_SettingDescriptor descriptor) async {
@@ -8708,8 +8712,9 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     final isDark = theme.brightness == Brightness.dark;
     if (_isLoading) return const AppLoadingIndicator();
 
-    final selected = _groups
-        .where((group) => group.name == _selectedGroup)
+    final sections = _settings?.sections ?? const <RuntimeSettingsSection>[];
+    final selected = sections
+        .where((section) => section.name == _selectedSection)
         .firstOrNull;
     final entries = selected == null
         ? <MapEntry<String, dynamic>>[]
@@ -8718,10 +8723,10 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
     final useTwoPane =
         AppBreakpoints.widthOf(context) >= AppBreakpoints.expandedStart;
 
-    final isOAuth2Group =
+    final isOAuth2Section =
         selected?.name == 'oauth2' &&
         selected!.settings.containsKey('providers');
-    final oauth2Providers = isOAuth2Group
+    final oauth2Providers = isOAuth2Section
         ? _oauth2ProvidersFromValue(
             _normalizedSettingValue(
               selected.name,
@@ -8733,14 +8738,14 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
 
     final settingsList = selected == null || entries.isEmpty
         ? const AppEmptyMessage(message: '暂无设置')
-        : isOAuth2Group
+        : isOAuth2Section
         ? AppListView(
             padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
             children: [
-              _SettingsGroupHeader(
-                groupName: selected.name,
+              _SettingsSectionHeader(
+                sectionName: selected.name,
                 entryCount: oauth2Providers.length,
-                isLoading: _isLoadingGroup,
+                isLoading: _isLoadingSection,
                 action: AppActionButton(
                   icon: Icons.add_rounded,
                   label: '添加登录提供方',
@@ -8752,9 +8757,9 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
                           null,
                         ),
                 ),
-                onRefresh: _isLoadingGroup
+                onRefresh: _isLoadingSection
                     ? null
-                    : () => _refreshSelectedGroup(refresh: true),
+                    : () => _refreshSelectedSection(refresh: true),
               ),
               _OAuth2ProvidersList(
                 providers: oauth2Providers,
@@ -8771,10 +8776,10 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
             itemCount: entries.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
-                return _SettingsGroupHeader(
-                  groupName: selected.name,
+                return _SettingsSectionHeader(
+                  sectionName: selected.name,
                   entryCount: entries.length,
-                  isLoading: _isLoadingGroup,
+                  isLoading: _isLoadingSection,
                   action: selected.name == 'email'
                       ? AppActionButton(
                           icon: Icons.outgoing_mail,
@@ -8783,9 +8788,9 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
                           style: AppActionButtonStyle.tonal,
                         )
                       : null,
-                  onRefresh: _isLoadingGroup
+                  onRefresh: _isLoadingSection
                       ? null
-                      : () => _refreshSelectedGroup(refresh: true),
+                      : () => _refreshSelectedSection(refresh: true),
                 );
               }
               final entry = entries[index - 1];
@@ -8826,11 +8831,11 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
                           fontWeight: FontWeight.w700,
                         ),
                       )
-                    : _SettingsGroupDropdown(
-                        groups: _groups,
-                        selectedGroup: _selectedGroup,
-                        enabled: !_isLoadingGroup,
-                        onChanged: _selectGroup,
+                    : _SettingsSectionDropdown(
+                        sections: sections,
+                        selectedSection: _selectedSection,
+                        enabled: !_isLoadingSection,
+                        onChanged: _selectSection,
                       ),
               ),
               const SizedBox(width: 12),
@@ -8838,7 +8843,7 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
                 tooltip: '刷新全部',
                 icon: Icons.sync_rounded,
                 style: AppIconButtonStyle.tonal,
-                onPressed: _isLoadingGroup
+                onPressed: _isLoadingSection
                     ? null
                     : () => _loadSettings(silent: true, refresh: true),
               ),
@@ -8855,16 +8860,16 @@ class _AdminSettingsGroupsTabState extends State<AdminSettingsGroupsTab> {
                       child: AppListView(
                         padding: const EdgeInsets.fromLTRB(16, 0, 8, 24),
                         children: [
-                          for (final group in _groups)
+                          for (final section in sections)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: _SettingsGroupButton(
-                                groupName: group.name,
-                                selected: group.name == _selectedGroup,
-                                count: group.settings.length,
-                                onTap: _isLoadingGroup
+                              child: _SettingsSectionButton(
+                                sectionName: section.name,
+                                selected: section.name == _selectedSection,
+                                count: section.settings.length,
+                                onTap: _isLoadingSection
                                     ? null
-                                    : () => _selectGroup(group.name),
+                                    : () => _selectSection(section.name),
                               ),
                             ),
                         ],
@@ -8959,7 +8964,7 @@ class _SettingChoice {
   const _SettingChoice(this.value, this.label, this.description);
 }
 
-const Map<String, String> _settingsGroupLabels = {
+const Map<String, String> _settingsSectionLabels = {
   'server': '服务',
   'room': '房间',
   'user': '用户',
@@ -8992,6 +8997,7 @@ const Map<String, String> _oauth2ProviderTypeLabels = {
   'google': 'Google',
   'logto': 'Logto',
   'oidc': 'OIDC',
+  'casdoor': 'Casdoor',
 };
 
 const List<String> _knownPermissions = [
@@ -9046,66 +9052,84 @@ const Map<String, String> _permissionLabels = {
   'delete_room': '删除房间',
 };
 
-_SettingDescriptor _settingDescriptor(String group, String key, dynamic value) {
-  final id = '$group.$key';
+const Map<String, int> _runtimePermissionBits = {
+  'chat': 1 << 0,
+  'create_media_resource': 1 << 1,
+  'view_media_resources': 1 << 2,
+  'view_member_list': 1 << 3,
+  'view_chat_history': 1 << 4,
+  'use_webrtc': 1 << 5,
+  'delete_media_resource_any': 1 << 6,
+  'reorder_media_resources': 1 << 7,
+  'clear_media_resources': 1 << 8,
+  'live_control': 1 << 9,
+  'play_control': 1 << 10,
+  'change_current_media': 1 << 11,
+  'change_playback_rate': 1 << 12,
+  'approve_member': 1 << 13,
+  'kick_member': 1 << 14,
+  'set_member_permissions': 1 << 15,
+  'add_member': 1 << 16,
+  'set_room_settings': 1 << 17,
+  'delete_chat': 1 << 18,
+  'delete_room': 1 << 19,
+};
+
+_SettingDescriptor _settingDescriptor(
+  String section,
+  String key,
+  dynamic value,
+) {
+  final id = '$section.$key';
   final known = <String, _SettingDescriptor>{
-    'server.allowRoomCreation': const _SettingDescriptor(
-      group: 'server',
-      key: 'allowRoomCreation',
+    'roomDefaults.defaultMaxMembers': const _SettingDescriptor(
+      group: 'roomDefaults',
+      key: 'defaultMaxMembers',
+      title: '默认房间成员上限',
+      description: '新房间默认使用的成员上限。',
+      icon: Icons.groups_2_outlined,
+      kind: _SettingEditorKind.number,
+    ),
+    'roomDefaults.defaultMaxChatMessages': const _SettingDescriptor(
+      group: 'roomDefaults',
+      key: 'defaultMaxChatMessages',
+      title: '房间聊天快照条数',
+      description: '新房间默认保留并推送给客户端的聊天消息上限，0 表示不限制。',
+      icon: Icons.forum_outlined,
+      kind: _SettingEditorKind.number,
+    ),
+    'roomCreation.enabled': const _SettingDescriptor(
+      group: 'roomCreation',
+      key: 'enabled',
       title: '允许创建房间',
       description: '控制普通用户是否可以创建新房间。',
       icon: Icons.add_home_work_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'server.maxRoomsPerUser': const _SettingDescriptor(
-      group: 'server',
-      key: 'maxRoomsPerUser',
-      title: '每个用户最多房间数',
-      description: '限制单个用户可拥有的房间数量。',
-      icon: Icons.meeting_room_outlined,
-      kind: _SettingEditorKind.number,
-    ),
-    'server.maxMembersPerRoom': const _SettingDescriptor(
-      group: 'server',
-      key: 'maxMembersPerRoom',
-      title: '每个房间最多成员数',
-      description: '限制单个房间的成员上限。',
-      icon: Icons.groups_2_outlined,
-      kind: _SettingEditorKind.number,
-    ),
-    'server.maxChatMessages': const _SettingDescriptor(
-      group: 'server',
-      key: 'maxChatMessages',
-      title: '房间聊天快照条数',
-      description: '服务端保留并推送给客户端的聊天消息上限，0 表示不限制。',
-      icon: Icons.forum_outlined,
-      kind: _SettingEditorKind.number,
-    ),
-    'room.disableCreateRoom': const _SettingDescriptor(
-      group: 'room',
-      key: 'disableCreateRoom',
-      title: '关闭创建房间',
-      description: '打开后用户不能创建新房间，适合维护或封闭运营。',
-      icon: Icons.block_outlined,
-      kind: _SettingEditorKind.boolean,
-      warning: '关闭创建房间会立刻影响所有用户的新建房间入口。',
-    ),
-    'room.createRoomNeedReview': const _SettingDescriptor(
-      group: 'room',
-      key: 'createRoomNeedReview',
+    'roomCreation.approvalRequired': const _SettingDescriptor(
+      group: 'roomCreation',
+      key: 'approvalRequired',
       title: '创建房间需要审核',
       description: '打开后新建房间进入审核流程，通过后才可正常使用。',
       icon: Icons.fact_check_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'room.passwordPolicy': const _SettingDescriptor(
-      group: 'room',
+    'roomCreation.passwordPolicy': const _SettingDescriptor(
+      group: 'roomCreation',
       key: 'passwordPolicy',
       title: '房间密码策略',
       description: '统一约束新房间是否必须或禁止设置密码。',
       icon: Icons.password_rounded,
       kind: _SettingEditorKind.enumChoice,
       choices: _roomPasswordChoices,
+    ),
+    'roomCreation.maxRoomsPerUser': const _SettingDescriptor(
+      group: 'roomCreation',
+      key: 'maxRoomsPerUser',
+      title: '每个用户最多房间数',
+      description: '限制单个用户可拥有的房间数量。',
+      icon: Icons.meeting_room_outlined,
+      kind: _SettingEditorKind.number,
     ),
     'user.enablePasswordSignup': const _SettingDescriptor(
       group: 'user',
@@ -9173,7 +9197,7 @@ _SettingDescriptor _settingDescriptor(String group, String key, dynamic value) {
       kind: _SettingEditorKind.oauth2Providers,
       warning: 'OAuth2 配置会影响登录入口。错误的回调地址、密钥或端点会导致第三方登录不可用。',
     ),
-    'proxy.movieProxy': const _SettingDescriptor(
+    'proxy.entryProxy': const _SettingDescriptor(
       group: 'proxy',
       key: 'movieProxy',
       title: '影片代理',
@@ -9283,9 +9307,9 @@ _SettingDescriptor _settingDescriptor(String group, String key, dynamic value) {
       icon: Icons.mark_email_unread_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'email.whitelist': const _SettingDescriptor(
+    'email.whitelistDomains': const _SettingDescriptor(
       group: 'email',
-      key: 'whitelist',
+      key: 'whitelistDomains',
       title: '邮箱白名单',
       description: '每行一个邮箱或域名。域名可使用 example.com 或 @example.com。',
       icon: Icons.playlist_add_check_rounded,
@@ -9325,25 +9349,25 @@ _SettingDescriptor _settingDescriptor(String group, String key, dynamic value) {
       kind: _SettingEditorKind.stringList,
       warning: '跨域来源配置过宽会扩大浏览器侧访问面。只添加明确可信的 https Origin。',
     ),
-    'permissions.admin_default': const _SettingDescriptor(
+    'permissions.adminDefaultPermissions': const _SettingDescriptor(
       group: 'permissions',
-      key: 'admin_default',
+      key: 'adminDefaultPermissions',
       title: '管理员默认权限',
       description: '房间管理员的默认权限集合。',
       icon: Icons.admin_panel_settings_outlined,
       kind: _SettingEditorKind.permissionList,
     ),
-    'permissions.member_default': const _SettingDescriptor(
+    'permissions.memberDefaultPermissions': const _SettingDescriptor(
       group: 'permissions',
-      key: 'member_default',
+      key: 'memberDefaultPermissions',
       title: '成员默认权限',
       description: '普通成员加入房间后的默认权限集合。',
       icon: Icons.group_outlined,
       kind: _SettingEditorKind.permissionList,
     ),
-    'permissions.guest_default': const _SettingDescriptor(
+    'permissions.guestDefaultPermissions': const _SettingDescriptor(
       group: 'permissions',
-      key: 'guest_default',
+      key: 'guestDefaultPermissions',
       title: '游客默认权限',
       description: '游客进入房间后的默认权限集合，仅包含服务端定义的游客可用权限。',
       icon: Icons.person_pin_circle_outlined,
@@ -9363,18 +9387,18 @@ _SettingDescriptor _settingDescriptor(String group, String key, dynamic value) {
     _ => _SettingEditorKind.text,
   };
   return _SettingDescriptor(
-    group: group,
+    group: section,
     key: key,
     title: _humanizeSettingKey(key),
-    description: '${_settingsGroupLabel(group)} 运行时配置。',
+    description: '${_settingsSectionLabel(section)} 运行时配置。',
     icon: Icons.tune_rounded,
     kind: kind,
     secret: _isSecretKey(key),
   );
 }
 
-String _settingsGroupLabel(String group) =>
-    _settingsGroupLabels[group] ?? group;
+String _settingsSectionLabel(String section) =>
+    _settingsSectionLabels[section] ?? section;
 
 String _humanizeSettingKey(String key) {
   return key
@@ -9414,10 +9438,15 @@ String _settingSummary(dynamic value, _SettingDescriptor descriptor) {
       final list = value is List ? value : const [];
       return list.isEmpty ? '未配置 ICE 服务器' : '${list.length} 个 ICE 服务器';
     case _SettingEditorKind.stringList:
-    case _SettingEditorKind.permissionList:
     case _SettingEditorKind.list:
       final list = _valueAsStringList(value);
       return list.isEmpty ? '空列表' : list.join('、');
+    case _SettingEditorKind.permissionList:
+      final permissions = _permissionsFromValue(value).toList()..sort();
+      if (permissions.isEmpty) return '无权限';
+      return permissions
+          .map((permission) => _permissionLabels[permission] ?? permission)
+          .join('、');
     case _SettingEditorKind.enumChoice:
       return descriptor.choices
           .firstWhere(
@@ -9461,15 +9490,41 @@ List<String> _valueAsStringList(dynamic value) {
   return <String>[];
 }
 
-class _SettingsGroupDropdown extends StatelessWidget {
-  final List<AdminSettingsGroup> groups;
-  final String? selectedGroup;
+Set<String> _permissionsFromValue(dynamic value) {
+  if (value is List || value is String && value.trim().startsWith('[')) {
+    return _valueAsStringList(value).toSet();
+  }
+  final bits = value is num
+      ? value.toInt()
+      : int.tryParse(value?.toString() ?? '') ?? 0;
+  return {
+    for (final entry in _runtimePermissionBits.entries)
+      if ((bits & entry.value) != 0) entry.key,
+  };
+}
+
+int _permissionsToBits(dynamic value) {
+  final names = value is Set<String>
+      ? value
+      : value is Iterable
+      ? value.map((item) => item.toString()).toSet()
+      : _permissionsFromValue(value);
+  var bits = 0;
+  for (final name in names) {
+    bits |= _runtimePermissionBits[name] ?? 0;
+  }
+  return bits;
+}
+
+class _SettingsSectionDropdown extends StatelessWidget {
+  final List<RuntimeSettingsSection> sections;
+  final String? selectedSection;
   final bool enabled;
   final ValueChanged<String?> onChanged;
 
-  const _SettingsGroupDropdown({
-    required this.groups,
-    required this.selectedGroup,
+  const _SettingsSectionDropdown({
+    required this.sections,
+    required this.selectedSection,
     required this.enabled,
     required this.onChanged,
   });
@@ -9477,11 +9532,12 @@ class _SettingsGroupDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppSelect<String>(
-      value: selectedGroup,
-      label: '设置组',
+      value: selectedSection,
+      label: '设置',
       prefixIcon: Icons.folder_outlined,
       options: {
-        for (final group in groups) _settingsGroupLabel(group.name): group.name,
+        for (final section in sections)
+          _settingsSectionLabel(section.name): section.name,
       },
       enabled: enabled,
       onChanged: enabled ? onChanged : null,
@@ -9489,14 +9545,14 @@ class _SettingsGroupDropdown extends StatelessWidget {
   }
 }
 
-class _SettingsGroupButton extends StatelessWidget {
-  final String groupName;
+class _SettingsSectionButton extends StatelessWidget {
+  final String sectionName;
   final bool selected;
   final int count;
   final VoidCallback? onTap;
 
-  const _SettingsGroupButton({
-    required this.groupName,
+  const _SettingsSectionButton({
+    required this.sectionName,
     required this.selected,
     required this.count,
     required this.onTap,
@@ -9521,7 +9577,7 @@ class _SettingsGroupButton extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              _settingsGroupLabel(groupName),
+              _settingsSectionLabel(sectionName),
               style: theme.textTheme.titleSmall?.copyWith(
                 color: color,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -9538,15 +9594,15 @@ class _SettingsGroupButton extends StatelessWidget {
   }
 }
 
-class _SettingsGroupHeader extends StatelessWidget {
-  final String groupName;
+class _SettingsSectionHeader extends StatelessWidget {
+  final String sectionName;
   final int entryCount;
   final bool isLoading;
   final Widget? action;
   final VoidCallback? onRefresh;
 
-  const _SettingsGroupHeader({
-    required this.groupName,
+  const _SettingsSectionHeader({
+    required this.sectionName,
     required this.entryCount,
     required this.isLoading,
     this.action,
@@ -9565,7 +9621,7 @@ class _SettingsGroupHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _settingsGroupLabel(groupName),
+                  _settingsSectionLabel(sectionName),
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -9583,7 +9639,7 @@ class _SettingsGroupHeader extends StatelessWidget {
           if (action != null) ...[const SizedBox(width: 12), action!],
           const SizedBox(width: 8),
           AppIconButton(
-            tooltip: '刷新当前组',
+            tooltip: '刷新当前分区',
             icon: Icons.refresh_rounded,
             loading: isLoading,
             style: AppIconButtonStyle.tonal,
@@ -9840,13 +9896,13 @@ class _SettingsDialogActions extends StatelessWidget {
 
 class _SettingEditorSheet extends StatefulWidget {
   final _SettingDescriptor descriptor;
-  final String groupName;
+  final String sectionName;
   final String settingKey;
   final dynamic value;
 
   const _SettingEditorSheet({
     required this.descriptor,
-    required this.groupName,
+    required this.sectionName,
     required this.settingKey,
     required this.value,
   });
@@ -9946,12 +10002,12 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
         return _StringListSettingEditor(
           values: _valueAsStringList(_value),
           label: '条目',
-          hintText: _stringListHint(widget.groupName, widget.settingKey),
+          hintText: _stringListHint(widget.sectionName, widget.settingKey),
           onChanged: (values) => setState(() => _value = values),
         );
       case _SettingEditorKind.permissionList:
         return _PermissionListSettingEditor(
-          values: _valueAsStringList(_value).toSet(),
+          values: _permissionsFromValue(_value),
           permissions: widget.descriptor.permissions ?? _knownPermissions,
           onChanged: (values) =>
               setState(() => _value = values.toList()..sort()),
@@ -10004,15 +10060,13 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
         result = _controller('text').text.trim();
         break;
       case _SettingEditorKind.stringList:
-        if (widget.groupName == 'email' && widget.settingKey == 'whitelist') {
-          result = _valueAsStringList(_value).join('\n');
-        } else {
-          result = _valueAsStringList(_value);
-        }
+        result = _valueAsStringList(_value);
         break;
       case _SettingEditorKind.oauth2Providers:
       case _SettingEditorKind.iceServers:
       case _SettingEditorKind.permissionList:
+        result = _permissionsToBits(_value);
+        break;
       case _SettingEditorKind.map:
       case _SettingEditorKind.list:
       case _SettingEditorKind.enumChoice:
@@ -10278,27 +10332,28 @@ Map<String, dynamic> _oauth2ProvidersFromList(List<dynamic> providers) {
   return {
     for (final provider in providers)
       if (provider is Map)
-        (provider['instanceName'] ?? '').toString(): Map<String, dynamic>.from(
+        (provider['name'] ?? '').toString(): Map<String, dynamic>.from(
           provider,
         ),
   }..remove('');
 }
 
 Map<String, dynamic> _oauth2ProviderConfig(Map<String, dynamic> value) {
-  for (final type in _oauth2ProviderTypes) {
-    final config = value[type];
-    if (config is Map) return Map<String, dynamic>.from(config);
-  }
+  final type = _oauth2ProviderType(value);
+  final preferred = value[_oauth2ProviderConfigField(type)];
+  if (preferred is Map) return Map<String, dynamic>.from(preferred);
   return <String, dynamic>{};
 }
 
 String _oauth2ProviderType(Map<String, dynamic> value) {
-  final type = (value['type'] ?? '').toString();
-  if (_oauth2ProviderTypes.contains(type)) return type;
-  for (final candidate in _oauth2ProviderTypes) {
-    if (value[candidate] is Map) return candidate;
+  for (final type in _oauth2ProviderTypes) {
+    if (value[type] is Map) return type;
   }
   return 'oidc';
+}
+
+String _oauth2ProviderConfigField(String type) {
+  return _oauth2ProviderTypes.contains(type) ? type : 'oidc';
 }
 
 List<Map<String, dynamic>> _oauth2ProvidersToProtoList(
@@ -10312,10 +10367,10 @@ List<Map<String, dynamic>> _oauth2ProvidersToProtoList(
         final type = _oauth2ProviderType(value);
         final config = _oauth2ProviderConfig(value);
         return <String, dynamic>{
-          'instanceName': entry.key,
+          'name': entry.key,
           'enableSignup': value['enableSignup'] == true,
           'signupNeedReview': value['signupNeedReview'] == true,
-          type: config,
+          _oauth2ProviderConfigField(type): config,
         };
       })
       .toList(growable: false);
@@ -10754,7 +10809,7 @@ class _OAuth2ProviderEditorSheetState
                           validator: _validateHttpUrl,
                         ),
                       ],
-                      if (_type == 'oidc') ...[
+                      if (_type == 'oidc' || _type == 'casdoor') ...[
                         const SizedBox(height: 12),
                         _oauthTextField(
                           _issuer,
@@ -10893,7 +10948,7 @@ class _OAuth2ProviderEditorSheetState
     if (_type == 'logto') {
       config['endpoint'] = _endpoint.text.trim();
     }
-    if (_type == 'oidc') {
+    if (_type == 'oidc' || _type == 'casdoor') {
       config['issuer'] = _issuer.text.trim();
       for (final entry in {
         'authUrl': _authUrl.text.trim(),
@@ -10907,10 +10962,9 @@ class _OAuth2ProviderEditorSheetState
     Navigator.pop(
       context,
       _OAuth2ProviderEditResult(_name.text.trim(), {
-        'type': _type,
         'enableSignup': _enableSignup,
         'signupNeedReview': _enableSignup && _signupNeedReview,
-        _type: config,
+        _oauth2ProviderConfigField(_type): config,
       }),
     );
   }

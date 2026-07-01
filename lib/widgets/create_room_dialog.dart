@@ -159,8 +159,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
 
   bool get _creationDisabled {
     final settings = _settings;
-    return settings != null &&
-        (settings.disableCreateRoom || !settings.allowRoomCreation);
+    return settings != null && !settings.roomCreationEnabled;
   }
 
   String get _passwordPolicy =>
@@ -232,7 +231,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
       Navigator.pop(context);
       await widget.onCreated(room);
       final pendingReview =
-          _settings?.createRoomNeedReview == true ||
+          _settings?.roomCreationApprovalRequired == true ||
           room.status != common_enum.RoomStatus.ROOM_STATUS_ACTIVE.value;
       if (!widget.pageContext.mounted) return;
       MessageUtils.showSuccess(
@@ -318,7 +317,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                           tone: _PolicyTone.danger,
                         ),
                         const SizedBox(height: 16),
-                      ] else if (_settings?.createRoomNeedReview == true) ...[
+                      ] else if (_settings?.roomCreationApprovalRequired ==
+                          true) ...[
                         const _CreateRoomPolicyBanner(
                           icon: Icons.fact_check_outlined,
                           text: '新房间需要审核。通过前只有管理员可以处理，普通用户暂时不可访问。',
@@ -611,7 +611,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
     if (_loadingSettings) return '正在读取服务器创建策略';
     if (_settingsError != null) return '创建策略不可用';
     if (_creationDisabled) return '当前服务器不允许创建新房间';
-    if (_settings?.createRoomNeedReview == true) return '创建后将提交审核';
+    if (_settings?.roomCreationApprovalRequired == true) return '创建后将提交审核';
     return _needPassword ? '密码房间只允许知道密码的成员加入' : '公开房间可被允许访问的成员加入';
   }
 }

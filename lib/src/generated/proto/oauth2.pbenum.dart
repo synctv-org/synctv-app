@@ -70,5 +70,27 @@ class OAuth2ProviderType extends $pb.ProtobufEnum {
   const OAuth2ProviderType._(super.value, super.name);
 }
 
+class OAuth2Operation extends $pb.ProtobufEnum {
+  static const OAuth2Operation OAUTH2_OPERATION_UNSPECIFIED = OAuth2Operation._(
+      0, _omitEnumNames ? '' : 'OAUTH2_OPERATION_UNSPECIFIED');
+  static const OAuth2Operation OAUTH2_OPERATION_LOGIN =
+      OAuth2Operation._(1, _omitEnumNames ? '' : 'OAUTH2_OPERATION_LOGIN');
+  static const OAuth2Operation OAUTH2_OPERATION_BIND =
+      OAuth2Operation._(2, _omitEnumNames ? '' : 'OAUTH2_OPERATION_BIND');
+
+  static const $core.List<OAuth2Operation> values = <OAuth2Operation>[
+    OAUTH2_OPERATION_UNSPECIFIED,
+    OAUTH2_OPERATION_LOGIN,
+    OAUTH2_OPERATION_BIND,
+  ];
+
+  static final $core.List<OAuth2Operation?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static OAuth2Operation? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const OAuth2Operation._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');
