@@ -81,6 +81,7 @@ class _RoomScreenState extends State<RoomScreen>
   String? _expandedChatActionMessageId;
   String? _highlightedChatMessageId;
   Timer? _syncTimer;
+  Timer? _diagnosticsTimer;
   Timer? _chatHighlightTimer;
   SyncTvPlaybackStatus? _currentStatus;
   RoomRealtimeConnection? _channel;
@@ -119,6 +120,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   // Sync state
   bool _isSyncing = false;
+  bool _serverTimeSyncInFlight = false;
   bool _joiningVoice = false;
   final Set<String> _warnedPlaybackCredentialHeaderKeys = {};
   PlaybackDanmakuWindow? _playbackDanmakuWindow;
@@ -155,6 +157,8 @@ class _RoomScreenState extends State<RoomScreen>
             common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value ||
         selfRole == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
   }
+
+  bool get _isCurrentPlaybackLive => _currentStatus?.entry?.live == true;
 
   @override
   void initState() {
@@ -194,7 +198,33 @@ class _RoomScreenState extends State<RoomScreen>
     );
 
     _mediaEntryScrollController.addListener(_onMediaEntryScroll);
+    _startDiagnosticsTimers();
     _joinRoom();
+  }
+
+  void _startDiagnosticsTimers() {
+    unawaited(_syncRoomServerTime());
+    _syncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      unawaited(_syncRoomServerTime());
+    });
+    _diagnosticsTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (!mounted) return;
+      if (_currentStatus?.entry != null &&
+          _videoPlayerController?.value.isInitialized == true) {
+        setState(() {});
+      }
+    });
+  }
+
+  Future<void> _syncRoomServerTime() async {
+    if (_serverTimeSyncInFlight) return;
+    _serverTimeSyncInFlight = true;
+    try {
+      await SyncTvService.syncServerTime(refresh: true);
+    } finally {
+      _serverTimeSyncInFlight = false;
+      if (mounted) setState(() {});
+    }
   }
 
   Future<void> _joinRoom() async {
@@ -1042,27 +1072,35 @@ class _RoomScreenState extends State<RoomScreen>
         _refreshPlaybackUi(controller);
       }
 
-      final currentPos = controller.value.position.inMilliseconds / 1000.0;
-      final target = _playbackSyncTarget(status, controller);
-      final targetIsPlaying = target.isAtEnd ? false : status.isPlaying;
+      final isLive = status.entry?.live == true;
+      final target = isLive ? null : _playbackSyncTarget(status, controller);
+      final targetIsPlaying = target?.isAtEnd == true
+          ? false
+          : status.isPlaying;
       if (!targetIsPlaying && controller.value.isPlaying) {
         await controller.pause();
         if (!mounted || !identical(_videoPlayerController, controller)) return;
         _refreshPlaybackUi(controller);
       }
-      final positionDrift = (currentPos - target.positionSeconds).abs();
-      final shouldAutoSeek =
-          _playbackSyncConfig.autoSyncEnabled &&
-          positionDrift > _playbackSyncConfig.autoSeekDriftThresholdSeconds;
-      final shouldManualSeek =
-          forceSeek &&
-          positionDrift >= _playbackSyncConfig.manualSeekDriftThresholdSeconds;
-      if (target.isAtEnd || shouldManualSeek || shouldAutoSeek) {
-        await controller.seekTo(
-          Duration(milliseconds: (target.positionSeconds * 1000).toInt()),
-        );
-        if (!mounted || !identical(_videoPlayerController, controller)) return;
-        _refreshPlaybackUi(controller);
+      if (target != null) {
+        final currentPos = controller.value.position.inMilliseconds / 1000.0;
+        final positionDrift = (currentPos - target.positionSeconds).abs();
+        final shouldAutoSeek =
+            _playbackSyncConfig.autoSyncEnabled &&
+            positionDrift > _playbackSyncConfig.autoSeekDriftThresholdSeconds;
+        final shouldManualSeek =
+            forceSeek &&
+            positionDrift >=
+                _playbackSyncConfig.manualSeekDriftThresholdSeconds;
+        if (target.isAtEnd || shouldManualSeek || shouldAutoSeek) {
+          await controller.seekTo(
+            Duration(milliseconds: (target.positionSeconds * 1000).toInt()),
+          );
+          if (!mounted || !identical(_videoPlayerController, controller)) {
+            return;
+          }
+          _refreshPlaybackUi(controller);
+        }
       }
 
       if (targetIsPlaying && controller.value.isPlaying == false) {
@@ -1089,6 +1127,160 @@ class _RoomScreenState extends State<RoomScreen>
     return resolvePlaybackSyncTarget(
       status: status,
       duration: controller.value.duration,
+    );
+  }
+
+  double? _playbackDeviationSeconds() {
+    final status = _currentStatus;
+    final controller = _videoPlayerController;
+    if (status == null ||
+        status.entry == null ||
+        status.entry!.live ||
+        controller == null ||
+        !controller.value.isInitialized) {
+      return null;
+    }
+    final target = _playbackSyncTarget(status, controller);
+    final actual = controller.value.position.inMilliseconds / 1000.0;
+    final deviation = actual - target.positionSeconds;
+    return deviation.isFinite ? deviation : null;
+  }
+
+  String _formatLatency(Duration? latency) {
+    if (latency == null) return '--';
+    final millis = latency.inMicroseconds / 1000.0;
+    if (millis > 0 && millis < 1) return '<1ms';
+    if (millis < 10) return '${millis.toStringAsFixed(1)}ms';
+    if (millis < 1000) return '${millis.round()}ms';
+    return '${(millis / 1000).toStringAsFixed(2)}s';
+  }
+
+  String _formatDeviation(double seconds) {
+    final sign = seconds > 0
+        ? '+'
+        : seconds < 0
+        ? '-'
+        : '';
+    final absolute = seconds.abs();
+    final digits = absolute < 10 ? 2 : 1;
+    return '$sign${absolute.toStringAsFixed(digits)}s';
+  }
+
+  Color _serverLatencyColor(Duration? latency, {required bool videoStyle}) {
+    if (latency == null) {
+      return videoStyle
+          ? Colors.white70
+          : Theme.of(context).colorScheme.onSurfaceVariant;
+    }
+    final millis = latency.inMicroseconds / 1000.0;
+    if (millis <= 120) {
+      return videoStyle ? const Color(0xFF7CFFB2) : Colors.green;
+    }
+    if (millis <= 350) {
+      return videoStyle ? Colors.amberAccent : Colors.orange;
+    }
+    return videoStyle
+        ? const Color(0xFFFF8A80)
+        : Theme.of(context).colorScheme.error;
+  }
+
+  Color _playbackDeviationColor(double deviation, {required bool videoStyle}) {
+    final absolute = deviation.abs();
+    final warningThreshold = math.max(
+      0.5,
+      _playbackSyncConfig.autoSeekDriftThresholdSeconds,
+    );
+    if (absolute <= 0.5) {
+      return videoStyle ? const Color(0xFF7CFFB2) : Colors.green;
+    }
+    if (absolute <= warningThreshold) {
+      return videoStyle ? Colors.amberAccent : Colors.orange;
+    }
+    return videoStyle
+        ? const Color(0xFFFF8A80)
+        : Theme.of(context).colorScheme.error;
+  }
+
+  Widget _buildServerLatencyBadge({
+    required bool compact,
+    bool videoStyle = false,
+  }) {
+    final latency = SyncedClock.estimatedLatency;
+    final color = _serverLatencyColor(latency, videoStyle: videoStyle);
+    final background = videoStyle
+        ? Colors.white.withValues(alpha: 0.12)
+        : color.withValues(alpha: 0.10);
+    final label = compact
+        ? _formatLatency(latency)
+        : '延迟 ${_formatLatency(latency)}';
+    return Tooltip(
+      message: '服务器延迟',
+      child: AppBadge(
+        constraints: const BoxConstraints(minHeight: 28, maxWidth: 128),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: videoStyle ? const BorderSide(color: Colors.white24) : null,
+        icon: Icons.network_ping_rounded,
+        iconSize: 15,
+        color: color,
+        backgroundColor: background,
+        textStyle: TextStyle(color: color, fontSize: 12),
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+    );
+  }
+
+  Widget? _buildPlaybackDeviationBadge({
+    required bool compact,
+    bool videoStyle = false,
+  }) {
+    final deviation = _playbackDeviationSeconds();
+    if (deviation == null) return null;
+    final color = _playbackDeviationColor(deviation, videoStyle: videoStyle);
+    final background = videoStyle
+        ? Colors.white.withValues(alpha: 0.12)
+        : color.withValues(alpha: 0.10);
+    final label = compact
+        ? _formatDeviation(deviation)
+        : '偏差 ${_formatDeviation(deviation)}';
+    return Tooltip(
+      message: '播放偏差',
+      child: AppBadge(
+        constraints: const BoxConstraints(minHeight: 28, maxWidth: 128),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: videoStyle ? const BorderSide(color: Colors.white24) : null,
+        icon: Icons.speed_rounded,
+        iconSize: 15,
+        color: color,
+        backgroundColor: background,
+        textStyle: TextStyle(color: color, fontSize: 12),
+        label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+    );
+  }
+
+  Widget? _buildPlaybackDiagnosticsBadges({
+    bool compact = false,
+    bool includeLatency = false,
+    bool videoStyle = false,
+  }) {
+    final badges = <Widget>[
+      if (includeLatency)
+        _buildServerLatencyBadge(compact: compact, videoStyle: videoStyle),
+    ];
+    final deviationBadge = _buildPlaybackDeviationBadge(
+      compact: compact,
+      videoStyle: videoStyle,
+    );
+    if (deviationBadge != null) badges.add(deviationBadge);
+    if (badges.isEmpty) return null;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: badges,
     );
   }
 
@@ -1123,7 +1315,7 @@ class _RoomScreenState extends State<RoomScreen>
     final position = _boundedPlaybackTime(
       value.position.inMilliseconds / 1000.0,
     );
-    if (value.isPlaying) {
+    if (value.isPlaying && !_isCurrentPlaybackLive) {
       unawaited(_maybeFetchPlaybackDanmaku(position));
     }
   }
@@ -1140,6 +1332,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _handleUserSeek(Duration position) {
+    if (_isCurrentPlaybackLive) return;
     final value = _videoPlayerController?.value;
     if (value == null) return;
     _sendPlaybackControlMessage(
@@ -1162,6 +1355,7 @@ class _RoomScreenState extends State<RoomScreen>
     return PlaybackControlReporter(
       currentStatus: _currentStatus,
       isSyncing: _isSyncing,
+      isLive: _isCurrentPlaybackLive,
       boundPosition: _boundedPlaybackTime,
     );
   }
@@ -1216,7 +1410,10 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Future<void> _applyPlaybackStatus(SyncTvPlaybackStatus status) async {
+  Future<void> _applyPlaybackStatus(
+    SyncTvPlaybackStatus status, {
+    bool forceReloadVideo = false,
+  }) async {
     if (!mounted) return;
     final oldMovieId = _currentStatus?.entry?.id;
     final nextMovieId = status.entry?.id;
@@ -1238,6 +1435,7 @@ class _RoomScreenState extends State<RoomScreen>
       final newUrl = SyncTvService.resolveResourceUrl(status.entry!.url);
 
       if (_videoPlayerController == null ||
+          forceReloadVideo ||
           _videoPlayerController!.dataSource != newUrl) {
         await _initVideo(newUrl, headers: status.entry!.headers);
         if (mounted &&
@@ -1263,7 +1461,9 @@ class _RoomScreenState extends State<RoomScreen>
         streamDanmakuHeaders: status.entry!.streamDanmuHeaders,
         controller: _videoPlayerController,
       );
-      unawaited(_maybeFetchPlaybackDanmaku(status.currentTime));
+      if (!status.entry!.live) {
+        unawaited(_maybeFetchPlaybackDanmaku(status.currentTime));
+      }
     } else {
       if (_videoPlayerController != null) {
         _disposeVideoController();
@@ -1328,14 +1528,16 @@ class _RoomScreenState extends State<RoomScreen>
     final entry = status?.entry;
     if (status == null || entry == null) return;
     final wasPlaying = _videoPlayerController?.value.isPlaying ?? false;
-    final position = _videoPlayerController == null
-        ? status.derivedCurrentTime()
-        : _videoPlayerController!.value.position.inMilliseconds / 1000.0;
     final selected = entry.selectPlayback(
       modeKey: mode.key,
       urlIndex: urlIndex,
       resolveUrl: SyncTvService.resolveResourceUrl,
     );
+    final position = selected.live
+        ? 0.0
+        : _videoPlayerController == null
+        ? status.derivedCurrentTime()
+        : _videoPlayerController!.value.position.inMilliseconds / 1000.0;
     setState(() {
       _currentStatus = SyncTvPlaybackStatus(
         entry: selected,
@@ -1530,6 +1732,7 @@ class _RoomScreenState extends State<RoomScreen>
     _tabController.dispose();
     _disposeVideoController();
     _syncTimer?.cancel();
+    _diagnosticsTimer?.cancel();
     _chatHighlightTimer?.cancel();
     _reconnectTimer?.cancel();
     _channel?.sink.close();
@@ -1622,6 +1825,13 @@ class _RoomScreenState extends State<RoomScreen>
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: _buildPlaybackDiagnosticsBadges(
+              compact: compactChrome,
+              includeLatency: true,
+            )!,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: compactChrome
                 ? AppIconButton(
                     onPressed: _openPlaybackSyncSettings,
@@ -1703,6 +1913,7 @@ class _RoomScreenState extends State<RoomScreen>
                         title: _currentStatus?.entry?.name ?? '未知影片',
                         danmakuController: _danmakuController,
                         subtitles: _currentStatus?.entry?.subtitles,
+                        isLive: _currentStatus?.entry?.live == true,
                         onToggleFullScreen: _toggleFullScreen,
                         onSync: _handleSync,
                         onUserPlaybackStateChanged:
@@ -1711,6 +1922,11 @@ class _RoomScreenState extends State<RoomScreen>
                         onUserPlaybackSpeedChanged:
                             _handleUserPlaybackSpeedChanged,
                         interactionMode: VideoPlayerInteractionMode.desktop,
+                        diagnosticsBuilder: (_) =>
+                            _buildPlaybackDiagnosticsBadges(
+                              compact: true,
+                              videoStyle: true,
+                            ),
                         extraBottomWidget: _buildPlaybackOptionButton(
                           compact: true,
                         ),
@@ -1787,6 +2003,10 @@ class _RoomScreenState extends State<RoomScreen>
   void _handleSync() {
     final status = _currentStatus;
     if (status == null) return;
+    if (status.entry?.live == true) {
+      unawaited(_reloadCurrentPlaybackUrl());
+      return;
+    }
     unawaited(_performSync(status, forceSeek: true));
     if (mounted) {
       MessageUtils.showInfo(
@@ -1794,6 +2014,30 @@ class _RoomScreenState extends State<RoomScreen>
         '已同步到最新进度',
         duration: const Duration(seconds: 1),
       );
+    }
+  }
+
+  Future<void> _reloadCurrentPlaybackUrl() async {
+    try {
+      final status = await SyncTvService.getCurrentMedia(widget.room.roomId);
+      if (!mounted) return;
+      await _applyPlaybackStatus(
+        _mergePlaybackStatus(
+          status,
+          incomingHasTiming: status.entry?.url.isEmpty != true,
+        ),
+        forceReloadVideo: true,
+      );
+      if (mounted) {
+        MessageUtils.showInfo(
+          context,
+          '已重新加载播放地址',
+          duration: const Duration(seconds: 1),
+        );
+      }
+    } catch (e) {
+      debugPrint('Reload playback URL error: $e');
+      if (mounted) MessageUtils.showError(context, '重新加载播放地址失败');
     }
   }
 
@@ -2033,6 +2277,7 @@ class _RoomScreenState extends State<RoomScreen>
           title: _currentStatus?.entry?.name ?? '未知影片',
           danmakuController: _danmakuController,
           subtitles: _currentStatus?.entry?.subtitles,
+          isLive: _currentStatus?.entry?.live == true,
           onToggleFullScreen: () => Navigator.of(context).pop(),
           onSync: _handleSync,
           onUserPlaybackStateChanged: _handleUserPlaybackStateChanged,
@@ -2041,6 +2286,11 @@ class _RoomScreenState extends State<RoomScreen>
           onSendDanmaku: _sendDanmaku,
           isFullScreen: true,
           interactionMode: VideoPlayerInteractionMode.desktop,
+          diagnosticsBuilder: (_) => _buildPlaybackDiagnosticsBadges(
+            compact: true,
+            includeLatency: true,
+            videoStyle: true,
+          ),
           extraBottomWidget: _buildPlaybackOptionButton(compact: true),
         ),
       ),

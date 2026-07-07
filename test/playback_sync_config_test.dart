@@ -83,6 +83,7 @@ void main() {
         targetHash: 'target_hash',
       ),
       isSyncing: false,
+      isLive: false,
       boundPosition: (position) => position.clamp(0.0, 10.0).toDouble(),
     );
     const value = VideoPlayerValue(
@@ -128,6 +129,7 @@ void main() {
     final reporter = PlaybackControlReporter(
       currentStatus: SyncTvPlaybackStatus(),
       isSyncing: true,
+      isLive: false,
       boundPosition: (position) => position,
     );
     const value = VideoPlayerValue(
@@ -147,6 +149,37 @@ void main() {
       isNull,
     );
     expect(reporter.playbackSpeedChanged(value: value, speed: 1.25), isNull);
+  });
+
+  test('live playback controls omit progress and suppress seeking', () {
+    final reporter = PlaybackControlReporter(
+      currentStatus: SyncTvPlaybackStatus(),
+      isSyncing: false,
+      isLive: true,
+      boundPosition: (position) => position,
+    );
+    const value = VideoPlayerValue(
+      duration: Duration.zero,
+      position: Duration(seconds: 30),
+      isInitialized: true,
+      isPlaying: true,
+      playbackSpeed: 1.0,
+    );
+
+    final pause = reporter.playbackStateChanged(
+      value: value,
+      isPlaying: false,
+    )!;
+    expect(
+      pause.playbackStateUpdate.type,
+      client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PAUSE,
+    );
+    expect(pause.playbackStateUpdate.playing, isFalse);
+    expect(pause.playbackStateUpdate.hasPosition(), isFalse);
+    expect(
+      reporter.seek(value: value, position: const Duration(seconds: 8)),
+      isNull,
+    );
   });
 
   test('sync target clamps past-duration playback to video end', () {

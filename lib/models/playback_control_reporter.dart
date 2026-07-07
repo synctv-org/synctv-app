@@ -7,11 +7,13 @@ class PlaybackControlReporter {
   const PlaybackControlReporter({
     required this.currentStatus,
     required this.isSyncing,
+    required this.isLive,
     required this.boundPosition,
   });
 
   final SyncTvPlaybackStatus? currentStatus;
   final bool isSyncing;
+  final bool isLive;
   final double Function(double positionSeconds) boundPosition;
 
   client.ClientMessage? playbackStateChanged({
@@ -22,7 +24,7 @@ class PlaybackControlReporter {
     return _message(
       isPlaying ? PlaybackControlAction.play : PlaybackControlAction.pause,
       isPlaying: isPlaying,
-      position: value.position.inMilliseconds / 1000.0,
+      position: isLive ? null : value.position.inMilliseconds / 1000.0,
       playbackRate: value.playbackSpeed,
     );
   }
@@ -32,6 +34,7 @@ class PlaybackControlReporter {
     required Duration position,
   }) {
     if (!_canReport(value)) return null;
+    if (isLive) return null;
     return _message(
       PlaybackControlAction.seek,
       isPlaying: value.isPlaying,
@@ -48,7 +51,7 @@ class PlaybackControlReporter {
     return _message(
       PlaybackControlAction.speed,
       isPlaying: value.isPlaying,
-      position: value.position.inMilliseconds / 1000.0,
+      position: isLive ? null : value.position.inMilliseconds / 1000.0,
       playbackRate: speed,
     );
   }
@@ -58,14 +61,15 @@ class PlaybackControlReporter {
   client.ClientMessage _message(
     PlaybackControlAction action, {
     required bool isPlaying,
-    required double position,
+    required double? position,
     required double playbackRate,
   }) {
+    final boundedPosition = position == null ? null : boundPosition(position);
     return RoomRealtimeCodec.buildGuardedPlaybackStateUpdateMessage(
       action,
       currentStatus,
       isPlaying: isPlaying,
-      position: boundPosition(position),
+      position: boundedPosition,
       playbackRate: playbackRate,
     );
   }

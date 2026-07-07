@@ -289,11 +289,13 @@ class CustomVideoPlayer extends StatefulWidget {
   final ValueChanged<Duration>? onUserSeek;
   final ValueChanged<double>? onUserPlaybackSpeedChanged;
   final bool isFullScreen;
+  final bool isLive;
   final Function(String)? onSendDanmaku;
   final IconData? fullScreenIcon;
   final IconData? exitFullScreenIcon;
   final bool showCastButton;
   final Widget? extraBottomWidget;
+  final Widget? Function(BuildContext context)? diagnosticsBuilder;
   final VideoPlayerInteractionMode interactionMode;
 
   const CustomVideoPlayer({
@@ -308,11 +310,13 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onUserSeek,
     this.onUserPlaybackSpeedChanged,
     this.isFullScreen = false,
+    this.isLive = false,
     this.onSendDanmaku,
     this.fullScreenIcon,
     this.exitFullScreenIcon,
     this.showCastButton = true,
     this.extraBottomWidget,
+    this.diagnosticsBuilder,
     this.interactionMode = VideoPlayerInteractionMode.mobile,
   });
 
@@ -987,6 +991,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   Future<void> _seekFromUser(Duration target) async {
     if (_isCasting) return;
+    if (widget.isLive) return;
     final duration = widget.controller.value.duration;
     final clamped = target < Duration.zero
         ? Duration.zero
@@ -1020,6 +1025,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   Future<void> _seekRelative(Duration offset) async {
     if (_isCasting) return;
+    if (widget.isLive) return;
     final value = widget.controller.value;
     final duration = value.duration;
     if (duration <= Duration.zero) return;
@@ -1042,10 +1048,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowLeft) {
+      if (widget.isLive) return KeyEventResult.handled;
       _seekRelative(const Duration(seconds: -5));
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowRight) {
+      if (widget.isLive) return KeyEventResult.handled;
       _seekRelative(const Duration(seconds: 5));
       return KeyEventResult.handled;
     }
@@ -1071,6 +1079,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void _onHorizontalDragStart(DragStartDetails details) {
     if (_isDesktopMode) return;
     if (_isCasting) return;
+    if (widget.isLive) return;
     _isDragging = true;
     _dragStartPosition = widget.controller.value.position;
     _hideTimer?.cancel();
@@ -1084,6 +1093,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     if (_isDesktopMode) return;
     if (_isCasting) return;
+    if (widget.isLive) return;
     if (_dragStartPosition == null) return;
 
     final duration = widget.controller.value.duration.inMilliseconds.toDouble();
@@ -1105,6 +1115,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void _onHorizontalDragEnd(DragEndDetails details) {
     if (_isDesktopMode) return;
     if (_isCasting) return;
+    if (widget.isLive) return;
     _isDragging = false;
     if (_dragStartPosition != null) {
       unawaited(_seekFromUser(_dragStartPosition!));
@@ -2417,6 +2428,20 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
+                                  Builder(
+                                    builder: (context) {
+                                      final diagnostics = widget
+                                          .diagnosticsBuilder
+                                          ?.call(context);
+                                      if (diagnostics == null) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return Padding(
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: diagnostics,
+                                      );
+                                    },
+                                  ),
                                   if (widget.showCastButton)
                                     AppIconButton(
                                       icon: _isCasting
@@ -2515,9 +2540,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             SizedBox(width: horizontalGap),
                                             if (showTime) ...[
                                               Text(
-                                                _formatDuration(
-                                                  videoValue.position,
-                                                ),
+                                                widget.isLive
+                                                    ? '直播'
+                                                    : _formatDuration(
+                                                        videoValue.position,
+                                                      ),
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 12,
@@ -2528,13 +2555,18 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             Expanded(
                                               child: Semantics(
                                                 slider: true,
-                                                label: '播放进度',
-                                                value:
-                                                    '${_formatDuration(videoValue.position)} / ${_formatDuration(videoValue.duration)}',
+                                                enabled: !widget.isLive,
+                                                label: widget.isLive
+                                                    ? '直播'
+                                                    : '播放进度',
+                                                value: widget.isLive
+                                                    ? '直播'
+                                                    : '${_formatDuration(videoValue.position)} / ${_formatDuration(videoValue.duration)}',
                                                 child: GestureDetector(
                                                   behavior:
                                                       HitTestBehavior.opaque,
                                                   onHorizontalDragStart: (details) {
+                                                    if (widget.isLive) return;
                                                     _startHideTimer();
                                                     final RenderBox box =
                                                         context.findRenderObject()
@@ -2564,6 +2596,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                     });
                                                   },
                                                   onHorizontalDragUpdate: (details) {
+                                                    if (widget.isLive) return;
                                                     _startHideTimer();
                                                     final RenderBox box =
                                                         context.findRenderObject()
@@ -2593,6 +2626,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   },
                                                   onHorizontalDragEnd:
                                                       (details) {
+                                                        if (widget.isLive) {
+                                                          return;
+                                                        }
                                                         _startHideTimer();
                                                         final target = Duration(
                                                           milliseconds:
@@ -2609,6 +2645,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                         });
                                                       },
                                                   onTapDown: (details) {
+                                                    if (widget.isLive) return;
                                                     _startHideTimer();
                                                     final RenderBox box =
                                                         context.findRenderObject()
@@ -2638,6 +2675,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                     });
                                                   },
                                                   onTapUp: (details) {
+                                                    if (widget.isLive) return;
                                                     _startHideTimer();
                                                     final target = Duration(
                                                       milliseconds:
@@ -2654,6 +2692,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                     });
                                                   },
                                                   onTapCancel: () {
+                                                    if (widget.isLive) return;
                                                     if (_isSliderDragging) {
                                                       final target = Duration(
                                                         milliseconds:
@@ -2701,9 +2740,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                                     24,
                                                               ),
                                                           activeTrackColor:
-                                                              const Color(
-                                                                0xFF5D5FEF,
-                                                              ),
+                                                              widget.isLive
+                                                              ? Colors.redAccent
+                                                              : const Color(
+                                                                  0xFF5D5FEF,
+                                                                ),
                                                           inactiveTrackColor:
                                                               Colors.white24,
                                                           thumbColor:
@@ -2714,27 +2755,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                         child: IgnorePointer(
                                                           // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
                                                           child: AppSlider(
-                                                            value:
-                                                                (_isSliderDragging
-                                                                        ? _sliderDragValue
-                                                                        : videoValue
-                                                                              .position
-                                                                              .inMilliseconds
-                                                                              .toDouble())
-                                                                    .clamp(
-                                                                      0,
-                                                                      videoValue.duration.inMilliseconds.toDouble() >
-                                                                              0
-                                                                          ? videoValue.duration.inMilliseconds.toDouble()
-                                                                          : 1.0,
-                                                                    ),
+                                                            value: widget.isLive
+                                                                ? 1.0
+                                                                : (_isSliderDragging
+                                                                          ? _sliderDragValue
+                                                                          : videoValue.position.inMilliseconds.toDouble())
+                                                                      .clamp(
+                                                                        0,
+                                                                        videoValue.duration.inMilliseconds.toDouble() >
+                                                                                0
+                                                                            ? videoValue.duration.inMilliseconds.toDouble()
+                                                                            : 1.0,
+                                                                      ),
                                                             min: 0,
-                                                            max:
-                                                                videoValue
-                                                                        .duration
-                                                                        .inMilliseconds
-                                                                        .toDouble() >
-                                                                    0
+                                                            max: widget.isLive
+                                                                ? 1.0
+                                                                : videoValue
+                                                                          .duration
+                                                                          .inMilliseconds
+                                                                          .toDouble() >
+                                                                      0
                                                                 ? videoValue
                                                                       .duration
                                                                       .inMilliseconds
@@ -2752,7 +2792,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                 ),
                                               ),
                                             ),
-                                            if (showTime) ...[
+                                            if (showTime && !widget.isLive) ...[
                                               SizedBox(width: horizontalGap),
                                               Text(
                                                 _formatDuration(
@@ -2869,8 +2909,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                     : 4,
                                               ),
                                               AppIconButton(
-                                                icon: Icons.sync_rounded,
-                                                tooltip: '同步',
+                                                icon: widget.isLive
+                                                    ? Icons.refresh_rounded
+                                                    : Icons.sync_rounded,
+                                                tooltip: widget.isLive
+                                                    ? '重新加载'
+                                                    : '同步',
                                                 onPressed: widget.onSync,
                                                 padding: widget.isFullScreen
                                                     ? const EdgeInsets.all(8)
