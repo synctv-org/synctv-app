@@ -761,6 +761,29 @@ class ChatMessageStatus extends $pb.ProtobufEnum {
   const ChatMessageStatus._(super.value, super.name);
 }
 
+class ChatMessageType extends $pb.ProtobufEnum {
+  static const ChatMessageType CHAT_MESSAGE_TYPE_UNSPECIFIED =
+      ChatMessageType._(
+          0, _omitEnumNames ? '' : 'CHAT_MESSAGE_TYPE_UNSPECIFIED');
+  static const ChatMessageType CHAT_MESSAGE_TYPE_USER =
+      ChatMessageType._(1, _omitEnumNames ? '' : 'CHAT_MESSAGE_TYPE_USER');
+  static const ChatMessageType CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED =
+      ChatMessageType._(
+          1001, _omitEnumNames ? '' : 'CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED');
+
+  static const $core.List<ChatMessageType> values = <ChatMessageType>[
+    CHAT_MESSAGE_TYPE_UNSPECIFIED,
+    CHAT_MESSAGE_TYPE_USER,
+    CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED,
+  ];
+
+  static final $core.Map<$core.int, ChatMessageType> _byValue =
+      $pb.ProtobufEnum.initByValue(values);
+  static ChatMessageType? valueOf($core.int value) => _byValue[value];
+
+  const ChatMessageType._(super.value, super.name);
+}
+
 class ChatMessageEventKind extends $pb.ProtobufEnum {
   static const ChatMessageEventKind CHAT_MESSAGE_EVENT_KIND_UNSPECIFIED =
       ChatMessageEventKind._(
@@ -913,6 +936,51 @@ class ChatAttachmentReferenceKind extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const ChatAttachmentReferenceKind._(super.value, super.name);
+}
+
+class FileObjectAccessKind extends $pb.ProtobufEnum {
+  static const FileObjectAccessKind FILE_OBJECT_ACCESS_KIND_UNSPECIFIED =
+      FileObjectAccessKind._(
+          0, _omitEnumNames ? '' : 'FILE_OBJECT_ACCESS_KIND_UNSPECIFIED');
+  static const FileObjectAccessKind FILE_OBJECT_ACCESS_KIND_CHAT_ATTACHMENT =
+      FileObjectAccessKind._(
+          1, _omitEnumNames ? '' : 'FILE_OBJECT_ACCESS_KIND_CHAT_ATTACHMENT');
+  static const FileObjectAccessKind FILE_OBJECT_ACCESS_KIND_USER_AVATAR =
+      FileObjectAccessKind._(
+          2, _omitEnumNames ? '' : 'FILE_OBJECT_ACCESS_KIND_USER_AVATAR');
+  static const FileObjectAccessKind FILE_OBJECT_ACCESS_KIND_MEDIA_COVER =
+      FileObjectAccessKind._(
+          3, _omitEnumNames ? '' : 'FILE_OBJECT_ACCESS_KIND_MEDIA_COVER');
+  static const FileObjectAccessKind FILE_OBJECT_ACCESS_KIND_ROOM_COVER =
+      FileObjectAccessKind._(
+          4, _omitEnumNames ? '' : 'FILE_OBJECT_ACCESS_KIND_ROOM_COVER');
+  static const FileObjectAccessKind FILE_OBJECT_ACCESS_KIND_PLAYLIST_COVER =
+      FileObjectAccessKind._(
+          5, _omitEnumNames ? '' : 'FILE_OBJECT_ACCESS_KIND_PLAYLIST_COVER');
+  static const FileObjectAccessKind FILE_OBJECT_ACCESS_KIND_GENERIC =
+      FileObjectAccessKind._(
+          6, _omitEnumNames ? '' : 'FILE_OBJECT_ACCESS_KIND_GENERIC');
+  static const FileObjectAccessKind FILE_OBJECT_ACCESS_KIND_MEDIA_THUMBNAIL =
+      FileObjectAccessKind._(
+          7, _omitEnumNames ? '' : 'FILE_OBJECT_ACCESS_KIND_MEDIA_THUMBNAIL');
+
+  static const $core.List<FileObjectAccessKind> values = <FileObjectAccessKind>[
+    FILE_OBJECT_ACCESS_KIND_UNSPECIFIED,
+    FILE_OBJECT_ACCESS_KIND_CHAT_ATTACHMENT,
+    FILE_OBJECT_ACCESS_KIND_USER_AVATAR,
+    FILE_OBJECT_ACCESS_KIND_MEDIA_COVER,
+    FILE_OBJECT_ACCESS_KIND_ROOM_COVER,
+    FILE_OBJECT_ACCESS_KIND_PLAYLIST_COVER,
+    FILE_OBJECT_ACCESS_KIND_GENERIC,
+    FILE_OBJECT_ACCESS_KIND_MEDIA_THUMBNAIL,
+  ];
+
+  static final $core.List<FileObjectAccessKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 7);
+  static FileObjectAccessKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const FileObjectAccessKind._(super.value, super.name);
 }
 
 class OnlineEventKind extends $pb.ProtobufEnum {

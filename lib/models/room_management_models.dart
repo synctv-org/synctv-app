@@ -158,6 +158,8 @@ class AdminRoomMember {
   final String roomId;
   final String userId;
   final String username;
+  final String remarkName;
+  final String displayTag;
   final int role;
   final int permissions;
   final int addedPermissions;
@@ -172,6 +174,8 @@ class AdminRoomMember {
     required this.roomId,
     required this.userId,
     required this.username,
+    this.remarkName = '',
+    this.displayTag = '',
     required this.role,
     required this.permissions,
     required this.addedPermissions,
@@ -187,6 +191,8 @@ class AdminRoomMember {
     String? roomId,
     String? userId,
     String? username,
+    String? remarkName,
+    String? displayTag,
     int? role,
     int? permissions,
     int? addedPermissions,
@@ -201,6 +207,8 @@ class AdminRoomMember {
       roomId: roomId ?? this.roomId,
       userId: userId ?? this.userId,
       username: username ?? this.username,
+      remarkName: remarkName ?? this.remarkName,
+      displayTag: displayTag ?? this.displayTag,
       role: role ?? this.role,
       permissions: permissions ?? this.permissions,
       addedPermissions: addedPermissions ?? this.addedPermissions,

@@ -13,6 +13,7 @@ import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/oauth2_callback_parser.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
+import 'package:synctv_app/services/synctv_clock.dart';
 import 'package:synctv_app/services/synctv_domain_services.dart';
 import 'package:synctv_app/services/synctv_file_upload_service.dart';
 import 'package:synctv_app/services/synctv_runtime_service.dart';
@@ -31,10 +32,15 @@ import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
 export 'package:synctv_app/models/admin_models.dart';
 export 'package:synctv_app/models/provider_models.dart';
 export 'package:synctv_app/models/room_media_models.dart';
+export 'package:synctv_app/services/synctv_clock.dart';
 export 'package:synctv_app/services/synctv_file_upload_service.dart';
 
 class SyncTvService {
   static const String _playbackSyncConfigKey = 'synctv.playback.sync.config';
+  static const List<client_enum.ChatMessageType> chatVisibleMessageTypes = [
+    client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
+    client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED,
+  ];
   static PlaybackSyncConfig _playbackSyncConfig = PlaybackSyncConfig.defaults;
 
   static String get baseUrl => _runtime.baseUrl;
@@ -355,6 +361,35 @@ class SyncTvService {
 
   static Future<ServerInfo> getServerInfo({bool refresh = false}) async {
     return _domains.publicRooms.getServerInfo(refresh: refresh);
+  }
+
+  static Future<client.GetServerTimeResponse> getServerTime({
+    int clientSentAtNanos = 0,
+  }) {
+    return _domains.publicRooms.getServerTime(
+      clientSentAtNanos: clientSentAtNanos,
+    );
+  }
+
+  static DateTime serverNow() => SyncedClock.now();
+
+  static int serverNowMillis() => SyncedClock.nowMillis();
+
+  static Future<void> syncServerTime({bool refresh = false}) async {
+    if (!refresh && SyncedClock.isSynced) return;
+    try {
+      final sentAt = SyncedClock.localUnixNanos();
+      final response = await getServerTime(clientSentAtNanos: sentAt);
+      final receivedAt = SyncedClock.localUnixNanos();
+      SyncedClock.updateFromServerTime(
+        clientSentAtNanos: response.clientSentAtNanos.toInt(),
+        clientReceivedAtNanos: receivedAt,
+        serverReceivedAtNanos: response.serverReceivedAtNanos.toInt(),
+        serverSentAtNanos: response.serverSentAtNanos.toInt(),
+      );
+    } catch (_) {
+      SyncedClock.reset();
+    }
   }
 
   static Future<List<RoomCategoryInfo>> listRoomCategories({
@@ -1040,6 +1075,30 @@ class SyncTvService {
     return _api.mapMedia(media);
   }
 
+  static Future<RoomMediaItem> updateVideoThumbnail(
+    String roomId,
+    String mediaId,
+    LocalImageUpload upload,
+  ) async {
+    final media = await _domains.fileUploads.updateVideoThumbnail(
+      roomId,
+      mediaId,
+      upload,
+    );
+    return _api.mapMedia(media);
+  }
+
+  static Future<RoomMediaItem> clearVideoThumbnail(
+    String roomId,
+    String mediaId,
+  ) async {
+    final media = await _domains.fileUploads.clearVideoThumbnail(
+      roomId,
+      mediaId,
+    );
+    return _api.mapMedia(media);
+  }
+
   static Future<RoomMediaItem> getMedia(String roomId, String mediaId) async {
     return _domains.roomMedia.getMedia(roomId, mediaId);
   }
@@ -1072,11 +1131,14 @@ class SyncTvService {
     String roomId, {
     int limit = 50,
     String cursor = '',
+    List<client_enum.ChatMessageType> includeMessageTypes =
+        chatVisibleMessageTypes,
   }) async {
     return _domains.roomMedia.getChatHistory(
       roomId,
       limit: limit,
       cursor: cursor,
+      includeMessageTypes: includeMessageTypes,
     );
   }
 
@@ -1319,6 +1381,7 @@ class SyncTvService {
     double afterSeconds = 30,
     int limit = 50,
     bool includeDeleted = false,
+    List<client_enum.ChatMessageType> includeMessageTypes = const [],
   }) {
     return _domains.roomMedia.getChatPlaybackMessages(
       roomId,
@@ -1330,6 +1393,7 @@ class SyncTvService {
       afterSeconds: afterSeconds,
       limit: limit,
       includeDeleted: includeDeleted,
+      includeMessageTypes: includeMessageTypes,
     );
   }
 
@@ -1542,7 +1606,7 @@ class SyncTvService {
             isPlaying: true,
             currentTime: 0,
             playbackRate: playback.playbackRate,
-            generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+            generatedAtMillis: SyncedClock.nowMillis(),
             version: playback.version,
             playingMediaId: playback.playingMediaId,
             playingPlaylistId: playback.playingPlaylistId,
@@ -1893,6 +1957,30 @@ class SyncTvService {
       userId,
       role: role,
       notify: notify,
+    );
+  }
+
+  static Future<void> updateRoomMemberRemarkName(
+    String roomId,
+    String userId,
+    String remarkName,
+  ) async {
+    await _domains.roomManagement.updateRoomMemberRemarkName(
+      roomId,
+      userId,
+      remarkName,
+    );
+  }
+
+  static Future<void> updateRoomMemberDisplayTag(
+    String roomId,
+    String userId,
+    String displayTag,
+  ) async {
+    await _domains.roomManagement.updateRoomMemberDisplayTag(
+      roomId,
+      userId,
+      displayTag,
     );
   }
 
@@ -2315,6 +2403,30 @@ class SyncTvService {
       userId,
       role: role,
       notify: notify,
+    );
+  }
+
+  static Future<void> adminUpdateRoomMemberRemarkName(
+    String roomId,
+    String userId,
+    String remarkName,
+  ) {
+    return _domains.admin.updateRoomMemberRemarkName(
+      roomId,
+      userId,
+      remarkName,
+    );
+  }
+
+  static Future<void> adminUpdateRoomMemberDisplayTag(
+    String roomId,
+    String userId,
+    String displayTag,
+  ) {
+    return _domains.admin.updateRoomMemberDisplayTag(
+      roomId,
+      userId,
+      displayTag,
     );
   }
 

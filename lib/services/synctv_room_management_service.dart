@@ -407,6 +407,34 @@ class SyncTvRoomManagementDomainService {
     );
   }
 
+  Future<void> updateRoomMemberRemarkName(
+    String roomId,
+    String userId,
+    String remarkName,
+  ) async {
+    await _api.room.updateMemberRemarkName(
+      roomId,
+      client.UpdateMemberRemarkNameRequest(
+        userId: userId,
+        remarkName: remarkName,
+      ),
+    );
+  }
+
+  Future<void> updateRoomMemberDisplayTag(
+    String roomId,
+    String userId,
+    String displayTag,
+  ) async {
+    await _api.room.updateMemberDisplayTag(
+      roomId,
+      client.UpdateMemberDisplayTagRequest(
+        userId: userId,
+        displayTag: displayTag,
+      ),
+    );
+  }
+
   Future<void> setRoomMemberRole(String roomId, String userId, int role) async {
     await _api.room.updateMemberPermissions(
       roomId,
@@ -482,6 +510,8 @@ AdminRoomMember roomMemberFromProto(common.RoomMember member) {
     roomId: member.roomId,
     userId: member.userId,
     username: member.username,
+    remarkName: member.remarkName,
+    displayTag: member.displayTag,
     role: member.role.value,
     permissions: member.permissions.toInt(),
     addedPermissions: member.addedPermissions.toInt(),

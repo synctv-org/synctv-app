@@ -2323,26 +2323,6 @@ final $typed_data.Uint8List createUserRequestDescriptor = $convert.base64Decode(
     '9sZRI7CgZzdGF0dXMYBCABKA4yGS5zeW5jdHYuY29tbW9uLlVzZXJTdGF0dXNCCLpIBYIBAhAB'
     'UgZzdGF0dXMSKQoIcGFzc3dvcmQYBSABKAlCDbpICnIFEAgYgAHYAQFSCHBhc3N3b3Jk');
 
-@$core.Deprecated('Use createUserResponseDescriptor instead')
-const CreateUserResponse$json = {
-  '1': 'CreateUserResponse',
-  '2': [
-    {
-      '1': 'user',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.AdminUser',
-      '10': 'user'
-    },
-  ],
-};
-
-/// Descriptor for `CreateUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List createUserResponseDescriptor = $convert.base64Decode(
-    'ChJDcmVhdGVVc2VyUmVzcG9uc2USKwoEdXNlchgBIAEoCzIXLnN5bmN0di5hZG1pbi5BZG1pbl'
-    'VzZXJSBHVzZXI=');
-
 @$core.Deprecated('Use deleteUserRequestDescriptor instead')
 const DeleteUserRequest$json = {
   '1': 'DeleteUserRequest',
@@ -2490,26 +2470,6 @@ const UserPathRequest$json = {
 final $typed_data.Uint8List userPathRequestDescriptor = $convert.base64Decode(
     'Cg9Vc2VyUGF0aFJlcXVlc3QSNgoHdXNlcl9pZBgBIAEoCUIdukgachgQARhAMhJedXNyX1tBLV'
     'phLXowLTldKyRSBnVzZXJJZA==');
-
-@$core.Deprecated('Use getUserResponseDescriptor instead')
-const GetUserResponse$json = {
-  '1': 'GetUserResponse',
-  '2': [
-    {
-      '1': 'user',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.AdminUser',
-      '10': 'user'
-    },
-  ],
-};
-
-/// Descriptor for `GetUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getUserResponseDescriptor = $convert.base64Decode(
-    'Cg9HZXRVc2VyUmVzcG9uc2USKwoEdXNlchgBIAEoCzIXLnN5bmN0di5hZG1pbi5BZG1pblVzZX'
-    'JSBHVzZXI=');
 
 @$core.Deprecated('Use getUserPreferencesRequestDescriptor instead')
 const GetUserPreferencesRequest$json = {
@@ -2690,27 +2650,6 @@ final $typed_data.Uint8List updateUserUsernameRequestDescriptor = $convert.base6
     'ISXnVzcl9bQS1aYS16MC05XSskUgZ1c2VySWQSPwoMbmV3X3VzZXJuYW1lGAIgASgJQhy6SBly'
     'FxADGDIyEV5bXHB7TH1ccHtOfV8tXSskUgtuZXdVc2VybmFtZQ==');
 
-@$core.Deprecated('Use updateUserUsernameResponseDescriptor instead')
-const UpdateUserUsernameResponse$json = {
-  '1': 'UpdateUserUsernameResponse',
-  '2': [
-    {
-      '1': 'user',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.AdminUser',
-      '10': 'user'
-    },
-  ],
-};
-
-/// Descriptor for `UpdateUserUsernameResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateUserUsernameResponseDescriptor =
-    $convert.base64Decode(
-        'ChpVcGRhdGVVc2VyVXNlcm5hbWVSZXNwb25zZRIrCgR1c2VyGAEgASgLMhcuc3luY3R2LmFkbW'
-        'luLkFkbWluVXNlclIEdXNlcg==');
-
 @$core.Deprecated('Use updateUserRoleRequestDescriptor instead')
 const UpdateUserRoleRequest$json = {
   '1': 'UpdateUserRoleRequest',
@@ -2734,27 +2673,6 @@ final $typed_data.Uint8List updateUserRoleRequestDescriptor = $convert.base64Dec
     'NyX1tBLVphLXowLTldKyRSBnVzZXJJZBI1CgRyb2xlGAIgASgOMhcuc3luY3R2LmNvbW1vbi5V'
     'c2VyUm9sZUIIukgFggECEAFSBHJvbGU=');
 
-@$core.Deprecated('Use updateUserRoleResponseDescriptor instead')
-const UpdateUserRoleResponse$json = {
-  '1': 'UpdateUserRoleResponse',
-  '2': [
-    {
-      '1': 'user',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.AdminUser',
-      '10': 'user'
-    },
-  ],
-};
-
-/// Descriptor for `UpdateUserRoleResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateUserRoleResponseDescriptor =
-    $convert.base64Decode(
-        'ChZVcGRhdGVVc2VyUm9sZVJlc3BvbnNlEisKBHVzZXIYASABKAsyFy5zeW5jdHYuYWRtaW4uQW'
-        'RtaW5Vc2VyUgR1c2Vy');
-
 @$core.Deprecated('Use banUserRequestDescriptor instead')
 const BanUserRequest$json = {
   '1': 'BanUserRequest',
@@ -2769,26 +2687,6 @@ final $typed_data.Uint8List banUserRequestDescriptor = $convert.base64Decode(
     'Cg5CYW5Vc2VyUmVxdWVzdBI2Cgd1c2VyX2lkGAEgASgJQh26SBpyGBABGEAyEl51c3JfW0EtWm'
     'EtejAtOV0rJFIGdXNlcklkEhYKBnJlYXNvbhgCIAEoCVIGcmVhc29u');
 
-@$core.Deprecated('Use banUserResponseDescriptor instead')
-const BanUserResponse$json = {
-  '1': 'BanUserResponse',
-  '2': [
-    {
-      '1': 'user',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.AdminUser',
-      '10': 'user'
-    },
-  ],
-};
-
-/// Descriptor for `BanUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List banUserResponseDescriptor = $convert.base64Decode(
-    'Cg9CYW5Vc2VyUmVzcG9uc2USKwoEdXNlchgBIAEoCzIXLnN5bmN0di5hZG1pbi5BZG1pblVzZX'
-    'JSBHVzZXI=');
-
 @$core.Deprecated('Use unbanUserRequestDescriptor instead')
 const UnbanUserRequest$json = {
   '1': 'UnbanUserRequest',
@@ -2801,26 +2699,6 @@ const UnbanUserRequest$json = {
 final $typed_data.Uint8List unbanUserRequestDescriptor = $convert.base64Decode(
     'ChBVbmJhblVzZXJSZXF1ZXN0EjYKB3VzZXJfaWQYASABKAlCHbpIGnIYEAEYQDISXnVzcl9bQS'
     '1aYS16MC05XSskUgZ1c2VySWQ=');
-
-@$core.Deprecated('Use unbanUserResponseDescriptor instead')
-const UnbanUserResponse$json = {
-  '1': 'UnbanUserResponse',
-  '2': [
-    {
-      '1': 'user',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.AdminUser',
-      '10': 'user'
-    },
-  ],
-};
-
-/// Descriptor for `UnbanUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List unbanUserResponseDescriptor = $convert.base64Decode(
-    'ChFVbmJhblVzZXJSZXNwb25zZRIrCgR1c2VyGAEgASgLMhcuc3luY3R2LmFkbWluLkFkbWluVX'
-    'NlclIEdXNlcg==');
 
 @$core.Deprecated('Use getUserRoomsRequestDescriptor instead')
 const GetUserRoomsRequest$json = {
@@ -3025,29 +2903,6 @@ final $typed_data.Uint8List rejectUserRegistrationReviewRequestDescriptor =
         'gJQh26SBpyGBABGEAyEl51c3JfW0EtWmEtejAtOV0rJFIJcmVxdWVzdElkEiAKBnJlYXNvbhgC'
         'IAEoCUIIukgFcgMY9ANSBnJlYXNvbg==');
 
-@$core.Deprecated('Use rejectUserRegistrationReviewResponseDescriptor instead')
-const RejectUserRegistrationReviewResponse$json = {
-  '1': 'RejectUserRegistrationReviewResponse',
-  '2': [
-    {
-      '1': 'review',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.UserRegistrationReview',
-      '10': 'review'
-    },
-    {'1': 'success', '3': 2, '4': 1, '5': 8, '10': 'success'},
-  ],
-};
-
-/// Descriptor for `RejectUserRegistrationReviewResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List rejectUserRegistrationReviewResponseDescriptor =
-    $convert.base64Decode(
-        'CiRSZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVzcG9uc2USPAoGcmV2aWV3GAEgASgLMi'
-        'Quc3luY3R2LmFkbWluLlVzZXJSZWdpc3RyYXRpb25SZXZpZXdSBnJldmlldxIYCgdzdWNjZXNz'
-        'GAIgASgIUgdzdWNjZXNz');
-
 @$core.Deprecated('Use listRoomCreationReviewsRequestDescriptor instead')
 const ListRoomCreationReviewsRequest$json = {
   '1': 'ListRoomCreationReviewsRequest',
@@ -3165,29 +3020,6 @@ final $typed_data.Uint8List rejectRoomCreationReviewRequestDescriptor =
         'pIG3IZEAEYQDITXnJvb21fW0EtWmEtejAtOV0rJFIJcmVxdWVzdElkEiAKBnJlYXNvbhgCIAEo'
         'CUIIukgFcgMY9ANSBnJlYXNvbg==');
 
-@$core.Deprecated('Use rejectRoomCreationReviewResponseDescriptor instead')
-const RejectRoomCreationReviewResponse$json = {
-  '1': 'RejectRoomCreationReviewResponse',
-  '2': [
-    {
-      '1': 'review',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.RoomCreationReview',
-      '10': 'review'
-    },
-    {'1': 'success', '3': 2, '4': 1, '5': 8, '10': 'success'},
-  ],
-};
-
-/// Descriptor for `RejectRoomCreationReviewResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List rejectRoomCreationReviewResponseDescriptor =
-    $convert.base64Decode(
-        'CiBSZWplY3RSb29tQ3JlYXRpb25SZXZpZXdSZXNwb25zZRI4CgZyZXZpZXcYASABKAsyIC5zeW'
-        '5jdHYuYWRtaW4uUm9vbUNyZWF0aW9uUmV2aWV3UgZyZXZpZXcSGAoHc3VjY2VzcxgCIAEoCFIH'
-        'c3VjY2Vzcw==');
-
 @$core.Deprecated('Use listRoomJoinReviewsRequestDescriptor instead')
 const ListRoomJoinReviewsRequest$json = {
   '1': 'ListRoomJoinReviewsRequest',
@@ -3303,28 +3135,6 @@ final $typed_data.Uint8List rejectRoomJoinReviewRequestDescriptor =
         'ChtSZWplY3RSb29tSm9pblJldmlld1JlcXVlc3QSPAoKcmVxdWVzdF9pZBgBIAEoCUIdukgach'
         'gQARhAMhJecmV2X1tBLVphLXowLTldKyRSCXJlcXVlc3RJZBIgCgZyZWFzb24YAiABKAlCCLpI'
         'BXIDGPQDUgZyZWFzb24=');
-
-@$core.Deprecated('Use rejectRoomJoinReviewResponseDescriptor instead')
-const RejectRoomJoinReviewResponse$json = {
-  '1': 'RejectRoomJoinReviewResponse',
-  '2': [
-    {
-      '1': 'review',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.RoomJoinReview',
-      '10': 'review'
-    },
-    {'1': 'success', '3': 2, '4': 1, '5': 8, '10': 'success'},
-  ],
-};
-
-/// Descriptor for `RejectRoomJoinReviewResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List rejectRoomJoinReviewResponseDescriptor =
-    $convert.base64Decode(
-        'ChxSZWplY3RSb29tSm9pblJldmlld1Jlc3BvbnNlEjQKBnJldmlldxgBIAEoCzIcLnN5bmN0di'
-        '5hZG1pbi5Sb29tSm9pblJldmlld1IGcmV2aWV3EhgKB3N1Y2Nlc3MYAiABKAhSB3N1Y2Nlc3M=');
 
 @$core.Deprecated('Use listRoomsRequestDescriptor instead')
 const ListRoomsRequest$json = {
@@ -3486,27 +3296,6 @@ final $typed_data.Uint8List upsertRoomCategoryRequestDescriptor = $convert.base6
     'SAVyAxisAlILZGVzY3JpcHRpb24SHQoKc29ydF9vcmRlchgEIAEoBVIJc29ydE9yZGVyEiIKCm'
     'lzX2VuYWJsZWQYBSABKAhIAFIJaXNFbmFibGVkiAEBQg0KC19pc19lbmFibGVk');
 
-@$core.Deprecated('Use upsertRoomCategoryResponseDescriptor instead')
-const UpsertRoomCategoryResponse$json = {
-  '1': 'UpsertRoomCategoryResponse',
-  '2': [
-    {
-      '1': 'category',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.client.RoomCategory',
-      '10': 'category'
-    },
-  ],
-};
-
-/// Descriptor for `UpsertRoomCategoryResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List upsertRoomCategoryResponseDescriptor =
-    $convert.base64Decode(
-        'ChpVcHNlcnRSb29tQ2F0ZWdvcnlSZXNwb25zZRI3CghjYXRlZ29yeRgBIAEoCzIbLnN5bmN0di'
-        '5jbGllbnQuUm9vbUNhdGVnb3J5UghjYXRlZ29yeQ==');
-
 @$core.Deprecated('Use deleteRoomCategoryRequestDescriptor instead')
 const DeleteRoomCategoryRequest$json = {
   '1': 'DeleteRoomCategoryRequest',
@@ -3604,27 +3393,6 @@ final $typed_data.Uint8List upsertRoomLabelRequestDescriptor = $convert.base64De
     'Z29yeUlkEh0KCnNvcnRfb3JkZXIYBiABKAVSCXNvcnRPcmRlchIiCgppc19lbmFibGVkGAcgAS'
     'gISABSCWlzRW5hYmxlZIgBAUINCgtfaXNfZW5hYmxlZA==');
 
-@$core.Deprecated('Use upsertRoomLabelResponseDescriptor instead')
-const UpsertRoomLabelResponse$json = {
-  '1': 'UpsertRoomLabelResponse',
-  '2': [
-    {
-      '1': 'label',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.client.RoomLabel',
-      '10': 'label'
-    },
-  ],
-};
-
-/// Descriptor for `UpsertRoomLabelResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List upsertRoomLabelResponseDescriptor =
-    $convert.base64Decode(
-        'ChdVcHNlcnRSb29tTGFiZWxSZXNwb25zZRIuCgVsYWJlbBgBIAEoCzIYLnN5bmN0di5jbGllbn'
-        'QuUm9vbUxhYmVsUgVsYWJlbA==');
-
 @$core.Deprecated('Use deleteRoomLabelRequestDescriptor instead')
 const DeleteRoomLabelRequest$json = {
   '1': 'DeleteRoomLabelRequest',
@@ -3684,27 +3452,6 @@ final $typed_data.Uint8List updateRoomTaxonomyRequestDescriptor = $convert.base6
     'bElkcxIlCg5jbGVhcl9jYXRlZ29yeRgEIAEoCFINY2xlYXJDYXRlZ29yeUIOCgxfY2F0ZWdvcn'
     'lfaWQ=');
 
-@$core.Deprecated('Use updateRoomTaxonomyResponseDescriptor instead')
-const UpdateRoomTaxonomyResponse$json = {
-  '1': 'UpdateRoomTaxonomyResponse',
-  '2': [
-    {
-      '1': 'room',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.Room',
-      '10': 'room'
-    },
-  ],
-};
-
-/// Descriptor for `UpdateRoomTaxonomyResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateRoomTaxonomyResponseDescriptor =
-    $convert.base64Decode(
-        'ChpVcGRhdGVSb29tVGF4b25vbXlSZXNwb25zZRImCgRyb29tGAEgASgLMhIuc3luY3R2LmFkbW'
-        'luLlJvb21SBHJvb20=');
-
 @$core.Deprecated('Use getRoomRequestDescriptor instead')
 const GetRoomRequest$json = {
   '1': 'GetRoomRequest',
@@ -3730,26 +3477,6 @@ const RoomPathRequest$json = {
 final $typed_data.Uint8List roomPathRequestDescriptor = $convert.base64Decode(
     'Cg9Sb29tUGF0aFJlcXVlc3QSNwoHcm9vbV9pZBgBIAEoCUIeukgbchkQARhAMhNecm9vbV9bQS'
     '1aYS16MC05XSskUgZyb29tSWQ=');
-
-@$core.Deprecated('Use getRoomResponseDescriptor instead')
-const GetRoomResponse$json = {
-  '1': 'GetRoomResponse',
-  '2': [
-    {
-      '1': 'room',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.Room',
-      '10': 'room'
-    },
-  ],
-};
-
-/// Descriptor for `GetRoomResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getRoomResponseDescriptor = $convert.base64Decode(
-    'Cg9HZXRSb29tUmVzcG9uc2USJgoEcm9vbRgBIAEoCzISLnN5bmN0di5hZG1pbi5Sb29tUgRyb2'
-    '9t');
 
 @$core.Deprecated('Use getRoomSettingsRequestDescriptor instead')
 const GetRoomSettingsRequest$json = {
@@ -3950,27 +3677,6 @@ final $typed_data.Uint8List resetRoomSettingsRequestDescriptor =
         'ChhSZXNldFJvb21TZXR0aW5nc1JlcXVlc3QSNwoHcm9vbV9pZBgBIAEoCUIeukgbchkQARhAMh'
         'Necm9vbV9bQS1aYS16MC05XSskUgZyb29tSWQ=');
 
-@$core.Deprecated('Use resetRoomSettingsResponseDescriptor instead')
-const ResetRoomSettingsResponse$json = {
-  '1': 'ResetRoomSettingsResponse',
-  '2': [
-    {
-      '1': 'room',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.Room',
-      '10': 'room'
-    },
-  ],
-};
-
-/// Descriptor for `ResetRoomSettingsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List resetRoomSettingsResponseDescriptor =
-    $convert.base64Decode(
-        'ChlSZXNldFJvb21TZXR0aW5nc1Jlc3BvbnNlEiYKBHJvb20YASABKAsyEi5zeW5jdHYuYWRtaW'
-        '4uUm9vbVIEcm9vbQ==');
-
 @$core.Deprecated('Use updateRoomPasswordRequestDescriptor instead')
 const UpdateRoomPasswordRequest$json = {
   '1': 'UpdateRoomPasswordRequest',
@@ -4039,26 +3745,6 @@ final $typed_data.Uint8List banRoomRequestDescriptor = $convert.base64Decode(
     'Cg5CYW5Sb29tUmVxdWVzdBI3Cgdyb29tX2lkGAEgASgJQh66SBtyGRABGEAyE15yb29tX1tBLV'
     'phLXowLTldKyRSBnJvb21JZBIWCgZyZWFzb24YAiABKAlSBnJlYXNvbg==');
 
-@$core.Deprecated('Use banRoomResponseDescriptor instead')
-const BanRoomResponse$json = {
-  '1': 'BanRoomResponse',
-  '2': [
-    {
-      '1': 'room',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.Room',
-      '10': 'room'
-    },
-  ],
-};
-
-/// Descriptor for `BanRoomResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List banRoomResponseDescriptor = $convert.base64Decode(
-    'Cg9CYW5Sb29tUmVzcG9uc2USJgoEcm9vbRgBIAEoCzISLnN5bmN0di5hZG1pbi5Sb29tUgRyb2'
-    '9t');
-
 @$core.Deprecated('Use unbanRoomRequestDescriptor instead')
 const UnbanRoomRequest$json = {
   '1': 'UnbanRoomRequest',
@@ -4071,26 +3757,6 @@ const UnbanRoomRequest$json = {
 final $typed_data.Uint8List unbanRoomRequestDescriptor = $convert.base64Decode(
     'ChBVbmJhblJvb21SZXF1ZXN0EjcKB3Jvb21faWQYASABKAlCHrpIG3IZEAEYQDITXnJvb21fW0'
     'EtWmEtejAtOV0rJFIGcm9vbUlk');
-
-@$core.Deprecated('Use unbanRoomResponseDescriptor instead')
-const UnbanRoomResponse$json = {
-  '1': 'UnbanRoomResponse',
-  '2': [
-    {
-      '1': 'room',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.Room',
-      '10': 'room'
-    },
-  ],
-};
-
-/// Descriptor for `UnbanRoomResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List unbanRoomResponseDescriptor = $convert.base64Decode(
-    'ChFVbmJhblJvb21SZXNwb25zZRImCgRyb29tGAEgASgLMhIuc3luY3R2LmFkbWluLlJvb21SBH'
-    'Jvb20=');
 
 @$core.Deprecated('Use getRoomMembersRequestDescriptor instead')
 const GetRoomMembersRequest$json = {
@@ -4191,6 +3857,8 @@ const AddMemberRequest$json = {
       '10': 'role'
     },
     {'1': 'notify', '3': 4, '4': 1, '5': 8, '10': 'notify'},
+    {'1': 'remark_name', '3': 5, '4': 1, '5': 9, '8': {}, '10': 'remarkName'},
+    {'1': 'display_tag', '3': 6, '4': 1, '5': 9, '8': {}, '10': 'displayTag'},
   ],
 };
 
@@ -4199,27 +3867,43 @@ final $typed_data.Uint8List addMemberRequestDescriptor = $convert.base64Decode(
     'ChBBZGRNZW1iZXJSZXF1ZXN0EjcKB3Jvb21faWQYASABKAlCHrpIG3IZEAEYQDITXnJvb21fW0'
     'EtWmEtejAtOV0rJFIGcm9vbUlkEjYKB3VzZXJfaWQYAiABKAlCHbpIGnIYEAEYQDISXnVzcl9b'
     'QS1aYS16MC05XSskUgZ1c2VySWQSMQoEcm9sZRgDIAEoDjIdLnN5bmN0di5jb21tb24uUm9vbU'
-    '1lbWJlclJvbGVSBHJvbGUSFgoGbm90aWZ5GAQgASgIUgZub3RpZnk=');
+    '1lbWJlclJvbGVSBHJvbGUSFgoGbm90aWZ5GAQgASgIUgZub3RpZnkSKAoLcmVtYXJrX25hbWUY'
+    'BSABKAlCB7pIBHICGEBSCnJlbWFya05hbWUSKAoLZGlzcGxheV90YWcYBiABKAlCB7pIBHICGB'
+    'BSCmRpc3BsYXlUYWc=');
 
-@$core.Deprecated('Use addMemberResponseDescriptor instead')
-const AddMemberResponse$json = {
-  '1': 'AddMemberResponse',
+@$core.Deprecated('Use updateMemberRemarkNameRequestDescriptor instead')
+const UpdateMemberRemarkNameRequest$json = {
+  '1': 'UpdateMemberRemarkNameRequest',
   '2': [
-    {
-      '1': 'member',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.common.RoomMember',
-      '10': 'member'
-    },
+    {'1': 'room_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'roomId'},
+    {'1': 'user_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'userId'},
+    {'1': 'remark_name', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'remarkName'},
   ],
 };
 
-/// Descriptor for `AddMemberResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List addMemberResponseDescriptor = $convert.base64Decode(
-    'ChFBZGRNZW1iZXJSZXNwb25zZRIxCgZtZW1iZXIYASABKAsyGS5zeW5jdHYuY29tbW9uLlJvb2'
-    '1NZW1iZXJSBm1lbWJlcg==');
+/// Descriptor for `UpdateMemberRemarkNameRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateMemberRemarkNameRequestDescriptor = $convert.base64Decode(
+    'Ch1VcGRhdGVNZW1iZXJSZW1hcmtOYW1lUmVxdWVzdBI3Cgdyb29tX2lkGAEgASgJQh66SBtyGR'
+    'ABGEAyE15yb29tX1tBLVphLXowLTldKyRSBnJvb21JZBI2Cgd1c2VyX2lkGAIgASgJQh26SBpy'
+    'GBABGEAyEl51c3JfW0EtWmEtejAtOV0rJFIGdXNlcklkEigKC3JlbWFya19uYW1lGAMgASgJQg'
+    'e6SARyAhhAUgpyZW1hcmtOYW1l');
+
+@$core.Deprecated('Use updateMemberDisplayTagRequestDescriptor instead')
+const UpdateMemberDisplayTagRequest$json = {
+  '1': 'UpdateMemberDisplayTagRequest',
+  '2': [
+    {'1': 'room_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'roomId'},
+    {'1': 'user_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'userId'},
+    {'1': 'display_tag', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'displayTag'},
+  ],
+};
+
+/// Descriptor for `UpdateMemberDisplayTagRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateMemberDisplayTagRequestDescriptor = $convert.base64Decode(
+    'Ch1VcGRhdGVNZW1iZXJEaXNwbGF5VGFnUmVxdWVzdBI3Cgdyb29tX2lkGAEgASgJQh66SBtyGR'
+    'ABGEAyE15yb29tX1tBLVphLXowLTldKyRSBnJvb21JZBI2Cgd1c2VyX2lkGAIgASgJQh26SBpy'
+    'GBABGEAyEl51c3JfW0EtWmEtejAtOV0rJFIGdXNlcklkEigKC2Rpc3BsYXlfdGFnGAMgASgJQg'
+    'e6SARyAhgQUgpkaXNwbGF5VGFn');
 
 @$core.Deprecated('Use updateMemberPermissionsRequestDescriptor instead')
 const UpdateMemberPermissionsRequest$json = {
@@ -4277,27 +3961,6 @@ final $typed_data.Uint8List updateMemberPermissionsRequestDescriptor = $convert.
     'ZWRQZXJtaXNzaW9ucxI6ChlhZG1pbl9yZW1vdmVkX3Blcm1pc3Npb25zGAcgASgEUhdhZG1pbl'
     'JlbW92ZWRQZXJtaXNzaW9ucw==');
 
-@$core.Deprecated('Use updateMemberPermissionsResponseDescriptor instead')
-const UpdateMemberPermissionsResponse$json = {
-  '1': 'UpdateMemberPermissionsResponse',
-  '2': [
-    {
-      '1': 'member',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.common.RoomMember',
-      '10': 'member'
-    },
-  ],
-};
-
-/// Descriptor for `UpdateMemberPermissionsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateMemberPermissionsResponseDescriptor =
-    $convert.base64Decode(
-        'Ch9VcGRhdGVNZW1iZXJQZXJtaXNzaW9uc1Jlc3BvbnNlEjEKBm1lbWJlchgBIAEoCzIZLnN5bm'
-        'N0di5jb21tb24uUm9vbU1lbWJlclIGbWVtYmVy');
-
 @$core.Deprecated('Use kickMemberRequestDescriptor instead')
 const KickMemberRequest$json = {
   '1': 'KickMemberRequest',
@@ -4347,26 +4010,6 @@ const AddAdminRequest$json = {
 final $typed_data.Uint8List addAdminRequestDescriptor = $convert.base64Decode(
     'Cg9BZGRBZG1pblJlcXVlc3QSNgoHdXNlcl9pZBgBIAEoCUIdukgachgQARhAMhJedXNyX1tBLV'
     'phLXowLTldKyRSBnVzZXJJZA==');
-
-@$core.Deprecated('Use addAdminResponseDescriptor instead')
-const AddAdminResponse$json = {
-  '1': 'AddAdminResponse',
-  '2': [
-    {
-      '1': 'user',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.AdminUser',
-      '10': 'user'
-    },
-  ],
-};
-
-/// Descriptor for `AddAdminResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List addAdminResponseDescriptor = $convert.base64Decode(
-    'ChBBZGRBZG1pblJlc3BvbnNlEisKBHVzZXIYASABKAsyFy5zeW5jdHYuYWRtaW4uQWRtaW5Vc2'
-    'VyUgR1c2Vy');
 
 @$core.Deprecated('Use removeAdminRequestDescriptor instead')
 const RemoveAdminRequest$json = {
@@ -4983,27 +4626,6 @@ final $typed_data.Uint8List getContentReportRequestDescriptor =
         'ChdHZXRDb250ZW50UmVwb3J0UmVxdWVzdBI9CglyZXBvcnRfaWQYASABKAlCILpIHXIbEAEYQD'
         'IVXnJlcG9ydF9bQS1aYS16MC05XSskUghyZXBvcnRJZA==');
 
-@$core.Deprecated('Use getContentReportResponseDescriptor instead')
-const GetContentReportResponse$json = {
-  '1': 'GetContentReportResponse',
-  '2': [
-    {
-      '1': 'report',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.ContentReport',
-      '10': 'report'
-    },
-  ],
-};
-
-/// Descriptor for `GetContentReportResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getContentReportResponseDescriptor =
-    $convert.base64Decode(
-        'ChhHZXRDb250ZW50UmVwb3J0UmVzcG9uc2USMwoGcmVwb3J0GAEgASgLMhsuc3luY3R2LmFkbW'
-        'luLkNvbnRlbnRSZXBvcnRSBnJlcG9ydA==');
-
 @$core.Deprecated('Use updateContentReportStatusRequestDescriptor instead')
 const UpdateContentReportStatusRequest$json = {
   '1': 'UpdateContentReportStatusRequest',
@@ -5118,7 +4740,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'CreateUser',
       '2': '.synctv.admin.CreateUserRequest',
-      '3': '.synctv.admin.CreateUserResponse'
+      '3': '.synctv.admin.AdminUser'
     },
     {
       '1': 'DeleteUser',
@@ -5133,7 +4755,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'GetUser',
       '2': '.synctv.admin.GetUserRequest',
-      '3': '.synctv.admin.GetUserResponse'
+      '3': '.synctv.admin.AdminUser'
     },
     {
       '1': 'GetUserPreferences',
@@ -5153,22 +4775,22 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'UpdateUserUsername',
       '2': '.synctv.admin.UpdateUserUsernameRequest',
-      '3': '.synctv.admin.UpdateUserUsernameResponse'
+      '3': '.synctv.admin.AdminUser'
     },
     {
       '1': 'UpdateUserRole',
       '2': '.synctv.admin.UpdateUserRoleRequest',
-      '3': '.synctv.admin.UpdateUserRoleResponse'
+      '3': '.synctv.admin.AdminUser'
     },
     {
       '1': 'BanUser',
       '2': '.synctv.admin.BanUserRequest',
-      '3': '.synctv.admin.BanUserResponse'
+      '3': '.synctv.admin.AdminUser'
     },
     {
       '1': 'UnbanUser',
       '2': '.synctv.admin.UnbanUserRequest',
-      '3': '.synctv.admin.UnbanUserResponse'
+      '3': '.synctv.admin.AdminUser'
     },
     {
       '1': 'GetUserRooms',
@@ -5203,7 +4825,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'GetRoom',
       '2': '.synctv.admin.GetRoomRequest',
-      '3': '.synctv.admin.GetRoomResponse'
+      '3': '.synctv.admin.Room'
     },
     {
       '1': 'GetRoomSettings',
@@ -5218,7 +4840,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'ResetRoomSettings',
       '2': '.synctv.admin.ResetRoomSettingsRequest',
-      '3': '.synctv.admin.ResetRoomSettingsResponse'
+      '3': '.synctv.admin.Room'
     },
     {
       '1': 'UpdateRoomPassword',
@@ -5233,12 +4855,12 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'BanRoom',
       '2': '.synctv.admin.BanRoomRequest',
-      '3': '.synctv.admin.BanRoomResponse'
+      '3': '.synctv.admin.Room'
     },
     {
       '1': 'UnbanRoom',
       '2': '.synctv.admin.UnbanRoomRequest',
-      '3': '.synctv.admin.UnbanRoomResponse'
+      '3': '.synctv.admin.Room'
     },
     {
       '1': 'GetRoomMembers',
@@ -5248,12 +4870,22 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'AddMember',
       '2': '.synctv.admin.AddMemberRequest',
-      '3': '.synctv.admin.AddMemberResponse'
+      '3': '.synctv.common.RoomMember'
+    },
+    {
+      '1': 'UpdateMemberRemarkName',
+      '2': '.synctv.admin.UpdateMemberRemarkNameRequest',
+      '3': '.synctv.common.RoomMember'
+    },
+    {
+      '1': 'UpdateMemberDisplayTag',
+      '2': '.synctv.admin.UpdateMemberDisplayTagRequest',
+      '3': '.synctv.common.RoomMember'
     },
     {
       '1': 'UpdateMemberPermissions',
       '2': '.synctv.admin.UpdateMemberPermissionsRequest',
-      '3': '.synctv.admin.UpdateMemberPermissionsResponse'
+      '3': '.synctv.common.RoomMember'
     },
     {
       '1': 'KickMember',
@@ -5268,7 +4900,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'UpsertRoomCategory',
       '2': '.synctv.admin.UpsertRoomCategoryRequest',
-      '3': '.synctv.admin.UpsertRoomCategoryResponse'
+      '3': '.synctv.client.RoomCategory'
     },
     {
       '1': 'DeleteRoomCategory',
@@ -5283,7 +4915,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'UpsertRoomLabel',
       '2': '.synctv.admin.UpsertRoomLabelRequest',
-      '3': '.synctv.admin.UpsertRoomLabelResponse'
+      '3': '.synctv.client.RoomLabel'
     },
     {
       '1': 'DeleteRoomLabel',
@@ -5293,12 +4925,12 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'UpdateRoomTaxonomy',
       '2': '.synctv.admin.UpdateRoomTaxonomyRequest',
-      '3': '.synctv.admin.UpdateRoomTaxonomyResponse'
+      '3': '.synctv.admin.Room'
     },
     {
       '1': 'AddAdmin',
       '2': '.synctv.admin.AddAdminRequest',
-      '3': '.synctv.admin.AddAdminResponse'
+      '3': '.synctv.admin.AdminUser'
     },
     {
       '1': 'RemoveAdmin',
@@ -5338,7 +4970,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'RejectUserRegistrationReview',
       '2': '.synctv.admin.RejectUserRegistrationReviewRequest',
-      '3': '.synctv.admin.RejectUserRegistrationReviewResponse'
+      '3': '.synctv.admin.UserRegistrationReview'
     },
     {
       '1': 'ListRoomCreationReviews',
@@ -5353,7 +4985,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'RejectRoomCreationReview',
       '2': '.synctv.admin.RejectRoomCreationReviewRequest',
-      '3': '.synctv.admin.RejectRoomCreationReviewResponse'
+      '3': '.synctv.admin.RoomCreationReview'
     },
     {
       '1': 'ListRoomJoinReviews',
@@ -5368,7 +5000,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'RejectRoomJoinReview',
       '2': '.synctv.admin.RejectRoomJoinReviewRequest',
-      '3': '.synctv.admin.RejectRoomJoinReviewResponse'
+      '3': '.synctv.admin.RoomJoinReview'
     },
     {
       '1': 'ListBanRecords',
@@ -5383,7 +5015,7 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
     {
       '1': 'GetContentReport',
       '2': '.synctv.admin.GetContentReportRequest',
-      '3': '.synctv.admin.GetContentReportResponse'
+      '3': '.synctv.admin.ContentReport'
     },
     {
       '1': 'UpdateContentReportStatus',
@@ -5434,7 +5066,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.SendTestEmailRequest': SendTestEmailRequest$json,
   '.synctv.admin.SendTestEmailResponse': SendTestEmailResponse$json,
   '.synctv.admin.CreateUserRequest': CreateUserRequest$json,
-  '.synctv.admin.CreateUserResponse': CreateUserResponse$json,
   '.synctv.admin.AdminUser': AdminUser$json,
   '.synctv.common.UserPresenceStats': $0.UserPresenceStats$json,
   '.synctv.common.NodeConnectionCount': $0.NodeConnectionCount$json,
@@ -5443,7 +5074,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ListUsersRequest': ListUsersRequest$json,
   '.synctv.admin.ListUsersResponse': ListUsersResponse$json,
   '.synctv.admin.GetUserRequest': GetUserRequest$json,
-  '.synctv.admin.GetUserResponse': GetUserResponse$json,
   '.synctv.admin.GetUserPreferencesRequest': GetUserPreferencesRequest$json,
   '.synctv.admin.GetUserPreferencesResponse': GetUserPreferencesResponse$json,
   '.synctv.client.UserPreferences': $1.UserPreferences$json,
@@ -5459,13 +5089,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.SetUserPasswordRequest': SetUserPasswordRequest$json,
   '.synctv.admin.SetUserPasswordResponse': SetUserPasswordResponse$json,
   '.synctv.admin.UpdateUserUsernameRequest': UpdateUserUsernameRequest$json,
-  '.synctv.admin.UpdateUserUsernameResponse': UpdateUserUsernameResponse$json,
   '.synctv.admin.UpdateUserRoleRequest': UpdateUserRoleRequest$json,
-  '.synctv.admin.UpdateUserRoleResponse': UpdateUserRoleResponse$json,
   '.synctv.admin.BanUserRequest': BanUserRequest$json,
-  '.synctv.admin.BanUserResponse': BanUserResponse$json,
   '.synctv.admin.UnbanUserRequest': UnbanUserRequest$json,
-  '.synctv.admin.UnbanUserResponse': UnbanUserResponse$json,
   '.synctv.admin.GetUserRoomsRequest': GetUserRoomsRequest$json,
   '.synctv.admin.GetUserRoomsResponse': GetUserRoomsResponse$json,
   '.synctv.admin.Room': Room$json,
@@ -5473,6 +5099,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ResourceCover': $1.ResourceCover$json,
   '.synctv.client.FileMetadata': $1.FileMetadata$json,
   '.synctv.client.FileObjectVariant': $1.FileObjectVariant$json,
+  '.synctv.client.FileObjectAccess': $1.FileObjectAccess$json,
   '.synctv.client.RoomCategory': $1.RoomCategory$json,
   '.synctv.client.RoomLabel': $1.RoomLabel$json,
   '.synctv.admin.BatchBanUsersRequest': BatchBanUsersRequest$json,
@@ -5487,48 +5114,41 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ListRoomsRequest': ListRoomsRequest$json,
   '.synctv.admin.ListRoomsResponse': ListRoomsResponse$json,
   '.synctv.admin.GetRoomRequest': GetRoomRequest$json,
-  '.synctv.admin.GetRoomResponse': GetRoomResponse$json,
   '.synctv.admin.GetRoomSettingsRequest': GetRoomSettingsRequest$json,
   '.synctv.admin.GetRoomSettingsResponse': GetRoomSettingsResponse$json,
   '.synctv.admin.UpdateRoomSettingsRequest': UpdateRoomSettingsRequest$json,
   '.synctv.client.AutoPlaySettingsPatch': $1.AutoPlaySettingsPatch$json,
   '.synctv.admin.ResetRoomSettingsRequest': ResetRoomSettingsRequest$json,
-  '.synctv.admin.ResetRoomSettingsResponse': ResetRoomSettingsResponse$json,
   '.synctv.admin.UpdateRoomPasswordRequest': UpdateRoomPasswordRequest$json,
   '.synctv.admin.UpdateRoomPasswordResponse': UpdateRoomPasswordResponse$json,
   '.synctv.admin.DeleteRoomRequest': DeleteRoomRequest$json,
   '.synctv.admin.DeleteRoomResponse': DeleteRoomResponse$json,
   '.synctv.admin.BanRoomRequest': BanRoomRequest$json,
-  '.synctv.admin.BanRoomResponse': BanRoomResponse$json,
   '.synctv.admin.UnbanRoomRequest': UnbanRoomRequest$json,
-  '.synctv.admin.UnbanRoomResponse': UnbanRoomResponse$json,
   '.synctv.admin.GetRoomMembersRequest': GetRoomMembersRequest$json,
   '.synctv.admin.GetRoomMembersResponse': GetRoomMembersResponse$json,
   '.synctv.common.RoomMember': $0.RoomMember$json,
   '.synctv.admin.AddMemberRequest': AddMemberRequest$json,
-  '.synctv.admin.AddMemberResponse': AddMemberResponse$json,
+  '.synctv.admin.UpdateMemberRemarkNameRequest':
+      UpdateMemberRemarkNameRequest$json,
+  '.synctv.admin.UpdateMemberDisplayTagRequest':
+      UpdateMemberDisplayTagRequest$json,
   '.synctv.admin.UpdateMemberPermissionsRequest':
       UpdateMemberPermissionsRequest$json,
-  '.synctv.admin.UpdateMemberPermissionsResponse':
-      UpdateMemberPermissionsResponse$json,
   '.synctv.admin.KickMemberRequest': KickMemberRequest$json,
   '.synctv.admin.KickMemberResponse': KickMemberResponse$json,
   '.synctv.admin.ListRoomCategoriesRequest': ListRoomCategoriesRequest$json,
   '.synctv.admin.ListRoomCategoriesResponse': ListRoomCategoriesResponse$json,
   '.synctv.admin.UpsertRoomCategoryRequest': UpsertRoomCategoryRequest$json,
-  '.synctv.admin.UpsertRoomCategoryResponse': UpsertRoomCategoryResponse$json,
   '.synctv.admin.DeleteRoomCategoryRequest': DeleteRoomCategoryRequest$json,
   '.synctv.admin.DeleteRoomCategoryResponse': DeleteRoomCategoryResponse$json,
   '.synctv.admin.ListRoomLabelsRequest': ListRoomLabelsRequest$json,
   '.synctv.admin.ListRoomLabelsResponse': ListRoomLabelsResponse$json,
   '.synctv.admin.UpsertRoomLabelRequest': UpsertRoomLabelRequest$json,
-  '.synctv.admin.UpsertRoomLabelResponse': UpsertRoomLabelResponse$json,
   '.synctv.admin.DeleteRoomLabelRequest': DeleteRoomLabelRequest$json,
   '.synctv.admin.DeleteRoomLabelResponse': DeleteRoomLabelResponse$json,
   '.synctv.admin.UpdateRoomTaxonomyRequest': UpdateRoomTaxonomyRequest$json,
-  '.synctv.admin.UpdateRoomTaxonomyResponse': UpdateRoomTaxonomyResponse$json,
   '.synctv.admin.AddAdminRequest': AddAdminRequest$json,
-  '.synctv.admin.AddAdminResponse': AddAdminResponse$json,
   '.synctv.admin.RemoveAdminRequest': RemoveAdminRequest$json,
   '.synctv.admin.RemoveAdminResponse': RemoveAdminResponse$json,
   '.synctv.admin.ListAdminsRequest': ListAdminsRequest$json,
@@ -5554,8 +5174,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       ApproveUserRegistrationReviewResponse$json,
   '.synctv.admin.RejectUserRegistrationReviewRequest':
       RejectUserRegistrationReviewRequest$json,
-  '.synctv.admin.RejectUserRegistrationReviewResponse':
-      RejectUserRegistrationReviewResponse$json,
   '.synctv.admin.ListRoomCreationReviewsRequest':
       ListRoomCreationReviewsRequest$json,
   '.synctv.admin.ListRoomCreationReviewsResponse':
@@ -5567,8 +5185,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       ApproveRoomCreationReviewResponse$json,
   '.synctv.admin.RejectRoomCreationReviewRequest':
       RejectRoomCreationReviewRequest$json,
-  '.synctv.admin.RejectRoomCreationReviewResponse':
-      RejectRoomCreationReviewResponse$json,
   '.synctv.admin.ListRoomJoinReviewsRequest': ListRoomJoinReviewsRequest$json,
   '.synctv.admin.ListRoomJoinReviewsResponse': ListRoomJoinReviewsResponse$json,
   '.synctv.admin.RoomJoinReview': RoomJoinReview$json,
@@ -5577,8 +5193,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ApproveRoomJoinReviewResponse':
       ApproveRoomJoinReviewResponse$json,
   '.synctv.admin.RejectRoomJoinReviewRequest': RejectRoomJoinReviewRequest$json,
-  '.synctv.admin.RejectRoomJoinReviewResponse':
-      RejectRoomJoinReviewResponse$json,
   '.synctv.admin.ListBanRecordsRequest': ListBanRecordsRequest$json,
   '.synctv.admin.ListBanRecordsResponse': ListBanRecordsResponse$json,
   '.synctv.admin.BanRecord': BanRecord$json,
@@ -5587,7 +5201,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ContentReport': ContentReport$json,
   '.synctv.client.ContentReportMetadata': $1.ContentReportMetadata$json,
   '.synctv.admin.GetContentReportRequest': GetContentReportRequest$json,
-  '.synctv.admin.GetContentReportResponse': GetContentReportResponse$json,
   '.synctv.admin.UpdateContentReportStatusRequest':
       UpdateContentReportStatusRequest$json,
   '.synctv.admin.UpdateContentReportStatusResponse':
@@ -5600,68 +5213,68 @@ final $typed_data.Uint8List adminServiceDescriptor = $convert.base64Decode(
     'NSZXF1ZXN0Gh0uc3luY3R2LmFkbWluLlJ1bnRpbWVTZXR0aW5ncxJUCg5VcGRhdGVTZXR0aW5n'
     'cxIjLnN5bmN0di5hZG1pbi5VcGRhdGVTZXR0aW5nc1JlcXVlc3QaHS5zeW5jdHYuYWRtaW4uUn'
     'VudGltZVNldHRpbmdzElgKDVNlbmRUZXN0RW1haWwSIi5zeW5jdHYuYWRtaW4uU2VuZFRlc3RF'
-    'bWFpbFJlcXVlc3QaIy5zeW5jdHYuYWRtaW4uU2VuZFRlc3RFbWFpbFJlc3BvbnNlEk8KCkNyZW'
-    'F0ZVVzZXISHy5zeW5jdHYuYWRtaW4uQ3JlYXRlVXNlclJlcXVlc3QaIC5zeW5jdHYuYWRtaW4u'
-    'Q3JlYXRlVXNlclJlc3BvbnNlEk8KCkRlbGV0ZVVzZXISHy5zeW5jdHYuYWRtaW4uRGVsZXRlVX'
-    'NlclJlcXVlc3QaIC5zeW5jdHYuYWRtaW4uRGVsZXRlVXNlclJlc3BvbnNlEkwKCUxpc3RVc2Vy'
-    'cxIeLnN5bmN0di5hZG1pbi5MaXN0VXNlcnNSZXF1ZXN0Gh8uc3luY3R2LmFkbWluLkxpc3RVc2'
-    'Vyc1Jlc3BvbnNlEkYKB0dldFVzZXISHC5zeW5jdHYuYWRtaW4uR2V0VXNlclJlcXVlc3QaHS5z'
-    'eW5jdHYuYWRtaW4uR2V0VXNlclJlc3BvbnNlEmcKEkdldFVzZXJQcmVmZXJlbmNlcxInLnN5bm'
-    'N0di5hZG1pbi5HZXRVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0Giguc3luY3R2LmFkbWluLkdldFVz'
-    'ZXJQcmVmZXJlbmNlc1Jlc3BvbnNlEnAKFVVwZGF0ZVVzZXJQcmVmZXJlbmNlcxIqLnN5bmN0di'
-    '5hZG1pbi5VcGRhdGVVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0Gisuc3luY3R2LmFkbWluLlVwZGF0'
-    'ZVVzZXJQcmVmZXJlbmNlc1Jlc3BvbnNlEl4KD1NldFVzZXJQYXNzd29yZBIkLnN5bmN0di5hZG'
-    '1pbi5TZXRVc2VyUGFzc3dvcmRSZXF1ZXN0GiUuc3luY3R2LmFkbWluLlNldFVzZXJQYXNzd29y'
-    'ZFJlc3BvbnNlEmcKElVwZGF0ZVVzZXJVc2VybmFtZRInLnN5bmN0di5hZG1pbi5VcGRhdGVVc2'
-    'VyVXNlcm5hbWVSZXF1ZXN0Giguc3luY3R2LmFkbWluLlVwZGF0ZVVzZXJVc2VybmFtZVJlc3Bv'
-    'bnNlElsKDlVwZGF0ZVVzZXJSb2xlEiMuc3luY3R2LmFkbWluLlVwZGF0ZVVzZXJSb2xlUmVxdW'
-    'VzdBokLnN5bmN0di5hZG1pbi5VcGRhdGVVc2VyUm9sZVJlc3BvbnNlEkYKB0JhblVzZXISHC5z'
-    'eW5jdHYuYWRtaW4uQmFuVXNlclJlcXVlc3QaHS5zeW5jdHYuYWRtaW4uQmFuVXNlclJlc3Bvbn'
-    'NlEkwKCVVuYmFuVXNlchIeLnN5bmN0di5hZG1pbi5VbmJhblVzZXJSZXF1ZXN0Gh8uc3luY3R2'
-    'LmFkbWluLlVuYmFuVXNlclJlc3BvbnNlElUKDEdldFVzZXJSb29tcxIhLnN5bmN0di5hZG1pbi'
-    '5HZXRVc2VyUm9vbXNSZXF1ZXN0GiIuc3luY3R2LmFkbWluLkdldFVzZXJSb29tc1Jlc3BvbnNl'
-    'ElgKDUJhdGNoQmFuVXNlcnMSIi5zeW5jdHYuYWRtaW4uQmF0Y2hCYW5Vc2Vyc1JlcXVlc3QaIy'
-    '5zeW5jdHYuYWRtaW4uQmF0Y2hCYW5Vc2Vyc1Jlc3BvbnNlEmEKEEJhdGNoRGVsZXRlVXNlcnMS'
-    'JS5zeW5jdHYuYWRtaW4uQmF0Y2hEZWxldGVVc2Vyc1JlcXVlc3QaJi5zeW5jdHYuYWRtaW4uQm'
-    'F0Y2hEZWxldGVVc2Vyc1Jlc3BvbnNlElgKDUJhdGNoQmFuUm9vbXMSIi5zeW5jdHYuYWRtaW4u'
-    'QmF0Y2hCYW5Sb29tc1JlcXVlc3QaIy5zeW5jdHYuYWRtaW4uQmF0Y2hCYW5Sb29tc1Jlc3Bvbn'
-    'NlEmEKEEJhdGNoRGVsZXRlUm9vbXMSJS5zeW5jdHYuYWRtaW4uQmF0Y2hEZWxldGVSb29tc1Jl'
-    'cXVlc3QaJi5zeW5jdHYuYWRtaW4uQmF0Y2hEZWxldGVSb29tc1Jlc3BvbnNlEkwKCUxpc3RSb2'
-    '9tcxIeLnN5bmN0di5hZG1pbi5MaXN0Um9vbXNSZXF1ZXN0Gh8uc3luY3R2LmFkbWluLkxpc3RS'
-    'b29tc1Jlc3BvbnNlEkYKB0dldFJvb20SHC5zeW5jdHYuYWRtaW4uR2V0Um9vbVJlcXVlc3QaHS'
-    '5zeW5jdHYuYWRtaW4uR2V0Um9vbVJlc3BvbnNlEl4KD0dldFJvb21TZXR0aW5ncxIkLnN5bmN0'
-    'di5hZG1pbi5HZXRSb29tU2V0dGluZ3NSZXF1ZXN0GiUuc3luY3R2LmFkbWluLkdldFJvb21TZX'
-    'R0aW5nc1Jlc3BvbnNlElEKElVwZGF0ZVJvb21TZXR0aW5ncxInLnN5bmN0di5hZG1pbi5VcGRh'
-    'dGVSb29tU2V0dGluZ3NSZXF1ZXN0GhIuc3luY3R2LmFkbWluLlJvb20SZAoRUmVzZXRSb29tU2'
-    'V0dGluZ3MSJi5zeW5jdHYuYWRtaW4uUmVzZXRSb29tU2V0dGluZ3NSZXF1ZXN0Gicuc3luY3R2'
-    'LmFkbWluLlJlc2V0Um9vbVNldHRpbmdzUmVzcG9uc2USZwoSVXBkYXRlUm9vbVBhc3N3b3JkEi'
-    'cuc3luY3R2LmFkbWluLlVwZGF0ZVJvb21QYXNzd29yZFJlcXVlc3QaKC5zeW5jdHYuYWRtaW4u'
-    'VXBkYXRlUm9vbVBhc3N3b3JkUmVzcG9uc2USTwoKRGVsZXRlUm9vbRIfLnN5bmN0di5hZG1pbi'
-    '5EZWxldGVSb29tUmVxdWVzdBogLnN5bmN0di5hZG1pbi5EZWxldGVSb29tUmVzcG9uc2USRgoH'
-    'QmFuUm9vbRIcLnN5bmN0di5hZG1pbi5CYW5Sb29tUmVxdWVzdBodLnN5bmN0di5hZG1pbi5CYW'
-    '5Sb29tUmVzcG9uc2USTAoJVW5iYW5Sb29tEh4uc3luY3R2LmFkbWluLlVuYmFuUm9vbVJlcXVl'
-    'c3QaHy5zeW5jdHYuYWRtaW4uVW5iYW5Sb29tUmVzcG9uc2USWwoOR2V0Um9vbU1lbWJlcnMSIy'
-    '5zeW5jdHYuYWRtaW4uR2V0Um9vbU1lbWJlcnNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkdldFJv'
-    'b21NZW1iZXJzUmVzcG9uc2USTAoJQWRkTWVtYmVyEh4uc3luY3R2LmFkbWluLkFkZE1lbWJlcl'
-    'JlcXVlc3QaHy5zeW5jdHYuYWRtaW4uQWRkTWVtYmVyUmVzcG9uc2USdgoXVXBkYXRlTWVtYmVy'
-    'UGVybWlzc2lvbnMSLC5zeW5jdHYuYWRtaW4uVXBkYXRlTWVtYmVyUGVybWlzc2lvbnNSZXF1ZX'
-    'N0Gi0uc3luY3R2LmFkbWluLlVwZGF0ZU1lbWJlclBlcm1pc3Npb25zUmVzcG9uc2USTwoKS2lj'
-    'a01lbWJlchIfLnN5bmN0di5hZG1pbi5LaWNrTWVtYmVyUmVxdWVzdBogLnN5bmN0di5hZG1pbi'
-    '5LaWNrTWVtYmVyUmVzcG9uc2USZwoSTGlzdFJvb21DYXRlZ29yaWVzEicuc3luY3R2LmFkbWlu'
-    'Lkxpc3RSb29tQ2F0ZWdvcmllc1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uTGlzdFJvb21DYXRlZ2'
-    '9yaWVzUmVzcG9uc2USZwoSVXBzZXJ0Um9vbUNhdGVnb3J5Eicuc3luY3R2LmFkbWluLlVwc2Vy'
-    'dFJvb21DYXRlZ29yeVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBzZXJ0Um9vbUNhdGVnb3J5Um'
-    'VzcG9uc2USZwoSRGVsZXRlUm9vbUNhdGVnb3J5Eicuc3luY3R2LmFkbWluLkRlbGV0ZVJvb21D'
-    'YXRlZ29yeVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uRGVsZXRlUm9vbUNhdGVnb3J5UmVzcG9uc2'
-    'USWwoOTGlzdFJvb21MYWJlbHMSIy5zeW5jdHYuYWRtaW4uTGlzdFJvb21MYWJlbHNSZXF1ZXN0'
-    'GiQuc3luY3R2LmFkbWluLkxpc3RSb29tTGFiZWxzUmVzcG9uc2USXgoPVXBzZXJ0Um9vbUxhYm'
-    'VsEiQuc3luY3R2LmFkbWluLlVwc2VydFJvb21MYWJlbFJlcXVlc3QaJS5zeW5jdHYuYWRtaW4u'
-    'VXBzZXJ0Um9vbUxhYmVsUmVzcG9uc2USXgoPRGVsZXRlUm9vbUxhYmVsEiQuc3luY3R2LmFkbW'
-    'luLkRlbGV0ZVJvb21MYWJlbFJlcXVlc3QaJS5zeW5jdHYuYWRtaW4uRGVsZXRlUm9vbUxhYmVs'
-    'UmVzcG9uc2USZwoSVXBkYXRlUm9vbVRheG9ub215Eicuc3luY3R2LmFkbWluLlVwZGF0ZVJvb2'
-    '1UYXhvbm9teVJlcXVlc3QaKC5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVRheG9ub215UmVzcG9u'
-    'c2USSQoIQWRkQWRtaW4SHS5zeW5jdHYuYWRtaW4uQWRkQWRtaW5SZXF1ZXN0Gh4uc3luY3R2Lm'
-    'FkbWluLkFkZEFkbWluUmVzcG9uc2USUgoLUmVtb3ZlQWRtaW4SIC5zeW5jdHYuYWRtaW4uUmVt'
+    'bWFpbFJlcXVlc3QaIy5zeW5jdHYuYWRtaW4uU2VuZFRlc3RFbWFpbFJlc3BvbnNlEkYKCkNyZW'
+    'F0ZVVzZXISHy5zeW5jdHYuYWRtaW4uQ3JlYXRlVXNlclJlcXVlc3QaFy5zeW5jdHYuYWRtaW4u'
+    'QWRtaW5Vc2VyEk8KCkRlbGV0ZVVzZXISHy5zeW5jdHYuYWRtaW4uRGVsZXRlVXNlclJlcXVlc3'
+    'QaIC5zeW5jdHYuYWRtaW4uRGVsZXRlVXNlclJlc3BvbnNlEkwKCUxpc3RVc2VycxIeLnN5bmN0'
+    'di5hZG1pbi5MaXN0VXNlcnNSZXF1ZXN0Gh8uc3luY3R2LmFkbWluLkxpc3RVc2Vyc1Jlc3Bvbn'
+    'NlEkAKB0dldFVzZXISHC5zeW5jdHYuYWRtaW4uR2V0VXNlclJlcXVlc3QaFy5zeW5jdHYuYWRt'
+    'aW4uQWRtaW5Vc2VyEmcKEkdldFVzZXJQcmVmZXJlbmNlcxInLnN5bmN0di5hZG1pbi5HZXRVc2'
+    'VyUHJlZmVyZW5jZXNSZXF1ZXN0Giguc3luY3R2LmFkbWluLkdldFVzZXJQcmVmZXJlbmNlc1Jl'
+    'c3BvbnNlEnAKFVVwZGF0ZVVzZXJQcmVmZXJlbmNlcxIqLnN5bmN0di5hZG1pbi5VcGRhdGVVc2'
+    'VyUHJlZmVyZW5jZXNSZXF1ZXN0Gisuc3luY3R2LmFkbWluLlVwZGF0ZVVzZXJQcmVmZXJlbmNl'
+    'c1Jlc3BvbnNlEl4KD1NldFVzZXJQYXNzd29yZBIkLnN5bmN0di5hZG1pbi5TZXRVc2VyUGFzc3'
+    'dvcmRSZXF1ZXN0GiUuc3luY3R2LmFkbWluLlNldFVzZXJQYXNzd29yZFJlc3BvbnNlElYKElVw'
+    'ZGF0ZVVzZXJVc2VybmFtZRInLnN5bmN0di5hZG1pbi5VcGRhdGVVc2VyVXNlcm5hbWVSZXF1ZX'
+    'N0Ghcuc3luY3R2LmFkbWluLkFkbWluVXNlchJOCg5VcGRhdGVVc2VyUm9sZRIjLnN5bmN0di5h'
+    'ZG1pbi5VcGRhdGVVc2VyUm9sZVJlcXVlc3QaFy5zeW5jdHYuYWRtaW4uQWRtaW5Vc2VyEkAKB0'
+    'JhblVzZXISHC5zeW5jdHYuYWRtaW4uQmFuVXNlclJlcXVlc3QaFy5zeW5jdHYuYWRtaW4uQWRt'
+    'aW5Vc2VyEkQKCVVuYmFuVXNlchIeLnN5bmN0di5hZG1pbi5VbmJhblVzZXJSZXF1ZXN0Ghcuc3'
+    'luY3R2LmFkbWluLkFkbWluVXNlchJVCgxHZXRVc2VyUm9vbXMSIS5zeW5jdHYuYWRtaW4uR2V0'
+    'VXNlclJvb21zUmVxdWVzdBoiLnN5bmN0di5hZG1pbi5HZXRVc2VyUm9vbXNSZXNwb25zZRJYCg'
+    '1CYXRjaEJhblVzZXJzEiIuc3luY3R2LmFkbWluLkJhdGNoQmFuVXNlcnNSZXF1ZXN0GiMuc3lu'
+    'Y3R2LmFkbWluLkJhdGNoQmFuVXNlcnNSZXNwb25zZRJhChBCYXRjaERlbGV0ZVVzZXJzEiUuc3'
+    'luY3R2LmFkbWluLkJhdGNoRGVsZXRlVXNlcnNSZXF1ZXN0GiYuc3luY3R2LmFkbWluLkJhdGNo'
+    'RGVsZXRlVXNlcnNSZXNwb25zZRJYCg1CYXRjaEJhblJvb21zEiIuc3luY3R2LmFkbWluLkJhdG'
+    'NoQmFuUm9vbXNSZXF1ZXN0GiMuc3luY3R2LmFkbWluLkJhdGNoQmFuUm9vbXNSZXNwb25zZRJh'
+    'ChBCYXRjaERlbGV0ZVJvb21zEiUuc3luY3R2LmFkbWluLkJhdGNoRGVsZXRlUm9vbXNSZXF1ZX'
+    'N0GiYuc3luY3R2LmFkbWluLkJhdGNoRGVsZXRlUm9vbXNSZXNwb25zZRJMCglMaXN0Um9vbXMS'
+    'Hi5zeW5jdHYuYWRtaW4uTGlzdFJvb21zUmVxdWVzdBofLnN5bmN0di5hZG1pbi5MaXN0Um9vbX'
+    'NSZXNwb25zZRI7CgdHZXRSb29tEhwuc3luY3R2LmFkbWluLkdldFJvb21SZXF1ZXN0GhIuc3lu'
+    'Y3R2LmFkbWluLlJvb20SXgoPR2V0Um9vbVNldHRpbmdzEiQuc3luY3R2LmFkbWluLkdldFJvb2'
+    '1TZXR0aW5nc1JlcXVlc3QaJS5zeW5jdHYuYWRtaW4uR2V0Um9vbVNldHRpbmdzUmVzcG9uc2US'
+    'UQoSVXBkYXRlUm9vbVNldHRpbmdzEicuc3luY3R2LmFkbWluLlVwZGF0ZVJvb21TZXR0aW5nc1'
+    'JlcXVlc3QaEi5zeW5jdHYuYWRtaW4uUm9vbRJPChFSZXNldFJvb21TZXR0aW5ncxImLnN5bmN0'
+    'di5hZG1pbi5SZXNldFJvb21TZXR0aW5nc1JlcXVlc3QaEi5zeW5jdHYuYWRtaW4uUm9vbRJnCh'
+    'JVcGRhdGVSb29tUGFzc3dvcmQSJy5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVBhc3N3b3JkUmVx'
+    'dWVzdBooLnN5bmN0di5hZG1pbi5VcGRhdGVSb29tUGFzc3dvcmRSZXNwb25zZRJPCgpEZWxldG'
+    'VSb29tEh8uc3luY3R2LmFkbWluLkRlbGV0ZVJvb21SZXF1ZXN0GiAuc3luY3R2LmFkbWluLkRl'
+    'bGV0ZVJvb21SZXNwb25zZRI7CgdCYW5Sb29tEhwuc3luY3R2LmFkbWluLkJhblJvb21SZXF1ZX'
+    'N0GhIuc3luY3R2LmFkbWluLlJvb20SPwoJVW5iYW5Sb29tEh4uc3luY3R2LmFkbWluLlVuYmFu'
+    'Um9vbVJlcXVlc3QaEi5zeW5jdHYuYWRtaW4uUm9vbRJbCg5HZXRSb29tTWVtYmVycxIjLnN5bm'
+    'N0di5hZG1pbi5HZXRSb29tTWVtYmVyc1JlcXVlc3QaJC5zeW5jdHYuYWRtaW4uR2V0Um9vbU1l'
+    'bWJlcnNSZXNwb25zZRJGCglBZGRNZW1iZXISHi5zeW5jdHYuYWRtaW4uQWRkTWVtYmVyUmVxdW'
+    'VzdBoZLnN5bmN0di5jb21tb24uUm9vbU1lbWJlchJgChZVcGRhdGVNZW1iZXJSZW1hcmtOYW1l'
+    'Eisuc3luY3R2LmFkbWluLlVwZGF0ZU1lbWJlclJlbWFya05hbWVSZXF1ZXN0Ghkuc3luY3R2Lm'
+    'NvbW1vbi5Sb29tTWVtYmVyEmAKFlVwZGF0ZU1lbWJlckRpc3BsYXlUYWcSKy5zeW5jdHYuYWRt'
+    'aW4uVXBkYXRlTWVtYmVyRGlzcGxheVRhZ1JlcXVlc3QaGS5zeW5jdHYuY29tbW9uLlJvb21NZW'
+    '1iZXISYgoXVXBkYXRlTWVtYmVyUGVybWlzc2lvbnMSLC5zeW5jdHYuYWRtaW4uVXBkYXRlTWVt'
+    'YmVyUGVybWlzc2lvbnNSZXF1ZXN0Ghkuc3luY3R2LmNvbW1vbi5Sb29tTWVtYmVyEk8KCktpY2'
+    'tNZW1iZXISHy5zeW5jdHYuYWRtaW4uS2lja01lbWJlclJlcXVlc3QaIC5zeW5jdHYuYWRtaW4u'
+    'S2lja01lbWJlclJlc3BvbnNlEmcKEkxpc3RSb29tQ2F0ZWdvcmllcxInLnN5bmN0di5hZG1pbi'
+    '5MaXN0Um9vbUNhdGVnb3JpZXNSZXF1ZXN0Giguc3luY3R2LmFkbWluLkxpc3RSb29tQ2F0ZWdv'
+    'cmllc1Jlc3BvbnNlEloKElVwc2VydFJvb21DYXRlZ29yeRInLnN5bmN0di5hZG1pbi5VcHNlcn'
+    'RSb29tQ2F0ZWdvcnlSZXF1ZXN0Ghsuc3luY3R2LmNsaWVudC5Sb29tQ2F0ZWdvcnkSZwoSRGVs'
+    'ZXRlUm9vbUNhdGVnb3J5Eicuc3luY3R2LmFkbWluLkRlbGV0ZVJvb21DYXRlZ29yeVJlcXVlc3'
+    'QaKC5zeW5jdHYuYWRtaW4uRGVsZXRlUm9vbUNhdGVnb3J5UmVzcG9uc2USWwoOTGlzdFJvb21M'
+    'YWJlbHMSIy5zeW5jdHYuYWRtaW4uTGlzdFJvb21MYWJlbHNSZXF1ZXN0GiQuc3luY3R2LmFkbW'
+    'luLkxpc3RSb29tTGFiZWxzUmVzcG9uc2USUQoPVXBzZXJ0Um9vbUxhYmVsEiQuc3luY3R2LmFk'
+    'bWluLlVwc2VydFJvb21MYWJlbFJlcXVlc3QaGC5zeW5jdHYuY2xpZW50LlJvb21MYWJlbBJeCg'
+    '9EZWxldGVSb29tTGFiZWwSJC5zeW5jdHYuYWRtaW4uRGVsZXRlUm9vbUxhYmVsUmVxdWVzdBol'
+    'LnN5bmN0di5hZG1pbi5EZWxldGVSb29tTGFiZWxSZXNwb25zZRJRChJVcGRhdGVSb29tVGF4b2'
+    '5vbXkSJy5zeW5jdHYuYWRtaW4uVXBkYXRlUm9vbVRheG9ub215UmVxdWVzdBoSLnN5bmN0di5h'
+    'ZG1pbi5Sb29tEkIKCEFkZEFkbWluEh0uc3luY3R2LmFkbWluLkFkZEFkbWluUmVxdWVzdBoXLn'
+    'N5bmN0di5hZG1pbi5BZG1pblVzZXISUgoLUmVtb3ZlQWRtaW4SIC5zeW5jdHYuYWRtaW4uUmVt'
     'b3ZlQWRtaW5SZXF1ZXN0GiEuc3luY3R2LmFkbWluLlJlbW92ZUFkbWluUmVzcG9uc2USTwoKTG'
     'lzdEFkbWlucxIfLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5zUmVxdWVzdBogLnN5bmN0di5hZG1p'
     'bi5MaXN0QWRtaW5zUmVzcG9uc2USWwoOR2V0U3lzdGVtU3RhdHMSIy5zeW5jdHYuYWRtaW4uR2'
@@ -5674,26 +5287,25 @@ final $typed_data.Uint8List adminServiceDescriptor = $convert.base64Decode(
     'FkbWluLkxpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3c1Jlc3BvbnNlEogBCh1BcHByb3ZlVXNl'
     'clJlZ2lzdHJhdGlvblJldmlldxIyLnN5bmN0di5hZG1pbi5BcHByb3ZlVXNlclJlZ2lzdHJhdG'
     'lvblJldmlld1JlcXVlc3QaMy5zeW5jdHYuYWRtaW4uQXBwcm92ZVVzZXJSZWdpc3RyYXRpb25S'
-    'ZXZpZXdSZXNwb25zZRKFAQocUmVqZWN0VXNlclJlZ2lzdHJhdGlvblJldmlldxIxLnN5bmN0di'
-    '5hZG1pbi5SZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVxdWVzdBoyLnN5bmN0di5hZG1p'
-    'bi5SZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3UmVzcG9uc2USdgoXTGlzdFJvb21DcmVhdG'
-    'lvblJldmlld3MSLC5zeW5jdHYuYWRtaW4uTGlzdFJvb21DcmVhdGlvblJldmlld3NSZXF1ZXN0'
-    'Gi0uc3luY3R2LmFkbWluLkxpc3RSb29tQ3JlYXRpb25SZXZpZXdzUmVzcG9uc2USfAoZQXBwcm'
-    '92ZVJvb21DcmVhdGlvblJldmlldxIuLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9u'
-    'UmV2aWV3UmVxdWVzdBovLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3Um'
-    'VzcG9uc2USeQoYUmVqZWN0Um9vbUNyZWF0aW9uUmV2aWV3Ei0uc3luY3R2LmFkbWluLlJlamVj'
-    'dFJvb21DcmVhdGlvblJldmlld1JlcXVlc3QaLi5zeW5jdHYuYWRtaW4uUmVqZWN0Um9vbUNyZW'
-    'F0aW9uUmV2aWV3UmVzcG9uc2USagoTTGlzdFJvb21Kb2luUmV2aWV3cxIoLnN5bmN0di5hZG1p'
-    'bi5MaXN0Um9vbUpvaW5SZXZpZXdzUmVxdWVzdBopLnN5bmN0di5hZG1pbi5MaXN0Um9vbUpvaW'
-    '5SZXZpZXdzUmVzcG9uc2UScAoVQXBwcm92ZVJvb21Kb2luUmV2aWV3Eiouc3luY3R2LmFkbWlu'
-    'LkFwcHJvdmVSb29tSm9pblJldmlld1JlcXVlc3QaKy5zeW5jdHYuYWRtaW4uQXBwcm92ZVJvb2'
-    '1Kb2luUmV2aWV3UmVzcG9uc2USbQoUUmVqZWN0Um9vbUpvaW5SZXZpZXcSKS5zeW5jdHYuYWRt'
-    'aW4uUmVqZWN0Um9vbUpvaW5SZXZpZXdSZXF1ZXN0Giouc3luY3R2LmFkbWluLlJlamVjdFJvb2'
-    '1Kb2luUmV2aWV3UmVzcG9uc2USWwoOTGlzdEJhblJlY29yZHMSIy5zeW5jdHYuYWRtaW4uTGlz'
-    'dEJhblJlY29yZHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkxpc3RCYW5SZWNvcmRzUmVzcG9uc2'
-    'USZwoSTGlzdENvbnRlbnRSZXBvcnRzEicuc3luY3R2LmFkbWluLkxpc3RDb250ZW50UmVwb3J0'
-    'c1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uTGlzdENvbnRlbnRSZXBvcnRzUmVzcG9uc2USYQoQR2'
-    'V0Q29udGVudFJlcG9ydBIlLnN5bmN0di5hZG1pbi5HZXRDb250ZW50UmVwb3J0UmVxdWVzdBom'
-    'LnN5bmN0di5hZG1pbi5HZXRDb250ZW50UmVwb3J0UmVzcG9uc2USfAoZVXBkYXRlQ29udGVudF'
-    'JlcG9ydFN0YXR1cxIuLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVx'
-    'dWVzdBovLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVzcG9uc2U=');
+    'ZXZpZXdSZXNwb25zZRJ3ChxSZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3EjEuc3luY3R2Lm'
+    'FkbWluLlJlamVjdFVzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXF1ZXN0GiQuc3luY3R2LmFkbWlu'
+    'LlVzZXJSZWdpc3RyYXRpb25SZXZpZXcSdgoXTGlzdFJvb21DcmVhdGlvblJldmlld3MSLC5zeW'
+    '5jdHYuYWRtaW4uTGlzdFJvb21DcmVhdGlvblJldmlld3NSZXF1ZXN0Gi0uc3luY3R2LmFkbWlu'
+    'Lkxpc3RSb29tQ3JlYXRpb25SZXZpZXdzUmVzcG9uc2USfAoZQXBwcm92ZVJvb21DcmVhdGlvbl'
+    'JldmlldxIuLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVxdWVzdBov'
+    'LnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USawoYUmVqZW'
+    'N0Um9vbUNyZWF0aW9uUmV2aWV3Ei0uc3luY3R2LmFkbWluLlJlamVjdFJvb21DcmVhdGlvblJl'
+    'dmlld1JlcXVlc3QaIC5zeW5jdHYuYWRtaW4uUm9vbUNyZWF0aW9uUmV2aWV3EmoKE0xpc3RSb2'
+    '9tSm9pblJldmlld3MSKC5zeW5jdHYuYWRtaW4uTGlzdFJvb21Kb2luUmV2aWV3c1JlcXVlc3Qa'
+    'KS5zeW5jdHYuYWRtaW4uTGlzdFJvb21Kb2luUmV2aWV3c1Jlc3BvbnNlEnAKFUFwcHJvdmVSb2'
+    '9tSm9pblJldmlldxIqLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUpvaW5SZXZpZXdSZXF1ZXN0'
+    'Gisuc3luY3R2LmFkbWluLkFwcHJvdmVSb29tSm9pblJldmlld1Jlc3BvbnNlEl8KFFJlamVjdF'
+    'Jvb21Kb2luUmV2aWV3Eikuc3luY3R2LmFkbWluLlJlamVjdFJvb21Kb2luUmV2aWV3UmVxdWVz'
+    'dBocLnN5bmN0di5hZG1pbi5Sb29tSm9pblJldmlldxJbCg5MaXN0QmFuUmVjb3JkcxIjLnN5bm'
+    'N0di5hZG1pbi5MaXN0QmFuUmVjb3Jkc1JlcXVlc3QaJC5zeW5jdHYuYWRtaW4uTGlzdEJhblJl'
+    'Y29yZHNSZXNwb25zZRJnChJMaXN0Q29udGVudFJlcG9ydHMSJy5zeW5jdHYuYWRtaW4uTGlzdE'
+    'NvbnRlbnRSZXBvcnRzUmVxdWVzdBooLnN5bmN0di5hZG1pbi5MaXN0Q29udGVudFJlcG9ydHNS'
+    'ZXNwb25zZRJWChBHZXRDb250ZW50UmVwb3J0EiUuc3luY3R2LmFkbWluLkdldENvbnRlbnRSZX'
+    'BvcnRSZXF1ZXN0Ghsuc3luY3R2LmFkbWluLkNvbnRlbnRSZXBvcnQSfAoZVXBkYXRlQ29udGVu'
+    'dFJlcG9ydFN0YXR1cxIuLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUm'
+    'VxdWVzdBovLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVzcG9uc2U=');

@@ -2098,6 +2098,56 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 }
               }
 
+              Future<void> updateMemberRemarkName(
+                AdminRoomMember member,
+              ) async {
+                final value = await _showRoomMemberTextDialog(
+                  title: '备注名称',
+                  label: '备注名称',
+                  initialValue: member.remarkName,
+                  icon: Icons.drive_file_rename_outline_rounded,
+                );
+                if (value == null || value == member.remarkName) return;
+                try {
+                  await SyncTvService.adminUpdateRoomMemberRemarkName(
+                    room.roomId,
+                    member.userId,
+                    value,
+                  );
+                  await loadMembers();
+                  if (!context.mounted) return;
+                  MessageUtils.showSuccess(context, '备注名称已更新');
+                } catch (e) {
+                  if (!context.mounted) return;
+                  MessageUtils.showError(context, '更新备注名称失败: $e');
+                }
+              }
+
+              Future<void> updateMemberDisplayTag(
+                AdminRoomMember member,
+              ) async {
+                final value = await _showRoomMemberTextDialog(
+                  title: '展示标签',
+                  label: '展示标签',
+                  initialValue: member.displayTag,
+                  icon: Icons.sell_outlined,
+                );
+                if (value == null || value == member.displayTag) return;
+                try {
+                  await SyncTvService.adminUpdateRoomMemberDisplayTag(
+                    room.roomId,
+                    member.userId,
+                    value,
+                  );
+                  await loadMembers();
+                  if (!context.mounted) return;
+                  MessageUtils.showSuccess(context, '展示标签已更新');
+                } catch (e) {
+                  if (!context.mounted) return;
+                  MessageUtils.showError(context, '更新展示标签失败: $e');
+                }
+              }
+
               final totalPages = total <= 0 ? 1 : ((total - 1) ~/ pageSize) + 1;
               final canPrev = page > 1;
               final canNext = page < totalPages;
@@ -2242,6 +2292,24 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                             itemCount: members.length,
                             itemBuilder: (context, index) {
                               final member = members[index];
+                              final remarkName = member.remarkName.trim();
+                              final displayTag = member.displayTag.trim();
+                              final username = member.username.isEmpty
+                                  ? member.userId
+                                  : member.username;
+                              final title = remarkName.isEmpty
+                                  ? username
+                                  : remarkName;
+                              final subtitleParts = [
+                                if (remarkName.isNotEmpty) username,
+                                member.userId,
+                                _roomMemberRoleText(member.role),
+                                if (displayTag.isNotEmpty) displayTag,
+                                member.isOnline
+                                    ? '${member.connectionCount} 连接'
+                                    : '离线',
+                                _formatTimestamp(member.joinedAt),
+                              ];
                               return AppTile(
                                 prefix: Icon(
                                   member.isOnline
@@ -2249,13 +2317,26 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                                       : Icons.radio_button_unchecked,
                                   color: member.isOnline ? Colors.green : null,
                                 ),
-                                title: Text(member.username),
-                                subtitle: Text(
-                                  '${member.userId} · ${_roomMemberRoleText(member.role)} · ${member.isOnline ? '${member.connectionCount} 连接' : '离线'} · ${_formatTimestamp(member.joinedAt)}',
-                                ),
+                                title: Text(title),
+                                subtitle: Text(subtitleParts.join(' · ')),
                                 suffix: Wrap(
                                   spacing: 4,
                                   children: [
+                                    AppIconButton(
+                                      tooltip: '备注名称',
+                                      icon: Icons
+                                          .drive_file_rename_outline_rounded,
+                                      onPressed: () async {
+                                        await updateMemberRemarkName(member);
+                                      },
+                                    ),
+                                    AppIconButton(
+                                      tooltip: '展示标签',
+                                      icon: Icons.sell_outlined,
+                                      onPressed: () async {
+                                        await updateMemberDisplayTag(member);
+                                      },
+                                    ),
                                     AppIconButton(
                                       tooltip: '切换管理员',
                                       icon: Icons.admin_panel_settings_outlined,
@@ -2416,6 +2497,37 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       if (!mounted) return;
       MessageUtils.showError(context, '添加成员失败: $e');
     }
+  }
+
+  Future<String?> _showRoomMemberTextDialog({
+    required String title,
+    required String label,
+    required String initialValue,
+    required IconData icon,
+  }) {
+    final controller = TextEditingController(text: initialValue);
+    void submit() => Navigator.pop(context, controller.text.trim());
+
+    return ChatUtils.showStyledDialog<String>(
+      context: context,
+      title: title,
+      icon: Icon(icon, color: const Color(0xFF5D5FEF)),
+      content: SizedBox(
+        width: 360,
+        child: AppTextField(
+          controller: controller,
+          label: label,
+          autofocus: true,
+          maxLength: 64,
+          onSubmitted: (_) => submit(),
+        ),
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        const SizedBox(width: 8),
+        ChatUtils.createConfirmButton(context, submit, text: '保存'),
+      ],
+    ).whenComplete(controller.dispose);
   }
 
   Future<int?> _askKickCooldownSeconds() async {

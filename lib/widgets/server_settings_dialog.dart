@@ -98,6 +98,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     setState(() => _busy = true);
     try {
       await SyncTvService.activateServer(profile.serverId);
+      await SyncTvService.syncServerTime(refresh: true);
       await _loadServerInfo(refresh: true);
       _changed = true;
       if (mounted) {

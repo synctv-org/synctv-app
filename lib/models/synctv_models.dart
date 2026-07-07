@@ -1,5 +1,6 @@
 import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
+import 'package:synctv_app/services/synctv_clock.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
 class RoomCategoryInfo {
@@ -351,6 +352,7 @@ class RoomMediaEntry {
   final Map<String, dynamic> metadata;
   final String description;
   final String coverUrl;
+  final String thumbnailUrl;
   final List<SyncTvPlaybackModeOption> playbackModes;
   final String selectedPlaybackMode;
   final int selectedPlaybackUrlIndex;
@@ -386,6 +388,7 @@ class RoomMediaEntry {
     this.metadata = const {},
     this.description = '',
     this.coverUrl = '',
+    this.thumbnailUrl = '',
     this.playbackModes = const [],
     this.selectedPlaybackMode = '',
     this.selectedPlaybackUrlIndex = 0,
@@ -563,6 +566,7 @@ class RoomMediaEntry {
     Map<String, dynamic>? metadata,
     String? description,
     String? coverUrl,
+    String? thumbnailUrl,
     List<SyncTvPlaybackModeOption>? playbackModes,
     String? selectedPlaybackMode,
     int? selectedPlaybackUrlIndex,
@@ -600,6 +604,7 @@ class RoomMediaEntry {
       metadata: metadata ?? this.metadata,
       description: description ?? this.description,
       coverUrl: coverUrl ?? this.coverUrl,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       playbackModes: playbackModes ?? this.playbackModes,
       selectedPlaybackMode: selectedPlaybackMode ?? this.selectedPlaybackMode,
       selectedPlaybackUrlIndex:
@@ -830,6 +835,7 @@ class RoomMediaItem extends RoomMediaEntry {
     super.metadata,
     super.description,
     super.coverUrl,
+    super.thumbnailUrl,
   });
 }
 
@@ -939,7 +945,7 @@ class SyncTvPlaybackStatus {
     final base = currentTime.isFinite && currentTime > 0 ? currentTime : 0.0;
     if (!isPlaying || generatedAtMillis <= 0) return base;
     final elapsedMillis =
-        (now ?? DateTime.now()).millisecondsSinceEpoch - generatedAtMillis;
+        (now ?? SyncedClock.now()).millisecondsSinceEpoch - generatedAtMillis;
     if (elapsedMillis <= 0) return base;
     return base + elapsedMillis / 1000.0 * playbackRate;
   }

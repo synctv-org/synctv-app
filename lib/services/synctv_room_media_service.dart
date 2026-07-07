@@ -10,6 +10,7 @@ import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
+import 'package:synctv_app/services/synctv_clock.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -19,6 +20,11 @@ import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
 
 class SyncTvRoomMediaDomainService {
   SyncTvRoomMediaDomainService(this._api);
+
+  static const List<client_enum.ChatMessageType> chatVisibleMessageTypes = [
+    client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
+    client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED,
+  ];
 
   final SyncTvApiClient _api;
 
@@ -276,7 +282,7 @@ class SyncTvRoomMediaDomainService {
         description: description,
       ),
     );
-    return _api.mapPlaylist(response.playlist);
+    return _api.mapPlaylist(response);
   }
 
   Future<RoomPlaylistItem> updatePlaylist(
@@ -293,7 +299,7 @@ class SyncTvRoomMediaDomainService {
         description: description ?? '',
       ),
     );
-    return _api.mapPlaylist(response.playlist);
+    return _api.mapPlaylist(response);
   }
 
   Future<RoomPlaylistItem> movePlaylist(
@@ -310,7 +316,7 @@ class SyncTvRoomMediaDomainService {
         afterPlaylistId: afterPlaylistId,
       ),
     );
-    return _api.mapPlaylist(response.playlist);
+    return _api.mapPlaylist(response);
   }
 
   Future<void> deletePlaylist(
@@ -338,7 +344,7 @@ class SyncTvRoomMediaDomainService {
         description: description ?? '',
       ),
     );
-    return _api.mapMedia(response.media);
+    return _api.mapMedia(response);
   }
 
   Future<RoomMediaItem> getMedia(String roomId, String mediaId) async {
@@ -376,10 +382,16 @@ class SyncTvRoomMediaDomainService {
     String roomId, {
     int limit = 50,
     String cursor = '',
+    List<client_enum.ChatMessageType> includeMessageTypes =
+        chatVisibleMessageTypes,
   }) async {
     final response = await _api.room.getChatHistory(
       roomId,
-      client.GetChatHistoryRequest(limit: limit, cursor: cursor),
+      client.GetChatHistoryRequest(
+        limit: limit,
+        cursor: cursor,
+        includeMessageTypes: includeMessageTypes,
+      ),
     );
     return ChatHistoryPage(
       messages: response.messages.map(_chatMessageFromProto).toList(),
@@ -572,7 +584,7 @@ class SyncTvRoomMediaDomainService {
         enabled: enabled,
       ),
     );
-    return _chatMessageFromProto(response.event.message);
+    return _chatMessageFromProto(response.message);
   }
 
   Future<String> reportChatMessage(
@@ -660,7 +672,7 @@ class SyncTvRoomMediaDomainService {
         includeDeleted: includeDeleted,
       ),
     );
-    return _chatMessageFromProto(response.message);
+    return _chatMessageFromProto(response);
   }
 
   Future<ChatReactionUsersPage> listChatReactionUsers(
@@ -719,6 +731,7 @@ class SyncTvRoomMediaDomainService {
     double afterSeconds = 30,
     int limit = 50,
     bool includeDeleted = false,
+    List<client_enum.ChatMessageType> includeMessageTypes = const [],
   }) async {
     final response = await _api.room.getChatPlaybackMessages(
       roomId,
@@ -737,9 +750,18 @@ class SyncTvRoomMediaDomainService {
         afterSeconds: afterSeconds,
         limit: limit,
         includeDeleted: includeDeleted,
+        includeMessageTypes: includeMessageTypes,
       ),
     );
-    return response.messages.map(_chatMessageFromProto).toList();
+    final allowedTypes = includeMessageTypes.map((type) => type.value).toSet();
+    return response.messages
+        .map(_chatMessageFromProto)
+        .where(
+          (message) =>
+              allowedTypes.isEmpty ||
+              allowedTypes.contains(message.messageType),
+        )
+        .toList();
   }
 
   Future<ChatReadStateInfo> markChatRead(
@@ -956,9 +978,6 @@ class SyncTvRoomMediaDomainService {
           final sourceProvider = item['sourceProvider']?.toString() ?? '';
           final request = client.AddMediaRequest(
             playlistId: playlistId.isEmpty ? null : playlistId,
-            sourceProvider: SourceConfigCodec.providerFromString(
-              sourceProvider,
-            ),
             providerInstanceName:
                 item['providerInstanceName']?.toString() ?? '',
             sourceConfig: SourceConfigCodec.mediaSourceConfigFromMap(
@@ -1036,7 +1055,7 @@ class SyncTvRoomMediaDomainService {
       isPlaying: true,
       currentTime: 0,
       playbackRate: current.playbackRate,
-      generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+      generatedAtMillis: SyncedClock.nowMillis(),
       version: current.version,
       playingMediaId: current.playingMediaId,
       playingPlaylistId: current.playingPlaylistId,
@@ -1078,7 +1097,6 @@ class SyncTvRoomMediaDomainService {
       roomId,
       client.AddMediaRequest(
         playlistId: playlistId.isEmpty ? null : playlistId,
-        sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
         providerInstanceName: providerInstanceName,
         sourceConfig: SourceConfigCodec.mediaSourceConfigFromMap(
           sourceProvider: sourceProvider,
@@ -1087,7 +1105,7 @@ class SyncTvRoomMediaDomainService {
         name: name,
       ),
     );
-    return response.media.id;
+    return response.id;
   }
 
   client_enum.ResourceDeliveryMode get _watchDeliveryMode =>
@@ -1183,6 +1201,7 @@ class SyncTvRoomMediaDomainService {
       username: message.username,
       content: message.content,
       timestamp: message.timestamp.toInt(),
+      messageType: message.messageType.value,
       displayPosition: message.displayPosition,
       displayColor: message.displayColor,
       version: message.version.toInt(),
@@ -1337,7 +1356,7 @@ class SyncTvRoomMediaDomainService {
           );
     return SyncTvPlaybackStatus(
       entry: entry,
-      generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+      generatedAtMillis: SyncedClock.nowMillis(),
     );
   }
 }

@@ -46,25 +46,25 @@ service AuthService {
 service UserService {
   // Profile Management
   rpc Logout(LogoutRequest) returns (LogoutResponse);
-  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
-  rpc SetUsername(SetUsernameRequest) returns (SetUsernameResponse);
+  rpc GetProfile(GetProfileRequest) returns (User);
+  rpc SetUsername(SetUsernameRequest) returns (User);
   rpc CreateUserAvatarUploadSession(CreateUserAvatarUploadSessionRequest) returns (CreateUserAvatarUploadSessionResponse);
   rpc UploadUserAvatarObject(UploadUserAvatarObjectRequest) returns (UploadUserAvatarObjectResponse);
   rpc CompleteUserAvatarUploadSession(CompleteUserAvatarUploadSessionRequest) returns (CompleteUserAvatarUploadSessionResponse);
   rpc GetUserAvatarObject(GetUserAvatarObjectRequest) returns (stream UserAvatarObjectResponse);
-  rpc UpdateUserAvatar(UpdateUserAvatarRequest) returns (GetProfileResponse);
-  rpc ClearUserAvatar(ClearUserAvatarRequest) returns (GetProfileResponse);
+  rpc UpdateUserAvatar(UpdateUserAvatarRequest) returns (User);
+  rpc ClearUserAvatar(ClearUserAvatarRequest) returns (User);
   rpc StartSensitiveOperationVerification(StartSensitiveOperationVerificationRequest) returns (StartSensitiveOperationVerificationResponse);
   rpc StartSensitiveOperationPasskey(StartSensitiveOperationPasskeyRequest) returns (StartSensitiveOperationPasskeyResponse);
   rpc RequestSensitiveOperationEmailCode(RequestSensitiveOperationEmailCodeRequest) returns (RequestSensitiveOperationEmailCodeResponse);
   rpc FinishSensitiveOperationVerification(FinishSensitiveOperationVerificationRequest) returns (FinishSensitiveOperationVerificationResponse);
   rpc StartEmailBind(StartEmailBindRequest) returns (StartEmailBindResponse);
-  rpc ConfirmEmailBind(ConfirmEmailBindRequest) returns (ConfirmEmailBindResponse);
-  rpc UnbindEmail(UnbindEmailRequest) returns (UnbindEmailResponse);
+  rpc ConfirmEmailBind(ConfirmEmailBindRequest) returns (User);
+  rpc UnbindEmail(UnbindEmailRequest) returns (User);
   rpc StartOpaquePasswordUpdate(StartOpaquePasswordUpdateRequest) returns (StartOpaquePasswordUpdateResponse);
-  rpc FinishOpaquePasswordUpdate(FinishOpaquePasswordUpdateRequest) returns (FinishOpaquePasswordUpdateResponse);
+  rpc FinishOpaquePasswordUpdate(FinishOpaquePasswordUpdateRequest) returns (User);
   rpc StartPasskeyBind(StartPasskeyBindRequest) returns (StartPasskeyBindResponse);
-  rpc FinishPasskeyBind(FinishPasskeyBindRequest) returns (PasskeyCredentialResponse);
+  rpc FinishPasskeyBind(FinishPasskeyBindRequest) returns (PasskeyCredential);
   rpc ListPasskeys(ListPasskeysRequest) returns (ListPasskeysResponse);
   rpc DeletePasskey(DeletePasskeyRequest) returns (DeletePasskeyResponse);
   rpc GetUserPreferences(GetUserPreferencesRequest) returns (GetUserPreferencesResponse);
@@ -72,7 +72,7 @@ service UserService {
   rpc CloseAccount(CloseAccountRequest) returns (CloseAccountResponse);
 
   // User-initiated room lifecycle operations outside room-scoped context
-  rpc CreateRoom(CreateRoomRequest) returns (CreateRoomResponse);
+  rpc CreateRoom(CreateRoomRequest) returns (Room);
   rpc GetRoom(GetRoomRequest) returns (GetRoomResponse);
   rpc JoinRoom(JoinRoomRequest) returns (JoinRoomResponse);
   rpc StartRoomPasswordLogin(StartRoomPasswordLoginRequest) returns (StartRoomPasswordLoginResponse);
@@ -87,8 +87,8 @@ service RoomService {
   // Room Settings Management
   rpc GetRoomSettings(GetRoomSettingsRequest) returns (GetRoomSettingsResponse);
   rpc UpdateRoomSettings(UpdateRoomSettingsRequest) returns (Room);
-  rpc ResetRoomSettings(ResetRoomSettingsRequest) returns (ResetRoomSettingsResponse);
-  rpc TransferRoomOwnership(TransferRoomOwnershipRequest) returns (TransferRoomOwnershipResponse);
+  rpc ResetRoomSettings(ResetRoomSettingsRequest) returns (RoomSettings);
+  rpc TransferRoomOwnership(TransferRoomOwnershipRequest) returns (Room);
   rpc LeaveRoom(LeaveRoomRequest) returns (LeaveRoomResponse);
   rpc DeleteRoom(DeleteRoomRequest) returns (DeleteRoomResponse);
 
@@ -102,11 +102,13 @@ service RoomService {
   rpc ListRoomStreams(ListRoomStreamsRequest) returns (ListRoomStreamsResponse);
   rpc GetRoomStreamInfo(GetRoomStreamInfoRequest) returns (GetRoomStreamInfoResponse);
   rpc KickRoomStream(KickRoomStreamRequest) returns (KickRoomStreamResponse);
-  rpc AddMember(AddMemberRequest) returns (AddMemberResponse);
+  rpc AddMember(AddMemberRequest) returns (synctv.common.RoomMember);
   rpc ListRoomJoinReviews(ListRoomJoinReviewsRequest) returns (ListRoomJoinReviewsResponse);
   rpc ApproveRoomJoinReview(ApproveRoomJoinReviewRequest) returns (ApproveRoomJoinReviewResponse);
-  rpc RejectRoomJoinReview(RejectRoomJoinReviewRequest) returns (RejectRoomJoinReviewResponse);
-  rpc UpdateMemberPermissions(UpdateMemberPermissionsRequest) returns (UpdateMemberPermissionsResponse);
+  rpc RejectRoomJoinReview(RejectRoomJoinReviewRequest) returns (RoomJoinReview);
+  rpc UpdateMemberRemarkName(UpdateMemberRemarkNameRequest) returns (synctv.common.RoomMember);
+  rpc UpdateMemberDisplayTag(UpdateMemberDisplayTagRequest) returns (synctv.common.RoomMember);
+  rpc UpdateMemberPermissions(UpdateMemberPermissionsRequest) returns (synctv.common.RoomMember);
   rpc KickMember(KickMemberRequest) returns (KickMemberResponse);
 
   // Real-time Messaging (room-scoped)
@@ -134,20 +136,20 @@ service RoomService {
   rpc DeleteChatMessage(DeleteChatMessageRequest) returns (ChatMessageEventResponse);
   rpc GetChatHistory(GetChatHistoryRequest) returns (GetChatHistoryResponse);
   rpc SearchChatMessages(SearchChatMessagesRequest) returns (SearchChatMessagesResponse);
-  rpc GetChatMessage(GetChatMessageRequest) returns (GetChatMessageResponse);
+  rpc GetChatMessage(GetChatMessageRequest) returns (ChatMessageReceive);
   rpc GetChatMessageContext(GetChatMessageContextRequest) returns (GetChatMessageContextResponse);
   rpc GetChatPlaybackMessages(GetChatPlaybackMessagesRequest) returns (GetChatPlaybackMessagesResponse);
   rpc ListPinnedChatMessages(ListPinnedChatMessagesRequest) returns (ListPinnedChatMessagesResponse);
   rpc PinChatMessage(PinChatMessageRequest) returns (ChatPinEventResponse);
   rpc UnpinChatMessage(UnpinChatMessageRequest) returns (ChatPinEventResponse);
-  rpc SetChatReaction(SetChatReactionRequest) returns (SetChatReactionResponse);
+  rpc SetChatReaction(SetChatReactionRequest) returns (ChatMessageEvent);
   rpc ListChatReactionUsers(ListChatReactionUsersRequest) returns (ListChatReactionUsersResponse);
   rpc MarkChatRead(MarkChatReadRequest) returns (ChatReadStateResponse);
   rpc GetChatReadState(GetChatReadStateRequest) returns (ChatReadStateResponse);
   rpc GetChatMessageReadReceipts(GetChatMessageReadReceiptsRequest) returns (GetChatMessageReadReceiptsResponse);
   rpc ReportContent(ReportContentRequest) returns (ReportContentResponse);
   rpc ListRoomContentReports(ListRoomContentReportsRequest) returns (ListRoomContentReportsResponse);
-  rpc GetRoomContentReport(GetRoomContentReportRequest) returns (GetRoomContentReportResponse);
+  rpc GetRoomContentReport(GetRoomContentReportRequest) returns (ContentReport);
   rpc UpdateRoomContentReportStatus(UpdateRoomContentReportStatusRequest) returns (UpdateRoomContentReportStatusResponse);
 
   // Room discovery taxonomy
@@ -158,31 +160,37 @@ service RoomService {
   rpc GetIceServers(GetIceServersRequest) returns (GetIceServersResponse);
 
   // Playlist Management (room-scoped operations)
-  rpc CreatePlaylist(CreatePlaylistRequest) returns (CreatePlaylistResponse);
+  rpc CreatePlaylist(CreatePlaylistRequest) returns (Playlist);
   rpc GetPlaylist(GetPlaylistRequest) returns (GetPlaylistResponse);
-  rpc UpdatePlaylist(UpdatePlaylistRequest) returns (UpdatePlaylistResponse);
+  rpc UpdatePlaylist(UpdatePlaylistRequest) returns (Playlist);
   rpc CreatePlaylistCoverUploadSession(CreatePlaylistCoverUploadSessionRequest) returns (CreatePlaylistCoverUploadSessionResponse);
   rpc UploadPlaylistCoverObject(UploadPlaylistCoverObjectRequest) returns (UploadPlaylistCoverObjectResponse);
   rpc CompletePlaylistCoverUploadSession(CompletePlaylistCoverUploadSessionRequest) returns (CompletePlaylistCoverUploadSessionResponse);
   rpc GetPlaylistCoverObject(GetPlaylistCoverObjectRequest) returns (stream PlaylistCoverObjectResponse);
-  rpc UpdatePlaylistCover(UpdatePlaylistCoverRequest) returns (UpdatePlaylistResponse);
-  rpc ClearPlaylistCover(ClearPlaylistCoverRequest) returns (UpdatePlaylistResponse);
-  rpc MovePlaylist(MovePlaylistRequest) returns (MovePlaylistResponse);
+  rpc UpdatePlaylistCover(UpdatePlaylistCoverRequest) returns (Playlist);
+  rpc ClearPlaylistCover(ClearPlaylistCoverRequest) returns (Playlist);
+  rpc MovePlaylist(MovePlaylistRequest) returns (Playlist);
   rpc DeletePlaylist(DeletePlaylistRequest) returns (DeletePlaylistResponse);
   rpc ListPlaylists(ListPlaylistsRequest) returns (ListPlaylistsResponse);
 
   // Media Management (room-scoped operations)
-  rpc AddMedia(AddMediaRequest) returns (AddMediaResponse);
+  rpc AddMedia(AddMediaRequest) returns (Media);
   rpc GetMedia(GetMediaRequest) returns (Media);
   rpc CreateMediaCoverUploadSession(CreateMediaCoverUploadSessionRequest) returns (CreateMediaCoverUploadSessionResponse);
   rpc UploadMediaCoverObject(UploadMediaCoverObjectRequest) returns (UploadMediaCoverObjectResponse);
   rpc CompleteMediaCoverUploadSession(CompleteMediaCoverUploadSessionRequest) returns (CompleteMediaCoverUploadSessionResponse);
   rpc GetMediaCoverObject(GetMediaCoverObjectRequest) returns (stream MediaCoverObjectResponse);
-  rpc UpdateMediaCover(UpdateMediaCoverRequest) returns (EditMediaResponse);
-  rpc ClearMediaCover(ClearMediaCoverRequest) returns (EditMediaResponse);
+  rpc UpdateMediaCover(UpdateMediaCoverRequest) returns (Media);
+  rpc ClearMediaCover(ClearMediaCoverRequest) returns (Media);
+  rpc CreateMediaThumbnailUploadSession(CreateMediaThumbnailUploadSessionRequest) returns (CreateMediaThumbnailUploadSessionResponse);
+  rpc UploadMediaThumbnailObject(UploadMediaThumbnailObjectRequest) returns (UploadMediaThumbnailObjectResponse);
+  rpc CompleteMediaThumbnailUploadSession(CompleteMediaThumbnailUploadSessionRequest) returns (CompleteMediaThumbnailUploadSessionResponse);
+  rpc GetMediaThumbnailObject(GetMediaThumbnailObjectRequest) returns (stream MediaThumbnailObjectResponse);
+  rpc UpdateMediaThumbnail(UpdateMediaThumbnailRequest) returns (Media);
+  rpc ClearMediaThumbnail(ClearMediaThumbnailRequest) returns (Media);
   rpc DeleteMedia(DeleteMediaRequest) returns (DeleteMediaResponse);
   rpc DeleteEntries(DeleteEntriesRequest) returns (DeleteEntriesResponse);
-  rpc EditMedia(EditMediaRequest) returns (EditMediaResponse);
+  rpc EditMedia(EditMediaRequest) returns (Media);
   rpc ListPlaylistItems(ListPlaylistItemsRequest) returns (ListPlaylistItemsResponse); // List dynamic playlist items
   rpc MoveMedia(MoveMediaRequest) returns (MoveMediaResponse);
   rpc ClearPlaylist(ClearPlaylistRequest) returns (ClearPlaylistResponse);
@@ -197,19 +205,20 @@ service RoomService {
   rpc StartPlayback(StartPlaybackRequest) returns (StartPlaybackResponse); // Start playing a media or a dynamic-playlist item
   rpc StopPlayback(StopPlaybackRequest) returns (StopPlaybackResponse); // Stop current playback
   rpc GetPlayback(GetPlaybackRequest) returns (GetPlaybackResponse); // Get current playback state and info
-  rpc UpdatePlaybackState(UpdatePlaybackStateRequest) returns (UpdatePlaybackStateResponse); // Patch current playback state
+  rpc UpdatePlaybackState(UpdatePlaybackStateRequest) returns (PlaybackState); // Patch current playback state
 }
 
 // ==================== Public Service ====================
 // Authentication: None (public access)
 // HTTP routes: public room discovery uses /api/rooms/*, public settings uses /api/public/settings,
-// server identity uses /api/public/server-info.
+// server identity uses /api/public/server-info, server time uses /api/public/time.
 service PublicService {
   rpc CheckRoom(CheckRoomRequest) returns (CheckRoomResponse);
   rpc ListRooms(ListRoomsRequest) returns (ListRoomsResponse);
   rpc GetHotRooms(GetHotRoomsRequest) returns (GetHotRoomsResponse);
   rpc GetPublicSettings(GetPublicSettingsRequest) returns (GetPublicSettingsResponse);
   rpc GetServerInfo(GetServerInfoRequest) returns (GetServerInfoResponse);
+  rpc GetServerTime(GetServerTimeRequest) returns (GetServerTimeResponse);
 }
 
 // ==================== Email Service ====================
@@ -227,7 +236,7 @@ service EmailService {
 // Routes: /api/notifications/*
 service NotificationService {
   rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
-  rpc GetNotification(GetNotificationRequest) returns (GetNotificationResponse);
+  rpc GetNotification(GetNotificationRequest) returns (NotificationProto);
   rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse);
   rpc MarkAllAsRead(MarkAllAsReadRequest) returns (MarkAllAsReadResponse);
   rpc DeleteNotification(DeleteNotificationRequest) returns (DeleteNotificationResponse);
@@ -248,6 +257,7 @@ message User {
   bool is_banned = 7;
   string avatar_url = 8;
   UserAvatar avatar = 9;
+  FileObjectAccess avatar_access = 10;
 }
 
 // Public user view - safe to return in any context (room member lists, chat, etc.).
@@ -259,6 +269,7 @@ message UserPublicView {
   int64 created_at = 4;
   string avatar_url = 5;
   UserAvatar avatar = 6;
+  FileObjectAccess avatar_access = 7;
 }
 
 enum PlayMode {
@@ -335,9 +346,24 @@ message ChatPlaybackMetadata {
   optional double position_seconds = 4;
 }
 
-message ChatMetadata {
+message ChatUserMetadata {
   ChatPresentationMetadata presentation = 1;
   ChatPlaybackMetadata playback = 2;
+}
+
+message ChatMemberJoinedMetadata {
+  string user_id = 1;
+  string username = 2;
+  string actor_user_id = 3;
+  string actor_username = 4;
+  common.RoomMemberRole role = 5;
+}
+
+message ChatMetadata {
+  oneof metadata {
+    ChatUserMetadata user = 1;
+    ChatMemberJoinedMetadata member_joined = 2;
+  }
 }
 
 message ContentReportMetadata {
@@ -411,6 +437,7 @@ message Media {
   int64 version = 13; // Resource version from database
   MediaCover cover = 14;
   string description = 15;
+  MediaThumbnail thumbnail = 16;
 }
 
 message Playlist {
@@ -437,6 +464,7 @@ message ResourceCover {
   string url = 1;
   FileMetadata metadata = 2;
   repeated FileObjectVariant variants = 3;
+  FileObjectAccess object_access = 4;
 }
 
 enum ResourceAvailability {
@@ -827,10 +855,6 @@ message PasskeyCredential {
   int64 last_used_at = 6;
 }
 
-message PasskeyCredentialResponse {
-  PasskeyCredential credential = 1;
-}
-
 message ListPasskeysRequest {}
 
 message ListPasskeysResponse {
@@ -964,10 +988,6 @@ message RefreshTokenResponse {
 
 message GetProfileRequest {}
 
-message GetProfileResponse {
-  User user = 1;
-}
-
 message CloseAccountRequest {}
 
 message CloseAccountResponse {
@@ -1017,10 +1037,6 @@ message FinishOpaquePasswordUpdateRequest {
   }];
   string passkey_session_id = 5 [(buf.validate.field).string = {max_len: 128}];
   PasskeyAuthenticationCredential passkey_credential = 6;
-}
-
-message FinishOpaquePasswordUpdateResponse {
-  User user = 1;
 }
 
 message CreateWebSocketTicketRequest {
@@ -1101,10 +1117,6 @@ message CreateRoomRequest {
   ];
 }
 
-message CreateRoomResponse {
-  Room room = 1;
-}
-
 // Note: UserService room-scoped resource request; room_id is carried in payload.
 message GetRoomRequest {
   string room_id = 1 [(buf.validate.field).string = {
@@ -1126,6 +1138,8 @@ message JoinRoomRequest {
     pattern: "^room_[A-Za-z0-9]+$"
   }];
   string password = 2 [(buf.validate.field).string = {max_len: 128}];
+  string remark_name = 3 [(buf.validate.field).string = {max_len: 64}];
+  string display_tag = 4 [(buf.validate.field).string = {max_len: 16}];
 }
 
 message JoinRoomResponse {
@@ -1291,20 +1305,12 @@ enum MyRoomRelation {
 // Reset room settings to default
 message ResetRoomSettingsRequest {}
 
-message ResetRoomSettingsResponse {
-  RoomSettings settings = 1;
-}
-
 message TransferRoomOwnershipRequest {
   string new_owner_user_id = 1 [(buf.validate.field).string = {
     min_len: 1
     max_len: 64
     pattern: "^usr_[A-Za-z0-9]+$"
   }]; // Target active member user ID
-}
-
-message TransferRoomOwnershipResponse {
-  Room room = 1;
 }
 
 // Room Password Messages
@@ -1475,10 +1481,8 @@ message AddMemberRequest {
   }];
   synctv.common.RoomMemberRole role = 2; // Defaults to MEMBER when unspecified
   bool notify = 3; // Best-effort invitation/announcement to the target user
-}
-
-message AddMemberResponse {
-  synctv.common.RoomMember member = 1;
+  string remark_name = 4 [(buf.validate.field).string = {max_len: 64}];
+  string display_tag = 5 [(buf.validate.field).string = {max_len: 16}];
 }
 
 message RoomJoinReview {
@@ -1541,9 +1545,22 @@ message RejectRoomJoinReviewRequest {
   string reason = 2 [(buf.validate.field).string.max_len = 500];
 }
 
-message RejectRoomJoinReviewResponse {
-  RoomJoinReview review = 1;
-  bool success = 2;
+message UpdateMemberRemarkNameRequest {
+  string user_id = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^usr_[A-Za-z0-9]+$"
+  }];
+  string remark_name = 2 [(buf.validate.field).string = {max_len: 64}];
+}
+
+message UpdateMemberDisplayTagRequest {
+  string user_id = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+    pattern: "^usr_[A-Za-z0-9]+$"
+  }];
+  string display_tag = 2 [(buf.validate.field).string = {max_len: 16}];
 }
 
 message UpdateMemberPermissionsRequest {
@@ -1562,10 +1579,6 @@ message UpdateMemberPermissionsRequest {
   uint64 removed_permissions = 4;
   uint64 admin_added_permissions = 5;
   uint64 admin_removed_permissions = 6;
-}
-
-message UpdateMemberPermissionsResponse {
-  synctv.common.RoomMember member = 1;
 }
 
 message KickMemberRequest {
@@ -1617,10 +1630,6 @@ message CreatePlaylistRequest {
   string description = 6 [(buf.validate.field).string = {max_len: 5000}];
 }
 
-message CreatePlaylistResponse {
-  Playlist playlist = 1;
-}
-
 message UpdatePlaylistRequest {
   string playlist_id = 1 [(buf.validate.field).string = {
     min_len: 1
@@ -1632,10 +1641,6 @@ message UpdatePlaylistRequest {
     (buf.validate.field).string = {max_len: 255}
   ]; // Optional new name
   string description = 3 [(buf.validate.field).string = {max_len: 5000}];
-}
-
-message UpdatePlaylistResponse {
-  Playlist playlist = 1;
 }
 
 message MovePlaylistRequest {
@@ -1657,10 +1662,6 @@ message MovePlaylistRequest {
       pattern: "^pl_[A-Za-z0-9]+$"
     }];
   }
-}
-
-message MovePlaylistResponse {
-  Playlist playlist = 1;
 }
 
 message DeletePlaylistRequest {
@@ -1809,34 +1810,21 @@ message UpdatePlaybackRequest {
 // Note: room_id extracted from x-room-id metadata
 
 message AddMediaRequest {
-  option (buf.validate.message).cel = {
-    id: "add_media.source_provider"
-    message: "source_provider is required"
-    expression: "this.source_provider != 0"
-  };
   optional string playlist_id = 1 [(buf.validate.field).string = {
     min_len: 1
     max_len: 64
     pattern: "^pl_[A-Za-z0-9]+$"
   }]; // Target playlist ID. Omit for room-root media
-  synctv.source_config.SourceProvider source_provider = 2 [(buf.validate.field).enum = {
-    defined_only: true
-    not_in: [0]
-  }]; // Required source provider type, e.g. direct_url, bilibili, alist
-  string provider_instance_name = 3 [
+  string provider_instance_name = 2 [
     (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
     (buf.validate.field).string = {
       pattern: "^[A-Za-z0-9_-]+$"
       max_len: 64
     }
-  ]; // Optional provider instance name; empty means use the default provider instance for source_provider
-  synctv.source_config.MediaSourceConfig source_config = 4;
-  string name = 5 [(buf.validate.field).string.max_len = 500]; // Optional media display name. Validation: max 500 chars, no HTML tags
-  string description = 6 [(buf.validate.field).string.max_len = 5000];
-}
-
-message AddMediaResponse {
-  Media media = 1;
+  ]; // Optional provider instance name; empty means use the default provider instance for the source_config provider
+  synctv.source_config.MediaSourceConfig source_config = 3 [(buf.validate.field).required = true];
+  string name = 4 [(buf.validate.field).string.max_len = 500]; // Optional media display name. Validation: max 500 chars, no HTML tags
+  string description = 5 [(buf.validate.field).string.max_len = 5000];
 }
 
 message GetMediaRequest {
@@ -2038,10 +2026,6 @@ message EditMediaRequest {
   string description = 3 [(buf.validate.field).string.max_len = 5000];
 }
 
-message EditMediaResponse {
-  Media media = 1;
-}
-
 // Clear Playlist
 message ClearPlaylistRequest {
   string playlist_id = 1 [
@@ -2064,7 +2048,7 @@ message AddMediaBatchRequest {
   repeated AddMediaRequest items = 1 [(buf.validate.field).repeated.max_items = 100]; // Validation: max 100 items
 }
 message AddMediaBatchResponse {
-  repeated AddMediaResponse results = 1;
+  repeated Media results = 1;
 }
 
 // Playback Control Messages
@@ -2099,10 +2083,6 @@ message UpdatePlaybackStateRequest {
   optional string expected_playlist_id = 7;
   // SHA-256 hex of PlaybackState.target.
   optional string expected_target_hash = 8;
-}
-
-message UpdatePlaybackStateResponse {
-  PlaybackState playback_state = 1;
 }
 
 enum PlaybackStreamPreference {
@@ -2194,26 +2174,26 @@ message Playback {
 }
 
 message PlaybackMetadata {
+  oneof metadata {
+    AlistPlaybackMetadata alist = 1;
+    BilibiliPlaybackMetadata bilibili = 2;
+    EmbyPlaybackMetadata emby = 3;
+    DirectUrlPlaybackMetadata direct_url = 4;
+    LiveProxyPlaybackMetadata live_proxy = 5;
+    LivePlaybackMetadata live = 6;
+  }
+}
+
+message AlistPlaybackMetadata {
   optional string name = 1;
   optional uint64 size = 2;
   optional string provider = 3;
-  optional string source_host = 4;
-  optional string thumbnail = 5;
-  optional int32 external_subtitle_count = 6;
-  optional string video_preview_error = 7;
-  repeated AlistTranscodingTaskMetadata transcoding_tasks = 8;
-  optional AlistVideoPreviewMetadata video_preview = 9;
-  optional double duration = 10;
-  optional uint64 width = 11;
-  optional uint64 height = 12;
-  optional string format = 13;
-  optional string filename = 14;
-  optional bool is_live = 15;
-  optional string media_id = 16;
-  optional string room_id = 17;
-  optional string content_type = 18;
-  optional BilibiliPlaybackMetadata bilibili = 19;
-  optional EmbyPlaybackMetadata emby = 20;
+  optional int32 external_subtitle_count = 4;
+  optional string video_preview_error = 5;
+  repeated AlistTranscodingTaskMetadata transcoding_tasks = 6;
+  optional AlistVideoPreviewMetadata video_preview = 7;
+  optional uint64 width = 8;
+  optional uint64 height = 9;
 }
 
 message AlistTranscodingTaskMetadata {
@@ -2236,14 +2216,15 @@ message AlistVideoPreviewMetadata {
 }
 
 message BilibiliPlaybackMetadata {
-  optional string bvid = 1;
-  optional uint64 aid = 2;
-  optional uint64 epid = 3;
-  optional uint64 cid = 4;
-  optional double min_buffer_time = 5;
-  optional string fallback_format = 6;
-  optional uint64 quality = 7;
-  optional uint64 room_id = 8;
+  optional string content_type = 1;
+  optional string bvid = 2;
+  optional uint64 aid = 3;
+  optional uint64 epid = 4;
+  optional uint64 cid = 5;
+  optional double min_buffer_time = 6;
+  optional string fallback_format = 7;
+  optional uint64 quality = 8;
+  optional uint64 room_id = 9;
 }
 
 message EmbyPlaybackMetadata {
@@ -2253,8 +2234,27 @@ message EmbyPlaybackMetadata {
   optional string play_session_id = 4;
 }
 
+message DirectUrlPlaybackMetadata {
+  optional string format = 1;
+  optional string filename = 2;
+}
+
+message LiveProxyPlaybackMetadata {
+  string media_id = 1;
+  string room_id = 2;
+  optional string source_host = 3;
+}
+
+message LivePlaybackMetadata {
+  string media_id = 1;
+  string room_id = 2;
+}
+
 // Playback information for a single mode
 message PlaybackInfo {
+  // Thumbnail URL for this playback mode.
+  optional string thumbnail = 7;
+
   // List of playback media resources (different qualities, codecs, or provider-backed resources)
   repeated PlaybackMedia medias = 1;
 
@@ -2463,6 +2463,9 @@ message ObserveChatEvents {
   // Unset starts from live chat events; 0 replays retained chat events from the empty watermark.
   // Use GetChatHistory for message backfill.
   optional int64 after_event_sequence = 1;
+  // Empty uses the default user-visible set: USER.
+  // System message types, such as SYSTEM_MEMBER_JOINED, are included explicitly.
+  repeated ChatMessageType include_message_types = 2 [(buf.validate.field).repeated.items.enum.defined_only = true];
 }
 
 message ObserveChatPinEvents {
@@ -2663,6 +2666,7 @@ message ChatMessageReceive {
   ChatMetadata metadata = 25;
   repeated ChatMention mentions = 26;
   optional ChatMessagePin pin = 27;
+  ChatMessageType message_type = 28;
 }
 
 message ChatMessagePin {
@@ -2689,6 +2693,12 @@ enum ChatMessageStatus {
   CHAT_MESSAGE_STATUS_ACTIVE = 1;
   CHAT_MESSAGE_STATUS_EDITED = 2;
   CHAT_MESSAGE_STATUS_DELETED = 3;
+}
+
+enum ChatMessageType {
+  CHAT_MESSAGE_TYPE_UNSPECIFIED = 0;
+  CHAT_MESSAGE_TYPE_USER = 1;
+  CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED = 1001;
 }
 
 enum ChatMessageEventKind {
@@ -2728,6 +2738,23 @@ enum ChatAttachmentReferenceKind {
   CHAT_ATTACHMENT_REFERENCE_KIND_REUSE = 2;
 }
 
+enum FileObjectAccessKind {
+  FILE_OBJECT_ACCESS_KIND_UNSPECIFIED = 0;
+  FILE_OBJECT_ACCESS_KIND_CHAT_ATTACHMENT = 1;
+  FILE_OBJECT_ACCESS_KIND_USER_AVATAR = 2;
+  FILE_OBJECT_ACCESS_KIND_MEDIA_COVER = 3;
+  FILE_OBJECT_ACCESS_KIND_ROOM_COVER = 4;
+  FILE_OBJECT_ACCESS_KIND_PLAYLIST_COVER = 5;
+  FILE_OBJECT_ACCESS_KIND_GENERIC = 6;
+  FILE_OBJECT_ACCESS_KIND_MEDIA_THUMBNAIL = 7;
+}
+
+message FileObjectAccess {
+  FileObjectAccessKind object_kind = 1;
+  string encoded_object_key = 2;
+  string read_token = 3;
+}
+
 message ChatAttachment {
   string id = 1;
   string url = 2;
@@ -2741,6 +2768,7 @@ message ChatAttachment {
   string reuse_token = 10;
   optional int64 reuse_expires_at = 11;
   repeated FileObjectVariant variants = 12;
+  FileObjectAccess object_access = 13;
 }
 
 message FileObjectVariant {
@@ -2755,6 +2783,7 @@ message FileObjectVariant {
   bool lossy = 9;
   optional int32 quality = 10;
   FileMetadata metadata = 11;
+  FileObjectAccess object_access = 12;
 }
 
 message ChatAttachmentReference {
@@ -2834,6 +2863,7 @@ message ChatAttachmentUploadSession {
   repeated FileUploadPartUrl part_urls = 17;
   string upload_token = 18;
   string encoded_object_key = 19;
+  FileObjectAccess upload_object_access = 20;
 }
 
 message ChatAttachmentOwnershipProofRange {
@@ -2925,6 +2955,7 @@ message UserAvatar {
   int32 height = 6;
   FileMetadata metadata = 7;
   repeated FileObjectVariant variants = 8;
+  FileObjectAccess object_access = 9;
 }
 
 message CreateUserAvatarUploadSessionRequest {
@@ -2958,6 +2989,7 @@ message UserAvatarUploadSession {
   repeated FileUploadPartUrl part_urls = 17;
   string upload_token = 18;
   string encoded_object_key = 19;
+  FileObjectAccess upload_object_access = 20;
 }
 
 message UserAvatarOwnershipProofRange {
@@ -3032,6 +3064,7 @@ message FileCover {
   int32 height = 6;
   FileMetadata metadata = 7;
   repeated FileObjectVariant variants = 8;
+  FileObjectAccess object_access = 9;
 }
 
 message MediaCover {
@@ -3043,6 +3076,19 @@ message MediaCover {
   int32 height = 6;
   FileMetadata metadata = 7;
   repeated FileObjectVariant variants = 8;
+  FileObjectAccess object_access = 9;
+}
+
+message MediaThumbnail {
+  string id = 1;
+  string url = 2;
+  string mime_type = 3;
+  int64 size_bytes = 4;
+  int32 width = 5;
+  int32 height = 6;
+  FileMetadata metadata = 7;
+  repeated FileObjectVariant variants = 8;
+  FileObjectAccess object_access = 9;
 }
 
 message CreateMediaCoverUploadSessionRequest {
@@ -3078,6 +3124,7 @@ message MediaCoverUploadSession {
   repeated FileUploadPartUrl part_urls = 17;
   string upload_token = 18;
   string encoded_object_key = 19;
+  FileObjectAccess upload_object_access = 20;
 }
 
 message MediaCoverOwnershipProofRange {
@@ -3148,6 +3195,105 @@ message ClearMediaCoverRequest {
   string media_id = 2 [(buf.validate.field).string.min_len = 1];
 }
 
+message CreateMediaThumbnailUploadSessionRequest {
+  string room_id = 1;
+  string media_id = 2 [(buf.validate.field).string.min_len = 1];
+  string client_thumbnail_id = 3;
+  string mime_type = 4;
+  int64 size_bytes = 5;
+  int32 width = 6;
+  int32 height = 7;
+  repeated FileUploadManifestPart parts = 8;
+  FileMetadata metadata = 9;
+  int32 duration_seconds = 10;
+  int32 bitrate_bps = 11;
+}
+
+message MediaThumbnailUploadSession {
+  FileUploadReference thumbnail_reference = 1;
+  bool upload_required = 2;
+  optional string upload_url = 3;
+  optional string upload_method = 4;
+  map<string, string> upload_headers = 5;
+  optional int64 expires_at = 6;
+  int64 max_size_bytes = 7;
+  bool ownership_proof_required = 8;
+  optional string ownership_proof_nonce = 9;
+  repeated MediaCoverOwnershipProofRange ownership_proof_ranges = 10;
+  bool resumable = 12;
+  int64 part_size_bytes = 13;
+  int64 uploaded_size_bytes = 14;
+  repeated int32 uploaded_parts = 15;
+  optional string upload_id = 16;
+  repeated FileUploadPartUrl part_urls = 17;
+  string upload_token = 18;
+  string encoded_object_key = 19;
+  FileObjectAccess upload_object_access = 20;
+}
+
+message CreateMediaThumbnailUploadSessionResponse {
+  oneof result {
+    FileUploadPlan plan = 1;
+    MediaThumbnailUploadSession session = 2;
+  }
+}
+
+message UploadMediaThumbnailObjectRequest {
+  string encoded_object_key = 1;
+  string token = 2;
+  optional string content_type = 3;
+  bytes data = 4;
+  optional FileUploadRange content_range = 5;
+}
+
+message GetMediaThumbnailObjectRequest {
+  string encoded_object_key = 1;
+  string token = 2;
+  optional FileRangeRequest range = 3;
+}
+
+message MediaThumbnailObjectResponse {
+  string mime_type = 1;
+  string content_manifest_sha256 = 2;
+  bytes data = 3;
+  optional FileByteRange content_range = 4;
+  int64 total_size_bytes = 5;
+}
+
+message UploadMediaThumbnailObjectResponse {
+  MediaThumbnailObjectResponse object = 1;
+  bool complete = 2;
+  int64 uploaded_size_bytes = 3;
+  repeated int32 uploaded_parts = 4;
+}
+
+message CompleteMediaThumbnailUploadSessionRequest {
+  string encoded_object_key = 1;
+  string token = 2;
+  optional string upload_id = 3;
+  repeated CompleteFileUploadPart parts = 4;
+  string file_id = 5;
+  string ownership_proof = 6;
+}
+
+message CompleteMediaThumbnailUploadSessionResponse {
+  MediaThumbnailObjectResponse object = 1;
+  bool complete = 2;
+  int64 uploaded_size_bytes = 3;
+  repeated int32 uploaded_parts = 4;
+}
+
+message UpdateMediaThumbnailRequest {
+  string room_id = 1;
+  string media_id = 2 [(buf.validate.field).string.min_len = 1];
+  FileUploadReference thumbnail_reference = 3;
+}
+
+message ClearMediaThumbnailRequest {
+  string room_id = 1;
+  string media_id = 2 [(buf.validate.field).string.min_len = 1];
+}
+
 message CreateRoomCoverUploadSessionRequest {
   string room_id = 1;
   string client_cover_id = 2;
@@ -3180,6 +3326,7 @@ message RoomCoverUploadSession {
   repeated FileUploadPartUrl part_urls = 17;
   string upload_token = 18;
   string encoded_object_key = 19;
+  FileObjectAccess upload_object_access = 20;
 }
 
 message CreateRoomCoverUploadSessionResponse {
@@ -3276,6 +3423,7 @@ message PlaylistCoverUploadSession {
   repeated FileUploadPartUrl part_urls = 17;
   string upload_token = 18;
   string encoded_object_key = 19;
+  FileObjectAccess upload_object_access = 20;
 }
 
 message CreatePlaylistCoverUploadSessionResponse {
@@ -3377,6 +3525,8 @@ message RoomMemberEvent {
   string reason = 9;
   int64 occurred_at = 10;
   int64 sequence = 11;
+  string remark_name = 12;
+  string display_tag = 13;
 }
 
 message HeartbeatMessage {
@@ -3504,10 +3654,6 @@ message SetChatReactionRequest {
   bool enabled = 3;
 }
 
-message SetChatReactionResponse {
-  ChatMessageEvent event = 1;
-}
-
 message ReportRoomTarget {
   string room_id = 1;
 }
@@ -3580,10 +3726,6 @@ message GetRoomContentReportRequest {
     max_len: 64
     pattern: "^report_[A-Za-z0-9]+$"
   }];
-}
-
-message GetRoomContentReportResponse {
-  ContentReport report = 1;
 }
 
 message UpdateRoomContentReportStatusRequest {
@@ -3688,6 +3830,9 @@ message GetChatHistoryRequest {
   };
   int32 limit = 1; // Max page size (clamped to 100 server-side). Default: 50.
   string cursor = 2; // Opaque keyset cursor returned by the server as "<rfc3339_created_at>|<message_id>".
+  // Empty uses the default user-visible set: USER.
+  // Include system message types explicitly when they should appear in history and cursors.
+  repeated ChatMessageType include_message_types = 3 [(buf.validate.field).repeated.items.enum.defined_only = true];
 }
 
 message GetChatHistoryResponse {
@@ -3733,10 +3878,6 @@ message GetChatMessageRequest {
   bool include_deleted = 2;
 }
 
-message GetChatMessageResponse {
-  ChatMessageReceive message = 1;
-}
-
 message GetChatMessageContextRequest {
   string message_id = 1;
   int32 before_limit = 2;
@@ -3759,6 +3900,7 @@ message GetChatPlaybackMessagesRequest {
   double after_seconds = 6;
   int32 limit = 7;
   bool include_deleted = 8;
+  repeated ChatMessageType include_message_types = 9 [(buf.validate.field).repeated.items.enum.defined_only = true];
 }
 
 message GetChatPlaybackMessagesResponse {
@@ -3824,10 +3966,6 @@ message SetUsernameRequest {
   }];
 }
 
-message SetUsernameResponse {
-  User user = 1;
-}
-
 message StartEmailBindRequest {
   string email = 1 [(buf.validate.field).string = {
     min_len: 3
@@ -3856,19 +3994,11 @@ message ConfirmEmailBindRequest {
   }];
 }
 
-message ConfirmEmailBindResponse {
-  User user = 1;
-}
-
 message UnbindEmailRequest {
   string verification_id = 1 [(buf.validate.field).string = {
     min_len: 1
     max_len: 128
   }];
-}
-
-message UnbindEmailResponse {
-  User user = 1;
 }
 
 message ListMyRoomsRequest {
@@ -4047,6 +4177,23 @@ message GetServerInfoResponse {
   // in runtime settings storage; clients only read it.
   string server_id = 1;
   string server_name = 2;
+}
+
+// ==================== Public Server Time ====================
+
+message GetServerTimeRequest {
+  // Unix nanoseconds recorded by the client immediately before sending the
+  // request. Optional for simple clock reads; set it for offset calculation.
+  int64 client_sent_at_nanos = 1;
+}
+
+message GetServerTimeResponse {
+  // Echo of GetServerTimeRequest.client_sent_at_nanos.
+  int64 client_sent_at_nanos = 1;
+  // Unix nanoseconds recorded by the server when handling the request.
+  int64 server_received_at_nanos = 2;
+  // Unix nanoseconds recorded by the server immediately before sending the response.
+  int64 server_sent_at_nanos = 3;
 }
 
 // ==================== Password Reset ====================
@@ -4274,10 +4421,6 @@ message ListNotificationsResponse {
 
 message GetNotificationRequest {
   int64 notification_id = 1 [(buf.validate.field).int64.gte = 1];
-}
-
-message GetNotificationResponse {
-  NotificationProto notification = 1;
 }
 
 message MarkAsReadRequest {

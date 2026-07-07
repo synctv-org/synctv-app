@@ -9,6 +9,7 @@ import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/room_media_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
+import 'package:synctv_app/services/synctv_clock.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/common.pb.dart' as common;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
@@ -148,6 +149,7 @@ class RoomRealtimeMessage {
     this.chatEditedAt = 0,
     this.chatDeletedAt = 0,
     this.chatStatus = 0,
+    this.chatMessageType = 1,
     this.chatDisplayPosition = '',
     this.chatDisplayColor = '',
     this.chatReplyToMessageId = '',
@@ -186,6 +188,7 @@ class RoomRealtimeMessage {
   final int chatEditedAt;
   final int chatDeletedAt;
   final int chatStatus;
+  final int chatMessageType;
   final String chatDisplayPosition;
   final String chatDisplayColor;
   final String chatReplyToMessageId;
@@ -257,7 +260,7 @@ class RoomRealtimeChatEntry {
       version: message.chatVersion,
       replyToMessageId: message.chatReplyToMessageId,
       timestampMillis: message.timestampMillis == 0
-          ? DateTime.now().millisecondsSinceEpoch
+          ? SyncedClock.nowMillis()
           : message.timestampMillis,
       isDeleted: message.isChatDeleted,
       isEdited: message.isChatEdited,
@@ -474,7 +477,7 @@ class RoomRealtimeCodec {
     return client.ClientMessage(
       chat: client.ChatMessageSend(
         content: content,
-        clientMessageId: 'msg_${DateTime.now().microsecondsSinceEpoch}',
+        clientMessageId: 'msg_${SyncedClock.now().microsecondsSinceEpoch}',
         displayPosition: displayPosition,
         displayColor: displayColor,
         replyToMessageId: replyToMessageId,
@@ -722,7 +725,7 @@ class RoomRealtimeCodec {
   static List<int> encodeSync() {
     return client.ClientMessage(
       heartbeat: client.HeartbeatMessage(
-        timestamp: Int64(DateTime.now().millisecondsSinceEpoch),
+        timestamp: Int64(SyncedClock.nowMillis()),
       ),
     ).writeToBuffer();
   }
@@ -894,6 +897,10 @@ class RoomRealtimeCodec {
           client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
       chatEvents: client.ObserveChatEvents(
         afterEventSequence: _watchSequence(cursor),
+        includeMessageTypes: const [
+          client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
+          client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED,
+        ],
       ),
     );
   }
@@ -1087,6 +1094,7 @@ class RoomRealtimeCodec {
       chatEditedAt: chat.editedAt.toInt(),
       chatDeletedAt: chat.deletedAt.toInt(),
       chatStatus: chat.status.value,
+      chatMessageType: chat.messageType.value,
       chatReplyToMessageId: chat.replyToMessageId,
       chatDisplayPosition: chat.displayPosition,
       chatDisplayColor: chat.displayColor,
@@ -1351,6 +1359,7 @@ class RoomRealtimeCodec {
       username: message.username,
       content: message.content,
       timestamp: message.timestamp.toInt(),
+      messageType: message.messageType.value,
       displayPosition: message.displayPosition,
       displayColor: message.displayColor,
       version: message.version.toInt(),
@@ -1557,6 +1566,7 @@ class RoomRealtimeCodec {
       metadata: metadata,
       description: media.description,
       coverUrl: media.hasCover() ? media.cover.url : '',
+      thumbnailUrl: media.hasThumbnail() ? media.thumbnail.url : '',
     );
   }
 
@@ -1630,6 +1640,8 @@ class RoomRealtimeCodec {
       roomId: member.roomId,
       userId: member.userId,
       username: member.username,
+      remarkName: member.remarkName,
+      displayTag: member.displayTag,
       role: member.role.value,
       permissions: member.permissions.toInt(),
       addedPermissions: member.addedPermissions.toInt(),

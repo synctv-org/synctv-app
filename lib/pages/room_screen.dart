@@ -591,7 +591,7 @@ class _RoomScreenState extends State<RoomScreen>
             isPlaying: status.isPlaying,
             currentTime: status.currentTime,
             playbackRate: status.playbackRate,
-            generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+            generatedAtMillis: SyncTvService.serverNowMillis(),
           ),
         );
       }
@@ -699,7 +699,7 @@ class _RoomScreenState extends State<RoomScreen>
       mentions: message.mentions,
       pin: message.chatPinEvent?.pin,
       timestampMillis: message.timestampMillis == 0
-          ? DateTime.now().millisecondsSinceEpoch
+          ? SyncTvService.serverNowMillis()
           : message.timestampMillis,
       isDeleted: message.isChatDeleted,
       isEdited: message.isChatEdited,
@@ -1342,7 +1342,7 @@ class _RoomScreenState extends State<RoomScreen>
         isPlaying: wasPlaying || status.isPlaying,
         currentTime: position,
         playbackRate: status.playbackRate,
-        generatedAtMillis: DateTime.now().millisecondsSinceEpoch,
+        generatedAtMillis: SyncTvService.serverNowMillis(),
         version: status.version,
         playingMediaId: status.playingMediaId,
         playingPlaylistId: status.playingPlaylistId,

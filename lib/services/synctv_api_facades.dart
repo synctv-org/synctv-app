@@ -294,10 +294,8 @@ class SyncTvUserApi {
     return response;
   }
 
-  Future<client.GetProfileResponse> getProfile(
-    client.GetProfileRequest request,
-  ) {
-    return _api._send('GET', '/api/user', client.GetProfileResponse.create);
+  Future<client.User> getProfile(client.GetProfileRequest request) {
+    return _api._send('GET', '/api/user', client.User.create);
   }
 
   Future<client.CreateUserAvatarUploadSessionResponse>
@@ -362,36 +360,21 @@ class SyncTvUserApi {
     );
   }
 
-  Future<client.GetProfileResponse> updateUserAvatar(
-    client.UpdateUserAvatarRequest request,
-  ) {
+  Future<client.User> updateUserAvatar(client.UpdateUserAvatarRequest request) {
     return _api._send(
       'PUT',
       '/api/user/avatar',
-      client.GetProfileResponse.create,
+      client.User.create,
       body: request,
     );
   }
 
-  Future<client.GetProfileResponse> clearUserAvatar(
-    client.ClearUserAvatarRequest request,
-  ) {
-    return _api._send(
-      'DELETE',
-      '/api/user/avatar',
-      client.GetProfileResponse.create,
-    );
+  Future<client.User> clearUserAvatar(client.ClearUserAvatarRequest request) {
+    return _api._send('DELETE', '/api/user/avatar', client.User.create);
   }
 
-  Future<client.SetUsernameResponse> setUsername(
-    client.SetUsernameRequest request,
-  ) {
-    return _api._send(
-      'PATCH',
-      '/api/user',
-      client.SetUsernameResponse.create,
-      body: request,
-    );
+  Future<client.User> setUsername(client.SetUsernameRequest request) {
+    return _api._send('PATCH', '/api/user', client.User.create, body: request);
   }
 
   Future<client.StartEmailBindResponse> startEmailBind(
@@ -405,24 +388,20 @@ class SyncTvUserApi {
     );
   }
 
-  Future<client.ConfirmEmailBindResponse> confirmEmailBind(
-    client.ConfirmEmailBindRequest request,
-  ) {
+  Future<client.User> confirmEmailBind(client.ConfirmEmailBindRequest request) {
     return _api._send(
       'POST',
       '/api/user/email/bind/confirm',
-      client.ConfirmEmailBindResponse.create,
+      client.User.create,
       body: request,
     );
   }
 
-  Future<client.UnbindEmailResponse> unbindEmail(
-    client.UnbindEmailRequest request,
-  ) {
+  Future<client.User> unbindEmail(client.UnbindEmailRequest request) {
     return _api._send(
       'POST',
       '/api/user/email/unbind',
-      client.UnbindEmailResponse.create,
+      client.User.create,
       body: request,
     );
   }
@@ -438,13 +417,13 @@ class SyncTvUserApi {
     );
   }
 
-  Future<client.FinishOpaquePasswordUpdateResponse> finishOpaquePasswordUpdate(
+  Future<client.User> finishOpaquePasswordUpdate(
     client.FinishOpaquePasswordUpdateRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/user/opaque-password/update/finish',
-      client.FinishOpaquePasswordUpdateResponse.create,
+      client.User.create,
       body: request,
     );
   }
@@ -508,13 +487,13 @@ class SyncTvUserApi {
     );
   }
 
-  Future<client.PasskeyCredentialResponse> finishPasskeyBind(
+  Future<client.PasskeyCredential> finishPasskeyBind(
     client.FinishPasskeyBindRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/user/passkeys/bind/finish',
-      client.PasskeyCredentialResponse.create,
+      client.PasskeyCredential.create,
       body: request,
     );
   }
@@ -575,15 +554,8 @@ class SyncTvUserApi {
     return response;
   }
 
-  Future<client.CreateRoomResponse> createRoom(
-    client.CreateRoomRequest request,
-  ) {
-    return _api._send(
-      'POST',
-      '/api/rooms',
-      client.CreateRoomResponse.create,
-      body: request,
-    );
+  Future<client.Room> createRoom(client.CreateRoomRequest request) {
+    return _api._send('POST', '/api/rooms', client.Room.create, body: request);
   }
 
   Future<client.GetRoomResponse> getRoom(client.GetRoomRequest request) {
@@ -668,26 +640,26 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.ResetRoomSettingsResponse> resetRoomSettings(
+  Future<client.RoomSettings> resetRoomSettings(
     String roomId,
     client.ResetRoomSettingsRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/settings/reset',
-      client.ResetRoomSettingsResponse.create,
+      client.RoomSettings.create,
       body: request,
     );
   }
 
-  Future<client.TransferRoomOwnershipResponse> transferRoomOwnership(
+  Future<client.Room> transferRoomOwnership(
     String roomId,
     client.TransferRoomOwnershipRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/owner',
-      client.TransferRoomOwnershipResponse.create,
+      client.Room.create,
       body: request,
     );
   }
@@ -805,14 +777,14 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.AddMemberResponse> addMember(
+  Future<common.RoomMember> addMember(
     String roomId,
     client.AddMemberRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/members',
-      client.AddMemberResponse.create,
+      common.RoomMember.create,
       body: request,
     );
   }
@@ -841,26 +813,50 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.RejectRoomJoinReviewResponse> rejectRoomJoinReview(
+  Future<client.RoomJoinReview> rejectRoomJoinReview(
     String roomId,
     client.RejectRoomJoinReviewRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/reviews/joins/${request.requestId}/reject',
-      client.RejectRoomJoinReviewResponse.create,
+      client.RoomJoinReview.create,
       body: request,
     );
   }
 
-  Future<client.UpdateMemberPermissionsResponse> updateMemberPermissions(
+  Future<common.RoomMember> updateMemberRemarkName(
+    String roomId,
+    client.UpdateMemberRemarkNameRequest request,
+  ) {
+    return _api._send(
+      'PATCH',
+      '/api/rooms/$roomId/members/${request.userId}/remark-name',
+      common.RoomMember.create,
+      body: request,
+    );
+  }
+
+  Future<common.RoomMember> updateMemberDisplayTag(
+    String roomId,
+    client.UpdateMemberDisplayTagRequest request,
+  ) {
+    return _api._send(
+      'PATCH',
+      '/api/rooms/$roomId/members/${request.userId}/display-tag',
+      common.RoomMember.create,
+      body: request,
+    );
+  }
+
+  Future<common.RoomMember> updateMemberPermissions(
     String roomId,
     client.UpdateMemberPermissionsRequest request,
   ) {
     return _api._send(
       'PATCH',
       '/api/rooms/$roomId/members/${request.userId}',
-      client.UpdateMemberPermissionsResponse.create,
+      common.RoomMember.create,
       body: request,
     );
   }
@@ -1046,14 +1042,14 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.GetChatMessageResponse> getChatMessage(
+  Future<client.ChatMessageReceive> getChatMessage(
     String roomId,
     client.GetChatMessageRequest request,
   ) {
     return _api._send(
       'GET',
       '/api/rooms/$roomId/chat/messages/${request.messageId}',
-      client.GetChatMessageResponse.create,
+      client.ChatMessageReceive.create,
       query: _api._messageQuery(request)..remove('messageId'),
     );
   }
@@ -1144,7 +1140,7 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.SetChatReactionResponse> setChatReaction(
+  Future<client.ChatMessageEvent> setChatReaction(
     String roomId,
     client.SetChatReactionRequest request,
   ) {
@@ -1153,7 +1149,7 @@ class SyncTvRoomApi {
     return _api._send(
       request.enabled ? 'PUT' : 'DELETE',
       '/api/rooms/$roomId/chat/messages/$messageId/reactions/$reactionKey',
-      client.SetChatReactionResponse.create,
+      client.ChatMessageEvent.create,
     );
   }
 
@@ -1181,14 +1177,14 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.GetRoomContentReportResponse> getRoomContentReport(
+  Future<client.ContentReport> getRoomContentReport(
     String roomId,
     client.GetRoomContentReportRequest request,
   ) {
     return _api._send(
       'GET',
       '/api/rooms/$roomId/reports/${request.reportId}',
-      client.GetRoomContentReportResponse.create,
+      client.ContentReport.create,
     );
   }
 
@@ -1333,14 +1329,14 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.CreatePlaylistResponse> createPlaylist(
+  Future<client.Playlist> createPlaylist(
     String roomId,
     client.CreatePlaylistRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/playlists',
-      client.CreatePlaylistResponse.create,
+      client.Playlist.create,
       body: request,
     );
   }
@@ -1442,14 +1438,14 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.UpdatePlaylistResponse> updatePlaylist(
+  Future<client.Playlist> updatePlaylist(
     String roomId,
     client.UpdatePlaylistRequest request,
   ) {
     return _api._send(
       'PATCH',
       '/api/rooms/$roomId/playlists/${request.playlistId}',
-      client.UpdatePlaylistResponse.create,
+      client.Playlist.create,
       body: request,
     );
   }
@@ -1517,37 +1513,37 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.UpdatePlaylistResponse> updatePlaylistCover(
+  Future<client.Playlist> updatePlaylistCover(
     String roomId,
     client.UpdatePlaylistCoverRequest request,
   ) {
     return _api._send(
       'PUT',
       '/api/rooms/$roomId/playlists/${request.playlistId}/cover',
-      client.UpdatePlaylistResponse.create,
+      client.Playlist.create,
       body: request,
     );
   }
 
-  Future<client.UpdatePlaylistResponse> clearPlaylistCover(
+  Future<client.Playlist> clearPlaylistCover(
     String roomId,
     client.ClearPlaylistCoverRequest request,
   ) {
     return _api._send(
       'DELETE',
       '/api/rooms/$roomId/playlists/${request.playlistId}/cover',
-      client.UpdatePlaylistResponse.create,
+      client.Playlist.create,
     );
   }
 
-  Future<client.MovePlaylistResponse> movePlaylist(
+  Future<client.Playlist> movePlaylist(
     String roomId,
     client.MovePlaylistRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/playlists/${request.playlistId}/move',
-      client.MovePlaylistResponse.create,
+      client.Playlist.create,
       body: request,
     );
   }
@@ -1578,14 +1574,11 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.AddMediaResponse> addMedia(
-    String roomId,
-    client.AddMediaRequest request,
-  ) {
+  Future<client.Media> addMedia(String roomId, client.AddMediaRequest request) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/media',
-      client.AddMediaResponse.create,
+      client.Media.create,
       body: request,
     );
   }
@@ -1622,14 +1615,14 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.EditMediaResponse> editMedia(
+  Future<client.Media> editMedia(
     String roomId,
     client.EditMediaRequest request,
   ) {
     return _api._send(
       'PATCH',
       '/api/rooms/$roomId/media/${request.mediaId}',
-      client.EditMediaResponse.create,
+      client.Media.create,
       body: request,
     );
   }
@@ -1697,26 +1690,112 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.EditMediaResponse> updateMediaCover(
+  Future<client.Media> updateMediaCover(
     String roomId,
     client.UpdateMediaCoverRequest request,
   ) {
     return _api._send(
       'PUT',
       '/api/rooms/$roomId/media/${request.mediaId}/cover',
-      client.EditMediaResponse.create,
+      client.Media.create,
       body: request,
     );
   }
 
-  Future<client.EditMediaResponse> clearMediaCover(
+  Future<client.Media> clearMediaCover(
     String roomId,
     client.ClearMediaCoverRequest request,
   ) {
     return _api._send(
       'DELETE',
       '/api/rooms/$roomId/media/${request.mediaId}/cover',
-      client.EditMediaResponse.create,
+      client.Media.create,
+    );
+  }
+
+  Future<client.CreateMediaThumbnailUploadSessionResponse>
+  createMediaThumbnailUploadSession(
+    String roomId,
+    client.CreateMediaThumbnailUploadSessionRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/media/${request.mediaId}/thumbnail/upload-session',
+      client.CreateMediaThumbnailUploadSessionResponse.create,
+      body: request,
+    );
+  }
+
+  Future<client.UploadMediaThumbnailObjectResponse> uploadMediaThumbnailObject(
+    client.UploadMediaThumbnailObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._uploadFileObject(
+      '/api/media/thumbnail-objects/$key',
+      token: request.token,
+      data: request.data,
+      contentType: request.contentType,
+      contentRange: request.hasContentRange() ? request.contentRange : null,
+    );
+    return client.UploadMediaThumbnailObjectResponse(
+      complete: result.complete,
+      uploadedSizeBytes: result.uploadedSizeBytes,
+      uploadedParts: result.uploadedParts,
+    );
+  }
+
+  Future<client.MediaThumbnailObjectResponse> getMediaThumbnailObject(
+    client.GetMediaThumbnailObjectRequest request,
+  ) async {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    final result = await _api._downloadFileObject(
+      '/api/media/thumbnail-objects/$key',
+      token: request.token,
+      range: request.hasRange() ? request.range : null,
+    );
+    return client.MediaThumbnailObjectResponse(
+      mimeType: result.mimeType,
+      contentManifestSha256: result.contentManifestSha256,
+      data: result.data,
+      contentRange: result.contentRange,
+      totalSizeBytes: result.totalSizeBytes,
+    );
+  }
+
+  Future<client.CompleteMediaThumbnailUploadSessionResponse>
+  completeMediaThumbnailUploadSession(
+    client.CompleteMediaThumbnailUploadSessionRequest request,
+  ) {
+    final key = Uri.encodeComponent(request.encodedObjectKey);
+    return _api._send(
+      'POST',
+      '/api/media/thumbnail-objects/$key/complete',
+      client.CompleteMediaThumbnailUploadSessionResponse.create,
+      body: request,
+      auth: false,
+    );
+  }
+
+  Future<client.Media> updateMediaThumbnail(
+    String roomId,
+    client.UpdateMediaThumbnailRequest request,
+  ) {
+    return _api._send(
+      'PUT',
+      '/api/rooms/$roomId/media/${request.mediaId}/thumbnail',
+      client.Media.create,
+      body: request,
+    );
+  }
+
+  Future<client.Media> clearMediaThumbnail(
+    String roomId,
+    client.ClearMediaThumbnailRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/rooms/$roomId/media/${request.mediaId}/thumbnail',
+      client.Media.create,
     );
   }
 
@@ -1807,14 +1886,14 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.UpdatePlaybackStateResponse> updatePlaybackState(
+  Future<client.PlaybackState> updatePlaybackState(
     String roomId,
     client.UpdatePlaybackStateRequest request,
   ) {
     return _api._send(
       'PATCH',
       '/api/rooms/$roomId/playback',
-      client.UpdatePlaybackStateResponse.create,
+      client.PlaybackState.create,
       body: request,
     );
   }
@@ -1875,6 +1954,18 @@ class SyncTvPublicApi {
       '/api/public/server-info',
       client.GetServerInfoResponse.create,
       auth: false,
+    );
+  }
+
+  Future<client.GetServerTimeResponse> getServerTime(
+    client.GetServerTimeRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/public/time',
+      client.GetServerTimeResponse.create,
+      auth: false,
+      query: _api._messageQuery(request),
     );
   }
 
@@ -1961,13 +2052,13 @@ class SyncTvNotificationApi {
     );
   }
 
-  Future<client.GetNotificationResponse> getNotification(
+  Future<client.NotificationProto> getNotification(
     client.GetNotificationRequest request,
   ) {
     return _api._send(
       'GET',
       '/api/notifications/${request.notificationId}',
-      client.GetNotificationResponse.create,
+      client.NotificationProto.create,
     );
   }
 
@@ -2124,11 +2215,11 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.CreateUserResponse> createUser(admin.CreateUserRequest request) {
+  Future<admin.AdminUser> createUser(admin.CreateUserRequest request) {
     return _api._send(
       'POST',
       '/api/admin/users',
-      admin.CreateUserResponse.create,
+      admin.AdminUser.create,
       body: request,
     );
   }
@@ -2150,11 +2241,11 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.GetUserResponse> getUser(admin.GetUserRequest request) {
+  Future<admin.AdminUser> getUser(admin.GetUserRequest request) {
     return _api._send(
       'GET',
       '/api/admin/users/${request.userId}',
-      admin.GetUserResponse.create,
+      admin.AdminUser.create,
     );
   }
 
@@ -2190,42 +2281,40 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.UpdateUserUsernameResponse> updateUserUsername(
+  Future<admin.AdminUser> updateUserUsername(
     admin.UpdateUserUsernameRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/admin/users/${request.userId}/username',
-      admin.UpdateUserUsernameResponse.create,
+      admin.AdminUser.create,
       body: request,
     );
   }
 
-  Future<admin.UpdateUserRoleResponse> updateUserRole(
-    admin.UpdateUserRoleRequest request,
-  ) {
+  Future<admin.AdminUser> updateUserRole(admin.UpdateUserRoleRequest request) {
     return _api._send(
       'POST',
       '/api/admin/users/${request.userId}/role',
-      admin.UpdateUserRoleResponse.create,
+      admin.AdminUser.create,
       body: request,
     );
   }
 
-  Future<admin.BanUserResponse> banUser(admin.BanUserRequest request) {
+  Future<admin.AdminUser> banUser(admin.BanUserRequest request) {
     return _api._send(
       'POST',
       '/api/admin/users/${request.userId}/ban',
-      admin.BanUserResponse.create,
+      admin.AdminUser.create,
       body: request,
     );
   }
 
-  Future<admin.UnbanUserResponse> unbanUser(admin.UnbanUserRequest request) {
+  Future<admin.AdminUser> unbanUser(admin.UnbanUserRequest request) {
     return _api._send(
       'POST',
       '/api/admin/users/${request.userId}/unban',
-      admin.UnbanUserResponse.create,
+      admin.AdminUser.create,
     );
   }
 
@@ -2279,11 +2368,11 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.GetRoomResponse> getRoom(admin.GetRoomRequest request) {
+  Future<admin.Room> getRoom(admin.GetRoomRequest request) {
     return _api._send(
       'GET',
       '/api/admin/rooms/${request.roomId}',
-      admin.GetRoomResponse.create,
+      admin.Room.create,
     );
   }
 
@@ -2308,13 +2397,11 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.ResetRoomSettingsResponse> resetRoomSettings(
-    admin.ResetRoomSettingsRequest request,
-  ) {
+  Future<admin.Room> resetRoomSettings(admin.ResetRoomSettingsRequest request) {
     return _api._send(
       'POST',
       '/api/admin/rooms/${request.roomId}/settings/reset',
-      admin.ResetRoomSettingsResponse.create,
+      admin.Room.create,
       body: request,
     );
   }
@@ -2330,20 +2417,20 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.BanRoomResponse> banRoom(admin.BanRoomRequest request) {
+  Future<admin.Room> banRoom(admin.BanRoomRequest request) {
     return _api._send(
       'POST',
       '/api/admin/rooms/${request.roomId}/ban',
-      admin.BanRoomResponse.create,
+      admin.Room.create,
       body: request,
     );
   }
 
-  Future<admin.UnbanRoomResponse> unbanRoom(admin.UnbanRoomRequest request) {
+  Future<admin.Room> unbanRoom(admin.UnbanRoomRequest request) {
     return _api._send(
       'POST',
       '/api/admin/rooms/${request.roomId}/unban',
-      admin.UnbanRoomResponse.create,
+      admin.Room.create,
     );
   }
 
@@ -2358,22 +2445,44 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.AddMemberResponse> addMember(admin.AddMemberRequest request) {
+  Future<common.RoomMember> addMember(admin.AddMemberRequest request) {
     return _api._send(
       'POST',
       '/api/admin/rooms/${request.roomId}/members',
-      admin.AddMemberResponse.create,
+      common.RoomMember.create,
       body: request,
     );
   }
 
-  Future<admin.UpdateMemberPermissionsResponse> updateMemberPermissions(
+  Future<common.RoomMember> updateMemberRemarkName(
+    admin.UpdateMemberRemarkNameRequest request,
+  ) {
+    return _api._send(
+      'PATCH',
+      '/api/admin/rooms/${request.roomId}/members/${request.userId}/remark-name',
+      common.RoomMember.create,
+      body: request,
+    );
+  }
+
+  Future<common.RoomMember> updateMemberDisplayTag(
+    admin.UpdateMemberDisplayTagRequest request,
+  ) {
+    return _api._send(
+      'PATCH',
+      '/api/admin/rooms/${request.roomId}/members/${request.userId}/display-tag',
+      common.RoomMember.create,
+      body: request,
+    );
+  }
+
+  Future<common.RoomMember> updateMemberPermissions(
     admin.UpdateMemberPermissionsRequest request,
   ) {
     return _api._send(
       'PATCH',
       '/api/admin/rooms/${request.roomId}/members/${request.userId}',
-      admin.UpdateMemberPermissionsResponse.create,
+      common.RoomMember.create,
       body: request,
     );
   }
@@ -2398,13 +2507,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.UpsertRoomCategoryResponse> upsertRoomCategory(
+  Future<client.RoomCategory> upsertRoomCategory(
     admin.UpsertRoomCategoryRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/admin/rooms/categories',
-      admin.UpsertRoomCategoryResponse.create,
+      client.RoomCategory.create,
       body: request,
     );
   }
@@ -2431,13 +2540,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.UpsertRoomLabelResponse> upsertRoomLabel(
+  Future<client.RoomLabel> upsertRoomLabel(
     admin.UpsertRoomLabelRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/admin/rooms/labels',
-      admin.UpsertRoomLabelResponse.create,
+      client.RoomLabel.create,
       body: request,
     );
   }
@@ -2453,13 +2562,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.UpdateRoomTaxonomyResponse> updateRoomTaxonomy(
+  Future<admin.Room> updateRoomTaxonomy(
     admin.UpdateRoomTaxonomyRequest request,
   ) {
     return _api._send(
       'PATCH',
       '/api/admin/rooms/${request.roomId}/taxonomy',
-      admin.UpdateRoomTaxonomyResponse.create,
+      admin.Room.create,
       body: request,
     );
   }
@@ -2486,11 +2595,11 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.AddAdminResponse> addAdmin(admin.AddAdminRequest request) {
+  Future<admin.AdminUser> addAdmin(admin.AddAdminRequest request) {
     return _api._send(
       'POST',
       '/api/admin/admins/${request.userId}',
-      admin.AddAdminResponse.create,
+      admin.AdminUser.create,
       body: request,
     );
   }
@@ -2567,14 +2676,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.RejectUserRegistrationReviewResponse>
-  rejectUserRegistrationReview(
+  Future<admin.UserRegistrationReview> rejectUserRegistrationReview(
     admin.RejectUserRegistrationReviewRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/admin/reviews/user-registrations/reject',
-      admin.RejectUserRegistrationReviewResponse.create,
+      admin.UserRegistrationReview.create,
       body: request,
     );
   }
@@ -2601,13 +2709,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.RejectRoomCreationReviewResponse> rejectRoomCreationReview(
+  Future<admin.RoomCreationReview> rejectRoomCreationReview(
     admin.RejectRoomCreationReviewRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/admin/reviews/room-creations/reject',
-      admin.RejectRoomCreationReviewResponse.create,
+      admin.RoomCreationReview.create,
       body: request,
     );
   }
@@ -2634,13 +2742,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.RejectRoomJoinReviewResponse> rejectRoomJoinReview(
+  Future<admin.RoomJoinReview> rejectRoomJoinReview(
     admin.RejectRoomJoinReviewRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/admin/reviews/room-joins/reject',
-      admin.RejectRoomJoinReviewResponse.create,
+      admin.RoomJoinReview.create,
       body: request,
     );
   }
@@ -2667,13 +2775,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.GetContentReportResponse> getContentReport(
+  Future<admin.ContentReport> getContentReport(
     admin.GetContentReportRequest request,
   ) {
     return _api._send(
       'GET',
       '/api/admin/reports/${request.reportId}',
-      admin.GetContentReportResponse.create,
+      admin.ContentReport.create,
     );
   }
 

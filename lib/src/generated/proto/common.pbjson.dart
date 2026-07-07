@@ -194,6 +194,8 @@ const RoomMember$json = {
     {'1': 'joined_at', '3': 10, '4': 1, '5': 3, '10': 'joinedAt'},
     {'1': 'is_online', '3': 11, '4': 1, '5': 8, '10': 'isOnline'},
     {'1': 'connection_count', '3': 12, '4': 1, '5': 5, '10': 'connectionCount'},
+    {'1': 'remark_name', '3': 13, '4': 1, '5': 9, '10': 'remarkName'},
+    {'1': 'display_tag', '3': 14, '4': 1, '5': 9, '10': 'displayTag'},
   ],
 };
 
@@ -207,7 +209,8 @@ final $typed_data.Uint8List roomMemberDescriptor = $convert.base64Decode(
     '5fYWRkZWRfcGVybWlzc2lvbnMYCCABKARSFWFkbWluQWRkZWRQZXJtaXNzaW9ucxI6ChlhZG1p'
     'bl9yZW1vdmVkX3Blcm1pc3Npb25zGAkgASgEUhdhZG1pblJlbW92ZWRQZXJtaXNzaW9ucxIbCg'
     'lqb2luZWRfYXQYCiABKANSCGpvaW5lZEF0EhsKCWlzX29ubGluZRgLIAEoCFIIaXNPbmxpbmUS'
-    'KQoQY29ubmVjdGlvbl9jb3VudBgMIAEoBVIPY29ubmVjdGlvbkNvdW50');
+    'KQoQY29ubmVjdGlvbl9jb3VudBgMIAEoBVIPY29ubmVjdGlvbkNvdW50Eh8KC3JlbWFya19uYW'
+    '1lGA0gASgJUgpyZW1hcmtOYW1lEh8KC2Rpc3BsYXlfdGFnGA4gASgJUgpkaXNwbGF5VGFn');
 
 @$core.Deprecated('Use nodeConnectionCountDescriptor instead')
 const NodeConnectionCount$json = {

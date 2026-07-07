@@ -36,6 +36,8 @@ class RoomMember extends $pb.GeneratedMessage {
     $fixnum.Int64? joinedAt,
     $core.bool? isOnline,
     $core.int? connectionCount,
+    $core.String? remarkName,
+    $core.String? displayTag,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
@@ -53,6 +55,8 @@ class RoomMember extends $pb.GeneratedMessage {
     if (joinedAt != null) result.joinedAt = joinedAt;
     if (isOnline != null) result.isOnline = isOnline;
     if (connectionCount != null) result.connectionCount = connectionCount;
+    if (remarkName != null) result.remarkName = remarkName;
+    if (displayTag != null) result.displayTag = displayTag;
     return result;
   }
 
@@ -92,6 +96,8 @@ class RoomMember extends $pb.GeneratedMessage {
     ..aInt64(10, _omitFieldNames ? '' : 'joinedAt')
     ..aOB(11, _omitFieldNames ? '' : 'isOnline')
     ..aI(12, _omitFieldNames ? '' : 'connectionCount')
+    ..aOS(13, _omitFieldNames ? '' : 'remarkName')
+    ..aOS(14, _omitFieldNames ? '' : 'displayTag')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -223,6 +229,24 @@ class RoomMember extends $pb.GeneratedMessage {
   $core.bool hasConnectionCount() => $_has(11);
   @$pb.TagNumber(12)
   void clearConnectionCount() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get remarkName => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set remarkName($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasRemarkName() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearRemarkName() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.String get displayTag => $_getSZ(13);
+  @$pb.TagNumber(14)
+  set displayTag($core.String value) => $_setString(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasDisplayTag() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearDisplayTag() => $_clearField(14);
 }
 
 class NodeConnectionCount extends $pb.GeneratedMessage {

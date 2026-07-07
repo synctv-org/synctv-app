@@ -1290,6 +1290,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       username: message.senderUsername,
       content: message.chatContent,
       timestamp: (message.timestampMillis / 1000).round(),
+      messageType: message.chatMessageType,
       displayPosition: message.chatDisplayPosition,
       displayColor: message.chatDisplayColor,
       version: message.chatVersion,
@@ -1672,6 +1673,48 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       if (mounted) MessageUtils.showSuccess(context, '成员权限已更新');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '更新权限失败: $e');
+    }
+  }
+
+  Future<void> _editMemberRemarkName(AdminRoomMember member) async {
+    final value = await _showMemberTextDialog(
+      title: '备注名称',
+      label: '备注名称',
+      initialValue: member.remarkName,
+      icon: Icons.drive_file_rename_outline_rounded,
+    );
+    if (value == null || value == member.remarkName) return;
+    try {
+      await SyncTvService.updateRoomMemberRemarkName(
+        widget.roomId,
+        member.userId,
+        value,
+      );
+      await _loadMembers();
+      if (mounted) MessageUtils.showSuccess(context, '备注名称已更新');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '更新备注名称失败: $e');
+    }
+  }
+
+  Future<void> _editMemberDisplayTag(AdminRoomMember member) async {
+    final value = await _showMemberTextDialog(
+      title: '展示标签',
+      label: '展示标签',
+      initialValue: member.displayTag,
+      icon: Icons.sell_outlined,
+    );
+    if (value == null || value == member.displayTag) return;
+    try {
+      await SyncTvService.updateRoomMemberDisplayTag(
+        widget.roomId,
+        member.userId,
+        value,
+      );
+      await _loadMembers();
+      if (mounted) MessageUtils.showSuccess(context, '展示标签已更新');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '更新展示标签失败: $e');
     }
   }
 
@@ -2157,6 +2200,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       _buildDetailLine('父级', detail.parentId!),
                     if (detail.description.isNotEmpty)
                       _buildDetailLine('描述', detail.description),
+                    if (detail.thumbnailUrl.isNotEmpty)
+                      _buildDetailLine('缩略图', detail.thumbnailUrl),
                     if (detail.url.isNotEmpty)
                       _buildDetailLine('URL', detail.url),
                     if (detail.subPath?.isNotEmpty == true)
@@ -2213,6 +2258,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             label: '封面',
                             style: AppActionButtonStyle.tonal,
                           ),
+                          if (detail.id.startsWith('med_')) ...[
+                            const SizedBox(width: 8),
+                            AppActionButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _updateEntryThumbnail(detail);
+                              },
+                              icon: Icons.photo_size_select_actual_outlined,
+                              label: '缩略图',
+                              style: AppActionButtonStyle.tonal,
+                            ),
+                          ],
                         ],
                       ],
                     ),
@@ -2273,6 +2330,42 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       if (mounted) MessageUtils.showSuccess(context, '封面已移除');
     } catch (e) {
       if (mounted) MessageUtils.showError(context, '移除封面失败: $e');
+    }
+  }
+
+  Future<void> _updateEntryThumbnail(RoomMediaEntry entry) async {
+    if (!_canMutateCurrentMediaScope ||
+        entry.isProviderDynamicEntry ||
+        !entry.id.startsWith('med_')) {
+      return;
+    }
+    try {
+      final image = await pickLocalImageUpload(context, aspectRatio: 16 / 9);
+      if (image == null || !mounted) return;
+      await SyncTvService.updateVideoThumbnail(
+        widget.roomId,
+        entry.id,
+        image.upload,
+      );
+      await _loadMediaLibrary();
+      if (mounted) MessageUtils.showSuccess(context, '缩略图已更新');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '更新缩略图失败: $e');
+    }
+  }
+
+  Future<void> _clearEntryThumbnail(RoomMediaEntry entry) async {
+    if (!_canMutateCurrentMediaScope ||
+        entry.isProviderDynamicEntry ||
+        !entry.id.startsWith('med_')) {
+      return;
+    }
+    try {
+      await SyncTvService.clearVideoThumbnail(widget.roomId, entry.id);
+      await _loadMediaLibrary();
+      if (mounted) MessageUtils.showSuccess(context, '缩略图已移除');
+    } catch (e) {
+      if (mounted) MessageUtils.showError(context, '移除缩略图失败: $e');
     }
   }
 
@@ -2851,6 +2944,36 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         ),
       ],
     );
+  }
+
+  Future<String?> _showMemberTextDialog({
+    required String title,
+    required String label,
+    required String initialValue,
+    required IconData icon,
+  }) {
+    final controller = TextEditingController(text: initialValue);
+    void submit() => Navigator.pop(context, controller.text.trim());
+
+    return ChatUtils.showStyledDialog<String>(
+      context: context,
+      title: title,
+      icon: Icon(icon),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: AppTextField(
+          controller: controller,
+          label: label,
+          autofocus: true,
+          maxLength: 64,
+          onSubmitted: (_) => submit(),
+        ),
+      ),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        ChatUtils.createConfirmButton(context, submit, text: '保存'),
+      ],
+    ).whenComplete(() => _disposeTextControllersAfterDialog([controller]));
   }
 
   Future<_MemberPermissionOverrideResult?> _showMemberPermissionOverrideDialog(
@@ -4923,6 +5046,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   _updateEntryCover(entry);
                 case _MediaAction.clearCover:
                   _clearEntryCover(entry);
+                case _MediaAction.updateThumbnail:
+                  _updateEntryThumbnail(entry);
+                case _MediaAction.clearThumbnail:
+                  _clearEntryThumbnail(entry);
                 case _MediaAction.moveUp:
                   _movePlaylistRelative(entry, -1);
                 case _MediaAction.moveDown:
@@ -4957,6 +5084,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   enabled: entry.coverUrl.isNotEmpty,
                   child: const Text('移除封面'),
                 ),
+                if (entry.id.startsWith('med_')) ...[
+                  const PopupMenuItem(
+                    value: _MediaAction.updateThumbnail,
+                    child: Text('更新缩略图'),
+                  ),
+                  PopupMenuItem(
+                    value: _MediaAction.clearThumbnail,
+                    enabled: entry.thumbnailUrl.isNotEmpty,
+                    child: const Text('移除缩略图'),
+                  ),
+                ],
                 PopupMenuItem(
                   value: _MediaAction.moveUp,
                   enabled: playlistIndex > 0,
@@ -5608,9 +5746,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final presenceColor = member.isOnline
         ? const Color(0xFF16A34A)
         : theme.hintColor;
-    final displayName = member.username.isEmpty
-        ? member.userId
-        : member.username;
+    final baseName = member.username.isEmpty ? member.userId : member.username;
+    final remarkName = member.remarkName.trim();
+    final displayTag = member.displayTag.trim();
+    final displayName = remarkName.isEmpty ? baseName : remarkName;
     return _buildManagementTileSurface(
       theme,
       isDark,
@@ -5658,6 +5797,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             icon: Icons.badge_outlined,
                             color: theme.colorScheme.primary,
                           ),
+                        if (displayTag.isNotEmpty)
+                          _buildMemberBadge(
+                            label: displayTag,
+                            icon: Icons.sell_outlined,
+                            color: theme.colorScheme.tertiary,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -5685,7 +5830,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     if (member.userId.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Text(
-                        member.userId,
+                        remarkName.isEmpty
+                            ? member.userId
+                            : '$baseName · ${member.userId}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(color: theme.hintColor, fontSize: 12),
@@ -5702,6 +5849,20 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               spacing: 8,
               runSpacing: 8,
               children: [
+                AppIconButton(
+                  tooltip: '备注名称',
+                  icon: Icons.drive_file_rename_outline_rounded,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _editMemberRemarkName(member),
+                ),
+                AppIconButton(
+                  tooltip: '展示标签',
+                  icon: Icons.sell_outlined,
+                  size: AppIconButtonSize.sm,
+                  style: AppIconButtonStyle.outlined,
+                  onPressed: () => _editMemberDisplayTag(member),
+                ),
                 AppIconButton(
                   tooltip: '修改角色',
                   icon: Icons.admin_panel_settings_outlined,
@@ -5760,6 +5921,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   tooltip: '更多成员操作',
                   onSelected: (action) {
                     switch (action) {
+                      case _MemberAction.remarkName:
+                        _editMemberRemarkName(member);
+                      case _MemberAction.displayTag:
+                        _editMemberDisplayTag(member);
                       case _MemberAction.role:
                         _setMemberRole(member);
                       case _MemberAction.permissions:
@@ -5771,6 +5936,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     }
                   },
                   itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: _MemberAction.remarkName,
+                      child: Text('备注名称'),
+                    ),
+                    PopupMenuItem(
+                      value: _MemberAction.displayTag,
+                      child: Text('展示标签'),
+                    ),
                     PopupMenuItem(
                       value: _MemberAction.role,
                       child: Text('修改角色'),
@@ -6320,7 +6493,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 }
 
-enum _MemberAction { role, permissions, transfer, kick }
+enum _MemberAction { remarkName, displayTag, role, permissions, transfer, kick }
 
 class _RoomSettingsNavTile extends StatelessWidget {
   final IconData icon;
@@ -6445,6 +6618,8 @@ enum _MediaAction {
   rename,
   updateCover,
   clearCover,
+  updateThumbnail,
+  clearThumbnail,
   moveUp,
   moveDown,
   move,

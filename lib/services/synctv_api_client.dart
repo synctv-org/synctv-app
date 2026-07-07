@@ -1281,6 +1281,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
       metadata: metadata,
       description: media.description,
       coverUrl: resolveResourceUrl(media.hasCover() ? media.cover.url : ''),
+      thumbnailUrl: resolveResourceUrl(
+        media.hasThumbnail() ? media.thumbnail.url : '',
+      ),
     );
   }
 
@@ -1374,10 +1377,9 @@ extension SyncTvModelMapping on SyncTvApiClient {
   }
 
   SyncTvPlaybackStatus mapPlaybackState(
-    client.UpdatePlaybackStateResponse response, {
+    client.PlaybackState state, {
     RoomMediaEntry? entry,
   }) {
-    final state = response.playbackState;
     return SyncTvPlaybackStatus(
       entry: entry,
       isPlaying: state.isPlaying,

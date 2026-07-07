@@ -1,4 +1,6 @@
 import 'package:synctv_app/models/synctv_models.dart';
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
 
 class RtmpPublishKeyInfo {
   final String publishKey;
@@ -263,6 +265,7 @@ class RoomChatMessageInfo {
   final String username;
   final String content;
   final int timestamp;
+  final int messageType;
   final String displayPosition;
   final String displayColor;
   final int version;
@@ -283,6 +286,7 @@ class RoomChatMessageInfo {
     required this.username,
     required this.content,
     required this.timestamp,
+    this.messageType = 1,
     this.displayPosition = '',
     this.displayColor = '',
     this.version = 0,
@@ -302,6 +306,9 @@ class RoomChatMessageInfo {
   bool get isDeleted => deletedAt > 0 || status == 3;
   bool get isEdited => editedAt > 0 || status == 2;
   bool get isPinned => pin != null;
+  bool get isUserMessage =>
+      messageType == client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER.value;
+  bool get isSystemMessage => !isUserMessage;
 
   RoomChatMessageInfo copyWith({
     String? id,
@@ -310,6 +317,7 @@ class RoomChatMessageInfo {
     String? username,
     String? content,
     int? timestamp,
+    int? messageType,
     String? displayPosition,
     String? displayColor,
     int? version,
@@ -331,6 +339,7 @@ class RoomChatMessageInfo {
       username: username ?? this.username,
       content: content ?? this.content,
       timestamp: timestamp ?? this.timestamp,
+      messageType: messageType ?? this.messageType,
       displayPosition: displayPosition ?? this.displayPosition,
       displayColor: displayColor ?? this.displayColor,
       version: version ?? this.version,

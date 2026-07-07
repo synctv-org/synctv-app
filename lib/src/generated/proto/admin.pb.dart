@@ -5087,63 +5087,6 @@ class CreateUserRequest extends $pb.GeneratedMessage {
   void clearPassword() => $_clearField(5);
 }
 
-class CreateUserResponse extends $pb.GeneratedMessage {
-  factory CreateUserResponse({
-    AdminUser? user,
-  }) {
-    final result = create();
-    if (user != null) result.user = user;
-    return result;
-  }
-
-  CreateUserResponse._();
-
-  factory CreateUserResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory CreateUserResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'CreateUserResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<AdminUser>(1, _omitFieldNames ? '' : 'user',
-        subBuilder: AdminUser.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CreateUserResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CreateUserResponse copyWith(void Function(CreateUserResponse) updates) =>
-      super.copyWith((message) => updates(message as CreateUserResponse))
-          as CreateUserResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static CreateUserResponse create() => CreateUserResponse._();
-  @$core.override
-  CreateUserResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static CreateUserResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<CreateUserResponse>(create);
-  static CreateUserResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  AdminUser get user => $_getN(0);
-  @$pb.TagNumber(1)
-  set user(AdminUser value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUser() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUser() => $_clearField(1);
-  @$pb.TagNumber(1)
-  AdminUser ensureUser() => $_ensure(0);
-}
-
 class DeleteUserRequest extends $pb.GeneratedMessage {
   factory DeleteUserRequest({
     $core.String? userId,
@@ -5561,63 +5504,6 @@ class UserPathRequest extends $pb.GeneratedMessage {
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
   void clearUserId() => $_clearField(1);
-}
-
-class GetUserResponse extends $pb.GeneratedMessage {
-  factory GetUserResponse({
-    AdminUser? user,
-  }) {
-    final result = create();
-    if (user != null) result.user = user;
-    return result;
-  }
-
-  GetUserResponse._();
-
-  factory GetUserResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetUserResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetUserResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<AdminUser>(1, _omitFieldNames ? '' : 'user',
-        subBuilder: AdminUser.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetUserResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetUserResponse copyWith(void Function(GetUserResponse) updates) =>
-      super.copyWith((message) => updates(message as GetUserResponse))
-          as GetUserResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetUserResponse create() => GetUserResponse._();
-  @$core.override
-  GetUserResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static GetUserResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetUserResponse>(create);
-  static GetUserResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  AdminUser get user => $_getN(0);
-  @$pb.TagNumber(1)
-  set user(AdminUser value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUser() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUser() => $_clearField(1);
-  @$pb.TagNumber(1)
-  AdminUser ensureUser() => $_ensure(0);
 }
 
 class GetUserPreferencesRequest extends $pb.GeneratedMessage {
@@ -6156,65 +6042,6 @@ class UpdateUserUsernameRequest extends $pb.GeneratedMessage {
   void clearNewUsername() => $_clearField(2);
 }
 
-class UpdateUserUsernameResponse extends $pb.GeneratedMessage {
-  factory UpdateUserUsernameResponse({
-    AdminUser? user,
-  }) {
-    final result = create();
-    if (user != null) result.user = user;
-    return result;
-  }
-
-  UpdateUserUsernameResponse._();
-
-  factory UpdateUserUsernameResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpdateUserUsernameResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateUserUsernameResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<AdminUser>(1, _omitFieldNames ? '' : 'user',
-        subBuilder: AdminUser.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateUserUsernameResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateUserUsernameResponse copyWith(
-          void Function(UpdateUserUsernameResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as UpdateUserUsernameResponse))
-          as UpdateUserUsernameResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UpdateUserUsernameResponse create() => UpdateUserUsernameResponse._();
-  @$core.override
-  UpdateUserUsernameResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpdateUserUsernameResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateUserUsernameResponse>(create);
-  static UpdateUserUsernameResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  AdminUser get user => $_getN(0);
-  @$pb.TagNumber(1)
-  set user(AdminUser value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUser() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUser() => $_clearField(1);
-  @$pb.TagNumber(1)
-  AdminUser ensureUser() => $_ensure(0);
-}
-
 class UpdateUserRoleRequest extends $pb.GeneratedMessage {
   factory UpdateUserRoleRequest({
     $core.String? userId,
@@ -6283,64 +6110,6 @@ class UpdateUserRoleRequest extends $pb.GeneratedMessage {
   void clearRole() => $_clearField(2);
 }
 
-class UpdateUserRoleResponse extends $pb.GeneratedMessage {
-  factory UpdateUserRoleResponse({
-    AdminUser? user,
-  }) {
-    final result = create();
-    if (user != null) result.user = user;
-    return result;
-  }
-
-  UpdateUserRoleResponse._();
-
-  factory UpdateUserRoleResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpdateUserRoleResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateUserRoleResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<AdminUser>(1, _omitFieldNames ? '' : 'user',
-        subBuilder: AdminUser.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateUserRoleResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateUserRoleResponse copyWith(
-          void Function(UpdateUserRoleResponse) updates) =>
-      super.copyWith((message) => updates(message as UpdateUserRoleResponse))
-          as UpdateUserRoleResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UpdateUserRoleResponse create() => UpdateUserRoleResponse._();
-  @$core.override
-  UpdateUserRoleResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpdateUserRoleResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateUserRoleResponse>(create);
-  static UpdateUserRoleResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  AdminUser get user => $_getN(0);
-  @$pb.TagNumber(1)
-  set user(AdminUser value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUser() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUser() => $_clearField(1);
-  @$pb.TagNumber(1)
-  AdminUser ensureUser() => $_ensure(0);
-}
-
 class BanUserRequest extends $pb.GeneratedMessage {
   factory BanUserRequest({
     $core.String? userId,
@@ -6407,63 +6176,6 @@ class BanUserRequest extends $pb.GeneratedMessage {
   void clearReason() => $_clearField(2);
 }
 
-class BanUserResponse extends $pb.GeneratedMessage {
-  factory BanUserResponse({
-    AdminUser? user,
-  }) {
-    final result = create();
-    if (user != null) result.user = user;
-    return result;
-  }
-
-  BanUserResponse._();
-
-  factory BanUserResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory BanUserResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'BanUserResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<AdminUser>(1, _omitFieldNames ? '' : 'user',
-        subBuilder: AdminUser.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BanUserResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BanUserResponse copyWith(void Function(BanUserResponse) updates) =>
-      super.copyWith((message) => updates(message as BanUserResponse))
-          as BanUserResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static BanUserResponse create() => BanUserResponse._();
-  @$core.override
-  BanUserResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static BanUserResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<BanUserResponse>(create);
-  static BanUserResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  AdminUser get user => $_getN(0);
-  @$pb.TagNumber(1)
-  set user(AdminUser value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUser() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUser() => $_clearField(1);
-  @$pb.TagNumber(1)
-  AdminUser ensureUser() => $_ensure(0);
-}
-
 class UnbanUserRequest extends $pb.GeneratedMessage {
   factory UnbanUserRequest({
     $core.String? userId,
@@ -6516,63 +6228,6 @@ class UnbanUserRequest extends $pb.GeneratedMessage {
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
   void clearUserId() => $_clearField(1);
-}
-
-class UnbanUserResponse extends $pb.GeneratedMessage {
-  factory UnbanUserResponse({
-    AdminUser? user,
-  }) {
-    final result = create();
-    if (user != null) result.user = user;
-    return result;
-  }
-
-  UnbanUserResponse._();
-
-  factory UnbanUserResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UnbanUserResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UnbanUserResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<AdminUser>(1, _omitFieldNames ? '' : 'user',
-        subBuilder: AdminUser.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UnbanUserResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UnbanUserResponse copyWith(void Function(UnbanUserResponse) updates) =>
-      super.copyWith((message) => updates(message as UnbanUserResponse))
-          as UnbanUserResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UnbanUserResponse create() => UnbanUserResponse._();
-  @$core.override
-  UnbanUserResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UnbanUserResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UnbanUserResponse>(create);
-  static UnbanUserResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  AdminUser get user => $_getN(0);
-  @$pb.TagNumber(1)
-  set user(AdminUser value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUser() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUser() => $_clearField(1);
-  @$pb.TagNumber(1)
-  AdminUser ensureUser() => $_ensure(0);
 }
 
 class GetUserRoomsRequest extends $pb.GeneratedMessage {
@@ -7145,80 +6800,6 @@ class RejectUserRegistrationReviewRequest extends $pb.GeneratedMessage {
   void clearReason() => $_clearField(2);
 }
 
-class RejectUserRegistrationReviewResponse extends $pb.GeneratedMessage {
-  factory RejectUserRegistrationReviewResponse({
-    UserRegistrationReview? review,
-    $core.bool? success,
-  }) {
-    final result = create();
-    if (review != null) result.review = review;
-    if (success != null) result.success = success;
-    return result;
-  }
-
-  RejectUserRegistrationReviewResponse._();
-
-  factory RejectUserRegistrationReviewResponse.fromBuffer(
-          $core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory RejectUserRegistrationReviewResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RejectUserRegistrationReviewResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<UserRegistrationReview>(1, _omitFieldNames ? '' : 'review',
-        subBuilder: UserRegistrationReview.create)
-    ..aOB(2, _omitFieldNames ? '' : 'success')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RejectUserRegistrationReviewResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RejectUserRegistrationReviewResponse copyWith(
-          void Function(RejectUserRegistrationReviewResponse) updates) =>
-      super.copyWith((message) =>
-              updates(message as RejectUserRegistrationReviewResponse))
-          as RejectUserRegistrationReviewResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static RejectUserRegistrationReviewResponse create() =>
-      RejectUserRegistrationReviewResponse._();
-  @$core.override
-  RejectUserRegistrationReviewResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static RejectUserRegistrationReviewResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          RejectUserRegistrationReviewResponse>(create);
-  static RejectUserRegistrationReviewResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  UserRegistrationReview get review => $_getN(0);
-  @$pb.TagNumber(1)
-  set review(UserRegistrationReview value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasReview() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearReview() => $_clearField(1);
-  @$pb.TagNumber(1)
-  UserRegistrationReview ensureReview() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  $core.bool get success => $_getBF(1);
-  @$pb.TagNumber(2)
-  set success($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasSuccess() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSuccess() => $_clearField(2);
-}
-
 class ListRoomCreationReviewsRequest extends $pb.GeneratedMessage {
   factory ListRoomCreationReviewsRequest({
     $core.int? page,
@@ -7595,80 +7176,6 @@ class RejectRoomCreationReviewRequest extends $pb.GeneratedMessage {
   void clearReason() => $_clearField(2);
 }
 
-class RejectRoomCreationReviewResponse extends $pb.GeneratedMessage {
-  factory RejectRoomCreationReviewResponse({
-    RoomCreationReview? review,
-    $core.bool? success,
-  }) {
-    final result = create();
-    if (review != null) result.review = review;
-    if (success != null) result.success = success;
-    return result;
-  }
-
-  RejectRoomCreationReviewResponse._();
-
-  factory RejectRoomCreationReviewResponse.fromBuffer(
-          $core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory RejectRoomCreationReviewResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RejectRoomCreationReviewResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<RoomCreationReview>(1, _omitFieldNames ? '' : 'review',
-        subBuilder: RoomCreationReview.create)
-    ..aOB(2, _omitFieldNames ? '' : 'success')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RejectRoomCreationReviewResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RejectRoomCreationReviewResponse copyWith(
-          void Function(RejectRoomCreationReviewResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as RejectRoomCreationReviewResponse))
-          as RejectRoomCreationReviewResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static RejectRoomCreationReviewResponse create() =>
-      RejectRoomCreationReviewResponse._();
-  @$core.override
-  RejectRoomCreationReviewResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static RejectRoomCreationReviewResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RejectRoomCreationReviewResponse>(
-          create);
-  static RejectRoomCreationReviewResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  RoomCreationReview get review => $_getN(0);
-  @$pb.TagNumber(1)
-  set review(RoomCreationReview value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasReview() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearReview() => $_clearField(1);
-  @$pb.TagNumber(1)
-  RoomCreationReview ensureReview() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  $core.bool get success => $_getBF(1);
-  @$pb.TagNumber(2)
-  set success($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasSuccess() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSuccess() => $_clearField(2);
-}
-
 class ListRoomJoinReviewsRequest extends $pb.GeneratedMessage {
   factory ListRoomJoinReviewsRequest({
     $core.int? page,
@@ -8037,78 +7544,6 @@ class RejectRoomJoinReviewRequest extends $pb.GeneratedMessage {
   $core.bool hasReason() => $_has(1);
   @$pb.TagNumber(2)
   void clearReason() => $_clearField(2);
-}
-
-class RejectRoomJoinReviewResponse extends $pb.GeneratedMessage {
-  factory RejectRoomJoinReviewResponse({
-    RoomJoinReview? review,
-    $core.bool? success,
-  }) {
-    final result = create();
-    if (review != null) result.review = review;
-    if (success != null) result.success = success;
-    return result;
-  }
-
-  RejectRoomJoinReviewResponse._();
-
-  factory RejectRoomJoinReviewResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory RejectRoomJoinReviewResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RejectRoomJoinReviewResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<RoomJoinReview>(1, _omitFieldNames ? '' : 'review',
-        subBuilder: RoomJoinReview.create)
-    ..aOB(2, _omitFieldNames ? '' : 'success')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RejectRoomJoinReviewResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RejectRoomJoinReviewResponse copyWith(
-          void Function(RejectRoomJoinReviewResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as RejectRoomJoinReviewResponse))
-          as RejectRoomJoinReviewResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static RejectRoomJoinReviewResponse create() =>
-      RejectRoomJoinReviewResponse._();
-  @$core.override
-  RejectRoomJoinReviewResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static RejectRoomJoinReviewResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RejectRoomJoinReviewResponse>(create);
-  static RejectRoomJoinReviewResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  RoomJoinReview get review => $_getN(0);
-  @$pb.TagNumber(1)
-  set review(RoomJoinReview value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasReview() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearReview() => $_clearField(1);
-  @$pb.TagNumber(1)
-  RoomJoinReview ensureReview() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  $core.bool get success => $_getBF(1);
-  @$pb.TagNumber(2)
-  set success($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasSuccess() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSuccess() => $_clearField(2);
 }
 
 class ListRoomsRequest extends $pb.GeneratedMessage {
@@ -8539,65 +7974,6 @@ class UpsertRoomCategoryRequest extends $pb.GeneratedMessage {
   void clearIsEnabled() => $_clearField(5);
 }
 
-class UpsertRoomCategoryResponse extends $pb.GeneratedMessage {
-  factory UpsertRoomCategoryResponse({
-    $1.RoomCategory? category,
-  }) {
-    final result = create();
-    if (category != null) result.category = category;
-    return result;
-  }
-
-  UpsertRoomCategoryResponse._();
-
-  factory UpsertRoomCategoryResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpsertRoomCategoryResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpsertRoomCategoryResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<$1.RoomCategory>(1, _omitFieldNames ? '' : 'category',
-        subBuilder: $1.RoomCategory.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpsertRoomCategoryResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpsertRoomCategoryResponse copyWith(
-          void Function(UpsertRoomCategoryResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as UpsertRoomCategoryResponse))
-          as UpsertRoomCategoryResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UpsertRoomCategoryResponse create() => UpsertRoomCategoryResponse._();
-  @$core.override
-  UpsertRoomCategoryResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpsertRoomCategoryResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpsertRoomCategoryResponse>(create);
-  static UpsertRoomCategoryResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $1.RoomCategory get category => $_getN(0);
-  @$pb.TagNumber(1)
-  set category($1.RoomCategory value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasCategory() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearCategory() => $_clearField(1);
-  @$pb.TagNumber(1)
-  $1.RoomCategory ensureCategory() => $_ensure(0);
-}
-
 class DeleteRoomCategoryRequest extends $pb.GeneratedMessage {
   factory DeleteRoomCategoryRequest({
     $core.String? categoryId,
@@ -8953,64 +8329,6 @@ class UpsertRoomLabelRequest extends $pb.GeneratedMessage {
   void clearIsEnabled() => $_clearField(7);
 }
 
-class UpsertRoomLabelResponse extends $pb.GeneratedMessage {
-  factory UpsertRoomLabelResponse({
-    $1.RoomLabel? label,
-  }) {
-    final result = create();
-    if (label != null) result.label = label;
-    return result;
-  }
-
-  UpsertRoomLabelResponse._();
-
-  factory UpsertRoomLabelResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpsertRoomLabelResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpsertRoomLabelResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<$1.RoomLabel>(1, _omitFieldNames ? '' : 'label',
-        subBuilder: $1.RoomLabel.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpsertRoomLabelResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpsertRoomLabelResponse copyWith(
-          void Function(UpsertRoomLabelResponse) updates) =>
-      super.copyWith((message) => updates(message as UpsertRoomLabelResponse))
-          as UpsertRoomLabelResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UpsertRoomLabelResponse create() => UpsertRoomLabelResponse._();
-  @$core.override
-  UpsertRoomLabelResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpsertRoomLabelResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpsertRoomLabelResponse>(create);
-  static UpsertRoomLabelResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $1.RoomLabel get label => $_getN(0);
-  @$pb.TagNumber(1)
-  set label($1.RoomLabel value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasLabel() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearLabel() => $_clearField(1);
-  @$pb.TagNumber(1)
-  $1.RoomLabel ensureLabel() => $_ensure(0);
-}
-
 class DeleteRoomLabelRequest extends $pb.GeneratedMessage {
   factory DeleteRoomLabelRequest({
     $core.String? labelId,
@@ -9206,64 +8524,6 @@ class UpdateRoomTaxonomyRequest extends $pb.GeneratedMessage {
   void clearClearCategory() => $_clearField(4);
 }
 
-class UpdateRoomTaxonomyResponse extends $pb.GeneratedMessage {
-  factory UpdateRoomTaxonomyResponse({
-    Room? room,
-  }) {
-    final result = create();
-    if (room != null) result.room = room;
-    return result;
-  }
-
-  UpdateRoomTaxonomyResponse._();
-
-  factory UpdateRoomTaxonomyResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpdateRoomTaxonomyResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateRoomTaxonomyResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateRoomTaxonomyResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateRoomTaxonomyResponse copyWith(
-          void Function(UpdateRoomTaxonomyResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as UpdateRoomTaxonomyResponse))
-          as UpdateRoomTaxonomyResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UpdateRoomTaxonomyResponse create() => UpdateRoomTaxonomyResponse._();
-  @$core.override
-  UpdateRoomTaxonomyResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpdateRoomTaxonomyResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateRoomTaxonomyResponse>(create);
-  static UpdateRoomTaxonomyResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  Room get room => $_getN(0);
-  @$pb.TagNumber(1)
-  set room(Room value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoom() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoom() => $_clearField(1);
-  @$pb.TagNumber(1)
-  Room ensureRoom() => $_ensure(0);
-}
-
 class GetRoomRequest extends $pb.GeneratedMessage {
   factory GetRoomRequest({
     $core.String? roomId,
@@ -9370,62 +8630,6 @@ class RoomPathRequest extends $pb.GeneratedMessage {
   $core.bool hasRoomId() => $_has(0);
   @$pb.TagNumber(1)
   void clearRoomId() => $_clearField(1);
-}
-
-class GetRoomResponse extends $pb.GeneratedMessage {
-  factory GetRoomResponse({
-    Room? room,
-  }) {
-    final result = create();
-    if (room != null) result.room = room;
-    return result;
-  }
-
-  GetRoomResponse._();
-
-  factory GetRoomResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetRoomResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetRoomResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetRoomResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetRoomResponse copyWith(void Function(GetRoomResponse) updates) =>
-      super.copyWith((message) => updates(message as GetRoomResponse))
-          as GetRoomResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetRoomResponse create() => GetRoomResponse._();
-  @$core.override
-  GetRoomResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static GetRoomResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetRoomResponse>(create);
-  static GetRoomResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  Room get room => $_getN(0);
-  @$pb.TagNumber(1)
-  set room(Room value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoom() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoom() => $_clearField(1);
-  @$pb.TagNumber(1)
-  Room ensureRoom() => $_ensure(0);
 }
 
 class GetRoomSettingsRequest extends $pb.GeneratedMessage {
@@ -9830,63 +9034,6 @@ class ResetRoomSettingsRequest extends $pb.GeneratedMessage {
   void clearRoomId() => $_clearField(1);
 }
 
-class ResetRoomSettingsResponse extends $pb.GeneratedMessage {
-  factory ResetRoomSettingsResponse({
-    Room? room,
-  }) {
-    final result = create();
-    if (room != null) result.room = room;
-    return result;
-  }
-
-  ResetRoomSettingsResponse._();
-
-  factory ResetRoomSettingsResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ResetRoomSettingsResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ResetRoomSettingsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ResetRoomSettingsResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ResetRoomSettingsResponse copyWith(
-          void Function(ResetRoomSettingsResponse) updates) =>
-      super.copyWith((message) => updates(message as ResetRoomSettingsResponse))
-          as ResetRoomSettingsResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ResetRoomSettingsResponse create() => ResetRoomSettingsResponse._();
-  @$core.override
-  ResetRoomSettingsResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ResetRoomSettingsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ResetRoomSettingsResponse>(create);
-  static ResetRoomSettingsResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  Room get room => $_getN(0);
-  @$pb.TagNumber(1)
-  set room(Room value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoom() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoom() => $_clearField(1);
-  @$pb.TagNumber(1)
-  Room ensureRoom() => $_ensure(0);
-}
-
 class UpdateRoomPasswordRequest extends $pb.GeneratedMessage {
   factory UpdateRoomPasswordRequest({
     $core.String? roomId,
@@ -10184,62 +9331,6 @@ class BanRoomRequest extends $pb.GeneratedMessage {
   void clearReason() => $_clearField(2);
 }
 
-class BanRoomResponse extends $pb.GeneratedMessage {
-  factory BanRoomResponse({
-    Room? room,
-  }) {
-    final result = create();
-    if (room != null) result.room = room;
-    return result;
-  }
-
-  BanRoomResponse._();
-
-  factory BanRoomResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory BanRoomResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'BanRoomResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BanRoomResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BanRoomResponse copyWith(void Function(BanRoomResponse) updates) =>
-      super.copyWith((message) => updates(message as BanRoomResponse))
-          as BanRoomResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static BanRoomResponse create() => BanRoomResponse._();
-  @$core.override
-  BanRoomResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static BanRoomResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<BanRoomResponse>(create);
-  static BanRoomResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  Room get room => $_getN(0);
-  @$pb.TagNumber(1)
-  set room(Room value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoom() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoom() => $_clearField(1);
-  @$pb.TagNumber(1)
-  Room ensureRoom() => $_ensure(0);
-}
-
 class UnbanRoomRequest extends $pb.GeneratedMessage {
   factory UnbanRoomRequest({
     $core.String? roomId,
@@ -10292,62 +9383,6 @@ class UnbanRoomRequest extends $pb.GeneratedMessage {
   $core.bool hasRoomId() => $_has(0);
   @$pb.TagNumber(1)
   void clearRoomId() => $_clearField(1);
-}
-
-class UnbanRoomResponse extends $pb.GeneratedMessage {
-  factory UnbanRoomResponse({
-    Room? room,
-  }) {
-    final result = create();
-    if (room != null) result.room = room;
-    return result;
-  }
-
-  UnbanRoomResponse._();
-
-  factory UnbanRoomResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UnbanRoomResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UnbanRoomResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UnbanRoomResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UnbanRoomResponse copyWith(void Function(UnbanRoomResponse) updates) =>
-      super.copyWith((message) => updates(message as UnbanRoomResponse))
-          as UnbanRoomResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UnbanRoomResponse create() => UnbanRoomResponse._();
-  @$core.override
-  UnbanRoomResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UnbanRoomResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UnbanRoomResponse>(create);
-  static UnbanRoomResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  Room get room => $_getN(0);
-  @$pb.TagNumber(1)
-  set room(Room value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoom() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoom() => $_clearField(1);
-  @$pb.TagNumber(1)
-  Room ensureRoom() => $_ensure(0);
 }
 
 class GetRoomMembersRequest extends $pb.GeneratedMessage {
@@ -10563,12 +9598,16 @@ class AddMemberRequest extends $pb.GeneratedMessage {
     $core.String? userId,
     $0.RoomMemberRole? role,
     $core.bool? notify,
+    $core.String? remarkName,
+    $core.String? displayTag,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
     if (userId != null) result.userId = userId;
     if (role != null) result.role = role;
     if (notify != null) result.notify = notify;
+    if (remarkName != null) result.remarkName = remarkName;
+    if (displayTag != null) result.displayTag = displayTag;
     return result;
   }
 
@@ -10590,6 +9629,8 @@ class AddMemberRequest extends $pb.GeneratedMessage {
     ..aE<$0.RoomMemberRole>(3, _omitFieldNames ? '' : 'role',
         enumValues: $0.RoomMemberRole.values)
     ..aOB(4, _omitFieldNames ? '' : 'notify')
+    ..aOS(5, _omitFieldNames ? '' : 'remarkName')
+    ..aOS(6, _omitFieldNames ? '' : 'displayTag')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -10646,63 +9687,186 @@ class AddMemberRequest extends $pb.GeneratedMessage {
   $core.bool hasNotify() => $_has(3);
   @$pb.TagNumber(4)
   void clearNotify() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get remarkName => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set remarkName($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRemarkName() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRemarkName() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get displayTag => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set displayTag($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasDisplayTag() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearDisplayTag() => $_clearField(6);
 }
 
-class AddMemberResponse extends $pb.GeneratedMessage {
-  factory AddMemberResponse({
-    $0.RoomMember? member,
+class UpdateMemberRemarkNameRequest extends $pb.GeneratedMessage {
+  factory UpdateMemberRemarkNameRequest({
+    $core.String? roomId,
+    $core.String? userId,
+    $core.String? remarkName,
   }) {
     final result = create();
-    if (member != null) result.member = member;
+    if (roomId != null) result.roomId = roomId;
+    if (userId != null) result.userId = userId;
+    if (remarkName != null) result.remarkName = remarkName;
     return result;
   }
 
-  AddMemberResponse._();
+  UpdateMemberRemarkNameRequest._();
 
-  factory AddMemberResponse.fromBuffer($core.List<$core.int> data,
+  factory UpdateMemberRemarkNameRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory AddMemberResponse.fromJson($core.String json,
+  factory UpdateMemberRemarkNameRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'AddMemberResponse',
+      _omitMessageNames ? '' : 'UpdateMemberRemarkNameRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<$0.RoomMember>(1, _omitFieldNames ? '' : 'member',
-        subBuilder: $0.RoomMember.create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..aOS(2, _omitFieldNames ? '' : 'userId')
+    ..aOS(3, _omitFieldNames ? '' : 'remarkName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AddMemberResponse clone() => deepCopy();
+  UpdateMemberRemarkNameRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AddMemberResponse copyWith(void Function(AddMemberResponse) updates) =>
-      super.copyWith((message) => updates(message as AddMemberResponse))
-          as AddMemberResponse;
+  UpdateMemberRemarkNameRequest copyWith(
+          void Function(UpdateMemberRemarkNameRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as UpdateMemberRemarkNameRequest))
+          as UpdateMemberRemarkNameRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static AddMemberResponse create() => AddMemberResponse._();
+  static UpdateMemberRemarkNameRequest create() =>
+      UpdateMemberRemarkNameRequest._();
   @$core.override
-  AddMemberResponse createEmptyInstance() => create();
+  UpdateMemberRemarkNameRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static AddMemberResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<AddMemberResponse>(create);
-  static AddMemberResponse? _defaultInstance;
+  static UpdateMemberRemarkNameRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateMemberRemarkNameRequest>(create);
+  static UpdateMemberRemarkNameRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $0.RoomMember get member => $_getN(0);
+  $core.String get roomId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set member($0.RoomMember value) => $_setField(1, value);
+  set roomId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasMember() => $_has(0);
+  $core.bool hasRoomId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearMember() => $_clearField(1);
+  void clearRoomId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get userId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set userId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUserId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get remarkName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set remarkName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRemarkName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRemarkName() => $_clearField(3);
+}
+
+class UpdateMemberDisplayTagRequest extends $pb.GeneratedMessage {
+  factory UpdateMemberDisplayTagRequest({
+    $core.String? roomId,
+    $core.String? userId,
+    $core.String? displayTag,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    if (userId != null) result.userId = userId;
+    if (displayTag != null) result.displayTag = displayTag;
+    return result;
+  }
+
+  UpdateMemberDisplayTagRequest._();
+
+  factory UpdateMemberDisplayTagRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateMemberDisplayTagRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateMemberDisplayTagRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..aOS(2, _omitFieldNames ? '' : 'userId')
+    ..aOS(3, _omitFieldNames ? '' : 'displayTag')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateMemberDisplayTagRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateMemberDisplayTagRequest copyWith(
+          void Function(UpdateMemberDisplayTagRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as UpdateMemberDisplayTagRequest))
+          as UpdateMemberDisplayTagRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateMemberDisplayTagRequest create() =>
+      UpdateMemberDisplayTagRequest._();
+  @$core.override
+  UpdateMemberDisplayTagRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateMemberDisplayTagRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateMemberDisplayTagRequest>(create);
+  static UpdateMemberDisplayTagRequest? _defaultInstance;
+
   @$pb.TagNumber(1)
-  $0.RoomMember ensureMember() => $_ensure(0);
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get userId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set userId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUserId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get displayTag => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set displayTag($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDisplayTag() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDisplayTag() => $_clearField(3);
 }
 
 class UpdateMemberPermissionsRequest extends $pb.GeneratedMessage {
@@ -10844,67 +10008,6 @@ class UpdateMemberPermissionsRequest extends $pb.GeneratedMessage {
   $core.bool hasAdminRemovedPermissions() => $_has(6);
   @$pb.TagNumber(7)
   void clearAdminRemovedPermissions() => $_clearField(7);
-}
-
-class UpdateMemberPermissionsResponse extends $pb.GeneratedMessage {
-  factory UpdateMemberPermissionsResponse({
-    $0.RoomMember? member,
-  }) {
-    final result = create();
-    if (member != null) result.member = member;
-    return result;
-  }
-
-  UpdateMemberPermissionsResponse._();
-
-  factory UpdateMemberPermissionsResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory UpdateMemberPermissionsResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateMemberPermissionsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<$0.RoomMember>(1, _omitFieldNames ? '' : 'member',
-        subBuilder: $0.RoomMember.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateMemberPermissionsResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateMemberPermissionsResponse copyWith(
-          void Function(UpdateMemberPermissionsResponse) updates) =>
-      super.copyWith(
-              (message) => updates(message as UpdateMemberPermissionsResponse))
-          as UpdateMemberPermissionsResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static UpdateMemberPermissionsResponse create() =>
-      UpdateMemberPermissionsResponse._();
-  @$core.override
-  UpdateMemberPermissionsResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static UpdateMemberPermissionsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateMemberPermissionsResponse>(
-          create);
-  static UpdateMemberPermissionsResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $0.RoomMember get member => $_getN(0);
-  @$pb.TagNumber(1)
-  set member($0.RoomMember value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasMember() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMember() => $_clearField(1);
-  @$pb.TagNumber(1)
-  $0.RoomMember ensureMember() => $_ensure(0);
 }
 
 class KickMemberRequest extends $pb.GeneratedMessage {
@@ -11092,63 +10195,6 @@ class AddAdminRequest extends $pb.GeneratedMessage {
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
   void clearUserId() => $_clearField(1);
-}
-
-class AddAdminResponse extends $pb.GeneratedMessage {
-  factory AddAdminResponse({
-    AdminUser? user,
-  }) {
-    final result = create();
-    if (user != null) result.user = user;
-    return result;
-  }
-
-  AddAdminResponse._();
-
-  factory AddAdminResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory AddAdminResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'AddAdminResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<AdminUser>(1, _omitFieldNames ? '' : 'user',
-        subBuilder: AdminUser.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AddAdminResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AddAdminResponse copyWith(void Function(AddAdminResponse) updates) =>
-      super.copyWith((message) => updates(message as AddAdminResponse))
-          as AddAdminResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static AddAdminResponse create() => AddAdminResponse._();
-  @$core.override
-  AddAdminResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static AddAdminResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<AddAdminResponse>(create);
-  static AddAdminResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  AdminUser get user => $_getN(0);
-  @$pb.TagNumber(1)
-  set user(AdminUser value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUser() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUser() => $_clearField(1);
-  @$pb.TagNumber(1)
-  AdminUser ensureUser() => $_ensure(0);
 }
 
 class RemoveAdminRequest extends $pb.GeneratedMessage {
@@ -13097,64 +12143,6 @@ class GetContentReportRequest extends $pb.GeneratedMessage {
   void clearReportId() => $_clearField(1);
 }
 
-class GetContentReportResponse extends $pb.GeneratedMessage {
-  factory GetContentReportResponse({
-    ContentReport? report,
-  }) {
-    final result = create();
-    if (report != null) result.report = report;
-    return result;
-  }
-
-  GetContentReportResponse._();
-
-  factory GetContentReportResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetContentReportResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetContentReportResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOM<ContentReport>(1, _omitFieldNames ? '' : 'report',
-        subBuilder: ContentReport.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetContentReportResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetContentReportResponse copyWith(
-          void Function(GetContentReportResponse) updates) =>
-      super.copyWith((message) => updates(message as GetContentReportResponse))
-          as GetContentReportResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetContentReportResponse create() => GetContentReportResponse._();
-  @$core.override
-  GetContentReportResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static GetContentReportResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetContentReportResponse>(create);
-  static GetContentReportResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  ContentReport get report => $_getN(0);
-  @$pb.TagNumber(1)
-  set report(ContentReport value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasReport() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearReport() => $_clearField(1);
-  @$pb.TagNumber(1)
-  ContentReport ensureReport() => $_ensure(0);
-}
-
 class UpdateContentReportStatusRequest extends $pb.GeneratedMessage {
   factory UpdateContentReportStatusRequest({
     $core.String? reportId,
@@ -13467,10 +12455,10 @@ class AdminServiceApi {
   /// =========================
   /// User Management
   /// =========================
-  $async.Future<CreateUserResponse> createUser(
+  $async.Future<AdminUser> createUser(
           $pb.ClientContext? ctx, CreateUserRequest request) =>
-      _client.invoke<CreateUserResponse>(
-          ctx, 'AdminService', 'CreateUser', request, CreateUserResponse());
+      _client.invoke<AdminUser>(
+          ctx, 'AdminService', 'CreateUser', request, AdminUser());
   $async.Future<DeleteUserResponse> deleteUser(
           $pb.ClientContext? ctx, DeleteUserRequest request) =>
       _client.invoke<DeleteUserResponse>(
@@ -13479,10 +12467,10 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, ListUsersRequest request) =>
       _client.invoke<ListUsersResponse>(
           ctx, 'AdminService', 'ListUsers', request, ListUsersResponse());
-  $async.Future<GetUserResponse> getUser(
+  $async.Future<AdminUser> getUser(
           $pb.ClientContext? ctx, GetUserRequest request) =>
-      _client.invoke<GetUserResponse>(
-          ctx, 'AdminService', 'GetUser', request, GetUserResponse());
+      _client.invoke<AdminUser>(
+          ctx, 'AdminService', 'GetUser', request, AdminUser());
   $async.Future<GetUserPreferencesResponse> getUserPreferences(
           $pb.ClientContext? ctx, GetUserPreferencesRequest request) =>
       _client.invoke<GetUserPreferencesResponse>(ctx, 'AdminService',
@@ -13495,22 +12483,22 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, SetUserPasswordRequest request) =>
       _client.invoke<SetUserPasswordResponse>(ctx, 'AdminService',
           'SetUserPassword', request, SetUserPasswordResponse());
-  $async.Future<UpdateUserUsernameResponse> updateUserUsername(
+  $async.Future<AdminUser> updateUserUsername(
           $pb.ClientContext? ctx, UpdateUserUsernameRequest request) =>
-      _client.invoke<UpdateUserUsernameResponse>(ctx, 'AdminService',
-          'UpdateUserUsername', request, UpdateUserUsernameResponse());
-  $async.Future<UpdateUserRoleResponse> updateUserRole(
+      _client.invoke<AdminUser>(
+          ctx, 'AdminService', 'UpdateUserUsername', request, AdminUser());
+  $async.Future<AdminUser> updateUserRole(
           $pb.ClientContext? ctx, UpdateUserRoleRequest request) =>
-      _client.invoke<UpdateUserRoleResponse>(ctx, 'AdminService',
-          'UpdateUserRole', request, UpdateUserRoleResponse());
-  $async.Future<BanUserResponse> banUser(
+      _client.invoke<AdminUser>(
+          ctx, 'AdminService', 'UpdateUserRole', request, AdminUser());
+  $async.Future<AdminUser> banUser(
           $pb.ClientContext? ctx, BanUserRequest request) =>
-      _client.invoke<BanUserResponse>(
-          ctx, 'AdminService', 'BanUser', request, BanUserResponse());
-  $async.Future<UnbanUserResponse> unbanUser(
+      _client.invoke<AdminUser>(
+          ctx, 'AdminService', 'BanUser', request, AdminUser());
+  $async.Future<AdminUser> unbanUser(
           $pb.ClientContext? ctx, UnbanUserRequest request) =>
-      _client.invoke<UnbanUserResponse>(
-          ctx, 'AdminService', 'UnbanUser', request, UnbanUserResponse());
+      _client.invoke<AdminUser>(
+          ctx, 'AdminService', 'UnbanUser', request, AdminUser());
   $async.Future<GetUserRoomsResponse> getUserRooms(
           $pb.ClientContext? ctx, GetUserRoomsRequest request) =>
       _client.invoke<GetUserRoomsResponse>(
@@ -13543,10 +12531,8 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, ListRoomsRequest request) =>
       _client.invoke<ListRoomsResponse>(
           ctx, 'AdminService', 'ListRooms', request, ListRoomsResponse());
-  $async.Future<GetRoomResponse> getRoom(
-          $pb.ClientContext? ctx, GetRoomRequest request) =>
-      _client.invoke<GetRoomResponse>(
-          ctx, 'AdminService', 'GetRoom', request, GetRoomResponse());
+  $async.Future<Room> getRoom($pb.ClientContext? ctx, GetRoomRequest request) =>
+      _client.invoke<Room>(ctx, 'AdminService', 'GetRoom', request, Room());
   $async.Future<GetRoomSettingsResponse> getRoomSettings(
           $pb.ClientContext? ctx, GetRoomSettingsRequest request) =>
       _client.invoke<GetRoomSettingsResponse>(ctx, 'AdminService',
@@ -13555,10 +12541,10 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, UpdateRoomSettingsRequest request) =>
       _client.invoke<Room>(
           ctx, 'AdminService', 'UpdateRoomSettings', request, Room());
-  $async.Future<ResetRoomSettingsResponse> resetRoomSettings(
+  $async.Future<Room> resetRoomSettings(
           $pb.ClientContext? ctx, ResetRoomSettingsRequest request) =>
-      _client.invoke<ResetRoomSettingsResponse>(ctx, 'AdminService',
-          'ResetRoomSettings', request, ResetRoomSettingsResponse());
+      _client.invoke<Room>(
+          ctx, 'AdminService', 'ResetRoomSettings', request, Room());
   $async.Future<UpdateRoomPasswordResponse> updateRoomPassword(
           $pb.ClientContext? ctx, UpdateRoomPasswordRequest request) =>
       _client.invoke<UpdateRoomPasswordResponse>(ctx, 'AdminService',
@@ -13567,30 +12553,31 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, DeleteRoomRequest request) =>
       _client.invoke<DeleteRoomResponse>(
           ctx, 'AdminService', 'DeleteRoom', request, DeleteRoomResponse());
-  $async.Future<BanRoomResponse> banRoom(
-          $pb.ClientContext? ctx, BanRoomRequest request) =>
-      _client.invoke<BanRoomResponse>(
-          ctx, 'AdminService', 'BanRoom', request, BanRoomResponse());
-  $async.Future<UnbanRoomResponse> unbanRoom(
+  $async.Future<Room> banRoom($pb.ClientContext? ctx, BanRoomRequest request) =>
+      _client.invoke<Room>(ctx, 'AdminService', 'BanRoom', request, Room());
+  $async.Future<Room> unbanRoom(
           $pb.ClientContext? ctx, UnbanRoomRequest request) =>
-      _client.invoke<UnbanRoomResponse>(
-          ctx, 'AdminService', 'UnbanRoom', request, UnbanRoomResponse());
+      _client.invoke<Room>(ctx, 'AdminService', 'UnbanRoom', request, Room());
   $async.Future<GetRoomMembersResponse> getRoomMembers(
           $pb.ClientContext? ctx, GetRoomMembersRequest request) =>
       _client.invoke<GetRoomMembersResponse>(ctx, 'AdminService',
           'GetRoomMembers', request, GetRoomMembersResponse());
-  $async.Future<AddMemberResponse> addMember(
+  $async.Future<$0.RoomMember> addMember(
           $pb.ClientContext? ctx, AddMemberRequest request) =>
-      _client.invoke<AddMemberResponse>(
-          ctx, 'AdminService', 'AddMember', request, AddMemberResponse());
-  $async.Future<UpdateMemberPermissionsResponse> updateMemberPermissions(
+      _client.invoke<$0.RoomMember>(
+          ctx, 'AdminService', 'AddMember', request, $0.RoomMember());
+  $async.Future<$0.RoomMember> updateMemberRemarkName(
+          $pb.ClientContext? ctx, UpdateMemberRemarkNameRequest request) =>
+      _client.invoke<$0.RoomMember>(ctx, 'AdminService',
+          'UpdateMemberRemarkName', request, $0.RoomMember());
+  $async.Future<$0.RoomMember> updateMemberDisplayTag(
+          $pb.ClientContext? ctx, UpdateMemberDisplayTagRequest request) =>
+      _client.invoke<$0.RoomMember>(ctx, 'AdminService',
+          'UpdateMemberDisplayTag', request, $0.RoomMember());
+  $async.Future<$0.RoomMember> updateMemberPermissions(
           $pb.ClientContext? ctx, UpdateMemberPermissionsRequest request) =>
-      _client.invoke<UpdateMemberPermissionsResponse>(
-          ctx,
-          'AdminService',
-          'UpdateMemberPermissions',
-          request,
-          UpdateMemberPermissionsResponse());
+      _client.invoke<$0.RoomMember>(ctx, 'AdminService',
+          'UpdateMemberPermissions', request, $0.RoomMember());
   $async.Future<KickMemberResponse> kickMember(
           $pb.ClientContext? ctx, KickMemberRequest request) =>
       _client.invoke<KickMemberResponse>(
@@ -13599,10 +12586,10 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, ListRoomCategoriesRequest request) =>
       _client.invoke<ListRoomCategoriesResponse>(ctx, 'AdminService',
           'ListRoomCategories', request, ListRoomCategoriesResponse());
-  $async.Future<UpsertRoomCategoryResponse> upsertRoomCategory(
+  $async.Future<$1.RoomCategory> upsertRoomCategory(
           $pb.ClientContext? ctx, UpsertRoomCategoryRequest request) =>
-      _client.invoke<UpsertRoomCategoryResponse>(ctx, 'AdminService',
-          'UpsertRoomCategory', request, UpsertRoomCategoryResponse());
+      _client.invoke<$1.RoomCategory>(ctx, 'AdminService', 'UpsertRoomCategory',
+          request, $1.RoomCategory());
   $async.Future<DeleteRoomCategoryResponse> deleteRoomCategory(
           $pb.ClientContext? ctx, DeleteRoomCategoryRequest request) =>
       _client.invoke<DeleteRoomCategoryResponse>(ctx, 'AdminService',
@@ -13611,26 +12598,26 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, ListRoomLabelsRequest request) =>
       _client.invoke<ListRoomLabelsResponse>(ctx, 'AdminService',
           'ListRoomLabels', request, ListRoomLabelsResponse());
-  $async.Future<UpsertRoomLabelResponse> upsertRoomLabel(
+  $async.Future<$1.RoomLabel> upsertRoomLabel(
           $pb.ClientContext? ctx, UpsertRoomLabelRequest request) =>
-      _client.invoke<UpsertRoomLabelResponse>(ctx, 'AdminService',
-          'UpsertRoomLabel', request, UpsertRoomLabelResponse());
+      _client.invoke<$1.RoomLabel>(
+          ctx, 'AdminService', 'UpsertRoomLabel', request, $1.RoomLabel());
   $async.Future<DeleteRoomLabelResponse> deleteRoomLabel(
           $pb.ClientContext? ctx, DeleteRoomLabelRequest request) =>
       _client.invoke<DeleteRoomLabelResponse>(ctx, 'AdminService',
           'DeleteRoomLabel', request, DeleteRoomLabelResponse());
-  $async.Future<UpdateRoomTaxonomyResponse> updateRoomTaxonomy(
+  $async.Future<Room> updateRoomTaxonomy(
           $pb.ClientContext? ctx, UpdateRoomTaxonomyRequest request) =>
-      _client.invoke<UpdateRoomTaxonomyResponse>(ctx, 'AdminService',
-          'UpdateRoomTaxonomy', request, UpdateRoomTaxonomyResponse());
+      _client.invoke<Room>(
+          ctx, 'AdminService', 'UpdateRoomTaxonomy', request, Room());
 
   /// =========================
   /// Admin Management (Root Only)
   /// =========================
-  $async.Future<AddAdminResponse> addAdmin(
+  $async.Future<AdminUser> addAdmin(
           $pb.ClientContext? ctx, AddAdminRequest request) =>
-      _client.invoke<AddAdminResponse>(
-          ctx, 'AdminService', 'AddAdmin', request, AddAdminResponse());
+      _client.invoke<AdminUser>(
+          ctx, 'AdminService', 'AddAdmin', request, AdminUser());
   $async.Future<RemoveAdminResponse> removeAdmin(
           $pb.ClientContext? ctx, RemoveAdminRequest request) =>
       _client.invoke<RemoveAdminResponse>(
@@ -13681,15 +12668,11 @@ class AdminServiceApi {
               'ApproveUserRegistrationReview',
               request,
               ApproveUserRegistrationReviewResponse());
-  $async.Future<RejectUserRegistrationReviewResponse>
-      rejectUserRegistrationReview($pb.ClientContext? ctx,
-              RejectUserRegistrationReviewRequest request) =>
-          _client.invoke<RejectUserRegistrationReviewResponse>(
-              ctx,
-              'AdminService',
-              'RejectUserRegistrationReview',
-              request,
-              RejectUserRegistrationReviewResponse());
+  $async.Future<UserRegistrationReview> rejectUserRegistrationReview(
+          $pb.ClientContext? ctx,
+          RejectUserRegistrationReviewRequest request) =>
+      _client.invoke<UserRegistrationReview>(ctx, 'AdminService',
+          'RejectUserRegistrationReview', request, UserRegistrationReview());
   $async.Future<ListRoomCreationReviewsResponse> listRoomCreationReviews(
           $pb.ClientContext? ctx, ListRoomCreationReviewsRequest request) =>
       _client.invoke<ListRoomCreationReviewsResponse>(
@@ -13706,14 +12689,10 @@ class AdminServiceApi {
           'ApproveRoomCreationReview',
           request,
           ApproveRoomCreationReviewResponse());
-  $async.Future<RejectRoomCreationReviewResponse> rejectRoomCreationReview(
+  $async.Future<RoomCreationReview> rejectRoomCreationReview(
           $pb.ClientContext? ctx, RejectRoomCreationReviewRequest request) =>
-      _client.invoke<RejectRoomCreationReviewResponse>(
-          ctx,
-          'AdminService',
-          'RejectRoomCreationReview',
-          request,
-          RejectRoomCreationReviewResponse());
+      _client.invoke<RoomCreationReview>(ctx, 'AdminService',
+          'RejectRoomCreationReview', request, RoomCreationReview());
   $async.Future<ListRoomJoinReviewsResponse> listRoomJoinReviews(
           $pb.ClientContext? ctx, ListRoomJoinReviewsRequest request) =>
       _client.invoke<ListRoomJoinReviewsResponse>(ctx, 'AdminService',
@@ -13722,10 +12701,10 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, ApproveRoomJoinReviewRequest request) =>
       _client.invoke<ApproveRoomJoinReviewResponse>(ctx, 'AdminService',
           'ApproveRoomJoinReview', request, ApproveRoomJoinReviewResponse());
-  $async.Future<RejectRoomJoinReviewResponse> rejectRoomJoinReview(
+  $async.Future<RoomJoinReview> rejectRoomJoinReview(
           $pb.ClientContext? ctx, RejectRoomJoinReviewRequest request) =>
-      _client.invoke<RejectRoomJoinReviewResponse>(ctx, 'AdminService',
-          'RejectRoomJoinReview', request, RejectRoomJoinReviewResponse());
+      _client.invoke<RoomJoinReview>(ctx, 'AdminService',
+          'RejectRoomJoinReview', request, RoomJoinReview());
 
   /// =========================
   /// Moderation Bans
@@ -13742,10 +12721,10 @@ class AdminServiceApi {
           $pb.ClientContext? ctx, ListContentReportsRequest request) =>
       _client.invoke<ListContentReportsResponse>(ctx, 'AdminService',
           'ListContentReports', request, ListContentReportsResponse());
-  $async.Future<GetContentReportResponse> getContentReport(
+  $async.Future<ContentReport> getContentReport(
           $pb.ClientContext? ctx, GetContentReportRequest request) =>
-      _client.invoke<GetContentReportResponse>(ctx, 'AdminService',
-          'GetContentReport', request, GetContentReportResponse());
+      _client.invoke<ContentReport>(
+          ctx, 'AdminService', 'GetContentReport', request, ContentReport());
   $async.Future<UpdateContentReportStatusResponse> updateContentReportStatus(
           $pb.ClientContext? ctx, UpdateContentReportStatusRequest request) =>
       _client.invoke<UpdateContentReportStatusResponse>(

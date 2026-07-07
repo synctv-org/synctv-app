@@ -61,12 +61,14 @@ Future<void> _activateBestEndpoint(
   final profile = matches.first;
   if (profile.endpoints.length <= 1) {
     await SyncTvService.activateServer(profile.serverId);
+    await SyncTvService.syncServerTime(refresh: true);
     return;
   }
 
   final endpoint = await _chooseEndpoint(context, profile);
   if (endpoint == null) return;
   await SyncTvService.activateServerEndpoint(profile.serverId, endpoint);
+  await SyncTvService.syncServerTime(refresh: true);
 }
 
 Future<String?> _chooseEndpoint(

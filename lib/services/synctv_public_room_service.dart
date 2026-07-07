@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
@@ -44,6 +45,14 @@ class SyncTvPublicRoomDomainService {
       ttl: const Duration(minutes: 5),
       refresh: refresh,
       loader: _fetchServerInfo,
+    );
+  }
+
+  Future<client.GetServerTimeResponse> getServerTime({
+    int clientSentAtNanos = 0,
+  }) {
+    return _api.publicService.getServerTime(
+      client.GetServerTimeRequest(clientSentAtNanos: Int64(clientSentAtNanos)),
     );
   }
 
@@ -261,8 +270,8 @@ class SyncTvPublicRoomDomainService {
       request.categoryId = categoryId;
     }
     request.labelIds.addAll(labelIds);
-    final response = await _api.user.createRoom(request);
-    return _api.mapRoom(response.room);
+    final room = await _api.user.createRoom(request);
+    return _api.mapRoom(room);
   }
 
   Future<void> deleteRoom(String roomId) async {

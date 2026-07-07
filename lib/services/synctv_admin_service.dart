@@ -86,7 +86,7 @@ class SyncTvAdminDomainService {
     final response = await _api.adminService.getUser(
       admin.GetUserRequest(userId: userId),
     );
-    return _api.mapAdminUser(response.user);
+    return _api.mapAdminUser(response);
   }
 
   Future<AdminRoomsPage> listUserRoomsPage(
@@ -310,7 +310,7 @@ class SyncTvAdminDomainService {
     final response = await _api.adminService.getRoom(
       admin.GetRoomRequest(roomId: roomId),
     );
-    return _api.mapAdminRoom(response.room);
+    return _api.mapAdminRoom(response);
   }
 
   Future<SyncTvRoomSettings> getRoomSettings(
@@ -403,7 +403,7 @@ class SyncTvAdminDomainService {
     );
     _cache.invalidatePrefix('admin:room-categories');
     _cache.invalidatePrefix('public:room-categories');
-    return _api.mapRoomCategory(response.category);
+    return _api.mapRoomCategory(response);
   }
 
   Future<void> deleteRoomCategory(String categoryId) async {
@@ -457,7 +457,7 @@ class SyncTvAdminDomainService {
     );
     _cache.invalidatePrefix('admin:room-labels');
     _cache.invalidatePrefix('public:room-labels');
-    return _api.mapRoomLabel(response.label);
+    return _api.mapRoomLabel(response);
   }
 
   Future<void> deleteRoomLabel(String labelId) async {
@@ -482,7 +482,7 @@ class SyncTvAdminDomainService {
         clearCategory: clearCategory,
       ),
     );
-    return _api.mapAdminRoom(response.room);
+    return _api.mapAdminRoom(response);
   }
 
   Future<RuntimeSettingsSection> updateSettingInSection(
@@ -632,6 +632,34 @@ class SyncTvAdminDomainService {
         userId: userId,
         role: roomMemberRoleFromValue(role),
         notify: notify,
+      ),
+    );
+  }
+
+  Future<void> updateRoomMemberRemarkName(
+    String roomId,
+    String userId,
+    String remarkName,
+  ) async {
+    await _api.adminService.updateMemberRemarkName(
+      admin.UpdateMemberRemarkNameRequest(
+        roomId: roomId,
+        userId: userId,
+        remarkName: remarkName,
+      ),
+    );
+  }
+
+  Future<void> updateRoomMemberDisplayTag(
+    String roomId,
+    String userId,
+    String displayTag,
+  ) async {
+    await _api.adminService.updateMemberDisplayTag(
+      admin.UpdateMemberDisplayTagRequest(
+        roomId: roomId,
+        userId: userId,
+        displayTag: displayTag,
       ),
     );
   }
@@ -978,7 +1006,7 @@ class SyncTvAdminDomainService {
     final response = await _api.adminService.getContentReport(
       admin.GetContentReportRequest(reportId: reportId),
     );
-    return _contentReportFromProto(response.report);
+    return _contentReportFromProto(response);
   }
 
   Future<AdminContentReport> updateContentReportStatus(
@@ -1040,7 +1068,7 @@ class SyncTvAdminDomainService {
       roomId,
       client.GetRoomContentReportRequest(reportId: reportId),
     );
-    return _clientContentReportFromProto(response.report);
+    return _clientContentReportFromProto(response);
   }
 
   Future<AdminContentReport> updateRoomContentReportStatus(

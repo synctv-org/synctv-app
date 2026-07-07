@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
 import 'package:synctv_app/utils/chat_reactions.dart';
 
 class PlaybackDanmakuWindow {
@@ -65,6 +67,9 @@ Future<PlaybackDanmakuFetchResult?> fetchPlaybackDanmakuWindow({
     beforeSeconds: beforeSeconds,
     afterSeconds: afterSeconds,
     limit: limit,
+    includeMessageTypes: const [
+      client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
+    ],
   );
 
   final start = (positionSeconds - beforeSeconds).clamp(0, double.infinity);
@@ -76,7 +81,10 @@ Future<PlaybackDanmakuFetchResult?> fetchPlaybackDanmakuWindow({
     ),
     items: messages
         .where(
-          (message) => !message.isDeleted && message.content.trim().isNotEmpty,
+          (message) =>
+              message.isUserMessage &&
+              !message.isDeleted &&
+              message.content.trim().isNotEmpty,
         )
         .map(chatMessageToDanmaku)
         .toList(growable: false),

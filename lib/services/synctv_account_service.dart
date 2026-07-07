@@ -42,8 +42,8 @@ class SyncTvAccountDomainService {
   }
 
   Future<SyncTvUser> _fetchMe() async {
-    final response = await _api.user.getProfile(client.GetProfileRequest());
-    return _api.mapUser(response.user);
+    final user = await _api.user.getProfile(client.GetProfileRequest());
+    return _api.mapUser(user);
   }
 
   Future<SyncTvUser> updateUsername(String username) async {
@@ -74,7 +74,7 @@ class SyncTvAccountDomainService {
         verificationId: verificationId,
       ),
     );
-    final user = _api.mapUser(response.user);
+    final user = _api.mapUser(response);
     _cache.put('account:me', user, ttl: const Duration(minutes: 2));
     _cache.invalidate('account:preferences');
     return user;
@@ -84,7 +84,7 @@ class SyncTvAccountDomainService {
     final response = await _api.user.unbindEmail(
       client.UnbindEmailRequest(verificationId: verificationId),
     );
-    final user = _api.mapUser(response.user);
+    final user = _api.mapUser(response);
     _cache.put('account:me', user, ttl: const Duration(minutes: 2));
     _cache.invalidate('account:preferences');
     return user;
@@ -203,7 +203,7 @@ class SyncTvAccountDomainService {
             : passkeyAuthenticationCredentialFromJson(passkeyCredential),
       ),
     );
-    return _api.mapUser(response.user);
+    return _api.mapUser(response);
   }
 
   Future<PasskeyChallengeStart> startPasskeyBind({String name = ''}) async {
@@ -226,7 +226,7 @@ class SyncTvAccountDomainService {
         credential: passkeyRegistrationCredentialFromJson(credential),
       ),
     );
-    final passkey = passkeyFromProto(response.credential);
+    final passkey = passkeyFromProto(response);
     _cache.invalidate('account:passkeys');
     _cache.invalidate('account:preferences');
     return passkey;
@@ -321,7 +321,7 @@ class SyncTvNotificationDomainService {
     final response = await _api.notifications.getNotification(
       client.GetNotificationRequest(notificationId: Int64(notificationId)),
     );
-    return notificationFromProto(response.notification);
+    return notificationFromProto(response);
   }
 
   Future<void> markNotificationAsRead(UserNotificationItem item) async {

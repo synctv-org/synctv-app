@@ -212,14 +212,14 @@ class SyncTvFileUploadDomainService {
     final updated = await _api.user.updateUserAvatar(
       client.UpdateUserAvatarRequest(avatarReference: session.avatarReference),
     );
-    return updated.user;
+    return updated;
   }
 
   Future<client.User> clearUserAvatar() async {
     final response = await _api.user.clearUserAvatar(
       client.ClearUserAvatarRequest(),
     );
-    return response.user;
+    return response;
   }
 
   Future<client.Room> updateRoomCover(
@@ -378,7 +378,7 @@ class SyncTvFileUploadDomainService {
         coverReference: session.coverReference,
       ),
     );
-    return updated.playlist;
+    return updated;
   }
 
   Future<client.Playlist> clearPlaylistCover(
@@ -389,7 +389,7 @@ class SyncTvFileUploadDomainService {
       roomId,
       client.ClearPlaylistCoverRequest(roomId: roomId, playlistId: playlistId),
     );
-    return response.playlist;
+    return response;
   }
 
   Future<client.Media> updateVideoCover(
@@ -466,7 +466,7 @@ class SyncTvFileUploadDomainService {
         coverReference: session.coverReference,
       ),
     );
-    return updated.media;
+    return updated;
   }
 
   Future<client.Media> clearVideoCover(String roomId, String mediaId) async {
@@ -474,7 +474,95 @@ class SyncTvFileUploadDomainService {
       roomId,
       client.ClearMediaCoverRequest(roomId: roomId, mediaId: mediaId),
     );
-    return response.media;
+    return response;
+  }
+
+  Future<client.Media> updateVideoThumbnail(
+    String roomId,
+    String mediaId,
+    LocalImageUpload upload,
+  ) async {
+    _validateImageUpload(upload, maxSizeBytes: 10 * 1024 * 1024);
+    final result =
+        await _createUploadSession<
+          client.MediaThumbnailUploadSession,
+          client.CreateMediaThumbnailUploadSessionResponse
+        >(
+          upload: upload,
+          createRequest: (parts) => _api.room.createMediaThumbnailUploadSession(
+            roomId,
+            client.CreateMediaThumbnailUploadSessionRequest(
+              roomId: roomId,
+              mediaId: mediaId,
+              clientThumbnailId: _clientObjectId(upload),
+              mimeType: upload.mimeType,
+              sizeBytes: Int64(upload.sizeBytes),
+              width: upload.width,
+              height: upload.height,
+              parts: parts,
+              metadata: upload.metadata,
+            ),
+          ),
+          planOf: (response) => response.plan,
+          sessionOf: (response) => response.session,
+          hasPlan: (response) => response.hasPlan(),
+          hasSession: (response) => response.hasSession(),
+        );
+    final session = result.session;
+    final uploadedParts = await _uploadSessionParts(
+      upload: upload,
+      sessionUploadRequired: session.uploadRequired,
+      uploadUrl: session.uploadUrl,
+      uploadHeaders: session.uploadHeaders,
+      partUrls: session.partUrls,
+      manifestParts: result.manifestParts,
+    );
+    final complete = await _api.room.completeMediaThumbnailUploadSession(
+      client.CompleteMediaThumbnailUploadSessionRequest(
+        encodedObjectKey: session.encodedObjectKey,
+        token: session.uploadToken,
+        uploadId: session.uploadId,
+        parts: uploadedParts.map(_completePart),
+        fileId: session.thumbnailReference.id,
+        ownershipProof: _ownershipProof(
+          upload: upload,
+          required: session.ownershipProofRequired,
+          nonce: session.ownershipProofNonce,
+          contentManifestSha256: result.contentManifestSha256,
+          ranges: session.ownershipProofRanges
+              .map(
+                (range) => _OwnershipProofRange(
+                  offset: range.offset.toInt(),
+                  length: range.length,
+                ),
+              )
+              .toList(growable: false),
+        ),
+      ),
+    );
+    if (!complete.complete) {
+      throw const SyncTvFileUploadException('缩略图上传尚未完成，请稍后重试。');
+    }
+    final updated = await _api.room.updateMediaThumbnail(
+      roomId,
+      client.UpdateMediaThumbnailRequest(
+        roomId: roomId,
+        mediaId: mediaId,
+        thumbnailReference: session.thumbnailReference,
+      ),
+    );
+    return updated;
+  }
+
+  Future<client.Media> clearVideoThumbnail(
+    String roomId,
+    String mediaId,
+  ) async {
+    final response = await _api.room.clearMediaThumbnail(
+      roomId,
+      client.ClearMediaThumbnailRequest(roomId: roomId, mediaId: mediaId),
+    );
+    return response;
   }
 
   Future<_UploadSessionResult<TSession>>

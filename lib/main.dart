@@ -17,6 +17,7 @@ void main(List<String> args) async {
     return;
   }
   await SyncTvService.init();
+  await SyncTvService.syncServerTime();
   await OAuth2DeepLinkService.initialize();
 
   try {
