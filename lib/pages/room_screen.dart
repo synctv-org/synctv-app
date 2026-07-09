@@ -51,6 +51,8 @@ class RoomScreen extends StatefulWidget {
   State<RoomScreen> createState() => _RoomScreenState();
 }
 
+enum _PlaylistViewMode { compact, detailed, grid }
+
 class _RoomScreenState extends State<RoomScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -141,6 +143,7 @@ class _RoomScreenState extends State<RoomScreen>
   bool _isSelectionMode = false;
   final Set<String> _selectedMediaEntryIds = {};
   int _roomTabIndex = 0;
+  _PlaylistViewMode _playlistViewMode = _PlaylistViewMode.compact;
 
   bool get _showRealtimeDebugTab => kDebugMode;
   int get _roomTabCount => 3 + (_showRealtimeDebugTab ? 1 : 0);
@@ -3983,6 +3986,9 @@ class _RoomScreenState extends State<RoomScreen>
                       : AppIconButtonStyle.ghost,
                 ),
               ],
+              _buildPlaylistViewModeButton(_PlaylistViewMode.compact),
+              _buildPlaylistViewModeButton(_PlaylistViewMode.detailed),
+              _buildPlaylistViewModeButton(_PlaylistViewMode.grid),
             ],
           ),
         ),
@@ -4015,73 +4021,503 @@ class _RoomScreenState extends State<RoomScreen>
                   onAdd: canMutatePlaylist ? _showAddMediaDialog : null,
                   compact: true,
                 )
-              : AppListView.builder(
-                  controller: _mediaEntryScrollController,
-                  itemCount:
-                      _mediaEntries.length + (_hasMoreMediaEntries ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == _mediaEntries.length) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: AppLoadingIndicator(centered: false),
-                        ),
-                      );
-                    }
-                    final entry = _mediaEntries[index];
-                    final isCurrent = _currentStatus?.entry?.id == entry.id;
-                    final isFolder = entry.isFolder;
-                    final isSelected = _selectedMediaEntryIds.contains(
-                      entry.id,
-                    );
-
-                    return AppTile(
-                      selected: isSelected,
-                      prefix: Icon(
-                        isFolder ? Icons.folder : Icons.movie,
-                        color: isFolder
-                            ? Colors.amber
-                            : (isCurrent ? primaryColor : null),
-                      ),
-                      title: Text(
-                        entry.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: isCurrent ? primaryColor : null,
-                          fontWeight: isCurrent ? FontWeight.bold : null,
-                        ),
-                      ),
-                      suffix: selectionMode
-                          ? Icon(
-                              isSelected
-                                  ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
-                              color: isSelected ? primaryColor : Colors.grey,
-                            )
-                          : null,
-                      onPressed: () {
-                        if (selectionMode) {
-                          _toggleSelection(entry);
-                        } else if (isFolder) {
-                          _enterFolder(entry);
-                        } else {
-                          _switchMedia(entry);
-                        }
-                      },
-                      onLongPress: () {
-                        if (canMutatePlaylist &&
-                            !selectionMode &&
-                            _isPersistedLibraryEntry(entry)) {
-                          _enterSelectionMode(entry);
-                        }
-                      },
-                    );
-                  },
-                ),
+              : _buildPlaylistEntries(primaryColor, selectionMode),
         ),
       ],
     );
+  }
+
+  Widget _buildPlaylistEntries(Color primaryColor, bool selectionMode) {
+    return switch (_playlistViewMode) {
+      _PlaylistViewMode.compact => AppListView.builder(
+        controller: _mediaEntryScrollController,
+        itemCount: _mediaEntries.length + (_hasMoreMediaEntries ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _mediaEntries.length) return _buildPlaylistLoadingRow();
+          return _buildCompactPlaylistEntry(
+            _mediaEntries[index],
+            primaryColor,
+            selectionMode,
+          );
+        },
+      ),
+      _PlaylistViewMode.detailed => AppListView.builder(
+        controller: _mediaEntryScrollController,
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        itemCount: _mediaEntries.length + (_hasMoreMediaEntries ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _mediaEntries.length) return _buildPlaylistLoadingRow();
+          return _buildDetailedPlaylistEntry(
+            _mediaEntries[index],
+            primaryColor,
+            selectionMode,
+          );
+        },
+      ),
+      _PlaylistViewMode.grid => AppGridView.builder(
+        controller: _mediaEntryScrollController,
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 180,
+          mainAxisExtent: 164,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+        ),
+        itemCount: _mediaEntries.length + (_hasMoreMediaEntries ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _mediaEntries.length) return _buildPlaylistLoadingCard();
+          return _buildGridPlaylistEntry(
+            _mediaEntries[index],
+            primaryColor,
+            selectionMode,
+          );
+        },
+      ),
+    };
+  }
+
+  AppIconButton _buildPlaylistViewModeButton(_PlaylistViewMode mode) {
+    final selected = _playlistViewMode == mode;
+    final (icon, tooltip) = switch (mode) {
+      _PlaylistViewMode.compact => (Icons.view_headline_rounded, '紧凑列表'),
+      _PlaylistViewMode.detailed => (Icons.view_agenda_rounded, '详细列表'),
+      _PlaylistViewMode.grid => (Icons.grid_view_rounded, '网格'),
+    };
+    return AppIconButton(
+      icon: icon,
+      tooltip: tooltip,
+      selected: selected,
+      style: selected ? AppIconButtonStyle.tonal : AppIconButtonStyle.ghost,
+      onPressed: selected
+          ? null
+          : () => setState(() {
+              _playlistViewMode = mode;
+            }),
+    );
+  }
+
+  Widget _buildPlaylistLoadingRow() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: AppLoadingIndicator(centered: false),
+      ),
+    );
+  }
+
+  Widget _buildPlaylistLoadingCard() {
+    return const AppPanelSurface(
+      padding: EdgeInsets.all(12),
+      child: Center(child: AppLoadingIndicator(centered: false)),
+    );
+  }
+
+  Widget _buildCompactPlaylistEntry(
+    RoomMediaEntry entry,
+    Color primaryColor,
+    bool selectionMode,
+  ) {
+    final isCurrent = _currentStatus?.entry?.id == entry.id;
+    final isSelected = _selectedMediaEntryIds.contains(entry.id);
+
+    return AppTile(
+      selected: isSelected,
+      prefix: Icon(
+        _playlistEntryIcon(entry),
+        color: _playlistEntryAccent(entry, isCurrent, primaryColor),
+      ),
+      title: Text(
+        entry.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: isCurrent ? primaryColor : null,
+          fontWeight: isCurrent ? FontWeight.bold : null,
+        ),
+      ),
+      suffix: _buildPlaylistSelectionIcon(
+        isSelected,
+        selectionMode,
+        primaryColor,
+      ),
+      onPressed: () => _handlePlaylistEntryPressed(entry, selectionMode),
+      onLongPress: () => _handlePlaylistEntryLongPressed(entry, selectionMode),
+    );
+  }
+
+  Widget _buildDetailedPlaylistEntry(
+    RoomMediaEntry entry,
+    Color primaryColor,
+    bool selectionMode,
+  ) {
+    final theme = Theme.of(context);
+    final isCurrent = _currentStatus?.entry?.id == entry.id;
+    final isSelected = _selectedMediaEntryIds.contains(entry.id);
+
+    return AppPanelSurface(
+      margin: const EdgeInsets.only(bottom: 8),
+      color: isSelected
+          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.34)
+          : theme.colorScheme.surface,
+      border: Border.all(
+        color: isCurrent
+            ? primaryColor.withValues(alpha: 0.58)
+            : theme.dividerColor.withValues(alpha: 0.12),
+      ),
+      child: InkWell(
+        onTap: () => _handlePlaylistEntryPressed(entry, selectionMode),
+        onLongPress: () =>
+            _handlePlaylistEntryLongPressed(entry, selectionMode),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildPlaylistArtwork(entry, isCurrent, primaryColor, size: 52),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            entry.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: isCurrent ? primaryColor : null,
+                              fontWeight: isCurrent
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (isCurrent)
+                          Icon(
+                            Icons.graphic_eq_rounded,
+                            size: 18,
+                            color: primaryColor,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _playlistEntrySummary(entry),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: _playlistEntryChips(entry)
+                          .map((label) => _buildPlaylistMetaChip(label))
+                          .toList(growable: false),
+                    ),
+                  ],
+                ),
+              ),
+              if (selectionMode) ...[
+                const SizedBox(width: 8),
+                _buildPlaylistSelectionIcon(
+                  isSelected,
+                  selectionMode,
+                  primaryColor,
+                )!,
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridPlaylistEntry(
+    RoomMediaEntry entry,
+    Color primaryColor,
+    bool selectionMode,
+  ) {
+    final theme = Theme.of(context);
+    final isCurrent = _currentStatus?.entry?.id == entry.id;
+    final isSelected = _selectedMediaEntryIds.contains(entry.id);
+
+    return AppPanelSurface(
+      color: isSelected
+          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.38)
+          : theme.colorScheme.surface,
+      border: Border.all(
+        color: isCurrent
+            ? primaryColor.withValues(alpha: 0.64)
+            : theme.dividerColor.withValues(alpha: 0.12),
+      ),
+      child: InkWell(
+        onTap: () => _handlePlaylistEntryPressed(entry, selectionMode),
+        onLongPress: () =>
+            _handlePlaylistEntryLongPressed(entry, selectionMode),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: _buildPlaylistArtwork(
+                      entry,
+                      isCurrent,
+                      primaryColor,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    left: 8,
+                    top: 8,
+                    child: _buildPlaylistMetaChip(
+                      _playlistEntryTypeLabel(entry),
+                    ),
+                  ),
+                  if (selectionMode)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: _buildPlaylistSelectionIcon(
+                        isSelected,
+                        selectionMode,
+                        primaryColor,
+                      )!,
+                    ),
+                  if (isCurrent)
+                    Positioned(
+                      right: 8,
+                      bottom: 8,
+                      child: Icon(
+                        Icons.graphic_eq_rounded,
+                        size: 20,
+                        color: primaryColor,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isCurrent ? primaryColor : null,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _playlistEntryShortMeta(entry),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaylistArtwork(
+    RoomMediaEntry entry,
+    bool isCurrent,
+    Color primaryColor, {
+    double? size,
+    BoxFit fit = BoxFit.cover,
+  }) {
+    final theme = Theme.of(context);
+    final imageUrl = entry.coverUrl.isNotEmpty
+        ? entry.coverUrl
+        : entry.thumbnailUrl;
+    final icon = Icon(
+      _playlistEntryIcon(entry),
+      size: size == null ? 38 : 24,
+      color: _playlistEntryAccent(entry, isCurrent, primaryColor),
+    );
+    final placeholder = AppPanelSurface(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.78),
+      borderRadius: BorderRadius.circular(size == null ? 0 : 8),
+      child: Center(child: icon),
+    );
+    if (size != null) {
+      if (imageUrl.isEmpty) {
+        return SizedBox(width: size, height: size, child: placeholder);
+      }
+      return AppImageThumbnail(
+        url: imageUrl,
+        width: size,
+        height: size,
+        fit: fit,
+        errorChild: placeholder,
+        borderRadius: BorderRadius.circular(8),
+        semanticLabel: entry.name,
+      );
+    }
+    if (imageUrl.isEmpty) return placeholder;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return AppImageThumbnail(
+          url: imageUrl,
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          fit: fit,
+          errorChild: placeholder,
+          borderRadius: BorderRadius.zero,
+          semanticLabel: entry.name,
+        );
+      },
+    );
+  }
+
+  Widget _buildPlaylistMetaChip(String label) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.82,
+        ),
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.12)),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.labelSmall,
+      ),
+    );
+  }
+
+  Widget? _buildPlaylistSelectionIcon(
+    bool isSelected,
+    bool selectionMode,
+    Color primaryColor,
+  ) {
+    if (!selectionMode) return null;
+    return Icon(
+      isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+      color: isSelected ? primaryColor : Colors.grey,
+    );
+  }
+
+  void _handlePlaylistEntryPressed(RoomMediaEntry entry, bool selectionMode) {
+    if (selectionMode) {
+      _toggleSelection(entry);
+    } else if (entry.isFolder) {
+      _enterFolder(entry);
+    } else {
+      _switchMedia(entry);
+    }
+  }
+
+  void _handlePlaylistEntryLongPressed(
+    RoomMediaEntry entry,
+    bool selectionMode,
+  ) {
+    if (_canMutateCurrentPlaylist &&
+        !selectionMode &&
+        _isPersistedLibraryEntry(entry)) {
+      _enterSelectionMode(entry);
+    }
+  }
+
+  IconData _playlistEntryIcon(RoomMediaEntry entry) {
+    if (entry.isFolder) {
+      return entry.isDynamicPlaylist || entry.isProviderDynamicItem
+          ? Icons.folder_special_rounded
+          : Icons.folder_rounded;
+    }
+    if (entry.live) return Icons.sensors_rounded;
+    if (entry.type.toLowerCase().contains('audio')) {
+      return Icons.music_note_rounded;
+    }
+    return Icons.movie_rounded;
+  }
+
+  Color _playlistEntryAccent(
+    RoomMediaEntry entry,
+    bool isCurrent,
+    Color primaryColor,
+  ) {
+    if (isCurrent) return primaryColor;
+    if (entry.isFolder) return Colors.amber;
+    if (entry.live) return Colors.redAccent;
+    return Theme.of(context).colorScheme.onSurfaceVariant;
+  }
+
+  String _playlistEntrySummary(RoomMediaEntry entry) {
+    final description = entry.description.trim();
+    if (description.isNotEmpty) return description;
+    return _playlistEntryShortMeta(entry);
+  }
+
+  String _playlistEntryShortMeta(RoomMediaEntry entry) {
+    final parts = <String>[_playlistEntryTypeLabel(entry)];
+    if (entry.isFolder && entry.itemCount > 0) {
+      parts.add('${entry.itemCount} 项');
+    }
+    final provider = _playlistProviderLabel(entry);
+    if (provider.isNotEmpty) parts.add(provider);
+    if (!entry.isFolder && entry.hasPlaybackChoices) parts.add('多线路');
+    if (entry.proxy) parts.add('代理');
+    return parts.join(' · ');
+  }
+
+  List<String> _playlistEntryChips(RoomMediaEntry entry) {
+    final chips = <String>[_playlistEntryTypeLabel(entry)];
+    if (entry.isFolder) {
+      chips.add(entry.itemCount > 0 ? '${entry.itemCount} 项' : '可进入');
+    }
+    final provider = _playlistProviderLabel(entry);
+    if (provider.isNotEmpty) chips.add(provider);
+    if (entry.live) chips.add('直播');
+    if (entry.proxy) chips.add('代理');
+    if (!entry.isFolder && entry.hasPlaybackChoices) chips.add('多线路');
+    if (entry.version > 0) chips.add('v${entry.version}');
+    return chips;
+  }
+
+  String _playlistEntryTypeLabel(RoomMediaEntry entry) {
+    if (entry.isDynamicPlaylist) return '动态播放列表';
+    if (entry.isProviderDynamicItem && entry.isFolder) return '动态目录';
+    if (entry.isProviderDynamicItem) return '动态媒体';
+    if (entry.isPlaylist) return '播放列表';
+    if (entry.live) return '直播';
+    final type = entry.type.trim();
+    if (type.isEmpty) return '媒体';
+    return type.toUpperCase();
+  }
+
+  String _playlistProviderLabel(RoomMediaEntry entry) {
+    final provider = entry.sourceProvider.trim().isNotEmpty
+        ? entry.sourceProvider.trim()
+        : entry.providerInstanceName.trim();
+    return switch (provider.toLowerCase()) {
+      'alist' => 'AList',
+      'emby' => 'Emby',
+      'bilibili' => 'Bilibili',
+      'direct_url' || 'direct' => '直链',
+      '' => '',
+      _ => provider,
+    };
   }
 
   Widget _buildMembersTab() {
