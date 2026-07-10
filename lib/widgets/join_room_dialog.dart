@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
 Future<void> showJoinRoomDialog({
@@ -92,8 +93,8 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
               children: [
                 _DialogHeader(
                   icon: Icons.login_rounded,
-                  title: '加入房间',
-                  subtitle: '输入房间 ID，或粘贴邀请链接',
+                  title: context.l10n.joinRoom,
+                  subtitle: context.l10n.joinRoomSubtitle,
                   onClose: _joining ? null : () => Navigator.pop(context),
                 ),
                 Padding(
@@ -120,7 +121,7 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                '邀请链接会自动识别服务器；如果本地已有多个匹配地址，会在下一步让你选择。',
+                                context.l10n.inviteLinkServerHint,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -133,8 +134,8 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
                       AppTextField(
                         controller: _controller,
                         focusNode: _focusNode,
-                        label: '房间 ID 或邀请链接',
-                        hintText: 'room_xxx 或 https://...',
+                        label: context.l10n.roomIdOrInviteLink,
+                        hintText: context.l10n.roomIdOrInviteLinkHint,
                         prefixIcon: Icons.meeting_room_outlined,
                         enabled: !_joining,
                         textInputAction: TextInputAction.done,
@@ -152,7 +153,9 @@ class _JoinRoomDialogState extends State<_JoinRoomDialog> {
                   ),
                 ),
                 _DialogActions(
-                  primaryLabel: _joining ? '查找中' : '继续',
+                  primaryLabel: _joining
+                      ? context.l10n.searching
+                      : context.l10n.continueAction,
                   primaryIcon: Icons.arrow_forward_rounded,
                   primaryLoading: _joining,
                   primaryEnabled: !_joining && _hasInput,
@@ -210,7 +213,7 @@ class _RoomPasswordDialogState extends State<_RoomPasswordDialog> {
           children: [
             _DialogHeader(
               icon: Icons.lock_outline_rounded,
-              title: '输入房间密码',
+              title: context.l10n.enterRoomPassword,
               subtitle: widget.roomName,
               onClose: () => Navigator.pop(context),
             ),
@@ -219,8 +222,8 @@ class _RoomPasswordDialogState extends State<_RoomPasswordDialog> {
               child: AppTextField(
                 controller: _controller,
                 focusNode: _focusNode,
-                label: '房间密码',
-                hintText: '输入后加入房间',
+                label: context.l10n.roomPassword,
+                hintText: context.l10n.roomPasswordJoinHint,
                 prefixIcon: Icons.key_rounded,
                 obscureText: true,
                 textInputAction: TextInputAction.done,
@@ -228,7 +231,7 @@ class _RoomPasswordDialogState extends State<_RoomPasswordDialog> {
               ),
             ),
             _DialogActions(
-              primaryLabel: '加入房间',
+              primaryLabel: context.l10n.joinRoom,
               primaryIcon: Icons.login_rounded,
               primaryEnabled: true,
               onCancel: () => Navigator.pop(context),
@@ -296,7 +299,7 @@ class _DialogHeader extends StatelessWidget {
             ),
           ),
           AppIconButton(
-            tooltip: '关闭',
+            tooltip: context.l10n.close,
             icon: Icons.close_rounded,
             onPressed: onClose,
           ),
@@ -338,7 +341,7 @@ class _DialogActions extends StatelessWidget {
         children: [
           AppActionButton(
             onPressed: onCancel,
-            label: '取消',
+            label: context.l10n.cancel,
             style: AppActionButtonStyle.outlined,
           ),
           const SizedBox(width: 10),

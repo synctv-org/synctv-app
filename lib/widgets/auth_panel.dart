@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
@@ -105,7 +106,10 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingOptions = false);
-      MessageUtils.showError(context, '加载认证配置失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.authConfigLoadFailed(e.toString()),
+      );
     }
   }
 
@@ -123,7 +127,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   bool _ensureTermsAccepted() {
     if (_agreedToTerms) return true;
-    MessageUtils.showWarning(context, '请先阅读并同意用户协议和隐私政策');
+    MessageUtils.showWarning(context, context.l10n.acceptTermsFirst);
     return false;
   }
 
@@ -138,10 +142,12 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       return;
     }
     if (result.registrationReviewRequired) {
-      final suffix = result.registrationReviewId.isEmpty
-          ? ''
-          : '（${result.registrationReviewId}）';
-      MessageUtils.showInfo(context, '注册申请已提交，等待管理员审核$suffix');
+      final message = result.registrationReviewId.isEmpty
+          ? context.l10n.registrationSubmitted
+          : context.l10n.registrationSubmittedWithId(
+              result.registrationReviewId,
+            );
+      MessageUtils.showInfo(context, message);
       return;
     }
     Navigator.pop(context, true);
@@ -166,14 +172,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     final email = _effectiveLoginIdentifier();
     if (email.isEmpty) {
-      MessageUtils.showWarning(context, '请输入邮箱');
+      MessageUtils.showWarning(context, context.l10n.emailRequired);
       return;
     }
     await _withLoading(() async {
       await SyncTvService.requestEmailLogin(email);
       if (!mounted) return;
       setState(() => _emailTokenRequested = true);
-      MessageUtils.showSuccess(context, '验证码已发送');
+      MessageUtils.showSuccess(context, context.l10n.verificationCodeSent);
     });
   }
 
@@ -182,7 +188,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final email = _effectiveLoginIdentifier();
     final token = _emailTokenController.text.trim();
     if (email.isEmpty || token.isEmpty) {
-      MessageUtils.showWarning(context, '请输入邮箱和验证码');
+      MessageUtils.showWarning(context, context.l10n.emailAndCodeRequired);
       return;
     }
     await _withLoading(() async {
@@ -195,7 +201,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     final identifier = _effectiveLoginIdentifier();
     if (identifier.isEmpty) {
-      MessageUtils.showWarning(context, '请输入邮箱或用户名');
+      MessageUtils.showWarning(context, context.l10n.emailOrUsernameRequired);
       return;
     }
     await _withLoading(() async {
@@ -218,7 +224,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     final input = _registerIdentifierController.text.trim();
     if (!_registerIdentifierConfirmed || input.isEmpty) {
-      MessageUtils.showWarning(context, '请先输入用户名或邮箱');
+      MessageUtils.showWarning(context, context.l10n.enterIdentifierFirst);
       return;
     }
     final registerByEmail = input.contains('@');
@@ -229,7 +235,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         ? input
         : (_registerIncludeEmail ? _registerEmailController.text.trim() : '');
     if (username.isEmpty) {
-      MessageUtils.showWarning(context, '请输入用户名');
+      MessageUtils.showWarning(context, context.l10n.usernameRequired);
       return;
     }
     await _withLoading(() async {
@@ -246,7 +252,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     final input = _registerIdentifierController.text.trim();
     if (!_registerIdentifierConfirmed || input.isEmpty) {
-      MessageUtils.showWarning(context, '请先输入用户名或邮箱');
+      MessageUtils.showWarning(context, context.l10n.enterIdentifierFirst);
       return;
     }
     final registerByEmail = input.contains('@');
@@ -257,7 +263,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         ? input
         : _registerEmailController.text.trim();
     if (username.isEmpty || email.isEmpty) {
-      MessageUtils.showWarning(context, '请输入用户名和邮箱');
+      MessageUtils.showWarning(context, context.l10n.usernameAndEmailRequired);
       return;
     }
     await _withLoading(() async {
@@ -267,7 +273,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       );
       if (!mounted) return;
       setState(() => _registerEmailTokenRequested = true);
-      MessageUtils.showSuccess(context, '注册验证码已发送');
+      MessageUtils.showSuccess(context, context.l10n.registrationCodeSent);
     });
   }
 
@@ -275,7 +281,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     final token = _registerEmailTokenController.text.trim();
     if (token.isEmpty || _registerPasswordController.text.isEmpty) {
-      MessageUtils.showWarning(context, '请输入验证码和密码');
+      MessageUtils.showWarning(context, context.l10n.codeAndPasswordRequired);
       return;
     }
     await _withLoading(() async {
@@ -291,7 +297,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     final input = _registerIdentifierController.text.trim();
     if (!_registerIdentifierConfirmed || input.isEmpty) {
-      MessageUtils.showWarning(context, '请先输入用户名或邮箱');
+      MessageUtils.showWarning(context, context.l10n.enterIdentifierFirst);
       return;
     }
     final registerByEmail = input.contains('@');
@@ -302,7 +308,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         ? input
         : (_registerIncludeEmail ? _registerEmailController.text.trim() : '');
     if (username.isEmpty) {
-      MessageUtils.showWarning(context, '请输入用户名');
+      MessageUtils.showWarning(context, context.l10n.usernameRequired);
       return;
     }
     await _withLoading(() async {
@@ -326,7 +332,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     final roomId = _guestRoomController.text.trim();
     if (roomId.isEmpty) {
-      MessageUtils.showWarning(context, '请输入房间 ID');
+      MessageUtils.showWarning(context, context.l10n.roomIdRequired);
       return;
     }
     await _withLoading(() async {
@@ -337,6 +343,8 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _startOAuth2(OAuth2ProviderOption provider) async {
     if (!_ensureTermsAccepted()) return;
+    final authorizationPageOpenFailed =
+        context.l10n.authorizationPageOpenFailed;
     await _withLoading(() async {
       final callbackSession = await OAuth2DeepLinkService.createSession();
       final start = await SyncTvService.startOAuth2Login(
@@ -353,7 +361,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         final opened =
             await canLaunchUrl(uri) &&
             await launchUrl(uri, mode: LaunchMode.externalApplication);
-        if (!opened) throw StateError('无法打开授权页面');
+        if (!opened) {
+          throw StateError(authorizationPageOpenFailed);
+        }
         final parsed = await callbackSession.waitForCallback(
           expectedState: start.state,
         );
@@ -374,14 +384,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final challenge = _mfaChallenge;
     if (challenge == null) return;
     if (!challenge.supportsEmail) {
-      MessageUtils.showWarning(context, '当前账号不支持邮箱二次验证');
+      MessageUtils.showWarning(context, context.l10n.mfaEmailUnsupported);
       return;
     }
     await _withLoading(() async {
       await SyncTvService.requestMfaEmailCode(challenge.sessionId);
       if (!mounted) return;
       setState(() => _mfaEmailRequested = true);
-      MessageUtils.showSuccess(context, '二次验证码已发送');
+      MessageUtils.showSuccess(context, context.l10n.mfaCodeSent);
     });
   }
 
@@ -389,7 +399,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final challenge = _mfaChallenge;
     final token = _mfaTokenController.text.trim();
     if (challenge == null || token.isEmpty) {
-      MessageUtils.showWarning(context, '请输入二次验证码');
+      MessageUtils.showWarning(context, context.l10n.mfaCodeRequired);
       return;
     }
     await _withLoading(() async {
@@ -405,7 +415,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final challenge = _mfaChallenge;
     if (challenge == null) return;
     if (!challenge.supportsPasskey) {
-      MessageUtils.showWarning(context, '当前账号没有可用的 Passkey');
+      MessageUtils.showWarning(context, context.l10n.mfaPasskeyUnavailable);
       return;
     }
     await _withLoading(() async {
@@ -440,7 +450,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       );
       if (!mounted) return;
       _loginIdentifierController.text = reset.email;
-      MessageUtils.showSuccess(context, '密码已重置，请使用新密码登录');
+      MessageUtils.showSuccess(context, context.l10n.passwordResetSuccess);
     });
   }
 
@@ -448,7 +458,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     await showAppDialog<void>(
       context: context,
       builder: (context) =>
-          const UserAgreementDialog(agreementContent: _agreementContent),
+          UserAgreementDialog(agreementContent: context.l10n.agreementContent),
     );
   }
 
@@ -462,6 +472,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final media = MediaQuery.of(context);
@@ -521,13 +532,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '连接 SyncTV',
+                              l10n.connectToSyncTv,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
                             Text(
-                              SyncTvService.activeServer?.name ?? '未连接服务器',
+                              SyncTvService.activeServer?.name ??
+                                  l10n.noServerConnected,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -538,7 +550,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                         ),
                       ),
                       AppIconButton(
-                        tooltip: '关闭',
+                        tooltip: l10n.close,
                         onPressed: () => Navigator.pop(context),
                         icon: Icons.close_rounded,
                       ),
@@ -553,15 +565,18 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                       controller: _tabController,
                       indicatorSize: TabBarIndicatorSize.tab,
                       dividerColor: theme.dividerColor.withValues(alpha: 0.45),
-                      tabs: const [
-                        Tab(icon: Icon(Icons.login_rounded), text: '登录'),
+                      tabs: [
                         Tab(
-                          icon: Icon(Icons.person_add_alt_1_rounded),
-                          text: '注册',
+                          icon: const Icon(Icons.login_rounded),
+                          text: l10n.login,
                         ),
                         Tab(
-                          icon: Icon(Icons.meeting_room_outlined),
-                          text: '访客',
+                          icon: const Icon(Icons.person_add_alt_1_rounded),
+                          text: l10n.register,
+                        ),
+                        Tab(
+                          icon: const Icon(Icons.meeting_room_outlined),
+                          text: l10n.guest,
                         ),
                       ],
                     ),
@@ -617,6 +632,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   Widget _buildLoginTab(ThemeData theme) {
+    final l10n = context.l10n;
     final identifier = _loginIdentifierController.text.trim();
     final availableMethods = _availableLoginMethods(identifier);
     final selectedMethod = availableMethods.contains(_loginMethod)
@@ -628,7 +644,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       children: [
         _buildTextField(
           controller: _loginIdentifierController,
-          label: '邮箱或用户名',
+          label: l10n.emailOrUsername,
           icon: Icons.person_outline_rounded,
           textInputAction: TextInputAction.done,
           onChanged: (_) {
@@ -646,7 +662,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           AppActionButton(
             onPressed: _loading ? null : _confirmLoginIdentifier,
             icon: Icons.arrow_forward_rounded,
-            label: '继续',
+            label: l10n.continueAction,
             loading: _loading,
           ),
           if (_oauth2Providers.isNotEmpty) ...[
@@ -658,16 +674,16 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             AppSegmentedControl<_LoginMethod>(
               segments: [
                 if (availableMethods.contains(_LoginMethod.password))
-                  const ButtonSegment(
+                  ButtonSegment(
                     value: _LoginMethod.password,
-                    icon: Icon(Icons.lock_outline_rounded),
-                    label: Text('密码'),
+                    icon: const Icon(Icons.lock_outline_rounded),
+                    label: Text(l10n.password),
                   ),
                 if (availableMethods.contains(_LoginMethod.emailCode))
-                  const ButtonSegment(
+                  ButtonSegment(
                     value: _LoginMethod.emailCode,
-                    icon: Icon(Icons.mark_email_read_outlined),
-                    label: Text('验证码'),
+                    icon: const Icon(Icons.mark_email_read_outlined),
+                    label: Text(l10n.verificationCode),
                   ),
                 if (availableMethods.contains(_LoginMethod.passkey))
                   const ButtonSegment(
@@ -708,7 +724,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(child: Text('等待 $_oauthProvider 授权完成')),
+              Expanded(
+                child: Text(l10n.waitingForAuthorization(_oauthProvider!)),
+              ),
             ],
           ),
         ],
@@ -719,7 +737,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   void _confirmLoginIdentifier() {
     final identifier = _loginIdentifierController.text.trim();
     if (identifier.isEmpty) {
-      MessageUtils.showWarning(context, '请输入邮箱或用户名');
+      MessageUtils.showWarning(context, context.l10n.emailOrUsernameRequired);
       return;
     }
     final methods = _availableLoginMethods(identifier);
@@ -739,17 +757,17 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   void _confirmRegisterIdentifier() {
     final identifier = _registerIdentifierController.text.trim();
     if (!_hasAvailableRegistrationMethod()) {
-      MessageUtils.showWarning(context, '当前服务器未开放账号注册');
+      MessageUtils.showWarning(context, context.l10n.registrationDisabled);
       return;
     }
     if (identifier.isEmpty) {
-      MessageUtils.showWarning(context, '请输入用户名或邮箱');
+      MessageUtils.showWarning(context, context.l10n.usernameOrEmail);
       return;
     }
     final emailSignupEnabled =
         _settings?.enableEmail == true && _settings?.enableEmailSignup == true;
     if (identifier.contains('@') && !emailSignupEnabled) {
-      MessageUtils.showWarning(context, '当前服务器未开放邮箱注册');
+      MessageUtils.showWarning(context, context.l10n.emailRegistrationDisabled);
       return;
     }
     setState(() {
@@ -788,6 +806,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   Widget _buildSelectedLoginMethod(_LoginMethod method) {
+    final l10n = context.l10n;
     switch (method) {
       case _LoginMethod.password:
         return Column(
@@ -795,7 +814,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           children: [
             _buildTextField(
               controller: _loginPasswordController,
-              label: '密码',
+              label: l10n.password,
               icon: Icons.lock_outline_rounded,
               obscureText: true,
               onSubmitted: (_) => _submitPasswordLogin(),
@@ -804,7 +823,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             AppActionButton(
               onPressed: _loading ? null : _submitPasswordLogin,
               icon: Icons.login_rounded,
-              label: '登录',
+              label: l10n.login,
               loading: _loading,
             ),
             const SizedBox(height: 8),
@@ -813,7 +832,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               child: AppActionButton(
                 onPressed: _loading ? null : _resetPassword,
                 icon: Icons.lock_reset_rounded,
-                label: '忘记密码',
+                label: l10n.forgotPassword,
                 style: AppActionButtonStyle.text,
               ),
             ),
@@ -828,7 +847,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 Expanded(
                   child: _buildTextField(
                     controller: _emailTokenController,
-                    label: _emailTokenRequested ? '验证码' : '先获取验证码',
+                    label: _emailTokenRequested
+                        ? l10n.verificationCode
+                        : l10n.getCodeFirst,
                     icon: Icons.pin_outlined,
                   ),
                 ),
@@ -836,7 +857,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 AppActionButton(
                   onPressed: _loading ? null : _requestEmailToken,
                   icon: Icons.send_outlined,
-                  label: '发送',
+                  label: l10n.send,
                   loading: _loading,
                   style: AppActionButtonStyle.outlined,
                 ),
@@ -846,7 +867,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             AppActionButton(
               onPressed: _loading ? null : _submitEmailLogin,
               icon: Icons.mark_email_read_outlined,
-              label: '验证码登录',
+              label: l10n.emailCodeLogin,
               loading: _loading,
             ),
           ],
@@ -858,7 +879,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             AppActionButton(
               onPressed: _loading ? null : _submitPasskeyLogin,
               icon: Icons.fingerprint_rounded,
-              label: '使用 Passkey 登录',
+              label: l10n.passkeyLogin,
               loading: _loading,
             ),
           ],
@@ -867,13 +888,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   String _loginMethodLabel(_LoginMethod method) {
+    final l10n = context.l10n;
     switch (method) {
       case _LoginMethod.password:
-        return '密码登录';
+        return l10n.passwordLogin;
       case _LoginMethod.emailCode:
-        return '邮箱验证码登录';
+        return l10n.emailCodeLogin;
       case _LoginMethod.passkey:
-        return 'Passkey 登录';
+        return l10n.passkeyLogin;
     }
   }
 
@@ -938,6 +960,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   Widget _buildRegisterTab(ThemeData theme) {
+    final l10n = context.l10n;
     final passwordSignupEnabled = _settings?.enablePasswordSignup == true;
     final emailSignupEnabled =
         _settings?.enableEmail == true && _settings?.enableEmailSignup == true;
@@ -956,12 +979,12 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final registerByEmail = identifier.contains('@');
 
     if (!_loadingOptions && !hasRegistrationMethod) {
-      return const AppEmptyState(
+      return AppEmptyState(
         icon: Icons.person_off_outlined,
-        title: '当前服务器未开放账号注册',
-        subtitle: '请联系管理员创建账号，或使用已有账号登录。',
+        title: l10n.registrationDisabled,
+        subtitle: l10n.registrationDisabled,
         iconSize: 42,
-        padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       );
     }
 
@@ -972,7 +995,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         if (oauthSignupProviders.isNotEmpty) ...[
           _SectionLabel(
             icon: Icons.open_in_new_rounded,
-            label: '第三方注册',
+            label: l10n.thirdPartyRegistration,
             color: theme.colorScheme.primary,
           ),
           const SizedBox(height: 10),
@@ -982,13 +1005,13 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         if (hasLocalRegistrationMethod) ...[
           _SectionLabel(
             icon: Icons.person_add_alt_1_rounded,
-            label: '账号注册',
+            label: l10n.accountRegistration,
             color: theme.colorScheme.primary,
           ),
           const SizedBox(height: 10),
           _buildTextField(
             controller: _registerIdentifierController,
-            label: emailSignupEnabled ? '用户名或邮箱' : '用户名',
+            label: emailSignupEnabled ? l10n.usernameOrEmail : l10n.username,
             icon: Icons.person_outline_rounded,
             keyboardType: emailSignupEnabled
                 ? TextInputType.emailAddress
@@ -1013,14 +1036,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             AppActionButton(
               onPressed: _loading ? null : _confirmRegisterIdentifier,
               icon: Icons.arrow_forward_rounded,
-              label: '继续',
+              label: l10n.continueAction,
               loading: _loading,
             )
           else ...[
             if (registerByEmail) ...[
               _buildTextField(
                 controller: _registerUsernameController,
-                label: '用户名',
+                label: l10n.username,
                 icon: Icons.person_outline_rounded,
                 textInputAction: TextInputAction.next,
               ),
@@ -1031,14 +1054,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 onChanged: _loading
                     ? null
                     : (value) => setState(() => _registerIncludeEmail = value),
-                title: const Text('同时填写邮箱'),
-                subtitle: const Text('可使用邮箱验证码完成注册。'),
+                title: Text(l10n.includeEmail),
+                subtitle: Text(l10n.includeEmailDescription),
               ),
               if (_registerIncludeEmail) ...[
                 const SizedBox(height: 8),
                 _buildTextField(
                   controller: _registerEmailController,
-                  label: '邮箱',
+                  label: l10n.email,
                   icon: Icons.mail_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -1054,7 +1077,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             if (passwordSignupEnabled) ...[
               _buildTextField(
                 controller: _registerPasswordController,
-                label: '密码',
+                label: l10n.password,
                 icon: Icons.lock_outline_rounded,
                 obscureText: true,
               ),
@@ -1062,7 +1085,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               AppActionButton(
                 onPressed: _loading ? null : _submitPasswordRegistration,
                 icon: Icons.person_add_alt_1_rounded,
-                label: '创建账号',
+                label: l10n.createAccount,
                 loading: _loading,
               ),
             ],
@@ -1071,7 +1094,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               if (passwordSignupEnabled) const SizedBox(height: 18),
               _SectionLabel(
                 icon: Icons.mark_email_read_outlined,
-                label: '邮箱验证码注册',
+                label: l10n.emailCodeRegistration,
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(height: 10),
@@ -1080,7 +1103,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                   Expanded(
                     child: _buildTextField(
                       controller: _registerEmailTokenController,
-                      label: _registerEmailTokenRequested ? '验证码' : '先获取验证码',
+                      label: _registerEmailTokenRequested
+                          ? l10n.verificationCode
+                          : l10n.getCodeFirst,
                       icon: Icons.pin_outlined,
                     ),
                   ),
@@ -1088,7 +1113,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                   AppActionButton(
                     onPressed: _loading ? null : _requestEmailRegistrationToken,
                     icon: Icons.send_outlined,
-                    label: '发送',
+                    label: l10n.send,
                     loading: _loading,
                     style: AppActionButtonStyle.outlined,
                   ),
@@ -1097,7 +1122,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               const SizedBox(height: 12),
               _buildTextField(
                 controller: _registerPasswordController,
-                label: '密码',
+                label: l10n.password,
                 icon: Icons.lock_outline_rounded,
                 obscureText: true,
               ),
@@ -1105,7 +1130,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               AppActionButton(
                 onPressed: _loading ? null : _submitEmailRegistration,
                 icon: Icons.mark_email_read_outlined,
-                label: '使用邮箱验证码创建账号',
+                label: l10n.createAccountWithEmailCode,
                 loading: _loading,
                 style: passwordSignupEnabled
                     ? AppActionButtonStyle.outlined
@@ -1116,20 +1141,20 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               const SizedBox(height: 18),
               _SectionLabel(
                 icon: Icons.fingerprint_rounded,
-                label: 'Passkey 注册',
+                label: l10n.passkeyRegistration,
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(height: 10),
               _buildTextField(
                 controller: _passkeyNameController,
-                label: '设备名称，例如 MacBook 或手机',
+                label: l10n.deviceNameHint,
                 icon: Icons.devices_rounded,
               ),
               const SizedBox(height: 12),
               AppActionButton(
                 onPressed: _loading ? null : _submitPasskeyRegistration,
                 icon: Icons.fingerprint_rounded,
-                label: '创建 Passkey 账号',
+                label: l10n.createPasskeyAccount,
                 loading: _loading,
                 style: AppActionButtonStyle.outlined,
               ),
@@ -1147,7 +1172,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                         _registerEmailTokenController.clear();
                       }),
                 icon: Icons.edit_outlined,
-                label: '修改',
+                label: l10n.edit,
                 style: AppActionButtonStyle.text,
               ),
             ),
@@ -1158,12 +1183,13 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   Widget _buildGuestTab(ThemeData theme) {
+    final l10n = context.l10n;
     final guestEnabled = _settings?.enableGuest == true;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '访客只用于进入指定房间。公开房间列表不需要登录，创建房间、账号中心和管理功能需要账号。',
+          l10n.guestAccessDescription,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             height: 1.35,
@@ -1172,7 +1198,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         const SizedBox(height: 18),
         _buildTextField(
           controller: _guestRoomController,
-          label: guestEnabled ? '房间 ID' : '服务器未开放访客访问',
+          label: guestEnabled ? l10n.roomId : l10n.guestAccessDisabled,
           icon: Icons.meeting_room_outlined,
           enabled: guestEnabled && !_loading,
           onSubmitted: (_) => _submitGuest(),
@@ -1181,7 +1207,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         AppActionButton(
           onPressed: guestEnabled && !_loading ? _submitGuest : null,
           icon: Icons.door_front_door_outlined,
-          label: '以访客身份进入',
+          label: l10n.enterAsGuest,
           loading: _loading,
         ),
       ],
@@ -1189,20 +1215,21 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   Widget _buildMfaPanel(ThemeData theme) {
+    final l10n = context.l10n;
     final challenge = _mfaChallenge!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SectionLabel(
           icon: Icons.verified_user_outlined,
-          label: '二次验证',
+          label: l10n.twoFactorVerification,
           color: theme.colorScheme.primary,
         ),
         const SizedBox(height: 8),
         Text(
           challenge.maskedEmail.isEmpty
-              ? '当前账号需要额外验证。'
-              : '验证码将发送到 ${challenge.maskedEmail}',
+              ? l10n.additionalVerificationRequired
+              : l10n.codeSentTo(challenge.maskedEmail),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -1213,7 +1240,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
             Expanded(
               child: _buildTextField(
                 controller: _mfaTokenController,
-                label: _mfaEmailRequested ? '二次验证码' : '先获取二次验证码',
+                label: _mfaEmailRequested
+                    ? l10n.verificationCode
+                    : l10n.getMfaCodeFirst,
                 icon: Icons.pin_outlined,
                 enabled: challenge.supportsEmail && !_loading,
               ),
@@ -1224,7 +1253,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                   ? _requestMfaEmailToken
                   : null,
               icon: Icons.send_outlined,
-              label: '发送',
+              label: l10n.send,
               loading: _loading,
               style: AppActionButtonStyle.outlined,
             ),
@@ -1236,7 +1265,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               ? _submitMfaEmailToken
               : null,
           icon: Icons.verified_user_outlined,
-          label: '完成验证',
+          label: l10n.completeVerification,
           loading: _loading,
         ),
         if (challenge.supportsPasskey &&
@@ -1246,7 +1275,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           AppActionButton(
             onPressed: _loading ? null : _submitMfaPasskey,
             icon: Icons.fingerprint_rounded,
-            label: '使用 Passkey 验证',
+            label: l10n.verifyWithPasskey,
             loading: _loading,
             style: AppActionButtonStyle.outlined,
           ),
@@ -1267,7 +1296,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           icon: _showOAuthProviders
               ? Icons.expand_less_rounded
               : Icons.expand_more_rounded,
-          label: '第三方登录',
+          label: context.l10n.thirdPartyLogin,
           style: AppActionButtonStyle.text,
         ),
         AnimatedCrossFade(
@@ -1299,14 +1328,16 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 ? null
                 : () => _startOAuth2(provider),
             icon: Icons.open_in_new_rounded,
-            label: '使用 ${_oauth2ProviderLabel(provider)} 继续',
+            label: context.l10n.continueWithProvider(
+              _oauth2ProviderLabel(provider),
+            ),
             style: AppActionButtonStyle.outlined,
           ),
           const SizedBox(height: 8),
         ],
         if (!oauth2Available)
           Text(
-            '当前构建未配置 App Link 或桌面回跳，暂不能使用 OAuth2。',
+            context.l10n.oauthCallbackUnavailable,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -1319,8 +1350,12 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     final display = provider.type.trim().isEmpty
         ? provider.name
         : provider.type;
-    if (provider.signupNeedReview) return '$display（注册需审核）';
-    if (!provider.signupEnabled) return '$display（仅登录）';
+    if (provider.signupNeedReview) {
+      return context.l10n.providerReviewRequired(display);
+    }
+    if (!provider.signupEnabled) {
+      return context.l10n.providerLoginOnly(display);
+    }
     return display;
   }
 
@@ -1452,23 +1487,23 @@ class _AgreementRow extends StatelessWidget {
     return AppCheckboxTile(
       value: agreed,
       onChanged: onChanged,
-      semanticsLabel: '同意用户协议和隐私政策',
+      semanticsLabel: context.l10n.acceptTermsSemantics,
       contentPadding: EdgeInsets.zero,
       title: Wrap(
         crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 2,
         children: [
-          const Text('我已阅读并同意'),
+          Text(context.l10n.termsPrefix),
           AppActionButton(
             onPressed: onOpenAgreement,
-            label: '《用户协议》',
+            label: context.l10n.userAgreementLink,
             style: AppActionButtonStyle.text,
             size: AppActionButtonSize.sm,
           ),
-          const Text('和'),
+          Text(context.l10n.and),
           AppActionButton(
             onPressed: onOpenAgreement,
-            label: '《隐私政策》',
+            label: context.l10n.privacyPolicyLink,
             style: AppActionButtonStyle.text,
             size: AppActionButtonSize.sm,
           ),
@@ -1512,7 +1547,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
   Future<void> _requestResetEmail() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      MessageUtils.showWarning(context, '请输入邮箱');
+      MessageUtils.showWarning(context, context.l10n.emailRequired);
       return;
     }
     setState(() => _requesting = true);
@@ -1521,10 +1556,15 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
       if (!mounted) return;
       MessageUtils.showSuccess(
         context,
-        message.isEmpty ? '密码重置邮件已发送' : message,
+        message.isEmpty ? context.l10n.passwordResetEmailSent : message,
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '发送重置邮件失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.passwordResetEmailFailed(e.toString()),
+        );
+      }
     } finally {
       if (mounted) setState(() => _requesting = false);
     }
@@ -1535,11 +1575,11 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
     final token = _tokenController.text.trim();
     final password = _passwordController.text;
     if (email.isEmpty || token.isEmpty || password.isEmpty) {
-      MessageUtils.showWarning(context, '请输入邮箱、验证码和新密码');
+      MessageUtils.showWarning(context, context.l10n.resetFieldsRequired);
       return;
     }
     if (password != _confirmController.text) {
-      MessageUtils.showWarning(context, '两次输入的新密码不一致');
+      MessageUtils.showWarning(context, context.l10n.newPasswordsMismatch);
       return;
     }
     Navigator.pop(context, (email: email, token: token, password: password));
@@ -1548,7 +1588,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
   @override
   Widget build(BuildContext context) {
     return AppDialog(
-      title: const Text('重置密码'),
+      title: Text(context.l10n.resetPassword),
       body: SizedBox(
         width: 420,
         child: Column(
@@ -1559,7 +1599,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
                 Expanded(
                   child: AppTextField(
                     controller: _emailController,
-                    label: '邮箱',
+                    label: context.l10n.email,
                     prefixIcon: Icons.mail_outline_rounded,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
@@ -1572,7 +1612,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
                 AppActionButton(
                   onPressed: _requesting ? null : _requestResetEmail,
                   icon: Icons.send_outlined,
-                  label: '发送',
+                  label: context.l10n.send,
                   loading: _requesting,
                   style: AppActionButtonStyle.outlined,
                 ),
@@ -1581,7 +1621,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
             const SizedBox(height: 12),
             AppTextField(
               controller: _tokenController,
-              label: '重置验证码',
+              label: context.l10n.resetCode,
               prefixIcon: Icons.pin_outlined,
               textInputAction: TextInputAction.next,
               autocorrect: false,
@@ -1591,7 +1631,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
             const SizedBox(height: 12),
             AppTextField(
               controller: _passwordController,
-              label: '新密码',
+              label: context.l10n.newPassword,
               prefixIcon: Icons.lock_reset_rounded,
               obscureText: true,
               textInputAction: TextInputAction.next,
@@ -1599,7 +1639,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
             const SizedBox(height: 12),
             AppTextField(
               controller: _confirmController,
-              label: '确认新密码',
+              label: context.l10n.confirmNewPassword,
               prefixIcon: Icons.check_circle_outline_rounded,
               obscureText: true,
               onSubmitted: (_) => _submit(),
@@ -1610,31 +1650,15 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
       actions: [
         AppActionButton(
           onPressed: () => Navigator.pop(context),
-          label: '取消',
+          label: context.l10n.cancel,
           style: AppActionButtonStyle.outlined,
         ),
         AppActionButton(
           onPressed: _submit,
           icon: Icons.lock_reset_rounded,
-          label: '重置',
+          label: context.l10n.reset,
         ),
       ],
     );
   }
 }
-
-const String _agreementContent = '''
-# SyncTV 用户服务协议与隐私政策
-
-本应用是连接用户自有 SyncTV 服务器的客户端工具，不提供公共内容服务器，不存储、审核或运营用户服务器中的内容。
-
-用户应确保接入的服务器、房间和媒体内容具备合法授权，并自行承担服务器安全、账号安全、内容合规和数据备份责任。
-
-使用本应用登录、注册、访客访问或连接服务器，即表示你同意遵守相关法律法规，不利用本应用传播违法、有害、侵权或未授权内容。
-
-应用可能在本地保存服务器地址、登录令牌、访客令牌和基础偏好，用于保持登录状态与多服务器切换。这些数据仅存储在当前设备上。
-
-OAuth2 登录将跳转到浏览器或系统授权页面，并通过 App Link 或桌面本地回跳完成授权；应用不会要求用户手动填写回调地址或授权码。
-
-如不同意以上条款，请停止使用本应用。
-''';

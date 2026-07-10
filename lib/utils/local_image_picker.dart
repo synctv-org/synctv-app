@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/services/synctv_file_upload_service.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
@@ -101,7 +102,7 @@ class _LocalImageEditDialogState extends State<_LocalImageEditDialog> {
     final theme = Theme.of(context);
     final effectiveRatio = _squareCrop ? 1.0 : widget.aspectRatio;
     return AppDialog(
-      title: const Text('编辑图片'),
+      title: Text(context.l10n.editImage),
       icon: const Icon(Icons.photo_size_select_large_outlined),
       body: Material(
         type: MaterialType.transparency,
@@ -148,7 +149,10 @@ class _LocalImageEditDialogState extends State<_LocalImageEditDialog> {
                             );
                           case CropFailure(:final cause):
                             setState(() => _cropping = false);
-                            MessageUtils.showError(context, '图片裁剪失败: $cause');
+                            MessageUtils.showError(
+                              context,
+                              context.l10n.imageCropFailed('$cause'),
+                            );
                         }
                       },
                     ),
@@ -161,7 +165,7 @@ class _LocalImageEditDialogState extends State<_LocalImageEditDialog> {
                 runSpacing: 8,
                 children: [
                   FilterChip(
-                    label: const Text('按用途裁剪'),
+                    label: Text(context.l10n.cropForPurpose),
                     selected: effectiveRatio != null && !_squareCrop,
                     onSelected: widget.aspectRatio == null
                         ? null
@@ -171,7 +175,7 @@ class _LocalImageEditDialogState extends State<_LocalImageEditDialog> {
                           },
                   ),
                   FilterChip(
-                    label: const Text('方形裁剪'),
+                    label: Text(context.l10n.squareCrop),
                     selected: _squareCrop,
                     onSelected: (_) {
                       setState(() => _squareCrop = true);
@@ -197,7 +201,7 @@ class _LocalImageEditDialogState extends State<_LocalImageEditDialog> {
                 mimeType: _mimeTypeForName(widget.fileName),
               ),
             ),
-            text: '上传原图',
+            text: context.l10n.uploadOriginalImage,
           ),
         const SizedBox(width: 8),
         _cropping
@@ -205,7 +209,7 @@ class _LocalImageEditDialogState extends State<_LocalImageEditDialog> {
             : ChatUtils.createConfirmButton(context, () {
                 setState(() => _cropping = true);
                 _controller.crop();
-              }, text: '使用编辑'),
+              }, text: context.l10n.useEditedImage),
       ],
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/pages/home_screen.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
@@ -76,7 +77,7 @@ class _SplashPageState extends State<SplashPage> {
             child: Column(
               children: [
                 Text(
-                  'SyncTV',
+                  context.l10n.appTitle,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -86,7 +87,7 @@ class _SplashPageState extends State<SplashPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '让距离不再是距离',
+                  context.l10n.appTagline,
                   style: TextStyle(
                     fontSize: 14,
                     color: isDark ? Colors.white54 : Colors.black54,

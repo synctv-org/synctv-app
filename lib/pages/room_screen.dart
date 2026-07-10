@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/playback_control_reporter.dart';
 import 'package:synctv_app/models/playback_sync_config.dart';
@@ -115,7 +116,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   // Folder navigation
   final List<RoomMediaEntry> _folderStack = [];
-  final List<String> _folderNameStack = ['根目录'];
+  final List<String> _folderNameStack = [''];
 
   SyncTvUser? _currentUser;
   bool _showChatScrollToBottom = false;
@@ -170,7 +171,7 @@ class _RoomScreenState extends State<RoomScreen>
     _chatScrollController.addListener(_handleChatScroll);
     _authErrorSubscription = SyncTvService.onAuthError.listen((_) {
       if (mounted) {
-        _handleRoomSessionClosed('登录已过期，请重新登录');
+        _handleRoomSessionClosed(context.l10n.loginExpired);
       }
     });
     _tabController = TabController(length: _roomTabCount, vsync: this);
@@ -524,7 +525,9 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _scheduleReconnect() {
     if (_reconnectAttempts >= _maxReconnectAttempts) {
-      if (mounted) MessageUtils.showError(context, '连接断开，请退出重试');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.connectionClosedRetry);
+      }
       return;
     }
 
@@ -631,7 +634,7 @@ class _RoomScreenState extends State<RoomScreen>
     } else if (type == RoomRealtimeMessageKind.current) {
       final playbackStatus = message.playbackStatus;
       if (playbackStatus == null) {
-        _reportInvalidRealtimePayload('播放资源');
+        _reportInvalidRealtimePayload(context.l10n.playbackResource);
       } else {
         _applyPlaybackStatus(
           _mergePlaybackStatus(playbackStatus, incomingHasTiming: false),
@@ -658,7 +661,7 @@ class _RoomScreenState extends State<RoomScreen>
         if (message.resourceObserveId.isEmpty) {
           _observeCurrentPlaylist();
         } else {
-          _reportInvalidRealtimePayload('播放列表');
+          _reportInvalidRealtimePayload(context.l10n.playlist);
         }
       } else {
         _applyMediaLibrary(mediaLibrary);
@@ -678,11 +681,11 @@ class _RoomScreenState extends State<RoomScreen>
       }
       final errorMsg = message.error?.message ?? '';
       if (errorMsg.isNotEmpty && mounted) {
-        MessageUtils.showError(context, '错误: $errorMsg');
+        MessageUtils.showError(context, context.l10n.errorMessage(errorMsg));
       }
     } else if (type == RoomRealtimeMessageKind.expired) {
       if (mounted) {
-        _handleRoomSessionClosed('登录已过期，请重新登录');
+        _handleRoomSessionClosed(context.l10n.loginExpired);
       }
     } else if (type == RoomRealtimeMessageKind.webrtcOffer ||
         type == RoomRealtimeMessageKind.webrtcAnswer ||
@@ -853,11 +856,11 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   String _chatPreviewText(RoomRealtimeChatEntry message) {
-    if (message.isDeleted) return '消息已删除';
+    if (message.isDeleted) return context.l10n.messageDeleted;
     final text = message.content.trim();
     if (text.isNotEmpty) return text;
-    if (message.images.isNotEmpty) return '[图片]';
-    return '[消息]';
+    if (message.images.isNotEmpty) return context.l10n.imageMessage;
+    return context.l10n.genericMessage;
   }
 
   GlobalKey _chatMessageKey(String messageId) {
@@ -873,7 +876,7 @@ class _RoomScreenState extends State<RoomScreen>
       index = _messages.indexWhere((message) => message.id == messageId);
     }
     if (index < 0) {
-      MessageUtils.showInfo(context, '引用消息不在当前可查看范围');
+      MessageUtils.showInfo(context, context.l10n.quotedMessageUnavailable);
       return;
     }
     _highlightChatMessage(messageId);
@@ -927,7 +930,12 @@ class _RoomScreenState extends State<RoomScreen>
         );
       });
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载引用上下文失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadQuotedContextFailed('$e'),
+        );
+      }
     }
   }
 
@@ -1052,7 +1060,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _reportInvalidRealtimePayload(String resourceName) {
-    final message = '服务端未推送$resourceName快照';
+    final message = context.l10n.serverSnapshotMissing(resourceName);
     debugPrint(message);
     if (mounted) MessageUtils.showError(context, message);
   }
@@ -1215,9 +1223,9 @@ class _RoomScreenState extends State<RoomScreen>
         : color.withValues(alpha: 0.10);
     final label = compact
         ? _formatLatency(latency)
-        : '延迟 ${_formatLatency(latency)}';
+        : context.l10n.latencyValue(_formatLatency(latency));
     return Tooltip(
-      message: '服务器延迟',
+      message: context.l10n.serverLatency,
       child: AppBadge(
         constraints: const BoxConstraints(minHeight: 28, maxWidth: 128),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1245,9 +1253,9 @@ class _RoomScreenState extends State<RoomScreen>
         : color.withValues(alpha: 0.10);
     final label = compact
         ? _formatDeviation(deviation)
-        : '偏差 ${_formatDeviation(deviation)}';
+        : context.l10n.deviationValue(_formatDeviation(deviation));
     return Tooltip(
-      message: '播放偏差',
+      message: context.l10n.playbackDeviation,
       child: AppBadge(
         constraints: const BoxConstraints(minHeight: 28, maxWidth: 128),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1369,7 +1377,9 @@ class _RoomScreenState extends State<RoomScreen>
       _sendRealtimeMessage(message.writeToBuffer());
     } catch (e) {
       debugPrint('Realtime playback state update error: $e');
-      if (mounted) MessageUtils.showError(context, '播放状态更新失败');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.playbackUpdateFailed);
+      }
     }
   }
 
@@ -1513,7 +1523,7 @@ class _RoomScreenState extends State<RoomScreen>
     } catch (e) {
       newController.dispose();
       if (mounted && generation == _videoInitGeneration) {
-        final message = playbackLoadErrorMessage(e);
+        final message = playbackLoadErrorMessage(context.l10n, e);
         setState(() {
           _isVideoLoading = false;
           _videoError = message;
@@ -1558,7 +1568,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (mounted) {
       MessageUtils.showInfo(
         context,
-        '已切换到 ${selected.playbackChoiceLabel}',
+        context.l10n.switchedToPlaybackRoute(selected.playbackChoiceLabel),
         duration: const Duration(seconds: 1),
       );
     }
@@ -1569,7 +1579,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (entry == null || !entry.hasPlaybackChoices) return null;
     if (compact) {
       return AppPopupMenuButton<String>(
-        tooltip: '播放线路',
+        tooltip: context.l10n.playbackRoute,
         color: Colors.black87,
         onSelected: (value) {
           final parts = value.split('|');
@@ -1602,7 +1612,7 @@ class _RoomScreenState extends State<RoomScreen>
     }
     final maxLabelWidth = compact ? 0.0 : 170.0;
     return AppPopupMenuButton<String>(
-      tooltip: '播放线路',
+      tooltip: context.l10n.playbackRoute,
       color: Colors.black87,
       onSelected: (value) {
         final parts = value.split('|');
@@ -1713,7 +1723,7 @@ class _RoomScreenState extends State<RoomScreen>
     ).join('、');
     MessageUtils.showWarning(
       context,
-      '当前播放地址携带 $names。此类凭据来自播放信息，房间成员可能获取并用于请求媒体资源。',
+      context.l10n.playbackCredentialWarning(names),
     );
   }
 
@@ -1821,7 +1831,7 @@ class _RoomScreenState extends State<RoomScreen>
         leading: AppIconButton(
           onPressed: () => Navigator.of(context).maybePop(),
           icon: Icons.arrow_back_rounded,
-          tooltip: '返回',
+          tooltip: context.l10n.back,
         ),
         title: Text(widget.room.roomName),
         backgroundColor: theme.appBarTheme.backgroundColor,
@@ -1839,13 +1849,13 @@ class _RoomScreenState extends State<RoomScreen>
                 ? AppIconButton(
                     onPressed: _openPlaybackSyncSettings,
                     icon: Icons.sync_alt_rounded,
-                    tooltip: '同步设置',
+                    tooltip: context.l10n.syncSettings,
                     style: AppIconButtonStyle.tonal,
                   )
                 : AppActionButton(
                     onPressed: _openPlaybackSyncSettings,
                     icon: Icons.sync_alt_rounded,
-                    label: '同步设置',
+                    label: context.l10n.syncSettings,
                     style: AppActionButtonStyle.tonal,
                   ),
           ),
@@ -1853,7 +1863,9 @@ class _RoomScreenState extends State<RoomScreen>
             AppActionButton(
               onPressed: _stopPlayback,
               icon: Icons.stop_circle_outlined,
-              label: compactChrome ? '停止' : '停止播放',
+              label: compactChrome
+                  ? context.l10n.stop
+                  : context.l10n.stopPlayback,
               style: AppActionButtonStyle.destructive,
             ),
           if (_currentUser != null)
@@ -1865,7 +1877,7 @@ class _RoomScreenState extends State<RoomScreen>
                       icon: _canManageRoom
                           ? Icons.tune_rounded
                           : Icons.lock_outline_rounded,
-                      tooltip: '房间管理',
+                      tooltip: context.l10n.roomManagement,
                       style: AppIconButtonStyle.tonal,
                     )
                   : AppActionButton(
@@ -1873,7 +1885,7 @@ class _RoomScreenState extends State<RoomScreen>
                       icon: _canManageRoom
                           ? Icons.tune_rounded
                           : Icons.lock_outline_rounded,
-                      label: '房间管理',
+                      label: context.l10n.roomManagement,
                       style: AppActionButtonStyle.tonal,
                     ),
             ),
@@ -1913,7 +1925,9 @@ class _RoomScreenState extends State<RoomScreen>
                         _videoPlayerController!.value.isInitialized
                     ? CustomVideoPlayer(
                         controller: _videoPlayerController!,
-                        title: _currentStatus?.entry?.name ?? '未知影片',
+                        title:
+                            _currentStatus?.entry?.name ??
+                            context.l10n.unknownVideo,
                         danmakuController: _danmakuController,
                         subtitles: _currentStatus?.entry?.subtitles,
                         isLive: _currentStatus?.entry?.live == true,
@@ -1958,14 +1972,14 @@ class _RoomScreenState extends State<RoomScreen>
               children: [
                 Expanded(
                   child: Text(
-                    '房间协作',
+                    context.l10n.roomCollaboration,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
                 Text(
-                  '$_roomOnlineCount 人',
+                  context.l10n.peopleCount(_roomOnlineCount),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
                   ),
@@ -1974,13 +1988,13 @@ class _RoomScreenState extends State<RoomScreen>
                 AppIconButton(
                   onPressed: () => _selectRoomTab(1),
                   icon: Icons.playlist_play_rounded,
-                  tooltip: '播放列表',
+                  tooltip: context.l10n.playlist,
                 ),
                 const SizedBox(width: 4),
                 AppIconButton(
                   onPressed: () => copyRoomInviteLink(context, widget.room),
                   icon: Icons.ios_share_rounded,
-                  tooltip: '复制邀请链接',
+                  tooltip: context.l10n.copyInviteLink,
                 ),
               ],
             ),
@@ -2014,7 +2028,7 @@ class _RoomScreenState extends State<RoomScreen>
     if (mounted) {
       MessageUtils.showInfo(
         context,
-        '已同步到最新进度',
+        context.l10n.syncedToLatestProgress,
         duration: const Duration(seconds: 1),
       );
     }
@@ -2034,13 +2048,18 @@ class _RoomScreenState extends State<RoomScreen>
       if (mounted) {
         MessageUtils.showInfo(
           context,
-          '已重新加载播放地址',
+          context.l10n.playbackAddressReloaded,
           duration: const Duration(seconds: 1),
         );
       }
     } catch (e) {
       debugPrint('Reload playback URL error: $e');
-      if (mounted) MessageUtils.showError(context, '重新加载播放地址失败');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.reloadPlaybackAddressFailed,
+        );
+      }
     }
   }
 
@@ -2051,13 +2070,15 @@ class _RoomScreenState extends State<RoomScreen>
         var draft = _playbackSyncConfig;
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final autoThresholdLabel =
-                '${draft.autoSeekDriftThresholdSeconds.toStringAsFixed(1)} 秒';
-            final manualThresholdLabel =
-                '${draft.manualSeekDriftThresholdSeconds.toStringAsFixed(1)} 秒';
+            final autoThresholdLabel = context.l10n.secondsValue(
+              draft.autoSeekDriftThresholdSeconds.toStringAsFixed(1),
+            );
+            final manualThresholdLabel = context.l10n.secondsValue(
+              draft.manualSeekDriftThresholdSeconds.toStringAsFixed(1),
+            );
 
             return AppDialog(
-              title: const Text('同步设置'),
+              title: Text(context.l10n.syncSettings),
               icon: const Icon(Icons.sync_alt_rounded),
               body: SizedBox(
                 width: 520,
@@ -2074,13 +2095,15 @@ class _RoomScreenState extends State<RoomScreen>
                           });
                         },
                         prefix: const Icon(Icons.auto_mode_rounded),
-                        title: const Text('自动进度纠偏'),
-                        subtitle: const Text('实时状态事件到达后，客户端按本地时钟计算目标进度并自动跳转'),
+                        title: Text(context.l10n.automaticProgressCorrection),
+                        subtitle: Text(
+                          context.l10n.automaticProgressCorrectionDescription,
+                        ),
                       ),
                       const SizedBox(height: 18),
                       _PlaybackSyncSlider(
                         icon: Icons.linear_scale_rounded,
-                        title: '自动纠偏阈值',
+                        title: context.l10n.automaticCorrectionThreshold,
                         valueLabel: autoThresholdLabel,
                         value: draft.autoSeekDriftThresholdSeconds,
                         min: 0.1,
@@ -2098,7 +2121,7 @@ class _RoomScreenState extends State<RoomScreen>
                       const SizedBox(height: 18),
                       _PlaybackSyncSlider(
                         icon: Icons.touch_app_rounded,
-                        title: '手动同步最小误差',
+                        title: context.l10n.manualSyncMinimumError,
                         valueLabel: manualThresholdLabel,
                         value: draft.manualSeekDriftThresholdSeconds,
                         min: 0.1,
@@ -2120,14 +2143,14 @@ class _RoomScreenState extends State<RoomScreen>
               actions: [
                 AppActionButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  label: '取消',
+                  label: context.l10n.cancel,
                   style: AppActionButtonStyle.outlined,
                 ),
                 AppActionButton(
                   onPressed: () {
                     Navigator.pop(dialogContext, PlaybackSyncConfig.defaults);
                   },
-                  label: '恢复默认',
+                  label: context.l10n.restoreDefaults,
                   style: AppActionButtonStyle.tonal,
                 ),
                 AppActionButton(
@@ -2135,7 +2158,7 @@ class _RoomScreenState extends State<RoomScreen>
                     Navigator.pop(dialogContext, draft.normalized());
                   },
                   icon: Icons.check_rounded,
-                  label: '保存',
+                  label: context.l10n.save,
                   style: AppActionButtonStyle.filled,
                 ),
               ],
@@ -2151,7 +2174,7 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() {
       _playbackSyncConfig = SyncTvService.playbackSyncConfig;
     });
-    MessageUtils.showSuccess(context, '同步设置已保存');
+    MessageUtils.showSuccess(context, context.l10n.syncSettingsSaved);
   }
 
   Future<void> _observeRoomMembers() async {
@@ -2177,7 +2200,7 @@ class _RoomScreenState extends State<RoomScreen>
     } catch (e) {
       debugPrint('Observe room members error: $e');
       if (mounted) {
-        MessageUtils.showError(context, '成员列表加载失败');
+        MessageUtils.showError(context, context.l10n.loadMemberListFailed);
       }
     } finally {
       if (mounted) setState(() => _membersLoading = false);
@@ -2277,7 +2300,7 @@ class _RoomScreenState extends State<RoomScreen>
       MaterialPageRoute(
         builder: (context) => CustomVideoPlayer(
           controller: _videoPlayerController!,
-          title: _currentStatus?.entry?.name ?? '未知影片',
+          title: _currentStatus?.entry?.name ?? context.l10n.unknownVideo,
           danmakuController: _danmakuController,
           subtitles: _currentStatus?.entry?.subtitles,
           isLive: _currentStatus?.entry?.live == true,
@@ -2312,13 +2335,20 @@ class _RoomScreenState extends State<RoomScreen>
         _sendRealtimeMessage(bytes);
       } catch (e) {
         debugPrint('Send danmaku error: $e');
-        if (mounted) MessageUtils.showError(context, '弹幕发送失败: $e');
+        if (mounted) {
+          MessageUtils.showError(context, context.l10n.sendDanmakuFailed('$e'));
+        }
       }
     }
   }
 
   Widget _buildTabBar(ThemeData theme) {
-    final labels = ['聊天', '列表', '成员', if (_showRealtimeDebugTab) '实时'];
+    final labels = [
+      context.l10n.chat,
+      context.l10n.list,
+      context.l10n.members,
+      if (_showRealtimeDebugTab) context.l10n.realtime,
+    ];
     final icons = [
       Icons.chat_bubble_rounded,
       Icons.playlist_play_rounded,
@@ -2405,7 +2435,7 @@ class _RoomScreenState extends State<RoomScreen>
       events: _realtimeEvents,
       onClear: () => setState(_realtimeEvents.clear),
       onMaxEntriesChanged: (_) => setState(_trimRealtimeEvents),
-      emptyText: '实时事件会在收发 WebSocket 消息后显示',
+      emptyText: context.l10n.realtimeEventsWebSocketDescription,
     );
   }
 
@@ -2435,7 +2465,7 @@ class _RoomScreenState extends State<RoomScreen>
                   child: AppFloatingActionButton(
                     heroTag: 'desktop_chat_scroll_to_bottom',
                     onPressed: _scrollToBottom,
-                    tooltip: '滚动到底部',
+                    tooltip: context.l10n.scrollToBottom,
                     icon: Icons.keyboard_arrow_down_rounded,
                     small: true,
                   ),
@@ -2473,7 +2503,7 @@ class _RoomScreenState extends State<RoomScreen>
           Icon(Icons.push_pin_rounded, size: 18, color: scheme.primary),
           const SizedBox(width: 8),
           Text(
-            '置顶',
+            context.l10n.pinned,
             style: theme.textTheme.labelMedium?.copyWith(
               color: scheme.primary,
               fontWeight: FontWeight.w700,
@@ -2509,7 +2539,7 @@ class _RoomScreenState extends State<RoomScreen>
           ),
           const SizedBox(width: 6),
           AppIconButton(
-            tooltip: '刷新置顶消息',
+            tooltip: context.l10n.refreshPinnedMessages,
             constraints: const BoxConstraints.tightFor(width: 32, height: 32),
             padding: EdgeInsets.zero,
             iconSize: 17,
@@ -2574,7 +2604,7 @@ class _RoomScreenState extends State<RoomScreen>
               ),
               const SizedBox(width: 6),
               AppIconButton(
-                tooltip: '取消置顶',
+                tooltip: context.l10n.unpin,
                 constraints: const BoxConstraints.tightFor(
                   width: 28,
                   height: 28,
@@ -2668,7 +2698,7 @@ class _RoomScreenState extends State<RoomScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '回复 ${message.username}',
+                  context.l10n.replyingTo(message.username),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
@@ -2691,7 +2721,7 @@ class _RoomScreenState extends State<RoomScreen>
             ),
           ),
           AppIconButton(
-            tooltip: '取消回复',
+            tooltip: context.l10n.cancelReply,
             constraints: const BoxConstraints.tightFor(width: 32, height: 32),
             padding: EdgeInsets.zero,
             iconSize: 17,
@@ -2841,7 +2871,7 @@ class _RoomScreenState extends State<RoomScreen>
                                   if (message.isEdited) ...[
                                     const SizedBox(width: 6),
                                     Text(
-                                      '已编辑',
+                                      context.l10n.edited,
                                       style: theme.textTheme.labelSmall
                                           ?.copyWith(
                                             color: scheme.onSurfaceVariant
@@ -2947,10 +2977,15 @@ class _RoomScreenState extends State<RoomScreen>
     final text =
         mentionReceipt ??
         (receipt == null
-            ? (hasMentions ? '@ 已读' : '已读')
-            : '${receipt.readerTotal} 已读 · ${receipt.unreadTotal} 未读');
+            ? (hasMentions ? context.l10n.mentionRead : context.l10n.read)
+            : context.l10n.readUnreadSummary(
+                receipt.readerTotal,
+                receipt.unreadTotal,
+              ));
     final isMentionReceipt = mentionReceipt != null || hasMentions;
-    final label = isMentionReceipt ? '查看 @ 已读详情' : '查看阅读详情';
+    final label = isMentionReceipt
+        ? context.l10n.viewMentionReadDetails
+        : context.l10n.viewReadDetails;
     return Tooltip(
       message: label,
       child: Semantics(
@@ -3027,12 +3062,14 @@ class _RoomScreenState extends State<RoomScreen>
         .where((user) => mentionedIds.contains(user.id))
         .length;
     if (readCount == 0 && unreadCount == 0) {
-      return '@ 已读';
+      return context.l10n.mentionRead;
     }
     if (mentionedUsers.length == 1) {
-      return unreadCount == 0 ? '@ 已读' : '@ 未读';
+      return unreadCount == 0
+          ? context.l10n.mentionRead
+          : context.l10n.mentionUnread;
     }
-    return '@ $readCount 已读 · $unreadCount 未读';
+    return context.l10n.mentionReadUnreadSummary(readCount, unreadCount);
   }
 
   List<SyncTvUser> _mentionedUsersForMessage(
@@ -3089,7 +3126,12 @@ class _RoomScreenState extends State<RoomScreen>
         });
         receipt = loaded;
       } catch (e) {
-        if (mounted) MessageUtils.showError(context, '加载已读详情失败: $e');
+        if (mounted) {
+          MessageUtils.showError(
+            context,
+            context.l10n.loadReadDetailsFailed('$e'),
+          );
+        }
         return;
       } finally {
         if (mounted) {
@@ -3129,10 +3171,14 @@ class _RoomScreenState extends State<RoomScreen>
     final scheme = theme.colorScheme;
     final accent = isMine ? scheme.primary : scheme.secondary;
     final author = quote?.username.trim();
-    final title = author == null || author.isEmpty ? '引用消息' : author;
-    final preview = quote == null ? '正在加载引用消息...' : _chatPreviewText(quote);
+    final title = author == null || author.isEmpty
+        ? context.l10n.quotedMessage
+        : author;
+    final preview = quote == null
+        ? context.l10n.loadingQuotedMessage
+        : _chatPreviewText(quote);
     return Tooltip(
-      message: '跳转到引用消息',
+      message: context.l10n.jumpToQuotedMessage,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -3206,7 +3252,9 @@ class _RoomScreenState extends State<RoomScreen>
         : scheme.outlineVariant.withValues(alpha: 0.68);
 
     return Tooltip(
-      message: selected ? '点击取消回应，长按查看成员' : '点击添加回应，长按查看成员',
+      message: selected
+          ? context.l10n.reactionSelectedHint
+          : context.l10n.reactionUnselectedHint,
       child: InkWell(
         onTap: () => _toggleChatReaction(message, reaction),
         onLongPress: () => _showChatReactionUsers(message, reaction),
@@ -3290,7 +3338,7 @@ class _RoomScreenState extends State<RoomScreen>
     final scheme = Theme.of(context).colorScheme;
     return [
       _buildChatActionIcon(
-        tooltip: '表情回应',
+        tooltip: context.l10n.react,
         icon: Icons.add_reaction_outlined,
         keepExpanded: true,
         onPressed: () => setState(() {
@@ -3302,29 +3350,29 @@ class _RoomScreenState extends State<RoomScreen>
         }),
       ),
       _buildChatActionIcon(
-        tooltip: '回复',
+        tooltip: context.l10n.reply,
         icon: Icons.reply_rounded,
         onPressed: () => _replyToChatMessage(message),
       ),
       _buildChatActionIcon(
-        tooltip: '复制',
+        tooltip: context.l10n.copy,
         icon: Icons.copy_rounded,
         onPressed: () => _copyChatMessageText(message),
       ),
       _buildChatActionIcon(
-        tooltip: message.isPinned ? '取消置顶' : '置顶',
+        tooltip: message.isPinned ? context.l10n.unpin : context.l10n.pin,
         icon: message.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
         onPressed: () => _toggleChatPin(message),
       ),
       if (isMine || _canManageRoom)
         _buildChatActionIcon(
-          tooltip: '删除',
+          tooltip: context.l10n.delete,
           icon: Icons.delete_outline_rounded,
           color: scheme.error,
           onPressed: () => _deleteChatMessage(message),
         ),
       _buildChatActionIcon(
-        tooltip: '举报',
+        tooltip: context.l10n.report,
         icon: Icons.flag_outlined,
         onPressed: () => _showReportChatMessageDialog(message),
       ),
@@ -3365,7 +3413,9 @@ class _RoomScreenState extends State<RoomScreen>
   Widget _buildQuickReactionButton(RoomRealtimeChatEntry message, String key) {
     final reactedByMe = _chatReactionReactedByMe(message, key);
     return Tooltip(
-      message: reactedByMe ? '取消回应 $key' : '回应 $key',
+      message: reactedByMe
+          ? context.l10n.removeReaction(key)
+          : context.l10n.addReaction(key),
       child: InkWell(
         borderRadius: BorderRadius.circular(6),
         onTap: () {
@@ -3388,7 +3438,9 @@ class _RoomScreenState extends State<RoomScreen>
   ) {
     final reactedByMe = _chatReactionReactedByMe(message, key);
     return Tooltip(
-      message: reactedByMe ? '取消回应 $key' : '回应 $key',
+      message: reactedByMe
+          ? context.l10n.removeReaction(key)
+          : context.l10n.addReaction(key),
       child: InkWell(
         borderRadius: BorderRadius.circular(6),
         onTap: () {
@@ -3485,7 +3537,7 @@ class _RoomScreenState extends State<RoomScreen>
     await showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: '关闭消息操作',
+      barrierLabel: context.l10n.closeMessageActions,
       barrierColor: Colors.transparent,
       pageBuilder: (dialogContext, _, __) {
         return Stack(
@@ -3558,19 +3610,21 @@ class _RoomScreenState extends State<RoomScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildContextActionIcon(
-                  tooltip: '回复',
+                  tooltip: context.l10n.reply,
                   icon: Icons.reply_rounded,
                   onClose: onClose,
                   onPressed: () => _replyToChatMessage(message),
                 ),
                 _buildContextActionIcon(
-                  tooltip: '复制',
+                  tooltip: context.l10n.copy,
                   icon: Icons.copy_rounded,
                   onClose: onClose,
                   onPressed: () => _copyChatMessageText(message),
                 ),
                 _buildContextActionIcon(
-                  tooltip: message.isPinned ? '取消置顶' : '置顶',
+                  tooltip: message.isPinned
+                      ? context.l10n.unpin
+                      : context.l10n.pin,
                   icon: message.isPinned
                       ? Icons.push_pin
                       : Icons.push_pin_outlined,
@@ -3579,14 +3633,14 @@ class _RoomScreenState extends State<RoomScreen>
                 ),
                 if (isMine || _canManageRoom)
                   _buildContextActionIcon(
-                    tooltip: '删除',
+                    tooltip: context.l10n.delete,
                     icon: Icons.delete_outline_rounded,
                     color: scheme.error,
                     onClose: onClose,
                     onPressed: () => _deleteChatMessage(message),
                   ),
                 _buildContextActionIcon(
-                  tooltip: '举报',
+                  tooltip: context.l10n.report,
                   icon: Icons.flag_outlined,
                   onClose: onClose,
                   onPressed: () => _showReportChatMessageDialog(message),
@@ -3635,7 +3689,9 @@ class _RoomScreenState extends State<RoomScreen>
         _indexChatMessage(entry);
       });
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '表情回应失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.reactionFailed('$e'));
+      }
     }
   }
 
@@ -3651,11 +3707,11 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _copyChatMessageText(RoomRealtimeChatEntry message) async {
     final text = message.content.trim();
     if (text.isEmpty) {
-      MessageUtils.showInfo(context, '这条消息没有可复制文本');
+      MessageUtils.showInfo(context, context.l10n.noCopyableMessageText);
       return;
     }
     await Clipboard.setData(ClipboardData(text: text));
-    if (mounted) MessageUtils.showSuccess(context, '消息已复制');
+    if (mounted) MessageUtils.showSuccess(context, context.l10n.messageCopied);
   }
 
   Future<void> _toggleChatPin(RoomRealtimeChatEntry message) async {
@@ -3666,12 +3722,19 @@ class _RoomScreenState extends State<RoomScreen>
           : await SyncTvService.pinChatMessage(widget.room.roomId, message.id);
       if (!mounted) return;
       setState(() => _applyChatPinEvent(event));
-      MessageUtils.showSuccess(context, message.isPinned ? '已取消置顶' : '消息已置顶');
+      MessageUtils.showSuccess(
+        context,
+        message.isPinned
+            ? context.l10n.messageUnpinned
+            : context.l10n.messagePinned,
+      );
     } catch (e) {
       if (mounted) {
         MessageUtils.showError(
           context,
-          message.isPinned ? '取消置顶失败: $e' : '置顶消息失败: $e',
+          message.isPinned
+              ? context.l10n.unpinMessageFailed('$e')
+              : context.l10n.pinMessageFailed('$e'),
         );
       }
     }
@@ -3696,9 +3759,11 @@ class _RoomScreenState extends State<RoomScreen>
           _replyingToMessage = null;
         }
       });
-      MessageUtils.showSuccess(context, '消息已删除');
+      MessageUtils.showSuccess(context, context.l10n.messageDeleted);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '删除消息失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.deleteMessageFailed('$e'));
+      }
     }
   }
 
@@ -3707,7 +3772,7 @@ class _RoomScreenState extends State<RoomScreen>
   ) async {
     if (message.id.isEmpty) return;
     await _showReportContentDialog(
-      title: '举报消息',
+      title: context.l10n.reportMessage,
       submit: (reasonCode, reason) => SyncTvService.reportChatMessage(
         widget.room.roomId,
         message.id,
@@ -3720,7 +3785,7 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _showReportRoomMemberDialog(SyncTvUser member) async {
     if (member.id.isEmpty) return;
     await _showReportContentDialog(
-      title: '举报成员',
+      title: context.l10n.reportMember,
       targetLabel: member.username.isEmpty ? member.id : member.username,
       submit: (reasonCode, reason) => SyncTvService.reportRoomMember(
         widget.room.roomId,
@@ -3734,7 +3799,7 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _showReportUserDialog(SyncTvUser member) async {
     if (member.id.isEmpty) return;
     await _showReportContentDialog(
-      title: '举报用户',
+      title: context.l10n.reportUser,
       targetLabel: member.username.isEmpty ? member.id : member.username,
       submit: (reasonCode, reason) => SyncTvService.reportUser(
         widget.room.roomId,
@@ -3750,12 +3815,12 @@ class _RoomScreenState extends State<RoomScreen>
     String targetLabel = '',
     required Future<String> Function(String reasonCode, String reason) submit,
   }) async {
-    const reasons = <String, String>{
-      'spam': '垃圾广告',
-      'abuse': '辱骂骚扰',
-      'illegal': '违法违规',
-      'sexual': '低俗色情',
-      'other': '其他问题',
+    final reasons = <String, String>{
+      'spam': context.l10n.reportReasonSpam,
+      'abuse': context.l10n.reportReasonAbuse,
+      'illegal': context.l10n.reportReasonIllegal,
+      'sexual': context.l10n.reportReasonSexual,
+      'other': context.l10n.reportReasonOther,
     };
     var selectedReason = 'spam';
     final detailController = TextEditingController();
@@ -3765,7 +3830,7 @@ class _RoomScreenState extends State<RoomScreen>
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AppDialog(
-              title: const Text('举报消息'),
+              title: Text(context.l10n.reportMessage),
               icon: const Icon(Icons.flag_outlined),
               body: SizedBox(
                 width: 360,
@@ -3799,8 +3864,8 @@ class _RoomScreenState extends State<RoomScreen>
                     const SizedBox(height: 12),
                     AppTextField(
                       controller: detailController,
-                      label: '补充说明',
-                      hintText: '描述具体问题',
+                      label: context.l10n.additionalDetails,
+                      hintText: context.l10n.describeIssue,
                       minLines: 3,
                       maxLines: 5,
                       maxLength: 2000,
@@ -3811,12 +3876,12 @@ class _RoomScreenState extends State<RoomScreen>
               actions: [
                 AppActionButton(
                   onPressed: () => Navigator.of(dialogContext).pop(false),
-                  label: '取消',
+                  label: context.l10n.cancel,
                   style: AppActionButtonStyle.text,
                 ),
                 AppActionButton(
                   onPressed: () => Navigator.of(dialogContext).pop(true),
-                  label: '提交',
+                  label: context.l10n.submit,
                   icon: Icons.flag_outlined,
                 ),
               ],
@@ -3828,9 +3893,13 @@ class _RoomScreenState extends State<RoomScreen>
     try {
       if (submitted != true) return;
       await submit(selectedReason, detailController.text);
-      if (mounted) MessageUtils.showSuccess(context, '举报已提交');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.reportSubmitted);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '举报失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.reportFailed('$e'));
+      }
     } finally {
       detailController.dispose();
     }
@@ -3866,12 +3935,16 @@ class _RoomScreenState extends State<RoomScreen>
         _webrtcManager!.isConnected
             ? (_webrtcManager!.hasPeersConnected
                   ? (_webrtcManager!.isMuted
-                        ? '语音已连接 (${_webrtcManager!.participantCount}人) (静音)'
-                        : '语音已连接 (${_webrtcManager!.participantCount}人)')
+                        ? context.l10n.voiceConnectedMuted(
+                            _webrtcManager!.participantCount,
+                          )
+                        : context.l10n.voiceConnected(
+                            _webrtcManager!.participantCount,
+                          ))
                   : (_webrtcManager!.isMuted
-                        ? '等待加入... (1人) (静音)'
-                        : '等待加入... (1人)'))
-            : '语音聊天',
+                        ? context.l10n.waitingToJoinVoiceMuted(1)
+                        : context.l10n.waitingToJoinVoice(1)))
+            : context.l10n.voiceChat,
         style: TextStyle(
           color: theme.textTheme.bodyMedium?.color,
           fontWeight: FontWeight.bold,
@@ -3887,7 +3960,9 @@ class _RoomScreenState extends State<RoomScreen>
                       ? Icons.mic_off_rounded
                       : Icons.mic_rounded,
                   onPressed: () => _webrtcManager!.toggleMute(),
-                  tooltip: _webrtcManager!.isMuted ? '取消静音' : '静音',
+                  tooltip: _webrtcManager!.isMuted
+                      ? context.l10n.unmute
+                      : context.l10n.mute,
                   size: AppIconButtonSize.sm,
                   style: _webrtcManager!.isMuted
                       ? AppIconButtonStyle.destructive
@@ -3896,7 +3971,7 @@ class _RoomScreenState extends State<RoomScreen>
                 AppIconButton(
                   icon: Icons.call_end_rounded,
                   onPressed: () => _webrtcManager!.leave(),
-                  tooltip: '退出语音',
+                  tooltip: context.l10n.leaveVoice,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.destructive,
                 ),
@@ -3908,7 +3983,7 @@ class _RoomScreenState extends State<RoomScreen>
                 onPressed: _joinVoice,
                 loading: _joiningVoice,
                 icon: Icons.call_rounded,
-                label: _joiningVoice ? '加入中' : '加入',
+                label: _joiningVoice ? context.l10n.joining : context.l10n.join,
                 style: AppActionButtonStyle.tonal,
               ),
             ),
@@ -3918,19 +3993,20 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _joinVoice() async {
     final manager = _webrtcManager;
     if (manager == null || _joiningVoice) return;
+    final l10n = context.l10n;
     setState(() {
       _joiningVoice = true;
     });
     try {
       await manager.join().timeout(
         const Duration(seconds: 15),
-        onTimeout: () => throw TimeoutException('加入语音超时，请检查麦克风权限'),
+        onTimeout: () => throw TimeoutException(l10n.joinVoiceTimeout),
       );
     } catch (e, stackTrace) {
       debugPrint('WebRTC voice join failed: $e');
       debugPrint('$stackTrace');
       if (mounted) {
-        MessageUtils.showError(context, '加入语音失败: $e');
+        MessageUtils.showError(context, l10n.joinVoiceFailed('$e'));
       }
     } finally {
       if (mounted) {
@@ -3956,11 +4032,15 @@ class _RoomScreenState extends State<RoomScreen>
                 AppIconButton(
                   icon: Icons.arrow_back,
                   onPressed: _exitFolder,
-                  tooltip: '返回上一级',
+                  tooltip: context.l10n.parentDirectory,
                 ),
               Expanded(
                 child: Text(
-                  _folderStack.isNotEmpty ? _folderNameStack.last : '播放列表',
+                  _folderStack.isNotEmpty
+                      ? (_folderNameStack.last.isEmpty
+                            ? context.l10n.rootDirectory
+                            : _folderNameStack.last)
+                      : context.l10n.playlist,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -3968,7 +4048,7 @@ class _RoomScreenState extends State<RoomScreen>
               if (canMutatePlaylist) ...[
                 AppActionButton(
                   icon: Icons.add,
-                  label: '添加',
+                  label: context.l10n.add,
                   onPressed: _showAddMediaDialog,
                   style: AppActionButtonStyle.text,
                 ),
@@ -3980,7 +4060,9 @@ class _RoomScreenState extends State<RoomScreen>
                       _selectedMediaEntryIds.clear();
                     });
                   },
-                  tooltip: selectionMode ? '取消选择' : '批量管理',
+                  tooltip: selectionMode
+                      ? context.l10n.cancelSelection
+                      : context.l10n.batchManage,
                   style: selectionMode
                       ? AppIconButtonStyle.tonal
                       : AppIconButtonStyle.ghost,
@@ -3999,7 +4081,7 @@ class _RoomScreenState extends State<RoomScreen>
               children: [
                 AppActionButton(
                   onPressed: _selectAll,
-                  label: '全选',
+                  label: context.l10n.selectAll,
                   style: AppActionButtonStyle.text,
                 ),
                 const Spacer(),
@@ -4007,7 +4089,7 @@ class _RoomScreenState extends State<RoomScreen>
                   onPressed: _selectedMediaEntryIds.isEmpty
                       ? null
                       : _deleteSelectedMediaEntries,
-                  label: '删除',
+                  label: context.l10n.delete,
                   style: AppActionButtonStyle.tonal,
                 ),
               ],
@@ -4079,9 +4161,15 @@ class _RoomScreenState extends State<RoomScreen>
   AppIconButton _buildPlaylistViewModeButton(_PlaylistViewMode mode) {
     final selected = _playlistViewMode == mode;
     final (icon, tooltip) = switch (mode) {
-      _PlaylistViewMode.compact => (Icons.view_headline_rounded, '紧凑列表'),
-      _PlaylistViewMode.detailed => (Icons.view_agenda_rounded, '详细列表'),
-      _PlaylistViewMode.grid => (Icons.grid_view_rounded, '网格'),
+      _PlaylistViewMode.compact => (
+        Icons.view_headline_rounded,
+        context.l10n.compactList,
+      ),
+      _PlaylistViewMode.detailed => (
+        Icons.view_agenda_rounded,
+        context.l10n.detailedList,
+      ),
+      _PlaylistViewMode.grid => (Icons.grid_view_rounded, context.l10n.grid),
     };
     return AppIconButton(
       icon: icon,
@@ -4472,37 +4560,47 @@ class _RoomScreenState extends State<RoomScreen>
   String _playlistEntryShortMeta(RoomMediaEntry entry) {
     final parts = <String>[_playlistEntryTypeLabel(entry)];
     if (entry.isFolder && entry.itemCount > 0) {
-      parts.add('${entry.itemCount} 项');
+      parts.add(context.l10n.itemCount(entry.itemCount));
     }
     final provider = _playlistProviderLabel(entry);
     if (provider.isNotEmpty) parts.add(provider);
-    if (!entry.isFolder && entry.hasPlaybackChoices) parts.add('多线路');
-    if (entry.proxy) parts.add('代理');
+    if (!entry.isFolder && entry.hasPlaybackChoices) {
+      parts.add(context.l10n.multipleRoutes);
+    }
+    if (entry.proxy) parts.add(context.l10n.proxy);
     return parts.join(' · ');
   }
 
   List<String> _playlistEntryChips(RoomMediaEntry entry) {
     final chips = <String>[_playlistEntryTypeLabel(entry)];
     if (entry.isFolder) {
-      chips.add(entry.itemCount > 0 ? '${entry.itemCount} 项' : '可进入');
+      chips.add(
+        entry.itemCount > 0
+            ? context.l10n.itemCount(entry.itemCount)
+            : context.l10n.openable,
+      );
     }
     final provider = _playlistProviderLabel(entry);
     if (provider.isNotEmpty) chips.add(provider);
-    if (entry.live) chips.add('直播');
-    if (entry.proxy) chips.add('代理');
-    if (!entry.isFolder && entry.hasPlaybackChoices) chips.add('多线路');
+    if (entry.live) chips.add(context.l10n.live);
+    if (entry.proxy) chips.add(context.l10n.proxy);
+    if (!entry.isFolder && entry.hasPlaybackChoices) {
+      chips.add(context.l10n.multipleRoutes);
+    }
     if (entry.version > 0) chips.add('v${entry.version}');
     return chips;
   }
 
   String _playlistEntryTypeLabel(RoomMediaEntry entry) {
-    if (entry.isDynamicPlaylist) return '动态播放列表';
-    if (entry.isProviderDynamicItem && entry.isFolder) return '动态目录';
-    if (entry.isProviderDynamicItem) return '动态媒体';
-    if (entry.isPlaylist) return '播放列表';
-    if (entry.live) return '直播';
+    if (entry.isDynamicPlaylist) return context.l10n.dynamicPlaylist;
+    if (entry.isProviderDynamicItem && entry.isFolder) {
+      return context.l10n.dynamicDirectory;
+    }
+    if (entry.isProviderDynamicItem) return context.l10n.dynamicMedia;
+    if (entry.isPlaylist) return context.l10n.playlist;
+    if (entry.live) return context.l10n.live;
     final type = entry.type.trim();
-    if (type.isEmpty) return '媒体';
+    if (type.isEmpty) return context.l10n.media;
     return type.toUpperCase();
   }
 
@@ -4514,7 +4612,7 @@ class _RoomScreenState extends State<RoomScreen>
       'alist' => 'AList',
       'emby' => 'Emby',
       'bilibili' => 'Bilibili',
-      'direct_url' || 'direct' => '直链',
+      'direct_url' || 'direct' => context.l10n.directLink,
       '' => '',
       _ => provider,
     };
@@ -4531,7 +4629,7 @@ class _RoomScreenState extends State<RoomScreen>
           child: Row(
             children: [
               Text(
-                '在线成员 ($_roomOnlineCount)',
+                context.l10n.onlineMembers(_roomOnlineCount),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -4553,7 +4651,7 @@ class _RoomScreenState extends State<RoomScreen>
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
-                label: const Text('Live'),
+                label: Text(context.l10n.live),
               ),
             ],
           ),
@@ -4617,7 +4715,7 @@ class _RoomScreenState extends State<RoomScreen>
                                 .value)
                       AppIconButton(
                         icon: Icons.admin_panel_settings_outlined,
-                        tooltip: '设为管理',
+                        tooltip: context.l10n.makeAdmin,
                         onPressed: () => _setRoomAdmin(member),
                         size: AppIconButtonSize.sm,
                         iconSize: 18,
@@ -4626,7 +4724,7 @@ class _RoomScreenState extends State<RoomScreen>
                     if (viewerIsCreator && isTargetAdmin)
                       AppIconButton(
                         icon: Icons.remove_moderator_outlined,
-                        tooltip: '取消管理',
+                        tooltip: context.l10n.removeAdmin,
                         onPressed: () => _removeRoomAdmin(member),
                         size: AppIconButtonSize.sm,
                         iconSize: 18,
@@ -4635,7 +4733,7 @@ class _RoomScreenState extends State<RoomScreen>
                     if (canKick)
                       AppIconButton(
                         icon: Icons.remove_circle_outline,
-                        tooltip: '移除成员',
+                        tooltip: context.l10n.removeMember,
                         onPressed: () => _kickMember(member),
                         size: AppIconButtonSize.sm,
                         iconSize: 18,
@@ -4643,7 +4741,7 @@ class _RoomScreenState extends State<RoomScreen>
                       ),
                     AppIconButton(
                       icon: Icons.flag_outlined,
-                      tooltip: '举报成员',
+                      tooltip: context.l10n.reportMember,
                       onPressed: () => _showReportRoomMemberDialog(member),
                       size: AppIconButtonSize.sm,
                       iconSize: 18,
@@ -4651,7 +4749,7 @@ class _RoomScreenState extends State<RoomScreen>
                     ),
                     AppIconButton(
                       icon: Icons.person_off_outlined,
-                      tooltip: '举报用户',
+                      tooltip: context.l10n.reportUser,
                       onPressed: () => _showReportUserDialog(member),
                       size: AppIconButtonSize.sm,
                       iconSize: 18,
@@ -4726,12 +4824,12 @@ class _RoomScreenState extends State<RoomScreen>
                                   ),
                                   if (isMe)
                                     _RoomMiniBadge(
-                                      label: '我',
+                                      label: context.l10n.me,
                                       color: theme.primaryColor,
                                     ),
                                   if (isTargetAdmin) ...[
                                     _RoomMiniBadge(
-                                      label: '管理员',
+                                      label: context.l10n.administrator,
                                       color: Colors.blue,
                                       borderSide: BorderSide(
                                         color: Colors.blue.withValues(
@@ -4745,8 +4843,14 @@ class _RoomScreenState extends State<RoomScreen>
                               const SizedBox(height: 4),
                               Text(
                                 member.onlineCount > 0
-                                    ? '在线 · ${member.connectionCount} 连接'
-                                    : '离线 · 加入于 ${DateTime.fromMillisecondsSinceEpoch(member.createdAt * 1000).toString().substring(0, 10)}',
+                                    ? context.l10n.onlineConnections(
+                                        member.connectionCount,
+                                      )
+                                    : context.l10n.offlineJoinedAt(
+                                        DateTime.fromMillisecondsSinceEpoch(
+                                          member.createdAt * 1000,
+                                        ).toString().substring(0, 10),
+                                      ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -4815,7 +4919,9 @@ class _RoomScreenState extends State<RoomScreen>
       );
     } catch (e) {
       debugPrint('Observe playlist error: $e');
-      if (mounted) MessageUtils.showError(context, '播放列表订阅失败');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.playlistSubscribeFailed);
+      }
     }
   }
 
@@ -4829,9 +4935,13 @@ class _RoomScreenState extends State<RoomScreen>
       );
       await _applyPlaybackStatus(playback);
       _requestPlaybackSnapshot();
-      if (mounted) MessageUtils.showSuccess(context, '已切换并播放');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.switchedAndPlaying);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '切换失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.switchFailed('$e'));
+      }
     }
   }
 
@@ -4901,16 +5011,18 @@ class _RoomScreenState extends State<RoomScreen>
 
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除条目',
+      title: context.l10n.deleteEntries,
       icon: const Icon(Icons.delete_outline, color: Colors.red),
-      content: Text('确定要删除选中的 ${_selectedMediaEntryIds.length} 个媒体条目吗？'),
+      content: Text(
+        context.l10n.confirmDeleteMediaEntries(_selectedMediaEntryIds.length),
+      ),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: context.l10n.delete,
         ),
       ],
     );
@@ -4930,7 +5042,12 @@ class _RoomScreenState extends State<RoomScreen>
             .where((id) => id.startsWith('pl_'))
             .toList();
         if (mediaIds.isEmpty && playlistIds.isEmpty) {
-          if (mounted) MessageUtils.showInfo(context, '动态目录内容不能在房间内删除');
+          if (mounted) {
+            MessageUtils.showInfo(
+              context,
+              context.l10n.dynamicDirectoryCannotDelete,
+            );
+          }
           return;
         }
         if (isAllLoadedSelected && !_hasMoreMediaEntries && canClearScope) {
@@ -4953,9 +5070,11 @@ class _RoomScreenState extends State<RoomScreen>
           _selectedMediaEntryIds.clear();
         });
         _observeCurrentPlaylist();
-        if (mounted) MessageUtils.showInfo(context, '已删除');
+        if (mounted) MessageUtils.showInfo(context, context.l10n.deleted);
       } catch (e) {
-        if (mounted) MessageUtils.showError(context, '删除失败: $e');
+        if (mounted) {
+          MessageUtils.showError(context, context.l10n.deleteEntryFailed('$e'));
+        }
       }
     }
   }
@@ -4964,7 +5083,7 @@ class _RoomScreenState extends State<RoomScreen>
     try {
       await SyncTvService.switchMedia(widget.room.roomId, '', subPath: '');
       if (mounted) {
-        MessageUtils.showSuccess(context, '已停止播放');
+        MessageUtils.showSuccess(context, context.l10n.playbackStopped);
         _disposeVideoController();
         setState(() {
           _currentStatus = null;
@@ -4972,14 +5091,14 @@ class _RoomScreenState extends State<RoomScreen>
       }
     } catch (e) {
       if (mounted) {
-        MessageUtils.showError(context, '停止播放失败: $e');
+        MessageUtils.showError(context, context.l10n.stopPlaybackFailed('$e'));
       }
     }
   }
 
   Future<void> _openRoomSettings() async {
     if (!_canManageRoom) {
-      MessageUtils.showWarning(context, '仅房主和管理员可管理房间');
+      MessageUtils.showWarning(context, context.l10n.roomManagersOnly);
       return;
     }
     showAppDialog<void>(
@@ -5020,7 +5139,7 @@ class _RoomScreenState extends State<RoomScreen>
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        MessageUtils.showError(context, '获取设置失败: $e');
+        MessageUtils.showError(context, context.l10n.loadSettingsFailed('$e'));
       }
     }
   }
@@ -5040,16 +5159,16 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _setRoomAdmin(SyncTvUser member) async {
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '设为管理员',
+      title: context.l10n.makeAdmin,
       icon: const Icon(Icons.admin_panel_settings_rounded, color: Colors.blue),
-      content: Text('确定要将 ${member.username} 设为管理员吗？\n管理员拥有踢人、管理成员等权限。'),
+      content: Text(context.l10n.confirmMakeAdmin(member.username)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '确定',
+          text: context.l10n.confirm,
         ),
       ],
     );
@@ -5059,10 +5178,15 @@ class _RoomScreenState extends State<RoomScreen>
         await SyncTvService.setRoomAdmin(widget.room.roomId, member.id);
         _observeRoomMembers();
         if (mounted) {
-          MessageUtils.showSuccess(context, '已将 ${member.username} 设为管理员');
+          MessageUtils.showSuccess(
+            context,
+            context.l10n.madeAdmin(member.username),
+          );
         }
       } catch (e) {
-        if (mounted) MessageUtils.showError(context, '设置失败: $e');
+        if (mounted) {
+          MessageUtils.showError(context, context.l10n.settingFailed('$e'));
+        }
       }
     }
   }
@@ -5070,16 +5194,16 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _removeRoomAdmin(SyncTvUser member) async {
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '取消管理员',
+      title: context.l10n.removeAdmin,
       icon: const Icon(Icons.remove_moderator_rounded, color: Colors.orange),
-      content: Text('确定要取消 ${member.username} 的管理员权限吗？'),
+      content: Text(context.l10n.confirmRemoveAdmin(member.username)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '确定',
+          text: context.l10n.confirm,
         ),
       ],
     );
@@ -5089,10 +5213,18 @@ class _RoomScreenState extends State<RoomScreen>
         await SyncTvService.removeRoomAdmin(widget.room.roomId, member.id);
         _observeRoomMembers();
         if (mounted) {
-          MessageUtils.showSuccess(context, '已取消 ${member.username} 的管理员权限');
+          MessageUtils.showSuccess(
+            context,
+            context.l10n.removedAdmin(member.username),
+          );
         }
       } catch (e) {
-        if (mounted) MessageUtils.showError(context, '取消失败: $e');
+        if (mounted) {
+          MessageUtils.showError(
+            context,
+            context.l10n.cancelActionFailed('$e'),
+          );
+        }
       }
     }
   }
@@ -5107,9 +5239,11 @@ class _RoomScreenState extends State<RoomScreen>
         kickCooldownSeconds: cooldown,
       );
       _observeRoomMembers();
-      if (mounted) MessageUtils.showSuccess(context, '已踢出成员');
+      if (mounted) MessageUtils.showSuccess(context, context.l10n.memberKicked);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '踢出失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.kickMemberFailed('$e'));
+      }
     }
   }
 
@@ -5118,17 +5252,17 @@ class _RoomScreenState extends State<RoomScreen>
     final value = await showAppDialog<int>(
       context: context,
       builder: (dialogContext) => AppDialog(
-        title: const Text('踢出成员'),
+        title: Text(context.l10n.kickMember),
         icon: const Icon(Icons.remove_circle_outline),
         body: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('确定要踢出 $username，并设置重新加入冷却时间。'),
+            Text(context.l10n.confirmKickMember(username)),
             const SizedBox(height: 12),
             AppTextField(
               controller: controller,
-              label: '冷却秒数',
+              label: context.l10n.cooldownSeconds,
               hintText: '1 - 2592000',
               prefixIcon: Icons.timer_outlined,
               keyboardType: TextInputType.number,
@@ -5138,20 +5272,23 @@ class _RoomScreenState extends State<RoomScreen>
         actions: [
           AppActionButton(
             onPressed: () => Navigator.pop(dialogContext),
-            label: '取消',
+            label: context.l10n.cancel,
             style: AppActionButtonStyle.text,
           ),
           AppActionButton(
             onPressed: () {
               final seconds = int.tryParse(controller.text.trim());
               if (seconds == null || seconds < 1 || seconds > 2592000) {
-                MessageUtils.showWarning(context, '请输入 1 到 2592000 之间的秒数');
+                MessageUtils.showWarning(
+                  context,
+                  context.l10n.cooldownSecondsRange,
+                );
                 return;
               }
               Navigator.pop(dialogContext, seconds);
             },
             icon: Icons.logout_rounded,
-            label: '踢出',
+            label: context.l10n.kick,
             style: AppActionButtonStyle.destructive,
           ),
         ],
@@ -5167,7 +5304,9 @@ class _RoomScreenState extends State<RoomScreen>
       if (image == null || !mounted) return;
       setState(() => _selectedChatImage = image);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '选择图片失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.chooseImageFailed('$e'));
+      }
     }
   }
 
@@ -5214,7 +5353,9 @@ class _RoomScreenState extends State<RoomScreen>
       }
     } catch (e) {
       debugPrint('Send message error: $e');
-      if (mounted) MessageUtils.showError(context, '发送失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.sendFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _sendingChatMessage = false);
     }

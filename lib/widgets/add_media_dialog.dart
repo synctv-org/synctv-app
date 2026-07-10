@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
@@ -86,7 +87,7 @@ class _AddMediaDialogHeader extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '添加媒体',
+              context.l10n.addMedia,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
@@ -95,7 +96,7 @@ class _AddMediaDialogHeader extends StatelessWidget {
           AppIconButton(
             onPressed: onClose,
             icon: Icons.close_rounded,
-            tooltip: '关闭',
+            tooltip: context.l10n.close,
           ),
         ],
       ),
@@ -226,7 +227,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _checkingVendors = false);
-      MessageUtils.showError(context, '获取媒体源绑定失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.loadMediaBindingsFailed('$e'),
+      );
     }
   }
 
@@ -294,62 +298,62 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   String _getTitle(int index) {
     switch (index) {
       case 0:
-        return '直链';
+        return context.l10n.directLink;
       case 1:
-        return 'RTMP 推流';
+        return context.l10n.rtmpPublishing;
       case 2:
-        return '直播拉流';
+        return context.l10n.livePull;
       case 3:
         return 'Bilibili';
       case 4:
-        return 'AList 网盘';
+        return context.l10n.alistStorage;
       case 5:
-        return 'Emby 媒体库';
+        return context.l10n.embyLibrary;
       default:
         return '';
     }
   }
 
   List<_MediaSourceSpec> get _sourceSpecs => [
-    const _MediaSourceSpec(
+    _MediaSourceSpec(
       index: 0,
-      title: '直链',
+      title: context.l10n.directLink,
       subtitle: 'HTTP / HTTPS / HLS',
       icon: Icons.link_rounded,
-      color: Color(0xFF5D5FEF),
+      color: const Color(0xFF5D5FEF),
     ),
     _MediaSourceSpec(
       index: 1,
-      title: 'RTMP 推流',
-      subtitle: '生成推流地址',
+      title: context.l10n.rtmpPublishing,
+      subtitle: context.l10n.generatePublishingAddress,
       icon: Icons.upload_rounded,
       color: Colors.deepOrange.shade600,
     ),
     _MediaSourceSpec(
       index: 2,
-      title: '直播拉流',
+      title: context.l10n.livePull,
       subtitle: 'RTMP / HTTP-FLV',
       icon: Icons.sensors_rounded,
       color: Colors.teal.shade600,
     ),
-    const _MediaSourceSpec(
+    _MediaSourceSpec(
       index: 3,
       title: 'Bilibili',
-      subtitle: 'BV / 链接解析',
+      subtitle: context.l10n.bilibiliLinkParsing,
       icon: Icons.tv_rounded,
-      color: Color(0xFFFB7299),
+      color: const Color(0xFFFB7299),
     ),
     _MediaSourceSpec(
       index: 4,
-      title: 'AList 网盘',
-      subtitle: '挂载目录资源',
+      title: context.l10n.alistStorage,
+      subtitle: context.l10n.mountedDirectoryResources,
       icon: Icons.cloud_circle_rounded,
       color: Colors.amber.shade700,
     ),
     _MediaSourceSpec(
       index: 5,
-      title: 'Emby 媒体库',
-      subtitle: '个人媒体服务器',
+      title: context.l10n.embyLibrary,
+      subtitle: context.l10n.personalMediaServer,
       icon: Icons.video_library_rounded,
       color: Colors.green.shade600,
     ),
@@ -382,7 +386,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '来源',
+            context.l10n.source,
             style: theme.textTheme.labelLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w800,
@@ -403,7 +407,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             const AppLinearProgress(minHeight: 2)
           else
             Text(
-              '已连接 ${_boundVendors.length} 个媒体源',
+              context.l10n.connectedMediaSources(_boundVendors.length),
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -547,7 +551,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                     }
                   },
                   icon: Icons.tune_rounded,
-                  label: '媒体源',
+                  label: context.l10n.mediaSource,
                   style: AppActionButtonStyle.text,
                 ),
             ],
@@ -591,8 +595,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           _buildDirectTextField(
             controller: _urlController,
             focusNode: _urlFocusNode,
-            label: '视频链接',
-            hintText: '每行一个 HTTP / HTTPS / HLS 地址',
+            label: context.l10n.videoLinks,
+            hintText: context.l10n.videoLinksHint,
             prefixIcon: Icons.link_rounded,
             minLines: 1,
             maxLines: 2,
@@ -607,8 +611,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           const SizedBox(height: 10),
           _buildDirectTextField(
             controller: _nameController,
-            label: '视频名称（单条可选）',
-            hintText: '默认为文件名',
+            label: context.l10n.optionalVideoName,
+            hintText: context.l10n.defaultsToFileName,
             prefixIcon: Icons.title_rounded,
             textInputAction: TextInputAction.next,
             enabled: !_isLoading,
@@ -622,10 +626,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             onChanged: _isLoading
                 ? null
                 : (val) => setState(() => _isProxy = val),
-            title: const Text('默认使用代理播放'),
-            subtitle: const Text('由 SyncTV 服务端转发媒体请求'),
+            title: Text(context.l10n.preferProxyPlayback),
+            subtitle: Text(context.l10n.proxyPlaybackDescription),
             prefix: const Icon(Icons.route_rounded),
-            semanticsLabel: '默认使用代理播放',
+            semanticsLabel: context.l10n.preferProxyPlayback,
           ),
           if (_directHeadersContainCredentials())
             Padding(
@@ -634,7 +638,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             ),
           const SizedBox(height: 18),
           _buildActionButton(
-            '添加到播放列表',
+            context.l10n.addToPlaylist,
             _addDirectLink,
             icon: Icons.playlist_add_rounded,
           ),
@@ -701,7 +705,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       border: Border.all(color: warningColor.withValues(alpha: 0.28)),
       crossAxisAlignment: CrossAxisAlignment.start,
       title: Text(
-        'Authorization、Cookie 等凭据请求头会写入媒体播放信息，房间成员播放时可能获取这些值。只对可信房间和可信链接使用。',
+        context.l10n.credentialHeaderRisk,
         style: TextStyle(
           fontSize: 12,
           height: 1.4,
@@ -734,7 +738,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '请求头',
+                  context.l10n.requestHeaders,
                   style: theme.textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -743,7 +747,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               AppActionButton(
                 onPressed: _addDirectHeaderRow,
                 icon: Icons.add_rounded,
-                label: '请求头',
+                label: context.l10n.requestHeaders,
                 style: AppActionButtonStyle.text,
               ),
             ],
@@ -752,7 +756,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             Padding(
               padding: const EdgeInsets.fromLTRB(26, 2, 0, 4),
               child: Text(
-                '默认不发送额外请求头。',
+                context.l10n.noExtraRequestHeaders,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -800,7 +804,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           final compact = constraints.maxWidth < 520;
           final nameField = AppTextField(
             controller: header.nameController,
-            label: '名称',
+            label: context.l10n.name,
             hintText: 'Referer',
             textInputAction: TextInputAction.next,
             autocorrect: false,
@@ -810,7 +814,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           );
           final valueField = AppTextField(
             controller: header.valueController,
-            label: '值',
+            label: context.l10n.value,
             hintText: 'https://example.com',
             textInputAction: TextInputAction.done,
             autocorrect: false,
@@ -824,7 +828,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             child: AppIconButton(
               onPressed: () => _removeDirectHeaderRow(index),
               icon: Icons.close_rounded,
-              tooltip: '移除请求头',
+              tooltip: context.l10n.removeRequestHeader,
               style: AppIconButtonStyle.destructive,
             ),
           );
@@ -863,8 +867,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           _buildTextField(
             theme,
             _nameController,
-            '直播名称',
-            '例如 摄像机、OBS 推流',
+            context.l10n.liveName,
+            context.l10n.liveNameHint,
             Icons.live_tv_rounded,
           ),
           const SizedBox(height: 18),
@@ -875,13 +879,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           _buildInlineNotice(
             theme,
             icon: Icons.key_rounded,
-            title: '创建后会生成推流地址和 Stream Key',
-            subtitle: '复制到 OBS 或其他推流工具即可开始直播。',
+            title: context.l10n.publishAddressGeneratedDescription,
+            subtitle: context.l10n.copyToStreamingToolDescription,
             color: Colors.deepOrange.shade600,
           ),
           const SizedBox(height: 18),
           _buildActionButton(
-            '创建推流入口',
+            context.l10n.createPublishingEntry,
             _addRtmpPublish,
             color: Colors.deepOrange.shade600,
             icon: Icons.live_tv_rounded,
@@ -899,8 +903,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         children: [
           AppTextField(
             controller: _liveProxyUrlController,
-            label: '源地址',
-            hintText: 'rtmp://example/live/stream 或 https://example/live.flv',
+            label: context.l10n.sourceAddress,
+            hintText: context.l10n.liveSourceAddressHint,
             prefixIcon: Icons.sensors_rounded,
             keyboardType: TextInputType.url,
             textInputAction: TextInputAction.next,
@@ -913,8 +917,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           const SizedBox(height: 10),
           AppTextField(
             controller: _liveProxyNameController,
-            label: '直播名称（可选）',
-            hintText: '例如 上游直播、赛事源',
+            label: context.l10n.optionalLiveName,
+            hintText: context.l10n.optionalLiveNameHint,
             prefixIcon: Icons.title_rounded,
             textInputAction: TextInputAction.done,
             enabled: !_isLoading,
@@ -924,13 +928,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           _buildInlineNotice(
             theme,
             icon: Icons.route_rounded,
-            title: 'SyncTV 服务端会拉取上游直播源',
-            subtitle: '支持 RTMP 和 HTTP-FLV，上游地址只保存在媒体源配置中。',
+            title: context.l10n.serverPullsUpstreamLiveSource,
+            subtitle: context.l10n.livePullSupportDescription,
             color: Colors.teal.shade600,
           ),
           const SizedBox(height: 18),
           _buildActionButton(
-            '添加直播拉流',
+            context.l10n.addLivePull,
             _addLiveProxyMedia,
             color: Colors.teal.shade600,
             icon: Icons.playlist_add_rounded,
@@ -949,7 +953,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     final coverImage = selectedVideo?.cover ?? '';
     final title = _biliInfo?.title.isNotEmpty == true
         ? _biliInfo!.title
-        : (selectedVideo?.name ?? '未知标题');
+        : (selectedVideo?.name ?? context.l10n.unknownTitle);
     final desc = _biliInfo == null ? '' : _biliInfo!.actors.join(' / ');
 
     return Column(
@@ -960,7 +964,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           selectedKey: _bilibiliInstanceName,
           keyOf: (bind) => bind.providerInstanceName,
           labelOf: (bind) => _providerBindLabel(
-            title: 'Bilibili 账号',
+            title: context.l10n.bilibiliAccount,
             instanceName: bind.providerInstanceName,
           ),
           onChanged: (bind) {
@@ -979,9 +983,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                 child: _buildTextField(
                   theme,
                   _biliUrlController,
-                  '视频链接 / BV号',
-                  '粘贴链接自动解析',
+                  context.l10n.bilibiliVideoLink,
+                  context.l10n.bilibiliVideoLinkHint,
                   Icons.search,
+                  urlInput: true,
                 ),
               ),
               const SizedBox(width: 12),
@@ -990,7 +995,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                 child: AppIconButton(
                   onPressed: _parseBilibili,
                   icon: Icons.arrow_forward_rounded,
-                  tooltip: '解析 Bilibili 链接',
+                  tooltip: context.l10n.parseBilibiliLink,
                   loading: _isLoading,
                   style: AppIconButtonStyle.filled,
                 ),
@@ -1000,13 +1005,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         ),
         Expanded(
           child: _biliInfo == null
-              ? const Center(
+              ? Center(
                   child: AppEmptyState(
                     icon: Icons.tv_rounded,
-                    iconColor: Color(0xFFFB7299),
+                    iconColor: const Color(0xFFFB7299),
                     iconSize: 58,
-                    title: '粘贴 Bilibili 链接',
-                    subtitle: '支持 BV 号、视频链接和直播间链接。',
+                    title: context.l10n.pasteBilibiliLink,
+                    subtitle: context.l10n.bilibiliSupportedLinks,
                     maxWidth: 360,
                   ),
                 )
@@ -1059,7 +1064,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                       const SizedBox(height: 16),
                       const SizedBox(height: 8),
                       _buildActionButton(
-                        '添加到播放列表',
+                        context.l10n.addToPlaylist,
                         _addBilibili,
                         color: const Color(0xFFFB7299),
                         icon: Icons.playlist_add_rounded,
@@ -1119,8 +1124,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                     icon: Icons.cloud_queue_rounded,
                     iconColor: Colors.amber.shade700,
                     iconSize: 58,
-                    title: '暂无文件',
-                    subtitle: '当前目录没有可添加的媒体资源。',
+                    title: context.l10n.noFiles,
+                    subtitle: context.l10n.noMediaInDirectory,
                     maxWidth: 360,
                   ),
                 )
@@ -1164,7 +1169,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                         trailing: file.isDir
                             ? AppIconButton(
                                 icon: Icons.playlist_add_rounded,
-                                tooltip: '添加为动态播放列表',
+                                tooltip: context.l10n.addAsDynamicPlaylist,
                                 onPressed: () =>
                                     _addAlistDirectoryPlaylist(file),
                               )
@@ -1196,7 +1201,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               ),
             ],
             child: _buildActionButton(
-              '添加选中的 ${_selectedAlistItems.length} 项',
+              context.l10n.addSelectedItems(_selectedAlistItems.length),
               _addSelectedAlistItems,
               icon: Icons.playlist_add_check_rounded,
             ),
@@ -1246,8 +1251,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                     icon: Icons.video_library_rounded,
                     iconColor: Colors.green.shade600,
                     iconSize: 58,
-                    title: '暂无媒体',
-                    subtitle: '当前媒体库目录没有可添加的项目。',
+                    title: context.l10n.noMedia,
+                    subtitle: context.l10n.noMediaLibraryItems,
                     maxWidth: 360,
                   ),
                 )
@@ -1287,7 +1292,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                         trailing: file.isDir
                             ? AppIconButton(
                                 icon: Icons.playlist_add_rounded,
-                                tooltip: '添加为动态播放列表',
+                                tooltip: context.l10n.addAsDynamicPlaylist,
                                 onPressed: () =>
                                     _addEmbyDirectoryPlaylist(file),
                               )
@@ -1306,21 +1311,21 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     TextEditingController controller,
     String label,
     String hint,
-    IconData icon,
-  ) {
-    final isUrlLike = label.contains('链接') || hint.contains('https');
+    IconData icon, {
+    bool urlInput = false,
+  }) {
     return AppTextField(
       controller: controller,
       label: label,
       hintText: hint,
       prefixIcon: icon,
       enabled: !_isLoading,
-      keyboardType: isUrlLike ? TextInputType.url : null,
+      keyboardType: urlInput ? TextInputType.url : null,
       autocorrect: false,
-      smartDashesType: isUrlLike
+      smartDashesType: urlInput
           ? SmartDashesType.disabled
           : SmartDashesType.enabled,
-      smartQuotesType: isUrlLike
+      smartQuotesType: urlInput
           ? SmartQuotesType.disabled
           : SmartQuotesType.enabled,
     );
@@ -1387,7 +1392,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       child: Row(
         children: [
           AppIconButton(
-            tooltip: '上级目录',
+            tooltip: context.l10n.parentDirectory,
             icon: Icons.arrow_upward_rounded,
             onPressed: path.isEmpty || path == '/' ? null : onUp,
             style: AppIconButtonStyle.ghost,
@@ -1421,7 +1426,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
       child: AppSelect<String>(
         value: value,
-        label: '媒体源账号',
+        label: context.l10n.mediaSourceAccount,
         prefixIcon: Icons.account_tree_rounded,
         options: {for (final item in items) labelOf(item): keyOf(item)},
         onChanged: (key) {
@@ -1437,7 +1442,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
       child: AppSearchField(
         controller: _alistSearchController,
-        hintText: '搜索当前目录',
+        hintText: context.l10n.searchCurrentDirectory,
         onChanged: (value) {
           if (value.isEmpty && _alistKeyword.isNotEmpty) _clearAlistSearch();
         },
@@ -1451,13 +1456,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
       child: AppTextField(
         controller: _alistPasswordController,
-        label: '目录密码',
+        label: context.l10n.directoryPassword,
         prefixIcon: Icons.lock_outline_rounded,
         suffix: _alistPasswordController.text.isEmpty && _alistPassword.isEmpty
             ? null
             : AppIconButton(
                 icon: Icons.backspace_outlined,
-                tooltip: '清除目录密码',
+                tooltip: context.l10n.clearDirectoryPassword,
                 onPressed: _clearAlistPassword,
                 style: AppIconButtonStyle.destructive,
               ),
@@ -1474,7 +1479,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
       child: AppSearchField(
         controller: _embySearchController,
-        hintText: '搜索媒体库',
+        hintText: context.l10n.searchMediaLibrary,
         onChanged: (value) {
           if (value.isEmpty && _embyKeyword.isNotEmpty) _clearEmbySearch();
         },
@@ -1504,9 +1509,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         itemBuilder: (context, index) {
           final video = videos[index];
           final selected = index == selectedIndex;
-          final title = video.name.isEmpty ? '视频 ${index + 1}' : video.name;
+          final title = video.name.isEmpty
+              ? context.l10n.videoNumber(index + 1)
+              : video.name;
           final subtitle = video.isLive
-              ? '直播间 ${video.cid > 0 ? video.cid : video.epid}'
+              ? context.l10n.liveRoomNumber(
+                  video.cid > 0 ? video.cid : video.epid,
+                )
               : video.epid > 0
               ? 'EP ${video.epid} · CID ${video.cid}'
               : '${video.bvid} · CID ${video.cid}';
@@ -1571,7 +1580,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   height: 24,
                   child: AppCheckbox(
                     value: isSelected ?? false,
-                    semanticsLabel: '选择媒体',
+                    semanticsLabel: context.l10n.selectMedia,
                     onChanged: onSelectionChanged,
                   ),
                 ),
@@ -1626,11 +1635,14 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           ),
           const SizedBox(height: 16),
           Text(
-            '未绑定 $name',
+            context.l10n.providerNotBound(name),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text('请先绑定账号以访问资源', style: TextStyle(color: theme.hintColor)),
+          Text(
+            context.l10n.bindAccountToAccessResources,
+            style: TextStyle(color: theme.hintColor),
+          ),
           const SizedBox(height: 24),
           AppActionButton(
             onPressed: () async {
@@ -1641,7 +1653,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               _checkVendors();
             },
             icon: Icons.link_rounded,
-            label: '立即绑定 $name',
+            label: context.l10n.bindProviderNow(name),
           ),
         ],
       ),
@@ -1702,7 +1714,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     required String title,
     required String instanceName,
   }) {
-    final instanceLabel = instanceName.isEmpty ? '本地实例' : instanceName;
+    final instanceLabel = instanceName.isEmpty
+        ? context.l10n.localInstance
+        : instanceName;
     return '$title · $instanceLabel';
   }
 
@@ -1728,7 +1742,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     if (fileName.isNotEmpty) return fileName;
     final host = parsed?.host ?? '';
     if (host.isNotEmpty) return host;
-    return '直链视频';
+    return context.l10n.directLinkVideo;
   }
 
   void _addDirectHeaderRow() {
@@ -1738,7 +1752,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           header.valueController.text.trim().isEmpty,
     );
     if (hasBlank) {
-      setState(() => _directHeaderError = '请先填写当前空白请求头');
+      setState(
+        () => _directHeaderError = context.l10n.completeBlankRequestHeader,
+      );
       return;
     }
     setState(() {
@@ -1793,13 +1809,17 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       final value = draft.valueController.text.trim();
       if (name.isEmpty && value.isEmpty) continue;
       if (validateCompleteRows && (name.isEmpty || value.isEmpty)) {
-        throw const DirectUrlSourceConfigException('请填写完整的请求头名称和值');
+        throw DirectUrlSourceConfigException(
+          context.l10n.completeRequestHeaderNameAndValue,
+        );
       }
       if (name.isNotEmpty) {
         DirectUrlSourceConfig.validateHeaderName(name);
         final normalized = name.toLowerCase();
         if (!normalizedNames.add(normalized)) {
-          throw DirectUrlSourceConfigException('请求头 $name 重复');
+          throw DirectUrlSourceConfigException(
+            context.l10n.duplicateRequestHeader(name),
+          );
         }
       }
       if (validateCompleteRows) {
@@ -1832,25 +1852,25 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   Future<bool> _confirmDiscardDraft() async {
     final result = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '放弃当前编辑？',
+      title: context.l10n.discardCurrentEdits,
       icon: Icon(
         Icons.warning_amber_rounded,
         color: Theme.of(context).colorScheme.error,
       ),
       iconColor: Theme.of(context).colorScheme.error,
       content: Text(
-        '已填写的媒体链接、直播源、名称或请求头会被清空。',
+        context.l10n.discardMediaDraftDescription,
         style: Theme.of(context).textTheme.bodyMedium,
       ),
       actions: [
         AppActionButton(
           onPressed: () => Navigator.pop(context, false),
-          label: '继续编辑',
+          label: context.l10n.continueEditing,
           style: AppActionButtonStyle.outlined,
         ),
         AppActionButton(
           onPressed: () => Navigator.pop(context, true),
-          label: '放弃',
+          label: context.l10n.discard,
           style: AppActionButtonStyle.tonal,
         ),
       ],
@@ -1920,11 +1940,15 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         Navigator.pop(context);
         MessageUtils.showSuccess(
           context,
-          urls.length == 1 ? '添加成功' : '已添加 ${urls.length} 项',
+          urls.length == 1
+              ? context.l10n.addedSuccessfully
+              : context.l10n.itemsAdded(urls.length),
         );
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '添加失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -1938,11 +1962,11 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     ).join('、');
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '确认共享凭据请求头',
+      title: context.l10n.confirmCredentialHeaderSharing,
       icon: Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
       iconColor: Colors.orange.shade700,
       content: Text(
-        '$names 会随播放信息提供给房间成员，用于请求媒体资源。继续添加前请确认房间成员可信，且这些凭据泄漏不会影响你的账号安全。',
+        context.l10n.credentialHeaderSharingDescription(names),
         style: TextStyle(
           height: 1.5,
           color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -1953,7 +1977,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '确认添加',
+          text: context.l10n.confirmAdd,
         ),
       ],
     );
@@ -1968,7 +1992,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       urls.add(DirectUrlSourceConfig.validateUrl(url));
     }
     if (urls.isEmpty) {
-      throw const DirectUrlSourceConfigException('请输入 http/https 链接');
+      throw DirectUrlSourceConfigException(context.l10n.enterHttpLinks);
     }
     return urls;
   }
@@ -1980,7 +2004,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       final mediaId = await SyncTvService.addRtmpMedia(
         widget.roomId,
         playlistId: widget.parentId ?? '',
-        name: name.isEmpty ? 'RTMP 直播' : name,
+        name: name.isEmpty ? context.l10n.rtmpLive : name,
       );
       final publish = await SyncTvService.createRtmpPublishKeyInfo(
         widget.roomId,
@@ -1995,7 +2019,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         await _showRtmpPublishDialog(publish: publish, streamInfo: streamInfo);
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '创建推流入口失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.createPublishingEntryFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -2021,10 +2050,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       );
       if (mounted) {
         Navigator.pop(context);
-        MessageUtils.showSuccess(context, '添加成功');
+        MessageUtils.showSuccess(context, context.l10n.addedSuccessfully);
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '添加直播拉流失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addLivePullFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -2032,11 +2063,11 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   String _validateLiveProxyUrl(String rawUrl) {
     if (rawUrl.isEmpty) {
-      throw const FormatException('请输入直播源地址');
+      throw FormatException(context.l10n.enterLiveSourceAddress);
     }
     final uri = Uri.tryParse(rawUrl);
     if (uri == null || uri.scheme.isEmpty || uri.host.isEmpty) {
-      throw const FormatException('请输入有效的直播源地址');
+      throw FormatException(context.l10n.enterValidLiveSourceAddress);
     }
     final scheme = uri.scheme.toLowerCase();
     final isRtmp = scheme == 'rtmp';
@@ -2044,7 +2075,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         (scheme == 'http' || scheme == 'https') &&
         uri.path.toLowerCase().endsWith('.flv');
     if (!isRtmp && !isFlv) {
-      throw const FormatException('直播拉流仅支持 rtmp:// 或 HTTP-FLV .flv 地址');
+      throw FormatException(context.l10n.livePullUrlSupport);
     }
     return rawUrl;
   }
@@ -2058,7 +2089,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         const <String>[];
     final lastSegment = segments.isEmpty ? null : segments.last;
     if (lastSegment == null || lastSegment.isEmpty) {
-      return '直播拉流';
+      return context.l10n.livePull;
     }
     return Uri.decodeComponent(lastSegment);
   }
@@ -2070,7 +2101,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     final publicSettings = _publicSettings;
     return ChatUtils.showStyledDialog<void>(
       context: context,
-      title: 'RTMP 推流',
+      title: context.l10n.rtmpPublishing,
       icon: const Icon(Icons.live_tv_rounded, color: Color(0xFF5D5FEF)),
       content: SizedBox(
         width: 420,
@@ -2078,7 +2109,11 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildRtmpInfoRow('推流地址', publish.rtmpUrl, copyable: true),
+            _buildRtmpInfoRow(
+              context.l10n.publishingAddress,
+              publish.rtmpUrl,
+              copyable: true,
+            ),
             _buildRtmpInfoRow('Stream Key', publish.streamKey, copyable: true),
             _buildRtmpInfoRow(
               'Publish Key',
@@ -2087,17 +2122,25 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             ),
             if (publicSettings?.customPublishHost?.isNotEmpty == true)
               _buildRtmpInfoRow(
-                '发布主机',
+                context.l10n.publishingHost,
                 publicSettings!.customPublishHost!,
                 copyable: true,
               ),
             if (publicSettings != null)
               _buildRtmpInfoRow(
-                'TS 伪装',
-                publicSettings.tsDisguisedAsPng ? '启用 PNG 伪装' : '未启用',
+                context.l10n.tsDisguise,
+                publicSettings.tsDisguisedAsPng
+                    ? context.l10n.pngDisguiseEnabled
+                    : context.l10n.disabled,
               ),
-            _buildRtmpInfoRow('过期时间', _formatTimestamp(publish.expiresAt)),
-            _buildRtmpInfoRow('当前状态', streamInfo.active ? '活跃' : '未活跃'),
+            _buildRtmpInfoRow(
+              context.l10n.expirationTime,
+              _formatTimestamp(publish.expiresAt),
+            ),
+            _buildRtmpInfoRow(
+              context.l10n.currentStatus,
+              streamInfo.active ? context.l10n.active : context.l10n.inactive,
+            ),
           ],
         ),
       ),
@@ -2105,7 +2148,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context),
-          text: '完成',
+          text: context.l10n.done,
         ),
       ],
     );
@@ -2126,14 +2169,18 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            publishHost?.isNotEmpty == true ? publishHost! : '使用服务端默认发布主机',
+            publishHost?.isNotEmpty == true
+                ? publishHost!
+                : context.l10n.useServerPublishingHost,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
           Text(
-            settings.tsDisguisedAsPng ? '直播切片会以 PNG 形式分发' : '直播切片按 TS 形式分发',
+            settings.tsDisguisedAsPng
+                ? context.l10n.liveSegmentsAsPng
+                : context.l10n.liveSegmentsAsTs,
             style: TextStyle(fontSize: 12, color: theme.hintColor),
           ),
         ],
@@ -2165,13 +2212,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           if (copyable) ...[
             const SizedBox(width: 8),
             AppIconButton(
-              tooltip: '复制',
+              tooltip: context.l10n.copy,
               icon: Icons.copy_rounded,
               iconSize: 18,
               size: AppIconButtonSize.sm,
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: value));
-                MessageUtils.showSuccess(context, '已复制');
+                MessageUtils.showSuccess(context, context.l10n.copied);
               },
             ),
           ],
@@ -2209,7 +2256,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         });
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '解析失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.parseFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -2222,7 +2271,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     try {
       final videos = _biliInfo!.videos;
       if (videos.isEmpty) {
-        throw Exception('无法获取 Bilibili 视频信息');
+        throw Exception(context.l10n.bilibiliVideoInfoUnavailable);
       }
       final selectedIndex = _biliSelectedIndex
           .clamp(0, videos.length - 1)
@@ -2242,10 +2291,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       );
       if (mounted) {
         Navigator.pop(context);
-        MessageUtils.showSuccess(context, '添加成功');
+        MessageUtils.showSuccess(context, context.l10n.addedSuccessfully);
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '添加失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -2254,15 +2305,19 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   Map<String, dynamic> _bilibiliSourceConfig(BilibiliVideoItemInfo video) {
     if (video.isLive) {
       final roomId = video.cid > 0 ? video.cid : video.epid;
-      if (roomId <= 0) throw Exception('无法获取 Bilibili 直播间 ID');
+      if (roomId <= 0) {
+        throw Exception(context.l10n.bilibiliLiveRoomIdUnavailable);
+      }
       return {'type': 'live', 'room_id': roomId};
     }
     if (video.epid > 0) {
-      if (video.cid <= 0) throw Exception('无法获取 Bilibili CID');
+      if (video.cid <= 0) {
+        throw Exception(context.l10n.bilibiliCidUnavailable);
+      }
       return {'type': 'pgc', 'epid': video.epid, 'cid': video.cid};
     }
     if (video.bvid.isEmpty || video.cid <= 0) {
-      throw Exception('无法获取 BVID 或 CID');
+      throw Exception(context.l10n.bilibiliIdentifiersUnavailable);
     }
     return {'type': 'video', 'bvid': video.bvid, 'cid': video.cid};
   }
@@ -2316,7 +2371,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       }
     } catch (e) {
       debugPrint('AList load error: $e');
-      if (mounted) MessageUtils.showError(context, '加载失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.loadFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _alistLoading = false);
     }
@@ -2396,7 +2453,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   Future<void> _addAlistFile(AlistItemInfo file) async {
     if (_alistServerId.isEmpty) {
-      MessageUtils.showWarning(context, '请选择已绑定的 AList 账号');
+      MessageUtils.showWarning(context, context.l10n.chooseBoundAlistAccount);
       return;
     }
     setState(() => _isLoading = true);
@@ -2413,10 +2470,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       );
       if (mounted) {
         Navigator.pop(context);
-        MessageUtils.showSuccess(context, '添加成功');
+        MessageUtils.showSuccess(context, context.l10n.addedSuccessfully);
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '添加失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -2424,7 +2483,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   Future<void> _addAlistDirectoryPlaylist(AlistItemInfo file) async {
     if (_alistServerId.isEmpty) {
-      MessageUtils.showWarning(context, '请选择已绑定的 AList 账号');
+      MessageUtils.showWarning(context, context.l10n.chooseBoundAlistAccount);
       return;
     }
     setState(() => _isLoading = true);
@@ -2445,10 +2504,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       );
       if (mounted) {
         Navigator.pop(context);
-        MessageUtils.showSuccess(context, '已添加动态播放列表');
+        MessageUtils.showSuccess(context, context.l10n.dynamicPlaylistAdded);
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '添加失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -2457,7 +2518,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   Future<void> _addSelectedAlistItems() async {
     if (_selectedAlistItems.isEmpty) return;
     if (_alistServerId.isEmpty) {
-      MessageUtils.showWarning(context, '请选择已绑定的 AList 账号');
+      MessageUtils.showWarning(context, context.l10n.chooseBoundAlistAccount);
       return;
     }
     setState(() => _isLoading = true);
@@ -2509,11 +2570,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         Navigator.pop(context);
         MessageUtils.showSuccess(
           context,
-          '已添加 ${_selectedAlistItems.length} 项',
+          context.l10n.itemsAdded(_selectedAlistItems.length),
         );
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '批量添加失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.batchAddFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -2558,7 +2621,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         });
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.loadFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _embyLoading = false);
     }
@@ -2611,14 +2676,14 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   Future<void> _addEmbyFile(EmbyItemInfo file) async {
     if (_embyServerId.isEmpty) {
-      MessageUtils.showWarning(context, '请选择已绑定的 Emby 账号');
+      MessageUtils.showWarning(context, context.l10n.chooseBoundEmbyAccount);
       return;
     }
     setState(() => _isLoading = true);
     try {
       final itemId = file.id;
       if (itemId.isEmpty) {
-        throw Exception('无法获取 Emby 媒体 ID');
+        throw Exception(context.l10n.embyMediaIdUnavailable);
       }
       await SyncTvService.addEmbyMedia(
         widget.roomId,
@@ -2630,10 +2695,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       );
       if (mounted) {
         Navigator.pop(context);
-        MessageUtils.showSuccess(context, '添加成功');
+        MessageUtils.showSuccess(context, context.l10n.addedSuccessfully);
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '添加失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -2641,14 +2708,14 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   Future<void> _addEmbyDirectoryPlaylist(EmbyItemInfo file) async {
     if (_embyServerId.isEmpty) {
-      MessageUtils.showWarning(context, '请选择已绑定的 Emby 账号');
+      MessageUtils.showWarning(context, context.l10n.chooseBoundEmbyAccount);
       return;
     }
     setState(() => _isLoading = true);
     try {
       final itemId = file.id;
       if (itemId.isEmpty) {
-        throw Exception('无法获取 Emby 目录 ID');
+        throw Exception(context.l10n.embyDirectoryIdUnavailable);
       }
       await SyncTvService.createPlaylist(
         widget.roomId,
@@ -2660,10 +2727,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       );
       if (mounted) {
         Navigator.pop(context);
-        MessageUtils.showSuccess(context, '已添加动态播放列表');
+        MessageUtils.showSuccess(context, context.l10n.dynamicPlaylistAdded);
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '添加失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

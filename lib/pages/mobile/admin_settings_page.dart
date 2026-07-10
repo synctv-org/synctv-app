@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
@@ -167,68 +168,70 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
   late TabController _tabController;
   int _selectedSectionIndex = 0;
   final Set<int> _builtSectionIndexes = <int>{0};
-  static const List<_AdminSection> _sections = [
+  static const int _sectionCount = 11;
+
+  List<_AdminSection> get _sections => [
     _AdminSection(
-      label: '总览',
+      label: context.l10n.overview,
       icon: Icons.dashboard_rounded,
-      page: AdminOverviewTab(),
+      page: const AdminOverviewTab(),
     ),
     _AdminSection(
-      label: '管理员',
+      label: context.l10n.administrators,
       icon: Icons.admin_panel_settings_rounded,
-      page: AdminAdminsTab(),
+      page: const AdminAdminsTab(),
     ),
     _AdminSection(
-      label: '房间',
+      label: context.l10n.rooms,
       icon: Icons.meeting_room_rounded,
-      page: RoomManagementTab(),
+      page: const RoomManagementTab(),
     ),
     _AdminSection(
-      label: '分类标签',
+      label: context.l10n.categoriesAndLabels,
       icon: Icons.category_rounded,
-      page: AdminRoomTaxonomyTab(),
+      page: const AdminRoomTaxonomyTab(),
     ),
     _AdminSection(
-      label: '用户',
+      label: context.l10n.users,
       icon: Icons.people_alt_rounded,
-      page: UserManagementTab(),
+      page: const UserManagementTab(),
     ),
     _AdminSection(
-      label: '审核',
+      label: context.l10n.review,
       icon: Icons.fact_check_rounded,
-      page: AdminReviewTab(),
+      page: const AdminReviewTab(),
     ),
     _AdminSection(
-      label: '举报',
+      label: context.l10n.reports,
       icon: Icons.report_gmailerrorred_rounded,
-      page: AdminContentReportsTab(),
+      page: const AdminContentReportsTab(),
     ),
-    _AdminSection(
+    const _AdminSection(
       label: 'Provider',
       icon: Icons.hub_rounded,
       page: AdminProviderTab(),
     ),
     _AdminSection(
-      label: '推流',
+      label: context.l10n.streaming,
       icon: Icons.podcasts_rounded,
-      page: AdminStreamsTab(),
+      page: const AdminStreamsTab(),
     ),
     _AdminSection(
-      label: '封禁',
+      label: context.l10n.bans,
       icon: Icons.gavel_rounded,
-      page: AdminBanRecordsTab(),
+      page: const AdminBanRecordsTab(),
     ),
     _AdminSection(
-      label: '设置',
+      label: context.l10n.settings,
       icon: Icons.tune_rounded,
-      page: RuntimeSettingsSectionsTab(),
+      page: const RuntimeSettingsSectionsTab(),
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _sections.length, vsync: this);
+    _tabController = TabController(length: _sectionCount, vsync: this);
     _tabController.addListener(_handleTabControllerChanged);
   }
 
@@ -280,9 +283,9 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
             ? const Color(0xFF121212)
             : const Color(0xFFF7F7FC),
         appBar: AppAppBar(
-          title: const Text(
-            '管理员设置',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          title: Text(
+            context.l10n.adminSettings,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           elevation: 0,
           backgroundColor: isDark
@@ -365,7 +368,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                     Padding(
                       padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
                       child: Text(
-                        '系统管理',
+                        context.l10n.systemManagement,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: theme.colorScheme.onSurface.withValues(
@@ -604,7 +607,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, '加载总览失败: $e');
+      MessageUtils.showError(context, context.l10n.loadOverviewFailed('$e'));
     }
   }
 
@@ -620,70 +623,70 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
         padding: const EdgeInsets.all(16),
         children: [
           if (stats == null)
-            const AppEmptyMessage(message: '暂无统计数据')
+            AppEmptyMessage(message: context.l10n.noStatistics)
           else
             Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
                 _StatTile(
-                  '用户',
+                  context.l10n.users,
                   stats.totalUsers,
                   Icons.people_alt_rounded,
                   Colors.blue,
                   isDark,
                 ),
                 _StatTile(
-                  '活跃用户',
+                  context.l10n.activeUsers,
                   stats.activeUsers,
                   Icons.person_pin_circle_rounded,
                   Colors.green,
                   isDark,
                 ),
                 _StatTile(
-                  '在线用户',
+                  context.l10n.onlineUsers,
                   stats.onlineUsers,
                   Icons.online_prediction_rounded,
                   Colors.lightGreen,
                   isDark,
                 ),
                 _StatTile(
-                  '在线连接',
+                  context.l10n.onlineConnectionsLabel,
                   stats.onlineConnections,
                   Icons.link_rounded,
                   Colors.cyan,
                   isDark,
                 ),
                 _StatTile(
-                  '封禁用户',
+                  context.l10n.bannedUsers,
                   stats.bannedUsers,
                   Icons.block_rounded,
                   Colors.red,
                   isDark,
                 ),
                 _StatTile(
-                  '房间',
+                  context.l10n.rooms,
                   stats.totalRooms,
                   Icons.meeting_room_rounded,
                   Colors.indigo,
                   isDark,
                 ),
                 _StatTile(
-                  '活跃房间',
+                  context.l10n.activeRooms,
                   stats.activeRooms,
                   Icons.sensors_rounded,
                   Colors.teal,
                   isDark,
                 ),
                 _StatTile(
-                  '在线房间',
+                  context.l10n.onlineRooms,
                   stats.activePresenceRooms,
                   Icons.wifi_tethering_rounded,
                   Colors.blueGrey,
                   isDark,
                 ),
                 _StatTile(
-                  '媒体',
+                  context.l10n.media,
                   stats.totalMedia,
                   Icons.video_library_rounded,
                   Colors.deepPurple,
@@ -765,21 +768,24 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, '加载管理员失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.loadAdministratorsFailed('$e'),
+      );
     }
   }
 
   Future<void> _addAdmin() async {
     final mode = await ChatUtils.showStyledDialog<String>(
       context: context,
-      title: '添加管理员',
+      title: context.l10n.addAdministrator,
       icon: const Icon(
         Icons.admin_panel_settings_rounded,
         color: Color(0xFF5D5FEF),
       ),
-      content: const SizedBox(
+      content: SizedBox(
         width: 420,
-        child: Text('可以创建新的管理员账号，也可以把已有用户提升为管理员。'),
+        child: Text(context.l10n.addAdministratorDescription),
       ),
       actions: [
         ChatUtils.createCancelButton(context),
@@ -787,14 +793,14 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
         AppActionButton(
           onPressed: () => Navigator.pop(context, 'existing'),
           icon: Icons.person_search_rounded,
-          label: '提升已有用户',
+          label: context.l10n.promoteExistingUser,
           style: AppActionButtonStyle.tonal,
         ),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, 'new'),
-          text: '新建管理员',
+          text: context.l10n.createAdministrator,
         ),
       ],
     );
@@ -810,7 +816,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     var disposeScheduled = false;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '添加管理员',
+      title: context.l10n.addAdministrator,
       icon: const Icon(
         Icons.admin_panel_settings_rounded,
         color: Color(0xFF5D5FEF),
@@ -829,17 +835,17 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
             children: [
               ChatUtils.createFormField(
                 context: dialogContext,
-                label: '用户名',
+                label: context.l10n.username,
                 controller: usernameController,
-                hintText: '请输入用户名',
+                hintText: context.l10n.usernameRequired,
                 prefixIcon: Icons.person_outline,
               ),
               const SizedBox(height: 12),
               ChatUtils.createFormField(
                 context: dialogContext,
-                label: '密码',
+                label: context.l10n.password,
                 controller: passwordController,
-                hintText: '请输入密码',
+                hintText: context.l10n.passwordRequired,
                 prefixIcon: Icons.lock_outline,
                 obscureText: true,
               ),
@@ -853,7 +859,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '添加',
+          text: context.l10n.add,
         ),
       ],
     );
@@ -863,7 +869,10 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
       final password = passwordController.text;
       if (username.isEmpty || password.isEmpty) {
         if (!mounted) return;
-        MessageUtils.showWarning(context, '请填写用户名和密码');
+        MessageUtils.showWarning(
+          context,
+          context.l10n.usernameAndPasswordRequired,
+        );
         return;
       }
       await SyncTvService.adminAddUser(
@@ -872,11 +881,11 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
         common_enum.UserRole.USER_ROLE_ADMIN.value,
       );
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '管理员已添加');
+      MessageUtils.showSuccess(context, context.l10n.administratorAdded);
       _load(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '添加失败: $e');
+      MessageUtils.showError(context, context.l10n.addFailed('$e'));
     }
   }
 
@@ -885,7 +894,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     var disposeScheduled = false;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '提升已有用户',
+      title: context.l10n.promoteExistingUser,
       icon: const Icon(Icons.person_search_rounded, color: Color(0xFF5D5FEF)),
       content: Builder(
         builder: (dialogContext) {
@@ -899,9 +908,9 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
             width: 420,
             child: ChatUtils.createFormField(
               context: dialogContext,
-              label: '用户 ID',
+              label: context.l10n.userId,
               controller: userIdController,
-              hintText: '请输入已有用户 ID',
+              hintText: context.l10n.existingUserIdRequired,
               prefixIcon: Icons.badge_outlined,
             ),
           );
@@ -913,7 +922,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '提升',
+          text: context.l10n.promote,
         ),
       ],
     );
@@ -921,33 +930,33 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     final userId = userIdController.text.trim();
     if (userId.isEmpty) {
       if (!mounted) return;
-      MessageUtils.showWarning(context, '请填写用户 ID');
+      MessageUtils.showWarning(context, context.l10n.userIdRequired);
       return;
     }
     try {
       await SyncTvService.adminAddAdmin(userId);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '管理员已添加');
+      MessageUtils.showSuccess(context, context.l10n.administratorAdded);
       _load(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '添加失败: $e');
+      MessageUtils.showError(context, context.l10n.addFailed('$e'));
     }
   }
 
   Future<void> _removeAdmin(SyncTvUser user) async {
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '移除管理员',
+      title: context.l10n.removeAdministrator,
       icon: const Icon(Icons.remove_moderator_outlined, color: Colors.red),
-      content: Text('确定移除 ${user.username} 的管理员权限吗？'),
+      content: Text(context.l10n.confirmRemoveAdmin(user.username)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '移除',
+          text: context.l10n.remove,
         ),
       ],
     );
@@ -955,11 +964,11 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
     try {
       await SyncTvService.adminRemoveAdmin(user.id);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '管理员已移除');
+      MessageUtils.showSuccess(context, context.l10n.administratorRemoved);
       _load(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '移除失败: $e');
+      MessageUtils.showError(context, context.l10n.removeFailed('$e'));
     }
   }
 
@@ -979,10 +988,10 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
             child: Column(
               children: [
                 AppTile(
-                  title: const Text('管理员'),
-                  subtitle: Text('共 $_adminTotal 个管理员账号'),
+                  title: Text(context.l10n.administrators),
+                  subtitle: Text(context.l10n.administratorCount(_adminTotal)),
                   suffix: AppIconButton(
-                    tooltip: '添加管理员',
+                    tooltip: context.l10n.addAdministrator,
                     icon: Icons.add_moderator_outlined,
                     onPressed: _addAdmin,
                   ),
@@ -1002,7 +1011,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                         width: 220,
                         child: AppSearchField(
                           controller: _adminSearchController,
-                          hintText: '搜索管理员',
+                          hintText: context.l10n.searchAdministrators,
                           onChanged: (value) {
                             if (value.isEmpty && _adminSearch.isNotEmpty) {
                               setState(() {
@@ -1023,17 +1032,17 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                       ),
                       AppSelect<admin_enum.UserListSortBy>(
                         value: _adminSortBy,
-                        options: const {
-                          '创建时间': admin_enum
+                        options: {
+                          context.l10n.createdAt: admin_enum
                               .UserListSortBy
                               .USER_LIST_SORT_BY_CREATED_AT,
-                          '更新时间': admin_enum
+                          context.l10n.updatedAt: admin_enum
                               .UserListSortBy
                               .USER_LIST_SORT_BY_UPDATED_AT,
-                          '用户名': admin_enum
+                          context.l10n.username: admin_enum
                               .UserListSortBy
                               .USER_LIST_SORT_BY_USERNAME,
-                          '邮箱':
+                          context.l10n.email:
                               admin_enum.UserListSortBy.USER_LIST_SORT_BY_EMAIL,
                         },
                         onChanged: (value) {
@@ -1049,8 +1058,8 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                         tooltip:
                             _adminSortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
-                            ? '降序'
-                            : '升序',
+                            ? context.l10n.descending
+                            : context.l10n.ascending,
                         icon:
                             _adminSortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
@@ -1070,10 +1079,10 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                       ),
                       AppSelect<int>(
                         value: _adminPageSize,
-                        options: const {
-                          '20 / 页': 20,
-                          '50 / 页': 50,
-                          '100 / 页': 100,
+                        options: {
+                          context.l10n.itemsPerPage(20): 20,
+                          context.l10n.itemsPerPage(50): 50,
+                          context.l10n.itemsPerPage(100): 100,
                         },
                         onChanged: (value) {
                           if (value == null) return;
@@ -1085,7 +1094,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                         },
                       ),
                       AppIconButton(
-                        tooltip: '刷新',
+                        tooltip: context.l10n.refresh,
                         icon: Icons.refresh_rounded,
                         onPressed: () => _load(silent: true),
                       ),
@@ -1093,7 +1102,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                   ),
                 ),
                 if (_admins.isEmpty)
-                  const AppEmptyMessage(message: '暂无管理员')
+                  AppEmptyMessage(message: context.l10n.noAdministrators)
                 else
                   for (final admin in _admins)
                     Builder(
@@ -1106,7 +1115,9 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                           title: Text(admin.username),
                           subtitle: Text(admin.id),
                           suffix: AppIconButton(
-                            tooltip: removeDisabledReason ?? '移除管理员',
+                            tooltip:
+                                removeDisabledReason ??
+                                context.l10n.removeAdministrator,
                             icon: Icons.remove_circle_outline,
                             style: removeDisabledReason == null
                                 ? AppIconButtonStyle.destructive
@@ -1119,7 +1130,7 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
                       },
                     ),
                 AppPaginationBar(
-                  label: '第 $_adminPage / $_adminPageCount 页',
+                  label: context.l10n.pageOf(_adminPage, _adminPageCount),
                   onPrevious: _adminPage <= 1
                       ? null
                       : () {
@@ -1143,10 +1154,10 @@ class _AdminAdminsTabState extends State<AdminAdminsTab> {
 
   String? _adminRemoveDisabledReason(SyncTvUser admin) {
     if (_currentUserId.isNotEmpty && admin.id == _currentUserId) {
-      return '不能移除当前登录账号的管理员权限';
+      return context.l10n.cannotRemoveCurrentAdministrator;
     }
     if (_adminTotal <= 1) {
-      return '至少保留一个管理员账号';
+      return context.l10n.keepAtLeastOneAdministrator;
     }
     return null;
   }
@@ -1225,7 +1236,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        MessageUtils.showError(context, '加载房间失败: $e');
+        MessageUtils.showError(context, context.l10n.loadRoomsFailed('$e'));
       }
     }
   }
@@ -1284,7 +1295,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     final selectedIds = Set<String>.from(_labelFilters);
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '筛选标签',
+      title: context.l10n.filterLabels,
       icon: const Icon(Icons.sell_outlined, color: Color(0xFF5D5FEF)),
       content: StatefulBuilder(
         builder: (dialogContext, setDialogState) {
@@ -1299,7 +1310,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 children: [
                   if (labels.isEmpty)
                     Text(
-                      _categoryFilter.isEmpty ? '暂无可用标签' : '当前分类下暂无标签',
+                      _categoryFilter.isEmpty
+                          ? context.l10n.noLabelsAvailable
+                          : context.l10n.noLabelsForCategory,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -1358,14 +1371,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         AppActionButton(
           onPressed: () => Navigator.pop(context, false),
           icon: Icons.filter_alt_off_rounded,
-          label: '清空',
+          label: context.l10n.clear,
           style: AppActionButtonStyle.tonal,
         ),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '应用',
+          text: context.l10n.apply,
         ),
       ],
     );
@@ -1380,11 +1393,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   }
 
   Future<void> _banRoom(SyncTvRoom room, bool ban) async {
-    final action = ban ? '封禁' : '解封';
+    final action = ban ? context.l10n.ban : context.l10n.unban;
     final reasonController = TextEditingController();
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '$action房间',
+      title: context.l10n.roomAction(action),
       icon: Icon(
         ban ? Icons.block : Icons.check_circle,
         color: ban ? Colors.red : Colors.green,
@@ -1393,18 +1406,18 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('确定要$action房间 "${room.roomName}" 吗？'),
+                Text(context.l10n.confirmRoomAction(action, room.roomName)),
                 const SizedBox(height: 12),
                 ChatUtils.createFormField(
                   context: context,
-                  label: '封禁原因',
+                  label: context.l10n.banReason,
                   controller: reasonController,
-                  hintText: '可选',
+                  hintText: context.l10n.optional,
                   prefixIcon: Icons.edit_note_rounded,
                 ),
               ],
             )
-          : Text('确定要$action房间 "${room.roomName}" 吗？'),
+          : Text(context.l10n.confirmRoomAction(action, room.roomName)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
@@ -1424,11 +1437,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
           reason: reasonController.text.trim(),
         );
         if (!mounted) return;
-        MessageUtils.showSuccess(context, '操作成功');
+        MessageUtils.showSuccess(context, context.l10n.operationSucceeded);
         _loadRooms(silent: true);
       } catch (e) {
         if (!mounted) return;
-        MessageUtils.showError(context, '操作失败: $e');
+        MessageUtils.showError(context, context.l10n.operationFailed('$e'));
       }
     }
   }
@@ -1436,20 +1449,23 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   Future<void> _deleteRoom(SyncTvRoom room) async {
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除房间',
+      title: context.l10n.deleteRoom,
       icon: const Icon(Icons.delete_forever, color: Colors.red),
-      content: _destructiveDialogContent('将永久删除房间 "${room.roomName}"。', const [
-        '所有成员会立即失去访问权限。',
-        '房间设置、成员关系、播放列表、聊天记录和实时状态会同步清除。',
-        '正在观看的成员会收到房间数据变更并退出当前协作流程。',
-      ]),
+      content: _destructiveDialogContent(
+        context.l10n.permanentlyDeleteRoom(room.roomName),
+        [
+          context.l10n.allMembersLoseAccess,
+          context.l10n.roomDataWillBeCleared,
+          context.l10n.watchingMembersWillExit,
+        ],
+      ),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: context.l10n.delete,
         ),
       ],
     );
@@ -1458,11 +1474,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       try {
         await SyncTvService.adminDeleteRoom(room.roomId);
         if (!mounted) return;
-        MessageUtils.showSuccess(context, '房间已删除');
+        MessageUtils.showSuccess(context, context.l10n.roomDeleted);
         _loadRooms(silent: true);
       } catch (e) {
         if (!mounted) return;
-        MessageUtils.showError(context, '删除失败: $e');
+        MessageUtils.showError(context, context.l10n.deleteEntryFailed('$e'));
       }
     }
   }
@@ -1482,19 +1498,19 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     final reasonController = TextEditingController();
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '批量封禁房间',
+      title: context.l10n.batchBanRooms,
       icon: const Icon(Icons.block_rounded, color: Colors.redAccent),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('将封禁 ${_selectedRoomIds.length} 个房间。'),
+          Text(context.l10n.roomsWillBeBanned(_selectedRoomIds.length)),
           const SizedBox(height: 12),
           ChatUtils.createFormField(
             context: context,
-            label: '封禁原因',
+            label: context.l10n.banReason,
             controller: reasonController,
-            hintText: '可选',
+            hintText: context.l10n.optional,
             prefixIcon: Icons.edit_note_rounded,
           ),
         ],
@@ -1505,7 +1521,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '封禁',
+          text: context.l10n.ban,
         ),
       ],
     );
@@ -1516,12 +1532,12 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         reason: reasonController.text.trim(),
       );
       if (!mounted) return;
-      _showBatchResult('批量封禁完成', result);
+      _showBatchResult(context.l10n.batchBanCompleted, result);
       setState(_selectedRoomIds.clear);
       _loadRooms(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '批量封禁失败: $e');
+      MessageUtils.showError(context, context.l10n.batchBanFailed('$e'));
     }
   }
 
@@ -1529,14 +1545,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     if (_selectedRoomIds.isEmpty) return;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '批量删除房间',
+      title: context.l10n.batchDeleteRooms,
       icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
       content: _destructiveDialogContent(
-        '将永久删除 ${_selectedRoomIds.length} 个房间。',
-        const [
-          '相关成员会立即失去访问权限。',
-          '房间设置、成员关系、播放列表、聊天记录和实时状态会同步清除。',
-          '批量操作完成后只能通过备份恢复数据。',
+        context.l10n.roomsWillBeDeleted(_selectedRoomIds.length),
+        [
+          context.l10n.relatedMembersLoseAccess,
+          context.l10n.roomDataWillBeCleared,
+          context.l10n.batchDeleteBackupOnly,
         ],
       ),
       actions: [
@@ -1545,7 +1561,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: context.l10n.delete,
         ),
       ],
     );
@@ -1555,20 +1571,20 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         _selectedRoomIds.toList(),
       );
       if (!mounted) return;
-      _showBatchResult('批量删除完成', result);
+      _showBatchResult(context.l10n.batchDeleteCompleted, result);
       setState(_selectedRoomIds.clear);
       _loadRooms(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '批量删除失败: $e');
+      MessageUtils.showError(context, context.l10n.batchDeleteFailed('$e'));
     }
   }
 
   void _showBatchResult(String title, AdminBatchOperationResult result) {
     final failedItems = result.results.where((item) => !item.success).toList();
     final message = failedItems.isEmpty
-        ? '$title：成功 ${result.succeeded} 个'
-        : '$title：成功 ${result.succeeded} 个，失败 ${result.failed} 个';
+        ? context.l10n.batchResultSuccess(title, result.succeeded)
+        : context.l10n.batchResultMixed(title, result.succeeded, result.failed);
     if (failedItems.isEmpty) {
       MessageUtils.showSuccess(context, message);
       return;
@@ -1622,7 +1638,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       var passwordAction = _RoomPasswordAction.keep;
       await ChatUtils.showStyledDialog(
         context: context,
-        title: '房间信息',
+        title: context.l10n.roomInformation,
         icon: const Icon(Icons.meeting_room_rounded, color: Color(0xFF5D5FEF)),
         content: StatefulBuilder(
           builder: (dialogContext, setDialogState) {
@@ -1672,32 +1688,50 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: _InfoLine(
-                            '创建者',
+                            context.l10n.creator,
                             '${detail.creator} (${detail.creatorId})',
                           ),
                         ),
                       ],
                     ),
                     if (detail.description.isNotEmpty)
-                      _InfoLine('描述', detail.description),
+                      _InfoLine(context.l10n.description, detail.description),
                     if (detail.category != null)
-                      _InfoLine('分类', _roomCategoryDisplay(detail.category!)),
+                      _InfoLine(
+                        context.l10n.category,
+                        _roomCategoryDisplay(detail.category!),
+                      ),
                     if (detail.labels.isNotEmpty)
                       _InfoLine(
-                        '标签',
+                        context.l10n.labels,
                         detail.labels.map(_roomLabelDisplay).join('、'),
                       ),
-                    _InfoLine('成员数', detail.memberCount.toString()),
-                    _InfoLine('状态', _roomStatusLabel(detail)),
-                    _InfoLine('创建者状态', _userStatusText(detail.creatorStatus)),
                     _InfoLine(
-                      '资源可用性',
-                      _resourceAvailabilityText(detail.availability),
+                      context.l10n.memberCountLabel,
+                      detail.memberCount.toString(),
                     ),
-                    _InfoLine('创建时间', _formatTimestamp(detail.createdAt)),
-                    _InfoLine('更新时间', _formatTimestamp(detail.updatedAt)),
+                    _InfoLine(context.l10n.status, _roomStatusLabel(detail)),
+                    _InfoLine(
+                      context.l10n.creatorStatus,
+                      _userStatusText(context, detail.creatorStatus),
+                    ),
+                    _InfoLine(
+                      context.l10n.resourceAvailability,
+                      _resourceAvailabilityText(context, detail.availability),
+                    ),
+                    _InfoLine(
+                      context.l10n.createdAt,
+                      _formatTimestamp(detail.createdAt),
+                    ),
+                    _InfoLine(
+                      context.l10n.updatedAt,
+                      _formatTimestamp(detail.updatedAt),
+                    ),
                     if (detail.version > 0)
-                      _InfoLine('版本', detail.version.toString()),
+                      _InfoLine(
+                        context.l10n.version,
+                        detail.version.toString(),
+                      ),
                     const SizedBox(height: 16),
                     AppDivider(
                       color: Theme.of(
@@ -1706,7 +1740,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '房间密码',
+                      context.l10n.roomPassword,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -1714,11 +1748,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     const SizedBox(height: 8),
                     AppSelect<_RoomPasswordAction>(
                       value: passwordAction,
-                      label: '密码操作',
-                      options: const {
-                        '保持不变': _RoomPasswordAction.keep,
-                        '设置新密码': _RoomPasswordAction.update,
-                        '清除密码': _RoomPasswordAction.clear,
+                      label: context.l10n.passwordAction,
+                      options: {
+                        context.l10n.keepUnchanged: _RoomPasswordAction.keep,
+                        context.l10n.setNewPassword: _RoomPasswordAction.update,
+                        context.l10n.clearPassword: _RoomPasswordAction.clear,
                       },
                       onChanged: (value) => setDialogState(() {
                         passwordAction = value ?? _RoomPasswordAction.keep;
@@ -1731,9 +1765,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       const SizedBox(height: 12),
                       ChatUtils.createFormField(
                         context: dialogContext,
-                        label: '新密码',
+                        label: context.l10n.newPassword,
                         controller: passwordController,
-                        hintText: '请输入新密码',
+                        hintText: context.l10n.newPassword,
                         prefixIcon: Icons.lock_outline,
                       ),
                     ],
@@ -1749,7 +1783,10 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               final nextPassword = passwordController.text.trim();
               if (passwordAction == _RoomPasswordAction.update &&
                   nextPassword.isEmpty) {
-                MessageUtils.showWarning(context, '请输入新密码');
+                MessageUtils.showWarning(
+                  context,
+                  context.l10n.newPasswordRequired,
+                );
                 return;
               }
               try {
@@ -1770,14 +1807,22 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 }
                 if (!mounted) return;
                 Navigator.pop(context);
-                MessageUtils.showSuccess(context, '房间密码已更新');
+                MessageUtils.showSuccess(
+                  context,
+                  context.l10n.roomPasswordUpdated,
+                );
                 _loadRooms(silent: true);
               } catch (e) {
-                if (mounted) MessageUtils.showError(context, '更新房间密码失败: $e');
+                if (mounted) {
+                  MessageUtils.showError(
+                    context,
+                    context.l10n.updateRoomPasswordFailed('$e'),
+                  );
+                }
               }
             },
             icon: Icons.password_rounded,
-            label: '保存密码',
+            label: context.l10n.savePassword,
             style: AppActionButtonStyle.tonal,
           ),
           AppActionButton(
@@ -1786,7 +1831,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               _showRoomChatHistory(detail);
             },
             icon: Icons.forum_outlined,
-            label: '聊天历史',
+            label: context.l10n.chatHistory,
             style: AppActionButtonStyle.tonal,
           ),
           AppActionButton(
@@ -1795,7 +1840,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               _editRoomTaxonomy(detail);
             },
             icon: Icons.category_outlined,
-            label: '分类标签',
+            label: context.l10n.categoriesAndLabels,
             style: AppActionButtonStyle.tonal,
           ),
           AppActionButton(
@@ -1803,7 +1848,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               Navigator.pop(context);
               _openContentReportsViewer(
                 context,
-                title: '${detail.roomName} 的举报',
+                title: context.l10n.roomReports(detail.roomName),
                 targetType: 1,
                 targetRoomId: detail.roomId,
                 scope: admin_enum
@@ -1813,7 +1858,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               );
             },
             icon: Icons.report_gmailerrorred_outlined,
-            label: '举报记录',
+            label: context.l10n.reportRecords,
             style: AppActionButtonStyle.tonal,
           ),
           AppActionButton(
@@ -1822,7 +1867,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               _deleteRoom(detail);
             },
             icon: Icons.delete_outline_rounded,
-            label: '删除房间',
+            label: context.l10n.deleteRoom,
             style: AppActionButtonStyle.destructive,
           ),
           _closeButton(context),
@@ -1831,7 +1876,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       passwordController.dispose();
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '加载房间详情失败: $e');
+      MessageUtils.showError(context, context.l10n.loadRoomDetailsFailed('$e'));
     }
   }
 
@@ -1900,7 +1945,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       pruneSelectedLabels();
       final confirmed = await ChatUtils.showStyledDialog<bool>(
         context: context,
-        title: '分类标签',
+        title: context.l10n.categoriesAndLabels,
         icon: const Icon(Icons.category_outlined, color: Color(0xFF5D5FEF)),
         content: StatefulBuilder(
           builder: (dialogContext, setDialogState) {
@@ -1917,12 +1962,12 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       value: selectedCategoryId.isEmpty
                           ? null
                           : selectedCategoryId,
-                      label: '房间分类',
-                      hintText: '不设置分类',
+                      label: context.l10n.roomCategory,
+                      hintText: context.l10n.noCategory,
                       prefixIcon: Icons.category_outlined,
                       clearable: true,
                       options: {
-                        '不设置分类': null,
+                        context.l10n.noCategory: null,
                         for (final category in categories)
                           _roomCategoryDisplay(category): category.id,
                       },
@@ -1933,7 +1978,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      '房间标签',
+                      context.l10n.roomLabels,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -1941,7 +1986,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     const SizedBox(height: 8),
                     if (visibleLabels.isEmpty)
                       Text(
-                        selectedCategoryId.isEmpty ? '暂无可用标签' : '当前分类下暂无标签',
+                        selectedCategoryId.isEmpty
+                            ? context.l10n.noLabelsAvailable
+                            : context.l10n.noLabelsForCategory,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -2002,7 +2049,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
           ChatUtils.createConfirmButton(
             context,
             () => Navigator.pop(context, true),
-            text: '保存',
+            text: context.l10n.save,
           ),
         ],
       );
@@ -2018,11 +2065,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         labelIds: labelIds,
       );
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '分类标签已保存');
+      MessageUtils.showSuccess(context, context.l10n.categoriesLabelsSaved);
       _loadRooms(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '保存分类标签失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.saveCategoriesLabelsFailed('$e'),
+      );
     }
   }
 
@@ -2058,7 +2108,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       var loading = false;
       await ChatUtils.showStyledDialog(
         context: context,
-        title: '房间成员',
+        title: context.l10n.roomMembers,
         icon: const Icon(Icons.group_rounded, color: Color(0xFF5D5FEF)),
         content: SizedBox(
           width: 620,
@@ -2094,7 +2144,10 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 } catch (e) {
                   if (!context.mounted) return;
                   setDialogState(() => loading = false);
-                  MessageUtils.showError(context, '加载成员失败: $e');
+                  MessageUtils.showError(
+                    context,
+                    context.l10n.loadMembersFailed('$e'),
+                  );
                 }
               }
 
@@ -2102,8 +2155,8 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 AdminRoomMember member,
               ) async {
                 final value = await _showRoomMemberTextDialog(
-                  title: '备注名称',
-                  label: '备注名称',
+                  title: context.l10n.remarkName,
+                  label: context.l10n.remarkName,
                   initialValue: member.remarkName,
                   icon: Icons.drive_file_rename_outline_rounded,
                 );
@@ -2116,10 +2169,16 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                   );
                   await loadMembers();
                   if (!context.mounted) return;
-                  MessageUtils.showSuccess(context, '备注名称已更新');
+                  MessageUtils.showSuccess(
+                    context,
+                    context.l10n.remarkNameUpdated,
+                  );
                 } catch (e) {
                   if (!context.mounted) return;
-                  MessageUtils.showError(context, '更新备注名称失败: $e');
+                  MessageUtils.showError(
+                    context,
+                    context.l10n.updateRemarkNameFailed('$e'),
+                  );
                 }
               }
 
@@ -2127,8 +2186,8 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 AdminRoomMember member,
               ) async {
                 final value = await _showRoomMemberTextDialog(
-                  title: '展示标签',
-                  label: '展示标签',
+                  title: context.l10n.displayLabel,
+                  label: context.l10n.displayLabel,
                   initialValue: member.displayTag,
                   icon: Icons.sell_outlined,
                 );
@@ -2141,10 +2200,16 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                   );
                   await loadMembers();
                   if (!context.mounted) return;
-                  MessageUtils.showSuccess(context, '展示标签已更新');
+                  MessageUtils.showSuccess(
+                    context,
+                    context.l10n.displayLabelUpdated,
+                  );
                 } catch (e) {
                   if (!context.mounted) return;
-                  MessageUtils.showError(context, '更新展示标签失败: $e');
+                  MessageUtils.showError(
+                    context,
+                    context.l10n.updateDisplayLabelFailed('$e'),
+                  );
                 }
               }
 
@@ -2163,7 +2228,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                         width: 190,
                         child: AppSearchField(
                           controller: searchController,
-                          hintText: '搜索成员',
+                          hintText: context.l10n.searchMembers,
                           onChanged: (value) {
                             if (value.isEmpty) {
                               page = 1;
@@ -2178,19 +2243,19 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       ),
                       AppSelect<common_enum.RoomMemberRole>(
                         value: roleFilter,
-                        options: const {
-                          '全部角色': common_enum
+                        options: {
+                          context.l10n.allRoles: common_enum
                               .RoomMemberRole
                               .ROOM_MEMBER_ROLE_UNSPECIFIED,
-                          '创建者': common_enum
+                          context.l10n.creator: common_enum
                               .RoomMemberRole
                               .ROOM_MEMBER_ROLE_CREATOR,
-                          '管理员':
+                          context.l10n.administrator:
                               common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
-                          '成员': common_enum
+                          context.l10n.member: common_enum
                               .RoomMemberRole
                               .ROOM_MEMBER_ROLE_MEMBER,
-                          '访客':
+                          context.l10n.guest:
                               common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
                         },
                         onChanged: (value) {
@@ -2202,14 +2267,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       ),
                       AppSelect<admin_enum.RoomMemberListSortBy>(
                         value: sortBy,
-                        options: const {
-                          '加入时间': admin_enum
+                        options: {
+                          context.l10n.joinedAt: admin_enum
                               .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_JOINED_AT,
-                          '用户名': admin_enum
+                          context.l10n.username: admin_enum
                               .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_USERNAME,
-                          '角色': admin_enum
+                          context.l10n.role: admin_enum
                               .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_ROLE,
                         },
@@ -2224,8 +2289,8 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                         tooltip:
                             sortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
-                            ? '降序'
-                            : '升序',
+                            ? context.l10n.descending
+                            : context.l10n.ascending,
                         icon:
                             sortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
@@ -2243,10 +2308,10 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       ),
                       AppSelect<int>(
                         value: pageSize,
-                        options: const {
-                          '20 / 页': 20,
-                          '50 / 页': 50,
-                          '100 / 页': 100,
+                        options: {
+                          context.l10n.itemsPerPage(20): 20,
+                          context.l10n.itemsPerPage(50): 50,
+                          context.l10n.itemsPerPage(100): 100,
                         },
                         onChanged: (value) {
                           if (value == null) return;
@@ -2256,7 +2321,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                         },
                       ),
                       AppIconButton(
-                        tooltip: '刷新',
+                        tooltip: context.l10n.refresh,
                         icon: Icons.refresh_rounded,
                         onPressed: loadMembers,
                       ),
@@ -2266,7 +2331,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                           await _addRoomMember(room);
                         },
                         icon: Icons.person_add_alt_rounded,
-                        label: '添加成员',
+                        label: context.l10n.addMember,
                         style: AppActionButtonStyle.text,
                       ),
                     ],
@@ -2275,7 +2340,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      '总数 $total · 在线 $onlineCount · 连接 $connectionCount',
+                      context.l10n.memberAdminSummary(
+                        total,
+                        onlineCount,
+                        connectionCount,
+                      ),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).hintColor,
                         fontWeight: FontWeight.w600,
@@ -2287,7 +2356,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     child: loading
                         ? const AppLoadingIndicator()
                         : members.isEmpty
-                        ? const AppEmptyMessage(message: '暂无成员')
+                        ? AppEmptyMessage(message: context.l10n.noMembers)
                         : AppListView.builder(
                             itemCount: members.length,
                             itemBuilder: (context, index) {
@@ -2303,11 +2372,13 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                               final subtitleParts = [
                                 if (remarkName.isNotEmpty) username,
                                 member.userId,
-                                _roomMemberRoleText(member.role),
+                                _roomMemberRoleText(context, member.role),
                                 if (displayTag.isNotEmpty) displayTag,
                                 member.isOnline
-                                    ? '${member.connectionCount} 连接'
-                                    : '离线',
+                                    ? context.l10n.roomConnections(
+                                        member.connectionCount,
+                                      )
+                                    : context.l10n.offline,
                                 _formatTimestamp(member.joinedAt),
                               ];
                               return AppTile(
@@ -2323,7 +2394,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                                   spacing: 4,
                                   children: [
                                     AppIconButton(
-                                      tooltip: '备注名称',
+                                      tooltip: context.l10n.remarkName,
                                       icon: Icons
                                           .drive_file_rename_outline_rounded,
                                       onPressed: () async {
@@ -2331,14 +2402,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                                       },
                                     ),
                                     AppIconButton(
-                                      tooltip: '展示标签',
+                                      tooltip: context.l10n.displayLabel,
                                       icon: Icons.sell_outlined,
                                       onPressed: () async {
                                         await updateMemberDisplayTag(member);
                                       },
                                     ),
                                     AppIconButton(
-                                      tooltip: '切换管理员',
+                                      tooltip: context.l10n.toggleAdministrator,
                                       icon: Icons.admin_panel_settings_outlined,
                                       onPressed: () async {
                                         final nextRole =
@@ -2364,7 +2435,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                                       },
                                     ),
                                     AppIconButton(
-                                      tooltip: '权限覆盖',
+                                      tooltip: context.l10n.permissionOverrides,
                                       icon: Icons.tune_rounded,
                                       onPressed: () async {
                                         Navigator.pop(context);
@@ -2375,7 +2446,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                                       },
                                     ),
                                     AppIconButton(
-                                      tooltip: '踢出',
+                                      tooltip: context.l10n.kick,
                                       icon: Icons.logout_rounded,
                                       style: AppIconButtonStyle.destructive,
                                       onPressed: () async {
@@ -2399,7 +2470,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                   const SizedBox(height: 8),
                   AppPaginationBar(
                     padding: EdgeInsets.zero,
-                    label: '共 $total 个成员，第 $page / $totalPages 页',
+                    label: context.l10n.memberPageSummary(
+                      total,
+                      page,
+                      totalPages,
+                    ),
                     onPrevious: canPrev
                         ? () {
                             page -= 1;
@@ -2422,7 +2497,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       );
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '加载成员失败: $e');
+      MessageUtils.showError(context, context.l10n.loadMembersFailed('$e'));
     }
   }
 
@@ -2432,7 +2507,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     var notify = true;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '添加成员',
+      title: context.l10n.addMember,
       icon: const Icon(Icons.person_add_alt_rounded, color: Color(0xFF5D5FEF)),
       content: StatefulBuilder(
         builder: (context, setDialogState) {
@@ -2441,7 +2516,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
             children: [
               ChatUtils.createFormField(
                 context: context,
-                label: '用户 ID',
+                label: context.l10n.userId,
                 controller: controller,
                 hintText: 'usr_...',
                 prefixIcon: Icons.person_outline,
@@ -2449,11 +2524,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               const SizedBox(height: 12),
               AppSelect<int>(
                 value: role,
-                label: '房间角色',
+                label: context.l10n.roomRole,
                 options: {
-                  '成员':
+                  context.l10n.member:
                       common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_MEMBER.value,
-                  '管理员':
+                  context.l10n.administrator:
                       common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value,
                 },
                 onChanged: (value) => setDialogState(
@@ -2464,7 +2539,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               ),
               const SizedBox(height: 12),
               AppSwitchTile(
-                title: const Text('通知成员'),
+                title: Text(context.l10n.notifyMember),
                 value: notify,
                 onChanged: (value) => setDialogState(() => notify = value),
               ),
@@ -2478,7 +2553,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '添加',
+          text: context.l10n.add,
         ),
       ],
     );
@@ -2491,11 +2566,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         notify: notify,
       );
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '成员已添加');
+      MessageUtils.showSuccess(context, context.l10n.memberAdded);
       _showRoomMembers(room);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '添加成员失败: $e');
+      MessageUtils.showError(context, context.l10n.addMemberFailed('$e'));
     }
   }
 
@@ -2525,7 +2600,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
-        ChatUtils.createConfirmButton(context, submit, text: '保存'),
+        ChatUtils.createConfirmButton(context, submit, text: context.l10n.save),
       ],
     ).whenComplete(controller.dispose);
   }
@@ -2534,11 +2609,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
     final controller = TextEditingController(text: '60');
     final value = await ChatUtils.showStyledDialog<int>(
       context: context,
-      title: '踢出成员',
+      title: context.l10n.kickMember,
       icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
       content: ChatUtils.createFormField(
         context: context,
-        label: '冷却秒数',
+        label: context.l10n.cooldownSeconds,
         controller: controller,
         hintText: '1 - 2592000',
         prefixIcon: Icons.timer_outlined,
@@ -2550,11 +2625,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         ChatUtils.createConfirmButton(context, () {
           final seconds = int.tryParse(controller.text.trim());
           if (seconds == null || seconds < 1 || seconds > 2592000) {
-            MessageUtils.showWarning(context, '请输入 1 到 2592000 之间的秒数');
+            MessageUtils.showWarning(
+              context,
+              context.l10n.cooldownSecondsRange,
+            );
             return;
           }
           Navigator.pop(context, seconds);
-        }, text: '踢出'),
+        }, text: context.l10n.kick),
       ],
     );
     return value;
@@ -2580,11 +2658,14 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         adminRemovedPermissions: result.adminRemovedPermissions,
       );
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '成员权限已更新');
+      MessageUtils.showSuccess(context, context.l10n.memberPermissionsUpdated);
       await _showRoomMembers(room);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '更新成员权限失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.updatePermissionsFailed('$e'),
+      );
       await _showRoomMembers(room);
     }
   }
@@ -2603,7 +2684,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
 
     return ChatUtils.showStyledDialog<_PermissionOverrideResult>(
       context: context,
-      title: '权限覆盖',
+      title: context.l10n.permissionOverrides,
       icon: const Icon(Icons.tune_rounded, color: Color(0xFF5D5FEF)),
       content: StatefulBuilder(
         builder: (context, setDialogState) {
@@ -2656,7 +2737,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               ),
             );
           },
-          label: '清除覆盖',
+          label: context.l10n.clearOverrides,
           style: AppActionButtonStyle.text,
         ),
         const SizedBox(width: 8),
@@ -2670,7 +2751,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               adminRemovedPermissions: isAdmin ? removed : 0,
             ),
           );
-        }, text: '保存'),
+        }, text: context.l10n.save),
       ],
     );
   }
@@ -2693,18 +2774,18 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         children: [
           Expanded(child: Text(title)),
           AppSegmentedControl<_PermissionOverrideMode>(
-            segments: const [
+            segments: [
               ButtonSegment(
                 value: _PermissionOverrideMode.inherit,
-                label: Text('继承'),
+                label: Text(context.l10n.inherit),
               ),
               ButtonSegment(
                 value: _PermissionOverrideMode.allow,
-                label: Text('允许'),
+                label: Text(context.l10n.allow),
               ),
               ButtonSegment(
                 value: _PermissionOverrideMode.deny,
-                label: Text('拒绝'),
+                label: Text(context.l10n.deny),
               ),
             ],
             value: mode,
@@ -2729,7 +2810,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
       bool danmakuEnabled = settings.danmakuEnabled;
       final confirmed = await ChatUtils.showStyledDialog<bool>(
         context: context,
-        title: '房间设置',
+        title: context.l10n.roomSettings,
         icon: const Icon(Icons.tune_rounded, color: Color(0xFF5D5FEF)),
         content: StatefulBuilder(
           builder: (dialogContext, setDialogState) {
@@ -2741,35 +2822,35 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     value: requirePassword,
                     onChanged: (value) =>
                         setDialogState(() => requirePassword = value),
-                    title: const Text('需要密码'),
+                    title: Text(context.l10n.requiresPassword),
                   ),
                   AppSwitchTile(
                     value: requireApproval,
                     onChanged: (value) =>
                         setDialogState(() => requireApproval = value),
-                    title: const Text('加入需要审核'),
+                    title: Text(context.l10n.joinRequiresApproval),
                   ),
                   AppSwitchTile(
                     value: allowGuestJoin,
                     onChanged: (value) =>
                         setDialogState(() => allowGuestJoin = value),
-                    title: const Text('允许访客加入'),
+                    title: Text(context.l10n.allowGuestJoin),
                   ),
                   AppSwitchTile(
                     value: chatEnabled,
                     onChanged: (value) =>
                         setDialogState(() => chatEnabled = value),
-                    title: const Text('聊天'),
+                    title: Text(context.l10n.chat),
                   ),
                   AppSwitchTile(
                     value: danmakuEnabled,
                     onChanged: (value) =>
                         setDialogState(() => danmakuEnabled = value),
-                    title: const Text('弹幕'),
+                    title: Text(context.l10n.danmaku),
                   ),
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '最大成员数',
+                    label: context.l10n.maximumMembers,
                     controller: maxMembers,
                     hintText: '100',
                     prefixIcon: Icons.groups_rounded,
@@ -2786,9 +2867,9 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               await SyncTvService.adminResetRoomSettings(room.roomId);
               if (!mounted) return;
               Navigator.pop(context, false);
-              MessageUtils.showSuccess(context, '房间设置已重置');
+              MessageUtils.showSuccess(context, context.l10n.roomSettingsReset);
             },
-            label: '重置',
+            label: context.l10n.reset,
             style: AppActionButtonStyle.text,
           ),
           ChatUtils.createCancelButton(context),
@@ -2796,7 +2877,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
           ChatUtils.createConfirmButton(
             context,
             () => Navigator.pop(context, true),
-            text: '保存',
+            text: context.l10n.save,
           ),
         ],
       );
@@ -2811,22 +2892,25 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
           int.tryParse(maxMembers.text.trim()) ?? settings.maxMembers;
       await SyncTvService.adminUpdateRoomSettings(room.roomId, settings);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '房间设置已保存');
+      MessageUtils.showSuccess(context, context.l10n.roomSettingsSaved);
       _loadRooms(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '保存房间设置失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.saveRoomSettingsFailed('$e'),
+      );
     }
   }
 
   String _getStatusText(int status) {
     switch (status) {
       case 1:
-        return '活跃';
+        return context.l10n.active;
       case 2:
-        return '已关闭';
+        return context.l10n.closed;
       default:
-        return '未知';
+        return context.l10n.unknown;
     }
   }
 
@@ -2842,7 +2926,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
   }
 
   String _roomStatusLabel(SyncTvRoom room) {
-    return room.isBanned ? '已封禁' : _getStatusText(room.status);
+    return room.isBanned ? context.l10n.banned : _getStatusText(room.status);
   }
 
   Color _roomStatusColorForRoom(SyncTvRoom room) {
@@ -2871,7 +2955,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                     });
                     _loadRooms();
                   },
-                  hint: '搜索房间',
+                  hint: context.l10n.searchRooms,
                   icon: Icons.search,
                 ),
               ),
@@ -2879,12 +2963,12 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 width: 112,
                 child: AppSelect<String?>(
                   value: _categoryFilter.isEmpty ? null : _categoryFilter,
-                  hintText: '全部分类',
+                  hintText: context.l10n.allCategories,
                   prefixIcon: Icons.category_outlined,
                   clearable: true,
                   enabled: !_isLoadingTaxonomy && _categories.isNotEmpty,
                   options: {
-                    '全部分类': null,
+                    context.l10n.allCategories: null,
                     for (final category in _categories)
                       _roomCategoryDisplay(category): category.id,
                   },
@@ -2910,8 +2994,8 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                       : _showRoomLabelFilterDialog,
                   icon: Icons.sell_outlined,
                   label: _labelFilters.isEmpty
-                      ? '标签'
-                      : '标签 ${_labelFilters.length}',
+                      ? context.l10n.labels
+                      : context.l10n.selectedLabels(_labelFilters.length),
                   style: _labelFilters.isEmpty
                       ? AppActionButtonStyle.outlined
                       : AppActionButtonStyle.tonal,
@@ -2921,10 +3005,13 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 width: 112,
                 child: AppSelect<common_enum.RoomStatus>(
                   value: _statusFilter,
-                  options: const {
-                    '全部状态': common_enum.RoomStatus.ROOM_STATUS_UNSPECIFIED,
-                    '活跃': common_enum.RoomStatus.ROOM_STATUS_ACTIVE,
-                    '已关闭': common_enum.RoomStatus.ROOM_STATUS_CLOSED,
+                  options: {
+                    context.l10n.allStatuses:
+                        common_enum.RoomStatus.ROOM_STATUS_UNSPECIFIED,
+                    context.l10n.active:
+                        common_enum.RoomStatus.ROOM_STATUS_ACTIVE,
+                    context.l10n.closed:
+                        common_enum.RoomStatus.ROOM_STATUS_CLOSED,
                   },
                   onChanged: (val) {
                     if (val == null) return;
@@ -2940,7 +3027,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 width: 112,
                 child: AppSelect<bool?>(
                   value: _bannedFilter,
-                  options: const {'全部封禁': null, '仅封禁': true, '未封禁': false},
+                  options: {
+                    context.l10n.allBanStates: null,
+                    context.l10n.bannedOnly: true,
+                    context.l10n.notBanned: false,
+                  },
                   onChanged: (value) {
                     setState(() {
                       _bannedFilter = value;
@@ -2954,15 +3045,16 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 width: 126,
                 child: AppSelect<admin_enum.RoomListSortBy>(
                   value: _sortBy,
-                  options: const {
-                    '创建时间':
+                  options: {
+                    context.l10n.createdAt:
                         admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_CREATED_AT,
-                    '更新时间':
+                    context.l10n.updatedAt:
                         admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_UPDATED_AT,
-                    '最近活跃': admin_enum
+                    context.l10n.recentActivity: admin_enum
                         .RoomListSortBy
                         .ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-                    '房间名': admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME,
+                    context.l10n.roomName:
+                        admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME,
                   },
                   onChanged: (value) {
                     if (value == null) return;
@@ -2980,8 +3072,8 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                   tooltip:
                       _sortDirection ==
                           admin_enum.SortDirection.SORT_DIRECTION_DESC
-                      ? '降序'
-                      : '升序',
+                      ? context.l10n.descending
+                      : context.l10n.ascending,
                   icon:
                       _sortDirection ==
                           admin_enum.SortDirection.SORT_DIRECTION_DESC
@@ -3004,7 +3096,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 width: 96,
                 child: AppSelect<int>(
                   value: _pageSize,
-                  options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
+                  options: {
+                    context.l10n.itemsPerPage(20): 20,
+                    context.l10n.itemsPerPage(50): 50,
+                    context.l10n.itemsPerPage(100): 100,
+                  },
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() {
@@ -3019,7 +3115,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                 _AdminToolbarItem(
                   width: 44,
                   child: AppIconButton(
-                    tooltip: '清除分类标签筛选',
+                    tooltip: context.l10n.clearRoomTaxonomyFilters,
                     icon: Icons.filter_alt_off_rounded,
                     onPressed: () {
                       setState(() {
@@ -3035,7 +3131,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
               _AdminToolbarItem(
                 width: 44,
                 child: AppIconButton(
-                  tooltip: '选择当前页',
+                  tooltip: context.l10n.selectCurrentPage,
                   icon: Icons.select_all_rounded,
                   onPressed: _rooms.isEmpty
                       ? null
@@ -3073,7 +3169,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
           child: _isLoading
               ? const AppLoadingIndicator()
               : _rooms.isEmpty
-              ? const AppEmptyMessage(message: '暂无房间')
+              ? AppEmptyMessage(message: context.l10n.noRooms)
               : AppListView.builder(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -3092,7 +3188,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                         ),
                         prefix: AppCheckbox(
                           value: _selectedRoomIds.contains(room.roomId),
-                          semanticsLabel: '选择房间',
+                          semanticsLabel: context.l10n.selectRoom,
                           onChanged: (value) =>
                               _toggleRoomSelection(room.roomId, value),
                         ),
@@ -3148,7 +3244,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                               AppIconButton(
                                 icon: Icons.block,
                                 iconSize: 22,
-                                tooltip: '封禁',
+                                tooltip: context.l10n.ban,
                                 style: AppIconButtonStyle.destructive,
                                 onPressed: () => _banRoom(room, true),
                               )
@@ -3156,12 +3252,12 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                               AppIconButton(
                                 icon: Icons.check_circle,
                                 iconSize: 22,
-                                tooltip: '解封',
+                                tooltip: context.l10n.unban,
                                 onPressed: () => _banRoom(room, false),
                               ),
                             AppActionButton(
                               icon: Icons.info_outline_rounded,
-                              label: '房间信息',
+                              label: context.l10n.roomInformation,
                               size: AppActionButtonSize.sm,
                               style: AppActionButtonStyle.tonal,
                               onPressed: () => _showRoomDetails(room),
@@ -3169,22 +3265,22 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                             AppIconButton(
                               icon: Icons.group_outlined,
                               iconSize: 22,
-                              tooltip: '成员',
+                              tooltip: context.l10n.members,
                               onPressed: () => _showRoomMembers(room),
                             ),
                             AppIconButton(
                               icon: Icons.forum_outlined,
                               iconSize: 22,
-                              tooltip: '聊天历史',
+                              tooltip: context.l10n.chatHistory,
                               onPressed: () => _showRoomChatHistory(room),
                             ),
                             AppIconButton(
                               icon: Icons.report_gmailerrorred_outlined,
                               iconSize: 22,
-                              tooltip: '举报',
+                              tooltip: context.l10n.reports,
                               onPressed: () => _openContentReportsViewer(
                                 context,
-                                title: '${room.roomName} 的举报',
+                                title: context.l10n.roomReports(room.roomName),
                                 targetType: 1,
                                 targetRoomId: room.roomId,
                                 scope: admin_enum
@@ -3196,7 +3292,7 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
                             AppIconButton(
                               icon: Icons.tune_rounded,
                               iconSize: 22,
-                              tooltip: '设置',
+                              tooltip: context.l10n.settings,
                               onPressed: () => _editRoomSettings(room),
                             ),
                           ],
@@ -3221,24 +3317,26 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
         children: [
           Icon(Icons.checklist_rounded, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          Expanded(child: Text('已选择 ${_selectedRoomIds.length} 个房间')),
+          Expanded(
+            child: Text(context.l10n.roomsSelected(_selectedRoomIds.length)),
+          ),
           AppActionButton(
             onPressed: () => setState(_selectedRoomIds.clear),
-            label: '清空',
+            label: context.l10n.clear,
             style: AppActionButtonStyle.text,
           ),
           const SizedBox(width: 4),
           AppActionButton(
             onPressed: _batchBanRooms,
             icon: Icons.block_rounded,
-            label: '封禁',
+            label: context.l10n.ban,
             style: AppActionButtonStyle.tonal,
           ),
           const SizedBox(width: 8),
           AppActionButton(
             onPressed: _batchDeleteRooms,
             icon: Icons.delete_outline_rounded,
-            label: '删除',
+            label: context.l10n.delete,
             style: AppActionButtonStyle.destructive,
           ),
         ],
@@ -3302,7 +3400,10 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, '加载分类标签失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.loadCategoriesLabelsFailed('$e'),
+      );
     }
   }
 
@@ -3333,11 +3434,11 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
   }
 
   String _categoryDisplayById(String categoryId) {
-    if (categoryId.isEmpty) return '未绑定分类';
+    if (categoryId.isEmpty) return context.l10n.categoryNotBound;
     for (final category in _categories) {
       if (category.id == categoryId) return _categoryDisplay(category);
     }
-    return '未知分类';
+    return context.l10n.unknownCategory;
   }
 
   String _normalizeColor(String value) {
@@ -3365,7 +3466,9 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     var disposeScheduled = false;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: category == null ? '新增分类' : '编辑分类',
+      title: category == null
+          ? context.l10n.addCategory
+          : context.l10n.editCategory,
       icon: const Icon(Icons.category_rounded, color: Color(0xFF5D5FEF)),
       content: StatefulBuilder(
         builder: (dialogContext, setDialogState) {
@@ -3386,34 +3489,34 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                 children: [
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '标识',
+                    label: context.l10n.identifier,
                     controller: keyController,
-                    hintText: '例如 movie',
+                    hintText: context.l10n.categoryIdentifierExample,
                     prefixIcon: Icons.key_rounded,
                   ),
                   const SizedBox(height: 12),
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '名称',
+                    label: context.l10n.name,
                     controller: nameController,
-                    hintText: '例如 电影',
+                    hintText: context.l10n.categoryNameExample,
                     prefixIcon: Icons.drive_file_rename_outline_rounded,
                   ),
                   const SizedBox(height: 12),
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '描述',
+                    label: context.l10n.description,
                     controller: descriptionController,
-                    hintText: '可选',
+                    hintText: context.l10n.optional,
                     prefixIcon: Icons.notes_rounded,
                     maxLines: 3,
                   ),
                   const SizedBox(height: 12),
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '排序',
+                    label: context.l10n.sort,
                     controller: sortController,
-                    hintText: '数字越小越靠前',
+                    hintText: context.l10n.lowerNumberFirst,
                     prefixIcon: Icons.sort_rounded,
                     keyboardType: TextInputType.number,
                   ),
@@ -3421,7 +3524,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                   AppSwitchTile(
                     value: enabled,
                     onChanged: (value) => setDialogState(() => enabled = value),
-                    title: const Text('启用分类'),
+                    title: Text(context.l10n.enableCategory),
                     prefix: const Icon(Icons.toggle_on_outlined),
                   ),
                 ],
@@ -3436,7 +3539,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '保存',
+          text: context.l10n.save,
         ),
       ],
     );
@@ -3447,12 +3550,12 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     final sortOrder = int.tryParse(sortController.text.trim());
     if (key.isEmpty || name.isEmpty) {
       if (!mounted) return;
-      MessageUtils.showWarning(context, '请填写分类标识和名称');
+      MessageUtils.showWarning(context, context.l10n.categoryIdAndNameRequired);
       return;
     }
     if (sortOrder == null) {
       if (!mounted) return;
-      MessageUtils.showWarning(context, '排序需要填写整数');
+      MessageUtils.showWarning(context, context.l10n.sortMustBeInteger);
       return;
     }
 
@@ -3465,22 +3568,22 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         isEnabled: enabled,
       );
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '分类已保存');
+      MessageUtils.showSuccess(context, context.l10n.categorySaved);
       _load(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '保存分类失败: $e');
+      MessageUtils.showError(context, context.l10n.saveCategoryFailed('$e'));
     }
   }
 
   Future<void> _deleteCategory(RoomCategoryInfo category) async {
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除分类',
+      title: context.l10n.deleteCategory,
       icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
       content: _destructiveDialogContent(
-        '将永久删除分类 "${_categoryDisplay(category)}"。',
-        const ['已绑定该分类的房间会失去对应分类。', '后台筛选和房间展示会立即使用最新分类数据。'],
+        context.l10n.permanentlyDeleteCategory(_categoryDisplay(category)),
+        [context.l10n.roomsLoseCategory, context.l10n.categoryChangesImmediate],
       ),
       actions: [
         ChatUtils.createCancelButton(context),
@@ -3488,7 +3591,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: context.l10n.delete,
         ),
       ],
     );
@@ -3496,11 +3599,11 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     try {
       await SyncTvService.adminDeleteRoomCategory(category.id);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '分类已删除');
+      MessageUtils.showSuccess(context, context.l10n.categoryDeleted);
       _load(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '删除分类失败: $e');
+      MessageUtils.showError(context, context.l10n.deleteCategoryFailed('$e'));
     }
   }
 
@@ -3521,7 +3624,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     var disposeScheduled = false;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: label == null ? '新增标签' : '编辑标签',
+      title: label == null ? context.l10n.addLabel : context.l10n.editLabel,
       icon: const Icon(Icons.sell_rounded, color: Color(0xFF5D5FEF)),
       content: StatefulBuilder(
         builder: (dialogContext, setDialogState) {
@@ -3547,28 +3650,28 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                 children: [
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '标识',
+                    label: context.l10n.identifier,
                     controller: keyController,
-                    hintText: '例如 hot',
+                    hintText: context.l10n.labelIdentifierExample,
                     prefixIcon: Icons.key_rounded,
                   ),
                   const SizedBox(height: 12),
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '名称',
+                    label: context.l10n.name,
                     controller: nameController,
-                    hintText: '例如 热门',
+                    hintText: context.l10n.labelNameExample,
                     prefixIcon: Icons.drive_file_rename_outline_rounded,
                   ),
                   const SizedBox(height: 12),
                   AppSelect<String?>(
                     value: categoryId.isEmpty ? null : categoryId,
-                    label: '所属分类',
-                    hintText: '不绑定分类',
+                    label: context.l10n.parentCategory,
+                    hintText: context.l10n.noCategoryBinding,
                     prefixIcon: Icons.category_outlined,
                     clearable: true,
                     options: {
-                      '不绑定分类': null,
+                      context.l10n.noCategoryBinding: null,
                       for (final category in _categories)
                         _categoryDisplay(category): category.id,
                     },
@@ -3578,7 +3681,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                   const SizedBox(height: 12),
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '颜色',
+                    label: context.l10n.color,
                     controller: colorController,
                     hintText: '#5D5FEF',
                     prefixIcon: Icons.palette_outlined,
@@ -3594,18 +3697,18 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                   const SizedBox(height: 12),
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '描述',
+                    label: context.l10n.description,
                     controller: descriptionController,
-                    hintText: '可选',
+                    hintText: context.l10n.optional,
                     prefixIcon: Icons.notes_rounded,
                     maxLines: 3,
                   ),
                   const SizedBox(height: 12),
                   ChatUtils.createFormField(
                     context: dialogContext,
-                    label: '排序',
+                    label: context.l10n.sort,
                     controller: sortController,
-                    hintText: '数字越小越靠前',
+                    hintText: context.l10n.lowerNumberFirst,
                     prefixIcon: Icons.sort_rounded,
                     keyboardType: TextInputType.number,
                   ),
@@ -3613,7 +3716,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                   AppSwitchTile(
                     value: enabled,
                     onChanged: (value) => setDialogState(() => enabled = value),
-                    title: const Text('启用标签'),
+                    title: Text(context.l10n.enableLabel),
                     prefix: const Icon(Icons.toggle_on_outlined),
                   ),
                 ],
@@ -3628,7 +3731,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '保存',
+          text: context.l10n.save,
         ),
       ],
     );
@@ -3640,18 +3743,18 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     final color = _normalizeColor(colorController.text);
     if (key.isEmpty || name.isEmpty) {
       if (!mounted) return;
-      MessageUtils.showWarning(context, '请填写标签标识和名称');
+      MessageUtils.showWarning(context, context.l10n.labelIdAndNameRequired);
       return;
     }
     if (sortOrder == null) {
       if (!mounted) return;
-      MessageUtils.showWarning(context, '排序需要填写整数');
+      MessageUtils.showWarning(context, context.l10n.sortMustBeInteger);
       return;
     }
     if (color.isNotEmpty &&
         !RegExp(r'^#[0-9A-F]{6}$').hasMatch(color.toUpperCase())) {
       if (!mounted) return;
-      MessageUtils.showWarning(context, '颜色格式需要类似 #5D5FEF');
+      MessageUtils.showWarning(context, context.l10n.colorFormatExample);
       return;
     }
 
@@ -3666,22 +3769,22 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         isEnabled: enabled,
       );
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '标签已保存');
+      MessageUtils.showSuccess(context, context.l10n.labelSaved);
       _load(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '保存标签失败: $e');
+      MessageUtils.showError(context, context.l10n.saveLabelFailed('$e'));
     }
   }
 
   Future<void> _deleteLabel(RoomLabelInfo label) async {
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除标签',
+      title: context.l10n.deleteLabel,
       icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
       content: _destructiveDialogContent(
-        '将永久删除标签 "${_labelDisplay(label)}"。',
-        const ['已绑定该标签的房间会失去对应标签。', '房间详情、筛选和列表展示会立即使用最新标签数据。'],
+        context.l10n.permanentlyDeleteLabel(_labelDisplay(label)),
+        [context.l10n.roomsLoseLabel, context.l10n.labelChangesImmediate],
       ),
       actions: [
         ChatUtils.createCancelButton(context),
@@ -3689,7 +3792,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: context.l10n.delete,
         ),
       ],
     );
@@ -3697,11 +3800,11 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
     try {
       await SyncTvService.adminDeleteRoomLabel(label.id);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '标签已删除');
+      MessageUtils.showSuccess(context, context.l10n.labelDeleted);
       _load(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '删除标签失败: $e');
+      MessageUtils.showError(context, context.l10n.deleteLabelFailed('$e'));
     }
   }
 
@@ -3755,7 +3858,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                 child: AppActionButton(
                   onPressed: () => _editCategory(),
                   icon: Icons.add_rounded,
-                  label: '新增分类',
+                  label: context.l10n.addCategory,
                 ),
               ),
               _AdminToolbarItem(
@@ -3763,7 +3866,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                 child: AppActionButton(
                   onPressed: () => _editLabel(),
                   icon: Icons.add_rounded,
-                  label: '新增标签',
+                  label: context.l10n.addLabel,
                   style: AppActionButtonStyle.tonal,
                 ),
               ),
@@ -3772,7 +3875,7 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
                 child: AppActionButton(
                   onPressed: () => _load(),
                   icon: Icons.refresh_rounded,
-                  label: '刷新',
+                  label: context.l10n.refresh,
                   style: AppActionButtonStyle.outlined,
                 ),
               ),
@@ -3818,15 +3921,15 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         children: [
           _TaxonomyPanelHeader(
             icon: Icons.category_rounded,
-            title: '房间分类',
+            title: context.l10n.roomCategories,
             count: _categories.length,
           ),
           const SizedBox(height: 12),
           if (_categories.isEmpty)
-            const AppEmptyState(
+            AppEmptyState(
               icon: Icons.category_outlined,
-              title: '暂无分类',
-              subtitle: '新增分类后可在房间管理中分配',
+              title: context.l10n.noCategories,
+              subtitle: context.l10n.addCategoriesDescription,
             )
           else
             ..._categories.map(
@@ -3853,15 +3956,15 @@ class _AdminRoomTaxonomyTabState extends State<AdminRoomTaxonomyTab> {
         children: [
           _TaxonomyPanelHeader(
             icon: Icons.sell_rounded,
-            title: '房间标签',
+            title: context.l10n.roomLabels,
             count: _labels.length,
           ),
           const SizedBox(height: 12),
           if (_labels.isEmpty)
-            const AppEmptyState(
+            AppEmptyState(
               icon: Icons.sell_outlined,
-              title: '暂无标签',
-              subtitle: '新增标签后可在房间管理中分配',
+              title: context.l10n.noLabelsAvailable,
+              subtitle: context.l10n.addLabelsDescription,
             )
           else
             ..._labels.map(
@@ -3965,7 +4068,11 @@ class _CategoryCard extends StatelessWidget {
                       ),
                     ),
                     AppChip(
-                      label: Text(category.isEnabled ? '启用' : '停用'),
+                      label: Text(
+                        category.isEnabled
+                            ? context.l10n.enabled
+                            : context.l10n.disabled,
+                      ),
                       style: category.isEnabled
                           ? AppChipStyle.filled
                           : AppChipStyle.outlined,
@@ -4008,7 +4115,7 @@ class _CategoryCard extends StatelessWidget {
               AppIconButton(
                 onPressed: onEdit,
                 icon: Icons.edit_outlined,
-                tooltip: '编辑分类',
+                tooltip: context.l10n.editCategory,
                 style: AppIconButtonStyle.tonal,
                 size: AppIconButtonSize.sm,
               ),
@@ -4016,7 +4123,7 @@ class _CategoryCard extends StatelessWidget {
               AppIconButton(
                 onPressed: onDelete,
                 icon: Icons.delete_outline_rounded,
-                tooltip: '删除分类',
+                tooltip: context.l10n.deleteCategory,
                 style: AppIconButtonStyle.destructive,
                 size: AppIconButtonSize.sm,
               ),
@@ -4085,7 +4192,11 @@ class _LabelCard extends StatelessWidget {
                       ),
                     ),
                     AppChip(
-                      label: Text(label.isEnabled ? '启用' : '停用'),
+                      label: Text(
+                        label.isEnabled
+                            ? context.l10n.enabled
+                            : context.l10n.disabled,
+                      ),
                       style: label.isEnabled
                           ? AppChipStyle.filled
                           : AppChipStyle.outlined,
@@ -4108,7 +4219,7 @@ class _LabelCard extends StatelessWidget {
                     _TaxonomyMetaChip(
                       icon: Icons.palette_outlined,
                       label: label.color.trim().isEmpty
-                          ? '默认颜色'
+                          ? context.l10n.defaultColor
                           : label.color.trim(),
                     ),
                     _TaxonomyMetaChip(
@@ -4138,7 +4249,7 @@ class _LabelCard extends StatelessWidget {
               AppIconButton(
                 onPressed: onEdit,
                 icon: Icons.edit_outlined,
-                tooltip: '编辑标签',
+                tooltip: context.l10n.editLabel,
                 style: AppIconButtonStyle.tonal,
                 size: AppIconButtonSize.sm,
               ),
@@ -4146,7 +4257,7 @@ class _LabelCard extends StatelessWidget {
               AppIconButton(
                 onPressed: onDelete,
                 icon: Icons.delete_outline_rounded,
-                tooltip: '删除标签',
+                tooltip: context.l10n.deleteLabel,
                 style: AppIconButtonStyle.destructive,
                 size: AppIconButtonSize.sm,
               ),
@@ -4222,6 +4333,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
   }
 
   Future<void> _loadUsers({bool silent = false}) async {
+    final l10n = context.l10n;
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = await SyncTvService.adminListUsersPage(
@@ -4248,12 +4360,13 @@ class _UserManagementTabState extends State<UserManagementTab> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        MessageUtils.showError(context, '加载用户失败: $e');
+        MessageUtils.showError(context, l10n.loadUsersFailed('$e'));
       }
     }
   }
 
   Future<void> _addUser() async {
+    final l10n = context.l10n;
     final usernameController = TextEditingController();
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
@@ -4262,43 +4375,43 @@ class _UserManagementTabState extends State<UserManagementTab> {
 
     await ChatUtils.showStyledDialog(
       context: context,
-      title: '新增用户',
+      title: l10n.addUser,
       icon: const Icon(Icons.person_add, color: Color(0xFF5D5FEF)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ChatUtils.createFormField(
             context: context,
-            label: '用户名',
+            label: l10n.username,
             controller: usernameController,
-            hintText: '请输入用户名',
+            hintText: l10n.usernameRequired,
             prefixIcon: Icons.person_outline,
           ),
           const SizedBox(height: 12),
           ChatUtils.createFormField(
             context: context,
-            label: '邮箱',
+            label: l10n.email,
             controller: emailController,
-            hintText: '可选',
+            hintText: l10n.optional,
             prefixIcon: Icons.mail_outline_rounded,
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 12),
           ChatUtils.createFormField(
             context: context,
-            label: '密码',
+            label: l10n.password,
             controller: passwordController,
-            hintText: '请输入密码',
+            hintText: l10n.passwordRequired,
             prefixIcon: Icons.lock_outline,
             obscureText: true,
           ),
           const SizedBox(height: 12),
           AppSelect<int>(
             value: role,
-            label: '角色',
+            label: l10n.role,
             options: {
-              '普通用户': common_enum.UserRole.USER_ROLE_USER.value,
-              '管理员': common_enum.UserRole.USER_ROLE_ADMIN.value,
+              l10n.user: common_enum.UserRole.USER_ROLE_USER.value,
+              l10n.administrator: common_enum.UserRole.USER_ROLE_ADMIN.value,
             },
             onChanged: (value) {
               if (value != null) role = value;
@@ -4307,10 +4420,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
           const SizedBox(height: 12),
           AppSelect<common_enum.UserStatus>(
             value: status,
-            label: '状态',
-            options: const {
-              '正常': common_enum.UserStatus.USER_STATUS_ACTIVE,
-              '已封禁': common_enum.UserStatus.USER_STATUS_BANNED,
+            label: l10n.status,
+            options: {
+              l10n.active: common_enum.UserStatus.USER_STATUS_ACTIVE,
+              l10n.banned: common_enum.UserStatus.USER_STATUS_BANNED,
             },
             onChanged: (val) =>
                 status = val ?? common_enum.UserStatus.USER_STATUS_ACTIVE,
@@ -4323,7 +4436,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ChatUtils.createConfirmButton(context, () async {
           if (usernameController.text.isEmpty ||
               passwordController.text.isEmpty) {
-            MessageUtils.showWarning(context, '请填写完整信息');
+            MessageUtils.showWarning(context, l10n.usernameAndPasswordRequired);
             return;
           }
           try {
@@ -4336,34 +4449,36 @@ class _UserManagementTabState extends State<UserManagementTab> {
             );
             if (!mounted) return;
             Navigator.pop(context);
-            MessageUtils.showSuccess(context, '用户创建成功');
+            MessageUtils.showSuccess(context, l10n.userCreated);
             _loadUsers(silent: true);
           } catch (e) {
             if (!mounted) return;
-            MessageUtils.showError(context, '创建失败: $e');
+            MessageUtils.showError(context, l10n.createUserFailed('$e'));
           }
-        }, text: '创建'),
+        }, text: l10n.create),
       ],
     );
   }
 
   Future<void> _deleteUser(SyncTvUser user) async {
+    final l10n = context.l10n;
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除用户',
+      title: l10n.deleteUser,
       icon: const Icon(Icons.warning, color: Colors.red),
-      content: _destructiveDialogContent('将永久删除用户 "${user.username}"。', const [
-        '该用户的登录会话、第三方绑定和个人资料会被清除。',
-        '该用户创建或参与的房间关系、聊天记录归属和权限状态会受到影响。',
-        '在线客户端会立即失去当前账号访问能力。',
-      ]),
+      content:
+          _destructiveDialogContent(l10n.permanentlyDeleteUser(user.username), [
+            l10n.deleteUserClearsAccountData,
+            l10n.deleteUserAffectsRelatedData,
+            l10n.deleteUserRevokesOnlineAccess,
+          ]),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: l10n.delete,
         ),
       ],
     );
@@ -4372,37 +4487,40 @@ class _UserManagementTabState extends State<UserManagementTab> {
       try {
         await SyncTvService.adminDeleteUser(user.id);
         if (!mounted) return;
-        MessageUtils.showSuccess(context, '用户已删除');
+        MessageUtils.showSuccess(context, l10n.userDeleted);
         _loadUsers(silent: true);
       } catch (e) {
         if (!mounted) return;
-        MessageUtils.showError(context, '删除失败: $e');
+        MessageUtils.showError(context, l10n.deleteUserFailed('$e'));
       }
     }
   }
 
   Future<void> _toggleAdmin(SyncTvUser user) async {
+    final l10n = context.l10n;
     final isAdmin =
         user.role == common_enum.UserRole.USER_ROLE_ADMIN.value ||
         user.role == common_enum.UserRole.USER_ROLE_ROOT.value;
     if (user.role == common_enum.UserRole.USER_ROLE_ROOT.value) {
-      MessageUtils.showWarning(context, 'Root 用户不能在这里降级');
+      MessageUtils.showWarning(context, l10n.rootUserCannotBeDemoted);
       return;
     }
-    final action = isAdmin ? '取消管理员' : '设为管理员';
+    final action = isAdmin
+        ? l10n.removeAdministratorRole
+        : l10n.makeAdministrator;
 
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '修改权限',
+      title: l10n.changePermissions,
       icon: const Icon(Icons.admin_panel_settings, color: Color(0xFF5D5FEF)),
-      content: Text('确定要将用户 "${user.username}" $action 吗？'),
+      content: Text(l10n.confirmUserRoleAction(user.username, action)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '确定',
+          text: l10n.confirm,
         ),
       ],
     );
@@ -4411,21 +4529,22 @@ class _UserManagementTabState extends State<UserManagementTab> {
       try {
         await SyncTvService.adminSetAdmin(user.id, !isAdmin);
         if (!mounted) return;
-        MessageUtils.showSuccess(context, '操作成功');
+        MessageUtils.showSuccess(context, l10n.operationSucceeded);
         _loadUsers(silent: true);
       } catch (e) {
         if (!mounted) return;
-        MessageUtils.showError(context, '操作失败: $e');
+        MessageUtils.showError(context, l10n.operationFailed('$e'));
       }
     }
   }
 
   Future<void> _banUser(SyncTvUser user, bool ban) async {
-    final action = ban ? '封禁' : '解封';
+    final l10n = context.l10n;
+    final action = ban ? l10n.ban : l10n.unban;
     final reasonController = TextEditingController();
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '$action用户',
+      title: l10n.userAction(action),
       icon: Icon(
         ban ? Icons.block : Icons.check_circle,
         color: ban ? Colors.red : Colors.green,
@@ -4434,25 +4553,25 @@ class _UserManagementTabState extends State<UserManagementTab> {
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('确定要$action用户 "${user.username}" 吗？'),
+                Text(l10n.confirmUserAction(action, user.username)),
                 const SizedBox(height: 12),
                 ChatUtils.createFormField(
                   context: context,
-                  label: '封禁原因',
+                  label: l10n.banReason,
                   controller: reasonController,
-                  hintText: '可选',
+                  hintText: l10n.optional,
                   prefixIcon: Icons.edit_note_rounded,
                 ),
               ],
             )
-          : Text('确定要$action用户 "${user.username}" 吗？'),
+          : Text(l10n.confirmUserAction(action, user.username)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '确定',
+          text: l10n.confirm,
         ),
       ],
     );
@@ -4465,11 +4584,11 @@ class _UserManagementTabState extends State<UserManagementTab> {
           reason: reasonController.text.trim(),
         );
         if (!mounted) return;
-        MessageUtils.showSuccess(context, '操作成功');
+        MessageUtils.showSuccess(context, l10n.operationSucceeded);
         _loadUsers(silent: true);
       } catch (e) {
         if (!mounted) return;
-        MessageUtils.showError(context, '操作失败: $e');
+        MessageUtils.showError(context, l10n.operationFailed('$e'));
       }
     }
   }
@@ -4486,22 +4605,23 @@ class _UserManagementTabState extends State<UserManagementTab> {
 
   Future<void> _batchBanUsers() async {
     if (_selectedUserIds.isEmpty) return;
+    final l10n = context.l10n;
     final reasonController = TextEditingController();
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '批量封禁用户',
+      title: l10n.batchBanUsers,
       icon: const Icon(Icons.block_rounded, color: Colors.redAccent),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('将封禁 ${_selectedUserIds.length} 个用户。'),
+          Text(l10n.usersWillBeBanned(_selectedUserIds.length)),
           const SizedBox(height: 12),
           ChatUtils.createFormField(
             context: context,
-            label: '封禁原因',
+            label: l10n.banReason,
             controller: reasonController,
-            hintText: '可选',
+            hintText: l10n.optional,
             prefixIcon: Icons.edit_note_rounded,
           ),
         ],
@@ -4512,7 +4632,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '封禁',
+          text: l10n.ban,
         ),
       ],
     );
@@ -4523,27 +4643,28 @@ class _UserManagementTabState extends State<UserManagementTab> {
         reason: reasonController.text.trim(),
       );
       if (!mounted) return;
-      _showBatchResult('批量封禁完成', result);
+      _showBatchResult(l10n.batchBanCompleted, result);
       setState(_selectedUserIds.clear);
       _loadUsers(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '批量封禁失败: $e');
+      MessageUtils.showError(context, l10n.batchBanFailed('$e'));
     }
   }
 
   Future<void> _batchDeleteUsers() async {
     if (_selectedUserIds.isEmpty) return;
+    final l10n = context.l10n;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '批量删除用户',
+      title: l10n.batchDeleteUsers,
       icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
       content: _destructiveDialogContent(
-        '将永久删除 ${_selectedUserIds.length} 个用户。',
-        const [
-          '相关用户的登录会话、第三方绑定和个人资料会被清除。',
-          '这些用户关联的房间关系、聊天记录归属和权限状态会受到影响。',
-          '批量操作完成后只能通过备份恢复数据。',
+        l10n.usersWillBeDeleted(_selectedUserIds.length),
+        [
+          l10n.batchDeleteUsersClearsAccountData,
+          l10n.batchDeleteUsersAffectsRelatedData,
+          l10n.batchDeleteBackupOnly,
         ],
       ),
       actions: [
@@ -4552,7 +4673,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: l10n.delete,
         ),
       ],
     );
@@ -4562,20 +4683,20 @@ class _UserManagementTabState extends State<UserManagementTab> {
         _selectedUserIds.toList(),
       );
       if (!mounted) return;
-      _showBatchResult('批量删除完成', result);
+      _showBatchResult(l10n.batchDeleteCompleted, result);
       setState(_selectedUserIds.clear);
       _loadUsers(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '批量删除失败: $e');
+      MessageUtils.showError(context, l10n.batchDeleteFailed('$e'));
     }
   }
 
   void _showBatchResult(String title, AdminBatchOperationResult result) {
     final failedItems = result.results.where((item) => !item.success).toList();
     final message = failedItems.isEmpty
-        ? '$title：成功 ${result.succeeded} 个'
-        : '$title：成功 ${result.succeeded} 个，失败 ${result.failed} 个';
+        ? context.l10n.batchResultSuccess(title, result.succeeded)
+        : context.l10n.batchResultMixed(title, result.succeeded, result.failed);
     if (failedItems.isEmpty) {
       MessageUtils.showSuccess(context, message);
       return;
@@ -4630,6 +4751,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
       if (!mounted) return;
       final detail = results[0] as SyncTvUser;
       final preferences = results[1] as AccountPreferences;
+      final l10n = context.l10n;
       await ChatUtils.showStyledDialog(
         context: context,
         title: detail.username,
@@ -4641,12 +4763,12 @@ class _UserManagementTabState extends State<UserManagementTab> {
             length: 4,
             child: Column(
               children: [
-                const AppTabBar(
+                AppTabBar(
                   tabs: [
-                    Tab(text: '资料'),
-                    Tab(text: '房间'),
-                    Tab(text: '举报'),
-                    Tab(text: '偏好'),
+                    Tab(text: l10n.profile),
+                    Tab(text: l10n.rooms),
+                    Tab(text: l10n.reports),
+                    Tab(text: l10n.preferences),
                   ],
                 ),
                 Expanded(
@@ -4667,7 +4789,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
       );
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '加载用户详情失败: $e');
+      MessageUtils.showError(context, context.l10n.loadUserDetailsFailed('$e'));
     }
   }
 
@@ -4676,10 +4798,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
       length: 2,
       child: Column(
         children: [
-          const AppTabBar(
+          AppTabBar(
             tabs: [
-              Tab(text: '被举报'),
-              Tab(text: '发起举报'),
+              Tab(text: context.l10n.reportsAgainstUser),
+              Tab(text: context.l10n.reportsByUser),
             ],
           ),
           Expanded(
@@ -4712,18 +4834,19 @@ class _UserManagementTabState extends State<UserManagementTab> {
     return AppListView(
       padding: const EdgeInsets.only(top: 16),
       children: [
-        _InfoLine('用户 ID', detail.id),
-        _InfoLine('邮箱', detail.email ?? '-'),
-        _InfoLine('角色', _systemRoleText(detail.role)),
-        _InfoLine('状态', _userStatusText(detail.status)),
-        _InfoLine('创建时间', _formatTimestamp(detail.createdAt)),
+        _InfoLine(context.l10n.userId, detail.id),
+        _InfoLine(context.l10n.email, detail.email ?? '-'),
+        _InfoLine(context.l10n.role, _systemRoleText(context, detail.role)),
+        _InfoLine(context.l10n.status, _userStatusText(context, detail.status)),
+        _InfoLine(context.l10n.createdAt, _formatTimestamp(detail.createdAt)),
         if (detail.updatedAt > 0)
-          _InfoLine('更新时间', _formatTimestamp(detail.updatedAt)),
+          _InfoLine(context.l10n.updatedAt, _formatTimestamp(detail.updatedAt)),
         if (detail.isBanned) ...[
-          _InfoLine('封禁时间', _formatTimestamp(detail.bannedAt)),
-          if (detail.bannedBy.isNotEmpty) _InfoLine('封禁操作者', detail.bannedBy),
+          _InfoLine(context.l10n.bannedAt, _formatTimestamp(detail.bannedAt)),
+          if (detail.bannedBy.isNotEmpty)
+            _InfoLine(context.l10n.bannedBy, detail.bannedBy),
           if (detail.bannedReason.isNotEmpty)
-            _InfoLine('封禁原因', detail.bannedReason),
+            _InfoLine(context.l10n.banReason, detail.bannedReason),
         ],
       ],
     );
@@ -4767,7 +4890,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
           } catch (e) {
             if (!context.mounted) return;
             setDialogState(() => loading = false);
-            MessageUtils.showError(context, '加载用户房间失败: $e');
+            MessageUtils.showError(
+              context,
+              context.l10n.loadUserRoomsFailed('$e'),
+            );
           }
         }
 
@@ -4790,7 +4916,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                     width: 180,
                     child: AppSearchField(
                       controller: searchController,
-                      hintText: '搜索房间',
+                      hintText: context.l10n.searchRooms,
                       onChanged: (value) {
                         if (value.isEmpty && search.isNotEmpty) {
                           search = '';
@@ -4808,10 +4934,13 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   const SizedBox(width: 12),
                   AppSelect<common_enum.RoomStatus>(
                     value: status,
-                    options: const {
-                      '全部状态': common_enum.RoomStatus.ROOM_STATUS_UNSPECIFIED,
-                      '活跃': common_enum.RoomStatus.ROOM_STATUS_ACTIVE,
-                      '已关闭': common_enum.RoomStatus.ROOM_STATUS_CLOSED,
+                    options: {
+                      context.l10n.allStatuses:
+                          common_enum.RoomStatus.ROOM_STATUS_UNSPECIFIED,
+                      context.l10n.active:
+                          common_enum.RoomStatus.ROOM_STATUS_ACTIVE,
+                      context.l10n.closed:
+                          common_enum.RoomStatus.ROOM_STATUS_CLOSED,
                     },
                     onChanged: (value) {
                       if (value == null) return;
@@ -4823,7 +4952,11 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   const SizedBox(width: 12),
                   AppSelect<bool?>(
                     value: isBanned,
-                    options: const {'全部封禁': null, '仅封禁': true, '未封禁': false},
+                    options: {
+                      context.l10n.allBanStates: null,
+                      context.l10n.bannedOnly: true,
+                      context.l10n.notBanned: false,
+                    },
                     onChanged: (value) {
                       isBanned = value;
                       page = 1;
@@ -4833,17 +4966,18 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   const SizedBox(width: 12),
                   AppSelect<admin_enum.RoomListSortBy>(
                     value: sortBy,
-                    options: const {
-                      '创建时间': admin_enum
+                    options: {
+                      context.l10n.createdAt: admin_enum
                           .RoomListSortBy
                           .ROOM_LIST_SORT_BY_CREATED_AT,
-                      '更新时间': admin_enum
+                      context.l10n.updatedAt: admin_enum
                           .RoomListSortBy
                           .ROOM_LIST_SORT_BY_UPDATED_AT,
-                      '最近活跃': admin_enum
+                      context.l10n.recentActivity: admin_enum
                           .RoomListSortBy
                           .ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-                      '房间名': admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME,
+                      context.l10n.roomName:
+                          admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME,
                     },
                     onChanged: (value) {
                       if (value == null) return;
@@ -4856,8 +4990,8 @@ class _UserManagementTabState extends State<UserManagementTab> {
                     tooltip:
                         sortDirection ==
                             admin_enum.SortDirection.SORT_DIRECTION_DESC
-                        ? '降序'
-                        : '升序',
+                        ? context.l10n.descending
+                        : context.l10n.ascending,
                     icon:
                         sortDirection ==
                             admin_enum.SortDirection.SORT_DIRECTION_DESC
@@ -4875,7 +5009,11 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   ),
                   AppSelect<int>(
                     value: pageSize,
-                    options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
+                    options: {
+                      context.l10n.itemsPerPage(20): 20,
+                      context.l10n.itemsPerPage(50): 50,
+                      context.l10n.itemsPerPage(100): 100,
+                    },
                     onChanged: (value) {
                       if (value == null) return;
                       pageSize = value;
@@ -4884,7 +5022,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                     },
                   ),
                   AppIconButton(
-                    tooltip: '刷新',
+                    tooltip: context.l10n.refresh,
                     icon: Icons.refresh_rounded,
                     onPressed: loadRooms,
                   ),
@@ -4912,7 +5050,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
               child: loading
                   ? const AppLoadingIndicator()
                   : rooms.isEmpty
-                  ? const AppEmptyMessage(message: '暂无房间')
+                  ? AppEmptyMessage(message: context.l10n.noRooms)
                   : AppListView.builder(
                       padding: const EdgeInsets.only(top: 8),
                       itemCount: rooms.length,
@@ -4931,7 +5069,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           subtitle: Text(
-                            '${room.roomId} · ${room.isBanned ? '已封禁' : _roomStatusText(room.status)}',
+                            '${room.roomId} · ${room.isBanned ? context.l10n.banned : _roomStatusText(context, room.status)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -4969,10 +5107,13 @@ class _UserManagementTabState extends State<UserManagementTab> {
               preferences = updated;
               notifications = updated.notifications;
             });
-            MessageUtils.showSuccess(context, '偏好已更新');
+            MessageUtils.showSuccess(context, context.l10n.preferencesUpdated);
           } catch (e) {
             if (!context.mounted) return;
-            MessageUtils.showError(context, '保存偏好失败: $e');
+            MessageUtils.showError(
+              context,
+              context.l10n.savePreferencesFailed('$e'),
+            );
           }
         }
 
@@ -4997,43 +5138,51 @@ class _UserManagementTabState extends State<UserManagementTab> {
           children: [
             AppSwitchTile(
               value: preferences.twoFactorEnabled,
-              title: const Text('多因素认证'),
+              title: Text(context.l10n.multiFactorAuthentication),
               subtitle: Text(
-                '可用因子 ${preferences.eligibleFactorCount} 个：'
-                '密码 ${preferences.canUsePassword ? '可用' : '不可用'}，'
-                '邮箱 ${preferences.canUseEmail ? '可用' : '不可用'}，'
-                'Passkey ${preferences.canUsePasskey ? '可用' : '不可用'}',
+                context.l10n.authenticationFactorsSummary(
+                  preferences.eligibleFactorCount,
+                  preferences.canUsePassword
+                      ? context.l10n.available
+                      : context.l10n.unavailable,
+                  preferences.canUseEmail
+                      ? context.l10n.available
+                      : context.l10n.unavailable,
+                  preferences.canUsePasskey
+                      ? context.l10n.available
+                      : context.l10n.unavailable,
+                ),
               ),
               onChanged: (value) => savePreferences(twoFactorEnabled: value),
             ),
             const AppDivider(height: 20),
             notificationSwitch(
-              '房间邀请站内通知',
+              context.l10n.roomInvitationInAppNotification,
               notifications.roomInvitationInApp,
               (value) => notifications.copyWith(roomInvitationInApp: value),
             ),
             notificationSwitch(
-              '房间事件站内通知',
+              context.l10n.roomEventInAppNotification,
               notifications.roomEventInApp,
               (value) => notifications.copyWith(roomEventInApp: value),
             ),
             notificationSwitch(
-              '系统公告站内通知',
+              context.l10n.systemAnnouncementInAppNotification,
               notifications.systemAnnouncementInApp,
               (value) => notifications.copyWith(systemAnnouncementInApp: value),
             ),
             notificationSwitch(
-              '房间邀请邮件',
+              context.l10n.roomInvitationEmail,
               notifications.roomInvitationEmail,
               (value) => notifications.copyWith(roomInvitationEmail: value),
             ),
             notificationSwitch(
-              '房间事件邮件',
+              context.l10n.roomEventEmail,
               notifications.roomEventEmail,
               (value) => notifications.copyWith(roomEventEmail: value),
             ),
             notificationSwitch(
-              '系统公告邮件',
+              context.l10n.systemAnnouncementEmail,
               notifications.systemAnnouncementEmail,
               (value) => notifications.copyWith(systemAnnouncementEmail: value),
             ),
@@ -5044,19 +5193,20 @@ class _UserManagementTabState extends State<UserManagementTab> {
   }
 
   Future<void> _renameUser(SyncTvUser user) async {
+    final l10n = context.l10n;
     final controller = TextEditingController(text: user.username);
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '修改用户名',
+      title: l10n.changeUsername,
       icon: const Icon(
         Icons.drive_file_rename_outline_rounded,
         color: Color(0xFF5D5FEF),
       ),
       content: ChatUtils.createFormField(
         context: context,
-        label: '新用户名',
+        label: l10n.newUsername,
         controller: controller,
-        hintText: '3-50 个字符',
+        hintText: l10n.usernameLengthHint,
         prefixIcon: Icons.person_outline,
       ),
       actions: [
@@ -5065,7 +5215,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '保存',
+          text: l10n.save,
         ),
       ],
     );
@@ -5073,38 +5223,39 @@ class _UserManagementTabState extends State<UserManagementTab> {
     try {
       await SyncTvService.adminUpdateUsername(user.id, controller.text.trim());
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '用户名已更新');
+      MessageUtils.showSuccess(context, l10n.usernameUpdated);
       _loadUsers(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '修改失败: $e');
+      MessageUtils.showError(context, l10n.changeUsernameFailed('$e'));
     }
   }
 
   Future<void> _resetPassword(SyncTvUser user) async {
+    final l10n = context.l10n;
     final password = TextEditingController();
     final reason = TextEditingController();
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '重置密码',
+      title: l10n.resetPassword,
       icon: const Icon(Icons.lock_reset_rounded, color: Colors.orange),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ChatUtils.createFormField(
             context: context,
-            label: '新密码',
+            label: l10n.newPassword,
             controller: password,
-            hintText: '至少 8 个字符',
+            hintText: l10n.passwordMinimumLength(8),
             prefixIcon: Icons.lock_outline,
             obscureText: true,
           ),
           const SizedBox(height: 12),
           ChatUtils.createFormField(
             context: context,
-            label: '审计原因',
+            label: l10n.auditReason,
             controller: reason,
-            hintText: '可选',
+            hintText: l10n.optional,
             prefixIcon: Icons.edit_note_rounded,
           ),
         ],
@@ -5115,7 +5266,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '重置',
+          text: l10n.reset,
         ),
       ],
     );
@@ -5127,10 +5278,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
         reason: reason.text.trim(),
       );
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '密码已重置');
+      MessageUtils.showSuccess(context, l10n.passwordReset);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '重置失败: $e');
+      MessageUtils.showError(context, l10n.resetPasswordFailed('$e'));
     }
   }
 
@@ -5159,7 +5310,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                         });
                         _loadUsers();
                       },
-                      hint: '搜索用户',
+                      hint: context.l10n.searchUsers,
                       icon: Icons.search,
                     ),
                   ),
@@ -5188,7 +5339,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '新增',
+                                  context.l10n.add,
                                   style: TextStyle(
                                     color: theme.primaryColor,
                                     fontWeight: FontWeight.bold,
@@ -5205,7 +5356,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                   _AdminToolbarItem(
                     width: 44,
                     child: AppIconButton(
-                      tooltip: '选择当前页',
+                      tooltip: context.l10n.selectCurrentPage,
                       icon: Icons.select_all_rounded,
                       onPressed: _users.isEmpty
                           ? null
@@ -5228,11 +5379,13 @@ class _UserManagementTabState extends State<UserManagementTab> {
                       width: 112,
                       child: AppSelect<common_enum.UserStatus>(
                         value: _statusFilter,
-                        options: const {
-                          '全部状态':
+                        options: {
+                          context.l10n.allStatuses:
                               common_enum.UserStatus.USER_STATUS_UNSPECIFIED,
-                          '正常': common_enum.UserStatus.USER_STATUS_ACTIVE,
-                          '已封禁': common_enum.UserStatus.USER_STATUS_BANNED,
+                          context.l10n.active:
+                              common_enum.UserStatus.USER_STATUS_ACTIVE,
+                          context.l10n.banned:
+                              common_enum.UserStatus.USER_STATUS_BANNED,
                         },
                         onChanged: (value) {
                           if (value == null) return;
@@ -5248,11 +5401,14 @@ class _UserManagementTabState extends State<UserManagementTab> {
                       width: 112,
                       child: AppSelect<common_enum.UserRole>(
                         value: _roleFilter,
-                        options: const {
-                          '全部角色': common_enum.UserRole.USER_ROLE_UNSPECIFIED,
+                        options: {
+                          context.l10n.allRoles:
+                              common_enum.UserRole.USER_ROLE_UNSPECIFIED,
                           'Root': common_enum.UserRole.USER_ROLE_ROOT,
-                          '管理员': common_enum.UserRole.USER_ROLE_ADMIN,
-                          '用户': common_enum.UserRole.USER_ROLE_USER,
+                          context.l10n.administrator:
+                              common_enum.UserRole.USER_ROLE_ADMIN,
+                          context.l10n.user:
+                              common_enum.UserRole.USER_ROLE_USER,
                         },
                         onChanged: (value) {
                           if (value == null) return;
@@ -5268,10 +5424,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
                       width: 112,
                       child: AppSelect<bool?>(
                         value: _bannedFilter,
-                        options: const {
-                          '全部封禁': null,
-                          '仅封禁': true,
-                          '未封禁': false,
+                        options: {
+                          context.l10n.allBanStates: null,
+                          context.l10n.bannedOnly: true,
+                          context.l10n.notBanned: false,
                         },
                         onChanged: (value) {
                           setState(() {
@@ -5286,22 +5442,22 @@ class _UserManagementTabState extends State<UserManagementTab> {
                       width: 126,
                       child: AppSelect<admin_enum.UserListSortBy>(
                         value: _sortBy,
-                        options: const {
-                          '创建时间': admin_enum
+                        options: {
+                          context.l10n.createdAt: admin_enum
                               .UserListSortBy
                               .USER_LIST_SORT_BY_CREATED_AT,
-                          '更新时间': admin_enum
+                          context.l10n.updatedAt: admin_enum
                               .UserListSortBy
                               .USER_LIST_SORT_BY_UPDATED_AT,
-                          '用户名': admin_enum
+                          context.l10n.username: admin_enum
                               .UserListSortBy
                               .USER_LIST_SORT_BY_USERNAME,
-                          '邮箱':
+                          context.l10n.email:
                               admin_enum.UserListSortBy.USER_LIST_SORT_BY_EMAIL,
-                          '状态': admin_enum
+                          context.l10n.status: admin_enum
                               .UserListSortBy
                               .USER_LIST_SORT_BY_STATUS,
-                          '角色':
+                          context.l10n.role:
                               admin_enum.UserListSortBy.USER_LIST_SORT_BY_ROLE,
                         },
                         onChanged: (value) {
@@ -5320,8 +5476,8 @@ class _UserManagementTabState extends State<UserManagementTab> {
                         tooltip:
                             _sortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
-                            ? '降序'
-                            : '升序',
+                            ? context.l10n.descending
+                            : context.l10n.ascending,
                         icon:
                             _sortDirection ==
                                 admin_enum.SortDirection.SORT_DIRECTION_DESC
@@ -5344,10 +5500,10 @@ class _UserManagementTabState extends State<UserManagementTab> {
                       width: 96,
                       child: AppSelect<int>(
                         value: _pageSize,
-                        options: const {
-                          '20 / 页': 20,
-                          '50 / 页': 50,
-                          '100 / 页': 100,
+                        options: {
+                          context.l10n.itemsPerPage(20): 20,
+                          context.l10n.itemsPerPage(50): 50,
+                          context.l10n.itemsPerPage(100): 100,
                         },
                         onChanged: (value) {
                           if (value == null) return;
@@ -5414,7 +5570,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                           children: [
                             AppCheckbox(
                               value: _selectedUserIds.contains(user.id),
-                              semanticsLabel: '选择用户',
+                              semanticsLabel: context.l10n.selectUser,
                               onChanged: (value) =>
                                   _toggleUserSelection(user.id, value),
                             ),
@@ -5441,7 +5597,16 @@ class _UserManagementTabState extends State<UserManagementTab> {
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            'ID: ${user.id} · ${_systemRoleText(user.role)} · ${_userStatusText(user.status)} · ${user.connectionCount > 0 ? '${user.connectionCount} 连接' : '离线'}',
+                            context.l10n.userListSummary(
+                              user.id,
+                              _systemRoleText(context, user.role),
+                              _userStatusText(context, user.status),
+                              user.connectionCount > 0
+                                  ? context.l10n.connectionCount(
+                                      user.connectionCount,
+                                    )
+                                  : context.l10n.offline,
+                            ),
                             style: TextStyle(
                               fontSize: 12,
                               color: theme.hintColor,
@@ -5455,23 +5620,25 @@ class _UserManagementTabState extends State<UserManagementTab> {
                               AppIconButton(
                                 icon: Icons.check_circle_outline,
                                 iconSize: 24,
-                                tooltip: '解封',
+                                tooltip: context.l10n.unban,
                                 onPressed: () => _banUser(user, false),
                               ),
                             ] else ...[
                               AppIconButton(
                                 icon: Icons.info_outline,
                                 iconSize: 22,
-                                tooltip: '详情',
+                                tooltip: context.l10n.details,
                                 onPressed: () => _showUserDetails(user),
                               ),
                               AppIconButton(
                                 icon: Icons.report_gmailerrorred_outlined,
                                 iconSize: 22,
-                                tooltip: '查看举报',
+                                tooltip: context.l10n.viewReports,
                                 onPressed: () => _openContentReportsViewer(
                                   context,
-                                  title: '${user.username} 的举报',
+                                  title: context.l10n.userReports(
+                                    user.username,
+                                  ),
                                   targetType: 2,
                                   targetUserId: user.id,
                                   scope: admin_enum
@@ -5483,20 +5650,20 @@ class _UserManagementTabState extends State<UserManagementTab> {
                               AppIconButton(
                                 icon: Icons.edit_outlined,
                                 iconSize: 22,
-                                tooltip: '改名',
+                                tooltip: context.l10n.rename,
                                 onPressed: () => _renameUser(user),
                               ),
                               AppIconButton(
                                 icon: Icons.lock_reset_rounded,
                                 iconSize: 22,
-                                tooltip: '重置密码',
+                                tooltip: context.l10n.resetPassword,
                                 onPressed: () => _resetPassword(user),
                               ),
                               AppIconButton(
                                 icon: Icons.block,
                                 iconSize: 22,
                                 style: AppIconButtonStyle.destructive,
-                                tooltip: '封禁',
+                                tooltip: context.l10n.ban,
                                 onPressed: () => _banUser(user, true),
                               ),
                               AppIconButton(
@@ -5504,7 +5671,9 @@ class _UserManagementTabState extends State<UserManagementTab> {
                                     ? Icons.admin_panel_settings
                                     : Icons.admin_panel_settings_outlined,
                                 iconSize: 22,
-                                tooltip: isAdmin ? '取消管理员' : '设为管理员',
+                                tooltip: isAdmin
+                                    ? context.l10n.removeAdministratorRole
+                                    : context.l10n.makeAdministrator,
                                 onPressed: () => _toggleAdmin(user),
                               ),
                             ],
@@ -5512,7 +5681,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
                               icon: Icons.delete_outline,
                               iconSize: 22,
                               style: AppIconButtonStyle.destructive,
-                              tooltip: '删除用户',
+                              tooltip: context.l10n.deleteUser,
                               onPressed: () => _deleteUser(user),
                             ),
                           ],
@@ -5537,24 +5706,26 @@ class _UserManagementTabState extends State<UserManagementTab> {
         children: [
           Icon(Icons.checklist_rounded, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          Expanded(child: Text('已选择 ${_selectedUserIds.length} 个用户')),
+          Expanded(
+            child: Text(context.l10n.usersSelected(_selectedUserIds.length)),
+          ),
           AppActionButton(
             onPressed: () => setState(_selectedUserIds.clear),
-            label: '清空',
+            label: context.l10n.clear,
             style: AppActionButtonStyle.text,
           ),
           const SizedBox(width: 4),
           AppActionButton(
             onPressed: _batchBanUsers,
             icon: Icons.block_rounded,
-            label: '封禁',
+            label: context.l10n.ban,
             style: AppActionButtonStyle.tonal,
           ),
           const SizedBox(width: 8),
           AppActionButton(
             onPressed: _batchDeleteUsers,
             icon: Icons.delete_outline_rounded,
-            label: '删除',
+            label: context.l10n.delete,
             style: AppActionButtonStyle.destructive,
           ),
         ],
@@ -5611,6 +5782,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
   }
 
   Future<void> _loadReviews({bool silent = false}) async {
+    final l10n = context.l10n;
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = await SyncTvService.adminListReviewsPage(
@@ -5632,7 +5804,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, '加载审核失败: $e');
+      MessageUtils.showError(context, l10n.loadReviewsFailed('$e'));
     }
   }
 
@@ -5640,25 +5812,26 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
     try {
       await SyncTvService.adminApproveReview(_kind, review.id);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '审核已通过');
+      MessageUtils.showSuccess(context, context.l10n.reviewApproved);
       _loadReviews(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '操作失败: $e');
+      MessageUtils.showError(context, context.l10n.operationFailed('$e'));
     }
   }
 
   Future<void> _reject(AdminReviewItem review) async {
+    final l10n = context.l10n;
     final controller = TextEditingController();
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '拒绝审核',
+      title: l10n.rejectReview,
       icon: const Icon(Icons.cancel_outlined, color: Colors.red),
       content: ChatUtils.createFormField(
         context: context,
-        label: '原因',
+        label: l10n.reason,
         controller: controller,
-        hintText: '填写拒绝原因',
+        hintText: l10n.rejectionReasonHint,
         prefixIcon: Icons.edit_note_rounded,
       ),
       actions: [
@@ -5667,7 +5840,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '拒绝',
+          text: l10n.reject,
         ),
       ],
     );
@@ -5679,11 +5852,11 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
         reason: controller.text.trim(),
       );
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '审核已拒绝');
+      MessageUtils.showSuccess(context, l10n.reviewRejected);
       _loadReviews(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '操作失败: $e');
+      MessageUtils.showError(context, l10n.operationFailed('$e'));
     }
   }
 
@@ -5724,10 +5897,19 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               AppSegmentedControl<String>(
-                segments: const [
-                  ButtonSegment(value: 'user', label: Text('注册')),
-                  ButtonSegment(value: 'room', label: Text('建房')),
-                  ButtonSegment(value: 'join', label: Text('加入')),
+                segments: [
+                  ButtonSegment(
+                    value: 'user',
+                    label: Text(context.l10n.registration),
+                  ),
+                  ButtonSegment(
+                    value: 'room',
+                    label: Text(context.l10n.roomCreation),
+                  ),
+                  ButtonSegment(
+                    value: 'join',
+                    label: Text(context.l10n.joinRequest),
+                  ),
                 ],
                 value: _kind,
                 onChanged: (value) {
@@ -5744,9 +5926,12 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
               AppSelect<int>(
                 value: _status,
                 options: {
-                  '待审核': common_enum.ReviewStatus.REVIEW_STATUS_PENDING.value,
-                  '已通过': common_enum.ReviewStatus.REVIEW_STATUS_APPROVED.value,
-                  '已拒绝': common_enum.ReviewStatus.REVIEW_STATUS_REJECTED.value,
+                  context.l10n.pendingReview:
+                      common_enum.ReviewStatus.REVIEW_STATUS_PENDING.value,
+                  context.l10n.approved:
+                      common_enum.ReviewStatus.REVIEW_STATUS_APPROVED.value,
+                  context.l10n.rejected:
+                      common_enum.ReviewStatus.REVIEW_STATUS_REJECTED.value,
                 },
                 onChanged: (value) {
                   if (value == null) return;
@@ -5759,7 +5944,11 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
               ),
               AppSelect<int>(
                 value: _pageSize,
-                options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
+                options: {
+                  context.l10n.itemsPerPage(20): 20,
+                  context.l10n.itemsPerPage(50): 50,
+                  context.l10n.itemsPerPage(100): 100,
+                },
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -5773,7 +5962,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
                 width: 260,
                 child: AppSearchField(
                   controller: _searchController,
-                  hintText: '搜索或输入 room_/usr_ ID',
+                  hintText: context.l10n.searchReviewHint,
                   onChanged: (value) {
                     if (value.isEmpty && _search.isNotEmpty) _applySearch('');
                   },
@@ -5781,7 +5970,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
                 ),
               ),
               AppIconButton(
-                tooltip: '刷新',
+                tooltip: context.l10n.refresh,
                 icon: Icons.refresh_rounded,
                 onPressed: () => _loadReviews(silent: true),
               ),
@@ -5811,7 +6000,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
               : _reviews.isEmpty
               ? Center(
                   child: Text(
-                    '暂无审核记录',
+                    context.l10n.noReviewRecords,
                     style: TextStyle(color: theme.hintColor),
                   ),
                 )
@@ -5840,12 +6029,12 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
                                     spacing: 4,
                                     children: [
                                       AppIconButton(
-                                        tooltip: '通过',
+                                        tooltip: context.l10n.approve,
                                         icon: Icons.check_circle_outline,
                                         onPressed: () => _approve(review),
                                       ),
                                       AppIconButton(
-                                        tooltip: '拒绝',
+                                        tooltip: context.l10n.reject,
                                         icon: Icons.cancel_outlined,
                                         style: AppIconButtonStyle.destructive,
                                         onPressed: () => _reject(review),
@@ -5855,7 +6044,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
                                 : Padding(
                                     padding: const EdgeInsets.only(top: 2),
                                     child: Text(
-                                      _reviewStatusText(review.status),
+                                      _reviewStatusText(context, review.status),
                                     ),
                                   ),
                           ],
@@ -5873,8 +6062,10 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
     final meta = [
       review.id,
       _formatTimestamp(review.requestedAt),
-      if (review.reviewedBy.isNotEmpty) '审核人 ${review.reviewedBy}',
-      if (review.reviewedAt > 0) '审核 ${_formatTimestamp(review.reviewedAt)}',
+      if (review.reviewedBy.isNotEmpty)
+        context.l10n.reviewedBy(review.reviewedBy),
+      if (review.reviewedAt > 0)
+        context.l10n.reviewedAt(_formatTimestamp(review.reviewedAt)),
     ];
     final details = review.details.isEmpty
         ? [review.subtitle, review.detail]
@@ -5986,7 +6177,7 @@ class _ProviderTypeSelector extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Provider 类型',
+                context.l10n.providerTypes,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: hasError ? theme.colorScheme.error : null,
@@ -6008,13 +6199,16 @@ class _ProviderTypeSelector extends StatelessWidget {
                   showCheckmark: true,
                 ),
               if (options.isEmpty)
-                Text('暂无可选类型', style: TextStyle(color: theme.hintColor)),
+                Text(
+                  context.l10n.noProviderTypes,
+                  style: TextStyle(color: theme.hintColor),
+                ),
             ],
           ),
           if (hasError) ...[
             const SizedBox(height: 8),
             Text(
-              '至少选择一个 Provider 类型',
+              context.l10n.selectAtLeastOneProviderType,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.error,
               ),
@@ -6079,6 +6273,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
   }
 
   Future<void> _loadInstances({bool silent = false}) async {
+    final l10n = context.l10n;
     if (!silent) setState(() => _isLoading = true);
     try {
       final results = await Future.wait([
@@ -6107,11 +6302,12 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, '加载 Provider 实例失败: $e');
+      MessageUtils.showError(context, l10n.loadProviderInstancesFailed('$e'));
     }
   }
 
   Future<void> _editInstance([AdminProviderInstance? instance]) async {
+    final l10n = context.l10n;
     final editing = instance != null;
     final result = await showAppDialog<_ProviderInstanceEditResult>(
       context: context,
@@ -6157,27 +6353,31 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
         );
       }
       if (!mounted) return;
-      MessageUtils.showSuccess(context, editing ? '实例已更新' : '实例已创建');
+      MessageUtils.showSuccess(
+        context,
+        editing ? l10n.providerInstanceUpdated : l10n.providerInstanceCreated,
+      );
       _loadInstances(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '保存失败: $e');
+      MessageUtils.showError(context, l10n.saveProviderInstanceFailed('$e'));
     }
   }
 
   Future<void> _deleteInstance(AdminProviderInstance instance) async {
+    final l10n = context.l10n;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除 Provider',
+      title: l10n.deleteProvider,
       icon: const Icon(Icons.delete_forever, color: Colors.red),
-      content: Text('确定要删除 ${instance.name} 吗？'),
+      content: Text(l10n.confirmDeleteProvider(instance.name)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: l10n.delete,
         ),
       ],
     );
@@ -6185,11 +6385,11 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
     try {
       await SyncTvService.adminDeleteProviderInstance(instance.name);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '实例已删除');
+      MessageUtils.showSuccess(context, l10n.providerInstanceDeleted);
       _loadInstances(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '删除失败: $e');
+      MessageUtils.showError(context, l10n.deleteProviderFailed('$e'));
     }
   }
 
@@ -6203,7 +6403,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
       _loadInstances(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '操作失败: $e');
+      MessageUtils.showError(context, context.l10n.operationFailed('$e'));
     }
   }
 
@@ -6211,11 +6411,11 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
     try {
       await SyncTvService.adminReconnectProviderInstance(instance.name);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '已发起重连');
+      MessageUtils.showSuccess(context, context.l10n.reconnectStarted);
       _loadInstances(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '重连失败: $e');
+      MessageUtils.showError(context, context.l10n.reconnectFailed('$e'));
     }
   }
 
@@ -6236,7 +6436,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                     width: 260,
                     child: AppSearchField(
                       controller: _searchController,
-                      hintText: '搜索名称、Endpoint',
+                      hintText: context.l10n.searchProviderInstances,
                       onChanged: (value) {
                         if (value.isEmpty && _search.isNotEmpty) {
                           setState(() {
@@ -6258,7 +6458,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                   _AdminToolbarItem(
                     width: 44,
                     child: AppIconButton(
-                      tooltip: '新增',
+                      tooltip: context.l10n.add,
                       icon: Icons.add_circle_outline_rounded,
                       onPressed: () => _editInstance(),
                     ),
@@ -6273,10 +6473,10 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                       width: 112,
                       child: AppSelect<bool?>(
                         value: _enabledFilter,
-                        options: const {
-                          '全部状态': null,
-                          '已启用': true,
-                          '已停用': false,
+                        options: {
+                          context.l10n.allStatuses: null,
+                          context.l10n.enabled: true,
+                          context.l10n.disabled: false,
                         },
                         onChanged: (value) {
                           setState(() {
@@ -6291,10 +6491,10 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                       width: 112,
                       child: AppSelect<bool?>(
                         value: _tlsFilter,
-                        options: const {
-                          '全部 TLS': null,
-                          'TLS 开启': true,
-                          'TLS 关闭': false,
+                        options: {
+                          context.l10n.allTlsStates: null,
+                          context.l10n.tlsEnabled: true,
+                          context.l10n.tlsDisabled: false,
                         },
                         onChanged: (value) {
                           setState(() {
@@ -6309,8 +6509,8 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                       width: 112,
                       child: AppSelect<String>(
                         value: _providerType,
-                        options: const {
-                          '全部类型': '',
+                        options: {
+                          context.l10n.allTypes: '',
                           'Direct URL': 'directUrl',
                           'AList': 'alist',
                           'Emby': 'emby',
@@ -6335,17 +6535,17 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                             provider_common_enum.ProviderInstanceListSortBy
                           >(
                             value: _sortBy,
-                            options: const {
-                              '按名称': provider_common_enum
+                            options: {
+                              context.l10n.sortByName: provider_common_enum
                                   .ProviderInstanceListSortBy
                                   .PROVIDER_INSTANCE_LIST_SORT_BY_NAME,
-                              '按 Endpoint': provider_common_enum
+                              context.l10n.sortByEndpoint: provider_common_enum
                                   .ProviderInstanceListSortBy
                                   .PROVIDER_INSTANCE_LIST_SORT_BY_ENDPOINT,
-                              '按创建': provider_common_enum
+                              context.l10n.sortByCreatedAt: provider_common_enum
                                   .ProviderInstanceListSortBy
                                   .PROVIDER_INSTANCE_LIST_SORT_BY_CREATED_AT,
-                              '按更新': provider_common_enum
+                              context.l10n.sortByUpdatedAt: provider_common_enum
                                   .ProviderInstanceListSortBy
                                   .PROVIDER_INSTANCE_LIST_SORT_BY_UPDATED_AT,
                             },
@@ -6367,8 +6567,8 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                                 provider_common_enum
                                     .SortDirection
                                     .SORT_DIRECTION_DESC
-                            ? '降序'
-                            : '升序',
+                            ? context.l10n.descending
+                            : context.l10n.ascending,
                         icon:
                             _sortDirection ==
                                 provider_common_enum
@@ -6399,10 +6599,10 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                       width: 96,
                       child: AppSelect<int>(
                         value: _pageSize,
-                        options: const {
-                          '20 / 页': 20,
-                          '50 / 页': 50,
-                          '100 / 页': 100,
+                        options: {
+                          context.l10n.itemsPerPage(20): 20,
+                          context.l10n.itemsPerPage(50): 50,
+                          context.l10n.itemsPerPage(100): 100,
                         },
                         onChanged: (value) {
                           if (value == null) return;
@@ -6444,7 +6644,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
               : _instances.isEmpty
               ? Center(
                   child: Text(
-                    '暂无 Provider 实例',
+                    context.l10n.noProviderInstances,
                     style: TextStyle(color: theme.hintColor),
                   ),
                 )
@@ -6485,7 +6685,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
           Expanded(
             child: _backends.isEmpty
                 ? Text(
-                    '当前类型暂无可用 Backend',
+                    context.l10n.noAvailableBackends,
                     style: TextStyle(color: theme.hintColor),
                   )
                 : Wrap(
@@ -6498,14 +6698,17 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                           avatar: const Icon(Icons.copy_rounded, size: 16),
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: backend));
-                            MessageUtils.showSuccess(context, 'Backend 已复制');
+                            MessageUtils.showSuccess(
+                              context,
+                              context.l10n.backendCopied,
+                            );
                           },
                         ),
                     ],
                   ),
           ),
           AppIconButton(
-            tooltip: '刷新 Backend',
+            tooltip: context.l10n.refreshBackends,
             icon: Icons.refresh_rounded,
             onPressed: () => _loadInstances(silent: true),
           ),
@@ -6533,15 +6736,16 @@ class _ProviderInstanceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final statusText = _providerStatusText(instance.status);
+    final statusText = _providerStatusText(context, instance.status);
     final tlsText = !instance.tls
-        ? 'TLS 关闭'
+        ? context.l10n.tlsDisabled
         : instance.insecureTls
-        ? 'TLS 不校验'
-        : 'TLS 校验';
-    final timeText =
-        '创建 ${_formatTimestamp(instance.createdAt)}'
-        ' · 更新 ${_formatTimestamp(instance.updatedAt)}';
+        ? context.l10n.tlsUnverified
+        : context.l10n.tlsVerified;
+    final timeText = context.l10n.providerInstanceTimes(
+      _formatTimestamp(instance.createdAt),
+      _formatTimestamp(instance.updatedAt),
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
       child: Row(
@@ -6549,7 +6753,7 @@ class _ProviderInstanceTile extends StatelessWidget {
         children: [
           AppSwitch(
             value: instance.enabled,
-            semanticsLabel: '启用实例',
+            semanticsLabel: context.l10n.enableProviderInstance,
             onChanged: (_) => onToggleEnabled(),
           ),
           const SizedBox(width: 10),
@@ -6569,7 +6773,9 @@ class _ProviderInstanceTile extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     _ProviderMetaChip(
-                      label: instance.enabled ? '已启用' : '已停用',
+                      label: instance.enabled
+                          ? context.l10n.enabled
+                          : context.l10n.disabled,
                       icon: instance.enabled
                           ? Icons.power_settings_new_rounded
                           : Icons.power_off_rounded,
@@ -6641,17 +6847,17 @@ class _ProviderInstanceTile extends StatelessWidget {
             spacing: 2,
             children: [
               AppIconButton(
-                tooltip: '编辑',
+                tooltip: context.l10n.edit,
                 icon: Icons.edit_outlined,
                 onPressed: onEdit,
               ),
               AppIconButton(
-                tooltip: '重连',
+                tooltip: context.l10n.reconnect,
                 icon: Icons.sync_rounded,
                 onPressed: onReconnect,
               ),
               AppIconButton(
-                tooltip: '删除',
+                tooltip: context.l10n.delete,
                 icon: Icons.delete_outline,
                 style: AppIconButtonStyle.destructive,
                 onPressed: onDelete,
@@ -6831,7 +7037,9 @@ class _ProviderInstanceEditorDialogState
     final theme = Theme.of(context);
     final isCompact =
         AppBreakpoints.widthOf(context) < AppBreakpoints.expandedStart;
-    final title = _editing ? '编辑 Provider 实例' : '新增 Provider 实例';
+    final title = _editing
+        ? context.l10n.editProviderInstance
+        : context.l10n.addProviderInstance;
     return AppDialogFrame(
       maxWidth: 860,
       maxHeight: 760,
@@ -6839,7 +7047,9 @@ class _ProviderInstanceEditorDialogState
         children: [
           _ProviderEditorHeader(
             title: title,
-            subtitle: _editing ? widget.instance!.name : '配置外部媒体 Provider 节点',
+            subtitle: _editing
+                ? widget.instance!.name
+                : context.l10n.configureProviderNode,
             editing: _editing,
             onClose: () => Navigator.pop(context),
           ),
@@ -6887,17 +7097,17 @@ class _ProviderInstanceEditorDialogState
   List<Widget> _primarySections(ThemeData theme) => [
     _ProviderEditorSection(
       icon: Icons.badge_outlined,
-      title: '基础信息',
+      title: context.l10n.basicInformation,
       children: [
         AppTextField(
           controller: _nameController,
-          label: '实例名称',
+          label: context.l10n.instanceName,
           hintText: 'provider_main',
           prefixIcon: Icons.badge_outlined,
           enabled: !_editing,
           errorText:
               _submitted && !_editing && _nameController.text.trim().isEmpty
-              ? '请输入实例名称'
+              ? context.l10n.instanceNameRequired
               : null,
           autocorrect: false,
           smartDashesType: SmartDashesType.disabled,
@@ -6911,7 +7121,7 @@ class _ProviderInstanceEditorDialogState
           prefixIcon: Icons.link_rounded,
           keyboardType: TextInputType.url,
           errorText: _submitted && _endpointController.text.trim().isEmpty
-              ? '请输入 Endpoint'
+              ? context.l10n.endpointRequired
               : null,
           autocorrect: false,
           smartDashesType: SmartDashesType.disabled,
@@ -6920,18 +7130,21 @@ class _ProviderInstanceEditorDialogState
         const SizedBox(height: 12),
         AppTextField(
           controller: _timeoutController,
-          label: '请求超时',
+          label: context.l10n.requestTimeout,
           prefixIcon: Icons.timer_outlined,
-          suffix: const Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: Center(widthFactor: 1, child: Text('秒')),
+          suffix: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              widthFactor: 1,
+              child: Text(context.l10n.secondsShort),
+            ),
           ),
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           errorText:
               _submitted &&
                   ((int.tryParse(_timeoutController.text.trim()) ?? 0) <= 0)
-              ? '请输入大于 0 的整数'
+              ? context.l10n.positiveIntegerRequired
               : null,
         ),
       ],
@@ -6939,8 +7152,8 @@ class _ProviderInstanceEditorDialogState
     const SizedBox(height: 16),
     _ProviderEditorSection(
       icon: Icons.category_outlined,
-      title: '能力类型',
-      description: '一个实例可以同时承载多个 Provider 类型。',
+      title: context.l10n.capabilityTypes,
+      description: context.l10n.capabilityTypesDescription,
       children: [
         _ProviderTypeSelector(
           selectedProviders: _selectedProviders,
@@ -6965,13 +7178,15 @@ class _ProviderInstanceEditorDialogState
   List<Widget> _secondarySections(ThemeData theme) => [
     _ProviderEditorSection(
       icon: Icons.security_rounded,
-      title: '连接安全',
-      description: '不安全 TLS 只应用于受控内网或测试环境。',
+      title: context.l10n.connectionSecurity,
+      description: context.l10n.connectionSecurityDescription,
       children: [
         _ProviderOptionSwitch(
           icon: Icons.verified_user_outlined,
-          title: '启用 TLS',
-          subtitle: _tls ? '使用 HTTPS/TLS 连接 Provider' : '使用非 TLS 连接',
+          title: context.l10n.enableTls,
+          subtitle: _tls
+              ? context.l10n.providerTlsConnection
+              : context.l10n.providerPlainConnection,
           value: _tls,
           onChanged: (value) => setState(() {
             _tls = value;
@@ -6981,8 +7196,8 @@ class _ProviderInstanceEditorDialogState
         const SizedBox(height: 10),
         _ProviderOptionSwitch(
           icon: Icons.warning_amber_rounded,
-          title: '允许不安全 TLS',
-          subtitle: '跳过证书校验，可能被中间人攻击',
+          title: context.l10n.allowInsecureTls,
+          subtitle: context.l10n.allowInsecureTlsDescription,
           value: _insecureTls,
           enabled: _tls,
           danger: true,
@@ -6992,7 +7207,9 @@ class _ProviderInstanceEditorDialogState
         AppTextField(
           controller: _jwtSecretController,
           label: 'JWT Secret',
-          hintText: _editing ? '留空则不修改' : '可选',
+          hintText: _editing
+              ? context.l10n.emptyKeepsCurrentValue
+              : context.l10n.optional,
           prefixIcon: Icons.key_rounded,
           enabled: !_clearJwtSecret,
           obscureText: true,
@@ -7007,13 +7224,15 @@ class _ProviderInstanceEditorDialogState
               _clearJwtSecret = value;
               if (_clearJwtSecret) _jwtSecretController.clear();
             }),
-            title: const Text('清除 JWT Secret'),
+            title: Text(context.l10n.clearJwtSecret),
           ),
         const SizedBox(height: 12),
         AppTextField(
           controller: _customCaController,
           label: 'Custom CA',
-          hintText: _editing ? 'PEM 内容，留空则不修改' : 'PEM 内容，可选',
+          hintText: _editing
+              ? context.l10n.pemEmptyKeepsCurrent
+              : context.l10n.pemOptional,
           prefixIcon: Icons.verified_outlined,
           enabled: !_clearCustomCa,
           minLines: 4,
@@ -7029,19 +7248,19 @@ class _ProviderInstanceEditorDialogState
               _clearCustomCa = value;
               if (_clearCustomCa) _customCaController.clear();
             }),
-            title: const Text('清除 Custom CA'),
+            title: Text(context.l10n.clearCustomCa),
           ),
       ],
     ),
     const SizedBox(height: 16),
     _ProviderEditorSection(
       icon: Icons.notes_rounded,
-      title: '备注',
+      title: context.l10n.notes,
       children: [
         AppTextField(
           controller: _commentController,
-          label: '备注',
-          hintText: '可选，用于标记部署位置、用途或维护信息',
+          label: context.l10n.notes,
+          hintText: context.l10n.providerNotesHint,
           prefixIcon: Icons.notes_rounded,
           enabled: !_clearComment,
           minLines: 2,
@@ -7054,7 +7273,7 @@ class _ProviderInstanceEditorDialogState
               _clearComment = value;
               if (_clearComment) _commentController.clear();
             }),
-            title: const Text('清除备注'),
+            title: Text(context.l10n.clearNotes),
           ),
       ],
     ),
@@ -7116,13 +7335,13 @@ class _ProviderEditorHeader extends StatelessWidget {
             ),
           ),
           _ProviderMetaChip(
-            label: editing ? '编辑' : '新增',
+            label: editing ? context.l10n.edit : context.l10n.add,
             icon: editing ? Icons.edit_outlined : Icons.add_rounded,
             color: theme.colorScheme.primary,
           ),
           const SizedBox(width: 8),
           AppIconButton(
-            tooltip: '关闭',
+            tooltip: context.l10n.close,
             icon: Icons.close_rounded,
             onPressed: onClose,
           ),
@@ -7282,7 +7501,9 @@ class _ProviderEditorFooter extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              editing ? '仅提交已填写或明确清除的敏感字段' : '创建后可在列表中启停、重连或编辑',
+              editing
+                  ? context.l10n.providerEditFooterHint
+                  : context.l10n.providerCreateFooterHint,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -7293,14 +7514,14 @@ class _ProviderEditorFooter extends StatelessWidget {
           const SizedBox(width: 16),
           AppActionButton(
             onPressed: onCancel,
-            label: '取消',
+            label: context.l10n.cancel,
             style: AppActionButtonStyle.outlined,
           ),
           const SizedBox(width: 10),
           AppActionButton(
             onPressed: onSubmit,
             icon: editing ? Icons.save_outlined : Icons.add_rounded,
-            label: editing ? '保存' : '创建',
+            label: editing ? context.l10n.save : context.l10n.create,
           ),
         ],
       ),
@@ -7402,7 +7623,10 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, '加载活跃流失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.loadActiveStreamsFailed('$e'),
+      );
     }
   }
 
@@ -7410,11 +7634,11 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
     try {
       await SyncTvService.adminKickStream(stream);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '流已踢出');
+      MessageUtils.showSuccess(context, context.l10n.streamDisconnected);
       _loadStreams(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '操作失败: $e');
+      MessageUtils.showError(context, context.l10n.operationFailed('$e'));
     }
   }
 
@@ -7447,7 +7671,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
                 width: 240,
                 child: AppSearchField(
                   controller: _searchController,
-                  hintText: '搜索，或输入 room_/usr_/node_ ID',
+                  hintText: context.l10n.searchStreamsHint,
                   onChanged: (value) {
                     if (value.isEmpty && _search.isNotEmpty) {
                       _applyStreamSearch('');
@@ -7458,7 +7682,11 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
               ),
               AppSelect<int>(
                 value: _pageSize,
-                options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
+                options: {
+                  context.l10n.itemsPerPage(20): 20,
+                  context.l10n.itemsPerPage(50): 50,
+                  context.l10n.itemsPerPage(100): 100,
+                },
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -7470,20 +7698,20 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
               ),
               AppSelect<admin_enum.ActiveStreamListSortBy>(
                 value: _sortBy,
-                options: const {
-                  '开始时间': admin_enum
+                options: {
+                  context.l10n.startedAt: admin_enum
                       .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_STARTED_AT,
-                  '房间': admin_enum
+                  context.l10n.rooms: admin_enum
                       .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_ROOM_ID,
-                  '媒体': admin_enum
+                  context.l10n.media: admin_enum
                       .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_MEDIA_ID,
-                  '用户': admin_enum
+                  context.l10n.users: admin_enum
                       .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_USER_ID,
-                  '节点': admin_enum
+                  context.l10n.node: admin_enum
                       .ActiveStreamListSortBy
                       .ACTIVE_STREAM_LIST_SORT_BY_NODE_ID,
                 },
@@ -7500,8 +7728,8 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
                 tooltip:
                     _sortDirection ==
                         admin_enum.SortDirection.SORT_DIRECTION_DESC
-                    ? '降序'
-                    : '升序',
+                    ? context.l10n.descending
+                    : context.l10n.ascending,
                 icon:
                     _sortDirection ==
                         admin_enum.SortDirection.SORT_DIRECTION_DESC
@@ -7520,7 +7748,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
                 },
               ),
               AppIconButton(
-                tooltip: '刷新',
+                tooltip: context.l10n.refresh,
                 icon: Icons.refresh_rounded,
                 onPressed: () => _loadStreams(silent: true),
               ),
@@ -7550,7 +7778,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
               : _streams.isEmpty
               ? Center(
                   child: Text(
-                    '暂无活跃流',
+                    context.l10n.noActiveStreams,
                     style: TextStyle(color: theme.hintColor),
                   ),
                 )
@@ -7568,7 +7796,7 @@ class _AdminStreamsTabState extends State<AdminStreamsTab> {
                           '${stream.roomId} · ${stream.userId}\nNode: ${stream.nodeId} · ${_formatTimestamp(stream.startedAt)}',
                         ),
                         suffix: AppIconButton(
-                          tooltip: '踢出流',
+                          tooltip: context.l10n.disconnectStream,
                           icon: Icons.power_settings_new_rounded,
                           style: AppIconButtonStyle.destructive,
                           onPressed: () => _kick(stream),
@@ -7635,7 +7863,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, '加载封禁记录失败: $e');
+      MessageUtils.showError(context, context.l10n.loadBanRecordsFailed('$e'));
     }
   }
 
@@ -7657,22 +7885,22 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
         : (record.roomName.isEmpty ? record.roomId : record.roomName);
     final targetId = isUserBan ? record.userId : record.roomId;
     if (targetId.isEmpty) {
-      MessageUtils.showWarning(context, '封禁记录缺少目标 ID，无法解封');
+      MessageUtils.showWarning(context, context.l10n.banRecordMissingTargetId);
       return;
     }
 
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: isUserBan ? '解封用户' : '解封房间',
+      title: isUserBan ? context.l10n.unbanUser : context.l10n.unbanRoom,
       icon: const Icon(Icons.lock_open_rounded, color: Colors.green),
-      content: Text('确定要解除 "$targetName" 的封禁吗？'),
+      content: Text(context.l10n.confirmUnban(targetName)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '解封',
+          text: context.l10n.unban,
         ),
       ],
     );
@@ -7685,11 +7913,11 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
         await SyncTvService.adminBanRoom(targetId, false);
       }
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '已解除封禁');
+      MessageUtils.showSuccess(context, context.l10n.unbanned);
       _loadRecords(silent: true);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '解封失败: $e');
+      MessageUtils.showError(context, context.l10n.unbanFailed('$e'));
     }
   }
 
@@ -7712,7 +7940,11 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
             children: [
               AppSelect<int>(
                 value: _targetType,
-                options: const {'全部对象': 0, '用户': 1, '房间': 2},
+                options: {
+                  context.l10n.allTargets: 0,
+                  context.l10n.users: 1,
+                  context.l10n.rooms: 2,
+                },
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -7724,7 +7956,11 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
               ),
               AppSelect<bool?>(
                 value: _active,
-                options: const {'全部状态': null, '生效中': true, '已撤销/过期': false},
+                options: {
+                  context.l10n.allStatuses: null,
+                  context.l10n.active: true,
+                  context.l10n.revokedOrExpired: false,
+                },
                 onChanged: (value) {
                   setState(() {
                     _active = value;
@@ -7735,7 +7971,11 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
               ),
               AppSelect<int>(
                 value: _pageSize,
-                options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
+                options: {
+                  context.l10n.itemsPerPage(20): 20,
+                  context.l10n.itemsPerPage(50): 50,
+                  context.l10n.itemsPerPage(100): 100,
+                },
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -7749,7 +7989,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
                 width: 260,
                 child: AppSearchField(
                   controller: _searchController,
-                  hintText: '输入 usr_/room_ ID',
+                  hintText: context.l10n.userOrRoomIdHint,
                   onChanged: (value) {
                     if (value.isEmpty && _search.isNotEmpty) {
                       _applyBanSearch('');
@@ -7768,7 +8008,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
                   },
                 ),
               AppIconButton(
-                tooltip: '刷新',
+                tooltip: context.l10n.refresh,
                 icon: Icons.refresh_rounded,
                 onPressed: () => _loadRecords(silent: true),
               ),
@@ -7798,7 +8038,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
               : _records.isEmpty
               ? Center(
                   child: Text(
-                    '暂无封禁记录',
+                    context.l10n.noBanRecords,
                     style: TextStyle(color: theme.hintColor),
                   ),
                 )
@@ -7821,15 +8061,21 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
                         ),
                         title: Text(target),
                         subtitle: Text(
-                          '${record.reason.isEmpty ? '无原因' : record.reason}\n操作者: ${record.bannedByUsername} · ${_formatTimestamp(record.startsAt)}',
+                          context.l10n.banRecordSummary(
+                            record.reason.isEmpty
+                                ? context.l10n.noReason
+                                : record.reason,
+                            record.bannedByUsername,
+                            _formatTimestamp(record.startsAt),
+                          ),
                         ),
                         suffix: record.isActive
                             ? AppIconButton(
-                                tooltip: '解除封禁',
+                                tooltip: context.l10n.unban,
                                 icon: Icons.lock_open_rounded,
                                 onPressed: () => _unbanRecord(record),
                               )
-                            : const Text('已结束'),
+                            : Text(context.l10n.ended),
                       ),
                     );
                   },
@@ -7841,7 +8087,7 @@ class _AdminBanRecordsTabState extends State<AdminBanRecordsTab> {
 }
 
 class AdminContentReportsTab extends StatefulWidget {
-  final String title;
+  final String? title;
   final int initialTargetType;
   final String initialReporterUserId;
   final String initialRoomId;
@@ -7857,7 +8103,7 @@ class AdminContentReportsTab extends StatefulWidget {
 
   const AdminContentReportsTab({
     super.key,
-    this.title = '举报',
+    this.title,
     this.initialTargetType = 0,
     this.initialReporterUserId = '',
     this.initialRoomId = '',
@@ -7898,11 +8144,11 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
   TabController? _targetTypeTabController;
 
   static const _targetTypeTabs = <_ReportTargetTypeTab>[
-    _ReportTargetTypeTab('全部', 0),
-    _ReportTargetTypeTab('房间', 1),
-    _ReportTargetTypeTab('用户', 2),
-    _ReportTargetTypeTab('成员', 3),
-    _ReportTargetTypeTab('消息', 4),
+    _ReportTargetTypeTab(0),
+    _ReportTargetTypeTab(1),
+    _ReportTargetTypeTab(2),
+    _ReportTargetTypeTab(3),
+    _ReportTargetTypeTab(4),
   ];
 
   bool get _isRoomScoped => widget.roomScopedRoomId.isNotEmpty;
@@ -7999,7 +8245,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, '加载举报记录失败: $e');
+      MessageUtils.showError(context, context.l10n.loadReportsFailed('$e'));
     }
   }
 
@@ -8052,7 +8298,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
     if (!mounted) return;
     await ChatUtils.showStyledDialog<void>(
       context: context,
-      title: '举报详情',
+      title: context.l10n.reportDetails,
       icon: const Icon(Icons.report_gmailerrorred_rounded, color: Colors.red),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
@@ -8062,39 +8308,51 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _ReportDetailRow(
-                label: '状态',
-                value: _reportStatusText(detail.status),
+                label: context.l10n.status,
+                value: _reportStatusText(context, detail.status),
               ),
-              _ReportDetailRow(label: '目标', value: _reportTargetText(detail)),
-              _ReportDetailRow(label: '举报人', value: _reporterText(detail)),
-              _ReportDetailRow(label: '原因', value: _reportReasonText(detail)),
+              _ReportDetailRow(
+                label: context.l10n.target,
+                value: _reportTargetText(context, detail),
+              ),
+              _ReportDetailRow(
+                label: context.l10n.reporter,
+                value: _reporterText(detail),
+              ),
+              _ReportDetailRow(
+                label: context.l10n.reason,
+                value: _reportReasonText(detail),
+              ),
               if (detail.targetChatMessagePreview.isNotEmpty)
                 _ReportDetailRow(
-                  label: '消息内容',
+                  label: context.l10n.messageContent,
                   value: detail.targetChatMessagePreview,
                 ),
               _ReportDetailRow(
-                label: '创建时间',
+                label: context.l10n.createdAt,
                 value: _formatTimestamp(detail.createdAt),
               ),
               if (detail.reviewedByUsername.isNotEmpty ||
                   detail.reviewedBy.isNotEmpty)
                 _ReportDetailRow(
-                  label: '处理人',
+                  label: context.l10n.reviewedByLabel,
                   value: detail.reviewedByUsername.isEmpty
                       ? detail.reviewedBy
                       : detail.reviewedByUsername,
                 ),
               if (detail.reviewedAt > 0)
                 _ReportDetailRow(
-                  label: '处理时间',
+                  label: context.l10n.reviewedAtLabel,
                   value: _formatTimestamp(detail.reviewedAt),
                 ),
               if (detail.resolutionNote.isNotEmpty)
-                _ReportDetailRow(label: '处置说明', value: detail.resolutionNote),
+                _ReportDetailRow(
+                  label: context.l10n.resolutionNote,
+                  value: detail.resolutionNote,
+                ),
               if (detail.metadata.isNotEmpty)
                 _ReportDetailRow(
-                  label: '元数据',
+                  label: context.l10n.metadata,
                   value: const JsonEncoder.withIndent(
                     '  ',
                   ).convert(detail.metadata),
@@ -8109,7 +8367,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
         ChatUtils.createConfirmButton(context, () {
           Navigator.pop(context);
           _openDisposition(detail);
-        }, text: '处置'),
+        }, text: context.l10n.resolve),
       ],
     );
   }
@@ -8123,7 +8381,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
     final noteController = TextEditingController(text: report.resolutionNote);
     final updated = await ChatUtils.showStyledDialog<AdminContentReport>(
       context: context,
-      title: '处置举报',
+      title: context.l10n.resolveReport,
       icon: const Icon(Icons.rule_rounded, color: Colors.orange),
       content: StatefulBuilder(
         builder: (dialogContext, setDialogState) {
@@ -8133,11 +8391,16 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_reportTargetText(report)),
+                Text(_reportTargetText(context, report)),
                 const SizedBox(height: 12),
                 AppSelect<int>(
                   value: nextStatus,
-                  options: const {'处理中': 2, '已处理': 3, '已驳回': 4, '待处理': 1},
+                  options: {
+                    context.l10n.reviewing: 2,
+                    context.l10n.resolved: 3,
+                    context.l10n.dismissed: 4,
+                    context.l10n.reportOpenStatus: 1,
+                  },
                   onChanged: (value) {
                     if (value == null) return;
                     setDialogState(() => nextStatus = value);
@@ -8146,7 +8409,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 const SizedBox(height: 12),
                 AppTextField(
                   controller: noteController,
-                  label: '处置说明',
+                  label: context.l10n.resolutionNote,
                   maxLines: 4,
                 ),
               ],
@@ -8175,9 +8438,12 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
             Navigator.pop(context, result);
           } catch (e) {
             if (!mounted) return;
-            MessageUtils.showError(context, '处置失败: $e');
+            MessageUtils.showError(
+              context,
+              context.l10n.resolveReportFailed('$e'),
+            );
           }
-        }, text: '保存'),
+        }, text: context.l10n.save),
       ],
     );
     noteController.dispose();
@@ -8187,7 +8453,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
         for (final item in _reports) item.id == updated.id ? updated : item,
       ];
     });
-    MessageUtils.showSuccess(context, '举报状态已更新');
+    MessageUtils.showSuccess(context, context.l10n.reportStatusUpdated);
   }
 
   int get _pageCount {
@@ -8199,9 +8465,10 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final title = widget.title ?? context.l10n.reports;
     return Column(
       children: [
-        if (widget.title.isNotEmpty)
+        if (title.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: Row(
@@ -8213,7 +8480,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    widget.title,
+                    title,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -8237,7 +8504,9 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                   dividerColor: Colors.transparent,
                   tabs: [
                     for (final tab in _visibleTargetTypeTabs)
-                      Tab(text: tab.label),
+                      Tab(
+                        text: _reportTargetTypeLabel(context, tab.targetType),
+                      ),
                   ],
                 ),
               ),
@@ -8251,12 +8520,12 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
             children: [
               AppSelect<int>(
                 value: _status,
-                options: const {
-                  '全部状态': 0,
-                  '待处理': 1,
-                  '处理中': 2,
-                  '已处理': 3,
-                  '已驳回': 4,
+                options: {
+                  context.l10n.allStatuses: 0,
+                  context.l10n.reportOpenStatus: 1,
+                  context.l10n.reviewing: 2,
+                  context.l10n.resolved: 3,
+                  context.l10n.dismissed: 4,
                 },
                 onChanged: (value) {
                   if (value == null) return;
@@ -8271,8 +8540,14 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 AppSelect<int>(
                   value: _targetType,
                   options: _isRoomScoped
-                      ? const {'成员': 3, '消息': 4}
-                      : const {'全部对象': 0, '房间': 1, '用户': 2, '成员': 3, '消息': 4},
+                      ? {context.l10n.members: 3, context.l10n.messages: 4}
+                      : {
+                          context.l10n.allTargets: 0,
+                          context.l10n.rooms: 1,
+                          context.l10n.users: 2,
+                          context.l10n.members: 3,
+                          context.l10n.messages: 4,
+                        },
                   onChanged: (value) {
                     if (value == null) return;
                     setState(() {
@@ -8284,7 +8559,11 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 ),
               AppSelect<int>(
                 value: _pageSize,
-                options: const {'20 / 页': 20, '50 / 页': 50, '100 / 页': 100},
+                options: {
+                  context.l10n.itemsPerPage(20): 20,
+                  context.l10n.itemsPerPage(50): 50,
+                  context.l10n.itemsPerPage(100): 100,
+                },
                 onChanged: (value) {
                   if (value == null) return;
                   setState(() {
@@ -8298,7 +8577,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 width: 300,
                 child: AppSearchField(
                   controller: _searchController,
-                  hintText: '搜索原因、对象、usr_/room_ ID',
+                  hintText: context.l10n.searchReportsHint,
                   onChanged: (value) {
                     if (value.isEmpty && _search.isNotEmpty) {
                       _applySearch('');
@@ -8318,7 +8597,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                 ),
               ..._activeFilterChips(),
               AppIconButton(
-                tooltip: '刷新',
+                tooltip: context.l10n.refresh,
                 icon: Icons.refresh_rounded,
                 onPressed: () => _loadReports(silent: true),
               ),
@@ -8348,7 +8627,7 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
               : _reports.isEmpty
               ? Center(
                   child: Text(
-                    '暂无举报记录',
+                    context.l10n.noReportRecords,
                     style: TextStyle(color: theme.hintColor),
                   ),
                 )
@@ -8365,12 +8644,16 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
                           _reportStatusIcon(report.status),
                           color: _reportStatusColor(report.status),
                         ),
-                        title: Text(_reportTargetText(report)),
+                        title: Text(_reportTargetText(context, report)),
                         subtitle: Text(
-                          '${_reportReasonText(report)}\n举报人: ${_reporterText(report)} · ${_formatTimestamp(report.createdAt)}',
+                          context.l10n.reportListSummary(
+                            _reportReasonText(report),
+                            _reporterText(report),
+                            _formatTimestamp(report.createdAt),
+                          ),
                         ),
                         suffix: AppIconButton(
-                          tooltip: '处置',
+                          tooltip: context.l10n.resolve,
                           icon: Icons.rule_rounded,
                           onPressed: () => _openDisposition(report),
                         ),
@@ -8402,25 +8685,43 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
     }
 
     if (_reporterUserId.isNotEmpty) {
-      addChip('举报人 $_reporterUserId', () => _reporterUserId = '');
+      addChip(
+        context.l10n.reporterFilter(_reporterUserId),
+        () => _reporterUserId = '',
+      );
     }
     if (!_isRoomScoped && _roomId.isNotEmpty) {
-      addChip('上下文房间 $_roomId', () => _roomId = '');
+      addChip(context.l10n.contextRoomFilter(_roomId), () => _roomId = '');
     }
     if (_targetRoomId.isNotEmpty) {
-      addChip('被举报房间 $_targetRoomId', () => _targetRoomId = '');
+      addChip(
+        context.l10n.reportedRoomFilter(_targetRoomId),
+        () => _targetRoomId = '',
+      );
     }
     if (_targetUserId.isNotEmpty) {
-      addChip('被举报用户 $_targetUserId', () => _targetUserId = '');
+      addChip(
+        context.l10n.reportedUserFilter(_targetUserId),
+        () => _targetUserId = '',
+      );
     }
     if (_targetMemberRoomId.isNotEmpty) {
-      addChip('成员所在房间 $_targetMemberRoomId', () => _targetMemberRoomId = '');
+      addChip(
+        context.l10n.memberRoomFilter(_targetMemberRoomId),
+        () => _targetMemberRoomId = '',
+      );
     }
     if (_targetMemberUserId.isNotEmpty) {
-      addChip('被举报成员 $_targetMemberUserId', () => _targetMemberUserId = '');
+      addChip(
+        context.l10n.reportedMemberFilter(_targetMemberUserId),
+        () => _targetMemberUserId = '',
+      );
     }
     if (_targetChatMessageId > 0) {
-      addChip('消息 #$_targetChatMessageId', () => _targetChatMessageId = 0);
+      addChip(
+        context.l10n.messageFilter(_targetChatMessageId),
+        () => _targetChatMessageId = 0,
+      );
     }
     return chips;
   }
@@ -8454,10 +8755,9 @@ class _AdminContentReportsTabState extends State<AdminContentReportsTab>
 }
 
 class _ReportTargetTypeTab {
-  final String label;
   final int targetType;
 
-  const _ReportTargetTypeTab(this.label, this.targetType);
+  const _ReportTargetTypeTab(this.targetType);
 }
 
 class _ReportDetailRow extends StatelessWidget {
@@ -8483,12 +8783,27 @@ class _ReportDetailRow extends StatelessWidget {
   }
 }
 
-String _reportTargetText(AdminContentReport report) {
+String _reportTargetTypeLabel(BuildContext context, int targetType) {
+  return switch (targetType) {
+    0 => context.l10n.allTargets,
+    1 => context.l10n.rooms,
+    2 => context.l10n.users,
+    3 => context.l10n.members,
+    4 => context.l10n.messages,
+    _ => context.l10n.unknown,
+  };
+}
+
+String _reportTargetText(BuildContext context, AdminContentReport report) {
   switch (report.targetType) {
     case 1:
-      return '房间 ${_nameOrId(report.targetRoomName, report.targetRoomId)}';
+      return context.l10n.roomTarget(
+        _nameOrId(report.targetRoomName, report.targetRoomId),
+      );
     case 2:
-      return '用户 ${_nameOrId(report.targetUsername, report.targetUserId)}';
+      return context.l10n.userTarget(
+        _nameOrId(report.targetUsername, report.targetUserId),
+      );
     case 3:
       final room = _nameOrId(
         report.targetMemberRoomName,
@@ -8498,12 +8813,12 @@ String _reportTargetText(AdminContentReport report) {
         report.targetMemberUsername,
         report.targetMemberUserId,
       );
-      return '成员 $user · $room';
+      return context.l10n.memberTarget(user, room);
     case 4:
       final room = _nameOrId(report.roomName, report.roomId);
-      return '聊天消息 #${report.targetChatMessageId} · $room';
+      return context.l10n.chatMessageTarget(report.targetChatMessageId, room);
     default:
-      return '未知对象 ${report.id}';
+      return context.l10n.unknownTarget(report.id);
   }
 }
 
@@ -8523,18 +8838,18 @@ String _nameOrId(String name, String id) {
   return '$name ($id)';
 }
 
-String _reportStatusText(int status) {
+String _reportStatusText(BuildContext context, int status) {
   switch (status) {
     case 1:
-      return '待处理';
+      return context.l10n.reportOpenStatus;
     case 2:
-      return '处理中';
+      return context.l10n.reviewing;
     case 3:
-      return '已处理';
+      return context.l10n.resolved;
     case 4:
-      return '已驳回';
+      return context.l10n.dismissed;
     default:
-      return '未知';
+      return context.l10n.unknown;
   }
 }
 
@@ -8594,6 +8909,7 @@ class _RuntimeSettingsSectionsTabState
     bool silent = false,
     bool refresh = false,
   }) async {
+    final l10n = context.l10n;
     if (!silent) setState(() => _isLoading = true);
     try {
       final settings = await SyncTvService.runtimeGetSettings(refresh: refresh);
@@ -8609,7 +8925,7 @@ class _RuntimeSettingsSectionsTabState
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, '加载设置失败: $e');
+      MessageUtils.showError(context, l10n.loadSettingsFailed('$e'));
     }
   }
 
@@ -8624,6 +8940,7 @@ class _RuntimeSettingsSectionsTabState
     bool silent = false,
     bool refresh = true,
   }) async {
+    final l10n = context.l10n;
     final sectionName = _selectedSection;
     if (sectionName == null) return;
     if (!silent) setState(() => _isLoadingSection = true);
@@ -8637,7 +8954,7 @@ class _RuntimeSettingsSectionsTabState
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoadingSection = false);
-      MessageUtils.showError(context, '刷新设置失败: $e');
+      MessageUtils.showError(context, l10n.refreshSettingsFailed('$e'));
     }
   }
 
@@ -8646,6 +8963,7 @@ class _RuntimeSettingsSectionsTabState
     String key,
     dynamic nextValue,
   ) async {
+    final l10n = context.l10n;
     final settingId = '${section.name}.$key';
     setState(() => _savingSettings.add(settingId));
 
@@ -8662,11 +8980,11 @@ class _RuntimeSettingsSectionsTabState
         _settings = current.replaceSection(updated);
         _savingSettings.remove(settingId);
       });
-      MessageUtils.showSuccess(context, '设置已更新');
+      MessageUtils.showSuccess(context, l10n.settingsUpdated);
     } catch (e) {
       if (!mounted) return;
       setState(() => _savingSettings.remove(settingId));
-      MessageUtils.showError(context, '更新设置失败: $e');
+      MessageUtils.showError(context, l10n.updateSettingsFailed('$e'));
     }
   }
 
@@ -8675,7 +8993,12 @@ class _RuntimeSettingsSectionsTabState
     String key,
     dynamic value,
   ) async {
-    final descriptor = _settingDescriptor(section.name, key, value);
+    final descriptor = _settingDescriptor(
+      context.l10n,
+      section.name,
+      key,
+      value,
+    );
     final normalizedValue = _normalizedSettingValue(section.name, key, value);
 
     if (normalizedValue is bool) {
@@ -8706,6 +9029,7 @@ class _RuntimeSettingsSectionsTabState
     Map<String, dynamic> providers,
     String? name,
   ) async {
+    final l10n = context.l10n;
     final current = name == null
         ? <String, dynamic>{}
         : Map<String, dynamic>.from(providers[name] as Map? ?? const {});
@@ -8719,7 +9043,12 @@ class _RuntimeSettingsSectionsTabState
     );
     if (result == null) return;
 
-    final descriptor = _settingDescriptor('oauth2', 'providers', providers);
+    final descriptor = _settingDescriptor(
+      l10n,
+      'oauth2',
+      'providers',
+      providers,
+    );
     final confirmed = await _confirmRiskIfNeeded(descriptor);
     if (!confirmed) return;
 
@@ -8738,18 +9067,19 @@ class _RuntimeSettingsSectionsTabState
     Map<String, dynamic> providers,
     String name,
   ) async {
+    final l10n = context.l10n;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除登录提供方',
+      title: l10n.deleteLoginProvider,
       icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFE5484D)),
-      content: Text('确认删除 OAuth2 登录提供方 "$name"？删除后用户不能再通过该入口登录。'),
+      content: Text(l10n.confirmDeleteLoginProvider(name)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: l10n.delete,
         ),
       ],
     );
@@ -8767,7 +9097,7 @@ class _RuntimeSettingsSectionsTabState
     if (warning == null || warning.isEmpty) return true;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '确认修改',
+      title: context.l10n.confirmChanges,
       icon: const Icon(Icons.warning_amber_rounded, color: Color(0xFFE09F3E)),
       content: Text(warning),
       actions: [
@@ -8776,7 +9106,7 @@ class _RuntimeSettingsSectionsTabState
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '确认修改',
+          text: context.l10n.confirmChanges,
         ),
       ],
     );
@@ -8784,14 +9114,15 @@ class _RuntimeSettingsSectionsTabState
   }
 
   Future<void> _sendTestEmail() async {
+    final l10n = context.l10n;
     final controller = TextEditingController();
     final email = await ChatUtils.showStyledDialog<String>(
       context: context,
-      title: '发送测试邮件',
+      title: l10n.sendTestEmail,
       icon: const Icon(Icons.outgoing_mail, color: Color(0xFF5D5FEF)),
       content: ChatUtils.createFormField(
         context: context,
-        label: '收件人',
+        label: l10n.recipient,
         controller: controller,
         hintText: 'name@example.com',
         prefixIcon: Icons.email_outlined,
@@ -8803,7 +9134,7 @@ class _RuntimeSettingsSectionsTabState
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, controller.text.trim()),
-          text: '发送',
+          text: l10n.send,
         ),
       ],
     );
@@ -8811,10 +9142,13 @@ class _RuntimeSettingsSectionsTabState
     try {
       final message = await SyncTvService.adminSendTestEmail(email);
       if (!mounted) return;
-      MessageUtils.showSuccess(context, message.isEmpty ? '测试邮件已发送' : message);
+      MessageUtils.showSuccess(
+        context,
+        message.isEmpty ? l10n.testEmailSent : message,
+      );
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '发送测试邮件失败: $e');
+      MessageUtils.showError(context, l10n.sendTestEmailFailed('$e'));
     }
   }
 
@@ -8849,7 +9183,7 @@ class _RuntimeSettingsSectionsTabState
         : <String, dynamic>{};
 
     final settingsList = selected == null || entries.isEmpty
-        ? const AppEmptyMessage(message: '暂无设置')
+        ? AppEmptyMessage(message: context.l10n.noSettings)
         : isOAuth2Section
         ? AppListView(
             padding: EdgeInsets.fromLTRB(useTwoPane ? 8 : 16, 0, 16, 24),
@@ -8860,7 +9194,7 @@ class _RuntimeSettingsSectionsTabState
                 isLoading: _isLoadingSection,
                 action: AppActionButton(
                   icon: Icons.add_rounded,
-                  label: '添加登录提供方',
+                  label: context.l10n.addLoginProvider,
                   onPressed: _savingSettings.contains('oauth2.providers')
                       ? null
                       : () => _editOAuth2Provider(
@@ -8895,7 +9229,7 @@ class _RuntimeSettingsSectionsTabState
                   action: selected.name == 'email'
                       ? AppActionButton(
                           icon: Icons.outgoing_mail,
-                          label: '发送测试邮件',
+                          label: context.l10n.sendTestEmail,
                           onPressed: _sendTestEmail,
                           style: AppActionButtonStyle.tonal,
                         )
@@ -8912,6 +9246,7 @@ class _RuntimeSettingsSectionsTabState
                 entry.value,
               );
               final descriptor = _settingDescriptor(
+                context.l10n,
                 selected.name,
                 entry.key,
                 normalized,
@@ -8938,7 +9273,7 @@ class _RuntimeSettingsSectionsTabState
               Expanded(
                 child: useTwoPane
                     ? Text(
-                        '运行时设置',
+                        context.l10n.runtimeSettings,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -8952,7 +9287,7 @@ class _RuntimeSettingsSectionsTabState
               ),
               const SizedBox(width: 12),
               AppIconButton(
-                tooltip: '刷新全部',
+                tooltip: context.l10n.refreshAll,
                 icon: Icons.sync_rounded,
                 style: AppIconButtonStyle.tonal,
                 onPressed: _isLoadingSection
@@ -8997,7 +9332,7 @@ class _RuntimeSettingsSectionsTabState
   }
 
   dynamic _normalizedSettingValue(String group, String key, dynamic value) {
-    final descriptor = _settingDescriptor(group, key, value);
+    final descriptor = _settingDescriptor(context.l10n, group, key, value);
     if (value is String) {
       switch (descriptor.kind) {
         case _SettingEditorKind.oauth2Providers:
@@ -9082,24 +9417,22 @@ class _SettingChoice {
   const _SettingChoice(this.value, this.label, this.description);
 }
 
-const Map<String, String> _settingsSectionLabels = {
-  'server': '服务',
-  'room': '房间',
-  'user': '用户',
-  'oauth2': 'OAuth2',
-  'proxy': '代理',
-  'rtmp': '推流',
-  'email': '邮件',
-  'webrtc': 'WebRTC',
-  'chat': '聊天',
-  'cors': '跨域',
-  'permissions': '权限',
-};
-
-const List<_SettingChoice> _roomPasswordChoices = [
-  _SettingChoice('optional', '可选', '创建房间时可自行决定是否设置密码'),
-  _SettingChoice('required', '必须', '所有新房间都必须设置密码'),
-  _SettingChoice('forbidden', '禁用', '不允许新房间设置密码'),
+List<_SettingChoice> _roomPasswordChoices(AppLocalizations l10n) => [
+  _SettingChoice(
+    'optional',
+    l10n.optional,
+    l10n.roomPasswordOptionalDescription,
+  ),
+  _SettingChoice(
+    'required',
+    l10n.required,
+    l10n.roomPasswordRequiredDescription,
+  ),
+  _SettingChoice(
+    'forbidden',
+    l10n.disabled,
+    l10n.roomPasswordDisabledDescription,
+  ),
 ];
 
 const List<String> _oauth2ProviderTypes = [
@@ -9147,28 +9480,30 @@ const List<String> _guestPermissions = [
   'use_webrtc',
 ];
 
-const Map<String, String> _permissionLabels = {
-  'chat': '发送聊天',
-  'create_media_resource': '添加媒体',
-  'view_media_resources': '查看媒体',
-  'view_member_list': '查看成员',
-  'view_chat_history': '查看聊天历史',
-  'use_webrtc': '使用 WebRTC',
-  'delete_media_resource_any': '删除任意媒体',
-  'reorder_media_resources': '调整播放列表',
-  'clear_media_resources': '清空播放列表',
-  'live_control': '直播控制',
-  'play_control': '播放控制',
-  'change_current_media': '切换影片',
-  'change_playback_rate': '调整倍速',
-  'approve_member': '审批成员',
-  'kick_member': '踢出成员',
-  'set_member_permissions': '设置成员权限',
-  'add_member': '添加成员',
-  'set_room_settings': '修改房间设置',
-  'delete_chat': '删除聊天',
-  'delete_room': '删除房间',
-};
+String _permissionLabel(AppLocalizations l10n, String permission) =>
+    switch (permission) {
+      'chat' => l10n.sendChat,
+      'create_media_resource' => l10n.addMedia,
+      'view_media_resources' => l10n.viewMedia,
+      'view_member_list' => l10n.viewMembers,
+      'view_chat_history' => l10n.viewChatHistory,
+      'use_webrtc' => l10n.useWebRtc,
+      'delete_media_resource_any' => l10n.deleteAnyMedia,
+      'reorder_media_resources' => l10n.reorderPlaylist,
+      'clear_media_resources' => l10n.clearPlaylist,
+      'live_control' => l10n.liveControl,
+      'play_control' => l10n.playbackControl,
+      'change_current_media' => l10n.changeCurrentMedia,
+      'change_playback_rate' => l10n.changePlaybackRate,
+      'approve_member' => l10n.approveMember,
+      'kick_member' => l10n.kickMember,
+      'set_member_permissions' => l10n.setMemberPermissions,
+      'add_member' => l10n.addMember,
+      'set_room_settings' => l10n.changeRoomSettings,
+      'delete_chat' => l10n.deleteChat,
+      'delete_room' => l10n.deleteRoom,
+      _ => permission,
+    };
 
 const Map<String, int> _runtimePermissionBits = {
   'chat': 1 << 0,
@@ -9194,304 +9529,305 @@ const Map<String, int> _runtimePermissionBits = {
 };
 
 _SettingDescriptor _settingDescriptor(
+  AppLocalizations l10n,
   String section,
   String key,
   dynamic value,
 ) {
   final id = '$section.$key';
   final known = <String, _SettingDescriptor>{
-    'roomDefaults.defaultMaxMembers': const _SettingDescriptor(
+    'roomDefaults.defaultMaxMembers': _SettingDescriptor(
       group: 'roomDefaults',
       key: 'defaultMaxMembers',
-      title: '默认房间成员上限',
-      description: '新房间默认使用的成员上限。',
+      title: l10n.defaultRoomMemberLimit,
+      description: l10n.defaultRoomMemberLimitDescription,
       icon: Icons.groups_2_outlined,
       kind: _SettingEditorKind.number,
     ),
-    'roomDefaults.defaultMaxChatMessages': const _SettingDescriptor(
+    'roomDefaults.defaultMaxChatMessages': _SettingDescriptor(
       group: 'roomDefaults',
       key: 'defaultMaxChatMessages',
-      title: '房间聊天快照条数',
-      description: '新房间默认保留并推送给客户端的聊天消息上限，0 表示不限制。',
+      title: l10n.roomChatSnapshotLimit,
+      description: l10n.roomChatSnapshotLimitDescription,
       icon: Icons.forum_outlined,
       kind: _SettingEditorKind.number,
     ),
-    'roomCreation.enabled': const _SettingDescriptor(
+    'roomCreation.enabled': _SettingDescriptor(
       group: 'roomCreation',
       key: 'enabled',
-      title: '允许创建房间',
-      description: '控制普通用户是否可以创建新房间。',
+      title: l10n.allowRoomCreation,
+      description: l10n.allowRoomCreationDescription,
       icon: Icons.add_home_work_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'roomCreation.approvalRequired': const _SettingDescriptor(
+    'roomCreation.approvalRequired': _SettingDescriptor(
       group: 'roomCreation',
       key: 'approvalRequired',
-      title: '创建房间需要审核',
-      description: '打开后新建房间进入审核流程，通过后才可正常使用。',
+      title: l10n.roomCreationRequiresReview,
+      description: l10n.roomCreationRequiresReviewDescription,
       icon: Icons.fact_check_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'roomCreation.passwordPolicy': const _SettingDescriptor(
+    'roomCreation.passwordPolicy': _SettingDescriptor(
       group: 'roomCreation',
       key: 'passwordPolicy',
-      title: '房间密码策略',
-      description: '统一约束新房间是否必须或禁止设置密码。',
+      title: l10n.roomPasswordPolicy,
+      description: l10n.roomPasswordPolicyDescription,
       icon: Icons.password_rounded,
       kind: _SettingEditorKind.enumChoice,
-      choices: _roomPasswordChoices,
+      choices: _roomPasswordChoices(l10n),
     ),
-    'roomCreation.maxRoomsPerUser': const _SettingDescriptor(
+    'roomCreation.maxRoomsPerUser': _SettingDescriptor(
       group: 'roomCreation',
       key: 'maxRoomsPerUser',
-      title: '每个用户最多房间数',
-      description: '限制单个用户可拥有的房间数量。',
+      title: l10n.maximumRoomsPerUser,
+      description: l10n.maximumRoomsPerUserDescription,
       icon: Icons.meeting_room_outlined,
       kind: _SettingEditorKind.number,
     ),
-    'user.enablePasswordSignup': const _SettingDescriptor(
+    'user.enablePasswordSignup': _SettingDescriptor(
       group: 'user',
       key: 'enablePasswordSignup',
-      title: '允许密码注册',
-      description: '用户可以使用用户名和密码注册账号。',
+      title: l10n.allowPasswordSignup,
+      description: l10n.allowPasswordSignupDescription,
       icon: Icons.person_add_alt_1_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.passwordSignupNeedReview': const _SettingDescriptor(
+    'user.passwordSignupNeedReview': _SettingDescriptor(
       group: 'user',
       key: 'passwordSignupNeedReview',
-      title: '密码注册需要审核',
-      description: '新账号注册后需要管理员审核。',
+      title: l10n.passwordSignupRequiresReview,
+      description: l10n.passwordSignupRequiresReviewDescription,
       icon: Icons.how_to_reg_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.enableEmailSignup': const _SettingDescriptor(
+    'user.enableEmailSignup': _SettingDescriptor(
       group: 'user',
       key: 'enableEmailSignup',
-      title: '允许邮箱注册',
-      description: '用户可以通过邮箱验证码注册账号。',
+      title: l10n.allowEmailSignup,
+      description: l10n.allowEmailSignupDescription,
       icon: Icons.alternate_email_rounded,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.emailSignupNeedReview': const _SettingDescriptor(
+    'user.emailSignupNeedReview': _SettingDescriptor(
       group: 'user',
       key: 'emailSignupNeedReview',
-      title: '邮箱注册需要审核',
-      description: '邮箱注册完成后仍需管理员审核。',
+      title: l10n.emailSignupRequiresReview,
+      description: l10n.emailSignupRequiresReviewDescription,
       icon: Icons.mark_email_read_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.enableWebauthnSignup': const _SettingDescriptor(
+    'user.enableWebauthnSignup': _SettingDescriptor(
       group: 'user',
       key: 'enableWebauthnSignup',
-      title: '允许 Passkey 注册',
-      description: '用户可以使用系统 Passkey 能力创建账号。',
+      title: l10n.allowPasskeySignup,
+      description: l10n.allowPasskeySignupDescription,
       icon: Icons.fingerprint_rounded,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.webauthnSignupNeedReview': const _SettingDescriptor(
+    'user.webauthnSignupNeedReview': _SettingDescriptor(
       group: 'user',
       key: 'webauthnSignupNeedReview',
-      title: 'Passkey 注册需要审核',
-      description: 'Passkey 注册后需要管理员审核。',
+      title: l10n.passkeySignupRequiresReview,
+      description: l10n.passkeySignupRequiresReviewDescription,
       icon: Icons.verified_user_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'user.enableGuest': const _SettingDescriptor(
+    'user.enableGuest': _SettingDescriptor(
       group: 'user',
       key: 'enableGuest',
-      title: '允许游客',
-      description: '未登录用户可以以游客身份进入允许游客的房间。',
+      title: l10n.allowGuests,
+      description: l10n.allowGuestsDescription,
       icon: Icons.person_outline_rounded,
       kind: _SettingEditorKind.boolean,
-      warning: '允许游客会降低房间访问门槛，请确认公开房间和默认权限配置符合预期。',
+      warning: l10n.allowGuestsWarning,
     ),
-    'oauth2.providers': const _SettingDescriptor(
+    'oauth2.providers': _SettingDescriptor(
       group: 'oauth2',
       key: 'providers',
-      title: '第三方登录',
-      description: '管理 OAuth2/OIDC 登录提供方实例、注册策略和回调配置。',
+      title: l10n.externalLogin,
+      description: l10n.externalLoginDescription,
       icon: Icons.account_tree_outlined,
       kind: _SettingEditorKind.oauth2Providers,
-      warning: 'OAuth2 配置会影响登录入口。错误的回调地址、密钥或端点会导致第三方登录不可用。',
+      warning: l10n.externalLoginWarning,
     ),
-    'proxy.entryProxy': const _SettingDescriptor(
+    'proxy.entryProxy': _SettingDescriptor(
       group: 'proxy',
       key: 'movieProxy',
-      title: '影片代理',
-      description: '允许服务端代理影片资源请求。',
+      title: l10n.movieProxy,
+      description: l10n.movieProxyDescription,
       icon: Icons.movie_filter_outlined,
       kind: _SettingEditorKind.boolean,
-      warning: '代理能力可能把用户配置的认证信息发送给目标媒体站点，并随播放资源发布给房间成员。仅在信任成员和媒体来源时启用。',
+      warning: l10n.movieProxyWarning,
     ),
-    'proxy.liveProxy': const _SettingDescriptor(
+    'proxy.liveProxy': _SettingDescriptor(
       group: 'proxy',
       key: 'liveProxy',
-      title: '直播代理',
-      description: '允许服务端代理直播流请求。',
+      title: l10n.liveProxy,
+      description: l10n.liveProxyDescription,
       icon: Icons.live_tv_outlined,
       kind: _SettingEditorKind.boolean,
-      warning: '直播代理可能转发敏感请求头或 Cookie，并通过播放信息暴露给房间成员。请确认来源可信。',
+      warning: l10n.liveProxyWarning,
     ),
-    'rtmp.customPublishHost': const _SettingDescriptor(
+    'rtmp.customPublishHost': _SettingDescriptor(
       group: 'rtmp',
       key: 'customPublishHost',
-      title: '推流发布地址',
-      description: '覆盖对外展示的 RTMP 发布主机，留空使用服务端默认地址。',
+      title: l10n.rtmpPublishAddress,
+      description: l10n.rtmpPublishAddressDescription,
       icon: Icons.podcasts_outlined,
       kind: _SettingEditorKind.optionalText,
     ),
-    'rtmp.tsDisguisedAsPng': const _SettingDescriptor(
+    'rtmp.tsDisguisedAsPng': _SettingDescriptor(
       group: 'rtmp',
       key: 'tsDisguisedAsPng',
-      title: 'TS 分片伪装为 PNG',
-      description: '将 HLS TS 分片以 PNG 后缀暴露，用于部分网络环境兼容。',
+      title: l10n.tsSegmentsAsPng,
+      description: l10n.tsSegmentsAsPngDescription,
       icon: Icons.image_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'email.enabled': const _SettingDescriptor(
+    'email.enabled': _SettingDescriptor(
       group: 'email',
       key: 'enabled',
-      title: '启用邮件服务',
-      description: '打开后服务端可以发送邮箱绑定、密码重置、MFA 和通知邮件。',
+      title: l10n.enableEmailService,
+      description: l10n.enableEmailServiceDescription,
       icon: Icons.outgoing_mail,
       kind: _SettingEditorKind.boolean,
-      warning: '启用前请确认 SMTP 主机、发件地址和认证信息正确，否则邮件登录、邮箱绑定、找回密码和通知会不可用。',
+      warning: l10n.enableEmailServiceWarning,
     ),
-    'email.smtpHost': const _SettingDescriptor(
+    'email.smtpHost': _SettingDescriptor(
       group: 'email',
       key: 'smtpHost',
-      title: 'SMTP 主机',
-      description: '启用邮件发送时必填的邮件服务器地址。',
+      title: l10n.smtpHost,
+      description: l10n.smtpHostDescription,
       icon: Icons.dns_outlined,
       kind: _SettingEditorKind.optionalText,
     ),
-    'email.smtpPort': const _SettingDescriptor(
+    'email.smtpPort': _SettingDescriptor(
       group: 'email',
       key: 'smtpPort',
-      title: 'SMTP 端口',
-      description: '常用端口为 587、465 或 25。',
+      title: l10n.smtpPort,
+      description: l10n.smtpPortDescription,
       icon: Icons.numbers_rounded,
       kind: _SettingEditorKind.number,
     ),
-    'email.smtpCredentials': const _SettingDescriptor(
+    'email.smtpCredentials': _SettingDescriptor(
       group: 'email',
       key: 'smtpCredentials',
-      title: 'SMTP 认证',
-      description: '配置 SMTP 用户名和密码；无需认证的服务器可保持关闭。',
+      title: l10n.smtpAuthentication,
+      description: l10n.smtpAuthenticationDescription,
       icon: Icons.password_rounded,
       kind: _SettingEditorKind.smtpCredentials,
-      warning: 'SMTP 密码属于敏感凭据。保存前请确认当前环境和管理员账号可信。',
+      warning: l10n.smtpAuthenticationWarning,
     ),
-    'email.smtpProxy': const _SettingDescriptor(
+    'email.smtpProxy': _SettingDescriptor(
       group: 'email',
       key: 'smtpProxy',
-      title: 'SMTP 代理',
-      description: '配置可选 SOCKS5 代理及代理认证。',
+      title: l10n.smtpProxy,
+      description: l10n.smtpProxyDescription,
       icon: Icons.route_outlined,
       kind: _SettingEditorKind.smtpProxy,
-      warning: '邮件流量和 SMTP 目标地址会经过代理服务器，请使用可信代理。',
+      warning: l10n.smtpProxyWarning,
     ),
-    'email.useTls': const _SettingDescriptor(
+    'email.useTls': _SettingDescriptor(
       group: 'email',
       key: 'useTls',
-      title: '使用 TLS',
-      description: '启用 SMTP TLS/STARTTLS。除本地调试外通常应保持开启。',
+      title: l10n.useTls,
+      description: l10n.useTlsDescription,
       icon: Icons.enhanced_encryption_outlined,
       kind: _SettingEditorKind.boolean,
-      warning: '关闭 TLS 可能导致邮件认证信息明文传输，只应在受控内网或调试环境使用。',
+      warning: l10n.useTlsWarning,
     ),
-    'email.fromEmail': const _SettingDescriptor(
+    'email.fromEmail': _SettingDescriptor(
       group: 'email',
       key: 'fromEmail',
-      title: '发件邮箱',
-      description: '启用邮件发送时必填的合法 From 地址。',
+      title: l10n.senderEmail,
+      description: l10n.senderEmailDescription,
       icon: Icons.alternate_email_rounded,
       kind: _SettingEditorKind.optionalText,
     ),
-    'email.fromName': const _SettingDescriptor(
+    'email.fromName': _SettingDescriptor(
       group: 'email',
       key: 'fromName',
-      title: '发件人显示名',
-      description: '用户收到邮件时看到的发件人名称。',
+      title: l10n.senderDisplayName,
+      description: l10n.senderDisplayNameDescription,
       icon: Icons.badge_outlined,
       kind: _SettingEditorKind.text,
     ),
-    'email.whitelistEnabled': const _SettingDescriptor(
+    'email.whitelistEnabled': _SettingDescriptor(
       group: 'email',
       key: 'whitelistEnabled',
-      title: '启用邮箱白名单',
-      description: '限制邮箱注册只能使用指定域名或邮箱。',
+      title: l10n.enableEmailWhitelist,
+      description: l10n.enableEmailWhitelistDescription,
       icon: Icons.mark_email_unread_outlined,
       kind: _SettingEditorKind.boolean,
     ),
-    'email.whitelistDomains': const _SettingDescriptor(
+    'email.whitelistDomains': _SettingDescriptor(
       group: 'email',
       key: 'whitelistDomains',
-      title: '邮箱白名单',
-      description: '每行一个邮箱或域名。域名可使用 example.com 或 @example.com。',
+      title: l10n.emailWhitelist,
+      description: l10n.emailWhitelistDescription,
       icon: Icons.playlist_add_check_rounded,
       kind: _SettingEditorKind.stringList,
     ),
-    'webrtc.externalIceServers': const _SettingDescriptor(
+    'webrtc.externalIceServers': _SettingDescriptor(
       group: 'webrtc',
       key: 'externalIceServers',
-      title: '外部 ICE 服务器',
-      description: '向客户端下发的 STUN/TURN 服务器列表。',
+      title: l10n.externalIceServers,
+      description: l10n.externalIceServersDescription,
       icon: Icons.settings_input_antenna_rounded,
       kind: _SettingEditorKind.iceServers,
-      warning: 'TURN 用户名和凭据会下发给客户端。请使用最小权限、可轮换的账号。',
+      warning: l10n.externalIceServersWarning,
     ),
-    'chat.maxMessagesPerRoom': const _SettingDescriptor(
+    'chat.maxMessagesPerRoom': _SettingDescriptor(
       group: 'chat',
       key: 'maxMessagesPerRoom',
-      title: '每个房间保留聊天数',
-      description: '聊天消息按房间保留的数量上限，0 表示不限制。',
+      title: l10n.chatMessagesPerRoom,
+      description: l10n.chatMessagesPerRoomDescription,
       icon: Icons.chat_bubble_outline_rounded,
       kind: _SettingEditorKind.number,
     ),
-    'chat.messageRetentionDays': const _SettingDescriptor(
+    'chat.messageRetentionDays': _SettingDescriptor(
       group: 'chat',
       key: 'messageRetentionDays',
-      title: '聊天保留天数',
-      description: '聊天消息的最长保留时间。',
+      title: l10n.chatRetentionDays,
+      description: l10n.chatRetentionDaysDescription,
       icon: Icons.history_toggle_off_rounded,
       kind: _SettingEditorKind.number,
     ),
-    'cors.allowedOrigins': const _SettingDescriptor(
+    'cors.allowedOrigins': _SettingDescriptor(
       group: 'cors',
       key: 'allowedOrigins',
-      title: '允许跨域来源',
-      description: '允许访问代理接口的 Web Origin 列表，原生客户端通常不需要配置。',
+      title: l10n.allowedCorsOrigins,
+      description: l10n.allowedCorsOriginsDescription,
       icon: Icons.public_rounded,
       kind: _SettingEditorKind.stringList,
-      warning: '跨域来源配置过宽会扩大浏览器侧访问面。只添加明确可信的 https Origin。',
+      warning: l10n.allowedCorsOriginsWarning,
     ),
-    'permissions.adminDefaultPermissions': const _SettingDescriptor(
+    'permissions.adminDefaultPermissions': _SettingDescriptor(
       group: 'permissions',
       key: 'adminDefaultPermissions',
-      title: '管理员默认权限',
-      description: '房间管理员的默认权限集合。',
+      title: l10n.adminDefaultPermissions,
+      description: l10n.adminDefaultPermissionsDescription,
       icon: Icons.admin_panel_settings_outlined,
       kind: _SettingEditorKind.permissionList,
     ),
-    'permissions.memberDefaultPermissions': const _SettingDescriptor(
+    'permissions.memberDefaultPermissions': _SettingDescriptor(
       group: 'permissions',
       key: 'memberDefaultPermissions',
-      title: '成员默认权限',
-      description: '普通成员加入房间后的默认权限集合。',
+      title: l10n.memberDefaultPermissions,
+      description: l10n.memberDefaultPermissionsDescription,
       icon: Icons.group_outlined,
       kind: _SettingEditorKind.permissionList,
     ),
-    'permissions.guestDefaultPermissions': const _SettingDescriptor(
+    'permissions.guestDefaultPermissions': _SettingDescriptor(
       group: 'permissions',
       key: 'guestDefaultPermissions',
-      title: '游客默认权限',
-      description: '游客进入房间后的默认权限集合，仅包含服务端定义的游客可用权限。',
+      title: l10n.guestDefaultPermissions,
+      description: l10n.guestDefaultPermissionsDescription,
       icon: Icons.person_pin_circle_outlined,
       kind: _SettingEditorKind.permissionList,
       permissions: _guestPermissions,
-      warning: '游客权限会影响未登录用户。请只授予查看和低风险操作权限。',
+      warning: l10n.guestDefaultPermissionsWarning,
     ),
   };
   final descriptor = known[id];
@@ -9508,15 +9844,30 @@ _SettingDescriptor _settingDescriptor(
     group: section,
     key: key,
     title: _humanizeSettingKey(key),
-    description: '${_settingsSectionLabel(section)} 运行时配置。',
+    description: l10n.runtimeSectionDescription(
+      _settingsSectionLabel(l10n, section),
+    ),
     icon: Icons.tune_rounded,
     kind: kind,
     secret: _isSecretKey(key),
   );
 }
 
-String _settingsSectionLabel(String section) =>
-    _settingsSectionLabels[section] ?? section;
+String _settingsSectionLabel(AppLocalizations l10n, String section) =>
+    switch (section) {
+      'server' => l10n.server,
+      'room' => l10n.rooms,
+      'user' => l10n.users,
+      'oauth2' => 'OAuth2',
+      'proxy' => l10n.proxy,
+      'rtmp' => l10n.streaming,
+      'email' => l10n.email,
+      'webrtc' => 'WebRTC',
+      'chat' => l10n.chat,
+      'cors' => l10n.cors,
+      'permissions' => l10n.permissions,
+      _ => section,
+    };
 
 String _humanizeSettingKey(String key) {
   return key
@@ -9536,49 +9887,57 @@ bool _isSecretKey(String key) {
       lower.contains('key');
 }
 
-String _settingSummary(dynamic value, _SettingDescriptor descriptor) {
-  if (value == null) return '未设置';
+String _settingSummary(
+  AppLocalizations l10n,
+  dynamic value,
+  _SettingDescriptor descriptor,
+) {
+  if (value == null) return l10n.notConfigured;
   switch (descriptor.kind) {
     case _SettingEditorKind.boolean:
-      return value == true ? '已开启' : '已关闭';
+      return value == true ? l10n.enabled : l10n.disabled;
     case _SettingEditorKind.oauth2Providers:
       final map = value is Map
           ? Map<String, dynamic>.from(value)
           : const <String, dynamic>{};
-      if (map.isEmpty) return '未配置第三方登录';
+      if (map.isEmpty) return l10n.noExternalLoginConfigured;
       final enabled = map.values.where((entry) {
         if (entry is! Map) return false;
         final config = _oauth2ProviderConfig(Map<String, dynamic>.from(entry));
         return (config['clientId'] ?? '').toString().isNotEmpty;
       }).length;
-      return '${map.length} 个实例，$enabled 个已填写 Client ID';
+      return l10n.oauthProviderSummary(map.length, enabled);
     case _SettingEditorKind.iceServers:
       final list = value is List ? value : const [];
-      return list.isEmpty ? '未配置 ICE 服务器' : '${list.length} 个 ICE 服务器';
+      return list.isEmpty
+          ? l10n.noIceServersConfigured
+          : l10n.iceServerCount(list.length);
     case _SettingEditorKind.smtpCredentials:
       final credentials = value is Map
           ? Map<String, dynamic>.from(value)
           : const <String, dynamic>{};
       final username = (credentials['username'] ?? '').toString();
-      return username.isEmpty ? '未启用认证' : '已配置用户 $username';
+      return username.isEmpty
+          ? l10n.authenticationDisabled
+          : l10n.configuredUser(username);
     case _SettingEditorKind.smtpProxy:
       final proxy = value is Map
           ? Map<String, dynamic>.from(value)
           : const <String, dynamic>{};
       final url = (proxy['url'] ?? '').toString();
-      return url.isEmpty ? '使用直连' : url;
+      return url.isEmpty ? l10n.directConnection : url;
     case _SettingEditorKind.optionalText:
       return value.toString();
     case _SettingEditorKind.stringList:
     case _SettingEditorKind.list:
       final list = _valueAsStringList(value);
-      return list.isEmpty ? '空列表' : list.join('、');
+      return list.isEmpty ? l10n.emptyList : list.join(', ');
     case _SettingEditorKind.permissionList:
       final permissions = _permissionsFromValue(value).toList()..sort();
-      if (permissions.isEmpty) return '无权限';
+      if (permissions.isEmpty) return l10n.noPermissions;
       return permissions
-          .map((permission) => _permissionLabels[permission] ?? permission)
-          .join('、');
+          .map((permission) => _permissionLabel(l10n, permission))
+          .join(', ');
     case _SettingEditorKind.enumChoice:
       return descriptor.choices
           .firstWhere(
@@ -9589,11 +9948,15 @@ String _settingSummary(dynamic value, _SettingDescriptor descriptor) {
           .label;
     case _SettingEditorKind.map:
       final map = value is Map ? value : const {};
-      return map.isEmpty ? '空对象' : '${map.length} 项配置';
+      return map.isEmpty
+          ? l10n.emptyObject
+          : l10n.configurationCount(map.length);
     case _SettingEditorKind.number:
     case _SettingEditorKind.text:
-      if (descriptor.secret && value.toString().isNotEmpty) return '已设置';
-      return value.toString().isEmpty ? '未设置' : value.toString();
+      if (descriptor.secret && value.toString().isNotEmpty) {
+        return l10n.configured;
+      }
+      return value.toString().isEmpty ? l10n.notConfigured : value.toString();
   }
 }
 
@@ -9665,11 +10028,11 @@ class _SettingsSectionDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppSelect<String>(
       value: selectedSection,
-      label: '设置',
+      label: context.l10n.settings,
       prefixIcon: Icons.folder_outlined,
       options: {
         for (final section in sections)
-          _settingsSectionLabel(section.name): section.name,
+          _settingsSectionLabel(context.l10n, section.name): section.name,
       },
       enabled: enabled,
       onChanged: enabled ? onChanged : null,
@@ -9709,7 +10072,7 @@ class _SettingsSectionButton extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              _settingsSectionLabel(sectionName),
+              _settingsSectionLabel(context.l10n, sectionName),
               style: theme.textTheme.titleSmall?.copyWith(
                 color: color,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -9753,14 +10116,14 @@ class _SettingsSectionHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _settingsSectionLabel(sectionName),
+                  _settingsSectionLabel(context.l10n, sectionName),
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$entryCount 项可配置设置',
+                  context.l10n.configurableSettingsCount(entryCount),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -9771,7 +10134,7 @@ class _SettingsSectionHeader extends StatelessWidget {
           if (action != null) ...[const SizedBox(width: 12), action!],
           const SizedBox(width: 8),
           AppIconButton(
-            tooltip: '刷新当前分区',
+            tooltip: context.l10n.refreshCurrentSection,
             icon: Icons.refresh_rounded,
             loading: isLoading,
             style: AppIconButtonStyle.tonal,
@@ -9835,7 +10198,7 @@ class _SettingTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  _settingSummary(value, descriptor),
+                  _settingSummary(context.l10n, value, descriptor),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium,
@@ -9864,7 +10227,7 @@ class _SettingTile extends StatelessWidget {
             )
           else
             AppIconButton(
-              tooltip: '编辑',
+              tooltip: context.l10n.edit,
               icon: Icons.edit_outlined,
               style: AppIconButtonStyle.tonal,
               onPressed: onEdit,
@@ -9966,7 +10329,7 @@ class _SettingsDialogHeader extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           AppIconButton(
-            tooltip: '关闭',
+            tooltip: context.l10n.close,
             icon: Icons.close_rounded,
             onPressed: onClose,
           ),
@@ -10007,7 +10370,7 @@ class _SettingsDialogActions extends StatelessWidget {
             Expanded(
               child: AppActionButton(
                 onPressed: onCancel,
-                label: '取消',
+                label: context.l10n.cancel,
                 style: AppActionButtonStyle.outlined,
               ),
             ),
@@ -10112,7 +10475,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
                 ),
               ),
               _SettingsDialogActions(
-                confirmLabel: '保存',
+                confirmLabel: context.l10n.save,
                 onCancel: () => Navigator.pop(context),
                 onConfirm: _save,
               ),
@@ -10145,7 +10508,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
       case _SettingEditorKind.stringList:
         return _StringListSettingEditor(
           values: _valueAsStringList(_value),
-          label: '条目',
+          label: context.l10n.entry,
           hintText: _stringListHint(widget.sectionName, widget.settingKey),
           onChanged: (values) => setState(() => _value = values),
         );
@@ -10180,8 +10543,8 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
       case _SettingEditorKind.list:
         return _StringListSettingEditor(
           values: _valueAsStringList(_value),
-          label: '条目',
-          hintText: '输入条目',
+          label: context.l10n.entry,
+          hintText: context.l10n.enterEntry,
           onChanged: (values) => setState(() => _value = values),
         );
       case _SettingEditorKind.boolean:
@@ -10250,11 +10613,11 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
           const SizedBox(height: 16),
           AppTextField(
             controller: _controller('optionalText', _value?.toString() ?? ''),
-            label: '内容',
+            label: context.l10n.content,
             prefixIcon: Icons.edit_outlined,
             autocorrect: false,
             validator: (value) => value == null || value.trim().isEmpty
-                ? '请输入${widget.descriptor.title}'
+                ? context.l10n.enterSettingValue(widget.descriptor.title)
                 : null,
           ),
         ],
@@ -10278,23 +10641,26 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
         AppSwitchTile(
           value: _optionalConfigEnabled,
           onChanged: (value) => setState(() => _optionalConfigEnabled = value),
-          title: const Text('启用 SMTP 认证'),
-          subtitle: const Text('服务器要求登录时配置用户名和密码'),
+          title: Text(context.l10n.enableSmtpAuthentication),
+          subtitle: Text(context.l10n.enableSmtpAuthenticationDescription),
         ),
         if (_optionalConfigEnabled) ...[
           const SizedBox(height: 16),
           AppTextField(
             controller: _controller('credentialsUsername', currentUsername),
-            label: '用户名',
+            label: context.l10n.username,
             prefixIcon: Icons.person_outline_rounded,
-            validator: (value) =>
-                value == null || value.trim().isEmpty ? '请输入 SMTP 用户名' : null,
+            validator: (value) => value == null || value.trim().isEmpty
+                ? context.l10n.smtpUsernameRequired
+                : null,
           ),
           const SizedBox(height: 12),
           AppTextField(
             controller: _controller('credentialsPassword'),
-            label: '密码',
-            hintText: currentUsername.isEmpty ? '请输入密码' : '留空保留现有密码',
+            label: context.l10n.password,
+            hintText: currentUsername.isEmpty
+                ? context.l10n.passwordRequired
+                : context.l10n.emptyKeepsCurrentPassword,
             prefixIcon: Icons.password_rounded,
             obscureText: true,
             autocorrect: false,
@@ -10303,7 +10669,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
               final usernameChanged = username != currentUsername;
               if ((currentUsername.isEmpty || usernameChanged) &&
                   (value == null || value.isEmpty)) {
-                return '新认证或更换用户名时必须输入密码';
+                return context.l10n.passwordRequiredForNewCredentials;
               }
               return null;
             },
@@ -10327,8 +10693,8 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
         AppSwitchTile(
           value: _optionalConfigEnabled,
           onChanged: (value) => setState(() => _optionalConfigEnabled = value),
-          title: const Text('启用 SMTP 代理'),
-          subtitle: const Text('邮件连接通过 SOCKS5 代理建立'),
+          title: Text(context.l10n.enableSmtpProxy),
+          subtitle: Text(context.l10n.enableSmtpProxyDescription),
         ),
         if (_optionalConfigEnabled) ...[
           const SizedBox(height: 16),
@@ -10337,7 +10703,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
               'proxyUrl',
               (current['url'] ?? '').toString(),
             ),
-            label: 'SOCKS5 代理地址',
+            label: context.l10n.socks5ProxyAddress,
             hintText: 'socks5://proxy.example.com:1080',
             prefixIcon: Icons.route_outlined,
             keyboardType: TextInputType.url,
@@ -10346,7 +10712,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
               final url = value?.trim() ?? '';
               return url.startsWith('socks5://')
                   ? null
-                  : '请输入 socks5:// 开头的代理地址';
+                  : context.l10n.socks5ProxyAddressRequired;
             },
           ),
           const SizedBox(height: 12),
@@ -10354,23 +10720,26 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
             value: _nestedCredentialsEnabled,
             onChanged: (value) =>
                 setState(() => _nestedCredentialsEnabled = value),
-            title: const Text('代理需要认证'),
-            subtitle: const Text('配置 SOCKS5 用户名和密码'),
+            title: Text(context.l10n.proxyRequiresAuthentication),
+            subtitle: Text(context.l10n.proxyAuthenticationDescription),
           ),
           if (_nestedCredentialsEnabled) ...[
             const SizedBox(height: 12),
             AppTextField(
               controller: _controller('proxyUsername', currentUsername),
-              label: '代理用户名',
+              label: context.l10n.proxyUsername,
               prefixIcon: Icons.manage_accounts_outlined,
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? '请输入代理用户名' : null,
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? context.l10n.proxyUsernameRequired
+                  : null,
             ),
             const SizedBox(height: 12),
             AppTextField(
               controller: _controller('proxyPassword'),
-              label: '代理密码',
-              hintText: currentUsername.isEmpty ? '请输入密码' : '留空保留现有密码',
+              label: context.l10n.proxyPassword,
+              hintText: currentUsername.isEmpty
+                  ? context.l10n.passwordRequired
+                  : context.l10n.emptyKeepsCurrentPassword,
               prefixIcon: Icons.key_outlined,
               obscureText: true,
               autocorrect: false,
@@ -10379,7 +10748,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
                 final usernameChanged = username != currentUsername;
                 if ((currentUsername.isEmpty || usernameChanged) &&
                     (value == null || value.isEmpty)) {
-                  return '新认证或更换用户名时必须输入密码';
+                  return context.l10n.passwordRequiredForNewCredentials;
                 }
                 return null;
               },
@@ -10415,7 +10784,7 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
   String _stringListHint(String group, String key) {
     if (group == 'cors') return 'https://app.example.com';
     if (group == 'email') return '@example.com';
-    return '输入条目';
+    return context.l10n.enterEntry;
   }
 }
 
@@ -10439,12 +10808,16 @@ class _NumberSettingEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppTextField(
       controller: controller,
-      label: '数值',
+      label: context.l10n.value,
       prefixIcon: Icons.pin_outlined,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       validator: (value) {
-        if (value == null || value.trim().isEmpty) return '请输入数值';
-        return num.tryParse(value.trim()) == null ? '请输入有效数值' : null;
+        if (value == null || value.trim().isEmpty) {
+          return context.l10n.valueRequired;
+        }
+        return num.tryParse(value.trim()) == null
+            ? context.l10n.validNumberRequired
+            : null;
       },
     );
   }
@@ -10465,7 +10838,7 @@ class _TextSettingEditorState extends State<_TextSettingEditor> {
   Widget build(BuildContext context) {
     return AppTextField(
       controller: widget.controller,
-      label: '内容',
+      label: context.l10n.content,
       prefixIcon: Icons.edit_outlined,
       obscureText: widget.secret,
       minLines: widget.secret ? 1 : null,
@@ -10580,7 +10953,7 @@ class _StringListSettingEditorState extends State<_StringListSettingEditor> {
                 ),
                 const SizedBox(width: 8),
                 AppIconButton(
-                  tooltip: '删除',
+                  tooltip: context.l10n.delete,
                   icon: Icons.remove_rounded,
                   style: AppIconButtonStyle.destructive,
                   onPressed: _controllers.length == 1
@@ -10599,7 +10972,7 @@ class _StringListSettingEditorState extends State<_StringListSettingEditor> {
           alignment: Alignment.centerLeft,
           child: AppActionButton(
             icon: Icons.add_rounded,
-            label: '添加',
+            label: context.l10n.add,
             onPressed: () {
               setState(() => _controllers.add(TextEditingController()));
               _emit();
@@ -10631,7 +11004,7 @@ class _PermissionListSettingEditor extends StatelessWidget {
       children: [
         for (final permission in permissions)
           AppChip(
-            label: Text(_permissionLabels[permission] ?? permission),
+            label: Text(_permissionLabel(context.l10n, permission)),
             selected: values.contains(permission),
             onSelected: (selected) {
               final next = {...values};
@@ -10750,10 +11123,10 @@ class _OAuth2ProvidersEditor extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (entries.isEmpty)
-          const _EmptySettingsNotice(
+          _EmptySettingsNotice(
             icon: Icons.account_tree_outlined,
-            title: '还没有第三方登录实例',
-            message: '添加 GitHub、Google、Logto 或通用 OIDC 实例后，登录页会自动展示对应入口。',
+            title: context.l10n.noLoginProviders,
+            message: context.l10n.noLoginProvidersDescription,
           )
         else
           for (final entry in entries)
@@ -10774,7 +11147,7 @@ class _OAuth2ProvidersEditor extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: AppActionButton(
             icon: Icons.add_rounded,
-            label: '添加登录提供方',
+            label: context.l10n.addLoginProvider,
             onPressed: () => _editProvider(context, null),
           ),
         ),
@@ -10828,10 +11201,10 @@ class _OAuth2ProvidersList extends StatelessWidget {
             child: AppLinearProgress(),
           ),
         if (entries.isEmpty)
-          const _EmptySettingsNotice(
+          _EmptySettingsNotice(
             icon: Icons.account_tree_outlined,
-            title: '还没有第三方登录实例',
-            message: '点击右上角添加 GitHub、Google、Logto 或通用 OIDC 登录入口。',
+            title: context.l10n.noLoginProviders,
+            message: context.l10n.addLoginProviderHint,
           )
         else
           for (final entry in entries)
@@ -10888,7 +11261,12 @@ class _OAuth2ProviderCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${_oauth2ProviderTypeLabels[providerType] ?? providerType} · ${hasClientId ? '已配置客户端' : '未填写 Client ID'}',
+                    context.l10n.loginProviderSummary(
+                      _oauth2ProviderTypeLabels[providerType] ?? providerType,
+                      hasClientId
+                          ? context.l10n.clientConfigured
+                          : context.l10n.clientIdMissing,
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -10899,14 +11277,16 @@ class _OAuth2ProviderCard extends StatelessWidget {
                     runSpacing: 8,
                     children: [
                       _StatusChip(
-                        label: value['enableSignup'] == true ? '允许注册' : '仅登录绑定',
+                        label: value['enableSignup'] == true
+                            ? context.l10n.signupAllowed
+                            : context.l10n.loginBindingOnly,
                         icon: value['enableSignup'] == true
                             ? Icons.person_add_alt_1_outlined
                             : Icons.login_rounded,
                       ),
                       if (value['signupNeedReview'] == true)
-                        const _StatusChip(
-                          label: '注册需审核',
+                        _StatusChip(
+                          label: context.l10n.signupRequiresReview,
                           icon: Icons.fact_check_outlined,
                         ),
                     ],
@@ -10915,12 +11295,12 @@ class _OAuth2ProviderCard extends StatelessWidget {
               ),
             ),
             AppIconButton(
-              tooltip: '编辑',
+              tooltip: context.l10n.edit,
               icon: Icons.edit_outlined,
               onPressed: onEdit,
             ),
             AppIconButton(
-              tooltip: '删除',
+              tooltip: context.l10n.delete,
               icon: Icons.delete_outline_rounded,
               style: AppIconButtonStyle.destructive,
               onPressed: onDelete,
@@ -11067,8 +11447,10 @@ class _OAuth2ProviderEditorSheetState
             children: [
               _SettingsDialogHeader(
                 icon: Icons.login_rounded,
-                title: widget.initialName == null ? '添加第三方登录' : '编辑第三方登录',
-                subtitle: '配置 OAuth2/OIDC 登录实例、回调地址和注册策略。',
+                title: widget.initialName == null
+                    ? context.l10n.addExternalLogin
+                    : context.l10n.editExternalLogin,
+                subtitle: context.l10n.externalLoginEditorDescription,
                 onClose: () => Navigator.pop(context),
               ),
               Flexible(
@@ -11078,8 +11460,8 @@ class _OAuth2ProviderEditorSheetState
                     children: [
                       AppTextField(
                         controller: _name,
-                        label: '实例名称',
-                        helperText: '只能使用字母、数字、下划线和连字符',
+                        label: context.l10n.instanceName,
+                        helperText: context.l10n.instanceNameFormatHint,
                         prefixIcon: Icons.badge_outlined,
                         validator: _validateProviderName,
                         autocorrect: false,
@@ -11089,7 +11471,7 @@ class _OAuth2ProviderEditorSheetState
                       const SizedBox(height: 12),
                       AppSelect<String>(
                         value: _type,
-                        label: '提供方类型',
+                        label: context.l10n.providerType,
                         prefixIcon: Icons.account_tree_outlined,
                         options: {
                           for (final type in _oauth2ProviderTypes)
@@ -11124,7 +11506,7 @@ class _OAuth2ProviderEditorSheetState
                         obscureText: true,
                         validator: (value) =>
                             (value == null || value.trim().isEmpty)
-                            ? '请输入 Client Secret'
+                            ? context.l10n.clientSecretRequired
                             : null,
                         autocorrect: false,
                         smartDashesType: SmartDashesType.disabled,
@@ -11133,7 +11515,7 @@ class _OAuth2ProviderEditorSheetState
                       const SizedBox(height: 12),
                       _oauthTextField(
                         _redirectUrl,
-                        '回调地址',
+                        context.l10n.callbackUrl,
                         Icons.link_rounded,
                         required: true,
                         hintText: 'https://example.com/api/oauth2/callback',
@@ -11163,33 +11545,33 @@ class _OAuth2ProviderEditorSheetState
                         const SizedBox(height: 12),
                         _oauthTextField(
                           _authUrl,
-                          '授权端点',
+                          context.l10n.authorizationEndpoint,
                           Icons.open_in_browser_rounded,
-                          hintText: '留空使用 OIDC Discovery',
+                          hintText: context.l10n.emptyUsesOidcDiscovery,
                           validator: _validateOptionalHttpUrl,
                         ),
                         const SizedBox(height: 12),
                         _oauthTextField(
                           _tokenUrl,
-                          'Token 端点',
+                          context.l10n.tokenEndpoint,
                           Icons.token_outlined,
-                          hintText: '留空使用 OIDC Discovery',
+                          hintText: context.l10n.emptyUsesOidcDiscovery,
                           validator: _validateOptionalHttpUrl,
                         ),
                         const SizedBox(height: 12),
                         _oauthTextField(
                           _userinfoUrl,
-                          'UserInfo 端点',
+                          context.l10n.userInfoEndpoint,
                           Icons.person_search_outlined,
-                          hintText: '留空使用 OIDC Discovery',
+                          hintText: context.l10n.emptyUsesOidcDiscovery,
                           validator: _validateOptionalHttpUrl,
                         ),
                         const SizedBox(height: 12),
                         _oauthTextField(
                           _jwksUrl,
-                          'JWKS 端点',
+                          context.l10n.jwksEndpoint,
                           Icons.security_rounded,
-                          hintText: '留空使用 OIDC Discovery',
+                          hintText: context.l10n.emptyUsesOidcDiscovery,
                           validator: _validateOptionalHttpUrl,
                         ),
                       ],
@@ -11198,8 +11580,10 @@ class _OAuth2ProviderEditorSheetState
                         value: _enableSignup,
                         onChanged: (value) =>
                             setState(() => _enableSignup = value),
-                        title: const Text('允许用此提供方注册'),
-                        subtitle: const Text('关闭后只允许绑定过的用户登录。'),
+                        title: Text(context.l10n.allowProviderSignup),
+                        subtitle: Text(
+                          context.l10n.allowProviderSignupDescription,
+                        ),
                       ),
                       AppSwitchTile(
                         value: _signupNeedReview,
@@ -11207,14 +11591,14 @@ class _OAuth2ProviderEditorSheetState
                             ? (value) =>
                                   setState(() => _signupNeedReview = value)
                             : null,
-                        title: const Text('注册后需要审核'),
+                        title: Text(context.l10n.signupRequiresReview),
                       ),
                     ],
                   ),
                 ),
               ),
               _SettingsDialogActions(
-                confirmLabel: '保存实例',
+                confirmLabel: context.l10n.saveInstance,
                 onCancel: () => Navigator.pop(context),
                 onConfirm: _save,
               ),
@@ -11242,7 +11626,7 @@ class _OAuth2ProviderEditorSheetState
           validator ??
           (required
               ? (value) => (value == null || value.trim().isEmpty)
-                    ? '请输入 $label'
+                    ? context.l10n.fieldRequired(label)
                     : null
               : null),
       autocorrect: false,
@@ -11253,22 +11637,26 @@ class _OAuth2ProviderEditorSheetState
 
   String? _validateProviderName(String? value) {
     final name = value?.trim() ?? '';
-    if (name.isEmpty) return '请输入实例名称';
-    if (name.length > 64) return '实例名称不能超过 64 个字符';
-    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(name)) return '只能使用字母、数字、下划线和连字符';
+    if (name.isEmpty) return context.l10n.instanceNameRequired;
+    if (name.length > 64) return context.l10n.instanceNameTooLong(64);
+    if (!RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(name)) {
+      return context.l10n.instanceNameFormatHint;
+    }
     if (name != widget.initialName && widget.existingNames.contains(name)) {
-      return '实例名称已存在';
+      return context.l10n.instanceNameExists;
     }
     return null;
   }
 
   String? _validateHttpUrl(String? value) {
     final raw = value?.trim() ?? '';
-    if (raw.isEmpty) return '请输入 URL';
+    if (raw.isEmpty) return context.l10n.urlRequired;
     final uri = Uri.tryParse(raw);
-    if (uri == null || !uri.hasScheme || uri.host.isEmpty) return '请输入有效 URL';
+    if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+      return context.l10n.validUrlRequired;
+    }
     if (uri.scheme != 'http' && uri.scheme != 'https') {
-      return '只允许 http 或 https 地址';
+      return context.l10n.httpUrlRequired;
     }
     return null;
   }
@@ -11323,10 +11711,10 @@ class _IceServersEditor extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (servers.isEmpty)
-          const _EmptySettingsNotice(
+          _EmptySettingsNotice(
             icon: Icons.settings_input_antenna_rounded,
-            title: '未配置 ICE 服务器',
-            message: '添加 STUN 或 TURN 服务器后，客户端会优先使用这里的连接配置。',
+            title: context.l10n.noIceServersConfigured,
+            message: context.l10n.noIceServersDescription,
           )
         else
           for (var index = 0; index < servers.length; index++)
@@ -11348,7 +11736,7 @@ class _IceServersEditor extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: AppActionButton(
             icon: Icons.add_rounded,
-            label: '添加 ICE 服务器',
+            label: context.l10n.addIceServer,
             onPressed: () {
               onChanged([
                 ...servers,
@@ -11437,14 +11825,14 @@ class _IceServerCardState extends State<_IceServerCard> {
               children: [
                 Expanded(
                   child: Text(
-                    'ICE 服务器 ${widget.index + 1}',
+                    context.l10n.iceServerNumber(widget.index + 1),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
                 AppIconButton(
-                  tooltip: '删除',
+                  tooltip: context.l10n.delete,
                   icon: Icons.delete_outline_rounded,
                   style: AppIconButtonStyle.destructive,
                   onPressed: widget.onDelete,
@@ -11454,7 +11842,7 @@ class _IceServerCardState extends State<_IceServerCard> {
             AppTextField(
               controller: _urls,
               label: 'URL',
-              helperText: '每行一个，例如 stun:host:3478 或 turns:host:5349',
+              helperText: context.l10n.iceServerUrlsHint,
               prefixIcon: Icons.link_rounded,
               minLines: 1,
               maxLines: 4,
@@ -11470,27 +11858,29 @@ class _IceServerCardState extends State<_IceServerCard> {
                         .where((url) => url.isNotEmpty)
                         .toList() ??
                     const [];
-                if (urls.isEmpty) return '至少填写一个 URL';
+                if (urls.isEmpty) return context.l10n.atLeastOneUrlRequired;
                 final invalid = urls.where(
                   (url) =>
                       !(url.startsWith('stun:') ||
                           url.startsWith('turn:') ||
                           url.startsWith('turns:')),
                 );
-                return invalid.isNotEmpty ? '只支持 stun:/turn:/turns: URL' : null;
+                return invalid.isNotEmpty
+                    ? context.l10n.iceServerUrlSchemeRequired
+                    : null;
               },
             ),
             const SizedBox(height: 12),
             AppTextField(
               controller: _username,
-              label: '用户名',
+              label: context.l10n.username,
               prefixIcon: Icons.person_outline_rounded,
               onChanged: (_) => _emit(),
             ),
             const SizedBox(height: 12),
             AppTextField(
               controller: _credential,
-              label: '凭据',
+              label: context.l10n.credential,
               prefixIcon: Icons.password_outlined,
               obscureText: true,
               onChanged: (_) => _emit(),
@@ -11656,8 +12046,8 @@ class _AdminPager extends StatelessWidget {
   Widget build(BuildContext context) {
     final total = this.total;
     final label = total == null
-        ? '第 $page 页 · 每页 $pageSize'
-        : '第 $page 页 · 每页 $pageSize · 共 $total 条';
+        ? context.l10n.pageSizeSummary(page, pageSize)
+        : context.l10n.pageSizeTotalSummary(page, pageSize, total);
     return AppPaginationBar(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       label: label,
@@ -11797,18 +12187,18 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
       });
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '加载聊天历史失败: $e');
+      MessageUtils.showError(context, context.l10n.loadChatHistoryFailed('$e'));
     }
   }
 
   Future<void> _copyMessage(RoomChatMessageInfo message) async {
-    final text = _messagePreview(message).trim();
+    final text = _messagePreview(context, message).trim();
     if (text.isEmpty) {
-      MessageUtils.showInfo(context, '这条消息没有可复制内容');
+      MessageUtils.showInfo(context, context.l10n.messageHasNoCopyableContent);
       return;
     }
     await Clipboard.setData(ClipboardData(text: text));
-    if (mounted) MessageUtils.showSuccess(context, '消息已复制');
+    if (mounted) MessageUtils.showSuccess(context, context.l10n.messageCopied);
   }
 
   Future<void> _deleteMessage(RoomChatMessageInfo message) async {
@@ -11816,10 +12206,10 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
     final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AppConfirmDialog(
-        title: '删除消息',
+        title: context.l10n.deleteMessage,
         icon: const Icon(Icons.delete_outline_rounded),
-        content: Text('删除 ${message.username} 的这条消息。'),
-        confirmLabel: '删除',
+        content: Text(context.l10n.confirmDeleteUserMessage(message.username)),
+        confirmLabel: context.l10n.delete,
         confirmIcon: Icons.delete_outline_rounded,
         destructive: true,
         onConfirm: () => Navigator.pop(context, true),
@@ -11839,20 +12229,22 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
         if (index >= 0) _messages[index] = updated;
         _messageIndex[updated.id] = updated;
       });
-      MessageUtils.showSuccess(context, '消息已删除');
+      MessageUtils.showSuccess(context, context.l10n.messageDeleted);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '删除消息失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.deleteMessageFailed('$e'));
+      }
     }
   }
 
   Future<void> _reportMessage(RoomChatMessageInfo message) async {
     if (message.id.isEmpty) return;
-    const reasons = <String, String>{
-      'spam': '垃圾广告',
-      'abuse': '辱骂骚扰',
-      'illegal': '违法违规',
-      'sexual': '低俗色情',
-      'other': '其他问题',
+    final reasons = <String, String>{
+      'spam': context.l10n.reportReasonSpam,
+      'abuse': context.l10n.reportReasonAbuse,
+      'illegal': context.l10n.reportReasonIllegal,
+      'sexual': context.l10n.reportReasonSexual,
+      'other': context.l10n.reportReasonOther,
     };
     var selectedReason = 'spam';
     final detailController = TextEditingController();
@@ -11862,7 +12254,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AppDialog(
-              title: const Text('举报消息'),
+              title: Text(context.l10n.reportMessage),
               icon: const Icon(Icons.flag_outlined),
               body: SizedBox(
                 width: 380,
@@ -11888,8 +12280,8 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
                     const SizedBox(height: 12),
                     AppTextField(
                       controller: detailController,
-                      label: '补充说明',
-                      hintText: '描述具体问题',
+                      label: context.l10n.additionalDetails,
+                      hintText: context.l10n.describeIssue,
                       minLines: 3,
                       maxLines: 5,
                     ),
@@ -11900,7 +12292,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
                 AppActionButton(
                   onPressed: () => Navigator.pop(dialogContext, true),
                   icon: Icons.flag_outlined,
-                  label: '提交',
+                  label: context.l10n.submit,
                 ),
                 _closeButton(dialogContext),
               ],
@@ -11917,9 +12309,13 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
         reasonCode: selectedReason,
         reason: detailController.text,
       );
-      if (mounted) MessageUtils.showSuccess(context, '举报已提交');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.reportSubmitted);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '举报失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.reportFailed('$e'));
+      }
     } finally {
       detailController.dispose();
     }
@@ -11946,7 +12342,12 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
         ),
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载消息上下文失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadMessageContextFailed('$e'),
+        );
+      }
     }
   }
 
@@ -11987,7 +12388,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('聊天历史'),
+                  Text(context.l10n.chatHistory),
                   Text(
                     widget.room.roomName,
                     maxLines: 1,
@@ -12006,17 +12407,17 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
                 children: [
                   AppBadge(
                     icon: Icons.message_outlined,
-                    label: Text('${_messages.length} 条已加载'),
+                    label: Text(context.l10n.messagesLoaded(_messages.length)),
                   ),
                   const SizedBox(width: 8),
                   if (_nextCursor.isNotEmpty)
-                    const AppBadge(
+                    AppBadge(
                       icon: Icons.more_horiz_rounded,
-                      label: Text('还有更早消息'),
+                      label: Text(context.l10n.olderMessagesAvailable),
                     ),
                   const Spacer(),
                   AppIconButton(
-                    tooltip: '刷新',
+                    tooltip: context.l10n.refresh,
                     icon: Icons.refresh_rounded,
                     onPressed: _loadInitial,
                   ),
@@ -12029,7 +12430,7 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
                 child: _loading
                     ? const AppLoadingIndicator()
                     : _messages.isEmpty
-                    ? const AppEmptyMessage(message: '暂无聊天消息')
+                    ? AppEmptyMessage(message: context.l10n.noChatMessages)
                     : AppListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -12045,7 +12446,9 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
                                 child: AppActionButton(
                                   onPressed: _loadingMore ? null : _loadMore,
                                   icon: Icons.history_rounded,
-                                  label: _loadingMore ? '加载中' : '加载更早消息',
+                                  label: _loadingMore
+                                      ? context.l10n.loading
+                                      : context.l10n.loadOlderMessages,
                                   style: AppActionButtonStyle.outlined,
                                 ),
                               ),
@@ -12108,7 +12511,7 @@ class _RoomChatContextDialog extends StatelessWidget {
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('消息上下文'),
+                  Text(context.l10n.messageContext),
                   Text(
                     room.roomName,
                     maxLines: 1,
@@ -12210,7 +12613,9 @@ class _AdminChatMessageCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        message.username.isEmpty ? '已删除用户' : message.username,
+                        message.username.isEmpty
+                            ? context.l10n.deletedUser
+                            : message.username,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.labelLarge?.copyWith(
@@ -12218,7 +12623,12 @@ class _AdminChatMessageCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${message.userId.isEmpty ? '匿名' : message.userId} · ${_formatTimestamp(message.timestamp)}',
+                        context.l10n.messageAuthorTime(
+                          message.userId.isEmpty
+                              ? context.l10n.anonymous
+                              : message.userId,
+                          _formatTimestamp(message.timestamp),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.labelSmall?.copyWith(
@@ -12229,11 +12639,14 @@ class _AdminChatMessageCard extends StatelessWidget {
                   ),
                 ),
                 if (message.isEdited && !isDeleted)
-                  const AppBadge(icon: Icons.edit_outlined, label: Text('已编辑')),
+                  AppBadge(
+                    icon: Icons.edit_outlined,
+                    label: Text(context.l10n.edited),
+                  ),
                 if (isDeleted)
                   AppBadge(
                     icon: Icons.delete_outline_rounded,
-                    label: const Text('已删除'),
+                    label: Text(context.l10n.deleted),
                     color: scheme.error,
                     backgroundColor: scheme.errorContainer.withValues(
                       alpha: 0.32,
@@ -12252,7 +12665,9 @@ class _AdminChatMessageCard extends StatelessWidget {
             if (message.content.trim().isNotEmpty) ...[
               const SizedBox(height: 9),
               Text(
-                isDeleted ? '这条消息已删除' : message.content,
+                isDeleted
+                    ? context.l10n.messageDeletedContent
+                    : message.content,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: isDeleted ? scheme.onSurfaceVariant : scheme.onSurface,
                   height: 1.34,
@@ -12291,7 +12706,7 @@ class _AdminChatMessageCard extends StatelessWidget {
                 AppActionButton(
                   onPressed: onCopy,
                   icon: Icons.copy_rounded,
-                  label: '复制',
+                  label: context.l10n.copy,
                   size: AppActionButtonSize.sm,
                   style: AppActionButtonStyle.text,
                 ),
@@ -12299,21 +12714,21 @@ class _AdminChatMessageCard extends StatelessWidget {
                   AppActionButton(
                     onPressed: onContext,
                     icon: Icons.manage_search_rounded,
-                    label: '上下文',
+                    label: context.l10n.context,
                     size: AppActionButtonSize.sm,
                     style: AppActionButtonStyle.text,
                   ),
                 AppActionButton(
                   onPressed: onReport,
                   icon: Icons.flag_outlined,
-                  label: '举报',
+                  label: context.l10n.report,
                   size: AppActionButtonSize.sm,
                   style: AppActionButtonStyle.text,
                 ),
                 AppActionButton(
                   onPressed: isDeleted ? null : onDelete,
                   icon: Icons.delete_outline_rounded,
-                  label: '删除',
+                  label: context.l10n.delete,
                   size: AppActionButtonSize.sm,
                   style: AppActionButtonStyle.destructive,
                 ),
@@ -12343,8 +12758,10 @@ class _AdminQuotedMessage extends StatelessWidget {
     final scheme = theme.colorScheme;
     final title = quoted?.username.trim().isNotEmpty == true
         ? quoted!.username
-        : '引用消息';
-    final preview = quoted == null ? '点击查看上下文' : _messagePreview(quoted!);
+        : context.l10n.quotedMessage;
+    final preview = quoted == null
+        ? context.l10n.tapToViewContext
+        : _messagePreview(context, quoted!);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(7),
@@ -12425,10 +12842,12 @@ class _AdminChatImageGrid extends StatelessWidget {
   }
 }
 
-String _messagePreview(RoomChatMessageInfo message) {
+String _messagePreview(BuildContext context, RoomChatMessageInfo message) {
   final parts = <String>[];
   if (message.content.trim().isNotEmpty) parts.add(message.content.trim());
-  if (message.images.isNotEmpty) parts.add('[图片 ${message.images.length}]');
+  if (message.images.isNotEmpty) {
+    parts.add(context.l10n.imageCount(message.images.length));
+  }
   final reactionSuffix = chatReactionSummarySuffix(message.reactions, limit: 2);
   if (reactionSuffix.isNotEmpty) parts.add(reactionSuffix.trim());
   return parts.join(' ');
@@ -12473,54 +12892,54 @@ class _StatTile extends StatelessWidget {
   }
 }
 
-String _reviewStatusText(int status) {
+String _reviewStatusText(BuildContext context, int status) {
   return switch (status) {
-    1 => '待审核',
-    2 => '已通过',
-    3 => '已拒绝',
-    _ => '未知',
+    1 => context.l10n.pendingReview,
+    2 => context.l10n.approved,
+    3 => context.l10n.rejected,
+    _ => context.l10n.unknown,
   };
 }
 
-String _providerStatusText(int status) {
+String _providerStatusText(BuildContext context, int status) {
   return switch (status) {
-    1 => '已连接',
-    2 => '已断开',
-    3 => '错误',
-    _ => '未知',
+    1 => context.l10n.connected,
+    2 => context.l10n.disconnected,
+    3 => context.l10n.error,
+    _ => context.l10n.unknown,
   };
 }
 
-String _systemRoleText(int role) {
+String _systemRoleText(BuildContext context, int role) {
   return switch (role) {
     1 => 'Root',
-    2 => '管理员',
-    3 => '用户',
-    _ => '未知',
+    2 => context.l10n.administrator,
+    3 => context.l10n.user,
+    _ => context.l10n.unknown,
   };
 }
 
-String _userStatusText(int status) {
+String _userStatusText(BuildContext context, int status) {
   return switch (status) {
-    1 => '正常',
-    2 => '已封禁',
-    _ => '未知',
+    1 => context.l10n.active,
+    2 => context.l10n.banned,
+    _ => context.l10n.unknown,
   };
 }
 
-String _roomStatusText(int status) {
+String _roomStatusText(BuildContext context, int status) {
   return switch (status) {
-    1 => '活跃',
-    2 => '已关闭',
-    _ => '未知',
+    1 => context.l10n.active,
+    2 => context.l10n.closed,
+    _ => context.l10n.unknown,
   };
 }
 
-String _resourceAvailabilityText(int availability) {
+String _resourceAvailabilityText(BuildContext context, int availability) {
   return switch (availability) {
-    1 => '可用',
-    2 => '创建者不可用',
-    _ => '未知',
+    1 => context.l10n.available,
+    2 => context.l10n.creatorUnavailable,
+    _ => context.l10n.unknown,
   };
 }
 
@@ -12532,13 +12951,13 @@ Color _roomStatusColor(int status) {
   };
 }
 
-String _roomMemberRoleText(int role) {
+String _roomMemberRoleText(BuildContext context, int role) {
   return switch (role) {
-    1 => '创建者',
-    2 => '管理员',
-    3 => '成员',
-    4 => '访客',
-    _ => '未知',
+    1 => context.l10n.creator,
+    2 => context.l10n.administrator,
+    3 => context.l10n.member,
+    4 => context.l10n.guest,
+    _ => context.l10n.unknown,
   };
 }
 
@@ -12563,7 +12982,7 @@ class _PermissionOverrideResult {
 Widget _closeButton(BuildContext context) {
   return AppActionButton(
     onPressed: () => Navigator.pop(context),
-    label: '关闭',
+    label: context.l10n.close,
     style: AppActionButtonStyle.text,
   );
 }

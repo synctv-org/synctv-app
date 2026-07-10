@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
 class _ToastAction {
@@ -218,7 +219,7 @@ class MessageUtils {
       backgroundColor: isDark ? Colors.grey.shade900 : Colors.grey.shade800,
       icon: Icons.delete_outline_rounded,
       duration: duration,
-      action: _ToastAction(label: '撤销', onPressed: onUndo),
+      action: _ToastAction(label: context.l10n.undo, onPressed: onUndo),
     );
   }
 

@@ -4,18 +4,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:responsive_framework/responsive_framework.dart';
+import 'package:synctv_app/l10n/l10n.dart';
+import 'package:synctv_app/pages/splash_page.dart';
+import 'package:synctv_app/services/app_locale_controller.dart';
+import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/theme/app_theme.dart';
 import 'package:video_player_media_kit/video_player_media_kit.dart';
-import 'package:synctv_app/pages/splash_page.dart';
-import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   if (runWebViewTitleBarWidget(args)) {
     return;
   }
+  await appLocaleController.load();
   await SyncTvService.init();
   await SyncTvService.syncServerTime();
   await OAuth2DeepLinkService.initialize();
@@ -43,39 +46,47 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SyncTV',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      localizationsDelegates: const [FLocalizations.delegate],
-      builder: (context, child) {
-        final mediaQueryData = MediaQuery.of(context);
-        final newMediaQueryData = mediaQueryData.copyWith(
-          textScaler: mediaQueryData.textScaler.clamp(
-            minScaleFactor: 0.85,
-            maxScaleFactor: 1.3,
-          ),
-        );
-        final foruiTheme = Theme.of(context).brightness == Brightness.dark
-            ? FThemes.blue.dark.desktop
-            : FThemes.blue.light.desktop;
-        Widget appChild = MediaQuery(data: newMediaQueryData, child: child!);
-        appChild = ResponsiveBreakpoints.builder(
-          breakpoints: AppBreakpoints.values,
-          child: appChild,
-        );
-        if (kDebugMode && _enableAccessibilityTools) {
-          appChild = AccessibilityTools(
-            checkFontOverflows: true,
-            buttonsAlignment: ButtonsAlignment.bottomLeft,
+    return ListenableBuilder(
+      listenable: appLocaleController,
+      builder: (context, _) => MaterialApp(
+        onGenerateTitle: (context) => context.l10n.appTitle,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        locale: appLocaleController.locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          ...AppLocalizations.localizationsDelegates,
+          FLocalizations.delegate,
+        ],
+        builder: (context, child) {
+          final mediaQueryData = MediaQuery.of(context);
+          final newMediaQueryData = mediaQueryData.copyWith(
+            textScaler: mediaQueryData.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.3,
+            ),
+          );
+          final foruiTheme = Theme.of(context).brightness == Brightness.dark
+              ? FThemes.blue.dark.desktop
+              : FThemes.blue.light.desktop;
+          Widget appChild = MediaQuery(data: newMediaQueryData, child: child!);
+          appChild = ResponsiveBreakpoints.builder(
+            breakpoints: AppBreakpoints.values,
             child: appChild,
           );
-        }
+          if (kDebugMode && _enableAccessibilityTools) {
+            appChild = AccessibilityTools(
+              checkFontOverflows: true,
+              buttonsAlignment: ButtonsAlignment.bottomLeft,
+              child: appChild,
+            );
+          }
 
-        return FTheme(data: foruiTheme, child: appChild);
-      },
-      home: const ResponsiveHome(),
+          return FTheme(data: foruiTheme, child: appChild);
+        },
+        home: const ResponsiveHome(),
+      ),
     );
   }
 }

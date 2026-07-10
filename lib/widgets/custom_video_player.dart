@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/widgets/danmaku_overlay.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
@@ -1140,7 +1141,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           if (!_isVerticalDragging) return;
           setState(() {
             _dragIcon = Icons.brightness_6;
-            _dragLabel = '亮度';
+            _dragLabel = context.l10n.brightness;
           });
         } catch (e) {
           debugPrint('Brightness get error: $e');
@@ -1156,7 +1157,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       await widget.controller.setVolume(_dragStartVolume!.clamp(0.0, 1.0));
       setState(() {
         _dragIcon = Icons.volume_up;
-        _dragLabel = '音量';
+        _dragLabel = context.l10n.volume;
       });
     }
     _showControls = true;
@@ -1176,7 +1177,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           if (!_isVerticalDragging) return;
           _dragStartBrightness = newVal; // accumulate
           setState(() {
-            _dragLabel = '亮度 ${(newVal * 100).toInt()}%';
+            _dragLabel = context.l10n.brightnessPercent((newVal * 100).toInt());
           });
         } catch (e) {
           debugPrint('Brightness set error: $e');
@@ -1196,7 +1197,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       if (!_isVerticalDragging) return;
       _dragStartVolume = newVal;
       setState(() {
-        _dragLabel = '音量 ${(newVal * 100).toInt()}%';
+        _dragLabel = context.l10n.volumePercent((newVal * 100).toInt());
       });
     }
   }
@@ -1327,7 +1328,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       child: Row(
         children: [
           AppIconButton(
-            tooltip: videoValue.volume <= 0.01 ? '取消静音' : '静音',
+            tooltip: videoValue.volume <= 0.01
+                ? context.l10n.unmute
+                : context.l10n.mute,
             icon: _volumeIcon(videoValue.volume),
             padding: EdgeInsets.zero,
             constraints: BoxConstraints.tightFor(
@@ -1383,7 +1386,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
               child: Row(
                 children: [
                   AppIconButton(
-                    tooltip: volume <= 0.01 ? '取消静音' : '静音',
+                    tooltip: volume <= 0.01
+                        ? context.l10n.unmute
+                        : context.l10n.mute,
                     icon: _volumeIcon(volume.toDouble()),
                     onPressed: () async {
                       await _toggleMute();
@@ -1468,9 +1473,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        '投屏设备',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.castDevices,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1493,7 +1498,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       color: Color(0xFF5D5FEF),
                     ),
                     title: Text(
-                      '正在投屏: ${_currentDlnaDevice!.info.friendlyName}',
+                      context.l10n.castingTo(
+                        _currentDlnaDevice!.info.friendlyName,
+                      ),
                       style: const TextStyle(color: Color(0xFF5D5FEF)),
                     ),
                     suffix: AppActionButton(
@@ -1501,16 +1508,16 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         _stopDlnaCasting();
                         Navigator.pop(context);
                       },
-                      label: '退出投屏',
+                      label: context.l10n.stopCasting,
                       style: AppActionButtonStyle.destructive,
                     ),
                   ),
                 if (_dlnaDevices.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(32),
+                  Padding(
+                    padding: const EdgeInsets.all(32),
                     child: Text(
-                      '正在搜索设备...',
-                      style: TextStyle(color: Colors.white54),
+                      context.l10n.searchingForDevices,
+                      style: const TextStyle(color: Colors.white54),
                     ),
                   ),
                 Flexible(
@@ -1594,7 +1601,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     } catch (e) {
       debugPrint('DLNA Error: $e');
       if (mounted) {
-        MessageUtils.showError(context, '投屏失败: $e');
+        MessageUtils.showError(context, context.l10n.castFailed('$e'));
         setState(() {
           _isCasting = false;
           _currentDlnaDevice = null;
@@ -1666,7 +1673,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       if (nextVolume > 0) await device.mute(false);
     } catch (e) {
       debugPrint('DLNA volume failed: $e');
-      if (mounted) MessageUtils.showError(context, '调节投屏音量失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.castVolumeFailed('$e'));
+      }
     }
   }
 
@@ -1680,7 +1689,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     } catch (e) {
       if (!mounted) return;
       setState(() => _dlnaMuted = !nextMuted);
-      MessageUtils.showError(context, '切换投屏静音失败: $e');
+      MessageUtils.showError(context, context.l10n.castMuteFailed('$e'));
     }
   }
 
@@ -1700,7 +1709,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     try {
       await device.seek(_formatDurationDlna(bounded));
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '投屏跳转失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.castSeekFailed('$e'));
+      }
     }
   }
 
@@ -1739,7 +1750,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       await showAppDialog<void>(
         context: context,
         builder: (dialogContext) => AppDialog(
-          title: const Text('投屏设备信息'),
+          title: Text(context.l10n.castDeviceInfo),
           icon: const Icon(Icons.info_outline_rounded),
           body: SizedBox(
             width: 560,
@@ -1748,23 +1759,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DlnaInfoLine(label: '设备', value: device.info.friendlyName),
                   _DlnaInfoLine(
-                    label: '传输状态',
+                    label: context.l10n.device,
+                    value: device.info.friendlyName,
+                  ),
+                  _DlnaInfoLine(
+                    label: context.l10n.transportStatus,
                     value: TransportInfoParser(
                       results[0],
                     ).currentTransportState.trim(),
                   ),
                   _DlnaInfoLine(
-                    label: '可用动作',
+                    label: context.l10n.availableActions,
                     value: _extractDlnaTag(results[1], 'Actions'),
                   ),
                   _DlnaInfoLine(
-                    label: '媒体时长',
+                    label: context.l10n.mediaDuration,
                     value: _extractDlnaTag(results[2], 'MediaDuration'),
                   ),
                   _DlnaInfoLine(
-                    label: '能力',
+                    label: context.l10n.capabilities,
                     value: [
                       _extractDlnaTag(results[3], 'PlayMedia'),
                       _extractDlnaTag(results[3], 'RecMedia'),
@@ -1778,14 +1792,19 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           actions: [
             AppActionButton(
               onPressed: () => Navigator.pop(dialogContext),
-              label: '关闭',
+              label: context.l10n.close,
               style: AppActionButtonStyle.tonal,
             ),
           ],
         ),
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '读取投屏设备信息失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.castDeviceInfoFailed('$e'),
+        );
+      }
     }
   }
 
@@ -1819,11 +1838,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
+            Padding(
+              padding: const EdgeInsets.all(16),
               child: Text(
-                '选择字幕',
-                style: TextStyle(
+                context.l10n.chooseSubtitles,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -1832,7 +1851,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             ),
             AppTile(
               prefix: const Icon(Icons.close, color: Colors.white),
-              title: const Text('关闭字幕', style: TextStyle(color: Colors.white)),
+              title: Text(
+                context.l10n.disableSubtitles,
+                style: const TextStyle(color: Colors.white),
+              ),
               onPressed: () {
                 setState(() {
                   _subtitleItems.clear();
@@ -1892,9 +1914,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 Expanded(
                   child: AppTextField(
                     controller: textController,
-                    label: '弹幕',
+                    label: context.l10n.danmaku,
                     showLabel: false,
-                    hintText: '发个弹幕见证当下...',
+                    hintText: context.l10n.danmakuHint,
                     prefixIcon: Icons.subtitles_rounded,
                     style: const TextStyle(color: Colors.white),
                     fillColor: Colors.white.withValues(alpha: 0.08),
@@ -1920,7 +1942,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                 ),
                 AppIconButton(
                   icon: Icons.send,
-                  tooltip: '发送',
+                  tooltip: context.l10n.send,
                   style: AppIconButtonStyle.tonal,
                   onPressed: () {
                     if (textController.text.trim().isNotEmpty) {
@@ -1964,7 +1986,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _currentDlnaDevice?.info.friendlyName ?? '未知设备',
+                      _currentDlnaDevice?.info.friendlyName ??
+                          context.l10n.unknownDevice,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -2015,7 +2038,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       children: [
                         AppIconButton(
                           icon: _dlnaMuted ? Icons.volume_off : Icons.volume_up,
-                          tooltip: _dlnaMuted ? '取消静音' : '静音',
+                          tooltip: _dlnaMuted
+                              ? context.l10n.unmute
+                              : context.l10n.mute,
                           onPressed: () async {
                             await _toggleDlnaMute();
                             setPanelState(() {});
@@ -2038,7 +2063,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         SizedBox(
                           width: 42,
                           child: Text(
-                            _dlnaMuted ? '静音' : '$_dlnaVolume',
+                            _dlnaMuted ? context.l10n.muted : '$_dlnaVolume',
                             textAlign: TextAlign.end,
                             style: const TextStyle(color: Colors.white70),
                           ),
@@ -2051,12 +2076,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       children: [
                         AppIconButton(
                           icon: Icons.skip_previous_rounded,
-                          tooltip: '上一首',
+                          tooltip: context.l10n.previousTrack,
                           onPressed: () async {
                             await _runDlnaCommand(
                               (device) => device.previous(),
-                              successMessage: '已切换上一首',
-                              errorPrefix: '上一首失败',
+                              successMessage:
+                                  context.l10n.previousTrackSelected,
+                              errorPrefix: context.l10n.previousTrackFailed,
                             );
                             setPanelState(() {});
                           },
@@ -2064,7 +2090,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         const SizedBox(width: 16),
                         AppIconButton(
                           icon: Icons.replay_10_rounded,
-                          tooltip: '后退 10 秒',
+                          tooltip: context.l10n.rewindTenSeconds,
                           onPressed: () async {
                             await _seekDlnaBy(const Duration(seconds: -10));
                             setPanelState(() {});
@@ -2076,7 +2102,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                           icon: _dlnaIsPlaying
                               ? Icons.pause_circle_filled
                               : Icons.play_circle_filled,
-                          tooltip: _dlnaIsPlaying ? '暂停' : '播放',
+                          tooltip: _dlnaIsPlaying
+                              ? context.l10n.pause
+                              : context.l10n.play,
                           onPressed: () {
                             if (_dlnaIsPlaying) {
                               _currentDlnaDevice?.pause();
@@ -2092,7 +2120,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         const SizedBox(width: 16),
                         AppIconButton(
                           icon: Icons.forward_10_rounded,
-                          tooltip: '前进 10 秒',
+                          tooltip: context.l10n.forwardTenSeconds,
                           onPressed: () async {
                             await _seekDlnaBy(const Duration(seconds: 10));
                             setPanelState(() {});
@@ -2101,12 +2129,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                         const SizedBox(width: 16),
                         AppIconButton(
                           icon: Icons.skip_next_rounded,
-                          tooltip: '下一首',
+                          tooltip: context.l10n.nextTrack,
                           onPressed: () async {
                             await _runDlnaCommand(
                               (device) => device.next(),
-                              successMessage: '已切换下一首',
-                              errorPrefix: '下一首失败',
+                              successMessage: context.l10n.nextTrackSelected,
+                              errorPrefix: context.l10n.nextTrackFailed,
                             );
                             setPanelState(() {});
                           },
@@ -2123,30 +2151,30 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                           onPressed: () async {
                             await _runDlnaCommand(
                               (device) => device.setPlayMode('NORMAL'),
-                              successMessage: '已设置顺序播放',
-                              errorPrefix: '设置播放模式失败',
+                              successMessage: context.l10n.sequentialModeSet,
+                              errorPrefix: context.l10n.setPlaybackModeFailed,
                             );
                           },
                           icon: Icons.format_list_numbered_rounded,
-                          label: '顺序',
+                          label: context.l10n.sequential,
                           style: AppActionButtonStyle.outlined,
                         ),
                         AppActionButton(
                           onPressed: () async {
                             await _runDlnaCommand(
                               (device) => device.setPlayMode('REPEAT_ALL'),
-                              successMessage: '已设置循环播放',
-                              errorPrefix: '设置播放模式失败',
+                              successMessage: context.l10n.repeatModeSet,
+                              errorPrefix: context.l10n.setPlaybackModeFailed,
                             );
                           },
                           icon: Icons.repeat_rounded,
-                          label: '循环',
+                          label: context.l10n.repeat,
                           style: AppActionButtonStyle.outlined,
                         ),
                         AppActionButton(
                           onPressed: _showDlnaInfoDialog,
                           icon: Icons.info_outline_rounded,
-                          label: '信息',
+                          label: context.l10n.info,
                           style: AppActionButtonStyle.outlined,
                         ),
                       ],
@@ -2161,7 +2189,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                             setPanelState(() {});
                           },
                           icon: Icons.sync_rounded,
-                          label: '同步状态',
+                          label: context.l10n.syncStatus,
                           style: AppActionButtonStyle.tonal,
                         ),
                         const SizedBox(width: 12),
@@ -2171,7 +2199,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                             if (context.mounted) Navigator.pop(context);
                           },
                           icon: Icons.cast_connected_rounded,
-                          label: '退出投屏',
+                          label: context.l10n.stopCasting,
                           style: AppActionButtonStyle.destructive,
                         ),
                       ],
@@ -2233,7 +2261,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                           child: AppSafeArea(
                             child: AppOverlayActionButton(
                               icon: Icons.swap_horiz,
-                              label: '切换设备',
+                              label: context.l10n.switchDevice,
                               onPressed: _showDlnaMenu,
                               foregroundColor: Colors.white70,
                               backgroundColor: Colors.black26,
@@ -2253,9 +2281,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   size: 48,
                                 ),
                                 const SizedBox(height: 16),
-                                const Text(
-                                  '正在投屏中',
-                                  style: TextStyle(
+                                Text(
+                                  context.l10n.castingInProgress,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -2268,7 +2296,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   ),
                                   child: Text(
                                     _currentDlnaDevice?.info.friendlyName ??
-                                        '未知设备',
+                                        context.l10n.unknownDevice,
                                     style: const TextStyle(
                                       color: Colors.white70,
                                       fontSize: 14,
@@ -2283,7 +2311,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                 AppOverlayActionButton(
                                   onPressed: _showDlnaControlPanel,
                                   icon: Icons.tune,
-                                  label: '遥控器',
+                                  label: context.l10n.remoteControl,
                                   backgroundColor: Colors.white10,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
@@ -2447,7 +2475,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                       icon: _isCasting
                                           ? Icons.cast_connected
                                           : Icons.cast,
-                                      tooltip: _isCasting ? '正在投屏' : '投屏',
+                                      tooltip: _isCasting
+                                          ? context.l10n.castingInProgress
+                                          : context.l10n.cast,
                                       selected: _isCasting,
                                       style: _isCasting
                                           ? AppIconButtonStyle.tonal
@@ -2519,8 +2549,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             Semantics(
                                               button: true,
                                               label: videoValue.isPlaying
-                                                  ? '暂停'
-                                                  : '播放',
+                                                  ? context.l10n.pause
+                                                  : context.l10n.play,
                                               onTap: _togglePlayPause,
                                               child: GestureDetector(
                                                 onTap: _togglePlayPause,
@@ -2541,7 +2571,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             if (showTime) ...[
                                               Text(
                                                 widget.isLive
-                                                    ? '直播'
+                                                    ? context.l10n.live
                                                     : _formatDuration(
                                                         videoValue.position,
                                                       ),
@@ -2557,10 +2587,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                 slider: true,
                                                 enabled: !widget.isLive,
                                                 label: widget.isLive
-                                                    ? '直播'
-                                                    : '播放进度',
+                                                    ? context.l10n.live
+                                                    : context
+                                                          .l10n
+                                                          .playbackProgress,
                                                 value: widget.isLive
-                                                    ? '直播'
+                                                    ? context.l10n.live
                                                     : '${_formatDuration(videoValue.position)} / ${_formatDuration(videoValue.duration)}',
                                                 child: GestureDetector(
                                                   behavior:
@@ -2820,8 +2852,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               AppIconButton(
                                                 tooltip:
                                                     videoValue.volume <= 0.01
-                                                    ? '取消静音'
-                                                    : '音量',
+                                                    ? context.l10n.unmute
+                                                    : context.l10n.volume,
                                                 icon: _volumeIcon(
                                                   videoValue.volume,
                                                 ),
@@ -2837,7 +2869,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               AppIconButton(
                                                 icon: Icons
                                                     .closed_caption_rounded,
-                                                tooltip: '字幕',
+                                                tooltip: context.l10n.subtitles,
                                                 onPressed: _showSubtitleMenu,
                                                 padding: widget.isFullScreen
                                                     ? const EdgeInsets.all(8)
@@ -2879,8 +2911,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               AppIconButton(
                                                 icon: Icons.comment_rounded,
                                                 tooltip: _showDanmaku
-                                                    ? '关闭弹幕'
-                                                    : '开启弹幕',
+                                                    ? context
+                                                          .l10n
+                                                          .disableDanmaku
+                                                    : context
+                                                          .l10n
+                                                          .enableDanmaku,
                                                 selected: _showDanmaku,
                                                 style: _showDanmaku
                                                     ? AppIconButtonStyle.tonal
@@ -2913,8 +2949,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                     ? Icons.refresh_rounded
                                                     : Icons.sync_rounded,
                                                 tooltip: widget.isLive
-                                                    ? '重新加载'
-                                                    : '同步',
+                                                    ? context.l10n.reload
+                                                    : context.l10n.sync,
                                                 onPressed: widget.onSync,
                                                 padding: widget.isFullScreen
                                                     ? const EdgeInsets.all(8)
@@ -2942,7 +2978,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               AppIconButton(
                                                 icon: Icons.send_rounded,
                                                 onPressed: _showDanmakuInput,
-                                                tooltip: '发送弹幕',
+                                                tooltip:
+                                                    context.l10n.sendDanmaku,
                                               ),
                                             if (widget.onToggleFullScreen !=
                                                 null) ...[
@@ -2958,8 +2995,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                     : (widget.fullScreenIcon ??
                                                           Icons.fullscreen),
                                                 tooltip: widget.isFullScreen
-                                                    ? '退出全屏'
-                                                    : '全屏',
+                                                    ? context
+                                                          .l10n
+                                                          .exitFullscreen
+                                                    : context.l10n.fullscreen,
                                                 onPressed:
                                                     widget.onToggleFullScreen,
                                                 padding: widget.isFullScreen
@@ -3004,7 +3043,9 @@ class _DlnaInfoLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final displayValue = value.trim().isEmpty ? '未知' : value.trim();
+    final displayValue = value.trim().isEmpty
+        ? context.l10n.unknown
+        : value.trim();
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -3104,9 +3145,11 @@ class _PlaybackSpeedMenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: '倍速',
+      label: context.l10n.playbackSpeed,
       child: Tooltip(
-        message: '倍速 ${currentSpeed.toStringAsFixed(2)}x',
+        message: context.l10n.playbackSpeedValue(
+          currentSpeed.toStringAsFixed(2),
+        ),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => _openMenu(context),

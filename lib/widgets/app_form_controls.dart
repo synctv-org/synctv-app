@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 
 enum AppActionButtonStyle { filled, tonal, outlined, text, destructive }
@@ -884,7 +885,9 @@ class _AppTextFieldState extends State<AppTextField> {
     if (widget.obscureText && widget.showVisibilityToggle) {
       actions.add(
         IconButton(
-          tooltip: _obscure ? '显示' : '隐藏',
+          tooltip: _obscure
+              ? context.l10n.showPassword
+              : context.l10n.hidePassword,
           icon: Icon(
             _obscure
                 ? Icons.visibility_outlined
@@ -902,7 +905,7 @@ class _AppTextFieldState extends State<AppTextField> {
         widget.controller.text.isNotEmpty) {
       actions.add(
         IconButton(
-          tooltip: '清空',
+          tooltip: context.l10n.clear,
           icon: const Icon(Icons.close_rounded, size: 18),
           onPressed: _clear,
         ),
@@ -2413,7 +2416,7 @@ class AppDataToolbar extends StatelessWidget {
   final double compactBreakpoint;
   final TextStyle? titleStyle;
   final TextStyle? countStyle;
-  final String refreshTooltip;
+  final String? refreshTooltip;
   final IconData refreshIcon;
   final AppIconButtonStyle refreshStyle;
 
@@ -2428,7 +2431,7 @@ class AppDataToolbar extends StatelessWidget {
     this.compactBreakpoint = 430,
     this.titleStyle,
     this.countStyle,
-    this.refreshTooltip = '刷新',
+    this.refreshTooltip,
     this.refreshIcon = Icons.refresh,
     this.refreshStyle = AppIconButtonStyle.ghost,
   });
@@ -2477,7 +2480,7 @@ class AppDataToolbar extends StatelessWidget {
         if (action != null) action!,
         if (onRefresh != null)
           AppIconButton(
-            tooltip: refreshTooltip,
+            tooltip: refreshTooltip ?? context.l10n.refresh,
             onPressed: loading ? null : onRefresh,
             icon: refreshIcon,
             loading: loading,
@@ -2781,6 +2784,7 @@ class AppPaginationBar extends StatelessWidget {
 
   factory AppPaginationBar.page({
     Key? key,
+    required BuildContext context,
     required int page,
     int? pageSize,
     int? total,
@@ -2792,10 +2796,12 @@ class AppPaginationBar extends StatelessWidget {
     Widget? trailing,
   }) {
     final label = pageSize == null
-        ? '第 $page 页${total == null ? '' : ' · 共 $total 条'}'
+        ? total == null
+              ? context.l10n.pageNumber(page)
+              : context.l10n.pageTotalSummary(page, total)
         : total == null
-        ? '第 $page 页 · 每页 $pageSize'
-        : '第 $page 页 · 每页 $pageSize · 共 $total 条';
+        ? context.l10n.pageSizeSummary(page, pageSize)
+        : context.l10n.pageSizeTotalSummary(page, pageSize, total);
     return AppPaginationBar(
       key: key,
       label: label,
@@ -2833,12 +2839,12 @@ class AppPaginationBar extends StatelessWidget {
               flexibleLabel,
               if (trailing != null) ...[const SizedBox(width: 8), trailing!],
               AppIconButton(
-                tooltip: '上一页',
+                tooltip: context.l10n.previousPage,
                 icon: Icons.chevron_left_rounded,
                 onPressed: onPrevious,
               ),
               AppIconButton(
-                tooltip: '下一页',
+                tooltip: context.l10n.nextPage,
                 icon: Icons.chevron_right_rounded,
                 onPressed: onNext,
               ),
@@ -2853,7 +2859,7 @@ class AppPaginationBar extends StatelessWidget {
 class AppLoadMoreFooter extends StatelessWidget {
   final bool loading;
   final VoidCallback? onPressed;
-  final String label;
+  final String? label;
   final EdgeInsetsGeometry? padding;
   final AppActionButtonStyle buttonStyle;
   final AppLoadingSize loadingSize;
@@ -2863,7 +2869,7 @@ class AppLoadMoreFooter extends StatelessWidget {
     super.key,
     required this.loading,
     required this.onPressed,
-    this.label = '加载更多',
+    this.label,
     this.padding,
     this.buttonStyle = AppActionButtonStyle.text,
     this.loadingSize = AppLoadingSize.sm,
@@ -2880,7 +2886,7 @@ class AppLoadMoreFooter extends StatelessWidget {
             ? AppLoadingIndicator(size: loadingSize, centered: false)
             : AppActionButton(
                 onPressed: onPressed,
-                label: label,
+                label: label ?? context.l10n.loadMore,
                 style: buttonStyle,
                 size: AppActionButtonSize.sm,
               ),
@@ -2901,7 +2907,7 @@ class AppImageThumbnail extends StatelessWidget {
   final IconData errorIcon;
   final Widget? errorChild;
   final List<BoxShadow>? boxShadow;
-  final String semanticLabel;
+  final String? semanticLabel;
 
   const AppImageThumbnail({
     super.key,
@@ -2913,7 +2919,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorIcon = Icons.broken_image_outlined,
     this.errorChild,
     this.boxShadow,
-    this.semanticLabel = '图片',
+    this.semanticLabel,
   }) : assetName = null,
        bytes = null,
        file = null;
@@ -2928,7 +2934,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorIcon = Icons.broken_image_outlined,
     this.errorChild,
     this.boxShadow,
-    this.semanticLabel = '图片',
+    this.semanticLabel,
   }) : url = null,
        bytes = null,
        file = null;
@@ -2943,7 +2949,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorIcon = Icons.broken_image_outlined,
     this.errorChild,
     this.boxShadow,
-    this.semanticLabel = '图片',
+    this.semanticLabel,
   }) : url = null,
        assetName = null,
        file = null;
@@ -2958,13 +2964,14 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorIcon = Icons.broken_image_outlined,
     this.errorChild,
     this.boxShadow,
-    this.semanticLabel = '图片',
+    this.semanticLabel,
   }) : url = null,
        assetName = null,
        bytes = null;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveSemanticLabel = semanticLabel ?? context.l10n.image;
     final fallback = Center(child: errorChild ?? Icon(errorIcon));
     final image = switch ((url, assetName, bytes, file)) {
       (final String value, null, null, null) => Image.network(
@@ -2972,7 +2979,7 @@ class AppImageThumbnail extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        semanticLabel: semanticLabel,
+        semanticLabel: effectiveSemanticLabel,
         errorBuilder: (context, error, stackTrace) => fallback,
       ),
       (null, final String value, null, null) => Image.asset(
@@ -2980,7 +2987,7 @@ class AppImageThumbnail extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        semanticLabel: semanticLabel,
+        semanticLabel: effectiveSemanticLabel,
         errorBuilder: (context, error, stackTrace) => fallback,
       ),
       (null, null, final Uint8List value, null) => Image.memory(
@@ -2988,7 +2995,7 @@ class AppImageThumbnail extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        semanticLabel: semanticLabel,
+        semanticLabel: effectiveSemanticLabel,
         errorBuilder: (context, error, stackTrace) => fallback,
       ),
       (null, null, null, final File value) => Image.file(
@@ -2996,7 +3003,7 @@ class AppImageThumbnail extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        semanticLabel: semanticLabel,
+        semanticLabel: effectiveSemanticLabel,
         errorBuilder: (context, error, stackTrace) => fallback,
       ),
       _ => fallback,
@@ -3300,8 +3307,8 @@ class AppConfirmDialog extends StatelessWidget {
   final String title;
   final Widget? icon;
   final Widget content;
-  final String cancelLabel;
-  final String confirmLabel;
+  final String? cancelLabel;
+  final String? confirmLabel;
   final IconData? confirmIcon;
   final VoidCallback? onCancel;
   final VoidCallback? onConfirm;
@@ -3312,8 +3319,8 @@ class AppConfirmDialog extends StatelessWidget {
     required this.title,
     required this.content,
     this.icon,
-    this.cancelLabel = '取消',
-    this.confirmLabel = '确定',
+    this.cancelLabel,
+    this.confirmLabel,
     this.confirmIcon,
     this.onCancel,
     this.onConfirm,
@@ -3330,14 +3337,14 @@ class AppConfirmDialog extends StatelessWidget {
         AppActionButton(
           onPressed: onConfirm,
           icon: confirmIcon,
-          label: confirmLabel,
+          label: confirmLabel ?? context.l10n.confirm,
           style: destructive
               ? AppActionButtonStyle.destructive
               : AppActionButtonStyle.filled,
         ),
         AppActionButton(
           onPressed: onCancel ?? () => Navigator.pop(context, false),
-          label: cancelLabel,
+          label: cancelLabel ?? context.l10n.cancel,
           style: AppActionButtonStyle.outlined,
         ),
       ],
@@ -3476,7 +3483,7 @@ class AppDialogHeader extends StatelessWidget {
           ),
           if (onClose != null)
             AppIconButton(
-              tooltip: '关闭',
+              tooltip: context.l10n.close,
               onPressed: onClose,
               icon: Icons.close_rounded,
             ),
@@ -3577,7 +3584,7 @@ class AppSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: semanticsLabel ?? label ?? '开关',
+      label: semanticsLabel ?? label ?? context.l10n.switchControl,
       toggled: value,
       enabled: enabled && onChanged != null,
       child: FSwitch(
@@ -3587,7 +3594,7 @@ class AppSwitch extends StatelessWidget {
         label: label == null ? null : Text(label!),
         description: description == null ? null : Text(description!),
         error: errorText == null ? null : Text(errorText!),
-        semanticsLabel: semanticsLabel ?? label ?? '开关',
+        semanticsLabel: semanticsLabel ?? label ?? context.l10n.switchControl,
         leadingLabel: leadingLabel,
         focusNode: focusNode,
         autofocus: autofocus,
@@ -3693,7 +3700,7 @@ class AppSelect<T> extends StatelessWidget {
       items: options,
       control: FSelectControl<T>.lifted(value: value, onChange: _handleChange),
       label: label == null ? null : Text(label!),
-      hint: hintText ?? '请选择',
+      hint: hintText ?? context.l10n.selectOption,
       description: description == null ? null : Text(description!),
       forceErrorText: errorText,
       errorBuilder: (context, message) => Text(message),

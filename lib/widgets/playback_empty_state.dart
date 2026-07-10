@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
 class PlaybackEmptyState extends StatelessWidget {
@@ -24,7 +25,11 @@ class PlaybackEmptyState extends StatelessWidget {
         : hasPlayback
         ? Icons.hourglass_top_rounded
         : Icons.ondemand_video_rounded;
-    final message = error ?? (loading || hasPlayback ? '正在加载视频' : '等待播放');
+    final message =
+        error ??
+        (loading || hasPlayback
+            ? context.l10n.loadingVideo
+            : context.l10n.waitingForPlayback);
 
     return Center(
       child: AppPanelSurface(

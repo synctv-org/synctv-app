@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/pages/room_screen.dart';
@@ -13,6 +14,7 @@ import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
 import 'package:synctv_app/widgets/join_room_dialog.dart';
+import 'package:synctv_app/widgets/language_selector_dialog.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/room_invite_flow.dart';
 import 'package:synctv_app/widgets/server_settings_dialog.dart';
@@ -168,7 +170,12 @@ class _HomeScreenState extends State<HomeScreen> {
         final room = await SyncTvService.getRoomInfo(roomId);
         if (mounted) await _handleJoinRoom(room);
       } catch (e) {
-        if (mounted) MessageUtils.showError(context, '打开房间失败: $e');
+        if (mounted) {
+          MessageUtils.showError(
+            context,
+            context.l10n.openRoomFailed(e.toString()),
+          );
+        }
       }
     });
   }
@@ -266,7 +273,10 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _isLoading = false;
         });
-        MessageUtils.showError(context, '加载房间列表失败: $e');
+        MessageUtils.showError(
+          context,
+          context.l10n.loadRoomsFailed(e.toString()),
+        );
       }
     }
   }
@@ -330,7 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final selectedIds = Set<String>.from(_selectedRoomLabelIds);
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '筛选标签',
+      title: context.l10n.filterLabels,
       icon: const Icon(Icons.sell_outlined, color: Color(0xFF5D5FEF)),
       content: StatefulBuilder(
         builder: (dialogContext, setDialogState) {
@@ -345,7 +355,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   if (labels.isEmpty)
                     Text(
-                      _selectedRoomCategoryId.isEmpty ? '暂无可用标签' : '当前分类下暂无标签',
+                      _selectedRoomCategoryId.isEmpty
+                          ? context.l10n.noLabelsAvailable
+                          : context.l10n.noLabelsForCategory,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -404,14 +416,14 @@ class _HomeScreenState extends State<HomeScreen> {
         AppActionButton(
           onPressed: () => Navigator.pop(context, false),
           icon: Icons.filter_alt_off_rounded,
-          label: '清空',
+          label: context.l10n.clear,
           style: AppActionButtonStyle.tonal,
         ),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '应用',
+          text: context.l10n.apply,
         ),
       ],
     );
@@ -497,7 +509,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _joinRoomById(String value) async {
     if (value.trim().isEmpty) {
-      MessageUtils.showWarning(context, '请输入房间ID');
+      MessageUtils.showWarning(context, context.l10n.roomIdRequired);
       return;
     }
     try {
@@ -505,11 +517,15 @@ class _HomeScreenState extends State<HomeScreen> {
       if (id == null || id.isEmpty) return;
       final check = await SyncTvService.checkRoom(id);
       if (!check.exists) {
-        if (mounted) MessageUtils.showWarning(context, '房间不存在');
+        if (mounted) {
+          MessageUtils.showWarning(context, context.l10n.roomNotFound);
+        }
         return;
       }
       if (!check.isAvailable) {
-        if (mounted) MessageUtils.showWarning(context, '房间暂不可用');
+        if (mounted) {
+          MessageUtils.showWarning(context, context.l10n.roomUnavailable);
+        }
         return;
       }
       if (!_isLoggedIn) {
@@ -521,7 +537,12 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.pop(context);
       _handleJoinRoom(room);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '查找房间失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.findRoomFailed(e.toString()),
+        );
+      }
     }
   }
 
@@ -580,16 +601,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _handleLogout() async {
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '退出登录',
+      title: context.l10n.logout,
       icon: const Icon(Icons.logout, color: Colors.red),
-      content: const Text('确定要退出当前账号吗？'),
+      content: Text(context.l10n.logoutConfirmMessage),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '退出',
+          text: context.l10n.logoutAction,
         ),
       ],
     );
@@ -605,7 +626,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _roomFeed = _RoomFeed.public;
           _roomPage = 1;
         });
-        MessageUtils.showSuccess(context, '已退出登录');
+        MessageUtils.showSuccess(context, context.l10n.loggedOut);
         _loadRooms(silent: false);
       }
     }
@@ -630,7 +651,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (result == null) return;
         if (result.isEmpty) {
-          if (mounted) MessageUtils.showWarning(context, '请输入密码');
+          if (mounted) {
+            MessageUtils.showWarning(context, context.l10n.passwordRequired);
+          }
           return;
         }
         password = result;
@@ -641,7 +664,12 @@ class _HomeScreenState extends State<HomeScreen> {
         _navigateToRoom(room);
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加入房间失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.joinRoomFailed(e.toString()),
+        );
+      }
     } finally {
       _joiningRoomIds.remove(room.roomId);
     }
@@ -671,16 +699,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _handleDeleteRoom(SyncTvRoom room) async {
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除房间',
+      title: context.l10n.deleteRoom,
       icon: const Icon(Icons.delete_outline, color: Colors.red),
-      content: Text('确定要删除房间 "${room.roomName}" 吗？此操作不可撤销。'),
+      content: Text(context.l10n.deleteRoomConfirm(room.roomName)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '删除',
+          text: context.l10n.delete,
         ),
       ],
     );
@@ -689,10 +717,15 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         await SyncTvService.deleteRoom(room.roomId);
         if (!mounted) return;
-        MessageUtils.showSuccess(context, '房间已删除');
+        MessageUtils.showSuccess(context, context.l10n.roomDeleted);
         _loadRooms(silent: true);
       } catch (e) {
-        if (mounted) MessageUtils.showError(context, '删除失败: $e');
+        if (mounted) {
+          MessageUtils.showError(
+            context,
+            context.l10n.deleteFailed(e.toString()),
+          );
+        }
       }
     }
   }
@@ -747,12 +780,16 @@ class _HomeScreenState extends State<HomeScreen> {
         }
         _favoriteRoomIds = next;
       });
-      MessageUtils.showError(context, '更新收藏失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.updateFavoriteFailed(e.toString()),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final isAdmin =
@@ -785,7 +822,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                             onLongPress: _showServerSettingsDialog,
-                            semanticLabel: '打开服务器设置',
+                            semanticLabel: l10n.openServerSettings,
                             child: Row(
                               children: [
                                 AppIconBadge(
@@ -798,7 +835,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 if (!extraCompact) ...[
                                   const SizedBox(width: 12),
                                   Text(
-                                    'SyncTV',
+                                    l10n.appTitle,
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,
@@ -816,21 +853,31 @@ class _HomeScreenState extends State<HomeScreen> {
                             AppActionButton(
                               onPressed: _showServerSettingsDialog,
                               icon: Icons.dns_rounded,
-                              label: '服务器',
+                              label: l10n.server,
                               style: AppActionButtonStyle.tonal,
                             )
                           else
                             AppIconButton(
-                              tooltip: '服务器设置',
+                              tooltip: l10n.serverSettings,
                               onPressed: _showServerSettingsDialog,
                               icon: Icons.dns_rounded,
                               style: AppIconButtonStyle.tonal,
                             ),
                           SizedBox(width: compact ? 8 : 12),
+                          if (!_isLoggedIn) ...[
+                            AppIconButton(
+                              tooltip: l10n.language,
+                              onPressed: () =>
+                                  showLanguageSelectorDialog(context),
+                              icon: Icons.language_rounded,
+                              style: AppIconButtonStyle.tonal,
+                            ),
+                            SizedBox(width: compact ? 8 : 12),
+                          ],
                           if (_isLoggedIn) ...[
                             if (compact)
                               AppIconButton(
-                                tooltip: '加入房间',
+                                tooltip: l10n.joinRoom,
                                 onPressed: _showJoinRoomDialog,
                                 icon: Icons.login_rounded,
                                 style: AppIconButtonStyle.tonal,
@@ -839,13 +886,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               AppActionButton(
                                 onPressed: _showJoinRoomDialog,
                                 icon: Icons.login_rounded,
-                                label: '加入房间',
+                                label: l10n.joinRoom,
                                 style: AppActionButtonStyle.outlined,
                               ),
                             SizedBox(width: compact ? 8 : 10),
                             if (compact)
                               AppIconButton(
-                                tooltip: '创建房间',
+                                tooltip: l10n.createRoom,
                                 onPressed: _showCreateRoomDialog,
                                 icon: Icons.add_rounded,
                                 style: AppIconButtonStyle.filled,
@@ -854,7 +901,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               AppActionButton(
                                 onPressed: _showCreateRoomDialog,
                                 icon: Icons.add_rounded,
-                                label: '创建房间',
+                                label: l10n.createRoom,
                               ),
                             SizedBox(width: compact ? 8 : 12),
                             compact
@@ -864,13 +911,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             AppActionButton(
                               onPressed: _showLoginDialog,
                               icon: Icons.login_rounded,
-                              label: '登录',
+                              label: l10n.login,
                             )
                           else
                             AppActionButton(
                               onPressed: _showLoginDialog,
                               icon: Icons.login_rounded,
-                              label: '登录',
+                              label: l10n.login,
                             ),
                         ],
                       ),
@@ -898,9 +945,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCompactAccountMenu(ThemeData theme, bool isAdmin) {
+    final l10n = context.l10n;
     return AppPopupMenuButton<String>(
       offset: const Offset(0, 46),
-      tooltip: '账号菜单',
+      tooltip: l10n.accountMenu,
       child: AppAvatar(
         name: _currentUser?.username,
         radius: 18,
@@ -909,45 +957,55 @@ class _HomeScreenState extends State<HomeScreen> {
         textStyle: const TextStyle(fontSize: 13),
       ),
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'account',
           child: Row(
             children: [
-              Icon(Icons.account_circle_rounded, size: 18),
-              SizedBox(width: 8),
-              Text('账号中心'),
+              const Icon(Icons.account_circle_rounded, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.accountCenter),
             ],
           ),
         ),
         if (isAdmin)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'admin',
             child: Row(
               children: [
-                Icon(Icons.admin_panel_settings_rounded, size: 18),
-                SizedBox(width: 8),
-                Text('管理员设置'),
+                const Icon(Icons.admin_panel_settings_rounded, size: 18),
+                const SizedBox(width: 8),
+                Text(l10n.adminSettings),
               ],
             ),
           ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'server',
           child: Row(
             children: [
-              Icon(Icons.dns_rounded, size: 18),
-              SizedBox(width: 8),
-              Text('服务器设置'),
+              const Icon(Icons.dns_rounded, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.serverSettings),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'language',
+          child: Row(
+            children: [
+              const Icon(Icons.language_rounded, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.language),
             ],
           ),
         ),
         const PopupMenuDivider(),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'logout',
           child: Row(
             children: [
-              Icon(Icons.logout_rounded, color: Colors.red, size: 18),
-              SizedBox(width: 8),
-              Text('退出登录', style: TextStyle(color: Colors.red)),
+              const Icon(Icons.logout_rounded, color: Colors.red, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.logout, style: const TextStyle(color: Colors.red)),
             ],
           ),
         ),
@@ -963,6 +1021,9 @@ class _HomeScreenState extends State<HomeScreen> {
           case 'server':
             _showServerSettingsDialog();
             break;
+          case 'language':
+            showLanguageSelectorDialog(context);
+            break;
           case 'logout':
             _handleLogout();
             break;
@@ -972,9 +1033,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAccountMenu(ThemeData theme, bool isAdmin, bool isDark) {
+    final l10n = context.l10n;
     return AppPopupMenuButton<String>(
       offset: const Offset(0, 46),
-      tooltip: '账号菜单',
+      tooltip: l10n.accountMenu,
       child: AppInkSurface(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
@@ -1012,45 +1074,55 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'account',
           child: Row(
             children: [
-              Icon(Icons.account_circle_rounded, size: 18),
-              SizedBox(width: 8),
-              Text('账号中心'),
+              const Icon(Icons.account_circle_rounded, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.accountCenter),
             ],
           ),
         ),
         if (isAdmin)
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'admin',
             child: Row(
               children: [
-                Icon(Icons.admin_panel_settings_rounded, size: 18),
-                SizedBox(width: 8),
-                Text('管理员设置'),
+                const Icon(Icons.admin_panel_settings_rounded, size: 18),
+                const SizedBox(width: 8),
+                Text(l10n.adminSettings),
               ],
             ),
           ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'server',
           child: Row(
             children: [
-              Icon(Icons.dns_rounded, size: 18),
-              SizedBox(width: 8),
-              Text('服务器设置'),
+              const Icon(Icons.dns_rounded, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.serverSettings),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'language',
+          child: Row(
+            children: [
+              const Icon(Icons.language_rounded, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.language),
             ],
           ),
         ),
         const PopupMenuDivider(),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'logout',
           child: Row(
             children: [
-              Icon(Icons.logout_rounded, color: Colors.red, size: 18),
-              SizedBox(width: 8),
-              Text('退出登录', style: TextStyle(color: Colors.red)),
+              const Icon(Icons.logout_rounded, color: Colors.red, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.logout, style: const TextStyle(color: Colors.red)),
             ],
           ),
         ),
@@ -1066,6 +1138,9 @@ class _HomeScreenState extends State<HomeScreen> {
           case 'server':
             _showServerSettingsDialog();
             break;
+          case 'language':
+            showLanguageSelectorDialog(context);
+            break;
           case 'logout':
             _handleLogout();
             break;
@@ -1075,12 +1150,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRoomControls(ThemeData theme) {
+    final l10n = context.l10n;
     final supportsPaging = _roomFeed != _RoomFeed.hot;
     final summary = switch (_roomFeed) {
-      _RoomFeed.hot => '显示 ${_rooms.length} 个热门房间',
-      _RoomFeed.favorites =>
-        '共 $_roomsTotal 个收藏 · 第 $_roomPage / $_roomPageCount 页',
-      _ => '共 $_roomsTotal 个房间 · 第 $_roomPage / $_roomPageCount 页',
+      _RoomFeed.hot => l10n.popularRoomsSummary(_rooms.length),
+      _RoomFeed.favorites => l10n.favoriteRoomsPageSummary(
+        _roomsTotal,
+        _roomPage,
+        _roomPageCount,
+      ),
+      _ => l10n.roomsPageSummary(_roomsTotal, _roomPage, _roomPageCount),
     };
     final compact = AppBreakpoints.widthOf(context) < 1080;
 
@@ -1113,6 +1192,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildRoomFilterControls() {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final l10n = context.l10n;
         final compact = constraints.maxWidth < 520;
         return Wrap(
           spacing: 12,
@@ -1120,26 +1200,26 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             AppSegmentedControl<_RoomFeed>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: _RoomFeed.public,
-                  icon: Icon(Icons.public_rounded),
-                  label: Text('公开'),
+                  icon: const Icon(Icons.public_rounded),
+                  label: Text(l10n.roomFeedPublic),
                 ),
                 ButtonSegment(
                   value: _RoomFeed.mine,
-                  icon: Icon(Icons.video_library_rounded),
-                  label: Text('我的'),
+                  icon: const Icon(Icons.video_library_rounded),
+                  label: Text(l10n.roomFeedMine),
                 ),
                 ButtonSegment(
                   value: _RoomFeed.hot,
-                  icon: Icon(Icons.local_fire_department_rounded),
-                  label: Text('热门'),
+                  icon: const Icon(Icons.local_fire_department_rounded),
+                  label: Text(l10n.roomFeedPopular),
                 ),
                 ButtonSegment(
                   value: _RoomFeed.favorites,
-                  icon: Icon(Icons.bookmark_rounded),
-                  label: Text('收藏'),
+                  icon: const Icon(Icons.bookmark_rounded),
+                  label: Text(l10n.roomFeedFavorites),
                 ),
               ],
               value: _roomFeed,
@@ -1148,7 +1228,9 @@ class _HomeScreenState extends State<HomeScreen> {
             AppSearchField(
               controller: _roomSearchController,
               width: compact ? constraints.maxWidth : 320,
-              hintText: _roomFeed == _RoomFeed.hot ? '热门房间不支持搜索' : '搜索房间',
+              hintText: _roomFeed == _RoomFeed.hot
+                  ? l10n.popularRoomsSearchDisabled
+                  : l10n.searchRooms,
               enabled: _roomFeed != _RoomFeed.hot,
               onChanged: (value) {
                 if (value.isEmpty) _applyRoomSearch('');
@@ -1160,7 +1242,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? null
                   : _selectedRoomCategoryId,
               width: compact ? constraints.maxWidth : 180,
-              hintText: _roomFeed == _RoomFeed.public ? '全部分类' : '仅公开房间',
+              hintText: _roomFeed == _RoomFeed.public
+                  ? l10n.allCategories
+                  : l10n.publicRoomsOnly,
               prefixIcon: Icons.category_outlined,
               clearable: true,
               enabled:
@@ -1168,7 +1252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   !_isLoadingTaxonomy &&
                   _roomCategories.isNotEmpty,
               options: {
-                '全部分类': null,
+                l10n.allCategories: null,
                 for (final category in _roomCategories)
                   _roomCategoryName(category): category.id,
               },
@@ -1190,8 +1274,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   : _showRoomLabelFilter,
               icon: Icons.sell_outlined,
               label: _selectedRoomLabelIds.isEmpty
-                  ? '标签'
-                  : '标签 ${_selectedRoomLabelIds.length}',
+                  ? l10n.labels
+                  : l10n.selectedLabels(_selectedRoomLabelIds.length),
               style: _selectedRoomLabelIds.isEmpty
                   ? AppActionButtonStyle.outlined
                   : AppActionButtonStyle.tonal,
@@ -1199,7 +1283,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (_selectedRoomCategoryId.isNotEmpty ||
                 _selectedRoomLabelIds.isNotEmpty)
               AppIconButton(
-                tooltip: '清除分类标签筛选',
+                tooltip: l10n.clearRoomTaxonomyFilters,
                 icon: Icons.filter_alt_off_rounded,
                 onPressed: _clearRoomTaxonomyFilters,
                 style: AppIconButtonStyle.tonal,
@@ -1247,7 +1331,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(width: 8),
         AppIconButton(
-          tooltip: '刷新',
+          tooltip: context.l10n.refresh,
           onPressed: () => _loadRooms(silent: false),
           icon: Icons.refresh_rounded,
           style: AppIconButtonStyle.tonal,
@@ -1257,6 +1341,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRoomGrid() {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final hasServer = SyncTvService.activeServer != null;
     final emptyIcon = !hasServer
@@ -1265,14 +1350,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ? Icons.bookmark_border_rounded
               : Icons.meeting_room_outlined);
     final emptyTitle = !hasServer
-        ? '添加服务器后开始使用'
-        : (_roomFeed == _RoomFeed.favorites ? '还没有收藏的房间' : '暂无房间');
+        ? l10n.addServerToStart
+        : (_roomFeed == _RoomFeed.favorites
+              ? l10n.noFavoriteRooms
+              : l10n.noRooms);
     final emptyDescription = !hasServer
-        ? '输入服务器地址即可浏览公开房间、登录账号和加入观影房间。'
+        ? l10n.addServerDescription
         : switch (_roomFeed) {
-            _RoomFeed.mine => '加入或创建房间后会出现在这里',
-            _RoomFeed.favorites => '收藏房间后会出现在这里',
-            _ => '当前筛选下没有可显示的房间',
+            _RoomFeed.mine => l10n.myRoomsEmptyDescription,
+            _RoomFeed.favorites => l10n.favoriteRoomsEmptyDescription,
+            _ => l10n.filteredRoomsEmptyDescription,
           };
     return AppInkSurface(
       color: theme.colorScheme.surface,
@@ -1310,7 +1397,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ? () => _loadRooms(silent: false)
                         : _showServerSettingsDialog,
                     icon: hasServer ? Icons.refresh_rounded : Icons.add_link,
-                    label: hasServer ? '刷新' : '添加服务器',
+                    label: hasServer ? l10n.refresh : l10n.addServer,
                     style: AppActionButtonStyle.tonal,
                   ),
                 ],

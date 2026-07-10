@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
@@ -66,7 +67,7 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AppDialog(
-      title: Text('${widget.reactionKey} 回应成员'),
+      title: Text(context.l10n.reactionMembers(widget.reactionKey)),
       body: SizedBox(
         width: 420,
         height: 460,
@@ -74,7 +75,9 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _total > 0 ? '共 $_total 人' : '回应成员',
+              _total > 0
+                  ? context.l10n.memberCount(_total)
+                  : context.l10n.reactingMembers,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
@@ -87,7 +90,7 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
                   : _users.isEmpty
                   ? Center(
                       child: Text(
-                        '暂无成员',
+                        context.l10n.noMembers,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -143,7 +146,7 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
                   onPressed: _loading ? null : () => _load(loadMore: true),
                   loading: _loading,
                   icon: Icons.more_horiz,
-                  label: '加载更多',
+                  label: context.l10n.loadMore,
                   style: AppActionButtonStyle.tonal,
                 ),
               ),
@@ -154,7 +157,7 @@ class _ChatReactionUsersDialogState extends State<ChatReactionUsersDialog> {
       actions: [
         AppActionButton(
           onPressed: () => Navigator.pop(context),
-          label: '关闭',
+          label: context.l10n.close,
           style: AppActionButtonStyle.text,
         ),
       ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/services/room_invite_service.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/services/synctv_service.dart';
@@ -37,19 +38,19 @@ Future<String?> prepareRoomInviteTarget({
 Future<bool?> _showMissingServerDialog(BuildContext context) {
   return ChatUtils.showStyledDialog<bool>(
     context: context,
-    title: '需要添加服务器',
+    title: context.l10n.serverRequiredForInvite,
     icon: Icon(
       Icons.travel_explore_rounded,
       color: Theme.of(context).primaryColor,
     ),
-    content: const Text('这个邀请来自另一个 SyncTV 服务器。请先添加该服务器地址，客户端会自动识别身份后继续加入房间。'),
+    content: Text(context.l10n.serverRequiredForInviteDescription),
     actions: [
       ChatUtils.createCancelButton(context),
       const SizedBox(width: 8),
       ChatUtils.createConfirmButton(context, () async {
         final changed = await showServerSettingsDialog(context: context);
         if (context.mounted) Navigator.pop(context, changed == true);
-      }, text: '添加服务器'),
+      }, text: context.l10n.addServer),
     ],
   );
 }
@@ -77,7 +78,7 @@ Future<String?> _chooseEndpoint(
 ) {
   return ChatUtils.showStyledDialog<String>(
     context: context,
-    title: '选择访问地址',
+    title: context.l10n.chooseServerEndpoint,
     icon: Icon(Icons.route_rounded, color: Theme.of(context).primaryColor),
     content: SizedBox(
       width: 400,
@@ -121,10 +122,17 @@ Future<String?> parseInviteOrShowError({
   try {
     return await prepareRoomInviteTarget(context: context, value: value);
   } on FormatException {
-    if (context.mounted) MessageUtils.showWarning(context, '请输入房间ID或邀请链接');
+    if (context.mounted) {
+      MessageUtils.showWarning(context, context.l10n.roomIdOrInviteRequired);
+    }
     return null;
   } catch (error) {
-    if (context.mounted) MessageUtils.showError(context, '处理邀请失败: $error');
+    if (context.mounted) {
+      MessageUtils.showError(
+        context,
+        context.l10n.processInviteFailed('$error'),
+      );
+    }
     return null;
   }
 }

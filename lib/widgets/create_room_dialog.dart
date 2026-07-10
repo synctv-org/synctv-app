@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_service.dart';
@@ -14,7 +15,7 @@ Future<void> showCreateRoomDialog({
   required BuildContext context,
   required Future<void> Function(SyncTvRoom room) onCreated,
   double width = 520,
-  String successMessage = '房间创建成功',
+  String? successMessage,
 }) {
   return showAppDialog<void>(
     context: context,
@@ -23,7 +24,7 @@ Future<void> showCreateRoomDialog({
       child: _CreateRoomDialogBody(
         pageContext: context,
         onCreated: onCreated,
-        successMessage: successMessage,
+        successMessage: successMessage ?? context.l10n.roomCreated,
       ),
     ),
   );
@@ -205,7 +206,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
   Future<void> _submit() async {
     if (!_canSubmit) {
       if (_creationDisabled) {
-        MessageUtils.showWarning(context, '服务器当前已关闭房间创建');
+        MessageUtils.showWarning(context, context.l10n.roomCreationDisabled);
       }
       return;
     }
@@ -236,11 +237,16 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
       if (!widget.pageContext.mounted) return;
       MessageUtils.showSuccess(
         widget.pageContext,
-        pendingReview ? '房间已提交审核' : widget.successMessage,
+        pendingReview
+            ? widget.pageContext.l10n.roomSubmittedForReview
+            : widget.successMessage,
       );
     } catch (error) {
       if (mounted) {
-        MessageUtils.showError(context, '创建房间失败: $error');
+        MessageUtils.showError(
+          context,
+          context.l10n.createRoomFailed(error.toString()),
+        );
       }
     } finally {
       if (mounted) {
@@ -251,20 +257,21 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
 
   String? _validateName(String? value) {
     final name = value?.trim() ?? '';
-    if (name.isEmpty) return '请输入房间名称';
-    if (name.length > 64) return '房间名称不能超过 64 个字符';
+    if (name.isEmpty) return context.l10n.roomNameRequired;
+    if (name.length > 64) return context.l10n.roomNameTooLong(64);
     return null;
   }
 
   String? _validatePassword(String? value) {
     if (_needPassword && (value == null || value.isEmpty)) {
-      return '请输入房间密码';
+      return context.l10n.roomPasswordRequired;
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final isCompact = AppBreakpoints.isCompact(context);
     return Shortcuts(
@@ -303,31 +310,31 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (_settingsError != null) ...[
-                        const _CreateRoomPolicyBanner(
+                        _CreateRoomPolicyBanner(
                           icon: Icons.cloud_off_outlined,
-                          text: '无法读取服务器创建策略，请稍后重试。',
+                          text: l10n.createPolicyLoadFailed,
                           tone: _PolicyTone.warning,
                         ),
                         const SizedBox(height: 16),
                       ],
                       if (_creationDisabled) ...[
-                        const _CreateRoomPolicyBanner(
+                        _CreateRoomPolicyBanner(
                           icon: Icons.block_outlined,
-                          text: '服务器当前已关闭房间创建。',
+                          text: l10n.roomCreationDisabledBanner,
                           tone: _PolicyTone.danger,
                         ),
                         const SizedBox(height: 16),
                       ] else if (_settings?.roomCreationApprovalRequired ==
                           true) ...[
-                        const _CreateRoomPolicyBanner(
+                        _CreateRoomPolicyBanner(
                           icon: Icons.fact_check_outlined,
-                          text: '新房间需要审核。通过前只有管理员可以处理，普通用户暂时不可访问。',
+                          text: l10n.roomReviewRequiredBanner,
                           tone: _PolicyTone.info,
                         ),
                         const SizedBox(height: 16),
                       ],
                       Text(
-                        '基础信息',
+                        l10n.basicInformation,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -336,8 +343,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                       AppTextField(
                         controller: _nameController,
                         focusNode: _nameFocus,
-                        label: '房间名称',
-                        hintText: '例如 周末电影夜',
+                        label: l10n.roomName,
+                        hintText: l10n.roomNameHint,
                         errorText: _submitted && _nameError.isNotEmpty
                             ? _nameError
                             : null,
@@ -359,8 +366,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                       const SizedBox(height: 12),
                       AppTextField(
                         controller: _descriptionController,
-                        label: '房间简介',
-                        hintText: '可选，帮助成员理解这个房间的用途',
+                        label: l10n.roomDescription,
+                        hintText: l10n.roomDescriptionHint,
                         prefixIcon: Icons.notes_outlined,
                         enabled:
                             !_creating &&
@@ -374,7 +381,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                       _buildTaxonomySection(theme),
                       const SizedBox(height: 18),
                       Text(
-                        '访问方式',
+                        l10n.accessMethod,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -406,10 +413,10 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                                   padding: const EdgeInsets.only(top: 12),
                                   child: AppTextField(
                                     controller: _passwordController,
-                                    label: '房间密码',
+                                    label: l10n.roomPassword,
                                     hintText: _passwordRequired
-                                        ? '服务器要求设置密码'
-                                        : '成员加入时需要输入',
+                                        ? l10n.serverRequiresPassword
+                                        : l10n.membersEnterPassword,
                                     errorText:
                                         _submitted && _passwordError.isNotEmpty
                                         ? _passwordError
@@ -468,14 +475,14 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
                   AppActionButton(
                     onPressed: _creating ? null : () => Navigator.pop(context),
                     icon: Icons.close_rounded,
-                    label: '取消',
+                    label: l10n.cancel,
                     style: AppActionButtonStyle.outlined,
                   ),
                   const SizedBox(width: 10),
                   AppActionButton(
                     onPressed: _canSubmit ? _submit : null,
                     icon: Icons.add_rounded,
-                    label: _creating ? '创建中' : '创建房间',
+                    label: _creating ? l10n.creating : l10n.createRoom,
                     loading: _creating,
                   ),
                 ],
@@ -488,12 +495,13 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
   }
 
   Widget _buildTaxonomySection(ThemeData theme) {
+    final l10n = context.l10n;
     final enabled = !_creating && !_creationDisabled && _settingsError == null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '房间分类',
+          l10n.roomCategory,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
           ),
@@ -514,7 +522,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
         else ...[
           if (_taxonomyError != null) ...[
             Text(
-              '分类信息读取失败，仍可继续创建房间。',
+              l10n.taxonomyLoadFailedCreateAllowed,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -523,13 +531,13 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
           ],
           AppSelect<String?>(
             value: _selectedCategoryId.isEmpty ? null : _selectedCategoryId,
-            label: '房间分类',
-            hintText: '不设置分类',
+            label: l10n.roomCategory,
+            hintText: l10n.noCategory,
             prefixIcon: Icons.category_outlined,
             clearable: true,
             enabled: enabled && _categories.isNotEmpty,
             options: {
-              '不设置分类': null,
+              l10n.noCategory: null,
               for (final category in _categories)
                 _categoryName(category): category.id,
             },
@@ -544,7 +552,7 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
           ),
           const SizedBox(height: 14),
           Text(
-            '房间标签',
+            l10n.roomLabels,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -552,7 +560,9 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
           const SizedBox(height: 8),
           if (_availableLabels.isEmpty)
             Text(
-              _selectedCategoryId.isEmpty ? '暂无可用标签' : '当前分类下暂无标签',
+              _selectedCategoryId.isEmpty
+                  ? l10n.noLabelsAvailable
+                  : l10n.noLabelsForCategory,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -608,11 +618,16 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
   }
 
   String get _footerText {
-    if (_loadingSettings) return '正在读取服务器创建策略';
-    if (_settingsError != null) return '创建策略不可用';
-    if (_creationDisabled) return '当前服务器不允许创建新房间';
-    if (_settings?.roomCreationApprovalRequired == true) return '创建后将提交审核';
-    return _needPassword ? '密码房间只允许知道密码的成员加入' : '公开房间可被允许访问的成员加入';
+    final l10n = context.l10n;
+    if (_loadingSettings) return l10n.loadingCreationPolicy;
+    if (_settingsError != null) return l10n.creationPolicyUnavailable;
+    if (_creationDisabled) return l10n.serverDisallowsNewRooms;
+    if (_settings?.roomCreationApprovalRequired == true) {
+      return l10n.roomWillBeReviewed;
+    }
+    return _needPassword
+        ? l10n.passwordRoomAccessHint
+        : l10n.publicRoomAccessHint;
   }
 }
 
@@ -652,14 +667,14 @@ class _CreateRoomHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '创建房间',
+                      context.l10n.createRoom,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '设置房间名称、简介和访问方式',
+                      context.l10n.createRoomSubtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -668,7 +683,7 @@ class _CreateRoomHeader extends StatelessWidget {
                 ),
               ),
               AppIconButton(
-                tooltip: '关闭',
+                tooltip: context.l10n.close,
                 icon: Icons.close_rounded,
                 onPressed: onClose,
               ),
@@ -710,16 +725,20 @@ class _AccessModeSelector extends StatelessWidget {
           selected: value == _RoomAccessMode.public,
           enabled: canUsePublic,
           icon: Icons.public_rounded,
-          title: '公开房间',
-          subtitle: passwordRequired ? '服务器要求设置密码' : '成员可直接申请或加入',
+          title: context.l10n.publicRoom,
+          subtitle: passwordRequired
+              ? context.l10n.serverRequiresPassword
+              : context.l10n.publicRoomJoinHint,
           onTap: () => onChanged(_RoomAccessMode.public),
         );
         final passwordCard = _AccessModeCard(
           selected: value == _RoomAccessMode.password,
           enabled: canUsePassword,
           icon: Icons.lock_outline_rounded,
-          title: '密码房间',
-          subtitle: passwordForbidden ? '服务器禁止设置密码' : '成员需要密码才能进入',
+          title: context.l10n.passwordRoom,
+          subtitle: passwordForbidden
+              ? context.l10n.serverForbidsPassword
+              : context.l10n.passwordRoomJoinHint,
           onTap: () => onChanged(_RoomAccessMode.password),
         );
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
@@ -71,53 +72,76 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     with SingleTickerProviderStateMixin {
   static const int _notificationPageSize = 50;
   static const int _roomsPageSize = 24;
-  static const List<_AccountSection> _sections = [
-    _AccountSection(label: '概览', icon: Icons.space_dashboard_outlined),
-    _AccountSection(label: '资料', icon: Icons.person_outline_rounded),
-    _AccountSection(label: '房间', icon: Icons.meeting_room_outlined),
-    _AccountSection(label: '安全', icon: Icons.security_rounded),
-    _AccountSection(label: '通知', icon: Icons.notifications_none_rounded),
-    _AccountSection(label: '绑定', icon: Icons.link_rounded),
-  ];
-  static const Map<String, _AccountModuleInfo> _moduleInfo = {
-    '账号偏好': _AccountModuleInfo(
-      label: '账号偏好',
-      impact: '多因素认证状态、通知偏好和安全能力判断不可用。',
-      icon: Icons.tune_rounded,
+  static const int _sectionCount = 6;
+  static const String _moduleAccountPreferences = 'account_preferences';
+  static const String _moduleNotifications = 'notifications';
+  static const String _moduleRooms = 'rooms';
+  static const String _moduleOAuthProviders = 'oauth_providers';
+  static const String _moduleOAuthLinks = 'oauth_links';
+  static const String _modulePasskeys = 'passkeys';
+  static const String _moduleLocalPasskey = 'local_passkey';
+  static const String _modulePublicSettings = 'public_settings';
+
+  List<_AccountSection> get _sections => [
+    _AccountSection(
+      label: context.l10n.overview,
+      icon: Icons.space_dashboard_outlined,
     ),
-    '通知': _AccountModuleInfo(
-      label: '通知中心',
-      impact: '未读数量、通知列表、标记已读和删除通知不可用。',
-      icon: Icons.notifications_none_rounded,
+    _AccountSection(
+      label: context.l10n.profile,
+      icon: Icons.person_outline_rounded,
     ),
-    '房间': _AccountModuleInfo(
-      label: '我的房间',
-      impact: '账号中心内的房间列表、房间搜索和房间管理不可用。',
+    _AccountSection(
+      label: context.l10n.rooms,
       icon: Icons.meeting_room_outlined,
     ),
-    'OAuth2 Provider': _AccountModuleInfo(
-      label: 'OAuth2 可绑定账号',
-      impact: '无法展示可绑定的第三方登录 Provider。',
+    _AccountSection(label: context.l10n.security, icon: Icons.security_rounded),
+    _AccountSection(
+      label: context.l10n.notifications,
+      icon: Icons.notifications_none_rounded,
+    ),
+    _AccountSection(label: context.l10n.bindings, icon: Icons.link_rounded),
+  ];
+
+  Map<String, _AccountModuleInfo> get _moduleInfo => {
+    _moduleAccountPreferences: _AccountModuleInfo(
+      label: context.l10n.accountPreferences,
+      impact: context.l10n.accountPreferencesUnavailableImpact,
+      icon: Icons.tune_rounded,
+    ),
+    _moduleNotifications: _AccountModuleInfo(
+      label: context.l10n.notificationCenter,
+      impact: context.l10n.notificationsUnavailableImpact,
+      icon: Icons.notifications_none_rounded,
+    ),
+    _moduleRooms: _AccountModuleInfo(
+      label: context.l10n.myRooms,
+      impact: context.l10n.myRoomsUnavailableImpact,
+      icon: Icons.meeting_room_outlined,
+    ),
+    _moduleOAuthProviders: _AccountModuleInfo(
+      label: context.l10n.oauthAvailableAccounts,
+      impact: context.l10n.oauthProvidersUnavailableImpact,
       icon: Icons.add_link_rounded,
     ),
-    'OAuth2 绑定': _AccountModuleInfo(
-      label: 'OAuth2 已绑定账号',
-      impact: '无法查看或解除已经绑定的第三方登录账号。',
+    _moduleOAuthLinks: _AccountModuleInfo(
+      label: context.l10n.oauthLinkedAccounts,
+      impact: context.l10n.oauthLinksUnavailableImpact,
       icon: Icons.link_rounded,
     ),
-    'Passkey': _AccountModuleInfo(
-      label: 'Passkey 凭据',
-      impact: '无法查看、绑定或删除服务器上的 Passkey 凭据。',
+    _modulePasskeys: _AccountModuleInfo(
+      label: context.l10n.passkeyCredentials,
+      impact: context.l10n.passkeysUnavailableImpact,
       icon: Icons.fingerprint_rounded,
     ),
-    '本机 Passkey': _AccountModuleInfo(
-      label: '本机 Passkey 能力',
-      impact: '无法确认当前设备是否支持创建 Passkey。',
+    _moduleLocalPasskey: _AccountModuleInfo(
+      label: context.l10n.localPasskeyCapability,
+      impact: context.l10n.localPasskeyUnavailableImpact,
       icon: Icons.devices_rounded,
     ),
-    '公开设置': _AccountModuleInfo(
-      label: '服务器公开设置',
-      impact: '无法判断邮箱和 Passkey 当前是否启用。',
+    _modulePublicSettings: _AccountModuleInfo(
+      label: context.l10n.serverPublicSettings,
+      impact: context.l10n.publicSettingsUnavailableImpact,
       icon: Icons.tune_rounded,
     ),
   };
@@ -169,14 +193,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     if (!_user.hasEmail) {
       return _EmailStatusView(
         icon: Icons.alternate_email_rounded,
-        label: '未绑定',
+        label: context.l10n.notBound,
         tone: theme.colorScheme.onSurface.withValues(alpha: 0.58),
       );
     }
-    return const _EmailStatusView(
+    return _EmailStatusView(
       icon: Icons.mark_email_read_rounded,
-      label: '已绑定',
-      tone: Color(0xFF15803D),
+      label: context.l10n.bound,
+      tone: const Color(0xFF15803D),
     );
   }
 
@@ -184,7 +208,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   void initState() {
     super.initState();
     _user = widget.initialUser;
-    _tabController = TabController(length: _sections.length, vsync: this);
+    _tabController = TabController(length: _sectionCount, vsync: this);
     _opaqueAuthenticator = OpaqueAuthenticatorService();
     _load(refresh: false);
   }
@@ -204,19 +228,19 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       final user = await SyncTvService.getMe(refresh: refresh);
       final publicSettings = await _loadOptional(
         errors,
-        '公开设置',
+        _modulePublicSettings,
         () => SyncTvService.getPublicSettings(refresh: refresh),
       );
       final serverPasskeyEnabled = publicSettings?.enableWebauthn == true;
       final results = await Future.wait<dynamic>([
         _loadOptional(
           errors,
-          '账号偏好',
+          _moduleAccountPreferences,
           () => SyncTvService.getAccountPreferences(refresh: refresh),
         ),
         _loadOptional(
           errors,
-          '通知',
+          _moduleNotifications,
           () => SyncTvService.listNotifications(
             page: _notificationPage,
             pageSize: _notificationPageSize,
@@ -225,7 +249,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         ),
         _loadOptional(
           errors,
-          '房间',
+          _moduleRooms,
           () => SyncTvService.getMyRoomsPage(
             page: _roomsPage,
             pageSize: _roomsPageSize,
@@ -235,18 +259,18 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         ),
         _loadOptional(
           errors,
-          'OAuth2 Provider',
+          _moduleOAuthProviders,
           SyncTvService.listOAuth2Providers,
         ),
         _loadOptional(
           errors,
-          'OAuth2 绑定',
+          _moduleOAuthLinks,
           SyncTvService.getLinkedOAuth2Accounts,
         ),
         if (serverPasskeyEnabled)
           _loadOptional(
             errors,
-            'Passkey',
+            _modulePasskeys,
             () => SyncTvService.listPasskeys(refresh: refresh),
           )
         else
@@ -254,7 +278,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         if (serverPasskeyEnabled)
           _loadOptional(
             errors,
-            '本机 Passkey',
+            _moduleLocalPasskey,
             PasskeyAuthenticatorService.isSupported,
           )
         else
@@ -278,7 +302,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      MessageUtils.showError(context, '加载账号信息失败: $e');
+      MessageUtils.showError(context, context.l10n.loadAccountFailed('$e'));
     }
   }
 
@@ -301,12 +325,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final next = await showAppDialog<String>(
       context: context,
       builder: (_) => _SingleTextInputDialog(
-        title: '修改用户名',
-        subtitle: '设置这个服务器上的公开用户名',
+        title: context.l10n.changeUsername,
+        subtitle: context.l10n.changeUsernameDescription,
         icon: Icons.badge_outlined,
-        label: '用户名',
+        label: context.l10n.username,
         initialValue: _user.username,
-        primaryLabel: '保存',
+        primaryLabel: context.l10n.save,
       ),
     );
     if (next == null || next.isEmpty || next == _user.username) return;
@@ -315,9 +339,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       final user = await SyncTvService.updateUsername(next);
       if (!mounted) return;
       setState(() => _user = user);
-      MessageUtils.showSuccess(context, '用户名已更新');
+      MessageUtils.showSuccess(context, context.l10n.usernameUpdated);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新用户名失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.updateUsernameFailed('$e'),
+        );
+      }
     }
   }
 
@@ -330,9 +359,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       final user = await SyncTvService.updateUserAvatar(image.upload);
       if (!mounted) return;
       setState(() => _user = user);
-      MessageUtils.showSuccess(context, '头像已更新');
+      MessageUtils.showSuccess(context, context.l10n.avatarUpdated);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新头像失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.updateAvatarFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _updatingAvatar = false);
     }
@@ -345,9 +376,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       final user = await SyncTvService.clearUserAvatar();
       if (!mounted) return;
       setState(() => _user = user);
-      MessageUtils.showSuccess(context, '头像已移除');
+      MessageUtils.showSuccess(context, context.l10n.avatarRemoved);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '移除头像失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.removeAvatarFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _updatingAvatar = false);
     }
@@ -361,9 +394,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       );
       if (!mounted) return;
       setState(() => _preferences = updated);
-      MessageUtils.showSuccess(context, '通知偏好已保存');
+      MessageUtils.showSuccess(
+        context,
+        context.l10n.notificationPreferencesSaved,
+      );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '保存通知偏好失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.saveNotificationPreferencesFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _savingPreferences = false);
     }
@@ -377,9 +418,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       );
       if (!mounted) return;
       setState(() => _preferences = updated);
-      MessageUtils.showSuccess(context, '多因素认证设置已保存');
+      MessageUtils.showSuccess(context, context.l10n.mfaSettingsSaved);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '保存多因素认证设置失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.saveMfaSettingsFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _savingPreferences = false);
     }
@@ -391,9 +437,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       context: context,
       builder: (context) => AppConfirmDialog(
         icon: const Icon(Icons.link_off_rounded),
-        title: '解绑邮箱',
-        content: const Text('解绑后将无法继续使用这个邮箱接收验证码、邮件通知或密码重置邮件。'),
-        confirmLabel: '解绑',
+        title: context.l10n.unbindEmail,
+        content: Text(context.l10n.unbindEmailDescription),
+        confirmLabel: context.l10n.unbind,
         confirmIcon: Icons.link_off_rounded,
         destructive: true,
         onConfirm: () => Navigator.pop(context, true),
@@ -419,9 +465,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           _notificationTypeFilter = null;
         }
       });
-      MessageUtils.showSuccess(context, '邮箱已解绑');
+      MessageUtils.showSuccess(context, context.l10n.emailUnbound);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '解绑邮箱失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.unbindEmailFailed('$e'));
+      }
     }
   }
 
@@ -439,7 +487,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       _user = user;
       _preferences = preferences;
     });
-    MessageUtils.showSuccess(context, '邮箱已绑定');
+    MessageUtils.showSuccess(context, context.l10n.emailBound);
   }
 
   Future<String?> _verifySensitiveOperation() {
@@ -455,7 +503,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final canUseEmail = preferences?.canUseEmail == true && _user.hasEmail;
     final canUsePasskey = preferences?.canUsePasskey == true && _passkeyEnabled;
     if (!canUseCurrentPassword && !canUseEmail && !canUsePasskey) {
-      MessageUtils.showWarning(context, '当前账号没有可用的密码验证方式');
+      MessageUtils.showWarning(
+        context,
+        context.l10n.noPasswordVerificationMethod,
+      );
       return;
     }
 
@@ -492,16 +543,21 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _user = user;
         _preferences = updatedPreferences;
       });
-      MessageUtils.showSuccess(context, '密码已更新');
+      MessageUtils.showSuccess(context, context.l10n.passwordUpdated);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新密码失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.updatePasswordFailed('$e'),
+        );
+      }
     }
   }
 
   Future<void> _resetPasswordByEmail() async {
     final email = _user.email;
     if (email == null || email.isEmpty) {
-      MessageUtils.showWarning(context, '当前账号没有邮箱');
+      MessageUtils.showWarning(context, context.l10n.accountHasNoEmail);
       return;
     }
 
@@ -517,9 +573,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         token: result.token,
         newPassword: result.newPassword,
       );
-      if (mounted) MessageUtils.showSuccess(context, '密码已重置');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.passwordReset);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '重置密码失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.resetPasswordFailed('$e'));
+      }
     }
   }
 
@@ -529,16 +589,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         : credential.name;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '删除 Passkey',
+      title: context.l10n.deletePasskey,
       icon: const Icon(Icons.fingerprint_rounded),
       iconColor: Theme.of(context).colorScheme.error,
-      content: Text('确定删除「$label」吗？删除后这台设备将不能继续使用该 Passkey 登录。'),
+      content: Text(context.l10n.confirmDeletePasskey(label)),
       actions: [
         ChatUtils.createCancelButton(context),
         AppActionButton(
           onPressed: () => Navigator.pop(context, true),
           icon: Icons.delete_outline_rounded,
-          label: '删除',
+          label: context.l10n.delete,
           style: AppActionButtonStyle.destructive,
         ),
       ],
@@ -555,22 +615,24 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _passkeys = passkeys;
         _preferences = preferences;
       });
-      MessageUtils.showSuccess(context, 'Passkey 已删除');
+      MessageUtils.showSuccess(context, context.l10n.passkeyDeleted);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '删除 Passkey 失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.deletePasskeyFailed('$e'));
+      }
     }
   }
 
   Future<void> _bindPasskey() async {
     final name = await showAppDialog<String>(
       context: context,
-      builder: (_) => const _SingleTextInputDialog(
-        title: '绑定 Passkey',
-        subtitle: '为当前设备创建一个可识别的名称',
+      builder: (_) => _SingleTextInputDialog(
+        title: context.l10n.bindPasskey,
+        subtitle: context.l10n.bindPasskeyDescription,
         icon: Icons.fingerprint_rounded,
-        label: '设备名称',
-        hintText: '例如 MacBook、手机',
-        primaryLabel: '继续',
+        label: context.l10n.deviceName,
+        hintText: context.l10n.deviceNameExample,
+        primaryLabel: context.l10n.continueAction,
       ),
     );
     if (name == null) return;
@@ -593,9 +655,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _passkeys = passkeys;
         _preferences = preferences;
       });
-      MessageUtils.showSuccess(context, 'Passkey 已绑定');
+      MessageUtils.showSuccess(context, context.l10n.passkeyBound);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '绑定 Passkey 失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.bindPasskeyFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _bindingPasskey = false);
     }
@@ -605,9 +669,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     try {
       await SyncTvService.markAllNotificationsAsRead();
       await _reloadNotifications(refresh: true);
-      if (mounted) MessageUtils.showSuccess(context, '已全部标记为已读');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.allMarkedRead);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '操作失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.operationFailed('$e'));
+      }
     }
   }
 
@@ -620,9 +688,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       if (!mounted) return;
       setState(() => _selectedNotificationIds.clear());
       await _reloadNotifications(refresh: true);
-      if (mounted) MessageUtils.showSuccess(context, '已标记所选通知');
+      if (mounted) {
+        MessageUtils.showSuccess(
+          context,
+          context.l10n.selectedNotificationsMarked,
+        );
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '标记失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.markFailed('$e'));
+      }
     }
   }
 
@@ -630,9 +705,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     try {
       await SyncTvService.deleteAllReadNotifications();
       await _reloadNotifications(refresh: true);
-      if (mounted) MessageUtils.showSuccess(context, '已删除已读通知');
+      if (mounted) {
+        MessageUtils.showSuccess(
+          context,
+          context.l10n.readNotificationsDeleted,
+        );
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '删除失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.deleteEntryFailed('$e'));
+      }
     }
   }
 
@@ -644,7 +726,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       }
       await _reloadNotifications(refresh: true);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '标记失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.markFailed('$e'));
+      }
     }
   }
 
@@ -656,7 +740,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       }
       await _reloadNotifications(refresh: true);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '删除失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.deleteEntryFailed('$e'));
+      }
     }
   }
 
@@ -666,7 +752,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       detail = await SyncTvService.getNotification(item.numericId);
     } catch (e) {
       if (mounted) {
-        MessageUtils.showWarning(context, '加载通知详情失败，显示列表内容: $e');
+        MessageUtils.showWarning(
+          context,
+          context.l10n.loadNotificationDetailsFailed('$e'),
+        );
       }
     }
     if (!mounted) return;
@@ -715,7 +804,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _notifications = notifications;
         _notificationPage = actualPage;
         _loadingNotifications = false;
-        _clearLoadError('通知');
+        _clearLoadError(_moduleNotifications);
         final visibleIds = notifications.notifications
             .map((item) => item.numericId)
             .where((id) => id > 0)
@@ -726,9 +815,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       if (!mounted) return;
       setState(() {
         _loadingNotifications = false;
-        _setLoadError('通知', e);
+        _setLoadError(_moduleNotifications, e);
       });
-      MessageUtils.showError(context, '加载通知失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.loadNotificationsFailed('$e'),
+      );
     }
   }
 
@@ -781,10 +873,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           mode: LaunchMode.externalApplication,
         );
         if (!opened && mounted) {
-          MessageUtils.showError(context, '无法打开授权链接');
+          MessageUtils.showError(
+            context,
+            context.l10n.openAuthorizationLinkFailed,
+          );
           return;
         } else if (mounted) {
-          MessageUtils.showInfo(context, '请在浏览器完成授权');
+          MessageUtils.showInfo(
+            context,
+            context.l10n.completeAuthorizationInBrowser,
+          );
         }
         final parsed = await callbackSession.waitForCallback(
           expectedState: start.state,
@@ -798,15 +896,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         if (!mounted) return;
         setState(() {
           _linkedOAuth2 = linked;
-          _clearLoadError('OAuth2 绑定');
+          _clearLoadError(_moduleOAuthLinks);
           _bindProvider = null;
         });
-        MessageUtils.showSuccess(context, 'OAuth2 账号已绑定');
+        MessageUtils.showSuccess(context, context.l10n.oauthAccountBound);
       } finally {
         await callbackSession.close();
       }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, 'OAuth2 绑定失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.oauthBindingFailed('$e'));
+      }
     }
   }
 
@@ -822,11 +922,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       if (!mounted) return;
       setState(() {
         _linkedOAuth2 = linked;
-        _clearLoadError('OAuth2 绑定');
+        _clearLoadError(_moduleOAuthLinks);
       });
-      MessageUtils.showSuccess(context, '已解除绑定');
+      MessageUtils.showSuccess(context, context.l10n.unboundSuccessfully);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '解绑失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.unbindFailed('$e'));
+      }
     }
   }
 
@@ -847,15 +949,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         _myRooms = rooms;
         _roomsPage = actualPage;
         _loadingRooms = false;
-        _clearLoadError('房间');
+        _clearLoadError(_moduleRooms);
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loadingRooms = false;
-        _setLoadError('房间', e);
+        _setLoadError(_moduleRooms, e);
       });
-      MessageUtils.showError(context, '加载我的房间失败: $e');
+      MessageUtils.showError(context, context.l10n.loadMyRoomsFailed('$e'));
     }
   }
 
@@ -902,7 +1004,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       );
       if (mounted) await _reloadRooms();
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '打开房间失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.openRoomFailed('$e'));
+      }
     }
   }
 
@@ -941,13 +1045,20 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       );
       if (mounted) await _reloadRooms(refresh: true);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '打开房间管理失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.openRoomManagementFailed('$e'),
+        );
+      }
     }
   }
 
   Future<void> _leaveOrDeleteRoom(SyncTvRoom room) async {
     final isOwner = _isMyCreatedRoom(room);
-    final actionText = isOwner ? '删除房间' : '退出房间';
+    final actionText = isOwner
+        ? context.l10n.deleteRoom
+        : context.l10n.leaveRoom;
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: actionText,
@@ -957,8 +1068,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           : Theme.of(context).colorScheme.primary,
       content: Text(
         isOwner
-            ? '这会永久删除「${room.roomName}」及其房间数据，所有成员都会失去访问权限。'
-            : '确定退出「${room.roomName}」吗？退出后需要重新加入才能访问。',
+            ? context.l10n.deleteOwnedRoomDescription(room.roomName)
+            : context.l10n.leaveRoomDescription(room.roomName),
       ),
       actions: [
         ChatUtils.createCancelButton(context),
@@ -981,18 +1092,28 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         await SyncTvService.leaveRoom(room.roomId);
       }
       await _reloadRooms();
-      if (mounted) MessageUtils.showSuccess(context, '$actionText 已完成');
+      if (mounted) {
+        MessageUtils.showSuccess(
+          context,
+          context.l10n.actionCompleted(actionText),
+        );
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '$actionText 失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.actionFailed(actionText, '$e'),
+        );
+      }
     }
   }
 
   Future<void> _closeAccount() async {
-    const confirmationText = '关闭账户';
+    final confirmationText = context.l10n.closeAccount;
     final controller = TextEditingController();
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '关闭账户',
+      title: context.l10n.closeAccount,
       icon: const Icon(Icons.warning_amber_rounded),
       iconColor: Theme.of(context).colorScheme.error,
       content: Column(
@@ -1000,13 +1121,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '此操作会永久关闭当前账户及相关个人数据。',
+            context.l10n.closeAccountDescription,
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
           const SizedBox(height: 12),
           AppTextField(
             controller: controller,
-            label: '输入 关闭账户 确认',
+            label: context.l10n.enterCloseAccountToConfirm(confirmationText),
             prefixIcon: Icons.warning_amber_rounded,
             autofocus: true,
             onSubmitted: (_) => Navigator.pop(
@@ -1024,7 +1145,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             controller.text.trim() == confirmationText,
           ),
           icon: Icons.delete_forever_rounded,
-          label: '关闭账户',
+          label: context.l10n.closeAccount,
           style: AppActionButtonStyle.destructive,
         ),
       ],
@@ -1032,7 +1153,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     _disposeTextControllersAfterDialog([controller]);
     if (confirmed != true) {
       if (confirmed == false && mounted) {
-        MessageUtils.showWarning(context, '确认文本不匹配');
+        MessageUtils.showWarning(
+          context,
+          context.l10n.confirmationTextMismatch,
+        );
       }
       return;
     }
@@ -1040,10 +1164,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     try {
       await SyncTvService.closeAccount();
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '账户已关闭');
+      MessageUtils.showSuccess(context, context.l10n.accountClosed);
       Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '关闭账户失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.closeAccountFailed('$e'));
+      }
     }
   }
 
@@ -1066,16 +1192,16 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           ? const Color(0xFF121212)
           : const Color(0xFFF4F6FA),
       appBar: AppAppBar(
-        title: const Text(
-          '账号中心',
-          style: TextStyle(fontWeight: FontWeight.w800),
+        title: Text(
+          context.l10n.accountCenter,
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         centerTitle: false,
         actions: [
           AppIconButton(
             onPressed: () => _load(refresh: true),
             icon: Icons.refresh_rounded,
-            tooltip: '刷新',
+            tooltip: context.l10n.refresh,
           ),
         ],
       ),
@@ -1147,7 +1273,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _user.username.isEmpty ? '当前账号' : _user.username,
+                            _user.username.isEmpty
+                                ? context.l10n.currentAccount
+                                : _user.username,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleSmall?.copyWith(
@@ -1301,7 +1429,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           user: _user,
           roleLabel: _userRoleLabel(_user.role),
           statusLabel: _userStatusLabel(_user.status),
-          activeServerName: SyncTvService.activeServer?.name ?? '未连接服务器',
+          activeServerName:
+              SyncTvService.activeServer?.name ??
+              context.l10n.noServerConnected,
           createdAtLabel: _formatTimestamp(_user.createdAt),
         ),
         if (_loadErrors.isNotEmpty) ...[
@@ -1318,26 +1448,26 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             final tiles = [
               _MetricTile(
                 icon: Icons.meeting_room_outlined,
-                label: '我的房间',
+                label: context.l10n.myRooms,
                 value: '$roomCount',
                 tone: theme.colorScheme.primary,
               ),
               _MetricTile(
                 icon: Icons.notifications_none_rounded,
-                label: '未读通知',
+                label: context.l10n.unreadNotifications,
                 value: '$unread',
                 tone: const Color(0xFF0F766E),
               ),
               _MetricTile(
                 icon: Icons.security_rounded,
-                label: '登录因素',
+                label: context.l10n.loginFactors,
                 value: '$activeFactors',
                 tone: const Color(0xFFB45309),
               ),
               if (_showEmailBindingControls)
                 _MetricTile(
                   icon: emailStatus.icon,
-                  label: '邮箱状态',
+                  label: context.l10n.emailStatus,
                   value: emailStatus.label,
                   tone: emailStatus.tone,
                 ),
@@ -1400,9 +1530,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         preferences?.notifications ?? NotificationPreferences.defaults();
     return _responsiveList(
       children: [
-        const _SectionHeader(
-          title: '个人资料',
-          subtitle: '管理这个服务器上的公开身份和账号状态',
+        _SectionHeader(
+          title: context.l10n.personalProfile,
+          subtitle: context.l10n.personalProfileDescription,
           icon: Icons.person_outline_rounded,
         ),
         const SizedBox(height: 12),
@@ -1439,13 +1569,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       if (_showEmailBindingControls)
                         _StatusPill(
                           icon: emailStatus.icon,
-                          label: '邮箱${emailStatus.label}',
+                          label: context.l10n.emailWithStatus(
+                            emailStatus.label,
+                          ),
                           color: emailStatus.tone,
                         ),
                       if (_user.isBanned)
-                        const _StatusPill(
+                        _StatusPill(
                           icon: Icons.block_rounded,
-                          label: '已封禁',
+                          label: context.l10n.banned,
                           danger: true,
                         ),
                     ],
@@ -1453,7 +1585,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   if (_showEmailBindingControls) ...[
                     const SizedBox(height: 12),
                     Text(
-                      _user.hasEmail ? _user.email! : '未绑定邮箱',
+                      _user.hasEmail
+                          ? _user.email!
+                          : context.l10n.emailNotBound,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.7,
@@ -1466,7 +1600,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               final action = AppActionButton(
                 onPressed: _rename,
                 icon: Icons.edit_rounded,
-                label: '修改用户名',
+                label: context.l10n.changeUsername,
               );
               if (!wide) {
                 return Column(
@@ -1498,30 +1632,43 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         ),
         const SizedBox(height: 12),
         _Section(
-          title: '账号信息',
+          title: context.l10n.accountInformation,
           child: _InfoGrid(
             entries: [
-              _InfoEntry('用户 ID', _user.id),
-              _InfoEntry('账号状态', _userStatusLabel(_user.status)),
-              _InfoEntry('创建时间', _formatTimestamp(_user.createdAt)),
-              _InfoEntry('更新时间', _formatTimestamp(_user.updatedAt)),
-              _InfoEntry('在线连接', '${_user.onlineCount}'),
-              if (_user.isBanned) _InfoEntry('封禁原因', _user.bannedReason),
+              _InfoEntry(context.l10n.userId, _user.id),
+              _InfoEntry(
+                context.l10n.accountStatus,
+                _userStatusLabel(_user.status),
+              ),
+              _InfoEntry(
+                context.l10n.createdAt,
+                _formatTimestamp(_user.createdAt),
+              ),
+              _InfoEntry(
+                context.l10n.updatedAt,
+                _formatTimestamp(_user.updatedAt),
+              ),
+              _InfoEntry(
+                context.l10n.onlineConnectionsLabel,
+                '${_user.onlineCount}',
+              ),
+              if (_user.isBanned)
+                _InfoEntry(context.l10n.banReason, _user.bannedReason),
             ],
           ),
         ),
         const SizedBox(height: 12),
         if (preferences != null)
           _Section(
-            title: '通知偏好',
-            subtitle: '按场景控制站内通知和邮件通知',
+            title: context.l10n.notificationPreferences,
+            subtitle: context.l10n.notificationPreferencesDescription,
             child: AppResponsiveWrap(
               minItemWidth: 320,
               maxColumns: 2,
               runSpacing: 4,
               children: [
                 _PreferenceSwitch(
-                  title: '房间邀请站内通知',
+                  title: context.l10n.roomInviteInAppNotifications,
                   value: notifications.roomInvitationInApp,
                   onChanged: _savingPreferences
                       ? null
@@ -1530,7 +1677,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         ),
                 ),
                 _PreferenceSwitch(
-                  title: '房间事件站内通知',
+                  title: context.l10n.roomEventInAppNotifications,
                   value: notifications.roomEventInApp,
                   onChanged: _savingPreferences
                       ? null
@@ -1539,7 +1686,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         ),
                 ),
                 _PreferenceSwitch(
-                  title: '系统公告站内通知',
+                  title: context.l10n.systemAnnouncementInAppNotifications,
                   value: notifications.systemAnnouncementInApp,
                   onChanged: _savingPreferences
                       ? null
@@ -1551,7 +1698,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 if (_user.hasEmail && _emailFeatureEnabled)
                   _PreferenceSwitch(
-                    title: '房间邀请邮件通知',
+                    title: context.l10n.roomInviteEmailNotifications,
                     value: notifications.roomInvitationEmail,
                     onChanged: _savingPreferences
                         ? null
@@ -1561,7 +1708,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ),
                 if (_user.hasEmail && _emailFeatureEnabled)
                   _PreferenceSwitch(
-                    title: '房间事件邮件通知',
+                    title: context.l10n.roomEventEmailNotifications,
                     value: notifications.roomEventEmail,
                     onChanged: _savingPreferences
                         ? null
@@ -1571,7 +1718,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ),
                 if (_user.hasEmail && _emailFeatureEnabled)
                   _PreferenceSwitch(
-                    title: '系统公告邮件通知',
+                    title: context.l10n.systemAnnouncementEmailNotifications,
                     value: notifications.systemAnnouncementEmail,
                     onChanged: _savingPreferences
                         ? null
@@ -1584,11 +1731,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               ],
             ),
           )
-        else if (_loadError('账号偏好') != null)
+        else if (_loadError(_moduleAccountPreferences) != null)
           _LoadErrorBanner(
-            title: '通知偏好不可用',
-            moduleInfo: _moduleInfo['账号偏好'],
-            message: _loadError('账号偏好')!,
+            title: context.l10n.notificationPreferencesUnavailable,
+            moduleInfo: _moduleInfo[_moduleAccountPreferences],
+            message: _loadError(_moduleAccountPreferences)!,
             onRetry: () => _load(refresh: true),
           ),
       ],
@@ -1597,7 +1744,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Widget _buildRoomsTab(ThemeData theme) {
     final page = _myRooms;
-    final loadError = _loadError('房间');
+    final loadError = _loadError(_moduleRooms);
     final rooms = page?.rooms ?? const <SyncTvRoom>[];
     final total = page?.total ?? 0;
     final maxPage = _roomsMaxPage(total);
@@ -1618,10 +1765,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 children: [
                   Row(
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: _SectionHeader(
-                          title: '我的房间',
-                          subtitle: '管理你创建、加入或被授权的同步观影空间',
+                          title: context.l10n.myRooms,
+                          subtitle: context.l10n.myRoomsDescription,
                           icon: Icons.meeting_room_outlined,
                           dense: true,
                         ),
@@ -1629,7 +1776,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       AppActionButton(
                         onPressed: _createRoom,
                         icon: Icons.add_rounded,
-                        label: '创建房间',
+                        label: context.l10n.createRoom,
                       ),
                       if (_loadingRooms)
                         const Padding(
@@ -1651,7 +1798,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       final wide = constraints.maxWidth >= 760;
                       final search = AppSearchField(
                         controller: _roomSearchController,
-                        hintText: '搜索房间名称或描述',
+                        hintText: context.l10n.searchRoomNameOrDescription,
                         onChanged: (value) {
                           if (value.isEmpty) _reloadRoomsFromFirstPage();
                         },
@@ -1663,14 +1810,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           _RelationChip(
-                            label: '全部',
+                            label: context.l10n.all,
                             value:
                                 client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL,
                             groupValue: _roomRelationFilter,
                             onSelected: _setRoomRelationFilter,
                           ),
                           _RelationChip(
-                            label: '我创建的',
+                            label: context.l10n.createdByMe,
                             value: client_enum
                                 .MyRoomRelation
                                 .MY_ROOM_RELATION_CREATED,
@@ -1678,7 +1825,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                             onSelected: _setRoomRelationFilter,
                           ),
                           _RelationChip(
-                            label: '我加入的',
+                            label: context.l10n.joinedByMe,
                             value: client_enum
                                 .MyRoomRelation
                                 .MY_ROOM_RELATION_PARTICIPATING,
@@ -1687,17 +1834,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           ),
                           AppSelect<client_enum.MyRoomListSortBy>(
                             value: _roomSortBy,
-                            options: const {
-                              '最近活跃': client_enum
+                            options: {
+                              context.l10n.recentActivity: client_enum
                                   .MyRoomListSortBy
                                   .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-                              '更新时间': client_enum
+                              context.l10n.updatedAt: client_enum
                                   .MyRoomListSortBy
                                   .MY_ROOM_LIST_SORT_BY_UPDATED_AT,
-                              '创建时间': client_enum
+                              context.l10n.createdAt: client_enum
                                   .MyRoomListSortBy
                                   .MY_ROOM_LIST_SORT_BY_CREATED_AT,
-                              '名称': client_enum
+                              context.l10n.name: client_enum
                                   .MyRoomListSortBy
                                   .MY_ROOM_LIST_SORT_BY_NAME,
                             },
@@ -1710,7 +1857,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           AppIconButton(
                             onPressed: _reloadRooms,
                             icon: Icons.refresh_rounded,
-                            tooltip: '刷新房间',
+                            tooltip: context.l10n.refreshRooms,
                           ),
                         ],
                       );
@@ -1737,8 +1884,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   const SizedBox(height: 8),
                   AppPaginationBar(
                     padding: EdgeInsets.zero,
-                    label:
-                        '第 $_roomsPage / $maxPage 页 · $pageStart-$pageEnd / $total',
+                    label: context.l10n.pageRangeSummary(
+                      _roomsPage,
+                      maxPage,
+                      pageStart,
+                      pageEnd,
+                      total,
+                    ),
                     onPrevious: _loadingRooms || _roomsPage <= 1
                         ? null
                         : () => _reloadRooms(page: _roomsPage - 1),
@@ -1757,15 +1909,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
                     child: _LoadErrorBanner(
-                      title: '我的房间暂时不可用',
-                      moduleInfo: _moduleInfo['房间'],
+                      title: context.l10n.myRoomsTemporarilyUnavailable,
+                      moduleInfo: _moduleInfo[_moduleRooms],
                       message: loadError,
                       onRetry: _reloadRooms,
                     ),
                   ),
                 )
               : rooms.isEmpty
-              ? const AppEmptyMessage(message: '没有匹配的房间')
+              ? AppEmptyMessage(message: context.l10n.noMatchingRooms)
               : AppRefreshIndicator(
                   onRefresh: _reloadRooms,
                   child: LayoutBuilder(
@@ -1814,23 +1966,23 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Widget _buildSecurityTab(ThemeData theme) {
     final preferences = _preferences;
     final emailStatus = _emailStatusView(theme);
-    final preferencesError = _loadError('账号偏好');
+    final preferencesError = _loadError(_moduleAccountPreferences);
     final passkeyErrorKey = _loadError('Passkey') != null
         ? 'Passkey'
-        : '本机 Passkey';
+        : context.l10n.localPasskey;
     final passkeyError = _loadError(passkeyErrorKey);
     return _responsiveList(
       children: [
-        const _SectionHeader(
-          title: '账号安全',
-          subtitle: '管理登录因素、设备凭据和高风险账号操作',
+        _SectionHeader(
+          title: context.l10n.accountSecurity,
+          subtitle: context.l10n.accountSecurityDescription,
           icon: Icons.security_rounded,
         ),
         const SizedBox(height: 12),
         if (preferences != null)
           _Section(
-            title: '登录保护',
-            subtitle: '多因素认证会在密码之外要求额外验证因素',
+            title: context.l10n.loginProtection,
+            subtitle: context.l10n.loginProtectionDescription,
             child: Column(
               children: [
                 AppSwitchTile(
@@ -1838,9 +1990,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   onChanged: _savingPreferences
                       ? null
                       : (value) => _toggleTwoFactor(value),
-                  title: const Text('多因素认证'),
+                  title: Text(context.l10n.multiFactorAuthentication),
                   subtitle: Text(
-                    '可用因素：${_factorLabels(preferences).join('、')}',
+                    context.l10n.availableFactors(
+                      _factorLabels(
+                        preferences,
+                      ).join(context.l10n.listSeparator),
+                    ),
                   ),
                 ),
                 if (_showEmailBindingControls) ...[
@@ -1848,21 +2004,23 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   AppTile(
                     contentPadding: EdgeInsets.zero,
                     prefix: Icon(emailStatus.icon, color: emailStatus.tone),
-                    title: const Text('邮箱'),
+                    title: Text(context.l10n.email),
                     subtitle: Text(
-                      _user.hasEmail ? _user.email! : '绑定邮箱后可接收验证码、通知和密码重置邮件',
+                      _user.hasEmail
+                          ? _user.email!
+                          : context.l10n.bindEmailDescription,
                     ),
                     suffix: _user.hasEmail
                         ? AppActionButton(
                             onPressed: _unbindEmail,
                             icon: Icons.link_off_rounded,
-                            label: '解绑',
+                            label: context.l10n.unbind,
                             style: AppActionButtonStyle.outlined,
                           )
                         : AppActionButton(
                             onPressed: _emailFeatureEnabled ? _bindEmail : null,
                             icon: Icons.add_link_rounded,
-                            label: '绑定',
+                            label: context.l10n.bind,
                             style: AppActionButtonStyle.tonal,
                           ),
                   ),
@@ -1871,18 +2029,21 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 AppTile(
                   contentPadding: EdgeInsets.zero,
                   prefix: const Icon(Icons.password_rounded),
-                  title: const Text('登录密码'),
-                  subtitle: const Text('通过 OPAQUE 协议更新账号密码'),
+                  title: Text(context.l10n.loginPassword),
+                  subtitle: Text(context.l10n.opaquePasswordDescription),
                   suffix: Wrap(
                     spacing: 8,
                     children: [
                       if (_user.hasEmail && _emailFeatureEnabled)
                         AppActionButton(
                           onPressed: _resetPasswordByEmail,
-                          label: '邮件重置',
+                          label: context.l10n.emailReset,
                           style: AppActionButtonStyle.outlined,
                         ),
-                      AppActionButton(onPressed: _changePassword, label: '修改'),
+                      AppActionButton(
+                        onPressed: _changePassword,
+                        label: context.l10n.edit,
+                      ),
                     ],
                   ),
                 ),
@@ -1891,8 +2052,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           )
         else if (preferencesError != null)
           _LoadErrorBanner(
-            title: '登录保护信息不可用',
-            moduleInfo: _moduleInfo['账号偏好'],
+            title: context.l10n.loginProtectionUnavailable,
+            moduleInfo: _moduleInfo[_moduleAccountPreferences],
             message: preferencesError,
             onRetry: () => _load(refresh: true),
           ),
@@ -1900,7 +2061,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         if (_publicSettings?.enableWebauthn == true) ...[
           _Section(
             title: 'Passkey',
-            subtitle: '使用系统凭据管理器完成无密码或多因素验证',
+            subtitle: context.l10n.passkeyManagementDescription,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1915,7 +2076,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       onPressed: _passkeyAvailable ? _bindPasskey : null,
                       loading: _bindingPasskey,
                       icon: Icons.add_rounded,
-                      label: '绑定',
+                      label: context.l10n.bind,
                       style: AppActionButtonStyle.tonal,
                     ),
                     const SizedBox(width: 8),
@@ -1925,7 +2086,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         if (mounted) setState(() => _passkeys = passkeys);
                       },
                       icon: Icons.refresh_rounded,
-                      label: '刷新',
+                      label: context.l10n.refresh,
                       style: AppActionButtonStyle.text,
                     ),
                   ],
@@ -1938,7 +2099,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     onRetry: () => _load(refresh: true),
                   )
                 else if (_passkeys.isEmpty)
-                  Text('暂无 Passkey', style: TextStyle(color: theme.hintColor))
+                  Text(
+                    context.l10n.noPasskeys,
+                    style: TextStyle(color: theme.hintColor),
+                  )
                 else
                   for (final credential in _passkeys)
                     AppTile(
@@ -1946,21 +2110,25 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       prefix: const Icon(Icons.fingerprint_rounded),
                       title: Text(
                         credential.name.isEmpty
-                            ? '未命名 Passkey'
+                            ? context.l10n.unnamedPasskey
                             : credential.name,
                       ),
                       subtitle: Text(
                         [
                           _shortCredentialId(credential.credentialId),
-                          '创建 ${_formatTimestamp(credential.createdAt)}',
+                          context.l10n.createdAtValue(
+                            _formatTimestamp(credential.createdAt),
+                          ),
                           if (credential.lastUsedAt > 0)
-                            '最近使用 ${_formatTimestamp(credential.lastUsedAt)}',
+                            context.l10n.lastUsedAt(
+                              _formatTimestamp(credential.lastUsedAt),
+                            ),
                         ].join(' · '),
                       ),
                       suffix: AppIconButton(
                         onPressed: () => _deletePasskey(credential),
                         icon: Icons.delete_outline_rounded,
-                        tooltip: '删除 Passkey',
+                        tooltip: context.l10n.deletePasskey,
                         style: AppIconButtonStyle.destructive,
                       ),
                     ),
@@ -1970,18 +2138,18 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           const SizedBox(height: 12),
         ],
         _Section(
-          title: '危险操作',
-          subtitle: '这些操作会影响账号可用性或永久删除数据',
+          title: context.l10n.dangerousActions,
+          subtitle: context.l10n.dangerousActionsDescription,
           danger: true,
           child: AppTile(
             contentPadding: EdgeInsets.zero,
             prefix: const Icon(Icons.person_off_rounded, color: Colors.red),
-            title: const Text('关闭账户'),
-            subtitle: const Text('永久关闭当前账户，并清除本机登录状态'),
+            title: Text(context.l10n.closeAccount),
+            subtitle: Text(context.l10n.closeAccountTileDescription),
             suffix: AppActionButton(
               onPressed: _closeAccount,
               icon: Icons.person_remove_rounded,
-              label: '关闭',
+              label: context.l10n.close,
               style: AppActionButtonStyle.destructive,
             ),
           ),
@@ -1992,7 +2160,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Widget _buildNotificationsTab(ThemeData theme) {
     final page = _notifications;
-    final loadError = _loadError('通知');
+    final loadError = _loadError(_moduleNotifications);
     final items = page?.notifications ?? const <UserNotificationItem>[];
     final unreadSelectableIds = items
         .where((item) => !item.isRead && item.numericId > 0)
@@ -2017,7 +2185,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             children: [
               Row(
                 children: [
-                  Text('未读 ${page?.unreadCount ?? 0} / 总计 $total'),
+                  Text(
+                    context.l10n.unreadTotalSummary(
+                      page?.unreadCount ?? 0,
+                      total,
+                    ),
+                  ),
                   const Spacer(),
                   if (_loadingNotifications)
                     const Padding(
@@ -2036,7 +2209,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       onPressed: () =>
                           setState(() => _selectedNotificationIds.clear()),
                       icon: Icons.close_rounded,
-                      label: '已选 ${_selectedNotificationIds.length}',
+                      label: context.l10n.selectedCount(
+                        _selectedNotificationIds.length,
+                      ),
                       style: AppActionButtonStyle.text,
                     ),
                     AppIconButton(
@@ -2044,7 +2219,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           ? null
                           : _markSelectedRead,
                       icon: Icons.mark_email_read_rounded,
-                      tooltip: '标记所选未读通知',
+                      tooltip: context.l10n.markSelectedUnreadNotifications,
                     ),
                   ] else
                     AppIconButton(
@@ -2056,17 +2231,17 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                                 ..addAll(unreadSelectableIds);
                             }),
                       icon: Icons.select_all_rounded,
-                      tooltip: '选择当前未读通知',
+                      tooltip: context.l10n.selectCurrentUnreadNotifications,
                     ),
                   AppIconButton(
                     onPressed: items.isEmpty ? null : _markAllRead,
                     icon: Icons.done_all_rounded,
-                    tooltip: '全部标记为已读',
+                    tooltip: context.l10n.markAllRead,
                   ),
                   AppIconButton(
                     onPressed: items.isEmpty ? null : _deleteAllRead,
                     icon: Icons.delete_sweep_rounded,
-                    tooltip: '删除已读通知',
+                    tooltip: context.l10n.deleteReadNotifications,
                     style: AppIconButtonStyle.destructive,
                   ),
                 ],
@@ -2074,7 +2249,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               const SizedBox(height: 8),
               AppSearchField(
                 controller: _notificationSearchController,
-                hintText: '搜索标题或内容',
+                hintText: context.l10n.searchTitleOrContent,
                 onChanged: (value) {
                   if (value.isEmpty) _reloadNotificationsFromFirstPage();
                 },
@@ -2087,7 +2262,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   _NotificationFilterChip(
-                    label: '全部',
+                    label: context.l10n.all,
                     selected: _notificationReadFilter == null,
                     onSelected: () {
                       setState(() => _notificationReadFilter = null);
@@ -2095,7 +2270,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     },
                   ),
                   _NotificationFilterChip(
-                    label: '未读',
+                    label: context.l10n.unread,
                     selected: _notificationReadFilter == false,
                     onSelected: () {
                       setState(() => _notificationReadFilter = false);
@@ -2103,7 +2278,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     },
                   ),
                   _NotificationFilterChip(
-                    label: '已读',
+                    label: context.l10n.read,
                     selected: _notificationReadFilter == true,
                     onSelected: () {
                       setState(() => _notificationReadFilter = true);
@@ -2112,23 +2287,23 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ),
                   AppSelect<client_enum.NotificationType?>(
                     value: _notificationTypeFilter,
-                    hintText: '通知类型',
+                    hintText: context.l10n.notificationType,
                     options: {
-                      '全部类型': null,
-                      '房间邀请': client_enum
+                      context.l10n.allTypes: null,
+                      context.l10n.roomInvitation: client_enum
                           .NotificationType
                           .NOTIFICATION_TYPE_ROOM_INVITATION,
-                      '系统公告': client_enum
+                      context.l10n.systemAnnouncement: client_enum
                           .NotificationType
                           .NOTIFICATION_TYPE_SYSTEM_ANNOUNCEMENT,
-                      '房间事件': client_enum
+                      context.l10n.roomEvent: client_enum
                           .NotificationType
                           .NOTIFICATION_TYPE_ROOM_EVENT,
-                      '密码重置': client_enum
+                      context.l10n.passwordResetNotification: client_enum
                           .NotificationType
                           .NOTIFICATION_TYPE_PASSWORD_RESET,
                       if (_showEmailBindingControls)
-                        '邮箱绑定': client_enum
+                        context.l10n.emailBinding: client_enum
                             .NotificationType
                             .NOTIFICATION_TYPE_EMAIL_BIND,
                     },
@@ -2139,14 +2314,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ),
                   AppSelect<client_enum.NotificationListSortBy>(
                     value: _notificationSortBy,
-                    options: const {
-                      '创建时间': client_enum
+                    options: {
+                      context.l10n.createdAt: client_enum
                           .NotificationListSortBy
                           .NOTIFICATION_LIST_SORT_BY_CREATED_AT,
-                      '更新时间': client_enum
+                      context.l10n.updatedAt: client_enum
                           .NotificationListSortBy
                           .NOTIFICATION_LIST_SORT_BY_UPDATED_AT,
-                      '标题': client_enum
+                      context.l10n.title: client_enum
                           .NotificationListSortBy
                           .NOTIFICATION_LIST_SORT_BY_TITLE,
                     },
@@ -2175,8 +2350,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     tooltip:
                         _notificationSortDirection ==
                             client_enum.SortDirection.SORT_DIRECTION_DESC
-                        ? '降序'
-                        : '升序',
+                        ? context.l10n.descending
+                        : context.l10n.ascending,
                     style: AppIconButtonStyle.outlined,
                   ),
                 ],
@@ -2184,8 +2359,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               const SizedBox(height: 8),
               AppPaginationBar(
                 padding: EdgeInsets.zero,
-                label:
-                    '第 $_notificationPage / $maxPage 页 · $pageStart-$pageEnd',
+                label: context.l10n.notificationPageRange(
+                  _notificationPage,
+                  maxPage,
+                  pageStart,
+                  pageEnd,
+                ),
                 onPrevious: _loadingNotifications || _notificationPage <= 1
                     ? null
                     : () => _reloadNotifications(page: _notificationPage - 1),
@@ -2202,15 +2381,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
                     child: _LoadErrorBanner(
-                      title: '通知暂时不可用',
-                      moduleInfo: _moduleInfo['通知'],
+                      title: context.l10n.notificationsTemporarilyUnavailable,
+                      moduleInfo: _moduleInfo[_moduleNotifications],
                       message: loadError,
                       onRetry: _reloadNotifications,
                     ),
                   ),
                 )
               : items.isEmpty
-              ? const AppEmptyMessage(message: '暂无通知')
+              ? AppEmptyMessage(message: context.l10n.noNotifications)
               : AppRefreshIndicator(
                   onRefresh: _reloadNotifications,
                   child: AppListView.separated(
@@ -2252,7 +2431,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                               : null,
                           prefix: AppCheckbox(
                             value: selected,
-                            semanticsLabel: '选择通知',
+                            semanticsLabel: context.l10n.selectNotification,
                             onChanged: selectable
                                 ? (value) => setState(() {
                                     if (value) {
@@ -2299,7 +2478,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                                     ? null
                                     : () => _openNotification(item),
                                 icon: Icons.open_in_new_rounded,
-                                tooltip: '查看详情',
+                                tooltip: context.l10n.viewDetails,
                                 size: AppIconButtonSize.sm,
                               ),
                               if (!item.isRead)
@@ -2308,7 +2487,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                                       ? null
                                       : () => _markRead(item),
                                   icon: Icons.mark_email_read_rounded,
-                                  tooltip: '标记已读',
+                                  tooltip: context.l10n.markRead,
                                   size: AppIconButtonSize.sm,
                                 ),
                               AppIconButton(
@@ -2316,7 +2495,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                                     ? null
                                     : () => _deleteNotification(item),
                                 icon: Icons.delete_outline_rounded,
-                                tooltip: '删除',
+                                tooltip: context.l10n.delete,
                                 size: AppIconButtonSize.sm,
                                 style: AppIconButtonStyle.destructive,
                               ),
@@ -2335,7 +2514,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Widget _buildBindingsTab(ThemeData theme) {
     final bindableProviders = oauth2BindableProviders(_availableOAuth2);
     final oauth2Available = OAuth2DeepLinkService.canCreateSession;
-    final linkedError = _loadError('OAuth2 绑定');
+    final linkedError = _loadError(_moduleOAuthLinks);
     final providersError = _loadError('OAuth2 Provider');
     final showLinkedOAuth2 = linkedError != null || _linkedOAuth2.isNotEmpty;
     final showBindableOAuth2 =
@@ -2345,15 +2524,15 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       padding: const EdgeInsets.all(16),
       children: [
         _Section(
-          title: '媒体源账号',
-          subtitle: '绑定个人媒体库账号后，可在添加影片时直接浏览 AList、Emby 和 Bilibili 资源。',
+          title: context.l10n.mediaSourceAccounts,
+          subtitle: context.l10n.mediaSourceAccountsDescription,
           child: LayoutBuilder(
             builder: (context, constraints) {
               final compact = constraints.maxWidth < 640;
               final cards = [
                 _MediaProviderBindCard(
                   label: 'AList',
-                  description: '个人网盘与目录资源',
+                  description: context.l10n.alistAccountDescription,
                   icon: Icons.cloud_circle_rounded,
                   color: Colors.amber,
                   onTap: () =>
@@ -2361,7 +2540,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'Emby',
-                  description: '个人媒体库与影视资源',
+                  description: context.l10n.embyAccountDescription,
                   icon: Icons.video_library_rounded,
                   color: Colors.green,
                   onTap: () =>
@@ -2369,7 +2548,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'Bilibili',
-                  description: 'Bilibili 账号与收藏资源',
+                  description: context.l10n.bilibiliAccountDescription,
                   icon: Icons.tv_rounded,
                   color: const Color(0xFFFB7299),
                   onTap: () =>
@@ -2404,14 +2583,14 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '已绑定 OAuth2',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                  Text(
+                    context.l10n.linkedOAuth2,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8),
                   if (linkedError != null)
                     _InlineModuleError(
-                      moduleInfo: _moduleInfo['OAuth2 绑定'],
+                      moduleInfo: _moduleInfo[_moduleOAuthLinks],
                       message: linkedError,
                       onRetry: () => _load(refresh: true),
                     )
@@ -2437,7 +2616,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         suffix: AppIconButton(
                           onPressed: () => _unlinkOAuth2(account),
                           icon: Icons.link_off_rounded,
-                          tooltip: '解绑',
+                          tooltip: context.l10n.unbind,
                           style: AppIconButtonStyle.destructive,
                         ),
                       ),
@@ -2451,9 +2630,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '绑定新账号',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                  Text(
+                    context.l10n.bindNewAccount,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8),
                   if (providersError != null)
@@ -2481,7 +2660,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   if (!oauth2Available) ...[
                     const SizedBox(height: 10),
                     Text(
-                      '当前构建未配置 OAuth2 App Link，无法在本设备完成授权回跳。',
+                      context.l10n.oauthAppLinkUnavailable,
                       style: TextStyle(color: theme.hintColor),
                     ),
                   ],
@@ -2500,7 +2679,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            '等待 $_bindProvider 授权回跳',
+                            context.l10n.waitingForAuthorizationCallback(
+                              _bindProvider!,
+                            ),
                             style: TextStyle(color: theme.hintColor),
                           ),
                         ),
@@ -2515,7 +2696,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           _bindAttempt++;
                         }),
                         icon: Icons.close_rounded,
-                        label: '取消绑定',
+                        label: context.l10n.cancelBinding,
                         style: AppActionButtonStyle.text,
                       ),
                     ),
@@ -2530,20 +2711,21 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Widget _buildQuickProfilePanel(ThemeData theme) {
     return _Section(
-      title: '资料',
+      title: context.l10n.profile,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _InfoRow(label: '用户名', value: _user.username),
-          if (_user.hasEmail) _InfoRow(label: '邮箱', value: _user.email!),
-          _InfoRow(label: '角色', value: _userRoleLabel(_user.role)),
+          _InfoRow(label: context.l10n.username, value: _user.username),
+          if (_user.hasEmail)
+            _InfoRow(label: context.l10n.email, value: _user.email!),
+          _InfoRow(label: context.l10n.role, value: _userRoleLabel(_user.role)),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: AppActionButton(
               onPressed: () => _tabController.animateTo(1),
               icon: Icons.person_outline_rounded,
-              label: '查看资料',
+              label: context.l10n.viewProfile,
               style: AppActionButtonStyle.outlined,
             ),
           ),
@@ -2555,29 +2737,34 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Widget _buildQuickSecurityPanel(ThemeData theme) {
     final preferences = _preferences;
     return _Section(
-      title: '安全',
+      title: context.l10n.security,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _InfoRow(
-            label: '多因素认证',
-            value: preferences?.twoFactorEnabled == true ? '已启用' : '未启用',
+            label: context.l10n.multiFactorAuthentication,
+            value: preferences?.twoFactorEnabled == true
+                ? context.l10n.enabled
+                : context.l10n.disabled,
           ),
           _InfoRow(
-            label: '可用因素',
+            label: context.l10n.availableFactorsLabel,
             value: preferences == null
                 ? '-'
                 : _factorLabels(preferences).join('、'),
           ),
           if (_publicSettings?.enableWebauthn == true)
-            _InfoRow(label: 'Passkey', value: '${_passkeys.length} 个'),
+            _InfoRow(
+              label: 'Passkey',
+              value: context.l10n.itemCount(_passkeys.length),
+            ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: AppActionButton(
               onPressed: () => _tabController.animateTo(3),
               icon: Icons.security_rounded,
-              label: '管理安全',
+              label: context.l10n.manageSecurity,
               style: AppActionButtonStyle.outlined,
             ),
           ),
@@ -2589,13 +2776,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Widget _buildRecentRoomsPanel(ThemeData theme) {
     final rooms = (_myRooms?.rooms ?? const <SyncTvRoom>[]).take(3).toList();
     return _Section(
-      title: '最近房间',
+      title: context.l10n.recentRooms,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (rooms.isEmpty)
-            const AppEmptyMessage(
-              message: '暂无房间',
+            AppEmptyMessage(
+              message: context.l10n.noRooms,
               centered: false,
               padding: EdgeInsets.zero,
             )
@@ -2613,7 +2800,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   [
                     _roomRoleLabel(room.myRole),
                     if (room.creator.trim().isNotEmpty)
-                      '创建者 ${room.creator.trim()}',
+                      context.l10n.creatorName(room.creator.trim()),
                   ].join(' · '),
                 ),
                 onPressed: () => _openRoom(room),
@@ -2624,7 +2811,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             child: AppActionButton(
               onPressed: _createRoom,
               icon: Icons.add_rounded,
-              label: '创建房间',
+              label: context.l10n.createRoom,
             ),
           ),
           const SizedBox(height: 8),
@@ -2633,7 +2820,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             child: AppActionButton(
               onPressed: () => _tabController.animateTo(2),
               icon: Icons.meeting_room_outlined,
-              label: '管理房间',
+              label: context.l10n.manageRooms,
               style: AppActionButtonStyle.outlined,
             ),
           ),
@@ -2666,57 +2853,59 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   String _userRoleLabel(int role) {
     return switch (role) {
       1 => 'Root',
-      2 => '管理员',
-      3 => '用户',
-      _ => '用户',
+      2 => context.l10n.administrator,
+      3 => context.l10n.user,
+      _ => context.l10n.user,
     };
   }
 
   String _userStatusLabel(int status) {
     return switch (status) {
-      1 => '正常',
-      2 => '待审核',
-      3 => '已封禁',
-      4 => '已关闭',
-      _ => '正常',
+      1 => context.l10n.normal,
+      2 => context.l10n.pendingReview,
+      3 => context.l10n.banned,
+      4 => context.l10n.closed,
+      _ => context.l10n.normal,
     };
   }
 
   String _roomRoleLabel(int role) {
     return switch (role) {
-      1 => '创建者',
-      2 => '房间管理员',
-      3 => '成员',
-      4 => '访客',
-      _ => '成员',
+      1 => context.l10n.creator,
+      2 => context.l10n.roomAdministrator,
+      3 => context.l10n.member,
+      4 => context.l10n.guest,
+      _ => context.l10n.member,
     };
   }
 
   String _roomRelationLabel(int relation) {
     return switch (relation) {
-      2 => '我创建的',
-      3 => '我加入的',
-      _ => '我的房间',
+      2 => context.l10n.createdByMe,
+      3 => context.l10n.joinedByMe,
+      _ => context.l10n.myRooms,
     };
   }
 
   List<String> _factorLabels(AccountPreferences preferences) {
     final labels = <String>[];
-    if (preferences.canUsePassword) labels.add('密码');
+    if (preferences.canUsePassword) labels.add(context.l10n.password);
     if (preferences.canUsePasskey && _passkeyEnabled) labels.add('Passkey');
-    if (preferences.canUseEmail && _user.hasEmail) labels.add('邮箱');
-    if (labels.isEmpty) labels.add('无');
+    if (preferences.canUseEmail && _user.hasEmail) {
+      labels.add(context.l10n.email);
+    }
+    if (labels.isEmpty) labels.add(context.l10n.none);
     return labels;
   }
 
   String _notificationType(int type) {
     return switch (type) {
-      1 => '房间邀请',
-      2 => '系统公告',
-      3 => '房间事件',
-      4 => '密码重置',
-      5 => '邮箱绑定',
-      _ => '通知',
+      1 => context.l10n.roomInvitation,
+      2 => context.l10n.systemAnnouncement,
+      3 => context.l10n.roomEvent,
+      4 => context.l10n.passwordResetNotification,
+      5 => context.l10n.emailBinding,
+      _ => context.l10n.notifications,
     };
   }
 
@@ -2840,16 +3029,16 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
   Widget build(BuildContext context) {
     final methods = <ButtonSegment<_PasswordUpdateMethod>>[
       if (widget.canUseCurrentPassword)
-        const ButtonSegment(
+        ButtonSegment(
           value: _PasswordUpdateMethod.currentPassword,
-          icon: Icon(Icons.password_rounded),
-          label: Text('当前密码'),
+          icon: const Icon(Icons.password_rounded),
+          label: Text(context.l10n.currentPassword),
         ),
       if (widget.canUseEmail)
-        const ButtonSegment(
+        ButtonSegment(
           value: _PasswordUpdateMethod.emailToken,
-          icon: Icon(Icons.mark_email_read_rounded),
-          label: Text('邮箱'),
+          icon: const Icon(Icons.mark_email_read_rounded),
+          label: Text(context.l10n.email),
         ),
       if (widget.canUsePasskey)
         const ButtonSegment(
@@ -2859,21 +3048,22 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
         ),
     ];
     final methodDescriptions = {
-      _PasswordUpdateMethod.currentPassword: '使用当前密码验证身份',
-      _PasswordUpdateMethod.emailToken: '使用邮箱收到的验证码验证身份',
-      _PasswordUpdateMethod.passkey: '调用系统 Passkey 完成身份验证',
+      _PasswordUpdateMethod.currentPassword:
+          context.l10n.verifyWithCurrentPassword,
+      _PasswordUpdateMethod.emailToken: context.l10n.verifyWithEmailCode,
+      _PasswordUpdateMethod.passkey: context.l10n.verifyWithSystemPasskey,
     };
     return _AccountActionDialog(
       icon: Icons.lock_reset_rounded,
-      title: '修改密码',
-      subtitle: '选择一种可用的验证方式，然后设置新的登录密码。',
+      title: context.l10n.changePassword,
+      subtitle: context.l10n.changePasswordDescription,
       maxWidth: 560,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _DialogFieldGroup(
-            title: '验证方式',
+            title: context.l10n.verificationMethod,
             subtitle: methodDescriptions[_method] ?? '',
             child: AppSingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -2886,14 +3076,14 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
           ),
           const SizedBox(height: 16),
           _DialogFieldGroup(
-            title: '身份验证',
+            title: context.l10n.identityVerification,
             children: [
               if (_method == _PasswordUpdateMethod.currentPassword)
                 _DialogTextField(
                   controller: _currentPasswordController,
                   obscureText: true,
                   autofocus: true,
-                  label: '当前密码',
+                  label: context.l10n.currentPassword,
                   icon: Icons.lock_outline_rounded,
                   textInputAction: TextInputAction.next,
                 ),
@@ -2901,26 +3091,26 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
                 _DialogTextField(
                   controller: _emailTokenController,
                   autofocus: true,
-                  label: '邮箱验证码',
+                  label: context.l10n.emailVerificationCode,
                   icon: Icons.mark_email_read_outlined,
                   textInputAction: TextInputAction.next,
                 ),
               if (_method == _PasswordUpdateMethod.passkey)
-                const _DialogNotice(
+                _DialogNotice(
                   icon: Icons.fingerprint_rounded,
-                  title: 'Passkey 验证',
-                  message: '保存后会弹出系统验证窗口，验证通过后写入新密码。',
+                  title: context.l10n.passkeyVerification,
+                  message: context.l10n.passkeyPasswordUpdateDescription,
                 ),
             ],
           ),
           const SizedBox(height: 16),
           _DialogFieldGroup(
-            title: '新密码',
+            title: context.l10n.newPassword,
             children: [
               _DialogTextField(
                 controller: _newPasswordController,
                 obscureText: true,
-                label: '新密码',
+                label: context.l10n.newPassword,
                 icon: Icons.lock_reset_rounded,
                 textInputAction: TextInputAction.next,
               ),
@@ -2928,7 +3118,7 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
               _DialogTextField(
                 controller: _confirmPasswordController,
                 obscureText: true,
-                label: '确认新密码',
+                label: context.l10n.confirmNewPassword,
                 icon: Icons.check_circle_outline_rounded,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _submit(),
@@ -2937,7 +3127,7 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
           ),
         ],
       ),
-      primaryLabel: '保存密码',
+      primaryLabel: context.l10n.savePassword,
       onPrimary: _submit,
     );
   }
@@ -2974,10 +3164,15 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
       if (!mounted) return;
       MessageUtils.showSuccess(
         context,
-        message.isEmpty ? '密码重置邮件已发送' : message,
+        message.isEmpty ? context.l10n.passwordResetEmailSent : message,
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '发送重置邮件失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.passwordResetEmailFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _requesting = false);
     }
@@ -2988,11 +3183,14 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
     final newPassword = _newPasswordController.text;
     final confirmPassword = _confirmPasswordController.text;
     if (token.isEmpty || newPassword.isEmpty) {
-      MessageUtils.showWarning(context, '请输入验证码和新密码');
+      MessageUtils.showWarning(
+        context,
+        context.l10n.codeAndNewPasswordRequired,
+      );
       return;
     }
     if (newPassword != confirmPassword) {
-      MessageUtils.showWarning(context, '两次输入的新密码不一致');
+      MessageUtils.showWarning(context, context.l10n.newPasswordsMismatch);
       return;
     }
     Navigator.pop(
@@ -3005,20 +3203,20 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
   Widget build(BuildContext context) {
     return _AccountActionDialog(
       icon: Icons.mark_email_read_rounded,
-      title: '邮件重置密码',
-      subtitle: '向当前绑定邮箱发送一次性验证码，用验证码完成密码重置。',
+      title: context.l10n.emailPasswordReset,
+      subtitle: context.l10n.emailPasswordResetDescription,
       maxWidth: 560,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _DialogFieldGroup(
-            title: '接收邮箱',
+            title: context.l10n.recipientEmail,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final compact = constraints.maxWidth < 420;
                 final emailField = _DialogReadOnlyField(
-                  label: '邮箱',
+                  label: context.l10n.email,
                   value: widget.email,
                   icon: Icons.email_outlined,
                 );
@@ -3026,7 +3224,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
                   onPressed: _requestResetEmail,
                   loading: _requesting,
                   icon: Icons.send_rounded,
-                  label: '发送验证码',
+                  label: context.l10n.sendVerificationCode,
                   style: AppActionButtonStyle.outlined,
                 );
                 if (compact) {
@@ -3052,12 +3250,12 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
           ),
           const SizedBox(height: 16),
           _DialogFieldGroup(
-            title: '验证码',
+            title: context.l10n.verificationCode,
             children: [
               _DialogTextField(
                 controller: _tokenController,
                 autofocus: true,
-                label: '重置验证码',
+                label: context.l10n.resetCode,
                 icon: Icons.mark_email_read_outlined,
                 textInputAction: TextInputAction.next,
               ),
@@ -3065,12 +3263,12 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
           ),
           const SizedBox(height: 16),
           _DialogFieldGroup(
-            title: '新密码',
+            title: context.l10n.newPassword,
             children: [
               _DialogTextField(
                 controller: _newPasswordController,
                 obscureText: true,
-                label: '新密码',
+                label: context.l10n.newPassword,
                 icon: Icons.lock_reset_rounded,
                 textInputAction: TextInputAction.next,
               ),
@@ -3078,7 +3276,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
               _DialogTextField(
                 controller: _confirmPasswordController,
                 obscureText: true,
-                label: '确认新密码',
+                label: context.l10n.confirmNewPassword,
                 icon: Icons.check_circle_outline_rounded,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _submit(),
@@ -3087,7 +3285,7 @@ class _PasswordResetDialogState extends State<_PasswordResetDialog> {
           ),
         ],
       ),
-      primaryLabel: '重置密码',
+      primaryLabel: context.l10n.resetPassword,
       onPrimary: _submit,
     );
   }
@@ -3124,9 +3322,14 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
       final maskedEmail = await SyncTvService.startEmailBind(email);
       if (!mounted) return;
       setState(() => _maskedEmail = maskedEmail);
-      MessageUtils.showSuccess(context, '绑定确认邮件已发送');
+      MessageUtils.showSuccess(context, context.l10n.bindingEmailSent);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '发送绑定邮件失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.sendBindingEmailFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _requesting = false);
     }
@@ -3147,7 +3350,9 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
       );
       if (mounted) Navigator.pop(context, user);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '绑定邮箱失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.bindEmailFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -3157,15 +3362,15 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
   Widget build(BuildContext context) {
     return _AccountActionDialog(
       icon: Icons.alternate_email_rounded,
-      title: '绑定邮箱',
-      subtitle: '邮箱绑定成功后可用于登录、找回密码和接收账号通知。',
+      title: context.l10n.bindEmail,
+      subtitle: context.l10n.bindEmailBenefits,
       maxWidth: 560,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _DialogFieldGroup(
-            title: '邮箱地址',
+            title: context.l10n.emailAddress,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final compact = constraints.maxWidth < 420;
@@ -3173,7 +3378,7 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
                   controller: _emailController,
                   autofocus: true,
                   keyboardType: TextInputType.emailAddress,
-                  label: '邮箱',
+                  label: context.l10n.email,
                   icon: Icons.email_outlined,
                   textInputAction: TextInputAction.next,
                 );
@@ -3181,7 +3386,7 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
                   onPressed: _requestToken,
                   loading: _requesting,
                   icon: Icons.send_rounded,
-                  label: '发送验证码',
+                  label: context.l10n.sendVerificationCode,
                   style: AppActionButtonStyle.outlined,
                 );
                 if (compact) {
@@ -3209,17 +3414,17 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
             const SizedBox(height: 12),
             _DialogNotice(
               icon: Icons.mark_email_read_rounded,
-              title: '确认邮件已发送',
-              message: '验证码已发送至 $_maskedEmail。',
+              title: context.l10n.confirmationEmailSent,
+              message: context.l10n.codeSentTo(_maskedEmail),
             ),
           ],
           const SizedBox(height: 16),
           _DialogFieldGroup(
-            title: '确认绑定',
+            title: context.l10n.confirmBinding,
             children: [
               _DialogTextField(
                 controller: _tokenController,
-                label: '绑定验证码',
+                label: context.l10n.bindingCode,
                 icon: Icons.mark_email_read_outlined,
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _submit(),
@@ -3228,7 +3433,7 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
           ),
         ],
       ),
-      primaryLabel: '绑定邮箱',
+      primaryLabel: context.l10n.bindEmail,
       primaryLoading: _submitting,
       onPrimary: _submitting ? null : _submit,
     );
@@ -3281,7 +3486,10 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
-        MessageUtils.showError(context, '身份验证初始化失败: $e');
+        MessageUtils.showError(
+          context,
+          context.l10n.initializeVerificationFailed('$e'),
+        );
       }
     }
   }
@@ -3335,10 +3543,10 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
   ) {
     return [
       if (_methodAvailable(challenge, _SensitiveOperationMethod.password))
-        const ButtonSegment(
+        ButtonSegment(
           value: _SensitiveOperationMethod.password,
-          icon: Icon(Icons.password_rounded),
-          label: Text('密码'),
+          icon: const Icon(Icons.password_rounded),
+          label: Text(context.l10n.password),
         ),
       if (_methodAvailable(challenge, _SensitiveOperationMethod.passkey))
         const ButtonSegment(
@@ -3347,10 +3555,10 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
           label: Text('Passkey'),
         ),
       if (_methodAvailable(challenge, _SensitiveOperationMethod.email))
-        const ButtonSegment(
+        ButtonSegment(
           value: _SensitiveOperationMethod.email,
-          icon: Icon(Icons.mark_email_read_rounded),
-          label: Text('邮箱'),
+          icon: const Icon(Icons.mark_email_read_rounded),
+          label: Text(context.l10n.email),
         ),
     ];
   }
@@ -3367,10 +3575,12 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
       setState(() => _emailCode = info);
       MessageUtils.showSuccess(
         context,
-        info.message.isEmpty ? '验证码已发送' : info.message,
+        info.message.isEmpty ? context.l10n.verificationCodeSent : info.message,
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '发送验证码失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.sendCodeFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _requestingEmail = false);
     }
@@ -3382,14 +3592,15 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
     if (verification == null || method == null || _submitting) return;
     if (method == _SensitiveOperationMethod.password &&
         _passwordController.text.isEmpty) {
-      MessageUtils.showWarning(context, '请输入当前密码');
+      MessageUtils.showWarning(context, context.l10n.enterCurrentPassword);
       return;
     }
     if (method == _SensitiveOperationMethod.email &&
         _emailTokenController.text.trim().isEmpty) {
-      MessageUtils.showWarning(context, '请输入邮箱验证码');
+      MessageUtils.showWarning(context, context.l10n.enterEmailCode);
       return;
     }
+    final l10n = context.l10n;
     setState(() => _submitting = true);
     try {
       var passkeySessionId = '';
@@ -3399,7 +3610,7 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
           verification.challenge.sessionId,
         );
         if (passkey.passkeySessionId.isEmpty || passkey.options.isEmpty) {
-          throw const FormatException('服务器未返回 Passkey 验证 challenge');
+          throw FormatException(l10n.passkeyChallengeMissing);
         }
         passkeySessionId = passkey.passkeySessionId;
         passkeyCredential = await PasskeyAuthenticatorService.getCredential(
@@ -3417,7 +3628,12 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
       if (!mounted) return;
       Navigator.pop(context, finished.verificationId);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '身份验证失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.identityVerificationFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -3433,8 +3649,8 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
         : _methodSegments(challenge);
     return _AccountActionDialog(
       icon: Icons.verified_user_rounded,
-      title: '身份验证',
-      subtitle: '选择一种可用方式以继续账号安全操作。',
+      title: context.l10n.identityVerification,
+      subtitle: context.l10n.identityVerificationDescription,
       maxWidth: 560,
       content: _loading
           ? const SizedBox(
@@ -3442,17 +3658,17 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
               child: Center(child: AppLoadingIndicator()),
             )
           : challenge == null || method == null || segments.isEmpty
-          ? const _DialogNotice(
+          ? _DialogNotice(
               icon: Icons.error_outline_rounded,
-              title: '没有可用验证方式',
-              message: '当前账号缺少密码、邮箱或 Passkey 验证能力。',
+              title: context.l10n.noVerificationMethods,
+              message: context.l10n.noVerificationMethodsDescription,
             )
           : Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _DialogFieldGroup(
-                  title: '验证方式',
+                  title: context.l10n.verificationMethod,
                   child: AppSingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: AppSegmentedControl<_SensitiveOperationMethod>(
@@ -3465,23 +3681,23 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
                 ),
                 const SizedBox(height: 16),
                 _DialogFieldGroup(
-                  title: '验证信息',
+                  title: context.l10n.verificationInformation,
                   children: [
                     if (method == _SensitiveOperationMethod.password)
                       _DialogTextField(
                         controller: _passwordController,
                         autofocus: true,
                         obscureText: true,
-                        label: '当前密码',
+                        label: context.l10n.currentPassword,
                         icon: Icons.lock_outline_rounded,
                         textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _submit(),
                       ),
                     if (method == _SensitiveOperationMethod.passkey)
-                      const _DialogNotice(
+                      _DialogNotice(
                         icon: Icons.fingerprint_rounded,
-                        title: 'Passkey 验证',
-                        message: '点击验证后会弹出系统验证窗口。',
+                        title: context.l10n.passkeyVerification,
+                        message: context.l10n.passkeyVerificationDescription,
                       ),
                     if (method == _SensitiveOperationMethod.email)
                       LayoutBuilder(
@@ -3490,7 +3706,7 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
                           final field = _DialogTextField(
                             controller: _emailTokenController,
                             autofocus: true,
-                            label: '邮箱验证码',
+                            label: context.l10n.emailVerificationCode,
                             icon: Icons.mark_email_read_outlined,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _submit(),
@@ -3501,7 +3717,9 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
                                 : _requestEmailCode,
                             loading: _requestingEmail,
                             icon: Icons.send_rounded,
-                            label: _emailCode == null ? '发送验证码' : '重新发送',
+                            label: _emailCode == null
+                                ? context.l10n.sendVerificationCode
+                                : context.l10n.resend,
                             style: AppActionButtonStyle.outlined,
                           );
                           final maskedEmail = _emailCode?.maskedEmail ?? '';
@@ -3525,7 +3743,7 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
                               if (maskedEmail.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  '验证码已发送至 $maskedEmail',
+                                  context.l10n.codeSentTo(maskedEmail),
                                   style: TextStyle(
                                     color: Theme.of(context).hintColor,
                                     fontSize: 12,
@@ -3540,7 +3758,7 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
                 ),
               ],
             ),
-      primaryLabel: '验证',
+      primaryLabel: context.l10n.verify,
       primaryLoading: _submitting,
       onPrimary: _loading || challenge == null || method == null
           ? null
@@ -3614,16 +3832,22 @@ class _NotificationDetailSheet extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     AppChip(label: Text(typeLabel)),
-                    AppChip(label: Text(notification.isRead ? '已读' : '未读')),
+                    AppChip(
+                      label: Text(
+                        notification.isRead
+                            ? context.l10n.read
+                            : context.l10n.unread,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Text(
                   [
-                    '创建 $createdAtLabel',
+                    context.l10n.createdAtValue(createdAtLabel),
                     if (updatedAtLabel != '-' &&
                         updatedAtLabel != createdAtLabel)
-                      '更新 $updatedAtLabel',
+                      context.l10n.updatedAtValue(updatedAtLabel),
                   ].join(' · '),
                   style: TextStyle(color: theme.hintColor, fontSize: 12),
                 ),
@@ -3634,7 +3858,7 @@ class _NotificationDetailSheet extends StatelessWidget {
                 if (dataText.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Text(
-                    '数据',
+                    context.l10n.data,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -3665,7 +3889,7 @@ class _NotificationDetailSheet extends StatelessWidget {
                                 _NotificationDetailAction.markRead,
                               ),
                         icon: Icons.mark_email_read_rounded,
-                        label: '标记已读',
+                        label: context.l10n.markRead,
                         style: AppActionButtonStyle.outlined,
                       ),
                     ),
@@ -3677,7 +3901,7 @@ class _NotificationDetailSheet extends StatelessWidget {
                           _NotificationDetailAction.delete,
                         ),
                         icon: Icons.delete_outline_rounded,
-                        label: '删除',
+                        label: context.l10n.delete,
                         style: AppActionButtonStyle.destructive,
                       ),
                     ),
@@ -3763,7 +3987,7 @@ class _AccountActionDialog extends StatelessWidget {
                     ),
                   ),
                   AppIconButton(
-                    tooltip: '关闭',
+                    tooltip: context.l10n.close,
                     onPressed: () => Navigator.pop(context),
                     icon: Icons.close_rounded,
                   ),
@@ -3796,7 +4020,7 @@ class _AccountActionDialog extends StatelessWidget {
                     onPressed: primaryLoading
                         ? null
                         : () => Navigator.pop(context),
-                    label: '取消',
+                    label: context.l10n.cancel,
                     style: AppActionButtonStyle.text,
                   ),
                   const SizedBox(width: 10),
@@ -4173,7 +4397,7 @@ class _LoadErrorSummary extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '部分账号模块暂时不可用',
+                  context.l10n.someAccountModulesUnavailable,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -4182,7 +4406,7 @@ class _LoadErrorSummary extends StatelessWidget {
               AppActionButton(
                 onPressed: onRetry,
                 icon: Icons.refresh_rounded,
-                label: '全部重试',
+                label: context.l10n.retryAll,
                 style: AppActionButtonStyle.text,
               ),
             ],
@@ -4241,7 +4465,7 @@ class _LoadErrorBanner extends StatelessWidget {
               AppActionButton(
                 onPressed: onRetry,
                 icon: Icons.refresh_rounded,
-                label: '重试',
+                label: context.l10n.retry,
                 style: AppActionButtonStyle.text,
               ),
             ],
@@ -4304,7 +4528,7 @@ class _ModuleErrorRow extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                module?.impact ?? '此模块当前无法加载。',
+                module?.impact ?? context.l10n.moduleCurrentlyUnavailable,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
                 ),
@@ -4409,7 +4633,7 @@ class _InlineModuleError extends StatelessWidget {
       border: Border.all(color: Colors.red.withValues(alpha: 0.26)),
       crossAxisAlignment: CrossAxisAlignment.start,
       title: Text(
-        moduleInfo?.label ?? '模块不可用',
+        moduleInfo?.label ?? context.l10n.moduleUnavailable,
         style: theme.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w800,
         ),
@@ -4436,7 +4660,7 @@ class _InlineModuleError extends StatelessWidget {
       ),
       trailing: AppActionButton(
         onPressed: onRetry,
-        label: '重试',
+        label: context.l10n.retry,
         style: AppActionButtonStyle.text,
       ),
     );
@@ -4541,7 +4765,7 @@ class _EditableProfileAvatar extends StatelessWidget {
             const SizedBox(height: 8),
             AppActionButton(
               onPressed: updating ? null : onClear,
-              label: '移除',
+              label: context.l10n.remove,
               style: AppActionButtonStyle.text,
             ),
           ],
@@ -4669,7 +4893,9 @@ class _AccountHero extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user.username.isEmpty ? '当前账号' : user.username,
+                        user.username.isEmpty
+                            ? context.l10n.currentAccount
+                            : user.username,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.headlineSmall?.copyWith(
@@ -4922,22 +5148,28 @@ class _RoomManagementTile extends StatelessWidget {
               _StatusPill(icon: Icons.badge_outlined, label: roleLabel),
               _StatusPill(icon: Icons.group_outlined, label: relationLabel),
               if (room.needPassword)
-                const _StatusPill(
+                _StatusPill(
                   icon: Icons.lock_outline_rounded,
-                  label: '密码',
+                  label: context.l10n.password,
                 ),
               if (room.needVerify)
-                const _StatusPill(icon: Icons.fact_check_outlined, label: '审核'),
+                _StatusPill(
+                  icon: Icons.fact_check_outlined,
+                  label: context.l10n.review,
+                ),
               if (room.isBanned)
-                const _StatusPill(
+                _StatusPill(
                   icon: Icons.block_rounded,
-                  label: '已封禁',
+                  label: context.l10n.banned,
                   danger: true,
                 ),
             ],
           );
           final meta = Text(
-            '成员 ${room.memberCount} · 更新 $updatedAtLabel',
+            context.l10n.roomMemberUpdateSummary(
+              room.memberCount,
+              updatedAtLabel,
+            ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
             ),
@@ -4949,13 +5181,13 @@ class _RoomManagementTile extends StatelessWidget {
               AppActionButton(
                 onPressed: onOpen,
                 icon: Icons.open_in_new_rounded,
-                label: '打开',
+                label: context.l10n.open,
               ),
               if (canManage)
                 AppActionButton(
                   onPressed: onManage,
                   icon: Icons.settings_outlined,
-                  label: '管理',
+                  label: context.l10n.manage,
                   style: AppActionButtonStyle.outlined,
                 ),
               AppActionButton(
@@ -4963,7 +5195,7 @@ class _RoomManagementTile extends StatelessWidget {
                 icon: isOwner
                     ? Icons.delete_outline_rounded
                     : Icons.logout_rounded,
-                label: isOwner ? '删除' : '退出',
+                label: isOwner ? context.l10n.delete : context.l10n.leave,
                 style: AppActionButtonStyle.outlined,
               ),
             ],
@@ -5024,7 +5256,7 @@ class _RoomCreatorLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final creatorName = room.creator.trim().isEmpty
-        ? '未知创建者'
+        ? context.l10n.unknownCreator
         : room.creator.trim();
     return Row(
       children: [
@@ -5041,7 +5273,7 @@ class _RoomCreatorLine extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            '创建者 $creatorName',
+            context.l10n.creatorName(creatorName),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.labelMedium?.copyWith(

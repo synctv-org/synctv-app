@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
 class UserAgreementDialog extends StatefulWidget {
@@ -57,7 +58,7 @@ class _UserAgreementDialogState extends State<UserAgreementDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '用户使用协议',
+                context.l10n.userAgreement,
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -101,11 +102,11 @@ class _UserAgreementDialogState extends State<UserAgreementDialog> {
               ),
               const SizedBox(height: 16),
               if (!_canAgree)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
-                    '请阅读到底部以继续',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    context.l10n.readAgreementToEnd,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ),
               Row(
@@ -116,7 +117,7 @@ class _UserAgreementDialogState extends State<UserAgreementDialog> {
                         Navigator.of(context).pop(false);
                         SystemNavigator.pop(); // Exit app
                       },
-                      label: '不同意并退出',
+                      label: context.l10n.declineAndExit,
                       style: AppActionButtonStyle.text,
                     ),
                   ),
@@ -128,7 +129,7 @@ class _UserAgreementDialogState extends State<UserAgreementDialog> {
                               Navigator.of(context).pop(true);
                             }
                           : null,
-                      label: '同意',
+                      label: context.l10n.agree,
                     ),
                   ),
                 ],

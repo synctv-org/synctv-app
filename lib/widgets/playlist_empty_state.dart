@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
 class PlaylistEmptyState extends StatelessWidget {
@@ -16,8 +17,8 @@ class PlaylistEmptyState extends StatelessWidget {
           AppEmptyState(
             icon: Icons.movie_filter_outlined,
             iconSize: compact ? 48 : 64,
-            title: '播放列表为空',
-            subtitle: '添加影片后即可同步观看',
+            title: context.l10n.playlistEmpty,
+            subtitle: context.l10n.playlistEmptyDescription,
             maxWidth: 280,
           ),
           if (onAdd != null) ...[
@@ -25,7 +26,7 @@ class PlaylistEmptyState extends StatelessWidget {
             AppActionButton(
               onPressed: onAdd,
               icon: Icons.add_rounded,
-              label: '添加影片',
+              label: context.l10n.addMedia,
               style: AppActionButtonStyle.tonal,
             ),
           ],

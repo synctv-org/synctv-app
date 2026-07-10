@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/playlist_empty_state.dart';
 
 Widget _app(Widget child) {
   return MaterialApp(
+    locale: const Locale('zh'),
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
     home: FTheme(
       data: FThemes.blue.light.desktop,
       child: Scaffold(body: child),
@@ -403,12 +407,12 @@ void main() {
     );
 
     expect(find.byType(TextFormField), findsOneWidget);
-    expect(find.byTooltip('显示'), findsOneWidget);
+    expect(find.byTooltip('显示密码'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('显示'));
+    await tester.tap(find.byTooltip('显示密码'));
     await tester.pump(const Duration(milliseconds: 150));
 
-    expect(find.byTooltip('隐藏'), findsOneWidget);
+    expect(find.byTooltip('隐藏密码'), findsOneWidget);
 
     controller.dispose();
   });
@@ -1719,7 +1723,7 @@ void main() {
       await tester.pumpWidget(_app(const PlaylistEmptyState(compact: true)));
 
       expect(find.text('播放列表为空'), findsOneWidget);
-      expect(find.text('添加影片'), findsNothing);
+      expect(find.text('添加媒体'), findsNothing);
       expect(find.byIcon(Icons.add_rounded), findsNothing);
     },
   );
@@ -1733,8 +1737,8 @@ void main() {
       _app(PlaylistEmptyState(compact: true, onAdd: () => added = true)),
     );
 
-    expect(find.text('添加影片'), findsOneWidget);
-    await tester.tap(find.text('添加影片'));
+    expect(find.text('添加媒体'), findsOneWidget);
+    await tester.tap(find.text('添加媒体'));
     await tester.pump(const Duration(milliseconds: 150));
     expect(added, isTrue);
   });
@@ -1747,17 +1751,20 @@ void main() {
 
     await tester.pumpWidget(
       _app(
-        AppPaginationBar.page(
-          page: 2,
-          pageSize: 20,
-          total: 42,
-          onPrevious: () => previous += 1,
-          onNext: () => next += 1,
+        Builder(
+          builder: (context) => AppPaginationBar.page(
+            context: context,
+            page: 2,
+            pageSize: 20,
+            total: 42,
+            onPrevious: () => previous += 1,
+            onNext: () => next += 1,
+          ),
         ),
       ),
     );
 
-    expect(find.text('第 2 页 · 每页 20 · 共 42 条'), findsOneWidget);
+    expect(find.text('第 2 页 · 每页 20 条 · 共 42 条'), findsOneWidget);
 
     await tester.tap(find.byTooltip('上一页'));
     await tester.tap(find.byTooltip('下一页'));

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/services/synctv_api_client.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
@@ -66,7 +67,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   Future<void> _addServer() async {
     final input = _controller.text.trim();
     if (input.isEmpty) {
-      MessageUtils.showWarning(context, '请输入服务器地址');
+      MessageUtils.showWarning(context, context.l10n.serverAddressRequired);
       return;
     }
 
@@ -76,7 +77,10 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
       _controller.clear();
       _changed = true;
       if (mounted) {
-        MessageUtils.showSuccess(context, '已连接 ${profile.name}');
+        MessageUtils.showSuccess(
+          context,
+          context.l10n.serverConnected(profile.name),
+        );
       }
       setState(() {});
     } on SyncTvApiException catch (error) {
@@ -85,7 +89,10 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
       }
     } catch (error) {
       if (mounted) {
-        MessageUtils.showError(context, '无法连接服务器: $error');
+        MessageUtils.showError(
+          context,
+          context.l10n.serverConnectFailed(error.toString()),
+        );
       }
     } finally {
       if (mounted) {
@@ -102,12 +109,18 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
       await _loadServerInfo(refresh: true);
       _changed = true;
       if (mounted) {
-        MessageUtils.showSuccess(context, '已切换到 ${profile.name}');
+        MessageUtils.showSuccess(
+          context,
+          context.l10n.serverSwitched(profile.name),
+        );
       }
       setState(() {});
     } catch (error) {
       if (mounted) {
-        MessageUtils.showError(context, '切换服务器失败: $error');
+        MessageUtils.showError(
+          context,
+          context.l10n.serverSwitchFailed(error.toString()),
+        );
       }
     } finally {
       if (mounted) {
@@ -117,8 +130,8 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   }
 
   Future<void> _removeServer(SyncTvServerProfile profile) async {
-    if (profile.isDefault) {
-      MessageUtils.showWarning(context, '默认服务器由构建配置提供，不能删除');
+    if (profile.isBuiltIn) {
+      MessageUtils.showWarning(context, context.l10n.builtInServerCannotRemove);
       return;
     }
     setState(() => _busy = true);
@@ -126,12 +139,15 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
       await SyncTvService.removeServer(profile.serverId);
       _changed = true;
       if (mounted) {
-        MessageUtils.showSuccess(context, '服务器已移除');
+        MessageUtils.showSuccess(context, context.l10n.serverRemoved);
       }
       setState(() {});
     } catch (error) {
       if (mounted) {
-        MessageUtils.showError(context, '移除服务器失败: $error');
+        MessageUtils.showError(
+          context,
+          context.l10n.serverRemoveFailed(error.toString()),
+        );
       }
     } finally {
       if (mounted) {
@@ -142,6 +158,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final servers = SyncTvService.servers;
@@ -159,7 +176,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    '服务器',
+                    l10n.server,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -167,7 +184,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                 ),
                 AppActionButton(
                   onPressed: () => Navigator.pop(context, _changed),
-                  label: '完成',
+                  label: l10n.done,
                 ),
               ],
             ),
@@ -182,9 +199,9 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
             const SizedBox(height: 16),
             ChatUtils.createFormField(
               context: context,
-              label: '服务器地址',
+              label: l10n.serverAddress,
               controller: _controller,
-              hintText: '例如: https://tv.example.com',
+              hintText: l10n.serverAddressExample,
               prefixIcon: Icons.link_rounded,
               onSubmitted: (_) => _busy ? null : _addServer(),
             ),
@@ -193,7 +210,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    '添加地址后会自动识别服务器，不需要填写回调地址、Code 或 server_id。',
+                    l10n.serverAutoDiscoverDescription,
                     style: TextStyle(
                       color: isDark
                           ? Colors.grey.shade400
@@ -207,14 +224,14 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                 AppActionButton(
                   onPressed: _busy ? null : _addServer,
                   icon: Icons.add_link_rounded,
-                  label: '添加',
+                  label: l10n.add,
                   loading: _busy,
                 ),
               ],
             ),
             const SizedBox(height: 18),
             Text(
-              '已保存服务器',
+              l10n.savedServers,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -227,7 +244,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                 (profile) => _ServerProfileTile(
                   profile: profile,
                   active: profile.serverId == activeServer?.serverId,
-                  canRemove: !_busy && !profile.isDefault,
+                  canRemove: !_busy && !profile.isBuiltIn,
                   busy: _busy,
                   onActivate: () => _activateServer(profile),
                   onRemove: () => _removeServer(profile),
@@ -252,7 +269,7 @@ class _EmptyServerState extends StatelessWidget {
       child: AppInfoBanner(
         icon: Icons.dns_outlined,
         title: Text(
-          '还没有保存的服务器。添加服务器后即可登录和浏览公开房间。',
+          context.l10n.noSavedServers,
           style: TextStyle(
             color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
           ),
@@ -284,12 +301,13 @@ class _CurrentServerInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
     final serverName = (info?.serverName.trim().isNotEmpty ?? false)
         ? info!.serverName.trim()
-        : fallback?.name ?? '当前服务器';
+        : fallback?.name ?? l10n.currentServer;
     final serverId = (info?.serverId.trim().isNotEmpty ?? false)
         ? info!.serverId.trim()
         : fallback?.serverId ?? '';
@@ -350,7 +368,7 @@ class _CurrentServerInfoCard extends StatelessWidget {
                 if (error != null) ...[
                   const SizedBox(height: 6),
                   Text(
-                    '服务器信息读取失败: $error',
+                    l10n.serverInfoFailed(error.toString()),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -363,7 +381,7 @@ class _CurrentServerInfoCard extends StatelessWidget {
             ),
           ),
           AppIconButton(
-            tooltip: '刷新服务器信息',
+            tooltip: l10n.refreshServerInfo,
             onPressed: loading ? null : onRefresh,
             icon: Icons.refresh_rounded,
             loading: loading,
@@ -393,6 +411,7 @@ class _ServerProfileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primary = theme.colorScheme.primary;
@@ -437,10 +456,10 @@ class _ServerProfileTile extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (profile.isDefault) ...[
+                    if (profile.isBuiltIn) ...[
                       const SizedBox(width: 8),
                       _ServerBadge(
-                        label: '默认',
+                        label: l10n.builtInLabel,
                         color: theme.colorScheme.primary,
                       ),
                     ],
@@ -449,13 +468,13 @@ class _ServerProfileTile extends StatelessWidget {
               ),
               if (!active)
                 AppIconButton(
-                  tooltip: '切换',
+                  tooltip: l10n.switchServer,
                   onPressed: busy ? null : onActivate,
                   icon: Icons.login_rounded,
                 ),
-              if (!profile.isDefault)
+              if (!profile.isBuiltIn)
                 AppIconButton(
-                  tooltip: canRemove ? '移除' : '正在处理',
+                  tooltip: canRemove ? l10n.remove : l10n.processing,
                   onPressed: canRemove ? onRemove : null,
                   icon: Icons.delete_outline_rounded,
                   style: AppIconButtonStyle.destructive,

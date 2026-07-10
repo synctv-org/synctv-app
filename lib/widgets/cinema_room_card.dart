@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/utils/room_taxonomy.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
@@ -54,16 +55,19 @@ class CinemaRoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final isUnavailable = isBanned || availability == 2;
-    final statusLabel = isBanned ? '已封禁' : (availability == 2 ? '不可用' : '可加入');
+    final statusLabel = isBanned
+        ? l10n.roomBanned
+        : (availability == 2 ? l10n.roomUnavailableShort : l10n.roomJoinable);
     final statusColor = isUnavailable
         ? theme.colorScheme.error
         : theme.colorScheme.primary;
     final audienceText = memberCount > 0
-        ? '在线 $viewerCount / 成员 $memberCount'
-        : '在线 $viewerCount';
-    final connectionText = connectionCount > 0 ? '$connectionCount 连接' : '暂无连接';
+        ? l10n.roomAudienceWithMembers(viewerCount, memberCount)
+        : l10n.roomAudience(viewerCount);
+    final connectionText = l10n.roomConnections(connectionCount);
     final hasTaxonomy = categoryName.trim().isNotEmpty || labels.isNotEmpty;
     final dateStr = createdAt > 0
         ? DateFormat(
@@ -102,7 +106,9 @@ class CinemaRoomCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 if (onFavoritePressed != null) ...[
                   AppIconButton(
-                    tooltip: isFavorite ? '取消收藏' : '收藏房间',
+                    tooltip: isFavorite
+                        ? l10n.removeFavorite
+                        : l10n.favoriteRoom,
                     icon: Icons.bookmark_border_rounded,
                     selectedIcon: Icons.bookmark_rounded,
                     selected: isFavorite,
@@ -149,7 +155,9 @@ class CinemaRoomCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                description.trim().isEmpty ? '暂无简介' : description.trim(),
+                description.trim().isEmpty
+                    ? l10n.noDescription
+                    : description.trim(),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -183,11 +191,11 @@ class CinemaRoomCard extends StatelessWidget {
                 ),
                 _RoomMetric(icon: Icons.link_rounded, label: connectionText),
                 if (needPassword)
-                  const _RoomMetric(icon: Icons.lock_rounded, label: '密码'),
+                  _RoomMetric(icon: Icons.lock_rounded, label: l10n.password),
                 if (hidden)
-                  const _RoomMetric(
+                  _RoomMetric(
                     icon: Icons.visibility_off_rounded,
-                    label: '隐藏',
+                    label: l10n.hidden,
                   ),
                 if (dateStr.isNotEmpty)
                   _RoomMetric(icon: Icons.schedule_rounded, label: dateStr),
@@ -237,7 +245,9 @@ class _RoomCreator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final label = name.trim().isEmpty ? '未知创建者' : name.trim();
+    final label = name.trim().isEmpty
+        ? context.l10n.unknownCreator
+        : name.trim();
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

@@ -99,7 +99,7 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
     // 检测视频跳转（快进/快退）
     if ((currentPosition - _lastVideoPosition).abs() >
         const Duration(seconds: 2)) {
-      debugPrint('检测到视频跳转，重置弹幕状态');
+      debugPrint('Video seek detected; resetting danmaku state');
       _processedDanmakuIndices.clear();
       _danmakuController!.clear();
     }
@@ -119,7 +119,7 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
       // 检查是否到了显示时间
       if (danmaku.shouldShowAt(currentPosition)) {
         debugPrint(
-          'DanmakuOverlay: 显示弹幕 [${danmaku.text}] at ${currentPosition.inSeconds}s (start: ${danmaku.startTime.inSeconds}s)',
+          'DanmakuOverlay: showing [${danmaku.text}] at ${currentPosition.inSeconds}s (start: ${danmaku.startTime.inSeconds}s)',
         );
         _addDanmakuToScreen(danmaku);
         _processedDanmakuIndices.add(i);
@@ -128,7 +128,7 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
     }
 
     if (addedCount > 0) {
-      debugPrint('DanmakuOverlay: 本次同步添加了 $addedCount 条弹幕');
+      debugPrint('DanmakuOverlay: added $addedCount items during sync');
     }
   }
 
@@ -169,9 +169,11 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
           break;
       }
 
-      debugPrint('添加弹幕: ${danmaku.text} 在 ${_lastVideoPosition.inSeconds}s');
+      debugPrint(
+        'Added danmaku: ${danmaku.text} at ${_lastVideoPosition.inSeconds}s',
+      );
     } catch (e) {
-      debugPrint('添加弹幕失败: $e');
+      debugPrint('Failed to add danmaku: $e');
     }
   }
 
@@ -183,7 +185,7 @@ class _DanmakuOverlayState extends State<DanmakuOverlay> {
 
     return DanmakuScreen(
       createdController: (controller) {
-        debugPrint('弹幕控制器创建成功');
+        debugPrint('Danmaku controller created');
         _danmakuController = controller;
       },
       option: DanmakuOption(

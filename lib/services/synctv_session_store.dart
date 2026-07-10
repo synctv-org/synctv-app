@@ -10,6 +10,7 @@ class SyncTvServerProfile {
     required this.name,
     required List<String> endpoints,
     required this.activeEndpoint,
+    this.isBuiltIn = false,
     this.lastSeenAt,
     this.sessionData = const SyncTvServerSessionData(),
   }) : endpoints = _uniqueNormalized(endpoints);
@@ -18,20 +19,17 @@ class SyncTvServerProfile {
   final String name;
   final List<String> endpoints;
   final String activeEndpoint;
+  final bool isBuiltIn;
   final DateTime? lastSeenAt;
   final SyncTvServerSessionData sessionData;
 
   bool get isPending => serverId.startsWith('pending_');
-  bool get isDefault {
-    final endpoint = SyncTvSessionStore.defaultBaseUrl;
-    return endpoint.isNotEmpty &&
-        (activeEndpoint == endpoint || endpoints.contains(endpoint));
-  }
 
   SyncTvServerProfile copyWith({
     String? name,
     List<String>? endpoints,
     String? activeEndpoint,
+    bool? isBuiltIn,
     DateTime? lastSeenAt,
     SyncTvServerSessionData? sessionData,
   }) {
@@ -49,6 +47,7 @@ class SyncTvServerProfile {
       name: name ?? this.name,
       endpoints: nextEndpoints,
       activeEndpoint: nextActiveEndpoint,
+      isBuiltIn: isBuiltIn ?? this.isBuiltIn,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       sessionData: sessionData ?? this.sessionData,
     );
@@ -59,6 +58,7 @@ class SyncTvServerProfile {
     'name': name,
     'endpoints': endpoints,
     'active_endpoint': activeEndpoint,
+    'is_built_in': isBuiltIn,
     'session': sessionData.toJson(),
     if (lastSeenAt != null) 'last_seen_at': lastSeenAt!.toIso8601String(),
   };
@@ -78,6 +78,7 @@ class SyncTvServerProfile {
       name: json['name']?.toString() ?? '',
       endpoints: endpoints.isEmpty ? [activeEndpoint] : endpoints,
       activeEndpoint: activeEndpoint,
+      isBuiltIn: json['is_built_in'] == true,
       lastSeenAt: DateTime.tryParse(json['last_seen_at']?.toString() ?? ''),
       sessionData: SyncTvServerSessionData.fromJson(
         (json['session'] as Map?) ?? const {},
@@ -97,33 +98,39 @@ class SyncTvServerProfile {
 }
 
 class SyncTvSessionStore {
-  SyncTvSessionStore(this.session);
+  SyncTvSessionStore(this.session, {String? builtInServerUrl})
+    : _builtInServerUrl = _normalizeOptionalBaseUrl(
+        builtInServerUrl ?? SyncTvSessionStore.builtInServerUrl,
+      ) {
+    baseUrl = _builtInServerUrl;
+  }
 
-  static const String configuredDefaultBaseUrl = String.fromEnvironment(
-    'SYNCTV_DEFAULT_SERVER_URL',
+  static const String configuredBuiltInServerUrl = String.fromEnvironment(
+    'SYNCTV_BUILT_IN_SERVER_URL',
     defaultValue: '',
   );
   static const String fallbackClientBaseUrl = 'http://127.0.0.1:8080';
   static const String serversKey = 'synctv_servers_v1';
   static const String activeServerKey = 'synctv_active_server_id_v1';
 
-  static String get defaultBaseUrl {
-    final value = configuredDefaultBaseUrl.trim();
+  static String get builtInServerUrl {
+    final value = configuredBuiltInServerUrl.trim();
     if (value.isEmpty) return '';
     return SyncTvApiClient.normalizeBaseUrl(value);
   }
 
-  static bool get hasDefaultBaseUrl => defaultBaseUrl.isNotEmpty;
+  static bool get hasBuiltInServer => builtInServerUrl.isNotEmpty;
 
   static String get initialClientBaseUrl =>
-      hasDefaultBaseUrl ? defaultBaseUrl : '';
+      hasBuiltInServer ? builtInServerUrl : '';
 
   static String get clientBootstrapBaseUrl =>
-      hasDefaultBaseUrl ? defaultBaseUrl : fallbackClientBaseUrl;
+      hasBuiltInServer ? builtInServerUrl : fallbackClientBaseUrl;
 
   final SyncTvSession session;
+  final String _builtInServerUrl;
 
-  String baseUrl = initialClientBaseUrl;
+  late String baseUrl;
   String? guestRoomId;
   String? guestDisplayName;
   List<SyncTvServerProfile> servers = [];
@@ -136,26 +143,25 @@ class SyncTvSessionStore {
     final prefs = await SharedPreferences.getInstance();
     servers = _decodeServers(prefs.getString(serversKey));
     activeServerId = prefs.getString(activeServerKey);
+    var shouldPersist = _reconcileBuiltInServer();
 
     if (servers.isEmpty) {
-      final endpoint = defaultBaseUrl;
-      if (endpoint.isNotEmpty) {
-        final fallback = _fallbackProfile(endpoint);
-        servers = [fallback];
-        activeServerId = fallback.serverId;
-        await _persistServers(prefs);
-      } else {
-        activeServerId = null;
-        await _persistServers(prefs);
-      }
+      activeServerId = null;
+      shouldPersist = true;
     } else if (_serverById(activeServerId) == null) {
       activeServerId = servers.first.serverId;
-      await prefs.setString(activeServerKey, activeServerId!);
+      shouldPersist = true;
     }
 
-    baseUrl = activeServer?.activeEndpoint ?? initialClientBaseUrl;
+    baseUrl = activeServer?.activeEndpoint ?? _builtInServerUrl;
     _loadSessionFromActiveServer();
     if (_removePendingServersCoveredByIdentifiedServers()) {
+      shouldPersist = true;
+    }
+    if (_reconcileBuiltInServer()) {
+      shouldPersist = true;
+    }
+    if (shouldPersist) {
       await _persistServers(prefs);
     }
   }
@@ -193,6 +199,7 @@ class SyncTvSessionStore {
         name: resolvedName,
         endpoints: [...existing.endpoints, normalizedEndpoint],
         activeEndpoint: normalizedEndpoint,
+        isBuiltIn: existing.isBuiltIn || _isBuiltInEndpoint(normalizedEndpoint),
         lastSeenAt: now,
         sessionData: shouldCarryCurrentSession
             ? _currentSessionData()
@@ -210,6 +217,7 @@ class SyncTvSessionStore {
         name: resolvedName,
         endpoints: [normalizedEndpoint],
         activeEndpoint: normalizedEndpoint,
+        isBuiltIn: _isBuiltInEndpoint(normalizedEndpoint),
         lastSeenAt: now,
         sessionData: shouldCarryCurrentSession
             ? _currentSessionData()
@@ -241,7 +249,7 @@ class SyncTvSessionStore {
     final rawEndpoint = normalizedBaseUrl.trim();
     if (rawEndpoint.isEmpty) {
       activeServerId = null;
-      baseUrl = initialClientBaseUrl;
+      baseUrl = _builtInServerUrl;
       _clearInMemorySession();
       final prefs = await SharedPreferences.getInstance();
       await _persistServers(prefs);
@@ -252,9 +260,22 @@ class SyncTvSessionStore {
     baseUrl = endpoint;
     final current = activeServer;
     if (current == null) {
-      final fallback = _fallbackProfile(endpoint);
-      servers = [fallback];
-      activeServerId = fallback.serverId;
+      final existingIndex = servers.indexWhere(
+        (server) =>
+            server.activeEndpoint == endpoint ||
+            server.endpoints.contains(endpoint),
+      );
+      if (existingIndex >= 0) {
+        final existing = servers[existingIndex].copyWith(
+          activeEndpoint: endpoint,
+        );
+        servers[existingIndex] = existing;
+        activeServerId = existing.serverId;
+      } else {
+        final fallback = _fallbackProfile(endpoint);
+        servers.add(fallback);
+        activeServerId = fallback.serverId;
+      }
     } else {
       final index = servers.indexWhere(
         (server) => server.serverId == current.serverId,
@@ -307,12 +328,12 @@ class SyncTvSessionStore {
   Future<void> removeServer(String serverId) async {
     final index = servers.indexWhere((server) => server.serverId == serverId);
     if (index < 0) return;
-    if (servers[index].isDefault) return;
+    if (servers[index].isBuiltIn) return;
     servers.removeAt(index);
     if (activeServerId == serverId) {
       final nextServer = servers.firstOrNull;
       activeServerId = nextServer?.serverId;
-      baseUrl = nextServer?.activeEndpoint ?? initialClientBaseUrl;
+      baseUrl = nextServer?.activeEndpoint ?? _builtInServerUrl;
       if (nextServer == null) {
         _clearInMemorySession();
       } else {
@@ -370,10 +391,46 @@ class SyncTvSessionStore {
     final normalized = SyncTvApiClient.normalizeBaseUrl(endpoint);
     return SyncTvServerProfile(
       serverId: _fallbackServerId(normalized),
-      name: '自定义服务器',
+      name: normalized,
       endpoints: [normalized],
       activeEndpoint: normalized,
+      isBuiltIn: _isBuiltInEndpoint(normalized),
     );
+  }
+
+  bool _isBuiltInEndpoint(String endpoint) {
+    return _builtInServerUrl.isNotEmpty && endpoint == _builtInServerUrl;
+  }
+
+  bool _reconcileBuiltInServer() {
+    final configured = _builtInServerUrl;
+    var changed = false;
+    var builtInIndex = -1;
+    if (configured.isNotEmpty) {
+      builtInIndex = servers.indexWhere(
+        (server) =>
+            server.activeEndpoint == configured ||
+            server.endpoints.contains(configured),
+      );
+      if (builtInIndex < 0) {
+        servers.insert(0, _fallbackProfile(configured));
+        builtInIndex = 0;
+        changed = true;
+      }
+    }
+    for (var index = 0; index < servers.length; index++) {
+      final shouldBeBuiltIn = index == builtInIndex;
+      if (servers[index].isBuiltIn != shouldBeBuiltIn) {
+        servers[index] = servers[index].copyWith(isBuiltIn: shouldBeBuiltIn);
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  static String _normalizeOptionalBaseUrl(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? '' : SyncTvApiClient.normalizeBaseUrl(trimmed);
   }
 
   String _fallbackServerId(String endpoint) =>

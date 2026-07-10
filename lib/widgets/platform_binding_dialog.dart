@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/services/bilibili_geetest_service.dart';
 import 'package:synctv_app/services/synctv_service.dart';
@@ -29,8 +30,8 @@ List<String> _mergeInstanceNames(List<String> remoteInstances) {
   return names;
 }
 
-String _providerInstanceLabel(String instanceName) {
-  return instanceName.isEmpty ? '本地实例' : instanceName;
+String _providerInstanceLabel(String instanceName, String localInstanceLabel) {
+  return instanceName.isEmpty ? localInstanceLabel : instanceName;
 }
 
 String _hashAlistPassword(String password) {
@@ -55,7 +56,7 @@ class PlatformBindingDialog extends StatefulWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               AppDialogHeader(
-                title: const Text('账号绑定'),
+                title: Text(dialogContext.l10n.accountBinding),
                 icon: Icons.link_rounded,
                 color: accent,
                 onClose: () => Navigator.of(dialogContext).pop(),
@@ -169,7 +170,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
                   id: bind.id,
                   serverId: bind.serverId,
                   instanceName: bind.providerInstanceName,
-                  title: 'Bilibili 已绑定',
+                  title: context.l10n.bilibiliBound,
                   subtitle: bind.id,
                 ),
               )
@@ -178,7 +179,10 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       if (mounted) setState(() => _binds[kind] = list);
     } catch (e) {
       if (mounted && showLoading) {
-        MessageUtils.showError(context, '获取 ${_spec(kind).label} 绑定失败: $e');
+        MessageUtils.showError(
+          context,
+          context.l10n.loadProviderBindingsFailed(_spec(kind).label, '$e'),
+        );
       }
     } finally {
       if (mounted && showLoading) setState(() => _loading[kind] = false);
@@ -189,16 +193,16 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     final provider = _spec(kind);
     final confirm = await ChatUtils.showStyledDialog<bool>(
       context: context,
-      title: '确认解绑',
+      title: context.l10n.confirmUnbind,
       icon: const Icon(Icons.delete_outline, color: Colors.red),
-      content: Text('确定要解除此 ${provider.label} 账号绑定吗？'),
+      content: Text(context.l10n.confirmUnbindProvider(provider.label)),
       actions: [
         ChatUtils.createCancelButton(context),
         const SizedBox(width: 8),
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, true),
-          text: '解绑',
+          text: context.l10n.unbind,
         ),
       ],
     );
@@ -231,11 +235,11 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           await SyncTvService.logoutBilibili(instanceName: item.instanceName);
       }
       if (!mounted) return;
-      MessageUtils.showSuccess(context, '解绑成功');
+      MessageUtils.showSuccess(context, context.l10n.unboundSuccessfully);
       await _loadBinds(kind, showLoading: false);
     } catch (e) {
       if (!mounted) return;
-      MessageUtils.showError(context, '解绑失败: $e');
+      MessageUtils.showError(context, context.l10n.unbindFailed('$e'));
       await _loadBinds(kind, showLoading: false);
     }
   }
@@ -245,7 +249,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     if (kind == _ProviderKind.bilibili) {
       _showProviderFormDialog(
         context: context,
-        title: '绑定 Bilibili',
+        title: context.l10n.bindProvider('Bilibili'),
         icon: const Icon(Icons.tv_rounded, color: Color(0xFFFB7299)),
         iconColor: const Color(0xFFFB7299),
         content: _BilibiliLoginDialog(
@@ -261,7 +265,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
 
     _showProviderFormDialog(
       context: context,
-      title: '绑定 ${provider.label}',
+      title: context.l10n.bindProvider(provider.label),
       icon: Icon(provider.icon, color: provider.color),
       iconColor: provider.color,
       content: _PasswordAccountDialog(
@@ -327,7 +331,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       if (!mounted) return;
       ChatUtils.showStyledDialog(
         context: context,
-        title: '${provider.label} 详情',
+        title: context.l10n.providerDetails(provider.label),
         icon: Icon(provider.icon, color: provider.color),
         iconColor: provider.color,
         content: _AccountInfoView(rows: rows),
@@ -335,12 +339,14 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           ChatUtils.createConfirmButton(
             context,
             () => Navigator.pop(context),
-            text: '关闭',
+            text: context.l10n.close,
           ),
         ],
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '获取详情失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.loadDetailsFailed('$e'));
+      }
     }
   }
 
@@ -348,6 +354,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     _ProviderKind kind,
     _ProviderBindItem item,
   ) async {
+    final l10n = context.l10n;
     switch (kind) {
       case _ProviderKind.alist:
         final info = await SyncTvService.getAlistAccount(
@@ -355,10 +362,13 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           instanceName: item.instanceName,
         );
         return [
-          ('用户名', info.username),
-          ('根目录', info.basePath),
-          ('服务器', item.serverId),
-          ('实例', _providerInstanceLabel(item.instanceName)),
+          (l10n.username, info.username),
+          (l10n.rootDirectory, info.basePath),
+          (l10n.server, item.serverId),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
         ];
       case _ProviderKind.emby:
         final info = await SyncTvService.getEmbyAccount(
@@ -366,21 +376,30 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           instanceName: item.instanceName,
         );
         return [
-          ('用户名', info.name),
-          ('用户 ID', info.id),
-          ('服务器', item.serverId),
-          ('实例', _providerInstanceLabel(item.instanceName)),
+          (l10n.username, info.name),
+          (l10n.userId, info.id),
+          (l10n.server, item.serverId),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
         ];
       case _ProviderKind.bilibili:
         final info = await SyncTvService.getBilibiliAccount(
           instanceName: item.instanceName,
         );
         return [
-          ('登录状态', info.isLogin ? '已登录' : '未登录'),
-          ('用户名', info.username),
-          ('大会员', info.isVip ? '是' : '否'),
-          ('服务器', item.serverId),
-          ('实例', _providerInstanceLabel(item.instanceName)),
+          (
+            l10n.loginStatus,
+            info.isLogin ? l10n.loggedIn : l10n.loggedOutStatus,
+          ),
+          (l10n.username, info.username),
+          (l10n.bilibiliVip, info.isVip ? l10n.yes : l10n.no),
+          (l10n.server, item.serverId),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
         ];
     }
   }
@@ -526,8 +545,8 @@ class _ProviderBindList extends StatelessWidget {
               ? AppEmptyMessage(
                   icon: provider.emptyIcon,
                   message: provider.kind == _ProviderKind.bilibili
-                      ? '尚未绑定 Bilibili'
-                      : '暂无绑定的 ${provider.label} 账号',
+                      ? context.l10n.bilibiliNotBound
+                      : context.l10n.noBoundProviderAccounts(provider.label),
                 )
               : AppListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 4),
@@ -537,9 +556,10 @@ class _ProviderBindList extends StatelessWidget {
                     final serverId = item.serverId.isNotEmpty
                         ? item.serverId
                         : item.id;
-                    final title = _itemTitle(item, serverId);
+                    final title = _itemTitle(context, item, serverId);
                     final instanceLabel = _providerInstanceLabel(
                       item.instanceName,
+                      context.l10n.localInstance,
                     );
                     return AppPanelSurface(
                       margin: const EdgeInsets.only(bottom: 10),
@@ -595,14 +615,14 @@ class _ProviderBindList extends StatelessWidget {
                           AppIconButton(
                             icon: Icons.info_outline,
                             onPressed: () => onInfo(item),
-                            tooltip: '详情',
+                            tooltip: context.l10n.details,
                             style: AppIconButtonStyle.tonal,
                           ),
                           const SizedBox(width: 4),
                           AppIconButton(
                             icon: Icons.link_off_rounded,
                             onPressed: () => onUnbind(item),
-                            tooltip: '解绑',
+                            tooltip: context.l10n.unbind,
                             style: AppIconButtonStyle.destructive,
                           ),
                         ],
@@ -621,8 +641,8 @@ class _ProviderBindList extends StatelessWidget {
                   ? Icons.link_rounded
                   : Icons.add_rounded,
               label: items.isEmpty
-                  ? '绑定 ${provider.label}'
-                  : '重新绑定 ${provider.label}',
+                  ? context.l10n.bindProvider(provider.label)
+                  : context.l10n.rebindProvider(provider.label),
               style: AppActionButtonStyle.tonal,
             ),
           ),
@@ -631,10 +651,14 @@ class _ProviderBindList extends StatelessWidget {
     );
   }
 
-  String _itemTitle(_ProviderBindItem item, String serverId) {
+  String _itemTitle(
+    BuildContext context,
+    _ProviderBindItem item,
+    String serverId,
+  ) {
     if (item.title.isNotEmpty) return item.title;
     if (item.subtitle.isNotEmpty) return item.subtitle;
-    return '${provider.label} 账号 $serverId';
+    return context.l10n.providerAccount(provider.label, serverId);
   }
 }
 
@@ -685,7 +709,9 @@ class _BilibiliSingleBindView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              bound ? 'Bilibili 已绑定' : '绑定 Bilibili',
+                              bound
+                                  ? context.l10n.bilibiliBound
+                                  : context.l10n.bindProvider('Bilibili'),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
                               ),
@@ -693,8 +719,8 @@ class _BilibiliSingleBindView extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               bound
-                                  ? '当前账号已完成 Bilibili 绑定，可继续查看状态或重新绑定。'
-                                  : '绑定后可解析 Bilibili 视频、番剧和直播资源。',
+                                  ? context.l10n.bilibiliBoundDescription
+                                  : context.l10n.bilibiliBindingDescription,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                                 height: 1.35,
@@ -713,7 +739,10 @@ class _BilibiliSingleBindView extends StatelessWidget {
                       children: [
                         _ProviderTinyChip(
                           icon: Icons.account_tree_rounded,
-                          label: _providerInstanceLabel(item!.instanceName),
+                          label: _providerInstanceLabel(
+                            item!.instanceName,
+                            context.l10n.localInstance,
+                          ),
                           color: provider.color,
                         ),
                         if (item!.serverId.isNotEmpty)
@@ -737,7 +766,7 @@ class _BilibiliSingleBindView extends StatelessWidget {
                 child: AppActionButton(
                   onPressed: onInfo,
                   icon: Icons.info_outline_rounded,
-                  label: '查看状态',
+                  label: context.l10n.viewStatus,
                   style: AppActionButtonStyle.outlined,
                 ),
               ),
@@ -746,7 +775,7 @@ class _BilibiliSingleBindView extends StatelessWidget {
                 child: AppActionButton(
                   onPressed: onBind,
                   icon: Icons.sync_rounded,
-                  label: '重新绑定',
+                  label: context.l10n.rebind,
                 ),
               ),
               const SizedBox(width: 10),
@@ -754,7 +783,7 @@ class _BilibiliSingleBindView extends StatelessWidget {
                 child: AppActionButton(
                   onPressed: onUnbind,
                   icon: Icons.link_off_rounded,
-                  label: '解绑',
+                  label: context.l10n.unbind,
                   style: AppActionButtonStyle.tonal,
                 ),
               ),
@@ -763,7 +792,7 @@ class _BilibiliSingleBindView extends StatelessWidget {
                 child: AppActionButton(
                   onPressed: onBind,
                   icon: Icons.link_rounded,
-                  label: '绑定 Bilibili',
+                  label: context.l10n.bindProvider('Bilibili'),
                 ),
               ),
           ],
@@ -869,7 +898,10 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingInstances = false);
-      MessageUtils.showError(context, '获取媒体源实例失败: $e');
+      MessageUtils.showError(
+        context,
+        context.l10n.loadMediaSourceInstancesFailed('$e'),
+      );
     }
   }
 
@@ -887,7 +919,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
     if (host.isEmpty ||
         username.isEmpty ||
         (_isEmby && _useApiKey ? apiKey.isEmpty : password.isEmpty)) {
-      MessageUtils.showError(context, '请填写完整信息');
+      MessageUtils.showError(context, context.l10n.completeAllFields);
       return;
     }
 
@@ -913,10 +945,12 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
       }
       if (!mounted) return;
       Navigator.pop(context);
-      MessageUtils.showSuccess(context, '绑定成功');
+      MessageUtils.showSuccess(context, context.l10n.boundSuccessfully);
       widget.onSuccess();
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '绑定失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.bindingFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -960,14 +994,14 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (_isAlist)
-                    const _ProviderNotice(
+                    _ProviderNotice(
                       icon: Icons.warning_amber_rounded,
-                      text: '仅支持 AList 3.25.0 及以上版本',
+                      text: context.l10n.alistVersionRequirement,
                       color: Colors.amber,
                     ),
                   _ProviderFormSection(
                     icon: Icons.hub_outlined,
-                    title: '连接目标',
+                    title: context.l10n.connectionTarget,
                     color: providerColor,
                     children: [
                       _ProviderInstanceSelector(
@@ -980,9 +1014,9 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                       const SizedBox(height: 12),
                       ChatUtils.createFormField(
                         context: context,
-                        label: '$_label 地址',
+                        label: context.l10n.providerAddress(_label),
                         controller: _hostController,
-                        hintText: '127.0.0.1 或 https://example.com',
+                        hintText: context.l10n.providerAddressHint,
                         prefixIcon: Icons.link_rounded,
                         keyboardType: TextInputType.url,
                         enableSuggestions: false,
@@ -993,7 +1027,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                       const SizedBox(height: 12),
                       ChatUtils.createFormField(
                         context: context,
-                        label: '端口',
+                        label: context.l10n.port,
                         controller: _portController,
                         hintText: _isAlist ? '5244' : '8096',
                         prefixIcon: Icons.settings_ethernet_rounded,
@@ -1008,12 +1042,12 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                   const SizedBox(height: 14),
                   _ProviderFormSection(
                     icon: Icons.person_outline_rounded,
-                    title: '登录凭据',
+                    title: context.l10n.loginCredentials,
                     color: providerColor,
                     children: [
                       ChatUtils.createFormField(
                         context: context,
-                        label: '用户名',
+                        label: context.l10n.username,
                         controller: _usernameController,
                         prefixIcon: Icons.person_outline_rounded,
                       ),
@@ -1022,13 +1056,13 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                         Align(
                           alignment: Alignment.centerLeft,
                           child: AppSegmentedControl<bool>(
-                            segments: const [
+                            segments: [
                               ButtonSegment(
                                 value: false,
-                                icon: Icon(Icons.lock_outline_rounded),
-                                label: Text('密码'),
+                                icon: const Icon(Icons.lock_outline_rounded),
+                                label: Text(context.l10n.password),
                               ),
-                              ButtonSegment(
+                              const ButtonSegment(
                                 value: true,
                                 icon: Icon(Icons.key_rounded),
                                 label: Text('API Key'),
@@ -1052,7 +1086,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                       else
                         ChatUtils.createFormField(
                           context: context,
-                          label: '密码',
+                          label: context.l10n.password,
                           controller: _passwordController,
                           prefixIcon: Icons.lock_outline_rounded,
                           obscureText: true,
@@ -1063,14 +1097,14 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                     const SizedBox(height: 14),
                     _ProviderFormSection(
                       icon: Icons.shield_outlined,
-                      title: '双因素验证',
+                      title: context.l10n.twoFactorAuthentication,
                       color: theme.colorScheme.secondary,
                       children: [
                         ChatUtils.createFormField(
                           context: context,
-                          label: '一次性验证码',
+                          label: context.l10n.oneTimeCode,
                           controller: _otpCodeController,
-                          hintText: '启用 2FA 时填写',
+                          hintText: context.l10n.oneTimeCodeHint,
                           prefixIcon: Icons.pin_outlined,
                         ),
                         const SizedBox(height: 12),
@@ -1078,7 +1112,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                           context: context,
                           label: 'TOTP Secret',
                           controller: _otpSecretController,
-                          hintText: '可选，用于后续自动刷新',
+                          hintText: context.l10n.totpSecretHint,
                           prefixIcon: Icons.shield_outlined,
                           obscureText: true,
                         ),
@@ -1098,7 +1132,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
             child: _DialogActions(
               isLoading: _isLoading,
               onSubmit: _submit,
-              submitText: '登录',
+              submitText: context.l10n.login,
             ),
           ),
         ],
@@ -1205,7 +1239,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
   late final TabController _loginTabController;
   String _url = '';
   String _key = '';
-  String _statusText = '切换到扫码页后生成登录二维码';
+  String _statusText = '';
   bool _isLoading = false;
   bool _checkingStatus = false;
   bool _isExpired = false;
@@ -1263,7 +1297,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
       if (!mounted) return;
       setState(() {
         _loadingInstances = false;
-        _statusText = '获取媒体源实例失败: $e';
+        _statusText = context.l10n.loadMediaSourceInstancesFailed('$e');
         _isLoading = false;
       });
     }
@@ -1275,7 +1309,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
       _qrStarted = true;
       _url = '';
       _key = '';
-      _statusText = '正在创建登录链接...';
+      _statusText = context.l10n.creatingLoginLink;
       _isLoading = true;
       _isExpired = false;
     });
@@ -1288,7 +1322,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
       setState(() {
         _url = response.url;
         _key = response.key;
-        _statusText = '请在浏览器或 Bilibili App 中完成登录';
+        _statusText = context.l10n.completeBilibiliLogin;
         _isLoading = false;
       });
       _resumeQrPolling();
@@ -1296,7 +1330,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _statusText = '创建登录链接失败: $e';
+        _statusText = context.l10n.createLoginLinkFailed('$e');
         _isLoading = false;
       });
     }
@@ -1338,30 +1372,30 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
       switch (status) {
         case bilibili_enum.QRLoginStatus.QR_LOGIN_STATUS_SUCCESS:
           _pollTimer?.cancel();
-          MessageUtils.showSuccess(context, '绑定成功');
+          MessageUtils.showSuccess(context, context.l10n.boundSuccessfully);
           widget.onSuccess();
           Navigator.pop(context);
         case bilibili_enum.QRLoginStatus.QR_LOGIN_STATUS_EXPIRED:
           _pollTimer?.cancel();
           setState(() {
-            _statusText = '登录链接已过期，请重新生成';
+            _statusText = context.l10n.loginLinkExpired;
             _isExpired = true;
           });
         case bilibili_enum.QRLoginStatus.QR_LOGIN_STATUS_SCANNED:
-          setState(() => _statusText = '已扫码，请在 Bilibili 中确认登录');
+          setState(() => _statusText = context.l10n.qrScannedConfirmLogin);
         case bilibili_enum.QRLoginStatus.QR_LOGIN_STATUS_NOT_SCANNED:
-          setState(() => _statusText = '等待扫码或打开链接登录');
+          setState(() => _statusText = context.l10n.waitingForQrScan);
         case bilibili_enum.QRLoginStatus.QR_LOGIN_STATUS_UNSPECIFIED:
-          setState(() => _statusText = '等待 Bilibili 返回登录状态');
+          setState(() => _statusText = context.l10n.waitingForBilibiliStatus);
       }
     } catch (e) {
       if (!mounted) return;
       if (_isRateLimitError(e)) {
         _pollTimer?.cancel();
-        setState(() => _statusText = 'Bilibili 登录状态检查过于频繁，请稍后重新生成登录链接');
+        setState(() => _statusText = context.l10n.bilibiliStatusRateLimited);
         return;
       }
-      setState(() => _statusText = '检查登录状态失败: $e');
+      setState(() => _statusText = context.l10n.checkLoginStatusFailed('$e'));
     } finally {
       _checkingStatus = false;
     }
@@ -1378,13 +1412,17 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
     if (_url.isEmpty) return;
     final uri = Uri.parse(_url);
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && mounted) MessageUtils.showError(context, '无法打开登录链接');
+    if (!opened && mounted) {
+      MessageUtils.showError(context, context.l10n.openLoginLinkFailed);
+    }
   }
 
   Future<void> _copyLoginUrl() async {
     if (_url.isEmpty) return;
     await Clipboard.setData(ClipboardData(text: _url));
-    if (mounted) MessageUtils.showSuccess(context, '登录链接已复制');
+    if (mounted) {
+      MessageUtils.showSuccess(context, context.l10n.loginLinkCopied);
+    }
   }
 
   @override
@@ -1408,7 +1446,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
                 _key = '';
                 _isExpired = false;
                 _isLoading = false;
-                _statusText = '切换到扫码页后生成登录二维码';
+                _statusText = context.l10n.switchToQrPrompt;
               });
               if (_loginTabController.index == 0) _startLogin();
             },
@@ -1426,13 +1464,17 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
                 child: AppTabBar(
                   controller: _loginTabController,
                   indicatorSize: TabBarIndicatorSize.tab,
-                  tabs: const [
+                  tabs: [
                     Tab(
                       height: 48,
-                      icon: Icon(Icons.qr_code_2_rounded),
-                      text: '扫码',
+                      icon: const Icon(Icons.qr_code_2_rounded),
+                      text: context.l10n.qrCode,
                     ),
-                    Tab(height: 48, icon: Icon(Icons.sms_rounded), text: '验证码'),
+                    Tab(
+                      height: 48,
+                      icon: const Icon(Icons.sms_rounded),
+                      text: context.l10n.verificationCode,
+                    ),
                   ],
                 ),
               ),
@@ -1451,7 +1493,10 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
                           instanceName: _instanceName,
                           active: _loginTabController.index == 1,
                           onSuccess: () {
-                            MessageUtils.showSuccess(context, '绑定成功');
+                            MessageUtils.showSuccess(
+                              context,
+                              context.l10n.boundSuccessfully,
+                            );
                             widget.onSuccess();
                             Navigator.pop(context);
                           },
@@ -1484,7 +1529,7 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
             ),
             iconSize: 22,
             title: Text(
-              _statusText,
+              _statusText.isEmpty ? context.l10n.switchToQrPrompt : _statusText,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             trailing: _isLoading
@@ -1543,18 +1588,18 @@ class _BilibiliLoginDialogState extends State<_BilibiliLoginDialog>
             children: [
               _SecondaryActionButton(
                 icon: Icons.copy_rounded,
-                label: '复制链接',
+                label: context.l10n.copyLink,
                 onTap: _url.isEmpty ? null : _copyLoginUrl,
               ),
               _SecondaryActionButton(
                 icon: Icons.open_in_new_rounded,
-                label: '打开登录',
+                label: context.l10n.openLogin,
                 onTap: _url.isEmpty ? null : _openLoginUrl,
               ),
               if (_isExpired)
                 _SecondaryActionButton(
                   icon: Icons.refresh_rounded,
-                  label: '重新生成',
+                  label: context.l10n.regenerate,
                   onTap: _startLogin,
                 ),
             ],
@@ -1590,7 +1635,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
   BilibiliSmsLoginInfo? _session;
-  String _statusText = '切换到验证码页后准备安全验证';
+  String _statusText = '';
   bool _starting = false;
   bool _sending = false;
   bool _loggingIn = false;
@@ -1611,7 +1656,9 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
       setState(() {
         _smsSent = false;
         _session = null;
-        _statusText = widget.active ? '正在准备安全验证...' : '切换到验证码页后准备安全验证';
+        _statusText = widget.active
+            ? context.l10n.preparingSecurityVerification
+            : context.l10n.switchToCodePrompt;
         _starting = widget.active;
         _sending = false;
         _loggingIn = false;
@@ -1636,7 +1683,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
       _starting = true;
       _smsSent = false;
       _session = null;
-      _statusText = '正在准备安全验证...';
+      _statusText = context.l10n.preparingSecurityVerification;
     });
     try {
       final session = await SyncTvService.startBilibiliSmsLogin(
@@ -1646,13 +1693,13 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
       setState(() {
         _session = session;
         _starting = false;
-        _statusText = '输入手机号后完成安全验证，即可发送短信验证码';
+        _statusText = context.l10n.enterPhoneForSecurityVerification;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _starting = false;
-        _statusText = '安全验证准备失败: $e';
+        _statusText = context.l10n.prepareSecurityVerificationFailed('$e');
       });
     }
   }
@@ -1660,7 +1707,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
   Future<void> _sendSms() async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
-      MessageUtils.showWarning(context, '请输入手机号');
+      MessageUtils.showWarning(context, context.l10n.enterPhoneNumber);
       return;
     }
     var session = _session;
@@ -1673,7 +1720,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
 
     setState(() {
       _sending = true;
-      _statusText = '请完成 Bilibili 安全验证';
+      _statusText = context.l10n.completeBilibiliSecurityVerification;
     });
 
     try {
@@ -1692,7 +1739,7 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
         _session = nextSession;
         _sending = false;
         _smsSent = true;
-        _statusText = '短信验证码已发送';
+        _statusText = context.l10n.smsCodeSent;
       });
     } catch (e) {
       if (!mounted) return;
@@ -1702,9 +1749,9 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
         if (expired) {
           _session = null;
           _smsSent = false;
-          _statusText = '验证会话已失效，请重新开始短信登录';
+          _statusText = context.l10n.verificationSessionExpired;
         } else {
-          _statusText = '短信发送失败: $e';
+          _statusText = context.l10n.sendSmsFailed('$e');
         }
       });
     }
@@ -1714,17 +1761,17 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
     final session = _session;
     final code = _codeController.text.trim();
     if (session == null) {
-      MessageUtils.showWarning(context, '请先发送短信验证码');
+      MessageUtils.showWarning(context, context.l10n.sendSmsFirst);
       return;
     }
     if (code.isEmpty) {
-      MessageUtils.showWarning(context, '请输入短信验证码');
+      MessageUtils.showWarning(context, context.l10n.enterSmsCode);
       return;
     }
 
     setState(() {
       _loggingIn = true;
-      _statusText = '正在完成 Bilibili 绑定...';
+      _statusText = context.l10n.completingBilibiliBinding;
     });
     try {
       await SyncTvService.loginBilibiliSms(
@@ -1741,9 +1788,9 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
         if (expired) {
           _session = null;
           _smsSent = false;
-          _statusText = '登录会话已失效，请重新验证后发送短信';
+          _statusText = context.l10n.loginSessionExpired;
         } else {
-          _statusText = '绑定失败: $e';
+          _statusText = context.l10n.bindingFailed('$e');
         }
       });
     }
@@ -1773,7 +1820,9 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
             ),
             iconSize: 22,
             title: Text(
-              _statusText,
+              _statusText.isEmpty
+                  ? context.l10n.switchToCodePrompt
+                  : _statusText,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             trailing: _busy
@@ -1790,18 +1839,20 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
           const SizedBox(height: 10),
           ChatUtils.createFormField(
             context: context,
-            label: '手机号',
+            label: context.l10n.phoneNumber,
             controller: _phoneController,
-            hintText: '请输入 Bilibili 绑定手机号',
+            hintText: context.l10n.bilibiliPhoneHint,
             prefixIcon: Icons.phone_iphone_rounded,
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 8),
           ChatUtils.createFormField(
             context: context,
-            label: '短信验证码',
+            label: context.l10n.smsVerificationCode,
             controller: _codeController,
-            hintText: _smsSent ? '请输入收到的验证码' : '发送短信后填写验证码',
+            hintText: _smsSent
+                ? context.l10n.enterReceivedCode
+                : context.l10n.enterCodeAfterSms,
             prefixIcon: Icons.pin_rounded,
             keyboardType: TextInputType.number,
           ),
@@ -1813,18 +1864,18 @@ class _BilibiliSmsLoginPanelState extends State<_BilibiliSmsLoginPanel> {
             children: [
               _SecondaryActionButton(
                 icon: Icons.refresh_rounded,
-                label: '重新验证',
+                label: context.l10n.verifyAgain,
                 onTap: _busy ? null : _startSession,
               ),
               _SecondaryActionButton(
                 icon: Icons.send_to_mobile_rounded,
-                label: '发送短信',
+                label: context.l10n.sendSms,
                 onTap: _busy ? null : _sendSms,
               ),
               AppActionButton(
                 onPressed: _busy ? null : _login,
                 icon: Icons.login_rounded,
-                label: '绑定',
+                label: context.l10n.bind,
                 loading: _loggingIn,
               ),
             ],
@@ -1860,11 +1911,12 @@ class _ProviderInstanceSelector extends StatelessWidget {
         : (instanceNames.isEmpty ? '' : instanceNames.first);
     return AppSelect<String>(
       value: value,
-      label: '媒体源实例',
+      label: context.l10n.mediaSourceInstance,
       prefixIcon: loading ? null : Icons.account_tree_rounded,
       options: {
         for (final instanceName in instanceNames)
-          _providerInstanceLabel(instanceName): instanceName,
+          _providerInstanceLabel(instanceName, context.l10n.localInstance):
+              instanceName,
       },
       enabled: !loading,
       onChanged: loading ? null : (value) => onChanged(value ?? ''),

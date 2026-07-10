@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/room_media_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
@@ -12,7 +13,7 @@ class ChatReadReceiptsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AppDialog(
-      title: const Text('消息阅读详情'),
+      title: Text(context.l10n.messageReadDetails),
       body: SizedBox(
         width: 620,
         height: 460,
@@ -21,7 +22,7 @@ class ChatReadReceiptsDialog extends StatelessWidget {
           children: [
             Expanded(
               child: _ChatReceiptUserColumn(
-                title: '${receipts.readerTotal} 已读',
+                title: context.l10n.readCount(receipts.readerTotal),
                 users: receipts.readers.map((item) => item.user).toList(),
                 readTimes: {
                   for (final item in receipts.readers)
@@ -35,7 +36,7 @@ class ChatReadReceiptsDialog extends StatelessWidget {
             ),
             Expanded(
               child: _ChatReceiptUserColumn(
-                title: '${receipts.unreadTotal} 未读',
+                title: context.l10n.unreadCount(receipts.unreadTotal),
                 users: receipts.unreadMembers,
               ),
             ),
@@ -45,7 +46,7 @@ class ChatReadReceiptsDialog extends StatelessWidget {
       actions: [
         AppActionButton(
           onPressed: () => Navigator.pop(context),
-          label: '关闭',
+          label: context.l10n.close,
           style: AppActionButtonStyle.text,
         ),
       ],
@@ -81,7 +82,7 @@ class _ChatReceiptUserColumn extends StatelessWidget {
           child: users.isEmpty
               ? Center(
                   child: Text(
-                    '暂无成员',
+                    context.l10n.noMembers,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

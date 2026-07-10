@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/services/realtime_event_log_preferences.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
@@ -14,7 +15,7 @@ class RealtimeEventLogView extends StatefulWidget {
   final List<RealtimeEventLogEntry> events;
   final VoidCallback? onClear;
   final EdgeInsetsGeometry padding;
-  final String emptyText;
+  final String? emptyText;
   final ValueChanged<int>? onMaxEntriesChanged;
 
   const RealtimeEventLogView({
@@ -22,7 +23,7 @@ class RealtimeEventLogView extends StatefulWidget {
     required this.events,
     this.onClear,
     this.padding = const EdgeInsets.all(12),
-    this.emptyText = '暂无实时事件',
+    this.emptyText,
     this.onMaxEntriesChanged,
   });
 
@@ -36,7 +37,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
   List<RealtimeEventLogEntry> get events => widget.events;
   VoidCallback? get onClear => widget.onClear;
   EdgeInsetsGeometry get padding => widget.padding;
-  String get emptyText => widget.emptyText;
+  String get emptyText => widget.emptyText ?? context.l10n.noRealtimeEvents;
   ValueChanged<int>? get onMaxEntriesChanged => widget.onMaxEntriesChanged;
 
   @override
@@ -51,7 +52,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
       '  ',
     ).convert(events.map((event) => event.toJson()).toList(growable: false));
     await Clipboard.setData(ClipboardData(text: text));
-    if (context.mounted) MessageUtils.showSuccess(context, '实时事件已复制');
+    if (context.mounted) {
+      MessageUtils.showSuccess(context, context.l10n.realtimeEventsCopied);
+    }
   }
 
   Future<void> _changeMaxEntries(BuildContext context, int value) async {
@@ -65,11 +68,11 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
             context: context,
             builder: (dialogContext) {
               return AppDialog(
-                title: const Text('保留条数'),
+                title: Text(context.l10n.retentionCount),
                 body: AppTextField(
                   controller: controller,
-                  label: '最近事件数量',
-                  helperText: '范围 20-2000',
+                  label: context.l10n.recentEventCount,
+                  helperText: context.l10n.eventCountRange,
                   prefixIcon: Icons.format_list_numbered_rounded,
                   autofocus: true,
                   keyboardType: TextInputType.number,
@@ -84,7 +87,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                 actions: [
                   AppActionButton(
                     onPressed: () => Navigator.pop(dialogContext),
-                    label: '取消',
+                    label: context.l10n.cancel,
                     style: AppActionButtonStyle.outlined,
                   ),
                   AppActionButton(
@@ -93,7 +96,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       if (parsed == null) return;
                       Navigator.pop(dialogContext, parsed);
                     },
-                    label: '保存',
+                    label: context.l10n.save,
                   ),
                 ],
               );
@@ -130,18 +133,21 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
     bool showLabel = false,
   }) {
     return AppPopupMenuButton<int>(
-      tooltip: '保留条数',
+      tooltip: context.l10n.retentionCount,
       icon: showLabel ? null : const Icon(Icons.storage_rounded),
       initialValue: maxEntries,
       onSelected: (value) => _changeMaxEntries(context, value),
-      itemBuilder: (context) => const [
-        PopupMenuItem(value: 50, child: Text('保留 50 条')),
-        PopupMenuItem(value: 100, child: Text('保留 100 条')),
-        PopupMenuItem(value: 200, child: Text('保留 200 条')),
-        PopupMenuItem(value: 500, child: Text('保留 500 条')),
-        PopupMenuItem(value: 1000, child: Text('保留 1000 条')),
-        PopupMenuDivider(),
-        PopupMenuItem(value: -1, child: Text('自定义...')),
+      itemBuilder: (context) => [
+        PopupMenuItem(value: 50, child: Text(context.l10n.retainEvents(50))),
+        PopupMenuItem(value: 100, child: Text(context.l10n.retainEvents(100))),
+        PopupMenuItem(value: 200, child: Text(context.l10n.retainEvents(200))),
+        PopupMenuItem(value: 500, child: Text(context.l10n.retainEvents(500))),
+        PopupMenuItem(
+          value: 1000,
+          child: Text(context.l10n.retainEvents(1000)),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(value: -1, child: Text(context.l10n.customValue)),
       ],
       child: showLabel
           ? Padding(
@@ -151,7 +157,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                 children: [
                   const Icon(Icons.storage_rounded, size: 18),
                   const SizedBox(width: 6),
-                  Text('保留 $maxEntries'),
+                  Text(context.l10n.retainEvents(maxEntries)),
                   const SizedBox(width: 2),
                   const Icon(Icons.arrow_drop_down_rounded, size: 18),
                 ],
@@ -163,7 +169,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
 
   AppIconButton _buildGroupingButton(bool grouped) {
     return AppIconButton(
-      tooltip: grouped ? '按时间查看' : '按类型分组',
+      tooltip: grouped
+          ? context.l10n.viewChronologically
+          : context.l10n.groupByType,
       selectedIcon: Icons.view_agenda_rounded,
       selected: grouped,
       onPressed: () => RealtimeEventLogPreferences.setGrouped(!grouped),
@@ -190,37 +198,41 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                 grouped,
               );
             },
-            child: Text(grouped ? '按时间查看' : '按类型分组'),
+            child: Text(
+              grouped
+                  ? context.l10n.viewChronologically
+                  : context.l10n.groupByType,
+            ),
           ),
         if (includeLimit)
           SubmenuButton(
             menuChildren: [
               MenuItemButton(
                 onPressed: () => _changeMaxEntries(context, 50),
-                child: const Text('50 条'),
+                child: Text(context.l10n.eventCount(50)),
               ),
               MenuItemButton(
                 onPressed: () => _changeMaxEntries(context, 100),
-                child: const Text('100 条'),
+                child: Text(context.l10n.eventCount(100)),
               ),
               MenuItemButton(
                 onPressed: () => _changeMaxEntries(context, 200),
-                child: const Text('200 条'),
+                child: Text(context.l10n.eventCount(200)),
               ),
               MenuItemButton(
                 onPressed: () => _changeMaxEntries(context, 500),
-                child: const Text('500 条'),
+                child: Text(context.l10n.eventCount(500)),
               ),
               MenuItemButton(
                 onPressed: () => _changeMaxEntries(context, 1000),
-                child: const Text('1000 条'),
+                child: Text(context.l10n.eventCount(1000)),
               ),
               MenuItemButton(
                 onPressed: () => _changeMaxEntries(context, -1),
-                child: const Text('自定义...'),
+                child: Text(context.l10n.customValue),
               ),
             ],
-            child: const Text('保留条数'),
+            child: Text(context.l10n.retentionCount),
           ),
         if (includeCopy)
           MenuItemButton(
@@ -233,7 +245,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       grouped,
                     );
                   },
-            child: const Text('复制事件'),
+            child: Text(context.l10n.copyEvents),
           ),
         if (includeClear)
           MenuItemButton(
@@ -246,12 +258,12 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       grouped,
                     );
                   },
-            child: const Text('清空事件'),
+            child: Text(context.l10n.clearEvents),
           ),
       ],
       builder: (context, controller, child) {
         return AppIconButton(
-          tooltip: '更多操作',
+          tooltip: context.l10n.moreActions,
           onPressed: () {
             if (controller.isOpen) {
               controller.close();
@@ -304,7 +316,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
   ) {
     final active = _hiddenGroupKeys.isNotEmpty;
     return AppIconButton(
-      tooltip: '筛选事件类型',
+      tooltip: context.l10n.filterEventTypes,
       selected: active,
       selectedIcon: Icons.filter_alt_rounded,
       icon: Icons.filter_alt_outlined,
@@ -348,13 +360,16 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  '事件类型过滤',
+                                  context.l10n.eventTypeFilter,
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(fontWeight: FontWeight.w800),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '已选择 $selectedCount / ${options.length}',
+                                  context.l10n.selectionCount(
+                                    selectedCount,
+                                    options.length,
+                                  ),
                                   style: TextStyle(
                                     color: Theme.of(context).hintColor,
                                   ),
@@ -366,7 +381,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                             onPressed: () => setSheetState(() {
                               draftHidden = <String>{};
                             }),
-                            label: '全选',
+                            label: context.l10n.selectAll,
                             style: AppActionButtonStyle.text,
                           ),
                         ],
@@ -377,8 +392,8 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       onChanged: (value) => setSheetState(() {
                         draftHidden = value ? <String>{} : Set.of(optionKeys);
                       }),
-                      title: const Text('全部类型'),
-                      subtitle: Text('${events.length} 条事件'),
+                      title: Text(context.l10n.allTypes),
+                      subtitle: Text(context.l10n.eventCount(events.length)),
                     ),
                     const AppDivider(height: 1),
                     Flexible(
@@ -403,7 +418,9 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            subtitle: Text('${option.count} 条'),
+                            subtitle: Text(
+                              context.l10n.itemCount(option.count),
+                            ),
                           );
                         },
                       ),
@@ -415,14 +432,14 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                         children: [
                           AppActionButton(
                             onPressed: () => Navigator.pop(sheetContext),
-                            label: '取消',
+                            label: context.l10n.cancel,
                             style: AppActionButtonStyle.text,
                           ),
                           const SizedBox(width: 8),
                           AppActionButton(
                             onPressed: () =>
                                 Navigator.pop(sheetContext, draftHidden),
-                            label: '应用',
+                            label: context.l10n.apply,
                           ),
                         ],
                       ),
@@ -464,12 +481,15 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                 valueListenable: RealtimeEventLogPreferences.maxEntries,
                 builder: (context, maxEntries, _) {
                   final eventCountLabel = isFiltering
-                      ? '${filteredEvents.length}/${events.length} 条'
-                      : '${events.length} 条';
+                      ? context.l10n.filteredEventCount(
+                          filteredEvents.length,
+                          events.length,
+                        )
+                      : context.l10n.eventCount(events.length);
                   final titleChildren = [
                     Flexible(
                       child: Text(
-                        '实时事件',
+                        context.l10n.realtimeEvents,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall?.copyWith(
@@ -495,7 +515,10 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       ),
                       label: Text(
                         grouped
-                            ? '$groupCount 组 / $eventCountLabel'
+                            ? context.l10n.groupedEventCount(
+                                groupCount,
+                                eventCountLabel,
+                              )
                             : eventCountLabel,
                       ),
                     ),
@@ -551,14 +574,14 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                           _buildFilterButton(context, filterOptions),
                           _buildGroupingButton(grouped),
                           AppIconButton(
-                            tooltip: '复制',
+                            tooltip: context.l10n.copy,
                             onPressed: events.isEmpty
                                 ? null
                                 : () => _copy(context),
                             icon: Icons.copy_all_rounded,
                           ),
                           AppIconButton(
-                            tooltip: '清空',
+                            tooltip: context.l10n.clear,
                             onPressed: events.isEmpty ? null : onClear,
                             icon: Icons.delete_sweep_rounded,
                             style: AppIconButtonStyle.destructive,
@@ -581,10 +604,10 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                   ),
                 )
               : filteredEvents.isEmpty
-              ? const Center(
+              ? Center(
                   child: AppEmptyState(
                     icon: Icons.filter_alt_off_outlined,
-                    title: '当前过滤条件下暂无实时事件',
+                    title: context.l10n.noFilteredRealtimeEvents,
                   ),
                 )
               : ValueListenableBuilder<bool>(
@@ -689,7 +712,7 @@ class _DirectionPill extends StatelessWidget {
         fontSize: 12,
         fontWeight: FontWeight.w800,
       ),
-      label: Text(outgoing ? '发出' : '收到'),
+      label: Text(outgoing ? context.l10n.sent : context.l10n.received),
     );
   }
 }
@@ -729,10 +752,10 @@ class _RealtimeEventGroupTile extends StatelessWidget {
               spacing: 8,
               runSpacing: 4,
               children: [
-                _GroupMeta(label: '${group.count} 条'),
-                _GroupMeta(label: '最新 ${event.timeLabel}'),
+                _GroupMeta(label: context.l10n.itemCount(group.count)),
+                _GroupMeta(label: context.l10n.latestAt(event.timeLabel)),
                 if (group.totalBytes > 0)
-                  _GroupMeta(label: '${group.totalBytes} bytes'),
+                  _GroupMeta(label: context.l10n.byteCount(group.totalBytes)),
               ],
             ),
           ],
@@ -789,7 +812,7 @@ class _RealtimeEventGroupEntryTile extends StatelessWidget {
             children: [
               _GroupMeta(label: event.timeLabel),
               if (event.byteLength > 0)
-                _GroupMeta(label: '${event.byteLength} bytes'),
+                _GroupMeta(label: context.l10n.byteCount(event.byteLength)),
             ],
           ),
           if (event.detail.isNotEmpty) ...[
@@ -893,7 +916,7 @@ class _RealtimeEventTile extends StatelessWidget {
           if (event.byteLength > 0) ...[
             const SizedBox(height: 6),
             Text(
-              '${event.byteLength} bytes',
+              context.l10n.byteCount(event.byteLength),
               style: TextStyle(color: theme.hintColor, fontSize: 11),
             ),
           ],

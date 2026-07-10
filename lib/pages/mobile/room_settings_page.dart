@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/room_management_models.dart';
@@ -25,15 +26,6 @@ import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 
-const Map<String, String> _mediaSourceLabels = {
-  '': '全部来源',
-  'directUrl': '直链',
-  'bilibili': 'Bilibili',
-  'alist': 'AList',
-  'emby': 'Emby',
-  'rtmp': 'RTMP',
-};
-
 const String _settingsObserveId = 'manage_room_settings';
 const String _membersObserveId = 'manage_room_member_events';
 const String _membersOnlineCountObserveId = 'manage_member_online_count';
@@ -53,10 +45,6 @@ const Set<String> _mediaSourcesWithProviderInstances = {
   'bilibili',
 };
 
-String _providerInstanceLabel(String instanceName) {
-  return instanceName.isEmpty ? '本地实例' : instanceName;
-}
-
 class _RoomSettingsSection {
   final String label;
   final IconData icon;
@@ -74,7 +62,7 @@ class _RealtimeWatchStats {
   int changed = 0;
   int errors = 0;
   DateTime? lastSeenAt;
-  String lastKind = '等待';
+  String lastKind = 'waiting';
   String lastError = '';
 
   int get total => observed + changed + errors;
@@ -84,7 +72,7 @@ class _RealtimeWatchStats {
     changed = 0;
     errors = 0;
     lastSeenAt = null;
-    lastKind = '等待';
+    lastKind = 'waiting';
     lastError = '';
   }
 
@@ -93,17 +81,17 @@ class _RealtimeWatchStats {
     switch (event.kind) {
       case RoomResourceWatchKind.observed:
         observed += 1;
-        lastKind = event.changed ? '已观测，有变更' : '已观测，无变更';
+        lastKind = event.changed ? 'observed_changed' : 'observed_unchanged';
         lastError = '';
         break;
       case RoomResourceWatchKind.changed:
         changed += 1;
-        lastKind = '已推送快照';
+        lastKind = 'snapshot';
         lastError = '';
         break;
       case RoomResourceWatchKind.error:
         errors += 1;
-        lastKind = '异常';
+        lastKind = 'error';
         lastError = event.errorMessage;
         break;
     }
@@ -162,6 +150,7 @@ class RoomSettingsPage extends StatefulWidget {
 
 class _RoomSettingsPageState extends State<RoomSettingsPage>
     with SingleTickerProviderStateMixin {
+  static const int _sectionCount = 10;
   late final TabController _tabController;
   late final TextEditingController _passwordController;
   late final TextEditingController _maxMembersController;
@@ -260,7 +249,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _sections.length, vsync: this);
+    _tabController = TabController(length: _sectionCount, vsync: this);
     _tabController.addListener(_handleTabChanged);
     _settings = widget.currentSettings;
     _currentUserId = widget.currentUserId;
@@ -332,8 +321,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   void _handleTabChanged() {
     if (_tabController.indexIsChanging) return;
-    final selected = _sections[_tabController.index].label;
-    if (selected == '审核' && !_reviewsLoaded && !_reviewsLoading) {
+    if (_tabController.index == _sectionCount - 1 &&
+        !_reviewsLoaded &&
+        !_reviewsLoading) {
       _loadReviews();
     }
   }
@@ -389,9 +379,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       );
       if (!mounted) return;
       setState(() => _roomInfo = room);
-      MessageUtils.showSuccess(context, '房间封面已更新');
+      MessageUtils.showSuccess(context, context.l10n.roomCoverUpdated);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新房间封面失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.updateRoomCoverFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _coverUpdating = false);
     }
@@ -404,9 +399,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       final room = await SyncTvService.clearRoomCover(widget.roomId);
       if (!mounted) return;
       setState(() => _roomInfo = room);
-      MessageUtils.showSuccess(context, '房间封面已移除');
+      MessageUtils.showSuccess(context, context.l10n.roomCoverRemoved);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '移除房间封面失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.removeRoomCoverFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _coverUpdating = false);
     }
@@ -430,10 +430,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       });
       MessageUtils.showSuccess(
         context,
-        password.isEmpty ? '房间密码已移除' : '房间密码已更新',
+        password.isEmpty
+            ? context.l10n.roomPasswordRemoved
+            : context.l10n.roomPasswordUpdated,
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新房间密码失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.updateRoomPasswordFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _passwordUpdating = false);
     }
@@ -446,8 +453,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   String get _passwordActionLabel {
-    if (_passwordController.text.trim().isNotEmpty) return '保存密码';
-    return _settings.requirePassword ? '移除密码' : '无需操作';
+    if (_passwordController.text.trim().isNotEmpty) {
+      return context.l10n.savePassword;
+    }
+    return _settings.requirePassword
+        ? context.l10n.removePassword
+        : context.l10n.noActionNeeded;
   }
 
   void _startSettingsWatch() {
@@ -663,7 +674,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           context,
           message.error?.message.isNotEmpty == true
               ? message.error!.message
-              : '成员在线状态监听失败',
+              : context.l10n.memberOnlineWatchFailed,
         );
       }
     }
@@ -740,7 +751,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       case RoomResourceWatchKind.changed:
         final snapshot = event.snapshot;
         if (snapshot == null) {
-          MessageUtils.showError(context, '房间设置快照为空');
+          MessageUtils.showError(
+            context,
+            context.l10n.roomSettingsSnapshotEmpty,
+          );
           return;
         }
         setState(() {
@@ -751,7 +765,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       case RoomResourceWatchKind.error:
         MessageUtils.showError(
           context,
-          event.errorMessage.isEmpty ? '房间设置监听失败' : event.errorMessage,
+          event.errorMessage.isEmpty
+              ? context.l10n.roomSettingsWatchFailed
+              : event.errorMessage,
         );
         break;
     }
@@ -788,7 +804,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       case RoomResourceWatchKind.error:
         MessageUtils.showError(
           context,
-          event.errorMessage.isEmpty ? '成员监听失败' : event.errorMessage,
+          event.errorMessage.isEmpty
+              ? context.l10n.memberWatchFailed
+              : event.errorMessage,
         );
         break;
     }
@@ -826,7 +844,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       case RoomResourceWatchKind.changed:
         final snapshot = event.snapshot;
         if (snapshot == null) {
-          MessageUtils.showError(context, '媒体列表快照为空');
+          MessageUtils.showError(context, context.l10n.mediaSnapshotEmpty);
           return;
         }
         setState(() => _mediaPage = snapshot);
@@ -834,7 +852,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       case RoomResourceWatchKind.error:
         MessageUtils.showError(
           context,
-          event.errorMessage.isEmpty ? '媒体库监听失败' : event.errorMessage,
+          event.errorMessage.isEmpty
+              ? context.l10n.mediaLibraryWatchFailed
+              : event.errorMessage,
         );
         break;
     }
@@ -859,7 +879,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       case RoomResourceWatchKind.error:
         MessageUtils.showError(
           context,
-          event.errorMessage.isEmpty ? '聊天事件监听失败' : event.errorMessage,
+          event.errorMessage.isEmpty
+              ? context.l10n.chatWatchFailed
+              : event.errorMessage,
         );
         break;
     }
@@ -912,7 +934,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _saveSettings() async {
     final maxMembers = int.tryParse(_maxMembersController.text.trim());
     if (maxMembers == null || maxMembers < 0 || maxMembers > 10000) {
-      MessageUtils.showError(context, '最大成员数必须在 0 到 10000 之间');
+      MessageUtils.showError(context, context.l10n.maxMembersRange);
       return;
     }
 
@@ -939,10 +961,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _settings = freshSettings;
         _applySettings(freshSettings);
       });
-      MessageUtils.showSuccess(context, '设置已更新');
+      MessageUtils.showSuccess(context, context.l10n.settingsUpdated);
     } catch (e) {
       if (mounted) {
-        MessageUtils.showError(context, '更新失败: $e');
+        MessageUtils.showError(context, context.l10n.updateFailed('$e'));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -968,7 +990,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _streamsTotal = page.total;
       });
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载活跃流失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadActiveStreamsFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _streamsLoading = false);
     }
@@ -994,7 +1021,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _reviewsTotal = page.total;
       });
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载加入审核失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadJoinReviewsFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _reviewsLoading = false);
     }
@@ -1026,7 +1058,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       });
       _startMembersOnlineWatches();
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载成员失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.loadMembersFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _membersLoading = false);
     }
@@ -1054,7 +1088,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _mediaWatchVersion = page.version;
       });
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载媒体库失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadMediaLibraryFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _mediaLoading = false);
     }
@@ -1091,7 +1130,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final payload = _realtimeDebugPayload();
     const encoder = JsonEncoder.withIndent('  ');
     await Clipboard.setData(ClipboardData(text: encoder.convert(payload)));
-    if (mounted) MessageUtils.showSuccess(context, '实时诊断数据已复制');
+    if (mounted) {
+      MessageUtils.showSuccess(context, context.l10n.realtimeDiagnosticsCopied);
+    }
   }
 
   Future<void> _loadMediaProviderInstances() async {
@@ -1120,7 +1161,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         }
       });
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载媒体来源实例失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadMediaSourceInstancesFailed('$e'),
+        );
+      }
     } finally {
       if (mounted && provider == _mediaSourceProvider) {
         setState(() => _mediaProviderInstancesLoading = false);
@@ -1205,7 +1251,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       });
       if (shouldRestartChatWatch) _startChatWatch();
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载聊天历史失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadChatHistoryFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _chatLoading = false);
     }
@@ -1262,7 +1313,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _chatSearchCursor = page.nextCursor;
       });
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '搜索聊天历史失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.searchChatHistoryFailed('$e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _chatLoading = false);
     }
@@ -1337,7 +1393,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ..addAll(servers);
       });
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载 ICE 配置失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.loadIceConfigFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _iceLoading = false);
     }
@@ -1369,56 +1427,68 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   List<_RoomSettingsSection> get _sections => [
     _RoomSettingsSection(
-      label: '信息',
+      label: context.l10n.info,
       icon: Icons.info_outline_rounded,
       builder: _buildRoomInfoTab,
     ),
     _RoomSettingsSection(
-      label: '设置',
+      label: context.l10n.settings,
       icon: Icons.tune_rounded,
       builder: _buildSettingsTab,
     ),
     _RoomSettingsSection(
-      label: '成员',
+      label: context.l10n.members,
       icon: Icons.group_rounded,
       builder: _buildMembersTab,
     ),
     _RoomSettingsSection(
-      label: '媒体',
+      label: context.l10n.media,
       icon: Icons.video_library_rounded,
       builder: _buildMediaTab,
     ),
     _RoomSettingsSection(
-      label: '实时',
+      label: context.l10n.realtime,
       icon: Icons.sensors_rounded,
       builder: _buildRealtimeTab,
     ),
     _RoomSettingsSection(
-      label: '聊天',
+      label: context.l10n.chat,
       icon: Icons.forum_rounded,
       builder: _buildChatHistoryTab,
     ),
     _RoomSettingsSection(
-      label: '举报',
+      label: context.l10n.reports,
       icon: Icons.report_gmailerrorred_rounded,
       builder: _buildReportsTab,
     ),
     _RoomSettingsSection(
-      label: '网络',
+      label: context.l10n.network,
       icon: Icons.hub_rounded,
       builder: _buildNetworkTab,
     ),
     _RoomSettingsSection(
-      label: '推流',
+      label: context.l10n.streaming,
       icon: Icons.podcasts_rounded,
       builder: _buildStreamsTab,
     ),
     _RoomSettingsSection(
-      label: '审核',
+      label: context.l10n.review,
       icon: Icons.fact_check_rounded,
       builder: _buildReviewsTab,
     ),
   ];
+
+  Map<String, String> get _mediaSourceLabels => {
+    '': context.l10n.allSources,
+    'directUrl': context.l10n.directLink,
+    'bilibili': 'Bilibili',
+    'alist': 'AList',
+    'emby': 'Emby',
+    'rtmp': 'RTMP',
+  };
+
+  String _providerInstanceLabel(String instanceName) =>
+      instanceName.isEmpty ? context.l10n.localInstance : instanceName;
 
   String get _currentPlaylistId =>
       _mediaPlaylistStack.isEmpty ? '' : _mediaPlaylistStack.last;
@@ -1444,7 +1514,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _openMediaEntry(RoomMediaEntry entry) async {
     if (!_canOpenMediaEntry(entry)) {
       if (entry.isDynamicPlaylist) {
-        MessageUtils.showError(context, '仅创建者可查看动态播放列表');
+        MessageUtils.showError(
+          context,
+          context.l10n.dynamicPlaylistCreatorOnly,
+        );
       }
       return;
     }
@@ -1498,9 +1571,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         reason: 'Kicked from room settings',
       );
       await _loadStreams();
-      if (mounted) MessageUtils.showSuccess(context, '已断开推流');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.streamDisconnected);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '断开推流失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.disconnectStreamFailed('$e'),
+        );
+      }
     }
   }
 
@@ -1544,15 +1624,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _buildDetailLine('状态', detail.active ? '活跃' : '未活跃'),
                   _buildDetailLine(
-                    '发布者',
+                    context.l10n.status,
+                    detail.active ? context.l10n.active : context.l10n.inactive,
+                  ),
+                  _buildDetailLine(
+                    context.l10n.publisher,
                     detail.publisherUserId.isEmpty
-                        ? '未知发布者'
+                        ? context.l10n.unknownPublisher
                         : detail.publisherUserId,
                   ),
                   _buildDetailLine(
-                    '开始时间',
+                    context.l10n.startTime,
                     detail.startedAt <= 0
                         ? '-'
                         : _formatTimestamp(detail.startedAt),
@@ -1567,10 +1650,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             ClipboardData(text: detail.mediaId),
                           );
                           Navigator.pop(context);
-                          MessageUtils.showSuccess(context, '媒体 ID 已复制');
+                          MessageUtils.showSuccess(
+                            context,
+                            context.l10n.mediaIdCopied,
+                          );
                         },
                         icon: Icons.copy_rounded,
-                        label: '复制 ID',
+                        label: context.l10n.copyId,
                         style: AppActionButtonStyle.text,
                       ),
                       const SizedBox(width: 8),
@@ -1582,7 +1668,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                               }
                             : null,
                         icon: Icons.link_off,
-                        label: '断开推流',
+                        label: context.l10n.disconnectStream,
                         style: AppActionButtonStyle.destructive,
                       ),
                     ],
@@ -1594,7 +1680,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         },
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载推流详情失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadStreamDetailsFailed('$e'),
+        );
+      }
     }
   }
 
@@ -1602,9 +1693,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     try {
       await SyncTvService.approveRoomJoinReview(widget.roomId, review.id);
       await _loadReviews();
-      if (mounted) MessageUtils.showSuccess(context, '已通过申请');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.requestApproved);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '审核失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.reviewFailed('$e'));
+      }
     }
   }
 
@@ -1618,9 +1713,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         reason: reason,
       );
       await _loadReviews();
-      if (mounted) MessageUtils.showSuccess(context, '已拒绝申请');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.requestRejected);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '审核失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.reviewFailed('$e'));
+      }
     }
   }
 
@@ -1635,9 +1734,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         notify: result.notify,
       );
       await _loadMembers();
-      if (mounted) MessageUtils.showSuccess(context, '成员已添加');
+      if (mounted) MessageUtils.showSuccess(context, context.l10n.memberAdded);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '添加成员失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addMemberFailed('$e'));
+      }
     }
   }
 
@@ -1651,9 +1752,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         result,
       );
       await _loadMembers();
-      if (mounted) MessageUtils.showSuccess(context, '成员角色已更新');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.memberRoleUpdated);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新角色失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.updateRoleFailed('$e'));
+      }
     }
   }
 
@@ -1670,16 +1775,26 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         adminRemovedPermissions: result.adminRemovedPermissions,
       );
       await _loadMembers();
-      if (mounted) MessageUtils.showSuccess(context, '成员权限已更新');
+      if (mounted) {
+        MessageUtils.showSuccess(
+          context,
+          context.l10n.memberPermissionsUpdated,
+        );
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新权限失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.updatePermissionsFailed('$e'),
+        );
+      }
     }
   }
 
   Future<void> _editMemberRemarkName(AdminRoomMember member) async {
     final value = await _showMemberTextDialog(
-      title: '备注名称',
-      label: '备注名称',
+      title: context.l10n.remarkName,
+      label: context.l10n.remarkName,
       initialValue: member.remarkName,
       icon: Icons.drive_file_rename_outline_rounded,
     );
@@ -1691,16 +1806,23 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         value,
       );
       await _loadMembers();
-      if (mounted) MessageUtils.showSuccess(context, '备注名称已更新');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.remarkNameUpdated);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新备注名称失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.updateRemarkNameFailed('$e'),
+        );
+      }
     }
   }
 
   Future<void> _editMemberDisplayTag(AdminRoomMember member) async {
     final value = await _showMemberTextDialog(
-      title: '展示标签',
-      label: '展示标签',
+      title: context.l10n.displayLabel,
+      label: context.l10n.displayLabel,
       initialValue: member.displayTag,
       icon: Icons.sell_outlined,
     );
@@ -1712,25 +1834,36 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         value,
       );
       await _loadMembers();
-      if (mounted) MessageUtils.showSuccess(context, '展示标签已更新');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.displayLabelUpdated);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新展示标签失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.updateDisplayLabelFailed('$e'),
+        );
+      }
     }
   }
 
   Future<void> _transferOwnership(AdminRoomMember member) async {
     final confirmed = await _confirm(
-      title: '转让房主',
-      content: '确认将房间所有权转让给 ${member.username}？',
-      action: '转让',
+      title: context.l10n.transferOwnership,
+      content: context.l10n.confirmTransferOwnership(member.username),
+      action: context.l10n.transfer,
     );
     if (!confirmed) return;
     try {
       await SyncTvService.transferRoomOwnership(widget.roomId, member.userId);
       await _loadMembers();
-      if (mounted) MessageUtils.showSuccess(context, '房主已转让');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.ownershipTransferred);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '转让失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.transferFailed('$e'));
+      }
     }
   }
 
@@ -1744,16 +1877,20 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         kickCooldownSeconds: cooldown,
       );
       await _loadMembers();
-      if (mounted) MessageUtils.showSuccess(context, '成员已移出');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.memberRemoved);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '移出成员失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.removeMemberFailed('$e'));
+      }
     }
   }
 
   Future<void> _reportRoomMember(AdminRoomMember member) async {
     if (member.userId.isEmpty) return;
     await _showReportContentDialog(
-      title: '举报成员',
+      title: context.l10n.reportMember,
       targetLabel: member.username.isEmpty ? member.userId : member.username,
       submit: (reasonCode, reason) => SyncTvService.reportRoomMember(
         widget.roomId,
@@ -1767,7 +1904,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _reportUser(AdminRoomMember member) async {
     if (member.userId.isEmpty) return;
     await _showReportContentDialog(
-      title: '举报用户',
+      title: context.l10n.reportUser,
       targetLabel: member.username.isEmpty ? member.userId : member.username,
       submit: (reasonCode, reason) => SyncTvService.reportUser(
         widget.roomId,
@@ -1783,12 +1920,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     String targetLabel = '',
     required Future<String> Function(String reasonCode, String reason) submit,
   }) async {
-    const reasons = <String, String>{
-      'spam': '垃圾广告',
-      'abuse': '辱骂骚扰',
-      'illegal': '违法违规',
-      'sexual': '低俗色情',
-      'other': '其他问题',
+    final reasons = <String, String>{
+      'spam': context.l10n.reportReasonSpam,
+      'abuse': context.l10n.reportReasonAbuse,
+      'illegal': context.l10n.reportReasonIllegal,
+      'sexual': context.l10n.reportReasonSexual,
+      'other': context.l10n.reportReasonOther,
     };
     var selectedReason = 'spam';
     final detailController = TextEditingController();
@@ -1832,8 +1969,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     const SizedBox(height: 12),
                     AppTextField(
                       controller: detailController,
-                      label: '补充说明',
-                      hintText: '描述具体问题',
+                      label: context.l10n.additionalDetails,
+                      hintText: context.l10n.describeIssue,
                       minLines: 3,
                       maxLines: 5,
                       maxLength: 2000,
@@ -1844,12 +1981,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               actions: [
                 AppActionButton(
                   onPressed: () => Navigator.of(dialogContext).pop(false),
-                  label: '取消',
+                  label: context.l10n.cancel,
                   style: AppActionButtonStyle.text,
                 ),
                 AppActionButton(
                   onPressed: () => Navigator.of(dialogContext).pop(true),
-                  label: '提交',
+                  label: context.l10n.submit,
                   icon: Icons.flag_outlined,
                 ),
               ],
@@ -1861,9 +1998,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     try {
       if (submitted != true) return;
       await submit(selectedReason, detailController.text);
-      if (mounted) MessageUtils.showSuccess(context, '举报已提交');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.reportSubmitted);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '举报失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.reportFailed('$e'));
+      }
     } finally {
       detailController.dispose();
     }
@@ -1874,17 +2015,17 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final value = await showAppDialog<int>(
       context: context,
       builder: (dialogContext) => AppDialog(
-        title: const Text('移出成员'),
+        title: Text(context.l10n.removeMember),
         icon: const Icon(Icons.logout_rounded),
         body: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('确认将 $username 移出房间，并设置重新加入冷却时间。'),
+            Text(context.l10n.confirmRemoveMember(username)),
             const SizedBox(height: 12),
             AppTextField(
               controller: controller,
-              label: '冷却秒数',
+              label: context.l10n.cooldownSeconds,
               hintText: '1 - 2592000',
               prefixIcon: Icons.timer_outlined,
               keyboardType: TextInputType.number,
@@ -1894,20 +2035,23 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         actions: [
           AppActionButton(
             onPressed: () => Navigator.pop(dialogContext),
-            label: '取消',
+            label: context.l10n.cancel,
             style: AppActionButtonStyle.text,
           ),
           AppActionButton(
             onPressed: () {
               final seconds = int.tryParse(controller.text.trim());
               if (seconds == null || seconds < 1 || seconds > 2592000) {
-                MessageUtils.showWarning(context, '请输入 1 到 2592000 之间的秒数');
+                MessageUtils.showWarning(
+                  context,
+                  context.l10n.cooldownSecondsRange,
+                );
                 return;
               }
               Navigator.pop(dialogContext, seconds);
             },
             icon: Icons.logout_rounded,
-            label: '移出',
+            label: context.l10n.remove,
             style: AppActionButtonStyle.destructive,
           ),
         ],
@@ -1919,9 +2063,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _resetSettings() async {
     final confirmed = await _confirm(
-      title: '重置设置',
-      content: '确认将访问控制、消息开关、成员权限和访客权限恢复为服务端默认策略？当前未保存的房间策略会被覆盖。',
-      action: '重置',
+      title: context.l10n.resetSettings,
+      content: context.l10n.resetRoomSettingsDescription,
+      action: context.l10n.reset,
     );
     if (!confirmed) return;
     try {
@@ -1935,52 +2079,60 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _settings = settings;
         _applySettings(settings);
       });
-      MessageUtils.showSuccess(context, '设置已重置');
+      MessageUtils.showSuccess(context, context.l10n.settingsReset);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '重置失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.resetFailed('$e'));
+      }
     }
   }
 
   Future<void> _leaveRoom() async {
     final confirmed = await _confirm(
-      title: '退出房间',
-      content: '确认退出 ${widget.roomName}？',
-      action: '退出',
+      title: context.l10n.leaveRoom,
+      content: context.l10n.confirmLeaveRoom(widget.roomName),
+      action: context.l10n.leave,
+      destructive: true,
     );
     if (!confirmed) return;
     try {
       await SyncTvService.leaveRoom(widget.roomId);
       if (!mounted) return;
       Navigator.pop(context);
-      MessageUtils.showSuccess(context, '已退出房间');
+      MessageUtils.showSuccess(context, context.l10n.leftRoom);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '退出房间失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.leaveRoomFailed('$e'));
+      }
     }
   }
 
   Future<void> _deleteRoom() async {
     final confirmed = await _confirm(
-      title: '删除房间',
-      content: '确认永久删除 ${widget.roomName}？此操作会移除房间、播放列表和相关房间数据。',
-      action: '删除',
+      title: context.l10n.deleteRoom,
+      content: context.l10n.confirmPermanentRoomDeletion(widget.roomName),
+      action: context.l10n.delete,
+      destructive: true,
     );
     if (!confirmed) return;
     try {
       await SyncTvService.deleteRoom(widget.roomId);
       if (!mounted) return;
       Navigator.pop(context, true);
-      MessageUtils.showSuccess(context, '房间已删除');
+      MessageUtils.showSuccess(context, context.l10n.roomDeleted);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '删除房间失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.deleteFailed('$e'));
+      }
     }
   }
 
   Future<void> _createPlaylist() async {
     if (!_canMutateCurrentMediaScope) {
-      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      MessageUtils.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
-    final input = await _showEntryEditDialog(title: '新建播放列表');
+    final input = await _showEntryEditDialog(title: context.l10n.newPlaylist);
     if (input == null || input.name.isEmpty) return;
     try {
       await SyncTvService.createPlaylist(
@@ -1990,15 +2142,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         description: input.description,
       );
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '播放列表已创建');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.playlistCreated);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '创建播放列表失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.createPlaylistFailed('$e'),
+        );
+      }
     }
   }
 
   Future<void> _addMediaToCurrentScope() async {
     if (!_canMutateCurrentMediaScope) {
-      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      MessageUtils.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
     await AddMediaDialog.show(
@@ -2011,16 +2170,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _clearCurrentMediaScope() async {
     if (!_canMutateCurrentMediaScope) {
-      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      MessageUtils.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
     final playlistId = _currentPlaylistId;
     final confirmed = await _confirm(
-      title: playlistId.isEmpty ? '清空媒体库' : '清空播放列表',
+      title: playlistId.isEmpty
+          ? context.l10n.clearMediaLibrary
+          : context.l10n.clearPlaylist,
       content: playlistId.isEmpty
-          ? '确认清空根目录下的媒体和播放列表？'
-          : '确认清空当前播放列表下的媒体和子播放列表？播放列表本身会保留。',
-      action: '清空',
+          ? context.l10n.confirmClearMediaLibrary
+          : context.l10n.confirmClearPlaylist,
+      action: context.l10n.clear,
+      destructive: true,
     );
     if (!confirmed) return;
 
@@ -2030,19 +2192,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         parentId: playlistId.isEmpty ? null : playlistId,
       );
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '媒体库已清空');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.mediaLibraryCleared);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '清空失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.clearFailed('$e'));
+      }
     }
   }
 
   Future<void> _renameEntry(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
-      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      MessageUtils.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
     final input = await _showEntryEditDialog(
-      title: entry.isFolder ? '编辑播放列表' : '编辑媒体',
+      title: entry.isFolder
+          ? context.l10n.editPlaylist
+          : context.l10n.editMedia,
       initialName: entry.name,
       initialDescription: entry.description,
     );
@@ -2067,23 +2235,26 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         );
       }
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '名称已更新');
+      if (mounted) MessageUtils.showSuccess(context, context.l10n.nameUpdated);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '重命名失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.renameFailed('$e'));
+      }
     }
   }
 
   Future<void> _deleteEntry(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
-      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      MessageUtils.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
     final confirmed = await _confirm(
-      title: '删除条目',
+      title: context.l10n.deleteEntries,
       content: entry.isFolder
-          ? '确认删除播放列表 ${entry.name}？其中的子播放列表和媒体也会从房间媒体库移除，成员会立即看到变更。'
-          : '确认删除媒体 ${entry.name}？该条目会从房间媒体库移除，当前播放或成员播放列表会立即同步变更。',
-      action: '删除',
+          ? context.l10n.confirmDeletePlaylist(entry.name)
+          : context.l10n.confirmDeleteMedia(entry.name),
+      action: context.l10n.delete,
+      destructive: true,
     );
     if (!confirmed) return;
     try {
@@ -2097,9 +2268,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         await SyncTvService.deleteMedia(widget.roomId, entry.id);
       }
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '条目已删除');
+      if (mounted) MessageUtils.showSuccess(context, context.l10n.entryDeleted);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '删除失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.deleteEntryFailed('$e'));
+      }
     }
   }
 
@@ -2173,16 +2346,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     const SizedBox(height: 16),
                     _buildDetailLine('ID', detail.id),
                     _buildDetailLine(
-                      '类型',
+                      context.l10n.type,
                       isPlaylist
                           ? detail.metadata['isDynamic'] == true
-                                ? '动态播放列表'
-                                : '播放列表'
+                                ? context.l10n.dynamicPlaylist
+                                : context.l10n.playlist
                           : detail.isFolder
-                          ? '动态目录'
+                          ? context.l10n.dynamicDirectory
                           : detail.live
-                          ? '直播媒体'
-                          : '媒体',
+                          ? context.l10n.liveMedia
+                          : context.l10n.media,
                     ),
                     _buildDetailLine(
                       'Provider',
@@ -2191,36 +2364,45 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           : detail.sourceProvider,
                     ),
                     _buildDetailLine(
-                      '实例',
+                      context.l10n.instance,
                       detail.providerInstanceName.isEmpty
                           ? '-'
                           : detail.providerInstanceName,
                     ),
                     if (detail.parentId?.isNotEmpty == true)
-                      _buildDetailLine('父级', detail.parentId!),
+                      _buildDetailLine(context.l10n.parent, detail.parentId!),
                     if (detail.description.isNotEmpty)
-                      _buildDetailLine('描述', detail.description),
+                      _buildDetailLine(
+                        context.l10n.description,
+                        detail.description,
+                      ),
                     if (detail.thumbnailUrl.isNotEmpty)
-                      _buildDetailLine('缩略图', detail.thumbnailUrl),
+                      _buildDetailLine(
+                        context.l10n.thumbnail,
+                        detail.thumbnailUrl,
+                      ),
                     if (detail.url.isNotEmpty)
                       _buildDetailLine('URL', detail.url),
                     if (detail.subPath?.isNotEmpty == true)
                       _buildDetailLine('Sub path', detail.subPath!),
                     if (playlistDetail != null) ...[
                       _buildDetailLine(
-                        '子播放列表',
+                        context.l10n.childPlaylists,
                         playlistDetail.childFolderCount.toString(),
                       ),
                       _buildDetailLine(
-                        '媒体数量',
+                        context.l10n.mediaCount,
                         playlistDetail.mediaCount.toString(),
                       ),
                     ],
                     if (detail.metadata.isNotEmpty)
-                      _buildDetailLine('元数据', _compactMap(detail.metadata)),
+                      _buildDetailLine(
+                        context.l10n.metadata,
+                        _compactMap(detail.metadata),
+                      ),
                     if (detail.sourceConfig.isNotEmpty)
                       _buildDetailLine(
-                        '来源配置',
+                        context.l10n.sourceConfiguration,
                         _compactMap(detail.sourceConfig),
                       ),
                     const SizedBox(height: 20),
@@ -2231,10 +2413,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: detail.id));
                             Navigator.pop(context);
-                            MessageUtils.showSuccess(context, 'ID 已复制');
+                            MessageUtils.showSuccess(
+                              context,
+                              context.l10n.idCopied,
+                            );
                           },
                           icon: Icons.copy_rounded,
-                          label: '复制 ID',
+                          label: context.l10n.copyId,
                           style: AppActionButtonStyle.text,
                         ),
                         if (canMutate) ...[
@@ -2245,7 +2430,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                               _renameEntry(detail);
                             },
                             icon: Icons.edit_outlined,
-                            label: '编辑',
+                            label: context.l10n.edit,
                             style: AppActionButtonStyle.tonal,
                           ),
                           const SizedBox(width: 8),
@@ -2255,7 +2440,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                               _updateEntryCover(detail);
                             },
                             icon: Icons.image_outlined,
-                            label: '封面',
+                            label: context.l10n.cover,
                             style: AppActionButtonStyle.tonal,
                           ),
                           if (detail.id.startsWith('med_')) ...[
@@ -2266,7 +2451,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                                 _updateEntryThumbnail(detail);
                               },
                               icon: Icons.photo_size_select_actual_outlined,
-                              label: '缩略图',
+                              label: context.l10n.thumbnail,
                               style: AppActionButtonStyle.tonal,
                             ),
                           ],
@@ -2281,7 +2466,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         },
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载条目详情失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadEntryDetailsFailed('$e'),
+        );
+      }
     }
   }
 
@@ -2308,9 +2498,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         );
       }
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '封面已更新');
+      if (mounted) MessageUtils.showSuccess(context, context.l10n.coverUpdated);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新封面失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.updateCoverFailed('$e'));
+      }
     }
   }
 
@@ -2327,9 +2519,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         await SyncTvService.clearVideoCover(widget.roomId, entry.id);
       }
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '封面已移除');
+      if (mounted) MessageUtils.showSuccess(context, context.l10n.coverRemoved);
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '移除封面失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.removeCoverFailed('$e'));
+      }
     }
   }
 
@@ -2348,9 +2542,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         image.upload,
       );
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '缩略图已更新');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.thumbnailUpdated);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '更新缩略图失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.updateThumbnailFailed('$e'),
+        );
+      }
     }
   }
 
@@ -2363,15 +2564,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     try {
       await SyncTvService.clearVideoThumbnail(widget.roomId, entry.id);
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '缩略图已移除');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.thumbnailRemoved);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '移除缩略图失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.removeThumbnailFailed('$e'),
+        );
+      }
     }
   }
 
   Future<void> _editChatMessage(RoomChatMessageInfo message) async {
     if (message.isDeleted) {
-      MessageUtils.showInfo(context, '已删除的消息不能编辑');
+      MessageUtils.showInfo(context, context.l10n.deletedMessageCannotEdit);
       return;
     }
     final content = await _showChatMessageEditDialog(message.content);
@@ -2384,16 +2592,20 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         expectedVersion: message.version,
       );
       await _loadChatHistory();
-      if (mounted) MessageUtils.showSuccess(context, '消息已更新');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.messageUpdated);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '编辑消息失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.editMessageFailed('$e'));
+      }
     }
   }
 
   Future<String?> _showChatMessageEditDialog(String initialContent) {
     return ChatUtils.showStyledDialog<String>(
       context: context,
-      title: '编辑消息',
+      title: context.l10n.editMessage,
       icon: const Icon(Icons.edit_outlined),
       content: _ChatMessageEditForm(initialContent: initialContent),
       actions: const [],
@@ -2403,9 +2615,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   Future<void> _deleteChatMessage(RoomChatMessageInfo message) async {
     if (message.isDeleted) return;
     final confirmed = await _confirm(
-      title: '删除消息',
-      content: '确认删除这条聊天消息？删除后所有成员的聊天历史都会同步移除该消息。',
-      action: '删除',
+      title: context.l10n.deleteMessage,
+      content: context.l10n.confirmDeleteChatMessage,
+      action: context.l10n.delete,
+      destructive: true,
     );
     if (!confirmed) return;
     try {
@@ -2415,9 +2628,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         expectedVersion: message.version,
       );
       await _loadChatHistory();
-      if (mounted) MessageUtils.showSuccess(context, '消息已删除');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.messageDeleted);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '删除消息失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.deleteMessageFailed('$e'));
+      }
     }
   }
 
@@ -2429,12 +2646,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           : await SyncTvService.pinChatMessage(widget.roomId, message.id);
       if (!mounted) return;
       setState(() => _applyChatPinEvent(event));
-      MessageUtils.showSuccess(context, message.isPinned ? '已取消置顶' : '消息已置顶');
+      MessageUtils.showSuccess(
+        context,
+        message.isPinned
+            ? context.l10n.messageUnpinned
+            : context.l10n.messagePinned,
+      );
     } catch (e) {
       if (mounted) {
         MessageUtils.showError(
           context,
-          message.isPinned ? '取消置顶失败: $e' : '置顶消息失败: $e',
+          message.isPinned
+              ? context.l10n.unpinMessageFailed('$e')
+              : context.l10n.pinMessageFailed('$e'),
         );
       }
     }
@@ -2475,7 +2699,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             children: [
               Expanded(
                 child: Text(
-                  '${widget.roomName} 的举报管理',
+                  context.l10n.roomReportManagement(widget.roomName),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w700),
@@ -2484,7 +2708,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               AppActionButton(
                 onPressed: _reportCurrentRoom,
                 icon: Icons.flag_outlined,
-                label: '举报房间',
+                label: context.l10n.reportRoom,
                 size: AppActionButtonSize.sm,
                 style: AppActionButtonStyle.outlined,
               ),
@@ -2505,7 +2729,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _reportCurrentRoom() async {
     await _showReportContentDialog(
-      title: '举报房间',
+      title: context.l10n.reportRoom,
       targetLabel: widget.roomName,
       submit: (reasonCode, reason) => SyncTvService.reportRoom(
         widget.roomId,
@@ -2542,7 +2766,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
                   child: Text(
-                    '消息上下文',
+                    context.l10n.messageContext,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -2557,13 +2781,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         },
       );
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '加载消息上下文失败: $e');
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.loadMessageContextFailed('$e'),
+        );
+      }
     }
   }
 
   Future<void> _moveMedia(RoomMediaEntry entry) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
-      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      MessageUtils.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
     if (!entry.id.startsWith('med_')) return;
@@ -2582,9 +2811,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         targetPlaylistId: targetPlaylistId.isEmpty ? null : targetPlaylistId,
       );
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '已移动 $count 个媒体');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.mediaItemsMoved(count));
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '移动失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.moveFailed('$e'));
+      }
     }
   }
 
@@ -2593,7 +2826,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     int direction,
   ) async {
     if (!_canMutateCurrentMediaScope || entry.isProviderDynamicEntry) {
-      MessageUtils.showInfo(context, '动态来源内容只支持查看和打开');
+      MessageUtils.showInfo(context, context.l10n.dynamicContentReadOnly);
       return;
     }
     if (!entry.id.startsWith('pl_')) return;
@@ -2619,9 +2852,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         );
       }
       await _loadMediaLibrary();
-      if (mounted) MessageUtils.showSuccess(context, '播放列表顺序已更新');
+      if (mounted) {
+        MessageUtils.showSuccess(context, context.l10n.playlistOrderUpdated);
+      }
     } catch (e) {
-      if (mounted) MessageUtils.showError(context, '调整顺序失败: $e');
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.reorderFailed('$e'));
+      }
     }
   }
 
@@ -2673,7 +2910,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             }
 
             return AppDialog(
-              title: const Text('移动媒体'),
+              title: Text(context.l10n.moveMedia),
               body: SizedBox(
                 width: 420,
                 child: Column(
@@ -2691,13 +2928,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     const SizedBox(height: 12),
                     AppTile(
                       prefix: const Icon(Icons.home_outlined),
-                      title: const Text('根目录'),
+                      title: Text(context.l10n.rootDirectory),
                       enabled: _currentPlaylistId.isNotEmpty,
                       onPressed: _currentPlaylistId.isEmpty
                           ? null
                           : () => Navigator.pop(
                               context,
-                              const _MediaMoveTarget('', '根目录'),
+                              _MediaMoveTarget('', context.l10n.rootDirectory),
                             ),
                     ),
                     if (loading)
@@ -2731,7 +2968,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                               ),
                               subtitle: playlist.parentId == null
                                   ? null
-                                  : Text('上级 ${playlist.parentId}'),
+                                  : Text(
+                                      context.l10n.parentId(playlist.parentId!),
+                                    ),
                               onPressed: () => Navigator.pop(
                                 context,
                                 _MediaMoveTarget(playlist.id, playlist.name),
@@ -2746,7 +2985,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               actions: [
                 AppActionButton(
                   onPressed: () => Navigator.pop(context),
-                  label: '取消',
+                  label: context.l10n.cancel,
                   style: AppActionButtonStyle.text,
                 ),
                 AppActionButton(
@@ -2754,7 +2993,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ? null
                       : () => loadPlaylists(setDialogState),
                   icon: Icons.refresh,
-                  label: '刷新',
+                  label: context.l10n.refresh,
                   style: AppActionButtonStyle.text,
                 ),
               ],
@@ -2769,12 +3008,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final controller = TextEditingController();
     return ChatUtils.showStyledDialog<String>(
       context: context,
-      title: '拒绝申请',
+      title: context.l10n.rejectRequest,
       icon: const Icon(Icons.block_rounded),
       iconColor: Theme.of(context).colorScheme.error,
       content: AppTextField(
         controller: controller,
-        label: '原因',
+        label: context.l10n.reason,
         autofocus: true,
         maxLines: 3,
       ),
@@ -2783,7 +3022,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         AppActionButton(
           onPressed: () => Navigator.pop(context, controller.text.trim()),
           icon: Icons.block_rounded,
-          label: '拒绝',
+          label: context.l10n.reject,
           style: AppActionButtonStyle.destructive,
         ),
       ],
@@ -2810,7 +3049,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           children: [
             AppTextField(
               controller: nameController,
-              label: '名称',
+              label: context.l10n.name,
               autofocus: true,
               onSubmitted: (_) {
                 Navigator.pop(
@@ -2825,7 +3064,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             const SizedBox(height: 12),
             AppTextField(
               controller: descriptionController,
-              label: '描述',
+              label: context.l10n.description,
               minLines: 2,
               maxLines: 4,
             ),
@@ -2843,7 +3082,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               descriptionController.text.trim(),
             ),
           ),
-          text: '保存',
+          text: context.l10n.save,
         ),
       ],
     ).whenComplete(() {
@@ -2860,7 +3099,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     var notify = true;
     return ChatUtils.showStyledDialog<_MemberEditResult>(
       context: context,
-      title: '添加成员',
+      title: context.l10n.addMember,
       icon: const Icon(Icons.person_add_alt_1_rounded),
       content: StatefulBuilder(
         builder: (context, setDialogState) {
@@ -2869,23 +3108,27 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             children: [
               AppTextField(
                 controller: userIdController,
-                label: '用户 ID',
+                label: context.l10n.userId,
                 prefixIcon: Icons.person_outline_rounded,
                 autofocus: true,
               ),
               const SizedBox(height: 16),
               AppSelect<int>(
                 value: role,
-                label: '角色',
+                label: context.l10n.role,
                 prefixIcon: Icons.admin_panel_settings_outlined,
-                options: const {'管理员': 2, '成员': 3, '访客': 4},
+                options: {
+                  context.l10n.administrator: 2,
+                  context.l10n.member: 3,
+                  context.l10n.guest: 4,
+                },
                 onChanged: (value) {
                   if (value != null) setDialogState(() => role = value);
                 },
               ),
               const SizedBox(height: 12),
               AppSwitchTile(
-                title: const Text('发送通知'),
+                title: Text(context.l10n.sendNotification),
                 value: notify,
                 onChanged: (value) => setDialogState(() => notify = value),
               ),
@@ -2899,7 +3142,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           final userId = userIdController.text.trim();
           if (userId.isEmpty) return;
           Navigator.pop(context, _MemberEditResult(userId, role, notify));
-        }, text: '添加'),
+        }, text: context.l10n.add),
       ],
     ).whenComplete(
       () => _disposeTextControllersAfterDialog([userIdController]),
@@ -2920,15 +3163,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     var role = currentRole == 1 ? 3 : currentRole;
     return ChatUtils.showStyledDialog<int>(
       context: context,
-      title: '修改角色',
+      title: context.l10n.changeRole,
       icon: const Icon(Icons.admin_panel_settings_outlined),
       content: StatefulBuilder(
         builder: (context, setDialogState) {
           return AppSelect<int>(
             value: role,
-            label: '角色',
+            label: context.l10n.role,
             prefixIcon: Icons.admin_panel_settings_outlined,
-            options: const {'管理员': 2, '成员': 3, '访客': 4},
+            options: {
+              context.l10n.administrator: 2,
+              context.l10n.member: 3,
+              context.l10n.guest: 4,
+            },
             onChanged: (value) {
               if (value != null) setDialogState(() => role = value);
             },
@@ -2940,7 +3187,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         ChatUtils.createConfirmButton(
           context,
           () => Navigator.pop(context, role),
-          text: '保存',
+          text: context.l10n.save,
         ),
       ],
     );
@@ -2971,7 +3218,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       ),
       actions: [
         ChatUtils.createCancelButton(context),
-        ChatUtils.createConfirmButton(context, submit, text: '保存'),
+        ChatUtils.createConfirmButton(context, submit, text: context.l10n.save),
       ],
     ).whenComplete(() => _disposeTextControllersAfterDialog([controller]));
   }
@@ -3009,7 +3256,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             }
 
             return AppDialog(
-              title: const Text('权限覆盖'),
+              title: Text(context.l10n.permissionOverrides),
               body: SizedBox(
                 width: 440,
                 child: Column(
@@ -3030,7 +3277,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               actions: [
                 AppActionButton(
                   onPressed: () => Navigator.pop(context),
-                  label: '取消',
+                  label: context.l10n.cancel,
                   style: AppActionButtonStyle.text,
                 ),
                 AppActionButton(
@@ -3040,7 +3287,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       removed = 0;
                     });
                   },
-                  label: '清除覆盖',
+                  label: context.l10n.clearOverrides,
                   style: AppActionButtonStyle.text,
                 ),
                 AppActionButton(
@@ -3055,7 +3302,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       ),
                     );
                   },
-                  label: '保存',
+                  label: context.l10n.save,
                 ),
               ],
             );
@@ -3083,18 +3330,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         children: [
           Expanded(child: Text(title)),
           AppSegmentedControl<_PermissionOverrideMode>(
-            segments: const [
+            segments: [
               ButtonSegment(
                 value: _PermissionOverrideMode.inherit,
-                label: Text('继承'),
+                label: Text(context.l10n.inherit),
               ),
               ButtonSegment(
                 value: _PermissionOverrideMode.allow,
-                label: Text('允许'),
+                label: Text(context.l10n.allow),
               ),
               ButtonSegment(
                 value: _PermissionOverrideMode.deny,
-                label: Text('拒绝'),
+                label: Text(context.l10n.deny),
               ),
             ],
             value: mode,
@@ -3109,9 +3356,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     required String title,
     required String content,
     required String action,
+    bool destructive = false,
   }) async {
-    final destructive =
-        action.contains('删除') || action.contains('移出') || action.contains('拒绝');
     final confirmed = await ChatUtils.showStyledDialog<bool>(
       context: context,
       title: title,
@@ -3254,8 +3500,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: AppTextField(
         controller: _maxMembersController,
-        label: '最大成员数',
-        helperText: '0 表示不限制',
+        label: context.l10n.maximumMembers,
+        helperText: context.l10n.zeroMeansUnlimited,
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       ),
@@ -3266,13 +3512,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     return AppListView(
       padding: const EdgeInsets.only(bottom: 32, top: 8),
       children: [
-        _buildSectionHeader('访问控制', theme),
+        _buildSectionHeader(context.l10n.accessControl, theme),
         _buildSurface(
           isDark: isDark,
           children: [
             _buildSwitchItem(
-              '允许访客加入',
-              '访客 token 只能访问当前房间',
+              context.l10n.allowGuestJoin,
+              context.l10n.guestTokenCurrentRoomOnly,
               _allowGuestJoin,
               (v) => setState(() => _allowGuestJoin = v),
               theme,
@@ -3280,8 +3526,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildSwitchItem(
-              '加入需要审核',
-              '新成员申请需管理员批准',
+              context.l10n.joinRequiresApproval,
+              context.l10n.newMembersRequireApproval,
               _requireApproval,
               (v) => setState(() => _requireApproval = v),
               theme,
@@ -3289,8 +3535,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildSwitchItem(
-              '允许自动加入',
-              '关闭后只能通过邀请或管理员添加成员',
+              context.l10n.allowAutomaticJoin,
+              context.l10n.automaticJoinDescription,
               _allowAutoJoin,
               (v) => setState(() => _allowAutoJoin = v),
               theme,
@@ -3300,12 +3546,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildMaxMembersField(theme),
           ],
         ),
-        _buildSectionHeader('消息', theme),
+        _buildSectionHeader(context.l10n.message, theme),
         _buildSurface(
           isDark: isDark,
           children: [
             _buildSwitchItem(
-              '聊天',
+              context.l10n.chat,
               null,
               _chatEnabled,
               (v) => setState(() => _chatEnabled = v),
@@ -3314,7 +3560,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildSwitchItem(
-              '弹幕',
+              context.l10n.danmaku,
               null,
               _danmakuEnabled,
               (v) => setState(() => _danmakuEnabled = v),
@@ -3323,12 +3569,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ],
         ),
-        _buildSectionHeader('普通成员权限', theme),
+        _buildSectionHeader(context.l10n.regularMemberPermissions, theme),
         _buildSurface(
           isDark: isDark,
           children: [
             _buildPermissionSwitch(
-              '发送聊天/弹幕',
+              context.l10n.sendChatAndDanmaku,
               _memberPermissions,
               RoomMemberPermissions.chat,
               (v) => _setMemberPermission(RoomMemberPermissions.chat, v),
@@ -3337,7 +3583,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              '添加媒体',
+              context.l10n.addMedia,
               _memberPermissions,
               RoomMemberPermissions.createMediaResource,
               (v) => _setMemberPermission(
@@ -3349,7 +3595,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              '查看媒体列表',
+              context.l10n.viewMediaList,
               _memberPermissions,
               RoomMemberPermissions.viewMediaResources,
               (v) => _setMemberPermission(
@@ -3361,7 +3607,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              '查看成员列表',
+              context.l10n.viewMemberList,
               _memberPermissions,
               RoomMemberPermissions.viewMemberList,
               (v) =>
@@ -3371,7 +3617,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              '查看聊天历史',
+              context.l10n.viewChatHistory,
               _memberPermissions,
               RoomMemberPermissions.viewChatHistory,
               (v) => _setMemberPermission(
@@ -3383,7 +3629,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              'WebRTC 通话',
+              context.l10n.webrtcCalls,
               _memberPermissions,
               RoomMemberPermissions.useWebRTC,
               (v) => _setMemberPermission(RoomMemberPermissions.useWebRTC, v),
@@ -3392,12 +3638,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ],
         ),
-        _buildSectionHeader('访客权限', theme),
+        _buildSectionHeader(context.l10n.guestPermissions, theme),
         _buildSurface(
           isDark: isDark,
           children: [
             _buildPermissionSwitch(
-              '查看成员列表',
+              context.l10n.viewMemberList,
               _guestPermissions,
               RoomGuestPermissions.viewMemberList,
               (v) =>
@@ -3407,7 +3653,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              '查看聊天历史',
+              context.l10n.viewChatHistory,
               _guestPermissions,
               RoomGuestPermissions.viewChatHistory,
               (v) =>
@@ -3417,7 +3663,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              'WebRTC 通话',
+              context.l10n.webrtcCalls,
               _guestPermissions,
               RoomGuestPermissions.useWebRTC,
               (v) => _setGuestPermission(RoomGuestPermissions.useWebRTC, v),
@@ -3426,7 +3672,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ],
         ),
-        _buildSectionHeader('设置操作', theme),
+        _buildSectionHeader(context.l10n.settingsActions, theme),
         _buildSurface(
           isDark: isDark,
           children: [
@@ -3436,7 +3682,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 children: [
                   Expanded(
                     child: Text(
-                      _isSaving ? '正在保存设置' : '保存访问控制、消息开关和权限策略',
+                      _isSaving
+                          ? context.l10n.savingSettings
+                          : context.l10n.saveRoomPolicyDescription,
                       style: TextStyle(color: theme.hintColor, fontSize: 13),
                     ),
                   ),
@@ -3444,7 +3692,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     onPressed: _isSaving ? null : _saveSettings,
                     loading: _isSaving,
                     icon: Icons.save_outlined,
-                    label: '保存设置',
+                    label: context.l10n.saveSettings,
                     style: AppActionButtonStyle.tonal,
                   ),
                 ],
@@ -3453,8 +3701,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildDivider(theme),
             AppTile(
               prefix: const Icon(Icons.restart_alt),
-              title: const Text('重置房间设置'),
-              subtitle: const Text('恢复服务端默认房间策略'),
+              title: Text(context.l10n.resetRoomSettings),
+              subtitle: Text(context.l10n.restoreServerRoomPolicy),
               onPressed: _resetSettings,
             ),
           ],
@@ -3473,7 +3721,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
-            title: '活跃推流',
+            title: context.l10n.activeStreams,
             count: _streams.length,
             loading: _streamsLoading,
             onRefresh: _loadStreams,
@@ -3486,7 +3734,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 Expanded(
                   child: _buildSearchField(
                     controller: _streamSearchController,
-                    label: '媒体 ID',
+                    label: context.l10n.mediaId,
                     onSearch: () {
                       setState(() => _streamsPage = 1);
                       _loadStreams();
@@ -3514,8 +3762,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   tooltip:
                       _streamSortDirection ==
                           client_enum.SortDirection.SORT_DIRECTION_ASC
-                      ? '媒体 ID 升序'
-                      : '媒体 ID 降序',
+                      ? context.l10n.mediaIdAscending
+                      : context.l10n.mediaIdDescending,
                   style: AppIconButtonStyle.outlined,
                 ),
               ],
@@ -3523,8 +3771,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           AppPaginationBar(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            label:
-                '第 $_streamsPage 页 · 每页 $_streamsPageSize · 共 $_streamsTotal 条',
+            label: context.l10n.pagedItemSummary(
+              _streamsPage,
+              _streamsPageSize,
+              _streamsTotal,
+            ),
             labelStyle: TextStyle(color: theme.hintColor, fontSize: 12),
             onPrevious: _streamsPage <= 1
                 ? null
@@ -3540,7 +3791,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   },
           ),
           if (_streams.isEmpty)
-            _buildEmptyState('当前没有活跃推流', theme)
+            _buildEmptyState(context.l10n.noActiveStreams, theme)
           else
             ..._streams.map(
               (stream) => _buildStreamTile(stream, theme, isDark),
@@ -3560,7 +3811,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
-            title: '加入申请',
+            title: context.l10n.joinRequests,
             count: _reviewsTotal,
             loading: _reviewsLoading,
             onRefresh: _loadReviews,
@@ -3573,7 +3824,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 Expanded(
                   child: _buildSearchField(
                     controller: _reviewUserController,
-                    label: '用户 ID',
+                    label: context.l10n.userId,
                     onSearch: () {
                       setState(() => _reviewsPage = 1);
                       _loadReviews();
@@ -3585,11 +3836,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   width: 150,
                   child: AppSelect<common_enum.ReviewStatus>(
                     value: _reviewStatusFilter,
-                    label: '状态',
-                    options: const {
-                      '待审核': common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
-                      '已通过': common_enum.ReviewStatus.REVIEW_STATUS_APPROVED,
-                      '已拒绝': common_enum.ReviewStatus.REVIEW_STATUS_REJECTED,
+                    label: context.l10n.status,
+                    options: {
+                      context.l10n.pendingReview:
+                          common_enum.ReviewStatus.REVIEW_STATUS_PENDING,
+                      context.l10n.approved:
+                          common_enum.ReviewStatus.REVIEW_STATUS_APPROVED,
+                      context.l10n.rejected:
+                          common_enum.ReviewStatus.REVIEW_STATUS_REJECTED,
                     },
                     onChanged: (value) {
                       if (value == null) return;
@@ -3606,8 +3860,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           AppPaginationBar(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            label:
-                '第 $_reviewsPage 页 · 每页 $_reviewsPageSize · 共 $_reviewsTotal 条',
+            label: context.l10n.pagedItemSummary(
+              _reviewsPage,
+              _reviewsPageSize,
+              _reviewsTotal,
+            ),
             labelStyle: theme.textTheme.bodySmall?.copyWith(
               color: theme.hintColor,
             ),
@@ -3625,7 +3882,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   },
           ),
           if (_reviews.isEmpty)
-            _buildEmptyState('当前没有加入申请', theme)
+            _buildEmptyState(context.l10n.noJoinRequests, theme)
           else
             ..._reviews.map(
               (review) => _buildReviewTile(review, theme, isDark),
@@ -3648,7 +3905,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
-            title: '媒体库',
+            title: context.l10n.mediaLibrary,
             count: entries.length,
             loading: _mediaLoading,
             onRefresh: _loadMediaLibrary,
@@ -3657,7 +3914,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppIconButton(
-                  tooltip: '返回上级',
+                  tooltip: context.l10n.parentDirectory,
                   onPressed:
                       _mediaTarget.isNotEmpty || _mediaPlaylistStack.isNotEmpty
                       ? _handleMediaBack
@@ -3666,25 +3923,25 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 ),
                 if (canMutateScope) ...[
                   AppIconButton(
-                    tooltip: '添加媒体',
+                    tooltip: context.l10n.addMedia,
                     onPressed: _mediaLoading ? null : _addMediaToCurrentScope,
                     icon: Icons.add_to_queue_rounded,
                     style: AppIconButtonStyle.tonal,
                   ),
                   AppIconButton(
-                    tooltip: '新建播放列表',
+                    tooltip: context.l10n.newPlaylist,
                     onPressed: _createPlaylist,
                     icon: Icons.create_new_folder,
                   ),
                   AppIconButton(
-                    tooltip: '清空当前目录',
+                    tooltip: context.l10n.clearCurrentDirectory,
                     onPressed: _mediaLoading ? null : _clearCurrentMediaScope,
                     icon: Icons.delete_sweep_rounded,
                     style: AppIconButtonStyle.destructive,
                   ),
                 ],
                 AppIconButton(
-                  tooltip: '刷新动态列表',
+                  tooltip: context.l10n.refreshDynamicList,
                   onPressed: () => _reloadMediaLibrary(refresh: true),
                   icon: Icons.sync,
                 ),
@@ -3698,7 +3955,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               children: [
                 _buildSearchField(
                   controller: _mediaSearchController,
-                  label: '搜索媒体或目录',
+                  label: context.l10n.searchMediaOrDirectory,
                   onSearch: _reloadMediaLibrary,
                 ),
                 const SizedBox(height: 8),
@@ -3708,7 +3965,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       child: AppSelect<String>(
                         key: ValueKey('media-source-$_mediaSourceProvider'),
                         value: _mediaSourceProvider,
-                        label: '来源',
+                        label: context.l10n.source,
                         options: {
                           for (final entry in _mediaSourceLabels.entries)
                             entry.value: entry.key,
@@ -3733,7 +3990,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             )
                             ? _mediaProviderInstanceName
                             : '',
-                        label: '实例',
+                        label: context.l10n.instance,
                         options: {
                           for (final instance in _mediaProviderInstances)
                             _providerInstanceLabel(instance): instance,
@@ -3763,15 +4020,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     Expanded(
                       child: AppSelect<client_enum.ResourceAvailabilityFilter>(
                         value: _mediaAvailability,
-                        label: '可用性',
-                        options: const {
-                          '全部': client_enum
+                        label: context.l10n.availability,
+                        options: {
+                          context.l10n.all: client_enum
                               .ResourceAvailabilityFilter
                               .RESOURCE_AVAILABILITY_FILTER_ALL,
-                          '可用': client_enum
+                          context.l10n.available: client_enum
                               .ResourceAvailabilityFilter
                               .RESOURCE_AVAILABILITY_FILTER_AVAILABLE,
-                          '不可用': client_enum
+                          context.l10n.unavailable: client_enum
                               .ResourceAvailabilityFilter
                               .RESOURCE_AVAILABILITY_FILTER_UNAVAILABLE,
                         },
@@ -3786,24 +4043,24 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     Expanded(
                       child: AppSelect<client_enum.MediaListSortBy>(
                         value: _mediaSortBy,
-                        label: '排序',
-                        options: const {
-                          '位置': client_enum
+                        label: context.l10n.sort,
+                        options: {
+                          context.l10n.position: client_enum
                               .MediaListSortBy
                               .MEDIA_LIST_SORT_BY_POSITION,
-                          '名称': client_enum
+                          context.l10n.name: client_enum
                               .MediaListSortBy
                               .MEDIA_LIST_SORT_BY_NAME,
-                          '添加时间': client_enum
+                          context.l10n.addedAt: client_enum
                               .MediaListSortBy
                               .MEDIA_LIST_SORT_BY_ADDED_AT,
-                          '更新时间': client_enum
+                          context.l10n.updatedAt: client_enum
                               .MediaListSortBy
                               .MEDIA_LIST_SORT_BY_UPDATED_AT,
-                          '来源': client_enum
+                          context.l10n.source: client_enum
                               .MediaListSortBy
                               .MEDIA_LIST_SORT_BY_SOURCE_PROVIDER,
-                          '实例': client_enum
+                          context.l10n.instance: client_enum
                               .MediaListSortBy
                               .MEDIA_LIST_SORT_BY_PROVIDER_INSTANCE_NAME,
                         },
@@ -3834,8 +4091,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       tooltip:
                           _mediaSortDirection ==
                               client_enum.SortDirection.SORT_DIRECTION_ASC
-                          ? '升序'
-                          : '降序',
+                          ? context.l10n.ascending
+                          : context.l10n.descending,
                       style: AppIconButtonStyle.outlined,
                     ),
                   ],
@@ -3844,7 +4101,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ),
           if (entries.isEmpty)
-            _buildEmptyState('当前目录没有媒体条目', theme)
+            _buildEmptyState(context.l10n.noMediaEntriesInDirectory, theme)
           else
             ...entries.map((entry) => _buildMediaTile(entry, theme, isDark)),
         ],
@@ -3859,7 +4116,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       children: [
         const SizedBox(height: 12),
         _buildToolbar(
-          title: '实时诊断',
+          title: context.l10n.realtimeDiagnostics,
           count: resources.length,
           loading: loading,
           onRefresh: _refreshRealtimeDiagnostics,
@@ -3868,14 +4125,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             mainAxisSize: MainAxisSize.min,
             children: [
               AppIconButton(
-                tooltip: '复制诊断数据',
+                tooltip: context.l10n.copyDiagnostics,
                 onPressed: _copyRealtimeDiagnostics,
                 icon: Icons.copy_all_rounded,
                 style: AppIconButtonStyle.outlined,
               ),
               const SizedBox(width: 6),
               AppIconButton(
-                tooltip: '重置监听',
+                tooltip: context.l10n.resetWatches,
                 onPressed: loading ? null : _resetRealtimeDiagnostics,
                 icon: Icons.restart_alt_rounded,
                 style: AppIconButtonStyle.outlined,
@@ -3907,21 +4164,21 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   ),
                 ),
               ),
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: _RealtimeDiagnosticsPane.overview,
-                  icon: Icon(Icons.dashboard_rounded),
-                  label: Text('概览'),
+                  icon: const Icon(Icons.dashboard_rounded),
+                  label: Text(context.l10n.overview),
                 ),
                 ButtonSegment(
                   value: _RealtimeDiagnosticsPane.resources,
-                  icon: Icon(Icons.storage_rounded),
-                  label: Text('资源'),
+                  icon: const Icon(Icons.storage_rounded),
+                  label: Text(context.l10n.resources),
                 ),
                 ButtonSegment(
                   value: _RealtimeDiagnosticsPane.events,
-                  icon: Icon(Icons.receipt_long_rounded),
-                  label: Text('事件'),
+                  icon: const Icon(Icons.receipt_long_rounded),
+                  label: Text(context.l10n.events),
                 ),
               ],
               value: _realtimePane,
@@ -3975,7 +4232,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           padding: const EdgeInsets.all(12),
           onClear: () => setState(_realtimeEvents.clear),
           onMaxEntriesChanged: (_) => setState(_trimRealtimeEvents),
-          emptyText: '监听请求和资源事件会显示在这里',
+          emptyText: context.l10n.watchEventsDescription,
         ),
       ),
     );
@@ -3987,13 +4244,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     return [
       _RealtimeResourceDebugInfo(
         key: 'settings',
-        title: '房间设置',
+        title: context.l10n.roomSettings,
         icon: Icons.tune_rounded,
         observeId: _settingsObserveId,
         version: _settingsWatchVersion,
         loading: _isSaving,
         localCount: 1,
-        summary: _isSaving ? '正在保存设置' : '监听设置变更',
+        summary: _isSaving
+            ? context.l10n.savingSettings
+            : context.l10n.watchingSettingChanges,
         stats: _settingsWatchStats,
         details: {
           'requirePassword': _settings.requirePassword,
@@ -4009,15 +4268,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       ),
       _RealtimeResourceDebugInfo(
         key: 'members',
-        title: '成员列表',
+        title: context.l10n.memberList,
         icon: Icons.group_rounded,
         observeId: _membersObserveId,
         version: _membersWatchVersion,
         loading: _membersLoading,
         localCount: _members.length,
         summary: _membersLoading
-            ? '正在刷新成员'
-            : '$_membersOnlineCount 在线 / $_membersTotal 总数',
+            ? context.l10n.refreshingMembers
+            : context.l10n.onlineTotalSummary(
+                _membersOnlineCount,
+                _membersTotal,
+              ),
         stats: _membersWatchStats,
         details: {
           'pageCount': _members.length,
@@ -4033,15 +4295,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       ),
       _RealtimeResourceDebugInfo(
         key: 'media',
-        title: '媒体列表',
+        title: context.l10n.mediaList,
         icon: Icons.video_library_rounded,
         observeId: _mediaObserveId,
         version: _mediaWatchVersion,
         loading: _mediaLoading,
         localCount: mediaEntries,
         summary: mediaPage == null
-            ? '等待媒体快照'
-            : '${mediaPage.folderCount} 目录 / ${mediaPage.fileCount} 媒体',
+            ? context.l10n.waitingForMediaSnapshot
+            : context.l10n.folderMediaSummary(
+                mediaPage.folderCount,
+                mediaPage.fileCount,
+              ),
         stats: _mediaWatchStats,
         details: {
           'entries': mediaEntries,
@@ -4060,13 +4325,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       ),
       _RealtimeResourceDebugInfo(
         key: 'chat',
-        title: '聊天事件',
+        title: context.l10n.chatEvents,
         icon: Icons.forum_rounded,
         observeId: _chatObserveId,
         version: _chatWatchVersion,
         loading: _chatLoading,
         localCount: _chatMessages.length,
-        summary: _chatLoading ? '正在刷新聊天历史' : '聊天历史 ${_chatMessages.length} 条',
+        summary: _chatLoading
+            ? context.l10n.refreshingChatHistory
+            : context.l10n.chatHistoryCount(_chatMessages.length),
         stats: _chatWatchStats,
         details: {
           'history_count': _chatMessages.length,
@@ -4147,7 +4414,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               theme,
               isDark,
               icon: Icons.sensors_rounded,
-              label: '监听资源',
+              label: context.l10n.watchedResources,
               value: '$watched/${resources.length}',
               tone: watched == resources.length ? Colors.green : Colors.orange,
             ),
@@ -4155,7 +4422,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               theme,
               isDark,
               icon: Icons.swap_vert_rounded,
-              label: '事件',
+              label: context.l10n.events,
               value: eventCount.toString(),
               tone: theme.colorScheme.primary,
             ),
@@ -4163,7 +4430,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               theme,
               isDark,
               icon: Icons.compare_arrows_rounded,
-              label: '发出 / 收到',
+              label: context.l10n.sentReceived,
               value: '$outgoingCount / $incomingCount',
               tone: Colors.blueAccent,
             ),
@@ -4171,7 +4438,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               theme,
               isDark,
               icon: Icons.error_outline_rounded,
-              label: '异常',
+              label: context.l10n.errors,
               value: errorCount.toString(),
               tone: errorCount == 0 ? Colors.green : Colors.redAccent,
             ),
@@ -4267,7 +4534,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '运行快照',
+                    context.l10n.runtimeSnapshot,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -4276,12 +4543,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               ],
             ),
             const SizedBox(height: 12),
-            _buildDebugLine(theme, '房间', widget.roomName),
-            _buildDebugLine(theme, '房间 ID', widget.roomId),
-            _buildDebugLine(theme, '当前目录', _mediaScopeLabel(_mediaPage)),
+            _buildDebugLine(theme, context.l10n.room, widget.roomName),
+            _buildDebugLine(theme, context.l10n.roomId, widget.roomId),
             _buildDebugLine(
               theme,
-              '监听状态',
+              context.l10n.currentDirectory,
+              _mediaScopeLabel(_mediaPage),
+            ),
+            _buildDebugLine(
+              theme,
+              context.l10n.watchStatus,
               resources.map(_realtimeResourceStatusLabel).join('\n'),
             ),
           ],
@@ -4375,26 +4646,38 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           const SizedBox(height: 14),
           _buildDebugLine(
             theme,
-            '版本',
+            context.l10n.version,
             resource.version.isEmpty
-                ? (ready ? '未提供' : '等待')
+                ? (ready ? context.l10n.notProvided : context.l10n.waiting)
                 : resource.version,
           ),
-          _buildDebugLine(theme, '本地条目', resource.localCount.toString()),
-          _buildDebugLine(theme, '状态', resource.summary),
-          _buildDebugLine(theme, '最近事件', resource.stats.lastKind),
           _buildDebugLine(
             theme,
-            '事件计数',
+            context.l10n.localItems,
+            resource.localCount.toString(),
+          ),
+          _buildDebugLine(theme, context.l10n.status, resource.summary),
+          _buildDebugLine(
+            theme,
+            context.l10n.latestEvent,
+            _watchKindLabel(resource.stats.lastKind),
+          ),
+          _buildDebugLine(
+            theme,
+            context.l10n.eventCounts,
             'observed ${resource.stats.observed} / changed ${resource.stats.changed} / errors ${resource.stats.errors}',
           ),
           _buildDebugLine(
             theme,
-            '最后时间',
+            context.l10n.lastTime,
             _formatDateTime(resource.stats.lastSeenAt),
           ),
           if (resource.stats.lastError.isNotEmpty)
-            _buildDebugLine(theme, '错误', resource.stats.lastError),
+            _buildDebugLine(
+              theme,
+              context.l10n.error,
+              resource.stats.lastError,
+            ),
           const AppDivider(height: 20),
           ...resource.details.entries.map(
             (entry) =>
@@ -4441,7 +4724,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
-            title: '聊天历史',
+            title: context.l10n.chatHistory,
             count: _chatMessages.length,
             loading: _chatLoading,
             onRefresh: _loadChatHistory,
@@ -4449,7 +4732,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             action: nextCursor.isEmpty
                 ? null
                 : AppIconButton(
-                    tooltip: '加载更多',
+                    tooltip: context.l10n.loadMore,
                     onPressed: _chatLoading
                         ? null
                         : () => _loadChatHistory(loadMore: true),
@@ -4460,7 +4743,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: _buildSearchField(
               controller: _chatSearchController,
-              label: '搜索聊天内容',
+              label: context.l10n.searchChatContent,
               onSearch: _searchChatHistory,
               icon: Icons.manage_search_rounded,
             ),
@@ -4472,7 +4755,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 children: [
                   Expanded(
                     child: Text(
-                      '搜索 "$_chatSearchQuery"',
+                      context.l10n.searchQuery(_chatSearchQuery),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelMedium?.copyWith(
@@ -4489,14 +4772,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             _searchChatHistory();
                           },
                     icon: Icons.close_rounded,
-                    label: '清除',
+                    label: context.l10n.clear,
                     style: AppActionButtonStyle.text,
                   ),
                 ],
               ),
             ),
           if (_chatMessages.isEmpty)
-            _buildEmptyState(searchActive ? '没有匹配的聊天消息' : '当前没有聊天历史', theme)
+            _buildEmptyState(
+              searchActive
+                  ? context.l10n.noMatchingChatMessages
+                  : context.l10n.noChatHistory,
+              theme,
+            )
           else
             ..._chatMessages.reversed.map(
               (message) => _buildChatMessageTile(message, theme, isDark),
@@ -4513,14 +4801,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
-            title: 'ICE 服务器',
+            title: context.l10n.iceServers,
             count: _iceServers.length,
             loading: _iceLoading,
             onRefresh: _loadIceServers,
             theme: theme,
           ),
           if (_iceServers.isEmpty)
-            _buildEmptyState('当前没有 ICE 服务器配置', theme)
+            _buildEmptyState(context.l10n.noIceServers, theme)
           else
             ..._iceServers.map(
               (server) => _buildIceServerTile(server, theme, isDark),
@@ -4555,7 +4843,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           if (page != null)
             Text(
-              '${page.folderCount} 目录 / ${page.fileCount} 媒体',
+              context.l10n.folderMediaSummary(page.folderCount, page.fileCount),
               style: TextStyle(color: theme.hintColor, fontSize: 12),
             ),
         ],
@@ -4573,13 +4861,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         padding: const EdgeInsets.only(bottom: 32, top: 12),
         children: [
           _buildToolbar(
-            title: '房间成员',
+            title: context.l10n.roomMembers,
             count: _membersTotal,
             loading: _membersLoading,
             onRefresh: _loadMembers,
             theme: theme,
             action: AppIconButton(
-              tooltip: '添加成员',
+              tooltip: context.l10n.addMember,
               onPressed: _addMember,
               icon: Icons.person_add_alt_1,
             ),
@@ -4591,7 +4879,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               children: [
                 _buildSearchField(
                   controller: _memberSearchController,
-                  label: '用户名或用户 ID',
+                  label: context.l10n.usernameOrUserId,
                   onSearch: () {
                     setState(() => _membersPage = 1);
                     _refreshMembersRealtimeQuery();
@@ -4604,19 +4892,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     Expanded(
                       child: AppSelect<common_enum.RoomMemberRole?>(
                         value: _memberRoleFilter,
-                        label: '角色',
-                        hintText: '全部角色',
-                        options: const {
-                          '全部角色': null,
-                          '房主': common_enum
+                        label: context.l10n.role,
+                        hintText: context.l10n.allRoles,
+                        options: {
+                          context.l10n.allRoles: null,
+                          context.l10n.roomOwner: common_enum
                               .RoomMemberRole
                               .ROOM_MEMBER_ROLE_CREATOR,
-                          '管理员':
+                          context.l10n.administrator:
                               common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN,
-                          '成员': common_enum
+                          context.l10n.member: common_enum
                               .RoomMemberRole
                               .ROOM_MEMBER_ROLE_MEMBER,
-                          '访客':
+                          context.l10n.guest:
                               common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_GUEST,
                         },
                         onChanged: (value) {
@@ -4633,15 +4921,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     Expanded(
                       child: AppSelect<client_enum.RoomMemberListSortBy>(
                         value: _memberSortBy,
-                        label: '排序',
-                        options: const {
-                          '加入时间': client_enum
+                        label: context.l10n.sort,
+                        options: {
+                          context.l10n.joinedAt: client_enum
                               .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_JOINED_AT,
-                          '用户名': client_enum
+                          context.l10n.username: client_enum
                               .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_USERNAME,
-                          '角色': client_enum
+                          context.l10n.role: client_enum
                               .RoomMemberListSortBy
                               .ROOM_MEMBER_LIST_SORT_BY_ROLE,
                         },
@@ -4678,8 +4966,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       tooltip:
                           _memberSortDirection ==
                               client_enum.SortDirection.SORT_DIRECTION_ASC
-                          ? '升序'
-                          : '降序',
+                          ? context.l10n.ascending
+                          : context.l10n.descending,
                       style: AppIconButtonStyle.outlined,
                     ),
                   ],
@@ -4689,8 +4977,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           AppPaginationBar(
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            label:
-                '第 $_membersPage 页 · 每页 $_membersPageSize · 共 $_membersTotal 条',
+            label: context.l10n.pagedItemSummary(
+              _membersPage,
+              _membersPageSize,
+              _membersTotal,
+            ),
             labelStyle: theme.textTheme.bodySmall?.copyWith(
               color: theme.hintColor,
             ),
@@ -4710,7 +5001,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   },
           ),
           if (_members.isEmpty)
-            _buildEmptyState('当前没有成员', theme)
+            _buildEmptyState(context.l10n.noMembers, theme)
           else
             ..._members.map(
               (member) => _buildMemberTile(member, theme, isDark),
@@ -4766,12 +5057,15 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                '在线 $_membersOnlineCount / 成员 $_membersTotal',
+                context.l10n.onlineMemberSummary(
+                  _membersOnlineCount,
+                  _membersTotal,
+                ),
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
             Text(
-              '$totalConnections 个连接',
+              context.l10n.roomConnections(totalConnections),
               style: TextStyle(color: theme.hintColor, fontSize: 12),
             ),
           ],
@@ -4878,12 +5172,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ),
           AppIconButton(
-            tooltip: '查看详情',
+            tooltip: context.l10n.viewDetails,
             onPressed: () => _showStreamInfo(stream),
             icon: Icons.info_outline_rounded,
           ),
           AppIconButton(
-            tooltip: '断开推流',
+            tooltip: context.l10n.disconnectStream,
             onPressed: stream.active ? () => _kickStream(stream) : null,
             icon: Icons.link_off,
             style: AppIconButtonStyle.destructive,
@@ -4949,14 +5243,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 AppActionButton(
                   onPressed: () => _rejectReview(review),
                   icon: Icons.close,
-                  label: '拒绝',
+                  label: context.l10n.reject,
                   style: AppActionButtonStyle.text,
                 ),
                 const SizedBox(width: 8),
                 AppActionButton(
                   onPressed: () => _approveReview(review),
                   icon: Icons.check,
-                  label: '通过',
+                  label: context.l10n.approve,
                 ),
               ],
             ),
@@ -5033,7 +5327,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ),
           AppPopupMenuButton<_MediaAction>(
-            tooltip: '媒体操作',
+            tooltip: context.l10n.mediaActions,
             onSelected: (action) {
               switch (action) {
                 case _MediaAction.details:
@@ -5061,59 +5355,59 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: _MediaAction.details,
-                child: Text('详情'),
+                child: Text(context.l10n.details),
               ),
               PopupMenuItem(
                 value: _MediaAction.open,
                 enabled: canOpen,
-                child: const Text('打开'),
+                child: Text(context.l10n.open),
               ),
               if (canMutate) ...[
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: _MediaAction.rename,
-                  child: Text('编辑'),
+                  child: Text(context.l10n.edit),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: _MediaAction.updateCover,
-                  child: Text('更新封面'),
+                  child: Text(context.l10n.updateCover),
                 ),
                 PopupMenuItem(
                   value: _MediaAction.clearCover,
                   enabled: entry.coverUrl.isNotEmpty,
-                  child: const Text('移除封面'),
+                  child: Text(context.l10n.removeCover),
                 ),
                 if (entry.id.startsWith('med_')) ...[
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: _MediaAction.updateThumbnail,
-                    child: Text('更新缩略图'),
+                    child: Text(context.l10n.updateThumbnail),
                   ),
                   PopupMenuItem(
                     value: _MediaAction.clearThumbnail,
                     enabled: entry.thumbnailUrl.isNotEmpty,
-                    child: const Text('移除缩略图'),
+                    child: Text(context.l10n.removeThumbnail),
                   ),
                 ],
                 PopupMenuItem(
                   value: _MediaAction.moveUp,
                   enabled: playlistIndex > 0,
-                  child: const Text('上移'),
+                  child: Text(context.l10n.moveUp),
                 ),
                 PopupMenuItem(
                   value: _MediaAction.moveDown,
                   enabled:
                       playlistIndex >= 0 && playlistIndex < playlistCount - 1,
-                  child: const Text('下移'),
+                  child: Text(context.l10n.moveDown),
                 ),
                 if (entry.id.startsWith('med_'))
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: _MediaAction.move,
-                    child: Text('移动到...'),
+                    child: Text(context.l10n.moveTo),
                   ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: _MediaAction.delete,
-                  child: Text('删除'),
+                  child: Text(context.l10n.delete),
                 ),
               ],
             ],
@@ -5143,9 +5437,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         ? scheme.primary.withValues(alpha: 0.25)
         : scheme.outlineVariant.withValues(alpha: 0.55);
     final content = message.isDeleted
-        ? '这条消息已删除'
+        ? context.l10n.messageDeleted
         : message.content.trim().isEmpty && message.images.isNotEmpty
-        ? '图片消息'
+        ? context.l10n.imageMessagePlain
         : message.content;
 
     return Padding(
@@ -5194,7 +5488,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       if (message.isEdited && !message.isDeleted) ...[
                         const SizedBox(width: 6),
                         Text(
-                          '已编辑',
+                          context.l10n.edited,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: scheme.onSurfaceVariant.withValues(
                               alpha: 0.64,
@@ -5295,21 +5589,23 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           theme,
                         ),
                       _buildChatMessageActionButton(
-                        tooltip: '查看上下文',
+                        tooltip: context.l10n.viewContext,
                         icon: Icons.forum_outlined,
                         onPressed: () => _showChatMessageContext(message),
                       ),
                       _buildChatMessageActionButton(
-                        tooltip: '查看举报',
+                        tooltip: context.l10n.viewReports,
                         icon: Icons.report_gmailerrorred_outlined,
                         onPressed: () => _openRoomScopedReportsViewer(
-                          title: '消息 #${message.id} 的举报',
+                          title: context.l10n.messageReports(message.id),
                           targetType: 4,
                           targetChatMessageId: int.tryParse(message.id) ?? 0,
                         ),
                       ),
                       _buildChatMessageActionButton(
-                        tooltip: message.isPinned ? '取消置顶' : '置顶',
+                        tooltip: message.isPinned
+                            ? context.l10n.unpin
+                            : context.l10n.pin,
                         icon: message.isPinned
                             ? Icons.push_pin
                             : Icons.push_pin_outlined,
@@ -5318,14 +5614,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             : () => _toggleChatPin(message),
                       ),
                       _buildChatMessageActionButton(
-                        tooltip: '编辑',
+                        tooltip: context.l10n.edit,
                         icon: Icons.edit_outlined,
                         onPressed: message.isDeleted
                             ? null
                             : () => _editChatMessage(message),
                       ),
                       _buildChatMessageActionButton(
-                        tooltip: '删除',
+                        tooltip: context.l10n.delete,
                         icon: Icons.delete_outline,
                         color: scheme.error,
                         onPressed: message.isDeleted
@@ -5357,14 +5653,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       }
     }
     final title = quoted == null
-        ? '引用消息'
+        ? context.l10n.quotedMessage
         : (quoted.username.isEmpty ? quoted.userId : quoted.username);
     final preview = quoted == null
-        ? '点击查看上下文'
+        ? context.l10n.tapToViewContext
         : quoted.isDeleted
-        ? '这条消息已删除'
+        ? context.l10n.messageDeleted
         : quoted.content.trim().isEmpty
-        ? '图片消息'
+        ? context.l10n.imageMessagePlain
         : quoted.content.trim();
     return AppInkSurface(
       onTap: () => _showChatMessageContext(message),
@@ -5426,7 +5722,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       runSpacing: 5,
       children: sorted.take(6).map((reaction) {
         return Tooltip(
-          message: '查看回应成员',
+          message: context.l10n.viewReactionMembers,
           child: InkWell(
             borderRadius: BorderRadius.circular(999),
             onTap: () => _showChatReactionUsers(message, reaction),
@@ -5473,9 +5769,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         ? null
         : _mentionReadReceiptSummary(message, receipt);
     final text = receipt == null
-        ? '已读'
+        ? context.l10n.read
         : mentionSummary ??
-              '已读 ${receipt.readerTotal} · 未读 ${receipt.unreadTotal}';
+              context.l10n.readUnreadSummary(
+                receipt.readerTotal,
+                receipt.unreadTotal,
+              );
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 4),
       child: TextButton.icon(
@@ -5514,11 +5813,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final unreadCount = receipt.unreadMembers
         .where((user) => mentionedIds.contains(user.id))
         .length;
-    if (readCount == 0 && unreadCount == 0) return '@ 已读';
+    if (readCount == 0 && unreadCount == 0) return context.l10n.mentionRead;
     if (mentionedUsers.length == 1) {
-      return unreadCount == 0 ? '@ 已读' : '@ 未读';
+      return unreadCount == 0
+          ? context.l10n.mentionRead
+          : context.l10n.mentionUnread;
     }
-    return '@ $readCount 已读 · $unreadCount 未读';
+    return context.l10n.mentionReadUnreadSummary(readCount, unreadCount);
   }
 
   List<SyncTvUser> _mentionedUsersForMessage(
@@ -5578,7 +5879,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         });
         receipt = loaded;
       } catch (e) {
-        if (mounted) MessageUtils.showError(context, '加载已读详情失败: $e');
+        if (mounted) {
+          MessageUtils.showError(
+            context,
+            context.l10n.loadReadDetailsFailed('$e'),
+          );
+        }
         return;
       } finally {
         if (mounted) {
@@ -5677,7 +5983,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  server.username.isEmpty ? '匿名' : server.username,
+                  server.username.isEmpty
+                      ? context.l10n.anonymous
+                      : server.username,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: theme.hintColor, fontSize: 12),
@@ -5692,9 +6000,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   String _mediaSubtitle(RoomMediaEntry entry) {
     if (entry.id.startsWith('pl_')) {
-      final mode = entry.metadata['isDynamic'] == true ? '动态播放列表' : '播放列表';
+      final mode = entry.metadata['isDynamic'] == true
+          ? context.l10n.dynamicPlaylist
+          : context.l10n.playlist;
       if (entry.isDynamicPlaylist && !_canOpenMediaEntry(entry)) {
-        return '$mode · 仅创建者可查看';
+        return context.l10n.creatorOnlyMode(mode);
       }
       return '$mode · ${entry.sourceProvider.isEmpty ? 'static' : entry.sourceProvider}';
     }
@@ -5703,8 +6013,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     final size = entry.metadata['size'];
     return entry.isFolder
-        ? '动态目录'
-        : '动态媒体${size is int && size > 0 ? ' · $size bytes' : ''}';
+        ? context.l10n.dynamicDirectory
+        : context.l10n.dynamicMediaSize(size is int && size > 0 ? size : 0);
   }
 
   String _compactMap(Map<String, dynamic> value) {
@@ -5722,9 +6032,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   String _mediaScopeLabel(RoomMediaLibraryPage? page) {
     if (_mediaTarget.isNotEmpty) {
       final path = page?.currentPath.map((node) => node.name).join(' / ') ?? '';
-      return path.isEmpty ? '动态目录' : path;
+      return path.isEmpty ? context.l10n.dynamicDirectory : path;
     }
-    if (_mediaPlaylistStack.isEmpty) return '根目录';
+    if (_mediaPlaylistStack.isEmpty) return context.l10n.rootDirectory;
     final path = page?.currentPath.map((node) => node.name).join(' / ') ?? '';
     return path.isEmpty ? _currentPlaylistId : path;
   }
@@ -5741,8 +6051,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         _currentUserId.isNotEmpty && member.userId == _currentUserId;
     final canManageMember = !isCreator && !isCurrentUser;
     final connectionText = member.connectionCount > 0
-        ? '${member.connectionCount} 个连接'
-        : '0 个连接';
+        ? context.l10n.roomConnections(member.connectionCount)
+        : context.l10n.roomConnections(0);
     final presenceColor = member.isOnline
         ? const Color(0xFF16A34A)
         : theme.hintColor;
@@ -5781,13 +6091,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         ),
                         if (isCurrentUser)
                           _buildMemberBadge(
-                            label: '我',
+                            label: context.l10n.me,
                             icon: Icons.person_outline_rounded,
                             color: theme.colorScheme.primary,
                           ),
                         if (isCreator)
                           _buildMemberBadge(
-                            label: '房主',
+                            label: context.l10n.roomOwner,
                             icon: Icons.star_rounded,
                             color: const Color(0xFFF59E0B),
                           )
@@ -5811,7 +6121,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       runSpacing: 6,
                       children: [
                         _buildMemberBadge(
-                          label: member.isOnline ? '在线' : '离线',
+                          label: member.isOnline
+                              ? context.l10n.online
+                              : context.l10n.offline,
                           icon: Icons.circle,
                           color: presenceColor,
                         ),
@@ -5821,7 +6133,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           color: theme.colorScheme.secondary,
                         ),
                         _buildMemberBadge(
-                          label: '加入 ${_formatTimestamp(member.joinedAt)}',
+                          label: context.l10n.joinedAtValue(
+                            _formatTimestamp(member.joinedAt),
+                          ),
                           icon: Icons.schedule_rounded,
                           color: theme.hintColor,
                         ),
@@ -5850,75 +6164,76 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               runSpacing: 8,
               children: [
                 AppIconButton(
-                  tooltip: '备注名称',
+                  tooltip: context.l10n.remarkName,
                   icon: Icons.drive_file_rename_outline_rounded,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
                   onPressed: () => _editMemberRemarkName(member),
                 ),
                 AppIconButton(
-                  tooltip: '展示标签',
+                  tooltip: context.l10n.displayLabel,
                   icon: Icons.sell_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
                   onPressed: () => _editMemberDisplayTag(member),
                 ),
                 AppIconButton(
-                  tooltip: '修改角色',
+                  tooltip: context.l10n.changeRole,
                   icon: Icons.admin_panel_settings_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.tonal,
                   onPressed: () => _setMemberRole(member),
                 ),
                 AppIconButton(
-                  tooltip: '权限覆盖',
+                  tooltip: context.l10n.permissionOverrides,
                   icon: Icons.rule_rounded,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
                   onPressed: () => _editMemberPermissionOverrides(member),
                 ),
                 AppIconButton(
-                  tooltip: '转让房主',
+                  tooltip: context.l10n.transferOwnership,
                   icon: Icons.verified_user_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
                   onPressed: () => _transferOwnership(member),
                 ),
                 AppIconButton(
-                  tooltip: '移出房间',
+                  tooltip: context.l10n.removeFromRoom,
                   icon: Icons.person_remove_alt_1_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.destructive,
                   onPressed: () => _kickMember(member),
                 ),
                 AppIconButton(
-                  tooltip: '查看成员举报',
+                  tooltip: context.l10n.viewMemberReports,
                   icon: Icons.report_gmailerrorred_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
                   onPressed: () => _openRoomScopedReportsViewer(
-                    title:
-                        '${member.username.isEmpty ? member.userId : member.username} 的成员举报',
+                    title: context.l10n.memberReports(
+                      member.username.isEmpty ? member.userId : member.username,
+                    ),
                     targetType: 3,
                     targetMemberUserId: member.userId,
                   ),
                 ),
                 AppIconButton(
-                  tooltip: '举报成员',
+                  tooltip: context.l10n.reportMember,
                   icon: Icons.flag_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
                   onPressed: () => _reportRoomMember(member),
                 ),
                 AppIconButton(
-                  tooltip: '举报用户',
+                  tooltip: context.l10n.reportUser,
                   icon: Icons.person_off_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
                   onPressed: () => _reportUser(member),
                 ),
                 AppPopupMenuButton<_MemberAction>(
-                  tooltip: '更多成员操作',
+                  tooltip: context.l10n.moreMemberActions,
                   onSelected: (action) {
                     switch (action) {
                       case _MemberAction.remarkName:
@@ -5935,30 +6250,30 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         _kickMember(member);
                     }
                   },
-                  itemBuilder: (context) => const [
+                  itemBuilder: (context) => [
                     PopupMenuItem(
                       value: _MemberAction.remarkName,
-                      child: Text('备注名称'),
+                      child: Text(context.l10n.remarkName),
                     ),
                     PopupMenuItem(
                       value: _MemberAction.displayTag,
-                      child: Text('展示标签'),
+                      child: Text(context.l10n.displayLabel),
                     ),
                     PopupMenuItem(
                       value: _MemberAction.role,
-                      child: Text('修改角色'),
+                      child: Text(context.l10n.changeRole),
                     ),
                     PopupMenuItem(
                       value: _MemberAction.permissions,
-                      child: Text('权限覆盖'),
+                      child: Text(context.l10n.permissionOverrides),
                     ),
                     PopupMenuItem(
                       value: _MemberAction.transfer,
-                      child: Text('转让房主'),
+                      child: Text(context.l10n.transferOwnership),
                     ),
                     PopupMenuItem(
                       value: _MemberAction.kick,
-                      child: Text('移出房间'),
+                      child: Text(context.l10n.removeFromRoom),
                     ),
                   ],
                 ),
@@ -5970,25 +6285,28 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               children: [
                 Expanded(
                   child: Text(
-                    isCurrentUser ? '当前账号' : '房主账号',
+                    isCurrentUser
+                        ? context.l10n.currentAccount
+                        : context.l10n.ownerAccount,
                     style: TextStyle(color: theme.hintColor, fontSize: 12),
                   ),
                 ),
                 AppIconButton(
-                  tooltip: '查看成员举报',
+                  tooltip: context.l10n.viewMemberReports,
                   icon: Icons.report_gmailerrorred_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
                   onPressed: () => _openRoomScopedReportsViewer(
-                    title:
-                        '${member.username.isEmpty ? member.userId : member.username} 的成员举报',
+                    title: context.l10n.memberReports(
+                      member.username.isEmpty ? member.userId : member.username,
+                    ),
                     targetType: 3,
                     targetMemberUserId: member.userId,
                   ),
                 ),
                 const SizedBox(width: 6),
                 AppIconButton(
-                  tooltip: '举报成员',
+                  tooltip: context.l10n.reportMember,
                   icon: Icons.flag_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
@@ -5996,7 +6314,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 ),
                 const SizedBox(width: 6),
                 AppIconButton(
-                  tooltip: '举报用户',
+                  tooltip: context.l10n.reportUser,
                   icon: Icons.person_off_outlined,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.outlined,
@@ -6036,7 +6354,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final roomName = room?.roomName ?? widget.roomName;
     final creatorId = (room?.creatorId ?? widget.creatorId).trim();
     final creatorName = (room?.creator ?? '').trim().isEmpty
-        ? (creatorId.isEmpty ? '创建者' : creatorId)
+        ? (creatorId.isEmpty ? context.l10n.creator : creatorId)
         : room!.creator.trim();
     final creatorAvatarUrl = SyncTvService.resolveResourceUrl(
       room?.creatorAvatarUrl ?? '',
@@ -6044,7 +6362,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     return AppListView(
       padding: const EdgeInsets.only(bottom: 32, top: 8),
       children: [
-        _buildSectionHeader('房间信息', theme),
+        _buildSectionHeader(context.l10n.roomInformation, theme),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: AppInkSurface(
@@ -6093,7 +6411,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                       AppActionButton(
                         onPressed: _loadRoomInfo,
                         icon: Icons.refresh_rounded,
-                        label: '刷新',
+                        label: context.l10n.refresh,
                         style: AppActionButtonStyle.text,
                       ),
                       const SizedBox(width: 8),
@@ -6101,13 +6419,13 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                         onPressed: _coverUpdating ? null : _updateRoomCover,
                         loading: _coverUpdating,
                         icon: Icons.image_outlined,
-                        label: '封面',
+                        label: context.l10n.cover,
                         style: AppActionButtonStyle.tonal,
                       ),
                       if (_roomCoverUrl.isNotEmpty) ...[
                         const SizedBox(width: 8),
                         AppIconButton(
-                          tooltip: '移除封面',
+                          tooltip: context.l10n.removeCover,
                           onPressed: _coverUpdating ? null : _clearRoomCover,
                           icon: Icons.delete_outline_rounded,
                           style: AppIconButtonStyle.destructive,
@@ -6121,22 +6439,30 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                   child: Column(
                     children: [
                       if ((room?.description ?? '').trim().isNotEmpty)
-                        _buildDetailLine('简介', room!.description.trim()),
+                        _buildDetailLine(
+                          context.l10n.description,
+                          room!.description.trim(),
+                        ),
                       _buildDetailLine(
-                        '创建时间',
+                        context.l10n.createdAt,
                         _formatTimestamp(room?.createdAt ?? 0),
                       ),
                       _buildDetailLine(
-                        '更新时间',
+                        context.l10n.updatedAt,
                         _formatTimestamp(room?.updatedAt ?? 0),
                       ),
                       _buildDetailLine(
-                        '成员',
-                        '${room?.viewerCount ?? 0} 在线 / ${room?.memberCount ?? 0} 成员',
+                        context.l10n.members,
+                        context.l10n.onlineMemberSummary(
+                          room?.viewerCount ?? 0,
+                          room?.memberCount ?? 0,
+                        ),
                       ),
                       _buildDetailLine(
-                        '密码',
-                        _settings.requirePassword ? '已设置' : '未设置',
+                        context.l10n.password,
+                        _settings.requirePassword
+                            ? context.l10n.configured
+                            : context.l10n.notConfigured,
                       ),
                     ],
                   ),
@@ -6168,7 +6494,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              creatorId.isEmpty ? '创建者' : creatorId,
+                              creatorId.isEmpty
+                                  ? context.l10n.creator
+                                  : creatorId,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
@@ -6186,7 +6514,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ),
         ),
-        _buildSectionHeader('房间密码', theme),
+        _buildSectionHeader(context.l10n.roomPassword, theme),
         _buildSurface(
           isDark: isDark,
           children: [
@@ -6194,12 +6522,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: AppTextField(
                 controller: _passwordController,
-                label: '新密码',
-                helperText: '留空提交会移除房间密码',
+                label: context.l10n.newPassword,
+                helperText: context.l10n.emptyRemovesRoomPassword,
                 obscureText: true,
                 onChanged: (_) => setState(() {}),
                 suffix: AppIconButton(
-                  tooltip: '清空',
+                  tooltip: context.l10n.clear,
                   icon: Icons.clear,
                   iconSize: 18,
                   size: AppIconButtonSize.sm,
@@ -6217,7 +6545,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 children: [
                   Expanded(
                     child: Text(
-                      _settings.requirePassword ? '当前房间需要密码' : '当前房间无需密码',
+                      _settings.requirePassword
+                          ? context.l10n.roomCurrentlyRequiresPassword
+                          : context.l10n.roomCurrentlyNoPassword,
                       style: TextStyle(color: theme.hintColor, fontSize: 13),
                     ),
                   ),
@@ -6235,7 +6565,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ],
         ),
-        _buildSectionHeader('房间操作', theme),
+        _buildSectionHeader(context.l10n.roomActions, theme),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: AppInkSurface(
@@ -6249,8 +6579,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 if (_canLeaveRoom) ...[
                   AppTile(
                     prefix: const Icon(Icons.logout),
-                    title: const Text('退出房间'),
-                    subtitle: const Text('退出后需要重新加入才能访问成员内容'),
+                    title: Text(context.l10n.leaveRoom),
+                    subtitle: Text(context.l10n.leaveRoomTileDescription),
                     onPressed: _leaveRoom,
                   ),
                   _buildDivider(theme),
@@ -6261,7 +6591,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     color: theme.colorScheme.error,
                   ),
                   title: Text(
-                    '删除房间',
+                    context.l10n.deleteRoom,
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
                   onPressed: _deleteRoom,
@@ -6276,34 +6606,42 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   String _streamSubtitle(RoomStreamEntryInfo stream) {
-    if (!stream.active) return '未活跃';
+    if (!stream.active) return context.l10n.inactive;
     final publisher = stream.publisherUserId.isEmpty
-        ? '未知发布者'
+        ? context.l10n.unknownPublisher
         : stream.publisherUserId;
     return '$publisher · ${_formatTimestamp(stream.startedAt)}';
   }
 
+  String _watchKindLabel(String kind) => switch (kind) {
+    'observed_changed' => context.l10n.observedWithChanges,
+    'observed_unchanged' => context.l10n.observedWithoutChanges,
+    'snapshot' => context.l10n.snapshotPushed,
+    'error' => context.l10n.error,
+    _ => context.l10n.waiting,
+  };
+
   String _roleLabel(int role) {
     return switch (role) {
-      1 => '创建者',
-      2 => '管理员',
-      3 => '成员',
-      4 => '访客',
-      _ => '未指定',
+      1 => context.l10n.creator,
+      2 => context.l10n.administrator,
+      3 => context.l10n.member,
+      4 => context.l10n.guest,
+      _ => context.l10n.unspecified,
     };
   }
 
   String _reviewStatusLabel(int status) {
     return switch (status) {
-      1 => '待审核',
-      2 => '已通过',
-      3 => '已拒绝',
-      _ => '未指定',
+      1 => context.l10n.pendingReview,
+      2 => context.l10n.approved,
+      3 => context.l10n.rejected,
+      _ => context.l10n.unspecified,
     };
   }
 
   String _formatTimestamp(int timestamp) {
-    if (timestamp <= 0) return '时间未知';
+    if (timestamp <= 0) return context.l10n.unknownTime;
     final normalized = timestamp > 100000000000
         ? (timestamp / 1000).round()
         : timestamp;
@@ -6316,7 +6654,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   String _formatDateTime(DateTime? value) {
-    if (value == null) return '等待事件';
+    if (value == null) return context.l10n.waitingForEvent;
     return '${value.hour.toString().padLeft(2, '0')}:'
         '${value.minute.toString().padLeft(2, '0')}:'
         '${value.second.toString().padLeft(2, '0')}';
@@ -6456,7 +6794,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     Padding(
                       padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
                       child: Text(
-                        '房间管理',
+                        context.l10n.roomManagement,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: theme.colorScheme.onSurface.withValues(
@@ -6592,7 +6930,7 @@ class _ChatMessageEditFormState extends State<_ChatMessageEditForm> {
       children: [
         AppTextField(
           controller: _controller,
-          label: '消息内容',
+          label: context.l10n.messageContent,
           autofocus: true,
           minLines: 2,
           maxLines: 5,
@@ -6604,7 +6942,11 @@ class _ChatMessageEditFormState extends State<_ChatMessageEditForm> {
           children: [
             ChatUtils.createCancelButton(context),
             const SizedBox(width: 8),
-            ChatUtils.createConfirmButton(context, _submit, text: '保存'),
+            ChatUtils.createConfirmButton(
+              context,
+              _submit,
+              text: context.l10n.save,
+            ),
           ],
         ),
       ],

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:math';
 import 'dart:async';
 import 'dart:io';
+import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/room_media_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
@@ -522,7 +523,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            '已选择图片，输入描述后发送',
+                            context.l10n.imageSelectedDescription,
                             style: TextStyle(
                               color: theme.textTheme.bodyMedium?.color,
                               fontSize: 14,
@@ -536,7 +537,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                             color: Colors.red.shade400,
                             size: 18,
                           ),
-                          tooltip: '取消图片',
+                          tooltip: context.l10n.cancelImage,
                           onPressed: widget.onCancelSelectedImage,
                           isDark: isDark,
                           size: 36,
@@ -553,9 +554,11 @@ class _TextInputAreaState extends State<TextInputArea> {
                     child: AppTextField(
                       focusNode: _focusNode,
                       controller: widget.textController,
-                      label: '消息',
+                      label: context.l10n.message,
                       showLabel: false,
-                      hintText: hasSelectedImage ? '请描述图片...' : '输入消息...',
+                      hintText: hasSelectedImage
+                          ? context.l10n.describeImage
+                          : context.l10n.enterMessage,
                       prefixIcon: Icons.chat_bubble_outline,
                       filled: true,
                       fillColor: fieldFill,
@@ -599,7 +602,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                             : Colors.black.withValues(alpha: 0.7),
                         size: 22,
                       ),
-                      tooltip: '选择图片',
+                      tooltip: context.l10n.chooseImage,
                       onPressed: widget.onShowImagePicker,
                       isDark: isDark,
                       size: 44,
@@ -612,7 +615,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                     child: AppIconButton(
                       onPressed: canSend ? widget.onSendMessage : null,
                       icon: Icons.send_rounded,
-                      tooltip: '发送',
+                      tooltip: context.l10n.send,
                       loading: widget.isLoading,
                       style: AppIconButtonStyle.filled,
                       iconSize: 20,
@@ -629,7 +632,7 @@ class _TextInputAreaState extends State<TextInputArea> {
                             : Colors.black.withValues(alpha: 0.7),
                         size: 20,
                       ),
-                      tooltip: '切换语音',
+                      tooltip: context.l10n.switchToVoice,
                       onPressed: widget.onSwitchToVoiceMode,
                       isDark: isDark,
                       rotateOnPressed: true,
@@ -725,7 +728,7 @@ class _MentionSuggestions extends StatelessWidget {
                           child: AppIconButton(
                             onPressed: onLoadMore,
                             icon: Icons.more_horiz_rounded,
-                            tooltip: '加载更多',
+                            tooltip: context.l10n.loadMore,
                             iconSize: 18,
                           ),
                         );
@@ -950,9 +953,9 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
                           child: Text(
                             _isRecording
                                 ? _isCancelling
-                                      ? "松开手指，取消发送"
-                                      : "松开发送，上滑取消"
-                                : "按住说话",
+                                      ? context.l10n.releaseToCancel
+                                      : context.l10n.releaseToSendSwipeToCancel
+                                : context.l10n.holdToTalk,
                             style: TextStyle(
                               color: _isRecording
                                   ? _isCancelling
@@ -984,7 +987,7 @@ class _VoiceInputAreaState extends State<VoiceInputArea> {
                       : Colors.black.withValues(alpha: 0.7),
                   size: 20,
                 ),
-                tooltip: '切换文字',
+                tooltip: context.l10n.switchToText,
                 onPressed: () {
                   if (_isRecording) {
                     widget.onCancelRecording();
