@@ -610,6 +610,37 @@ class SyncTvUserApi {
       query: _api._messageQuery(request),
     );
   }
+
+  Future<client.FavoriteRoomResponse> favoriteRoom(
+    client.FavoriteRoomRequest request,
+  ) {
+    return _api._send(
+      'PUT',
+      '/api/user/rooms/${request.roomId}/favorite',
+      client.FavoriteRoomResponse.create,
+    );
+  }
+
+  Future<client.UnfavoriteRoomResponse> unfavoriteRoom(
+    client.UnfavoriteRoomRequest request,
+  ) {
+    return _api._send(
+      'DELETE',
+      '/api/user/rooms/${request.roomId}/favorite',
+      client.UnfavoriteRoomResponse.create,
+    );
+  }
+
+  Future<client.ListFavoriteRoomsResponse> listFavoriteRooms(
+    client.ListFavoriteRoomsRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/user/favorite-rooms',
+      client.ListFavoriteRoomsResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
 }
 
 class SyncTvRoomApi {

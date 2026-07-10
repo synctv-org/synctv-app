@@ -22,7 +22,9 @@ class CinemaRoomCard extends StatelessWidget {
   final String categoryName;
   final List<RoomLabelInfo> labels;
   final VoidCallback onTap;
+  final VoidCallback? onFavoritePressed;
   final VoidCallback? onLongPress;
+  final bool isFavorite;
   final bool showScaleAnimation;
 
   const CinemaRoomCard({
@@ -44,7 +46,9 @@ class CinemaRoomCard extends StatelessWidget {
     this.categoryName = '',
     this.labels = const [],
     required this.onTap,
+    this.onFavoritePressed,
     this.onLongPress,
+    this.isFavorite = false,
     this.showScaleAnimation = false,
   });
 
@@ -96,6 +100,25 @@ class CinemaRoomCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
+                if (onFavoritePressed != null) ...[
+                  AppIconButton(
+                    tooltip: isFavorite ? '取消收藏' : '收藏房间',
+                    icon: Icons.bookmark_border_rounded,
+                    selectedIcon: Icons.bookmark_rounded,
+                    selected: isFavorite,
+                    onPressed: onFavoritePressed,
+                    style: isFavorite
+                        ? AppIconButtonStyle.tonal
+                        : AppIconButtonStyle.ghost,
+                    size: AppIconButtonSize.sm,
+                    iconSize: 18,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 32,
+                      height: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 AppBadge(
                   label: Text(statusLabel),
                   color: statusColor,

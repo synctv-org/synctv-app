@@ -1664,6 +1664,7 @@ class Room extends $pb.GeneratedMessage {
     UserPublicView? creator,
     RoomCategory? category,
     $core.Iterable<RoomLabel>? labels,
+    $core.bool? favorited,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -1683,6 +1684,7 @@ class Room extends $pb.GeneratedMessage {
     if (creator != null) result.creator = creator;
     if (category != null) result.category = category;
     if (labels != null) result.labels.addAll(labels);
+    if (favorited != null) result.favorited = favorited;
     return result;
   }
 
@@ -1724,6 +1726,7 @@ class Room extends $pb.GeneratedMessage {
         subBuilder: RoomCategory.create)
     ..pPM<RoomLabel>(17, _omitFieldNames ? '' : 'labels',
         subBuilder: RoomLabel.create)
+    ..aOB(18, _omitFieldNames ? '' : 'favorited')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1900,6 +1903,15 @@ class Room extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(17)
   $pb.PbList<RoomLabel> get labels => $_getList(16);
+
+  @$pb.TagNumber(18)
+  $core.bool get favorited => $_getBF(17);
+  @$pb.TagNumber(18)
+  set favorited($core.bool value) => $_setBool(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasFavorited() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearFavorited() => $_clearField(18);
 }
 
 class RoomCategory extends $pb.GeneratedMessage {
@@ -35538,6 +35550,368 @@ class MyRoom extends $pb.GeneratedMessage {
   void clearRelation() => $_clearField(4);
 }
 
+class FavoriteRoomRequest extends $pb.GeneratedMessage {
+  factory FavoriteRoomRequest({
+    $core.String? roomId,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    return result;
+  }
+
+  FavoriteRoomRequest._();
+
+  factory FavoriteRoomRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FavoriteRoomRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FavoriteRoomRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FavoriteRoomRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FavoriteRoomRequest copyWith(void Function(FavoriteRoomRequest) updates) =>
+      super.copyWith((message) => updates(message as FavoriteRoomRequest))
+          as FavoriteRoomRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FavoriteRoomRequest create() => FavoriteRoomRequest._();
+  @$core.override
+  FavoriteRoomRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FavoriteRoomRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FavoriteRoomRequest>(create);
+  static FavoriteRoomRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+}
+
+class FavoriteRoomResponse extends $pb.GeneratedMessage {
+  factory FavoriteRoomResponse({
+    Room? room,
+  }) {
+    final result = create();
+    if (room != null) result.room = room;
+    return result;
+  }
+
+  FavoriteRoomResponse._();
+
+  factory FavoriteRoomResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FavoriteRoomResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FavoriteRoomResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FavoriteRoomResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FavoriteRoomResponse copyWith(void Function(FavoriteRoomResponse) updates) =>
+      super.copyWith((message) => updates(message as FavoriteRoomResponse))
+          as FavoriteRoomResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FavoriteRoomResponse create() => FavoriteRoomResponse._();
+  @$core.override
+  FavoriteRoomResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FavoriteRoomResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FavoriteRoomResponse>(create);
+  static FavoriteRoomResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  Room get room => $_getN(0);
+  @$pb.TagNumber(1)
+  set room(Room value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoom() => $_clearField(1);
+  @$pb.TagNumber(1)
+  Room ensureRoom() => $_ensure(0);
+}
+
+class UnfavoriteRoomRequest extends $pb.GeneratedMessage {
+  factory UnfavoriteRoomRequest({
+    $core.String? roomId,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    return result;
+  }
+
+  UnfavoriteRoomRequest._();
+
+  factory UnfavoriteRoomRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UnfavoriteRoomRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UnfavoriteRoomRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnfavoriteRoomRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnfavoriteRoomRequest copyWith(
+          void Function(UnfavoriteRoomRequest) updates) =>
+      super.copyWith((message) => updates(message as UnfavoriteRoomRequest))
+          as UnfavoriteRoomRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UnfavoriteRoomRequest create() => UnfavoriteRoomRequest._();
+  @$core.override
+  UnfavoriteRoomRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UnfavoriteRoomRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UnfavoriteRoomRequest>(create);
+  static UnfavoriteRoomRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+}
+
+class UnfavoriteRoomResponse extends $pb.GeneratedMessage {
+  factory UnfavoriteRoomResponse({
+    Room? room,
+  }) {
+    final result = create();
+    if (room != null) result.room = room;
+    return result;
+  }
+
+  UnfavoriteRoomResponse._();
+
+  factory UnfavoriteRoomResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UnfavoriteRoomResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UnfavoriteRoomResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnfavoriteRoomResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UnfavoriteRoomResponse copyWith(
+          void Function(UnfavoriteRoomResponse) updates) =>
+      super.copyWith((message) => updates(message as UnfavoriteRoomResponse))
+          as UnfavoriteRoomResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UnfavoriteRoomResponse create() => UnfavoriteRoomResponse._();
+  @$core.override
+  UnfavoriteRoomResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UnfavoriteRoomResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UnfavoriteRoomResponse>(create);
+  static UnfavoriteRoomResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  Room get room => $_getN(0);
+  @$pb.TagNumber(1)
+  set room(Room value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoom() => $_clearField(1);
+  @$pb.TagNumber(1)
+  Room ensureRoom() => $_ensure(0);
+}
+
+class ListFavoriteRoomsRequest extends $pb.GeneratedMessage {
+  factory ListFavoriteRoomsRequest({
+    $core.int? page,
+    $core.int? pageSize,
+    $core.String? search,
+  }) {
+    final result = create();
+    if (page != null) result.page = page;
+    if (pageSize != null) result.pageSize = pageSize;
+    if (search != null) result.search = search;
+    return result;
+  }
+
+  ListFavoriteRoomsRequest._();
+
+  factory ListFavoriteRoomsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListFavoriteRoomsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListFavoriteRoomsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'page')
+    ..aI(2, _omitFieldNames ? '' : 'pageSize')
+    ..aOS(3, _omitFieldNames ? '' : 'search')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListFavoriteRoomsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListFavoriteRoomsRequest copyWith(
+          void Function(ListFavoriteRoomsRequest) updates) =>
+      super.copyWith((message) => updates(message as ListFavoriteRoomsRequest))
+          as ListFavoriteRoomsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListFavoriteRoomsRequest create() => ListFavoriteRoomsRequest._();
+  @$core.override
+  ListFavoriteRoomsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListFavoriteRoomsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListFavoriteRoomsRequest>(create);
+  static ListFavoriteRoomsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get page => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set page($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPage() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPage() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get pageSize => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set pageSize($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPageSize() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPageSize() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get search => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set search($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSearch() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSearch() => $_clearField(3);
+}
+
+class ListFavoriteRoomsResponse extends $pb.GeneratedMessage {
+  factory ListFavoriteRoomsResponse({
+    $core.Iterable<Room>? rooms,
+    $core.int? total,
+  }) {
+    final result = create();
+    if (rooms != null) result.rooms.addAll(rooms);
+    if (total != null) result.total = total;
+    return result;
+  }
+
+  ListFavoriteRoomsResponse._();
+
+  factory ListFavoriteRoomsResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListFavoriteRoomsResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListFavoriteRoomsResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pPM<Room>(1, _omitFieldNames ? '' : 'rooms', subBuilder: Room.create)
+    ..aI(2, _omitFieldNames ? '' : 'total')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListFavoriteRoomsResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListFavoriteRoomsResponse copyWith(
+          void Function(ListFavoriteRoomsResponse) updates) =>
+      super.copyWith((message) => updates(message as ListFavoriteRoomsResponse))
+          as ListFavoriteRoomsResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListFavoriteRoomsResponse create() => ListFavoriteRoomsResponse._();
+  @$core.override
+  ListFavoriteRoomsResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListFavoriteRoomsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListFavoriteRoomsResponse>(create);
+  static ListFavoriteRoomsResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<Room> get rooms => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.int get total => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set total($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTotal() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTotal() => $_clearField(2);
+}
+
 /// Room Discovery
 class CheckRoomRequest extends $pb.GeneratedMessage {
   factory CheckRoomRequest({
@@ -39560,6 +39934,18 @@ class UserServiceApi {
           $pb.ClientContext? ctx, ListMyRoomsRequest request) =>
       _client.invoke<ListMyRoomsResponse>(
           ctx, 'UserService', 'ListMyRooms', request, ListMyRoomsResponse());
+  $async.Future<FavoriteRoomResponse> favoriteRoom(
+          $pb.ClientContext? ctx, FavoriteRoomRequest request) =>
+      _client.invoke<FavoriteRoomResponse>(
+          ctx, 'UserService', 'FavoriteRoom', request, FavoriteRoomResponse());
+  $async.Future<UnfavoriteRoomResponse> unfavoriteRoom(
+          $pb.ClientContext? ctx, UnfavoriteRoomRequest request) =>
+      _client.invoke<UnfavoriteRoomResponse>(ctx, 'UserService',
+          'UnfavoriteRoom', request, UnfavoriteRoomResponse());
+  $async.Future<ListFavoriteRoomsResponse> listFavoriteRooms(
+          $pb.ClientContext? ctx, ListFavoriteRoomsRequest request) =>
+      _client.invoke<ListFavoriteRoomsResponse>(ctx, 'UserService',
+          'ListFavoriteRooms', request, ListFavoriteRoomsResponse());
 }
 
 /// ==================== Room Service ====================

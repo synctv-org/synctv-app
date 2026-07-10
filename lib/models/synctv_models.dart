@@ -141,6 +141,7 @@ class SyncTvRoom {
   final String coverUrl;
   final RoomCategoryInfo? category;
   final List<RoomLabelInfo> labels;
+  final bool isFavorite;
 
   SyncTvRoom({
     required this.roomId,
@@ -170,6 +171,7 @@ class SyncTvRoom {
     this.coverUrl = '',
     this.category,
     this.labels = const [],
+    this.isFavorite = false,
   });
 
   SyncTvRoom copyWith({
@@ -200,6 +202,7 @@ class SyncTvRoom {
     String? coverUrl,
     RoomCategoryInfo? category,
     List<RoomLabelInfo>? labels,
+    bool? isFavorite,
   }) {
     return SyncTvRoom(
       roomId: roomId ?? this.roomId,
@@ -229,6 +232,7 @@ class SyncTvRoom {
       coverUrl: coverUrl ?? this.coverUrl,
       category: category ?? this.category,
       labels: labels ?? this.labels,
+      isFavorite: isFavorite ?? this.isFavorite,
     );
   }
 }

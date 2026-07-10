@@ -741,6 +741,44 @@ class SyncTvService {
     );
   }
 
+  static Future<RoomsPage> getFavoriteRoomsPage({
+    int page = 1,
+    int pageSize = 100,
+    String? search,
+    bool refresh = false,
+  }) async {
+    final key = [
+      'account:favorite-rooms',
+      page,
+      pageSize,
+      search ?? '',
+    ].join('|');
+    return _domains.cache.get<RoomsPage>(
+      key,
+      ttl: const Duration(seconds: 45),
+      refresh: refresh,
+      loader: () => _domains.publicRooms.getFavoriteRoomsPage(
+        page: page,
+        pageSize: pageSize,
+        search: search,
+      ),
+    );
+  }
+
+  static Future<SyncTvRoom> favoriteRoom(String roomId) async {
+    final room = await _domains.publicRooms.favoriteRoom(roomId);
+    _domains.cache.invalidatePrefix('account:favorite-rooms');
+    _domains.cache.invalidatePrefix('account:rooms');
+    return room;
+  }
+
+  static Future<SyncTvRoom> unfavoriteRoom(String roomId) async {
+    final room = await _domains.publicRooms.unfavoriteRoom(roomId);
+    _domains.cache.invalidatePrefix('account:favorite-rooms');
+    _domains.cache.invalidatePrefix('account:rooms');
+    return room;
+  }
+
   static Future<List<SyncTvRoom>> getHotRooms({int limit = 20}) async {
     return _domains.publicRooms.getHotRooms(limit: limit);
   }

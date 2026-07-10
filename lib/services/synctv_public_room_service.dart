@@ -220,6 +220,48 @@ class SyncTvPublicRoomDomainService {
     );
   }
 
+  Future<RoomsPage> getFavoriteRoomsPage({
+    int page = 1,
+    int pageSize = 100,
+    String? search,
+  }) async {
+    if (_api.session.isGuest) {
+      return RoomsPage(
+        rooms: const <SyncTvRoom>[],
+        total: 0,
+        page: page,
+        pageSize: pageSize,
+      );
+    }
+    final response = await _api.user.listFavoriteRooms(
+      client.ListFavoriteRoomsRequest(
+        page: page,
+        pageSize: pageSize,
+        search: search ?? '',
+      ),
+    );
+    return RoomsPage(
+      rooms: response.rooms.map(_api.mapRoom).toList(growable: false),
+      total: response.total,
+      page: page,
+      pageSize: pageSize,
+    );
+  }
+
+  Future<SyncTvRoom> favoriteRoom(String roomId) async {
+    final response = await _api.user.favoriteRoom(
+      client.FavoriteRoomRequest(roomId: roomId),
+    );
+    return _api.mapRoom(response.room);
+  }
+
+  Future<SyncTvRoom> unfavoriteRoom(String roomId) async {
+    final response = await _api.user.unfavoriteRoom(
+      client.UnfavoriteRoomRequest(roomId: roomId),
+    );
+    return _api.mapRoom(response.room);
+  }
+
   Future<List<SyncTvRoom>> getHotRooms({int limit = 20}) async {
     final response = await _api.publicService.getHotRooms(
       client.GetHotRoomsRequest(limit: limit),

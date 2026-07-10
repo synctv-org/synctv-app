@@ -23,7 +23,7 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
 
 import 'package:synctv_app/widgets/auth_panel.dart';
 
-enum _RoomFeed { public, mine, hot }
+enum _RoomFeed { public, mine, hot, favorites }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   SyncTvUser? _currentUser;
   StreamSubscription? _authErrorSubscription;
   final Set<String> _joiningRoomIds = <String>{};
+  Set<String> _favoriteRoomIds = <String>{};
   final Set<String> _selectedRoomLabelIds = <String>{};
   final TextEditingController _roomSearchController = TextEditingController();
   String _selectedRoomCategoryId = '';
@@ -183,7 +184,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       return;
     }
-    if (!_isLoggedIn && _roomFeed == _RoomFeed.mine) {
+    if (!_isLoggedIn &&
+        (_roomFeed == _RoomFeed.mine || _roomFeed == _RoomFeed.favorites)) {
       setState(() {
         _rooms = const [];
         _roomsTotal = 0;
@@ -237,12 +239,25 @@ class _HomeScreenState extends State<HomeScreen> {
           rooms = await SyncTvService.getHotRooms(limit: _roomPageSize);
           total = rooms.length;
           break;
+        case _RoomFeed.favorites:
+          final page = await SyncTvService.getFavoriteRoomsPage(
+            page: _roomPage,
+            pageSize: _roomPageSize,
+            search: search.isEmpty ? null : search,
+          );
+          rooms = page.rooms;
+          total = page.total;
+          break;
       }
 
       if (mounted) {
         setState(() {
           _rooms = rooms;
           _roomsTotal = total;
+          _favoriteRoomIds = rooms
+              .where((room) => room.isFavorite)
+              .map((room) => room.roomId)
+              .toSet();
           _isLoading = false;
         });
       }
@@ -260,7 +275,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _roomsTotal <= 0 ? 1 : ((_roomsTotal - 1) ~/ _roomPageSize) + 1;
 
   void _setRoomFeed(_RoomFeed feed) {
-    if (!_isLoggedIn && feed == _RoomFeed.mine) {
+    if (!_isLoggedIn &&
+        (feed == _RoomFeed.mine || feed == _RoomFeed.favorites)) {
       _showLoginDialog();
       return;
     }
@@ -672,13 +688,66 @@ class _HomeScreenState extends State<HomeScreen> {
     if (confirm == true) {
       try {
         await SyncTvService.deleteRoom(room.roomId);
-        if (mounted) {
-          MessageUtils.showSuccess(context, '房间已删除');
-          _loadRooms(silent: true);
-        }
+        if (!mounted) return;
+        MessageUtils.showSuccess(context, '房间已删除');
+        _loadRooms(silent: true);
       } catch (e) {
         if (mounted) MessageUtils.showError(context, '删除失败: $e');
       }
+    }
+  }
+
+  Future<void> _toggleRoomFavorite(SyncTvRoom room) async {
+    if (!_isLoggedIn) {
+      await _showLoginDialog();
+      return;
+    }
+    final wasFavorite =
+        room.isFavorite || _favoriteRoomIds.contains(room.roomId);
+    setState(() {
+      final next = Set<String>.from(_favoriteRoomIds);
+      if (wasFavorite) {
+        next.remove(room.roomId);
+      } else {
+        next.add(room.roomId);
+      }
+      _favoriteRoomIds = next;
+    });
+    try {
+      final SyncTvRoom updatedRoom;
+      if (wasFavorite) {
+        updatedRoom = await SyncTvService.unfavoriteRoom(room.roomId);
+      } else {
+        updatedRoom = await SyncTvService.favoriteRoom(room.roomId);
+      }
+      if (!mounted) return;
+      setState(() {
+        _rooms = _rooms
+            .map(
+              (item) => item.roomId == updatedRoom.roomId ? updatedRoom : item,
+            )
+            .where(
+              (item) =>
+                  _roomFeed != _RoomFeed.favorites ||
+                  _favoriteRoomIds.contains(item.roomId),
+            )
+            .toList(growable: false);
+      });
+      if (mounted && _roomFeed == _RoomFeed.favorites) {
+        await _loadRooms(silent: true);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        final next = Set<String>.from(_favoriteRoomIds);
+        if (wasFavorite) {
+          next.add(room.roomId);
+        } else {
+          next.remove(room.roomId);
+        }
+        _favoriteRoomIds = next;
+      });
+      MessageUtils.showError(context, '更新收藏失败: $e');
     }
   }
 
@@ -1007,9 +1076,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildRoomControls(ThemeData theme) {
     final supportsPaging = _roomFeed != _RoomFeed.hot;
-    final summary = supportsPaging
-        ? '共 $_roomsTotal 个房间 · 第 $_roomPage / $_roomPageCount 页'
-        : '显示 ${_rooms.length} 个热门房间';
+    final summary = switch (_roomFeed) {
+      _RoomFeed.hot => '显示 ${_rooms.length} 个热门房间',
+      _RoomFeed.favorites =>
+        '共 $_roomsTotal 个收藏 · 第 $_roomPage / $_roomPageCount 页',
+      _ => '共 $_roomsTotal 个房间 · 第 $_roomPage / $_roomPageCount 页',
+    };
     final compact = AppBreakpoints.widthOf(context) < 1080;
 
     return AppInkSurface(
@@ -1063,6 +1135,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   value: _RoomFeed.hot,
                   icon: Icon(Icons.local_fire_department_rounded),
                   label: Text('热门'),
+                ),
+                ButtonSegment(
+                  value: _RoomFeed.favorites,
+                  icon: Icon(Icons.bookmark_rounded),
+                  label: Text('收藏'),
                 ),
               ],
               value: _roomFeed,
@@ -1182,6 +1259,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildRoomGrid() {
     final theme = Theme.of(context);
     final hasServer = SyncTvService.activeServer != null;
+    final emptyIcon = !hasServer
+        ? Icons.dns_rounded
+        : (_roomFeed == _RoomFeed.favorites
+              ? Icons.bookmark_border_rounded
+              : Icons.meeting_room_outlined);
+    final emptyTitle = !hasServer
+        ? '添加服务器后开始使用'
+        : (_roomFeed == _RoomFeed.favorites ? '还没有收藏的房间' : '暂无房间');
+    final emptyDescription = !hasServer
+        ? '输入服务器地址即可浏览公开房间、登录账号和加入观影房间。'
+        : switch (_roomFeed) {
+            _RoomFeed.mine => '加入或创建房间后会出现在这里',
+            _RoomFeed.favorites => '收藏房间后会出现在这里',
+            _ => '当前筛选下没有可显示的房间',
+          };
     return AppInkSurface(
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(8),
@@ -1192,24 +1284,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    hasServer ? Icons.meeting_room_outlined : Icons.dns_rounded,
+                    emptyIcon,
                     size: 56,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    hasServer ? '暂无房间' : '添加服务器后开始使用',
+                    emptyTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    hasServer
-                        ? (_roomFeed == _RoomFeed.mine
-                              ? '加入或创建房间后会出现在这里'
-                              : '当前筛选下没有可显示的房间')
-                        : '输入服务器地址即可浏览公开房间、登录账号和加入观影房间。',
+                    emptyDescription,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(
                         alpha: 0.58,
@@ -1267,6 +1355,8 @@ class _HomeScreenState extends State<HomeScreen> {
       categoryName: room.category?.name ?? '',
       labels: room.labels,
       onTap: () => _handleJoinRoom(room),
+      onFavoritePressed: () => _toggleRoomFavorite(room),
+      isFavorite: room.isFavorite || _favoriteRoomIds.contains(room.roomId),
       onLongPress: _currentUser != null && _currentUser!.id == room.creatorId
           ? () => _handleDeleteRoom(room)
           : null,

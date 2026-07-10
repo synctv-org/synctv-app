@@ -1376,6 +1376,7 @@ const Room$json = {
       '6': '.synctv.client.RoomLabel',
       '10': 'labels'
     },
+    {'1': 'favorited', '3': 18, '4': 1, '5': 8, '10': 'favorited'},
   ],
 };
 
@@ -1393,7 +1394,8 @@ final $typed_data.Uint8List roomDescriptor = $convert.base64Decode(
     'NlbmNlGA4gASgLMiAuc3luY3R2LmNvbW1vbi5Sb29tUHJlc2VuY2VTdGF0c1IIcHJlc2VuY2US'
     'NwoHY3JlYXRvchgPIAEoCzIdLnN5bmN0di5jbGllbnQuVXNlclB1YmxpY1ZpZXdSB2NyZWF0b3'
     'ISNwoIY2F0ZWdvcnkYECABKAsyGy5zeW5jdHYuY2xpZW50LlJvb21DYXRlZ29yeVIIY2F0ZWdv'
-    'cnkSMAoGbGFiZWxzGBEgAygLMhguc3luY3R2LmNsaWVudC5Sb29tTGFiZWxSBmxhYmVscw==');
+    'cnkSMAoGbGFiZWxzGBEgAygLMhguc3luY3R2LmNsaWVudC5Sb29tTGFiZWxSBmxhYmVscxIcCg'
+    'lmYXZvcml0ZWQYEiABKAhSCWZhdm9yaXRlZA==');
 
 @$core.Deprecated('Use roomCategoryDescriptor instead')
 const RoomCategory$json = {
@@ -13559,6 +13561,116 @@ final $typed_data.Uint8List myRoomDescriptor = $convert.base64Decode(
     'b24uUm9vbU1lbWJlclJvbGVSBHJvbGUSOQoIcmVsYXRpb24YBCABKA4yHS5zeW5jdHYuY2xpZW'
     '50Lk15Um9vbVJlbGF0aW9uUghyZWxhdGlvbg==');
 
+@$core.Deprecated('Use favoriteRoomRequestDescriptor instead')
+const FavoriteRoomRequest$json = {
+  '1': 'FavoriteRoomRequest',
+  '2': [
+    {'1': 'room_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'roomId'},
+  ],
+};
+
+/// Descriptor for `FavoriteRoomRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List favoriteRoomRequestDescriptor = $convert.base64Decode(
+    'ChNGYXZvcml0ZVJvb21SZXF1ZXN0EjcKB3Jvb21faWQYASABKAlCHrpIG3IZEAEYQDITXnJvb2'
+    '1fW0EtWmEtejAtOV0rJFIGcm9vbUlk');
+
+@$core.Deprecated('Use favoriteRoomResponseDescriptor instead')
+const FavoriteRoomResponse$json = {
+  '1': 'FavoriteRoomResponse',
+  '2': [
+    {
+      '1': 'room',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.Room',
+      '10': 'room'
+    },
+  ],
+};
+
+/// Descriptor for `FavoriteRoomResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List favoriteRoomResponseDescriptor = $convert.base64Decode(
+    'ChRGYXZvcml0ZVJvb21SZXNwb25zZRInCgRyb29tGAEgASgLMhMuc3luY3R2LmNsaWVudC5Sb2'
+    '9tUgRyb29t');
+
+@$core.Deprecated('Use unfavoriteRoomRequestDescriptor instead')
+const UnfavoriteRoomRequest$json = {
+  '1': 'UnfavoriteRoomRequest',
+  '2': [
+    {'1': 'room_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'roomId'},
+  ],
+};
+
+/// Descriptor for `UnfavoriteRoomRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List unfavoriteRoomRequestDescriptor = $convert.base64Decode(
+    'ChVVbmZhdm9yaXRlUm9vbVJlcXVlc3QSNwoHcm9vbV9pZBgBIAEoCUIeukgbchkQARhAMhNecm'
+    '9vbV9bQS1aYS16MC05XSskUgZyb29tSWQ=');
+
+@$core.Deprecated('Use unfavoriteRoomResponseDescriptor instead')
+const UnfavoriteRoomResponse$json = {
+  '1': 'UnfavoriteRoomResponse',
+  '2': [
+    {
+      '1': 'room',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.Room',
+      '10': 'room'
+    },
+  ],
+};
+
+/// Descriptor for `UnfavoriteRoomResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List unfavoriteRoomResponseDescriptor =
+    $convert.base64Decode(
+        'ChZVbmZhdm9yaXRlUm9vbVJlc3BvbnNlEicKBHJvb20YASABKAsyEy5zeW5jdHYuY2xpZW50Ll'
+        'Jvb21SBHJvb20=');
+
+@$core.Deprecated('Use listFavoriteRoomsRequestDescriptor instead')
+const ListFavoriteRoomsRequest$json = {
+  '1': 'ListFavoriteRoomsRequest',
+  '2': [
+    {'1': 'page', '3': 1, '4': 1, '5': 5, '10': 'page'},
+    {'1': 'page_size', '3': 2, '4': 1, '5': 5, '10': 'pageSize'},
+    {'1': 'search', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'search'},
+  ],
+  '7': {},
+};
+
+/// Descriptor for `ListFavoriteRoomsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listFavoriteRoomsRequestDescriptor = $convert.base64Decode(
+    'ChhMaXN0RmF2b3JpdGVSb29tc1JlcXVlc3QSEgoEcGFnZRgBIAEoBVIEcGFnZRIbCglwYWdlX3'
+    'NpemUYAiABKAVSCHBhZ2VTaXplEh8KBnNlYXJjaBgDIAEoCUIHukgEcgIYZFIGc2VhcmNoOo8C'
+    'ukiLAhpoChhsaXN0X2Zhdm9yaXRlX3Jvb21zLnBhZ2USKnBhZ2UgbXVzdCBiZSAwICh1c2UgZG'
+    'VmYXVsdCkgb3IgYXQgbGVhc3QgMRogdGhpcy5wYWdlID09IDAgfHwgdGhpcy5wYWdlID49IDEa'
+    'ngEKHWxpc3RfZmF2b3JpdGVfcm9vbXMucGFnZV9zaXplEjZwYWdlX3NpemUgbXVzdCBiZSAwIC'
+    'h1c2UgZGVmYXVsdCkgb3IgYmV0d2VlbiAxIGFuZCAxMDAaRXRoaXMucGFnZV9zaXplID09IDAg'
+    'fHwgKHRoaXMucGFnZV9zaXplID49IDEgJiYgdGhpcy5wYWdlX3NpemUgPD0gMTAwKQ==');
+
+@$core.Deprecated('Use listFavoriteRoomsResponseDescriptor instead')
+const ListFavoriteRoomsResponse$json = {
+  '1': 'ListFavoriteRoomsResponse',
+  '2': [
+    {
+      '1': 'rooms',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.Room',
+      '10': 'rooms'
+    },
+    {'1': 'total', '3': 2, '4': 1, '5': 5, '10': 'total'},
+  ],
+};
+
+/// Descriptor for `ListFavoriteRoomsResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listFavoriteRoomsResponseDescriptor =
+    $convert.base64Decode(
+        'ChlMaXN0RmF2b3JpdGVSb29tc1Jlc3BvbnNlEikKBXJvb21zGAEgAygLMhMuc3luY3R2LmNsaW'
+        'VudC5Sb29tUgVyb29tcxIUCgV0b3RhbBgCIAEoBVIFdG90YWw=');
+
 @$core.Deprecated('Use checkRoomRequestDescriptor instead')
 const CheckRoomRequest$json = {
   '1': 'CheckRoomRequest',
@@ -15224,6 +15336,21 @@ const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
       '2': '.synctv.client.ListMyRoomsRequest',
       '3': '.synctv.client.ListMyRoomsResponse'
     },
+    {
+      '1': 'FavoriteRoom',
+      '2': '.synctv.client.FavoriteRoomRequest',
+      '3': '.synctv.client.FavoriteRoomResponse'
+    },
+    {
+      '1': 'UnfavoriteRoom',
+      '2': '.synctv.client.UnfavoriteRoomRequest',
+      '3': '.synctv.client.UnfavoriteRoomResponse'
+    },
+    {
+      '1': 'ListFavoriteRooms',
+      '2': '.synctv.client.ListFavoriteRoomsRequest',
+      '3': '.synctv.client.ListFavoriteRoomsResponse'
+    },
   ],
 };
 
@@ -15381,6 +15508,12 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ListMyRoomsRequest': ListMyRoomsRequest$json,
   '.synctv.client.ListMyRoomsResponse': ListMyRoomsResponse$json,
   '.synctv.client.MyRoom': MyRoom$json,
+  '.synctv.client.FavoriteRoomRequest': FavoriteRoomRequest$json,
+  '.synctv.client.FavoriteRoomResponse': FavoriteRoomResponse$json,
+  '.synctv.client.UnfavoriteRoomRequest': UnfavoriteRoomRequest$json,
+  '.synctv.client.UnfavoriteRoomResponse': UnfavoriteRoomResponse$json,
+  '.synctv.client.ListFavoriteRoomsRequest': ListFavoriteRoomsRequest$json,
+  '.synctv.client.ListFavoriteRoomsResponse': ListFavoriteRoomsResponse$json,
 };
 
 /// Descriptor for `UserService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
@@ -15442,7 +15575,13 @@ final $typed_data.Uint8List userServiceDescriptor = $convert.base64Decode(
     'dGFydFJvb21QYXNzd29yZExvZ2luUmVzcG9uc2USaQoXRmluaXNoUm9vbVBhc3N3b3JkTG9naW'
     '4SLS5zeW5jdHYuY2xpZW50LkZpbmlzaFJvb21QYXNzd29yZExvZ2luUmVxdWVzdBofLnN5bmN0'
     'di5jbGllbnQuSm9pblJvb21SZXNwb25zZRJUCgtMaXN0TXlSb29tcxIhLnN5bmN0di5jbGllbn'
-    'QuTGlzdE15Um9vbXNSZXF1ZXN0GiIuc3luY3R2LmNsaWVudC5MaXN0TXlSb29tc1Jlc3BvbnNl');
+    'QuTGlzdE15Um9vbXNSZXF1ZXN0GiIuc3luY3R2LmNsaWVudC5MaXN0TXlSb29tc1Jlc3BvbnNl'
+    'ElcKDEZhdm9yaXRlUm9vbRIiLnN5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVxdWVzdBojLn'
+    'N5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVzcG9uc2USXQoOVW5mYXZvcml0ZVJvb20SJC5z'
+    'eW5jdHYuY2xpZW50LlVuZmF2b3JpdGVSb29tUmVxdWVzdBolLnN5bmN0di5jbGllbnQuVW5mYX'
+    'Zvcml0ZVJvb21SZXNwb25zZRJmChFMaXN0RmF2b3JpdGVSb29tcxInLnN5bmN0di5jbGllbnQu'
+    'TGlzdEZhdm9yaXRlUm9vbXNSZXF1ZXN0Giguc3luY3R2LmNsaWVudC5MaXN0RmF2b3JpdGVSb2'
+    '9tc1Jlc3BvbnNl');
 
 const $core.Map<$core.String, $core.dynamic> RoomServiceBase$json = {
   '1': 'RoomService',

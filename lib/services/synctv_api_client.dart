@@ -1209,6 +1209,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       guestCanAdd: true,
       category: room.hasCategory() ? mapRoomCategory(room.category) : null,
       labels: room.labels.map(mapRoomLabel).toList(growable: false),
+      isFavorite: room.favorited,
     );
   }
 
