@@ -15,6 +15,9 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+import 'package:protobuf/well_known_types/google/protobuf/field_mask.pbjson.dart'
+    as $2;
+
 import 'client.pbjson.dart' as $1;
 import 'common.pbjson.dart' as $0;
 
@@ -939,7 +942,9 @@ const RtmpSettings$json = {
       '3': 1,
       '4': 1,
       '5': 9,
-      '10': 'customPublishHost'
+      '9': 0,
+      '10': 'customPublishHost',
+      '17': true
     },
     {
       '1': 'ts_disguised_as_png',
@@ -949,32 +954,58 @@ const RtmpSettings$json = {
       '10': 'tsDisguisedAsPng'
     },
   ],
+  '8': [
+    {'1': '_custom_publish_host'},
+  ],
 };
 
 /// Descriptor for `RtmpSettings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List rtmpSettingsDescriptor = $convert.base64Decode(
-    'CgxSdG1wU2V0dGluZ3MSLgoTY3VzdG9tX3B1Ymxpc2hfaG9zdBgBIAEoCVIRY3VzdG9tUHVibG'
-    'lzaEhvc3QSLQoTdHNfZGlzZ3Vpc2VkX2FzX3BuZxgCIAEoCFIQdHNEaXNndWlzZWRBc1BuZw==');
+    'CgxSdG1wU2V0dGluZ3MSMwoTY3VzdG9tX3B1Ymxpc2hfaG9zdBgBIAEoCUgAUhFjdXN0b21QdW'
+    'JsaXNoSG9zdIgBARItChN0c19kaXNndWlzZWRfYXNfcG5nGAIgASgIUhB0c0Rpc2d1aXNlZEFz'
+    'UG5nQhYKFF9jdXN0b21fcHVibGlzaF9ob3N0');
 
 @$core.Deprecated('Use emailSettingsDescriptor instead')
 const EmailSettings$json = {
   '1': 'EmailSettings',
   '2': [
     {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
-    {'1': 'smtp_host', '3': 2, '4': 1, '5': 9, '10': 'smtpHost'},
-    {'1': 'smtp_port', '3': 3, '4': 1, '5': 13, '10': 'smtpPort'},
-    {'1': 'smtp_username', '3': 4, '4': 1, '5': 9, '10': 'smtpUsername'},
     {
-      '1': 'smtp_password',
-      '3': 5,
+      '1': 'smtp_host',
+      '3': 2,
       '4': 1,
       '5': 9,
       '9': 0,
-      '10': 'smtpPassword',
+      '10': 'smtpHost',
       '17': true
     },
+    {'1': 'smtp_port', '3': 3, '4': 1, '5': 13, '10': 'smtpPort'},
+    {
+      '1': 'smtp_credentials',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.SmtpCredentials',
+      '10': 'smtpCredentials'
+    },
+    {
+      '1': 'smtp_proxy',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.SmtpProxy',
+      '10': 'smtpProxy'
+    },
     {'1': 'use_tls', '3': 6, '4': 1, '5': 8, '10': 'useTls'},
-    {'1': 'from_email', '3': 7, '4': 1, '5': 9, '10': 'fromEmail'},
+    {
+      '1': 'from_email',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'fromEmail',
+      '17': true
+    },
     {'1': 'from_name', '3': 8, '4': 1, '5': 9, '10': 'fromName'},
     {
       '1': 'whitelist_enabled',
@@ -992,19 +1023,67 @@ const EmailSettings$json = {
     },
   ],
   '8': [
-    {'1': '_smtp_password'},
+    {'1': '_smtp_host'},
+    {'1': '_from_email'},
   ],
 };
 
 /// Descriptor for `EmailSettings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List emailSettingsDescriptor = $convert.base64Decode(
-    'Cg1FbWFpbFNldHRpbmdzEhgKB2VuYWJsZWQYASABKAhSB2VuYWJsZWQSGwoJc210cF9ob3N0GA'
-    'IgASgJUghzbXRwSG9zdBIbCglzbXRwX3BvcnQYAyABKA1SCHNtdHBQb3J0EiMKDXNtdHBfdXNl'
-    'cm5hbWUYBCABKAlSDHNtdHBVc2VybmFtZRIoCg1zbXRwX3Bhc3N3b3JkGAUgASgJSABSDHNtdH'
-    'BQYXNzd29yZIgBARIXCgd1c2VfdGxzGAYgASgIUgZ1c2VUbHMSHQoKZnJvbV9lbWFpbBgHIAEo'
-    'CVIJZnJvbUVtYWlsEhsKCWZyb21fbmFtZRgIIAEoCVIIZnJvbU5hbWUSKwoRd2hpdGVsaXN0X2'
-    'VuYWJsZWQYCSABKAhSEHdoaXRlbGlzdEVuYWJsZWQSKwoRd2hpdGVsaXN0X2RvbWFpbnMYCiAD'
-    'KAlSEHdoaXRlbGlzdERvbWFpbnNCEAoOX3NtdHBfcGFzc3dvcmQ=');
+    'Cg1FbWFpbFNldHRpbmdzEhgKB2VuYWJsZWQYASABKAhSB2VuYWJsZWQSIAoJc210cF9ob3N0GA'
+    'IgASgJSABSCHNtdHBIb3N0iAEBEhsKCXNtdHBfcG9ydBgDIAEoDVIIc210cFBvcnQSSAoQc210'
+    'cF9jcmVkZW50aWFscxgEIAEoCzIdLnN5bmN0di5hZG1pbi5TbXRwQ3JlZGVudGlhbHNSD3NtdH'
+    'BDcmVkZW50aWFscxI2CgpzbXRwX3Byb3h5GAUgASgLMhcuc3luY3R2LmFkbWluLlNtdHBQcm94'
+    'eVIJc210cFByb3h5EhcKB3VzZV90bHMYBiABKAhSBnVzZVRscxIiCgpmcm9tX2VtYWlsGAcgAS'
+    'gJSAFSCWZyb21FbWFpbIgBARIbCglmcm9tX25hbWUYCCABKAlSCGZyb21OYW1lEisKEXdoaXRl'
+    'bGlzdF9lbmFibGVkGAkgASgIUhB3aGl0ZWxpc3RFbmFibGVkEisKEXdoaXRlbGlzdF9kb21haW'
+    '5zGAogAygJUhB3aGl0ZWxpc3REb21haW5zQgwKCl9zbXRwX2hvc3RCDQoLX2Zyb21fZW1haWw=');
+
+@$core.Deprecated('Use smtpCredentialsDescriptor instead')
+const SmtpCredentials$json = {
+  '1': 'SmtpCredentials',
+  '2': [
+    {'1': 'username', '3': 1, '4': 1, '5': 9, '10': 'username'},
+    {
+      '1': 'password',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'password',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_password'},
+  ],
+};
+
+/// Descriptor for `SmtpCredentials`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List smtpCredentialsDescriptor = $convert.base64Decode(
+    'Cg9TbXRwQ3JlZGVudGlhbHMSGgoIdXNlcm5hbWUYASABKAlSCHVzZXJuYW1lEh8KCHBhc3N3b3'
+    'JkGAIgASgJSABSCHBhc3N3b3JkiAEBQgsKCV9wYXNzd29yZA==');
+
+@$core.Deprecated('Use smtpProxyDescriptor instead')
+const SmtpProxy$json = {
+  '1': 'SmtpProxy',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '10': 'url'},
+    {
+      '1': 'credentials',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.SmtpCredentials',
+      '10': 'credentials'
+    },
+  ],
+};
+
+/// Descriptor for `SmtpProxy`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List smtpProxyDescriptor = $convert.base64Decode(
+    'CglTbXRwUHJveHkSEAoDdXJsGAEgASgJUgN1cmwSPwoLY3JlZGVudGlhbHMYAiABKAsyHS5zeW'
+    '5jdHYuYWRtaW4uU210cENyZWRlbnRpYWxzUgtjcmVkZW50aWFscw==');
 
 @$core.Deprecated('Use webRtcSettingsDescriptor instead')
 const WebRtcSettings$json = {
@@ -1077,6 +1156,37 @@ final $typed_data.Uint8List corsSettingsDescriptor = $convert.base64Decode(
 @$core.Deprecated('Use updateSettingsRequestDescriptor instead')
 const UpdateSettingsRequest$json = {
   '1': 'UpdateSettingsRequest',
+  '2': [
+    {
+      '1': 'settings',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.RuntimeSettingsPatch',
+      '8': {},
+      '10': 'settings'
+    },
+    {
+      '1': 'update_mask',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.FieldMask',
+      '8': {},
+      '10': 'updateMask'
+    },
+  ],
+};
+
+/// Descriptor for `UpdateSettingsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Decode(
+    'ChVVcGRhdGVTZXR0aW5nc1JlcXVlc3QSRgoIc2V0dGluZ3MYASABKAsyIi5zeW5jdHYuYWRtaW'
+    '4uUnVudGltZVNldHRpbmdzUGF0Y2hCBrpIA8gBAVIIc2V0dGluZ3MSQwoLdXBkYXRlX21hc2sY'
+    'AiABKAsyGi5nb29nbGUucHJvdG9idWYuRmllbGRNYXNrQga6SAPIAQFSCnVwZGF0ZU1hc2s=');
+
+@$core.Deprecated('Use runtimeSettingsPatchDescriptor instead')
+const RuntimeSettingsPatch$json = {
+  '1': 'RuntimeSettingsPatch',
   '2': [
     {
       '1': 'room_defaults',
@@ -1169,21 +1279,21 @@ const UpdateSettingsRequest$json = {
   ],
 };
 
-/// Descriptor for `UpdateSettingsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Decode(
-    'ChVVcGRhdGVTZXR0aW5nc1JlcXVlc3QSTAoNcm9vbV9kZWZhdWx0cxgBIAEoCzInLnN5bmN0di'
-    '5hZG1pbi5Sb29tRGVmYXVsdHNTZXR0aW5nc1BhdGNoUgxyb29tRGVmYXVsdHMSRwoLcGVybWlz'
-    'c2lvbnMYAiABKAsyJS5zeW5jdHYuYWRtaW4uUGVybWlzc2lvblNldHRpbmdzUGF0Y2hSC3Blcm'
-    '1pc3Npb25zEkwKDXJvb21fY3JlYXRpb24YAyABKAsyJy5zeW5jdHYuYWRtaW4uUm9vbUNyZWF0'
-    'aW9uU2V0dGluZ3NQYXRjaFIMcm9vbUNyZWF0aW9uEjMKBHVzZXIYBCABKAsyHy5zeW5jdHYuYW'
-    'RtaW4uVXNlclNldHRpbmdzUGF0Y2hSBHVzZXISOQoGb2F1dGgyGAUgASgLMiEuc3luY3R2LmFk'
-    'bWluLk9BdXRoMlNldHRpbmdzUGF0Y2hSBm9hdXRoMhI2CgVwcm94eRgGIAEoCzIgLnN5bmN0di'
-    '5hZG1pbi5Qcm94eVNldHRpbmdzUGF0Y2hSBXByb3h5EjMKBHJ0bXAYByABKAsyHy5zeW5jdHYu'
-    'YWRtaW4uUnRtcFNldHRpbmdzUGF0Y2hSBHJ0bXASNgoFZW1haWwYCCABKAsyIC5zeW5jdHYuYW'
-    'RtaW4uRW1haWxTZXR0aW5nc1BhdGNoUgVlbWFpbBI5CgZ3ZWJydGMYCSABKAsyIS5zeW5jdHYu'
-    'YWRtaW4uV2ViUnRjU2V0dGluZ3NQYXRjaFIGd2VicnRjEjMKBGNoYXQYCiABKAsyHy5zeW5jdH'
-    'YuYWRtaW4uQ2hhdFNldHRpbmdzUGF0Y2hSBGNoYXQSMwoEY29ycxgLIAEoCzIfLnN5bmN0di5h'
-    'ZG1pbi5Db3JzU2V0dGluZ3NQYXRjaFIEY29ycw==');
+/// Descriptor for `RuntimeSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List runtimeSettingsPatchDescriptor = $convert.base64Decode(
+    'ChRSdW50aW1lU2V0dGluZ3NQYXRjaBJMCg1yb29tX2RlZmF1bHRzGAEgASgLMicuc3luY3R2Lm'
+    'FkbWluLlJvb21EZWZhdWx0c1NldHRpbmdzUGF0Y2hSDHJvb21EZWZhdWx0cxJHCgtwZXJtaXNz'
+    'aW9ucxgCIAEoCzIlLnN5bmN0di5hZG1pbi5QZXJtaXNzaW9uU2V0dGluZ3NQYXRjaFILcGVybW'
+    'lzc2lvbnMSTAoNcm9vbV9jcmVhdGlvbhgDIAEoCzInLnN5bmN0di5hZG1pbi5Sb29tQ3JlYXRp'
+    'b25TZXR0aW5nc1BhdGNoUgxyb29tQ3JlYXRpb24SMwoEdXNlchgEIAEoCzIfLnN5bmN0di5hZG'
+    '1pbi5Vc2VyU2V0dGluZ3NQYXRjaFIEdXNlchI5CgZvYXV0aDIYBSABKAsyIS5zeW5jdHYuYWRt'
+    'aW4uT0F1dGgyU2V0dGluZ3NQYXRjaFIGb2F1dGgyEjYKBXByb3h5GAYgASgLMiAuc3luY3R2Lm'
+    'FkbWluLlByb3h5U2V0dGluZ3NQYXRjaFIFcHJveHkSMwoEcnRtcBgHIAEoCzIfLnN5bmN0di5h'
+    'ZG1pbi5SdG1wU2V0dGluZ3NQYXRjaFIEcnRtcBI2CgVlbWFpbBgIIAEoCzIgLnN5bmN0di5hZG'
+    '1pbi5FbWFpbFNldHRpbmdzUGF0Y2hSBWVtYWlsEjkKBndlYnJ0YxgJIAEoCzIhLnN5bmN0di5h'
+    'ZG1pbi5XZWJSdGNTZXR0aW5nc1BhdGNoUgZ3ZWJydGMSMwoEY2hhdBgKIAEoCzIfLnN5bmN0di'
+    '5hZG1pbi5DaGF0U2V0dGluZ3NQYXRjaFIEY2hhdBIzCgRjb3JzGAsgASgLMh8uc3luY3R2LmFk'
+    'bWluLkNvcnNTZXR0aW5nc1BhdGNoUgRjb3Jz');
 
 @$core.Deprecated('Use roomDefaultsSettingsPatchDescriptor instead')
 const RoomDefaultsSettingsPatch$json = {
@@ -1423,9 +1533,9 @@ final $typed_data.Uint8List userSettingsPatchDescriptor = $convert.base64Decode(
     'YXV0aG5fc2lnbnVwQh4KHF93ZWJhdXRobl9zaWdudXBfbmVlZF9yZXZpZXdCDwoNX2VuYWJsZV'
     '9ndWVzdA==');
 
-@$core.Deprecated('Use oAuth2ProviderListDescriptor instead')
-const OAuth2ProviderList$json = {
-  '1': 'OAuth2ProviderList',
+@$core.Deprecated('Use oAuth2SettingsPatchDescriptor instead')
+const OAuth2SettingsPatch$json = {
+  '1': 'OAuth2SettingsPatch',
   '2': [
     {
       '1': 'providers',
@@ -1438,30 +1548,10 @@ const OAuth2ProviderList$json = {
   ],
 };
 
-/// Descriptor for `OAuth2ProviderList`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List oAuth2ProviderListDescriptor = $convert.base64Decode(
-    'ChJPQXV0aDJQcm92aWRlckxpc3QSQgoJcHJvdmlkZXJzGAEgAygLMiQuc3luY3R2LmFkbWluLk'
-    '9BdXRoMlByb3ZpZGVyU2V0dGluZ3NSCXByb3ZpZGVycw==');
-
-@$core.Deprecated('Use oAuth2SettingsPatchDescriptor instead')
-const OAuth2SettingsPatch$json = {
-  '1': 'OAuth2SettingsPatch',
-  '2': [
-    {
-      '1': 'providers',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.OAuth2ProviderList',
-      '10': 'providers'
-    },
-  ],
-};
-
 /// Descriptor for `OAuth2SettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2SettingsPatchDescriptor = $convert.base64Decode(
-    'ChNPQXV0aDJTZXR0aW5nc1BhdGNoEj4KCXByb3ZpZGVycxgBIAEoCzIgLnN5bmN0di5hZG1pbi'
-    '5PQXV0aDJQcm92aWRlckxpc3RSCXByb3ZpZGVycw==');
+    'ChNPQXV0aDJTZXR0aW5nc1BhdGNoEkIKCXByb3ZpZGVycxgBIAMoCzIkLnN5bmN0di5hZG1pbi'
+    '5PQXV0aDJQcm92aWRlclNldHRpbmdzUglwcm92aWRlcnM=');
 
 @$core.Deprecated('Use proxySettingsPatchDescriptor instead')
 const ProxySettingsPatch$json = {
@@ -1534,18 +1624,6 @@ final $typed_data.Uint8List rtmpSettingsPatchDescriptor = $convert.base64Decode(
     'dWlzZWRBc1BuZ4gBAUIWChRfY3VzdG9tX3B1Ymxpc2hfaG9zdEIWChRfdHNfZGlzZ3Vpc2VkX2'
     'FzX3BuZw==');
 
-@$core.Deprecated('Use stringListDescriptor instead')
-const StringList$json = {
-  '1': 'StringList',
-  '2': [
-    {'1': 'values', '3': 1, '4': 3, '5': 9, '10': 'values'},
-  ],
-};
-
-/// Descriptor for `StringList`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List stringListDescriptor =
-    $convert.base64Decode('CgpTdHJpbmdMaXN0EhYKBnZhbHVlcxgBIAMoCVIGdmFsdWVz');
-
 @$core.Deprecated('Use emailSettingsPatchDescriptor instead')
 const EmailSettingsPatch$json = {
   '1': 'EmailSettingsPatch',
@@ -1578,29 +1656,27 @@ const EmailSettingsPatch$json = {
       '17': true
     },
     {
-      '1': 'smtp_username',
+      '1': 'smtp_credentials',
       '3': 4,
       '4': 1,
-      '5': 9,
-      '9': 3,
-      '10': 'smtpUsername',
-      '17': true
+      '5': 11,
+      '6': '.synctv.admin.SmtpCredentials',
+      '10': 'smtpCredentials'
     },
     {
-      '1': 'smtp_password',
+      '1': 'smtp_proxy',
       '3': 5,
       '4': 1,
-      '5': 9,
-      '9': 4,
-      '10': 'smtpPassword',
-      '17': true
+      '5': 11,
+      '6': '.synctv.admin.SmtpProxy',
+      '10': 'smtpProxy'
     },
     {
       '1': 'use_tls',
       '3': 6,
       '4': 1,
       '5': 8,
-      '9': 5,
+      '9': 3,
       '10': 'useTls',
       '17': true
     },
@@ -1609,7 +1685,7 @@ const EmailSettingsPatch$json = {
       '3': 7,
       '4': 1,
       '5': 9,
-      '9': 6,
+      '9': 4,
       '10': 'fromEmail',
       '17': true
     },
@@ -1618,7 +1694,7 @@ const EmailSettingsPatch$json = {
       '3': 8,
       '4': 1,
       '5': 9,
-      '9': 7,
+      '9': 5,
       '10': 'fromName',
       '17': true
     },
@@ -1627,16 +1703,15 @@ const EmailSettingsPatch$json = {
       '3': 9,
       '4': 1,
       '5': 8,
-      '9': 8,
+      '9': 6,
       '10': 'whitelistEnabled',
       '17': true
     },
     {
       '1': 'whitelist_domains',
       '3': 10,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.StringList',
+      '4': 3,
+      '5': 9,
       '10': 'whitelistDomains'
     },
   ],
@@ -1644,8 +1719,6 @@ const EmailSettingsPatch$json = {
     {'1': '_enabled'},
     {'1': '_smtp_host'},
     {'1': '_smtp_port'},
-    {'1': '_smtp_username'},
-    {'1': '_smtp_password'},
     {'1': '_use_tls'},
     {'1': '_from_email'},
     {'1': '_from_name'},
@@ -1657,35 +1730,14 @@ const EmailSettingsPatch$json = {
 final $typed_data.Uint8List emailSettingsPatchDescriptor = $convert.base64Decode(
     'ChJFbWFpbFNldHRpbmdzUGF0Y2gSHQoHZW5hYmxlZBgBIAEoCEgAUgdlbmFibGVkiAEBEiAKCX'
     'NtdHBfaG9zdBgCIAEoCUgBUghzbXRwSG9zdIgBARIgCglzbXRwX3BvcnQYAyABKA1IAlIIc210'
-    'cFBvcnSIAQESKAoNc210cF91c2VybmFtZRgEIAEoCUgDUgxzbXRwVXNlcm5hbWWIAQESKAoNc2'
-    '10cF9wYXNzd29yZBgFIAEoCUgEUgxzbXRwUGFzc3dvcmSIAQESHAoHdXNlX3RscxgGIAEoCEgF'
-    'UgZ1c2VUbHOIAQESIgoKZnJvbV9lbWFpbBgHIAEoCUgGUglmcm9tRW1haWyIAQESIAoJZnJvbV'
-    '9uYW1lGAggASgJSAdSCGZyb21OYW1liAEBEjAKEXdoaXRlbGlzdF9lbmFibGVkGAkgASgISAhS'
-    'EHdoaXRlbGlzdEVuYWJsZWSIAQESRQoRd2hpdGVsaXN0X2RvbWFpbnMYCiABKAsyGC5zeW5jdH'
-    'YuYWRtaW4uU3RyaW5nTGlzdFIQd2hpdGVsaXN0RG9tYWluc0IKCghfZW5hYmxlZEIMCgpfc210'
-    'cF9ob3N0QgwKCl9zbXRwX3BvcnRCEAoOX3NtdHBfdXNlcm5hbWVCEAoOX3NtdHBfcGFzc3dvcm'
-    'RCCgoIX3VzZV90bHNCDQoLX2Zyb21fZW1haWxCDAoKX2Zyb21fbmFtZUIUChJfd2hpdGVsaXN0'
-    'X2VuYWJsZWQ=');
-
-@$core.Deprecated('Use iceServerListDescriptor instead')
-const IceServerList$json = {
-  '1': 'IceServerList',
-  '2': [
-    {
-      '1': 'values',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.synctv.client.IceServer',
-      '10': 'values'
-    },
-  ],
-};
-
-/// Descriptor for `IceServerList`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List iceServerListDescriptor = $convert.base64Decode(
-    'Cg1JY2VTZXJ2ZXJMaXN0EjAKBnZhbHVlcxgBIAMoCzIYLnN5bmN0di5jbGllbnQuSWNlU2Vydm'
-    'VyUgZ2YWx1ZXM=');
+    'cFBvcnSIAQESSAoQc210cF9jcmVkZW50aWFscxgEIAEoCzIdLnN5bmN0di5hZG1pbi5TbXRwQ3'
+    'JlZGVudGlhbHNSD3NtdHBDcmVkZW50aWFscxI2CgpzbXRwX3Byb3h5GAUgASgLMhcuc3luY3R2'
+    'LmFkbWluLlNtdHBQcm94eVIJc210cFByb3h5EhwKB3VzZV90bHMYBiABKAhIA1IGdXNlVGxziA'
+    'EBEiIKCmZyb21fZW1haWwYByABKAlIBFIJZnJvbUVtYWlsiAEBEiAKCWZyb21fbmFtZRgIIAEo'
+    'CUgFUghmcm9tTmFtZYgBARIwChF3aGl0ZWxpc3RfZW5hYmxlZBgJIAEoCEgGUhB3aGl0ZWxpc3'
+    'RFbmFibGVkiAEBEisKEXdoaXRlbGlzdF9kb21haW5zGAogAygJUhB3aGl0ZWxpc3REb21haW5z'
+    'QgoKCF9lbmFibGVkQgwKCl9zbXRwX2hvc3RCDAoKX3NtdHBfcG9ydEIKCghfdXNlX3Rsc0INCg'
+    'tfZnJvbV9lbWFpbEIMCgpfZnJvbV9uYW1lQhQKEl93aGl0ZWxpc3RfZW5hYmxlZA==');
 
 @$core.Deprecated('Use webRtcSettingsPatchDescriptor instead')
 const WebRtcSettingsPatch$json = {
@@ -1694,9 +1746,9 @@ const WebRtcSettingsPatch$json = {
     {
       '1': 'external_ice_servers',
       '3': 1,
-      '4': 1,
+      '4': 3,
       '5': 11,
-      '6': '.synctv.admin.IceServerList',
+      '6': '.synctv.client.IceServer',
       '10': 'externalIceServers'
     },
   ],
@@ -1704,8 +1756,8 @@ const WebRtcSettingsPatch$json = {
 
 /// Descriptor for `WebRtcSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List webRtcSettingsPatchDescriptor = $convert.base64Decode(
-    'ChNXZWJSdGNTZXR0aW5nc1BhdGNoEk0KFGV4dGVybmFsX2ljZV9zZXJ2ZXJzGAEgASgLMhsuc3'
-    'luY3R2LmFkbWluLkljZVNlcnZlckxpc3RSEmV4dGVybmFsSWNlU2VydmVycw==');
+    'ChNXZWJSdGNTZXR0aW5nc1BhdGNoEkoKFGV4dGVybmFsX2ljZV9zZXJ2ZXJzGAEgAygLMhguc3'
+    'luY3R2LmNsaWVudC5JY2VTZXJ2ZXJSEmV4dGVybmFsSWNlU2VydmVycw==');
 
 @$core.Deprecated('Use chatSettingsPatchDescriptor instead')
 const ChatSettingsPatch$json = {
@@ -1759,21 +1811,14 @@ final $typed_data.Uint8List chatSettingsPatchDescriptor = $convert.base64Decode(
 const CorsSettingsPatch$json = {
   '1': 'CorsSettingsPatch',
   '2': [
-    {
-      '1': 'allowed_origins',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.StringList',
-      '10': 'allowedOrigins'
-    },
+    {'1': 'allowed_origins', '3': 1, '4': 3, '5': 9, '10': 'allowedOrigins'},
   ],
 };
 
 /// Descriptor for `CorsSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List corsSettingsPatchDescriptor = $convert.base64Decode(
-    'ChFDb3JzU2V0dGluZ3NQYXRjaBJBCg9hbGxvd2VkX29yaWdpbnMYASABKAsyGC5zeW5jdHYuYW'
-    'RtaW4uU3RyaW5nTGlzdFIOYWxsb3dlZE9yaWdpbnM=');
+    'ChFDb3JzU2V0dGluZ3NQYXRjaBInCg9hbGxvd2VkX29yaWdpbnMYASADKAlSDmFsbG93ZWRPcm'
+    'lnaW5z');
 
 @$core.Deprecated('Use userRegistrationReviewDescriptor instead')
 const UserRegistrationReview$json = {
@@ -5044,25 +5089,26 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ProxySettings': ProxySettings$json,
   '.synctv.admin.RtmpSettings': RtmpSettings$json,
   '.synctv.admin.EmailSettings': EmailSettings$json,
+  '.synctv.admin.SmtpCredentials': SmtpCredentials$json,
+  '.synctv.admin.SmtpProxy': SmtpProxy$json,
   '.synctv.admin.WebRtcSettings': WebRtcSettings$json,
   '.synctv.client.IceServer': $1.IceServer$json,
   '.synctv.admin.ChatSettings': ChatSettings$json,
   '.synctv.admin.CorsSettings': CorsSettings$json,
   '.synctv.admin.UpdateSettingsRequest': UpdateSettingsRequest$json,
+  '.synctv.admin.RuntimeSettingsPatch': RuntimeSettingsPatch$json,
   '.synctv.admin.RoomDefaultsSettingsPatch': RoomDefaultsSettingsPatch$json,
   '.synctv.admin.PermissionSettingsPatch': PermissionSettingsPatch$json,
   '.synctv.admin.RoomCreationSettingsPatch': RoomCreationSettingsPatch$json,
   '.synctv.admin.UserSettingsPatch': UserSettingsPatch$json,
   '.synctv.admin.OAuth2SettingsPatch': OAuth2SettingsPatch$json,
-  '.synctv.admin.OAuth2ProviderList': OAuth2ProviderList$json,
   '.synctv.admin.ProxySettingsPatch': ProxySettingsPatch$json,
   '.synctv.admin.RtmpSettingsPatch': RtmpSettingsPatch$json,
   '.synctv.admin.EmailSettingsPatch': EmailSettingsPatch$json,
-  '.synctv.admin.StringList': StringList$json,
   '.synctv.admin.WebRtcSettingsPatch': WebRtcSettingsPatch$json,
-  '.synctv.admin.IceServerList': IceServerList$json,
   '.synctv.admin.ChatSettingsPatch': ChatSettingsPatch$json,
   '.synctv.admin.CorsSettingsPatch': CorsSettingsPatch$json,
+  '.google.protobuf.FieldMask': $2.FieldMask$json,
   '.synctv.admin.SendTestEmailRequest': SendTestEmailRequest$json,
   '.synctv.admin.SendTestEmailResponse': SendTestEmailResponse$json,
   '.synctv.admin.CreateUserRequest': CreateUserRequest$json,

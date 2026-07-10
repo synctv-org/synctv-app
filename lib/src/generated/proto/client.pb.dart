@@ -38251,58 +38251,6 @@ class WebRtcEvent extends $pb.GeneratedMessage {
   WebRTCLeave ensureLeave() => $_ensure(4);
 }
 
-/// ICE Servers Configuration
-/// Server sends this to client upon request or connection
-/// Contains ICE server URLs for NAT traversal
-class IceServersConfig extends $pb.GeneratedMessage {
-  factory IceServersConfig({
-    $core.Iterable<IceServer>? servers,
-  }) {
-    final result = create();
-    if (servers != null) result.servers.addAll(servers);
-    return result;
-  }
-
-  IceServersConfig._();
-
-  factory IceServersConfig.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory IceServersConfig.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'IceServersConfig',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..pPM<IceServer>(1, _omitFieldNames ? '' : 'servers',
-        subBuilder: IceServer.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  IceServersConfig clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  IceServersConfig copyWith(void Function(IceServersConfig) updates) =>
-      super.copyWith((message) => updates(message as IceServersConfig))
-          as IceServersConfig;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static IceServersConfig create() => IceServersConfig._();
-  @$core.override
-  IceServersConfig createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static IceServersConfig getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<IceServersConfig>(create);
-  static IceServersConfig? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $pb.PbList<IceServer> get servers => $_getList(0);
-}
-
 class IceServer extends $pb.GeneratedMessage {
   factory IceServer({
     $core.Iterable<$core.String>? urls,

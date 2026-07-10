@@ -1,5 +1,7 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/protobuf.dart' as pb;
+import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart'
+    as field_mask;
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/admin_models.dart';
 import 'package:synctv_app/models/proto_mapping.dart';
@@ -1269,7 +1271,7 @@ class SyncTvAdminDomainService {
     String key,
     dynamic value,
   ) {
-    final patch = admin.UpdateSettingsRequest();
+    final settings = admin.RuntimeSettingsPatch();
 
     T patchSection<T extends pb.GeneratedMessage>(
       T message,
@@ -1279,104 +1281,80 @@ class SyncTvAdminDomainService {
         data,
         supportNamesWithUnderscores: false,
         permissiveEnums: true,
-        ignoreUnknownFields: true,
       );
       return message;
     }
 
+    T optionalPatchSection<T extends pb.GeneratedMessage>(T message) {
+      return value == null ? message : patchSection(message, {key: value});
+    }
+
     switch (sectionName) {
       case 'roomDefaults':
-        patch.roomDefaults = patchSection(admin.RoomDefaultsSettingsPatch(), {
-          key: value,
-        });
+        settings.roomDefaults = optionalPatchSection(
+          admin.RoomDefaultsSettingsPatch(),
+        );
         break;
       case 'permissions':
-        patch.permissions = patchSection(admin.PermissionSettingsPatch(), {
-          key: value,
-        });
+        settings.permissions = optionalPatchSection(
+          admin.PermissionSettingsPatch(),
+        );
         break;
       case 'roomCreation':
-        patch.roomCreation = patchSection(admin.RoomCreationSettingsPatch(), {
-          key: value,
-        });
+        settings.roomCreation = optionalPatchSection(
+          admin.RoomCreationSettingsPatch(),
+        );
         break;
       case 'user':
-        patch.user = patchSection(admin.UserSettingsPatch(), {key: value});
+        settings.user = optionalPatchSection(admin.UserSettingsPatch());
         break;
       case 'oauth2':
         if (key != 'providers') {
           throw ArgumentError.value(key, 'key', 'unsupported oauth2 setting');
         }
-        final providers = admin.OAuth2ProviderList();
-        providers.mergeFromProto3Json(
-          {'providers': value},
-          supportNamesWithUnderscores: false,
-          permissiveEnums: true,
-          ignoreUnknownFields: true,
-        );
-        patch.oauth2 = admin.OAuth2SettingsPatch(providers: providers);
+        settings.oauth2 = optionalPatchSection(admin.OAuth2SettingsPatch());
         break;
       case 'proxy':
-        patch.proxy = patchSection(admin.ProxySettingsPatch(), {key: value});
+        settings.proxy = optionalPatchSection(admin.ProxySettingsPatch());
         break;
       case 'rtmp':
-        patch.rtmp = patchSection(admin.RtmpSettingsPatch(), {key: value});
+        settings.rtmp = optionalPatchSection(admin.RtmpSettingsPatch());
         break;
       case 'email':
-        if (key == 'whitelistDomains') {
-          patch.email = admin.EmailSettingsPatch(
-            whitelistDomains: admin.StringList(values: _stringListValue(value)),
-          );
-        } else {
-          patch.email = patchSection(admin.EmailSettingsPatch(), {key: value});
-        }
+        settings.email = optionalPatchSection(admin.EmailSettingsPatch());
         break;
       case 'webrtc':
         if (key != 'externalIceServers') {
           throw ArgumentError.value(key, 'key', 'unsupported webrtc setting');
         }
-        final servers = admin.IceServerList();
-        servers.mergeFromProto3Json(
-          {'values': value},
-          supportNamesWithUnderscores: false,
-          permissiveEnums: true,
-          ignoreUnknownFields: true,
-        );
-        patch.webrtc = admin.WebRtcSettingsPatch(externalIceServers: servers);
+        settings.webrtc = optionalPatchSection(admin.WebRtcSettingsPatch());
         break;
       case 'chat':
-        patch.chat = patchSection(admin.ChatSettingsPatch(), {key: value});
+        settings.chat = optionalPatchSection(admin.ChatSettingsPatch());
         break;
       case 'cors':
         if (key != 'allowedOrigins') {
           throw ArgumentError.value(key, 'key', 'unsupported cors setting');
         }
-        patch.cors = admin.CorsSettingsPatch(
-          allowedOrigins: admin.StringList(values: _stringListValue(value)),
-        );
+        settings.cors = optionalPatchSection(admin.CorsSettingsPatch());
         break;
       default:
         throw ArgumentError.value(sectionName, 'sectionName');
     }
 
-    return patch;
+    return admin.UpdateSettingsRequest(
+      settings: settings,
+      updateMask: field_mask.FieldMask(
+        paths: ['${_protoFieldName(sectionName)}.${_protoFieldName(key)}'],
+      ),
+    );
   }
 
-  List<String> _stringListValue(dynamic value) {
-    if (value is Iterable) {
-      return value
-          .map((item) => item.toString())
-          .where((item) => item.isNotEmpty)
-          .toList();
-    }
-    if (value is String) {
-      return value
-          .split(RegExp(r'[\n,]'))
-          .map((item) => item.trim())
-          .where((item) => item.isNotEmpty)
-          .toList();
-    }
-    return const [];
+  String _protoFieldName(String value) {
+    return value.replaceAllMapped(
+      RegExp('[A-Z]'),
+      (match) => '_${match[0]!.toLowerCase()}',
+    );
   }
 
   RuntimeSettingsModel _settingsModelFromProto(admin.RuntimeSettings settings) {

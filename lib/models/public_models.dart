@@ -27,7 +27,7 @@ class PublicSettingsInfo {
   final bool emailWhitelistEnabled;
   final List<String> emailWhitelistDomains;
   final bool tsDisguisedAsPng;
-  final String customPublishHost;
+  final String? customPublishHost;
 
   const PublicSettingsInfo({
     required this.roomCreationEnabled,

@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:protobuf/protobuf.dart' as pb;
+import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart'
+    as field_mask;
 
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
@@ -542,6 +544,9 @@ class SyncTvApiClient {
 
   dynamic _protoFieldValue(Object? value) {
     if (value == null) return null;
+    if (value is field_mask.FieldMask) {
+      return value.toProto3Json();
+    }
     if (value is source_config.MediaSourceConfig) {
       return SourceConfigCodec.mediaSourceConfigJson(value);
     }

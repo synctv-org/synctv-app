@@ -132,7 +132,9 @@ class SyncTvPublicRoomDomainService {
         growable: false,
       ),
       tsDisguisedAsPng: settings.tsDisguisedAsPng,
-      customPublishHost: settings.customPublishHost,
+      customPublishHost: settings.hasCustomPublishHost()
+          ? settings.customPublishHost
+          : null,
     );
   }
 

@@ -234,14 +234,8 @@ Map<String, dynamic> runtimeSettingsSectionToJson(
       settings.hasProxy()
           ? protoMessageToJsonMap(settings.proxy)
           : <String, dynamic>{},
-    'rtmp' =>
-      settings.hasRtmp()
-          ? protoMessageToJsonMap(settings.rtmp)
-          : <String, dynamic>{},
-    'email' =>
-      settings.hasEmail()
-          ? protoMessageToJsonMap(settings.email)
-          : <String, dynamic>{},
+    'rtmp' => _rtmpRuntimeSettingsToJson(settings),
+    'email' => _emailRuntimeSettingsToJson(settings),
     'webrtc' =>
       settings.hasWebrtc()
           ? protoMessageToJsonMap(settings.webrtc)
@@ -256,6 +250,29 @@ Map<String, dynamic> runtimeSettingsSectionToJson(
           : <String, dynamic>{},
     _ => <String, dynamic>{},
   };
+}
+
+Map<String, dynamic> _rtmpRuntimeSettingsToJson(
+  admin.RuntimeSettings settings,
+) {
+  final json = settings.hasRtmp()
+      ? protoMessageToJsonMap(settings.rtmp)
+      : <String, dynamic>{};
+  json.putIfAbsent('customPublishHost', () => null);
+  return json;
+}
+
+Map<String, dynamic> _emailRuntimeSettingsToJson(
+  admin.RuntimeSettings settings,
+) {
+  final json = settings.hasEmail()
+      ? protoMessageToJsonMap(settings.email)
+      : <String, dynamic>{};
+  json.putIfAbsent('smtpHost', () => null);
+  json.putIfAbsent('smtpCredentials', () => null);
+  json.putIfAbsent('smtpProxy', () => null);
+  json.putIfAbsent('fromEmail', () => null);
+  return json;
 }
 
 String oauth2ProviderTypeToString(oauth2_enum.OAuth2ProviderType provider) {

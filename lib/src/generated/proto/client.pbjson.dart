@@ -13964,7 +13964,9 @@ const GetPublicSettingsResponse$json = {
       '3': 14,
       '4': 1,
       '5': 9,
-      '10': 'customPublishHost'
+      '9': 0,
+      '10': 'customPublishHost',
+      '17': true
     },
     {
       '1': 'email_whitelist_enabled',
@@ -13980,6 +13982,9 @@ const GetPublicSettingsResponse$json = {
       '5': 9,
       '10': 'emailWhitelistDomains'
     },
+  ],
+  '8': [
+    {'1': '_custom_publish_host'},
   ],
 };
 
@@ -14001,10 +14006,11 @@ final $typed_data.Uint8List getPublicSettingsResponseDescriptor = $convert.base6
     'JhdXRoblNpZ251cE5lZWRSZXZpZXcSRwohbWF4X3Bpbm5lZF9jaGF0X21lc3NhZ2VzX3Blcl9y'
     'b29tGBsgASgEUhxtYXhQaW5uZWRDaGF0TWVzc2FnZXNQZXJSb29tEh8KC21vdmllX3Byb3h5GA'
     'sgASgIUgptb3ZpZVByb3h5Eh0KCmxpdmVfcHJveHkYDCABKAhSCWxpdmVQcm94eRItChN0c19k'
-    'aXNndWlzZWRfYXNfcG5nGA0gASgIUhB0c0Rpc2d1aXNlZEFzUG5nEi4KE2N1c3RvbV9wdWJsaX'
-    'NoX2hvc3QYDiABKAlSEWN1c3RvbVB1Ymxpc2hIb3N0EjYKF2VtYWlsX3doaXRlbGlzdF9lbmFi'
-    'bGVkGA8gASgIUhVlbWFpbFdoaXRlbGlzdEVuYWJsZWQSNgoXZW1haWxfd2hpdGVsaXN0X2RvbW'
-    'FpbnMYGiADKAlSFWVtYWlsV2hpdGVsaXN0RG9tYWlucw==');
+    'aXNndWlzZWRfYXNfcG5nGA0gASgIUhB0c0Rpc2d1aXNlZEFzUG5nEjMKE2N1c3RvbV9wdWJsaX'
+    'NoX2hvc3QYDiABKAlIAFIRY3VzdG9tUHVibGlzaEhvc3SIAQESNgoXZW1haWxfd2hpdGVsaXN0'
+    'X2VuYWJsZWQYDyABKAhSFWVtYWlsV2hpdGVsaXN0RW5hYmxlZBI2ChdlbWFpbF93aGl0ZWxpc3'
+    'RfZG9tYWlucxgaIAMoCVIVZW1haWxXaGl0ZWxpc3REb21haW5zQhYKFF9jdXN0b21fcHVibGlz'
+    'aF9ob3N0');
 
 @$core.Deprecated('Use getServerInfoRequestDescriptor instead')
 const GetServerInfoRequest$json = {
@@ -14395,26 +14401,6 @@ final $typed_data.Uint8List webRtcEventDescriptor = $convert.base64Decode(
     'ljZUNhbmRpZGF0ZUgAUgxpY2VDYW5kaWRhdGUSLwoEam9pbhgEIAEoCzIZLnN5bmN0di5jbGll'
     'bnQuV2ViUlRDSm9pbkgAUgRqb2luEjIKBWxlYXZlGAUgASgLMhouc3luY3R2LmNsaWVudC5XZW'
     'JSVENMZWF2ZUgAUgVsZWF2ZUIHCgVldmVudA==');
-
-@$core.Deprecated('Use iceServersConfigDescriptor instead')
-const IceServersConfig$json = {
-  '1': 'IceServersConfig',
-  '2': [
-    {
-      '1': 'servers',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.synctv.client.IceServer',
-      '10': 'servers'
-    },
-  ],
-};
-
-/// Descriptor for `IceServersConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List iceServersConfigDescriptor = $convert.base64Decode(
-    'ChBJY2VTZXJ2ZXJzQ29uZmlnEjIKB3NlcnZlcnMYASADKAsyGC5zeW5jdHYuY2xpZW50LkljZV'
-    'NlcnZlclIHc2VydmVycw==');
 
 @$core.Deprecated('Use iceServerDescriptor instead')
 const IceServer$json = {

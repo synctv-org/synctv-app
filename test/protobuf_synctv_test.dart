@@ -5845,7 +5845,15 @@ void main() {
             'oauth2': {},
             'proxy': {},
             'rtmp': {},
-            'email': {'enabled': true, 'smtpHost': 'mail.example.test'},
+            'email': {
+              'enabled': true,
+              'smtpHost': 'mail.example.test',
+              'smtpCredentials': {'username': 'smtp-user'},
+              'smtpProxy': {
+                'url': 'socks5://proxy.example.test:1080',
+                'credentials': {'username': 'proxy-user'},
+              },
+            },
             'webrtc': {},
             'chat': {},
             'cors': {},
@@ -5863,11 +5871,19 @@ void main() {
 
       final settings = await SyncTvService.runtimeGetSettings();
       final section = settings.section('email');
+      final rtmpSection = settings.section('rtmp');
 
       expect(section, isNotNull);
       expect(section!.name, 'email');
       expect(section.settings['enabled'], isTrue);
       expect(section.settings['smtpHost'], 'mail.example.test');
+      expect(section.settings['smtpCredentials'], {'username': 'smtp-user'});
+      expect(section.settings['smtpProxy'], {
+        'url': 'socks5://proxy.example.test:1080',
+        'credentials': {'username': 'proxy-user'},
+      });
+      expect(rtmpSection, isNotNull);
+      expect(rtmpSection!.settings['customPublishHost'], isNull);
     } finally {
       await requests.cancel();
       await server.close(force: true);
@@ -5933,6 +5949,30 @@ void main() {
         'allowedOrigins',
         ['https://app.example.test'],
       );
+      await SyncTvService.runtimeUpdateSettingInSection('email', 'smtpProxy', {
+        'url': 'socks5://proxy.example.test:1080',
+        'credentials': {'username': 'proxy-user', 'password': 'proxy-secret'},
+      });
+      await SyncTvService.runtimeUpdateSettingInSection(
+        'email',
+        'smtpHost',
+        'smtp.example.test',
+      );
+      await SyncTvService.runtimeUpdateSettingInSection(
+        'email',
+        'fromEmail',
+        null,
+      );
+      await SyncTvService.runtimeUpdateSettingInSection(
+        'rtmp',
+        'customPublishHost',
+        'rtmp://live.example.test',
+      );
+      await SyncTvService.runtimeUpdateSettingInSection(
+        'rtmp',
+        'customPublishHost',
+        null,
+      );
     } finally {
       await requests.cancel();
       await server.close(force: true);
@@ -5944,23 +5984,61 @@ void main() {
     );
     expect(requestedBodies, [
       {
-        'roomCreation': {'maxRoomsPerUser': '42'},
+        'settings': {
+          'roomCreation': {'maxRoomsPerUser': '42'},
+        },
+        'updateMask': 'roomCreation.maxRoomsPerUser',
       },
       {
-        'roomCreation': {'enabled': false},
+        'settings': {
+          'roomCreation': {'enabled': false},
+        },
+        'updateMask': 'roomCreation.enabled',
       },
       {
-        'cors': {
-          'allowedOrigins': {
-            'values': ['https://app.example.test'],
+        'settings': {
+          'cors': {
+            'allowedOrigins': ['https://app.example.test'],
           },
         },
+        'updateMask': 'cors.allowedOrigins',
+      },
+      {
+        'settings': {
+          'email': {
+            'smtpProxy': {
+              'url': 'socks5://proxy.example.test:1080',
+              'credentials': {
+                'username': 'proxy-user',
+                'password': 'proxy-secret',
+              },
+            },
+          },
+        },
+        'updateMask': 'email.smtpProxy',
+      },
+      {
+        'settings': {
+          'email': {'smtpHost': 'smtp.example.test'},
+        },
+        'updateMask': 'email.smtpHost',
+      },
+      {
+        'settings': {'email': <String, dynamic>{}},
+        'updateMask': 'email.fromEmail',
+      },
+      {
+        'settings': {
+          'rtmp': {'customPublishHost': 'rtmp://live.example.test'},
+        },
+        'updateMask': 'rtmp.customPublishHost',
+      },
+      {
+        'settings': {'rtmp': <String, dynamic>{}},
+        'updateMask': 'rtmp.customPublishHost',
       },
     ]);
-    expect(
-      requestedBodies.every((body) => body.containsKey('settings')),
-      isFalse,
-    );
+    expect(requestedBodies, everyElement(contains('settings')));
   });
 
   test('room member service preserves pagination filters and version', () async {

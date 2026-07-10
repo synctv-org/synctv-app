@@ -8655,7 +8655,7 @@ class _RuntimeSettingsSectionsTabState
       final updated = await SyncTvService.runtimeUpdateSettingInSection(
         section.name,
         key,
-        nextValue,
+        identical(nextValue, _clearRuntimeSettingValue) ? null : nextValue,
       );
       if (!mounted) return;
       setState(() {
@@ -9004,6 +9004,8 @@ class _RuntimeSettingsSectionsTabState
         case _SettingEditorKind.iceServers:
         case _SettingEditorKind.stringList:
         case _SettingEditorKind.permissionList:
+        case _SettingEditorKind.smtpCredentials:
+        case _SettingEditorKind.smtpProxy:
         case _SettingEditorKind.map:
         case _SettingEditorKind.list:
           try {
@@ -9022,6 +9024,7 @@ class _RuntimeSettingsSectionsTabState
         case _SettingEditorKind.enumChoice:
         case _SettingEditorKind.number:
         case _SettingEditorKind.text:
+        case _SettingEditorKind.optionalText:
           break;
       }
     }
@@ -9033,11 +9036,14 @@ enum _SettingEditorKind {
   boolean,
   number,
   text,
+  optionalText,
   enumChoice,
   stringList,
   permissionList,
   oauth2Providers,
   iceServers,
+  smtpCredentials,
+  smtpProxy,
   map,
   list,
 }
@@ -9333,7 +9339,7 @@ _SettingDescriptor _settingDescriptor(
       title: '推流发布地址',
       description: '覆盖对外展示的 RTMP 发布主机，留空使用服务端默认地址。',
       icon: Icons.podcasts_outlined,
-      kind: _SettingEditorKind.text,
+      kind: _SettingEditorKind.optionalText,
     ),
     'rtmp.tsDisguisedAsPng': const _SettingDescriptor(
       group: 'rtmp',
@@ -9356,9 +9362,9 @@ _SettingDescriptor _settingDescriptor(
       group: 'email',
       key: 'smtpHost',
       title: 'SMTP 主机',
-      description: '邮件服务器地址。留空表示不配置发信能力。',
+      description: '启用邮件发送时必填的邮件服务器地址。',
       icon: Icons.dns_outlined,
-      kind: _SettingEditorKind.text,
+      kind: _SettingEditorKind.optionalText,
     ),
     'email.smtpPort': const _SettingDescriptor(
       group: 'email',
@@ -9368,23 +9374,23 @@ _SettingDescriptor _settingDescriptor(
       icon: Icons.numbers_rounded,
       kind: _SettingEditorKind.number,
     ),
-    'email.smtpUsername': const _SettingDescriptor(
+    'email.smtpCredentials': const _SettingDescriptor(
       group: 'email',
-      key: 'smtpUsername',
-      title: 'SMTP 用户名',
-      description: 'SMTP 登录用户名，通常是发件邮箱或服务商生成的账号。',
-      icon: Icons.person_outline_rounded,
-      kind: _SettingEditorKind.text,
-    ),
-    'email.smtpPassword': const _SettingDescriptor(
-      group: 'email',
-      key: 'smtpPassword',
-      title: 'SMTP 密码',
-      description: 'SMTP 登录密码或服务商生成的应用专用密码。',
+      key: 'smtpCredentials',
+      title: 'SMTP 认证',
+      description: '配置 SMTP 用户名和密码；无需认证的服务器可保持关闭。',
       icon: Icons.password_rounded,
-      kind: _SettingEditorKind.text,
-      secret: true,
+      kind: _SettingEditorKind.smtpCredentials,
       warning: 'SMTP 密码属于敏感凭据。保存前请确认当前环境和管理员账号可信。',
+    ),
+    'email.smtpProxy': const _SettingDescriptor(
+      group: 'email',
+      key: 'smtpProxy',
+      title: 'SMTP 代理',
+      description: '配置可选 SOCKS5 代理及代理认证。',
+      icon: Icons.route_outlined,
+      kind: _SettingEditorKind.smtpProxy,
+      warning: '邮件流量和 SMTP 目标地址会经过代理服务器，请使用可信代理。',
     ),
     'email.useTls': const _SettingDescriptor(
       group: 'email',
@@ -9399,9 +9405,9 @@ _SettingDescriptor _settingDescriptor(
       group: 'email',
       key: 'fromEmail',
       title: '发件邮箱',
-      description: '邮件 From 地址。配置 SMTP 时必须是合法邮箱地址。',
+      description: '启用邮件发送时必填的合法 From 地址。',
       icon: Icons.alternate_email_rounded,
-      kind: _SettingEditorKind.text,
+      kind: _SettingEditorKind.optionalText,
     ),
     'email.fromName': const _SettingDescriptor(
       group: 'email',
@@ -9549,6 +9555,20 @@ String _settingSummary(dynamic value, _SettingDescriptor descriptor) {
     case _SettingEditorKind.iceServers:
       final list = value is List ? value : const [];
       return list.isEmpty ? '未配置 ICE 服务器' : '${list.length} 个 ICE 服务器';
+    case _SettingEditorKind.smtpCredentials:
+      final credentials = value is Map
+          ? Map<String, dynamic>.from(value)
+          : const <String, dynamic>{};
+      final username = (credentials['username'] ?? '').toString();
+      return username.isEmpty ? '未启用认证' : '已配置用户 $username';
+    case _SettingEditorKind.smtpProxy:
+      final proxy = value is Map
+          ? Map<String, dynamic>.from(value)
+          : const <String, dynamic>{};
+      final url = (proxy['url'] ?? '').toString();
+      return url.isEmpty ? '使用直连' : url;
+    case _SettingEditorKind.optionalText:
+      return value.toString();
     case _SettingEditorKind.stringList:
     case _SettingEditorKind.list:
       final list = _valueAsStringList(value);
@@ -10027,11 +10047,21 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
   final _formKey = GlobalKey<FormState>();
   late dynamic _value;
   final Map<String, TextEditingController> _controllers = {};
+  bool _optionalConfigEnabled = false;
+  bool _nestedCredentialsEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _value = _deepCopySettingValue(widget.value);
+    _optionalConfigEnabled =
+        widget.descriptor.kind == _SettingEditorKind.optionalText
+        ? _value != null
+        : _value is Map;
+    if (widget.descriptor.kind == _SettingEditorKind.smtpProxy &&
+        _value is Map) {
+      _nestedCredentialsEnabled = (_value as Map)['credentials'] is Map;
+    }
   }
 
   @override
@@ -10104,6 +10134,8 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
           controller: _controller('text', _value?.toString() ?? ''),
           secret: widget.descriptor.secret,
         );
+      case _SettingEditorKind.optionalText:
+        return _buildOptionalTextEditor();
       case _SettingEditorKind.enumChoice:
         return _EnumSettingEditor(
           choices: widget.descriptor.choices,
@@ -10134,6 +10166,10 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
           servers: _iceServersFromValue(_value),
           onChanged: (servers) => setState(() => _value = servers),
         );
+      case _SettingEditorKind.smtpCredentials:
+        return _buildSmtpCredentialsEditor();
+      case _SettingEditorKind.smtpProxy:
+        return _buildSmtpProxyEditor();
       case _SettingEditorKind.map:
         return _StructuredValueEditor(
           value: _value is Map
@@ -10171,13 +10207,24 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
       case _SettingEditorKind.text:
         result = _controller('text').text.trim();
         break;
+      case _SettingEditorKind.optionalText:
+        result = _optionalTextUpdateValue();
+        break;
       case _SettingEditorKind.stringList:
         result = _valueAsStringList(_value);
         break;
       case _SettingEditorKind.oauth2Providers:
       case _SettingEditorKind.iceServers:
+        result = _value;
+        break;
       case _SettingEditorKind.permissionList:
         result = _permissionsToBits(_value);
+        break;
+      case _SettingEditorKind.smtpCredentials:
+        result = _smtpCredentialsUpdateValue();
+        break;
+      case _SettingEditorKind.smtpProxy:
+        result = _smtpProxyUpdateValue();
         break;
       case _SettingEditorKind.map:
       case _SettingEditorKind.list:
@@ -10189,12 +10236,194 @@ class _SettingEditorSheetState extends State<_SettingEditorSheet> {
     Navigator.pop(context, result);
   }
 
+  Widget _buildOptionalTextEditor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSwitchTile(
+          value: _optionalConfigEnabled,
+          onChanged: (value) => setState(() => _optionalConfigEnabled = value),
+          title: Text(widget.descriptor.title),
+          subtitle: Text(widget.descriptor.description),
+        ),
+        if (_optionalConfigEnabled) ...[
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: _controller('optionalText', _value?.toString() ?? ''),
+            label: '内容',
+            prefixIcon: Icons.edit_outlined,
+            autocorrect: false,
+            validator: (value) => value == null || value.trim().isEmpty
+                ? '请输入${widget.descriptor.title}'
+                : null,
+          ),
+        ],
+      ],
+    );
+  }
+
+  dynamic _optionalTextUpdateValue() {
+    if (!_optionalConfigEnabled) return _clearRuntimeSettingValue;
+    return _controller('optionalText').text.trim();
+  }
+
+  Widget _buildSmtpCredentialsEditor() {
+    final current = _value is Map
+        ? Map<String, dynamic>.from(_value as Map)
+        : const <String, dynamic>{};
+    final currentUsername = (current['username'] ?? '').toString();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSwitchTile(
+          value: _optionalConfigEnabled,
+          onChanged: (value) => setState(() => _optionalConfigEnabled = value),
+          title: const Text('启用 SMTP 认证'),
+          subtitle: const Text('服务器要求登录时配置用户名和密码'),
+        ),
+        if (_optionalConfigEnabled) ...[
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: _controller('credentialsUsername', currentUsername),
+            label: '用户名',
+            prefixIcon: Icons.person_outline_rounded,
+            validator: (value) =>
+                value == null || value.trim().isEmpty ? '请输入 SMTP 用户名' : null,
+          ),
+          const SizedBox(height: 12),
+          AppTextField(
+            controller: _controller('credentialsPassword'),
+            label: '密码',
+            hintText: currentUsername.isEmpty ? '请输入密码' : '留空保留现有密码',
+            prefixIcon: Icons.password_rounded,
+            obscureText: true,
+            autocorrect: false,
+            validator: (value) {
+              final username = _controller('credentialsUsername').text.trim();
+              final usernameChanged = username != currentUsername;
+              if ((currentUsername.isEmpty || usernameChanged) &&
+                  (value == null || value.isEmpty)) {
+                return '新认证或更换用户名时必须输入密码';
+              }
+              return null;
+            },
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSmtpProxyEditor() {
+    final current = _value is Map
+        ? Map<String, dynamic>.from(_value as Map)
+        : const <String, dynamic>{};
+    final credentials = current['credentials'] is Map
+        ? Map<String, dynamic>.from(current['credentials'] as Map)
+        : const <String, dynamic>{};
+    final currentUsername = (credentials['username'] ?? '').toString();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSwitchTile(
+          value: _optionalConfigEnabled,
+          onChanged: (value) => setState(() => _optionalConfigEnabled = value),
+          title: const Text('启用 SMTP 代理'),
+          subtitle: const Text('邮件连接通过 SOCKS5 代理建立'),
+        ),
+        if (_optionalConfigEnabled) ...[
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: _controller(
+              'proxyUrl',
+              (current['url'] ?? '').toString(),
+            ),
+            label: 'SOCKS5 代理地址',
+            hintText: 'socks5://proxy.example.com:1080',
+            prefixIcon: Icons.route_outlined,
+            keyboardType: TextInputType.url,
+            autocorrect: false,
+            validator: (value) {
+              final url = value?.trim() ?? '';
+              return url.startsWith('socks5://')
+                  ? null
+                  : '请输入 socks5:// 开头的代理地址';
+            },
+          ),
+          const SizedBox(height: 12),
+          AppSwitchTile(
+            value: _nestedCredentialsEnabled,
+            onChanged: (value) =>
+                setState(() => _nestedCredentialsEnabled = value),
+            title: const Text('代理需要认证'),
+            subtitle: const Text('配置 SOCKS5 用户名和密码'),
+          ),
+          if (_nestedCredentialsEnabled) ...[
+            const SizedBox(height: 12),
+            AppTextField(
+              controller: _controller('proxyUsername', currentUsername),
+              label: '代理用户名',
+              prefixIcon: Icons.manage_accounts_outlined,
+              validator: (value) =>
+                  value == null || value.trim().isEmpty ? '请输入代理用户名' : null,
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              controller: _controller('proxyPassword'),
+              label: '代理密码',
+              hintText: currentUsername.isEmpty ? '请输入密码' : '留空保留现有密码',
+              prefixIcon: Icons.key_outlined,
+              obscureText: true,
+              autocorrect: false,
+              validator: (value) {
+                final username = _controller('proxyUsername').text.trim();
+                final usernameChanged = username != currentUsername;
+                if ((currentUsername.isEmpty || usernameChanged) &&
+                    (value == null || value.isEmpty)) {
+                  return '新认证或更换用户名时必须输入密码';
+                }
+                return null;
+              },
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  dynamic _smtpCredentialsUpdateValue() {
+    if (!_optionalConfigEnabled) return _clearRuntimeSettingValue;
+    final password = _controller('credentialsPassword').text;
+    return {
+      'username': _controller('credentialsUsername').text.trim(),
+      if (password.isNotEmpty) 'password': password,
+    };
+  }
+
+  dynamic _smtpProxyUpdateValue() {
+    if (!_optionalConfigEnabled) return _clearRuntimeSettingValue;
+    final password = _controller('proxyPassword').text;
+    return {
+      'url': _controller('proxyUrl').text.trim(),
+      if (_nestedCredentialsEnabled)
+        'credentials': {
+          'username': _controller('proxyUsername').text.trim(),
+          if (password.isNotEmpty) 'password': password,
+        },
+    };
+  }
+
   String _stringListHint(String group, String key) {
     if (group == 'cors') return 'https://app.example.com';
     if (group == 'email') return '@example.com';
     return '输入条目';
   }
 }
+
+final class _ClearRuntimeSettingValue {
+  const _ClearRuntimeSettingValue();
+}
+
+const _clearRuntimeSettingValue = _ClearRuntimeSettingValue();
 
 dynamic _deepCopySettingValue(dynamic value) {
   if (value is Map || value is List) return jsonDecode(jsonEncode(value));

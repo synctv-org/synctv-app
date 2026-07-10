@@ -15,11 +15,13 @@ import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
+import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart'
+    as $2;
 
 import 'admin.pbenum.dart';
 import 'client.pb.dart' as $1;
 import 'common.pb.dart' as $0;
-import 'oauth2.pbenum.dart' as $2;
+import 'oauth2.pbenum.dart' as $3;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
 
@@ -1982,8 +1984,8 @@ class EmailSettings extends $pb.GeneratedMessage {
     $core.bool? enabled,
     $core.String? smtpHost,
     $core.int? smtpPort,
-    $core.String? smtpUsername,
-    $core.String? smtpPassword,
+    SmtpCredentials? smtpCredentials,
+    SmtpProxy? smtpProxy,
     $core.bool? useTls,
     $core.String? fromEmail,
     $core.String? fromName,
@@ -1994,8 +1996,8 @@ class EmailSettings extends $pb.GeneratedMessage {
     if (enabled != null) result.enabled = enabled;
     if (smtpHost != null) result.smtpHost = smtpHost;
     if (smtpPort != null) result.smtpPort = smtpPort;
-    if (smtpUsername != null) result.smtpUsername = smtpUsername;
-    if (smtpPassword != null) result.smtpPassword = smtpPassword;
+    if (smtpCredentials != null) result.smtpCredentials = smtpCredentials;
+    if (smtpProxy != null) result.smtpProxy = smtpProxy;
     if (useTls != null) result.useTls = useTls;
     if (fromEmail != null) result.fromEmail = fromEmail;
     if (fromName != null) result.fromName = fromName;
@@ -2021,8 +2023,10 @@ class EmailSettings extends $pb.GeneratedMessage {
     ..aOB(1, _omitFieldNames ? '' : 'enabled')
     ..aOS(2, _omitFieldNames ? '' : 'smtpHost')
     ..aI(3, _omitFieldNames ? '' : 'smtpPort', fieldType: $pb.PbFieldType.OU3)
-    ..aOS(4, _omitFieldNames ? '' : 'smtpUsername')
-    ..aOS(5, _omitFieldNames ? '' : 'smtpPassword')
+    ..aOM<SmtpCredentials>(4, _omitFieldNames ? '' : 'smtpCredentials',
+        subBuilder: SmtpCredentials.create)
+    ..aOM<SmtpProxy>(5, _omitFieldNames ? '' : 'smtpProxy',
+        subBuilder: SmtpProxy.create)
     ..aOB(6, _omitFieldNames ? '' : 'useTls')
     ..aOS(7, _omitFieldNames ? '' : 'fromEmail')
     ..aOS(8, _omitFieldNames ? '' : 'fromName')
@@ -2077,22 +2081,26 @@ class EmailSettings extends $pb.GeneratedMessage {
   void clearSmtpPort() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get smtpUsername => $_getSZ(3);
+  SmtpCredentials get smtpCredentials => $_getN(3);
   @$pb.TagNumber(4)
-  set smtpUsername($core.String value) => $_setString(3, value);
+  set smtpCredentials(SmtpCredentials value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSmtpUsername() => $_has(3);
+  $core.bool hasSmtpCredentials() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSmtpUsername() => $_clearField(4);
+  void clearSmtpCredentials() => $_clearField(4);
+  @$pb.TagNumber(4)
+  SmtpCredentials ensureSmtpCredentials() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  $core.String get smtpPassword => $_getSZ(4);
+  SmtpProxy get smtpProxy => $_getN(4);
   @$pb.TagNumber(5)
-  set smtpPassword($core.String value) => $_setString(4, value);
+  set smtpProxy(SmtpProxy value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasSmtpPassword() => $_has(4);
+  $core.bool hasSmtpProxy() => $_has(4);
   @$pb.TagNumber(5)
-  void clearSmtpPassword() => $_clearField(5);
+  void clearSmtpProxy() => $_clearField(5);
+  @$pb.TagNumber(5)
+  SmtpProxy ensureSmtpProxy() => $_ensure(4);
 
   @$pb.TagNumber(6)
   $core.bool get useTls => $_getBF(5);
@@ -2132,6 +2140,140 @@ class EmailSettings extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(10)
   $pb.PbList<$core.String> get whitelistDomains => $_getList(9);
+}
+
+class SmtpCredentials extends $pb.GeneratedMessage {
+  factory SmtpCredentials({
+    $core.String? username,
+    $core.String? password,
+  }) {
+    final result = create();
+    if (username != null) result.username = username;
+    if (password != null) result.password = password;
+    return result;
+  }
+
+  SmtpCredentials._();
+
+  factory SmtpCredentials.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SmtpCredentials.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SmtpCredentials',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'username')
+    ..aOS(2, _omitFieldNames ? '' : 'password')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SmtpCredentials clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SmtpCredentials copyWith(void Function(SmtpCredentials) updates) =>
+      super.copyWith((message) => updates(message as SmtpCredentials))
+          as SmtpCredentials;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SmtpCredentials create() => SmtpCredentials._();
+  @$core.override
+  SmtpCredentials createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SmtpCredentials getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SmtpCredentials>(create);
+  static SmtpCredentials? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get username => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set username($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUsername() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUsername() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get password => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set password($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPassword() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPassword() => $_clearField(2);
+}
+
+class SmtpProxy extends $pb.GeneratedMessage {
+  factory SmtpProxy({
+    $core.String? url,
+    SmtpCredentials? credentials,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    if (credentials != null) result.credentials = credentials;
+    return result;
+  }
+
+  SmtpProxy._();
+
+  factory SmtpProxy.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SmtpProxy.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SmtpProxy',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..aOM<SmtpCredentials>(2, _omitFieldNames ? '' : 'credentials',
+        subBuilder: SmtpCredentials.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SmtpProxy clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SmtpProxy copyWith(void Function(SmtpProxy) updates) =>
+      super.copyWith((message) => updates(message as SmtpProxy)) as SmtpProxy;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SmtpProxy create() => SmtpProxy._();
+  @$core.override
+  SmtpProxy createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SmtpProxy getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<SmtpProxy>(create);
+  static SmtpProxy? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  SmtpCredentials get credentials => $_getN(1);
+  @$pb.TagNumber(2)
+  set credentials(SmtpCredentials value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCredentials() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCredentials() => $_clearField(2);
+  @$pb.TagNumber(2)
+  SmtpCredentials ensureCredentials() => $_ensure(1);
 }
 
 class WebRtcSettings extends $pb.GeneratedMessage {
@@ -2319,6 +2461,79 @@ class CorsSettings extends $pb.GeneratedMessage {
 
 class UpdateSettingsRequest extends $pb.GeneratedMessage {
   factory UpdateSettingsRequest({
+    RuntimeSettingsPatch? settings,
+    $2.FieldMask? updateMask,
+  }) {
+    final result = create();
+    if (settings != null) result.settings = settings;
+    if (updateMask != null) result.updateMask = updateMask;
+    return result;
+  }
+
+  UpdateSettingsRequest._();
+
+  factory UpdateSettingsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateSettingsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateSettingsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOM<RuntimeSettingsPatch>(1, _omitFieldNames ? '' : 'settings',
+        subBuilder: RuntimeSettingsPatch.create)
+    ..aOM<$2.FieldMask>(2, _omitFieldNames ? '' : 'updateMask',
+        subBuilder: $2.FieldMask.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateSettingsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateSettingsRequest copyWith(
+          void Function(UpdateSettingsRequest) updates) =>
+      super.copyWith((message) => updates(message as UpdateSettingsRequest))
+          as UpdateSettingsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateSettingsRequest create() => UpdateSettingsRequest._();
+  @$core.override
+  UpdateSettingsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateSettingsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateSettingsRequest>(create);
+  static UpdateSettingsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  RuntimeSettingsPatch get settings => $_getN(0);
+  @$pb.TagNumber(1)
+  set settings(RuntimeSettingsPatch value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSettings() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSettings() => $_clearField(1);
+  @$pb.TagNumber(1)
+  RuntimeSettingsPatch ensureSettings() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $2.FieldMask get updateMask => $_getN(1);
+  @$pb.TagNumber(2)
+  set updateMask($2.FieldMask value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUpdateMask() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUpdateMask() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $2.FieldMask ensureUpdateMask() => $_ensure(1);
+}
+
+class RuntimeSettingsPatch extends $pb.GeneratedMessage {
+  factory RuntimeSettingsPatch({
     RoomDefaultsSettingsPatch? roomDefaults,
     PermissionSettingsPatch? permissions,
     RoomCreationSettingsPatch? roomCreation,
@@ -2346,17 +2561,17 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     return result;
   }
 
-  UpdateSettingsRequest._();
+  RuntimeSettingsPatch._();
 
-  factory UpdateSettingsRequest.fromBuffer($core.List<$core.int> data,
+  factory RuntimeSettingsPatch.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory UpdateSettingsRequest.fromJson($core.String json,
+  factory RuntimeSettingsPatch.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateSettingsRequest',
+      _omitMessageNames ? '' : 'RuntimeSettingsPatch',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..aOM<RoomDefaultsSettingsPatch>(1, _omitFieldNames ? '' : 'roomDefaults',
@@ -2384,24 +2599,23 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateSettingsRequest clone() => deepCopy();
+  RuntimeSettingsPatch clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateSettingsRequest copyWith(
-          void Function(UpdateSettingsRequest) updates) =>
-      super.copyWith((message) => updates(message as UpdateSettingsRequest))
-          as UpdateSettingsRequest;
+  RuntimeSettingsPatch copyWith(void Function(RuntimeSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as RuntimeSettingsPatch))
+          as RuntimeSettingsPatch;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static UpdateSettingsRequest create() => UpdateSettingsRequest._();
+  static RuntimeSettingsPatch create() => RuntimeSettingsPatch._();
   @$core.override
-  UpdateSettingsRequest createEmptyInstance() => create();
+  RuntimeSettingsPatch createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static UpdateSettingsRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateSettingsRequest>(create);
-  static UpdateSettingsRequest? _defaultInstance;
+  static RuntimeSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RuntimeSettingsPatch>(create);
+  static RuntimeSettingsPatch? _defaultInstance;
 
   @$pb.TagNumber(1)
   RoomDefaultsSettingsPatch get roomDefaults => $_getN(0);
@@ -2906,61 +3120,12 @@ class UserSettingsPatch extends $pb.GeneratedMessage {
   void clearEnableGuest() => $_clearField(7);
 }
 
-class OAuth2ProviderList extends $pb.GeneratedMessage {
-  factory OAuth2ProviderList({
+class OAuth2SettingsPatch extends $pb.GeneratedMessage {
+  factory OAuth2SettingsPatch({
     $core.Iterable<OAuth2ProviderSettings>? providers,
   }) {
     final result = create();
     if (providers != null) result.providers.addAll(providers);
-    return result;
-  }
-
-  OAuth2ProviderList._();
-
-  factory OAuth2ProviderList.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory OAuth2ProviderList.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'OAuth2ProviderList',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..pPM<OAuth2ProviderSettings>(1, _omitFieldNames ? '' : 'providers',
-        subBuilder: OAuth2ProviderSettings.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  OAuth2ProviderList clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  OAuth2ProviderList copyWith(void Function(OAuth2ProviderList) updates) =>
-      super.copyWith((message) => updates(message as OAuth2ProviderList))
-          as OAuth2ProviderList;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static OAuth2ProviderList create() => OAuth2ProviderList._();
-  @$core.override
-  OAuth2ProviderList createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static OAuth2ProviderList getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<OAuth2ProviderList>(create);
-  static OAuth2ProviderList? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $pb.PbList<OAuth2ProviderSettings> get providers => $_getList(0);
-}
-
-class OAuth2SettingsPatch extends $pb.GeneratedMessage {
-  factory OAuth2SettingsPatch({
-    OAuth2ProviderList? providers,
-  }) {
-    final result = create();
-    if (providers != null) result.providers = providers;
     return result;
   }
 
@@ -2977,8 +3142,8 @@ class OAuth2SettingsPatch extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'OAuth2SettingsPatch',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<OAuth2ProviderList>(1, _omitFieldNames ? '' : 'providers',
-        subBuilder: OAuth2ProviderList.create)
+    ..pPM<OAuth2ProviderSettings>(1, _omitFieldNames ? '' : 'providers',
+        subBuilder: OAuth2ProviderSettings.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3001,15 +3166,7 @@ class OAuth2SettingsPatch extends $pb.GeneratedMessage {
   static OAuth2SettingsPatch? _defaultInstance;
 
   @$pb.TagNumber(1)
-  OAuth2ProviderList get providers => $_getN(0);
-  @$pb.TagNumber(1)
-  set providers(OAuth2ProviderList value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasProviders() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearProviders() => $_clearField(1);
-  @$pb.TagNumber(1)
-  OAuth2ProviderList ensureProviders() => $_ensure(0);
+  $pb.PbList<OAuth2ProviderSettings> get providers => $_getList(0);
 }
 
 class ProxySettingsPatch extends $pb.GeneratedMessage {
@@ -3144,77 +3301,31 @@ class RtmpSettingsPatch extends $pb.GeneratedMessage {
   void clearTsDisguisedAsPng() => $_clearField(2);
 }
 
-class StringList extends $pb.GeneratedMessage {
-  factory StringList({
-    $core.Iterable<$core.String>? values,
-  }) {
-    final result = create();
-    if (values != null) result.values.addAll(values);
-    return result;
-  }
-
-  StringList._();
-
-  factory StringList.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory StringList.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'StringList',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..pPS(1, _omitFieldNames ? '' : 'values')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  StringList clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  StringList copyWith(void Function(StringList) updates) =>
-      super.copyWith((message) => updates(message as StringList)) as StringList;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static StringList create() => StringList._();
-  @$core.override
-  StringList createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static StringList getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<StringList>(create);
-  static StringList? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $pb.PbList<$core.String> get values => $_getList(0);
-}
-
 class EmailSettingsPatch extends $pb.GeneratedMessage {
   factory EmailSettingsPatch({
     $core.bool? enabled,
     $core.String? smtpHost,
     $core.int? smtpPort,
-    $core.String? smtpUsername,
-    $core.String? smtpPassword,
+    SmtpCredentials? smtpCredentials,
+    SmtpProxy? smtpProxy,
     $core.bool? useTls,
     $core.String? fromEmail,
     $core.String? fromName,
     $core.bool? whitelistEnabled,
-    StringList? whitelistDomains,
+    $core.Iterable<$core.String>? whitelistDomains,
   }) {
     final result = create();
     if (enabled != null) result.enabled = enabled;
     if (smtpHost != null) result.smtpHost = smtpHost;
     if (smtpPort != null) result.smtpPort = smtpPort;
-    if (smtpUsername != null) result.smtpUsername = smtpUsername;
-    if (smtpPassword != null) result.smtpPassword = smtpPassword;
+    if (smtpCredentials != null) result.smtpCredentials = smtpCredentials;
+    if (smtpProxy != null) result.smtpProxy = smtpProxy;
     if (useTls != null) result.useTls = useTls;
     if (fromEmail != null) result.fromEmail = fromEmail;
     if (fromName != null) result.fromName = fromName;
     if (whitelistEnabled != null) result.whitelistEnabled = whitelistEnabled;
-    if (whitelistDomains != null) result.whitelistDomains = whitelistDomains;
+    if (whitelistDomains != null)
+      result.whitelistDomains.addAll(whitelistDomains);
     return result;
   }
 
@@ -3234,14 +3345,15 @@ class EmailSettingsPatch extends $pb.GeneratedMessage {
     ..aOB(1, _omitFieldNames ? '' : 'enabled')
     ..aOS(2, _omitFieldNames ? '' : 'smtpHost')
     ..aI(3, _omitFieldNames ? '' : 'smtpPort', fieldType: $pb.PbFieldType.OU3)
-    ..aOS(4, _omitFieldNames ? '' : 'smtpUsername')
-    ..aOS(5, _omitFieldNames ? '' : 'smtpPassword')
+    ..aOM<SmtpCredentials>(4, _omitFieldNames ? '' : 'smtpCredentials',
+        subBuilder: SmtpCredentials.create)
+    ..aOM<SmtpProxy>(5, _omitFieldNames ? '' : 'smtpProxy',
+        subBuilder: SmtpProxy.create)
     ..aOB(6, _omitFieldNames ? '' : 'useTls')
     ..aOS(7, _omitFieldNames ? '' : 'fromEmail')
     ..aOS(8, _omitFieldNames ? '' : 'fromName')
     ..aOB(9, _omitFieldNames ? '' : 'whitelistEnabled')
-    ..aOM<StringList>(10, _omitFieldNames ? '' : 'whitelistDomains',
-        subBuilder: StringList.create)
+    ..pPS(10, _omitFieldNames ? '' : 'whitelistDomains')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3291,22 +3403,26 @@ class EmailSettingsPatch extends $pb.GeneratedMessage {
   void clearSmtpPort() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get smtpUsername => $_getSZ(3);
+  SmtpCredentials get smtpCredentials => $_getN(3);
   @$pb.TagNumber(4)
-  set smtpUsername($core.String value) => $_setString(3, value);
+  set smtpCredentials(SmtpCredentials value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasSmtpUsername() => $_has(3);
+  $core.bool hasSmtpCredentials() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSmtpUsername() => $_clearField(4);
+  void clearSmtpCredentials() => $_clearField(4);
+  @$pb.TagNumber(4)
+  SmtpCredentials ensureSmtpCredentials() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  $core.String get smtpPassword => $_getSZ(4);
+  SmtpProxy get smtpProxy => $_getN(4);
   @$pb.TagNumber(5)
-  set smtpPassword($core.String value) => $_setString(4, value);
+  set smtpProxy(SmtpProxy value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasSmtpPassword() => $_has(4);
+  $core.bool hasSmtpProxy() => $_has(4);
   @$pb.TagNumber(5)
-  void clearSmtpPassword() => $_clearField(5);
+  void clearSmtpProxy() => $_clearField(5);
+  @$pb.TagNumber(5)
+  SmtpProxy ensureSmtpProxy() => $_ensure(4);
 
   @$pb.TagNumber(6)
   $core.bool get useTls => $_getBF(5);
@@ -3345,73 +3461,16 @@ class EmailSettingsPatch extends $pb.GeneratedMessage {
   void clearWhitelistEnabled() => $_clearField(9);
 
   @$pb.TagNumber(10)
-  StringList get whitelistDomains => $_getN(9);
-  @$pb.TagNumber(10)
-  set whitelistDomains(StringList value) => $_setField(10, value);
-  @$pb.TagNumber(10)
-  $core.bool hasWhitelistDomains() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearWhitelistDomains() => $_clearField(10);
-  @$pb.TagNumber(10)
-  StringList ensureWhitelistDomains() => $_ensure(9);
-}
-
-class IceServerList extends $pb.GeneratedMessage {
-  factory IceServerList({
-    $core.Iterable<$1.IceServer>? values,
-  }) {
-    final result = create();
-    if (values != null) result.values.addAll(values);
-    return result;
-  }
-
-  IceServerList._();
-
-  factory IceServerList.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory IceServerList.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'IceServerList',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..pPM<$1.IceServer>(1, _omitFieldNames ? '' : 'values',
-        subBuilder: $1.IceServer.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  IceServerList clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  IceServerList copyWith(void Function(IceServerList) updates) =>
-      super.copyWith((message) => updates(message as IceServerList))
-          as IceServerList;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static IceServerList create() => IceServerList._();
-  @$core.override
-  IceServerList createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static IceServerList getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<IceServerList>(create);
-  static IceServerList? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $pb.PbList<$1.IceServer> get values => $_getList(0);
+  $pb.PbList<$core.String> get whitelistDomains => $_getList(9);
 }
 
 class WebRtcSettingsPatch extends $pb.GeneratedMessage {
   factory WebRtcSettingsPatch({
-    IceServerList? externalIceServers,
+    $core.Iterable<$1.IceServer>? externalIceServers,
   }) {
     final result = create();
     if (externalIceServers != null)
-      result.externalIceServers = externalIceServers;
+      result.externalIceServers.addAll(externalIceServers);
     return result;
   }
 
@@ -3428,8 +3487,8 @@ class WebRtcSettingsPatch extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'WebRtcSettingsPatch',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<IceServerList>(1, _omitFieldNames ? '' : 'externalIceServers',
-        subBuilder: IceServerList.create)
+    ..pPM<$1.IceServer>(1, _omitFieldNames ? '' : 'externalIceServers',
+        subBuilder: $1.IceServer.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3452,15 +3511,7 @@ class WebRtcSettingsPatch extends $pb.GeneratedMessage {
   static WebRtcSettingsPatch? _defaultInstance;
 
   @$pb.TagNumber(1)
-  IceServerList get externalIceServers => $_getN(0);
-  @$pb.TagNumber(1)
-  set externalIceServers(IceServerList value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasExternalIceServers() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearExternalIceServers() => $_clearField(1);
-  @$pb.TagNumber(1)
-  IceServerList ensureExternalIceServers() => $_ensure(0);
+  $pb.PbList<$1.IceServer> get externalIceServers => $_getList(0);
 }
 
 class ChatSettingsPatch extends $pb.GeneratedMessage {
@@ -3550,10 +3601,10 @@ class ChatSettingsPatch extends $pb.GeneratedMessage {
 
 class CorsSettingsPatch extends $pb.GeneratedMessage {
   factory CorsSettingsPatch({
-    StringList? allowedOrigins,
+    $core.Iterable<$core.String>? allowedOrigins,
   }) {
     final result = create();
-    if (allowedOrigins != null) result.allowedOrigins = allowedOrigins;
+    if (allowedOrigins != null) result.allowedOrigins.addAll(allowedOrigins);
     return result;
   }
 
@@ -3570,8 +3621,7 @@ class CorsSettingsPatch extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'CorsSettingsPatch',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aOM<StringList>(1, _omitFieldNames ? '' : 'allowedOrigins',
-        subBuilder: StringList.create)
+    ..pPS(1, _omitFieldNames ? '' : 'allowedOrigins')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3594,15 +3644,7 @@ class CorsSettingsPatch extends $pb.GeneratedMessage {
   static CorsSettingsPatch? _defaultInstance;
 
   @$pb.TagNumber(1)
-  StringList get allowedOrigins => $_getN(0);
-  @$pb.TagNumber(1)
-  set allowedOrigins(StringList value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasAllowedOrigins() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearAllowedOrigins() => $_clearField(1);
-  @$pb.TagNumber(1)
-  StringList ensureAllowedOrigins() => $_ensure(0);
+  $pb.PbList<$core.String> get allowedOrigins => $_getList(0);
 }
 
 class UserRegistrationReview extends $pb.GeneratedMessage {
@@ -3616,7 +3658,7 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     $fixnum.Int64? reviewedAt,
     $core.String? reviewedBy,
     $core.String? rejectionReason,
-    $2.OAuth2ProviderType? oauth2Provider,
+    $3.OAuth2ProviderType? oauth2Provider,
     $core.String? oauth2ProviderUserId,
     $core.String? oauth2ProviderUsername,
     $core.String? oauth2AvatarUrl,
@@ -3678,8 +3720,8 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     ..aInt64(7, _omitFieldNames ? '' : 'reviewedAt')
     ..aOS(8, _omitFieldNames ? '' : 'reviewedBy')
     ..aOS(9, _omitFieldNames ? '' : 'rejectionReason')
-    ..aE<$2.OAuth2ProviderType>(10, _omitFieldNames ? '' : 'oauth2Provider',
-        enumValues: $2.OAuth2ProviderType.values)
+    ..aE<$3.OAuth2ProviderType>(10, _omitFieldNames ? '' : 'oauth2Provider',
+        enumValues: $3.OAuth2ProviderType.values)
     ..aOS(11, _omitFieldNames ? '' : 'oauth2ProviderUserId')
     ..aOS(12, _omitFieldNames ? '' : 'oauth2ProviderUsername')
     ..aOS(13, _omitFieldNames ? '' : 'oauth2AvatarUrl')
@@ -3792,9 +3834,9 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
   void clearRejectionReason() => $_clearField(9);
 
   @$pb.TagNumber(10)
-  $2.OAuth2ProviderType get oauth2Provider => $_getN(9);
+  $3.OAuth2ProviderType get oauth2Provider => $_getN(9);
   @$pb.TagNumber(10)
-  set oauth2Provider($2.OAuth2ProviderType value) => $_setField(10, value);
+  set oauth2Provider($3.OAuth2ProviderType value) => $_setField(10, value);
   @$pb.TagNumber(10)
   $core.bool hasOauth2Provider() => $_has(9);
   @$pb.TagNumber(10)

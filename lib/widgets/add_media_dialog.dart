@@ -2085,10 +2085,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               publish.publishKey,
               copyable: true,
             ),
-            if (publicSettings?.customPublishHost.isNotEmpty == true)
+            if (publicSettings?.customPublishHost?.isNotEmpty == true)
               _buildRtmpInfoRow(
                 '发布主机',
-                publicSettings!.customPublishHost,
+                publicSettings!.customPublishHost!,
                 copyable: true,
               ),
             if (publicSettings != null)
@@ -2115,7 +2115,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     ThemeData theme,
     PublicSettingsInfo settings,
   ) {
-    final publishHost = settings.customPublishHost.trim();
+    final publishHost = settings.customPublishHost?.trim();
     return AppPanelSurface(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -2126,7 +2126,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            publishHost.isEmpty ? '使用服务端默认发布主机' : publishHost,
+            publishHost?.isNotEmpty == true ? publishHost! : '使用服务端默认发布主机',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontWeight: FontWeight.w600),
