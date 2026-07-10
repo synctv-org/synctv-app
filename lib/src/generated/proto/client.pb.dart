@@ -15,6 +15,8 @@ import 'dart:core' as $core;
 
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
+import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart'
+    as $3;
 
 import 'client.pbenum.dart';
 import 'common.pb.dart' as $0;
@@ -9006,8 +9008,8 @@ class DeleteRoomResponse extends $pb.GeneratedMessage {
   void clearSuccess() => $_clearField(1);
 }
 
-class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
-  factory UpdateRoomSettingsRequest({
+class RoomSettingsPatch extends $pb.GeneratedMessage {
+  factory RoomSettingsPatch({
     $core.bool? allowGuestJoin,
     $fixnum.Int64? maxMembers,
     $core.bool? requireApproval,
@@ -9043,17 +9045,17 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
     return result;
   }
 
-  UpdateRoomSettingsRequest._();
+  RoomSettingsPatch._();
 
-  factory UpdateRoomSettingsRequest.fromBuffer($core.List<$core.int> data,
+  factory RoomSettingsPatch.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory UpdateRoomSettingsRequest.fromJson($core.String json,
+  factory RoomSettingsPatch.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UpdateRoomSettingsRequest',
+      _omitMessageNames ? '' : 'RoomSettingsPatch',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'allowGuestJoin')
@@ -9086,24 +9088,23 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateRoomSettingsRequest clone() => deepCopy();
+  RoomSettingsPatch clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  UpdateRoomSettingsRequest copyWith(
-          void Function(UpdateRoomSettingsRequest) updates) =>
-      super.copyWith((message) => updates(message as UpdateRoomSettingsRequest))
-          as UpdateRoomSettingsRequest;
+  RoomSettingsPatch copyWith(void Function(RoomSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as RoomSettingsPatch))
+          as RoomSettingsPatch;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static UpdateRoomSettingsRequest create() => UpdateRoomSettingsRequest._();
+  static RoomSettingsPatch create() => RoomSettingsPatch._();
   @$core.override
-  UpdateRoomSettingsRequest createEmptyInstance() => create();
+  RoomSettingsPatch createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static UpdateRoomSettingsRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UpdateRoomSettingsRequest>(create);
-  static UpdateRoomSettingsRequest? _defaultInstance;
+  static RoomSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RoomSettingsPatch>(create);
+  static RoomSettingsPatch? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get allowGuestJoin => $_getBF(0);
@@ -9214,6 +9215,79 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
   $core.bool hasGuestRemovedPermissions() => $_has(11);
   @$pb.TagNumber(12)
   void clearGuestRemovedPermissions() => $_clearField(12);
+}
+
+class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
+  factory UpdateRoomSettingsRequest({
+    RoomSettingsPatch? settings,
+    $3.FieldMask? updateMask,
+  }) {
+    final result = create();
+    if (settings != null) result.settings = settings;
+    if (updateMask != null) result.updateMask = updateMask;
+    return result;
+  }
+
+  UpdateRoomSettingsRequest._();
+
+  factory UpdateRoomSettingsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateRoomSettingsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateRoomSettingsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<RoomSettingsPatch>(1, _omitFieldNames ? '' : 'settings',
+        subBuilder: RoomSettingsPatch.create)
+    ..aOM<$3.FieldMask>(2, _omitFieldNames ? '' : 'updateMask',
+        subBuilder: $3.FieldMask.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomSettingsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateRoomSettingsRequest copyWith(
+          void Function(UpdateRoomSettingsRequest) updates) =>
+      super.copyWith((message) => updates(message as UpdateRoomSettingsRequest))
+          as UpdateRoomSettingsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomSettingsRequest create() => UpdateRoomSettingsRequest._();
+  @$core.override
+  UpdateRoomSettingsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateRoomSettingsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateRoomSettingsRequest>(create);
+  static UpdateRoomSettingsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  RoomSettingsPatch get settings => $_getN(0);
+  @$pb.TagNumber(1)
+  set settings(RoomSettingsPatch value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSettings() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSettings() => $_clearField(1);
+  @$pb.TagNumber(1)
+  RoomSettingsPatch ensureSettings() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $3.FieldMask get updateMask => $_getN(1);
+  @$pb.TagNumber(2)
+  set updateMask($3.FieldMask value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUpdateMask() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUpdateMask() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $3.FieldMask ensureUpdateMask() => $_ensure(1);
 }
 
 /// Get room settings

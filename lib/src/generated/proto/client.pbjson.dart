@@ -15,6 +15,9 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
+import 'package:protobuf/well_known_types/google/protobuf/field_mask.pbjson.dart'
+    as $3;
+
 import 'common.pbjson.dart' as $0;
 import 'passkey.pbjson.dart' as $2;
 import 'source_config.pbjson.dart' as $1;
@@ -3628,9 +3631,9 @@ final $typed_data.Uint8List deleteRoomResponseDescriptor =
     $convert.base64Decode(
         'ChJEZWxldGVSb29tUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2Vzcw==');
 
-@$core.Deprecated('Use updateRoomSettingsRequestDescriptor instead')
-const UpdateRoomSettingsRequest$json = {
-  '1': 'UpdateRoomSettingsRequest',
+@$core.Deprecated('Use roomSettingsPatchDescriptor instead')
+const RoomSettingsPatch$json = {
+  '1': 'RoomSettingsPatch',
   '2': [
     {
       '1': 'allow_guest_join',
@@ -3755,26 +3758,58 @@ const UpdateRoomSettingsRequest$json = {
   ],
 };
 
+/// Descriptor for `RoomSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List roomSettingsPatchDescriptor = $convert.base64Decode(
+    'ChFSb29tU2V0dGluZ3NQYXRjaBItChBhbGxvd19ndWVzdF9qb2luGAEgASgISABSDmFsbG93R3'
+    'Vlc3RKb2luiAEBEiQKC21heF9tZW1iZXJzGAIgASgESAFSCm1heE1lbWJlcnOIAQESLgoQcmVx'
+    'dWlyZV9hcHByb3ZhbBgDIAEoCEgCUg9yZXF1aXJlQXBwcm92YWyIAQESKwoPYWxsb3dfYXV0b1'
+    '9qb2luGAQgASgISANSDWFsbG93QXV0b0pvaW6IAQESJgoMY2hhdF9lbmFibGVkGAUgASgISARS'
+    'C2NoYXRFbmFibGVkiAEBEkEKCWF1dG9fcGxheRgGIAEoCzIkLnN5bmN0di5jbGllbnQuQXV0b1'
+    'BsYXlTZXR0aW5nc1BhdGNoUghhdXRvUGxheRI7ChdhZG1pbl9hZGRlZF9wZXJtaXNzaW9ucxgH'
+    'IAEoBEgFUhVhZG1pbkFkZGVkUGVybWlzc2lvbnOIAQESPwoZYWRtaW5fcmVtb3ZlZF9wZXJtaX'
+    'NzaW9ucxgIIAEoBEgGUhdhZG1pblJlbW92ZWRQZXJtaXNzaW9uc4gBARI9ChhtZW1iZXJfYWRk'
+    'ZWRfcGVybWlzc2lvbnMYCSABKARIB1IWbWVtYmVyQWRkZWRQZXJtaXNzaW9uc4gBARJBChptZW'
+    '1iZXJfcmVtb3ZlZF9wZXJtaXNzaW9ucxgKIAEoBEgIUhhtZW1iZXJSZW1vdmVkUGVybWlzc2lv'
+    'bnOIAQESOwoXZ3Vlc3RfYWRkZWRfcGVybWlzc2lvbnMYCyABKARICVIVZ3Vlc3RBZGRlZFBlcm'
+    '1pc3Npb25ziAEBEj8KGWd1ZXN0X3JlbW92ZWRfcGVybWlzc2lvbnMYDCABKARIClIXZ3Vlc3RS'
+    'ZW1vdmVkUGVybWlzc2lvbnOIAQFCEwoRX2FsbG93X2d1ZXN0X2pvaW5CDgoMX21heF9tZW1iZX'
+    'JzQhMKEV9yZXF1aXJlX2FwcHJvdmFsQhIKEF9hbGxvd19hdXRvX2pvaW5CDwoNX2NoYXRfZW5h'
+    'YmxlZEIaChhfYWRtaW5fYWRkZWRfcGVybWlzc2lvbnNCHAoaX2FkbWluX3JlbW92ZWRfcGVybW'
+    'lzc2lvbnNCGwoZX21lbWJlcl9hZGRlZF9wZXJtaXNzaW9uc0IdChtfbWVtYmVyX3JlbW92ZWRf'
+    'cGVybWlzc2lvbnNCGgoYX2d1ZXN0X2FkZGVkX3Blcm1pc3Npb25zQhwKGl9ndWVzdF9yZW1vdm'
+    'VkX3Blcm1pc3Npb25z');
+
+@$core.Deprecated('Use updateRoomSettingsRequestDescriptor instead')
+const UpdateRoomSettingsRequest$json = {
+  '1': 'UpdateRoomSettingsRequest',
+  '2': [
+    {
+      '1': 'settings',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.RoomSettingsPatch',
+      '8': {},
+      '10': 'settings'
+    },
+    {
+      '1': 'update_mask',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.FieldMask',
+      '8': {},
+      '10': 'updateMask'
+    },
+  ],
+};
+
 /// Descriptor for `UpdateRoomSettingsRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateRoomSettingsRequestDescriptor = $convert.base64Decode(
-    'ChlVcGRhdGVSb29tU2V0dGluZ3NSZXF1ZXN0Ei0KEGFsbG93X2d1ZXN0X2pvaW4YASABKAhIAF'
-    'IOYWxsb3dHdWVzdEpvaW6IAQESJAoLbWF4X21lbWJlcnMYAiABKARIAVIKbWF4TWVtYmVyc4gB'
-    'ARIuChByZXF1aXJlX2FwcHJvdmFsGAMgASgISAJSD3JlcXVpcmVBcHByb3ZhbIgBARIrCg9hbG'
-    'xvd19hdXRvX2pvaW4YBCABKAhIA1INYWxsb3dBdXRvSm9pbogBARImCgxjaGF0X2VuYWJsZWQY'
-    'BSABKAhIBFILY2hhdEVuYWJsZWSIAQESQQoJYXV0b19wbGF5GAYgASgLMiQuc3luY3R2LmNsaW'
-    'VudC5BdXRvUGxheVNldHRpbmdzUGF0Y2hSCGF1dG9QbGF5EjsKF2FkbWluX2FkZGVkX3Blcm1p'
-    'c3Npb25zGAcgASgESAVSFWFkbWluQWRkZWRQZXJtaXNzaW9uc4gBARI/ChlhZG1pbl9yZW1vdm'
-    'VkX3Blcm1pc3Npb25zGAggASgESAZSF2FkbWluUmVtb3ZlZFBlcm1pc3Npb25ziAEBEj0KGG1l'
-    'bWJlcl9hZGRlZF9wZXJtaXNzaW9ucxgJIAEoBEgHUhZtZW1iZXJBZGRlZFBlcm1pc3Npb25ziA'
-    'EBEkEKGm1lbWJlcl9yZW1vdmVkX3Blcm1pc3Npb25zGAogASgESAhSGG1lbWJlclJlbW92ZWRQ'
-    'ZXJtaXNzaW9uc4gBARI7ChdndWVzdF9hZGRlZF9wZXJtaXNzaW9ucxgLIAEoBEgJUhVndWVzdE'
-    'FkZGVkUGVybWlzc2lvbnOIAQESPwoZZ3Vlc3RfcmVtb3ZlZF9wZXJtaXNzaW9ucxgMIAEoBEgK'
-    'UhdndWVzdFJlbW92ZWRQZXJtaXNzaW9uc4gBAUITChFfYWxsb3dfZ3Vlc3Rfam9pbkIOCgxfbW'
-    'F4X21lbWJlcnNCEwoRX3JlcXVpcmVfYXBwcm92YWxCEgoQX2FsbG93X2F1dG9fam9pbkIPCg1f'
-    'Y2hhdF9lbmFibGVkQhoKGF9hZG1pbl9hZGRlZF9wZXJtaXNzaW9uc0IcChpfYWRtaW5fcmVtb3'
-    'ZlZF9wZXJtaXNzaW9uc0IbChlfbWVtYmVyX2FkZGVkX3Blcm1pc3Npb25zQh0KG19tZW1iZXJf'
-    'cmVtb3ZlZF9wZXJtaXNzaW9uc0IaChhfZ3Vlc3RfYWRkZWRfcGVybWlzc2lvbnNCHAoaX2d1ZX'
-    'N0X3JlbW92ZWRfcGVybWlzc2lvbnM=');
+    'ChlVcGRhdGVSb29tU2V0dGluZ3NSZXF1ZXN0EkQKCHNldHRpbmdzGAEgASgLMiAuc3luY3R2Lm'
+    'NsaWVudC5Sb29tU2V0dGluZ3NQYXRjaEIGukgDyAEBUghzZXR0aW5ncxJDCgt1cGRhdGVfbWFz'
+    'axgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5GaWVsZE1hc2tCBrpIA8gBAVIKdXBkYXRlTWFzaw'
+    '==');
 
 @$core.Deprecated('Use getRoomSettingsRequestDescriptor instead')
 const GetRoomSettingsRequest$json = {
@@ -16097,7 +16132,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.RoomSettings': RoomSettings$json,
   '.synctv.client.AutoPlaySettings': AutoPlaySettings$json,
   '.synctv.client.UpdateRoomSettingsRequest': UpdateRoomSettingsRequest$json,
+  '.synctv.client.RoomSettingsPatch': RoomSettingsPatch$json,
   '.synctv.client.AutoPlaySettingsPatch': AutoPlaySettingsPatch$json,
+  '.google.protobuf.FieldMask': $3.FieldMask$json,
   '.synctv.client.Room': Room$json,
   '.synctv.client.ResourceCover': ResourceCover$json,
   '.synctv.client.FileMetadata': FileMetadata$json,

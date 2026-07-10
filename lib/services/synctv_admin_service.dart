@@ -338,15 +338,13 @@ class SyncTvAdminDomainService {
     String roomId,
     SyncTvRoomSettings settings,
   ) async {
+    final update = roomSettingsUpdateRequestFromJson(settings.toJson());
     await _api.adminService.updateRoomSettings(
-      admin.UpdateRoomSettingsRequest()
-        ..roomId = roomId
-        ..mergeFromProto3Json(
-          roomSettingsPatchFromJson(settings.toJson()).toProto3Json(),
-          supportNamesWithUnderscores: false,
-          permissiveEnums: true,
-          ignoreUnknownFields: true,
-        ),
+      admin.UpdateRoomSettingsRequest(
+        roomId: roomId,
+        settings: update.settings,
+        updateMask: update.updateMask,
+      ),
     );
     _cache.put(
       'admin:room:$roomId:settings',

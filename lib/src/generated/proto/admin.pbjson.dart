@@ -3564,149 +3564,33 @@ const UpdateRoomSettingsRequest$json = {
   '2': [
     {'1': 'room_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'roomId'},
     {
-      '1': 'allow_guest_join',
+      '1': 'settings',
       '3': 2,
       '4': 1,
-      '5': 8,
-      '9': 0,
-      '10': 'allowGuestJoin',
-      '17': true
+      '5': 11,
+      '6': '.synctv.client.RoomSettingsPatch',
+      '8': {},
+      '10': 'settings'
     },
     {
-      '1': 'max_members',
+      '1': 'update_mask',
       '3': 3,
       '4': 1,
-      '5': 4,
-      '9': 1,
-      '10': 'maxMembers',
-      '17': true
-    },
-    {
-      '1': 'require_approval',
-      '3': 4,
-      '4': 1,
-      '5': 8,
-      '9': 2,
-      '10': 'requireApproval',
-      '17': true
-    },
-    {
-      '1': 'allow_auto_join',
-      '3': 5,
-      '4': 1,
-      '5': 8,
-      '9': 3,
-      '10': 'allowAutoJoin',
-      '17': true
-    },
-    {
-      '1': 'chat_enabled',
-      '3': 6,
-      '4': 1,
-      '5': 8,
-      '9': 4,
-      '10': 'chatEnabled',
-      '17': true
-    },
-    {
-      '1': 'auto_play',
-      '3': 7,
-      '4': 1,
       '5': 11,
-      '6': '.synctv.client.AutoPlaySettingsPatch',
-      '10': 'autoPlay'
+      '6': '.google.protobuf.FieldMask',
+      '8': {},
+      '10': 'updateMask'
     },
-    {
-      '1': 'admin_added_permissions',
-      '3': 8,
-      '4': 1,
-      '5': 4,
-      '9': 5,
-      '10': 'adminAddedPermissions',
-      '17': true
-    },
-    {
-      '1': 'admin_removed_permissions',
-      '3': 9,
-      '4': 1,
-      '5': 4,
-      '9': 6,
-      '10': 'adminRemovedPermissions',
-      '17': true
-    },
-    {
-      '1': 'member_added_permissions',
-      '3': 10,
-      '4': 1,
-      '5': 4,
-      '9': 7,
-      '10': 'memberAddedPermissions',
-      '17': true
-    },
-    {
-      '1': 'member_removed_permissions',
-      '3': 11,
-      '4': 1,
-      '5': 4,
-      '9': 8,
-      '10': 'memberRemovedPermissions',
-      '17': true
-    },
-    {
-      '1': 'guest_added_permissions',
-      '3': 12,
-      '4': 1,
-      '5': 4,
-      '9': 9,
-      '10': 'guestAddedPermissions',
-      '17': true
-    },
-    {
-      '1': 'guest_removed_permissions',
-      '3': 13,
-      '4': 1,
-      '5': 4,
-      '9': 10,
-      '10': 'guestRemovedPermissions',
-      '17': true
-    },
-  ],
-  '8': [
-    {'1': '_allow_guest_join'},
-    {'1': '_max_members'},
-    {'1': '_require_approval'},
-    {'1': '_allow_auto_join'},
-    {'1': '_chat_enabled'},
-    {'1': '_admin_added_permissions'},
-    {'1': '_admin_removed_permissions'},
-    {'1': '_member_added_permissions'},
-    {'1': '_member_removed_permissions'},
-    {'1': '_guest_added_permissions'},
-    {'1': '_guest_removed_permissions'},
   ],
 };
 
 /// Descriptor for `UpdateRoomSettingsRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateRoomSettingsRequestDescriptor = $convert.base64Decode(
     'ChlVcGRhdGVSb29tU2V0dGluZ3NSZXF1ZXN0EjcKB3Jvb21faWQYASABKAlCHrpIG3IZEAEYQD'
-    'ITXnJvb21fW0EtWmEtejAtOV0rJFIGcm9vbUlkEi0KEGFsbG93X2d1ZXN0X2pvaW4YAiABKAhI'
-    'AFIOYWxsb3dHdWVzdEpvaW6IAQESJAoLbWF4X21lbWJlcnMYAyABKARIAVIKbWF4TWVtYmVyc4'
-    'gBARIuChByZXF1aXJlX2FwcHJvdmFsGAQgASgISAJSD3JlcXVpcmVBcHByb3ZhbIgBARIrCg9h'
-    'bGxvd19hdXRvX2pvaW4YBSABKAhIA1INYWxsb3dBdXRvSm9pbogBARImCgxjaGF0X2VuYWJsZW'
-    'QYBiABKAhIBFILY2hhdEVuYWJsZWSIAQESQQoJYXV0b19wbGF5GAcgASgLMiQuc3luY3R2LmNs'
-    'aWVudC5BdXRvUGxheVNldHRpbmdzUGF0Y2hSCGF1dG9QbGF5EjsKF2FkbWluX2FkZGVkX3Blcm'
-    '1pc3Npb25zGAggASgESAVSFWFkbWluQWRkZWRQZXJtaXNzaW9uc4gBARI/ChlhZG1pbl9yZW1v'
-    'dmVkX3Blcm1pc3Npb25zGAkgASgESAZSF2FkbWluUmVtb3ZlZFBlcm1pc3Npb25ziAEBEj0KGG'
-    '1lbWJlcl9hZGRlZF9wZXJtaXNzaW9ucxgKIAEoBEgHUhZtZW1iZXJBZGRlZFBlcm1pc3Npb25z'
-    'iAEBEkEKGm1lbWJlcl9yZW1vdmVkX3Blcm1pc3Npb25zGAsgASgESAhSGG1lbWJlclJlbW92ZW'
-    'RQZXJtaXNzaW9uc4gBARI7ChdndWVzdF9hZGRlZF9wZXJtaXNzaW9ucxgMIAEoBEgJUhVndWVz'
-    'dEFkZGVkUGVybWlzc2lvbnOIAQESPwoZZ3Vlc3RfcmVtb3ZlZF9wZXJtaXNzaW9ucxgNIAEoBE'
-    'gKUhdndWVzdFJlbW92ZWRQZXJtaXNzaW9uc4gBAUITChFfYWxsb3dfZ3Vlc3Rfam9pbkIOCgxf'
-    'bWF4X21lbWJlcnNCEwoRX3JlcXVpcmVfYXBwcm92YWxCEgoQX2FsbG93X2F1dG9fam9pbkIPCg'
-    '1fY2hhdF9lbmFibGVkQhoKGF9hZG1pbl9hZGRlZF9wZXJtaXNzaW9uc0IcChpfYWRtaW5fcmVt'
-    'b3ZlZF9wZXJtaXNzaW9uc0IbChlfbWVtYmVyX2FkZGVkX3Blcm1pc3Npb25zQh0KG19tZW1iZX'
-    'JfcmVtb3ZlZF9wZXJtaXNzaW9uc0IaChhfZ3Vlc3RfYWRkZWRfcGVybWlzc2lvbnNCHAoaX2d1'
-    'ZXN0X3JlbW92ZWRfcGVybWlzc2lvbnM=');
+    'ITXnJvb21fW0EtWmEtejAtOV0rJFIGcm9vbUlkEkQKCHNldHRpbmdzGAIgASgLMiAuc3luY3R2'
+    'LmNsaWVudC5Sb29tU2V0dGluZ3NQYXRjaEIGukgDyAEBUghzZXR0aW5ncxJDCgt1cGRhdGVfbW'
+    'FzaxgDIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5GaWVsZE1hc2tCBrpIA8gBAVIKdXBkYXRlTWFz'
+    'aw==');
 
 @$core.Deprecated('Use resetRoomSettingsRequestDescriptor instead')
 const ResetRoomSettingsRequest$json = {
@@ -5163,6 +5047,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.GetRoomSettingsRequest': GetRoomSettingsRequest$json,
   '.synctv.admin.GetRoomSettingsResponse': GetRoomSettingsResponse$json,
   '.synctv.admin.UpdateRoomSettingsRequest': UpdateRoomSettingsRequest$json,
+  '.synctv.client.RoomSettingsPatch': $1.RoomSettingsPatch$json,
   '.synctv.client.AutoPlaySettingsPatch': $1.AutoPlaySettingsPatch$json,
   '.synctv.admin.ResetRoomSettingsRequest': ResetRoomSettingsRequest$json,
   '.synctv.admin.UpdateRoomPasswordRequest': UpdateRoomPasswordRequest$json,

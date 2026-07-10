@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/protobuf.dart' as pb;
+import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart'
+    as field_mask;
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/oauth2.pbenum.dart'
@@ -66,16 +68,23 @@ client.RoomSettings roomSettingsFromJson(Map<String, dynamic> json) {
   return settings;
 }
 
-client.UpdateRoomSettingsRequest roomSettingsPatchFromJson(
+client.UpdateRoomSettingsRequest roomSettingsUpdateRequestFromJson(
   Map<String, dynamic> json,
 ) {
-  final patch = client.UpdateRoomSettingsRequest();
+  final patch = client.RoomSettingsPatch();
+  final paths = <String>[];
   void setBool(String key, void Function(bool) set) {
-    if (json.containsKey(key)) set(json[key] == true);
+    if (json.containsKey(key)) {
+      set(json[key] == true);
+      paths.add(_protoFieldName(key));
+    }
   }
 
   void setInt64(String key, void Function(Int64) set) {
-    if (json.containsKey(key)) set(Int64(_intValue(json[key])));
+    if (json.containsKey(key)) {
+      set(Int64(_intValue(json[key])));
+      paths.add(_protoFieldName(key));
+    }
   }
 
   setBool('allowGuestJoin', (value) => patch.allowGuestJoin = value);
@@ -88,14 +97,17 @@ client.UpdateRoomSettingsRequest roomSettingsPatchFromJson(
     final autoPlayPatch = client.AutoPlaySettingsPatch();
     if (autoPlay.containsKey('enabled')) {
       autoPlayPatch.enabled = autoPlay['enabled'] == true;
+      paths.add('auto_play.enabled');
     }
     if (autoPlay.containsKey('mode')) {
       autoPlayPatch.mode =
           client.PlayMode.valueOf(_intValue(autoPlay['mode'])) ??
           client.PlayMode.PLAY_MODE_UNSPECIFIED;
+      paths.add('auto_play.mode');
     }
     if (autoPlay.containsKey('delay')) {
       autoPlayPatch.delay = _intValue(autoPlay['delay']);
+      paths.add('auto_play.delay');
     }
     patch.autoPlay = autoPlayPatch;
   }
@@ -123,7 +135,17 @@ client.UpdateRoomSettingsRequest roomSettingsPatchFromJson(
     'guestRemovedPermissions',
     (value) => patch.guestRemovedPermissions = value,
   );
-  return patch;
+  return client.UpdateRoomSettingsRequest(
+    settings: patch,
+    updateMask: field_mask.FieldMask(paths: paths),
+  );
+}
+
+String _protoFieldName(String value) {
+  return value.replaceAllMapped(
+    RegExp('[A-Z]'),
+    (match) => '_${match[0]!.toLowerCase()}',
+  );
 }
 
 client.ProviderTarget providerTargetFromBase64(String? encoded) {

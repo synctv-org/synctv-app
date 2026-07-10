@@ -250,7 +250,7 @@ class SyncTvRoomManagementDomainService {
   ) async {
     await _api.room.updateRoomSettings(
       roomId,
-      roomSettingsPatchFromJson(settings.toJson()),
+      roomSettingsUpdateRequestFromJson(settings.toJson()),
     );
     _cache.put(
       'room:$roomId:settings',

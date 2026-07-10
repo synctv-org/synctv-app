@@ -8802,39 +8802,13 @@ class GetRoomSettingsResponse extends $pb.GeneratedMessage {
 class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
   factory UpdateRoomSettingsRequest({
     $core.String? roomId,
-    $core.bool? allowGuestJoin,
-    $fixnum.Int64? maxMembers,
-    $core.bool? requireApproval,
-    $core.bool? allowAutoJoin,
-    $core.bool? chatEnabled,
-    $1.AutoPlaySettingsPatch? autoPlay,
-    $fixnum.Int64? adminAddedPermissions,
-    $fixnum.Int64? adminRemovedPermissions,
-    $fixnum.Int64? memberAddedPermissions,
-    $fixnum.Int64? memberRemovedPermissions,
-    $fixnum.Int64? guestAddedPermissions,
-    $fixnum.Int64? guestRemovedPermissions,
+    $1.RoomSettingsPatch? settings,
+    $2.FieldMask? updateMask,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
-    if (allowGuestJoin != null) result.allowGuestJoin = allowGuestJoin;
-    if (maxMembers != null) result.maxMembers = maxMembers;
-    if (requireApproval != null) result.requireApproval = requireApproval;
-    if (allowAutoJoin != null) result.allowAutoJoin = allowAutoJoin;
-    if (chatEnabled != null) result.chatEnabled = chatEnabled;
-    if (autoPlay != null) result.autoPlay = autoPlay;
-    if (adminAddedPermissions != null)
-      result.adminAddedPermissions = adminAddedPermissions;
-    if (adminRemovedPermissions != null)
-      result.adminRemovedPermissions = adminRemovedPermissions;
-    if (memberAddedPermissions != null)
-      result.memberAddedPermissions = memberAddedPermissions;
-    if (memberRemovedPermissions != null)
-      result.memberRemovedPermissions = memberRemovedPermissions;
-    if (guestAddedPermissions != null)
-      result.guestAddedPermissions = guestAddedPermissions;
-    if (guestRemovedPermissions != null)
-      result.guestRemovedPermissions = guestRemovedPermissions;
+    if (settings != null) result.settings = settings;
+    if (updateMask != null) result.updateMask = updateMask;
     return result;
   }
 
@@ -8852,33 +8826,10 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'roomId')
-    ..aOB(2, _omitFieldNames ? '' : 'allowGuestJoin')
-    ..a<$fixnum.Int64>(
-        3, _omitFieldNames ? '' : 'maxMembers', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOB(4, _omitFieldNames ? '' : 'requireApproval')
-    ..aOB(5, _omitFieldNames ? '' : 'allowAutoJoin')
-    ..aOB(6, _omitFieldNames ? '' : 'chatEnabled')
-    ..aOM<$1.AutoPlaySettingsPatch>(7, _omitFieldNames ? '' : 'autoPlay',
-        subBuilder: $1.AutoPlaySettingsPatch.create)
-    ..a<$fixnum.Int64>(
-        8, _omitFieldNames ? '' : 'adminAddedPermissions', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(9, _omitFieldNames ? '' : 'adminRemovedPermissions',
-        $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(10, _omitFieldNames ? '' : 'memberAddedPermissions',
-        $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(11, _omitFieldNames ? '' : 'memberRemovedPermissions',
-        $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(
-        12, _omitFieldNames ? '' : 'guestAddedPermissions', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$fixnum.Int64>(13, _omitFieldNames ? '' : 'guestRemovedPermissions',
-        $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<$1.RoomSettingsPatch>(2, _omitFieldNames ? '' : 'settings',
+        subBuilder: $1.RoomSettingsPatch.create)
+    ..aOM<$2.FieldMask>(3, _omitFieldNames ? '' : 'updateMask',
+        subBuilder: $2.FieldMask.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8911,114 +8862,26 @@ class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
   void clearRoomId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.bool get allowGuestJoin => $_getBF(1);
+  $1.RoomSettingsPatch get settings => $_getN(1);
   @$pb.TagNumber(2)
-  set allowGuestJoin($core.bool value) => $_setBool(1, value);
+  set settings($1.RoomSettingsPatch value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasAllowGuestJoin() => $_has(1);
+  $core.bool hasSettings() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAllowGuestJoin() => $_clearField(2);
+  void clearSettings() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $1.RoomSettingsPatch ensureSettings() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $fixnum.Int64 get maxMembers => $_getI64(2);
+  $2.FieldMask get updateMask => $_getN(2);
   @$pb.TagNumber(3)
-  set maxMembers($fixnum.Int64 value) => $_setInt64(2, value);
+  set updateMask($2.FieldMask value) => $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasMaxMembers() => $_has(2);
+  $core.bool hasUpdateMask() => $_has(2);
   @$pb.TagNumber(3)
-  void clearMaxMembers() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.bool get requireApproval => $_getBF(3);
-  @$pb.TagNumber(4)
-  set requireApproval($core.bool value) => $_setBool(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasRequireApproval() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearRequireApproval() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $core.bool get allowAutoJoin => $_getBF(4);
-  @$pb.TagNumber(5)
-  set allowAutoJoin($core.bool value) => $_setBool(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasAllowAutoJoin() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearAllowAutoJoin() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.bool get chatEnabled => $_getBF(5);
-  @$pb.TagNumber(6)
-  set chatEnabled($core.bool value) => $_setBool(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasChatEnabled() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearChatEnabled() => $_clearField(6);
-
-  @$pb.TagNumber(7)
-  $1.AutoPlaySettingsPatch get autoPlay => $_getN(6);
-  @$pb.TagNumber(7)
-  set autoPlay($1.AutoPlaySettingsPatch value) => $_setField(7, value);
-  @$pb.TagNumber(7)
-  $core.bool hasAutoPlay() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearAutoPlay() => $_clearField(7);
-  @$pb.TagNumber(7)
-  $1.AutoPlaySettingsPatch ensureAutoPlay() => $_ensure(6);
-
-  @$pb.TagNumber(8)
-  $fixnum.Int64 get adminAddedPermissions => $_getI64(7);
-  @$pb.TagNumber(8)
-  set adminAddedPermissions($fixnum.Int64 value) => $_setInt64(7, value);
-  @$pb.TagNumber(8)
-  $core.bool hasAdminAddedPermissions() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearAdminAddedPermissions() => $_clearField(8);
-
-  @$pb.TagNumber(9)
-  $fixnum.Int64 get adminRemovedPermissions => $_getI64(8);
-  @$pb.TagNumber(9)
-  set adminRemovedPermissions($fixnum.Int64 value) => $_setInt64(8, value);
-  @$pb.TagNumber(9)
-  $core.bool hasAdminRemovedPermissions() => $_has(8);
-  @$pb.TagNumber(9)
-  void clearAdminRemovedPermissions() => $_clearField(9);
-
-  @$pb.TagNumber(10)
-  $fixnum.Int64 get memberAddedPermissions => $_getI64(9);
-  @$pb.TagNumber(10)
-  set memberAddedPermissions($fixnum.Int64 value) => $_setInt64(9, value);
-  @$pb.TagNumber(10)
-  $core.bool hasMemberAddedPermissions() => $_has(9);
-  @$pb.TagNumber(10)
-  void clearMemberAddedPermissions() => $_clearField(10);
-
-  @$pb.TagNumber(11)
-  $fixnum.Int64 get memberRemovedPermissions => $_getI64(10);
-  @$pb.TagNumber(11)
-  set memberRemovedPermissions($fixnum.Int64 value) => $_setInt64(10, value);
-  @$pb.TagNumber(11)
-  $core.bool hasMemberRemovedPermissions() => $_has(10);
-  @$pb.TagNumber(11)
-  void clearMemberRemovedPermissions() => $_clearField(11);
-
-  @$pb.TagNumber(12)
-  $fixnum.Int64 get guestAddedPermissions => $_getI64(11);
-  @$pb.TagNumber(12)
-  set guestAddedPermissions($fixnum.Int64 value) => $_setInt64(11, value);
-  @$pb.TagNumber(12)
-  $core.bool hasGuestAddedPermissions() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearGuestAddedPermissions() => $_clearField(12);
-
-  @$pb.TagNumber(13)
-  $fixnum.Int64 get guestRemovedPermissions => $_getI64(12);
-  @$pb.TagNumber(13)
-  set guestRemovedPermissions($fixnum.Int64 value) => $_setInt64(12, value);
-  @$pb.TagNumber(13)
-  $core.bool hasGuestRemovedPermissions() => $_has(12);
-  @$pb.TagNumber(13)
-  void clearGuestRemovedPermissions() => $_clearField(13);
+  void clearUpdateMask() => $_clearField(3);
+  @$pb.TagNumber(3)
+  $2.FieldMask ensureUpdateMask() => $_ensure(2);
 }
 
 class ResetRoomSettingsRequest extends $pb.GeneratedMessage {

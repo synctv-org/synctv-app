@@ -5816,13 +5816,20 @@ void main() {
       expect(requestedUri, isNotNull);
       expect(requestedUri!.path, '/api/rooms/room_1/settings');
       final body = jsonDecode(requestBody!) as Map<String, dynamic>;
-      expect(body['allowGuestJoin'], isTrue);
-      expect(body['requireApproval'], isTrue);
-      expect(body['maxMembers'], '42');
-      expect(body['chatEnabled'], isFalse);
+      final settings = body['settings'] as Map<String, dynamic>;
+      expect(settings['allowGuestJoin'], isTrue);
+      expect(settings['requireApproval'], isTrue);
+      expect(settings['maxMembers'], '42');
+      expect(settings['chatEnabled'], isFalse);
       expect(
-        body['guestAddedPermissions'],
+        settings['guestAddedPermissions'],
         RoomGuestPermissions.viewMemberList.toString(),
+      );
+      expect(
+        body['updateMask'],
+        'allowGuestJoin,maxMembers,requireApproval,allowAutoJoin,chatEnabled,'
+        'adminAddedPermissions,adminRemovedPermissions,memberAddedPermissions,'
+        'memberRemovedPermissions,guestAddedPermissions,guestRemovedPermissions',
       );
       expect(body.containsKey('roomId'), isFalse);
     },
