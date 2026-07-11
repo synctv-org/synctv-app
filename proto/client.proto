@@ -2904,15 +2904,15 @@ message FileUploadRange {
 }
 
 message FileByteRange {
-  int64 start = 1;
-  int64 end_inclusive = 2;
+  uint64 start = 1;
+  uint64 end_inclusive = 2;
 }
 
 message FileRangeRequest {
   oneof range {
     FileByteRange exact = 1;
-    int64 from_start = 2;
-    int64 suffix_length = 3;
+    uint64 from_start = 2;
+    uint64 suffix_length = 3;
   }
 }
 
@@ -4200,6 +4200,7 @@ message RoomWithStats {
 message GetPublicSettingsRequest {}
 
 message GetPublicSettingsResponse {
+  string server_name = 28;
   bool room_creation_enabled = 2;
   int64 max_rooms_per_user = 3;
   int64 default_max_members = 4;

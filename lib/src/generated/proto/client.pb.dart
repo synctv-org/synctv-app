@@ -22568,8 +22568,11 @@ class FileByteRange extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'FileByteRange',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aInt64(1, _omitFieldNames ? '' : 'start')
-    ..aInt64(2, _omitFieldNames ? '' : 'endInclusive')
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'start', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'endInclusive', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -22648,8 +22651,12 @@ class FileRangeRequest extends $pb.GeneratedMessage {
     ..oo(0, [1, 2, 3])
     ..aOM<FileByteRange>(1, _omitFieldNames ? '' : 'exact',
         subBuilder: FileByteRange.create)
-    ..aInt64(2, _omitFieldNames ? '' : 'fromStart')
-    ..aInt64(3, _omitFieldNames ? '' : 'suffixLength')
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'fromStart', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'suffixLength', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -36972,6 +36979,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     $core.bool? enableWebauthn,
     $core.Iterable<$core.String>? emailWhitelistDomains,
     $fixnum.Int64? maxPinnedChatMessagesPerRoom,
+    $core.String? serverName,
   }) {
     final result = create();
     if (roomCreationEnabled != null)
@@ -37006,6 +37014,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
       result.emailWhitelistDomains.addAll(emailWhitelistDomains);
     if (maxPinnedChatMessagesPerRoom != null)
       result.maxPinnedChatMessagesPerRoom = maxPinnedChatMessagesPerRoom;
+    if (serverName != null) result.serverName = serverName;
     return result;
   }
 
@@ -37047,6 +37056,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
         _omitFieldNames ? '' : 'maxPinnedChatMessagesPerRoom',
         $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(28, _omitFieldNames ? '' : 'serverName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -37257,6 +37267,15 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   $core.bool hasMaxPinnedChatMessagesPerRoom() => $_has(20);
   @$pb.TagNumber(27)
   void clearMaxPinnedChatMessagesPerRoom() => $_clearField(27);
+
+  @$pb.TagNumber(28)
+  $core.String get serverName => $_getSZ(21);
+  @$pb.TagNumber(28)
+  set serverName($core.String value) => $_setString(21, value);
+  @$pb.TagNumber(28)
+  $core.bool hasServerName() => $_has(21);
+  @$pb.TagNumber(28)
+  void clearServerName() => $_clearField(28);
 }
 
 class GetServerInfoRequest extends $pb.GeneratedMessage {
