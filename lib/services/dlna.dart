@@ -324,7 +324,7 @@ class XmlText {
     </s:Envelope>''';
   }
 
-  static String seekToXml(sk) {
+  static String seekToXml(String sk) {
     return '''<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
 	<s:Body>
@@ -567,7 +567,7 @@ class DeviceManager {
     });
   }
 
-  onMessage(String message) async {
+  Future<void> onMessage(String message) async {
     final DeviceInfo? info = await _UpnpMessageParser(message).parse();
     if (info == null) {
       return;
@@ -604,7 +604,7 @@ class DLNAManager {
   StreamSubscription? _serverSubscription;
   int _searchCount = 0;
   DeviceManager? _deviceManager;
-  Future<DeviceManager> start({reusePort = false}) async {
+  Future<DeviceManager> start({bool reusePort = false}) async {
     stop();
     _deviceManager?.devices.close();
     final dm = DeviceManager();
@@ -709,7 +709,7 @@ class DLNAManager {
     _searchCount++;
   }
 
-  stop() {
+  void stop() {
     _sender.cancel();
     _clientSubscription?.cancel();
     _serverSubscription?.cancel();

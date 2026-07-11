@@ -6806,7 +6806,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     Expanded(
                       child: AppListView.separated(
                         itemCount: _sections.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 4),
+                        separatorBuilder: (_, _) => const SizedBox(height: 4),
                         itemBuilder: (context, index) {
                           final section = _sections[index];
                           return _RoomSettingsNavTile(

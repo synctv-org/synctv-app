@@ -3539,7 +3539,7 @@ class _RoomScreenState extends State<RoomScreen>
       barrierDismissible: true,
       barrierLabel: context.l10n.closeMessageActions,
       barrierColor: Colors.transparent,
-      pageBuilder: (dialogContext, _, __) {
+      pageBuilder: (dialogContext, _, _) {
         return Stack(
           children: [
             Positioned(

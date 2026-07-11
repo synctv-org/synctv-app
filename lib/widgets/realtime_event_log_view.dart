@@ -620,7 +620,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       return AppListView.separated(
                         padding: padding,
                         itemCount: groups.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           return _RealtimeEventGroupTile(
                             group: groups[index],
@@ -633,7 +633,7 @@ class _RealtimeEventLogViewState extends State<RealtimeEventLogView> {
                       padding: padding,
                       reverse: true,
                       itemCount: filteredEvents.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final event =
                             filteredEvents[filteredEvents.length - 1 - index];

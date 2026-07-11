@@ -34,7 +34,7 @@ class ChatInputArea extends StatefulWidget {
   final ValueChanged<List<ChatMentionInfo>>? onMentionsChanged;
 
   const ChatInputArea({
-    Key? key,
+    super.key,
     required this.textController,
     required this.isVoiceInputMode,
     required this.isLoading,
@@ -57,7 +57,7 @@ class ChatInputArea extends StatefulWidget {
     this.mentionCandidatesHasMore = false,
     this.mentionCandidates = const [],
     this.onMentionsChanged,
-  }) : super(key: key);
+  });
 
   @override
   State<ChatInputArea> createState() => _ChatInputAreaState();
@@ -270,7 +270,7 @@ class TextInputArea extends StatefulWidget {
   final ValueChanged<List<ChatMentionInfo>>? onMentionsChanged;
 
   const TextInputArea({
-    Key? key,
+    super.key,
     required this.textController,
     required this.hasText,
     required this.isLoading,
@@ -289,7 +289,7 @@ class TextInputArea extends StatefulWidget {
     this.mentionCandidates = const [],
     this.onMentionsChanged,
     this.animationValue = 1.0,
-  }) : super(key: key);
+  });
 
   @override
   State<TextInputArea> createState() => _TextInputAreaState();
@@ -706,7 +706,7 @@ class _MentionSuggestions extends StatelessWidget {
                   child: AppListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: users.length + (loading || hasMore ? 1 : 0),
-                    separatorBuilder: (_, __) => const SizedBox(width: 6),
+                    separatorBuilder: (_, _) => const SizedBox(width: 6),
                     itemBuilder: (context, index) {
                       if (index >= users.length) {
                         if (loading) {
@@ -796,13 +796,13 @@ class VoiceInputArea extends StatefulWidget {
   final double animationValue;
 
   const VoiceInputArea({
-    Key? key,
+    super.key,
     required this.onStartRecording,
     required this.onStopRecording,
     required this.onCancelRecording,
     required this.onSwitchToTextMode,
     this.animationValue = 1.0,
-  }) : super(key: key);
+  });
 
   @override
   State<VoiceInputArea> createState() => _VoiceInputAreaState();

@@ -209,10 +209,7 @@ class SyncTvApiClient {
     client.FileRangeRequest? range,
   }) async {
     final rangeHeader = range == null ? null : _rangeHeader(range);
-    final headers = <String, String>{
-      'accept': '*/*',
-      if (rangeHeader != null) 'range': rangeHeader,
-    };
+    final headers = <String, String>{'accept': '*/*', 'range': ?rangeHeader};
     final response = await _http.get(
       _uri(path, {'token': token}),
       headers: headers,

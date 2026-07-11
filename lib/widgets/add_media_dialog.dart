@@ -397,7 +397,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             child: AppListView.separated(
               padding: EdgeInsets.zero,
               itemCount: _sourceSpecs.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              separatorBuilder: (_, _) => const SizedBox(height: 6),
               itemBuilder: (context, index) =>
                   _buildSourceTile(theme, _sourceSpecs[index]),
             ),
@@ -1502,7 +1502,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       child: AppListView.separated(
         shrinkWrap: true,
         itemCount: videos.length,
-        separatorBuilder: (_, __) => AppDivider(
+        separatorBuilder: (_, _) => AppDivider(
           height: 1,
           color: theme.dividerColor.withValues(alpha: 0.08),
         ),

@@ -2477,7 +2477,7 @@ class AppDataToolbar extends StatelessWidget {
     final actions = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (action != null) action!,
+        ?action,
         if (onRefresh != null)
           AppIconButton(
             tooltip: refreshTooltip ?? context.l10n.refresh,

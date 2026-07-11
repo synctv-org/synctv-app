@@ -1300,7 +1300,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                     Expanded(
                       child: AppListView.separated(
                         itemCount: _sections.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 4),
+                        separatorBuilder: (_, _) => const SizedBox(height: 4),
                         itemBuilder: (context, index) {
                           final section = _sections[index];
                           final selected = _tabController.index == index;
@@ -1930,7 +1930,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       return AppListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
                         itemCount: rooms.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final room = rooms[index];
                           return Center(
@@ -2395,7 +2395,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   child: AppListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final item = items[index];
                       final selected = _selectedNotificationIds.contains(

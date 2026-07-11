@@ -90,7 +90,7 @@ class _ChatReceiptUserColumn extends StatelessWidget {
                 )
               : AppListView.separated(
                   itemCount: users.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final user = users[index];
                     final readAt = readTimes[user.id] ?? 0;

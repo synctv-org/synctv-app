@@ -380,7 +380,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
                     Expanded(
                       child: AppListView.separated(
                         itemCount: _sections.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 4),
+                        separatorBuilder: (_, _) => const SizedBox(height: 4),
                         itemBuilder: (context, index) {
                           final section = _sections[index];
                           final selected = _selectedSectionIndex == index;

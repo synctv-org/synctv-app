@@ -2232,7 +2232,7 @@ void main() {
           ),
         ];
       },
-      onSignalingMessage: (_, __) {},
+      onSignalingMessage: (_, _) {},
       onStateChange: () {},
     );
 

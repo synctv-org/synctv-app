@@ -1976,7 +1976,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           });
 
           return PopScope(
-            onPopInvokedWithResult: (_, __) {
+            onPopInvokedWithResult: (_, _) {
               subscription?.cancel();
             },
             child: AppSafeArea(

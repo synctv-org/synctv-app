@@ -872,10 +872,10 @@ class RoomDynamicMediaEntry extends RoomMediaEntry {
     required super.name,
     required super.parentId,
     required super.subPath,
-    required bool isFolder,
+    required super.isFolder,
     super.coverUrl,
     super.metadata,
-  }) : super(url: '', isFolder: isFolder);
+  }) : super(url: '');
 }
 
 class RoomPlaybackEntry extends RoomMediaEntry {
