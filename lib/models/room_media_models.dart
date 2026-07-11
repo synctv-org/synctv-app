@@ -21,10 +21,13 @@ class RoomMediaLibraryPage {
   final List<RoomMediaItem> media;
   final List<RoomDynamicMediaEntry> dynamicItems;
   final List<PlaylistBrowsePathInfo> currentPath;
-  final int total;
+  final int? total;
   final int folderCount;
   final int fileCount;
   final String version;
+  final bool usesCursor;
+  final String nextCursor;
+  final int page;
 
   const RoomMediaLibraryPage({
     required this.playlists,
@@ -35,6 +38,9 @@ class RoomMediaLibraryPage {
     required this.folderCount,
     required this.fileCount,
     required this.version,
+    required this.usesCursor,
+    required this.nextCursor,
+    required this.page,
   });
 
   List<RoomMediaEntry> get entries => [...playlists, ...media, ...dynamicItems];

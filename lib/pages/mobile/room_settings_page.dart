@@ -43,6 +43,7 @@ const Set<String> _mediaSourcesWithProviderInstances = {
   'alist',
   'emby',
   'bilibili',
+  'cloudreve',
 };
 
 class _RoomSettingsSection {
@@ -1485,6 +1486,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     'alist': 'AList',
     'emby': 'Emby',
     'rtmp': 'RTMP',
+    'cloudreve': 'Cloudreve',
   };
 
   String _providerInstanceLabel(String instanceName) =>

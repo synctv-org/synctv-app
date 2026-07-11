@@ -132,7 +132,7 @@ class SyncTvRoomMediaDomainService {
               request: client.ListPlaylistItemsRequest(
                 playlistId: playlistId,
                 target: providerTargetFromBase64(target),
-                page: page,
+                page: client.PagePagination(page: page),
                 pageSize: pageSize,
                 search: search,
                 sourceProvider: SourceConfigCodec.providerFromString(
@@ -172,6 +172,7 @@ class SyncTvRoomMediaDomainService {
   Future<RoomMediaLibraryPage> listMediaLibrary(
     String roomId, {
     int page = 1,
+    String? cursor,
     int pageSize = 50,
     String playlistId = '',
     String? target,
@@ -191,7 +192,8 @@ class SyncTvRoomMediaDomainService {
       client.ListPlaylistItemsRequest(
         playlistId: playlistId,
         target: providerTargetFromBase64(target),
-        page: page,
+        page: cursor == null ? client.PagePagination(page: page) : null,
+        cursor: cursor == null ? null : client.CursorPagination(cursor: cursor),
         pageSize: pageSize,
         search: search,
         sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
@@ -907,6 +909,24 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
+  Future<String> addCloudreveMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'cloudreve',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'path': path},
+      name: name,
+    );
+  }
+
   Future<String> addRtmpMedia(
     String roomId, {
     String playlistId = '',
@@ -1176,10 +1196,15 @@ class SyncTvRoomMediaDomainService {
           .map((item) => _api.mapDynamicItem(item, playlistId: parentId))
           .toList(),
       currentPath: response.currentPath.map(_browsePathFromProto).toList(),
-      total: response.total,
-      folderCount: response.folderCount,
-      fileCount: response.fileCount,
+      total: response.hasTotal() ? response.total.toInt() : null,
+      folderCount: response.folderCount.toInt(),
+      fileCount: response.fileCount.toInt(),
       version: response.version,
+      usesCursor:
+          response.whichPagination() ==
+          client.ListPlaylistItemsResponse_Pagination.cursor,
+      nextCursor: response.hasCursor() ? response.cursor.cursor : '',
+      page: response.hasPage() ? response.page.page : 1,
     );
   }
 

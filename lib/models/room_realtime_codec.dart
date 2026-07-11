@@ -784,7 +784,7 @@ class RoomRealtimeCodec {
         request: client.ListPlaylistItemsRequest(
           playlistId: playlistId,
           target: providerTargetFromBase64(target),
-          page: page,
+          page: client.PagePagination(page: page),
           pageSize: pageSize,
           search: search,
           sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
@@ -1513,10 +1513,15 @@ class RoomRealtimeCodec {
           )
           .toList(),
       currentPath: response.currentPath.map(_browsePathFromProto).toList(),
-      total: response.total,
-      folderCount: response.folderCount,
-      fileCount: response.fileCount,
+      total: response.hasTotal() ? response.total.toInt() : null,
+      folderCount: response.folderCount.toInt(),
+      fileCount: response.fileCount.toInt(),
       version: response.version,
+      usesCursor:
+          response.whichPagination() ==
+          client.ListPlaylistItemsResponse_Pagination.cursor,
+      nextCursor: response.hasCursor() ? response.cursor.cursor : '',
+      page: response.hasPage() ? response.page.page : 1,
     );
   }
 

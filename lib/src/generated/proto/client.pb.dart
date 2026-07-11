@@ -808,16 +808,72 @@ class EmbyTarget extends $pb.GeneratedMessage {
   void clearItemId() => $_clearField(1);
 }
 
-enum ProviderTarget_Target { alist, emby, notSet }
+class CloudreveTarget extends $pb.GeneratedMessage {
+  factory CloudreveTarget({
+    $core.String? relativePath,
+  }) {
+    final result = create();
+    if (relativePath != null) result.relativePath = relativePath;
+    return result;
+  }
+
+  CloudreveTarget._();
+
+  factory CloudreveTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CloudreveTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CloudreveTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'relativePath')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CloudreveTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CloudreveTarget copyWith(void Function(CloudreveTarget) updates) =>
+      super.copyWith((message) => updates(message as CloudreveTarget))
+          as CloudreveTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CloudreveTarget create() => CloudreveTarget._();
+  @$core.override
+  CloudreveTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CloudreveTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CloudreveTarget>(create);
+  static CloudreveTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get relativePath => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set relativePath($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRelativePath() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRelativePath() => $_clearField(1);
+}
+
+enum ProviderTarget_Target { alist, emby, cloudreve, notSet }
 
 class ProviderTarget extends $pb.GeneratedMessage {
   factory ProviderTarget({
     AlistTarget? alist,
     EmbyTarget? emby,
+    CloudreveTarget? cloudreve,
   }) {
     final result = create();
     if (alist != null) result.alist = alist;
     if (emby != null) result.emby = emby;
+    if (cloudreve != null) result.cloudreve = cloudreve;
     return result;
   }
 
@@ -834,17 +890,20 @@ class ProviderTarget extends $pb.GeneratedMessage {
       _ProviderTarget_TargetByTag = {
     1: ProviderTarget_Target.alist,
     2: ProviderTarget_Target.emby,
+    3: ProviderTarget_Target.cloudreve,
     0: ProviderTarget_Target.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ProviderTarget',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2])
+    ..oo(0, [1, 2, 3])
     ..aOM<AlistTarget>(1, _omitFieldNames ? '' : 'alist',
         subBuilder: AlistTarget.create)
     ..aOM<EmbyTarget>(2, _omitFieldNames ? '' : 'emby',
         subBuilder: EmbyTarget.create)
+    ..aOM<CloudreveTarget>(3, _omitFieldNames ? '' : 'cloudreve',
+        subBuilder: CloudreveTarget.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -868,10 +927,12 @@ class ProviderTarget extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   ProviderTarget_Target whichTarget() =>
       _ProviderTarget_TargetByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   void clearTarget() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -895,6 +956,17 @@ class ProviderTarget extends $pb.GeneratedMessage {
   void clearEmby() => $_clearField(2);
   @$pb.TagNumber(2)
   EmbyTarget ensureEmby() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  CloudreveTarget get cloudreve => $_getN(2);
+  @$pb.TagNumber(3)
+  set cloudreve(CloudreveTarget value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCloudreve() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCloudreve() => $_clearField(3);
+  @$pb.TagNumber(3)
+  CloudreveTarget ensureCloudreve() => $_ensure(2);
 }
 
 class FileMetadata extends $pb.GeneratedMessage {
@@ -13357,11 +13429,14 @@ class DeleteEntriesResponse extends $pb.GeneratedMessage {
   void clearDeletedMedia() => $_clearField(2);
 }
 
+enum ListPlaylistItemsRequest_Pagination { page, cursor, notSet }
+
 class ListPlaylistItemsRequest extends $pb.GeneratedMessage {
   factory ListPlaylistItemsRequest({
     $core.String? playlistId,
     ProviderTarget? target,
-    $core.int? page,
+    PagePagination? page,
+    CursorPagination? cursor,
     $core.int? pageSize,
     $core.String? search,
     $1.SourceProvider? sourceProvider,
@@ -13375,6 +13450,7 @@ class ListPlaylistItemsRequest extends $pb.GeneratedMessage {
     if (playlistId != null) result.playlistId = playlistId;
     if (target != null) result.target = target;
     if (page != null) result.page = page;
+    if (cursor != null) result.cursor = cursor;
     if (pageSize != null) result.pageSize = pageSize;
     if (search != null) result.search = search;
     if (sourceProvider != null) result.sourceProvider = sourceProvider;
@@ -13396,26 +13472,36 @@ class ListPlaylistItemsRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
+  static const $core.Map<$core.int, ListPlaylistItemsRequest_Pagination>
+      _ListPlaylistItemsRequest_PaginationByTag = {
+    3: ListPlaylistItemsRequest_Pagination.page,
+    4: ListPlaylistItemsRequest_Pagination.cursor,
+    0: ListPlaylistItemsRequest_Pagination.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ListPlaylistItemsRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..oo(0, [3, 4])
     ..aOS(1, _omitFieldNames ? '' : 'playlistId')
     ..aOM<ProviderTarget>(2, _omitFieldNames ? '' : 'target',
         subBuilder: ProviderTarget.create)
-    ..aI(3, _omitFieldNames ? '' : 'page')
-    ..aI(4, _omitFieldNames ? '' : 'pageSize')
-    ..aOS(5, _omitFieldNames ? '' : 'search')
-    ..aE<$1.SourceProvider>(6, _omitFieldNames ? '' : 'sourceProvider',
+    ..aOM<PagePagination>(3, _omitFieldNames ? '' : 'page',
+        subBuilder: PagePagination.create)
+    ..aOM<CursorPagination>(4, _omitFieldNames ? '' : 'cursor',
+        subBuilder: CursorPagination.create)
+    ..aI(5, _omitFieldNames ? '' : 'pageSize', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(6, _omitFieldNames ? '' : 'search')
+    ..aE<$1.SourceProvider>(7, _omitFieldNames ? '' : 'sourceProvider',
         enumValues: $1.SourceProvider.values)
-    ..aOS(7, _omitFieldNames ? '' : 'providerInstanceName')
-    ..aE<MediaListSortBy>(8, _omitFieldNames ? '' : 'sortBy',
+    ..aOS(8, _omitFieldNames ? '' : 'providerInstanceName')
+    ..aE<MediaListSortBy>(9, _omitFieldNames ? '' : 'sortBy',
         enumValues: MediaListSortBy.values)
-    ..aE<SortDirection>(9, _omitFieldNames ? '' : 'sortDirection',
+    ..aE<SortDirection>(10, _omitFieldNames ? '' : 'sortDirection',
         enumValues: SortDirection.values)
-    ..aE<ResourceAvailabilityFilter>(10, _omitFieldNames ? '' : 'availability',
+    ..aE<ResourceAvailabilityFilter>(11, _omitFieldNames ? '' : 'availability',
         enumValues: ResourceAvailabilityFilter.values)
-    ..aOB(11, _omitFieldNames ? '' : 'refresh')
+    ..aOB(12, _omitFieldNames ? '' : 'refresh')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13438,6 +13524,14 @@ class ListPlaylistItemsRequest extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ListPlaylistItemsRequest>(create);
   static ListPlaylistItemsRequest? _defaultInstance;
 
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  ListPlaylistItemsRequest_Pagination whichPagination() =>
+      _ListPlaylistItemsRequest_PaginationByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  void clearPagination() => $_clearField($_whichOneof(0));
+
   @$pb.TagNumber(1)
   $core.String get playlistId => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -13459,97 +13553,222 @@ class ListPlaylistItemsRequest extends $pb.GeneratedMessage {
   ProviderTarget ensureTarget() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $core.int get page => $_getIZ(2);
+  PagePagination get page => $_getN(2);
   @$pb.TagNumber(3)
-  set page($core.int value) => $_setSignedInt32(2, value);
+  set page(PagePagination value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasPage() => $_has(2);
   @$pb.TagNumber(3)
   void clearPage() => $_clearField(3);
+  @$pb.TagNumber(3)
+  PagePagination ensurePage() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  $core.int get pageSize => $_getIZ(3);
+  CursorPagination get cursor => $_getN(3);
   @$pb.TagNumber(4)
-  set pageSize($core.int value) => $_setSignedInt32(3, value);
+  set cursor(CursorPagination value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasPageSize() => $_has(3);
+  $core.bool hasCursor() => $_has(3);
   @$pb.TagNumber(4)
-  void clearPageSize() => $_clearField(4);
+  void clearCursor() => $_clearField(4);
+  @$pb.TagNumber(4)
+  CursorPagination ensureCursor() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  $core.String get search => $_getSZ(4);
+  $core.int get pageSize => $_getIZ(4);
   @$pb.TagNumber(5)
-  set search($core.String value) => $_setString(4, value);
+  set pageSize($core.int value) => $_setUnsignedInt32(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasSearch() => $_has(4);
+  $core.bool hasPageSize() => $_has(4);
   @$pb.TagNumber(5)
-  void clearSearch() => $_clearField(5);
+  void clearPageSize() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $1.SourceProvider get sourceProvider => $_getN(5);
+  $core.String get search => $_getSZ(5);
   @$pb.TagNumber(6)
-  set sourceProvider($1.SourceProvider value) => $_setField(6, value);
+  set search($core.String value) => $_setString(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasSourceProvider() => $_has(5);
+  $core.bool hasSearch() => $_has(5);
   @$pb.TagNumber(6)
-  void clearSourceProvider() => $_clearField(6);
+  void clearSearch() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $core.String get providerInstanceName => $_getSZ(6);
+  $1.SourceProvider get sourceProvider => $_getN(6);
   @$pb.TagNumber(7)
-  set providerInstanceName($core.String value) => $_setString(6, value);
+  set sourceProvider($1.SourceProvider value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasProviderInstanceName() => $_has(6);
+  $core.bool hasSourceProvider() => $_has(6);
   @$pb.TagNumber(7)
-  void clearProviderInstanceName() => $_clearField(7);
+  void clearSourceProvider() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  MediaListSortBy get sortBy => $_getN(7);
+  $core.String get providerInstanceName => $_getSZ(7);
   @$pb.TagNumber(8)
-  set sortBy(MediaListSortBy value) => $_setField(8, value);
+  set providerInstanceName($core.String value) => $_setString(7, value);
   @$pb.TagNumber(8)
-  $core.bool hasSortBy() => $_has(7);
+  $core.bool hasProviderInstanceName() => $_has(7);
   @$pb.TagNumber(8)
-  void clearSortBy() => $_clearField(8);
+  void clearProviderInstanceName() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  SortDirection get sortDirection => $_getN(8);
+  MediaListSortBy get sortBy => $_getN(8);
   @$pb.TagNumber(9)
-  set sortDirection(SortDirection value) => $_setField(9, value);
+  set sortBy(MediaListSortBy value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasSortDirection() => $_has(8);
+  $core.bool hasSortBy() => $_has(8);
   @$pb.TagNumber(9)
-  void clearSortDirection() => $_clearField(9);
+  void clearSortBy() => $_clearField(9);
 
   @$pb.TagNumber(10)
-  ResourceAvailabilityFilter get availability => $_getN(9);
+  SortDirection get sortDirection => $_getN(9);
   @$pb.TagNumber(10)
-  set availability(ResourceAvailabilityFilter value) => $_setField(10, value);
+  set sortDirection(SortDirection value) => $_setField(10, value);
   @$pb.TagNumber(10)
-  $core.bool hasAvailability() => $_has(9);
+  $core.bool hasSortDirection() => $_has(9);
   @$pb.TagNumber(10)
-  void clearAvailability() => $_clearField(10);
+  void clearSortDirection() => $_clearField(10);
 
   @$pb.TagNumber(11)
-  $core.bool get refresh => $_getBF(10);
+  ResourceAvailabilityFilter get availability => $_getN(10);
   @$pb.TagNumber(11)
-  set refresh($core.bool value) => $_setBool(10, value);
+  set availability(ResourceAvailabilityFilter value) => $_setField(11, value);
   @$pb.TagNumber(11)
-  $core.bool hasRefresh() => $_has(10);
+  $core.bool hasAvailability() => $_has(10);
   @$pb.TagNumber(11)
-  void clearRefresh() => $_clearField(11);
+  void clearAvailability() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.bool get refresh => $_getBF(11);
+  @$pb.TagNumber(12)
+  set refresh($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasRefresh() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearRefresh() => $_clearField(12);
 }
+
+class PagePagination extends $pb.GeneratedMessage {
+  factory PagePagination({
+    $core.int? page,
+  }) {
+    final result = create();
+    if (page != null) result.page = page;
+    return result;
+  }
+
+  PagePagination._();
+
+  factory PagePagination.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PagePagination.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PagePagination',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'page', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PagePagination clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PagePagination copyWith(void Function(PagePagination) updates) =>
+      super.copyWith((message) => updates(message as PagePagination))
+          as PagePagination;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PagePagination create() => PagePagination._();
+  @$core.override
+  PagePagination createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PagePagination getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PagePagination>(create);
+  static PagePagination? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get page => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set page($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPage() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPage() => $_clearField(1);
+}
+
+class CursorPagination extends $pb.GeneratedMessage {
+  factory CursorPagination({
+    $core.String? cursor,
+  }) {
+    final result = create();
+    if (cursor != null) result.cursor = cursor;
+    return result;
+  }
+
+  CursorPagination._();
+
+  factory CursorPagination.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CursorPagination.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CursorPagination',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'cursor')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CursorPagination clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CursorPagination copyWith(void Function(CursorPagination) updates) =>
+      super.copyWith((message) => updates(message as CursorPagination))
+          as CursorPagination;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CursorPagination create() => CursorPagination._();
+  @$core.override
+  CursorPagination createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CursorPagination getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CursorPagination>(create);
+  static CursorPagination? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get cursor => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set cursor($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCursor() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCursor() => $_clearField(1);
+}
+
+enum ListPlaylistItemsResponse_Pagination { page, cursor, notSet }
 
 class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
   factory ListPlaylistItemsResponse({
     $core.Iterable<Playlist>? playlists,
     $core.Iterable<Media>? media,
-    $core.int? total,
-    $core.int? folderCount,
-    $core.int? fileCount,
+    $fixnum.Int64? total,
+    $fixnum.Int64? folderCount,
+    $fixnum.Int64? fileCount,
     $core.Iterable<PlaylistItem>? dynamicItems,
     $core.Iterable<PlaylistBrowsePathNode>? currentPath,
     $core.String? version,
+    PagePagination? page,
+    CursorPagination? cursor,
   }) {
     final result = create();
     if (playlists != null) result.playlists.addAll(playlists);
@@ -13560,6 +13779,8 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
     if (dynamicItems != null) result.dynamicItems.addAll(dynamicItems);
     if (currentPath != null) result.currentPath.addAll(currentPath);
     if (version != null) result.version = version;
+    if (page != null) result.page = page;
+    if (cursor != null) result.cursor = cursor;
     return result;
   }
 
@@ -13572,21 +13793,37 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
+  static const $core.Map<$core.int, ListPlaylistItemsResponse_Pagination>
+      _ListPlaylistItemsResponse_PaginationByTag = {
+    9: ListPlaylistItemsResponse_Pagination.page,
+    10: ListPlaylistItemsResponse_Pagination.cursor,
+    0: ListPlaylistItemsResponse_Pagination.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ListPlaylistItemsResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..oo(0, [9, 10])
     ..pPM<Playlist>(1, _omitFieldNames ? '' : 'playlists',
         subBuilder: Playlist.create)
     ..pPM<Media>(2, _omitFieldNames ? '' : 'media', subBuilder: Media.create)
-    ..aI(3, _omitFieldNames ? '' : 'total')
-    ..aI(4, _omitFieldNames ? '' : 'folderCount')
-    ..aI(5, _omitFieldNames ? '' : 'fileCount')
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'total', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        4, _omitFieldNames ? '' : 'folderCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        5, _omitFieldNames ? '' : 'fileCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
     ..pPM<PlaylistItem>(6, _omitFieldNames ? '' : 'dynamicItems',
         subBuilder: PlaylistItem.create)
     ..pPM<PlaylistBrowsePathNode>(7, _omitFieldNames ? '' : 'currentPath',
         subBuilder: PlaylistBrowsePathNode.create)
     ..aOS(8, _omitFieldNames ? '' : 'version')
+    ..aOM<PagePagination>(9, _omitFieldNames ? '' : 'page',
+        subBuilder: PagePagination.create)
+    ..aOM<CursorPagination>(10, _omitFieldNames ? '' : 'cursor',
+        subBuilder: CursorPagination.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13609,6 +13846,14 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ListPlaylistItemsResponse>(create);
   static ListPlaylistItemsResponse? _defaultInstance;
 
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  ListPlaylistItemsResponse_Pagination whichPagination() =>
+      _ListPlaylistItemsResponse_PaginationByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  void clearPagination() => $_clearField($_whichOneof(0));
+
   @$pb.TagNumber(1)
   $pb.PbList<Playlist> get playlists => $_getList(0);
 
@@ -13616,27 +13861,27 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
   $pb.PbList<Media> get media => $_getList(1);
 
   @$pb.TagNumber(3)
-  $core.int get total => $_getIZ(2);
+  $fixnum.Int64 get total => $_getI64(2);
   @$pb.TagNumber(3)
-  set total($core.int value) => $_setSignedInt32(2, value);
+  set total($fixnum.Int64 value) => $_setInt64(2, value);
   @$pb.TagNumber(3)
   $core.bool hasTotal() => $_has(2);
   @$pb.TagNumber(3)
   void clearTotal() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.int get folderCount => $_getIZ(3);
+  $fixnum.Int64 get folderCount => $_getI64(3);
   @$pb.TagNumber(4)
-  set folderCount($core.int value) => $_setSignedInt32(3, value);
+  set folderCount($fixnum.Int64 value) => $_setInt64(3, value);
   @$pb.TagNumber(4)
   $core.bool hasFolderCount() => $_has(3);
   @$pb.TagNumber(4)
   void clearFolderCount() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.int get fileCount => $_getIZ(4);
+  $fixnum.Int64 get fileCount => $_getI64(4);
   @$pb.TagNumber(5)
-  set fileCount($core.int value) => $_setSignedInt32(4, value);
+  set fileCount($fixnum.Int64 value) => $_setInt64(4, value);
   @$pb.TagNumber(5)
   $core.bool hasFileCount() => $_has(4);
   @$pb.TagNumber(5)
@@ -13657,6 +13902,28 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
   $core.bool hasVersion() => $_has(7);
   @$pb.TagNumber(8)
   void clearVersion() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  PagePagination get page => $_getN(8);
+  @$pb.TagNumber(9)
+  set page(PagePagination value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasPage() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearPage() => $_clearField(9);
+  @$pb.TagNumber(9)
+  PagePagination ensurePage() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  CursorPagination get cursor => $_getN(9);
+  @$pb.TagNumber(10)
+  set cursor(CursorPagination value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasCursor() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearCursor() => $_clearField(10);
+  @$pb.TagNumber(10)
+  CursorPagination ensureCursor() => $_ensure(9);
 }
 
 class PlaylistItem extends $pb.GeneratedMessage {
@@ -13698,7 +13965,8 @@ class PlaylistItem extends $pb.GeneratedMessage {
         enumValues: ItemType.values)
     ..aOM<ProviderTarget>(3, _omitFieldNames ? '' : 'target',
         subBuilder: ProviderTarget.create)
-    ..aInt64(4, _omitFieldNames ? '' : 'size')
+    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(5, _omitFieldNames ? '' : 'thumbnail')
     ..aInt64(6, _omitFieldNames ? '' : 'modifiedAt')
     ..aOS(7, _omitFieldNames ? '' : 'description')

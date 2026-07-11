@@ -148,6 +148,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   final _alistSearchController = TextEditingController();
   final _alistPasswordController = TextEditingController();
   final _embySearchController = TextEditingController();
+  final _cloudreveSearchController = TextEditingController();
 
   bool _isProxy = false;
   bool _isLoading = false;
@@ -180,6 +181,18 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   String _embyKeyword = '';
   List<EmbyBindInfo> _embyBinds = [];
 
+  String _cloudrevePath = 'cloudreve://my/';
+  List<CloudreveItemInfo> _cloudreveFiles = [];
+  bool _cloudreveLoading = false;
+  int _cloudrevePage = 1;
+  bool _cloudreveUsesCursor = false;
+  String _cloudreveNextCursor = '';
+  bool _cloudreveHasMore = true;
+  String _cloudreveServerId = '';
+  String _cloudreveInstanceName = '';
+  String _cloudreveKeyword = '';
+  List<CloudreveBindInfo> _cloudreveBinds = [];
+
   String _bilibiliInstanceName = '';
   List<BilibiliBindInfo> _bilibiliBinds = [];
 
@@ -204,22 +217,26 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         SyncTvService.getAllAlistBindInfos(),
         SyncTvService.getAllEmbyBindInfos(),
         SyncTvService.getAllBilibiliBindInfos(),
+        SyncTvService.getAllCloudreveBindInfos(),
         SyncTvService.getPublicSettings(),
       ]);
       final alistBinds = results[0] as List<AlistBindInfo>;
       final embyBinds = results[1] as List<EmbyBindInfo>;
       final bilibiliBinds = results[2] as List<BilibiliBindInfo>;
-      final publicSettings = results[3] as PublicSettingsInfo;
+      final cloudreveBinds = results[3] as List<CloudreveBindInfo>;
+      final publicSettings = results[4] as PublicSettingsInfo;
       if (!mounted) return;
       setState(() {
         _alistBinds = alistBinds;
         _embyBinds = embyBinds;
         _bilibiliBinds = bilibiliBinds;
+        _cloudreveBinds = cloudreveBinds;
         _publicSettings = publicSettings;
         _boundVendors = [
           if (alistBinds.isNotEmpty) 'alist',
           if (embyBinds.isNotEmpty) 'emby',
           if (bilibiliBinds.isNotEmpty) 'bilibili',
+          if (cloudreveBinds.isNotEmpty) 'cloudreve',
         ];
         _applyDefaultProviderBindings();
         _checkingVendors = false;
@@ -248,6 +265,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     _alistSearchController.dispose();
     _alistPasswordController.dispose();
     _embySearchController.dispose();
+    _cloudreveSearchController.dispose();
     super.dispose();
   }
 
@@ -309,6 +327,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         return context.l10n.alistStorage;
       case 5:
         return context.l10n.embyLibrary;
+      case 6:
+        return 'Cloudreve';
       default:
         return '';
     }
@@ -357,6 +377,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       icon: Icons.video_library_rounded,
       color: Colors.green.shade600,
     ),
+    _MediaSourceSpec(
+      index: 6,
+      title: 'Cloudreve',
+      subtitle: 'Cloudreve v4',
+      icon: Icons.cloud_rounded,
+      color: Colors.teal.shade600,
+    ),
   ];
 
   void _selectSource(int index) {
@@ -373,6 +400,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
     if (index == 5 && _embyBinds.isNotEmpty && _embyFiles.isEmpty) {
       _loadEmby('');
+    }
+    if (index == 6 && _cloudreveBinds.isNotEmpty && _cloudreveFiles.isEmpty) {
+      _loadCloudreve(_cloudrevePath);
     }
   }
 
@@ -549,6 +579,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                     if (_selectedIndex == 5 && _embyBinds.isNotEmpty) {
                       _loadEmby(_embyPath);
                     }
+                    if (_selectedIndex == 6 && _cloudreveBinds.isNotEmpty) {
+                      _loadCloudreve(_cloudrevePath);
+                    }
                   },
                   icon: Icons.tune_rounded,
                   label: context.l10n.mediaSource,
@@ -581,6 +614,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         return _buildAlistContent(theme);
       case 5:
         return _buildEmbyContent(theme);
+      case 6:
+        return _buildCloudreveContent(theme);
       default:
         return const SizedBox();
     }
@@ -1306,6 +1341,121 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
+  Widget _buildCloudreveContent(ThemeData theme) {
+    if (_checkingVendors) return const AppLoadingIndicator();
+    if (!_boundVendors.contains('cloudreve')) {
+      return _buildBindGuide('Cloudreve', theme);
+    }
+
+    return Column(
+      children: [
+        _buildProviderBindSelector<CloudreveBindInfo>(
+          theme: theme,
+          items: _cloudreveBinds,
+          selectedKey: _providerBindKey(
+            _cloudreveServerId,
+            _cloudreveInstanceName,
+          ),
+          keyOf: (bind) =>
+              _providerBindKey(bind.serverId, bind.providerInstanceName),
+          labelOf: (bind) => _providerBindLabel(
+            title: bind.host.isNotEmpty ? bind.host : bind.email,
+            instanceName: bind.providerInstanceName,
+          ),
+          onChanged: (bind) {
+            setState(() {
+              _cloudreveServerId = bind.serverId;
+              _cloudreveInstanceName = bind.providerInstanceName;
+              _cloudrevePath = 'cloudreve://my/';
+              _cloudreveFiles = [];
+              _cloudrevePage = 1;
+              _cloudreveUsesCursor = false;
+              _cloudreveNextCursor = '';
+              _cloudreveHasMore = true;
+              _cloudreveKeyword = '';
+              _cloudreveSearchController.clear();
+            });
+            _loadCloudreve(_cloudrevePath);
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+          child: AppSearchField(
+            controller: _cloudreveSearchController,
+            hintText: context.l10n.searchMediaLibrary,
+            onChanged: (value) {
+              if (value.isEmpty && _cloudreveKeyword.isNotEmpty) {
+                _clearCloudreveSearch();
+              }
+            },
+            onSubmitted: (_) => _searchCloudreve(),
+          ),
+        ),
+        _buildPathBar(theme, _cloudrevePath, _goUpCloudreve),
+        Expanded(
+          child: !_cloudreveLoading && _cloudreveFiles.isEmpty
+              ? Center(
+                  child: AppEmptyState(
+                    icon: Icons.cloud_off_rounded,
+                    iconColor: Colors.teal.shade600,
+                    iconSize: 58,
+                    title: context.l10n.noFiles,
+                    subtitle: context.l10n.noMediaInDirectory,
+                    maxWidth: 360,
+                  ),
+                )
+              : _cloudreveLoading && _cloudreveFiles.isEmpty
+              ? const AppLoadingIndicator()
+              : NotificationListener<ScrollNotification>(
+                  onNotification: (scrollInfo) {
+                    if (!_cloudreveLoading &&
+                        _cloudreveHasMore &&
+                        scrollInfo.metrics.pixels >=
+                            scrollInfo.metrics.maxScrollExtent - 200) {
+                      _loadCloudreve(_cloudrevePath, loadMore: true);
+                    }
+                    return false;
+                  },
+                  child: AppListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    itemCount:
+                        _cloudreveFiles.length + (_cloudreveHasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _cloudreveFiles.length) {
+                        return AppLoadMoreFooter(
+                          loading: _cloudreveLoading,
+                          onPressed: () =>
+                              _loadCloudreve(_cloudrevePath, loadMore: true),
+                        );
+                      }
+                      final file = _cloudreveFiles[index];
+                      return _buildFileItem(
+                        theme,
+                        file.name,
+                        file.isDir,
+                        () => file.isDir
+                            ? _openCloudreveDirectory(file.path)
+                            : _addCloudreveFile(file),
+                        subtitle: file.isDir ? null : _formatSize(file.size),
+                        thumbnailUrl: file.thumbnail,
+                        iconColor: Colors.teal,
+                        trailing: file.isDir
+                            ? AppIconButton(
+                                icon: Icons.playlist_add_rounded,
+                                tooltip: context.l10n.addAsDynamicPlaylist,
+                                onPressed: () =>
+                                    _addCloudreveDirectoryPlaylist(file),
+                              )
+                            : null,
+                      );
+                    },
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTextField(
     ThemeData theme,
     TextEditingController controller,
@@ -1662,17 +1812,19 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   int? _providerBindingIndex(int selectedIndex) {
     return switch (selectedIndex) {
-      3 => 2,
+      3 => 3,
       4 => 0,
-      5 => 1,
+      5 => 2,
+      6 => 1,
       _ => null,
     };
   }
 
   int _providerBindingIndexByName(String name) {
     return switch (name.toLowerCase()) {
-      'bilibili' => 2,
-      'emby' => 1,
+      'bilibili' => 3,
+      'cloudreve' => 1,
+      'emby' => 2,
       _ => 0,
     };
   }
@@ -1697,6 +1849,16 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       final bind = _embyBinds.first;
       _embyServerId = bind.serverId;
       _embyInstanceName = bind.providerInstanceName;
+    }
+    if (_cloudreveBinds.isNotEmpty &&
+        !_cloudreveBinds.any(
+          (bind) =>
+              bind.serverId == _cloudreveServerId &&
+              bind.providerInstanceName == _cloudreveInstanceName,
+        )) {
+      final bind = _cloudreveBinds.first;
+      _cloudreveServerId = bind.serverId;
+      _cloudreveInstanceName = bind.providerInstanceName;
     }
     if (_bilibiliBinds.isNotEmpty &&
         !_bilibiliBinds.any(
@@ -1839,7 +2001,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         _liveProxyNameController.text.trim().isNotEmpty ||
         _biliUrlController.text.trim().isNotEmpty ||
         _alistSearchController.text.trim().isNotEmpty ||
-        _embySearchController.text.trim().isNotEmpty) {
+        _embySearchController.text.trim().isNotEmpty ||
+        _cloudreveSearchController.text.trim().isNotEmpty) {
       return true;
     }
     return _directHeaders.any(
@@ -2376,6 +2539,155 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       }
     } finally {
       if (mounted) setState(() => _alistLoading = false);
+    }
+  }
+
+  Future<void> _loadCloudreve(String path, {bool loadMore = false}) async {
+    if (_cloudreveBinds.isEmpty || _cloudreveServerId.isEmpty) return;
+    if (loadMore && _cloudreveLoading) return;
+    final targetPage = loadMore ? _cloudrevePage + 1 : 1;
+    setState(() {
+      _cloudreveLoading = true;
+      if (!loadMore) {
+        _cloudrevePath = path;
+        _cloudreveFiles = [];
+      }
+    });
+    try {
+      final page = await SyncTvService.listCloudrevePage(
+        path,
+        keyword: _cloudreveKeyword,
+        page: targetPage,
+        max: _pageSize,
+        offset: _cloudreveKeyword.isNotEmpty && loadMore
+            ? _cloudreveFiles.length
+            : 0,
+        cursor: _cloudreveKeyword.isEmpty && loadMore && _cloudreveUsesCursor
+            ? _cloudreveNextCursor
+            : null,
+        serverId: _cloudreveServerId,
+        instanceName: _cloudreveInstanceName,
+      );
+      if (!mounted) return;
+      setState(() {
+        if (loadMore) {
+          _cloudreveFiles.addAll(page.items);
+          _cloudrevePage = targetPage;
+        } else {
+          _cloudreveFiles = page.items;
+          _cloudrevePage = 1;
+        }
+        _cloudreveUsesCursor = page.usesCursor;
+        _cloudreveNextCursor = page.nextCursor;
+        _cloudreveHasMore = page.usesCursor
+            ? page.nextCursor.isNotEmpty
+            : _cloudreveFiles.length < page.total;
+      });
+    } catch (e) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.loadFailed('$e'));
+      }
+    } finally {
+      if (mounted) setState(() => _cloudreveLoading = false);
+    }
+  }
+
+  void _searchCloudreve() {
+    final keyword = _cloudreveSearchController.text.trim();
+    if (keyword == _cloudreveKeyword) return;
+    setState(() {
+      _cloudreveKeyword = keyword;
+      _cloudrevePage = 1;
+      _cloudreveHasMore = true;
+      _cloudreveUsesCursor = false;
+      _cloudreveNextCursor = '';
+    });
+    _loadCloudreve(_cloudrevePath);
+  }
+
+  void _clearCloudreveSearch() {
+    if (_cloudreveKeyword.isEmpty && _cloudreveSearchController.text.isEmpty) {
+      return;
+    }
+    _cloudreveSearchController.clear();
+    setState(() {
+      _cloudreveKeyword = '';
+      _cloudrevePage = 1;
+      _cloudreveHasMore = true;
+      _cloudreveUsesCursor = false;
+      _cloudreveNextCursor = '';
+    });
+    _loadCloudreve(_cloudrevePath);
+  }
+
+  void _openCloudreveDirectory(String path) {
+    if (_cloudreveKeyword.isNotEmpty) {
+      _cloudreveSearchController.clear();
+      setState(() => _cloudreveKeyword = '');
+    }
+    _loadCloudreve(path);
+  }
+
+  void _goUpCloudreve() {
+    if (_cloudreveKeyword.isNotEmpty) {
+      _clearCloudreveSearch();
+      return;
+    }
+    final uri = Uri.tryParse(_cloudrevePath);
+    if (uri == null || uri.pathSegments.isEmpty) return;
+    final segments =
+        uri.pathSegments.where((segment) => segment.isNotEmpty).toList()
+          ..removeLast();
+    _loadCloudreve(
+      Uri(scheme: 'cloudreve', host: 'my', pathSegments: segments).toString(),
+    );
+  }
+
+  Future<void> _addCloudreveFile(CloudreveItemInfo file) async {
+    if (_cloudreveServerId.isEmpty) return;
+    setState(() => _isLoading = true);
+    try {
+      await SyncTvService.addCloudreveMedia(
+        widget.roomId,
+        playlistId: widget.parentId ?? '',
+        serverId: _cloudreveServerId,
+        path: file.path,
+        name: file.name,
+        providerInstanceName: _cloudreveInstanceName,
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+      MessageUtils.showSuccess(context, context.l10n.addedSuccessfully);
+    } catch (e) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addFailed('$e'));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _addCloudreveDirectoryPlaylist(CloudreveItemInfo file) async {
+    if (_cloudreveServerId.isEmpty) return;
+    setState(() => _isLoading = true);
+    try {
+      await SyncTvService.createPlaylist(
+        widget.roomId,
+        parentId: widget.parentId ?? '',
+        sourceProvider: 'cloudreve',
+        providerInstanceName: _cloudreveInstanceName,
+        sourceConfig: {'serverId': _cloudreveServerId, 'path': file.path},
+        name: file.name,
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+      MessageUtils.showSuccess(context, context.l10n.dynamicPlaylistAdded);
+    } catch (e) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addFailed('$e'));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

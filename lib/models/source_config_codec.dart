@@ -27,6 +27,7 @@ class SourceConfigCodec {
       'rtmp' => source_enum.SourceProvider.SOURCE_PROVIDER_RTMP,
       'live_proxy' ||
       'liveproxy' => source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY,
+      'cloudreve' => source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE,
       _ => source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
     };
   }
@@ -39,6 +40,7 @@ class SourceConfigCodec {
       source_enum.SourceProvider.SOURCE_PROVIDER_EMBY => 'emby',
       source_enum.SourceProvider.SOURCE_PROVIDER_RTMP => 'rtmp',
       source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY => 'liveProxy',
+      source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE => 'cloudreve',
       _ => '',
     };
   }
@@ -53,6 +55,7 @@ class SourceConfigCodec {
       source_config.MediaSourceConfig_Provider.emby => 'emby',
       source_config.MediaSourceConfig_Provider.rtmp => 'rtmp',
       source_config.MediaSourceConfig_Provider.liveProxy => 'liveProxy',
+      source_config.MediaSourceConfig_Provider.cloudreve => 'cloudreve',
       source_config.MediaSourceConfig_Provider.notSet => '',
     };
   }
@@ -63,6 +66,7 @@ class SourceConfigCodec {
     return switch (config.whichProvider()) {
       source_config.PlaylistSourceConfig_Provider.alist => 'alist',
       source_config.PlaylistSourceConfig_Provider.emby => 'emby',
+      source_config.PlaylistSourceConfig_Provider.cloudreve => 'cloudreve',
       source_config.PlaylistSourceConfig_Provider.notSet => '',
     };
   }
@@ -137,6 +141,13 @@ class SourceConfigCodec {
             url: _string(config['url']),
           ),
         ),
+      source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE =>
+        source_config.MediaSourceConfig(
+          cloudreve: source_config.CloudreveMediaSourceConfig(
+            serverId: _string(config['serverId']),
+            path: _string(config['path']),
+          ),
+        ),
       _ => null,
     };
   }
@@ -169,6 +180,13 @@ class SourceConfigCodec {
             itemId: _string(config['itemId']),
           ),
         ),
+      source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE =>
+        source_config.PlaylistSourceConfig(
+          cloudreve: source_config.CloudrevePlaylistSourceConfig(
+            serverId: _string(config['serverId']),
+            path: _string(config['path']),
+          ),
+        ),
       _ => null,
     };
   }
@@ -194,6 +212,11 @@ class SourceConfigCodec {
       source_config.MediaSourceConfig_Provider.liveProxy => {
         'url': config.liveProxy.url,
       },
+      source_config.MediaSourceConfig_Provider.cloudreve => {
+        if (config.cloudreve.serverId.isNotEmpty)
+          'serverId': config.cloudreve.serverId,
+        'path': config.cloudreve.path,
+      },
       source_config.MediaSourceConfig_Provider.notSet => <String, dynamic>{},
     };
   }
@@ -210,6 +233,11 @@ class SourceConfigCodec {
       source_config.PlaylistSourceConfig_Provider.emby => {
         if (config.emby.serverId.isNotEmpty) 'serverId': config.emby.serverId,
         'itemId': config.emby.itemId,
+      },
+      source_config.PlaylistSourceConfig_Provider.cloudreve => {
+        if (config.cloudreve.serverId.isNotEmpty)
+          'serverId': config.cloudreve.serverId,
+        'path': config.cloudreve.path,
       },
       source_config.PlaylistSourceConfig_Provider.notSet => <String, dynamic>{},
     };

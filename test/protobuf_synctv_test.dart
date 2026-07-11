@@ -46,6 +46,8 @@ import 'package:synctv_app/src/generated/proto/providers/alist.pb.dart'
     as alist;
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pb.dart'
     as bilibili;
+import 'package:synctv_app/src/generated/proto/providers/cloudreve.pb.dart'
+    as cloudreve;
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
 import 'package:synctv_app/src/generated/proto/providers/emby.pb.dart' as emby;
@@ -150,6 +152,104 @@ passkey.PasskeyRegistrationCredential testPasskeyRegistrationCredential(
 }
 
 void main() {
+  test('Cloudreve media source config round trips through protobuf', () {
+    final config = SourceConfigCodec.mediaSourceConfigFromMap(
+      sourceProvider: 'cloudreve',
+      sourceConfig: {
+        'serverId': 'cloudreve-server',
+        'path': 'cloudreve://my/Movies/movie.mp4',
+      },
+    );
+
+    expect(config, isNotNull);
+    expect(
+      SourceConfigCodec.providerForMediaSourceConfig(config!),
+      'cloudreve',
+    );
+    expect(SourceConfigCodec.mediaSourceConfigToMap(config), {
+      'serverId': 'cloudreve-server',
+      'path': 'cloudreve://my/Movies/movie.mp4',
+    });
+    expect(
+      SourceConfigCodec.providerFromString('cloudreve'),
+      source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE,
+    );
+  });
+
+  test('Cloudreve dynamic playlist config and target round trip', () {
+    final config = SourceConfigCodec.playlistSourceConfigFromMap(
+      sourceProvider: 'cloudreve',
+      sourceConfig: {
+        'serverId': 'cloudreve-server',
+        'path': 'cloudreve://my/Shows',
+      },
+    );
+    expect(config, isNotNull);
+    expect(
+      SourceConfigCodec.providerForPlaylistSourceConfig(config!),
+      'cloudreve',
+    );
+    expect(SourceConfigCodec.playlistSourceConfigToMap(config), {
+      'serverId': 'cloudreve-server',
+      'path': 'cloudreve://my/Shows',
+    });
+
+    final target = client.ProviderTarget(
+      cloudreve: client.CloudreveTarget(
+        relativePath: '/Season 1/Episode 1.mp4',
+      ),
+    );
+    final encoded = providerTargetToBase64(target);
+    final decoded = providerTargetFromBase64(encoded);
+    expect(decoded.whichTarget(), client.ProviderTarget_Target.cloudreve);
+    expect(decoded.cloudreve.relativePath, '/Season 1/Episode 1.mp4');
+  });
+
+  test('Cloudreve list pagination preserves page and cursor modes', () {
+    final pageRequest = cloudreve.ListRequest(
+      serverId: 'cloudreve-server',
+      path: '/Movies',
+      page: cloudreve.PagePagination(page: 3),
+      perPage: 20,
+    );
+    final cursorRequest = cloudreve.ListRequest(
+      serverId: 'cloudreve-server',
+      path: '/Movies',
+      cursor: cloudreve.CursorPagination(cursor: 'cursor-3'),
+      perPage: 20,
+    );
+
+    expect(
+      cloudreve.ListRequest.fromBuffer(
+        pageRequest.writeToBuffer(),
+      ).whichPagination(),
+      cloudreve.ListRequest_Pagination.page,
+    );
+    expect(
+      cloudreve.ListRequest.fromBuffer(
+        cursorRequest.writeToBuffer(),
+      ).whichPagination(),
+      cloudreve.ListRequest_Pagination.cursor,
+    );
+
+    final pageResponse = cloudreve.ListResponse(
+      page: cloudreve.PagePagination(page: 3, total: Int64(45)),
+    );
+    final cursorResponse = cloudreve.ListResponse(
+      cursor: cloudreve.CursorPagination(cursor: 'cursor-4'),
+    );
+    expect(
+      pageResponse.whichPagination(),
+      cloudreve.ListResponse_Pagination.page,
+    );
+    expect(pageResponse.page.total, Int64(45));
+    expect(
+      cursorResponse.whichPagination(),
+      cloudreve.ListResponse_Pagination.cursor,
+    );
+    expect(cursorResponse.cursor.cursor, 'cursor-4');
+  });
+
   test('playback status derives current position from generated time', () {
     final status = SyncTvPlaybackStatus(
       isPlaying: true,
@@ -2791,7 +2891,7 @@ void main() {
                 request: client.ListPlaylistItemsRequest(
                   playlistId: 'playlist_1',
                   target: testProviderTarget('season-1'),
-                  page: 2,
+                  page: client.PagePagination(page: 2),
                   pageSize: 25,
                   search: 'matrix',
                   sourceProvider:
@@ -2852,6 +2952,41 @@ void main() {
       expect(requestedUri!.queryParameters, containsPair('availability', '1'));
     },
   );
+
+  test('watch playlist items sends a flat cursor query', () async {
+    Uri? requestedUri;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'token',
+      httpClient: MockClient((request) async {
+        requestedUri = request.url;
+        return http.Response(
+          '',
+          200,
+          headers: {'content-type': 'text/event-stream'},
+        );
+      }),
+    );
+
+    await api.room
+        .watchPlaylistItems(
+          'room_1',
+          client.WatchPlaylistItemsRequest(
+            playlistItems: client.ObservePlaylistItems(
+              request: client.ListPlaylistItemsRequest(
+                playlistId: 'playlist_1',
+                cursor: client.CursorPagination(cursor: 'cursor-2'),
+                pageSize: 25,
+              ),
+            ),
+          ),
+        )
+        .drain<void>();
+
+    expect(requestedUri, isNotNull);
+    expect(requestedUri!.queryParameters, containsPair('cursor', 'cursor-2'));
+    expect(requestedUri!.queryParameters.containsKey('page'), isFalse);
+  });
 
   test(
     'playlist items watch decodes nested protobuf JSON bytes payloads',

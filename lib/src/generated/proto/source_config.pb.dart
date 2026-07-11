@@ -610,6 +610,145 @@ class AlistPlaylistSourceConfig extends $pb.GeneratedMessage {
   void clearPassword() => $_clearField(3);
 }
 
+class CloudreveMediaSourceConfig extends $pb.GeneratedMessage {
+  factory CloudreveMediaSourceConfig({
+    $core.String? serverId,
+    $core.String? path,
+  }) {
+    final result = create();
+    if (serverId != null) result.serverId = serverId;
+    if (path != null) result.path = path;
+    return result;
+  }
+
+  CloudreveMediaSourceConfig._();
+
+  factory CloudreveMediaSourceConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CloudreveMediaSourceConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CloudreveMediaSourceConfig',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.source_config'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'serverId')
+    ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CloudreveMediaSourceConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CloudreveMediaSourceConfig copyWith(
+          void Function(CloudreveMediaSourceConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as CloudreveMediaSourceConfig))
+          as CloudreveMediaSourceConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CloudreveMediaSourceConfig create() => CloudreveMediaSourceConfig._();
+  @$core.override
+  CloudreveMediaSourceConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CloudreveMediaSourceConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CloudreveMediaSourceConfig>(create);
+  static CloudreveMediaSourceConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get serverId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set serverId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasServerId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearServerId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get path => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set path($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPath() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPath() => $_clearField(2);
+}
+
+class CloudrevePlaylistSourceConfig extends $pb.GeneratedMessage {
+  factory CloudrevePlaylistSourceConfig({
+    $core.String? serverId,
+    $core.String? path,
+  }) {
+    final result = create();
+    if (serverId != null) result.serverId = serverId;
+    if (path != null) result.path = path;
+    return result;
+  }
+
+  CloudrevePlaylistSourceConfig._();
+
+  factory CloudrevePlaylistSourceConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CloudrevePlaylistSourceConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CloudrevePlaylistSourceConfig',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.source_config'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'serverId')
+    ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CloudrevePlaylistSourceConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CloudrevePlaylistSourceConfig copyWith(
+          void Function(CloudrevePlaylistSourceConfig) updates) =>
+      super.copyWith(
+              (message) => updates(message as CloudrevePlaylistSourceConfig))
+          as CloudrevePlaylistSourceConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CloudrevePlaylistSourceConfig create() =>
+      CloudrevePlaylistSourceConfig._();
+  @$core.override
+  CloudrevePlaylistSourceConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CloudrevePlaylistSourceConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CloudrevePlaylistSourceConfig>(create);
+  static CloudrevePlaylistSourceConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get serverId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set serverId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasServerId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearServerId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get path => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set path($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPath() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPath() => $_clearField(2);
+}
+
 class EmbyMediaSourceConfig extends $pb.GeneratedMessage {
   factory EmbyMediaSourceConfig({
     $core.String? serverId,
@@ -1204,6 +1343,7 @@ enum MediaSourceConfig_Provider {
   emby,
   rtmp,
   liveProxy,
+  cloudreve,
   notSet
 }
 
@@ -1215,6 +1355,7 @@ class MediaSourceConfig extends $pb.GeneratedMessage {
     EmbyMediaSourceConfig? emby,
     RtmpMediaSourceConfig? rtmp,
     LiveProxyMediaSourceConfig? liveProxy,
+    CloudreveMediaSourceConfig? cloudreve,
   }) {
     final result = create();
     if (directUrl != null) result.directUrl = directUrl;
@@ -1223,6 +1364,7 @@ class MediaSourceConfig extends $pb.GeneratedMessage {
     if (emby != null) result.emby = emby;
     if (rtmp != null) result.rtmp = rtmp;
     if (liveProxy != null) result.liveProxy = liveProxy;
+    if (cloudreve != null) result.cloudreve = cloudreve;
     return result;
   }
 
@@ -1243,6 +1385,7 @@ class MediaSourceConfig extends $pb.GeneratedMessage {
     4: MediaSourceConfig_Provider.emby,
     5: MediaSourceConfig_Provider.rtmp,
     6: MediaSourceConfig_Provider.liveProxy,
+    7: MediaSourceConfig_Provider.cloudreve,
     0: MediaSourceConfig_Provider.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -1250,7 +1393,7 @@ class MediaSourceConfig extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.source_config'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7])
     ..aOM<DirectUrlMediaSourceConfig>(1, _omitFieldNames ? '' : 'directUrl',
         subBuilder: DirectUrlMediaSourceConfig.create)
     ..aOM<BilibiliMediaSourceConfig>(2, _omitFieldNames ? '' : 'bilibili',
@@ -1263,6 +1406,8 @@ class MediaSourceConfig extends $pb.GeneratedMessage {
         subBuilder: RtmpMediaSourceConfig.create)
     ..aOM<LiveProxyMediaSourceConfig>(6, _omitFieldNames ? '' : 'liveProxy',
         subBuilder: LiveProxyMediaSourceConfig.create)
+    ..aOM<CloudreveMediaSourceConfig>(7, _omitFieldNames ? '' : 'cloudreve',
+        subBuilder: CloudreveMediaSourceConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1290,6 +1435,7 @@ class MediaSourceConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
   MediaSourceConfig_Provider whichProvider() =>
       _MediaSourceConfig_ProviderByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -1298,6 +1444,7 @@ class MediaSourceConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
   void clearProvider() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -1365,18 +1512,31 @@ class MediaSourceConfig extends $pb.GeneratedMessage {
   void clearLiveProxy() => $_clearField(6);
   @$pb.TagNumber(6)
   LiveProxyMediaSourceConfig ensureLiveProxy() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  CloudreveMediaSourceConfig get cloudreve => $_getN(6);
+  @$pb.TagNumber(7)
+  set cloudreve(CloudreveMediaSourceConfig value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasCloudreve() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearCloudreve() => $_clearField(7);
+  @$pb.TagNumber(7)
+  CloudreveMediaSourceConfig ensureCloudreve() => $_ensure(6);
 }
 
-enum PlaylistSourceConfig_Provider { alist, emby, notSet }
+enum PlaylistSourceConfig_Provider { alist, emby, cloudreve, notSet }
 
 class PlaylistSourceConfig extends $pb.GeneratedMessage {
   factory PlaylistSourceConfig({
     AlistPlaylistSourceConfig? alist,
     EmbyPlaylistSourceConfig? emby,
+    CloudrevePlaylistSourceConfig? cloudreve,
   }) {
     final result = create();
     if (alist != null) result.alist = alist;
     if (emby != null) result.emby = emby;
+    if (cloudreve != null) result.cloudreve = cloudreve;
     return result;
   }
 
@@ -1393,6 +1553,7 @@ class PlaylistSourceConfig extends $pb.GeneratedMessage {
       _PlaylistSourceConfig_ProviderByTag = {
     1: PlaylistSourceConfig_Provider.alist,
     2: PlaylistSourceConfig_Provider.emby,
+    3: PlaylistSourceConfig_Provider.cloudreve,
     0: PlaylistSourceConfig_Provider.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -1400,11 +1561,13 @@ class PlaylistSourceConfig extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.source_config'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2])
+    ..oo(0, [1, 2, 3])
     ..aOM<AlistPlaylistSourceConfig>(1, _omitFieldNames ? '' : 'alist',
         subBuilder: AlistPlaylistSourceConfig.create)
     ..aOM<EmbyPlaylistSourceConfig>(2, _omitFieldNames ? '' : 'emby',
         subBuilder: EmbyPlaylistSourceConfig.create)
+    ..aOM<CloudrevePlaylistSourceConfig>(3, _omitFieldNames ? '' : 'cloudreve',
+        subBuilder: CloudrevePlaylistSourceConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1428,10 +1591,12 @@ class PlaylistSourceConfig extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   PlaylistSourceConfig_Provider whichProvider() =>
       _PlaylistSourceConfig_ProviderByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   void clearProvider() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -1455,6 +1620,17 @@ class PlaylistSourceConfig extends $pb.GeneratedMessage {
   void clearEmby() => $_clearField(2);
   @$pb.TagNumber(2)
   EmbyPlaylistSourceConfig ensureEmby() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  CloudrevePlaylistSourceConfig get cloudreve => $_getN(2);
+  @$pb.TagNumber(3)
+  set cloudreve(CloudrevePlaylistSourceConfig value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCloudreve() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCloudreve() => $_clearField(3);
+  @$pb.TagNumber(3)
+  CloudrevePlaylistSourceConfig ensureCloudreve() => $_ensure(2);
 }
 
 const $core.bool _omitFieldNames =

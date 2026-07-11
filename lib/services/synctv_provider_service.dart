@@ -10,6 +10,8 @@ import 'package:synctv_app/src/generated/proto/providers/bilibili.pbenum.dart'
     as bilibili_enum;
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
+import 'package:synctv_app/src/generated/proto/providers/cloudreve.pb.dart'
+    as cloudreve;
 import 'package:synctv_app/src/generated/proto/providers/emby.pb.dart' as emby;
 
 class SyncTvProviderDomainService {
@@ -44,6 +46,32 @@ class SyncTvProviderDomainService {
   Future<void> logoutAList(String serverId, {String instanceName = ''}) {
     return _api.alistProvider.logout(
       alist.LogoutRequest(serverId: serverId, instanceName: instanceName),
+    );
+  }
+
+  Future<String> loginCloudreve(
+    String host,
+    String email,
+    String password, {
+    String instanceName = '',
+  }) async {
+    final response = await _api.cloudreveProvider.login(
+      cloudreve.LoginRequest(
+        host: host,
+        email: email,
+        password: password,
+        instanceName: instanceName,
+      ),
+    );
+    return response.serverId;
+  }
+
+  Future<void> logoutCloudreve(
+    String serverId, {
+    String instanceName = '',
+  }) async {
+    await _api.cloudreveProvider.logout(
+      cloudreve.LogoutRequest(serverId: serverId, instanceName: instanceName),
     );
   }
 
@@ -164,6 +192,39 @@ class SyncTvProviderDomainService {
     return response.binds.map(_embyBindFromProto).toList();
   }
 
+  Future<List<CloudreveBindInfo>> getCloudreveBindInfos({
+    String instanceName = '',
+  }) async {
+    final response = await _api.cloudreveProvider.getBinds(
+      cloudreve.GetBindsRequest(instanceName: instanceName),
+    );
+    return response.binds
+        .map(
+          (bind) => CloudreveBindInfo(
+            id: bind.id,
+            serverId: bind.serverId,
+            host: bind.host,
+            email: bind.email,
+            createdAt: bind.createdAt.toInt(),
+            providerInstanceName: bind.providerInstanceName,
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<CloudreveBindInfo>> getAllCloudreveBindInfos() async {
+    final instances = await _availableInstanceNames('cloudreve');
+    final lists = await Future.wait(
+      _withDefaultInstance(instances).map(
+        (instanceName) => getCloudreveBindInfos(instanceName: instanceName),
+      ),
+    );
+    return _dedupeBy(
+      lists.expand((list) => list),
+      (bind) => '${bind.providerInstanceName}\u0000${bind.serverId}',
+    );
+  }
+
   Future<List<EmbyBindInfo>> getAllEmbyBindInfos() async {
     final instances = await _availableInstanceNames('emby');
     final lists = await Future.wait(
@@ -220,6 +281,20 @@ class SyncTvProviderDomainService {
       emby.GetMeRequest(serverId: serverId, instanceName: instanceName),
     );
     return EmbyAccountInfo(id: response.id, name: response.name);
+  }
+
+  Future<CloudreveAccountInfo> getCloudreveAccount(
+    String serverId, {
+    String instanceName = '',
+  }) async {
+    final response = await _api.cloudreveProvider.getMe(
+      cloudreve.GetMeRequest(serverId: serverId, instanceName: instanceName),
+    );
+    return CloudreveAccountInfo(
+      id: response.id,
+      email: response.email,
+      nickname: response.nickname,
+    );
   }
 
   Future<BilibiliParseInfo> parseBilibiliInfo(
@@ -309,6 +384,82 @@ class SyncTvProviderDomainService {
       username: response.username,
       isAdmin: response.isAdmin,
       serverId: response.serverId,
+    );
+  }
+
+  Future<CloudreveListPage> listCloudrevePage(
+    String path, {
+    String? keyword,
+    int page = 1,
+    int max = 20,
+    int? offset,
+    String? cursor,
+    String serverId = '',
+    String instanceName = '',
+  }) async {
+    final resolvedServerId = serverId.trim();
+    if (resolvedServerId.isEmpty) {
+      throw StateError('请选择已绑定的 Cloudreve 账号');
+    }
+    final normalizedKeyword = keyword?.trim() ?? '';
+    final Iterable<cloudreve.FileItem> items;
+    final int total;
+    var usesCursor = false;
+    var nextCursor = '';
+    if (normalizedKeyword.isNotEmpty) {
+      final response = await _api.cloudreveProvider.search(
+        cloudreve.SearchRequest(
+          serverId: resolvedServerId,
+          keywords: normalizedKeyword,
+          offset: Int64(offset ?? (page - 1) * max),
+          instanceName: instanceName,
+        ),
+      );
+      items = response.content;
+      total = response.total.toInt();
+    } else {
+      final response = await _api.cloudreveProvider.list(
+        cloudreve.ListRequest(
+          serverId: resolvedServerId,
+          path: path,
+          perPage: max,
+          instanceName: instanceName,
+          page: cursor == null ? cloudreve.PagePagination(page: page) : null,
+          cursor: cursor == null
+              ? null
+              : cloudreve.CursorPagination(cursor: cursor),
+        ),
+      );
+      items = response.content;
+      usesCursor =
+          response.whichPagination() ==
+          cloudreve.ListResponse_Pagination.cursor;
+      if (usesCursor) {
+        nextCursor = response.cursor.cursor;
+        total = -1;
+      } else {
+        total = response.page.total.toInt();
+      }
+    }
+    return CloudreveListPage(
+      serverId: resolvedServerId,
+      providerInstanceName: instanceName,
+      items: items
+          .map(
+            (item) => CloudreveItemInfo(
+              id: item.id,
+              name: item.name,
+              path: item.path,
+              size: item.size.toInt(),
+              isDir: item.isDir,
+              modified: item.modified.toInt(),
+              thumbnail: item.thumbnail,
+            ),
+          )
+          .toList(),
+      total: total,
+      usesCursor: usesCursor,
+      nextCursor: nextCursor,
     );
   }
 

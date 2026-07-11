@@ -17,7 +17,7 @@ import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-enum _ProviderKind { alist, emby, bilibili }
+enum _ProviderKind { alist, cloudreve, emby, bilibili }
 
 List<String> _mergeInstanceNames(List<String> remoteInstances) {
   final names = <String>[''];
@@ -88,6 +88,14 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       icon: Icons.cloud_circle_rounded,
       emptyIcon: Icons.cloud_off_rounded,
       color: Colors.amber,
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.cloudreve,
+      label: 'Cloudreve',
+      tabLabel: 'Cloudreve',
+      icon: Icons.cloud_rounded,
+      emptyIcon: Icons.cloud_off_rounded,
+      color: Colors.teal,
     ),
     _ProviderSpec(
       kind: _ProviderKind.emby,
@@ -163,6 +171,18 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
                 ),
               )
               .toList(),
+        _ProviderKind.cloudreve =>
+          (await SyncTvService.getAllCloudreveBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.host,
+                  subtitle: bind.email,
+                ),
+              )
+              .toList(),
         _ProviderKind.bilibili =>
           (await SyncTvService.getAllBilibiliBindInfos())
               .map(
@@ -228,6 +248,11 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           );
         case _ProviderKind.emby:
           await SyncTvService.logoutEmby(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.cloudreve:
+          await SyncTvService.logoutCloudreve(
             item.serverId,
             instanceName: item.instanceName,
           );
@@ -384,6 +409,21 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
             _providerInstanceLabel(item.instanceName, l10n.localInstance),
           ),
         ];
+      case _ProviderKind.cloudreve:
+        final info = await SyncTvService.getCloudreveAccount(
+          item.serverId,
+          instanceName: item.instanceName,
+        );
+        return [
+          (l10n.username, info.nickname),
+          ('Email', info.email),
+          (l10n.userId, info.id),
+          (l10n.server, item.serverId),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
       case _ProviderKind.bilibili:
         final info = await SyncTvService.getBilibiliAccount(
           instanceName: item.instanceName,
@@ -408,6 +448,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     return switch (kind) {
       _ProviderKind.alist => 'alist',
       _ProviderKind.emby => 'emby',
+      _ProviderKind.cloudreve => 'cloudreve',
       _ProviderKind.bilibili => 'bilibili',
     };
   }
@@ -866,7 +907,13 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
 
   bool get _isAlist => widget.kind == _ProviderKind.alist;
   bool get _isEmby => widget.kind == _ProviderKind.emby;
-  String get _label => _isAlist ? 'AList' : 'Emby';
+  bool get _isCloudreve => widget.kind == _ProviderKind.cloudreve;
+  String get _label => switch (widget.kind) {
+    _ProviderKind.alist => 'AList',
+    _ProviderKind.cloudreve => 'Cloudreve',
+    _ProviderKind.emby => 'Emby',
+    _ProviderKind.bilibili => 'Bilibili',
+  };
 
   @override
   void initState() {
@@ -934,6 +981,13 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
           otpSecret: otpSecret,
           instanceName: _instanceName,
         );
+      } else if (_isCloudreve) {
+        await SyncTvService.loginCloudreve(
+          host,
+          username,
+          password,
+          instanceName: _instanceName,
+        );
       } else {
         await SyncTvService.loginEmbyInfo(
           host,
@@ -974,7 +1028,11 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final providerColor = _isAlist ? Colors.amber : Colors.green;
+    final providerColor = _isAlist
+        ? Colors.amber
+        : _isCloudreve
+        ? Colors.teal
+        : Colors.green;
     final availableHeight = AppMetrics.dialogMaxHeight(context, null);
     final maxHeight = (availableHeight * 0.70).clamp(
       420.0,
@@ -1029,7 +1087,11 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                         context: context,
                         label: context.l10n.port,
                         controller: _portController,
-                        hintText: _isAlist ? '5244' : '8096',
+                        hintText: _isAlist
+                            ? '5244'
+                            : _isCloudreve
+                            ? '5212'
+                            : '8096',
                         prefixIcon: Icons.settings_ethernet_rounded,
                         keyboardType: TextInputType.number,
                         enableSuggestions: false,
@@ -1047,7 +1109,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                     children: [
                       ChatUtils.createFormField(
                         context: context,
-                        label: context.l10n.username,
+                        label: _isCloudreve ? 'Email' : context.l10n.username,
                         controller: _usernameController,
                         prefixIcon: Icons.person_outline_rounded,
                       ),

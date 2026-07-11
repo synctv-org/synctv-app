@@ -29,6 +29,8 @@ class SourceProvider extends $pb.ProtobufEnum {
       SourceProvider._(5, _omitEnumNames ? '' : 'SOURCE_PROVIDER_RTMP');
   static const SourceProvider SOURCE_PROVIDER_LIVE_PROXY =
       SourceProvider._(6, _omitEnumNames ? '' : 'SOURCE_PROVIDER_LIVE_PROXY');
+  static const SourceProvider SOURCE_PROVIDER_CLOUDREVE =
+      SourceProvider._(7, _omitEnumNames ? '' : 'SOURCE_PROVIDER_CLOUDREVE');
 
   static const $core.List<SourceProvider> values = <SourceProvider>[
     SOURCE_PROVIDER_UNSPECIFIED,
@@ -38,10 +40,11 @@ class SourceProvider extends $pb.ProtobufEnum {
     SOURCE_PROVIDER_EMBY,
     SOURCE_PROVIDER_RTMP,
     SOURCE_PROVIDER_LIVE_PROXY,
+    SOURCE_PROVIDER_CLOUDREVE,
   ];
 
   static final $core.List<SourceProvider?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 6);
+      $pb.ProtobufEnum.$_initByValueList(values, 7);
   static SourceProvider? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

@@ -137,6 +137,7 @@ const Map<String, String> _providerTypeLabels = {
   'emby': 'Emby',
   'bilibili': 'Bilibili',
   'rtmp': 'RTMP',
+  'cloudreve': 'Cloudreve',
   'liveProxy': 'Live Proxy',
 };
 
@@ -6227,6 +6228,7 @@ IconData _providerTypeIcon(String provider) {
     'emby' => Icons.movie_filter_outlined,
     'bilibili' => Icons.live_tv_outlined,
     'rtmp' => Icons.podcasts_outlined,
+    'cloudreve' => Icons.cloud_outlined,
     'liveProxy' => Icons.route_rounded,
     _ => Icons.extension_outlined,
   };
@@ -6516,6 +6518,7 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                           'Emby': 'emby',
                           'Bilibili': 'bilibili',
                           'RTMP': 'rtmp',
+                          'Cloudreve': 'cloudreve',
                           'Live Proxy': 'liveProxy',
                         },
                         onChanged: (value) {

@@ -939,6 +939,18 @@ const EmbyTarget$json = {
 final $typed_data.Uint8List embyTargetDescriptor = $convert
     .base64Decode('CgpFbWJ5VGFyZ2V0EhcKB2l0ZW1faWQYASABKAlSBml0ZW1JZA==');
 
+@$core.Deprecated('Use cloudreveTargetDescriptor instead')
+const CloudreveTarget$json = {
+  '1': 'CloudreveTarget',
+  '2': [
+    {'1': 'relative_path', '3': 1, '4': 1, '5': 9, '10': 'relativePath'},
+  ],
+};
+
+/// Descriptor for `CloudreveTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List cloudreveTargetDescriptor = $convert.base64Decode(
+    'Cg9DbG91ZHJldmVUYXJnZXQSIwoNcmVsYXRpdmVfcGF0aBgBIAEoCVIMcmVsYXRpdmVQYXRo');
+
 @$core.Deprecated('Use providerTargetDescriptor instead')
 const ProviderTarget$json = {
   '1': 'ProviderTarget',
@@ -961,6 +973,15 @@ const ProviderTarget$json = {
       '9': 0,
       '10': 'emby'
     },
+    {
+      '1': 'cloudreve',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.CloudreveTarget',
+      '9': 0,
+      '10': 'cloudreve'
+    },
   ],
   '8': [
     {'1': 'target'},
@@ -971,7 +992,8 @@ const ProviderTarget$json = {
 final $typed_data.Uint8List providerTargetDescriptor = $convert.base64Decode(
     'Cg5Qcm92aWRlclRhcmdldBIyCgVhbGlzdBgBIAEoCzIaLnN5bmN0di5jbGllbnQuQWxpc3RUYX'
     'JnZXRIAFIFYWxpc3QSLwoEZW1ieRgCIAEoCzIZLnN5bmN0di5jbGllbnQuRW1ieVRhcmdldEgA'
-    'UgRlbWJ5QggKBnRhcmdldA==');
+    'UgRlbWJ5Ej4KCWNsb3VkcmV2ZRgDIAEoCzIeLnN5bmN0di5jbGllbnQuQ2xvdWRyZXZlVGFyZ2'
+    'V0SABSCWNsb3VkcmV2ZUIICgZ0YXJnZXQ=');
 
 @$core.Deprecated('Use fileMetadataDescriptor instead')
 const FileMetadata$json = {
@@ -5146,12 +5168,29 @@ const ListPlaylistItemsRequest$json = {
       '6': '.synctv.client.ProviderTarget',
       '10': 'target'
     },
-    {'1': 'page', '3': 3, '4': 1, '5': 5, '10': 'page'},
-    {'1': 'page_size', '3': 4, '4': 1, '5': 5, '10': 'pageSize'},
-    {'1': 'search', '3': 5, '4': 1, '5': 9, '8': {}, '10': 'search'},
+    {
+      '1': 'page',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.PagePagination',
+      '9': 0,
+      '10': 'page'
+    },
+    {
+      '1': 'cursor',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.CursorPagination',
+      '9': 0,
+      '10': 'cursor'
+    },
+    {'1': 'page_size', '3': 5, '4': 1, '5': 13, '8': {}, '10': 'pageSize'},
+    {'1': 'search', '3': 6, '4': 1, '5': 9, '8': {}, '10': 'search'},
     {
       '1': 'source_provider',
-      '3': 6,
+      '3': 7,
       '4': 1,
       '5': 14,
       '6': '.synctv.source_config.SourceProvider',
@@ -5160,7 +5199,7 @@ const ListPlaylistItemsRequest$json = {
     },
     {
       '1': 'provider_instance_name',
-      '3': 7,
+      '3': 8,
       '4': 1,
       '5': 9,
       '8': {},
@@ -5168,7 +5207,7 @@ const ListPlaylistItemsRequest$json = {
     },
     {
       '1': 'sort_by',
-      '3': 8,
+      '3': 9,
       '4': 1,
       '5': 14,
       '6': '.synctv.client.MediaListSortBy',
@@ -5177,7 +5216,7 @@ const ListPlaylistItemsRequest$json = {
     },
     {
       '1': 'sort_direction',
-      '3': 9,
+      '3': 10,
       '4': 1,
       '5': 14,
       '6': '.synctv.client.SortDirection',
@@ -5186,37 +5225,60 @@ const ListPlaylistItemsRequest$json = {
     },
     {
       '1': 'availability',
-      '3': 10,
+      '3': 11,
       '4': 1,
       '5': 14,
       '6': '.synctv.client.ResourceAvailabilityFilter',
       '8': {},
       '10': 'availability'
     },
-    {'1': 'refresh', '3': 11, '4': 1, '5': 8, '10': 'refresh'},
+    {'1': 'refresh', '3': 12, '4': 1, '5': 8, '10': 'refresh'},
   ],
-  '7': {},
+  '8': [
+    {'1': 'pagination'},
+  ],
 };
 
 /// Descriptor for `ListPlaylistItemsRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List listPlaylistItemsRequestDescriptor = $convert.base64Decode(
     'ChhMaXN0UGxheWxpc3RJdGVtc1JlcXVlc3QSHwoLcGxheWxpc3RfaWQYASABKAlSCnBsYXlsaX'
     'N0SWQSNQoGdGFyZ2V0GAIgASgLMh0uc3luY3R2LmNsaWVudC5Qcm92aWRlclRhcmdldFIGdGFy'
-    'Z2V0EhIKBHBhZ2UYAyABKAVSBHBhZ2USGwoJcGFnZV9zaXplGAQgASgFUghwYWdlU2l6ZRIfCg'
-    'ZzZWFyY2gYBSABKAlCB7pIBHICGGRSBnNlYXJjaBJXCg9zb3VyY2VfcHJvdmlkZXIYBiABKA4y'
-    'JC5zeW5jdHYuc291cmNlX2NvbmZpZy5Tb3VyY2VQcm92aWRlckIIukgFggECEAFSDnNvdXJjZV'
-    'Byb3ZpZGVyElIKFnByb3ZpZGVyX2luc3RhbmNlX25hbWUYByABKAlCHLpIGXIUGEAyEF5bQS1a'
-    'YS16MC05Xy1dKyTYAQFSFHByb3ZpZGVySW5zdGFuY2VOYW1lEkEKB3NvcnRfYnkYCCABKA4yHi'
-    '5zeW5jdHYuY2xpZW50Lk1lZGlhTGlzdFNvcnRCeUIIukgFggECEAFSBnNvcnRCeRJNCg5zb3J0'
-    'X2RpcmVjdGlvbhgJIAEoDjIcLnN5bmN0di5jbGllbnQuU29ydERpcmVjdGlvbkIIukgFggECEA'
-    'FSDXNvcnREaXJlY3Rpb24SVwoMYXZhaWxhYmlsaXR5GAogASgOMikuc3luY3R2LmNsaWVudC5S'
-    'ZXNvdXJjZUF2YWlsYWJpbGl0eUZpbHRlckIIukgFggECEAFSDGF2YWlsYWJpbGl0eRIYCgdyZW'
-    'ZyZXNoGAsgASgIUgdyZWZyZXNoOo8CukiLAhpoChhsaXN0X3BsYXlsaXN0X2l0ZW1zLnBhZ2US'
-    'KnBhZ2UgbXVzdCBiZSAwICh1c2UgZGVmYXVsdCkgb3IgYXQgbGVhc3QgMRogdGhpcy5wYWdlID'
-    '09IDAgfHwgdGhpcy5wYWdlID49IDEangEKHWxpc3RfcGxheWxpc3RfaXRlbXMucGFnZV9zaXpl'
-    'EjZwYWdlX3NpemUgbXVzdCBiZSAwICh1c2UgZGVmYXVsdCkgb3IgYmV0d2VlbiAxIGFuZCAxMD'
-    'AaRXRoaXMucGFnZV9zaXplID09IDAgfHwgKHRoaXMucGFnZV9zaXplID49IDEgJiYgdGhpcy5w'
-    'YWdlX3NpemUgPD0gMTAwKQ==');
+    'Z2V0EjMKBHBhZ2UYAyABKAsyHS5zeW5jdHYuY2xpZW50LlBhZ2VQYWdpbmF0aW9uSABSBHBhZ2'
+    'USOQoGY3Vyc29yGAQgASgLMh8uc3luY3R2LmNsaWVudC5DdXJzb3JQYWdpbmF0aW9uSABSBmN1'
+    'cnNvchIkCglwYWdlX3NpemUYBSABKA1CB7pIBCoCGGRSCHBhZ2VTaXplEh8KBnNlYXJjaBgGIA'
+    'EoCUIHukgEcgIYZFIGc2VhcmNoElcKD3NvdXJjZV9wcm92aWRlchgHIAEoDjIkLnN5bmN0di5z'
+    'b3VyY2VfY29uZmlnLlNvdXJjZVByb3ZpZGVyQgi6SAWCAQIQAVIOc291cmNlUHJvdmlkZXISUg'
+    'oWcHJvdmlkZXJfaW5zdGFuY2VfbmFtZRgIIAEoCUIcukgZchQYQDIQXltBLVphLXowLTlfLV0r'
+    'JNgBAVIUcHJvdmlkZXJJbnN0YW5jZU5hbWUSQQoHc29ydF9ieRgJIAEoDjIeLnN5bmN0di5jbG'
+    'llbnQuTWVkaWFMaXN0U29ydEJ5Qgi6SAWCAQIQAVIGc29ydEJ5Ek0KDnNvcnRfZGlyZWN0aW9u'
+    'GAogASgOMhwuc3luY3R2LmNsaWVudC5Tb3J0RGlyZWN0aW9uQgi6SAWCAQIQAVINc29ydERpcm'
+    'VjdGlvbhJXCgxhdmFpbGFiaWxpdHkYCyABKA4yKS5zeW5jdHYuY2xpZW50LlJlc291cmNlQXZh'
+    'aWxhYmlsaXR5RmlsdGVyQgi6SAWCAQIQAVIMYXZhaWxhYmlsaXR5EhgKB3JlZnJlc2gYDCABKA'
+    'hSB3JlZnJlc2hCDAoKcGFnaW5hdGlvbg==');
+
+@$core.Deprecated('Use pagePaginationDescriptor instead')
+const PagePagination$json = {
+  '1': 'PagePagination',
+  '2': [
+    {'1': 'page', '3': 1, '4': 1, '5': 13, '8': {}, '10': 'page'},
+  ],
+};
+
+/// Descriptor for `PagePagination`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List pagePaginationDescriptor = $convert.base64Decode(
+    'Cg5QYWdlUGFnaW5hdGlvbhIbCgRwYWdlGAEgASgNQge6SAQqAigBUgRwYWdl');
+
+@$core.Deprecated('Use cursorPaginationDescriptor instead')
+const CursorPagination$json = {
+  '1': 'CursorPagination',
+  '2': [
+    {'1': 'cursor', '3': 1, '4': 1, '5': 9, '10': 'cursor'},
+  ],
+};
+
+/// Descriptor for `CursorPagination`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List cursorPaginationDescriptor = $convert
+    .base64Decode('ChBDdXJzb3JQYWdpbmF0aW9uEhYKBmN1cnNvchgBIAEoCVIGY3Vyc29y');
 
 @$core.Deprecated('Use listPlaylistItemsResponseDescriptor instead')
 const ListPlaylistItemsResponse$json = {
@@ -5238,9 +5300,9 @@ const ListPlaylistItemsResponse$json = {
       '6': '.synctv.client.Media',
       '10': 'media'
     },
-    {'1': 'total', '3': 3, '4': 1, '5': 5, '10': 'total'},
-    {'1': 'folder_count', '3': 4, '4': 1, '5': 5, '10': 'folderCount'},
-    {'1': 'file_count', '3': 5, '4': 1, '5': 5, '10': 'fileCount'},
+    {'1': 'total', '3': 3, '4': 1, '5': 4, '9': 1, '10': 'total', '17': true},
+    {'1': 'folder_count', '3': 4, '4': 1, '5': 4, '10': 'folderCount'},
+    {'1': 'file_count', '3': 5, '4': 1, '5': 4, '10': 'fileCount'},
     {
       '1': 'dynamic_items',
       '3': 6,
@@ -5258,6 +5320,28 @@ const ListPlaylistItemsResponse$json = {
       '10': 'currentPath'
     },
     {'1': 'version', '3': 8, '4': 1, '5': 9, '10': 'version'},
+    {
+      '1': 'page',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.PagePagination',
+      '9': 0,
+      '10': 'page'
+    },
+    {
+      '1': 'cursor',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.CursorPagination',
+      '9': 0,
+      '10': 'cursor'
+    },
+  ],
+  '8': [
+    {'1': 'pagination'},
+    {'1': '_total'},
   ],
 };
 
@@ -5265,11 +5349,14 @@ const ListPlaylistItemsResponse$json = {
 final $typed_data.Uint8List listPlaylistItemsResponseDescriptor = $convert.base64Decode(
     'ChlMaXN0UGxheWxpc3RJdGVtc1Jlc3BvbnNlEjUKCXBsYXlsaXN0cxgBIAMoCzIXLnN5bmN0di'
     '5jbGllbnQuUGxheWxpc3RSCXBsYXlsaXN0cxIqCgVtZWRpYRgCIAMoCzIULnN5bmN0di5jbGll'
-    'bnQuTWVkaWFSBW1lZGlhEhQKBXRvdGFsGAMgASgFUgV0b3RhbBIhCgxmb2xkZXJfY291bnQYBC'
-    'ABKAVSC2ZvbGRlckNvdW50Eh0KCmZpbGVfY291bnQYBSABKAVSCWZpbGVDb3VudBJACg1keW5h'
-    'bWljX2l0ZW1zGAYgAygLMhsuc3luY3R2LmNsaWVudC5QbGF5bGlzdEl0ZW1SDGR5bmFtaWNJdG'
-    'VtcxJICgxjdXJyZW50X3BhdGgYByADKAsyJS5zeW5jdHYuY2xpZW50LlBsYXlsaXN0QnJvd3Nl'
-    'UGF0aE5vZGVSC2N1cnJlbnRQYXRoEhgKB3ZlcnNpb24YCCABKAlSB3ZlcnNpb24=');
+    'bnQuTWVkaWFSBW1lZGlhEhkKBXRvdGFsGAMgASgESAFSBXRvdGFsiAEBEiEKDGZvbGRlcl9jb3'
+    'VudBgEIAEoBFILZm9sZGVyQ291bnQSHQoKZmlsZV9jb3VudBgFIAEoBFIJZmlsZUNvdW50EkAK'
+    'DWR5bmFtaWNfaXRlbXMYBiADKAsyGy5zeW5jdHYuY2xpZW50LlBsYXlsaXN0SXRlbVIMZHluYW'
+    '1pY0l0ZW1zEkgKDGN1cnJlbnRfcGF0aBgHIAMoCzIlLnN5bmN0di5jbGllbnQuUGxheWxpc3RC'
+    'cm93c2VQYXRoTm9kZVILY3VycmVudFBhdGgSGAoHdmVyc2lvbhgIIAEoCVIHdmVyc2lvbhIzCg'
+    'RwYWdlGAkgASgLMh0uc3luY3R2LmNsaWVudC5QYWdlUGFnaW5hdGlvbkgAUgRwYWdlEjkKBmN1'
+    'cnNvchgKIAEoCzIfLnN5bmN0di5jbGllbnQuQ3Vyc29yUGFnaW5hdGlvbkgAUgZjdXJzb3JCDA'
+    'oKcGFnaW5hdGlvbkIICgZfdG90YWw=');
 
 @$core.Deprecated('Use playlistItemDescriptor instead')
 const PlaylistItem$json = {
@@ -5292,7 +5379,7 @@ const PlaylistItem$json = {
       '6': '.synctv.client.ProviderTarget',
       '10': 'target'
     },
-    {'1': 'size', '3': 4, '4': 1, '5': 3, '9': 0, '10': 'size', '17': true},
+    {'1': 'size', '3': 4, '4': 1, '5': 4, '9': 0, '10': 'size', '17': true},
     {
       '1': 'thumbnail',
       '3': 5,
@@ -5324,7 +5411,7 @@ const PlaylistItem$json = {
 final $typed_data.Uint8List playlistItemDescriptor = $convert.base64Decode(
     'CgxQbGF5bGlzdEl0ZW0SEgoEbmFtZRgBIAEoCVIEbmFtZRI0CglpdGVtX3R5cGUYAiABKA4yFy'
     '5zeW5jdHYuY2xpZW50Lkl0ZW1UeXBlUghpdGVtVHlwZRI1CgZ0YXJnZXQYAyABKAsyHS5zeW5j'
-    'dHYuY2xpZW50LlByb3ZpZGVyVGFyZ2V0UgZ0YXJnZXQSFwoEc2l6ZRgEIAEoA0gAUgRzaXpliA'
+    'dHYuY2xpZW50LlByb3ZpZGVyVGFyZ2V0UgZ0YXJnZXQSFwoEc2l6ZRgEIAEoBEgAUgRzaXpliA'
     'EBEiEKCXRodW1ibmFpbBgFIAEoCUgBUgl0aHVtYm5haWyIAQESJAoLbW9kaWZpZWRfYXQYBiAB'
     'KANIAlIKbW9kaWZpZWRBdIgBARIgCgtkZXNjcmlwdGlvbhgHIAEoCVILZGVzY3JpcHRpb25CBw'
     'oFX3NpemVCDAoKX3RodW1ibmFpbEIOCgxfbW9kaWZpZWRfYXQ=');
@@ -15517,6 +15604,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ProviderTarget': ProviderTarget$json,
   '.synctv.client.AlistTarget': AlistTarget$json,
   '.synctv.client.EmbyTarget': EmbyTarget$json,
+  '.synctv.client.CloudreveTarget': CloudreveTarget$json,
   '.synctv.client.JoinRoomRequest': JoinRoomRequest$json,
   '.synctv.client.JoinRoomResponse': JoinRoomResponse$json,
   '.synctv.common.RoomMember': $0.RoomMember$json,
@@ -16205,6 +16293,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ProviderTarget': ProviderTarget$json,
   '.synctv.client.AlistTarget': AlistTarget$json,
   '.synctv.client.EmbyTarget': EmbyTarget$json,
+  '.synctv.client.CloudreveTarget': CloudreveTarget$json,
   '.synctv.client.ChatMemberJoinedMetadata': ChatMemberJoinedMetadata$json,
   '.synctv.client.ChatMentionInput': ChatMentionInput$json,
   '.synctv.client.HeartbeatMessage': HeartbeatMessage$json,
@@ -16217,6 +16306,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ObserveRoomSettings': ObserveRoomSettings$json,
   '.synctv.client.ObservePlaylistItems': ObservePlaylistItems$json,
   '.synctv.client.ListPlaylistItemsRequest': ListPlaylistItemsRequest$json,
+  '.synctv.client.PagePagination': PagePagination$json,
+  '.synctv.client.CursorPagination': CursorPagination$json,
   '.synctv.client.ObserveRoomMemberEvents': ObserveRoomMemberEvents$json,
   '.synctv.client.ObserveChatEvents': ObserveChatEvents$json,
   '.synctv.client.ObserveOnlineCount': ObserveOnlineCount$json,
@@ -16270,6 +16361,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       $1.AlistPlaylistSourceConfig$json,
   '.synctv.source_config.EmbyPlaylistSourceConfig':
       $1.EmbyPlaylistSourceConfig$json,
+  '.synctv.source_config.CloudrevePlaylistSourceConfig':
+      $1.CloudrevePlaylistSourceConfig$json,
   '.synctv.client.Media': Media$json,
   '.synctv.client.ResourceMetadata': ResourceMetadata$json,
   '.synctv.source_config.MediaSourceConfig': $1.MediaSourceConfig$json,
@@ -16301,6 +16394,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.source_config.RtmpMediaSourceConfig': $1.RtmpMediaSourceConfig$json,
   '.synctv.source_config.LiveProxyMediaSourceConfig':
       $1.LiveProxyMediaSourceConfig$json,
+  '.synctv.source_config.CloudreveMediaSourceConfig':
+      $1.CloudreveMediaSourceConfig$json,
   '.synctv.client.MediaCover': MediaCover$json,
   '.synctv.client.MediaThumbnail': MediaThumbnail$json,
   '.synctv.client.PlaylistItem': PlaylistItem$json,

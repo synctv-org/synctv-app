@@ -917,6 +917,7 @@ class SyncTvService {
   static Future<RoomMediaLibraryPage> listMediaLibrary(
     String roomId, {
     int page = 1,
+    String? cursor,
     int pageSize = 50,
     String playlistId = '',
     String? target,
@@ -936,6 +937,7 @@ class SyncTvService {
       playlistId: playlistId,
       target: target,
       page: page,
+      cursor: cursor,
       pageSize: pageSize,
       search: search,
       sourceProvider: sourceProvider,
@@ -1532,6 +1534,24 @@ class SyncTvService {
     );
   }
 
+  static Future<String> addCloudreveMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _domains.roomMedia.addCloudreveMedia(
+      roomId,
+      playlistId: playlistId,
+      serverId: serverId,
+      path: path,
+      providerInstanceName: providerInstanceName,
+      name: name,
+    );
+  }
+
   static Future<String> addRtmpMedia(
     String roomId, {
     String playlistId = '',
@@ -1707,6 +1727,24 @@ class SyncTvService {
     return _domains.providers.logoutAList(serverId, instanceName: instanceName);
   }
 
+  static Future<String> loginCloudreve(
+    String host,
+    String email,
+    String password, {
+    String instanceName = '',
+  }) => _domains.providers.loginCloudreve(
+    host,
+    email,
+    password,
+    instanceName: instanceName,
+  );
+
+  static Future<void> logoutCloudreve(
+    String serverId, {
+    String instanceName = '',
+  }) =>
+      _domains.providers.logoutCloudreve(serverId, instanceName: instanceName);
+
   static Future<void> logoutEmby(String serverId, {String instanceName = ''}) {
     return _domains.providers.logoutEmby(serverId, instanceName: instanceName);
   }
@@ -1785,6 +1823,13 @@ class SyncTvService {
     return _domains.providers.getAllEmbyBindInfos();
   }
 
+  static Future<List<CloudreveBindInfo>> getCloudreveBindInfos({
+    String instanceName = '',
+  }) => _domains.providers.getCloudreveBindInfos(instanceName: instanceName);
+
+  static Future<List<CloudreveBindInfo>> getAllCloudreveBindInfos() =>
+      _domains.providers.getAllCloudreveBindInfos();
+
   static Future<List<BilibiliBindInfo>> getBilibiliBindInfos({
     String instanceName = '',
   }) async {
@@ -1814,6 +1859,14 @@ class SyncTvService {
       instanceName: instanceName,
     );
   }
+
+  static Future<CloudreveAccountInfo> getCloudreveAccount(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.getCloudreveAccount(
+    serverId,
+    instanceName: instanceName,
+  );
 
   static Future<BilibiliParseInfo> parseBilibiliInfo(
     String url, {
@@ -1860,6 +1913,26 @@ class SyncTvService {
       instanceName: instanceName,
     );
   }
+
+  static Future<CloudreveListPage> listCloudrevePage(
+    String path, {
+    String? keyword,
+    int page = 1,
+    int max = 20,
+    int? offset,
+    String? cursor,
+    String serverId = '',
+    String instanceName = '',
+  }) => _domains.providers.listCloudrevePage(
+    path,
+    keyword: keyword,
+    page: page,
+    max: max,
+    offset: offset,
+    cursor: cursor,
+    serverId: serverId,
+    instanceName: instanceName,
+  );
 
   static Future<EmbyListPage> listEmbyPage(
     String path, {

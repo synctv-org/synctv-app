@@ -2539,12 +2539,20 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                       PlatformBindingDialog.show(context, initialIndex: 0),
                 ),
                 _MediaProviderBindCard(
+                  label: 'Cloudreve',
+                  description: '连接 Cloudreve 账号并浏览云盘媒体',
+                  icon: Icons.cloud_rounded,
+                  color: Colors.teal,
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 1),
+                ),
+                _MediaProviderBindCard(
                   label: 'Emby',
                   description: context.l10n.embyAccountDescription,
                   icon: Icons.video_library_rounded,
                   color: Colors.green,
                   onTap: () =>
-                      PlatformBindingDialog.show(context, initialIndex: 1),
+                      PlatformBindingDialog.show(context, initialIndex: 2),
                 ),
                 _MediaProviderBindCard(
                   label: 'Bilibili',
@@ -2552,7 +2560,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   icon: Icons.tv_rounded,
                   color: const Color(0xFFFB7299),
                   onTap: () =>
-                      PlatformBindingDialog.show(context, initialIndex: 2),
+                      PlatformBindingDialog.show(context, initialIndex: 3),
                 ),
               ];
               if (compact) {

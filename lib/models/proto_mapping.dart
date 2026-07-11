@@ -160,7 +160,13 @@ client.ProviderTarget providerTargetFromJson(Map<String, dynamic> json) {
   final target = client.ProviderTarget();
   final alistPath = json['relativePath'] ?? json['path'];
   if (alistPath != null) {
-    target.alist = client.AlistTarget(relativePath: alistPath.toString());
+    if (json['provider']?.toString().toLowerCase() == 'cloudreve') {
+      target.cloudreve = client.CloudreveTarget(
+        relativePath: alistPath.toString(),
+      );
+    } else {
+      target.alist = client.AlistTarget(relativePath: alistPath.toString());
+    }
     return target;
   }
   final embyItemId = json['itemId'];
@@ -187,6 +193,10 @@ Map<String, dynamic> providerTargetToJson(client.ProviderTarget target) {
       'relativePath': target.alist.relativePath,
     },
     client.ProviderTarget_Target.emby => {'itemId': target.emby.itemId},
+    client.ProviderTarget_Target.cloudreve => {
+      'provider': 'cloudreve',
+      'relativePath': target.cloudreve.relativePath,
+    },
     client.ProviderTarget_Target.notSet => <String, dynamic>{},
   };
 }

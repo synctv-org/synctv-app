@@ -48,6 +48,74 @@ class BilibiliBindInfo {
   });
 }
 
+class CloudreveBindInfo {
+  final String id;
+  final String serverId;
+  final String host;
+  final String email;
+  final int createdAt;
+  final String providerInstanceName;
+
+  const CloudreveBindInfo({
+    required this.id,
+    required this.serverId,
+    required this.host,
+    required this.email,
+    required this.createdAt,
+    required this.providerInstanceName,
+  });
+}
+
+class CloudreveAccountInfo {
+  final String id;
+  final String email;
+  final String nickname;
+
+  const CloudreveAccountInfo({
+    required this.id,
+    required this.email,
+    required this.nickname,
+  });
+}
+
+class CloudreveItemInfo {
+  final String id;
+  final String name;
+  final String path;
+  final int size;
+  final bool isDir;
+  final int modified;
+  final String thumbnail;
+
+  const CloudreveItemInfo({
+    required this.id,
+    required this.name,
+    required this.path,
+    required this.size,
+    required this.isDir,
+    required this.modified,
+    required this.thumbnail,
+  });
+}
+
+class CloudreveListPage {
+  final String serverId;
+  final String providerInstanceName;
+  final List<CloudreveItemInfo> items;
+  final int total;
+  final bool usesCursor;
+  final String nextCursor;
+
+  const CloudreveListPage({
+    required this.serverId,
+    required this.providerInstanceName,
+    required this.items,
+    required this.total,
+    required this.usesCursor,
+    required this.nextCursor,
+  });
+}
+
 class AlistAccountInfo {
   final String username;
   final String basePath;

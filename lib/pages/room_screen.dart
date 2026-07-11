@@ -109,6 +109,8 @@ class _RoomScreenState extends State<RoomScreen>
 
   // Pagination
   int _currentPage = 1;
+  bool _usesCursorPagination = false;
+  String _nextCursor = '';
   final int _pageSize = 20;
   bool _hasMoreMediaEntries = true;
   bool _isLoadingMoreMediaEntries = false;
@@ -386,6 +388,7 @@ class _RoomScreenState extends State<RoomScreen>
         playlistId: parentFolder?.playbackPlaylistId ?? '',
         target: parentFolder?.playbackTarget,
         page: _currentPage + 1,
+        cursor: _usesCursorPagination ? _nextCursor : null,
         pageSize: _pageSize,
       );
 
@@ -396,8 +399,12 @@ class _RoomScreenState extends State<RoomScreen>
         setState(() {
           if (entries.isNotEmpty) {
             _mediaEntries.addAll(entries);
-            _currentPage++;
-            _hasMoreMediaEntries = _mediaEntries.length < total;
+            _usesCursorPagination = result.usesCursor;
+            _nextCursor = result.nextCursor;
+            _currentPage = result.page;
+            _hasMoreMediaEntries = result.usesCursor
+                ? result.nextCursor.isNotEmpty
+                : total != null && _mediaEntries.length < total;
           } else {
             _hasMoreMediaEntries = false;
           }
@@ -1041,8 +1048,12 @@ class _RoomScreenState extends State<RoomScreen>
     if (!mounted) return;
     setState(() {
       _mediaEntries = mediaLibrary.entries;
-      _currentPage = 1;
-      _hasMoreMediaEntries = mediaLibrary.total > _mediaEntries.length;
+      _currentPage = mediaLibrary.page;
+      _usesCursorPagination = mediaLibrary.usesCursor;
+      _nextCursor = mediaLibrary.nextCursor;
+      _hasMoreMediaEntries = mediaLibrary.usesCursor
+          ? mediaLibrary.nextCursor.isNotEmpty
+          : (mediaLibrary.total ?? 0) > _mediaEntries.length;
       _isLoadingMediaEntries = false;
       _selectedMediaEntryIds.removeWhere(
         (id) => !_mediaEntries.any((entry) => entry.id == id),
@@ -4612,6 +4623,7 @@ class _RoomScreenState extends State<RoomScreen>
       'alist' => 'AList',
       'emby' => 'Emby',
       'bilibili' => 'Bilibili',
+      'cloudreve' => 'Cloudreve',
       'direct_url' || 'direct' => context.l10n.directLink,
       '' => '',
       _ => provider,

@@ -25,6 +25,8 @@ import 'package:synctv_app/src/generated/proto/providers/bilibili.pb.dart'
     as bilibili;
 import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
     as provider_common;
+import 'package:synctv_app/src/generated/proto/providers/cloudreve.pb.dart'
+    as cloudreve;
 import 'package:synctv_app/src/generated/proto/providers/emby.pb.dart' as emby;
 import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
@@ -132,6 +134,8 @@ class SyncTvApiClient {
     this,
   );
   late final SyncTvEmbyProviderApi embyProvider = SyncTvEmbyProviderApi._(this);
+  late final SyncTvCloudreveProviderApi cloudreveProvider =
+      SyncTvCloudreveProviderApi._(this);
   late final SyncTvBilibiliProviderApi bilibiliProvider =
       SyncTvBilibiliProviderApi._(this);
   late final SyncTvRtmpProviderApi rtmpProvider = SyncTvRtmpProviderApi._(this);
@@ -712,7 +716,8 @@ class SyncTvApiClient {
         value.containsKey('alist') ||
         value.containsKey('emby') ||
         value.containsKey('rtmp') ||
-        value.containsKey('liveProxy');
+        value.containsKey('liveProxy') ||
+        value.containsKey('cloudreve');
   }
 
   T _decodeResponse<T extends GeneratedMessage>(

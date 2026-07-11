@@ -967,6 +967,15 @@ class SyncTvRoomApi {
     String roomId,
     client.WatchPlaylistItemsRequest request,
   ) {
+    final playlistRequest = request.playlistItems.request;
+    final query = _api._messageQuery(playlistRequest)
+      ..remove('page')
+      ..remove('cursor');
+    if (playlistRequest.hasPage()) {
+      query['page'] = playlistRequest.page.page.toString();
+    } else if (playlistRequest.hasCursor()) {
+      query['cursor'] = playlistRequest.cursor.cursor;
+    }
     return _api._watchSse(
       '/api/rooms/$roomId/watch/playlist-items',
       client.WatchPlaylistItemsEvent.create,
@@ -977,7 +986,7 @@ class SyncTvRoomApi {
               ? request.playlistItems.afterEventSequence
               : null,
         ),
-        ..._api._messageQuery(request.playlistItems.request),
+        ...query,
       },
     );
   }
@@ -3009,6 +3018,61 @@ class SyncTvAlistProviderApi {
       query: _api._messageQuery(request),
     );
   }
+}
+
+class SyncTvCloudreveProviderApi {
+  SyncTvCloudreveProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<cloudreve.LoginResponse> login(cloudreve.LoginRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/cloudreve/login',
+        cloudreve.LoginResponse.create,
+        body: request,
+      );
+
+  Future<cloudreve.ListResponse> list(cloudreve.ListRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/cloudreve/list',
+        cloudreve.ListResponse.create,
+        body: request,
+      );
+
+  Future<cloudreve.SearchResponse> search(cloudreve.SearchRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/cloudreve/search',
+        cloudreve.SearchResponse.create,
+        body: request,
+      );
+
+  Future<cloudreve.GetMeResponse> getMe(cloudreve.GetMeRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/cloudreve/me',
+        cloudreve.GetMeResponse.create,
+        body: request,
+      );
+
+  Future<cloudreve.LogoutResponse> logout(cloudreve.LogoutRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/cloudreve/logout',
+        cloudreve.LogoutResponse.create,
+        body: request,
+      );
+
+  Future<cloudreve.GetBindsResponse> getBinds(
+    cloudreve.GetBindsRequest request,
+  ) => _api._send(
+    'GET',
+    '/api/providers/cloudreve/binds',
+    cloudreve.GetBindsResponse.create,
+    query: _api._messageQuery(request),
+  );
 }
 
 class SyncTvEmbyProviderApi {
