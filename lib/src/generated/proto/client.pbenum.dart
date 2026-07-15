@@ -440,23 +440,31 @@ class MyRoomListSortBy extends $pb.ProtobufEnum {
   static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_UNSPECIFIED =
       MyRoomListSortBy._(
           0, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_UNSPECIFIED');
+  static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_FREQUENT =
+      MyRoomListSortBy._(
+          1, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_FREQUENT');
+  static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_LAST_VISITED_AT =
+      MyRoomListSortBy._(
+          2, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_LAST_VISITED_AT');
   static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_JOINED_AT =
       MyRoomListSortBy._(
-          1, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_JOINED_AT');
+          3, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_JOINED_AT');
   static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_CREATED_AT =
       MyRoomListSortBy._(
-          2, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_CREATED_AT');
+          4, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_CREATED_AT');
   static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_UPDATED_AT =
       MyRoomListSortBy._(
-          3, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_UPDATED_AT');
+          5, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_UPDATED_AT');
   static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT =
       MyRoomListSortBy._(
-          4, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT');
+          6, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT');
   static const MyRoomListSortBy MY_ROOM_LIST_SORT_BY_NAME =
-      MyRoomListSortBy._(5, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_NAME');
+      MyRoomListSortBy._(7, _omitEnumNames ? '' : 'MY_ROOM_LIST_SORT_BY_NAME');
 
   static const $core.List<MyRoomListSortBy> values = <MyRoomListSortBy>[
     MY_ROOM_LIST_SORT_BY_UNSPECIFIED,
+    MY_ROOM_LIST_SORT_BY_FREQUENT,
+    MY_ROOM_LIST_SORT_BY_LAST_VISITED_AT,
     MY_ROOM_LIST_SORT_BY_JOINED_AT,
     MY_ROOM_LIST_SORT_BY_CREATED_AT,
     MY_ROOM_LIST_SORT_BY_UPDATED_AT,
@@ -465,7 +473,7 @@ class MyRoomListSortBy extends $pb.ProtobufEnum {
   ];
 
   static final $core.List<MyRoomListSortBy?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 5);
+      $pb.ProtobufEnum.$_initByValueList(values, 7);
   static MyRoomListSortBy? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

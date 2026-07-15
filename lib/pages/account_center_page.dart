@@ -176,7 +176,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   client_enum.MyRoomRelation _roomRelationFilter =
       client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL;
   client_enum.MyRoomListSortBy _roomSortBy =
-      client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT;
+      client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_FREQUENT;
   final Set<int> _selectedNotificationIds = <int>{};
   final TextEditingController _notificationSearchController =
       TextEditingController();
@@ -1835,6 +1835,12 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                           AppSelect<client_enum.MyRoomListSortBy>(
                             value: _roomSortBy,
                             options: {
+                              context.l10n.frequentlyVisited: client_enum
+                                  .MyRoomListSortBy
+                                  .MY_ROOM_LIST_SORT_BY_FREQUENT,
+                              context.l10n.recentlyVisited: client_enum
+                                  .MyRoomListSortBy
+                                  .MY_ROOM_LIST_SORT_BY_LAST_VISITED_AT,
                               context.l10n.recentActivity: client_enum
                                   .MyRoomListSortBy
                                   .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,

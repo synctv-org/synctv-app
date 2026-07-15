@@ -2750,6 +2750,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recentActivity => '最近活跃';
 
   @override
+  String get frequentlyVisited => '常访问';
+
+  @override
+  String get recentlyVisited => '最近访问';
+
+  @override
   String get refreshRooms => '刷新房间';
 
   @override

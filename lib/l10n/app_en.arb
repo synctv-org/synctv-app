@@ -988,6 +988,8 @@
   "createdByMe": "Created by me",
   "joinedByMe": "Joined by me",
   "recentActivity": "Recent activity",
+  "frequentlyVisited": "Frequently visited",
+  "recentlyVisited": "Recently visited",
   "refreshRooms": "Refresh rooms",
   "pageRangeSummary": "Page {page} of {pages} · {start}-{end} / {total}",
   "@pageRangeSummary": {"placeholders": {"page": {"type": "int"}, "pages": {"type": "int"}, "start": {"type": "int"}, "end": {"type": "int"}, "total": {"type": "int"}}},

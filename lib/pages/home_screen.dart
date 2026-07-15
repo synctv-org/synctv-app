@@ -234,9 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
             pageSize: _roomPageSize,
             search: search.isEmpty ? null : search,
             relation: client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL,
-            sortBy: client_enum
-                .MyRoomListSortBy
-                .MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+            sortBy: client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_FREQUENT,
             sortDirection: client_enum.SortDirection.SORT_DIRECTION_DESC,
           );
           rooms = page.rooms;

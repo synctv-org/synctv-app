@@ -730,7 +730,7 @@ class SyncTvService {
     client_enum.MyRoomRelation relation =
         client_enum.MyRoomRelation.MY_ROOM_RELATION_ALL,
     client_enum.MyRoomListSortBy sortBy =
-        client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
+        client_enum.MyRoomListSortBy.MY_ROOM_LIST_SORT_BY_FREQUENT,
     client_enum.SortDirection sortDirection =
         client_enum.SortDirection.SORT_DIRECTION_DESC,
     bool refresh = false,

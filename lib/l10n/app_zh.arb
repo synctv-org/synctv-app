@@ -809,6 +809,8 @@
   "createdByMe": "我创建的",
   "joinedByMe": "我加入的",
   "recentActivity": "最近活跃",
+  "frequentlyVisited": "常访问",
+  "recentlyVisited": "最近访问",
   "refreshRooms": "刷新房间",
   "pageRangeSummary": "第 {page} / {pages} 页 · {start}-{end} / {total}",
   "myRoomsTemporarilyUnavailable": "我的房间暂时不可用",

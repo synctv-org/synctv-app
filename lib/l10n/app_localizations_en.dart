@@ -2984,6 +2984,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentActivity => 'Recent activity';
 
   @override
+  String get frequentlyVisited => 'Frequently visited';
+
+  @override
+  String get recentlyVisited => 'Recently visited';
+
+  @override
   String get refreshRooms => 'Refresh rooms';
 
   @override

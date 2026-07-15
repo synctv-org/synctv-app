@@ -4946,6 +4946,18 @@ abstract class AppLocalizations {
   /// **'Recent activity'**
   String get recentActivity;
 
+  /// No description provided for @frequentlyVisited.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently visited'**
+  String get frequentlyVisited;
+
+  /// No description provided for @recentlyVisited.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently visited'**
+  String get recentlyVisited;
+
   /// No description provided for @refreshRooms.
   ///
   /// In en, this message translates to:
