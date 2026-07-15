@@ -17,7 +17,22 @@ import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-enum _ProviderKind { alist, cloudreve, emby, bilibili }
+enum _ProviderKind {
+  alist,
+  cloudreve,
+  emby,
+  bilibili,
+  twitch,
+  fnos,
+  qnap,
+  synology,
+  nextcloud,
+  seafile,
+  truenas,
+  youtube,
+  douyin,
+  tiktok,
+}
 
 List<String> _mergeInstanceNames(List<String> remoteInstances) {
   final names = <String>[''];
@@ -113,6 +128,86 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       emptyIcon: Icons.live_tv_rounded,
       color: Color(0xFFFB7299),
     ),
+    _ProviderSpec(
+      kind: _ProviderKind.twitch,
+      label: 'Twitch',
+      tabLabel: 'Twitch',
+      icon: Icons.live_tv_rounded,
+      emptyIcon: Icons.live_tv_outlined,
+      color: Color(0xFF9146FF),
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.fnos,
+      label: 'FNOS',
+      tabLabel: 'FNOS',
+      icon: Icons.storage_rounded,
+      emptyIcon: Icons.storage_outlined,
+      color: Color(0xFF087F5B),
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.qnap,
+      label: 'QNAP',
+      tabLabel: 'QNAP',
+      icon: Icons.storage_rounded,
+      emptyIcon: Icons.storage_outlined,
+      color: Color(0xFF0076A8),
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.synology,
+      label: 'Synology DSM',
+      tabLabel: 'Synology',
+      icon: Icons.video_library_rounded,
+      emptyIcon: Icons.storage_outlined,
+      color: Color(0xFF1578D3),
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.nextcloud,
+      label: 'Nextcloud',
+      tabLabel: 'Nextcloud',
+      icon: Icons.cloud_outlined,
+      emptyIcon: Icons.cloud_off_outlined,
+      color: Color(0xFF0082C9),
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.seafile,
+      label: 'Seafile',
+      tabLabel: 'Seafile',
+      icon: Icons.cloud_queue_rounded,
+      emptyIcon: Icons.cloud_off_outlined,
+      color: Color(0xFFED7109),
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.truenas,
+      label: 'TrueNAS',
+      tabLabel: 'TrueNAS',
+      icon: Icons.dns_rounded,
+      emptyIcon: Icons.storage_outlined,
+      color: Color(0xFF0095D5),
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.youtube,
+      label: 'YouTube',
+      tabLabel: 'YouTube',
+      icon: Icons.smart_display_rounded,
+      emptyIcon: Icons.smart_display_outlined,
+      color: Color(0xFFFF0033),
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.douyin,
+      label: 'Douyin',
+      tabLabel: 'Douyin',
+      icon: Icons.music_video_rounded,
+      emptyIcon: Icons.music_video_outlined,
+      color: Color(0xFF00D4C6),
+    ),
+    _ProviderSpec(
+      kind: _ProviderKind.tiktok,
+      label: 'TikTok',
+      tabLabel: 'TikTok',
+      icon: Icons.music_video_rounded,
+      emptyIcon: Icons.music_video_outlined,
+      color: Color(0xFFFE2C55),
+    ),
   ];
 
   late TabController _tabController;
@@ -195,6 +290,153 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
                 ),
               )
               .toList(),
+        _ProviderKind.twitch =>
+          (await SyncTvService.getAllTwitchBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.login,
+                  subtitle: [
+                    bind.twitchUserId,
+                    if (bind.scopes.isNotEmpty) bind.scopes.join(', '),
+                  ].join(' · '),
+                ),
+              )
+              .toList(),
+        _ProviderKind.fnos =>
+          (await SyncTvService.getAllFnosBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.endpoint,
+                  subtitle: bind.mediaAvailable
+                      ? '${bind.username} · Media'
+                      : bind.username,
+                ),
+              )
+              .toList(),
+        _ProviderKind.qnap =>
+          (await SyncTvService.getAllQnapBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.serverName.isEmpty
+                      ? bind.endpoint
+                      : bind.serverName,
+                  subtitle: [
+                    bind.username,
+                    if (bind.version.isNotEmpty) bind.version,
+                    if (bind.supportRtt) 'RTT',
+                  ].join(' · '),
+                ),
+              )
+              .toList(),
+        _ProviderKind.synology =>
+          (await SyncTvService.getAllSynologyBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.endpoint,
+                  subtitle: bind.videoStationAvailable
+                      ? '${bind.username} · Video Station'
+                      : bind.username,
+                ),
+              )
+              .toList(),
+        _ProviderKind.nextcloud =>
+          (await SyncTvService.getAllNextcloudBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.endpoint,
+                  subtitle: [
+                    bind.username,
+                    if (bind.version.isNotEmpty) bind.version,
+                    if (bind.edition.isNotEmpty) bind.edition,
+                  ].where((value) => value.isNotEmpty).join(' · '),
+                ),
+              )
+              .toList(),
+        _ProviderKind.seafile =>
+          (await SyncTvService.getAllSeafileBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.endpoint,
+                  subtitle: [
+                    bind.username,
+                    if (bind.version.isNotEmpty) bind.version,
+                  ].join(' · '),
+                ),
+              )
+              .toList(),
+        _ProviderKind.truenas =>
+          (await SyncTvService.getAllTrueNasBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.endpoint,
+                  subtitle: [
+                    bind.hostname,
+                    if (bind.version.isNotEmpty) bind.version,
+                  ].join(' · '),
+                ),
+              )
+              .toList(),
+        _ProviderKind.youtube =>
+          (await SyncTvService.getAllYoutubeBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.label,
+                  subtitle: [
+                    if (bind.hasVisitorData) 'Visitor Data',
+                    if (bind.hasPoToken) 'PO Token',
+                    if (bind.hasCookie) 'Cookie',
+                  ].join(' · '),
+                ),
+              )
+              .toList(),
+        _ProviderKind.douyin =>
+          (await SyncTvService.getAllDouyinBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.label,
+                  subtitle: bind.hasCookie ? 'Cookie configured' : 'Cookie',
+                ),
+              )
+              .toList(),
+        _ProviderKind.tiktok =>
+          (await SyncTvService.getAllTikTokBindInfos())
+              .map(
+                (bind) => _ProviderBindItem(
+                  id: bind.id,
+                  serverId: bind.serverId,
+                  instanceName: bind.providerInstanceName,
+                  title: bind.label,
+                  subtitle: bind.hasCookie ? 'Cookie configured' : 'Cookie',
+                ),
+              )
+              .toList(),
       };
       if (mounted) setState(() => _binds[kind] = list);
     } catch (e) {
@@ -258,6 +500,56 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
           );
         case _ProviderKind.bilibili:
           await SyncTvService.logoutBilibili(instanceName: item.instanceName);
+        case _ProviderKind.twitch:
+          await SyncTvService.unbindTwitch(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.fnos:
+          await SyncTvService.logoutFnos(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.qnap:
+          await SyncTvService.logoutQnap(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.synology:
+          await SyncTvService.logoutSynology(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.nextcloud:
+          await SyncTvService.logoutNextcloud(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.seafile:
+          await SyncTvService.logoutSeafile(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.truenas:
+          await SyncTvService.logoutTrueNas(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.youtube:
+          await SyncTvService.unbindYoutube(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.douyin:
+          await SyncTvService.unbindDouyin(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
+        case _ProviderKind.tiktok:
+          await SyncTvService.unbindTikTok(
+            item.serverId,
+            instanceName: item.instanceName,
+          );
       }
       if (!mounted) return;
       MessageUtils.showSuccess(context, context.l10n.unboundSuccessfully);
@@ -278,6 +570,134 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
         icon: const Icon(Icons.tv_rounded, color: Color(0xFFFB7299)),
         iconColor: const Color(0xFFFB7299),
         content: _BilibiliLoginDialog(
+          instanceNamesLoader: () =>
+              SyncTvService.listAvailableProviderInstances(
+                providerType: _providerType(kind),
+              ),
+          onSuccess: () => _loadBinds(kind, showLoading: false),
+        ),
+      );
+      return;
+    }
+    if (kind == _ProviderKind.twitch) {
+      _showProviderFormDialog(
+        context: context,
+        title: context.l10n.bindProvider('Twitch'),
+        icon: const Icon(Icons.live_tv_rounded, color: Color(0xFF9146FF)),
+        iconColor: const Color(0xFF9146FF),
+        content: TwitchAccountBindingForm(
+          instanceNamesLoader: () =>
+              SyncTvService.listAvailableProviderInstances(
+                providerType: _providerType(kind),
+              ),
+          onSuccess: () => _loadBinds(kind, showLoading: false),
+        ),
+      );
+      return;
+    }
+    if (kind == _ProviderKind.youtube) {
+      _showProviderFormDialog(
+        context: context,
+        title: context.l10n.bindProvider('YouTube'),
+        icon: const Icon(Icons.smart_display_rounded, color: Color(0xFFFF0033)),
+        iconColor: const Color(0xFFFF0033),
+        content: YoutubeAccountBindingForm(
+          instanceNamesLoader: () =>
+              SyncTvService.listAvailableProviderInstances(
+                providerType: _providerType(kind),
+              ),
+          onSuccess: () => _loadBinds(kind, showLoading: false),
+        ),
+      );
+      return;
+    }
+    if (kind == _ProviderKind.douyin) {
+      _showProviderFormDialog(
+        context: context,
+        title: context.l10n.bindProvider('Douyin'),
+        icon: const Icon(Icons.music_video_rounded, color: Color(0xFF00D4C6)),
+        iconColor: const Color(0xFF00D4C6),
+        content: DouyinAccountBindingForm(
+          instanceNamesLoader: () =>
+              SyncTvService.listAvailableProviderInstances(
+                providerType: _providerType(kind),
+              ),
+          onSuccess: () => _loadBinds(kind, showLoading: false),
+        ),
+      );
+      return;
+    }
+    if (kind == _ProviderKind.tiktok) {
+      _showProviderFormDialog(
+        context: context,
+        title: context.l10n.bindProvider('TikTok'),
+        icon: const Icon(Icons.music_video_rounded, color: Color(0xFFFE2C55)),
+        iconColor: const Color(0xFFFE2C55),
+        content: TikTokAccountBindingForm(
+          instanceNamesLoader: () =>
+              SyncTvService.listAvailableProviderInstances(
+                providerType: _providerType(kind),
+              ),
+          onSuccess: () => _loadBinds(kind, showLoading: false),
+        ),
+      );
+      return;
+    }
+    if (kind == _ProviderKind.fnos) {
+      _showProviderFormDialog(
+        context: context,
+        title: context.l10n.bindProvider('FNOS'),
+        icon: const Icon(Icons.storage_rounded, color: Color(0xFF087F5B)),
+        iconColor: const Color(0xFF087F5B),
+        content: _FnosAccountDialog(
+          instanceNamesLoader: () =>
+              SyncTvService.listAvailableProviderInstances(
+                providerType: _providerType(kind),
+              ),
+          onSuccess: () => _loadBinds(kind, showLoading: false),
+        ),
+      );
+      return;
+    }
+    if (kind == _ProviderKind.qnap) {
+      _showProviderFormDialog(
+        context: context,
+        title: context.l10n.bindProvider('QNAP'),
+        icon: const Icon(Icons.storage_rounded, color: Color(0xFF0076A8)),
+        iconColor: const Color(0xFF0076A8),
+        content: _QnapAccountDialog(
+          instanceNamesLoader: () =>
+              SyncTvService.listAvailableProviderInstances(
+                providerType: _providerType(kind),
+              ),
+          onSuccess: () => _loadBinds(kind, showLoading: false),
+        ),
+      );
+      return;
+    }
+    if (kind == _ProviderKind.synology) {
+      _showProviderFormDialog(
+        context: context,
+        title: context.l10n.bindProvider('Synology DSM'),
+        icon: const Icon(Icons.video_library_rounded, color: Color(0xFF1578D3)),
+        iconColor: const Color(0xFF1578D3),
+        content: _SynologyAccountDialog(
+          instanceNamesLoader: () =>
+              SyncTvService.listAvailableProviderInstances(
+                providerType: _providerType(kind),
+              ),
+          onSuccess: () => _loadBinds(kind, showLoading: false),
+        ),
+      );
+      return;
+    }
+    if (kind == _ProviderKind.nextcloud) {
+      _showProviderFormDialog(
+        context: context,
+        title: context.l10n.bindProvider('Nextcloud'),
+        icon: const Icon(Icons.cloud_outlined, color: Color(0xFF0082C9)),
+        iconColor: const Color(0xFF0082C9),
+        content: _NextcloudAccountDialog(
           instanceNamesLoader: () =>
               SyncTvService.listAvailableProviderInstances(
                 providerType: _providerType(kind),
@@ -441,6 +861,160 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
             _providerInstanceLabel(item.instanceName, l10n.localInstance),
           ),
         ];
+      case _ProviderKind.twitch:
+        return [
+          (l10n.username, item.title),
+          (l10n.userId, item.subtitle),
+          (l10n.server, item.serverId),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
+      case _ProviderKind.fnos:
+        return [
+          (l10n.server, item.title),
+          (l10n.username, item.subtitle),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
+      case _ProviderKind.qnap:
+        final capabilities = await SyncTvService.getQnapCapabilities(
+          item.serverId,
+          instanceName: item.instanceName,
+        );
+        return [
+          (l10n.server, item.title),
+          (l10n.username, item.subtitle),
+          (
+            'Real-time transcoding',
+            capabilities.supportRtt ? l10n.yes : l10n.no,
+          ),
+          (
+            'Hardware transcoding',
+            capabilities.hardwareTranscode ? l10n.yes : l10n.no,
+          ),
+          ('QTranscode', capabilities.qtranscode ? l10n.yes : l10n.no),
+          (
+            'Multimedia Codec',
+            capabilities.multimediaCodec ? l10n.yes : l10n.no,
+          ),
+          ('HD Station', capabilities.hdStationSupport ? l10n.yes : l10n.no),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
+      case _ProviderKind.synology:
+        return [
+          (l10n.server, item.title),
+          (l10n.username, item.subtitle),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
+      case _ProviderKind.nextcloud:
+        final binds = await SyncTvService.getAllNextcloudBindInfos();
+        final bind = binds.firstWhere(
+          (candidate) =>
+              candidate.serverId == item.serverId &&
+              candidate.providerInstanceName == item.instanceName,
+        );
+        return [
+          (l10n.server, bind.endpoint),
+          (l10n.username, bind.username),
+          if (bind.userId.isNotEmpty) (l10n.userId, bind.userId),
+          if (bind.version.isNotEmpty) ('Version', bind.version),
+          if (bind.edition.isNotEmpty) ('Edition', bind.edition),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
+      case _ProviderKind.seafile:
+        final binds = await SyncTvService.getAllSeafileBindInfos();
+        final bind = binds.firstWhere(
+          (candidate) =>
+              candidate.serverId == item.serverId &&
+              candidate.providerInstanceName == item.instanceName,
+        );
+        return [
+          (l10n.server, bind.endpoint),
+          (l10n.username, bind.username),
+          if (bind.version.isNotEmpty) ('Version', bind.version),
+          if (bind.features.isNotEmpty) ('Features', bind.features.join(', ')),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
+      case _ProviderKind.truenas:
+        final binds = await SyncTvService.getAllTrueNasBindInfos();
+        final bind = binds.firstWhere(
+          (candidate) =>
+              candidate.serverId == item.serverId &&
+              candidate.providerInstanceName == item.instanceName,
+        );
+        return [
+          (l10n.server, bind.endpoint),
+          ('Hostname', bind.hostname),
+          if (bind.version.isNotEmpty) ('Version', bind.version),
+          if (bind.systemProduct.isNotEmpty) ('System', bind.systemProduct),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
+      case _ProviderKind.youtube:
+        final binds = await SyncTvService.getAllYoutubeBindInfos();
+        final bind = binds.firstWhere(
+          (candidate) =>
+              candidate.serverId == item.serverId &&
+              candidate.providerInstanceName == item.instanceName,
+        );
+        return [
+          ('Label', bind.label),
+          ('Visitor Data', bind.hasVisitorData ? 'Configured' : 'Empty'),
+          ('PO Token', bind.hasPoToken ? 'Configured' : 'Empty'),
+          ('Cookie', bind.hasCookie ? 'Configured' : 'Empty'),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
+      case _ProviderKind.douyin:
+        final binds = await SyncTvService.getAllDouyinBindInfos();
+        final bind = binds.firstWhere(
+          (candidate) =>
+              candidate.serverId == item.serverId &&
+              candidate.providerInstanceName == item.instanceName,
+        );
+        return [
+          ('Label', bind.label),
+          ('Cookie', bind.hasCookie ? 'Configured' : 'Empty'),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
+      case _ProviderKind.tiktok:
+        final binds = await SyncTvService.getAllTikTokBindInfos();
+        final bind = binds.firstWhere(
+          (candidate) =>
+              candidate.serverId == item.serverId &&
+              candidate.providerInstanceName == item.instanceName,
+        );
+        return [
+          ('Label', bind.label),
+          ('Cookie', bind.hasCookie ? 'Configured' : 'Empty'),
+          (
+            l10n.instance,
+            _providerInstanceLabel(item.instanceName, l10n.localInstance),
+          ),
+        ];
     }
   }
 
@@ -450,6 +1024,16 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
       _ProviderKind.emby => 'emby',
       _ProviderKind.cloudreve => 'cloudreve',
       _ProviderKind.bilibili => 'bilibili',
+      _ProviderKind.twitch => 'twitch',
+      _ProviderKind.fnos => 'fnos',
+      _ProviderKind.qnap => 'qnap',
+      _ProviderKind.synology => 'synology',
+      _ProviderKind.nextcloud => 'nextcloud',
+      _ProviderKind.seafile => 'seafile',
+      _ProviderKind.truenas => 'truenas',
+      _ProviderKind.youtube => 'youtube',
+      _ProviderKind.douyin => 'douyin',
+      _ProviderKind.tiktok => 'tiktok',
     };
   }
 
@@ -876,6 +1460,1446 @@ class _ProviderTinyChip extends StatelessWidget {
   }
 }
 
+class YoutubeAccountBindingForm extends StatefulWidget {
+  const YoutubeAccountBindingForm({
+    super.key,
+    required this.instanceNamesLoader,
+    required this.onSuccess,
+    this.onBind,
+  });
+
+  final Future<List<String>> Function() instanceNamesLoader;
+  final VoidCallback onSuccess;
+  final Future<void> Function({
+    required String label,
+    required String visitorData,
+    required String poToken,
+    required String cookie,
+    required String instanceName,
+  })?
+  onBind;
+
+  @override
+  State<YoutubeAccountBindingForm> createState() =>
+      _YoutubeAccountBindingFormState();
+}
+
+class _YoutubeAccountBindingFormState extends State<YoutubeAccountBindingForm> {
+  final _labelController = TextEditingController(text: 'Browser session');
+  final _visitorController = TextEditingController();
+  final _poTokenController = TextEditingController();
+  final _cookieController = TextEditingController();
+  List<String> _instances = const [''];
+  String _instanceName = '';
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.instanceNamesLoader().then((values) {
+      if (mounted) setState(() => _instances = _mergeInstanceNames(values));
+    });
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    _visitorController.dispose();
+    _poTokenController.dispose();
+    _cookieController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(
+          key: const Key('youtube-bind-label'),
+          controller: _labelController,
+          enabled: !_loading,
+          label: 'Label',
+          prefixIcon: Icons.label_outline,
+        ),
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('youtube-bind-visitor-data'),
+          controller: _visitorController,
+          enabled: !_loading,
+          label: 'Visitor Data',
+          prefixIcon: Icons.fingerprint,
+        ),
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('youtube-bind-po-token'),
+          controller: _poTokenController,
+          enabled: !_loading,
+          obscureText: true,
+          enableSuggestions: false,
+          autocorrect: false,
+          label: 'PO Token',
+          prefixIcon: Icons.key_outlined,
+        ),
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('youtube-bind-cookie'),
+          controller: _cookieController,
+          enabled: !_loading,
+          obscureText: true,
+          enableSuggestions: false,
+          autocorrect: false,
+          label: 'YouTube Cookie',
+          prefixIcon: Icons.cookie_outlined,
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _instanceName,
+          decoration: const InputDecoration(
+            labelText: 'Provider instance',
+            prefixIcon: Icon(Icons.dns_outlined),
+          ),
+          items: _instances
+              .map(
+                (value) => DropdownMenuItem(
+                  value: value,
+                  child: Text(value.isEmpty ? 'Default' : value),
+                ),
+              )
+              .toList(),
+          onChanged: _loading
+              ? null
+              : (value) => setState(() => _instanceName = value ?? ''),
+        ),
+        const SizedBox(height: 18),
+        FilledButton.icon(
+          key: const Key('youtube-bind-submit'),
+          onPressed: _loading ? null : _bind,
+          icon: _loading
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: AppLoadingIndicator(
+                    size: AppLoadingSize.sm,
+                    centered: false,
+                  ),
+                )
+              : const Icon(Icons.link),
+          label: const Text('Bind YouTube'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _bind() async {
+    if (_labelController.text.trim().isEmpty ||
+        (_visitorController.text.trim().isEmpty &&
+            _poTokenController.text.trim().isEmpty &&
+            _cookieController.text.trim().isEmpty)) {
+      MessageUtils.showError(
+        context,
+        'Label and at least one YouTube credential are required',
+      );
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      if (widget.onBind case final bind?) {
+        await bind(
+          label: _labelController.text,
+          visitorData: _visitorController.text,
+          poToken: _poTokenController.text,
+          cookie: _cookieController.text,
+          instanceName: _instanceName,
+        );
+      } else {
+        await SyncTvService.bindYoutube(
+          label: _labelController.text,
+          visitorData: _visitorController.text,
+          poToken: _poTokenController.text,
+          cookie: _cookieController.text,
+          instanceName: _instanceName,
+        );
+      }
+      if (!mounted) return;
+      widget.onSuccess();
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) MessageUtils.showError(context, '$error');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+}
+
+class DouyinAccountBindingForm extends StatefulWidget {
+  const DouyinAccountBindingForm({
+    super.key,
+    required this.instanceNamesLoader,
+    required this.onSuccess,
+    this.onBind,
+  });
+
+  final Future<List<String>> Function() instanceNamesLoader;
+  final VoidCallback onSuccess;
+  final Future<void> Function({
+    required String label,
+    required String cookie,
+    required String instanceName,
+  })?
+  onBind;
+
+  @override
+  State<DouyinAccountBindingForm> createState() =>
+      _DouyinAccountBindingFormState();
+}
+
+class _DouyinAccountBindingFormState extends State<DouyinAccountBindingForm> {
+  final _labelController = TextEditingController(text: 'Browser session');
+  final _cookieController = TextEditingController();
+  List<String> _instances = const [''];
+  String _instanceName = '';
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.instanceNamesLoader().then((values) {
+      if (mounted) setState(() => _instances = _mergeInstanceNames(values));
+    });
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    _cookieController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(
+          key: const Key('douyin-bind-label'),
+          controller: _labelController,
+          enabled: !_loading,
+          label: 'Label',
+          prefixIcon: Icons.label_outline,
+        ),
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('douyin-bind-cookie'),
+          controller: _cookieController,
+          enabled: !_loading,
+          obscureText: true,
+          enableSuggestions: false,
+          autocorrect: false,
+          label: 'Douyin Cookie',
+          prefixIcon: Icons.cookie_outlined,
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _instanceName,
+          decoration: const InputDecoration(
+            labelText: 'Provider instance',
+            prefixIcon: Icon(Icons.dns_outlined),
+          ),
+          items: _instances
+              .map(
+                (value) => DropdownMenuItem(
+                  value: value,
+                  child: Text(value.isEmpty ? 'Default' : value),
+                ),
+              )
+              .toList(),
+          onChanged: _loading
+              ? null
+              : (value) => setState(() => _instanceName = value ?? ''),
+        ),
+        const SizedBox(height: 18),
+        FilledButton.icon(
+          key: const Key('douyin-bind-submit'),
+          onPressed: _loading ? null : _bind,
+          icon: _loading
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: AppLoadingIndicator(
+                    size: AppLoadingSize.sm,
+                    centered: false,
+                  ),
+                )
+              : const Icon(Icons.link),
+          label: const Text('Bind Douyin'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _bind() async {
+    if (_labelController.text.trim().isEmpty ||
+        _cookieController.text.trim().isEmpty) {
+      MessageUtils.showError(context, 'Label and Douyin Cookie are required');
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      if (widget.onBind case final bind?) {
+        await bind(
+          label: _labelController.text,
+          cookie: _cookieController.text,
+          instanceName: _instanceName,
+        );
+      } else {
+        await SyncTvService.bindDouyin(
+          label: _labelController.text,
+          cookie: _cookieController.text,
+          instanceName: _instanceName,
+        );
+      }
+      if (!mounted) return;
+      widget.onSuccess();
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) MessageUtils.showError(context, '$error');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+}
+
+class TikTokAccountBindingForm extends StatefulWidget {
+  const TikTokAccountBindingForm({
+    super.key,
+    required this.instanceNamesLoader,
+    required this.onSuccess,
+    this.onBind,
+  });
+
+  final Future<List<String>> Function() instanceNamesLoader;
+  final VoidCallback onSuccess;
+  final Future<void> Function({
+    required String label,
+    required String cookie,
+    required String instanceName,
+  })?
+  onBind;
+
+  @override
+  State<TikTokAccountBindingForm> createState() =>
+      _TikTokAccountBindingFormState();
+}
+
+class _TikTokAccountBindingFormState extends State<TikTokAccountBindingForm> {
+  final _labelController = TextEditingController(text: 'Browser session');
+  final _cookieController = TextEditingController();
+  List<String> _instances = const [''];
+  String _instanceName = '';
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.instanceNamesLoader().then((values) {
+      if (mounted) setState(() => _instances = _mergeInstanceNames(values));
+    });
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    _cookieController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTextField(
+          key: const Key('tiktok-bind-label'),
+          controller: _labelController,
+          enabled: !_loading,
+          label: 'Label',
+          prefixIcon: Icons.label_outline,
+        ),
+        const SizedBox(height: 12),
+        AppTextField(
+          key: const Key('tiktok-bind-cookie'),
+          controller: _cookieController,
+          enabled: !_loading,
+          obscureText: true,
+          enableSuggestions: false,
+          autocorrect: false,
+          label: 'TikTok Cookie',
+          prefixIcon: Icons.cookie_outlined,
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          initialValue: _instanceName,
+          decoration: const InputDecoration(
+            labelText: 'Provider instance',
+            prefixIcon: Icon(Icons.dns_outlined),
+          ),
+          items: _instances
+              .map(
+                (value) => DropdownMenuItem(
+                  value: value,
+                  child: Text(value.isEmpty ? 'Default' : value),
+                ),
+              )
+              .toList(),
+          onChanged: _loading
+              ? null
+              : (value) => setState(() => _instanceName = value ?? ''),
+        ),
+        const SizedBox(height: 18),
+        FilledButton.icon(
+          key: const Key('tiktok-bind-submit'),
+          onPressed: _loading ? null : _bind,
+          icon: _loading
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: AppLoadingIndicator(
+                    size: AppLoadingSize.sm,
+                    centered: false,
+                  ),
+                )
+              : const Icon(Icons.link),
+          label: const Text('Bind TikTok'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _bind() async {
+    if (_labelController.text.trim().isEmpty ||
+        _cookieController.text.trim().isEmpty) {
+      MessageUtils.showError(context, 'Label and TikTok Cookie are required');
+      return;
+    }
+    setState(() => _loading = true);
+    try {
+      if (widget.onBind case final bind?) {
+        await bind(
+          label: _labelController.text,
+          cookie: _cookieController.text,
+          instanceName: _instanceName,
+        );
+      } else {
+        await SyncTvService.bindTikTok(
+          label: _labelController.text,
+          cookie: _cookieController.text,
+          instanceName: _instanceName,
+        );
+      }
+      if (!mounted) return;
+      widget.onSuccess();
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) MessageUtils.showError(context, '$error');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+}
+
+class TwitchAccountBindingForm extends StatefulWidget {
+  const TwitchAccountBindingForm({
+    super.key,
+    required this.instanceNamesLoader,
+    required this.onSuccess,
+    this.onBind,
+  });
+
+  final Future<List<String>> Function() instanceNamesLoader;
+  final VoidCallback onSuccess;
+  final Future<void> Function({
+    required String authToken,
+    required String deviceId,
+    required String clientIntegrity,
+    required String instanceName,
+  })?
+  onBind;
+
+  @override
+  State<TwitchAccountBindingForm> createState() =>
+      _TwitchAccountBindingFormState();
+}
+
+class _TwitchAccountBindingFormState extends State<TwitchAccountBindingForm> {
+  final _tokenController = TextEditingController();
+  final _deviceIdController = TextEditingController();
+  final _integrityController = TextEditingController();
+  List<String> _instanceNames = const [''];
+  String _instanceName = '';
+  bool _loadingInstances = true;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInstances();
+  }
+
+  @override
+  void dispose() {
+    _tokenController.dispose();
+    _deviceIdController.dispose();
+    _integrityController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInstances() async {
+    try {
+      final names = await widget.instanceNamesLoader();
+      if (!mounted) return;
+      setState(() {
+        _instanceNames = _mergeInstanceNames(names);
+        _instanceName = _instanceNames.first;
+        _loadingInstances = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadingInstances = false);
+      MessageUtils.showError(
+        context,
+        context.l10n.loadMediaSourceInstancesFailed('$error'),
+      );
+    }
+  }
+
+  Future<void> _submit() async {
+    final token = _tokenController.text.trim();
+    if (token.isEmpty) {
+      MessageUtils.showError(context, context.l10n.completeAllFields);
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      if (widget.onBind case final bind?) {
+        await bind(
+          authToken: token,
+          deviceId: _deviceIdController.text,
+          clientIntegrity: _integrityController.text,
+          instanceName: _instanceName,
+        );
+      } else {
+        await SyncTvService.bindTwitch(
+          authToken: token,
+          deviceId: _deviceIdController.text,
+          clientIntegrity: _integrityController.text,
+          instanceName: _instanceName,
+        );
+      }
+      if (!mounted) return;
+      Navigator.pop(context);
+      MessageUtils.showSuccess(context, context.l10n.boundSuccessfully);
+      widget.onSuccess();
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.bindingFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF9146FF);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _ProviderFormSection(
+          icon: Icons.account_tree_outlined,
+          title: context.l10n.connectionTarget,
+          color: color,
+          children: [
+            _ProviderInstanceSelector(
+              instanceNames: _instanceNames,
+              selected: _instanceName,
+              loading: _loadingInstances,
+              onChanged: (value) => setState(() => _instanceName = value),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _ProviderFormSection(
+          icon: Icons.key_rounded,
+          title: context.l10n.loginCredentials,
+          color: color,
+          children: [
+            AppTextField(
+              key: const Key('twitch-bind-token'),
+              label: 'OAuth Token',
+              controller: _tokenController,
+              prefixIcon: Icons.key_rounded,
+              obscureText: true,
+              enableSuggestions: false,
+              autocorrect: false,
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              key: const Key('twitch-bind-device-id'),
+              label: 'Device ID',
+              controller: _deviceIdController,
+              prefixIcon: Icons.devices_rounded,
+              enableSuggestions: false,
+              autocorrect: false,
+            ),
+            const SizedBox(height: 12),
+            AppTextField(
+              key: const Key('twitch-bind-integrity'),
+              label: 'Client Integrity',
+              controller: _integrityController,
+              prefixIcon: Icons.verified_user_outlined,
+              obscureText: true,
+              enableSuggestions: false,
+              autocorrect: false,
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _DialogActions(
+          isLoading: _submitting,
+          onSubmit: _submit,
+          submitText: context.l10n.login,
+        ),
+      ],
+    );
+  }
+}
+
+enum _NextcloudLoginMode { browser, appPassword }
+
+class _NextcloudAccountDialog extends StatefulWidget {
+  const _NextcloudAccountDialog({
+    required this.instanceNamesLoader,
+    required this.onSuccess,
+  });
+
+  final Future<List<String>> Function() instanceNamesLoader;
+  final VoidCallback onSuccess;
+
+  @override
+  State<_NextcloudAccountDialog> createState() =>
+      _NextcloudAccountDialogState();
+}
+
+class _NextcloudAccountDialogState extends State<_NextcloudAccountDialog> {
+  final _endpointController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _appPasswordController = TextEditingController();
+  List<String> _instanceNames = const [''];
+  String _instanceName = '';
+  _NextcloudLoginMode _mode = _NextcloudLoginMode.browser;
+  bool _loadingInstances = true;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInstances();
+  }
+
+  @override
+  void dispose() {
+    _endpointController.dispose();
+    _usernameController.dispose();
+    _appPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInstances() async {
+    try {
+      final names = await widget.instanceNamesLoader();
+      if (!mounted) return;
+      setState(() {
+        _instanceNames = _mergeInstanceNames(names);
+        _instanceName = _instanceNames.first;
+        _loadingInstances = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadingInstances = false);
+      MessageUtils.showError(
+        context,
+        context.l10n.loadMediaSourceInstancesFailed('$error'),
+      );
+    }
+  }
+
+  Future<void> _submit() {
+    return switch (_mode) {
+      _NextcloudLoginMode.browser => _loginWithBrowser(),
+      _NextcloudLoginMode.appPassword => _loginWithAppPassword(),
+    };
+  }
+
+  Future<void> _loginWithAppPassword() async {
+    if (_endpointController.text.trim().isEmpty ||
+        _usernameController.text.trim().isEmpty ||
+        _appPasswordController.text.isEmpty) {
+      MessageUtils.showError(context, context.l10n.completeAllFields);
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      await SyncTvService.loginNextcloud(
+        endpoint: _endpointController.text,
+        username: _usernameController.text,
+        appPassword: _appPasswordController.text,
+        instanceName: _instanceName,
+      );
+      _completeLogin();
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.bindingFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _loginWithBrowser() async {
+    final endpoint = _endpointController.text.trim();
+    if (endpoint.isEmpty) {
+      MessageUtils.showError(context, context.l10n.completeAllFields);
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      final flow = await SyncTvService.startNextcloudLoginFlow(endpoint);
+      final loginUri = Uri.parse(flow.loginUrl);
+      final launched = await launchUrl(
+        loginUri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) throw StateError('Unable to open Nextcloud login');
+
+      Object? lastError;
+      for (var attempt = 0; attempt < 90 && mounted; attempt++) {
+        try {
+          await SyncTvService.pollNextcloudLoginFlow(
+            endpoint: endpoint,
+            flow: flow,
+            instanceName: _instanceName,
+          );
+          _completeLogin();
+          return;
+        } catch (error) {
+          lastError = error;
+          await Future<void>.delayed(const Duration(seconds: 2));
+        }
+      }
+      if (mounted) {
+        throw StateError('Nextcloud login timed out: $lastError');
+      }
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.bindingFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  void _completeLogin() {
+    if (!mounted) return;
+    Navigator.pop(context);
+    MessageUtils.showSuccess(context, context.l10n.boundSuccessfully);
+    widget.onSuccess();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF0082C9);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 560),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: AppSingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _ProviderFormSection(
+                    icon: Icons.hub_outlined,
+                    title: context.l10n.connectionTarget,
+                    color: color,
+                    children: [
+                      _ProviderInstanceSelector(
+                        instanceNames: _instanceNames,
+                        selected: _instanceName,
+                        loading: _loadingInstances,
+                        onChanged: (value) =>
+                            setState(() => _instanceName = value),
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: 'Nextcloud URL',
+                        controller: _endpointController,
+                        hintText: 'https://cloud.example.com',
+                        prefixIcon: Icons.dns_outlined,
+                        keyboardType: TextInputType.url,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  AppSegmentedControl<_NextcloudLoginMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: _NextcloudLoginMode.browser,
+                        icon: Icon(Icons.open_in_browser_rounded),
+                        label: Text('Browser'),
+                      ),
+                      ButtonSegment(
+                        value: _NextcloudLoginMode.appPassword,
+                        icon: Icon(Icons.key_rounded),
+                        label: Text('App password'),
+                      ),
+                    ],
+                    value: _mode,
+                    onChanged: (value) {
+                      if (_submitting) return;
+                      setState(() => _mode = value);
+                    },
+                  ),
+                  if (_mode == _NextcloudLoginMode.appPassword) ...[
+                    const SizedBox(height: 14),
+                    _ProviderFormSection(
+                      icon: Icons.key_rounded,
+                      title: context.l10n.loginCredentials,
+                      color: color,
+                      children: [
+                        ChatUtils.createFormField(
+                          context: context,
+                          label: context.l10n.username,
+                          controller: _usernameController,
+                          prefixIcon: Icons.person_outline_rounded,
+                          enableSuggestions: false,
+                          autocorrect: false,
+                        ),
+                        const SizedBox(height: 12),
+                        ChatUtils.createFormField(
+                          context: context,
+                          label: 'App password',
+                          controller: _appPasswordController,
+                          prefixIcon: Icons.lock_outline_rounded,
+                          obscureText: true,
+                          enableSuggestions: false,
+                          autocorrect: false,
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _DialogActions(
+            isLoading: _submitting,
+            onSubmit: _submit,
+            submitText: _mode == _NextcloudLoginMode.browser
+                ? 'Open browser'
+                : context.l10n.login,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SynologyAccountDialog extends StatefulWidget {
+  const _SynologyAccountDialog({
+    required this.instanceNamesLoader,
+    required this.onSuccess,
+  });
+
+  final Future<List<String>> Function() instanceNamesLoader;
+  final VoidCallback onSuccess;
+
+  @override
+  State<_SynologyAccountDialog> createState() => _SynologyAccountDialogState();
+}
+
+class _SynologyAccountDialogState extends State<_SynologyAccountDialog> {
+  final _endpointController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _otpController = TextEditingController();
+  final _deviceController = TextEditingController(text: 'SyncTV');
+  List<String> _instanceNames = const [''];
+  String _instanceName = '';
+  bool _loadingInstances = true;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInstances();
+  }
+
+  @override
+  void dispose() {
+    _endpointController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _otpController.dispose();
+    _deviceController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInstances() async {
+    try {
+      final names = await widget.instanceNamesLoader();
+      if (!mounted) return;
+      setState(() {
+        _instanceNames = _mergeInstanceNames(names);
+        _instanceName = _instanceNames.first;
+        _loadingInstances = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadingInstances = false);
+      MessageUtils.showError(
+        context,
+        context.l10n.loadMediaSourceInstancesFailed('$error'),
+      );
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_endpointController.text.trim().isEmpty ||
+        _usernameController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      MessageUtils.showError(context, context.l10n.completeAllFields);
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      await SyncTvService.loginSynology(
+        endpoint: _endpointController.text,
+        username: _usernameController.text,
+        password: _passwordController.text,
+        otpCode: _otpController.text,
+        deviceName: _deviceController.text,
+        instanceName: _instanceName,
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+      MessageUtils.showSuccess(context, context.l10n.boundSuccessfully);
+      widget.onSuccess();
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.bindingFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF1578D3);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 560),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: AppSingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _ProviderFormSection(
+                    icon: Icons.hub_outlined,
+                    title: context.l10n.connectionTarget,
+                    color: color,
+                    children: [
+                      _ProviderInstanceSelector(
+                        instanceNames: _instanceNames,
+                        selected: _instanceName,
+                        loading: _loadingInstances,
+                        onChanged: (value) =>
+                            setState(() => _instanceName = value),
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: 'DSM URL',
+                        controller: _endpointController,
+                        hintText: 'https://nas.example.com:5001',
+                        prefixIcon: Icons.dns_outlined,
+                        keyboardType: TextInputType.url,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _ProviderFormSection(
+                    icon: Icons.key_rounded,
+                    title: context.l10n.loginCredentials,
+                    color: color,
+                    children: [
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: context.l10n.username,
+                        controller: _usernameController,
+                        prefixIcon: Icons.person_outline_rounded,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: context.l10n.password,
+                        controller: _passwordController,
+                        prefixIcon: Icons.lock_outline_rounded,
+                        obscureText: true,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: 'OTP',
+                        controller: _otpController,
+                        prefixIcon: Icons.password_rounded,
+                        keyboardType: TextInputType.number,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: 'Device name',
+                        controller: _deviceController,
+                        prefixIcon: Icons.devices_rounded,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _DialogActions(
+            isLoading: _submitting,
+            onSubmit: _submit,
+            submitText: context.l10n.login,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QnapAccountDialog extends StatefulWidget {
+  const _QnapAccountDialog({
+    required this.instanceNamesLoader,
+    required this.onSuccess,
+  });
+
+  final Future<List<String>> Function() instanceNamesLoader;
+  final VoidCallback onSuccess;
+
+  @override
+  State<_QnapAccountDialog> createState() => _QnapAccountDialogState();
+}
+
+class _QnapAccountDialogState extends State<_QnapAccountDialog> {
+  final _endpointController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  List<String> _instanceNames = const [''];
+  String _instanceName = '';
+  bool _loadingInstances = true;
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInstances();
+  }
+
+  @override
+  void dispose() {
+    _endpointController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInstances() async {
+    try {
+      final names = await widget.instanceNamesLoader();
+      if (!mounted) return;
+      setState(() {
+        _instanceNames = _mergeInstanceNames(names);
+        _instanceName = _instanceNames.first;
+        _loadingInstances = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadingInstances = false);
+      MessageUtils.showError(
+        context,
+        context.l10n.loadMediaSourceInstancesFailed('$error'),
+      );
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_endpointController.text.trim().isEmpty ||
+        _usernameController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
+      MessageUtils.showError(context, context.l10n.completeAllFields);
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      await SyncTvService.loginQnap(
+        endpoint: _endpointController.text,
+        username: _usernameController.text,
+        password: _passwordController.text,
+        instanceName: _instanceName,
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+      MessageUtils.showSuccess(context, context.l10n.boundSuccessfully);
+      widget.onSuccess();
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.bindingFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF0076A8);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 520),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: AppSingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _ProviderFormSection(
+                    icon: Icons.hub_outlined,
+                    title: context.l10n.connectionTarget,
+                    color: color,
+                    children: [
+                      _ProviderInstanceSelector(
+                        instanceNames: _instanceNames,
+                        selected: _instanceName,
+                        loading: _loadingInstances,
+                        onChanged: (value) =>
+                            setState(() => _instanceName = value),
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: 'QNAP URL',
+                        controller: _endpointController,
+                        hintText: 'https://nas.example.com:443',
+                        prefixIcon: Icons.dns_outlined,
+                        keyboardType: TextInputType.url,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _ProviderFormSection(
+                    icon: Icons.key_rounded,
+                    title: context.l10n.loginCredentials,
+                    color: color,
+                    children: [
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: context.l10n.username,
+                        controller: _usernameController,
+                        prefixIcon: Icons.person_outline_rounded,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: context.l10n.password,
+                        controller: _passwordController,
+                        prefixIcon: Icons.lock_outline_rounded,
+                        obscureText: true,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _DialogActions(
+            isLoading: _submitting,
+            onSubmit: _submit,
+            submitText: context.l10n.login,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FnosAccountDialog extends StatefulWidget {
+  const _FnosAccountDialog({
+    required this.instanceNamesLoader,
+    required this.onSuccess,
+  });
+
+  final Future<List<String>> Function() instanceNamesLoader;
+  final VoidCallback onSuccess;
+
+  @override
+  State<_FnosAccountDialog> createState() => _FnosAccountDialogState();
+}
+
+class _FnosAccountDialogState extends State<_FnosAccountDialog> {
+  final _endpointController = TextEditingController();
+  final _webdavController = TextEditingController();
+  final _mediaController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _twoFactorController = TextEditingController();
+  List<String> _instanceNames = const [''];
+  String _instanceName = '';
+  bool _loadingInstances = true;
+  bool _submitting = false;
+  bool _twoFactorRequired = false;
+  bool _trustDevice = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInstances();
+  }
+
+  @override
+  void dispose() {
+    _endpointController.dispose();
+    _webdavController.dispose();
+    _mediaController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _twoFactorController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInstances() async {
+    try {
+      final names = await widget.instanceNamesLoader();
+      if (!mounted) return;
+      setState(() {
+        _instanceNames = _mergeInstanceNames(names);
+        _instanceName = _instanceNames.first;
+        _loadingInstances = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadingInstances = false);
+      MessageUtils.showError(
+        context,
+        context.l10n.loadMediaSourceInstancesFailed('$error'),
+      );
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_endpointController.text.trim().isEmpty ||
+        _usernameController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty ||
+        (_twoFactorRequired && _twoFactorController.text.trim().length != 6)) {
+      MessageUtils.showError(context, context.l10n.completeAllFields);
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      final result = await SyncTvService.loginFnos(
+        endpoint: _endpointController.text,
+        webdavEndpoint: _webdavController.text,
+        mediaEndpoint: _mediaController.text,
+        username: _usernameController.text,
+        password: _passwordController.text,
+        twoFactorCode: _twoFactorController.text,
+        trustDevice: _trustDevice,
+        instanceName: _instanceName,
+      );
+      if (!mounted) return;
+      switch (result) {
+        case FnosAuthenticatedInfo():
+          Navigator.pop(context);
+          MessageUtils.showSuccess(context, context.l10n.boundSuccessfully);
+          widget.onSuccess();
+        case FnosTwoFactorRequiredInfo():
+          setState(() => _twoFactorRequired = true);
+      }
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.bindingFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const color = Color(0xFF087F5B);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 620),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: AppSingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _ProviderFormSection(
+                    icon: Icons.hub_outlined,
+                    title: context.l10n.connectionTarget,
+                    color: color,
+                    children: [
+                      _ProviderInstanceSelector(
+                        instanceNames: _instanceNames,
+                        selected: _instanceName,
+                        loading: _loadingInstances,
+                        onChanged: (value) =>
+                            setState(() => _instanceName = value),
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: 'FNOS WebSocket / Host',
+                        controller: _endpointController,
+                        prefixIcon: Icons.dns_outlined,
+                        keyboardType: TextInputType.url,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: 'WebDAV URL',
+                        controller: _webdavController,
+                        prefixIcon: Icons.folder_shared_outlined,
+                        keyboardType: TextInputType.url,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: 'Media API URL',
+                        controller: _mediaController,
+                        prefixIcon: Icons.video_library_outlined,
+                        keyboardType: TextInputType.url,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _ProviderFormSection(
+                    icon: Icons.key_rounded,
+                    title: context.l10n.loginCredentials,
+                    color: color,
+                    children: [
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: context.l10n.username,
+                        controller: _usernameController,
+                        prefixIcon: Icons.person_outline_rounded,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                      const SizedBox(height: 12),
+                      ChatUtils.createFormField(
+                        context: context,
+                        label: context.l10n.password,
+                        controller: _passwordController,
+                        prefixIcon: Icons.lock_outline_rounded,
+                        obscureText: true,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                      ),
+                      if (_twoFactorRequired) ...[
+                        const SizedBox(height: 12),
+                        ChatUtils.createFormField(
+                          context: context,
+                          label: '2FA',
+                          controller: _twoFactorController,
+                          prefixIcon: Icons.shield_outlined,
+                          keyboardType: TextInputType.number,
+                          enableSuggestions: false,
+                          autocorrect: false,
+                        ),
+                        const SizedBox(height: 8),
+                        AppSwitchTile(
+                          value: _trustDevice,
+                          onChanged: (value) =>
+                              setState(() => _trustDevice = value),
+                          title: const Text('Trust device'),
+                          prefix: const Icon(Icons.verified_user_outlined),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          _DialogActions(
+            isLoading: _submitting,
+            onSubmit: _submit,
+            submitText: context.l10n.login,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _PasswordAccountDialog extends StatefulWidget {
   final _ProviderKind kind;
   final Future<List<String>> Function() instanceNamesLoader;
@@ -908,11 +2932,22 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   bool get _isAlist => widget.kind == _ProviderKind.alist;
   bool get _isEmby => widget.kind == _ProviderKind.emby;
   bool get _isCloudreve => widget.kind == _ProviderKind.cloudreve;
+  bool get _isTrueNas => widget.kind == _ProviderKind.truenas;
   String get _label => switch (widget.kind) {
     _ProviderKind.alist => 'AList',
     _ProviderKind.cloudreve => 'Cloudreve',
     _ProviderKind.emby => 'Emby',
     _ProviderKind.bilibili => 'Bilibili',
+    _ProviderKind.twitch => 'Twitch',
+    _ProviderKind.fnos => 'FNOS',
+    _ProviderKind.qnap => 'QNAP',
+    _ProviderKind.synology => 'Synology DSM',
+    _ProviderKind.nextcloud => 'Nextcloud',
+    _ProviderKind.seafile => 'Seafile',
+    _ProviderKind.truenas => 'TrueNAS',
+    _ProviderKind.youtube => 'YouTube',
+    _ProviderKind.douyin => 'Douyin',
+    _ProviderKind.tiktok => 'TikTok',
   };
 
   @override
@@ -964,8 +2999,12 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
     final otpSecret = _otpSecretController.text.trim();
 
     if (host.isEmpty ||
-        username.isEmpty ||
-        (_isEmby && _useApiKey ? apiKey.isEmpty : password.isEmpty)) {
+        (_isTrueNas
+            ? apiKey.isEmpty
+            : username.isEmpty ||
+                  (_isEmby && _useApiKey
+                      ? apiKey.isEmpty
+                      : password.isEmpty))) {
       MessageUtils.showError(context, context.l10n.completeAllFields);
       return;
     }
@@ -986,6 +3025,19 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
           host,
           username,
           password,
+          instanceName: _instanceName,
+        );
+      } else if (widget.kind == _ProviderKind.seafile) {
+        await SyncTvService.loginSeafile(
+          endpoint: host,
+          username: username,
+          password: password,
+          instanceName: _instanceName,
+        );
+      } else if (_isTrueNas) {
+        await SyncTvService.loginTrueNas(
+          endpoint: host,
+          apiKey: apiKey,
           instanceName: _instanceName,
         );
       } else {
@@ -1028,7 +3080,9 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final providerColor = _isAlist
+    final providerColor = _isTrueNas
+        ? const Color(0xFF0095D5)
+        : _isAlist
         ? Colors.amber
         : _isCloudreve
         ? Colors.teal
@@ -1087,7 +3141,9 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                         context: context,
                         label: context.l10n.port,
                         controller: _portController,
-                        hintText: _isAlist
+                        hintText: _isTrueNas
+                            ? '443'
+                            : _isAlist
                             ? '5244'
                             : _isCloudreve
                             ? '5212'
@@ -1107,13 +3163,15 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                     title: context.l10n.loginCredentials,
                     color: providerColor,
                     children: [
-                      ChatUtils.createFormField(
-                        context: context,
-                        label: _isCloudreve ? 'Email' : context.l10n.username,
-                        controller: _usernameController,
-                        prefixIcon: Icons.person_outline_rounded,
-                      ),
-                      const SizedBox(height: 12),
+                      if (!_isTrueNas) ...[
+                        ChatUtils.createFormField(
+                          context: context,
+                          label: _isCloudreve ? 'Email' : context.l10n.username,
+                          controller: _usernameController,
+                          prefixIcon: Icons.person_outline_rounded,
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       if (_isEmby) ...[
                         Align(
                           alignment: Alignment.centerLeft,
@@ -1137,7 +3195,7 @@ class _PasswordAccountDialogState extends State<_PasswordAccountDialog> {
                         ),
                         const SizedBox(height: 12),
                       ],
-                      if (_useApiKey)
+                      if (_useApiKey || _isTrueNas)
                         ChatUtils.createFormField(
                           context: context,
                           label: 'API Key',

@@ -20,14 +20,34 @@ import 'package:synctv_app/services/synctv_runtime_service.dart';
 import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/providers/bilibili.pbenum.dart'
     as bilibili_enum;
+import 'package:synctv_app/src/generated/proto/providers/bilibili.pb.dart'
+    as bilibili;
 import 'package:synctv_app/src/generated/proto/providers/common.pbenum.dart'
     as provider_common_enum;
+import 'package:synctv_app/src/generated/proto/providers/douyin.pb.dart'
+    as douyin;
+import 'package:synctv_app/src/generated/proto/providers/huya.pb.dart' as huya;
+import 'package:synctv_app/src/generated/proto/providers/douyu.pb.dart'
+    as douyu;
+import 'package:synctv_app/src/generated/proto/providers/acfun.pb.dart'
+    as acfun;
+import 'package:synctv_app/src/generated/proto/providers/cctv.pb.dart' as cctv;
+import 'package:synctv_app/src/generated/proto/providers/tiktok.pb.dart'
+    as tiktok;
+import 'package:synctv_app/src/generated/proto/providers/twitch.pb.dart'
+    as twitch;
+import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
+    as youtube;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 export 'package:synctv_app/models/admin_models.dart';
 export 'package:synctv_app/models/provider_models.dart';
@@ -79,6 +99,8 @@ class SyncTvService {
 
   static String resolveResourceUrl(String url) =>
       _runtime.resolveResourceUrl(url);
+  static Map<String, String> get authenticatedResourceHeaders =>
+      _api.authenticatedResourceHeaders;
   static String? get guestRoomId => _runtime.guestRoomId;
   static bool get isGuestSession => _runtime.isGuestSession;
 
@@ -923,6 +945,8 @@ class SyncTvService {
     String? target,
     String search = '',
     String sourceProvider = '',
+    Map<String, dynamic>? previewSourceConfig,
+    source_config.PlaylistSourceConfig? typedPreviewSourceConfig,
     String providerInstanceName = '',
     client_enum.MediaListSortBy sortBy =
         client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
@@ -941,6 +965,8 @@ class SyncTvService {
       pageSize: pageSize,
       search: search,
       sourceProvider: sourceProvider,
+      previewSourceConfig: previewSourceConfig,
+      typedPreviewSourceConfig: typedPreviewSourceConfig,
       providerInstanceName: providerInstanceName,
       sortBy: sortBy,
       sortDirection: sortDirection,
@@ -1002,6 +1028,24 @@ class SyncTvService {
       parentId: parentId,
       sourceProvider: sourceProvider,
       sourceConfig: sourceConfig,
+      providerInstanceName: providerInstanceName,
+      description: description,
+    );
+  }
+
+  static Future<RoomPlaylistItem> createPlaylistFromSourceConfig(
+    String roomId, {
+    required String name,
+    required source_config.PlaylistSourceConfig sourceConfig,
+    String parentId = '',
+    String providerInstanceName = '',
+    String description = '',
+  }) {
+    return _domains.roomMedia.createPlaylistFromSourceConfig(
+      roomId,
+      name: name,
+      sourceConfig: sourceConfig,
+      parentId: parentId,
       providerInstanceName: providerInstanceName,
       description: description,
     );
@@ -1496,6 +1540,22 @@ class SyncTvService {
     );
   }
 
+  static Future<String> addMediaFromSourceConfig(
+    String roomId, {
+    String playlistId = '',
+    String providerInstanceName = '',
+    required source_config.MediaSourceConfig sourceConfig,
+    String name = '',
+  }) {
+    return _domains.roomMedia.addMediaFromSourceConfig(
+      roomId,
+      playlistId: playlistId,
+      providerInstanceName: providerInstanceName,
+      sourceConfig: sourceConfig,
+      name: name,
+    );
+  }
+
   static Future<String> addAlistMedia(
     String roomId, {
     String playlistId = '',
@@ -1551,6 +1611,148 @@ class SyncTvService {
       name: name,
     );
   }
+
+  static Future<String> addFnosFileMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addFnosFileMedia(
+    roomId,
+    playlistId: playlistId,
+    serverId: serverId,
+    path: path,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addFnosMediaLibraryItem(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String itemGuid,
+    String mediaGuid = '',
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addFnosMediaLibraryItem(
+    roomId,
+    playlistId: playlistId,
+    serverId: serverId,
+    itemGuid: itemGuid,
+    mediaGuid: mediaGuid,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addQnapMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addQnapMedia(
+    roomId,
+    playlistId: playlistId,
+    serverId: serverId,
+    path: path,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addNextcloudMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    required int fileId,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addNextcloudMedia(
+    roomId,
+    playlistId: playlistId,
+    serverId: serverId,
+    path: path,
+    fileId: fileId,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addSeafileMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String repositoryId,
+    required String path,
+    required String objectId,
+    required bool hasThumbnail,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addSeafileMedia(
+    roomId,
+    playlistId: playlistId,
+    serverId: serverId,
+    repositoryId: repositoryId,
+    path: path,
+    objectId: objectId,
+    hasThumbnail: hasThumbnail,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addTrueNasMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addTrueNasMedia(
+    roomId,
+    playlistId: playlistId,
+    serverId: serverId,
+    path: path,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addSynologyFileMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addSynologyFileMedia(
+    roomId,
+    playlistId: playlistId,
+    serverId: serverId,
+    path: path,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addSynologyLibraryMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String kind,
+    required int itemId,
+    required int fileId,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addSynologyLibraryMedia(
+    roomId,
+    playlistId: playlistId,
+    serverId: serverId,
+    kind: kind,
+    itemId: itemId,
+    fileId: fileId,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
 
   static Future<String> addRtmpMedia(
     String roomId, {
@@ -1739,11 +1941,717 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
+  static Future<String> addTwitchMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addTwitchMedia(
+    roomId,
+    playlistId: playlistId,
+    kind: kind,
+    id: id,
+    shared: shared,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addYoutubeMedia(
+    String roomId, {
+    String playlistId = '',
+    required String videoId,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addYoutubeMedia(
+    roomId,
+    playlistId: playlistId,
+    videoId: videoId,
+    shared: shared,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addDouyinMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addDouyinMedia(
+    roomId,
+    playlistId: playlistId,
+    kind: kind,
+    id: id,
+    shared: shared,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addTikTokMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addTikTokMedia(
+    roomId,
+    playlistId: playlistId,
+    kind: kind,
+    id: id,
+    shared: shared,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addHuyaMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addHuyaMedia(
+    roomId,
+    playlistId: playlistId,
+    kind: kind,
+    id: id,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addDouyuMedia(
+    String roomId, {
+    String playlistId = '',
+    required String room,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addDouyuMedia(
+    roomId,
+    playlistId: playlistId,
+    room: room,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addAcFunMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    String? episodeQuery,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addAcFunMedia(
+    roomId,
+    playlistId: playlistId,
+    kind: kind,
+    id: id,
+    episodeQuery: episodeQuery,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
+  static Future<String> addCctvMedia(
+    String roomId, {
+    String playlistId = '',
+    required String resource,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _domains.roomMedia.addCctvMedia(
+    roomId,
+    playlistId: playlistId,
+    resource: resource,
+    name: name,
+    providerInstanceName: providerInstanceName,
+  );
+
   static Future<void> logoutCloudreve(
     String serverId, {
     String instanceName = '',
   }) =>
       _domains.providers.logoutCloudreve(serverId, instanceName: instanceName);
+
+  static Future<FnosLoginInfo> loginFnos({
+    required String endpoint,
+    required String username,
+    required String password,
+    String webdavEndpoint = '',
+    String mediaEndpoint = '',
+    String twoFactorCode = '',
+    bool trustDevice = true,
+    String instanceName = '',
+  }) => _domains.providers.loginFnos(
+    endpoint: endpoint,
+    username: username,
+    password: password,
+    webdavEndpoint: webdavEndpoint,
+    mediaEndpoint: mediaEndpoint,
+    twoFactorCode: twoFactorCode,
+    trustDevice: trustDevice,
+    instanceName: instanceName,
+  );
+
+  static Future<void> logoutFnos(String serverId, {String instanceName = ''}) =>
+      _domains.providers.logoutFnos(serverId, instanceName: instanceName);
+
+  static Future<List<FnosBindInfo>> getAllFnosBindInfos() =>
+      _domains.providers.getAllFnosBindInfos();
+
+  static Future<FnosFileListPage> listFnosFiles(
+    String serverId,
+    String path, {
+    int page = 1,
+    int pageSize = 50,
+    String search = '',
+    String instanceName = '',
+  }) => _domains.providers.listFnosFiles(
+    serverId,
+    path,
+    page: page,
+    pageSize: pageSize,
+    search: search,
+    instanceName: instanceName,
+  );
+
+  static Future<List<FnosMediaLibraryInfo>> listFnosMediaLibraries(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.listFnosMediaLibraries(
+    serverId,
+    instanceName: instanceName,
+  );
+
+  static Future<FnosMediaListPage> listFnosMediaItems(
+    String serverId, {
+    FnosMediaCollection collection = FnosMediaCollection.library,
+    String ancestorGuid = '',
+    int page = 1,
+    int pageSize = 50,
+    List<String> mediaTypes = const ['Movie', 'TV', 'Directory', 'Video'],
+    String search = '',
+    String instanceName = '',
+  }) => _domains.providers.listFnosMediaItems(
+    serverId,
+    collection: collection,
+    ancestorGuid: ancestorGuid,
+    page: page,
+    pageSize: pageSize,
+    mediaTypes: mediaTypes,
+    search: search,
+    instanceName: instanceName,
+  );
+
+  static Future<bool> setFnosFavorite(
+    String serverId,
+    String itemGuid,
+    bool favorite, {
+    String instanceName = '',
+  }) => _domains.providers.setFnosFavorite(
+    serverId,
+    itemGuid,
+    favorite,
+    instanceName: instanceName,
+  );
+
+  static Future<bool> setFnosWatched(
+    String serverId,
+    String itemGuid,
+    bool watched, {
+    String instanceName = '',
+  }) => _domains.providers.setFnosWatched(
+    serverId,
+    itemGuid,
+    watched,
+    instanceName: instanceName,
+  );
+
+  static Future<QnapBindInfo> loginQnap({
+    required String endpoint,
+    required String username,
+    required String password,
+    String instanceName = '',
+  }) => _domains.providers.loginQnap(
+    endpoint: endpoint,
+    username: username,
+    password: password,
+    instanceName: instanceName,
+  );
+
+  static Future<void> logoutQnap(String serverId, {String instanceName = ''}) =>
+      _domains.providers.logoutQnap(serverId, instanceName: instanceName);
+
+  static Future<List<QnapBindInfo>> getAllQnapBindInfos() =>
+      _domains.providers.getAllQnapBindInfos();
+
+  static Future<QnapCapabilitiesInfo> getQnapCapabilities(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.getQnapCapabilities(
+    serverId,
+    instanceName: instanceName,
+  );
+
+  static Future<QnapFileListPage> listQnapFiles(
+    String serverId,
+    String path, {
+    int page = 1,
+    int pageSize = 50,
+    String search = '',
+    String instanceName = '',
+  }) => _domains.providers.listQnapFiles(
+    serverId,
+    path,
+    page: page,
+    pageSize: pageSize,
+    search: search,
+    instanceName: instanceName,
+  );
+
+  static Future<SynologyBindInfo> loginSynology({
+    required String endpoint,
+    required String username,
+    required String password,
+    String otpCode = '',
+    String deviceName = '',
+    String instanceName = '',
+  }) => _domains.providers.loginSynology(
+    endpoint: endpoint,
+    username: username,
+    password: password,
+    otpCode: otpCode,
+    deviceName: deviceName,
+    instanceName: instanceName,
+  );
+
+  static Future<void> logoutSynology(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.logoutSynology(serverId, instanceName: instanceName);
+
+  static Future<List<SynologyBindInfo>> getAllSynologyBindInfos() =>
+      _domains.providers.getAllSynologyBindInfos();
+
+  static Future<NextcloudBindInfo> loginNextcloud({
+    required String endpoint,
+    required String username,
+    required String appPassword,
+    String instanceName = '',
+  }) => _domains.providers.loginNextcloud(
+    endpoint: endpoint,
+    username: username,
+    appPassword: appPassword,
+    instanceName: instanceName,
+  );
+
+  static Future<NextcloudLoginFlowInfo> startNextcloudLoginFlow(
+    String endpoint,
+  ) => _domains.providers.startNextcloudLoginFlow(endpoint);
+
+  static Future<NextcloudBindInfo> pollNextcloudLoginFlow({
+    required String endpoint,
+    required NextcloudLoginFlowInfo flow,
+    String instanceName = '',
+  }) => _domains.providers.pollNextcloudLoginFlow(
+    endpoint: endpoint,
+    flow: flow,
+    instanceName: instanceName,
+  );
+
+  static Future<void> logoutNextcloud(
+    String serverId, {
+    String instanceName = '',
+  }) =>
+      _domains.providers.logoutNextcloud(serverId, instanceName: instanceName);
+
+  static Future<List<NextcloudBindInfo>> getAllNextcloudBindInfos() =>
+      _domains.providers.getAllNextcloudBindInfos();
+
+  static Future<NextcloudFileListPage> listNextcloudFiles(
+    String serverId,
+    String path, {
+    int page = 1,
+    int pageSize = 50,
+    String search = '',
+    String instanceName = '',
+  }) => _domains.providers.listNextcloudFiles(
+    serverId,
+    path,
+    page: page,
+    pageSize: pageSize,
+    search: search,
+    instanceName: instanceName,
+  );
+
+  static Future<NextcloudFileListPage> listNextcloudFavorites(
+    String serverId, {
+    int page = 1,
+    int pageSize = 50,
+    String instanceName = '',
+  }) => _domains.providers.listNextcloudFavorites(
+    serverId,
+    page: page,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<SeafileBindInfo> loginSeafile({
+    required String endpoint,
+    required String username,
+    required String password,
+    String instanceName = '',
+  }) => _domains.providers.loginSeafile(
+    endpoint: endpoint,
+    username: username,
+    password: password,
+    instanceName: instanceName,
+  );
+
+  static Future<void> unlockSeafileLibrary(
+    String serverId,
+    String repositoryId,
+    String password, {
+    String instanceName = '',
+  }) => _domains.providers.unlockSeafileLibrary(
+    serverId,
+    repositoryId,
+    password,
+    instanceName: instanceName,
+  );
+
+  static Future<void> logoutSeafile(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.logoutSeafile(serverId, instanceName: instanceName);
+
+  static Future<List<SeafileBindInfo>> getAllSeafileBindInfos() =>
+      _domains.providers.getAllSeafileBindInfos();
+
+  static Future<SeafileFileListPage> listSeafileRepositories(
+    String serverId, {
+    int page = 1,
+    int pageSize = 50,
+    String instanceName = '',
+  }) => _domains.providers.listSeafileRepositories(
+    serverId,
+    page: page,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<SeafileFileListPage> listSeafileFiles(
+    String serverId,
+    String repositoryId,
+    String path, {
+    int page = 1,
+    int pageSize = 50,
+    String search = '',
+    String instanceName = '',
+  }) => _domains.providers.listSeafileFiles(
+    serverId,
+    repositoryId,
+    path,
+    page: page,
+    pageSize: pageSize,
+    search: search,
+    instanceName: instanceName,
+  );
+
+  static Future<SeafileFileListPage> listSeafileStarred(
+    String serverId, {
+    int page = 1,
+    int pageSize = 50,
+    String instanceName = '',
+  }) => _domains.providers.listSeafileStarred(
+    serverId,
+    page: page,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<TrueNasBindInfo> loginTrueNas({
+    required String endpoint,
+    required String apiKey,
+    String instanceName = '',
+  }) => _domains.providers.loginTrueNas(
+    endpoint: endpoint,
+    apiKey: apiKey,
+    instanceName: instanceName,
+  );
+
+  static Future<void> logoutTrueNas(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.logoutTrueNas(serverId, instanceName: instanceName);
+
+  static Future<List<TrueNasBindInfo>> getAllTrueNasBindInfos() =>
+      _domains.providers.getAllTrueNasBindInfos();
+
+  static Future<TrueNasFileListPage> listTrueNasFiles(
+    String serverId,
+    String path, {
+    int page = 1,
+    int pageSize = 50,
+    String search = '',
+    String instanceName = '',
+  }) => _domains.providers.listTrueNasFiles(
+    serverId,
+    path,
+    page: page,
+    pageSize: pageSize,
+    search: search,
+    instanceName: instanceName,
+  );
+
+  static Future<SynologyFileListPage> listSynologyFiles(
+    String serverId,
+    String path, {
+    int page = 1,
+    int pageSize = 50,
+    String search = '',
+    String instanceName = '',
+  }) => _domains.providers.listSynologyFiles(
+    serverId,
+    path,
+    page: page,
+    pageSize: pageSize,
+    search: search,
+    instanceName: instanceName,
+  );
+
+  static Future<List<SynologyVideoLibraryInfo>> listSynologyLibraries(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.listSynologyLibraries(
+    serverId,
+    instanceName: instanceName,
+  );
+
+  static Future<SynologyVideoListPage> listSynologyVideos(
+    String serverId, {
+    required SynologyVideoCollection collection,
+    required int libraryId,
+    int? tvShowId,
+    int page = 1,
+    int pageSize = 50,
+    String search = '',
+    String instanceName = '',
+  }) => _domains.providers.listSynologyVideos(
+    serverId,
+    collection: collection,
+    libraryId: libraryId,
+    tvShowId: tvShowId,
+    page: page,
+    pageSize: pageSize,
+    search: search,
+    instanceName: instanceName,
+  );
+
+  static Future<TwitchBindInfo> bindTwitch({
+    required String authToken,
+    String deviceId = '',
+    String clientIntegrity = '',
+    String instanceName = '',
+  }) => _domains.providers.bindTwitch(
+    authToken: authToken,
+    deviceId: deviceId,
+    clientIntegrity: clientIntegrity,
+    instanceName: instanceName,
+  );
+
+  static Future<void> unbindTwitch(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.unbindTwitch(serverId, instanceName: instanceName);
+
+  static Future<twitch.ResolveResponse> resolveTwitch(
+    String resource, {
+    String instanceName = '',
+  }) => _domains.providers.resolveTwitch(resource, instanceName: instanceName);
+
+  static Future<twitch.ListChannelItemsResponse> listTwitchChannelItems(
+    String channel, {
+    required source_enum.TwitchPlaylistContent content,
+    String? cursor,
+    int pageSize = 20,
+    String instanceName = '',
+  }) => _domains.providers.listTwitchChannelItems(
+    channel,
+    content: content,
+    cursor: cursor,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<twitch.ListFollowedLiveResponse> listTwitchFollowedLive({
+    String? cursor,
+    int pageSize = 20,
+    String instanceName = '',
+  }) => _domains.providers.listTwitchFollowedLive(
+    cursor: cursor,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<twitch.ListCategoryStreamsResponse> listTwitchCategoryStreams({
+    required String categoryId,
+    required String categoryName,
+    String? cursor,
+    int pageSize = 20,
+    String instanceName = '',
+  }) => _domains.providers.listTwitchCategoryStreams(
+    categoryId: categoryId,
+    categoryName: categoryName,
+    cursor: cursor,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<twitch.ListTopCategoriesResponse> listTwitchTopCategories({
+    String? cursor,
+    int pageSize = 20,
+    String instanceName = '',
+  }) => _domains.providers.listTwitchTopCategories(
+    cursor: cursor,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<twitch.SearchLiveChannelsResponse> searchTwitchLiveChannels(
+    String query, {
+    String? cursor,
+    int pageSize = 20,
+    String instanceName = '',
+  }) => _domains.providers.searchTwitchLiveChannels(
+    query,
+    cursor: cursor,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<twitch.ListScheduleResponse> listTwitchSchedule(
+    String broadcasterId, {
+    String? cursor,
+    int pageSize = 20,
+    String instanceName = '',
+  }) => _domains.providers.listTwitchSchedule(
+    broadcasterId,
+    cursor: cursor,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<huya.ResolveResponse> resolveHuya(String resource) =>
+      _domains.providers.resolveHuya(resource);
+
+  static Future<douyu.ResolveResponse> resolveDouyu(String resource) =>
+      _domains.providers.resolveDouyu(resource);
+
+  static Future<acfun.ResolveResponse> resolveAcFun(String resource) =>
+      _domains.providers.resolveAcFun(resource);
+
+  static Future<cctv.ResolveResponse> resolveCctv(String resource) =>
+      _domains.providers.resolveCctv(resource);
+
+  static Future<YoutubeBindInfo> bindYoutube({
+    required String label,
+    String visitorData = '',
+    String poToken = '',
+    String cookie = '',
+    String instanceName = '',
+  }) => _domains.providers.bindYoutube(
+    label: label,
+    visitorData: visitorData,
+    poToken: poToken,
+    cookie: cookie,
+    instanceName: instanceName,
+  );
+
+  static Future<void> unbindYoutube(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.unbindYoutube(serverId, instanceName: instanceName);
+
+  static Future<youtube.ResolveResponse> resolveYoutube(
+    String resource, {
+    String instanceName = '',
+  }) => _domains.providers.resolveYoutube(resource, instanceName: instanceName);
+
+  static Future<DouyinBindInfo> bindDouyin({
+    required String label,
+    required String cookie,
+    String instanceName = '',
+  }) => _domains.providers.bindDouyin(
+    label: label,
+    cookie: cookie,
+    instanceName: instanceName,
+  );
+
+  static Future<void> unbindDouyin(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.unbindDouyin(serverId, instanceName: instanceName);
+
+  static Future<douyin.ResolveResponse> resolveDouyin(
+    String resource, {
+    String instanceName = '',
+  }) => _domains.providers.resolveDouyin(resource, instanceName: instanceName);
+
+  static Future<douyin.ListUserPostsResponse> listDouyinUserPosts(
+    String secUid, {
+    String? cursor,
+    int pageSize = 20,
+    String instanceName = '',
+  }) => _domains.providers.listDouyinUserPosts(
+    secUid,
+    cursor: cursor,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<TikTokBindInfo> bindTikTok({
+    required String label,
+    required String cookie,
+    String instanceName = '',
+  }) => _domains.providers.bindTikTok(
+    label: label,
+    cookie: cookie,
+    instanceName: instanceName,
+  );
+
+  static Future<void> unbindTikTok(
+    String serverId, {
+    String instanceName = '',
+  }) => _domains.providers.unbindTikTok(serverId, instanceName: instanceName);
+
+  static Future<tiktok.ResolveResponse> resolveTikTok(
+    String resource, {
+    String instanceName = '',
+  }) => _domains.providers.resolveTikTok(resource, instanceName: instanceName);
+
+  static Future<tiktok.GetUserResponse> getTikTokUser(
+    String uniqueId, {
+    String instanceName = '',
+  }) => _domains.providers.getTikTokUser(uniqueId, instanceName: instanceName);
+
+  static Future<tiktok.ListUserPostsResponse> listTikTokUserPosts(
+    String secUid, {
+    String? cursor,
+    int pageSize = 20,
+    String instanceName = '',
+  }) => _domains.providers.listTikTokUserPosts(
+    secUid,
+    cursor: cursor,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
 
   static Future<void> logoutEmby(String serverId, {String instanceName = ''}) {
     return _domains.providers.logoutEmby(serverId, instanceName: instanceName);
@@ -1757,6 +2665,34 @@ class SyncTvService {
     String instanceName = '',
   }) async {
     return _domains.providers.getBilibiliAccount(instanceName: instanceName);
+  }
+
+  static Future<List<BilibiliLiveAreaInfo>> listBilibiliLiveAreas({
+    String instanceName = '',
+  }) {
+    return _domains.providers.listBilibiliLiveAreas(instanceName: instanceName);
+  }
+
+  static Future<List<BilibiliFavoriteFolderInfo>> listBilibiliFavoriteFolders({
+    String instanceName = '',
+  }) {
+    return _domains.providers.listBilibiliFavoriteFolders(
+      instanceName: instanceName,
+    );
+  }
+
+  static Future<BilibiliFollowedPgcPage> listBilibiliFollowedPgc({
+    required bool cinema,
+    int page = 1,
+    int pageSize = 30,
+    String instanceName = '',
+  }) {
+    return _domains.providers.listBilibiliFollowedPgc(
+      cinema: cinema,
+      page: page,
+      pageSize: pageSize,
+      instanceName: instanceName,
+    );
   }
 
   static Future<BilibiliQrLoginInfo> startBilibiliQrLogin({
@@ -1830,6 +2766,34 @@ class SyncTvService {
   static Future<List<CloudreveBindInfo>> getAllCloudreveBindInfos() =>
       _domains.providers.getAllCloudreveBindInfos();
 
+  static Future<List<TwitchBindInfo>> getTwitchBindInfos({
+    String instanceName = '',
+  }) => _domains.providers.getTwitchBindInfos(instanceName: instanceName);
+
+  static Future<List<TwitchBindInfo>> getAllTwitchBindInfos() =>
+      _domains.providers.getAllTwitchBindInfos();
+
+  static Future<List<YoutubeBindInfo>> getYoutubeBindInfos({
+    String instanceName = '',
+  }) => _domains.providers.getYoutubeBindInfos(instanceName: instanceName);
+
+  static Future<List<YoutubeBindInfo>> getAllYoutubeBindInfos() =>
+      _domains.providers.getAllYoutubeBindInfos();
+
+  static Future<List<DouyinBindInfo>> getDouyinBindInfos({
+    String instanceName = '',
+  }) => _domains.providers.getDouyinBindInfos(instanceName: instanceName);
+
+  static Future<List<DouyinBindInfo>> getAllDouyinBindInfos() =>
+      _domains.providers.getAllDouyinBindInfos();
+
+  static Future<List<TikTokBindInfo>> getTikTokBindInfos({
+    String instanceName = '',
+  }) => _domains.providers.getTikTokBindInfos(instanceName: instanceName);
+
+  static Future<List<TikTokBindInfo>> getAllTikTokBindInfos() =>
+      _domains.providers.getAllTikTokBindInfos();
+
   static Future<List<BilibiliBindInfo>> getBilibiliBindInfos({
     String instanceName = '',
   }) async {
@@ -1865,6 +2829,55 @@ class SyncTvService {
     String instanceName = '',
   }) => _domains.providers.getCloudreveAccount(
     serverId,
+    instanceName: instanceName,
+  );
+
+  static Future<bilibili.ListHistoryResponse> listBilibiliHistory({
+    source_enum.BilibiliHistoryType type =
+        source_enum.BilibiliHistoryType.BILIBILI_HISTORY_TYPE_ALL,
+    String? cursor,
+    int pageSize = 30,
+    String instanceName = '',
+  }) => _domains.providers.listBilibiliHistory(
+    type: type,
+    cursor: cursor,
+    pageSize: pageSize,
+    instanceName: instanceName,
+  );
+
+  static Future<BilibiliPgcTimelineInfo> listBilibiliPgcTimeline({
+    required BilibiliPgcTimelineKind type,
+    int beforeDays = 3,
+    int afterDays = 7,
+    String instanceName = '',
+  }) => _domains.providers.listBilibiliPgcTimeline(
+    type: type,
+    beforeDays: beforeDays,
+    afterDays: afterDays,
+    instanceName: instanceName,
+  );
+
+  static Future<BilibiliPgcSeasonPage> listBilibiliPgcSeasons({
+    required BilibiliPgcSeasonKind type,
+    int page = 1,
+    int pageSize = 30,
+    BilibiliPgcSeasonOrder order = BilibiliPgcSeasonOrder.updated,
+    bool ascending = false,
+    bool? finished,
+    String? area,
+    String? year,
+    int? styleId,
+    String instanceName = '',
+  }) => _domains.providers.listBilibiliPgcSeasons(
+    type: type,
+    page: page,
+    pageSize: pageSize,
+    order: order,
+    ascending: ascending,
+    finished: finished,
+    area: area,
+    year: year,
+    styleId: styleId,
     instanceName: instanceName,
   );
 

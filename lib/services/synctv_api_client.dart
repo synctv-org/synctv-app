@@ -28,7 +28,31 @@ import 'package:synctv_app/src/generated/proto/providers/common.pb.dart'
 import 'package:synctv_app/src/generated/proto/providers/cloudreve.pb.dart'
     as cloudreve;
 import 'package:synctv_app/src/generated/proto/providers/emby.pb.dart' as emby;
+import 'package:synctv_app/src/generated/proto/providers/fnos.pb.dart' as fnos;
+import 'package:synctv_app/src/generated/proto/providers/nextcloud.pb.dart'
+    as nextcloud;
+import 'package:synctv_app/src/generated/proto/providers/qnap.pb.dart' as qnap;
+import 'package:synctv_app/src/generated/proto/providers/seafile.pb.dart'
+    as seafile;
+import 'package:synctv_app/src/generated/proto/providers/synology.pb.dart'
+    as synology;
+import 'package:synctv_app/src/generated/proto/providers/truenas.pb.dart'
+    as truenas;
 import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
+import 'package:synctv_app/src/generated/proto/providers/twitch.pb.dart'
+    as twitch;
+import 'package:synctv_app/src/generated/proto/providers/huya.pb.dart' as huya;
+import 'package:synctv_app/src/generated/proto/providers/douyu.pb.dart'
+    as douyu;
+import 'package:synctv_app/src/generated/proto/providers/acfun.pb.dart'
+    as acfun;
+import 'package:synctv_app/src/generated/proto/providers/cctv.pb.dart' as cctv;
+import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
+    as youtube;
+import 'package:synctv_app/src/generated/proto/providers/douyin.pb.dart'
+    as douyin;
+import 'package:synctv_app/src/generated/proto/providers/tiktok.pb.dart'
+    as tiktok;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
@@ -139,8 +163,44 @@ class SyncTvApiClient {
   late final SyncTvBilibiliProviderApi bilibiliProvider =
       SyncTvBilibiliProviderApi._(this);
   late final SyncTvRtmpProviderApi rtmpProvider = SyncTvRtmpProviderApi._(this);
+  late final SyncTvTwitchProviderApi twitchProvider = SyncTvTwitchProviderApi._(
+    this,
+  );
+  late final SyncTvHuyaProviderApi huyaProvider = SyncTvHuyaProviderApi._(this);
+  late final SyncTvDouyuProviderApi douyuProvider = SyncTvDouyuProviderApi._(
+    this,
+  );
+  late final SyncTvAcFunProviderApi acFunProvider = SyncTvAcFunProviderApi._(
+    this,
+  );
+  late final SyncTvCctvProviderApi cctvProvider = SyncTvCctvProviderApi._(this);
+  late final SyncTvYoutubeProviderApi youtubeProvider =
+      SyncTvYoutubeProviderApi._(this);
+  late final SyncTvDouyinProviderApi douyinProvider = SyncTvDouyinProviderApi._(
+    this,
+  );
+  late final SyncTvTikTokProviderApi tiktokProvider = SyncTvTikTokProviderApi._(
+    this,
+  );
+  late final SyncTvFnosProviderApi fnosProvider = SyncTvFnosProviderApi._(this);
+  late final SyncTvQnapProviderApi qnapProvider = SyncTvQnapProviderApi._(this);
+  late final SyncTvSynologyProviderApi synologyProvider =
+      SyncTvSynologyProviderApi._(this);
+  late final SyncTvNextcloudProviderApi nextcloudProvider =
+      SyncTvNextcloudProviderApi._(this);
+  late final SyncTvSeafileProviderApi seafileProvider =
+      SyncTvSeafileProviderApi._(this);
+  late final SyncTvTrueNasProviderApi trueNasProvider =
+      SyncTvTrueNasProviderApi._(this);
 
   String get baseUrl => _baseUri.toString();
+
+  Map<String, String> get authenticatedResourceHeaders {
+    final token = session.accessToken;
+    return token == null || token.isEmpty
+        ? const {}
+        : {'authorization': 'Bearer $token'};
+  }
 
   static String normalizeBaseUrl(String input) =>
       _normalizeBaseUri(input).toString();
@@ -717,7 +777,11 @@ class SyncTvApiClient {
         value.containsKey('emby') ||
         value.containsKey('rtmp') ||
         value.containsKey('liveProxy') ||
-        value.containsKey('cloudreve');
+        value.containsKey('cloudreve') ||
+        value.containsKey('twitch') ||
+        value.containsKey('huya') ||
+        value.containsKey('douyu') ||
+        value.containsKey('acFun');
   }
 
   T _decodeResponse<T extends GeneratedMessage>(
@@ -1344,6 +1408,12 @@ extension SyncTvModelMapping on SyncTvApiClient {
       parentId: playlistId,
       subPath: encodedTarget,
       coverUrl: thumbnailUrl,
+      mediaSourceConfig: item.hasMediaSourceConfig()
+          ? item.mediaSourceConfig.deepCopy()
+          : null,
+      playlistSourceConfig: item.hasPlaylistSourceConfig()
+          ? item.playlistSourceConfig.deepCopy()
+          : null,
       metadata: {
         'target': target,
         'target_json': providerTargetToJson(target),

@@ -33,6 +33,40 @@ class BilibiliProviderServiceApi {
       _client.invoke<$0.ParseResponse>(
           ctx, 'BilibiliProviderService', 'Parse', request, $0.ParseResponse());
 
+  /// List live categories available for dynamic playlist creation
+  $async.Future<$0.ListLiveAreasResponse> listLiveAreas(
+          $pb.ClientContext? ctx, $0.ListLiveAreasRequest request) =>
+      _client.invoke<$0.ListLiveAreasResponse>(ctx, 'BilibiliProviderService',
+          'ListLiveAreas', request, $0.ListLiveAreasResponse());
+
+  /// List the authenticated user's favorite folders
+  $async.Future<$0.ListFavoriteFoldersResponse> listFavoriteFolders(
+          $pb.ClientContext? ctx, $0.ListFavoriteFoldersRequest request) =>
+      _client.invoke<$0.ListFavoriteFoldersResponse>(
+          ctx,
+          'BilibiliProviderService',
+          'ListFavoriteFolders',
+          request,
+          $0.ListFavoriteFoldersResponse());
+
+  /// List anime or cinema seasons followed by the authenticated user
+  $async.Future<$0.ListFollowedPgcResponse> listFollowedPgc(
+          $pb.ClientContext? ctx, $0.ListFollowedPgcRequest request) =>
+      _client.invoke<$0.ListFollowedPgcResponse>(ctx, 'BilibiliProviderService',
+          'ListFollowedPgc', request, $0.ListFollowedPgcResponse());
+  $async.Future<$0.ListHistoryResponse> listHistory(
+          $pb.ClientContext? ctx, $0.ListHistoryRequest request) =>
+      _client.invoke<$0.ListHistoryResponse>(ctx, 'BilibiliProviderService',
+          'ListHistory', request, $0.ListHistoryResponse());
+  $async.Future<$0.ListPgcTimelineResponse> listPgcTimeline(
+          $pb.ClientContext? ctx, $0.ListPgcTimelineRequest request) =>
+      _client.invoke<$0.ListPgcTimelineResponse>(ctx, 'BilibiliProviderService',
+          'ListPgcTimeline', request, $0.ListPgcTimelineResponse());
+  $async.Future<$0.ListPgcSeasonsResponse> listPgcSeasons(
+          $pb.ClientContext? ctx, $0.ListPgcSeasonsRequest request) =>
+      _client.invoke<$0.ListPgcSeasonsResponse>(ctx, 'BilibiliProviderService',
+          'ListPgcSeasons', request, $0.ListPgcSeasonsResponse());
+
   /// Generate QR code for login
   $async.Future<$0.QRCodeResponse> loginQR(
           $pb.ClientContext? ctx, $0.LoginQRRequest request) =>

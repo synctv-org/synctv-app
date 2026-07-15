@@ -1,9 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
+import 'package:synctv_app/models/bilibili_source_config.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
+import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
@@ -11,6 +13,23 @@ import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
+import 'package:synctv_app/widgets/add_media/acfun_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/bilibili_playlist_preview.dart';
+import 'package:synctv_app/widgets/add_media/bilibili_playlist_form.dart';
+import 'package:synctv_app/widgets/add_media/cctv_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/douyin_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/douyu_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/emby_playlist_form.dart';
+import 'package:synctv_app/widgets/add_media/fnos_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/huya_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/nextcloud_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/qnap_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/seafile_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/tiktok_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/twitch_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/truenas_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/youtube_add_media_form.dart';
+import 'package:synctv_app/widgets/add_media/synology_add_media_form.dart';
 import 'platform_binding_dialog.dart';
 
 class AddMediaDialog extends StatefulWidget {
@@ -156,6 +175,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   BilibiliParseInfo? _biliInfo;
   int _biliSelectedIndex = 0;
+  bool _bilibiliShared = false;
+  RoomMediaLibraryPage? _biliPreview;
 
   String _alistPath = '/';
   List<AlistItemInfo> _alistFiles = [];
@@ -180,6 +201,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   String _embyInstanceName = '';
   String _embyKeyword = '';
   List<EmbyBindInfo> _embyBinds = [];
+  bool _embyPlaylistMode = false;
+  bool _embyPlaylistHasDraft = false;
 
   String _cloudrevePath = 'cloudreve://my/';
   List<CloudreveItemInfo> _cloudreveFiles = [];
@@ -193,8 +216,39 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   String _cloudreveKeyword = '';
   List<CloudreveBindInfo> _cloudreveBinds = [];
 
+  List<TwitchBindInfo> _twitchBinds = [];
+  bool _twitchHasDraft = false;
+  List<FnosBindInfo> _fnosBinds = [];
+  bool _fnosHasDraft = false;
+  List<QnapBindInfo> _qnapBinds = [];
+  bool _qnapHasDraft = false;
+  List<SynologyBindInfo> _synologyBinds = [];
+  bool _synologyHasDraft = false;
+  List<NextcloudBindInfo> _nextcloudBinds = [];
+  bool _nextcloudHasDraft = false;
+  List<SeafileBindInfo> _seafileBinds = [];
+  bool _seafileHasDraft = false;
+  List<TrueNasBindInfo> _trueNasBinds = [];
+  bool _trueNasHasDraft = false;
+  List<YoutubeBindInfo> _youtubeBinds = [];
+  bool _youtubeHasDraft = false;
+  List<DouyinBindInfo> _douyinBinds = [];
+  bool _douyinHasDraft = false;
+  List<TikTokBindInfo> _tiktokBinds = [];
+  bool _tiktokHasDraft = false;
+  List<String> _huyaInstances = const [''];
+  bool _huyaHasDraft = false;
+  List<String> _douyuInstances = const [''];
+  bool _douyuHasDraft = false;
+  List<String> _acfunInstances = const [''];
+  bool _acfunHasDraft = false;
+  List<String> _cctvInstances = const [''];
+  bool _cctvHasDraft = false;
+
   String _bilibiliInstanceName = '';
   List<BilibiliBindInfo> _bilibiliBinds = [];
+  bool _bilibiliPlaylistMode = false;
+  bool _bilibiliPlaylistHasDraft = false;
 
   List<String> _boundVendors = [];
   bool _checkingVendors = true;
@@ -218,25 +272,77 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         SyncTvService.getAllEmbyBindInfos(),
         SyncTvService.getAllBilibiliBindInfos(),
         SyncTvService.getAllCloudreveBindInfos(),
+        SyncTvService.getAllTwitchBindInfos(),
+        SyncTvService.getAllFnosBindInfos(),
+        SyncTvService.getAllQnapBindInfos(),
+        SyncTvService.listAvailableProviderInstances(providerType: 'huya'),
+        SyncTvService.listAvailableProviderInstances(providerType: 'douyu'),
+        SyncTvService.listAvailableProviderInstances(providerType: 'acfun'),
+        SyncTvService.listAvailableProviderInstances(providerType: 'cctv'),
         SyncTvService.getPublicSettings(),
+        SyncTvService.getAllSynologyBindInfos(),
+        SyncTvService.getAllNextcloudBindInfos(),
+        SyncTvService.getAllSeafileBindInfos(),
+        SyncTvService.getAllTrueNasBindInfos(),
+        SyncTvService.getAllYoutubeBindInfos(),
+        SyncTvService.getAllDouyinBindInfos(),
+        SyncTvService.getAllTikTokBindInfos(),
       ]);
       final alistBinds = results[0] as List<AlistBindInfo>;
       final embyBinds = results[1] as List<EmbyBindInfo>;
       final bilibiliBinds = results[2] as List<BilibiliBindInfo>;
       final cloudreveBinds = results[3] as List<CloudreveBindInfo>;
-      final publicSettings = results[4] as PublicSettingsInfo;
+      final twitchBinds = results[4] as List<TwitchBindInfo>;
+      final fnosBinds = results[5] as List<FnosBindInfo>;
+      final qnapBinds = results[6] as List<QnapBindInfo>;
+      final huyaInstances = results[7] as List<String>;
+      final douyuInstances = results[8] as List<String>;
+      final acfunInstances = results[9] as List<String>;
+      final cctvInstances = results[10] as List<String>;
+      final publicSettings = results[11] as PublicSettingsInfo;
+      final synologyBinds = results[12] as List<SynologyBindInfo>;
+      final nextcloudBinds = results[13] as List<NextcloudBindInfo>;
+      final seafileBinds = results[14] as List<SeafileBindInfo>;
+      final trueNasBinds = results[15] as List<TrueNasBindInfo>;
+      final youtubeBinds = results[16] as List<YoutubeBindInfo>;
+      final douyinBinds = results[17] as List<DouyinBindInfo>;
+      final tiktokBinds = results[18] as List<TikTokBindInfo>;
       if (!mounted) return;
       setState(() {
         _alistBinds = alistBinds;
         _embyBinds = embyBinds;
         _bilibiliBinds = bilibiliBinds;
         _cloudreveBinds = cloudreveBinds;
+        _twitchBinds = twitchBinds;
+        _fnosBinds = fnosBinds;
+        _qnapBinds = qnapBinds;
+        _synologyBinds = synologyBinds;
+        _nextcloudBinds = nextcloudBinds;
+        _seafileBinds = seafileBinds;
+        _trueNasBinds = trueNasBinds;
+        _youtubeBinds = youtubeBinds;
+        _douyinBinds = douyinBinds;
+        _tiktokBinds = tiktokBinds;
+        _huyaInstances = {'', ...huyaInstances}.toList();
+        _douyuInstances = {'', ...douyuInstances}.toList();
+        _acfunInstances = {'', ...acfunInstances}.toList();
+        _cctvInstances = {'', ...cctvInstances}.toList();
         _publicSettings = publicSettings;
         _boundVendors = [
           if (alistBinds.isNotEmpty) 'alist',
           if (embyBinds.isNotEmpty) 'emby',
           if (bilibiliBinds.isNotEmpty) 'bilibili',
           if (cloudreveBinds.isNotEmpty) 'cloudreve',
+          if (twitchBinds.isNotEmpty) 'twitch',
+          if (fnosBinds.isNotEmpty) 'fnos',
+          if (qnapBinds.isNotEmpty) 'qnap',
+          if (synologyBinds.isNotEmpty) 'synology',
+          if (nextcloudBinds.isNotEmpty) 'nextcloud',
+          if (seafileBinds.isNotEmpty) 'seafile',
+          if (trueNasBinds.isNotEmpty) 'truenas',
+          if (youtubeBinds.isNotEmpty) 'youtube',
+          if (douyinBinds.isNotEmpty) 'douyin',
+          if (tiktokBinds.isNotEmpty) 'tiktok',
         ];
         _applyDefaultProviderBindings();
         _checkingVendors = false;
@@ -329,6 +435,34 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         return context.l10n.embyLibrary;
       case 6:
         return 'Cloudreve';
+      case 7:
+        return 'Twitch';
+      case 8:
+        return 'Huya';
+      case 9:
+        return 'Douyu';
+      case 10:
+        return 'AcFun';
+      case 11:
+        return 'CCTV';
+      case 12:
+        return 'FNOS';
+      case 13:
+        return 'QNAP';
+      case 14:
+        return 'Synology DSM';
+      case 15:
+        return 'Nextcloud';
+      case 16:
+        return 'Seafile';
+      case 17:
+        return 'TrueNAS';
+      case 18:
+        return 'YouTube';
+      case 19:
+        return 'Douyin';
+      case 20:
+        return 'TikTok';
       default:
         return '';
     }
@@ -383,6 +517,104 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       subtitle: 'Cloudreve v4',
       icon: Icons.cloud_rounded,
       color: Colors.teal.shade600,
+    ),
+    const _MediaSourceSpec(
+      index: 7,
+      title: 'Twitch',
+      subtitle: 'Live / VOD / Clip',
+      icon: Icons.live_tv_rounded,
+      color: Color(0xFF9146FF),
+    ),
+    const _MediaSourceSpec(
+      index: 8,
+      title: 'Huya',
+      subtitle: 'Live / Video',
+      icon: Icons.sports_esports_rounded,
+      color: Color(0xFFFF7A00),
+    ),
+    const _MediaSourceSpec(
+      index: 9,
+      title: 'Douyu',
+      subtitle: 'Live / HEVC / Audio',
+      icon: Icons.live_tv_rounded,
+      color: Color(0xFFFF5D23),
+    ),
+    const _MediaSourceSpec(
+      index: 10,
+      title: 'AcFun',
+      subtitle: 'acfun.cn',
+      icon: Icons.ondemand_video_rounded,
+      color: Color(0xFFFD4C5B),
+    ),
+    const _MediaSourceSpec(
+      index: 11,
+      title: 'CCTV',
+      subtitle: 'cctv.com / cntv.cn',
+      icon: Icons.tv_rounded,
+      color: Color(0xFFC62828),
+    ),
+    const _MediaSourceSpec(
+      index: 12,
+      title: 'FNOS',
+      subtitle: 'Files / Media Library',
+      icon: Icons.storage_rounded,
+      color: Color(0xFF087F5B),
+    ),
+    const _MediaSourceSpec(
+      index: 13,
+      title: 'QNAP',
+      subtitle: 'QTS / QuTS hero',
+      icon: Icons.storage_rounded,
+      color: Color(0xFF0076A8),
+    ),
+    const _MediaSourceSpec(
+      index: 14,
+      title: 'Synology DSM',
+      subtitle: 'File Station / Video Station',
+      icon: Icons.video_library_rounded,
+      color: Color(0xFF1578D3),
+    ),
+    const _MediaSourceSpec(
+      index: 15,
+      title: 'Nextcloud',
+      subtitle: 'Files / Favorites / Search',
+      icon: Icons.cloud_outlined,
+      color: Color(0xFF0082C9),
+    ),
+    const _MediaSourceSpec(
+      index: 16,
+      title: 'Seafile',
+      subtitle: 'Libraries / Starred / Search',
+      icon: Icons.cloud_queue_rounded,
+      color: Color(0xFFED7109),
+    ),
+    const _MediaSourceSpec(
+      index: 17,
+      title: 'TrueNAS',
+      subtitle: 'ZFS / Filesystem',
+      icon: Icons.dns_rounded,
+      color: Color(0xFF0095D5),
+    ),
+    const _MediaSourceSpec(
+      index: 18,
+      title: 'YouTube',
+      subtitle: 'Video / Playlist / Channel / Search',
+      icon: Icons.smart_display_rounded,
+      color: Color(0xFFFF0033),
+    ),
+    const _MediaSourceSpec(
+      index: 19,
+      title: 'Douyin',
+      subtitle: 'Video / Live / User Posts',
+      icon: Icons.music_video_rounded,
+      color: Color(0xFF00AFA7),
+    ),
+    const _MediaSourceSpec(
+      index: 20,
+      title: 'TikTok',
+      subtitle: 'Video / Live / User Posts',
+      icon: Icons.music_video_rounded,
+      color: Color(0xFFFE2C55),
     ),
   ];
 
@@ -616,6 +848,104 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         return _buildEmbyContent(theme);
       case 6:
         return _buildCloudreveContent(theme);
+      case 7:
+        return TwitchAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _twitchBinds,
+          onDraftChanged: (value) => _twitchHasDraft = value,
+        );
+      case 8:
+        return HuyaAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          instances: _huyaInstances,
+          onDraftChanged: (value) => _huyaHasDraft = value,
+        );
+      case 9:
+        return DouyuAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          instances: _douyuInstances,
+          onDraftChanged: (value) => _douyuHasDraft = value,
+        );
+      case 10:
+        return AcFunAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          instances: _acfunInstances,
+          onDraftChanged: (value) => _acfunHasDraft = value,
+        );
+      case 11:
+        return CctvAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          instances: _cctvInstances,
+          onDraftChanged: (value) => _cctvHasDraft = value,
+        );
+      case 12:
+        return FnosAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _fnosBinds,
+          onDraftChanged: (value) => _fnosHasDraft = value,
+        );
+      case 13:
+        return QnapAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _qnapBinds,
+          onDraftChanged: (value) => _qnapHasDraft = value,
+        );
+      case 14:
+        return SynologyAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _synologyBinds,
+          onDraftChanged: (value) => _synologyHasDraft = value,
+        );
+      case 15:
+        return NextcloudAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _nextcloudBinds,
+          onDraftChanged: (value) => _nextcloudHasDraft = value,
+        );
+      case 16:
+        return SeafileAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _seafileBinds,
+          onDraftChanged: (value) => _seafileHasDraft = value,
+        );
+      case 17:
+        return TrueNasAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _trueNasBinds,
+          onDraftChanged: (value) => _trueNasHasDraft = value,
+        );
+      case 18:
+        return YoutubeAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _youtubeBinds,
+          onDraftChanged: (value) => _youtubeHasDraft = value,
+        );
+      case 19:
+        return DouyinAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _douyinBinds,
+          onDraftChanged: (value) => _douyinHasDraft = value,
+        );
+      case 20:
+        return TikTokAddMediaForm(
+          roomId: widget.roomId,
+          playlistId: widget.parentId ?? '',
+          binds: _tiktokBinds,
+          onDraftChanged: (value) => _tiktokHasDraft = value,
+        );
       default:
         return const SizedBox();
     }
@@ -980,16 +1310,63 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildBilibiliContent(ThemeData theme) {
-    final videos = _biliInfo?.videos ?? const <BilibiliVideoItemInfo>[];
-    final selectedIndex = videos.isEmpty
+    return Column(
+      children: [
+        SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment(
+              value: false,
+              icon: Icon(Icons.play_circle_outline),
+              label: Text('Media'),
+            ),
+            ButtonSegment(
+              value: true,
+              icon: Icon(Icons.playlist_play),
+              label: Text('Dynamic playlist'),
+            ),
+          ],
+          selected: {_bilibiliPlaylistMode},
+          onSelectionChanged: _isLoading
+              ? null
+              : (values) =>
+                    setState(() => _bilibiliPlaylistMode = values.first),
+        ),
+        const SizedBox(height: 14),
+        Expanded(
+          child: _bilibiliPlaylistMode
+              ? BilibiliPlaylistForm(
+                  roomId: widget.roomId,
+                  parentId: widget.parentId ?? '',
+                  binds: _bilibiliBinds,
+                  onDraftChanged: (value) => _bilibiliPlaylistHasDraft = value,
+                )
+              : _buildBilibiliMediaContent(theme),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBilibiliMediaContent(ThemeData theme) {
+    final candidates =
+        _biliInfo?.candidates ?? const <BilibiliParseCandidateInfo>[];
+    final selectedIndex = candidates.isEmpty
         ? -1
-        : _biliSelectedIndex.clamp(0, videos.length - 1).toInt();
-    final selectedVideo = selectedIndex >= 0 ? videos[selectedIndex] : null;
-    final coverImage = selectedVideo?.cover ?? '';
-    final title = _biliInfo?.title.isNotEmpty == true
-        ? _biliInfo!.title
-        : (selectedVideo?.name ?? context.l10n.unknownTitle);
-    final desc = _biliInfo == null ? '' : _biliInfo!.actors.join(' / ');
+        : _biliSelectedIndex.clamp(0, candidates.length - 1).toInt();
+    final selected = selectedIndex >= 0 ? candidates[selectedIndex] : null;
+    final coverImage = selected?.cover ?? '';
+    final title = selected?.title.isNotEmpty == true
+        ? selected!.title
+        : context.l10n.unknownTitle;
+    final details = <String>[
+      if (selected?.description.isNotEmpty == true) selected!.description,
+      if (selected?.actors.isNotEmpty == true) selected!.actors.join(' / '),
+      if (selected?.partNumber case final part?) 'P$part',
+      if (selected?.durationSeconds case final duration?) '${duration}s',
+      if (selected?.width case final width?)
+        if (selected?.height case final height?) '${width}x$height',
+    ];
+    final previewItems =
+        _biliPreview?.dynamicItems ?? const <RoomDynamicMediaEntry>[];
 
     return Column(
       children: [
@@ -1007,8 +1384,22 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               _bilibiliInstanceName = bind.providerInstanceName;
               _biliInfo = null;
               _biliSelectedIndex = 0;
+              _biliPreview = null;
             });
           },
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Use room owner credential'),
+          value: _bilibiliShared,
+          onChanged: _isLoading
+              ? null
+              : (value) {
+                  setState(() {
+                    _bilibiliShared = value;
+                    _biliPreview = null;
+                  });
+                },
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 14),
@@ -1079,10 +1470,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      if (desc.isNotEmpty) ...[
+                      if (details.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Text(
-                          desc,
+                          details.join(' · '),
                           style: TextStyle(
                             fontSize: 13,
                             color: theme.hintColor,
@@ -1092,18 +1483,43 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                           textAlign: TextAlign.center,
                         ),
                       ],
-                      if (videos.length > 1) ...[
+                      if (candidates.length > 1) ...[
                         const SizedBox(height: 16),
-                        _buildBilibiliVideoSelector(theme, videos),
+                        _buildBilibiliCandidateSelector(theme, candidates),
                       ],
                       const SizedBox(height: 16),
-                      const SizedBox(height: 8),
-                      _buildActionButton(
-                        context.l10n.addToPlaylist,
-                        _addBilibili,
-                        color: const Color(0xFFFB7299),
-                        icon: Icons.playlist_add_rounded,
-                      ),
+                      if (selected?.isMedia == true)
+                        _buildActionButton(
+                          context.l10n.addToPlaylist,
+                          _addBilibiliCandidate,
+                          color: const Color(0xFFFB7299),
+                          icon: Icons.playlist_add_rounded,
+                        )
+                      else if (selected?.isPlaylist == true)
+                        if (_biliPreview == null)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: OutlinedButton.icon(
+                              key: const Key('bilibili-candidate-preview'),
+                              onPressed: _isLoading
+                                  ? null
+                                  : _previewBilibiliCandidate,
+                              icon: const Icon(Icons.preview_outlined),
+                              label: const Text('Preview'),
+                            ),
+                          ),
+                      if (_biliPreview != null) ...[
+                        const SizedBox(height: 16),
+                        BilibiliPlaylistPreview(
+                          items: previewItems,
+                          loading: _isLoading,
+                          hasMore: _bilibiliPreviewHasMore,
+                          onLoadMore: () =>
+                              _previewBilibiliCandidate(loadMore: true),
+                          onAddSelected: _addSelectedBilibiliPreviewItems,
+                          onCreatePlaylist: _addBilibiliCandidate,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1246,6 +1662,42 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildEmbyContent(ThemeData theme) {
+    return Column(
+      children: [
+        SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment(
+              value: false,
+              icon: Icon(Icons.folder_open_outlined),
+              label: Text('Library'),
+            ),
+            ButtonSegment(
+              value: true,
+              icon: Icon(Icons.favorite_outline),
+              label: Text('Favorites & people'),
+            ),
+          ],
+          selected: {_embyPlaylistMode},
+          onSelectionChanged: _isLoading
+              ? null
+              : (values) => setState(() => _embyPlaylistMode = values.first),
+        ),
+        const SizedBox(height: 14),
+        Expanded(
+          child: _embyPlaylistMode
+              ? EmbyPlaylistForm(
+                  roomId: widget.roomId,
+                  parentId: widget.parentId ?? '',
+                  binds: _embyBinds,
+                  onDraftChanged: (value) => _embyPlaylistHasDraft = value,
+                )
+              : _buildEmbyLibraryContent(theme),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmbyLibraryContent(ThemeData theme) {
     if (_checkingVendors) {
       return const AppLoadingIndicator();
     }
@@ -1638,12 +2090,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
-  Widget _buildBilibiliVideoSelector(
+  Widget _buildBilibiliCandidateSelector(
     ThemeData theme,
-    List<BilibiliVideoItemInfo> videos,
+    List<BilibiliParseCandidateInfo> candidates,
   ) {
     final selectedIndex = _biliSelectedIndex
-        .clamp(0, videos.length - 1)
+        .clamp(0, candidates.length - 1)
         .toInt();
     return AppPanelSurface(
       constraints: const BoxConstraints(maxHeight: 220),
@@ -1651,29 +2103,27 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       borderRadius: BorderRadius.circular(8),
       child: AppListView.separated(
         shrinkWrap: true,
-        itemCount: videos.length,
+        itemCount: candidates.length,
         separatorBuilder: (_, _) => AppDivider(
           height: 1,
           color: theme.dividerColor.withValues(alpha: 0.08),
         ),
         itemBuilder: (context, index) {
-          final video = videos[index];
+          final candidate = candidates[index];
           final selected = index == selectedIndex;
-          final title = video.name.isEmpty
+          final title = candidate.title.isEmpty
               ? context.l10n.videoNumber(index + 1)
-              : video.name;
-          final subtitle = video.isLive
-              ? context.l10n.liveRoomNumber(
-                  video.cid > 0 ? video.cid : video.epid,
-                )
-              : video.epid > 0
-              ? 'EP ${video.epid} · CID ${video.cid}'
-              : '${video.bvid} · CID ${video.cid}';
+              : candidate.title;
+          final subtitle = [
+            candidate.isPlaylist ? 'Dynamic playlist' : 'Media',
+            if (candidate.partNumber case final part?) 'P$part',
+            if (candidate.durationSeconds case final duration?) '${duration}s',
+          ].join(' · ');
           return AppTile(
             selected: selected,
             prefix: Icon(
-              video.isLive
-                  ? Icons.live_tv_rounded
+              candidate.isPlaylist
+                  ? Icons.playlist_play
                   : selected
                   ? Icons.radio_button_checked_rounded
                   : Icons.radio_button_unchecked_rounded,
@@ -1685,7 +2135,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            onPressed: () => setState(() => _biliSelectedIndex = index),
+            onPressed: () => setState(() {
+              _biliSelectedIndex = index;
+              _biliPreview = null;
+            }),
           );
         },
       ),
@@ -1816,6 +2269,16 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       4 => 0,
       5 => 2,
       6 => 1,
+      7 => 4,
+      12 => 5,
+      13 => 6,
+      14 => 7,
+      15 => 8,
+      16 => 9,
+      17 => 10,
+      18 => 11,
+      19 => 12,
+      20 => 13,
       _ => null,
     };
   }
@@ -1825,6 +2288,16 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       'bilibili' => 3,
       'cloudreve' => 1,
       'emby' => 2,
+      'twitch' => 4,
+      'fnos' => 5,
+      'qnap' => 6,
+      'synology' => 7,
+      'nextcloud' => 8,
+      'seafile' => 9,
+      'truenas' => 10,
+      'youtube' => 11,
+      'douyin' => 12,
+      'tiktok' => 13,
       _ => 0,
     };
   }
@@ -2000,9 +2473,25 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         _liveProxyUrlController.text.trim().isNotEmpty ||
         _liveProxyNameController.text.trim().isNotEmpty ||
         _biliUrlController.text.trim().isNotEmpty ||
+        _bilibiliPlaylistHasDraft ||
         _alistSearchController.text.trim().isNotEmpty ||
         _embySearchController.text.trim().isNotEmpty ||
-        _cloudreveSearchController.text.trim().isNotEmpty) {
+        _embyPlaylistHasDraft ||
+        _cloudreveSearchController.text.trim().isNotEmpty ||
+        _twitchHasDraft ||
+        _huyaHasDraft ||
+        _douyuHasDraft ||
+        _acfunHasDraft ||
+        _cctvHasDraft ||
+        _fnosHasDraft ||
+        _qnapHasDraft ||
+        _synologyHasDraft ||
+        _nextcloudHasDraft ||
+        _seafileHasDraft ||
+        _trueNasHasDraft ||
+        _youtubeHasDraft ||
+        _douyinHasDraft ||
+        _tiktokHasDraft) {
       return true;
     }
     return _directHeaders.any(
@@ -2416,6 +2905,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         setState(() {
           _biliInfo = info;
           _biliSelectedIndex = 0;
+          _biliPreview = null;
         });
       }
     } catch (e) {
@@ -2427,31 +2917,115 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  Future<void> _addBilibili() async {
+  BilibiliParseCandidateInfo? get _selectedBilibiliCandidate {
+    final candidates = _biliInfo?.candidates;
+    if (candidates == null || candidates.isEmpty) return null;
+    final index = _biliSelectedIndex.clamp(0, candidates.length - 1).toInt();
+    return candidates[index];
+  }
+
+  bool get _bilibiliPreviewHasMore {
+    final preview = _biliPreview;
+    if (preview == null) return false;
+    if (preview.usesCursor) return preview.nextCursor.isNotEmpty;
+    if (preview.total case final total?) {
+      return preview.dynamicItems.length < total;
+    }
+    return false;
+  }
+
+  Future<void> _previewBilibiliCandidate({bool loadMore = false}) async {
+    final candidate = _selectedBilibiliCandidate;
+    final sourceConfig = candidate?.playlistSourceConfig;
+    if (sourceConfig == null) return;
+    final current = _biliPreview;
+    if (loadMore && (current == null || !_bilibiliPreviewHasMore)) return;
+    setState(() => _isLoading = true);
+    try {
+      final preview = await SyncTvService.listMediaLibrary(
+        widget.roomId,
+        sourceProvider: 'bilibili',
+        typedPreviewSourceConfig: BilibiliSourceConfig.playlistWithShared(
+          sourceConfig,
+          _bilibiliShared,
+        ),
+        providerInstanceName: _bilibiliInstanceName,
+        pageSize: 24,
+        page: loadMore && current?.usesCursor == false ? current!.page + 1 : 1,
+        cursor: loadMore && current?.usesCursor == true
+            ? current!.nextCursor
+            : null,
+      );
+      if (mounted) {
+        setState(() {
+          _biliPreview = loadMore && current != null
+              ? RoomMediaLibraryPage(
+                  playlists: preview.playlists,
+                  media: preview.media,
+                  dynamicItems: [
+                    ...current.dynamicItems,
+                    ...preview.dynamicItems,
+                  ],
+                  currentPath: preview.currentPath,
+                  total: preview.total,
+                  folderCount: preview.folderCount,
+                  fileCount: preview.fileCount,
+                  version: preview.version,
+                  usesCursor: preview.usesCursor,
+                  nextCursor: preview.nextCursor,
+                  page: preview.page,
+                )
+              : preview;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.parseFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _addBilibiliCandidate() async {
     if (_biliInfo == null) return;
     setState(() => _isLoading = true);
 
     try {
-      final videos = _biliInfo!.videos;
-      if (videos.isEmpty) {
+      final candidate = _selectedBilibiliCandidate;
+      if (candidate == null) {
         throw Exception(context.l10n.bilibiliVideoInfoUnavailable);
       }
-      final selectedIndex = _biliSelectedIndex
-          .clamp(0, videos.length - 1)
-          .toInt();
-      final selectedVideo = videos[selectedIndex];
-
-      final sourceConfig = _bilibiliSourceConfig(selectedVideo);
-      final title = _biliInfo!.title.isNotEmpty
-          ? _biliInfo!.title
-          : (selectedVideo.name.isEmpty ? 'Bilibili' : selectedVideo.name);
-      await SyncTvService.addBilibiliMedia(
-        widget.roomId,
-        playlistId: widget.parentId ?? '',
-        providerInstanceName: _bilibiliInstanceName,
-        sourceConfig: sourceConfig,
-        name: title,
-      );
+      final title = candidate.title.isEmpty ? 'Bilibili' : candidate.title;
+      if (candidate.mediaSourceConfig case final sourceConfig?) {
+        await SyncTvService.addMediaFromSourceConfig(
+          widget.roomId,
+          playlistId: widget.parentId ?? '',
+          providerInstanceName: _bilibiliInstanceName,
+          sourceConfig: BilibiliSourceConfig.mediaWithShared(
+            sourceConfig,
+            _bilibiliShared,
+          ),
+          name: title,
+        );
+      } else if (candidate.playlistSourceConfig case final sourceConfig?) {
+        if (_biliPreview == null) {
+          throw StateError('Preview the dynamic playlist before creating it');
+        }
+        await SyncTvService.createPlaylistFromSourceConfig(
+          widget.roomId,
+          parentId: widget.parentId ?? '',
+          providerInstanceName: _bilibiliInstanceName,
+          sourceConfig: BilibiliSourceConfig.playlistWithShared(
+            sourceConfig,
+            _bilibiliShared,
+          ),
+          name: title,
+          description: candidate.description,
+        );
+      } else {
+        throw StateError('Bilibili parse candidate has no source config');
+      }
       if (mounted) {
         Navigator.pop(context);
         MessageUtils.showSuccess(context, context.l10n.addedSuccessfully);
@@ -2465,24 +3039,37 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  Map<String, dynamic> _bilibiliSourceConfig(BilibiliVideoItemInfo video) {
-    if (video.isLive) {
-      final roomId = video.cid > 0 ? video.cid : video.epid;
-      if (roomId <= 0) {
-        throw Exception(context.l10n.bilibiliLiveRoomIdUnavailable);
+  Future<void> _addSelectedBilibiliPreviewItems(
+    List<RoomDynamicMediaEntry> items,
+  ) async {
+    if (items.isEmpty) return;
+    setState(() => _isLoading = true);
+    try {
+      for (final item in items) {
+        final sourceConfig = item.mediaSourceConfig;
+        if (sourceConfig == null) continue;
+        await SyncTvService.addMediaFromSourceConfig(
+          widget.roomId,
+          playlistId: widget.parentId ?? '',
+          providerInstanceName: _bilibiliInstanceName,
+          sourceConfig: BilibiliSourceConfig.mediaWithShared(
+            sourceConfig,
+            _bilibiliShared,
+          ),
+          name: item.name,
+        );
       }
-      return {'type': 'live', 'room_id': roomId};
-    }
-    if (video.epid > 0) {
-      if (video.cid <= 0) {
-        throw Exception(context.l10n.bilibiliCidUnavailable);
+      if (mounted) {
+        Navigator.pop(context);
+        MessageUtils.showSuccess(context, context.l10n.addedSuccessfully);
       }
-      return {'type': 'pgc', 'epid': video.epid, 'cid': video.cid};
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.addFailed('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    if (video.bvid.isEmpty || video.cid <= 0) {
-      throw Exception(context.l10n.bilibiliIdentifiersUnavailable);
-    }
-    return {'type': 'video', 'bvid': video.bvid, 'cid': video.cid};
   }
 
   Future<void> _loadAlist(String path, {bool loadMore = false}) async {
@@ -3034,7 +3621,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         parentId: widget.parentId ?? '',
         sourceProvider: 'emby',
         providerInstanceName: _embyInstanceName,
-        sourceConfig: {'serverId': _embyServerId, 'itemId': itemId},
+        sourceConfig: {
+          'serverId': _embyServerId,
+          'source': {'type': 'folder', 'itemId': itemId},
+        },
         name: file.name.isEmpty ? 'Emby Playlist' : file.name,
       );
       if (mounted) {

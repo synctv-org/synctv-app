@@ -1,4 +1,8 @@
 class SyncTvMemoryCache {
+  SyncTvMemoryCache({DateTime Function()? clock})
+    : _clock = clock ?? DateTime.now;
+
+  final DateTime Function() _clock;
   final Map<String, _CacheEntry<Object?>> _entries = {};
   final Map<String, Future<Object?>> _inFlight = {};
 
@@ -8,7 +12,7 @@ class SyncTvMemoryCache {
     required Future<T> Function() loader,
     bool refresh = false,
   }) async {
-    final now = DateTime.now();
+    final now = _clock();
     if (!refresh) {
       final cached = _entries[key];
       if (cached != null && cached.expiresAt.isAfter(now)) {
@@ -19,7 +23,7 @@ class SyncTvMemoryCache {
     }
 
     final future = loader().then<Object?>((value) {
-      _entries[key] = _CacheEntry<Object?>(value, DateTime.now().add(ttl));
+      _entries[key] = _CacheEntry<Object?>(value, _clock().add(ttl));
       return value;
     });
     _inFlight[key] = future;
@@ -33,7 +37,7 @@ class SyncTvMemoryCache {
   }
 
   void put<T>(String key, T value, {required Duration ttl}) {
-    _entries[key] = _CacheEntry<Object?>(value, DateTime.now().add(ttl));
+    _entries[key] = _CacheEntry<Object?>(value, _clock().add(ttl));
   }
 
   void invalidate(String key) {

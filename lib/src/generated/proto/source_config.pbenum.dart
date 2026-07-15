@@ -31,6 +31,34 @@ class SourceProvider extends $pb.ProtobufEnum {
       SourceProvider._(6, _omitEnumNames ? '' : 'SOURCE_PROVIDER_LIVE_PROXY');
   static const SourceProvider SOURCE_PROVIDER_CLOUDREVE =
       SourceProvider._(7, _omitEnumNames ? '' : 'SOURCE_PROVIDER_CLOUDREVE');
+  static const SourceProvider SOURCE_PROVIDER_TWITCH =
+      SourceProvider._(8, _omitEnumNames ? '' : 'SOURCE_PROVIDER_TWITCH');
+  static const SourceProvider SOURCE_PROVIDER_HUYA =
+      SourceProvider._(9, _omitEnumNames ? '' : 'SOURCE_PROVIDER_HUYA');
+  static const SourceProvider SOURCE_PROVIDER_DOUYU =
+      SourceProvider._(10, _omitEnumNames ? '' : 'SOURCE_PROVIDER_DOUYU');
+  static const SourceProvider SOURCE_PROVIDER_DOUYIN =
+      SourceProvider._(11, _omitEnumNames ? '' : 'SOURCE_PROVIDER_DOUYIN');
+  static const SourceProvider SOURCE_PROVIDER_ACFUN =
+      SourceProvider._(12, _omitEnumNames ? '' : 'SOURCE_PROVIDER_ACFUN');
+  static const SourceProvider SOURCE_PROVIDER_CCTV =
+      SourceProvider._(13, _omitEnumNames ? '' : 'SOURCE_PROVIDER_CCTV');
+  static const SourceProvider SOURCE_PROVIDER_FNOS =
+      SourceProvider._(14, _omitEnumNames ? '' : 'SOURCE_PROVIDER_FNOS');
+  static const SourceProvider SOURCE_PROVIDER_QNAP =
+      SourceProvider._(15, _omitEnumNames ? '' : 'SOURCE_PROVIDER_QNAP');
+  static const SourceProvider SOURCE_PROVIDER_SYNOLOGY =
+      SourceProvider._(16, _omitEnumNames ? '' : 'SOURCE_PROVIDER_SYNOLOGY');
+  static const SourceProvider SOURCE_PROVIDER_NEXTCLOUD =
+      SourceProvider._(17, _omitEnumNames ? '' : 'SOURCE_PROVIDER_NEXTCLOUD');
+  static const SourceProvider SOURCE_PROVIDER_SEAFILE =
+      SourceProvider._(18, _omitEnumNames ? '' : 'SOURCE_PROVIDER_SEAFILE');
+  static const SourceProvider SOURCE_PROVIDER_TRUENAS =
+      SourceProvider._(19, _omitEnumNames ? '' : 'SOURCE_PROVIDER_TRUENAS');
+  static const SourceProvider SOURCE_PROVIDER_YOUTUBE =
+      SourceProvider._(20, _omitEnumNames ? '' : 'SOURCE_PROVIDER_YOUTUBE');
+  static const SourceProvider SOURCE_PROVIDER_TIKTOK =
+      SourceProvider._(21, _omitEnumNames ? '' : 'SOURCE_PROVIDER_TIKTOK');
 
   static const $core.List<SourceProvider> values = <SourceProvider>[
     SOURCE_PROVIDER_UNSPECIFIED,
@@ -41,14 +69,181 @@ class SourceProvider extends $pb.ProtobufEnum {
     SOURCE_PROVIDER_RTMP,
     SOURCE_PROVIDER_LIVE_PROXY,
     SOURCE_PROVIDER_CLOUDREVE,
+    SOURCE_PROVIDER_TWITCH,
+    SOURCE_PROVIDER_HUYA,
+    SOURCE_PROVIDER_DOUYU,
+    SOURCE_PROVIDER_DOUYIN,
+    SOURCE_PROVIDER_ACFUN,
+    SOURCE_PROVIDER_CCTV,
+    SOURCE_PROVIDER_FNOS,
+    SOURCE_PROVIDER_QNAP,
+    SOURCE_PROVIDER_SYNOLOGY,
+    SOURCE_PROVIDER_NEXTCLOUD,
+    SOURCE_PROVIDER_SEAFILE,
+    SOURCE_PROVIDER_TRUENAS,
+    SOURCE_PROVIDER_YOUTUBE,
+    SOURCE_PROVIDER_TIKTOK,
   ];
 
   static final $core.List<SourceProvider?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 7);
+      $pb.ProtobufEnum.$_initByValueList(values, 21);
   static SourceProvider? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const SourceProvider._(super.value, super.name);
+}
+
+class BilibiliHistoryType extends $pb.ProtobufEnum {
+  static const BilibiliHistoryType BILIBILI_HISTORY_TYPE_ALL =
+      BilibiliHistoryType._(
+          0, _omitEnumNames ? '' : 'BILIBILI_HISTORY_TYPE_ALL');
+  static const BilibiliHistoryType BILIBILI_HISTORY_TYPE_ARCHIVE =
+      BilibiliHistoryType._(
+          1, _omitEnumNames ? '' : 'BILIBILI_HISTORY_TYPE_ARCHIVE');
+  static const BilibiliHistoryType BILIBILI_HISTORY_TYPE_LIVE =
+      BilibiliHistoryType._(
+          2, _omitEnumNames ? '' : 'BILIBILI_HISTORY_TYPE_LIVE');
+
+  static const $core.List<BilibiliHistoryType> values = <BilibiliHistoryType>[
+    BILIBILI_HISTORY_TYPE_ALL,
+    BILIBILI_HISTORY_TYPE_ARCHIVE,
+    BILIBILI_HISTORY_TYPE_LIVE,
+  ];
+
+  static final $core.List<BilibiliHistoryType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static BilibiliHistoryType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const BilibiliHistoryType._(super.value, super.name);
+}
+
+class BilibiliPgcTimelineType extends $pb.ProtobufEnum {
+  static const BilibiliPgcTimelineType BILIBILI_PGC_TIMELINE_TYPE_UNSPECIFIED =
+      BilibiliPgcTimelineType._(
+          0, _omitEnumNames ? '' : 'BILIBILI_PGC_TIMELINE_TYPE_UNSPECIFIED');
+  static const BilibiliPgcTimelineType BILIBILI_PGC_TIMELINE_TYPE_ANIME =
+      BilibiliPgcTimelineType._(
+          1, _omitEnumNames ? '' : 'BILIBILI_PGC_TIMELINE_TYPE_ANIME');
+  static const BilibiliPgcTimelineType BILIBILI_PGC_TIMELINE_TYPE_CINEMA =
+      BilibiliPgcTimelineType._(
+          3, _omitEnumNames ? '' : 'BILIBILI_PGC_TIMELINE_TYPE_CINEMA');
+  static const BilibiliPgcTimelineType BILIBILI_PGC_TIMELINE_TYPE_GUOCHUANG =
+      BilibiliPgcTimelineType._(
+          4, _omitEnumNames ? '' : 'BILIBILI_PGC_TIMELINE_TYPE_GUOCHUANG');
+
+  static const $core.List<BilibiliPgcTimelineType> values =
+      <BilibiliPgcTimelineType>[
+    BILIBILI_PGC_TIMELINE_TYPE_UNSPECIFIED,
+    BILIBILI_PGC_TIMELINE_TYPE_ANIME,
+    BILIBILI_PGC_TIMELINE_TYPE_CINEMA,
+    BILIBILI_PGC_TIMELINE_TYPE_GUOCHUANG,
+  ];
+
+  static final $core.List<BilibiliPgcTimelineType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static BilibiliPgcTimelineType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const BilibiliPgcTimelineType._(super.value, super.name);
+}
+
+class TwitchPlaylistContent extends $pb.ProtobufEnum {
+  static const TwitchPlaylistContent TWITCH_PLAYLIST_CONTENT_UNSPECIFIED =
+      TwitchPlaylistContent._(
+          0, _omitEnumNames ? '' : 'TWITCH_PLAYLIST_CONTENT_UNSPECIFIED');
+  static const TwitchPlaylistContent TWITCH_PLAYLIST_CONTENT_VIDEOS =
+      TwitchPlaylistContent._(
+          1, _omitEnumNames ? '' : 'TWITCH_PLAYLIST_CONTENT_VIDEOS');
+  static const TwitchPlaylistContent TWITCH_PLAYLIST_CONTENT_HIGHLIGHTS =
+      TwitchPlaylistContent._(
+          2, _omitEnumNames ? '' : 'TWITCH_PLAYLIST_CONTENT_HIGHLIGHTS');
+  static const TwitchPlaylistContent TWITCH_PLAYLIST_CONTENT_UPLOADS =
+      TwitchPlaylistContent._(
+          3, _omitEnumNames ? '' : 'TWITCH_PLAYLIST_CONTENT_UPLOADS');
+  static const TwitchPlaylistContent TWITCH_PLAYLIST_CONTENT_CLIPS =
+      TwitchPlaylistContent._(
+          4, _omitEnumNames ? '' : 'TWITCH_PLAYLIST_CONTENT_CLIPS');
+
+  static const $core.List<TwitchPlaylistContent> values =
+      <TwitchPlaylistContent>[
+    TWITCH_PLAYLIST_CONTENT_UNSPECIFIED,
+    TWITCH_PLAYLIST_CONTENT_VIDEOS,
+    TWITCH_PLAYLIST_CONTENT_HIGHLIGHTS,
+    TWITCH_PLAYLIST_CONTENT_UPLOADS,
+    TWITCH_PLAYLIST_CONTENT_CLIPS,
+  ];
+
+  static final $core.List<TwitchPlaylistContent?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static TwitchPlaylistContent? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const TwitchPlaylistContent._(super.value, super.name);
+}
+
+class YoutubeChannelContent extends $pb.ProtobufEnum {
+  static const YoutubeChannelContent YOUTUBE_CHANNEL_CONTENT_UNSPECIFIED =
+      YoutubeChannelContent._(
+          0, _omitEnumNames ? '' : 'YOUTUBE_CHANNEL_CONTENT_UNSPECIFIED');
+  static const YoutubeChannelContent YOUTUBE_CHANNEL_CONTENT_VIDEOS =
+      YoutubeChannelContent._(
+          1, _omitEnumNames ? '' : 'YOUTUBE_CHANNEL_CONTENT_VIDEOS');
+  static const YoutubeChannelContent YOUTUBE_CHANNEL_CONTENT_SHORTS =
+      YoutubeChannelContent._(
+          2, _omitEnumNames ? '' : 'YOUTUBE_CHANNEL_CONTENT_SHORTS');
+  static const YoutubeChannelContent YOUTUBE_CHANNEL_CONTENT_LIVE =
+      YoutubeChannelContent._(
+          3, _omitEnumNames ? '' : 'YOUTUBE_CHANNEL_CONTENT_LIVE');
+
+  static const $core.List<YoutubeChannelContent> values =
+      <YoutubeChannelContent>[
+    YOUTUBE_CHANNEL_CONTENT_UNSPECIFIED,
+    YOUTUBE_CHANNEL_CONTENT_VIDEOS,
+    YOUTUBE_CHANNEL_CONTENT_SHORTS,
+    YOUTUBE_CHANNEL_CONTENT_LIVE,
+  ];
+
+  static final $core.List<YoutubeChannelContent?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static YoutubeChannelContent? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const YoutubeChannelContent._(super.value, super.name);
+}
+
+class SynologyLibraryItemKind extends $pb.ProtobufEnum {
+  static const SynologyLibraryItemKind SYNOLOGY_LIBRARY_ITEM_KIND_UNSPECIFIED =
+      SynologyLibraryItemKind._(
+          0, _omitEnumNames ? '' : 'SYNOLOGY_LIBRARY_ITEM_KIND_UNSPECIFIED');
+  static const SynologyLibraryItemKind SYNOLOGY_LIBRARY_ITEM_KIND_MOVIE =
+      SynologyLibraryItemKind._(
+          1, _omitEnumNames ? '' : 'SYNOLOGY_LIBRARY_ITEM_KIND_MOVIE');
+  static const SynologyLibraryItemKind SYNOLOGY_LIBRARY_ITEM_KIND_EPISODE =
+      SynologyLibraryItemKind._(
+          2, _omitEnumNames ? '' : 'SYNOLOGY_LIBRARY_ITEM_KIND_EPISODE');
+  static const SynologyLibraryItemKind SYNOLOGY_LIBRARY_ITEM_KIND_HOME_VIDEO =
+      SynologyLibraryItemKind._(
+          3, _omitEnumNames ? '' : 'SYNOLOGY_LIBRARY_ITEM_KIND_HOME_VIDEO');
+  static const SynologyLibraryItemKind SYNOLOGY_LIBRARY_ITEM_KIND_TV_RECORDING =
+      SynologyLibraryItemKind._(
+          4, _omitEnumNames ? '' : 'SYNOLOGY_LIBRARY_ITEM_KIND_TV_RECORDING');
+
+  static const $core.List<SynologyLibraryItemKind> values =
+      <SynologyLibraryItemKind>[
+    SYNOLOGY_LIBRARY_ITEM_KIND_UNSPECIFIED,
+    SYNOLOGY_LIBRARY_ITEM_KIND_MOVIE,
+    SYNOLOGY_LIBRARY_ITEM_KIND_EPISODE,
+    SYNOLOGY_LIBRARY_ITEM_KIND_HOME_VIDEO,
+    SYNOLOGY_LIBRARY_ITEM_KIND_TV_RECORDING,
+  ];
+
+  static final $core.List<SynologyLibraryItemKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 4);
+  static SynologyLibraryItemKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const SynologyLibraryItemKind._(super.value, super.name);
 }
 
 const $core.bool _omitEnumNames =

@@ -14,6 +14,7 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/widgets/danmaku_overlay.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
+import 'package:synctv_app/models/acfun_danmaku_codec.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/services/dlna.dart';
 import 'package:synctv_app/services/xml_parser.dart';
@@ -131,6 +132,12 @@ class DanmakuController extends ChangeNotifier {
   }
 
   void _parseDanmaku(String content) {
+    final acFunItems = decodeAcFunDanmakuDocument(content);
+    if (acFunItems != null) {
+      _items = acFunItems;
+      notifyListeners();
+      return;
+    }
     String normalized = content
         .replaceAll('\u00A0', ' ')
         .replaceAll('\u3000', ' ')

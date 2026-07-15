@@ -40,6 +40,23 @@ final $typed_data.Uint8List playModeDescriptor = $convert.base64Decode(
     'VOVElBTBABEhgKFFBMQVlfTU9ERV9SRVBFQVRfT05FEAISGAoUUExBWV9NT0RFX1JFUEVBVF9B'
     'TEwQAxIVChFQTEFZX01PREVfU0hVRkZMRRAE');
 
+@$core.Deprecated('Use twitchTargetKindDescriptor instead')
+const TwitchTargetKind$json = {
+  '1': 'TwitchTargetKind',
+  '2': [
+    {'1': 'TWITCH_TARGET_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'TWITCH_TARGET_KIND_VIDEO', '2': 1},
+    {'1': 'TWITCH_TARGET_KIND_CLIP', '2': 2},
+    {'1': 'TWITCH_TARGET_KIND_LIVE', '2': 3},
+  ],
+};
+
+/// Descriptor for `TwitchTargetKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List twitchTargetKindDescriptor = $convert.base64Decode(
+    'ChBUd2l0Y2hUYXJnZXRLaW5kEiIKHlRXSVRDSF9UQVJHRVRfS0lORF9VTlNQRUNJRklFRBAAEh'
+    'wKGFRXSVRDSF9UQVJHRVRfS0lORF9WSURFTxABEhsKF1RXSVRDSF9UQVJHRVRfS0lORF9DTElQ'
+    'EAISGwoXVFdJVENIX1RBUkdFVF9LSU5EX0xJVkUQAw==');
+
 @$core.Deprecated('Use resourceAvailabilityDescriptor instead')
 const ResourceAvailability$json = {
   '1': 'ResourceAvailability',
@@ -927,17 +944,87 @@ const AlistTarget$json = {
 final $typed_data.Uint8List alistTargetDescriptor = $convert.base64Decode(
     'CgtBbGlzdFRhcmdldBIjCg1yZWxhdGl2ZV9wYXRoGAEgASgJUgxyZWxhdGl2ZVBhdGg=');
 
-@$core.Deprecated('Use embyTargetDescriptor instead')
-const EmbyTarget$json = {
-  '1': 'EmbyTarget',
+@$core.Deprecated('Use embyItemTargetDescriptor instead')
+const EmbyItemTarget$json = {
+  '1': 'EmbyItemTarget',
   '2': [
     {'1': 'item_id', '3': 1, '4': 1, '5': 9, '10': 'itemId'},
   ],
 };
 
+/// Descriptor for `EmbyItemTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List embyItemTargetDescriptor = $convert
+    .base64Decode('Cg5FbWJ5SXRlbVRhcmdldBIXCgdpdGVtX2lkGAEgASgJUgZpdGVtSWQ=');
+
+@$core.Deprecated('Use embyPersonTargetDescriptor instead')
+const EmbyPersonTarget$json = {
+  '1': 'EmbyPersonTarget',
+  '2': [
+    {'1': 'person_id', '3': 1, '4': 1, '5': 9, '10': 'personId'},
+  ],
+};
+
+/// Descriptor for `EmbyPersonTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List embyPersonTargetDescriptor = $convert.base64Decode(
+    'ChBFbWJ5UGVyc29uVGFyZ2V0EhsKCXBlcnNvbl9pZBgBIAEoCVIIcGVyc29uSWQ=');
+
+@$core.Deprecated('Use embyPersonItemTargetDescriptor instead')
+const EmbyPersonItemTarget$json = {
+  '1': 'EmbyPersonItemTarget',
+  '2': [
+    {'1': 'person_id', '3': 1, '4': 1, '5': 9, '10': 'personId'},
+    {'1': 'item_id', '3': 2, '4': 1, '5': 9, '10': 'itemId'},
+  ],
+};
+
+/// Descriptor for `EmbyPersonItemTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List embyPersonItemTargetDescriptor = $convert.base64Decode(
+    'ChRFbWJ5UGVyc29uSXRlbVRhcmdldBIbCglwZXJzb25faWQYASABKAlSCHBlcnNvbklkEhcKB2'
+    'l0ZW1faWQYAiABKAlSBml0ZW1JZA==');
+
+@$core.Deprecated('Use embyTargetDescriptor instead')
+const EmbyTarget$json = {
+  '1': 'EmbyTarget',
+  '2': [
+    {
+      '1': 'item',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.EmbyItemTarget',
+      '9': 0,
+      '10': 'item'
+    },
+    {
+      '1': 'person',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.EmbyPersonTarget',
+      '9': 0,
+      '10': 'person'
+    },
+    {
+      '1': 'person_item',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.EmbyPersonItemTarget',
+      '9': 0,
+      '10': 'personItem'
+    },
+  ],
+  '8': [
+    {'1': 'target'},
+  ],
+};
+
 /// Descriptor for `EmbyTarget`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List embyTargetDescriptor = $convert
-    .base64Decode('CgpFbWJ5VGFyZ2V0EhcKB2l0ZW1faWQYASABKAlSBml0ZW1JZA==');
+final $typed_data.Uint8List embyTargetDescriptor = $convert.base64Decode(
+    'CgpFbWJ5VGFyZ2V0EjMKBGl0ZW0YASABKAsyHS5zeW5jdHYuY2xpZW50LkVtYnlJdGVtVGFyZ2'
+    'V0SABSBGl0ZW0SOQoGcGVyc29uGAIgASgLMh8uc3luY3R2LmNsaWVudC5FbWJ5UGVyc29uVGFy'
+    'Z2V0SABSBnBlcnNvbhJGCgtwZXJzb25faXRlbRgDIAEoCzIjLnN5bmN0di5jbGllbnQuRW1ieV'
+    'BlcnNvbkl0ZW1UYXJnZXRIAFIKcGVyc29uSXRlbUIICgZ0YXJnZXQ=');
 
 @$core.Deprecated('Use cloudreveTargetDescriptor instead')
 const CloudreveTarget$json = {
@@ -950,6 +1037,411 @@ const CloudreveTarget$json = {
 /// Descriptor for `CloudreveTarget`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List cloudreveTargetDescriptor = $convert.base64Decode(
     'Cg9DbG91ZHJldmVUYXJnZXQSIwoNcmVsYXRpdmVfcGF0aBgBIAEoCVIMcmVsYXRpdmVQYXRo');
+
+@$core.Deprecated('Use fnosFileTargetDescriptor instead')
+const FnosFileTarget$json = {
+  '1': 'FnosFileTarget',
+  '2': [
+    {'1': 'relative_path', '3': 1, '4': 1, '5': 9, '10': 'relativePath'},
+  ],
+};
+
+/// Descriptor for `FnosFileTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fnosFileTargetDescriptor = $convert.base64Decode(
+    'Cg5Gbm9zRmlsZVRhcmdldBIjCg1yZWxhdGl2ZV9wYXRoGAEgASgJUgxyZWxhdGl2ZVBhdGg=');
+
+@$core.Deprecated('Use fnosMediaItemTargetDescriptor instead')
+const FnosMediaItemTarget$json = {
+  '1': 'FnosMediaItemTarget',
+  '2': [
+    {'1': 'item_guid', '3': 1, '4': 1, '5': 9, '10': 'itemGuid'},
+    {
+      '1': 'media_guid',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'mediaGuid',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_media_guid'},
+  ],
+};
+
+/// Descriptor for `FnosMediaItemTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fnosMediaItemTargetDescriptor = $convert.base64Decode(
+    'ChNGbm9zTWVkaWFJdGVtVGFyZ2V0EhsKCWl0ZW1fZ3VpZBgBIAEoCVIIaXRlbUd1aWQSIgoKbW'
+    'VkaWFfZ3VpZBgCIAEoCUgAUgltZWRpYUd1aWSIAQFCDQoLX21lZGlhX2d1aWQ=');
+
+@$core.Deprecated('Use fnosTargetDescriptor instead')
+const FnosTarget$json = {
+  '1': 'FnosTarget',
+  '2': [
+    {
+      '1': 'file',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.FnosFileTarget',
+      '9': 0,
+      '10': 'file'
+    },
+    {
+      '1': 'media_item',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.FnosMediaItemTarget',
+      '9': 0,
+      '10': 'mediaItem'
+    },
+  ],
+  '8': [
+    {'1': 'target'},
+  ],
+};
+
+/// Descriptor for `FnosTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fnosTargetDescriptor = $convert.base64Decode(
+    'CgpGbm9zVGFyZ2V0EjMKBGZpbGUYASABKAsyHS5zeW5jdHYuY2xpZW50LkZub3NGaWxlVGFyZ2'
+    'V0SABSBGZpbGUSQwoKbWVkaWFfaXRlbRgCIAEoCzIiLnN5bmN0di5jbGllbnQuRm5vc01lZGlh'
+    'SXRlbVRhcmdldEgAUgltZWRpYUl0ZW1CCAoGdGFyZ2V0');
+
+@$core.Deprecated('Use twitchTargetDescriptor instead')
+const TwitchTarget$json = {
+  '1': 'TwitchTarget',
+  '2': [
+    {
+      '1': 'kind',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.TwitchTargetKind',
+      '10': 'kind'
+    },
+    {'1': 'id', '3': 2, '4': 1, '5': 9, '10': 'id'},
+  ],
+};
+
+/// Descriptor for `TwitchTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List twitchTargetDescriptor = $convert.base64Decode(
+    'CgxUd2l0Y2hUYXJnZXQSMwoEa2luZBgBIAEoDjIfLnN5bmN0di5jbGllbnQuVHdpdGNoVGFyZ2'
+    'V0S2luZFIEa2luZBIOCgJpZBgCIAEoCVICaWQ=');
+
+@$core.Deprecated('Use qnapTargetDescriptor instead')
+const QnapTarget$json = {
+  '1': 'QnapTarget',
+  '2': [
+    {'1': 'relative_path', '3': 1, '4': 1, '5': 9, '10': 'relativePath'},
+  ],
+};
+
+/// Descriptor for `QnapTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List qnapTargetDescriptor = $convert.base64Decode(
+    'CgpRbmFwVGFyZ2V0EiMKDXJlbGF0aXZlX3BhdGgYASABKAlSDHJlbGF0aXZlUGF0aA==');
+
+@$core.Deprecated('Use synologyFileTargetDescriptor instead')
+const SynologyFileTarget$json = {
+  '1': 'SynologyFileTarget',
+  '2': [
+    {'1': 'relative_path', '3': 1, '4': 1, '5': 9, '10': 'relativePath'},
+  ],
+};
+
+/// Descriptor for `SynologyFileTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List synologyFileTargetDescriptor = $convert.base64Decode(
+    'ChJTeW5vbG9neUZpbGVUYXJnZXQSIwoNcmVsYXRpdmVfcGF0aBgBIAEoCVIMcmVsYXRpdmVQYX'
+    'Ro');
+
+@$core.Deprecated('Use synologyLibraryItemTargetDescriptor instead')
+const SynologyLibraryItemTarget$json = {
+  '1': 'SynologyLibraryItemTarget',
+  '2': [
+    {
+      '1': 'kind',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.SynologyLibraryItemKind',
+      '10': 'kind'
+    },
+    {'1': 'item_id', '3': 2, '4': 1, '5': 3, '10': 'itemId'},
+    {'1': 'file_id', '3': 3, '4': 1, '5': 3, '10': 'fileId'},
+    {
+      '1': 'parent_id',
+      '3': 4,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'parentId',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_parent_id'},
+  ],
+};
+
+/// Descriptor for `SynologyLibraryItemTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List synologyLibraryItemTargetDescriptor = $convert.base64Decode(
+    'ChlTeW5vbG9neUxpYnJhcnlJdGVtVGFyZ2V0EkEKBGtpbmQYASABKA4yLS5zeW5jdHYuc291cm'
+    'NlX2NvbmZpZy5TeW5vbG9neUxpYnJhcnlJdGVtS2luZFIEa2luZBIXCgdpdGVtX2lkGAIgASgD'
+    'UgZpdGVtSWQSFwoHZmlsZV9pZBgDIAEoA1IGZmlsZUlkEiAKCXBhcmVudF9pZBgEIAEoA0gAUg'
+    'hwYXJlbnRJZIgBAUIMCgpfcGFyZW50X2lk');
+
+@$core.Deprecated('Use synologyTvShowTargetDescriptor instead')
+const SynologyTvShowTarget$json = {
+  '1': 'SynologyTvShowTarget',
+  '2': [
+    {'1': 'library_id', '3': 1, '4': 1, '5': 3, '10': 'libraryId'},
+    {'1': 'tv_show_id', '3': 2, '4': 1, '5': 3, '10': 'tvShowId'},
+  ],
+};
+
+/// Descriptor for `SynologyTvShowTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List synologyTvShowTargetDescriptor = $convert.base64Decode(
+    'ChRTeW5vbG9neVR2U2hvd1RhcmdldBIdCgpsaWJyYXJ5X2lkGAEgASgDUglsaWJyYXJ5SWQSHA'
+    'oKdHZfc2hvd19pZBgCIAEoA1IIdHZTaG93SWQ=');
+
+@$core.Deprecated('Use synologyTargetDescriptor instead')
+const SynologyTarget$json = {
+  '1': 'SynologyTarget',
+  '2': [
+    {
+      '1': 'file',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.SynologyFileTarget',
+      '9': 0,
+      '10': 'file'
+    },
+    {
+      '1': 'library_item',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.SynologyLibraryItemTarget',
+      '9': 0,
+      '10': 'libraryItem'
+    },
+    {
+      '1': 'tv_show',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.SynologyTvShowTarget',
+      '9': 0,
+      '10': 'tvShow'
+    },
+  ],
+  '8': [
+    {'1': 'target'},
+  ],
+};
+
+/// Descriptor for `SynologyTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List synologyTargetDescriptor = $convert.base64Decode(
+    'Cg5TeW5vbG9neVRhcmdldBI3CgRmaWxlGAEgASgLMiEuc3luY3R2LmNsaWVudC5TeW5vbG9neU'
+    'ZpbGVUYXJnZXRIAFIEZmlsZRJNCgxsaWJyYXJ5X2l0ZW0YAiABKAsyKC5zeW5jdHYuY2xpZW50'
+    'LlN5bm9sb2d5TGlicmFyeUl0ZW1UYXJnZXRIAFILbGlicmFyeUl0ZW0SPgoHdHZfc2hvdxgDIA'
+    'EoCzIjLnN5bmN0di5jbGllbnQuU3lub2xvZ3lUdlNob3dUYXJnZXRIAFIGdHZTaG93QggKBnRh'
+    'cmdldA==');
+
+@$core.Deprecated('Use nextcloudTargetDescriptor instead')
+const NextcloudTarget$json = {
+  '1': 'NextcloudTarget',
+  '2': [
+    {'1': 'path', '3': 1, '4': 1, '5': 9, '10': 'path'},
+    {'1': 'file_id', '3': 2, '4': 1, '5': 4, '10': 'fileId'},
+  ],
+};
+
+/// Descriptor for `NextcloudTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List nextcloudTargetDescriptor = $convert.base64Decode(
+    'Cg9OZXh0Y2xvdWRUYXJnZXQSEgoEcGF0aBgBIAEoCVIEcGF0aBIXCgdmaWxlX2lkGAIgASgEUg'
+    'ZmaWxlSWQ=');
+
+@$core.Deprecated('Use seafileTargetDescriptor instead')
+const SeafileTarget$json = {
+  '1': 'SeafileTarget',
+  '2': [
+    {'1': 'repository_id', '3': 1, '4': 1, '5': 9, '10': 'repositoryId'},
+    {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
+    {'1': 'object_id', '3': 3, '4': 1, '5': 9, '10': 'objectId'},
+    {'1': 'has_thumbnail', '3': 4, '4': 1, '5': 8, '10': 'hasThumbnail'},
+  ],
+};
+
+/// Descriptor for `SeafileTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List seafileTargetDescriptor = $convert.base64Decode(
+    'Cg1TZWFmaWxlVGFyZ2V0EiMKDXJlcG9zaXRvcnlfaWQYASABKAlSDHJlcG9zaXRvcnlJZBISCg'
+    'RwYXRoGAIgASgJUgRwYXRoEhsKCW9iamVjdF9pZBgDIAEoCVIIb2JqZWN0SWQSIwoNaGFzX3Ro'
+    'dW1ibmFpbBgEIAEoCFIMaGFzVGh1bWJuYWls');
+
+@$core.Deprecated('Use trueNasTargetDescriptor instead')
+const TrueNasTarget$json = {
+  '1': 'TrueNasTarget',
+  '2': [
+    {'1': 'path', '3': 1, '4': 1, '5': 9, '10': 'path'},
+  ],
+};
+
+/// Descriptor for `TrueNasTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List trueNasTargetDescriptor =
+    $convert.base64Decode('Cg1UcnVlTmFzVGFyZ2V0EhIKBHBhdGgYASABKAlSBHBhdGg=');
+
+@$core.Deprecated('Use youtubeTargetDescriptor instead')
+const YoutubeTarget$json = {
+  '1': 'YoutubeTarget',
+  '2': [
+    {'1': 'video_id', '3': 1, '4': 1, '5': 9, '10': 'videoId'},
+  ],
+};
+
+/// Descriptor for `YoutubeTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List youtubeTargetDescriptor = $convert
+    .base64Decode('Cg1Zb3V0dWJlVGFyZ2V0EhkKCHZpZGVvX2lkGAEgASgJUgd2aWRlb0lk');
+
+@$core.Deprecated('Use douyinTargetDescriptor instead')
+const DouyinTarget$json = {
+  '1': 'DouyinTarget',
+  '2': [
+    {'1': 'aweme_id', '3': 1, '4': 1, '5': 9, '10': 'awemeId'},
+  ],
+};
+
+/// Descriptor for `DouyinTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List douyinTargetDescriptor = $convert
+    .base64Decode('CgxEb3V5aW5UYXJnZXQSGQoIYXdlbWVfaWQYASABKAlSB2F3ZW1lSWQ=');
+
+@$core.Deprecated('Use tikTokTargetDescriptor instead')
+const TikTokTarget$json = {
+  '1': 'TikTokTarget',
+  '2': [
+    {'1': 'video_id', '3': 1, '4': 1, '5': 9, '10': 'videoId'},
+  ],
+};
+
+/// Descriptor for `TikTokTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List tikTokTargetDescriptor = $convert
+    .base64Decode('CgxUaWtUb2tUYXJnZXQSGQoIdmlkZW9faWQYASABKAlSB3ZpZGVvSWQ=');
+
+@$core.Deprecated('Use bilibiliVideoTargetDescriptor instead')
+const BilibiliVideoTarget$json = {
+  '1': 'BilibiliVideoTarget',
+  '2': [
+    {'1': 'bvid', '3': 1, '4': 1, '5': 9, '10': 'bvid'},
+    {'1': 'aid', '3': 2, '4': 1, '5': 4, '10': 'aid'},
+  ],
+};
+
+/// Descriptor for `BilibiliVideoTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bilibiliVideoTargetDescriptor = $convert.base64Decode(
+    'ChNCaWxpYmlsaVZpZGVvVGFyZ2V0EhIKBGJ2aWQYASABKAlSBGJ2aWQSEAoDYWlkGAIgASgEUg'
+    'NhaWQ=');
+
+@$core.Deprecated('Use bilibiliVideoPartTargetDescriptor instead')
+const BilibiliVideoPartTarget$json = {
+  '1': 'BilibiliVideoPartTarget',
+  '2': [
+    {'1': 'bvid', '3': 1, '4': 1, '5': 9, '10': 'bvid'},
+    {'1': 'aid', '3': 2, '4': 1, '5': 4, '10': 'aid'},
+    {'1': 'cid', '3': 3, '4': 1, '5': 4, '10': 'cid'},
+    {'1': 'page', '3': 4, '4': 1, '5': 13, '10': 'page'},
+  ],
+};
+
+/// Descriptor for `BilibiliVideoPartTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bilibiliVideoPartTargetDescriptor =
+    $convert.base64Decode(
+        'ChdCaWxpYmlsaVZpZGVvUGFydFRhcmdldBISCgRidmlkGAEgASgJUgRidmlkEhAKA2FpZBgCIA'
+        'EoBFIDYWlkEhAKA2NpZBgDIAEoBFIDY2lkEhIKBHBhZ2UYBCABKA1SBHBhZ2U=');
+
+@$core.Deprecated('Use bilibiliPgcEpisodeTargetDescriptor instead')
+const BilibiliPgcEpisodeTarget$json = {
+  '1': 'BilibiliPgcEpisodeTarget',
+  '2': [
+    {'1': 'epid', '3': 1, '4': 1, '5': 4, '10': 'epid'},
+    {'1': 'cid', '3': 2, '4': 1, '5': 4, '10': 'cid'},
+  ],
+};
+
+/// Descriptor for `BilibiliPgcEpisodeTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bilibiliPgcEpisodeTargetDescriptor =
+    $convert.base64Decode(
+        'ChhCaWxpYmlsaVBnY0VwaXNvZGVUYXJnZXQSEgoEZXBpZBgBIAEoBFIEZXBpZBIQCgNjaWQYAi'
+        'ABKARSA2NpZA==');
+
+@$core.Deprecated('Use bilibiliLiveTargetDescriptor instead')
+const BilibiliLiveTarget$json = {
+  '1': 'BilibiliLiveTarget',
+  '2': [
+    {'1': 'room_id', '3': 1, '4': 1, '5': 4, '10': 'roomId'},
+  ],
+};
+
+/// Descriptor for `BilibiliLiveTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bilibiliLiveTargetDescriptor =
+    $convert.base64Decode(
+        'ChJCaWxpYmlsaUxpdmVUYXJnZXQSFwoHcm9vbV9pZBgBIAEoBFIGcm9vbUlk');
+
+@$core.Deprecated('Use bilibiliTargetDescriptor instead')
+const BilibiliTarget$json = {
+  '1': 'BilibiliTarget',
+  '2': [
+    {
+      '1': 'video',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.BilibiliVideoTarget',
+      '9': 0,
+      '10': 'video'
+    },
+    {
+      '1': 'video_part',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.BilibiliVideoPartTarget',
+      '9': 0,
+      '10': 'videoPart'
+    },
+    {
+      '1': 'pgc_episode',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.BilibiliPgcEpisodeTarget',
+      '9': 0,
+      '10': 'pgcEpisode'
+    },
+    {
+      '1': 'live',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.BilibiliLiveTarget',
+      '9': 0,
+      '10': 'live'
+    },
+  ],
+  '8': [
+    {'1': 'target'},
+  ],
+};
+
+/// Descriptor for `BilibiliTarget`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bilibiliTargetDescriptor = $convert.base64Decode(
+    'Cg5CaWxpYmlsaVRhcmdldBI6CgV2aWRlbxgBIAEoCzIiLnN5bmN0di5jbGllbnQuQmlsaWJpbG'
+    'lWaWRlb1RhcmdldEgAUgV2aWRlbxJHCgp2aWRlb19wYXJ0GAIgASgLMiYuc3luY3R2LmNsaWVu'
+    'dC5CaWxpYmlsaVZpZGVvUGFydFRhcmdldEgAUgl2aWRlb1BhcnQSSgoLcGdjX2VwaXNvZGUYAy'
+    'ABKAsyJy5zeW5jdHYuY2xpZW50LkJpbGliaWxpUGdjRXBpc29kZVRhcmdldEgAUgpwZ2NFcGlz'
+    'b2RlEjcKBGxpdmUYBCABKAsyIS5zeW5jdHYuY2xpZW50LkJpbGliaWxpTGl2ZVRhcmdldEgAUg'
+    'RsaXZlQggKBnRhcmdldA==');
 
 @$core.Deprecated('Use providerTargetDescriptor instead')
 const ProviderTarget$json = {
@@ -982,6 +1474,105 @@ const ProviderTarget$json = {
       '9': 0,
       '10': 'cloudreve'
     },
+    {
+      '1': 'twitch',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.TwitchTarget',
+      '9': 0,
+      '10': 'twitch'
+    },
+    {
+      '1': 'fnos',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.FnosTarget',
+      '9': 0,
+      '10': 'fnos'
+    },
+    {
+      '1': 'qnap',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.QnapTarget',
+      '9': 0,
+      '10': 'qnap'
+    },
+    {
+      '1': 'synology',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.SynologyTarget',
+      '9': 0,
+      '10': 'synology'
+    },
+    {
+      '1': 'nextcloud',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.NextcloudTarget',
+      '9': 0,
+      '10': 'nextcloud'
+    },
+    {
+      '1': 'seafile',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.SeafileTarget',
+      '9': 0,
+      '10': 'seafile'
+    },
+    {
+      '1': 'truenas',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.TrueNasTarget',
+      '9': 0,
+      '10': 'truenas'
+    },
+    {
+      '1': 'douyin',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.DouyinTarget',
+      '9': 0,
+      '10': 'douyin'
+    },
+    {
+      '1': 'youtube',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.YoutubeTarget',
+      '9': 0,
+      '10': 'youtube'
+    },
+    {
+      '1': 'tiktok',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.TikTokTarget',
+      '9': 0,
+      '10': 'tiktok'
+    },
+    {
+      '1': 'bilibili',
+      '3': 14,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.BilibiliTarget',
+      '9': 0,
+      '10': 'bilibili'
+    },
   ],
   '8': [
     {'1': 'target'},
@@ -993,7 +1584,18 @@ final $typed_data.Uint8List providerTargetDescriptor = $convert.base64Decode(
     'Cg5Qcm92aWRlclRhcmdldBIyCgVhbGlzdBgBIAEoCzIaLnN5bmN0di5jbGllbnQuQWxpc3RUYX'
     'JnZXRIAFIFYWxpc3QSLwoEZW1ieRgCIAEoCzIZLnN5bmN0di5jbGllbnQuRW1ieVRhcmdldEgA'
     'UgRlbWJ5Ej4KCWNsb3VkcmV2ZRgDIAEoCzIeLnN5bmN0di5jbGllbnQuQ2xvdWRyZXZlVGFyZ2'
-    'V0SABSCWNsb3VkcmV2ZUIICgZ0YXJnZXQ=');
+    'V0SABSCWNsb3VkcmV2ZRI1CgZ0d2l0Y2gYBCABKAsyGy5zeW5jdHYuY2xpZW50LlR3aXRjaFRh'
+    'cmdldEgAUgZ0d2l0Y2gSLwoEZm5vcxgFIAEoCzIZLnN5bmN0di5jbGllbnQuRm5vc1RhcmdldE'
+    'gAUgRmbm9zEi8KBHFuYXAYBiABKAsyGS5zeW5jdHYuY2xpZW50LlFuYXBUYXJnZXRIAFIEcW5h'
+    'cBI7CghzeW5vbG9neRgHIAEoCzIdLnN5bmN0di5jbGllbnQuU3lub2xvZ3lUYXJnZXRIAFIIc3'
+    'lub2xvZ3kSPgoJbmV4dGNsb3VkGAggASgLMh4uc3luY3R2LmNsaWVudC5OZXh0Y2xvdWRUYXJn'
+    'ZXRIAFIJbmV4dGNsb3VkEjgKB3NlYWZpbGUYCSABKAsyHC5zeW5jdHYuY2xpZW50LlNlYWZpbG'
+    'VUYXJnZXRIAFIHc2VhZmlsZRI4Cgd0cnVlbmFzGAogASgLMhwuc3luY3R2LmNsaWVudC5UcnVl'
+    'TmFzVGFyZ2V0SABSB3RydWVuYXMSNQoGZG91eWluGAsgASgLMhsuc3luY3R2LmNsaWVudC5Eb3'
+    'V5aW5UYXJnZXRIAFIGZG91eWluEjgKB3lvdXR1YmUYDCABKAsyHC5zeW5jdHYuY2xpZW50Lllv'
+    'dXR1YmVUYXJnZXRIAFIHeW91dHViZRI1CgZ0aWt0b2sYDSABKAsyGy5zeW5jdHYuY2xpZW50Ll'
+    'Rpa1Rva1RhcmdldEgAUgZ0aWt0b2sSOwoIYmlsaWJpbGkYDiABKAsyHS5zeW5jdHYuY2xpZW50'
+    'LkJpbGliaWxpVGFyZ2V0SABSCGJpbGliaWxpQggKBnRhcmdldA==');
 
 @$core.Deprecated('Use fileMetadataDescriptor instead')
 const FileMetadata$json = {
@@ -5233,6 +5835,14 @@ const ListPlaylistItemsRequest$json = {
       '10': 'availability'
     },
     {'1': 'refresh', '3': 12, '4': 1, '5': 8, '10': 'refresh'},
+    {
+      '1': 'preview_source_config',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.PlaylistSourceConfig',
+      '10': 'previewSourceConfig'
+    },
   ],
   '8': [
     {'1': 'pagination'},
@@ -5254,7 +5864,9 @@ final $typed_data.Uint8List listPlaylistItemsRequestDescriptor = $convert.base64
     'GAogASgOMhwuc3luY3R2LmNsaWVudC5Tb3J0RGlyZWN0aW9uQgi6SAWCAQIQAVINc29ydERpcm'
     'VjdGlvbhJXCgxhdmFpbGFiaWxpdHkYCyABKA4yKS5zeW5jdHYuY2xpZW50LlJlc291cmNlQXZh'
     'aWxhYmlsaXR5RmlsdGVyQgi6SAWCAQIQAVIMYXZhaWxhYmlsaXR5EhgKB3JlZnJlc2gYDCABKA'
-    'hSB3JlZnJlc2hCDAoKcGFnaW5hdGlvbg==');
+    'hSB3JlZnJlc2gSXgoVcHJldmlld19zb3VyY2VfY29uZmlnGA0gASgLMiouc3luY3R2LnNvdXJj'
+    'ZV9jb25maWcuUGxheWxpc3RTb3VyY2VDb25maWdSE3ByZXZpZXdTb3VyY2VDb25maWdCDAoKcG'
+    'FnaW5hdGlvbg==');
 
 @$core.Deprecated('Use pagePaginationDescriptor instead')
 const PagePagination$json = {
@@ -5379,13 +5991,13 @@ const PlaylistItem$json = {
       '6': '.synctv.client.ProviderTarget',
       '10': 'target'
     },
-    {'1': 'size', '3': 4, '4': 1, '5': 4, '9': 0, '10': 'size', '17': true},
+    {'1': 'size', '3': 4, '4': 1, '5': 4, '9': 1, '10': 'size', '17': true},
     {
       '1': 'thumbnail',
       '3': 5,
       '4': 1,
       '5': 9,
-      '9': 1,
+      '9': 2,
       '10': 'thumbnail',
       '17': true
     },
@@ -5394,13 +6006,32 @@ const PlaylistItem$json = {
       '3': 6,
       '4': 1,
       '5': 3,
-      '9': 2,
+      '9': 3,
       '10': 'modifiedAt',
       '17': true
     },
     {'1': 'description', '3': 7, '4': 1, '5': 9, '10': 'description'},
+    {
+      '1': 'media_source_config',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.MediaSourceConfig',
+      '9': 0,
+      '10': 'mediaSourceConfig'
+    },
+    {
+      '1': 'playlist_source_config',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.PlaylistSourceConfig',
+      '9': 0,
+      '10': 'playlistSourceConfig'
+    },
   ],
   '8': [
+    {'1': 'source_config'},
     {'1': '_size'},
     {'1': '_thumbnail'},
     {'1': '_modified_at'},
@@ -5411,10 +6042,14 @@ const PlaylistItem$json = {
 final $typed_data.Uint8List playlistItemDescriptor = $convert.base64Decode(
     'CgxQbGF5bGlzdEl0ZW0SEgoEbmFtZRgBIAEoCVIEbmFtZRI0CglpdGVtX3R5cGUYAiABKA4yFy'
     '5zeW5jdHYuY2xpZW50Lkl0ZW1UeXBlUghpdGVtVHlwZRI1CgZ0YXJnZXQYAyABKAsyHS5zeW5j'
-    'dHYuY2xpZW50LlByb3ZpZGVyVGFyZ2V0UgZ0YXJnZXQSFwoEc2l6ZRgEIAEoBEgAUgRzaXpliA'
-    'EBEiEKCXRodW1ibmFpbBgFIAEoCUgBUgl0aHVtYm5haWyIAQESJAoLbW9kaWZpZWRfYXQYBiAB'
-    'KANIAlIKbW9kaWZpZWRBdIgBARIgCgtkZXNjcmlwdGlvbhgHIAEoCVILZGVzY3JpcHRpb25CBw'
-    'oFX3NpemVCDAoKX3RodW1ibmFpbEIOCgxfbW9kaWZpZWRfYXQ=');
+    'dHYuY2xpZW50LlByb3ZpZGVyVGFyZ2V0UgZ0YXJnZXQSFwoEc2l6ZRgEIAEoBEgBUgRzaXpliA'
+    'EBEiEKCXRodW1ibmFpbBgFIAEoCUgCUgl0aHVtYm5haWyIAQESJAoLbW9kaWZpZWRfYXQYBiAB'
+    'KANIA1IKbW9kaWZpZWRBdIgBARIgCgtkZXNjcmlwdGlvbhgHIAEoCVILZGVzY3JpcHRpb24SWQ'
+    'oTbWVkaWFfc291cmNlX2NvbmZpZxgIIAEoCzInLnN5bmN0di5zb3VyY2VfY29uZmlnLk1lZGlh'
+    'U291cmNlQ29uZmlnSABSEW1lZGlhU291cmNlQ29uZmlnEmIKFnBsYXlsaXN0X3NvdXJjZV9jb2'
+    '5maWcYCSABKAsyKi5zeW5jdHYuc291cmNlX2NvbmZpZy5QbGF5bGlzdFNvdXJjZUNvbmZpZ0gA'
+    'UhRwbGF5bGlzdFNvdXJjZUNvbmZpZ0IPCg1zb3VyY2VfY29uZmlnQgcKBV9zaXplQgwKCl90aH'
+    'VtYm5haWxCDgoMX21vZGlmaWVkX2F0');
 
 @$core.Deprecated('Use playlistBrowsePathNodeDescriptor instead')
 const PlaylistBrowsePathNode$json = {
@@ -6046,6 +6681,132 @@ const PlaybackMetadata$json = {
       '9': 0,
       '10': 'live'
     },
+    {
+      '1': 'twitch',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.TwitchPlaybackMetadata',
+      '9': 0,
+      '10': 'twitch'
+    },
+    {
+      '1': 'youtube',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.YoutubePlaybackMetadata',
+      '9': 0,
+      '10': 'youtube'
+    },
+    {
+      '1': 'douyin',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.DouyinPlaybackMetadata',
+      '9': 0,
+      '10': 'douyin'
+    },
+    {
+      '1': 'tiktok',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.TikTokPlaybackMetadata',
+      '9': 0,
+      '10': 'tiktok'
+    },
+    {
+      '1': 'huya',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.HuyaPlaybackMetadata',
+      '9': 0,
+      '10': 'huya'
+    },
+    {
+      '1': 'douyu',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.DouyuPlaybackMetadata',
+      '9': 0,
+      '10': 'douyu'
+    },
+    {
+      '1': 'ac_fun',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.AcFunPlaybackMetadata',
+      '9': 0,
+      '10': 'acFun'
+    },
+    {
+      '1': 'cctv',
+      '3': 14,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.CctvPlaybackMetadata',
+      '9': 0,
+      '10': 'cctv'
+    },
+    {
+      '1': 'fnos',
+      '3': 15,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.FnosPlaybackMetadata',
+      '9': 0,
+      '10': 'fnos'
+    },
+    {
+      '1': 'qnap',
+      '3': 16,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.QnapPlaybackMetadata',
+      '9': 0,
+      '10': 'qnap'
+    },
+    {
+      '1': 'synology',
+      '3': 17,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.SynologyPlaybackMetadata',
+      '9': 0,
+      '10': 'synology'
+    },
+    {
+      '1': 'nextcloud',
+      '3': 18,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.NextcloudPlaybackMetadata',
+      '9': 0,
+      '10': 'nextcloud'
+    },
+    {
+      '1': 'seafile',
+      '3': 19,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.SeafilePlaybackMetadata',
+      '9': 0,
+      '10': 'seafile'
+    },
+    {
+      '1': 'truenas',
+      '3': 20,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.TrueNasPlaybackMetadata',
+      '9': 0,
+      '10': 'truenas'
+    },
   ],
   '8': [
     {'1': 'metadata'},
@@ -6061,7 +6822,24 @@ final $typed_data.Uint8List playbackMetadataDescriptor = $convert.base64Decode(
     'cmwYBCABKAsyKC5zeW5jdHYuY2xpZW50LkRpcmVjdFVybFBsYXliYWNrTWV0YWRhdGFIAFIJZG'
     'lyZWN0VXJsEkkKCmxpdmVfcHJveHkYBSABKAsyKC5zeW5jdHYuY2xpZW50LkxpdmVQcm94eVBs'
     'YXliYWNrTWV0YWRhdGFIAFIJbGl2ZVByb3h5EjkKBGxpdmUYBiABKAsyIy5zeW5jdHYuY2xpZW'
-    '50LkxpdmVQbGF5YmFja01ldGFkYXRhSABSBGxpdmVCCgoIbWV0YWRhdGE=');
+    '50LkxpdmVQbGF5YmFja01ldGFkYXRhSABSBGxpdmUSPwoGdHdpdGNoGAcgASgLMiUuc3luY3R2'
+    'LmNsaWVudC5Ud2l0Y2hQbGF5YmFja01ldGFkYXRhSABSBnR3aXRjaBJCCgd5b3V0dWJlGAggAS'
+    'gLMiYuc3luY3R2LmNsaWVudC5Zb3V0dWJlUGxheWJhY2tNZXRhZGF0YUgAUgd5b3V0dWJlEj8K'
+    'BmRvdXlpbhgJIAEoCzIlLnN5bmN0di5jbGllbnQuRG91eWluUGxheWJhY2tNZXRhZGF0YUgAUg'
+    'Zkb3V5aW4SPwoGdGlrdG9rGAogASgLMiUuc3luY3R2LmNsaWVudC5UaWtUb2tQbGF5YmFja01l'
+    'dGFkYXRhSABSBnRpa3RvaxI5CgRodXlhGAsgASgLMiMuc3luY3R2LmNsaWVudC5IdXlhUGxheW'
+    'JhY2tNZXRhZGF0YUgAUgRodXlhEjwKBWRvdXl1GAwgASgLMiQuc3luY3R2LmNsaWVudC5Eb3V5'
+    'dVBsYXliYWNrTWV0YWRhdGFIAFIFZG91eXUSPQoGYWNfZnVuGA0gASgLMiQuc3luY3R2LmNsaW'
+    'VudC5BY0Z1blBsYXliYWNrTWV0YWRhdGFIAFIFYWNGdW4SOQoEY2N0dhgOIAEoCzIjLnN5bmN0'
+    'di5jbGllbnQuQ2N0dlBsYXliYWNrTWV0YWRhdGFIAFIEY2N0dhI5CgRmbm9zGA8gASgLMiMuc3'
+    'luY3R2LmNsaWVudC5Gbm9zUGxheWJhY2tNZXRhZGF0YUgAUgRmbm9zEjkKBHFuYXAYECABKAsy'
+    'Iy5zeW5jdHYuY2xpZW50LlFuYXBQbGF5YmFja01ldGFkYXRhSABSBHFuYXASRQoIc3lub2xvZ3'
+    'kYESABKAsyJy5zeW5jdHYuY2xpZW50LlN5bm9sb2d5UGxheWJhY2tNZXRhZGF0YUgAUghzeW5v'
+    'bG9neRJICgluZXh0Y2xvdWQYEiABKAsyKC5zeW5jdHYuY2xpZW50Lk5leHRjbG91ZFBsYXliYW'
+    'NrTWV0YWRhdGFIAFIJbmV4dGNsb3VkEkIKB3NlYWZpbGUYEyABKAsyJi5zeW5jdHYuY2xpZW50'
+    'LlNlYWZpbGVQbGF5YmFja01ldGFkYXRhSABSB3NlYWZpbGUSQgoHdHJ1ZW5hcxgUIAEoCzImLn'
+    'N5bmN0di5jbGllbnQuVHJ1ZU5hc1BsYXliYWNrTWV0YWRhdGFIAFIHdHJ1ZW5hc0IKCghtZXRh'
+    'ZGF0YQ==');
 
 @$core.Deprecated('Use alistPlaybackMetadataDescriptor instead')
 const AlistPlaybackMetadata$json = {
@@ -6433,6 +7211,1631 @@ const LivePlaybackMetadata$json = {
 final $typed_data.Uint8List livePlaybackMetadataDescriptor = $convert.base64Decode(
     'ChRMaXZlUGxheWJhY2tNZXRhZGF0YRIZCghtZWRpYV9pZBgBIAEoCVIHbWVkaWFJZBIXCgdyb2'
     '9tX2lkGAIgASgJUgZyb29tSWQ=');
+
+@$core.Deprecated('Use twitchPlaybackMetadataDescriptor instead')
+const TwitchPlaybackMetadata$json = {
+  '1': 'TwitchPlaybackMetadata',
+  '2': [
+    {'1': 'resource_id', '3': 1, '4': 1, '5': 9, '10': 'resourceId'},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'author', '3': 3, '4': 1, '5': 9, '10': 'author'},
+    {
+      '1': 'category',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'category',
+      '17': true
+    },
+    {
+      '1': 'thumbnail_url',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'thumbnailUrl',
+      '17': true
+    },
+    {
+      '1': 'description',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'description',
+      '17': true
+    },
+    {
+      '1': 'view_count',
+      '3': 7,
+      '4': 1,
+      '5': 4,
+      '9': 3,
+      '10': 'viewCount',
+      '17': true
+    },
+    {
+      '1': 'published_at',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'publishedAt',
+      '17': true
+    },
+    {
+      '1': 'chapters',
+      '3': 9,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.TwitchChapterMetadata',
+      '10': 'chapters'
+    },
+    {
+      '1': 'storyboard_url',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '9': 5,
+      '10': 'storyboardUrl',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_category'},
+    {'1': '_thumbnail_url'},
+    {'1': '_description'},
+    {'1': '_view_count'},
+    {'1': '_published_at'},
+    {'1': '_storyboard_url'},
+  ],
+};
+
+/// Descriptor for `TwitchPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List twitchPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChZUd2l0Y2hQbGF5YmFja01ldGFkYXRhEh8KC3Jlc291cmNlX2lkGAEgASgJUgpyZXNvdXJjZU'
+    'lkEhQKBXRpdGxlGAIgASgJUgV0aXRsZRIWCgZhdXRob3IYAyABKAlSBmF1dGhvchIfCghjYXRl'
+    'Z29yeRgEIAEoCUgAUghjYXRlZ29yeYgBARIoCg10aHVtYm5haWxfdXJsGAUgASgJSAFSDHRodW'
+    '1ibmFpbFVybIgBARIlCgtkZXNjcmlwdGlvbhgGIAEoCUgCUgtkZXNjcmlwdGlvbogBARIiCgp2'
+    'aWV3X2NvdW50GAcgASgESANSCXZpZXdDb3VudIgBARImCgxwdWJsaXNoZWRfYXQYCCABKAlIBF'
+    'ILcHVibGlzaGVkQXSIAQESQAoIY2hhcHRlcnMYCSADKAsyJC5zeW5jdHYuY2xpZW50LlR3aXRj'
+    'aENoYXB0ZXJNZXRhZGF0YVIIY2hhcHRlcnMSKgoOc3Rvcnlib2FyZF91cmwYCiABKAlIBVINc3'
+    'Rvcnlib2FyZFVybIgBAUILCglfY2F0ZWdvcnlCEAoOX3RodW1ibmFpbF91cmxCDgoMX2Rlc2Ny'
+    'aXB0aW9uQg0KC192aWV3X2NvdW50Qg8KDV9wdWJsaXNoZWRfYXRCEQoPX3N0b3J5Ym9hcmRfdX'
+    'Js');
+
+@$core.Deprecated('Use twitchChapterMetadataDescriptor instead')
+const TwitchChapterMetadata$json = {
+  '1': 'TwitchChapterMetadata',
+  '2': [
+    {'1': 'title', '3': 1, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'start_seconds', '3': 2, '4': 1, '5': 4, '10': 'startSeconds'},
+    {'1': 'end_seconds', '3': 3, '4': 1, '5': 4, '10': 'endSeconds'},
+  ],
+};
+
+/// Descriptor for `TwitchChapterMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List twitchChapterMetadataDescriptor = $convert.base64Decode(
+    'ChVUd2l0Y2hDaGFwdGVyTWV0YWRhdGESFAoFdGl0bGUYASABKAlSBXRpdGxlEiMKDXN0YXJ0X3'
+    'NlY29uZHMYAiABKARSDHN0YXJ0U2Vjb25kcxIfCgtlbmRfc2Vjb25kcxgDIAEoBFIKZW5kU2Vj'
+    'b25kcw==');
+
+@$core.Deprecated('Use youtubePlaybackMetadataDescriptor instead')
+const YoutubePlaybackMetadata$json = {
+  '1': 'YoutubePlaybackMetadata',
+  '2': [
+    {'1': 'video_id', '3': 1, '4': 1, '5': 9, '10': 'videoId'},
+    {'1': 'channel_id', '3': 2, '4': 1, '5': 9, '10': 'channelId'},
+    {'1': 'channel_name', '3': 3, '4': 1, '5': 9, '10': 'channelName'},
+    {'1': 'description', '3': 4, '4': 1, '5': 9, '10': 'description'},
+    {
+      '1': 'view_count',
+      '3': 5,
+      '4': 1,
+      '5': 4,
+      '9': 0,
+      '10': 'viewCount',
+      '17': true
+    },
+    {
+      '1': 'publish_date',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'publishDate',
+      '17': true
+    },
+    {
+      '1': 'upload_date',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'uploadDate',
+      '17': true
+    },
+    {
+      '1': 'category',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'category',
+      '17': true
+    },
+    {'1': 'is_live', '3': 9, '4': 1, '5': 8, '10': 'isLive'},
+    {
+      '1': 'live_start',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'liveStart',
+      '17': true
+    },
+    {
+      '1': 'live_end',
+      '3': 11,
+      '4': 1,
+      '5': 9,
+      '9': 5,
+      '10': 'liveEnd',
+      '17': true
+    },
+    {
+      '1': 'storyboard_spec',
+      '3': 12,
+      '4': 1,
+      '5': 9,
+      '9': 6,
+      '10': 'storyboardSpec',
+      '17': true
+    },
+    {
+      '1': 'automatic_caption_count',
+      '3': 13,
+      '4': 1,
+      '5': 13,
+      '10': 'automaticCaptionCount'
+    },
+    {
+      '1': 'manual_caption_count',
+      '3': 14,
+      '4': 1,
+      '5': 13,
+      '10': 'manualCaptionCount'
+    },
+    {
+      '1': 'translation_languages',
+      '3': 15,
+      '4': 3,
+      '5': 9,
+      '10': 'translationLanguages'
+    },
+  ],
+  '8': [
+    {'1': '_view_count'},
+    {'1': '_publish_date'},
+    {'1': '_upload_date'},
+    {'1': '_category'},
+    {'1': '_live_start'},
+    {'1': '_live_end'},
+    {'1': '_storyboard_spec'},
+  ],
+};
+
+/// Descriptor for `YoutubePlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List youtubePlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChdZb3V0dWJlUGxheWJhY2tNZXRhZGF0YRIZCgh2aWRlb19pZBgBIAEoCVIHdmlkZW9JZBIdCg'
+    'pjaGFubmVsX2lkGAIgASgJUgljaGFubmVsSWQSIQoMY2hhbm5lbF9uYW1lGAMgASgJUgtjaGFu'
+    'bmVsTmFtZRIgCgtkZXNjcmlwdGlvbhgEIAEoCVILZGVzY3JpcHRpb24SIgoKdmlld19jb3VudB'
+    'gFIAEoBEgAUgl2aWV3Q291bnSIAQESJgoMcHVibGlzaF9kYXRlGAYgASgJSAFSC3B1Ymxpc2hE'
+    'YXRliAEBEiQKC3VwbG9hZF9kYXRlGAcgASgJSAJSCnVwbG9hZERhdGWIAQESHwoIY2F0ZWdvcn'
+    'kYCCABKAlIA1IIY2F0ZWdvcnmIAQESFwoHaXNfbGl2ZRgJIAEoCFIGaXNMaXZlEiIKCmxpdmVf'
+    'c3RhcnQYCiABKAlIBFIJbGl2ZVN0YXJ0iAEBEh4KCGxpdmVfZW5kGAsgASgJSAVSB2xpdmVFbm'
+    'SIAQESLAoPc3Rvcnlib2FyZF9zcGVjGAwgASgJSAZSDnN0b3J5Ym9hcmRTcGVjiAEBEjYKF2F1'
+    'dG9tYXRpY19jYXB0aW9uX2NvdW50GA0gASgNUhVhdXRvbWF0aWNDYXB0aW9uQ291bnQSMAoUbW'
+    'FudWFsX2NhcHRpb25fY291bnQYDiABKA1SEm1hbnVhbENhcHRpb25Db3VudBIzChV0cmFuc2xh'
+    'dGlvbl9sYW5ndWFnZXMYDyADKAlSFHRyYW5zbGF0aW9uTGFuZ3VhZ2VzQg0KC192aWV3X2NvdW'
+    '50Qg8KDV9wdWJsaXNoX2RhdGVCDgoMX3VwbG9hZF9kYXRlQgsKCV9jYXRlZ29yeUINCgtfbGl2'
+    'ZV9zdGFydEILCglfbGl2ZV9lbmRCEgoQX3N0b3J5Ym9hcmRfc3BlYw==');
+
+@$core.Deprecated('Use douyinPlaybackMetadataDescriptor instead')
+const DouyinPlaybackMetadata$json = {
+  '1': 'DouyinPlaybackMetadata',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'kind', '3': 2, '4': 1, '5': 9, '10': 'kind'},
+    {'1': 'author_id', '3': 3, '4': 1, '5': 9, '10': 'authorId'},
+    {'1': 'author_sec_uid', '3': 4, '4': 1, '5': 9, '10': 'authorSecUid'},
+    {'1': 'author_name', '3': 5, '4': 1, '5': 9, '10': 'authorName'},
+    {'1': 'description', '3': 6, '4': 1, '5': 9, '10': 'description'},
+    {
+      '1': 'view_count',
+      '3': 7,
+      '4': 1,
+      '5': 4,
+      '9': 0,
+      '10': 'viewCount',
+      '17': true
+    },
+    {
+      '1': 'like_count',
+      '3': 8,
+      '4': 1,
+      '5': 4,
+      '9': 1,
+      '10': 'likeCount',
+      '17': true
+    },
+    {
+      '1': 'comment_count',
+      '3': 9,
+      '4': 1,
+      '5': 4,
+      '9': 2,
+      '10': 'commentCount',
+      '17': true
+    },
+    {
+      '1': 'share_count',
+      '3': 10,
+      '4': 1,
+      '5': 4,
+      '9': 3,
+      '10': 'shareCount',
+      '17': true
+    },
+    {
+      '1': 'collect_count',
+      '3': 11,
+      '4': 1,
+      '5': 4,
+      '9': 4,
+      '10': 'collectCount',
+      '17': true
+    },
+    {
+      '1': 'created_at',
+      '3': 12,
+      '4': 1,
+      '5': 3,
+      '9': 5,
+      '10': 'createdAt',
+      '17': true
+    },
+    {
+      '1': 'music_title',
+      '3': 13,
+      '4': 1,
+      '5': 9,
+      '9': 6,
+      '10': 'musicTitle',
+      '17': true
+    },
+    {
+      '1': 'music_author',
+      '3': 14,
+      '4': 1,
+      '5': 9,
+      '9': 7,
+      '10': 'musicAuthor',
+      '17': true
+    },
+    {'1': 'is_live', '3': 15, '4': 1, '5': 8, '10': 'isLive'},
+    {
+      '1': 'room_id',
+      '3': 16,
+      '4': 1,
+      '5': 9,
+      '9': 8,
+      '10': 'roomId',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_view_count'},
+    {'1': '_like_count'},
+    {'1': '_comment_count'},
+    {'1': '_share_count'},
+    {'1': '_collect_count'},
+    {'1': '_created_at'},
+    {'1': '_music_title'},
+    {'1': '_music_author'},
+    {'1': '_room_id'},
+  ],
+};
+
+/// Descriptor for `DouyinPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List douyinPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChZEb3V5aW5QbGF5YmFja01ldGFkYXRhEg4KAmlkGAEgASgJUgJpZBISCgRraW5kGAIgASgJUg'
+    'RraW5kEhsKCWF1dGhvcl9pZBgDIAEoCVIIYXV0aG9ySWQSJAoOYXV0aG9yX3NlY191aWQYBCAB'
+    'KAlSDGF1dGhvclNlY1VpZBIfCgthdXRob3JfbmFtZRgFIAEoCVIKYXV0aG9yTmFtZRIgCgtkZX'
+    'NjcmlwdGlvbhgGIAEoCVILZGVzY3JpcHRpb24SIgoKdmlld19jb3VudBgHIAEoBEgAUgl2aWV3'
+    'Q291bnSIAQESIgoKbGlrZV9jb3VudBgIIAEoBEgBUglsaWtlQ291bnSIAQESKAoNY29tbWVudF'
+    '9jb3VudBgJIAEoBEgCUgxjb21tZW50Q291bnSIAQESJAoLc2hhcmVfY291bnQYCiABKARIA1IK'
+    'c2hhcmVDb3VudIgBARIoCg1jb2xsZWN0X2NvdW50GAsgASgESARSDGNvbGxlY3RDb3VudIgBAR'
+    'IiCgpjcmVhdGVkX2F0GAwgASgDSAVSCWNyZWF0ZWRBdIgBARIkCgttdXNpY190aXRsZRgNIAEo'
+    'CUgGUgptdXNpY1RpdGxliAEBEiYKDG11c2ljX2F1dGhvchgOIAEoCUgHUgttdXNpY0F1dGhvco'
+    'gBARIXCgdpc19saXZlGA8gASgIUgZpc0xpdmUSHAoHcm9vbV9pZBgQIAEoCUgIUgZyb29tSWSI'
+    'AQFCDQoLX3ZpZXdfY291bnRCDQoLX2xpa2VfY291bnRCEAoOX2NvbW1lbnRfY291bnRCDgoMX3'
+    'NoYXJlX2NvdW50QhAKDl9jb2xsZWN0X2NvdW50Qg0KC19jcmVhdGVkX2F0Qg4KDF9tdXNpY190'
+    'aXRsZUIPCg1fbXVzaWNfYXV0aG9yQgoKCF9yb29tX2lk');
+
+@$core.Deprecated('Use tikTokPlaybackMetadataDescriptor instead')
+const TikTokPlaybackMetadata$json = {
+  '1': 'TikTokPlaybackMetadata',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'kind', '3': 2, '4': 1, '5': 9, '10': 'kind'},
+    {'1': 'author_id', '3': 3, '4': 1, '5': 9, '10': 'authorId'},
+    {'1': 'author_sec_uid', '3': 4, '4': 1, '5': 9, '10': 'authorSecUid'},
+    {'1': 'author_unique_id', '3': 5, '4': 1, '5': 9, '10': 'authorUniqueId'},
+    {'1': 'author_name', '3': 6, '4': 1, '5': 9, '10': 'authorName'},
+    {'1': 'description', '3': 7, '4': 1, '5': 9, '10': 'description'},
+    {
+      '1': 'view_count',
+      '3': 8,
+      '4': 1,
+      '5': 4,
+      '9': 0,
+      '10': 'viewCount',
+      '17': true
+    },
+    {
+      '1': 'like_count',
+      '3': 9,
+      '4': 1,
+      '5': 4,
+      '9': 1,
+      '10': 'likeCount',
+      '17': true
+    },
+    {
+      '1': 'comment_count',
+      '3': 10,
+      '4': 1,
+      '5': 4,
+      '9': 2,
+      '10': 'commentCount',
+      '17': true
+    },
+    {
+      '1': 'share_count',
+      '3': 11,
+      '4': 1,
+      '5': 4,
+      '9': 3,
+      '10': 'shareCount',
+      '17': true
+    },
+    {
+      '1': 'collect_count',
+      '3': 12,
+      '4': 1,
+      '5': 4,
+      '9': 4,
+      '10': 'collectCount',
+      '17': true
+    },
+    {
+      '1': 'concurrent_viewers',
+      '3': 13,
+      '4': 1,
+      '5': 4,
+      '9': 5,
+      '10': 'concurrentViewers',
+      '17': true
+    },
+    {
+      '1': 'created_at',
+      '3': 14,
+      '4': 1,
+      '5': 3,
+      '9': 6,
+      '10': 'createdAt',
+      '17': true
+    },
+    {
+      '1': 'music_title',
+      '3': 15,
+      '4': 1,
+      '5': 9,
+      '9': 7,
+      '10': 'musicTitle',
+      '17': true
+    },
+    {
+      '1': 'music_author',
+      '3': 16,
+      '4': 1,
+      '5': 9,
+      '9': 8,
+      '10': 'musicAuthor',
+      '17': true
+    },
+    {'1': 'subtitle_count', '3': 17, '4': 1, '5': 13, '10': 'subtitleCount'},
+    {'1': 'is_live', '3': 18, '4': 1, '5': 8, '10': 'isLive'},
+    {
+      '1': 'room_id',
+      '3': 19,
+      '4': 1,
+      '5': 9,
+      '9': 9,
+      '10': 'roomId',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_view_count'},
+    {'1': '_like_count'},
+    {'1': '_comment_count'},
+    {'1': '_share_count'},
+    {'1': '_collect_count'},
+    {'1': '_concurrent_viewers'},
+    {'1': '_created_at'},
+    {'1': '_music_title'},
+    {'1': '_music_author'},
+    {'1': '_room_id'},
+  ],
+};
+
+/// Descriptor for `TikTokPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List tikTokPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChZUaWtUb2tQbGF5YmFja01ldGFkYXRhEg4KAmlkGAEgASgJUgJpZBISCgRraW5kGAIgASgJUg'
+    'RraW5kEhsKCWF1dGhvcl9pZBgDIAEoCVIIYXV0aG9ySWQSJAoOYXV0aG9yX3NlY191aWQYBCAB'
+    'KAlSDGF1dGhvclNlY1VpZBIoChBhdXRob3JfdW5pcXVlX2lkGAUgASgJUg5hdXRob3JVbmlxdW'
+    'VJZBIfCgthdXRob3JfbmFtZRgGIAEoCVIKYXV0aG9yTmFtZRIgCgtkZXNjcmlwdGlvbhgHIAEo'
+    'CVILZGVzY3JpcHRpb24SIgoKdmlld19jb3VudBgIIAEoBEgAUgl2aWV3Q291bnSIAQESIgoKbG'
+    'lrZV9jb3VudBgJIAEoBEgBUglsaWtlQ291bnSIAQESKAoNY29tbWVudF9jb3VudBgKIAEoBEgC'
+    'Ugxjb21tZW50Q291bnSIAQESJAoLc2hhcmVfY291bnQYCyABKARIA1IKc2hhcmVDb3VudIgBAR'
+    'IoCg1jb2xsZWN0X2NvdW50GAwgASgESARSDGNvbGxlY3RDb3VudIgBARIyChJjb25jdXJyZW50'
+    'X3ZpZXdlcnMYDSABKARIBVIRY29uY3VycmVudFZpZXdlcnOIAQESIgoKY3JlYXRlZF9hdBgOIA'
+    'EoA0gGUgljcmVhdGVkQXSIAQESJAoLbXVzaWNfdGl0bGUYDyABKAlIB1IKbXVzaWNUaXRsZYgB'
+    'ARImCgxtdXNpY19hdXRob3IYECABKAlICFILbXVzaWNBdXRob3KIAQESJQoOc3VidGl0bGVfY2'
+    '91bnQYESABKA1SDXN1YnRpdGxlQ291bnQSFwoHaXNfbGl2ZRgSIAEoCFIGaXNMaXZlEhwKB3Jv'
+    'b21faWQYEyABKAlICVIGcm9vbUlkiAEBQg0KC192aWV3X2NvdW50Qg0KC19saWtlX2NvdW50Qh'
+    'AKDl9jb21tZW50X2NvdW50Qg4KDF9zaGFyZV9jb3VudEIQCg5fY29sbGVjdF9jb3VudEIVChNf'
+    'Y29uY3VycmVudF92aWV3ZXJzQg0KC19jcmVhdGVkX2F0Qg4KDF9tdXNpY190aXRsZUIPCg1fbX'
+    'VzaWNfYXV0aG9yQgoKCF9yb29tX2lk');
+
+@$core.Deprecated('Use huyaPlaybackMetadataDescriptor instead')
+const HuyaPlaybackMetadata$json = {
+  '1': 'HuyaPlaybackMetadata',
+  '2': [
+    {'1': 'resource_id', '3': 1, '4': 1, '5': 9, '10': 'resourceId'},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'author', '3': 3, '4': 1, '5': 9, '10': 'author'},
+    {
+      '1': 'author_id',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'authorId',
+      '17': true
+    },
+    {
+      '1': 'category',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'category',
+      '17': true
+    },
+    {
+      '1': 'thumbnail_url',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'thumbnailUrl',
+      '17': true
+    },
+    {
+      '1': 'avatar_url',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'avatarUrl',
+      '17': true
+    },
+    {
+      '1': 'description',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'description',
+      '17': true
+    },
+    {
+      '1': 'view_count',
+      '3': 9,
+      '4': 1,
+      '5': 4,
+      '9': 5,
+      '10': 'viewCount',
+      '17': true
+    },
+    {
+      '1': 'comment_count',
+      '3': 10,
+      '4': 1,
+      '5': 4,
+      '9': 6,
+      '10': 'commentCount',
+      '17': true
+    },
+    {
+      '1': 'like_count',
+      '3': 11,
+      '4': 1,
+      '5': 4,
+      '9': 7,
+      '10': 'likeCount',
+      '17': true
+    },
+    {
+      '1': 'published_at',
+      '3': 12,
+      '4': 1,
+      '5': 3,
+      '9': 8,
+      '10': 'publishedAt',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_author_id'},
+    {'1': '_category'},
+    {'1': '_thumbnail_url'},
+    {'1': '_avatar_url'},
+    {'1': '_description'},
+    {'1': '_view_count'},
+    {'1': '_comment_count'},
+    {'1': '_like_count'},
+    {'1': '_published_at'},
+  ],
+};
+
+/// Descriptor for `HuyaPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List huyaPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChRIdXlhUGxheWJhY2tNZXRhZGF0YRIfCgtyZXNvdXJjZV9pZBgBIAEoCVIKcmVzb3VyY2VJZB'
+    'IUCgV0aXRsZRgCIAEoCVIFdGl0bGUSFgoGYXV0aG9yGAMgASgJUgZhdXRob3ISIAoJYXV0aG9y'
+    'X2lkGAQgASgJSABSCGF1dGhvcklkiAEBEh8KCGNhdGVnb3J5GAUgASgJSAFSCGNhdGVnb3J5iA'
+    'EBEigKDXRodW1ibmFpbF91cmwYBiABKAlIAlIMdGh1bWJuYWlsVXJsiAEBEiIKCmF2YXRhcl91'
+    'cmwYByABKAlIA1IJYXZhdGFyVXJsiAEBEiUKC2Rlc2NyaXB0aW9uGAggASgJSARSC2Rlc2NyaX'
+    'B0aW9uiAEBEiIKCnZpZXdfY291bnQYCSABKARIBVIJdmlld0NvdW50iAEBEigKDWNvbW1lbnRf'
+    'Y291bnQYCiABKARIBlIMY29tbWVudENvdW50iAEBEiIKCmxpa2VfY291bnQYCyABKARIB1IJbG'
+    'lrZUNvdW50iAEBEiYKDHB1Ymxpc2hlZF9hdBgMIAEoA0gIUgtwdWJsaXNoZWRBdIgBAUIMCgpf'
+    'YXV0aG9yX2lkQgsKCV9jYXRlZ29yeUIQCg5fdGh1bWJuYWlsX3VybEINCgtfYXZhdGFyX3VybE'
+    'IOCgxfZGVzY3JpcHRpb25CDQoLX3ZpZXdfY291bnRCEAoOX2NvbW1lbnRfY291bnRCDQoLX2xp'
+    'a2VfY291bnRCDwoNX3B1Ymxpc2hlZF9hdA==');
+
+@$core.Deprecated('Use douyuPlaybackMetadataDescriptor instead')
+const DouyuPlaybackMetadata$json = {
+  '1': 'DouyuPlaybackMetadata',
+  '2': [
+    {'1': 'room_id', '3': 1, '4': 1, '5': 9, '10': 'roomId'},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'author', '3': 3, '4': 1, '5': 9, '10': 'author'},
+    {
+      '1': 'category',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'category',
+      '17': true
+    },
+    {
+      '1': 'thumbnail_url',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'thumbnailUrl',
+      '17': true
+    },
+    {
+      '1': 'avatar_url',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'avatarUrl',
+      '17': true
+    },
+    {'1': 'is_replay', '3': 7, '4': 1, '5': 8, '10': 'isReplay'},
+    {'1': 'is_vip', '3': 8, '4': 1, '5': 8, '10': 'isVip'},
+    {
+      '1': 'viewer_count',
+      '3': 9,
+      '4': 1,
+      '5': 4,
+      '9': 3,
+      '10': 'viewerCount',
+      '17': true
+    },
+    {
+      '1': 'started_at',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'startedAt',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_category'},
+    {'1': '_thumbnail_url'},
+    {'1': '_avatar_url'},
+    {'1': '_viewer_count'},
+    {'1': '_started_at'},
+  ],
+};
+
+/// Descriptor for `DouyuPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List douyuPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChVEb3V5dVBsYXliYWNrTWV0YWRhdGESFwoHcm9vbV9pZBgBIAEoCVIGcm9vbUlkEhQKBXRpdG'
+    'xlGAIgASgJUgV0aXRsZRIWCgZhdXRob3IYAyABKAlSBmF1dGhvchIfCghjYXRlZ29yeRgEIAEo'
+    'CUgAUghjYXRlZ29yeYgBARIoCg10aHVtYm5haWxfdXJsGAUgASgJSAFSDHRodW1ibmFpbFVybI'
+    'gBARIiCgphdmF0YXJfdXJsGAYgASgJSAJSCWF2YXRhclVybIgBARIbCglpc19yZXBsYXkYByAB'
+    'KAhSCGlzUmVwbGF5EhUKBmlzX3ZpcBgIIAEoCFIFaXNWaXASJgoMdmlld2VyX2NvdW50GAkgAS'
+    'gESANSC3ZpZXdlckNvdW50iAEBEiIKCnN0YXJ0ZWRfYXQYCiABKAlIBFIJc3RhcnRlZEF0iAEB'
+    'QgsKCV9jYXRlZ29yeUIQCg5fdGh1bWJuYWlsX3VybEINCgtfYXZhdGFyX3VybEIPCg1fdmlld2'
+    'VyX2NvdW50Qg0KC19zdGFydGVkX2F0');
+
+@$core.Deprecated('Use acFunPlaybackMetadataDescriptor instead')
+const AcFunPlaybackMetadata$json = {
+  '1': 'AcFunPlaybackMetadata',
+  '2': [
+    {'1': 'resource_id', '3': 1, '4': 1, '5': 9, '10': 'resourceId'},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'author', '3': 3, '4': 1, '5': 9, '10': 'author'},
+    {
+      '1': 'author_id',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'authorId',
+      '17': true
+    },
+    {
+      '1': 'category',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'category',
+      '17': true
+    },
+    {
+      '1': 'thumbnail_url',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'thumbnailUrl',
+      '17': true
+    },
+    {
+      '1': 'avatar_url',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'avatarUrl',
+      '17': true
+    },
+    {
+      '1': 'description',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'description',
+      '17': true
+    },
+    {'1': 'tags', '3': 9, '4': 3, '5': 9, '10': 'tags'},
+    {
+      '1': 'view_count',
+      '3': 10,
+      '4': 1,
+      '5': 4,
+      '9': 5,
+      '10': 'viewCount',
+      '17': true
+    },
+    {
+      '1': 'like_count',
+      '3': 11,
+      '4': 1,
+      '5': 4,
+      '9': 6,
+      '10': 'likeCount',
+      '17': true
+    },
+    {
+      '1': 'comment_count',
+      '3': 12,
+      '4': 1,
+      '5': 4,
+      '9': 7,
+      '10': 'commentCount',
+      '17': true
+    },
+    {
+      '1': 'published_at',
+      '3': 13,
+      '4': 1,
+      '5': 3,
+      '9': 8,
+      '10': 'publishedAt',
+      '17': true
+    },
+    {
+      '1': 'started_at',
+      '3': 14,
+      '4': 1,
+      '5': 3,
+      '9': 9,
+      '10': 'startedAt',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_author_id'},
+    {'1': '_category'},
+    {'1': '_thumbnail_url'},
+    {'1': '_avatar_url'},
+    {'1': '_description'},
+    {'1': '_view_count'},
+    {'1': '_like_count'},
+    {'1': '_comment_count'},
+    {'1': '_published_at'},
+    {'1': '_started_at'},
+  ],
+};
+
+/// Descriptor for `AcFunPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List acFunPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChVBY0Z1blBsYXliYWNrTWV0YWRhdGESHwoLcmVzb3VyY2VfaWQYASABKAlSCnJlc291cmNlSW'
+    'QSFAoFdGl0bGUYAiABKAlSBXRpdGxlEhYKBmF1dGhvchgDIAEoCVIGYXV0aG9yEiAKCWF1dGhv'
+    'cl9pZBgEIAEoCUgAUghhdXRob3JJZIgBARIfCghjYXRlZ29yeRgFIAEoCUgBUghjYXRlZ29yeY'
+    'gBARIoCg10aHVtYm5haWxfdXJsGAYgASgJSAJSDHRodW1ibmFpbFVybIgBARIiCgphdmF0YXJf'
+    'dXJsGAcgASgJSANSCWF2YXRhclVybIgBARIlCgtkZXNjcmlwdGlvbhgIIAEoCUgEUgtkZXNjcm'
+    'lwdGlvbogBARISCgR0YWdzGAkgAygJUgR0YWdzEiIKCnZpZXdfY291bnQYCiABKARIBVIJdmll'
+    'd0NvdW50iAEBEiIKCmxpa2VfY291bnQYCyABKARIBlIJbGlrZUNvdW50iAEBEigKDWNvbW1lbn'
+    'RfY291bnQYDCABKARIB1IMY29tbWVudENvdW50iAEBEiYKDHB1Ymxpc2hlZF9hdBgNIAEoA0gI'
+    'UgtwdWJsaXNoZWRBdIgBARIiCgpzdGFydGVkX2F0GA4gASgDSAlSCXN0YXJ0ZWRBdIgBAUIMCg'
+    'pfYXV0aG9yX2lkQgsKCV9jYXRlZ29yeUIQCg5fdGh1bWJuYWlsX3VybEINCgtfYXZhdGFyX3Vy'
+    'bEIOCgxfZGVzY3JpcHRpb25CDQoLX3ZpZXdfY291bnRCDQoLX2xpa2VfY291bnRCEAoOX2NvbW'
+    '1lbnRfY291bnRCDwoNX3B1Ymxpc2hlZF9hdEINCgtfc3RhcnRlZF9hdA==');
+
+@$core.Deprecated('Use cctvChapterMetadataDescriptor instead')
+const CctvChapterMetadata$json = {
+  '1': 'CctvChapterMetadata',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'start_ms', '3': 3, '4': 1, '5': 4, '10': 'startMs'},
+    {'1': 'end_ms', '3': 4, '4': 1, '5': 4, '10': 'endMs'},
+  ],
+};
+
+/// Descriptor for `CctvChapterMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List cctvChapterMetadataDescriptor = $convert.base64Decode(
+    'ChNDY3R2Q2hhcHRlck1ldGFkYXRhEg4KAmlkGAEgASgJUgJpZBIUCgV0aXRsZRgCIAEoCVIFdG'
+    'l0bGUSGQoIc3RhcnRfbXMYAyABKARSB3N0YXJ0TXMSFQoGZW5kX21zGAQgASgEUgVlbmRNcw==');
+
+@$core.Deprecated('Use cctvPlaybackMetadataDescriptor instead')
+const CctvPlaybackMetadata$json = {
+  '1': 'CctvPlaybackMetadata',
+  '2': [
+    {'1': 'video_id', '3': 1, '4': 1, '5': 9, '10': 'videoId'},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
+    {
+      '1': 'description',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'description',
+      '17': true
+    },
+    {
+      '1': 'uploader',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'uploader',
+      '17': true
+    },
+    {
+      '1': 'producer',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'producer',
+      '17': true
+    },
+    {
+      '1': 'channel',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'channel',
+      '17': true
+    },
+    {'1': 'column', '3': 7, '4': 1, '5': 9, '9': 4, '10': 'column', '17': true},
+    {'1': 'tags', '3': 8, '4': 3, '5': 9, '10': 'tags'},
+    {
+      '1': 'thumbnail_url',
+      '3': 9,
+      '4': 1,
+      '5': 9,
+      '9': 5,
+      '10': 'thumbnailUrl',
+      '17': true
+    },
+    {
+      '1': 'published_at',
+      '3': 10,
+      '4': 1,
+      '5': 3,
+      '9': 6,
+      '10': 'publishedAt',
+      '17': true
+    },
+    {
+      '1': 'chapters',
+      '3': 11,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.CctvChapterMetadata',
+      '10': 'chapters'
+    },
+    {'1': 'protected', '3': 12, '4': 1, '5': 8, '10': 'protected'},
+  ],
+  '8': [
+    {'1': '_description'},
+    {'1': '_uploader'},
+    {'1': '_producer'},
+    {'1': '_channel'},
+    {'1': '_column'},
+    {'1': '_thumbnail_url'},
+    {'1': '_published_at'},
+  ],
+};
+
+/// Descriptor for `CctvPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List cctvPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChRDY3R2UGxheWJhY2tNZXRhZGF0YRIZCgh2aWRlb19pZBgBIAEoCVIHdmlkZW9JZBIUCgV0aX'
+    'RsZRgCIAEoCVIFdGl0bGUSJQoLZGVzY3JpcHRpb24YAyABKAlIAFILZGVzY3JpcHRpb26IAQES'
+    'HwoIdXBsb2FkZXIYBCABKAlIAVIIdXBsb2FkZXKIAQESHwoIcHJvZHVjZXIYBSABKAlIAlIIcH'
+    'JvZHVjZXKIAQESHQoHY2hhbm5lbBgGIAEoCUgDUgdjaGFubmVsiAEBEhsKBmNvbHVtbhgHIAEo'
+    'CUgEUgZjb2x1bW6IAQESEgoEdGFncxgIIAMoCVIEdGFncxIoCg10aHVtYm5haWxfdXJsGAkgAS'
+    'gJSAVSDHRodW1ibmFpbFVybIgBARImCgxwdWJsaXNoZWRfYXQYCiABKANIBlILcHVibGlzaGVk'
+    'QXSIAQESPgoIY2hhcHRlcnMYCyADKAsyIi5zeW5jdHYuY2xpZW50LkNjdHZDaGFwdGVyTWV0YW'
+    'RhdGFSCGNoYXB0ZXJzEhwKCXByb3RlY3RlZBgMIAEoCFIJcHJvdGVjdGVkQg4KDF9kZXNjcmlw'
+    'dGlvbkILCglfdXBsb2FkZXJCCwoJX3Byb2R1Y2VyQgoKCF9jaGFubmVsQgkKB19jb2x1bW5CEA'
+    'oOX3RodW1ibmFpbF91cmxCDwoNX3B1Ymxpc2hlZF9hdA==');
+
+@$core.Deprecated('Use fnosFilePlaybackMetadataDescriptor instead')
+const FnosFilePlaybackMetadata$json = {
+  '1': 'FnosFilePlaybackMetadata',
+  '2': [
+    {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
+    {'1': 'size', '3': 3, '4': 1, '5': 4, '9': 0, '10': 'size', '17': true},
+    {
+      '1': 'modified_at',
+      '3': 4,
+      '4': 1,
+      '5': 3,
+      '9': 1,
+      '10': 'modifiedAt',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_size'},
+    {'1': '_modified_at'},
+  ],
+};
+
+/// Descriptor for `FnosFilePlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fnosFilePlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChhGbm9zRmlsZVBsYXliYWNrTWV0YWRhdGESEgoEbmFtZRgBIAEoCVIEbmFtZRISCgRwYXRoGA'
+    'IgASgJUgRwYXRoEhcKBHNpemUYAyABKARIAFIEc2l6ZYgBARIkCgttb2RpZmllZF9hdBgEIAEo'
+    'A0gBUgptb2RpZmllZEF0iAEBQgcKBV9zaXplQg4KDF9tb2RpZmllZF9hdA==');
+
+@$core.Deprecated('Use qnapPlaybackMetadataDescriptor instead')
+const QnapPlaybackMetadata$json = {
+  '1': 'QnapPlaybackMetadata',
+  '2': [
+    {'1': 'name', '3': 1, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'path', '3': 2, '4': 1, '5': 9, '10': 'path'},
+    {'1': 'size', '3': 3, '4': 1, '5': 4, '10': 'size'},
+    {'1': 'modified_at', '3': 4, '4': 1, '5': 4, '10': 'modifiedAt'},
+    {'1': 'file_type', '3': 5, '4': 1, '5': 4, '10': 'fileType'},
+    {
+      '1': 'realtime_transcode',
+      '3': 6,
+      '4': 1,
+      '5': 8,
+      '10': 'realtimeTranscode'
+    },
+    {
+      '1': 'hardware_transcode',
+      '3': 7,
+      '4': 1,
+      '5': 8,
+      '10': 'hardwareTranscode'
+    },
+    {'1': 'multimedia_codec', '3': 8, '4': 1, '5': 8, '10': 'multimediaCodec'},
+    {
+      '1': 'pre_transcoded_heights',
+      '3': 9,
+      '4': 3,
+      '5': 13,
+      '10': 'preTranscodedHeights'
+    },
+    {
+      '1': 'realtime_heights',
+      '3': 10,
+      '4': 3,
+      '5': 13,
+      '10': 'realtimeHeights'
+    },
+  ],
+};
+
+/// Descriptor for `QnapPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List qnapPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChRRbmFwUGxheWJhY2tNZXRhZGF0YRISCgRuYW1lGAEgASgJUgRuYW1lEhIKBHBhdGgYAiABKA'
+    'lSBHBhdGgSEgoEc2l6ZRgDIAEoBFIEc2l6ZRIfCgttb2RpZmllZF9hdBgEIAEoBFIKbW9kaWZp'
+    'ZWRBdBIbCglmaWxlX3R5cGUYBSABKARSCGZpbGVUeXBlEi0KEnJlYWx0aW1lX3RyYW5zY29kZR'
+    'gGIAEoCFIRcmVhbHRpbWVUcmFuc2NvZGUSLQoSaGFyZHdhcmVfdHJhbnNjb2RlGAcgASgIUhFo'
+    'YXJkd2FyZVRyYW5zY29kZRIpChBtdWx0aW1lZGlhX2NvZGVjGAggASgIUg9tdWx0aW1lZGlhQ2'
+    '9kZWMSNAoWcHJlX3RyYW5zY29kZWRfaGVpZ2h0cxgJIAMoDVIUcHJlVHJhbnNjb2RlZEhlaWdo'
+    'dHMSKQoQcmVhbHRpbWVfaGVpZ2h0cxgKIAMoDVIPcmVhbHRpbWVIZWlnaHRz');
+
+@$core.Deprecated('Use synologyAudioTrackMetadataDescriptor instead')
+const SynologyAudioTrackMetadata$json = {
+  '1': 'SynologyAudioTrackMetadata',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 3, '10': 'id'},
+    {'1': 'language', '3': 2, '4': 1, '5': 9, '10': 'language'},
+    {'1': 'codec', '3': 3, '4': 1, '5': 9, '10': 'codec'},
+    {'1': 'channels', '3': 4, '4': 1, '5': 13, '10': 'channels'},
+    {'1': 'bitrate', '3': 5, '4': 1, '5': 4, '10': 'bitrate'},
+    {'1': 'is_default', '3': 6, '4': 1, '5': 8, '10': 'isDefault'},
+  ],
+};
+
+/// Descriptor for `SynologyAudioTrackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List synologyAudioTrackMetadataDescriptor = $convert.base64Decode(
+    'ChpTeW5vbG9neUF1ZGlvVHJhY2tNZXRhZGF0YRIOCgJpZBgBIAEoA1ICaWQSGgoIbGFuZ3VhZ2'
+    'UYAiABKAlSCGxhbmd1YWdlEhQKBWNvZGVjGAMgASgJUgVjb2RlYxIaCghjaGFubmVscxgEIAEo'
+    'DVIIY2hhbm5lbHMSGAoHYml0cmF0ZRgFIAEoBFIHYml0cmF0ZRIdCgppc19kZWZhdWx0GAYgAS'
+    'gIUglpc0RlZmF1bHQ=');
+
+@$core.Deprecated('Use synologySubtitleMetadataDescriptor instead')
+const SynologySubtitleMetadata$json = {
+  '1': 'SynologySubtitleMetadata',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'language', '3': 2, '4': 1, '5': 9, '10': 'language'},
+    {'1': 'title', '3': 3, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'format', '3': 4, '4': 1, '5': 9, '10': 'format'},
+    {'1': 'embedded', '3': 5, '4': 1, '5': 8, '10': 'embedded'},
+  ],
+};
+
+/// Descriptor for `SynologySubtitleMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List synologySubtitleMetadataDescriptor = $convert.base64Decode(
+    'ChhTeW5vbG9neVN1YnRpdGxlTWV0YWRhdGESDgoCaWQYASABKAlSAmlkEhoKCGxhbmd1YWdlGA'
+    'IgASgJUghsYW5ndWFnZRIUCgV0aXRsZRgDIAEoCVIFdGl0bGUSFgoGZm9ybWF0GAQgASgJUgZm'
+    'b3JtYXQSGgoIZW1iZWRkZWQYBSABKAhSCGVtYmVkZGVk');
+
+@$core.Deprecated('Use synologyPlaybackMetadataDescriptor instead')
+const SynologyPlaybackMetadata$json = {
+  '1': 'SynologyPlaybackMetadata',
+  '2': [
+    {'1': 'title', '3': 1, '4': 1, '5': 9, '10': 'title'},
+    {'1': 'summary', '3': 2, '4': 1, '5': 9, '10': 'summary'},
+    {'1': 'tagline', '3': 3, '4': 1, '5': 9, '10': 'tagline'},
+    {'1': 'certificate', '3': 4, '4': 1, '5': 9, '10': 'certificate'},
+    {'1': 'rating', '3': 5, '4': 1, '5': 5, '10': 'rating'},
+    {'1': 'actors', '3': 6, '4': 3, '5': 9, '10': 'actors'},
+    {'1': 'directors', '3': 7, '4': 3, '5': 9, '10': 'directors'},
+    {'1': 'writers', '3': 8, '4': 3, '5': 9, '10': 'writers'},
+    {'1': 'genres', '3': 9, '4': 3, '5': 9, '10': 'genres'},
+    {'1': 'item_id', '3': 10, '4': 1, '5': 3, '10': 'itemId'},
+    {'1': 'file_id', '3': 11, '4': 1, '5': 3, '10': 'fileId'},
+    {'1': 'kind', '3': 12, '4': 1, '5': 9, '10': 'kind'},
+    {'1': 'path', '3': 13, '4': 1, '5': 9, '10': 'path'},
+    {'1': 'size', '3': 14, '4': 1, '5': 4, '10': 'size'},
+    {'1': 'duration_seconds', '3': 15, '4': 1, '5': 4, '10': 'durationSeconds'},
+    {'1': 'progress_seconds', '3': 16, '4': 1, '5': 4, '10': 'progressSeconds'},
+    {'1': 'width', '3': 17, '4': 1, '5': 13, '10': 'width'},
+    {'1': 'height', '3': 18, '4': 1, '5': 13, '10': 'height'},
+    {'1': 'video_codec', '3': 19, '4': 1, '5': 9, '10': 'videoCodec'},
+    {'1': 'audio_codec', '3': 20, '4': 1, '5': 9, '10': 'audioCodec'},
+    {'1': 'container', '3': 21, '4': 1, '5': 9, '10': 'container'},
+    {'1': 'video_bitrate', '3': 22, '4': 1, '5': 4, '10': 'videoBitrate'},
+    {'1': 'audio_bitrate', '3': 23, '4': 1, '5': 4, '10': 'audioBitrate'},
+    {
+      '1': 'frame_rate_numerator',
+      '3': 24,
+      '4': 1,
+      '5': 4,
+      '10': 'frameRateNumerator'
+    },
+    {
+      '1': 'frame_rate_denominator',
+      '3': 25,
+      '4': 1,
+      '5': 4,
+      '10': 'frameRateDenominator'
+    },
+    {'1': 'audio_channels', '3': 26, '4': 1, '5': 13, '10': 'audioChannels'},
+    {
+      '1': 'audio_frequency_hz',
+      '3': 27,
+      '4': 1,
+      '5': 13,
+      '10': 'audioFrequencyHz'
+    },
+    {
+      '1': 'poster_url',
+      '3': 28,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'posterUrl',
+      '17': true
+    },
+    {
+      '1': 'backdrop_url',
+      '3': 29,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'backdropUrl',
+      '17': true
+    },
+    {'1': 'watched', '3': 30, '4': 1, '5': 8, '10': 'watched'},
+    {'1': 'watched_ratio', '3': 31, '4': 1, '5': 1, '10': 'watchedRatio'},
+    {
+      '1': 'parental_controlled',
+      '3': 32,
+      '4': 1,
+      '5': 8,
+      '10': 'parentalControlled'
+    },
+    {'1': 'create_time', '3': 33, '4': 1, '5': 3, '10': 'createTime'},
+    {'1': 'last_watched', '3': 34, '4': 1, '5': 3, '10': 'lastWatched'},
+    {
+      '1': 'audio_tracks',
+      '3': 35,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.SynologyAudioTrackMetadata',
+      '10': 'audioTracks'
+    },
+    {
+      '1': 'subtitles',
+      '3': 36,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.SynologySubtitleMetadata',
+      '10': 'subtitles'
+    },
+  ],
+  '8': [
+    {'1': '_poster_url'},
+    {'1': '_backdrop_url'},
+  ],
+};
+
+/// Descriptor for `SynologyPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List synologyPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChhTeW5vbG9neVBsYXliYWNrTWV0YWRhdGESFAoFdGl0bGUYASABKAlSBXRpdGxlEhgKB3N1bW'
+    '1hcnkYAiABKAlSB3N1bW1hcnkSGAoHdGFnbGluZRgDIAEoCVIHdGFnbGluZRIgCgtjZXJ0aWZp'
+    'Y2F0ZRgEIAEoCVILY2VydGlmaWNhdGUSFgoGcmF0aW5nGAUgASgFUgZyYXRpbmcSFgoGYWN0b3'
+    'JzGAYgAygJUgZhY3RvcnMSHAoJZGlyZWN0b3JzGAcgAygJUglkaXJlY3RvcnMSGAoHd3JpdGVy'
+    'cxgIIAMoCVIHd3JpdGVycxIWCgZnZW5yZXMYCSADKAlSBmdlbnJlcxIXCgdpdGVtX2lkGAogAS'
+    'gDUgZpdGVtSWQSFwoHZmlsZV9pZBgLIAEoA1IGZmlsZUlkEhIKBGtpbmQYDCABKAlSBGtpbmQS'
+    'EgoEcGF0aBgNIAEoCVIEcGF0aBISCgRzaXplGA4gASgEUgRzaXplEikKEGR1cmF0aW9uX3NlY2'
+    '9uZHMYDyABKARSD2R1cmF0aW9uU2Vjb25kcxIpChBwcm9ncmVzc19zZWNvbmRzGBAgASgEUg9w'
+    'cm9ncmVzc1NlY29uZHMSFAoFd2lkdGgYESABKA1SBXdpZHRoEhYKBmhlaWdodBgSIAEoDVIGaG'
+    'VpZ2h0Eh8KC3ZpZGVvX2NvZGVjGBMgASgJUgp2aWRlb0NvZGVjEh8KC2F1ZGlvX2NvZGVjGBQg'
+    'ASgJUgphdWRpb0NvZGVjEhwKCWNvbnRhaW5lchgVIAEoCVIJY29udGFpbmVyEiMKDXZpZGVvX2'
+    'JpdHJhdGUYFiABKARSDHZpZGVvQml0cmF0ZRIjCg1hdWRpb19iaXRyYXRlGBcgASgEUgxhdWRp'
+    'b0JpdHJhdGUSMAoUZnJhbWVfcmF0ZV9udW1lcmF0b3IYGCABKARSEmZyYW1lUmF0ZU51bWVyYX'
+    'RvchI0ChZmcmFtZV9yYXRlX2Rlbm9taW5hdG9yGBkgASgEUhRmcmFtZVJhdGVEZW5vbWluYXRv'
+    'chIlCg5hdWRpb19jaGFubmVscxgaIAEoDVINYXVkaW9DaGFubmVscxIsChJhdWRpb19mcmVxdW'
+    'VuY3lfaHoYGyABKA1SEGF1ZGlvRnJlcXVlbmN5SHoSIgoKcG9zdGVyX3VybBgcIAEoCUgAUglw'
+    'b3N0ZXJVcmyIAQESJgoMYmFja2Ryb3BfdXJsGB0gASgJSAFSC2JhY2tkcm9wVXJsiAEBEhgKB3'
+    'dhdGNoZWQYHiABKAhSB3dhdGNoZWQSIwoNd2F0Y2hlZF9yYXRpbxgfIAEoAVIMd2F0Y2hlZFJh'
+    'dGlvEi8KE3BhcmVudGFsX2NvbnRyb2xsZWQYICABKAhSEnBhcmVudGFsQ29udHJvbGxlZBIfCg'
+    'tjcmVhdGVfdGltZRghIAEoA1IKY3JlYXRlVGltZRIhCgxsYXN0X3dhdGNoZWQYIiABKANSC2xh'
+    'c3RXYXRjaGVkEkwKDGF1ZGlvX3RyYWNrcxgjIAMoCzIpLnN5bmN0di5jbGllbnQuU3lub2xvZ3'
+    'lBdWRpb1RyYWNrTWV0YWRhdGFSC2F1ZGlvVHJhY2tzEkUKCXN1YnRpdGxlcxgkIAMoCzInLnN5'
+    'bmN0di5jbGllbnQuU3lub2xvZ3lTdWJ0aXRsZU1ldGFkYXRhUglzdWJ0aXRsZXNCDQoLX3Bvc3'
+    'Rlcl91cmxCDwoNX2JhY2tkcm9wX3VybA==');
+
+@$core.Deprecated('Use nextcloudPlaybackMetadataDescriptor instead')
+const NextcloudPlaybackMetadata$json = {
+  '1': 'NextcloudPlaybackMetadata',
+  '2': [
+    {'1': 'file_id', '3': 1, '4': 1, '5': 4, '10': 'fileId'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'path', '3': 3, '4': 1, '5': 9, '10': 'path'},
+    {'1': 'size', '3': 4, '4': 1, '5': 4, '10': 'size'},
+    {
+      '1': 'modified_at',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'modifiedAt',
+      '17': true
+    },
+    {
+      '1': 'content_type',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'contentType',
+      '17': true
+    },
+    {'1': 'etag', '3': 7, '4': 1, '5': 9, '9': 2, '10': 'etag', '17': true},
+    {
+      '1': 'permissions',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'permissions',
+      '17': true
+    },
+    {
+      '1': 'owner_id',
+      '3': 9,
+      '4': 1,
+      '5': 9,
+      '9': 4,
+      '10': 'ownerId',
+      '17': true
+    },
+    {
+      '1': 'owner_display_name',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '9': 5,
+      '10': 'ownerDisplayName',
+      '17': true
+    },
+    {'1': 'favorite', '3': 11, '4': 1, '5': 8, '10': 'favorite'},
+    {'1': 'has_preview', '3': 12, '4': 1, '5': 8, '10': 'hasPreview'},
+    {
+      '1': 'blurhash',
+      '3': 13,
+      '4': 1,
+      '5': 9,
+      '9': 6,
+      '10': 'blurhash',
+      '17': true
+    },
+    {'1': 'width', '3': 14, '4': 1, '5': 13, '9': 7, '10': 'width', '17': true},
+    {
+      '1': 'height',
+      '3': 15,
+      '4': 1,
+      '5': 13,
+      '9': 8,
+      '10': 'height',
+      '17': true
+    },
+    {
+      '1': 'duration_millis',
+      '3': 16,
+      '4': 1,
+      '5': 4,
+      '9': 9,
+      '10': 'durationMillis',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_modified_at'},
+    {'1': '_content_type'},
+    {'1': '_etag'},
+    {'1': '_permissions'},
+    {'1': '_owner_id'},
+    {'1': '_owner_display_name'},
+    {'1': '_blurhash'},
+    {'1': '_width'},
+    {'1': '_height'},
+    {'1': '_duration_millis'},
+  ],
+};
+
+/// Descriptor for `NextcloudPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List nextcloudPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChlOZXh0Y2xvdWRQbGF5YmFja01ldGFkYXRhEhcKB2ZpbGVfaWQYASABKARSBmZpbGVJZBISCg'
+    'RuYW1lGAIgASgJUgRuYW1lEhIKBHBhdGgYAyABKAlSBHBhdGgSEgoEc2l6ZRgEIAEoBFIEc2l6'
+    'ZRIkCgttb2RpZmllZF9hdBgFIAEoCUgAUgptb2RpZmllZEF0iAEBEiYKDGNvbnRlbnRfdHlwZR'
+    'gGIAEoCUgBUgtjb250ZW50VHlwZYgBARIXCgRldGFnGAcgASgJSAJSBGV0YWeIAQESJQoLcGVy'
+    'bWlzc2lvbnMYCCABKAlIA1ILcGVybWlzc2lvbnOIAQESHgoIb3duZXJfaWQYCSABKAlIBFIHb3'
+    'duZXJJZIgBARIxChJvd25lcl9kaXNwbGF5X25hbWUYCiABKAlIBVIQb3duZXJEaXNwbGF5TmFt'
+    'ZYgBARIaCghmYXZvcml0ZRgLIAEoCFIIZmF2b3JpdGUSHwoLaGFzX3ByZXZpZXcYDCABKAhSCm'
+    'hhc1ByZXZpZXcSHwoIYmx1cmhhc2gYDSABKAlIBlIIYmx1cmhhc2iIAQESGQoFd2lkdGgYDiAB'
+    'KA1IB1IFd2lkdGiIAQESGwoGaGVpZ2h0GA8gASgNSAhSBmhlaWdodIgBARIsCg9kdXJhdGlvbl'
+    '9taWxsaXMYECABKARICVIOZHVyYXRpb25NaWxsaXOIAQFCDgoMX21vZGlmaWVkX2F0Qg8KDV9j'
+    'b250ZW50X3R5cGVCBwoFX2V0YWdCDgoMX3Blcm1pc3Npb25zQgsKCV9vd25lcl9pZEIVChNfb3'
+    'duZXJfZGlzcGxheV9uYW1lQgsKCV9ibHVyaGFzaEIICgZfd2lkdGhCCQoHX2hlaWdodEISChBf'
+    'ZHVyYXRpb25fbWlsbGlz');
+
+@$core.Deprecated('Use seafilePlaybackMetadataDescriptor instead')
+const SeafilePlaybackMetadata$json = {
+  '1': 'SeafilePlaybackMetadata',
+  '2': [
+    {'1': 'repository_id', '3': 1, '4': 1, '5': 9, '10': 'repositoryId'},
+    {'1': 'object_id', '3': 2, '4': 1, '5': 9, '10': 'objectId'},
+    {'1': 'name', '3': 3, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'path', '3': 4, '4': 1, '5': 9, '10': 'path'},
+    {'1': 'size', '3': 5, '4': 1, '5': 4, '10': 'size'},
+    {'1': 'modified_at', '3': 6, '4': 1, '5': 9, '10': 'modifiedAt'},
+    {'1': 'is_locked', '3': 7, '4': 1, '5': 8, '10': 'isLocked'},
+    {'1': 'can_preview', '3': 8, '4': 1, '5': 8, '10': 'canPreview'},
+    {'1': 'can_edit', '3': 9, '4': 1, '5': 8, '10': 'canEdit'},
+    {'1': 'has_thumbnail', '3': 10, '4': 1, '5': 8, '10': 'hasThumbnail'},
+  ],
+};
+
+/// Descriptor for `SeafilePlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List seafilePlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChdTZWFmaWxlUGxheWJhY2tNZXRhZGF0YRIjCg1yZXBvc2l0b3J5X2lkGAEgASgJUgxyZXBvc2'
+    'l0b3J5SWQSGwoJb2JqZWN0X2lkGAIgASgJUghvYmplY3RJZBISCgRuYW1lGAMgASgJUgRuYW1l'
+    'EhIKBHBhdGgYBCABKAlSBHBhdGgSEgoEc2l6ZRgFIAEoBFIEc2l6ZRIfCgttb2RpZmllZF9hdB'
+    'gGIAEoCVIKbW9kaWZpZWRBdBIbCglpc19sb2NrZWQYByABKAhSCGlzTG9ja2VkEh8KC2Nhbl9w'
+    'cmV2aWV3GAggASgIUgpjYW5QcmV2aWV3EhkKCGNhbl9lZGl0GAkgASgIUgdjYW5FZGl0EiMKDW'
+    'hhc190aHVtYm5haWwYCiABKAhSDGhhc1RodW1ibmFpbA==');
+
+@$core.Deprecated('Use trueNasPlaybackMetadataDescriptor instead')
+const TrueNasPlaybackMetadata$json = {
+  '1': 'TrueNasPlaybackMetadata',
+  '2': [
+    {'1': 'realpath', '3': 1, '4': 1, '5': 9, '10': 'realpath'},
+    {'1': 'size', '3': 2, '4': 1, '5': 4, '10': 'size'},
+    {'1': 'allocation_size', '3': 3, '4': 1, '5': 4, '10': 'allocationSize'},
+    {'1': 'mode', '3': 4, '4': 1, '5': 13, '10': 'mode'},
+    {'1': 'mount_id', '3': 5, '4': 1, '5': 4, '10': 'mountId'},
+    {'1': 'uid', '3': 6, '4': 1, '5': 13, '10': 'uid'},
+    {'1': 'gid', '3': 7, '4': 1, '5': 13, '10': 'gid'},
+    {'1': 'atime', '3': 8, '4': 1, '5': 1, '10': 'atime'},
+    {'1': 'mtime', '3': 9, '4': 1, '5': 1, '10': 'mtime'},
+    {'1': 'ctime', '3': 10, '4': 1, '5': 1, '10': 'ctime'},
+    {'1': 'btime', '3': 11, '4': 1, '5': 1, '10': 'btime'},
+    {'1': 'dev', '3': 12, '4': 1, '5': 4, '10': 'dev'},
+    {'1': 'inode', '3': 13, '4': 1, '5': 4, '10': 'inode'},
+    {'1': 'nlink', '3': 14, '4': 1, '5': 4, '10': 'nlink'},
+    {'1': 'acl', '3': 15, '4': 1, '5': 8, '10': 'acl'},
+    {'1': 'is_mountpoint', '3': 16, '4': 1, '5': 8, '10': 'isMountpoint'},
+    {'1': 'is_ctldir', '3': 17, '4': 1, '5': 8, '10': 'isCtldir'},
+    {'1': 'attributes', '3': 18, '4': 3, '5': 9, '10': 'attributes'},
+    {'1': 'user', '3': 19, '4': 1, '5': 9, '9': 0, '10': 'user', '17': true},
+    {'1': 'group', '3': 20, '4': 1, '5': 9, '9': 1, '10': 'group', '17': true},
+  ],
+  '8': [
+    {'1': '_user'},
+    {'1': '_group'},
+  ],
+};
+
+/// Descriptor for `TrueNasPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List trueNasPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChdUcnVlTmFzUGxheWJhY2tNZXRhZGF0YRIaCghyZWFscGF0aBgBIAEoCVIIcmVhbHBhdGgSEg'
+    'oEc2l6ZRgCIAEoBFIEc2l6ZRInCg9hbGxvY2F0aW9uX3NpemUYAyABKARSDmFsbG9jYXRpb25T'
+    'aXplEhIKBG1vZGUYBCABKA1SBG1vZGUSGQoIbW91bnRfaWQYBSABKARSB21vdW50SWQSEAoDdW'
+    'lkGAYgASgNUgN1aWQSEAoDZ2lkGAcgASgNUgNnaWQSFAoFYXRpbWUYCCABKAFSBWF0aW1lEhQK'
+    'BW10aW1lGAkgASgBUgVtdGltZRIUCgVjdGltZRgKIAEoAVIFY3RpbWUSFAoFYnRpbWUYCyABKA'
+    'FSBWJ0aW1lEhAKA2RldhgMIAEoBFIDZGV2EhQKBWlub2RlGA0gASgEUgVpbm9kZRIUCgVubGlu'
+    'axgOIAEoBFIFbmxpbmsSEAoDYWNsGA8gASgIUgNhY2wSIwoNaXNfbW91bnRwb2ludBgQIAEoCF'
+    'IMaXNNb3VudHBvaW50EhsKCWlzX2N0bGRpchgRIAEoCFIIaXNDdGxkaXISHgoKYXR0cmlidXRl'
+    'cxgSIAMoCVIKYXR0cmlidXRlcxIXCgR1c2VyGBMgASgJSABSBHVzZXKIAQESGQoFZ3JvdXAYFC'
+    'ABKAlIAVIFZ3JvdXCIAQFCBwoFX3VzZXJCCAoGX2dyb3Vw');
+
+@$core.Deprecated('Use fnosAudioTrackMetadataDescriptor instead')
+const FnosAudioTrackMetadata$json = {
+  '1': 'FnosAudioTrackMetadata',
+  '2': [
+    {'1': 'guid', '3': 1, '4': 1, '5': 9, '9': 0, '10': 'guid', '17': true},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '9': 1, '10': 'title', '17': true},
+    {
+      '1': 'language',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'language',
+      '17': true
+    },
+    {'1': 'codec', '3': 4, '4': 1, '5': 9, '9': 3, '10': 'codec', '17': true},
+    {'1': 'channels', '3': 5, '4': 1, '5': 13, '10': 'channels'},
+    {'1': 'bitrate', '3': 6, '4': 1, '5': 4, '10': 'bitrate'},
+    {'1': 'is_default', '3': 7, '4': 1, '5': 8, '10': 'isDefault'},
+  ],
+  '8': [
+    {'1': '_guid'},
+    {'1': '_title'},
+    {'1': '_language'},
+    {'1': '_codec'},
+  ],
+};
+
+/// Descriptor for `FnosAudioTrackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fnosAudioTrackMetadataDescriptor = $convert.base64Decode(
+    'ChZGbm9zQXVkaW9UcmFja01ldGFkYXRhEhcKBGd1aWQYASABKAlIAFIEZ3VpZIgBARIZCgV0aX'
+    'RsZRgCIAEoCUgBUgV0aXRsZYgBARIfCghsYW5ndWFnZRgDIAEoCUgCUghsYW5ndWFnZYgBARIZ'
+    'CgVjb2RlYxgEIAEoCUgDUgVjb2RlY4gBARIaCghjaGFubmVscxgFIAEoDVIIY2hhbm5lbHMSGA'
+    'oHYml0cmF0ZRgGIAEoBFIHYml0cmF0ZRIdCgppc19kZWZhdWx0GAcgASgIUglpc0RlZmF1bHRC'
+    'BwoFX2d1aWRCCAoGX3RpdGxlQgsKCV9sYW5ndWFnZUIICgZfY29kZWM=');
+
+@$core.Deprecated('Use fnosSubtitleTrackMetadataDescriptor instead')
+const FnosSubtitleTrackMetadata$json = {
+  '1': 'FnosSubtitleTrackMetadata',
+  '2': [
+    {'1': 'guid', '3': 1, '4': 1, '5': 9, '9': 0, '10': 'guid', '17': true},
+    {'1': 'title', '3': 2, '4': 1, '5': 9, '9': 1, '10': 'title', '17': true},
+    {
+      '1': 'language',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'language',
+      '17': true
+    },
+    {'1': 'codec', '3': 4, '4': 1, '5': 9, '9': 3, '10': 'codec', '17': true},
+    {'1': 'format', '3': 5, '4': 1, '5': 9, '9': 4, '10': 'format', '17': true},
+    {'1': 'external', '3': 6, '4': 1, '5': 8, '10': 'external'},
+    {'1': 'is_default', '3': 7, '4': 1, '5': 8, '10': 'isDefault'},
+    {'1': 'forced', '3': 8, '4': 1, '5': 8, '10': 'forced'},
+  ],
+  '8': [
+    {'1': '_guid'},
+    {'1': '_title'},
+    {'1': '_language'},
+    {'1': '_codec'},
+    {'1': '_format'},
+  ],
+};
+
+/// Descriptor for `FnosSubtitleTrackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fnosSubtitleTrackMetadataDescriptor = $convert.base64Decode(
+    'ChlGbm9zU3VidGl0bGVUcmFja01ldGFkYXRhEhcKBGd1aWQYASABKAlIAFIEZ3VpZIgBARIZCg'
+    'V0aXRsZRgCIAEoCUgBUgV0aXRsZYgBARIfCghsYW5ndWFnZRgDIAEoCUgCUghsYW5ndWFnZYgB'
+    'ARIZCgVjb2RlYxgEIAEoCUgDUgVjb2RlY4gBARIbCgZmb3JtYXQYBSABKAlIBFIGZm9ybWF0iA'
+    'EBEhoKCGV4dGVybmFsGAYgASgIUghleHRlcm5hbBIdCgppc19kZWZhdWx0GAcgASgIUglpc0Rl'
+    'ZmF1bHQSFgoGZm9yY2VkGAggASgIUgZmb3JjZWRCBwoFX2d1aWRCCAoGX3RpdGxlQgsKCV9sYW'
+    '5ndWFnZUIICgZfY29kZWNCCQoHX2Zvcm1hdA==');
+
+@$core.Deprecated('Use fnosMediaPlaybackMetadataDescriptor instead')
+const FnosMediaPlaybackMetadata$json = {
+  '1': 'FnosMediaPlaybackMetadata',
+  '2': [
+    {'1': 'item_guid', '3': 1, '4': 1, '5': 9, '10': 'itemGuid'},
+    {'1': 'media_guid', '3': 2, '4': 1, '5': 9, '10': 'mediaGuid'},
+    {'1': 'title', '3': 3, '4': 1, '5': 9, '10': 'title'},
+    {
+      '1': 'overview',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'overview',
+      '17': true
+    },
+    {
+      '1': 'poster_url',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'posterUrl',
+      '17': true
+    },
+    {
+      '1': 'backdrop_url',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'backdropUrl',
+      '17': true
+    },
+    {'1': 'width', '3': 7, '4': 1, '5': 13, '9': 3, '10': 'width', '17': true},
+    {
+      '1': 'height',
+      '3': 8,
+      '4': 1,
+      '5': 13,
+      '9': 4,
+      '10': 'height',
+      '17': true
+    },
+    {
+      '1': 'video_codec',
+      '3': 9,
+      '4': 1,
+      '5': 9,
+      '9': 5,
+      '10': 'videoCodec',
+      '17': true
+    },
+    {
+      '1': 'video_profile',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '9': 6,
+      '10': 'videoProfile',
+      '17': true
+    },
+    {
+      '1': 'bit_depth',
+      '3': 11,
+      '4': 1,
+      '5': 13,
+      '9': 7,
+      '10': 'bitDepth',
+      '17': true
+    },
+    {
+      '1': 'dolby_vision_profile',
+      '3': 12,
+      '4': 1,
+      '5': 5,
+      '9': 8,
+      '10': 'dolbyVisionProfile',
+      '17': true
+    },
+    {
+      '1': 'frame_rate',
+      '3': 13,
+      '4': 1,
+      '5': 9,
+      '9': 9,
+      '10': 'frameRate',
+      '17': true
+    },
+    {
+      '1': 'season_number',
+      '3': 14,
+      '4': 1,
+      '5': 13,
+      '9': 10,
+      '10': 'seasonNumber',
+      '17': true
+    },
+    {
+      '1': 'episode_number',
+      '3': 15,
+      '4': 1,
+      '5': 13,
+      '9': 11,
+      '10': 'episodeNumber',
+      '17': true
+    },
+    {'1': 'progress_seconds', '3': 16, '4': 1, '5': 4, '10': 'progressSeconds'},
+    {'1': 'duration_seconds', '3': 17, '4': 1, '5': 4, '10': 'durationSeconds'},
+    {'1': 'watched', '3': 18, '4': 1, '5': 8, '10': 'watched'},
+    {
+      '1': 'audio_tracks',
+      '3': 19,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.FnosAudioTrackMetadata',
+      '10': 'audioTracks'
+    },
+    {
+      '1': 'subtitle_tracks',
+      '3': 20,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.FnosSubtitleTrackMetadata',
+      '10': 'subtitleTracks'
+    },
+  ],
+  '8': [
+    {'1': '_overview'},
+    {'1': '_poster_url'},
+    {'1': '_backdrop_url'},
+    {'1': '_width'},
+    {'1': '_height'},
+    {'1': '_video_codec'},
+    {'1': '_video_profile'},
+    {'1': '_bit_depth'},
+    {'1': '_dolby_vision_profile'},
+    {'1': '_frame_rate'},
+    {'1': '_season_number'},
+    {'1': '_episode_number'},
+  ],
+};
+
+/// Descriptor for `FnosMediaPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fnosMediaPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChlGbm9zTWVkaWFQbGF5YmFja01ldGFkYXRhEhsKCWl0ZW1fZ3VpZBgBIAEoCVIIaXRlbUd1aW'
+    'QSHQoKbWVkaWFfZ3VpZBgCIAEoCVIJbWVkaWFHdWlkEhQKBXRpdGxlGAMgASgJUgV0aXRsZRIf'
+    'CghvdmVydmlldxgEIAEoCUgAUghvdmVydmlld4gBARIiCgpwb3N0ZXJfdXJsGAUgASgJSAFSCX'
+    'Bvc3RlclVybIgBARImCgxiYWNrZHJvcF91cmwYBiABKAlIAlILYmFja2Ryb3BVcmyIAQESGQoF'
+    'd2lkdGgYByABKA1IA1IFd2lkdGiIAQESGwoGaGVpZ2h0GAggASgNSARSBmhlaWdodIgBARIkCg'
+    't2aWRlb19jb2RlYxgJIAEoCUgFUgp2aWRlb0NvZGVjiAEBEigKDXZpZGVvX3Byb2ZpbGUYCiAB'
+    'KAlIBlIMdmlkZW9Qcm9maWxliAEBEiAKCWJpdF9kZXB0aBgLIAEoDUgHUghiaXREZXB0aIgBAR'
+    'I1ChRkb2xieV92aXNpb25fcHJvZmlsZRgMIAEoBUgIUhJkb2xieVZpc2lvblByb2ZpbGWIAQES'
+    'IgoKZnJhbWVfcmF0ZRgNIAEoCUgJUglmcmFtZVJhdGWIAQESKAoNc2Vhc29uX251bWJlchgOIA'
+    'EoDUgKUgxzZWFzb25OdW1iZXKIAQESKgoOZXBpc29kZV9udW1iZXIYDyABKA1IC1INZXBpc29k'
+    'ZU51bWJlcogBARIpChBwcm9ncmVzc19zZWNvbmRzGBAgASgEUg9wcm9ncmVzc1NlY29uZHMSKQ'
+    'oQZHVyYXRpb25fc2Vjb25kcxgRIAEoBFIPZHVyYXRpb25TZWNvbmRzEhgKB3dhdGNoZWQYEiAB'
+    'KAhSB3dhdGNoZWQSSAoMYXVkaW9fdHJhY2tzGBMgAygLMiUuc3luY3R2LmNsaWVudC5Gbm9zQX'
+    'VkaW9UcmFja01ldGFkYXRhUgthdWRpb1RyYWNrcxJRCg9zdWJ0aXRsZV90cmFja3MYFCADKAsy'
+    'KC5zeW5jdHYuY2xpZW50LkZub3NTdWJ0aXRsZVRyYWNrTWV0YWRhdGFSDnN1YnRpdGxlVHJhY2'
+    'tzQgsKCV9vdmVydmlld0INCgtfcG9zdGVyX3VybEIPCg1fYmFja2Ryb3BfdXJsQggKBl93aWR0'
+    'aEIJCgdfaGVpZ2h0Qg4KDF92aWRlb19jb2RlY0IQCg5fdmlkZW9fcHJvZmlsZUIMCgpfYml0X2'
+    'RlcHRoQhcKFV9kb2xieV92aXNpb25fcHJvZmlsZUINCgtfZnJhbWVfcmF0ZUIQCg5fc2Vhc29u'
+    'X251bWJlckIRCg9fZXBpc29kZV9udW1iZXI=');
+
+@$core.Deprecated('Use fnosPlaybackMetadataDescriptor instead')
+const FnosPlaybackMetadata$json = {
+  '1': 'FnosPlaybackMetadata',
+  '2': [
+    {
+      '1': 'file',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.FnosFilePlaybackMetadata',
+      '9': 0,
+      '10': 'file'
+    },
+    {
+      '1': 'media',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.FnosMediaPlaybackMetadata',
+      '9': 0,
+      '10': 'media'
+    },
+  ],
+  '8': [
+    {'1': 'kind'},
+  ],
+};
+
+/// Descriptor for `FnosPlaybackMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List fnosPlaybackMetadataDescriptor = $convert.base64Decode(
+    'ChRGbm9zUGxheWJhY2tNZXRhZGF0YRI9CgRmaWxlGAEgASgLMicuc3luY3R2LmNsaWVudC5Gbm'
+    '9zRmlsZVBsYXliYWNrTWV0YWRhdGFIAFIEZmlsZRJACgVtZWRpYRgCIAEoCzIoLnN5bmN0di5j'
+    'bGllbnQuRm5vc01lZGlhUGxheWJhY2tNZXRhZGF0YUgAUgVtZWRpYUIGCgRraW5k');
 
 @$core.Deprecated('Use playbackInfoDescriptor instead')
 const PlaybackInfo$json = {
@@ -15605,7 +18008,30 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ProviderTarget': ProviderTarget$json,
   '.synctv.client.AlistTarget': AlistTarget$json,
   '.synctv.client.EmbyTarget': EmbyTarget$json,
+  '.synctv.client.EmbyItemTarget': EmbyItemTarget$json,
+  '.synctv.client.EmbyPersonTarget': EmbyPersonTarget$json,
+  '.synctv.client.EmbyPersonItemTarget': EmbyPersonItemTarget$json,
   '.synctv.client.CloudreveTarget': CloudreveTarget$json,
+  '.synctv.client.TwitchTarget': TwitchTarget$json,
+  '.synctv.client.FnosTarget': FnosTarget$json,
+  '.synctv.client.FnosFileTarget': FnosFileTarget$json,
+  '.synctv.client.FnosMediaItemTarget': FnosMediaItemTarget$json,
+  '.synctv.client.QnapTarget': QnapTarget$json,
+  '.synctv.client.SynologyTarget': SynologyTarget$json,
+  '.synctv.client.SynologyFileTarget': SynologyFileTarget$json,
+  '.synctv.client.SynologyLibraryItemTarget': SynologyLibraryItemTarget$json,
+  '.synctv.client.SynologyTvShowTarget': SynologyTvShowTarget$json,
+  '.synctv.client.NextcloudTarget': NextcloudTarget$json,
+  '.synctv.client.SeafileTarget': SeafileTarget$json,
+  '.synctv.client.TrueNasTarget': TrueNasTarget$json,
+  '.synctv.client.DouyinTarget': DouyinTarget$json,
+  '.synctv.client.YoutubeTarget': YoutubeTarget$json,
+  '.synctv.client.TikTokTarget': TikTokTarget$json,
+  '.synctv.client.BilibiliTarget': BilibiliTarget$json,
+  '.synctv.client.BilibiliVideoTarget': BilibiliVideoTarget$json,
+  '.synctv.client.BilibiliVideoPartTarget': BilibiliVideoPartTarget$json,
+  '.synctv.client.BilibiliPgcEpisodeTarget': BilibiliPgcEpisodeTarget$json,
+  '.synctv.client.BilibiliLiveTarget': BilibiliLiveTarget$json,
   '.synctv.client.JoinRoomRequest': JoinRoomRequest$json,
   '.synctv.client.JoinRoomResponse': JoinRoomResponse$json,
   '.synctv.common.RoomMember': $0.RoomMember$json,
@@ -16294,7 +18720,30 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ProviderTarget': ProviderTarget$json,
   '.synctv.client.AlistTarget': AlistTarget$json,
   '.synctv.client.EmbyTarget': EmbyTarget$json,
+  '.synctv.client.EmbyItemTarget': EmbyItemTarget$json,
+  '.synctv.client.EmbyPersonTarget': EmbyPersonTarget$json,
+  '.synctv.client.EmbyPersonItemTarget': EmbyPersonItemTarget$json,
   '.synctv.client.CloudreveTarget': CloudreveTarget$json,
+  '.synctv.client.TwitchTarget': TwitchTarget$json,
+  '.synctv.client.FnosTarget': FnosTarget$json,
+  '.synctv.client.FnosFileTarget': FnosFileTarget$json,
+  '.synctv.client.FnosMediaItemTarget': FnosMediaItemTarget$json,
+  '.synctv.client.QnapTarget': QnapTarget$json,
+  '.synctv.client.SynologyTarget': SynologyTarget$json,
+  '.synctv.client.SynologyFileTarget': SynologyFileTarget$json,
+  '.synctv.client.SynologyLibraryItemTarget': SynologyLibraryItemTarget$json,
+  '.synctv.client.SynologyTvShowTarget': SynologyTvShowTarget$json,
+  '.synctv.client.NextcloudTarget': NextcloudTarget$json,
+  '.synctv.client.SeafileTarget': SeafileTarget$json,
+  '.synctv.client.TrueNasTarget': TrueNasTarget$json,
+  '.synctv.client.DouyinTarget': DouyinTarget$json,
+  '.synctv.client.YoutubeTarget': YoutubeTarget$json,
+  '.synctv.client.TikTokTarget': TikTokTarget$json,
+  '.synctv.client.BilibiliTarget': BilibiliTarget$json,
+  '.synctv.client.BilibiliVideoTarget': BilibiliVideoTarget$json,
+  '.synctv.client.BilibiliVideoPartTarget': BilibiliVideoPartTarget$json,
+  '.synctv.client.BilibiliPgcEpisodeTarget': BilibiliPgcEpisodeTarget$json,
+  '.synctv.client.BilibiliLiveTarget': BilibiliLiveTarget$json,
   '.synctv.client.ChatMemberJoinedMetadata': ChatMemberJoinedMetadata$json,
   '.synctv.client.ChatMentionInput': ChatMentionInput$json,
   '.synctv.client.HeartbeatMessage': HeartbeatMessage$json,
@@ -16309,6 +18758,143 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ListPlaylistItemsRequest': ListPlaylistItemsRequest$json,
   '.synctv.client.PagePagination': PagePagination$json,
   '.synctv.client.CursorPagination': CursorPagination$json,
+  '.synctv.source_config.PlaylistSourceConfig': $1.PlaylistSourceConfig$json,
+  '.synctv.source_config.BilibiliPlaylistSourceConfig':
+      $1.BilibiliPlaylistSourceConfig$json,
+  '.synctv.source_config.BilibiliVideoPartsPlaylistSource':
+      $1.BilibiliVideoPartsPlaylistSource$json,
+  '.synctv.source_config.BilibiliPopularPlaylistSource':
+      $1.BilibiliPopularPlaylistSource$json,
+  '.synctv.source_config.BilibiliRecommendedPlaylistSource':
+      $1.BilibiliRecommendedPlaylistSource$json,
+  '.synctv.source_config.BilibiliUpVideosPlaylistSource':
+      $1.BilibiliUpVideosPlaylistSource$json,
+  '.synctv.source_config.BilibiliFavoriteVideosPlaylistSource':
+      $1.BilibiliFavoriteVideosPlaylistSource$json,
+  '.synctv.source_config.BilibiliCollectionVideosPlaylistSource':
+      $1.BilibiliCollectionVideosPlaylistSource$json,
+  '.synctv.source_config.BilibiliSeriesVideosPlaylistSource':
+      $1.BilibiliSeriesVideosPlaylistSource$json,
+  '.synctv.source_config.BilibiliWatchLaterPlaylistSource':
+      $1.BilibiliWatchLaterPlaylistSource$json,
+  '.synctv.source_config.BilibiliPgcSeasonPlaylistSource':
+      $1.BilibiliPgcSeasonPlaylistSource$json,
+  '.synctv.source_config.BilibiliLiveRecommendedPlaylistSource':
+      $1.BilibiliLiveRecommendedPlaylistSource$json,
+  '.synctv.source_config.BilibiliLiveFollowedPlaylistSource':
+      $1.BilibiliLiveFollowedPlaylistSource$json,
+  '.synctv.source_config.BilibiliLiveAreaPlaylistSource':
+      $1.BilibiliLiveAreaPlaylistSource$json,
+  '.synctv.source_config.BilibiliHistoryPlaylistSource':
+      $1.BilibiliHistoryPlaylistSource$json,
+  '.synctv.source_config.BilibiliPgcTimelinePlaylistSource':
+      $1.BilibiliPgcTimelinePlaylistSource$json,
+  '.synctv.source_config.AlistPlaylistSourceConfig':
+      $1.AlistPlaylistSourceConfig$json,
+  '.synctv.source_config.EmbyPlaylistSourceConfig':
+      $1.EmbyPlaylistSourceConfig$json,
+  '.synctv.source_config.EmbyFolderPlaylistSource':
+      $1.EmbyFolderPlaylistSource$json,
+  '.synctv.source_config.EmbyFavoriteItemsPlaylistSource':
+      $1.EmbyFavoriteItemsPlaylistSource$json,
+  '.synctv.source_config.EmbyFavoritePeoplePlaylistSource':
+      $1.EmbyFavoritePeoplePlaylistSource$json,
+  '.synctv.source_config.EmbyPersonItemsPlaylistSource':
+      $1.EmbyPersonItemsPlaylistSource$json,
+  '.synctv.source_config.EmbyContinueWatchingPlaylistSource':
+      $1.EmbyContinueWatchingPlaylistSource$json,
+  '.synctv.source_config.EmbyNextUpPlaylistSource':
+      $1.EmbyNextUpPlaylistSource$json,
+  '.synctv.source_config.EmbyRecentlyAddedPlaylistSource':
+      $1.EmbyRecentlyAddedPlaylistSource$json,
+  '.synctv.source_config.EmbyPlaylistsPlaylistSource':
+      $1.EmbyPlaylistsPlaylistSource$json,
+  '.synctv.source_config.EmbyCollectionsPlaylistSource':
+      $1.EmbyCollectionsPlaylistSource$json,
+  '.synctv.source_config.EmbyGenresPlaylistSource':
+      $1.EmbyGenresPlaylistSource$json,
+  '.synctv.source_config.EmbyGenreItemsPlaylistSource':
+      $1.EmbyGenreItemsPlaylistSource$json,
+  '.synctv.source_config.CloudrevePlaylistSourceConfig':
+      $1.CloudrevePlaylistSourceConfig$json,
+  '.synctv.source_config.TwitchPlaylistSourceConfig':
+      $1.TwitchPlaylistSourceConfig$json,
+  '.synctv.source_config.TwitchPlaylistSourceConfig.Channel':
+      $1.TwitchPlaylistSourceConfig_Channel$json,
+  '.synctv.source_config.TwitchPlaylistSourceConfig.FollowedLive':
+      $1.TwitchPlaylistSourceConfig_FollowedLive$json,
+  '.synctv.source_config.TwitchPlaylistSourceConfig.CategoryLive':
+      $1.TwitchPlaylistSourceConfig_CategoryLive$json,
+  '.synctv.source_config.TwitchPlaylistSourceConfig.SearchLive':
+      $1.TwitchPlaylistSourceConfig_SearchLive$json,
+  '.synctv.source_config.DouyinPlaylistSourceConfig':
+      $1.DouyinPlaylistSourceConfig$json,
+  '.synctv.source_config.FnosPlaylistSourceConfig':
+      $1.FnosPlaylistSourceConfig$json,
+  '.synctv.source_config.FnosFilesPlaylistSourceConfig':
+      $1.FnosFilesPlaylistSourceConfig$json,
+  '.synctv.source_config.FnosMediaLibraryPlaylistSourceConfig':
+      $1.FnosMediaLibraryPlaylistSourceConfig$json,
+  '.synctv.source_config.FnosFavoritesPlaylistSourceConfig':
+      $1.FnosFavoritesPlaylistSourceConfig$json,
+  '.synctv.source_config.FnosHistoryPlaylistSourceConfig':
+      $1.FnosHistoryPlaylistSourceConfig$json,
+  '.synctv.source_config.QnapPlaylistSourceConfig':
+      $1.QnapPlaylistSourceConfig$json,
+  '.synctv.source_config.SynologyPlaylistSourceConfig':
+      $1.SynologyPlaylistSourceConfig$json,
+  '.synctv.source_config.SynologyFilesPlaylistSourceConfig':
+      $1.SynologyFilesPlaylistSourceConfig$json,
+  '.synctv.source_config.SynologyMoviesPlaylistSourceConfig':
+      $1.SynologyMoviesPlaylistSourceConfig$json,
+  '.synctv.source_config.SynologyTvShowsPlaylistSourceConfig':
+      $1.SynologyTvShowsPlaylistSourceConfig$json,
+  '.synctv.source_config.SynologyEpisodesPlaylistSourceConfig':
+      $1.SynologyEpisodesPlaylistSourceConfig$json,
+  '.synctv.source_config.SynologyHomeVideosPlaylistSourceConfig':
+      $1.SynologyHomeVideosPlaylistSourceConfig$json,
+  '.synctv.source_config.SynologyTvRecordingsPlaylistSourceConfig':
+      $1.SynologyTvRecordingsPlaylistSourceConfig$json,
+  '.synctv.source_config.NextcloudPlaylistSourceConfig':
+      $1.NextcloudPlaylistSourceConfig$json,
+  '.synctv.source_config.NextcloudFolderPlaylistSourceConfig':
+      $1.NextcloudFolderPlaylistSourceConfig$json,
+  '.synctv.source_config.NextcloudFavoritesPlaylistSourceConfig':
+      $1.NextcloudFavoritesPlaylistSourceConfig$json,
+  '.synctv.source_config.NextcloudSearchPlaylistSourceConfig':
+      $1.NextcloudSearchPlaylistSourceConfig$json,
+  '.synctv.source_config.SeafilePlaylistSourceConfig':
+      $1.SeafilePlaylistSourceConfig$json,
+  '.synctv.source_config.SeafileFolderPlaylistSourceConfig':
+      $1.SeafileFolderPlaylistSourceConfig$json,
+  '.synctv.source_config.SeafileStarredPlaylistSourceConfig':
+      $1.SeafileStarredPlaylistSourceConfig$json,
+  '.synctv.source_config.SeafileSearchPlaylistSourceConfig':
+      $1.SeafileSearchPlaylistSourceConfig$json,
+  '.synctv.source_config.TrueNasPlaylistSourceConfig':
+      $1.TrueNasPlaylistSourceConfig$json,
+  '.synctv.source_config.TrueNasFolderPlaylistSourceConfig':
+      $1.TrueNasFolderPlaylistSourceConfig$json,
+  '.synctv.source_config.TrueNasSearchPlaylistSourceConfig':
+      $1.TrueNasSearchPlaylistSourceConfig$json,
+  '.synctv.source_config.YoutubePlaylistSourceConfig':
+      $1.YoutubePlaylistSourceConfig$json,
+  '.synctv.source_config.YoutubePlaylistSourceConfig.Playlist':
+      $1.YoutubePlaylistSourceConfig_Playlist$json,
+  '.synctv.source_config.YoutubePlaylistSourceConfig.Channel':
+      $1.YoutubePlaylistSourceConfig_Channel$json,
+  '.synctv.source_config.YoutubePlaylistSourceConfig.Search':
+      $1.YoutubePlaylistSourceConfig_Search$json,
+  '.synctv.source_config.YoutubePlaylistSourceConfig.Trending':
+      $1.YoutubePlaylistSourceConfig_Trending$json,
+  '.synctv.source_config.YoutubePlaylistSourceConfig.Subscriptions':
+      $1.YoutubePlaylistSourceConfig_Subscriptions$json,
+  '.synctv.source_config.YoutubePlaylistSourceConfig.LikedVideos':
+      $1.YoutubePlaylistSourceConfig_LikedVideos$json,
+  '.synctv.source_config.YoutubePlaylistSourceConfig.WatchLater':
+      $1.YoutubePlaylistSourceConfig_WatchLater$json,
+  '.synctv.source_config.TikTokPlaylistSourceConfig':
+      $1.TikTokPlaylistSourceConfig$json,
   '.synctv.client.ObserveRoomMemberEvents': ObserveRoomMemberEvents$json,
   '.synctv.client.ObserveChatEvents': ObserveChatEvents$json,
   '.synctv.client.ObserveOnlineCount': ObserveOnlineCount$json,
@@ -16355,15 +18941,30 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.DirectUrlPlaybackMetadata': DirectUrlPlaybackMetadata$json,
   '.synctv.client.LiveProxyPlaybackMetadata': LiveProxyPlaybackMetadata$json,
   '.synctv.client.LivePlaybackMetadata': LivePlaybackMetadata$json,
+  '.synctv.client.TwitchPlaybackMetadata': TwitchPlaybackMetadata$json,
+  '.synctv.client.TwitchChapterMetadata': TwitchChapterMetadata$json,
+  '.synctv.client.YoutubePlaybackMetadata': YoutubePlaybackMetadata$json,
+  '.synctv.client.DouyinPlaybackMetadata': DouyinPlaybackMetadata$json,
+  '.synctv.client.TikTokPlaybackMetadata': TikTokPlaybackMetadata$json,
+  '.synctv.client.HuyaPlaybackMetadata': HuyaPlaybackMetadata$json,
+  '.synctv.client.DouyuPlaybackMetadata': DouyuPlaybackMetadata$json,
+  '.synctv.client.AcFunPlaybackMetadata': AcFunPlaybackMetadata$json,
+  '.synctv.client.CctvPlaybackMetadata': CctvPlaybackMetadata$json,
+  '.synctv.client.CctvChapterMetadata': CctvChapterMetadata$json,
+  '.synctv.client.FnosPlaybackMetadata': FnosPlaybackMetadata$json,
+  '.synctv.client.FnosFilePlaybackMetadata': FnosFilePlaybackMetadata$json,
+  '.synctv.client.FnosMediaPlaybackMetadata': FnosMediaPlaybackMetadata$json,
+  '.synctv.client.FnosAudioTrackMetadata': FnosAudioTrackMetadata$json,
+  '.synctv.client.FnosSubtitleTrackMetadata': FnosSubtitleTrackMetadata$json,
+  '.synctv.client.QnapPlaybackMetadata': QnapPlaybackMetadata$json,
+  '.synctv.client.SynologyPlaybackMetadata': SynologyPlaybackMetadata$json,
+  '.synctv.client.SynologyAudioTrackMetadata': SynologyAudioTrackMetadata$json,
+  '.synctv.client.SynologySubtitleMetadata': SynologySubtitleMetadata$json,
+  '.synctv.client.NextcloudPlaybackMetadata': NextcloudPlaybackMetadata$json,
+  '.synctv.client.SeafilePlaybackMetadata': SeafilePlaybackMetadata$json,
+  '.synctv.client.TrueNasPlaybackMetadata': TrueNasPlaybackMetadata$json,
   '.synctv.client.ListPlaylistItemsResponse': ListPlaylistItemsResponse$json,
   '.synctv.client.Playlist': Playlist$json,
-  '.synctv.source_config.PlaylistSourceConfig': $1.PlaylistSourceConfig$json,
-  '.synctv.source_config.AlistPlaylistSourceConfig':
-      $1.AlistPlaylistSourceConfig$json,
-  '.synctv.source_config.EmbyPlaylistSourceConfig':
-      $1.EmbyPlaylistSourceConfig$json,
-  '.synctv.source_config.CloudrevePlaylistSourceConfig':
-      $1.CloudrevePlaylistSourceConfig$json,
   '.synctv.client.Media': Media$json,
   '.synctv.client.ResourceMetadata': ResourceMetadata$json,
   '.synctv.source_config.MediaSourceConfig': $1.MediaSourceConfig$json,
@@ -16397,6 +18998,58 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       $1.LiveProxyMediaSourceConfig$json,
   '.synctv.source_config.CloudreveMediaSourceConfig':
       $1.CloudreveMediaSourceConfig$json,
+  '.synctv.source_config.TwitchMediaSourceConfig':
+      $1.TwitchMediaSourceConfig$json,
+  '.synctv.source_config.TwitchLiveSourceConfig':
+      $1.TwitchLiveSourceConfig$json,
+  '.synctv.source_config.TwitchVideoSourceConfig':
+      $1.TwitchVideoSourceConfig$json,
+  '.synctv.source_config.TwitchClipSourceConfig':
+      $1.TwitchClipSourceConfig$json,
+  '.synctv.source_config.HuyaMediaSourceConfig': $1.HuyaMediaSourceConfig$json,
+  '.synctv.source_config.HuyaLiveSourceConfig': $1.HuyaLiveSourceConfig$json,
+  '.synctv.source_config.HuyaVideoSourceConfig': $1.HuyaVideoSourceConfig$json,
+  '.synctv.source_config.DouyuMediaSourceConfig':
+      $1.DouyuMediaSourceConfig$json,
+  '.synctv.source_config.DouyinMediaSourceConfig':
+      $1.DouyinMediaSourceConfig$json,
+  '.synctv.source_config.DouyinVideoSourceConfig':
+      $1.DouyinVideoSourceConfig$json,
+  '.synctv.source_config.DouyinLiveSourceConfig':
+      $1.DouyinLiveSourceConfig$json,
+  '.synctv.source_config.AcFunMediaSourceConfig':
+      $1.AcFunMediaSourceConfig$json,
+  '.synctv.source_config.AcFunVideoSourceConfig':
+      $1.AcFunVideoSourceConfig$json,
+  '.synctv.source_config.AcFunBangumiSourceConfig':
+      $1.AcFunBangumiSourceConfig$json,
+  '.synctv.source_config.AcFunLiveSourceConfig': $1.AcFunLiveSourceConfig$json,
+  '.synctv.source_config.CctvMediaSourceConfig': $1.CctvMediaSourceConfig$json,
+  '.synctv.source_config.FnosMediaSourceConfig': $1.FnosMediaSourceConfig$json,
+  '.synctv.source_config.FnosFileSourceConfig': $1.FnosFileSourceConfig$json,
+  '.synctv.source_config.FnosLibraryItemSourceConfig':
+      $1.FnosLibraryItemSourceConfig$json,
+  '.synctv.source_config.QnapMediaSourceConfig': $1.QnapMediaSourceConfig$json,
+  '.synctv.source_config.SynologyMediaSourceConfig':
+      $1.SynologyMediaSourceConfig$json,
+  '.synctv.source_config.SynologyFileSourceConfig':
+      $1.SynologyFileSourceConfig$json,
+  '.synctv.source_config.SynologyLibraryItemSourceConfig':
+      $1.SynologyLibraryItemSourceConfig$json,
+  '.synctv.source_config.NextcloudMediaSourceConfig':
+      $1.NextcloudMediaSourceConfig$json,
+  '.synctv.source_config.SeafileMediaSourceConfig':
+      $1.SeafileMediaSourceConfig$json,
+  '.synctv.source_config.TrueNasMediaSourceConfig':
+      $1.TrueNasMediaSourceConfig$json,
+  '.synctv.source_config.YoutubeMediaSourceConfig':
+      $1.YoutubeMediaSourceConfig$json,
+  '.synctv.source_config.TikTokMediaSourceConfig':
+      $1.TikTokMediaSourceConfig$json,
+  '.synctv.source_config.TikTokVideoSourceConfig':
+      $1.TikTokVideoSourceConfig$json,
+  '.synctv.source_config.TikTokLiveSourceConfig':
+      $1.TikTokLiveSourceConfig$json,
   '.synctv.client.MediaCover': MediaCover$json,
   '.synctv.client.MediaThumbnail': MediaThumbnail$json,
   '.synctv.client.PlaylistItem': PlaylistItem$json,

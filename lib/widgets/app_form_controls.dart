@@ -2908,6 +2908,7 @@ class AppImageThumbnail extends StatelessWidget {
   final Widget? errorChild;
   final List<BoxShadow>? boxShadow;
   final String? semanticLabel;
+  final Map<String, String>? headers;
 
   const AppImageThumbnail({
     super.key,
@@ -2920,6 +2921,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorChild,
     this.boxShadow,
     this.semanticLabel,
+    this.headers,
   }) : assetName = null,
        bytes = null,
        file = null;
@@ -2935,6 +2937,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorChild,
     this.boxShadow,
     this.semanticLabel,
+    this.headers,
   }) : url = null,
        bytes = null,
        file = null;
@@ -2950,6 +2953,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorChild,
     this.boxShadow,
     this.semanticLabel,
+    this.headers,
   }) : url = null,
        assetName = null,
        file = null;
@@ -2965,6 +2969,7 @@ class AppImageThumbnail extends StatelessWidget {
     this.errorChild,
     this.boxShadow,
     this.semanticLabel,
+    this.headers,
   }) : url = null,
        assetName = null,
        bytes = null;
@@ -2976,6 +2981,7 @@ class AppImageThumbnail extends StatelessWidget {
     final image = switch ((url, assetName, bytes, file)) {
       (final String value, null, null, null) => Image.network(
         value,
+        headers: headers,
         width: width,
         height: height,
         fit: fit,

@@ -50,12 +50,24 @@ SyncTV 是一款跨平台的视频同步观看应用，允许用户创建或加�
 *   **电影/视频库**：支持添加和管理房间内的视频资源。
 *   **目录浏览**：支持层级目录结构的视频资源浏览。
 *   **链接解析**：支持直接添加网络视频链接（如 HLS/M3U8）。
+*   **Typed Provider 来源**：解析、预览和目录条目直接携带服务端 protobuf source config，支持选择部分媒体或创建动态播放列表。
 
-### 5. 个性化体验
+### 5. 媒体 Provider
+
+| 类型 | Provider 与能力 |
+|:---|:---|
+| 视频与直播平台 | Bilibili、Twitch、YouTube、抖音、TikTok、虎牙、斗鱼、AcFun、CCTV；支持 URL/ID 解析、原生清晰度、封面，以及平台可用的字幕、弹幕、聊天、章节或 Storyboard |
+| 媒体服务器与文件服务 | Emby/Jellyfin、Alist、Cloudreve；支持账号绑定、目录/搜索、缩略图、字幕、转码和动态来源 |
+| NAS 与私有云 | FNOS、QNAP、Synology、Nextcloud、Seafile、TrueNAS；支持文件浏览、搜索、Preview/thumbnail，以及设备提供的媒体库、转码、收藏和播放进度能力 |
+| 通用来源 | Direct URL、RTMP、Live Proxy；支持自定义 header、Range、HLS/FLV 和房间直播 |
+
+App 会根据 Provider instance 的绑定能力控制账号来源。例如 Twitch Followed Live 需要 `user:read:follows` scope；YouTube 订阅、喜欢和稍后观看需要 Cookie。`使用房主凭据` 由用户在创建来源时选择。
+
+### 6. 个性化体验
 *   **深色模式**：自动适配系统深色/浅色模式，或强制纯白主题。
 *   **自定义配置**：支持长按标题修改服务器地址，方便私有化部署连接。
 
-### 6. 投屏功能
+### 7. 投屏功能
 *   **支持投屏**：支持将视频同步到其他设备（如 TV、智能电视、手机等）进行播放。
 *   **投屏控制**：在投屏设备上可控制视频播放（暂停、播放、快进等）。
 
@@ -85,6 +97,56 @@ bash tool/generate_proto.sh
 ```
 
 生成脚本只读取当前项目的 `proto/`，不会引用服务端仓库路径。
+
+### 4. 运行与验证
+
+```bash
+flutter pub get
+dart analyze
+flutter test
+flutter run
+```
+
+运行 App 前先启动 SyncTV 后端。首页长按 `SyncTV` 标题可以切换服务器根地址。
+
+## Provider 使用
+
+1. 在账号中心打开平台绑定。
+2. 选择 Provider 和 Provider instance，完成账号、Cookie、token、API key 或 NAS 登录。
+3. 进入房间媒体库并打开添加媒体。
+4. 输入 URL/ID，或使用热门、分类、收藏、历史、搜索和目录浏览入口。
+5. 预览服务端返回的资源，选择单个/部分条目，或创建完整动态播放列表。
+6. 播放页根据 Provider 返回的 mode 选择清晰度、直连或 proxy。
+
+Bilibili 支持多 P、热门、推荐、UP、收藏、合集、系列、稍后观看、历史、追番、番剧时间表/索引和直播来源。Twitch 支持直播、VOD、Clip、频道归档、关注/分类/搜索直播和排期。YouTube 支持视频、播放列表、频道 Videos/Shorts/Live、搜索、热门与账号 feed。
+
+完整说明见后端文档站的 [Provider 使用手册](https://github.com/synctv-org/synctv/blob/main/docs/src/content/docs/use/provider-guide.mdx)。
+
+## 开发结构
+
+| 目录 | 职责 |
+|:---|:---|
+| `proto/` | 当前 SyncTV 公开 protobuf 源文件 |
+| `lib/src/generated/proto/` | `tool/generate_proto.sh` 生成的 Dart protobuf |
+| `lib/models/` | Provider domain model、typed source-config helper 和 codec |
+| `lib/services/synctv_api_facades.dart` | protobuf HTTP facade |
+| `lib/services/synctv_provider_service.dart` | Provider protobuf 到 App domain 的映射 |
+| `lib/services/synctv_service.dart` | UI 使用的稳定 service 入口 |
+| `lib/widgets/platform_binding_dialog.dart` | Provider 绑定、能力显示和解绑 |
+| `lib/widgets/add_media/` | 每个 Provider 独立的解析、预览、选择和创建流程 |
+| `test/models/`、`test/services/`、`test/widgets/` | codec、service 与 Widget 回归测试 |
+
+新增 Provider UI 时按以下顺序接入：
+
+1. 同步服务端 `synctv-proto/proto` 到 App `proto/` 并生成代码。
+2. 为该 Provider 创建独立 source-config helper 和 domain model。
+3. 在 `SourceConfigCodec` 增加 protobuf/map 双向 round trip。
+4. 接入 API facade、Provider domain service 和 `SyncTvService`。
+5. 在平台绑定页实现凭据和 capability 流程。
+6. 在 `widgets/add_media/` 创建独立表单与预览组件。
+7. 添加 codec、service、Widget 和 UI guard 测试。
+
+Provider 的 DTO、分页和产品状态保持独立。App 使用服务端返回的 typed source config，并把 shared scope 作为创建时的用户选择。完整跨层流程见 [Provider 开发指南](https://github.com/synctv-org/synctv/blob/main/docs/src/content/docs/develop/provider-development.mdx)。
 
 ## ⚙️ 隐藏功能
 *   **修改服务器地址**：在首页长按顶部 "SyncTV" 标题，即可弹出服务器配置对话框，支持连接到私有部署的 SyncTV 后端。

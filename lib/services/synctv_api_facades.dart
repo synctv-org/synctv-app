@@ -3075,6 +3075,558 @@ class SyncTvCloudreveProviderApi {
   );
 }
 
+class SyncTvTwitchProviderApi {
+  SyncTvTwitchProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<twitch.BindResponse> bind(twitch.BindRequest request) => _api._send(
+    'POST',
+    '/api/providers/twitch/bind',
+    twitch.BindResponse.create,
+    body: request,
+  );
+
+  Future<twitch.GetBindsResponse> getBinds(twitch.GetBindsRequest request) =>
+      _api._send(
+        'GET',
+        '/api/providers/twitch/binds',
+        twitch.GetBindsResponse.create,
+        query: _api._messageQuery(request),
+      );
+
+  Future<twitch.UnbindResponse> unbind(twitch.UnbindRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/twitch/unbind',
+        twitch.UnbindResponse.create,
+        body: request,
+      );
+
+  Future<twitch.ResolveResponse> resolve(twitch.ResolveRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/twitch/resolve',
+        twitch.ResolveResponse.create,
+        body: request,
+      );
+
+  Future<twitch.ListChannelItemsResponse> listChannelItems(
+    twitch.ListChannelItemsRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/twitch/channel-items',
+    twitch.ListChannelItemsResponse.create,
+    body: request,
+  );
+
+  Future<twitch.ListFollowedLiveResponse> listFollowedLive(
+    twitch.ListFollowedLiveRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/twitch/followed-live',
+    twitch.ListFollowedLiveResponse.create,
+    body: request,
+  );
+
+  Future<twitch.ListCategoryStreamsResponse> listCategoryStreams(
+    twitch.ListCategoryStreamsRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/twitch/category-streams',
+    twitch.ListCategoryStreamsResponse.create,
+    body: request,
+  );
+
+  Future<twitch.ListTopCategoriesResponse> listTopCategories(
+    twitch.ListTopCategoriesRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/twitch/top-categories',
+    twitch.ListTopCategoriesResponse.create,
+    body: request,
+  );
+
+  Future<twitch.SearchLiveChannelsResponse> searchLiveChannels(
+    twitch.SearchLiveChannelsRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/twitch/search-live',
+    twitch.SearchLiveChannelsResponse.create,
+    body: request,
+  );
+
+  Future<twitch.ListScheduleResponse> listSchedule(
+    twitch.ListScheduleRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/twitch/schedule',
+    twitch.ListScheduleResponse.create,
+    body: request,
+  );
+}
+
+class SyncTvHuyaProviderApi {
+  SyncTvHuyaProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<huya.ResolveResponse> resolve(huya.ResolveRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/huya/resolve',
+        huya.ResolveResponse.create,
+        body: request,
+      );
+}
+
+class SyncTvDouyuProviderApi {
+  SyncTvDouyuProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<douyu.ResolveResponse> resolve(douyu.ResolveRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/douyu/resolve',
+        douyu.ResolveResponse.create,
+        body: request,
+      );
+}
+
+class SyncTvAcFunProviderApi {
+  SyncTvAcFunProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<acfun.ResolveResponse> resolve(acfun.ResolveRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/acfun/resolve',
+        acfun.ResolveResponse.create,
+        body: request,
+      );
+}
+
+class SyncTvCctvProviderApi {
+  SyncTvCctvProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<cctv.ResolveResponse> resolve(cctv.ResolveRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/cctv/resolve',
+        cctv.ResolveResponse.create,
+        body: request,
+      );
+}
+
+class SyncTvFnosProviderApi {
+  SyncTvFnosProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<fnos.LoginResponse> login(fnos.LoginRequest request) => _api._send(
+    'POST',
+    '/api/providers/fnos/login',
+    fnos.LoginResponse.create,
+    body: request,
+  );
+
+  Future<fnos.ListResponse> list(fnos.ListRequest request) => _api._send(
+    'POST',
+    '/api/providers/fnos/list',
+    fnos.ListResponse.create,
+    body: request,
+  );
+
+  Future<fnos.ListMediaLibrariesResponse> listMediaLibraries(
+    fnos.ListMediaLibrariesRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/fnos/media-libraries',
+    fnos.ListMediaLibrariesResponse.create,
+    body: request,
+  );
+
+  Future<fnos.ListMediaItemsResponse> listMediaItems(
+    fnos.ListMediaItemsRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/fnos/media-items',
+    fnos.ListMediaItemsResponse.create,
+    body: request,
+  );
+
+  Future<fnos.SetFavoriteResponse> setFavorite(
+    fnos.SetFavoriteRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/fnos/media-favorite',
+    fnos.SetFavoriteResponse.create,
+    body: request,
+  );
+
+  Future<fnos.SetWatchedResponse> setWatched(fnos.SetWatchedRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/fnos/media-watched',
+        fnos.SetWatchedResponse.create,
+        body: request,
+      );
+
+  Future<fnos.GetServerInfoResponse> getServerInfo(
+    fnos.GetServerInfoRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/fnos/server-info',
+    fnos.GetServerInfoResponse.create,
+    body: request,
+  );
+
+  Future<fnos.LogoutResponse> logout(fnos.LogoutRequest request) => _api._send(
+    'POST',
+    '/api/providers/fnos/logout',
+    fnos.LogoutResponse.create,
+    body: request,
+  );
+
+  Future<fnos.GetBindsResponse> getBinds(fnos.GetBindsRequest request) =>
+      _api._send(
+        'GET',
+        '/api/providers/fnos/binds',
+        fnos.GetBindsResponse.create,
+        query: _api._messageQuery(request),
+      );
+}
+
+class SyncTvYoutubeProviderApi {
+  SyncTvYoutubeProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<youtube.BindResponse> bind(youtube.BindRequest request) => _api._send(
+    'POST',
+    '/api/providers/youtube/bind',
+    youtube.BindResponse.create,
+    body: request,
+  );
+
+  Future<youtube.GetBindsResponse> getBinds(youtube.GetBindsRequest request) =>
+      _api._send(
+        'GET',
+        '/api/providers/youtube/binds',
+        youtube.GetBindsResponse.create,
+        query: _api._messageQuery(request),
+      );
+
+  Future<youtube.UnbindResponse> unbind(youtube.UnbindRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/youtube/unbind',
+        youtube.UnbindResponse.create,
+        body: request,
+      );
+
+  Future<youtube.ResolveResponse> resolve(youtube.ResolveRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/youtube/resolve',
+        youtube.ResolveResponse.create,
+        body: request,
+      );
+}
+
+class SyncTvDouyinProviderApi {
+  SyncTvDouyinProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<douyin.BindResponse> bind(douyin.BindRequest request) => _api._send(
+    'POST',
+    '/api/providers/douyin/bind',
+    douyin.BindResponse.create,
+    body: request,
+  );
+
+  Future<douyin.GetBindsResponse> getBinds(douyin.GetBindsRequest request) =>
+      _api._send(
+        'GET',
+        '/api/providers/douyin/binds',
+        douyin.GetBindsResponse.create,
+        query: _api._messageQuery(request),
+      );
+
+  Future<douyin.UnbindResponse> unbind(douyin.UnbindRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/douyin/unbind',
+        douyin.UnbindResponse.create,
+        body: request,
+      );
+
+  Future<douyin.ResolveResponse> resolve(douyin.ResolveRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/douyin/resolve',
+        douyin.ResolveResponse.create,
+        body: request,
+      );
+
+  Future<douyin.ListUserPostsResponse> listUserPosts(
+    douyin.ListUserPostsRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/douyin/user-posts',
+    douyin.ListUserPostsResponse.create,
+    body: request,
+  );
+}
+
+class SyncTvTikTokProviderApi {
+  SyncTvTikTokProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<tiktok.BindResponse> bind(tiktok.BindRequest request) => _api._send(
+    'POST',
+    '/api/providers/tiktok/bind',
+    tiktok.BindResponse.create,
+    body: request,
+  );
+
+  Future<tiktok.GetBindsResponse> getBinds(tiktok.GetBindsRequest request) =>
+      _api._send(
+        'GET',
+        '/api/providers/tiktok/binds',
+        tiktok.GetBindsResponse.create,
+        query: _api._messageQuery(request),
+      );
+
+  Future<tiktok.UnbindResponse> unbind(tiktok.UnbindRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/tiktok/unbind',
+        tiktok.UnbindResponse.create,
+        body: request,
+      );
+
+  Future<tiktok.ResolveResponse> resolve(tiktok.ResolveRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/tiktok/resolve',
+        tiktok.ResolveResponse.create,
+        body: request,
+      );
+
+  Future<tiktok.GetUserResponse> getUser(tiktok.GetUserRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/tiktok/user',
+        tiktok.GetUserResponse.create,
+        body: request,
+      );
+
+  Future<tiktok.ListUserPostsResponse> listUserPosts(
+    tiktok.ListUserPostsRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/tiktok/user-posts',
+    tiktok.ListUserPostsResponse.create,
+    body: request,
+  );
+}
+
+class SyncTvQnapProviderApi {
+  SyncTvQnapProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<qnap.LoginResponse> login(qnap.LoginRequest request) => _api._send(
+    'POST',
+    '/api/providers/qnap/login',
+    qnap.LoginResponse.create,
+    body: request,
+  );
+
+  Future<qnap.ListResponse> list(qnap.ListRequest request) => _api._send(
+    'POST',
+    '/api/providers/qnap/list',
+    qnap.ListResponse.create,
+    body: request,
+  );
+
+  Future<qnap.GetCapabilitiesResponse> getCapabilities(
+    qnap.GetCapabilitiesRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/qnap/capabilities',
+    qnap.GetCapabilitiesResponse.create,
+    body: request,
+  );
+
+  Future<qnap.LogoutResponse> logout(qnap.LogoutRequest request) => _api._send(
+    'POST',
+    '/api/providers/qnap/logout',
+    qnap.LogoutResponse.create,
+    body: request,
+  );
+
+  Future<qnap.GetBindsResponse> getBinds(qnap.GetBindsRequest request) =>
+      _api._send(
+        'GET',
+        '/api/providers/qnap/binds',
+        qnap.GetBindsResponse.create,
+        query: _api._messageQuery(request),
+      );
+}
+
+class SyncTvSynologyProviderApi {
+  SyncTvSynologyProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<synology.LoginResponse> login(synology.LoginRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/synology/login',
+        synology.LoginResponse.create,
+        body: request,
+      );
+
+  Future<synology.ListFilesResponse> listFiles(
+    synology.ListFilesRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/synology/files',
+    synology.ListFilesResponse.create,
+    body: request,
+  );
+
+  Future<synology.ListLibrariesResponse> listLibraries(
+    synology.ListLibrariesRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/synology/libraries',
+    synology.ListLibrariesResponse.create,
+    body: request,
+  );
+
+  Future<synology.ListVideoItemsResponse> listMovies(
+    synology.ListMoviesRequest request,
+  ) => _videoList('/api/providers/synology/movies', request);
+
+  Future<synology.ListVideoItemsResponse> listTvShows(
+    synology.ListTvShowsRequest request,
+  ) => _videoList('/api/providers/synology/tv-shows', request);
+
+  Future<synology.ListVideoItemsResponse> listEpisodes(
+    synology.ListEpisodesRequest request,
+  ) => _videoList('/api/providers/synology/episodes', request);
+
+  Future<synology.ListVideoItemsResponse> listHomeVideos(
+    synology.ListHomeVideosRequest request,
+  ) => _videoList('/api/providers/synology/home-videos', request);
+
+  Future<synology.ListVideoItemsResponse> listTvRecordings(
+    synology.ListTvRecordingsRequest request,
+  ) => _videoList('/api/providers/synology/tv-recordings', request);
+
+  Future<synology.ListVideoItemsResponse> _videoList(
+    String path,
+    GeneratedMessage request,
+  ) => _api._send(
+    'POST',
+    path,
+    synology.ListVideoItemsResponse.create,
+    body: request,
+  );
+
+  Future<synology.LogoutResponse> logout(synology.LogoutRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/synology/logout',
+        synology.LogoutResponse.create,
+        body: request,
+      );
+
+  Future<synology.GetBindsResponse> getBinds(
+    synology.GetBindsRequest request,
+  ) => _api._send(
+    'GET',
+    '/api/providers/synology/binds',
+    synology.GetBindsResponse.create,
+    query: _api._messageQuery(request),
+  );
+}
+
+class SyncTvNextcloudProviderApi {
+  SyncTvNextcloudProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<nextcloud.LoginResponse> login(nextcloud.LoginRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/nextcloud/login',
+        nextcloud.LoginResponse.create,
+        body: request,
+      );
+
+  Future<nextcloud.StartLoginFlowResponse> startLoginFlow(
+    nextcloud.StartLoginFlowRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/nextcloud/login-flow/start',
+    nextcloud.StartLoginFlowResponse.create,
+    body: request,
+  );
+
+  Future<nextcloud.LoginResponse> pollLoginFlow(
+    nextcloud.PollLoginFlowRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/nextcloud/login-flow/poll',
+    nextcloud.LoginResponse.create,
+    body: request,
+  );
+
+  Future<nextcloud.ListResponse> list(nextcloud.ListRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/nextcloud/list',
+        nextcloud.ListResponse.create,
+        body: request,
+      );
+
+  Future<nextcloud.ListResponse> listFavorites(
+    nextcloud.ListFavoritesRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/nextcloud/favorites',
+    nextcloud.ListResponse.create,
+    body: request,
+  );
+
+  Future<nextcloud.LogoutResponse> logout(nextcloud.LogoutRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/nextcloud/logout',
+        nextcloud.LogoutResponse.create,
+        body: request,
+      );
+
+  Future<nextcloud.GetBindsResponse> getBinds(
+    nextcloud.GetBindsRequest request,
+  ) => _api._send(
+    'GET',
+    '/api/providers/nextcloud/binds',
+    nextcloud.GetBindsResponse.create,
+    query: _api._messageQuery(request),
+  );
+}
+
 class SyncTvEmbyProviderApi {
   SyncTvEmbyProviderApi._(this._api);
 
@@ -3141,6 +3693,68 @@ class SyncTvBilibiliProviderApi {
       body: request,
     );
   }
+
+  Future<bilibili.ListLiveAreasResponse> listLiveAreas(
+    bilibili.ListLiveAreasRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/providers/bilibili/live/areas',
+      bilibili.ListLiveAreasResponse.create,
+      body: request,
+    );
+  }
+
+  Future<bilibili.ListFavoriteFoldersResponse> listFavoriteFolders(
+    bilibili.ListFavoriteFoldersRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/providers/bilibili/favorites',
+      bilibili.ListFavoriteFoldersResponse.create,
+      body: request,
+    );
+  }
+
+  Future<bilibili.ListFollowedPgcResponse> listFollowedPgc(
+    bilibili.ListFollowedPgcRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/providers/bilibili/pgc/followed',
+      bilibili.ListFollowedPgcResponse.create,
+      body: request,
+    );
+  }
+
+  Future<bilibili.ListHistoryResponse> listHistory(
+    bilibili.ListHistoryRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/providers/bilibili/history',
+      bilibili.ListHistoryResponse.create,
+      body: request,
+    );
+  }
+
+  Future<bilibili.ListPgcTimelineResponse> listPgcTimeline(
+    bilibili.ListPgcTimelineRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/bilibili/pgc/timeline',
+    bilibili.ListPgcTimelineResponse.create,
+    body: request,
+  );
+
+  Future<bilibili.ListPgcSeasonsResponse> listPgcSeasons(
+    bilibili.ListPgcSeasonsRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/bilibili/pgc/seasons',
+    bilibili.ListPgcSeasonsResponse.create,
+    body: request,
+  );
 
   Future<bilibili.QRCodeResponse> loginQR(bilibili.LoginQRRequest request) {
     return _api._send(
@@ -3217,6 +3831,107 @@ class SyncTvBilibiliProviderApi {
       query: _api._messageQuery(request),
     );
   }
+}
+
+class SyncTvSeafileProviderApi {
+  SyncTvSeafileProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<seafile.LoginResponse> login(seafile.LoginRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/seafile/login',
+        seafile.LoginResponse.create,
+        body: request,
+      );
+
+  Future<seafile.UnlockLibraryResponse> unlockLibrary(
+    seafile.UnlockLibraryRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/seafile/unlock-library',
+    seafile.UnlockLibraryResponse.create,
+    body: request,
+  );
+
+  Future<seafile.ListResponse> listRepositories(
+    seafile.ListRepositoriesRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/seafile/repositories',
+    seafile.ListResponse.create,
+    body: request,
+  );
+
+  Future<seafile.ListResponse> list(seafile.ListRequest request) => _api._send(
+    'POST',
+    '/api/providers/seafile/list',
+    seafile.ListResponse.create,
+    body: request,
+  );
+
+  Future<seafile.ListResponse> listStarred(
+    seafile.ListStarredRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/providers/seafile/starred',
+    seafile.ListResponse.create,
+    body: request,
+  );
+
+  Future<seafile.LogoutResponse> logout(seafile.LogoutRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/seafile/logout',
+        seafile.LogoutResponse.create,
+        body: request,
+      );
+
+  Future<seafile.GetBindsResponse> getBinds(seafile.GetBindsRequest request) =>
+      _api._send(
+        'GET',
+        '/api/providers/seafile/binds',
+        seafile.GetBindsResponse.create,
+        query: _api._messageQuery(request),
+      );
+}
+
+class SyncTvTrueNasProviderApi {
+  SyncTvTrueNasProviderApi._(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<truenas.LoginResponse> login(truenas.LoginRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/truenas/login',
+        truenas.LoginResponse.create,
+        body: request,
+      );
+
+  Future<truenas.ListResponse> list(truenas.ListRequest request) => _api._send(
+    'POST',
+    '/api/providers/truenas/list',
+    truenas.ListResponse.create,
+    body: request,
+  );
+
+  Future<truenas.LogoutResponse> logout(truenas.LogoutRequest request) =>
+      _api._send(
+        'POST',
+        '/api/providers/truenas/logout',
+        truenas.LogoutResponse.create,
+        body: request,
+      );
+
+  Future<truenas.GetBindsResponse> getBinds(truenas.GetBindsRequest request) =>
+      _api._send(
+        'GET',
+        '/api/providers/truenas/binds',
+        truenas.GetBindsResponse.create,
+        query: _api._messageQuery(request),
+      );
 }
 
 class SyncTvRtmpProviderApi {

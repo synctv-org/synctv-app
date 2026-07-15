@@ -178,6 +178,8 @@ class SyncTvRoomMediaDomainService {
     String? target,
     String search = '',
     String sourceProvider = '',
+    Map<String, dynamic>? previewSourceConfig,
+    source_config.PlaylistSourceConfig? typedPreviewSourceConfig,
     String providerInstanceName = '',
     client_enum.MediaListSortBy sortBy =
         client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
@@ -202,6 +204,14 @@ class SyncTvRoomMediaDomainService {
         sortDirection: sortDirection,
         availability: availability,
         refresh: refresh,
+        previewSourceConfig:
+            typedPreviewSourceConfig ??
+            (previewSourceConfig == null
+                ? null
+                : SourceConfigCodec.playlistSourceConfigFromMap(
+                    sourceProvider: sourceProvider,
+                    sourceConfig: previewSourceConfig,
+                  )),
       ),
     );
     return _mediaLibraryPageFromProto(response, parentId: playlistId);
@@ -280,6 +290,31 @@ class SyncTvRoomMediaDomainService {
           sourceProvider: sourceProvider,
           sourceConfig: sourceConfig,
         ),
+        providerInstanceName: providerInstanceName,
+        description: description,
+      ),
+    );
+    return _api.mapPlaylist(response);
+  }
+
+  Future<RoomPlaylistItem> createPlaylistFromSourceConfig(
+    String roomId, {
+    required String name,
+    required source_config.PlaylistSourceConfig sourceConfig,
+    String parentId = '',
+    String providerInstanceName = '',
+    String description = '',
+  }) async {
+    final provider = SourceConfigCodec.providerForPlaylistSourceConfig(
+      sourceConfig,
+    );
+    final response = await _api.room.createPlaylist(
+      roomId,
+      client.CreatePlaylistRequest(
+        name: name,
+        parentId: parentId,
+        sourceProvider: SourceConfigCodec.providerFromString(provider),
+        sourceConfig: sourceConfig,
         providerInstanceName: providerInstanceName,
         description: description,
       ),
@@ -870,6 +905,25 @@ class SyncTvRoomMediaDomainService {
     );
   }
 
+  Future<String> addMediaFromSourceConfig(
+    String roomId, {
+    String playlistId = '',
+    String providerInstanceName = '',
+    required source_config.MediaSourceConfig sourceConfig,
+    String name = '',
+  }) async {
+    final response = await _api.room.addMedia(
+      roomId,
+      client.AddMediaRequest(
+        playlistId: playlistId.isEmpty ? null : playlistId,
+        providerInstanceName: providerInstanceName,
+        sourceConfig: sourceConfig,
+        name: name,
+      ),
+    );
+    return response.id;
+  }
+
   Future<String> addAlistMedia(
     String roomId, {
     String playlistId = '',
@@ -923,6 +977,349 @@ class SyncTvRoomMediaDomainService {
       sourceProvider: 'cloudreve',
       providerInstanceName: providerInstanceName,
       sourceConfig: {'serverId': serverId, 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addFnosFileMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'fnos',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'type': 'file', 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addFnosMediaLibraryItem(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String itemGuid,
+    String mediaGuid = '',
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'fnos',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'serverId': serverId,
+        'type': 'libraryItem',
+        'itemGuid': itemGuid,
+        if (mediaGuid.isNotEmpty) 'mediaGuid': mediaGuid,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addQnapMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'qnap',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addNextcloudMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    required int fileId,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'nextcloud',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'path': path, 'fileId': fileId},
+      name: name,
+    );
+  }
+
+  Future<String> addSeafileMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String repositoryId,
+    required String path,
+    required String objectId,
+    required bool hasThumbnail,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'seafile',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'serverId': serverId,
+        'repositoryId': repositoryId,
+        'path': path,
+        'objectId': objectId,
+        'hasThumbnail': hasThumbnail,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addTrueNasMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'truenas',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addSynologyFileMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'synology',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'type': 'file', 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addSynologyLibraryMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String kind,
+    required int itemId,
+    required int fileId,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'synology',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'serverId': serverId,
+        'type': 'libraryItem',
+        'kind': kind,
+        'itemId': itemId,
+        'fileId': fileId,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addTwitchMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    final sourceConfig = <String, dynamic>{
+      'kind': kind,
+      switch (kind) {
+        'live' => 'channel',
+        'video' => 'videoId',
+        'clip' => 'slug',
+        _ => 'id',
+      }: id,
+      if (shared) 'shared': true,
+    };
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'twitch',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: sourceConfig,
+      name: name,
+    );
+  }
+
+  Future<String> addYoutubeMedia(
+    String roomId, {
+    String playlistId = '',
+    required String videoId,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'youtube',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'videoId': videoId, if (shared) 'shared': true},
+      name: name,
+    );
+  }
+
+  Future<String> addDouyinMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'douyin',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'kind': kind,
+        if (kind == 'live') 'webRid': id else 'awemeId': id,
+        if (shared) 'shared': true,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addTikTokMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _addMedia(
+    roomId,
+    playlistId: playlistId,
+    sourceProvider: 'tiktok',
+    providerInstanceName: providerInstanceName,
+    sourceConfig: {
+      'kind': kind,
+      if (kind == 'live') 'uniqueId': id else 'videoId': id,
+      if (shared) 'shared': true,
+    },
+    name: name,
+  );
+
+  Future<String> addHuyaMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'huya',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'kind': kind,
+        if (kind == 'video') 'videoId': id else 'roomId': id,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addDouyuMedia(
+    String roomId, {
+    String playlistId = '',
+    required String room,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'douyu',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'room': room},
+      name: name,
+    );
+  }
+
+  Future<String> addAcFunMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    String? episodeQuery,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'acfun',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'kind': kind,
+        switch (kind) {
+          'video' => 'videoId',
+          'bangumi' => 'bangumiId',
+          'live' => 'authorId',
+          _ => 'id',
+        }: id,
+        if (episodeQuery != null && episodeQuery.isNotEmpty)
+          'episodeQuery': episodeQuery,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addCctvMedia(
+    String roomId, {
+    String playlistId = '',
+    required String resource,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'cctv',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'resource': resource},
       name: name,
     );
   }

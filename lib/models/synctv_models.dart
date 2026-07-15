@@ -2,6 +2,8 @@ import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/services/synctv_clock.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config;
 
 class RoomCategoryInfo {
   final String id;
@@ -421,7 +423,14 @@ class RoomMediaEntry {
     final metadataUrl = _stringValue(metadata['url']);
     if (metadataUrl.isNotEmpty) return metadataUrl;
 
-    return _stringValue(metadata['source']);
+    final source = _stringValue(metadata['source']);
+    return _isPlaybackResource(source) ? source : '';
+  }
+
+  static bool _isPlaybackResource(String value) {
+    if (value.startsWith('/api/')) return true;
+    final scheme = Uri.tryParse(value)?.scheme.toLowerCase();
+    return const {'http', 'https', 'rtmp', 'rtmps'}.contains(scheme);
   }
 
   static String _stringValue(Object? value) =>
@@ -814,6 +823,11 @@ class RoomMediaEntry {
   static bool _isStreamDanmu(client.PlaybackDanmaku danmaku) {
     final format = danmaku.format.trim().toLowerCase();
     if (format == 'synctv-bilibili-live') return true;
+    if (format == 'synctv-twitch-live') return true;
+    if (format == 'synctv-huya-live') return true;
+    if (format == 'synctv-douyu-live') return true;
+    if (format == 'synctv-douyin-live') return true;
+    if (format == 'synctv-acfun-live') return true;
     return danmaku.url.contains('/live-danmaku/');
   }
 }
@@ -875,7 +889,12 @@ class RoomDynamicMediaEntry extends RoomMediaEntry {
     required super.isFolder,
     super.coverUrl,
     super.metadata,
+    this.mediaSourceConfig,
+    this.playlistSourceConfig,
   }) : super(url: '');
+
+  final source_config.MediaSourceConfig? mediaSourceConfig;
+  final source_config.PlaylistSourceConfig? playlistSourceConfig;
 }
 
 class RoomPlaybackEntry extends RoomMediaEntry {

@@ -2562,6 +2562,87 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   onTap: () =>
                       PlatformBindingDialog.show(context, initialIndex: 3),
                 ),
+                _MediaProviderBindCard(
+                  label: 'Twitch',
+                  description: '连接 Twitch 账号并播放直播、VOD 与 Clip',
+                  icon: Icons.live_tv_rounded,
+                  color: const Color(0xFF9146FF),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 4),
+                ),
+                _MediaProviderBindCard(
+                  label: 'FNOS',
+                  description: '连接 FNOS 文件与影视媒体库',
+                  icon: Icons.storage_rounded,
+                  color: const Color(0xFF087F5B),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 5),
+                ),
+                _MediaProviderBindCard(
+                  label: 'QNAP',
+                  description: '连接 QTS / QuTS hero File Station',
+                  icon: Icons.storage_rounded,
+                  color: const Color(0xFF0076A8),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 6),
+                ),
+                _MediaProviderBindCard(
+                  label: 'Synology DSM',
+                  description: '连接 File Station 与 Video Station',
+                  icon: Icons.video_library_rounded,
+                  color: const Color(0xFF1578D3),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 7),
+                ),
+                _MediaProviderBindCard(
+                  label: 'Nextcloud',
+                  description: '连接 Nextcloud 文件、收藏与搜索媒体',
+                  icon: Icons.cloud_outlined,
+                  color: const Color(0xFF0082C9),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 8),
+                ),
+                _MediaProviderBindCard(
+                  label: 'Seafile',
+                  description: '连接 Seafile 资料库、星标与搜索媒体',
+                  icon: Icons.cloud_queue_rounded,
+                  color: const Color(0xFFED7109),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 9),
+                ),
+                _MediaProviderBindCard(
+                  label: 'TrueNAS',
+                  description: '连接 TrueNAS ZFS 文件系统媒体',
+                  icon: Icons.dns_rounded,
+                  color: const Color(0xFF0095D5),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 10),
+                ),
+                _MediaProviderBindCard(
+                  label: 'YouTube',
+                  description:
+                      '连接 Cookie、Visitor Data 或 PO Token 并播放视频、直播与动态列表',
+                  icon: Icons.smart_display_rounded,
+                  color: const Color(0xFFFF0033),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 11),
+                ),
+                _MediaProviderBindCard(
+                  label: 'Douyin',
+                  description: '连接 Cookie 并播放短视频、直播、弹幕与用户作品列表',
+                  icon: Icons.music_video_rounded,
+                  color: const Color(0xFF00AFA7),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 12),
+                ),
+                _MediaProviderBindCard(
+                  label: 'TikTok',
+                  description: '连接 Cookie 并播放视频、直播、字幕与用户作品列表',
+                  icon: Icons.music_video_rounded,
+                  color: const Color(0xFFFE2C55),
+                  onTap: () =>
+                      PlatformBindingDialog.show(context, initialIndex: 13),
+                ),
               ];
               if (compact) {
                 return Column(
@@ -2573,12 +2654,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   ],
                 );
               }
-              return Row(
+              final cardWidth = (constraints.maxWidth - 20) / 3;
+              return Wrap(
+                spacing: 10,
+                runSpacing: 10,
                 children: [
-                  for (final card in cards) ...[
-                    Expanded(child: card),
-                    if (card != cards.last) const SizedBox(width: 10),
-                  ],
+                  for (final card in cards)
+                    SizedBox(width: cardWidth, child: card),
                 ],
               );
             },

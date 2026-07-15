@@ -44,6 +44,14 @@ const Set<String> _mediaSourcesWithProviderInstances = {
   'emby',
   'bilibili',
   'cloudreve',
+  'twitch',
+  'youtube',
+  'douyin',
+  'tiktok',
+  'huya',
+  'douyu',
+  'acfun',
+  'cctv',
 };
 
 class _RoomSettingsSection {
@@ -1487,6 +1495,16 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     'emby': 'Emby',
     'rtmp': 'RTMP',
     'cloudreve': 'Cloudreve',
+    'twitch': 'Twitch',
+    'youtube': 'YouTube',
+    'douyin': 'Douyin',
+    'tiktok': 'TikTok',
+    'huya': 'Huya',
+    'douyu': 'Douyu',
+    'acfun': 'AcFun',
+    'cctv': 'CCTV',
+    'fnos': 'FNOS',
+    'qnap': 'QNAP',
   };
 
   String _providerInstanceLabel(String instanceName) =>

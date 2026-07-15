@@ -755,12 +755,192 @@ class AlistTarget extends $pb.GeneratedMessage {
   void clearRelativePath() => $_clearField(1);
 }
 
-class EmbyTarget extends $pb.GeneratedMessage {
-  factory EmbyTarget({
+class EmbyItemTarget extends $pb.GeneratedMessage {
+  factory EmbyItemTarget({
     $core.String? itemId,
   }) {
     final result = create();
     if (itemId != null) result.itemId = itemId;
+    return result;
+  }
+
+  EmbyItemTarget._();
+
+  factory EmbyItemTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EmbyItemTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EmbyItemTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'itemId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmbyItemTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmbyItemTarget copyWith(void Function(EmbyItemTarget) updates) =>
+      super.copyWith((message) => updates(message as EmbyItemTarget))
+          as EmbyItemTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EmbyItemTarget create() => EmbyItemTarget._();
+  @$core.override
+  EmbyItemTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EmbyItemTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EmbyItemTarget>(create);
+  static EmbyItemTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get itemId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set itemId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasItemId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearItemId() => $_clearField(1);
+}
+
+class EmbyPersonTarget extends $pb.GeneratedMessage {
+  factory EmbyPersonTarget({
+    $core.String? personId,
+  }) {
+    final result = create();
+    if (personId != null) result.personId = personId;
+    return result;
+  }
+
+  EmbyPersonTarget._();
+
+  factory EmbyPersonTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EmbyPersonTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EmbyPersonTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'personId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmbyPersonTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmbyPersonTarget copyWith(void Function(EmbyPersonTarget) updates) =>
+      super.copyWith((message) => updates(message as EmbyPersonTarget))
+          as EmbyPersonTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EmbyPersonTarget create() => EmbyPersonTarget._();
+  @$core.override
+  EmbyPersonTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EmbyPersonTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EmbyPersonTarget>(create);
+  static EmbyPersonTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get personId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set personId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPersonId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPersonId() => $_clearField(1);
+}
+
+class EmbyPersonItemTarget extends $pb.GeneratedMessage {
+  factory EmbyPersonItemTarget({
+    $core.String? personId,
+    $core.String? itemId,
+  }) {
+    final result = create();
+    if (personId != null) result.personId = personId;
+    if (itemId != null) result.itemId = itemId;
+    return result;
+  }
+
+  EmbyPersonItemTarget._();
+
+  factory EmbyPersonItemTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EmbyPersonItemTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EmbyPersonItemTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'personId')
+    ..aOS(2, _omitFieldNames ? '' : 'itemId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmbyPersonItemTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EmbyPersonItemTarget copyWith(void Function(EmbyPersonItemTarget) updates) =>
+      super.copyWith((message) => updates(message as EmbyPersonItemTarget))
+          as EmbyPersonItemTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EmbyPersonItemTarget create() => EmbyPersonItemTarget._();
+  @$core.override
+  EmbyPersonItemTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EmbyPersonItemTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EmbyPersonItemTarget>(create);
+  static EmbyPersonItemTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get personId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set personId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPersonId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPersonId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get itemId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set itemId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasItemId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearItemId() => $_clearField(2);
+}
+
+enum EmbyTarget_Target { item, person, personItem, notSet }
+
+class EmbyTarget extends $pb.GeneratedMessage {
+  factory EmbyTarget({
+    EmbyItemTarget? item,
+    EmbyPersonTarget? person,
+    EmbyPersonItemTarget? personItem,
+  }) {
+    final result = create();
+    if (item != null) result.item = item;
+    if (person != null) result.person = person;
+    if (personItem != null) result.personItem = personItem;
     return result;
   }
 
@@ -773,11 +953,24 @@ class EmbyTarget extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
+  static const $core.Map<$core.int, EmbyTarget_Target> _EmbyTarget_TargetByTag =
+      {
+    1: EmbyTarget_Target.item,
+    2: EmbyTarget_Target.person,
+    3: EmbyTarget_Target.personItem,
+    0: EmbyTarget_Target.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'EmbyTarget',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'itemId')
+    ..oo(0, [1, 2, 3])
+    ..aOM<EmbyItemTarget>(1, _omitFieldNames ? '' : 'item',
+        subBuilder: EmbyItemTarget.create)
+    ..aOM<EmbyPersonTarget>(2, _omitFieldNames ? '' : 'person',
+        subBuilder: EmbyPersonTarget.create)
+    ..aOM<EmbyPersonItemTarget>(3, _omitFieldNames ? '' : 'personItem',
+        subBuilder: EmbyPersonItemTarget.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -799,13 +992,46 @@ class EmbyTarget extends $pb.GeneratedMessage {
   static EmbyTarget? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get itemId => $_getSZ(0);
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  EmbyTarget_Target whichTarget() => _EmbyTarget_TargetByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
-  set itemId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  void clearTarget() => $_clearField($_whichOneof(0));
+
   @$pb.TagNumber(1)
-  $core.bool hasItemId() => $_has(0);
+  EmbyItemTarget get item => $_getN(0);
   @$pb.TagNumber(1)
-  void clearItemId() => $_clearField(1);
+  set item(EmbyItemTarget value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasItem() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearItem() => $_clearField(1);
+  @$pb.TagNumber(1)
+  EmbyItemTarget ensureItem() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  EmbyPersonTarget get person => $_getN(1);
+  @$pb.TagNumber(2)
+  set person(EmbyPersonTarget value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPerson() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPerson() => $_clearField(2);
+  @$pb.TagNumber(2)
+  EmbyPersonTarget ensurePerson() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  EmbyPersonItemTarget get personItem => $_getN(2);
+  @$pb.TagNumber(3)
+  set personItem(EmbyPersonItemTarget value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPersonItem() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPersonItem() => $_clearField(3);
+  @$pb.TagNumber(3)
+  EmbyPersonItemTarget ensurePersonItem() => $_ensure(2);
 }
 
 class CloudreveTarget extends $pb.GeneratedMessage {
@@ -862,18 +1088,1484 @@ class CloudreveTarget extends $pb.GeneratedMessage {
   void clearRelativePath() => $_clearField(1);
 }
 
-enum ProviderTarget_Target { alist, emby, cloudreve, notSet }
+class FnosFileTarget extends $pb.GeneratedMessage {
+  factory FnosFileTarget({
+    $core.String? relativePath,
+  }) {
+    final result = create();
+    if (relativePath != null) result.relativePath = relativePath;
+    return result;
+  }
+
+  FnosFileTarget._();
+
+  factory FnosFileTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FnosFileTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FnosFileTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'relativePath')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosFileTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosFileTarget copyWith(void Function(FnosFileTarget) updates) =>
+      super.copyWith((message) => updates(message as FnosFileTarget))
+          as FnosFileTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FnosFileTarget create() => FnosFileTarget._();
+  @$core.override
+  FnosFileTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FnosFileTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FnosFileTarget>(create);
+  static FnosFileTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get relativePath => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set relativePath($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRelativePath() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRelativePath() => $_clearField(1);
+}
+
+class FnosMediaItemTarget extends $pb.GeneratedMessage {
+  factory FnosMediaItemTarget({
+    $core.String? itemGuid,
+    $core.String? mediaGuid,
+  }) {
+    final result = create();
+    if (itemGuid != null) result.itemGuid = itemGuid;
+    if (mediaGuid != null) result.mediaGuid = mediaGuid;
+    return result;
+  }
+
+  FnosMediaItemTarget._();
+
+  factory FnosMediaItemTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FnosMediaItemTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FnosMediaItemTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'itemGuid')
+    ..aOS(2, _omitFieldNames ? '' : 'mediaGuid')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosMediaItemTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosMediaItemTarget copyWith(void Function(FnosMediaItemTarget) updates) =>
+      super.copyWith((message) => updates(message as FnosMediaItemTarget))
+          as FnosMediaItemTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FnosMediaItemTarget create() => FnosMediaItemTarget._();
+  @$core.override
+  FnosMediaItemTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FnosMediaItemTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FnosMediaItemTarget>(create);
+  static FnosMediaItemTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get itemGuid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set itemGuid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasItemGuid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearItemGuid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get mediaGuid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set mediaGuid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMediaGuid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMediaGuid() => $_clearField(2);
+}
+
+enum FnosTarget_Target { file, mediaItem, notSet }
+
+class FnosTarget extends $pb.GeneratedMessage {
+  factory FnosTarget({
+    FnosFileTarget? file,
+    FnosMediaItemTarget? mediaItem,
+  }) {
+    final result = create();
+    if (file != null) result.file = file;
+    if (mediaItem != null) result.mediaItem = mediaItem;
+    return result;
+  }
+
+  FnosTarget._();
+
+  factory FnosTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FnosTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, FnosTarget_Target> _FnosTarget_TargetByTag =
+      {
+    1: FnosTarget_Target.file,
+    2: FnosTarget_Target.mediaItem,
+    0: FnosTarget_Target.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FnosTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOM<FnosFileTarget>(1, _omitFieldNames ? '' : 'file',
+        subBuilder: FnosFileTarget.create)
+    ..aOM<FnosMediaItemTarget>(2, _omitFieldNames ? '' : 'mediaItem',
+        subBuilder: FnosMediaItemTarget.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosTarget copyWith(void Function(FnosTarget) updates) =>
+      super.copyWith((message) => updates(message as FnosTarget)) as FnosTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FnosTarget create() => FnosTarget._();
+  @$core.override
+  FnosTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FnosTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FnosTarget>(create);
+  static FnosTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  FnosTarget_Target whichTarget() => _FnosTarget_TargetByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearTarget() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  FnosFileTarget get file => $_getN(0);
+  @$pb.TagNumber(1)
+  set file(FnosFileTarget value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFile() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFile() => $_clearField(1);
+  @$pb.TagNumber(1)
+  FnosFileTarget ensureFile() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  FnosMediaItemTarget get mediaItem => $_getN(1);
+  @$pb.TagNumber(2)
+  set mediaItem(FnosMediaItemTarget value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMediaItem() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMediaItem() => $_clearField(2);
+  @$pb.TagNumber(2)
+  FnosMediaItemTarget ensureMediaItem() => $_ensure(1);
+}
+
+class TwitchTarget extends $pb.GeneratedMessage {
+  factory TwitchTarget({
+    TwitchTargetKind? kind,
+    $core.String? id,
+  }) {
+    final result = create();
+    if (kind != null) result.kind = kind;
+    if (id != null) result.id = id;
+    return result;
+  }
+
+  TwitchTarget._();
+
+  factory TwitchTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TwitchTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TwitchTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aE<TwitchTargetKind>(1, _omitFieldNames ? '' : 'kind',
+        enumValues: TwitchTargetKind.values)
+    ..aOS(2, _omitFieldNames ? '' : 'id')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TwitchTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TwitchTarget copyWith(void Function(TwitchTarget) updates) =>
+      super.copyWith((message) => updates(message as TwitchTarget))
+          as TwitchTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TwitchTarget create() => TwitchTarget._();
+  @$core.override
+  TwitchTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TwitchTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TwitchTarget>(create);
+  static TwitchTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  TwitchTargetKind get kind => $_getN(0);
+  @$pb.TagNumber(1)
+  set kind(TwitchTargetKind value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasKind() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKind() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get id => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set id($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearId() => $_clearField(2);
+}
+
+class QnapTarget extends $pb.GeneratedMessage {
+  factory QnapTarget({
+    $core.String? relativePath,
+  }) {
+    final result = create();
+    if (relativePath != null) result.relativePath = relativePath;
+    return result;
+  }
+
+  QnapTarget._();
+
+  factory QnapTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory QnapTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'QnapTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'relativePath')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  QnapTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  QnapTarget copyWith(void Function(QnapTarget) updates) =>
+      super.copyWith((message) => updates(message as QnapTarget)) as QnapTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static QnapTarget create() => QnapTarget._();
+  @$core.override
+  QnapTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static QnapTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<QnapTarget>(create);
+  static QnapTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get relativePath => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set relativePath($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRelativePath() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRelativePath() => $_clearField(1);
+}
+
+class SynologyFileTarget extends $pb.GeneratedMessage {
+  factory SynologyFileTarget({
+    $core.String? relativePath,
+  }) {
+    final result = create();
+    if (relativePath != null) result.relativePath = relativePath;
+    return result;
+  }
+
+  SynologyFileTarget._();
+
+  factory SynologyFileTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SynologyFileTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SynologyFileTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'relativePath')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyFileTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyFileTarget copyWith(void Function(SynologyFileTarget) updates) =>
+      super.copyWith((message) => updates(message as SynologyFileTarget))
+          as SynologyFileTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SynologyFileTarget create() => SynologyFileTarget._();
+  @$core.override
+  SynologyFileTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SynologyFileTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SynologyFileTarget>(create);
+  static SynologyFileTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get relativePath => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set relativePath($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRelativePath() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRelativePath() => $_clearField(1);
+}
+
+class SynologyLibraryItemTarget extends $pb.GeneratedMessage {
+  factory SynologyLibraryItemTarget({
+    $1.SynologyLibraryItemKind? kind,
+    $fixnum.Int64? itemId,
+    $fixnum.Int64? fileId,
+    $fixnum.Int64? parentId,
+  }) {
+    final result = create();
+    if (kind != null) result.kind = kind;
+    if (itemId != null) result.itemId = itemId;
+    if (fileId != null) result.fileId = fileId;
+    if (parentId != null) result.parentId = parentId;
+    return result;
+  }
+
+  SynologyLibraryItemTarget._();
+
+  factory SynologyLibraryItemTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SynologyLibraryItemTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SynologyLibraryItemTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aE<$1.SynologyLibraryItemKind>(1, _omitFieldNames ? '' : 'kind',
+        enumValues: $1.SynologyLibraryItemKind.values)
+    ..aInt64(2, _omitFieldNames ? '' : 'itemId')
+    ..aInt64(3, _omitFieldNames ? '' : 'fileId')
+    ..aInt64(4, _omitFieldNames ? '' : 'parentId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyLibraryItemTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyLibraryItemTarget copyWith(
+          void Function(SynologyLibraryItemTarget) updates) =>
+      super.copyWith((message) => updates(message as SynologyLibraryItemTarget))
+          as SynologyLibraryItemTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SynologyLibraryItemTarget create() => SynologyLibraryItemTarget._();
+  @$core.override
+  SynologyLibraryItemTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SynologyLibraryItemTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SynologyLibraryItemTarget>(create);
+  static SynologyLibraryItemTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $1.SynologyLibraryItemKind get kind => $_getN(0);
+  @$pb.TagNumber(1)
+  set kind($1.SynologyLibraryItemKind value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasKind() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKind() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get itemId => $_getI64(1);
+  @$pb.TagNumber(2)
+  set itemId($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasItemId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearItemId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get fileId => $_getI64(2);
+  @$pb.TagNumber(3)
+  set fileId($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFileId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFileId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get parentId => $_getI64(3);
+  @$pb.TagNumber(4)
+  set parentId($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasParentId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearParentId() => $_clearField(4);
+}
+
+class SynologyTvShowTarget extends $pb.GeneratedMessage {
+  factory SynologyTvShowTarget({
+    $fixnum.Int64? libraryId,
+    $fixnum.Int64? tvShowId,
+  }) {
+    final result = create();
+    if (libraryId != null) result.libraryId = libraryId;
+    if (tvShowId != null) result.tvShowId = tvShowId;
+    return result;
+  }
+
+  SynologyTvShowTarget._();
+
+  factory SynologyTvShowTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SynologyTvShowTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SynologyTvShowTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'libraryId')
+    ..aInt64(2, _omitFieldNames ? '' : 'tvShowId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyTvShowTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyTvShowTarget copyWith(void Function(SynologyTvShowTarget) updates) =>
+      super.copyWith((message) => updates(message as SynologyTvShowTarget))
+          as SynologyTvShowTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SynologyTvShowTarget create() => SynologyTvShowTarget._();
+  @$core.override
+  SynologyTvShowTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SynologyTvShowTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SynologyTvShowTarget>(create);
+  static SynologyTvShowTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get libraryId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set libraryId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLibraryId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLibraryId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get tvShowId => $_getI64(1);
+  @$pb.TagNumber(2)
+  set tvShowId($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTvShowId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTvShowId() => $_clearField(2);
+}
+
+enum SynologyTarget_Target { file, libraryItem, tvShow, notSet }
+
+class SynologyTarget extends $pb.GeneratedMessage {
+  factory SynologyTarget({
+    SynologyFileTarget? file,
+    SynologyLibraryItemTarget? libraryItem,
+    SynologyTvShowTarget? tvShow,
+  }) {
+    final result = create();
+    if (file != null) result.file = file;
+    if (libraryItem != null) result.libraryItem = libraryItem;
+    if (tvShow != null) result.tvShow = tvShow;
+    return result;
+  }
+
+  SynologyTarget._();
+
+  factory SynologyTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SynologyTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, SynologyTarget_Target>
+      _SynologyTarget_TargetByTag = {
+    1: SynologyTarget_Target.file,
+    2: SynologyTarget_Target.libraryItem,
+    3: SynologyTarget_Target.tvShow,
+    0: SynologyTarget_Target.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SynologyTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3])
+    ..aOM<SynologyFileTarget>(1, _omitFieldNames ? '' : 'file',
+        subBuilder: SynologyFileTarget.create)
+    ..aOM<SynologyLibraryItemTarget>(2, _omitFieldNames ? '' : 'libraryItem',
+        subBuilder: SynologyLibraryItemTarget.create)
+    ..aOM<SynologyTvShowTarget>(3, _omitFieldNames ? '' : 'tvShow',
+        subBuilder: SynologyTvShowTarget.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyTarget copyWith(void Function(SynologyTarget) updates) =>
+      super.copyWith((message) => updates(message as SynologyTarget))
+          as SynologyTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SynologyTarget create() => SynologyTarget._();
+  @$core.override
+  SynologyTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SynologyTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SynologyTarget>(create);
+  static SynologyTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  SynologyTarget_Target whichTarget() =>
+      _SynologyTarget_TargetByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  void clearTarget() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  SynologyFileTarget get file => $_getN(0);
+  @$pb.TagNumber(1)
+  set file(SynologyFileTarget value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFile() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFile() => $_clearField(1);
+  @$pb.TagNumber(1)
+  SynologyFileTarget ensureFile() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  SynologyLibraryItemTarget get libraryItem => $_getN(1);
+  @$pb.TagNumber(2)
+  set libraryItem(SynologyLibraryItemTarget value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLibraryItem() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLibraryItem() => $_clearField(2);
+  @$pb.TagNumber(2)
+  SynologyLibraryItemTarget ensureLibraryItem() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  SynologyTvShowTarget get tvShow => $_getN(2);
+  @$pb.TagNumber(3)
+  set tvShow(SynologyTvShowTarget value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTvShow() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTvShow() => $_clearField(3);
+  @$pb.TagNumber(3)
+  SynologyTvShowTarget ensureTvShow() => $_ensure(2);
+}
+
+class NextcloudTarget extends $pb.GeneratedMessage {
+  factory NextcloudTarget({
+    $core.String? path,
+    $fixnum.Int64? fileId,
+  }) {
+    final result = create();
+    if (path != null) result.path = path;
+    if (fileId != null) result.fileId = fileId;
+    return result;
+  }
+
+  NextcloudTarget._();
+
+  factory NextcloudTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory NextcloudTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'NextcloudTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'path')
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'fileId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NextcloudTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NextcloudTarget copyWith(void Function(NextcloudTarget) updates) =>
+      super.copyWith((message) => updates(message as NextcloudTarget))
+          as NextcloudTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static NextcloudTarget create() => NextcloudTarget._();
+  @$core.override
+  NextcloudTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static NextcloudTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<NextcloudTarget>(create);
+  static NextcloudTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get path => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set path($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPath() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPath() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get fileId => $_getI64(1);
+  @$pb.TagNumber(2)
+  set fileId($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasFileId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFileId() => $_clearField(2);
+}
+
+class SeafileTarget extends $pb.GeneratedMessage {
+  factory SeafileTarget({
+    $core.String? repositoryId,
+    $core.String? path,
+    $core.String? objectId,
+    $core.bool? hasThumbnail,
+  }) {
+    final result = create();
+    if (repositoryId != null) result.repositoryId = repositoryId;
+    if (path != null) result.path = path;
+    if (objectId != null) result.objectId = objectId;
+    if (hasThumbnail != null) result.hasThumbnail = hasThumbnail;
+    return result;
+  }
+
+  SeafileTarget._();
+
+  factory SeafileTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SeafileTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SeafileTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'repositoryId')
+    ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..aOS(3, _omitFieldNames ? '' : 'objectId')
+    ..aOB(4, _omitFieldNames ? '' : 'hasThumbnail')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SeafileTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SeafileTarget copyWith(void Function(SeafileTarget) updates) =>
+      super.copyWith((message) => updates(message as SeafileTarget))
+          as SeafileTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SeafileTarget create() => SeafileTarget._();
+  @$core.override
+  SeafileTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SeafileTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SeafileTarget>(create);
+  static SeafileTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get repositoryId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set repositoryId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRepositoryId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRepositoryId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get path => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set path($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPath() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPath() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get objectId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set objectId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasObjectId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearObjectId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get hasThumbnail => $_getBF(3);
+  @$pb.TagNumber(4)
+  set hasThumbnail($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasHasThumbnail() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearHasThumbnail() => $_clearField(4);
+}
+
+class TrueNasTarget extends $pb.GeneratedMessage {
+  factory TrueNasTarget({
+    $core.String? path,
+  }) {
+    final result = create();
+    if (path != null) result.path = path;
+    return result;
+  }
+
+  TrueNasTarget._();
+
+  factory TrueNasTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TrueNasTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TrueNasTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'path')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrueNasTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrueNasTarget copyWith(void Function(TrueNasTarget) updates) =>
+      super.copyWith((message) => updates(message as TrueNasTarget))
+          as TrueNasTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TrueNasTarget create() => TrueNasTarget._();
+  @$core.override
+  TrueNasTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TrueNasTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TrueNasTarget>(create);
+  static TrueNasTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get path => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set path($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasPath() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPath() => $_clearField(1);
+}
+
+class YoutubeTarget extends $pb.GeneratedMessage {
+  factory YoutubeTarget({
+    $core.String? videoId,
+  }) {
+    final result = create();
+    if (videoId != null) result.videoId = videoId;
+    return result;
+  }
+
+  YoutubeTarget._();
+
+  factory YoutubeTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory YoutubeTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'YoutubeTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'videoId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  YoutubeTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  YoutubeTarget copyWith(void Function(YoutubeTarget) updates) =>
+      super.copyWith((message) => updates(message as YoutubeTarget))
+          as YoutubeTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static YoutubeTarget create() => YoutubeTarget._();
+  @$core.override
+  YoutubeTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static YoutubeTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<YoutubeTarget>(create);
+  static YoutubeTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get videoId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set videoId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVideoId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVideoId() => $_clearField(1);
+}
+
+class DouyinTarget extends $pb.GeneratedMessage {
+  factory DouyinTarget({
+    $core.String? awemeId,
+  }) {
+    final result = create();
+    if (awemeId != null) result.awemeId = awemeId;
+    return result;
+  }
+
+  DouyinTarget._();
+
+  factory DouyinTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DouyinTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DouyinTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'awemeId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DouyinTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DouyinTarget copyWith(void Function(DouyinTarget) updates) =>
+      super.copyWith((message) => updates(message as DouyinTarget))
+          as DouyinTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DouyinTarget create() => DouyinTarget._();
+  @$core.override
+  DouyinTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DouyinTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DouyinTarget>(create);
+  static DouyinTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get awemeId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set awemeId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasAwemeId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAwemeId() => $_clearField(1);
+}
+
+class TikTokTarget extends $pb.GeneratedMessage {
+  factory TikTokTarget({
+    $core.String? videoId,
+  }) {
+    final result = create();
+    if (videoId != null) result.videoId = videoId;
+    return result;
+  }
+
+  TikTokTarget._();
+
+  factory TikTokTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TikTokTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TikTokTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'videoId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TikTokTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TikTokTarget copyWith(void Function(TikTokTarget) updates) =>
+      super.copyWith((message) => updates(message as TikTokTarget))
+          as TikTokTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TikTokTarget create() => TikTokTarget._();
+  @$core.override
+  TikTokTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TikTokTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TikTokTarget>(create);
+  static TikTokTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get videoId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set videoId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVideoId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVideoId() => $_clearField(1);
+}
+
+class BilibiliVideoTarget extends $pb.GeneratedMessage {
+  factory BilibiliVideoTarget({
+    $core.String? bvid,
+    $fixnum.Int64? aid,
+  }) {
+    final result = create();
+    if (bvid != null) result.bvid = bvid;
+    if (aid != null) result.aid = aid;
+    return result;
+  }
+
+  BilibiliVideoTarget._();
+
+  factory BilibiliVideoTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BilibiliVideoTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BilibiliVideoTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'bvid')
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'aid', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliVideoTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliVideoTarget copyWith(void Function(BilibiliVideoTarget) updates) =>
+      super.copyWith((message) => updates(message as BilibiliVideoTarget))
+          as BilibiliVideoTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BilibiliVideoTarget create() => BilibiliVideoTarget._();
+  @$core.override
+  BilibiliVideoTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BilibiliVideoTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BilibiliVideoTarget>(create);
+  static BilibiliVideoTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get bvid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set bvid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasBvid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBvid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get aid => $_getI64(1);
+  @$pb.TagNumber(2)
+  set aid($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAid() => $_clearField(2);
+}
+
+class BilibiliVideoPartTarget extends $pb.GeneratedMessage {
+  factory BilibiliVideoPartTarget({
+    $core.String? bvid,
+    $fixnum.Int64? aid,
+    $fixnum.Int64? cid,
+    $core.int? page,
+  }) {
+    final result = create();
+    if (bvid != null) result.bvid = bvid;
+    if (aid != null) result.aid = aid;
+    if (cid != null) result.cid = cid;
+    if (page != null) result.page = page;
+    return result;
+  }
+
+  BilibiliVideoPartTarget._();
+
+  factory BilibiliVideoPartTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BilibiliVideoPartTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BilibiliVideoPartTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'bvid')
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'aid', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'cid', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aI(4, _omitFieldNames ? '' : 'page', fieldType: $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliVideoPartTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliVideoPartTarget copyWith(
+          void Function(BilibiliVideoPartTarget) updates) =>
+      super.copyWith((message) => updates(message as BilibiliVideoPartTarget))
+          as BilibiliVideoPartTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BilibiliVideoPartTarget create() => BilibiliVideoPartTarget._();
+  @$core.override
+  BilibiliVideoPartTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BilibiliVideoPartTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BilibiliVideoPartTarget>(create);
+  static BilibiliVideoPartTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get bvid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set bvid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasBvid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBvid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get aid => $_getI64(1);
+  @$pb.TagNumber(2)
+  set aid($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAid() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get cid => $_getI64(2);
+  @$pb.TagNumber(3)
+  set cid($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCid() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCid() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.int get page => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set page($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPage() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPage() => $_clearField(4);
+}
+
+class BilibiliPgcEpisodeTarget extends $pb.GeneratedMessage {
+  factory BilibiliPgcEpisodeTarget({
+    $fixnum.Int64? epid,
+    $fixnum.Int64? cid,
+  }) {
+    final result = create();
+    if (epid != null) result.epid = epid;
+    if (cid != null) result.cid = cid;
+    return result;
+  }
+
+  BilibiliPgcEpisodeTarget._();
+
+  factory BilibiliPgcEpisodeTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BilibiliPgcEpisodeTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BilibiliPgcEpisodeTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'epid', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'cid', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliPgcEpisodeTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliPgcEpisodeTarget copyWith(
+          void Function(BilibiliPgcEpisodeTarget) updates) =>
+      super.copyWith((message) => updates(message as BilibiliPgcEpisodeTarget))
+          as BilibiliPgcEpisodeTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BilibiliPgcEpisodeTarget create() => BilibiliPgcEpisodeTarget._();
+  @$core.override
+  BilibiliPgcEpisodeTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BilibiliPgcEpisodeTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BilibiliPgcEpisodeTarget>(create);
+  static BilibiliPgcEpisodeTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get epid => $_getI64(0);
+  @$pb.TagNumber(1)
+  set epid($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEpid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEpid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get cid => $_getI64(1);
+  @$pb.TagNumber(2)
+  set cid($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCid() => $_clearField(2);
+}
+
+class BilibiliLiveTarget extends $pb.GeneratedMessage {
+  factory BilibiliLiveTarget({
+    $fixnum.Int64? roomId,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    return result;
+  }
+
+  BilibiliLiveTarget._();
+
+  factory BilibiliLiveTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BilibiliLiveTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BilibiliLiveTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'roomId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliLiveTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliLiveTarget copyWith(void Function(BilibiliLiveTarget) updates) =>
+      super.copyWith((message) => updates(message as BilibiliLiveTarget))
+          as BilibiliLiveTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BilibiliLiveTarget create() => BilibiliLiveTarget._();
+  @$core.override
+  BilibiliLiveTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BilibiliLiveTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BilibiliLiveTarget>(create);
+  static BilibiliLiveTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get roomId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set roomId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+}
+
+enum BilibiliTarget_Target { video, videoPart, pgcEpisode, live, notSet }
+
+class BilibiliTarget extends $pb.GeneratedMessage {
+  factory BilibiliTarget({
+    BilibiliVideoTarget? video,
+    BilibiliVideoPartTarget? videoPart,
+    BilibiliPgcEpisodeTarget? pgcEpisode,
+    BilibiliLiveTarget? live,
+  }) {
+    final result = create();
+    if (video != null) result.video = video;
+    if (videoPart != null) result.videoPart = videoPart;
+    if (pgcEpisode != null) result.pgcEpisode = pgcEpisode;
+    if (live != null) result.live = live;
+    return result;
+  }
+
+  BilibiliTarget._();
+
+  factory BilibiliTarget.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory BilibiliTarget.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, BilibiliTarget_Target>
+      _BilibiliTarget_TargetByTag = {
+    1: BilibiliTarget_Target.video,
+    2: BilibiliTarget_Target.videoPart,
+    3: BilibiliTarget_Target.pgcEpisode,
+    4: BilibiliTarget_Target.live,
+    0: BilibiliTarget_Target.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'BilibiliTarget',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3, 4])
+    ..aOM<BilibiliVideoTarget>(1, _omitFieldNames ? '' : 'video',
+        subBuilder: BilibiliVideoTarget.create)
+    ..aOM<BilibiliVideoPartTarget>(2, _omitFieldNames ? '' : 'videoPart',
+        subBuilder: BilibiliVideoPartTarget.create)
+    ..aOM<BilibiliPgcEpisodeTarget>(3, _omitFieldNames ? '' : 'pgcEpisode',
+        subBuilder: BilibiliPgcEpisodeTarget.create)
+    ..aOM<BilibiliLiveTarget>(4, _omitFieldNames ? '' : 'live',
+        subBuilder: BilibiliLiveTarget.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliTarget clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  BilibiliTarget copyWith(void Function(BilibiliTarget) updates) =>
+      super.copyWith((message) => updates(message as BilibiliTarget))
+          as BilibiliTarget;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static BilibiliTarget create() => BilibiliTarget._();
+  @$core.override
+  BilibiliTarget createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static BilibiliTarget getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BilibiliTarget>(create);
+  static BilibiliTarget? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  BilibiliTarget_Target whichTarget() =>
+      _BilibiliTarget_TargetByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  void clearTarget() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  BilibiliVideoTarget get video => $_getN(0);
+  @$pb.TagNumber(1)
+  set video(BilibiliVideoTarget value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVideo() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVideo() => $_clearField(1);
+  @$pb.TagNumber(1)
+  BilibiliVideoTarget ensureVideo() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  BilibiliVideoPartTarget get videoPart => $_getN(1);
+  @$pb.TagNumber(2)
+  set videoPart(BilibiliVideoPartTarget value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasVideoPart() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearVideoPart() => $_clearField(2);
+  @$pb.TagNumber(2)
+  BilibiliVideoPartTarget ensureVideoPart() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  BilibiliPgcEpisodeTarget get pgcEpisode => $_getN(2);
+  @$pb.TagNumber(3)
+  set pgcEpisode(BilibiliPgcEpisodeTarget value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPgcEpisode() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPgcEpisode() => $_clearField(3);
+  @$pb.TagNumber(3)
+  BilibiliPgcEpisodeTarget ensurePgcEpisode() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  BilibiliLiveTarget get live => $_getN(3);
+  @$pb.TagNumber(4)
+  set live(BilibiliLiveTarget value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasLive() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearLive() => $_clearField(4);
+  @$pb.TagNumber(4)
+  BilibiliLiveTarget ensureLive() => $_ensure(3);
+}
+
+enum ProviderTarget_Target {
+  alist,
+  emby,
+  cloudreve,
+  twitch,
+  fnos,
+  qnap,
+  synology,
+  nextcloud,
+  seafile,
+  truenas,
+  douyin,
+  youtube,
+  tiktok,
+  bilibili,
+  notSet
+}
 
 class ProviderTarget extends $pb.GeneratedMessage {
   factory ProviderTarget({
     AlistTarget? alist,
     EmbyTarget? emby,
     CloudreveTarget? cloudreve,
+    TwitchTarget? twitch,
+    FnosTarget? fnos,
+    QnapTarget? qnap,
+    SynologyTarget? synology,
+    NextcloudTarget? nextcloud,
+    SeafileTarget? seafile,
+    TrueNasTarget? truenas,
+    DouyinTarget? douyin,
+    YoutubeTarget? youtube,
+    TikTokTarget? tiktok,
+    BilibiliTarget? bilibili,
   }) {
     final result = create();
     if (alist != null) result.alist = alist;
     if (emby != null) result.emby = emby;
     if (cloudreve != null) result.cloudreve = cloudreve;
+    if (twitch != null) result.twitch = twitch;
+    if (fnos != null) result.fnos = fnos;
+    if (qnap != null) result.qnap = qnap;
+    if (synology != null) result.synology = synology;
+    if (nextcloud != null) result.nextcloud = nextcloud;
+    if (seafile != null) result.seafile = seafile;
+    if (truenas != null) result.truenas = truenas;
+    if (douyin != null) result.douyin = douyin;
+    if (youtube != null) result.youtube = youtube;
+    if (tiktok != null) result.tiktok = tiktok;
+    if (bilibili != null) result.bilibili = bilibili;
     return result;
   }
 
@@ -891,19 +2583,52 @@ class ProviderTarget extends $pb.GeneratedMessage {
     1: ProviderTarget_Target.alist,
     2: ProviderTarget_Target.emby,
     3: ProviderTarget_Target.cloudreve,
+    4: ProviderTarget_Target.twitch,
+    5: ProviderTarget_Target.fnos,
+    6: ProviderTarget_Target.qnap,
+    7: ProviderTarget_Target.synology,
+    8: ProviderTarget_Target.nextcloud,
+    9: ProviderTarget_Target.seafile,
+    10: ProviderTarget_Target.truenas,
+    11: ProviderTarget_Target.douyin,
+    12: ProviderTarget_Target.youtube,
+    13: ProviderTarget_Target.tiktok,
+    14: ProviderTarget_Target.bilibili,
     0: ProviderTarget_Target.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ProviderTarget',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
     ..aOM<AlistTarget>(1, _omitFieldNames ? '' : 'alist',
         subBuilder: AlistTarget.create)
     ..aOM<EmbyTarget>(2, _omitFieldNames ? '' : 'emby',
         subBuilder: EmbyTarget.create)
     ..aOM<CloudreveTarget>(3, _omitFieldNames ? '' : 'cloudreve',
         subBuilder: CloudreveTarget.create)
+    ..aOM<TwitchTarget>(4, _omitFieldNames ? '' : 'twitch',
+        subBuilder: TwitchTarget.create)
+    ..aOM<FnosTarget>(5, _omitFieldNames ? '' : 'fnos',
+        subBuilder: FnosTarget.create)
+    ..aOM<QnapTarget>(6, _omitFieldNames ? '' : 'qnap',
+        subBuilder: QnapTarget.create)
+    ..aOM<SynologyTarget>(7, _omitFieldNames ? '' : 'synology',
+        subBuilder: SynologyTarget.create)
+    ..aOM<NextcloudTarget>(8, _omitFieldNames ? '' : 'nextcloud',
+        subBuilder: NextcloudTarget.create)
+    ..aOM<SeafileTarget>(9, _omitFieldNames ? '' : 'seafile',
+        subBuilder: SeafileTarget.create)
+    ..aOM<TrueNasTarget>(10, _omitFieldNames ? '' : 'truenas',
+        subBuilder: TrueNasTarget.create)
+    ..aOM<DouyinTarget>(11, _omitFieldNames ? '' : 'douyin',
+        subBuilder: DouyinTarget.create)
+    ..aOM<YoutubeTarget>(12, _omitFieldNames ? '' : 'youtube',
+        subBuilder: YoutubeTarget.create)
+    ..aOM<TikTokTarget>(13, _omitFieldNames ? '' : 'tiktok',
+        subBuilder: TikTokTarget.create)
+    ..aOM<BilibiliTarget>(14, _omitFieldNames ? '' : 'bilibili',
+        subBuilder: BilibiliTarget.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -928,11 +2653,33 @@ class ProviderTarget extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
   ProviderTarget_Target whichTarget() =>
       _ProviderTarget_TargetByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
+  @$pb.TagNumber(4)
+  @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
   void clearTarget() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -967,6 +2714,127 @@ class ProviderTarget extends $pb.GeneratedMessage {
   void clearCloudreve() => $_clearField(3);
   @$pb.TagNumber(3)
   CloudreveTarget ensureCloudreve() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  TwitchTarget get twitch => $_getN(3);
+  @$pb.TagNumber(4)
+  set twitch(TwitchTarget value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasTwitch() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearTwitch() => $_clearField(4);
+  @$pb.TagNumber(4)
+  TwitchTarget ensureTwitch() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  FnosTarget get fnos => $_getN(4);
+  @$pb.TagNumber(5)
+  set fnos(FnosTarget value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasFnos() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearFnos() => $_clearField(5);
+  @$pb.TagNumber(5)
+  FnosTarget ensureFnos() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  QnapTarget get qnap => $_getN(5);
+  @$pb.TagNumber(6)
+  set qnap(QnapTarget value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasQnap() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearQnap() => $_clearField(6);
+  @$pb.TagNumber(6)
+  QnapTarget ensureQnap() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  SynologyTarget get synology => $_getN(6);
+  @$pb.TagNumber(7)
+  set synology(SynologyTarget value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasSynology() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearSynology() => $_clearField(7);
+  @$pb.TagNumber(7)
+  SynologyTarget ensureSynology() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  NextcloudTarget get nextcloud => $_getN(7);
+  @$pb.TagNumber(8)
+  set nextcloud(NextcloudTarget value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasNextcloud() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearNextcloud() => $_clearField(8);
+  @$pb.TagNumber(8)
+  NextcloudTarget ensureNextcloud() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  SeafileTarget get seafile => $_getN(8);
+  @$pb.TagNumber(9)
+  set seafile(SeafileTarget value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasSeafile() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearSeafile() => $_clearField(9);
+  @$pb.TagNumber(9)
+  SeafileTarget ensureSeafile() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  TrueNasTarget get truenas => $_getN(9);
+  @$pb.TagNumber(10)
+  set truenas(TrueNasTarget value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasTruenas() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearTruenas() => $_clearField(10);
+  @$pb.TagNumber(10)
+  TrueNasTarget ensureTruenas() => $_ensure(9);
+
+  @$pb.TagNumber(11)
+  DouyinTarget get douyin => $_getN(10);
+  @$pb.TagNumber(11)
+  set douyin(DouyinTarget value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasDouyin() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearDouyin() => $_clearField(11);
+  @$pb.TagNumber(11)
+  DouyinTarget ensureDouyin() => $_ensure(10);
+
+  @$pb.TagNumber(12)
+  YoutubeTarget get youtube => $_getN(11);
+  @$pb.TagNumber(12)
+  set youtube(YoutubeTarget value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasYoutube() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearYoutube() => $_clearField(12);
+  @$pb.TagNumber(12)
+  YoutubeTarget ensureYoutube() => $_ensure(11);
+
+  @$pb.TagNumber(13)
+  TikTokTarget get tiktok => $_getN(12);
+  @$pb.TagNumber(13)
+  set tiktok(TikTokTarget value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasTiktok() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearTiktok() => $_clearField(13);
+  @$pb.TagNumber(13)
+  TikTokTarget ensureTiktok() => $_ensure(12);
+
+  @$pb.TagNumber(14)
+  BilibiliTarget get bilibili => $_getN(13);
+  @$pb.TagNumber(14)
+  set bilibili(BilibiliTarget value) => $_setField(14, value);
+  @$pb.TagNumber(14)
+  $core.bool hasBilibili() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearBilibili() => $_clearField(14);
+  @$pb.TagNumber(14)
+  BilibiliTarget ensureBilibili() => $_ensure(13);
 }
 
 class FileMetadata extends $pb.GeneratedMessage {
@@ -13445,6 +15313,7 @@ class ListPlaylistItemsRequest extends $pb.GeneratedMessage {
     SortDirection? sortDirection,
     ResourceAvailabilityFilter? availability,
     $core.bool? refresh,
+    $1.PlaylistSourceConfig? previewSourceConfig,
   }) {
     final result = create();
     if (playlistId != null) result.playlistId = playlistId;
@@ -13460,6 +15329,8 @@ class ListPlaylistItemsRequest extends $pb.GeneratedMessage {
     if (sortDirection != null) result.sortDirection = sortDirection;
     if (availability != null) result.availability = availability;
     if (refresh != null) result.refresh = refresh;
+    if (previewSourceConfig != null)
+      result.previewSourceConfig = previewSourceConfig;
     return result;
   }
 
@@ -13502,6 +15373,9 @@ class ListPlaylistItemsRequest extends $pb.GeneratedMessage {
     ..aE<ResourceAvailabilityFilter>(11, _omitFieldNames ? '' : 'availability',
         enumValues: ResourceAvailabilityFilter.values)
     ..aOB(12, _omitFieldNames ? '' : 'refresh')
+    ..aOM<$1.PlaylistSourceConfig>(
+        13, _omitFieldNames ? '' : 'previewSourceConfig',
+        subBuilder: $1.PlaylistSourceConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13645,6 +15519,18 @@ class ListPlaylistItemsRequest extends $pb.GeneratedMessage {
   $core.bool hasRefresh() => $_has(11);
   @$pb.TagNumber(12)
   void clearRefresh() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $1.PlaylistSourceConfig get previewSourceConfig => $_getN(12);
+  @$pb.TagNumber(13)
+  set previewSourceConfig($1.PlaylistSourceConfig value) =>
+      $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasPreviewSourceConfig() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearPreviewSourceConfig() => $_clearField(13);
+  @$pb.TagNumber(13)
+  $1.PlaylistSourceConfig ensurePreviewSourceConfig() => $_ensure(12);
 }
 
 class PagePagination extends $pb.GeneratedMessage {
@@ -13926,6 +15812,12 @@ class ListPlaylistItemsResponse extends $pb.GeneratedMessage {
   CursorPagination ensureCursor() => $_ensure(9);
 }
 
+enum PlaylistItem_SourceConfig {
+  mediaSourceConfig,
+  playlistSourceConfig,
+  notSet
+}
+
 class PlaylistItem extends $pb.GeneratedMessage {
   factory PlaylistItem({
     $core.String? name,
@@ -13935,6 +15827,8 @@ class PlaylistItem extends $pb.GeneratedMessage {
     $core.String? thumbnail,
     $fixnum.Int64? modifiedAt,
     $core.String? description,
+    $1.MediaSourceConfig? mediaSourceConfig,
+    $1.PlaylistSourceConfig? playlistSourceConfig,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -13944,6 +15838,9 @@ class PlaylistItem extends $pb.GeneratedMessage {
     if (thumbnail != null) result.thumbnail = thumbnail;
     if (modifiedAt != null) result.modifiedAt = modifiedAt;
     if (description != null) result.description = description;
+    if (mediaSourceConfig != null) result.mediaSourceConfig = mediaSourceConfig;
+    if (playlistSourceConfig != null)
+      result.playlistSourceConfig = playlistSourceConfig;
     return result;
   }
 
@@ -13956,10 +15853,17 @@ class PlaylistItem extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
+  static const $core.Map<$core.int, PlaylistItem_SourceConfig>
+      _PlaylistItem_SourceConfigByTag = {
+    8: PlaylistItem_SourceConfig.mediaSourceConfig,
+    9: PlaylistItem_SourceConfig.playlistSourceConfig,
+    0: PlaylistItem_SourceConfig.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PlaylistItem',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..oo(0, [8, 9])
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..aE<ItemType>(2, _omitFieldNames ? '' : 'itemType',
         enumValues: ItemType.values)
@@ -13970,6 +15874,11 @@ class PlaylistItem extends $pb.GeneratedMessage {
     ..aOS(5, _omitFieldNames ? '' : 'thumbnail')
     ..aInt64(6, _omitFieldNames ? '' : 'modifiedAt')
     ..aOS(7, _omitFieldNames ? '' : 'description')
+    ..aOM<$1.MediaSourceConfig>(8, _omitFieldNames ? '' : 'mediaSourceConfig',
+        subBuilder: $1.MediaSourceConfig.create)
+    ..aOM<$1.PlaylistSourceConfig>(
+        9, _omitFieldNames ? '' : 'playlistSourceConfig',
+        subBuilder: $1.PlaylistSourceConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -13990,6 +15899,14 @@ class PlaylistItem extends $pb.GeneratedMessage {
   static PlaylistItem getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PlaylistItem>(create);
   static PlaylistItem? _defaultInstance;
+
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  PlaylistItem_SourceConfig whichSourceConfig() =>
+      _PlaylistItem_SourceConfigByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  void clearSourceConfig() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   $core.String get name => $_getSZ(0);
@@ -14055,6 +15972,29 @@ class PlaylistItem extends $pb.GeneratedMessage {
   $core.bool hasDescription() => $_has(6);
   @$pb.TagNumber(7)
   void clearDescription() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $1.MediaSourceConfig get mediaSourceConfig => $_getN(7);
+  @$pb.TagNumber(8)
+  set mediaSourceConfig($1.MediaSourceConfig value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasMediaSourceConfig() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearMediaSourceConfig() => $_clearField(8);
+  @$pb.TagNumber(8)
+  $1.MediaSourceConfig ensureMediaSourceConfig() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  $1.PlaylistSourceConfig get playlistSourceConfig => $_getN(8);
+  @$pb.TagNumber(9)
+  set playlistSourceConfig($1.PlaylistSourceConfig value) =>
+      $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasPlaylistSourceConfig() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearPlaylistSourceConfig() => $_clearField(9);
+  @$pb.TagNumber(9)
+  $1.PlaylistSourceConfig ensurePlaylistSourceConfig() => $_ensure(8);
 }
 
 class PlaylistBrowsePathNode extends $pb.GeneratedMessage {
@@ -15265,6 +17205,20 @@ enum PlaybackMetadata_Metadata {
   directUrl,
   liveProxy,
   live,
+  twitch,
+  youtube,
+  douyin,
+  tiktok,
+  huya,
+  douyu,
+  acFun,
+  cctv,
+  fnos,
+  qnap,
+  synology,
+  nextcloud,
+  seafile,
+  truenas,
   notSet
 }
 
@@ -15276,6 +17230,20 @@ class PlaybackMetadata extends $pb.GeneratedMessage {
     DirectUrlPlaybackMetadata? directUrl,
     LiveProxyPlaybackMetadata? liveProxy,
     LivePlaybackMetadata? live,
+    TwitchPlaybackMetadata? twitch,
+    YoutubePlaybackMetadata? youtube,
+    DouyinPlaybackMetadata? douyin,
+    TikTokPlaybackMetadata? tiktok,
+    HuyaPlaybackMetadata? huya,
+    DouyuPlaybackMetadata? douyu,
+    AcFunPlaybackMetadata? acFun,
+    CctvPlaybackMetadata? cctv,
+    FnosPlaybackMetadata? fnos,
+    QnapPlaybackMetadata? qnap,
+    SynologyPlaybackMetadata? synology,
+    NextcloudPlaybackMetadata? nextcloud,
+    SeafilePlaybackMetadata? seafile,
+    TrueNasPlaybackMetadata? truenas,
   }) {
     final result = create();
     if (alist != null) result.alist = alist;
@@ -15284,6 +17252,20 @@ class PlaybackMetadata extends $pb.GeneratedMessage {
     if (directUrl != null) result.directUrl = directUrl;
     if (liveProxy != null) result.liveProxy = liveProxy;
     if (live != null) result.live = live;
+    if (twitch != null) result.twitch = twitch;
+    if (youtube != null) result.youtube = youtube;
+    if (douyin != null) result.douyin = douyin;
+    if (tiktok != null) result.tiktok = tiktok;
+    if (huya != null) result.huya = huya;
+    if (douyu != null) result.douyu = douyu;
+    if (acFun != null) result.acFun = acFun;
+    if (cctv != null) result.cctv = cctv;
+    if (fnos != null) result.fnos = fnos;
+    if (qnap != null) result.qnap = qnap;
+    if (synology != null) result.synology = synology;
+    if (nextcloud != null) result.nextcloud = nextcloud;
+    if (seafile != null) result.seafile = seafile;
+    if (truenas != null) result.truenas = truenas;
     return result;
   }
 
@@ -15304,13 +17286,28 @@ class PlaybackMetadata extends $pb.GeneratedMessage {
     4: PlaybackMetadata_Metadata.directUrl,
     5: PlaybackMetadata_Metadata.liveProxy,
     6: PlaybackMetadata_Metadata.live,
+    7: PlaybackMetadata_Metadata.twitch,
+    8: PlaybackMetadata_Metadata.youtube,
+    9: PlaybackMetadata_Metadata.douyin,
+    10: PlaybackMetadata_Metadata.tiktok,
+    11: PlaybackMetadata_Metadata.huya,
+    12: PlaybackMetadata_Metadata.douyu,
+    13: PlaybackMetadata_Metadata.acFun,
+    14: PlaybackMetadata_Metadata.cctv,
+    15: PlaybackMetadata_Metadata.fnos,
+    16: PlaybackMetadata_Metadata.qnap,
+    17: PlaybackMetadata_Metadata.synology,
+    18: PlaybackMetadata_Metadata.nextcloud,
+    19: PlaybackMetadata_Metadata.seafile,
+    20: PlaybackMetadata_Metadata.truenas,
     0: PlaybackMetadata_Metadata.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'PlaybackMetadata',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6])
+    ..oo(0,
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
     ..aOM<AlistPlaybackMetadata>(1, _omitFieldNames ? '' : 'alist',
         subBuilder: AlistPlaybackMetadata.create)
     ..aOM<BilibiliPlaybackMetadata>(2, _omitFieldNames ? '' : 'bilibili',
@@ -15323,6 +17320,34 @@ class PlaybackMetadata extends $pb.GeneratedMessage {
         subBuilder: LiveProxyPlaybackMetadata.create)
     ..aOM<LivePlaybackMetadata>(6, _omitFieldNames ? '' : 'live',
         subBuilder: LivePlaybackMetadata.create)
+    ..aOM<TwitchPlaybackMetadata>(7, _omitFieldNames ? '' : 'twitch',
+        subBuilder: TwitchPlaybackMetadata.create)
+    ..aOM<YoutubePlaybackMetadata>(8, _omitFieldNames ? '' : 'youtube',
+        subBuilder: YoutubePlaybackMetadata.create)
+    ..aOM<DouyinPlaybackMetadata>(9, _omitFieldNames ? '' : 'douyin',
+        subBuilder: DouyinPlaybackMetadata.create)
+    ..aOM<TikTokPlaybackMetadata>(10, _omitFieldNames ? '' : 'tiktok',
+        subBuilder: TikTokPlaybackMetadata.create)
+    ..aOM<HuyaPlaybackMetadata>(11, _omitFieldNames ? '' : 'huya',
+        subBuilder: HuyaPlaybackMetadata.create)
+    ..aOM<DouyuPlaybackMetadata>(12, _omitFieldNames ? '' : 'douyu',
+        subBuilder: DouyuPlaybackMetadata.create)
+    ..aOM<AcFunPlaybackMetadata>(13, _omitFieldNames ? '' : 'acFun',
+        subBuilder: AcFunPlaybackMetadata.create)
+    ..aOM<CctvPlaybackMetadata>(14, _omitFieldNames ? '' : 'cctv',
+        subBuilder: CctvPlaybackMetadata.create)
+    ..aOM<FnosPlaybackMetadata>(15, _omitFieldNames ? '' : 'fnos',
+        subBuilder: FnosPlaybackMetadata.create)
+    ..aOM<QnapPlaybackMetadata>(16, _omitFieldNames ? '' : 'qnap',
+        subBuilder: QnapPlaybackMetadata.create)
+    ..aOM<SynologyPlaybackMetadata>(17, _omitFieldNames ? '' : 'synology',
+        subBuilder: SynologyPlaybackMetadata.create)
+    ..aOM<NextcloudPlaybackMetadata>(18, _omitFieldNames ? '' : 'nextcloud',
+        subBuilder: NextcloudPlaybackMetadata.create)
+    ..aOM<SeafilePlaybackMetadata>(19, _omitFieldNames ? '' : 'seafile',
+        subBuilder: SeafilePlaybackMetadata.create)
+    ..aOM<TrueNasPlaybackMetadata>(20, _omitFieldNames ? '' : 'truenas',
+        subBuilder: TrueNasPlaybackMetadata.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -15350,6 +17375,20 @@ class PlaybackMetadata extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
+  @$pb.TagNumber(15)
+  @$pb.TagNumber(16)
+  @$pb.TagNumber(17)
+  @$pb.TagNumber(18)
+  @$pb.TagNumber(19)
+  @$pb.TagNumber(20)
   PlaybackMetadata_Metadata whichMetadata() =>
       _PlaybackMetadata_MetadataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
@@ -15358,6 +17397,20 @@ class PlaybackMetadata extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  @$pb.TagNumber(11)
+  @$pb.TagNumber(12)
+  @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
+  @$pb.TagNumber(15)
+  @$pb.TagNumber(16)
+  @$pb.TagNumber(17)
+  @$pb.TagNumber(18)
+  @$pb.TagNumber(19)
+  @$pb.TagNumber(20)
   void clearMetadata() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -15425,6 +17478,160 @@ class PlaybackMetadata extends $pb.GeneratedMessage {
   void clearLive() => $_clearField(6);
   @$pb.TagNumber(6)
   LivePlaybackMetadata ensureLive() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  TwitchPlaybackMetadata get twitch => $_getN(6);
+  @$pb.TagNumber(7)
+  set twitch(TwitchPlaybackMetadata value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasTwitch() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearTwitch() => $_clearField(7);
+  @$pb.TagNumber(7)
+  TwitchPlaybackMetadata ensureTwitch() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  YoutubePlaybackMetadata get youtube => $_getN(7);
+  @$pb.TagNumber(8)
+  set youtube(YoutubePlaybackMetadata value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasYoutube() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearYoutube() => $_clearField(8);
+  @$pb.TagNumber(8)
+  YoutubePlaybackMetadata ensureYoutube() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  DouyinPlaybackMetadata get douyin => $_getN(8);
+  @$pb.TagNumber(9)
+  set douyin(DouyinPlaybackMetadata value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasDouyin() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearDouyin() => $_clearField(9);
+  @$pb.TagNumber(9)
+  DouyinPlaybackMetadata ensureDouyin() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  TikTokPlaybackMetadata get tiktok => $_getN(9);
+  @$pb.TagNumber(10)
+  set tiktok(TikTokPlaybackMetadata value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasTiktok() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearTiktok() => $_clearField(10);
+  @$pb.TagNumber(10)
+  TikTokPlaybackMetadata ensureTiktok() => $_ensure(9);
+
+  @$pb.TagNumber(11)
+  HuyaPlaybackMetadata get huya => $_getN(10);
+  @$pb.TagNumber(11)
+  set huya(HuyaPlaybackMetadata value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasHuya() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearHuya() => $_clearField(11);
+  @$pb.TagNumber(11)
+  HuyaPlaybackMetadata ensureHuya() => $_ensure(10);
+
+  @$pb.TagNumber(12)
+  DouyuPlaybackMetadata get douyu => $_getN(11);
+  @$pb.TagNumber(12)
+  set douyu(DouyuPlaybackMetadata value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasDouyu() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearDouyu() => $_clearField(12);
+  @$pb.TagNumber(12)
+  DouyuPlaybackMetadata ensureDouyu() => $_ensure(11);
+
+  @$pb.TagNumber(13)
+  AcFunPlaybackMetadata get acFun => $_getN(12);
+  @$pb.TagNumber(13)
+  set acFun(AcFunPlaybackMetadata value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasAcFun() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearAcFun() => $_clearField(13);
+  @$pb.TagNumber(13)
+  AcFunPlaybackMetadata ensureAcFun() => $_ensure(12);
+
+  @$pb.TagNumber(14)
+  CctvPlaybackMetadata get cctv => $_getN(13);
+  @$pb.TagNumber(14)
+  set cctv(CctvPlaybackMetadata value) => $_setField(14, value);
+  @$pb.TagNumber(14)
+  $core.bool hasCctv() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearCctv() => $_clearField(14);
+  @$pb.TagNumber(14)
+  CctvPlaybackMetadata ensureCctv() => $_ensure(13);
+
+  @$pb.TagNumber(15)
+  FnosPlaybackMetadata get fnos => $_getN(14);
+  @$pb.TagNumber(15)
+  set fnos(FnosPlaybackMetadata value) => $_setField(15, value);
+  @$pb.TagNumber(15)
+  $core.bool hasFnos() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearFnos() => $_clearField(15);
+  @$pb.TagNumber(15)
+  FnosPlaybackMetadata ensureFnos() => $_ensure(14);
+
+  @$pb.TagNumber(16)
+  QnapPlaybackMetadata get qnap => $_getN(15);
+  @$pb.TagNumber(16)
+  set qnap(QnapPlaybackMetadata value) => $_setField(16, value);
+  @$pb.TagNumber(16)
+  $core.bool hasQnap() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearQnap() => $_clearField(16);
+  @$pb.TagNumber(16)
+  QnapPlaybackMetadata ensureQnap() => $_ensure(15);
+
+  @$pb.TagNumber(17)
+  SynologyPlaybackMetadata get synology => $_getN(16);
+  @$pb.TagNumber(17)
+  set synology(SynologyPlaybackMetadata value) => $_setField(17, value);
+  @$pb.TagNumber(17)
+  $core.bool hasSynology() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearSynology() => $_clearField(17);
+  @$pb.TagNumber(17)
+  SynologyPlaybackMetadata ensureSynology() => $_ensure(16);
+
+  @$pb.TagNumber(18)
+  NextcloudPlaybackMetadata get nextcloud => $_getN(17);
+  @$pb.TagNumber(18)
+  set nextcloud(NextcloudPlaybackMetadata value) => $_setField(18, value);
+  @$pb.TagNumber(18)
+  $core.bool hasNextcloud() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearNextcloud() => $_clearField(18);
+  @$pb.TagNumber(18)
+  NextcloudPlaybackMetadata ensureNextcloud() => $_ensure(17);
+
+  @$pb.TagNumber(19)
+  SeafilePlaybackMetadata get seafile => $_getN(18);
+  @$pb.TagNumber(19)
+  set seafile(SeafilePlaybackMetadata value) => $_setField(19, value);
+  @$pb.TagNumber(19)
+  $core.bool hasSeafile() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearSeafile() => $_clearField(19);
+  @$pb.TagNumber(19)
+  SeafilePlaybackMetadata ensureSeafile() => $_ensure(18);
+
+  @$pb.TagNumber(20)
+  TrueNasPlaybackMetadata get truenas => $_getN(19);
+  @$pb.TagNumber(20)
+  set truenas(TrueNasPlaybackMetadata value) => $_setField(20, value);
+  @$pb.TagNumber(20)
+  $core.bool hasTruenas() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearTruenas() => $_clearField(20);
+  @$pb.TagNumber(20)
+  TrueNasPlaybackMetadata ensureTruenas() => $_ensure(19);
 }
 
 class AlistPlaybackMetadata extends $pb.GeneratedMessage {
@@ -16290,6 +18497,4090 @@ class LivePlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasRoomId() => $_has(1);
   @$pb.TagNumber(2)
   void clearRoomId() => $_clearField(2);
+}
+
+class TwitchPlaybackMetadata extends $pb.GeneratedMessage {
+  factory TwitchPlaybackMetadata({
+    $core.String? resourceId,
+    $core.String? title,
+    $core.String? author,
+    $core.String? category,
+    $core.String? thumbnailUrl,
+    $core.String? description,
+    $fixnum.Int64? viewCount,
+    $core.String? publishedAt,
+    $core.Iterable<TwitchChapterMetadata>? chapters,
+    $core.String? storyboardUrl,
+  }) {
+    final result = create();
+    if (resourceId != null) result.resourceId = resourceId;
+    if (title != null) result.title = title;
+    if (author != null) result.author = author;
+    if (category != null) result.category = category;
+    if (thumbnailUrl != null) result.thumbnailUrl = thumbnailUrl;
+    if (description != null) result.description = description;
+    if (viewCount != null) result.viewCount = viewCount;
+    if (publishedAt != null) result.publishedAt = publishedAt;
+    if (chapters != null) result.chapters.addAll(chapters);
+    if (storyboardUrl != null) result.storyboardUrl = storyboardUrl;
+    return result;
+  }
+
+  TwitchPlaybackMetadata._();
+
+  factory TwitchPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TwitchPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TwitchPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'resourceId')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'author')
+    ..aOS(4, _omitFieldNames ? '' : 'category')
+    ..aOS(5, _omitFieldNames ? '' : 'thumbnailUrl')
+    ..aOS(6, _omitFieldNames ? '' : 'description')
+    ..a<$fixnum.Int64>(
+        7, _omitFieldNames ? '' : 'viewCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(8, _omitFieldNames ? '' : 'publishedAt')
+    ..pPM<TwitchChapterMetadata>(9, _omitFieldNames ? '' : 'chapters',
+        subBuilder: TwitchChapterMetadata.create)
+    ..aOS(10, _omitFieldNames ? '' : 'storyboardUrl')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TwitchPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TwitchPlaybackMetadata copyWith(
+          void Function(TwitchPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as TwitchPlaybackMetadata))
+          as TwitchPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TwitchPlaybackMetadata create() => TwitchPlaybackMetadata._();
+  @$core.override
+  TwitchPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TwitchPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TwitchPlaybackMetadata>(create);
+  static TwitchPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get resourceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set resourceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasResourceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearResourceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get author => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set author($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAuthor() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAuthor() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get category => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set category($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCategory() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCategory() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get thumbnailUrl => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set thumbnailUrl($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasThumbnailUrl() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearThumbnailUrl() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get description => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set description($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasDescription() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearDescription() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get viewCount => $_getI64(6);
+  @$pb.TagNumber(7)
+  set viewCount($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasViewCount() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearViewCount() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get publishedAt => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set publishedAt($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasPublishedAt() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearPublishedAt() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $pb.PbList<TwitchChapterMetadata> get chapters => $_getList(8);
+
+  @$pb.TagNumber(10)
+  $core.String get storyboardUrl => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set storyboardUrl($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasStoryboardUrl() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearStoryboardUrl() => $_clearField(10);
+}
+
+class TwitchChapterMetadata extends $pb.GeneratedMessage {
+  factory TwitchChapterMetadata({
+    $core.String? title,
+    $fixnum.Int64? startSeconds,
+    $fixnum.Int64? endSeconds,
+  }) {
+    final result = create();
+    if (title != null) result.title = title;
+    if (startSeconds != null) result.startSeconds = startSeconds;
+    if (endSeconds != null) result.endSeconds = endSeconds;
+    return result;
+  }
+
+  TwitchChapterMetadata._();
+
+  factory TwitchChapterMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TwitchChapterMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TwitchChapterMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'title')
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'startSeconds', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'endSeconds', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TwitchChapterMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TwitchChapterMetadata copyWith(
+          void Function(TwitchChapterMetadata) updates) =>
+      super.copyWith((message) => updates(message as TwitchChapterMetadata))
+          as TwitchChapterMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TwitchChapterMetadata create() => TwitchChapterMetadata._();
+  @$core.override
+  TwitchChapterMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TwitchChapterMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TwitchChapterMetadata>(create);
+  static TwitchChapterMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get title => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set title($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTitle() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTitle() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get startSeconds => $_getI64(1);
+  @$pb.TagNumber(2)
+  set startSeconds($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasStartSeconds() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearStartSeconds() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get endSeconds => $_getI64(2);
+  @$pb.TagNumber(3)
+  set endSeconds($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasEndSeconds() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEndSeconds() => $_clearField(3);
+}
+
+class YoutubePlaybackMetadata extends $pb.GeneratedMessage {
+  factory YoutubePlaybackMetadata({
+    $core.String? videoId,
+    $core.String? channelId,
+    $core.String? channelName,
+    $core.String? description,
+    $fixnum.Int64? viewCount,
+    $core.String? publishDate,
+    $core.String? uploadDate,
+    $core.String? category,
+    $core.bool? isLive,
+    $core.String? liveStart,
+    $core.String? liveEnd,
+    $core.String? storyboardSpec,
+    $core.int? automaticCaptionCount,
+    $core.int? manualCaptionCount,
+    $core.Iterable<$core.String>? translationLanguages,
+  }) {
+    final result = create();
+    if (videoId != null) result.videoId = videoId;
+    if (channelId != null) result.channelId = channelId;
+    if (channelName != null) result.channelName = channelName;
+    if (description != null) result.description = description;
+    if (viewCount != null) result.viewCount = viewCount;
+    if (publishDate != null) result.publishDate = publishDate;
+    if (uploadDate != null) result.uploadDate = uploadDate;
+    if (category != null) result.category = category;
+    if (isLive != null) result.isLive = isLive;
+    if (liveStart != null) result.liveStart = liveStart;
+    if (liveEnd != null) result.liveEnd = liveEnd;
+    if (storyboardSpec != null) result.storyboardSpec = storyboardSpec;
+    if (automaticCaptionCount != null)
+      result.automaticCaptionCount = automaticCaptionCount;
+    if (manualCaptionCount != null)
+      result.manualCaptionCount = manualCaptionCount;
+    if (translationLanguages != null)
+      result.translationLanguages.addAll(translationLanguages);
+    return result;
+  }
+
+  YoutubePlaybackMetadata._();
+
+  factory YoutubePlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory YoutubePlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'YoutubePlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'videoId')
+    ..aOS(2, _omitFieldNames ? '' : 'channelId')
+    ..aOS(3, _omitFieldNames ? '' : 'channelName')
+    ..aOS(4, _omitFieldNames ? '' : 'description')
+    ..a<$fixnum.Int64>(
+        5, _omitFieldNames ? '' : 'viewCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(6, _omitFieldNames ? '' : 'publishDate')
+    ..aOS(7, _omitFieldNames ? '' : 'uploadDate')
+    ..aOS(8, _omitFieldNames ? '' : 'category')
+    ..aOB(9, _omitFieldNames ? '' : 'isLive')
+    ..aOS(10, _omitFieldNames ? '' : 'liveStart')
+    ..aOS(11, _omitFieldNames ? '' : 'liveEnd')
+    ..aOS(12, _omitFieldNames ? '' : 'storyboardSpec')
+    ..aI(13, _omitFieldNames ? '' : 'automaticCaptionCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(14, _omitFieldNames ? '' : 'manualCaptionCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..pPS(15, _omitFieldNames ? '' : 'translationLanguages')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  YoutubePlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  YoutubePlaybackMetadata copyWith(
+          void Function(YoutubePlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as YoutubePlaybackMetadata))
+          as YoutubePlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static YoutubePlaybackMetadata create() => YoutubePlaybackMetadata._();
+  @$core.override
+  YoutubePlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static YoutubePlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<YoutubePlaybackMetadata>(create);
+  static YoutubePlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get videoId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set videoId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVideoId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVideoId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get channelId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set channelId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasChannelId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearChannelId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get channelName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set channelName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasChannelName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearChannelName() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get description => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set description($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasDescription() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearDescription() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get viewCount => $_getI64(4);
+  @$pb.TagNumber(5)
+  set viewCount($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasViewCount() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearViewCount() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get publishDate => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set publishDate($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasPublishDate() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearPublishDate() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get uploadDate => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set uploadDate($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasUploadDate() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearUploadDate() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get category => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set category($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasCategory() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearCategory() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.bool get isLive => $_getBF(8);
+  @$pb.TagNumber(9)
+  set isLive($core.bool value) => $_setBool(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasIsLive() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearIsLive() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.String get liveStart => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set liveStart($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasLiveStart() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearLiveStart() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.String get liveEnd => $_getSZ(10);
+  @$pb.TagNumber(11)
+  set liveEnd($core.String value) => $_setString(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasLiveEnd() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearLiveEnd() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get storyboardSpec => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set storyboardSpec($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasStoryboardSpec() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearStoryboardSpec() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.int get automaticCaptionCount => $_getIZ(12);
+  @$pb.TagNumber(13)
+  set automaticCaptionCount($core.int value) => $_setUnsignedInt32(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasAutomaticCaptionCount() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearAutomaticCaptionCount() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.int get manualCaptionCount => $_getIZ(13);
+  @$pb.TagNumber(14)
+  set manualCaptionCount($core.int value) => $_setUnsignedInt32(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasManualCaptionCount() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearManualCaptionCount() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $pb.PbList<$core.String> get translationLanguages => $_getList(14);
+}
+
+class DouyinPlaybackMetadata extends $pb.GeneratedMessage {
+  factory DouyinPlaybackMetadata({
+    $core.String? id,
+    $core.String? kind,
+    $core.String? authorId,
+    $core.String? authorSecUid,
+    $core.String? authorName,
+    $core.String? description,
+    $fixnum.Int64? viewCount,
+    $fixnum.Int64? likeCount,
+    $fixnum.Int64? commentCount,
+    $fixnum.Int64? shareCount,
+    $fixnum.Int64? collectCount,
+    $fixnum.Int64? createdAt,
+    $core.String? musicTitle,
+    $core.String? musicAuthor,
+    $core.bool? isLive,
+    $core.String? roomId,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (kind != null) result.kind = kind;
+    if (authorId != null) result.authorId = authorId;
+    if (authorSecUid != null) result.authorSecUid = authorSecUid;
+    if (authorName != null) result.authorName = authorName;
+    if (description != null) result.description = description;
+    if (viewCount != null) result.viewCount = viewCount;
+    if (likeCount != null) result.likeCount = likeCount;
+    if (commentCount != null) result.commentCount = commentCount;
+    if (shareCount != null) result.shareCount = shareCount;
+    if (collectCount != null) result.collectCount = collectCount;
+    if (createdAt != null) result.createdAt = createdAt;
+    if (musicTitle != null) result.musicTitle = musicTitle;
+    if (musicAuthor != null) result.musicAuthor = musicAuthor;
+    if (isLive != null) result.isLive = isLive;
+    if (roomId != null) result.roomId = roomId;
+    return result;
+  }
+
+  DouyinPlaybackMetadata._();
+
+  factory DouyinPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DouyinPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DouyinPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'kind')
+    ..aOS(3, _omitFieldNames ? '' : 'authorId')
+    ..aOS(4, _omitFieldNames ? '' : 'authorSecUid')
+    ..aOS(5, _omitFieldNames ? '' : 'authorName')
+    ..aOS(6, _omitFieldNames ? '' : 'description')
+    ..a<$fixnum.Int64>(
+        7, _omitFieldNames ? '' : 'viewCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        8, _omitFieldNames ? '' : 'likeCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        9, _omitFieldNames ? '' : 'commentCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        10, _omitFieldNames ? '' : 'shareCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        11, _omitFieldNames ? '' : 'collectCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aInt64(12, _omitFieldNames ? '' : 'createdAt')
+    ..aOS(13, _omitFieldNames ? '' : 'musicTitle')
+    ..aOS(14, _omitFieldNames ? '' : 'musicAuthor')
+    ..aOB(15, _omitFieldNames ? '' : 'isLive')
+    ..aOS(16, _omitFieldNames ? '' : 'roomId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DouyinPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DouyinPlaybackMetadata copyWith(
+          void Function(DouyinPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as DouyinPlaybackMetadata))
+          as DouyinPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DouyinPlaybackMetadata create() => DouyinPlaybackMetadata._();
+  @$core.override
+  DouyinPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DouyinPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DouyinPlaybackMetadata>(create);
+  static DouyinPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get kind => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set kind($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasKind() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearKind() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get authorId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set authorId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAuthorId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAuthorId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get authorSecUid => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set authorSecUid($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAuthorSecUid() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAuthorSecUid() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get authorName => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set authorName($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasAuthorName() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearAuthorName() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get description => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set description($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasDescription() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearDescription() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get viewCount => $_getI64(6);
+  @$pb.TagNumber(7)
+  set viewCount($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasViewCount() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearViewCount() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get likeCount => $_getI64(7);
+  @$pb.TagNumber(8)
+  set likeCount($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasLikeCount() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearLikeCount() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get commentCount => $_getI64(8);
+  @$pb.TagNumber(9)
+  set commentCount($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasCommentCount() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearCommentCount() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get shareCount => $_getI64(9);
+  @$pb.TagNumber(10)
+  set shareCount($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasShareCount() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearShareCount() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get collectCount => $_getI64(10);
+  @$pb.TagNumber(11)
+  set collectCount($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasCollectCount() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearCollectCount() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $fixnum.Int64 get createdAt => $_getI64(11);
+  @$pb.TagNumber(12)
+  set createdAt($fixnum.Int64 value) => $_setInt64(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasCreatedAt() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearCreatedAt() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get musicTitle => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set musicTitle($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasMusicTitle() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearMusicTitle() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.String get musicAuthor => $_getSZ(13);
+  @$pb.TagNumber(14)
+  set musicAuthor($core.String value) => $_setString(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasMusicAuthor() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearMusicAuthor() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $core.bool get isLive => $_getBF(14);
+  @$pb.TagNumber(15)
+  set isLive($core.bool value) => $_setBool(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasIsLive() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearIsLive() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $core.String get roomId => $_getSZ(15);
+  @$pb.TagNumber(16)
+  set roomId($core.String value) => $_setString(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasRoomId() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearRoomId() => $_clearField(16);
+}
+
+class TikTokPlaybackMetadata extends $pb.GeneratedMessage {
+  factory TikTokPlaybackMetadata({
+    $core.String? id,
+    $core.String? kind,
+    $core.String? authorId,
+    $core.String? authorSecUid,
+    $core.String? authorUniqueId,
+    $core.String? authorName,
+    $core.String? description,
+    $fixnum.Int64? viewCount,
+    $fixnum.Int64? likeCount,
+    $fixnum.Int64? commentCount,
+    $fixnum.Int64? shareCount,
+    $fixnum.Int64? collectCount,
+    $fixnum.Int64? concurrentViewers,
+    $fixnum.Int64? createdAt,
+    $core.String? musicTitle,
+    $core.String? musicAuthor,
+    $core.int? subtitleCount,
+    $core.bool? isLive,
+    $core.String? roomId,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (kind != null) result.kind = kind;
+    if (authorId != null) result.authorId = authorId;
+    if (authorSecUid != null) result.authorSecUid = authorSecUid;
+    if (authorUniqueId != null) result.authorUniqueId = authorUniqueId;
+    if (authorName != null) result.authorName = authorName;
+    if (description != null) result.description = description;
+    if (viewCount != null) result.viewCount = viewCount;
+    if (likeCount != null) result.likeCount = likeCount;
+    if (commentCount != null) result.commentCount = commentCount;
+    if (shareCount != null) result.shareCount = shareCount;
+    if (collectCount != null) result.collectCount = collectCount;
+    if (concurrentViewers != null) result.concurrentViewers = concurrentViewers;
+    if (createdAt != null) result.createdAt = createdAt;
+    if (musicTitle != null) result.musicTitle = musicTitle;
+    if (musicAuthor != null) result.musicAuthor = musicAuthor;
+    if (subtitleCount != null) result.subtitleCount = subtitleCount;
+    if (isLive != null) result.isLive = isLive;
+    if (roomId != null) result.roomId = roomId;
+    return result;
+  }
+
+  TikTokPlaybackMetadata._();
+
+  factory TikTokPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TikTokPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TikTokPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'kind')
+    ..aOS(3, _omitFieldNames ? '' : 'authorId')
+    ..aOS(4, _omitFieldNames ? '' : 'authorSecUid')
+    ..aOS(5, _omitFieldNames ? '' : 'authorUniqueId')
+    ..aOS(6, _omitFieldNames ? '' : 'authorName')
+    ..aOS(7, _omitFieldNames ? '' : 'description')
+    ..a<$fixnum.Int64>(
+        8, _omitFieldNames ? '' : 'viewCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        9, _omitFieldNames ? '' : 'likeCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        10, _omitFieldNames ? '' : 'commentCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        11, _omitFieldNames ? '' : 'shareCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        12, _omitFieldNames ? '' : 'collectCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        13, _omitFieldNames ? '' : 'concurrentViewers', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aInt64(14, _omitFieldNames ? '' : 'createdAt')
+    ..aOS(15, _omitFieldNames ? '' : 'musicTitle')
+    ..aOS(16, _omitFieldNames ? '' : 'musicAuthor')
+    ..aI(17, _omitFieldNames ? '' : 'subtitleCount',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOB(18, _omitFieldNames ? '' : 'isLive')
+    ..aOS(19, _omitFieldNames ? '' : 'roomId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TikTokPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TikTokPlaybackMetadata copyWith(
+          void Function(TikTokPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as TikTokPlaybackMetadata))
+          as TikTokPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TikTokPlaybackMetadata create() => TikTokPlaybackMetadata._();
+  @$core.override
+  TikTokPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TikTokPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TikTokPlaybackMetadata>(create);
+  static TikTokPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get kind => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set kind($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasKind() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearKind() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get authorId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set authorId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAuthorId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAuthorId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get authorSecUid => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set authorSecUid($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAuthorSecUid() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAuthorSecUid() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get authorUniqueId => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set authorUniqueId($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasAuthorUniqueId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearAuthorUniqueId() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get authorName => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set authorName($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasAuthorName() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearAuthorName() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get description => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set description($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasDescription() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearDescription() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get viewCount => $_getI64(7);
+  @$pb.TagNumber(8)
+  set viewCount($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasViewCount() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearViewCount() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get likeCount => $_getI64(8);
+  @$pb.TagNumber(9)
+  set likeCount($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasLikeCount() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearLikeCount() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get commentCount => $_getI64(9);
+  @$pb.TagNumber(10)
+  set commentCount($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasCommentCount() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearCommentCount() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get shareCount => $_getI64(10);
+  @$pb.TagNumber(11)
+  set shareCount($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasShareCount() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearShareCount() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $fixnum.Int64 get collectCount => $_getI64(11);
+  @$pb.TagNumber(12)
+  set collectCount($fixnum.Int64 value) => $_setInt64(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasCollectCount() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearCollectCount() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $fixnum.Int64 get concurrentViewers => $_getI64(12);
+  @$pb.TagNumber(13)
+  set concurrentViewers($fixnum.Int64 value) => $_setInt64(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasConcurrentViewers() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearConcurrentViewers() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $fixnum.Int64 get createdAt => $_getI64(13);
+  @$pb.TagNumber(14)
+  set createdAt($fixnum.Int64 value) => $_setInt64(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasCreatedAt() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearCreatedAt() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $core.String get musicTitle => $_getSZ(14);
+  @$pb.TagNumber(15)
+  set musicTitle($core.String value) => $_setString(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasMusicTitle() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearMusicTitle() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $core.String get musicAuthor => $_getSZ(15);
+  @$pb.TagNumber(16)
+  set musicAuthor($core.String value) => $_setString(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasMusicAuthor() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearMusicAuthor() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $core.int get subtitleCount => $_getIZ(16);
+  @$pb.TagNumber(17)
+  set subtitleCount($core.int value) => $_setUnsignedInt32(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasSubtitleCount() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearSubtitleCount() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $core.bool get isLive => $_getBF(17);
+  @$pb.TagNumber(18)
+  set isLive($core.bool value) => $_setBool(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasIsLive() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearIsLive() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $core.String get roomId => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set roomId($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasRoomId() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearRoomId() => $_clearField(19);
+}
+
+class HuyaPlaybackMetadata extends $pb.GeneratedMessage {
+  factory HuyaPlaybackMetadata({
+    $core.String? resourceId,
+    $core.String? title,
+    $core.String? author,
+    $core.String? authorId,
+    $core.String? category,
+    $core.String? thumbnailUrl,
+    $core.String? avatarUrl,
+    $core.String? description,
+    $fixnum.Int64? viewCount,
+    $fixnum.Int64? commentCount,
+    $fixnum.Int64? likeCount,
+    $fixnum.Int64? publishedAt,
+  }) {
+    final result = create();
+    if (resourceId != null) result.resourceId = resourceId;
+    if (title != null) result.title = title;
+    if (author != null) result.author = author;
+    if (authorId != null) result.authorId = authorId;
+    if (category != null) result.category = category;
+    if (thumbnailUrl != null) result.thumbnailUrl = thumbnailUrl;
+    if (avatarUrl != null) result.avatarUrl = avatarUrl;
+    if (description != null) result.description = description;
+    if (viewCount != null) result.viewCount = viewCount;
+    if (commentCount != null) result.commentCount = commentCount;
+    if (likeCount != null) result.likeCount = likeCount;
+    if (publishedAt != null) result.publishedAt = publishedAt;
+    return result;
+  }
+
+  HuyaPlaybackMetadata._();
+
+  factory HuyaPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory HuyaPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'HuyaPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'resourceId')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'author')
+    ..aOS(4, _omitFieldNames ? '' : 'authorId')
+    ..aOS(5, _omitFieldNames ? '' : 'category')
+    ..aOS(6, _omitFieldNames ? '' : 'thumbnailUrl')
+    ..aOS(7, _omitFieldNames ? '' : 'avatarUrl')
+    ..aOS(8, _omitFieldNames ? '' : 'description')
+    ..a<$fixnum.Int64>(
+        9, _omitFieldNames ? '' : 'viewCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        10, _omitFieldNames ? '' : 'commentCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        11, _omitFieldNames ? '' : 'likeCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aInt64(12, _omitFieldNames ? '' : 'publishedAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HuyaPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HuyaPlaybackMetadata copyWith(void Function(HuyaPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as HuyaPlaybackMetadata))
+          as HuyaPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static HuyaPlaybackMetadata create() => HuyaPlaybackMetadata._();
+  @$core.override
+  HuyaPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static HuyaPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<HuyaPlaybackMetadata>(create);
+  static HuyaPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get resourceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set resourceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasResourceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearResourceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get author => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set author($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAuthor() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAuthor() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get authorId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set authorId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAuthorId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAuthorId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get category => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set category($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasCategory() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearCategory() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get thumbnailUrl => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set thumbnailUrl($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasThumbnailUrl() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearThumbnailUrl() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get avatarUrl => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set avatarUrl($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasAvatarUrl() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearAvatarUrl() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get description => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set description($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasDescription() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearDescription() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get viewCount => $_getI64(8);
+  @$pb.TagNumber(9)
+  set viewCount($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasViewCount() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearViewCount() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get commentCount => $_getI64(9);
+  @$pb.TagNumber(10)
+  set commentCount($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasCommentCount() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearCommentCount() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get likeCount => $_getI64(10);
+  @$pb.TagNumber(11)
+  set likeCount($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasLikeCount() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearLikeCount() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $fixnum.Int64 get publishedAt => $_getI64(11);
+  @$pb.TagNumber(12)
+  set publishedAt($fixnum.Int64 value) => $_setInt64(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasPublishedAt() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearPublishedAt() => $_clearField(12);
+}
+
+class DouyuPlaybackMetadata extends $pb.GeneratedMessage {
+  factory DouyuPlaybackMetadata({
+    $core.String? roomId,
+    $core.String? title,
+    $core.String? author,
+    $core.String? category,
+    $core.String? thumbnailUrl,
+    $core.String? avatarUrl,
+    $core.bool? isReplay,
+    $core.bool? isVip,
+    $fixnum.Int64? viewerCount,
+    $core.String? startedAt,
+  }) {
+    final result = create();
+    if (roomId != null) result.roomId = roomId;
+    if (title != null) result.title = title;
+    if (author != null) result.author = author;
+    if (category != null) result.category = category;
+    if (thumbnailUrl != null) result.thumbnailUrl = thumbnailUrl;
+    if (avatarUrl != null) result.avatarUrl = avatarUrl;
+    if (isReplay != null) result.isReplay = isReplay;
+    if (isVip != null) result.isVip = isVip;
+    if (viewerCount != null) result.viewerCount = viewerCount;
+    if (startedAt != null) result.startedAt = startedAt;
+    return result;
+  }
+
+  DouyuPlaybackMetadata._();
+
+  factory DouyuPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DouyuPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DouyuPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roomId')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'author')
+    ..aOS(4, _omitFieldNames ? '' : 'category')
+    ..aOS(5, _omitFieldNames ? '' : 'thumbnailUrl')
+    ..aOS(6, _omitFieldNames ? '' : 'avatarUrl')
+    ..aOB(7, _omitFieldNames ? '' : 'isReplay')
+    ..aOB(8, _omitFieldNames ? '' : 'isVip')
+    ..a<$fixnum.Int64>(
+        9, _omitFieldNames ? '' : 'viewerCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(10, _omitFieldNames ? '' : 'startedAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DouyuPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DouyuPlaybackMetadata copyWith(
+          void Function(DouyuPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as DouyuPlaybackMetadata))
+          as DouyuPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DouyuPlaybackMetadata create() => DouyuPlaybackMetadata._();
+  @$core.override
+  DouyuPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DouyuPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DouyuPlaybackMetadata>(create);
+  static DouyuPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roomId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roomId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoomId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoomId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get author => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set author($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAuthor() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAuthor() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get category => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set category($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCategory() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCategory() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get thumbnailUrl => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set thumbnailUrl($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasThumbnailUrl() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearThumbnailUrl() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get avatarUrl => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set avatarUrl($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasAvatarUrl() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearAvatarUrl() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get isReplay => $_getBF(6);
+  @$pb.TagNumber(7)
+  set isReplay($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasIsReplay() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearIsReplay() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.bool get isVip => $_getBF(7);
+  @$pb.TagNumber(8)
+  set isVip($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasIsVip() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearIsVip() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get viewerCount => $_getI64(8);
+  @$pb.TagNumber(9)
+  set viewerCount($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasViewerCount() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearViewerCount() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.String get startedAt => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set startedAt($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasStartedAt() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearStartedAt() => $_clearField(10);
+}
+
+class AcFunPlaybackMetadata extends $pb.GeneratedMessage {
+  factory AcFunPlaybackMetadata({
+    $core.String? resourceId,
+    $core.String? title,
+    $core.String? author,
+    $core.String? authorId,
+    $core.String? category,
+    $core.String? thumbnailUrl,
+    $core.String? avatarUrl,
+    $core.String? description,
+    $core.Iterable<$core.String>? tags,
+    $fixnum.Int64? viewCount,
+    $fixnum.Int64? likeCount,
+    $fixnum.Int64? commentCount,
+    $fixnum.Int64? publishedAt,
+    $fixnum.Int64? startedAt,
+  }) {
+    final result = create();
+    if (resourceId != null) result.resourceId = resourceId;
+    if (title != null) result.title = title;
+    if (author != null) result.author = author;
+    if (authorId != null) result.authorId = authorId;
+    if (category != null) result.category = category;
+    if (thumbnailUrl != null) result.thumbnailUrl = thumbnailUrl;
+    if (avatarUrl != null) result.avatarUrl = avatarUrl;
+    if (description != null) result.description = description;
+    if (tags != null) result.tags.addAll(tags);
+    if (viewCount != null) result.viewCount = viewCount;
+    if (likeCount != null) result.likeCount = likeCount;
+    if (commentCount != null) result.commentCount = commentCount;
+    if (publishedAt != null) result.publishedAt = publishedAt;
+    if (startedAt != null) result.startedAt = startedAt;
+    return result;
+  }
+
+  AcFunPlaybackMetadata._();
+
+  factory AcFunPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory AcFunPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'AcFunPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'resourceId')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'author')
+    ..aOS(4, _omitFieldNames ? '' : 'authorId')
+    ..aOS(5, _omitFieldNames ? '' : 'category')
+    ..aOS(6, _omitFieldNames ? '' : 'thumbnailUrl')
+    ..aOS(7, _omitFieldNames ? '' : 'avatarUrl')
+    ..aOS(8, _omitFieldNames ? '' : 'description')
+    ..pPS(9, _omitFieldNames ? '' : 'tags')
+    ..a<$fixnum.Int64>(
+        10, _omitFieldNames ? '' : 'viewCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        11, _omitFieldNames ? '' : 'likeCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        12, _omitFieldNames ? '' : 'commentCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aInt64(13, _omitFieldNames ? '' : 'publishedAt')
+    ..aInt64(14, _omitFieldNames ? '' : 'startedAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AcFunPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  AcFunPlaybackMetadata copyWith(
+          void Function(AcFunPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as AcFunPlaybackMetadata))
+          as AcFunPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AcFunPlaybackMetadata create() => AcFunPlaybackMetadata._();
+  @$core.override
+  AcFunPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static AcFunPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AcFunPlaybackMetadata>(create);
+  static AcFunPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get resourceId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set resourceId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasResourceId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearResourceId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get author => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set author($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAuthor() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAuthor() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get authorId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set authorId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAuthorId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAuthorId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get category => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set category($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasCategory() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearCategory() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get thumbnailUrl => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set thumbnailUrl($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasThumbnailUrl() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearThumbnailUrl() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get avatarUrl => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set avatarUrl($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasAvatarUrl() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearAvatarUrl() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get description => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set description($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasDescription() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearDescription() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $pb.PbList<$core.String> get tags => $_getList(8);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get viewCount => $_getI64(9);
+  @$pb.TagNumber(10)
+  set viewCount($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasViewCount() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearViewCount() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get likeCount => $_getI64(10);
+  @$pb.TagNumber(11)
+  set likeCount($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasLikeCount() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearLikeCount() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $fixnum.Int64 get commentCount => $_getI64(11);
+  @$pb.TagNumber(12)
+  set commentCount($fixnum.Int64 value) => $_setInt64(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasCommentCount() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearCommentCount() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $fixnum.Int64 get publishedAt => $_getI64(12);
+  @$pb.TagNumber(13)
+  set publishedAt($fixnum.Int64 value) => $_setInt64(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasPublishedAt() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearPublishedAt() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $fixnum.Int64 get startedAt => $_getI64(13);
+  @$pb.TagNumber(14)
+  set startedAt($fixnum.Int64 value) => $_setInt64(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasStartedAt() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearStartedAt() => $_clearField(14);
+}
+
+class CctvChapterMetadata extends $pb.GeneratedMessage {
+  factory CctvChapterMetadata({
+    $core.String? id,
+    $core.String? title,
+    $fixnum.Int64? startMs,
+    $fixnum.Int64? endMs,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (title != null) result.title = title;
+    if (startMs != null) result.startMs = startMs;
+    if (endMs != null) result.endMs = endMs;
+    return result;
+  }
+
+  CctvChapterMetadata._();
+
+  factory CctvChapterMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CctvChapterMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CctvChapterMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'startMs', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'endMs', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CctvChapterMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CctvChapterMetadata copyWith(void Function(CctvChapterMetadata) updates) =>
+      super.copyWith((message) => updates(message as CctvChapterMetadata))
+          as CctvChapterMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CctvChapterMetadata create() => CctvChapterMetadata._();
+  @$core.override
+  CctvChapterMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CctvChapterMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CctvChapterMetadata>(create);
+  static CctvChapterMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get startMs => $_getI64(2);
+  @$pb.TagNumber(3)
+  set startMs($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStartMs() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStartMs() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get endMs => $_getI64(3);
+  @$pb.TagNumber(4)
+  set endMs($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasEndMs() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearEndMs() => $_clearField(4);
+}
+
+class CctvPlaybackMetadata extends $pb.GeneratedMessage {
+  factory CctvPlaybackMetadata({
+    $core.String? videoId,
+    $core.String? title,
+    $core.String? description,
+    $core.String? uploader,
+    $core.String? producer,
+    $core.String? channel,
+    $core.String? column,
+    $core.Iterable<$core.String>? tags,
+    $core.String? thumbnailUrl,
+    $fixnum.Int64? publishedAt,
+    $core.Iterable<CctvChapterMetadata>? chapters,
+    $core.bool? protected,
+  }) {
+    final result = create();
+    if (videoId != null) result.videoId = videoId;
+    if (title != null) result.title = title;
+    if (description != null) result.description = description;
+    if (uploader != null) result.uploader = uploader;
+    if (producer != null) result.producer = producer;
+    if (channel != null) result.channel = channel;
+    if (column != null) result.column = column;
+    if (tags != null) result.tags.addAll(tags);
+    if (thumbnailUrl != null) result.thumbnailUrl = thumbnailUrl;
+    if (publishedAt != null) result.publishedAt = publishedAt;
+    if (chapters != null) result.chapters.addAll(chapters);
+    if (protected != null) result.protected = protected;
+    return result;
+  }
+
+  CctvPlaybackMetadata._();
+
+  factory CctvPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CctvPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CctvPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'videoId')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'description')
+    ..aOS(4, _omitFieldNames ? '' : 'uploader')
+    ..aOS(5, _omitFieldNames ? '' : 'producer')
+    ..aOS(6, _omitFieldNames ? '' : 'channel')
+    ..aOS(7, _omitFieldNames ? '' : 'column')
+    ..pPS(8, _omitFieldNames ? '' : 'tags')
+    ..aOS(9, _omitFieldNames ? '' : 'thumbnailUrl')
+    ..aInt64(10, _omitFieldNames ? '' : 'publishedAt')
+    ..pPM<CctvChapterMetadata>(11, _omitFieldNames ? '' : 'chapters',
+        subBuilder: CctvChapterMetadata.create)
+    ..aOB(12, _omitFieldNames ? '' : 'protected')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CctvPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CctvPlaybackMetadata copyWith(void Function(CctvPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as CctvPlaybackMetadata))
+          as CctvPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CctvPlaybackMetadata create() => CctvPlaybackMetadata._();
+  @$core.override
+  CctvPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CctvPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CctvPlaybackMetadata>(create);
+  static CctvPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get videoId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set videoId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVideoId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVideoId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get description => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set description($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDescription() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDescription() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get uploader => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set uploader($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasUploader() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearUploader() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get producer => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set producer($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasProducer() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearProducer() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get channel => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set channel($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasChannel() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearChannel() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get column => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set column($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasColumn() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearColumn() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $pb.PbList<$core.String> get tags => $_getList(7);
+
+  @$pb.TagNumber(9)
+  $core.String get thumbnailUrl => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set thumbnailUrl($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasThumbnailUrl() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearThumbnailUrl() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get publishedAt => $_getI64(9);
+  @$pb.TagNumber(10)
+  set publishedAt($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasPublishedAt() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearPublishedAt() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $pb.PbList<CctvChapterMetadata> get chapters => $_getList(10);
+
+  @$pb.TagNumber(12)
+  $core.bool get protected => $_getBF(11);
+  @$pb.TagNumber(12)
+  set protected($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasProtected() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearProtected() => $_clearField(12);
+}
+
+class FnosFilePlaybackMetadata extends $pb.GeneratedMessage {
+  factory FnosFilePlaybackMetadata({
+    $core.String? name,
+    $core.String? path,
+    $fixnum.Int64? size,
+    $fixnum.Int64? modifiedAt,
+  }) {
+    final result = create();
+    if (name != null) result.name = name;
+    if (path != null) result.path = path;
+    if (size != null) result.size = size;
+    if (modifiedAt != null) result.modifiedAt = modifiedAt;
+    return result;
+  }
+
+  FnosFilePlaybackMetadata._();
+
+  factory FnosFilePlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FnosFilePlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FnosFilePlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aInt64(4, _omitFieldNames ? '' : 'modifiedAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosFilePlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosFilePlaybackMetadata copyWith(
+          void Function(FnosFilePlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as FnosFilePlaybackMetadata))
+          as FnosFilePlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FnosFilePlaybackMetadata create() => FnosFilePlaybackMetadata._();
+  @$core.override
+  FnosFilePlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FnosFilePlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FnosFilePlaybackMetadata>(create);
+  static FnosFilePlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get name => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set name($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasName() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearName() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get path => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set path($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPath() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPath() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get size => $_getI64(2);
+  @$pb.TagNumber(3)
+  set size($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSize() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSize() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get modifiedAt => $_getI64(3);
+  @$pb.TagNumber(4)
+  set modifiedAt($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasModifiedAt() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearModifiedAt() => $_clearField(4);
+}
+
+class QnapPlaybackMetadata extends $pb.GeneratedMessage {
+  factory QnapPlaybackMetadata({
+    $core.String? name,
+    $core.String? path,
+    $fixnum.Int64? size,
+    $fixnum.Int64? modifiedAt,
+    $fixnum.Int64? fileType,
+    $core.bool? realtimeTranscode,
+    $core.bool? hardwareTranscode,
+    $core.bool? multimediaCodec,
+    $core.Iterable<$core.int>? preTranscodedHeights,
+    $core.Iterable<$core.int>? realtimeHeights,
+  }) {
+    final result = create();
+    if (name != null) result.name = name;
+    if (path != null) result.path = path;
+    if (size != null) result.size = size;
+    if (modifiedAt != null) result.modifiedAt = modifiedAt;
+    if (fileType != null) result.fileType = fileType;
+    if (realtimeTranscode != null) result.realtimeTranscode = realtimeTranscode;
+    if (hardwareTranscode != null) result.hardwareTranscode = hardwareTranscode;
+    if (multimediaCodec != null) result.multimediaCodec = multimediaCodec;
+    if (preTranscodedHeights != null)
+      result.preTranscodedHeights.addAll(preTranscodedHeights);
+    if (realtimeHeights != null) result.realtimeHeights.addAll(realtimeHeights);
+    return result;
+  }
+
+  QnapPlaybackMetadata._();
+
+  factory QnapPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory QnapPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'QnapPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..aOS(2, _omitFieldNames ? '' : 'path')
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        4, _omitFieldNames ? '' : 'modifiedAt', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        5, _omitFieldNames ? '' : 'fileType', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(6, _omitFieldNames ? '' : 'realtimeTranscode')
+    ..aOB(7, _omitFieldNames ? '' : 'hardwareTranscode')
+    ..aOB(8, _omitFieldNames ? '' : 'multimediaCodec')
+    ..p<$core.int>(
+        9, _omitFieldNames ? '' : 'preTranscodedHeights', $pb.PbFieldType.KU3)
+    ..p<$core.int>(
+        10, _omitFieldNames ? '' : 'realtimeHeights', $pb.PbFieldType.KU3)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  QnapPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  QnapPlaybackMetadata copyWith(void Function(QnapPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as QnapPlaybackMetadata))
+          as QnapPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static QnapPlaybackMetadata create() => QnapPlaybackMetadata._();
+  @$core.override
+  QnapPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static QnapPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<QnapPlaybackMetadata>(create);
+  static QnapPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get name => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set name($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasName() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearName() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get path => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set path($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPath() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPath() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get size => $_getI64(2);
+  @$pb.TagNumber(3)
+  set size($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSize() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSize() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get modifiedAt => $_getI64(3);
+  @$pb.TagNumber(4)
+  set modifiedAt($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasModifiedAt() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearModifiedAt() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get fileType => $_getI64(4);
+  @$pb.TagNumber(5)
+  set fileType($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasFileType() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearFileType() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get realtimeTranscode => $_getBF(5);
+  @$pb.TagNumber(6)
+  set realtimeTranscode($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasRealtimeTranscode() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearRealtimeTranscode() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get hardwareTranscode => $_getBF(6);
+  @$pb.TagNumber(7)
+  set hardwareTranscode($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasHardwareTranscode() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearHardwareTranscode() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.bool get multimediaCodec => $_getBF(7);
+  @$pb.TagNumber(8)
+  set multimediaCodec($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasMultimediaCodec() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearMultimediaCodec() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $pb.PbList<$core.int> get preTranscodedHeights => $_getList(8);
+
+  @$pb.TagNumber(10)
+  $pb.PbList<$core.int> get realtimeHeights => $_getList(9);
+}
+
+class SynologyAudioTrackMetadata extends $pb.GeneratedMessage {
+  factory SynologyAudioTrackMetadata({
+    $fixnum.Int64? id,
+    $core.String? language,
+    $core.String? codec,
+    $core.int? channels,
+    $fixnum.Int64? bitrate,
+    $core.bool? isDefault,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (language != null) result.language = language;
+    if (codec != null) result.codec = codec;
+    if (channels != null) result.channels = channels;
+    if (bitrate != null) result.bitrate = bitrate;
+    if (isDefault != null) result.isDefault = isDefault;
+    return result;
+  }
+
+  SynologyAudioTrackMetadata._();
+
+  factory SynologyAudioTrackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SynologyAudioTrackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SynologyAudioTrackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'language')
+    ..aOS(3, _omitFieldNames ? '' : 'codec')
+    ..aI(4, _omitFieldNames ? '' : 'channels', fieldType: $pb.PbFieldType.OU3)
+    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'bitrate', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(6, _omitFieldNames ? '' : 'isDefault')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyAudioTrackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyAudioTrackMetadata copyWith(
+          void Function(SynologyAudioTrackMetadata) updates) =>
+      super.copyWith(
+              (message) => updates(message as SynologyAudioTrackMetadata))
+          as SynologyAudioTrackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SynologyAudioTrackMetadata create() => SynologyAudioTrackMetadata._();
+  @$core.override
+  SynologyAudioTrackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SynologyAudioTrackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SynologyAudioTrackMetadata>(create);
+  static SynologyAudioTrackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get id => $_getI64(0);
+  @$pb.TagNumber(1)
+  set id($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get language => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set language($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLanguage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLanguage() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get codec => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set codec($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCodec() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCodec() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.int get channels => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set channels($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasChannels() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearChannels() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get bitrate => $_getI64(4);
+  @$pb.TagNumber(5)
+  set bitrate($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasBitrate() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearBitrate() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get isDefault => $_getBF(5);
+  @$pb.TagNumber(6)
+  set isDefault($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasIsDefault() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearIsDefault() => $_clearField(6);
+}
+
+class SynologySubtitleMetadata extends $pb.GeneratedMessage {
+  factory SynologySubtitleMetadata({
+    $core.String? id,
+    $core.String? language,
+    $core.String? title,
+    $core.String? format,
+    $core.bool? embedded,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (language != null) result.language = language;
+    if (title != null) result.title = title;
+    if (format != null) result.format = format;
+    if (embedded != null) result.embedded = embedded;
+    return result;
+  }
+
+  SynologySubtitleMetadata._();
+
+  factory SynologySubtitleMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SynologySubtitleMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SynologySubtitleMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'language')
+    ..aOS(3, _omitFieldNames ? '' : 'title')
+    ..aOS(4, _omitFieldNames ? '' : 'format')
+    ..aOB(5, _omitFieldNames ? '' : 'embedded')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologySubtitleMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologySubtitleMetadata copyWith(
+          void Function(SynologySubtitleMetadata) updates) =>
+      super.copyWith((message) => updates(message as SynologySubtitleMetadata))
+          as SynologySubtitleMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SynologySubtitleMetadata create() => SynologySubtitleMetadata._();
+  @$core.override
+  SynologySubtitleMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SynologySubtitleMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SynologySubtitleMetadata>(create);
+  static SynologySubtitleMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get language => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set language($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLanguage() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLanguage() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get title => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set title($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTitle() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTitle() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get format => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set format($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasFormat() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearFormat() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get embedded => $_getBF(4);
+  @$pb.TagNumber(5)
+  set embedded($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasEmbedded() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearEmbedded() => $_clearField(5);
+}
+
+class SynologyPlaybackMetadata extends $pb.GeneratedMessage {
+  factory SynologyPlaybackMetadata({
+    $core.String? title,
+    $core.String? summary,
+    $core.String? tagline,
+    $core.String? certificate,
+    $core.int? rating,
+    $core.Iterable<$core.String>? actors,
+    $core.Iterable<$core.String>? directors,
+    $core.Iterable<$core.String>? writers,
+    $core.Iterable<$core.String>? genres,
+    $fixnum.Int64? itemId,
+    $fixnum.Int64? fileId,
+    $core.String? kind,
+    $core.String? path,
+    $fixnum.Int64? size,
+    $fixnum.Int64? durationSeconds,
+    $fixnum.Int64? progressSeconds,
+    $core.int? width,
+    $core.int? height,
+    $core.String? videoCodec,
+    $core.String? audioCodec,
+    $core.String? container,
+    $fixnum.Int64? videoBitrate,
+    $fixnum.Int64? audioBitrate,
+    $fixnum.Int64? frameRateNumerator,
+    $fixnum.Int64? frameRateDenominator,
+    $core.int? audioChannels,
+    $core.int? audioFrequencyHz,
+    $core.String? posterUrl,
+    $core.String? backdropUrl,
+    $core.bool? watched,
+    $core.double? watchedRatio,
+    $core.bool? parentalControlled,
+    $fixnum.Int64? createTime,
+    $fixnum.Int64? lastWatched,
+    $core.Iterable<SynologyAudioTrackMetadata>? audioTracks,
+    $core.Iterable<SynologySubtitleMetadata>? subtitles,
+  }) {
+    final result = create();
+    if (title != null) result.title = title;
+    if (summary != null) result.summary = summary;
+    if (tagline != null) result.tagline = tagline;
+    if (certificate != null) result.certificate = certificate;
+    if (rating != null) result.rating = rating;
+    if (actors != null) result.actors.addAll(actors);
+    if (directors != null) result.directors.addAll(directors);
+    if (writers != null) result.writers.addAll(writers);
+    if (genres != null) result.genres.addAll(genres);
+    if (itemId != null) result.itemId = itemId;
+    if (fileId != null) result.fileId = fileId;
+    if (kind != null) result.kind = kind;
+    if (path != null) result.path = path;
+    if (size != null) result.size = size;
+    if (durationSeconds != null) result.durationSeconds = durationSeconds;
+    if (progressSeconds != null) result.progressSeconds = progressSeconds;
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    if (videoCodec != null) result.videoCodec = videoCodec;
+    if (audioCodec != null) result.audioCodec = audioCodec;
+    if (container != null) result.container = container;
+    if (videoBitrate != null) result.videoBitrate = videoBitrate;
+    if (audioBitrate != null) result.audioBitrate = audioBitrate;
+    if (frameRateNumerator != null)
+      result.frameRateNumerator = frameRateNumerator;
+    if (frameRateDenominator != null)
+      result.frameRateDenominator = frameRateDenominator;
+    if (audioChannels != null) result.audioChannels = audioChannels;
+    if (audioFrequencyHz != null) result.audioFrequencyHz = audioFrequencyHz;
+    if (posterUrl != null) result.posterUrl = posterUrl;
+    if (backdropUrl != null) result.backdropUrl = backdropUrl;
+    if (watched != null) result.watched = watched;
+    if (watchedRatio != null) result.watchedRatio = watchedRatio;
+    if (parentalControlled != null)
+      result.parentalControlled = parentalControlled;
+    if (createTime != null) result.createTime = createTime;
+    if (lastWatched != null) result.lastWatched = lastWatched;
+    if (audioTracks != null) result.audioTracks.addAll(audioTracks);
+    if (subtitles != null) result.subtitles.addAll(subtitles);
+    return result;
+  }
+
+  SynologyPlaybackMetadata._();
+
+  factory SynologyPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SynologyPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SynologyPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'title')
+    ..aOS(2, _omitFieldNames ? '' : 'summary')
+    ..aOS(3, _omitFieldNames ? '' : 'tagline')
+    ..aOS(4, _omitFieldNames ? '' : 'certificate')
+    ..aI(5, _omitFieldNames ? '' : 'rating')
+    ..pPS(6, _omitFieldNames ? '' : 'actors')
+    ..pPS(7, _omitFieldNames ? '' : 'directors')
+    ..pPS(8, _omitFieldNames ? '' : 'writers')
+    ..pPS(9, _omitFieldNames ? '' : 'genres')
+    ..aInt64(10, _omitFieldNames ? '' : 'itemId')
+    ..aInt64(11, _omitFieldNames ? '' : 'fileId')
+    ..aOS(12, _omitFieldNames ? '' : 'kind')
+    ..aOS(13, _omitFieldNames ? '' : 'path')
+    ..a<$fixnum.Int64>(14, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        15, _omitFieldNames ? '' : 'durationSeconds', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        16, _omitFieldNames ? '' : 'progressSeconds', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aI(17, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(18, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(19, _omitFieldNames ? '' : 'videoCodec')
+    ..aOS(20, _omitFieldNames ? '' : 'audioCodec')
+    ..aOS(21, _omitFieldNames ? '' : 'container')
+    ..a<$fixnum.Int64>(
+        22, _omitFieldNames ? '' : 'videoBitrate', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        23, _omitFieldNames ? '' : 'audioBitrate', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        24, _omitFieldNames ? '' : 'frameRateNumerator', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        25, _omitFieldNames ? '' : 'frameRateDenominator', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aI(26, _omitFieldNames ? '' : 'audioChannels',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(27, _omitFieldNames ? '' : 'audioFrequencyHz',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aOS(28, _omitFieldNames ? '' : 'posterUrl')
+    ..aOS(29, _omitFieldNames ? '' : 'backdropUrl')
+    ..aOB(30, _omitFieldNames ? '' : 'watched')
+    ..aD(31, _omitFieldNames ? '' : 'watchedRatio')
+    ..aOB(32, _omitFieldNames ? '' : 'parentalControlled')
+    ..aInt64(33, _omitFieldNames ? '' : 'createTime')
+    ..aInt64(34, _omitFieldNames ? '' : 'lastWatched')
+    ..pPM<SynologyAudioTrackMetadata>(35, _omitFieldNames ? '' : 'audioTracks',
+        subBuilder: SynologyAudioTrackMetadata.create)
+    ..pPM<SynologySubtitleMetadata>(36, _omitFieldNames ? '' : 'subtitles',
+        subBuilder: SynologySubtitleMetadata.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SynologyPlaybackMetadata copyWith(
+          void Function(SynologyPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as SynologyPlaybackMetadata))
+          as SynologyPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SynologyPlaybackMetadata create() => SynologyPlaybackMetadata._();
+  @$core.override
+  SynologyPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SynologyPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SynologyPlaybackMetadata>(create);
+  static SynologyPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get title => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set title($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTitle() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTitle() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get summary => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set summary($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSummary() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSummary() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get tagline => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set tagline($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTagline() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTagline() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get certificate => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set certificate($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCertificate() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCertificate() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.int get rating => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set rating($core.int value) => $_setSignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRating() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRating() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $pb.PbList<$core.String> get actors => $_getList(5);
+
+  @$pb.TagNumber(7)
+  $pb.PbList<$core.String> get directors => $_getList(6);
+
+  @$pb.TagNumber(8)
+  $pb.PbList<$core.String> get writers => $_getList(7);
+
+  @$pb.TagNumber(9)
+  $pb.PbList<$core.String> get genres => $_getList(8);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get itemId => $_getI64(9);
+  @$pb.TagNumber(10)
+  set itemId($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasItemId() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearItemId() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get fileId => $_getI64(10);
+  @$pb.TagNumber(11)
+  set fileId($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasFileId() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearFileId() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get kind => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set kind($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasKind() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearKind() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get path => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set path($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasPath() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearPath() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $fixnum.Int64 get size => $_getI64(13);
+  @$pb.TagNumber(14)
+  set size($fixnum.Int64 value) => $_setInt64(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasSize() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearSize() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $fixnum.Int64 get durationSeconds => $_getI64(14);
+  @$pb.TagNumber(15)
+  set durationSeconds($fixnum.Int64 value) => $_setInt64(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasDurationSeconds() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearDurationSeconds() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $fixnum.Int64 get progressSeconds => $_getI64(15);
+  @$pb.TagNumber(16)
+  set progressSeconds($fixnum.Int64 value) => $_setInt64(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasProgressSeconds() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearProgressSeconds() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $core.int get width => $_getIZ(16);
+  @$pb.TagNumber(17)
+  set width($core.int value) => $_setUnsignedInt32(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasWidth() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearWidth() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $core.int get height => $_getIZ(17);
+  @$pb.TagNumber(18)
+  set height($core.int value) => $_setUnsignedInt32(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasHeight() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearHeight() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $core.String get videoCodec => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set videoCodec($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasVideoCodec() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearVideoCodec() => $_clearField(19);
+
+  @$pb.TagNumber(20)
+  $core.String get audioCodec => $_getSZ(19);
+  @$pb.TagNumber(20)
+  set audioCodec($core.String value) => $_setString(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasAudioCodec() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearAudioCodec() => $_clearField(20);
+
+  @$pb.TagNumber(21)
+  $core.String get container => $_getSZ(20);
+  @$pb.TagNumber(21)
+  set container($core.String value) => $_setString(20, value);
+  @$pb.TagNumber(21)
+  $core.bool hasContainer() => $_has(20);
+  @$pb.TagNumber(21)
+  void clearContainer() => $_clearField(21);
+
+  @$pb.TagNumber(22)
+  $fixnum.Int64 get videoBitrate => $_getI64(21);
+  @$pb.TagNumber(22)
+  set videoBitrate($fixnum.Int64 value) => $_setInt64(21, value);
+  @$pb.TagNumber(22)
+  $core.bool hasVideoBitrate() => $_has(21);
+  @$pb.TagNumber(22)
+  void clearVideoBitrate() => $_clearField(22);
+
+  @$pb.TagNumber(23)
+  $fixnum.Int64 get audioBitrate => $_getI64(22);
+  @$pb.TagNumber(23)
+  set audioBitrate($fixnum.Int64 value) => $_setInt64(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasAudioBitrate() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearAudioBitrate() => $_clearField(23);
+
+  @$pb.TagNumber(24)
+  $fixnum.Int64 get frameRateNumerator => $_getI64(23);
+  @$pb.TagNumber(24)
+  set frameRateNumerator($fixnum.Int64 value) => $_setInt64(23, value);
+  @$pb.TagNumber(24)
+  $core.bool hasFrameRateNumerator() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearFrameRateNumerator() => $_clearField(24);
+
+  @$pb.TagNumber(25)
+  $fixnum.Int64 get frameRateDenominator => $_getI64(24);
+  @$pb.TagNumber(25)
+  set frameRateDenominator($fixnum.Int64 value) => $_setInt64(24, value);
+  @$pb.TagNumber(25)
+  $core.bool hasFrameRateDenominator() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearFrameRateDenominator() => $_clearField(25);
+
+  @$pb.TagNumber(26)
+  $core.int get audioChannels => $_getIZ(25);
+  @$pb.TagNumber(26)
+  set audioChannels($core.int value) => $_setUnsignedInt32(25, value);
+  @$pb.TagNumber(26)
+  $core.bool hasAudioChannels() => $_has(25);
+  @$pb.TagNumber(26)
+  void clearAudioChannels() => $_clearField(26);
+
+  @$pb.TagNumber(27)
+  $core.int get audioFrequencyHz => $_getIZ(26);
+  @$pb.TagNumber(27)
+  set audioFrequencyHz($core.int value) => $_setUnsignedInt32(26, value);
+  @$pb.TagNumber(27)
+  $core.bool hasAudioFrequencyHz() => $_has(26);
+  @$pb.TagNumber(27)
+  void clearAudioFrequencyHz() => $_clearField(27);
+
+  @$pb.TagNumber(28)
+  $core.String get posterUrl => $_getSZ(27);
+  @$pb.TagNumber(28)
+  set posterUrl($core.String value) => $_setString(27, value);
+  @$pb.TagNumber(28)
+  $core.bool hasPosterUrl() => $_has(27);
+  @$pb.TagNumber(28)
+  void clearPosterUrl() => $_clearField(28);
+
+  @$pb.TagNumber(29)
+  $core.String get backdropUrl => $_getSZ(28);
+  @$pb.TagNumber(29)
+  set backdropUrl($core.String value) => $_setString(28, value);
+  @$pb.TagNumber(29)
+  $core.bool hasBackdropUrl() => $_has(28);
+  @$pb.TagNumber(29)
+  void clearBackdropUrl() => $_clearField(29);
+
+  @$pb.TagNumber(30)
+  $core.bool get watched => $_getBF(29);
+  @$pb.TagNumber(30)
+  set watched($core.bool value) => $_setBool(29, value);
+  @$pb.TagNumber(30)
+  $core.bool hasWatched() => $_has(29);
+  @$pb.TagNumber(30)
+  void clearWatched() => $_clearField(30);
+
+  @$pb.TagNumber(31)
+  $core.double get watchedRatio => $_getN(30);
+  @$pb.TagNumber(31)
+  set watchedRatio($core.double value) => $_setDouble(30, value);
+  @$pb.TagNumber(31)
+  $core.bool hasWatchedRatio() => $_has(30);
+  @$pb.TagNumber(31)
+  void clearWatchedRatio() => $_clearField(31);
+
+  @$pb.TagNumber(32)
+  $core.bool get parentalControlled => $_getBF(31);
+  @$pb.TagNumber(32)
+  set parentalControlled($core.bool value) => $_setBool(31, value);
+  @$pb.TagNumber(32)
+  $core.bool hasParentalControlled() => $_has(31);
+  @$pb.TagNumber(32)
+  void clearParentalControlled() => $_clearField(32);
+
+  @$pb.TagNumber(33)
+  $fixnum.Int64 get createTime => $_getI64(32);
+  @$pb.TagNumber(33)
+  set createTime($fixnum.Int64 value) => $_setInt64(32, value);
+  @$pb.TagNumber(33)
+  $core.bool hasCreateTime() => $_has(32);
+  @$pb.TagNumber(33)
+  void clearCreateTime() => $_clearField(33);
+
+  @$pb.TagNumber(34)
+  $fixnum.Int64 get lastWatched => $_getI64(33);
+  @$pb.TagNumber(34)
+  set lastWatched($fixnum.Int64 value) => $_setInt64(33, value);
+  @$pb.TagNumber(34)
+  $core.bool hasLastWatched() => $_has(33);
+  @$pb.TagNumber(34)
+  void clearLastWatched() => $_clearField(34);
+
+  @$pb.TagNumber(35)
+  $pb.PbList<SynologyAudioTrackMetadata> get audioTracks => $_getList(34);
+
+  @$pb.TagNumber(36)
+  $pb.PbList<SynologySubtitleMetadata> get subtitles => $_getList(35);
+}
+
+class NextcloudPlaybackMetadata extends $pb.GeneratedMessage {
+  factory NextcloudPlaybackMetadata({
+    $fixnum.Int64? fileId,
+    $core.String? name,
+    $core.String? path,
+    $fixnum.Int64? size,
+    $core.String? modifiedAt,
+    $core.String? contentType,
+    $core.String? etag,
+    $core.String? permissions,
+    $core.String? ownerId,
+    $core.String? ownerDisplayName,
+    $core.bool? favorite,
+    $core.bool? hasPreview,
+    $core.String? blurhash,
+    $core.int? width,
+    $core.int? height,
+    $fixnum.Int64? durationMillis,
+  }) {
+    final result = create();
+    if (fileId != null) result.fileId = fileId;
+    if (name != null) result.name = name;
+    if (path != null) result.path = path;
+    if (size != null) result.size = size;
+    if (modifiedAt != null) result.modifiedAt = modifiedAt;
+    if (contentType != null) result.contentType = contentType;
+    if (etag != null) result.etag = etag;
+    if (permissions != null) result.permissions = permissions;
+    if (ownerId != null) result.ownerId = ownerId;
+    if (ownerDisplayName != null) result.ownerDisplayName = ownerDisplayName;
+    if (favorite != null) result.favorite = favorite;
+    if (hasPreview != null) result.hasPreview = hasPreview;
+    if (blurhash != null) result.blurhash = blurhash;
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    if (durationMillis != null) result.durationMillis = durationMillis;
+    return result;
+  }
+
+  NextcloudPlaybackMetadata._();
+
+  factory NextcloudPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory NextcloudPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'NextcloudPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'fileId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(2, _omitFieldNames ? '' : 'name')
+    ..aOS(3, _omitFieldNames ? '' : 'path')
+    ..a<$fixnum.Int64>(4, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(5, _omitFieldNames ? '' : 'modifiedAt')
+    ..aOS(6, _omitFieldNames ? '' : 'contentType')
+    ..aOS(7, _omitFieldNames ? '' : 'etag')
+    ..aOS(8, _omitFieldNames ? '' : 'permissions')
+    ..aOS(9, _omitFieldNames ? '' : 'ownerId')
+    ..aOS(10, _omitFieldNames ? '' : 'ownerDisplayName')
+    ..aOB(11, _omitFieldNames ? '' : 'favorite')
+    ..aOB(12, _omitFieldNames ? '' : 'hasPreview')
+    ..aOS(13, _omitFieldNames ? '' : 'blurhash')
+    ..aI(14, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(15, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..a<$fixnum.Int64>(
+        16, _omitFieldNames ? '' : 'durationMillis', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NextcloudPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NextcloudPlaybackMetadata copyWith(
+          void Function(NextcloudPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as NextcloudPlaybackMetadata))
+          as NextcloudPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static NextcloudPlaybackMetadata create() => NextcloudPlaybackMetadata._();
+  @$core.override
+  NextcloudPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static NextcloudPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<NextcloudPlaybackMetadata>(create);
+  static NextcloudPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get fileId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set fileId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFileId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFileId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get path => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set path($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPath() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPath() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get size => $_getI64(3);
+  @$pb.TagNumber(4)
+  set size($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSize() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSize() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get modifiedAt => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set modifiedAt($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasModifiedAt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearModifiedAt() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get contentType => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set contentType($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasContentType() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearContentType() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get etag => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set etag($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasEtag() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearEtag() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get permissions => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set permissions($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasPermissions() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearPermissions() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get ownerId => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set ownerId($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasOwnerId() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearOwnerId() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.String get ownerDisplayName => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set ownerDisplayName($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasOwnerDisplayName() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearOwnerDisplayName() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.bool get favorite => $_getBF(10);
+  @$pb.TagNumber(11)
+  set favorite($core.bool value) => $_setBool(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasFavorite() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearFavorite() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.bool get hasPreview => $_getBF(11);
+  @$pb.TagNumber(12)
+  set hasPreview($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasHasPreview() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearHasPreview() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get blurhash => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set blurhash($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasBlurhash() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearBlurhash() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.int get width => $_getIZ(13);
+  @$pb.TagNumber(14)
+  set width($core.int value) => $_setUnsignedInt32(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasWidth() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearWidth() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $core.int get height => $_getIZ(14);
+  @$pb.TagNumber(15)
+  set height($core.int value) => $_setUnsignedInt32(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasHeight() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearHeight() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $fixnum.Int64 get durationMillis => $_getI64(15);
+  @$pb.TagNumber(16)
+  set durationMillis($fixnum.Int64 value) => $_setInt64(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasDurationMillis() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearDurationMillis() => $_clearField(16);
+}
+
+class SeafilePlaybackMetadata extends $pb.GeneratedMessage {
+  factory SeafilePlaybackMetadata({
+    $core.String? repositoryId,
+    $core.String? objectId,
+    $core.String? name,
+    $core.String? path,
+    $fixnum.Int64? size,
+    $core.String? modifiedAt,
+    $core.bool? isLocked,
+    $core.bool? canPreview,
+    $core.bool? canEdit,
+    $core.bool? hasThumbnail,
+  }) {
+    final result = create();
+    if (repositoryId != null) result.repositoryId = repositoryId;
+    if (objectId != null) result.objectId = objectId;
+    if (name != null) result.name = name;
+    if (path != null) result.path = path;
+    if (size != null) result.size = size;
+    if (modifiedAt != null) result.modifiedAt = modifiedAt;
+    if (isLocked != null) result.isLocked = isLocked;
+    if (canPreview != null) result.canPreview = canPreview;
+    if (canEdit != null) result.canEdit = canEdit;
+    if (hasThumbnail != null) result.hasThumbnail = hasThumbnail;
+    return result;
+  }
+
+  SeafilePlaybackMetadata._();
+
+  factory SeafilePlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SeafilePlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SeafilePlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'repositoryId')
+    ..aOS(2, _omitFieldNames ? '' : 'objectId')
+    ..aOS(3, _omitFieldNames ? '' : 'name')
+    ..aOS(4, _omitFieldNames ? '' : 'path')
+    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOS(6, _omitFieldNames ? '' : 'modifiedAt')
+    ..aOB(7, _omitFieldNames ? '' : 'isLocked')
+    ..aOB(8, _omitFieldNames ? '' : 'canPreview')
+    ..aOB(9, _omitFieldNames ? '' : 'canEdit')
+    ..aOB(10, _omitFieldNames ? '' : 'hasThumbnail')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SeafilePlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SeafilePlaybackMetadata copyWith(
+          void Function(SeafilePlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as SeafilePlaybackMetadata))
+          as SeafilePlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SeafilePlaybackMetadata create() => SeafilePlaybackMetadata._();
+  @$core.override
+  SeafilePlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SeafilePlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SeafilePlaybackMetadata>(create);
+  static SeafilePlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get repositoryId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set repositoryId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRepositoryId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRepositoryId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get objectId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set objectId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasObjectId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearObjectId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get name => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set name($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearName() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get path => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set path($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPath() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPath() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get size => $_getI64(4);
+  @$pb.TagNumber(5)
+  set size($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSize() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSize() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get modifiedAt => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set modifiedAt($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasModifiedAt() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearModifiedAt() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get isLocked => $_getBF(6);
+  @$pb.TagNumber(7)
+  set isLocked($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasIsLocked() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearIsLocked() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.bool get canPreview => $_getBF(7);
+  @$pb.TagNumber(8)
+  set canPreview($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasCanPreview() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearCanPreview() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.bool get canEdit => $_getBF(8);
+  @$pb.TagNumber(9)
+  set canEdit($core.bool value) => $_setBool(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasCanEdit() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearCanEdit() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.bool get hasThumbnail => $_getBF(9);
+  @$pb.TagNumber(10)
+  set hasThumbnail($core.bool value) => $_setBool(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasHasThumbnail() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearHasThumbnail() => $_clearField(10);
+}
+
+class TrueNasPlaybackMetadata extends $pb.GeneratedMessage {
+  factory TrueNasPlaybackMetadata({
+    $core.String? realpath,
+    $fixnum.Int64? size,
+    $fixnum.Int64? allocationSize,
+    $core.int? mode,
+    $fixnum.Int64? mountId,
+    $core.int? uid,
+    $core.int? gid,
+    $core.double? atime,
+    $core.double? mtime,
+    $core.double? ctime,
+    $core.double? btime,
+    $fixnum.Int64? dev,
+    $fixnum.Int64? inode,
+    $fixnum.Int64? nlink,
+    $core.bool? acl,
+    $core.bool? isMountpoint,
+    $core.bool? isCtldir,
+    $core.Iterable<$core.String>? attributes,
+    $core.String? user,
+    $core.String? group,
+  }) {
+    final result = create();
+    if (realpath != null) result.realpath = realpath;
+    if (size != null) result.size = size;
+    if (allocationSize != null) result.allocationSize = allocationSize;
+    if (mode != null) result.mode = mode;
+    if (mountId != null) result.mountId = mountId;
+    if (uid != null) result.uid = uid;
+    if (gid != null) result.gid = gid;
+    if (atime != null) result.atime = atime;
+    if (mtime != null) result.mtime = mtime;
+    if (ctime != null) result.ctime = ctime;
+    if (btime != null) result.btime = btime;
+    if (dev != null) result.dev = dev;
+    if (inode != null) result.inode = inode;
+    if (nlink != null) result.nlink = nlink;
+    if (acl != null) result.acl = acl;
+    if (isMountpoint != null) result.isMountpoint = isMountpoint;
+    if (isCtldir != null) result.isCtldir = isCtldir;
+    if (attributes != null) result.attributes.addAll(attributes);
+    if (user != null) result.user = user;
+    if (group != null) result.group = group;
+    return result;
+  }
+
+  TrueNasPlaybackMetadata._();
+
+  factory TrueNasPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TrueNasPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TrueNasPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'realpath')
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'size', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'allocationSize', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aI(4, _omitFieldNames ? '' : 'mode', fieldType: $pb.PbFieldType.OU3)
+    ..a<$fixnum.Int64>(5, _omitFieldNames ? '' : 'mountId', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aI(6, _omitFieldNames ? '' : 'uid', fieldType: $pb.PbFieldType.OU3)
+    ..aI(7, _omitFieldNames ? '' : 'gid', fieldType: $pb.PbFieldType.OU3)
+    ..aD(8, _omitFieldNames ? '' : 'atime')
+    ..aD(9, _omitFieldNames ? '' : 'mtime')
+    ..aD(10, _omitFieldNames ? '' : 'ctime')
+    ..aD(11, _omitFieldNames ? '' : 'btime')
+    ..a<$fixnum.Int64>(12, _omitFieldNames ? '' : 'dev', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(13, _omitFieldNames ? '' : 'inode', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(14, _omitFieldNames ? '' : 'nlink', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(15, _omitFieldNames ? '' : 'acl')
+    ..aOB(16, _omitFieldNames ? '' : 'isMountpoint')
+    ..aOB(17, _omitFieldNames ? '' : 'isCtldir')
+    ..pPS(18, _omitFieldNames ? '' : 'attributes')
+    ..aOS(19, _omitFieldNames ? '' : 'user')
+    ..aOS(20, _omitFieldNames ? '' : 'group')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrueNasPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TrueNasPlaybackMetadata copyWith(
+          void Function(TrueNasPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as TrueNasPlaybackMetadata))
+          as TrueNasPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TrueNasPlaybackMetadata create() => TrueNasPlaybackMetadata._();
+  @$core.override
+  TrueNasPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TrueNasPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TrueNasPlaybackMetadata>(create);
+  static TrueNasPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get realpath => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set realpath($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRealpath() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRealpath() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get size => $_getI64(1);
+  @$pb.TagNumber(2)
+  set size($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSize() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSize() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get allocationSize => $_getI64(2);
+  @$pb.TagNumber(3)
+  set allocationSize($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAllocationSize() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAllocationSize() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.int get mode => $_getIZ(3);
+  @$pb.TagNumber(4)
+  set mode($core.int value) => $_setUnsignedInt32(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMode() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMode() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get mountId => $_getI64(4);
+  @$pb.TagNumber(5)
+  set mountId($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMountId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMountId() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.int get uid => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set uid($core.int value) => $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasUid() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearUid() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.int get gid => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set gid($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasGid() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearGid() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.double get atime => $_getN(7);
+  @$pb.TagNumber(8)
+  set atime($core.double value) => $_setDouble(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasAtime() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearAtime() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.double get mtime => $_getN(8);
+  @$pb.TagNumber(9)
+  set mtime($core.double value) => $_setDouble(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasMtime() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearMtime() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.double get ctime => $_getN(9);
+  @$pb.TagNumber(10)
+  set ctime($core.double value) => $_setDouble(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasCtime() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearCtime() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.double get btime => $_getN(10);
+  @$pb.TagNumber(11)
+  set btime($core.double value) => $_setDouble(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasBtime() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearBtime() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $fixnum.Int64 get dev => $_getI64(11);
+  @$pb.TagNumber(12)
+  set dev($fixnum.Int64 value) => $_setInt64(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasDev() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearDev() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $fixnum.Int64 get inode => $_getI64(12);
+  @$pb.TagNumber(13)
+  set inode($fixnum.Int64 value) => $_setInt64(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasInode() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearInode() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $fixnum.Int64 get nlink => $_getI64(13);
+  @$pb.TagNumber(14)
+  set nlink($fixnum.Int64 value) => $_setInt64(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasNlink() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearNlink() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $core.bool get acl => $_getBF(14);
+  @$pb.TagNumber(15)
+  set acl($core.bool value) => $_setBool(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasAcl() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearAcl() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $core.bool get isMountpoint => $_getBF(15);
+  @$pb.TagNumber(16)
+  set isMountpoint($core.bool value) => $_setBool(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasIsMountpoint() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearIsMountpoint() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $core.bool get isCtldir => $_getBF(16);
+  @$pb.TagNumber(17)
+  set isCtldir($core.bool value) => $_setBool(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasIsCtldir() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearIsCtldir() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $pb.PbList<$core.String> get attributes => $_getList(17);
+
+  @$pb.TagNumber(19)
+  $core.String get user => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set user($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasUser() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearUser() => $_clearField(19);
+
+  @$pb.TagNumber(20)
+  $core.String get group => $_getSZ(19);
+  @$pb.TagNumber(20)
+  set group($core.String value) => $_setString(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasGroup() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearGroup() => $_clearField(20);
+}
+
+class FnosAudioTrackMetadata extends $pb.GeneratedMessage {
+  factory FnosAudioTrackMetadata({
+    $core.String? guid,
+    $core.String? title,
+    $core.String? language,
+    $core.String? codec,
+    $core.int? channels,
+    $fixnum.Int64? bitrate,
+    $core.bool? isDefault,
+  }) {
+    final result = create();
+    if (guid != null) result.guid = guid;
+    if (title != null) result.title = title;
+    if (language != null) result.language = language;
+    if (codec != null) result.codec = codec;
+    if (channels != null) result.channels = channels;
+    if (bitrate != null) result.bitrate = bitrate;
+    if (isDefault != null) result.isDefault = isDefault;
+    return result;
+  }
+
+  FnosAudioTrackMetadata._();
+
+  factory FnosAudioTrackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FnosAudioTrackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FnosAudioTrackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'guid')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'language')
+    ..aOS(4, _omitFieldNames ? '' : 'codec')
+    ..aI(5, _omitFieldNames ? '' : 'channels', fieldType: $pb.PbFieldType.OU3)
+    ..a<$fixnum.Int64>(6, _omitFieldNames ? '' : 'bitrate', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(7, _omitFieldNames ? '' : 'isDefault')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosAudioTrackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosAudioTrackMetadata copyWith(
+          void Function(FnosAudioTrackMetadata) updates) =>
+      super.copyWith((message) => updates(message as FnosAudioTrackMetadata))
+          as FnosAudioTrackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FnosAudioTrackMetadata create() => FnosAudioTrackMetadata._();
+  @$core.override
+  FnosAudioTrackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FnosAudioTrackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FnosAudioTrackMetadata>(create);
+  static FnosAudioTrackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get guid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set guid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasGuid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearGuid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get language => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set language($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLanguage() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLanguage() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get codec => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set codec($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCodec() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCodec() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.int get channels => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set channels($core.int value) => $_setUnsignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasChannels() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearChannels() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get bitrate => $_getI64(5);
+  @$pb.TagNumber(6)
+  set bitrate($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasBitrate() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearBitrate() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get isDefault => $_getBF(6);
+  @$pb.TagNumber(7)
+  set isDefault($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasIsDefault() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearIsDefault() => $_clearField(7);
+}
+
+class FnosSubtitleTrackMetadata extends $pb.GeneratedMessage {
+  factory FnosSubtitleTrackMetadata({
+    $core.String? guid,
+    $core.String? title,
+    $core.String? language,
+    $core.String? codec,
+    $core.String? format,
+    $core.bool? external,
+    $core.bool? isDefault,
+    $core.bool? forced,
+  }) {
+    final result = create();
+    if (guid != null) result.guid = guid;
+    if (title != null) result.title = title;
+    if (language != null) result.language = language;
+    if (codec != null) result.codec = codec;
+    if (format != null) result.format = format;
+    if (external != null) result.external = external;
+    if (isDefault != null) result.isDefault = isDefault;
+    if (forced != null) result.forced = forced;
+    return result;
+  }
+
+  FnosSubtitleTrackMetadata._();
+
+  factory FnosSubtitleTrackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FnosSubtitleTrackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FnosSubtitleTrackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'guid')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'language')
+    ..aOS(4, _omitFieldNames ? '' : 'codec')
+    ..aOS(5, _omitFieldNames ? '' : 'format')
+    ..aOB(6, _omitFieldNames ? '' : 'external')
+    ..aOB(7, _omitFieldNames ? '' : 'isDefault')
+    ..aOB(8, _omitFieldNames ? '' : 'forced')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosSubtitleTrackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosSubtitleTrackMetadata copyWith(
+          void Function(FnosSubtitleTrackMetadata) updates) =>
+      super.copyWith((message) => updates(message as FnosSubtitleTrackMetadata))
+          as FnosSubtitleTrackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FnosSubtitleTrackMetadata create() => FnosSubtitleTrackMetadata._();
+  @$core.override
+  FnosSubtitleTrackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FnosSubtitleTrackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FnosSubtitleTrackMetadata>(create);
+  static FnosSubtitleTrackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get guid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set guid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasGuid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearGuid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get language => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set language($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLanguage() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLanguage() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get codec => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set codec($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCodec() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCodec() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get format => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set format($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasFormat() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearFormat() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get external => $_getBF(5);
+  @$pb.TagNumber(6)
+  set external($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasExternal() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearExternal() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get isDefault => $_getBF(6);
+  @$pb.TagNumber(7)
+  set isDefault($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasIsDefault() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearIsDefault() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.bool get forced => $_getBF(7);
+  @$pb.TagNumber(8)
+  set forced($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasForced() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearForced() => $_clearField(8);
+}
+
+class FnosMediaPlaybackMetadata extends $pb.GeneratedMessage {
+  factory FnosMediaPlaybackMetadata({
+    $core.String? itemGuid,
+    $core.String? mediaGuid,
+    $core.String? title,
+    $core.String? overview,
+    $core.String? posterUrl,
+    $core.String? backdropUrl,
+    $core.int? width,
+    $core.int? height,
+    $core.String? videoCodec,
+    $core.String? videoProfile,
+    $core.int? bitDepth,
+    $core.int? dolbyVisionProfile,
+    $core.String? frameRate,
+    $core.int? seasonNumber,
+    $core.int? episodeNumber,
+    $fixnum.Int64? progressSeconds,
+    $fixnum.Int64? durationSeconds,
+    $core.bool? watched,
+    $core.Iterable<FnosAudioTrackMetadata>? audioTracks,
+    $core.Iterable<FnosSubtitleTrackMetadata>? subtitleTracks,
+  }) {
+    final result = create();
+    if (itemGuid != null) result.itemGuid = itemGuid;
+    if (mediaGuid != null) result.mediaGuid = mediaGuid;
+    if (title != null) result.title = title;
+    if (overview != null) result.overview = overview;
+    if (posterUrl != null) result.posterUrl = posterUrl;
+    if (backdropUrl != null) result.backdropUrl = backdropUrl;
+    if (width != null) result.width = width;
+    if (height != null) result.height = height;
+    if (videoCodec != null) result.videoCodec = videoCodec;
+    if (videoProfile != null) result.videoProfile = videoProfile;
+    if (bitDepth != null) result.bitDepth = bitDepth;
+    if (dolbyVisionProfile != null)
+      result.dolbyVisionProfile = dolbyVisionProfile;
+    if (frameRate != null) result.frameRate = frameRate;
+    if (seasonNumber != null) result.seasonNumber = seasonNumber;
+    if (episodeNumber != null) result.episodeNumber = episodeNumber;
+    if (progressSeconds != null) result.progressSeconds = progressSeconds;
+    if (durationSeconds != null) result.durationSeconds = durationSeconds;
+    if (watched != null) result.watched = watched;
+    if (audioTracks != null) result.audioTracks.addAll(audioTracks);
+    if (subtitleTracks != null) result.subtitleTracks.addAll(subtitleTracks);
+    return result;
+  }
+
+  FnosMediaPlaybackMetadata._();
+
+  factory FnosMediaPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FnosMediaPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FnosMediaPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'itemGuid')
+    ..aOS(2, _omitFieldNames ? '' : 'mediaGuid')
+    ..aOS(3, _omitFieldNames ? '' : 'title')
+    ..aOS(4, _omitFieldNames ? '' : 'overview')
+    ..aOS(5, _omitFieldNames ? '' : 'posterUrl')
+    ..aOS(6, _omitFieldNames ? '' : 'backdropUrl')
+    ..aI(7, _omitFieldNames ? '' : 'width', fieldType: $pb.PbFieldType.OU3)
+    ..aI(8, _omitFieldNames ? '' : 'height', fieldType: $pb.PbFieldType.OU3)
+    ..aOS(9, _omitFieldNames ? '' : 'videoCodec')
+    ..aOS(10, _omitFieldNames ? '' : 'videoProfile')
+    ..aI(11, _omitFieldNames ? '' : 'bitDepth', fieldType: $pb.PbFieldType.OU3)
+    ..aI(12, _omitFieldNames ? '' : 'dolbyVisionProfile')
+    ..aOS(13, _omitFieldNames ? '' : 'frameRate')
+    ..aI(14, _omitFieldNames ? '' : 'seasonNumber',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aI(15, _omitFieldNames ? '' : 'episodeNumber',
+        fieldType: $pb.PbFieldType.OU3)
+    ..a<$fixnum.Int64>(
+        16, _omitFieldNames ? '' : 'progressSeconds', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        17, _omitFieldNames ? '' : 'durationSeconds', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(18, _omitFieldNames ? '' : 'watched')
+    ..pPM<FnosAudioTrackMetadata>(19, _omitFieldNames ? '' : 'audioTracks',
+        subBuilder: FnosAudioTrackMetadata.create)
+    ..pPM<FnosSubtitleTrackMetadata>(
+        20, _omitFieldNames ? '' : 'subtitleTracks',
+        subBuilder: FnosSubtitleTrackMetadata.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosMediaPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosMediaPlaybackMetadata copyWith(
+          void Function(FnosMediaPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as FnosMediaPlaybackMetadata))
+          as FnosMediaPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FnosMediaPlaybackMetadata create() => FnosMediaPlaybackMetadata._();
+  @$core.override
+  FnosMediaPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FnosMediaPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FnosMediaPlaybackMetadata>(create);
+  static FnosMediaPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get itemGuid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set itemGuid($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasItemGuid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearItemGuid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get mediaGuid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set mediaGuid($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMediaGuid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMediaGuid() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get title => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set title($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTitle() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTitle() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get overview => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set overview($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasOverview() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearOverview() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get posterUrl => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set posterUrl($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasPosterUrl() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearPosterUrl() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get backdropUrl => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set backdropUrl($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasBackdropUrl() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearBackdropUrl() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.int get width => $_getIZ(6);
+  @$pb.TagNumber(7)
+  set width($core.int value) => $_setUnsignedInt32(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasWidth() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearWidth() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.int get height => $_getIZ(7);
+  @$pb.TagNumber(8)
+  set height($core.int value) => $_setUnsignedInt32(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasHeight() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearHeight() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get videoCodec => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set videoCodec($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasVideoCodec() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearVideoCodec() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.String get videoProfile => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set videoProfile($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasVideoProfile() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearVideoProfile() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.int get bitDepth => $_getIZ(10);
+  @$pb.TagNumber(11)
+  set bitDepth($core.int value) => $_setUnsignedInt32(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasBitDepth() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearBitDepth() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.int get dolbyVisionProfile => $_getIZ(11);
+  @$pb.TagNumber(12)
+  set dolbyVisionProfile($core.int value) => $_setSignedInt32(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasDolbyVisionProfile() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearDolbyVisionProfile() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get frameRate => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set frameRate($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasFrameRate() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearFrameRate() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.int get seasonNumber => $_getIZ(13);
+  @$pb.TagNumber(14)
+  set seasonNumber($core.int value) => $_setUnsignedInt32(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasSeasonNumber() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearSeasonNumber() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $core.int get episodeNumber => $_getIZ(14);
+  @$pb.TagNumber(15)
+  set episodeNumber($core.int value) => $_setUnsignedInt32(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasEpisodeNumber() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearEpisodeNumber() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $fixnum.Int64 get progressSeconds => $_getI64(15);
+  @$pb.TagNumber(16)
+  set progressSeconds($fixnum.Int64 value) => $_setInt64(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasProgressSeconds() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearProgressSeconds() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $fixnum.Int64 get durationSeconds => $_getI64(16);
+  @$pb.TagNumber(17)
+  set durationSeconds($fixnum.Int64 value) => $_setInt64(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasDurationSeconds() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearDurationSeconds() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $core.bool get watched => $_getBF(17);
+  @$pb.TagNumber(18)
+  set watched($core.bool value) => $_setBool(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasWatched() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearWatched() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $pb.PbList<FnosAudioTrackMetadata> get audioTracks => $_getList(18);
+
+  @$pb.TagNumber(20)
+  $pb.PbList<FnosSubtitleTrackMetadata> get subtitleTracks => $_getList(19);
+}
+
+enum FnosPlaybackMetadata_Kind { file, media, notSet }
+
+class FnosPlaybackMetadata extends $pb.GeneratedMessage {
+  factory FnosPlaybackMetadata({
+    FnosFilePlaybackMetadata? file,
+    FnosMediaPlaybackMetadata? media,
+  }) {
+    final result = create();
+    if (file != null) result.file = file;
+    if (media != null) result.media = media;
+    return result;
+  }
+
+  FnosPlaybackMetadata._();
+
+  factory FnosPlaybackMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FnosPlaybackMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, FnosPlaybackMetadata_Kind>
+      _FnosPlaybackMetadata_KindByTag = {
+    1: FnosPlaybackMetadata_Kind.file,
+    2: FnosPlaybackMetadata_Kind.media,
+    0: FnosPlaybackMetadata_Kind.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FnosPlaybackMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOM<FnosFilePlaybackMetadata>(1, _omitFieldNames ? '' : 'file',
+        subBuilder: FnosFilePlaybackMetadata.create)
+    ..aOM<FnosMediaPlaybackMetadata>(2, _omitFieldNames ? '' : 'media',
+        subBuilder: FnosMediaPlaybackMetadata.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosPlaybackMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FnosPlaybackMetadata copyWith(void Function(FnosPlaybackMetadata) updates) =>
+      super.copyWith((message) => updates(message as FnosPlaybackMetadata))
+          as FnosPlaybackMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FnosPlaybackMetadata create() => FnosPlaybackMetadata._();
+  @$core.override
+  FnosPlaybackMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FnosPlaybackMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FnosPlaybackMetadata>(create);
+  static FnosPlaybackMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  FnosPlaybackMetadata_Kind whichKind() =>
+      _FnosPlaybackMetadata_KindByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearKind() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  FnosFilePlaybackMetadata get file => $_getN(0);
+  @$pb.TagNumber(1)
+  set file(FnosFilePlaybackMetadata value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFile() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFile() => $_clearField(1);
+  @$pb.TagNumber(1)
+  FnosFilePlaybackMetadata ensureFile() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  FnosMediaPlaybackMetadata get media => $_getN(1);
+  @$pb.TagNumber(2)
+  set media(FnosMediaPlaybackMetadata value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMedia() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMedia() => $_clearField(2);
+  @$pb.TagNumber(2)
+  FnosMediaPlaybackMetadata ensureMedia() => $_ensure(1);
 }
 
 /// Playback information for a single mode

@@ -42,6 +42,32 @@ class PlayMode extends $pb.ProtobufEnum {
   const PlayMode._(super.value, super.name);
 }
 
+class TwitchTargetKind extends $pb.ProtobufEnum {
+  static const TwitchTargetKind TWITCH_TARGET_KIND_UNSPECIFIED =
+      TwitchTargetKind._(
+          0, _omitEnumNames ? '' : 'TWITCH_TARGET_KIND_UNSPECIFIED');
+  static const TwitchTargetKind TWITCH_TARGET_KIND_VIDEO =
+      TwitchTargetKind._(1, _omitEnumNames ? '' : 'TWITCH_TARGET_KIND_VIDEO');
+  static const TwitchTargetKind TWITCH_TARGET_KIND_CLIP =
+      TwitchTargetKind._(2, _omitEnumNames ? '' : 'TWITCH_TARGET_KIND_CLIP');
+  static const TwitchTargetKind TWITCH_TARGET_KIND_LIVE =
+      TwitchTargetKind._(3, _omitEnumNames ? '' : 'TWITCH_TARGET_KIND_LIVE');
+
+  static const $core.List<TwitchTargetKind> values = <TwitchTargetKind>[
+    TWITCH_TARGET_KIND_UNSPECIFIED,
+    TWITCH_TARGET_KIND_VIDEO,
+    TWITCH_TARGET_KIND_CLIP,
+    TWITCH_TARGET_KIND_LIVE,
+  ];
+
+  static final $core.List<TwitchTargetKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static TwitchTargetKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const TwitchTargetKind._(super.value, super.name);
+}
+
 class ResourceAvailability extends $pb.ProtobufEnum {
   static const ResourceAvailability RESOURCE_AVAILABILITY_UNSPECIFIED =
       ResourceAvailability._(

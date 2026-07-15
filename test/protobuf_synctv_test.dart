@@ -250,6 +250,143 @@ void main() {
     expect(cursorResponse.cursor.cursor, 'cursor-4');
   });
 
+  test('Twitch media source configs preserve each resource kind', () {
+    for (final entry in [
+      ('live', 'channel', 'synctv'),
+      ('video', 'videoId', '123456'),
+      ('clip', 'slug', 'ClipSlug'),
+    ]) {
+      final config = SourceConfigCodec.mediaSourceConfigFromMap(
+        sourceProvider: 'twitch',
+        sourceConfig: {'kind': entry.$1, entry.$2: entry.$3, 'shared': true},
+      );
+      expect(config, isNotNull);
+      expect(SourceConfigCodec.providerForMediaSourceConfig(config!), 'twitch');
+      expect(SourceConfigCodec.mediaSourceConfigToMap(config), {
+        'kind': entry.$1,
+        entry.$2: entry.$3,
+        'shared': true,
+      });
+    }
+  });
+
+  test('Huya media source configs preserve live and video resources', () {
+    for (final entry in [
+      ('live', 'roomId', '660000'),
+      ('video', 'videoId', '1002412640'),
+    ]) {
+      final config = SourceConfigCodec.mediaSourceConfigFromMap(
+        sourceProvider: 'huya',
+        sourceConfig: {'kind': entry.$1, entry.$2: entry.$3},
+      );
+      expect(config, isNotNull);
+      expect(SourceConfigCodec.providerForMediaSourceConfig(config!), 'huya');
+      expect(SourceConfigCodec.mediaSourceConfigToMap(config), {
+        'kind': entry.$1,
+        entry.$2: entry.$3,
+      });
+    }
+    expect(
+      SourceConfigCodec.providerFromString('huya'),
+      source_enum.SourceProvider.SOURCE_PROVIDER_HUYA,
+    );
+  });
+
+  test('Douyu media source config preserves room aliases', () {
+    final config = SourceConfigCodec.mediaSourceConfigFromMap(
+      sourceProvider: 'douyu',
+      sourceConfig: const {'room': 'some_room'},
+    );
+    expect(config, isNotNull);
+    expect(SourceConfigCodec.providerForMediaSourceConfig(config!), 'douyu');
+    expect(SourceConfigCodec.mediaSourceConfigToMap(config), {
+      'room': 'some_room',
+    });
+    expect(
+      SourceConfigCodec.providerFromString('douyu'),
+      source_enum.SourceProvider.SOURCE_PROVIDER_DOUYU,
+    );
+  });
+
+  test('AcFun media source configs preserve provider-specific fields', () {
+    for (final sourceConfig in [
+      const {'kind': 'video', 'videoId': 'ac123_2'},
+      const {
+        'kind': 'bangumi',
+        'bangumiId': 'aa5023171_36188_1750645',
+        'episodeQuery': 'ac=2',
+      },
+      const {'kind': 'live', 'authorId': '265502'},
+    ]) {
+      final config = SourceConfigCodec.mediaSourceConfigFromMap(
+        sourceProvider: 'acfun',
+        sourceConfig: sourceConfig,
+      );
+      expect(config, isNotNull);
+      expect(SourceConfigCodec.providerForMediaSourceConfig(config!), 'acfun');
+      expect(SourceConfigCodec.mediaSourceConfigToMap(config), sourceConfig);
+    }
+    expect(
+      SourceConfigCodec.providerFromString('acfun'),
+      source_enum.SourceProvider.SOURCE_PROVIDER_ACFUN,
+    );
+  });
+
+  test('CCTV media source config preserves its resource', () {
+    const sourceConfig = {
+      'resource': 'https://news.cctv.com/2024/02/21/ARTIexample.shtml',
+    };
+    final config = SourceConfigCodec.mediaSourceConfigFromMap(
+      sourceProvider: 'cctv',
+      sourceConfig: sourceConfig,
+    );
+
+    expect(config, isNotNull);
+    expect(SourceConfigCodec.providerForMediaSourceConfig(config!), 'cctv');
+    expect(SourceConfigCodec.mediaSourceConfigToMap(config), sourceConfig);
+    expect(
+      SourceConfigCodec.providerFromString('cctv'),
+      source_enum.SourceProvider.SOURCE_PROVIDER_CCTV,
+    );
+  });
+
+  test('Twitch dynamic playlist and typed target round trip', () {
+    final config = SourceConfigCodec.playlistSourceConfigFromMap(
+      sourceProvider: 'twitch',
+      sourceConfig: {
+        'kind': 'channel',
+        'channel': 'synctv',
+        'content': 'highlights',
+        'shared': true,
+      },
+    );
+    expect(config, isNotNull);
+    expect(
+      SourceConfigCodec.providerForPlaylistSourceConfig(config!),
+      'twitch',
+    );
+    expect(SourceConfigCodec.playlistSourceConfigToMap(config), {
+      'kind': 'channel',
+      'channel': 'synctv',
+      'content': 'highlights',
+      'shared': true,
+    });
+
+    final target = client.ProviderTarget(
+      twitch: client.TwitchTarget(
+        kind: client_enum.TwitchTargetKind.TWITCH_TARGET_KIND_CLIP,
+        id: 'ClipSlug',
+      ),
+    );
+    final decoded = providerTargetFromBase64(providerTargetToBase64(target));
+    expect(decoded.whichTarget(), client.ProviderTarget_Target.twitch);
+    expect(
+      decoded.twitch.kind,
+      client_enum.TwitchTargetKind.TWITCH_TARGET_KIND_CLIP,
+    );
+    expect(decoded.twitch.id, 'ClipSlug');
+  });
+
   test('playback status derives current position from generated time', () {
     final status = SyncTvPlaybackStatus(
       isPlaying: true,
@@ -2988,134 +3125,145 @@ void main() {
     expect(requestedUri!.queryParameters.containsKey('page'), isFalse);
   });
 
-  test(
-    'playlist items watch decodes nested protobuf JSON bytes payloads',
-    () async {
-      final server = await io.HttpServer.bind(
-        io.InternetAddress.loopbackIPv4,
-        0,
-      );
-      final subscription = server.listen((request) async {
-        expect(request.uri.path, '/api/rooms/room_1/watch/playlist-items');
-        request.response
-          ..statusCode = 200
-          ..headers.contentType = io.ContentType(
-            'text',
-            'event-stream',
-            charset: 'utf-8',
-          )
-          ..write(
-            'event: changed\n'
-            'data: ${jsonEncode({
-              'observeId': 'playlist-items',
-              'version': 'items-v2',
-              'playlistItems': {
-                'playlists': [
-                  {
-                    'id': 'pl_dynamic',
-                    'roomId': 'room_1',
-                    'name': 'Season 1',
-                    'sourceProvider': source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value,
-                    'providerInstanceName': 'main',
-                    'isDynamic': true,
-                    'sourceConfig': {
-                      'alist': {'path': '/shows/season-1'},
+  test('playlist items watch decodes nested protobuf JSON bytes payloads', () async {
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      expect(request.uri.path, '/api/rooms/room_1/watch/playlist-items');
+      request.response
+        ..statusCode = 200
+        ..headers.contentType = io.ContentType(
+          'text',
+          'event-stream',
+          charset: 'utf-8',
+        )
+        ..write(
+          'event: changed\n'
+          'data: ${jsonEncode({
+            'observeId': 'playlist-items',
+            'version': 'items-v2',
+            'playlistItems': {
+              'playlists': [
+                {
+                  'id': 'pl_dynamic',
+                  'roomId': 'room_1',
+                  'name': 'Season 1',
+                  'sourceProvider': source_enum.SourceProvider.SOURCE_PROVIDER_ALIST.value,
+                  'providerInstanceName': 'main',
+                  'isDynamic': true,
+                  'sourceConfig': {
+                    'alist': {'path': '/shows/season-1'},
+                  },
+                },
+              ],
+              'media': [
+                {
+                  'id': 'med_1',
+                  'roomId': 'room_1',
+                  'sourceProvider': source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
+                  'name': 'Episode 1',
+                  'creatorId': 'usr_creator',
+                  'metadata': {'source': '/api/media/med_1/stream'},
+                  'sourceConfig': {
+                    'directUrl': {
+                      'medias': [
+                        {'url': 'https://origin.example/episode-1.mp4'},
+                      ],
                     },
                   },
-                ],
-                'media': [
-                  {
-                    'id': 'med_1',
-                    'roomId': 'room_1',
-                    'sourceProvider': source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL.value,
-                    'name': 'Episode 1',
-                    'creatorId': 'usr_creator',
-                    'metadata': {'source': '/api/media/med_1/stream'},
-                    'sourceConfig': {
-                      'directUrl': {
-                        'medias': [
-                          {'url': 'https://origin.example/episode-1.mp4'},
-                        ],
-                      },
+                },
+              ],
+              'dynamicItems': [
+                {
+                  'name': 'Remote Episode',
+                  'item_type': client.ItemType.ITEM_TYPE_MEDIA.value,
+                  'target': {
+                    'alist': {'relativePath': '/remote/episode-1.mkv'},
+                  },
+                  'size': '123456',
+                  'thumbnail': 'https://img.example/ep1.jpg',
+                  'mediaSourceConfig': {
+                    'bilibili': {
+                      'video': {'bvid': 'BV1preview', 'aid': '100', 'cid': '200', 'shared': true},
                     },
                   },
-                ],
-                'dynamicItems': [
-                  {
-                    'name': 'Remote Episode',
-                    'item_type': client.ItemType.ITEM_TYPE_MEDIA.value,
-                    'target': {
-                      'alist': {'relativePath': '/remote/episode-1.mkv'},
-                    },
-                    'size': '123456',
-                    'thumbnail': 'https://img.example/ep1.jpg',
+                },
+              ],
+              'currentPath': [
+                {
+                  'name': 'Season 1',
+                  'target': {
+                    'alist': {'relativePath': 'season-1'},
                   },
-                ],
-                'currentPath': [
-                  {
-                    'name': 'Season 1',
-                    'target': {
-                      'alist': {'relativePath': 'season-1'},
-                    },
-                  },
-                ],
-                'version': 'snapshot-v2',
-              },
-            })}\n\n',
-          );
-        await request.response.close();
-      });
-
-      try {
-        final api = SyncTvApiClient(
-          baseUrl: 'http://${server.address.host}:${server.port}',
-          session: SyncTvSession()..accessToken = 'token',
+                },
+              ],
+              'version': 'snapshot-v2',
+            },
+          })}\n\n',
         );
+      await request.response.close();
+    });
 
-        final event = await api.room
-            .watchPlaylistItems(
-              'room_1',
-              client.WatchPlaylistItemsRequest(
-                playlistItems: client.ObservePlaylistItems(
-                  request: client.ListPlaylistItemsRequest(
-                    playlistId: 'pl_dynamic',
-                  ),
+    try {
+      final api = SyncTvApiClient(
+        baseUrl: 'http://${server.address.host}:${server.port}',
+        session: SyncTvSession()..accessToken = 'token',
+      );
+
+      final event = await api.room
+          .watchPlaylistItems(
+            'room_1',
+            client.WatchPlaylistItemsRequest(
+              playlistItems: client.ObservePlaylistItems(
+                request: client.ListPlaylistItemsRequest(
+                  playlistId: 'pl_dynamic',
                 ),
               ),
-            )
-            .first;
+            ),
+          )
+          .first;
 
-        expect(event.hasResourceEvent(), isTrue);
-        final snapshot = event.resourceEvent.playlistItems;
-        expect(snapshot.version, 'snapshot-v2');
-        expect(
-          SourceConfigCodec.playlistSourceConfigToMap(
-            snapshot.playlists.single.sourceConfig,
-          ),
-          {'path': '/shows/season-1'},
-        );
-        expect(resourceMetadataToJson(snapshot.media.single.metadata), {
-          'source': '/api/media/med_1/stream',
-          'url': '/api/media/med_1/stream',
-        });
-        expect(
-          SourceConfigCodec.mediaSourceConfigToMap(
-            snapshot.media.single.sourceConfig,
-          ),
-          {'url': 'https://origin.example/episode-1.mp4'},
-        );
-        expect(testProviderTargetJson(snapshot.dynamicItems.single.target), {
-          'relativePath': '/remote/episode-1.mkv',
-        });
-        expect(testProviderTargetJson(snapshot.currentPath.single.target), {
-          'relativePath': 'season-1',
-        });
-      } finally {
-        await subscription.cancel();
-        await server.close(force: true);
-      }
-    },
-  );
+      expect(event.hasResourceEvent(), isTrue);
+      final snapshot = event.resourceEvent.playlistItems;
+      expect(snapshot.version, 'snapshot-v2');
+      expect(
+        SourceConfigCodec.playlistSourceConfigToMap(
+          snapshot.playlists.single.sourceConfig,
+        ),
+        {'path': '/shows/season-1'},
+      );
+      expect(resourceMetadataToJson(snapshot.media.single.metadata), {
+        'source': '/api/media/med_1/stream',
+      });
+      expect(
+        SourceConfigCodec.mediaSourceConfigToMap(
+          snapshot.media.single.sourceConfig,
+        ),
+        {'url': 'https://origin.example/episode-1.mp4'},
+      );
+      expect(testProviderTargetJson(snapshot.dynamicItems.single.target), {
+        'relativePath': '/remote/episode-1.mkv',
+      });
+      expect(
+        SourceConfigCodec.mediaSourceConfigToMap(
+          snapshot.dynamicItems.single.mediaSourceConfig,
+        ),
+        {
+          'kind': 'video',
+          'type': 'video',
+          'bvid': 'BV1preview',
+          'aid': 100,
+          'cid': 200,
+          'shared': true,
+        },
+      );
+      expect(testProviderTargetJson(snapshot.currentPath.single.target), {
+        'relativePath': 'season-1',
+      });
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+  });
 
   test(
     'list playlists page preserves protobuf filters sorting and total',
@@ -5770,7 +5918,10 @@ void main() {
                   source_enum.SourceProvider.SOURCE_PROVIDER_EMBY.value,
               'providerInstanceName': 'emby_main',
               'sourceConfig': {
-                'emby': {'serverId': 'server_1', 'itemId': 'folder_1'},
+                'emby': {
+                  'serverId': 'server_1',
+                  'folder': {'itemId': 'folder_1'},
+                },
               },
             }),
             200,
@@ -5786,7 +5937,10 @@ void main() {
         parentId: 'pl_parent',
         sourceProvider: 'emby',
         providerInstanceName: 'emby_main',
-        sourceConfig: const {'serverId': 'server_1', 'itemId': 'folder_1'},
+        sourceConfig: const {
+          'serverId': 'server_1',
+          'source': {'type': 'folder', 'itemId': 'folder_1'},
+        },
       );
 
       expect(requestMethod, 'POST');
@@ -5800,7 +5954,10 @@ void main() {
       );
       expect(body['providerInstanceName'], 'emby_main');
       expect(body['sourceConfig'], {
-        'emby': {'serverId': 'server_1', 'itemId': 'folder_1'},
+        'emby': {
+          'serverId': 'server_1',
+          'folder': {'itemId': 'folder_1'},
+        },
       });
       expect(playlist.id, 'pl_emby');
       expect(playlist.isDynamicPlaylist, isTrue);
