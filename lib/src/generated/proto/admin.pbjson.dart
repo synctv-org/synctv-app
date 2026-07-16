@@ -463,6 +463,15 @@ const RuntimeSettings$json = {
       '8': {},
       '10': 'cors'
     },
+    {
+      '1': 'server',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.ServerSettings',
+      '8': {},
+      '10': 'server'
+    },
   ],
 };
 
@@ -480,8 +489,21 @@ final $typed_data.Uint8List runtimeSettingsDescriptor = $convert.base64Decode(
     'ABKAsyGy5zeW5jdHYuYWRtaW4uRW1haWxTZXR0aW5nc0IGukgDyAEBUgVlbWFpbBI8CgZ3ZWJy'
     'dGMYCSABKAsyHC5zeW5jdHYuYWRtaW4uV2ViUnRjU2V0dGluZ3NCBrpIA8gBAVIGd2VicnRjEj'
     'YKBGNoYXQYCiABKAsyGi5zeW5jdHYuYWRtaW4uQ2hhdFNldHRpbmdzQga6SAPIAQFSBGNoYXQS'
-    'NgoEY29ycxgLIAEoCzIaLnN5bmN0di5hZG1pbi5Db3JzU2V0dGluZ3NCBrpIA8gBAVIEY29ycw'
-    '==');
+    'NgoEY29ycxgLIAEoCzIaLnN5bmN0di5hZG1pbi5Db3JzU2V0dGluZ3NCBrpIA8gBAVIEY29ycx'
+    'I8CgZzZXJ2ZXIYDCABKAsyHC5zeW5jdHYuYWRtaW4uU2VydmVyU2V0dGluZ3NCBrpIA8gBAVIG'
+    'c2VydmVy');
+
+@$core.Deprecated('Use serverSettingsDescriptor instead')
+const ServerSettings$json = {
+  '1': 'ServerSettings',
+  '2': [
+    {'1': 'name', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'name'},
+  ],
+};
+
+/// Descriptor for `ServerSettings`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List serverSettingsDescriptor = $convert.base64Decode(
+    'Cg5TZXJ2ZXJTZXR0aW5ncxIeCgRuYW1lGAEgASgJQgq6SAdyBRABGIABUgRuYW1l');
 
 @$core.Deprecated('Use roomDefaultsSettingsDescriptor instead')
 const RoomDefaultsSettings$json = {
@@ -1276,6 +1298,14 @@ const RuntimeSettingsPatch$json = {
       '6': '.synctv.admin.CorsSettingsPatch',
       '10': 'cors'
     },
+    {
+      '1': 'server',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.ServerSettingsPatch',
+      '10': 'server'
+    },
   ],
 };
 
@@ -1293,7 +1323,33 @@ final $typed_data.Uint8List runtimeSettingsPatchDescriptor = $convert.base64Deco
     '1pbi5FbWFpbFNldHRpbmdzUGF0Y2hSBWVtYWlsEjkKBndlYnJ0YxgJIAEoCzIhLnN5bmN0di5h'
     'ZG1pbi5XZWJSdGNTZXR0aW5nc1BhdGNoUgZ3ZWJydGMSMwoEY2hhdBgKIAEoCzIfLnN5bmN0di'
     '5hZG1pbi5DaGF0U2V0dGluZ3NQYXRjaFIEY2hhdBIzCgRjb3JzGAsgASgLMh8uc3luY3R2LmFk'
-    'bWluLkNvcnNTZXR0aW5nc1BhdGNoUgRjb3Jz');
+    'bWluLkNvcnNTZXR0aW5nc1BhdGNoUgRjb3JzEjkKBnNlcnZlchgMIAEoCzIhLnN5bmN0di5hZG'
+    '1pbi5TZXJ2ZXJTZXR0aW5nc1BhdGNoUgZzZXJ2ZXI=');
+
+@$core.Deprecated('Use serverSettingsPatchDescriptor instead')
+const ServerSettingsPatch$json = {
+  '1': 'ServerSettingsPatch',
+  '2': [
+    {
+      '1': 'name',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 0,
+      '10': 'name',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_name'},
+  ],
+};
+
+/// Descriptor for `ServerSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List serverSettingsPatchDescriptor = $convert.base64Decode(
+    'ChNTZXJ2ZXJTZXR0aW5nc1BhdGNoEiMKBG5hbWUYASABKAlCCrpIB3IFEAEYgAFIAFIEbmFtZY'
+    'gBAUIHCgVfbmFtZQ==');
 
 @$core.Deprecated('Use roomDefaultsSettingsPatchDescriptor instead')
 const RoomDefaultsSettingsPatch$json = {
@@ -4029,40 +4085,40 @@ final $typed_data.Uint8List listAdminsResponseDescriptor = $convert.base64Decode
     'ChJMaXN0QWRtaW5zUmVzcG9uc2USLwoGYWRtaW5zGAEgAygLMhcuc3luY3R2LmFkbWluLkFkbW'
     'luVXNlclIGYWRtaW5zEhQKBXRvdGFsGAIgASgFUgV0b3RhbA==');
 
-@$core.Deprecated('Use getSystemStatsRequestDescriptor instead')
-const GetSystemStatsRequest$json = {
-  '1': 'GetSystemStatsRequest',
+@$core.Deprecated('Use getServiceStateRequestDescriptor instead')
+const GetServiceStateRequest$json = {
+  '1': 'GetServiceStateRequest',
 };
 
-/// Descriptor for `GetSystemStatsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSystemStatsRequestDescriptor =
-    $convert.base64Decode('ChVHZXRTeXN0ZW1TdGF0c1JlcXVlc3Q=');
+/// Descriptor for `GetServiceStateRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getServiceStateRequestDescriptor =
+    $convert.base64Decode('ChZHZXRTZXJ2aWNlU3RhdGVSZXF1ZXN0');
 
-@$core.Deprecated('Use getSystemStatsResponseDescriptor instead')
-const GetSystemStatsResponse$json = {
-  '1': 'GetSystemStatsResponse',
+@$core.Deprecated('Use getServiceStateResponseDescriptor instead')
+const GetServiceStateResponse$json = {
+  '1': 'GetServiceStateResponse',
   '2': [
-    {'1': 'total_users', '3': 1, '4': 1, '5': 5, '10': 'totalUsers'},
-    {'1': 'active_users', '3': 2, '4': 1, '5': 5, '10': 'activeUsers'},
-    {'1': 'banned_users', '3': 3, '4': 1, '5': 5, '10': 'bannedUsers'},
-    {'1': 'total_rooms', '3': 4, '4': 1, '5': 5, '10': 'totalRooms'},
-    {'1': 'active_rooms', '3': 5, '4': 1, '5': 5, '10': 'activeRooms'},
-    {'1': 'banned_rooms', '3': 6, '4': 1, '5': 5, '10': 'bannedRooms'},
-    {'1': 'total_media', '3': 7, '4': 1, '5': 5, '10': 'totalMedia'},
+    {'1': 'total_users', '3': 1, '4': 1, '5': 3, '10': 'totalUsers'},
+    {'1': 'active_users', '3': 2, '4': 1, '5': 3, '10': 'activeUsers'},
+    {'1': 'banned_users', '3': 3, '4': 1, '5': 3, '10': 'bannedUsers'},
+    {'1': 'total_rooms', '3': 4, '4': 1, '5': 3, '10': 'totalRooms'},
+    {'1': 'active_rooms', '3': 5, '4': 1, '5': 3, '10': 'activeRooms'},
+    {'1': 'banned_rooms', '3': 6, '4': 1, '5': 3, '10': 'bannedRooms'},
+    {'1': 'total_media', '3': 7, '4': 1, '5': 3, '10': 'totalMedia'},
     {
       '1': 'provider_instances',
       '3': 8,
       '4': 1,
-      '5': 5,
+      '5': 3,
       '10': 'providerInstances'
     },
     {
-      '1': 'additional_stats',
+      '1': 'additional_state',
       '3': 9,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.SystemAdditionalStats',
-      '10': 'additionalStats'
+      '6': '.synctv.admin.ServiceAdditionalState',
+      '10': 'additionalState'
     },
     {
       '1': 'presence',
@@ -4075,31 +4131,32 @@ const GetSystemStatsResponse$json = {
   ],
 };
 
-/// Descriptor for `GetSystemStatsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSystemStatsResponseDescriptor = $convert.base64Decode(
-    'ChZHZXRTeXN0ZW1TdGF0c1Jlc3BvbnNlEh8KC3RvdGFsX3VzZXJzGAEgASgFUgp0b3RhbFVzZX'
-    'JzEiEKDGFjdGl2ZV91c2VycxgCIAEoBVILYWN0aXZlVXNlcnMSIQoMYmFubmVkX3VzZXJzGAMg'
-    'ASgFUgtiYW5uZWRVc2VycxIfCgt0b3RhbF9yb29tcxgEIAEoBVIKdG90YWxSb29tcxIhCgxhY3'
-    'RpdmVfcm9vbXMYBSABKAVSC2FjdGl2ZVJvb21zEiEKDGJhbm5lZF9yb29tcxgGIAEoBVILYmFu'
-    'bmVkUm9vbXMSHwoLdG90YWxfbWVkaWEYByABKAVSCnRvdGFsTWVkaWESLQoScHJvdmlkZXJfaW'
-    '5zdGFuY2VzGAggASgFUhFwcm92aWRlckluc3RhbmNlcxJOChBhZGRpdGlvbmFsX3N0YXRzGAkg'
-    'ASgLMiMuc3luY3R2LmFkbWluLlN5c3RlbUFkZGl0aW9uYWxTdGF0c1IPYWRkaXRpb25hbFN0YX'
-    'RzEjsKCHByZXNlbmNlGAogASgLMh8uc3luY3R2LmNvbW1vbi5QcmVzZW5jZU92ZXJ2aWV3Ughw'
-    'cmVzZW5jZQ==');
+/// Descriptor for `GetServiceStateResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getServiceStateResponseDescriptor = $convert.base64Decode(
+    'ChdHZXRTZXJ2aWNlU3RhdGVSZXNwb25zZRIfCgt0b3RhbF91c2VycxgBIAEoA1IKdG90YWxVc2'
+    'VycxIhCgxhY3RpdmVfdXNlcnMYAiABKANSC2FjdGl2ZVVzZXJzEiEKDGJhbm5lZF91c2VycxgD'
+    'IAEoA1ILYmFubmVkVXNlcnMSHwoLdG90YWxfcm9vbXMYBCABKANSCnRvdGFsUm9vbXMSIQoMYW'
+    'N0aXZlX3Jvb21zGAUgASgDUgthY3RpdmVSb29tcxIhCgxiYW5uZWRfcm9vbXMYBiABKANSC2Jh'
+    'bm5lZFJvb21zEh8KC3RvdGFsX21lZGlhGAcgASgDUgp0b3RhbE1lZGlhEi0KEnByb3ZpZGVyX2'
+    'luc3RhbmNlcxgIIAEoA1IRcHJvdmlkZXJJbnN0YW5jZXMSTwoQYWRkaXRpb25hbF9zdGF0ZRgJ'
+    'IAEoCzIkLnN5bmN0di5hZG1pbi5TZXJ2aWNlQWRkaXRpb25hbFN0YXRlUg9hZGRpdGlvbmFsU3'
+    'RhdGUSOwoIcHJlc2VuY2UYCiABKAsyHy5zeW5jdHYuY29tbW9uLlByZXNlbmNlT3ZlcnZpZXdS'
+    'CHByZXNlbmNl');
 
-@$core.Deprecated('Use systemAdditionalStatsDescriptor instead')
-const SystemAdditionalStats$json = {
-  '1': 'SystemAdditionalStats',
+@$core.Deprecated('Use serviceAdditionalStateDescriptor instead')
+const ServiceAdditionalState$json = {
+  '1': 'ServiceAdditionalState',
   '2': [
-    {'1': 'active_streams', '3': 1, '4': 1, '5': 5, '10': 'activeStreams'},
-    {'1': 'open_reports', '3': 2, '4': 1, '5': 5, '10': 'openReports'},
+    {'1': 'active_streams', '3': 1, '4': 1, '5': 3, '10': 'activeStreams'},
+    {'1': 'open_reports', '3': 2, '4': 1, '5': 3, '10': 'openReports'},
   ],
 };
 
-/// Descriptor for `SystemAdditionalStats`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List systemAdditionalStatsDescriptor = $convert.base64Decode(
-    'ChVTeXN0ZW1BZGRpdGlvbmFsU3RhdHMSJQoOYWN0aXZlX3N0cmVhbXMYASABKAVSDWFjdGl2ZV'
-    'N0cmVhbXMSIQoMb3Blbl9yZXBvcnRzGAIgASgFUgtvcGVuUmVwb3J0cw==');
+/// Descriptor for `ServiceAdditionalState`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List serviceAdditionalStateDescriptor =
+    $convert.base64Decode(
+        'ChZTZXJ2aWNlQWRkaXRpb25hbFN0YXRlEiUKDmFjdGl2ZV9zdHJlYW1zGAEgASgDUg1hY3Rpdm'
+        'VTdHJlYW1zEiEKDG9wZW5fcmVwb3J0cxgCIAEoA1ILb3BlblJlcG9ydHM=');
 
 @$core.Deprecated('Use listActiveStreamsRequestDescriptor instead')
 const ListActiveStreamsRequest$json = {
@@ -4218,6 +4275,335 @@ const KickStreamResponse$json = {
 /// Descriptor for `KickStreamResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List kickStreamResponseDescriptor =
     $convert.base64Decode('ChJLaWNrU3RyZWFtUmVzcG9uc2U=');
+
+@$core.Deprecated('Use getSliceCacheStatsRequestDescriptor instead')
+const GetSliceCacheStatsRequest$json = {
+  '1': 'GetSliceCacheStatsRequest',
+  '2': [
+    {'1': 'node_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'nodeId'},
+    {'1': 'all_nodes', '3': 2, '4': 1, '5': 8, '10': 'allNodes'},
+  ],
+  '7': {},
+};
+
+/// Descriptor for `GetSliceCacheStatsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getSliceCacheStatsRequestDescriptor = $convert.base64Decode(
+    'ChlHZXRTbGljZUNhY2hlU3RhdHNSZXF1ZXN0EiEKB25vZGVfaWQYASABKAlCCLpIBXIDGIABUg'
+    'Zub2RlSWQSGwoJYWxsX25vZGVzGAIgASgIUghhbGxOb2RlczqAAbpIfRp7CiJhZG1pbi5nZXRf'
+    'c2xpY2VfY2FjaGVfc3RhdHMudGFyZ2V0Eixub2RlX2lkIGFuZCBhbGxfbm9kZXMgYXJlIG11dH'
+    'VhbGx5IGV4Y2x1c2l2ZRonISh0aGlzLmFsbF9ub2RlcyAmJiB0aGlzLm5vZGVfaWQgIT0gJycp');
+
+@$core.Deprecated('Use purgeSliceCacheRequestDescriptor instead')
+const PurgeSliceCacheRequest$json = {
+  '1': 'PurgeSliceCacheRequest',
+  '2': [
+    {'1': 'node_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'nodeId'},
+    {'1': 'all_nodes', '3': 2, '4': 1, '5': 8, '10': 'allNodes'},
+  ],
+  '7': {},
+};
+
+/// Descriptor for `PurgeSliceCacheRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List purgeSliceCacheRequestDescriptor = $convert.base64Decode(
+    'ChZQdXJnZVNsaWNlQ2FjaGVSZXF1ZXN0EiEKB25vZGVfaWQYASABKAlCCLpIBXIDGIABUgZub2'
+    'RlSWQSGwoJYWxsX25vZGVzGAIgASgIUghhbGxOb2Rlczp8ukh5GncKHmFkbWluLnB1cmdlX3Ns'
+    'aWNlX2NhY2hlLnRhcmdldBIsbm9kZV9pZCBhbmQgYWxsX25vZGVzIGFyZSBtdXR1YWxseSBleG'
+    'NsdXNpdmUaJyEodGhpcy5hbGxfbm9kZXMgJiYgdGhpcy5ub2RlX2lkICE9ICcnKQ==');
+
+@$core.Deprecated('Use evictExpiredSliceCacheRequestDescriptor instead')
+const EvictExpiredSliceCacheRequest$json = {
+  '1': 'EvictExpiredSliceCacheRequest',
+  '2': [
+    {'1': 'node_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'nodeId'},
+    {'1': 'all_nodes', '3': 2, '4': 1, '5': 8, '10': 'allNodes'},
+  ],
+  '7': {},
+};
+
+/// Descriptor for `EvictExpiredSliceCacheRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List evictExpiredSliceCacheRequestDescriptor = $convert.base64Decode(
+    'Ch1FdmljdEV4cGlyZWRTbGljZUNhY2hlUmVxdWVzdBIhCgdub2RlX2lkGAEgASgJQgi6SAVyAx'
+    'iAAVIGbm9kZUlkEhsKCWFsbF9ub2RlcxgCIAEoCFIIYWxsTm9kZXM6hQG6SIEBGn8KJmFkbWlu'
+    'LmV2aWN0X2V4cGlyZWRfc2xpY2VfY2FjaGUudGFyZ2V0Eixub2RlX2lkIGFuZCBhbGxfbm9kZX'
+    'MgYXJlIG11dHVhbGx5IGV4Y2x1c2l2ZRonISh0aGlzLmFsbF9ub2RlcyAmJiB0aGlzLm5vZGVf'
+    'aWQgIT0gJycp');
+
+@$core.Deprecated('Use sliceCacheConfigInfoDescriptor instead')
+const SliceCacheConfigInfo$json = {
+  '1': 'SliceCacheConfigInfo',
+  '2': [
+    {'1': 'engine_enabled', '3': 1, '4': 1, '5': 8, '10': 'engineEnabled'},
+    {'1': 'backend', '3': 2, '4': 1, '5': 9, '10': 'backend'},
+    {'1': 'file_cache_dir', '3': 3, '4': 1, '5': 9, '10': 'fileCacheDir'},
+    {'1': 'slice_size', '3': 4, '4': 1, '5': 4, '10': 'sliceSize'},
+    {'1': 'max_cache_size', '3': 5, '4': 1, '5': 4, '10': 'maxCacheSize'},
+    {'1': 'segment_ttl_secs', '3': 6, '4': 1, '5': 4, '10': 'segmentTtlSecs'},
+    {
+      '1': 'stale_max_age_secs',
+      '3': 7,
+      '4': 1,
+      '5': 4,
+      '10': 'staleMaxAgeSecs'
+    },
+    {
+      '1': 'stale_while_revalidate',
+      '3': 8,
+      '4': 1,
+      '5': 8,
+      '10': 'staleWhileRevalidate'
+    },
+    {
+      '1': 'eviction_interval_secs',
+      '3': 9,
+      '4': 1,
+      '5': 4,
+      '10': 'evictionIntervalSecs'
+    },
+    {'1': 'watermark_ratio', '3': 10, '4': 1, '5': 1, '10': 'watermarkRatio'},
+  ],
+};
+
+/// Descriptor for `SliceCacheConfigInfo`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sliceCacheConfigInfoDescriptor = $convert.base64Decode(
+    'ChRTbGljZUNhY2hlQ29uZmlnSW5mbxIlCg5lbmdpbmVfZW5hYmxlZBgBIAEoCFINZW5naW5lRW'
+    '5hYmxlZBIYCgdiYWNrZW5kGAIgASgJUgdiYWNrZW5kEiQKDmZpbGVfY2FjaGVfZGlyGAMgASgJ'
+    'UgxmaWxlQ2FjaGVEaXISHQoKc2xpY2Vfc2l6ZRgEIAEoBFIJc2xpY2VTaXplEiQKDm1heF9jYW'
+    'NoZV9zaXplGAUgASgEUgxtYXhDYWNoZVNpemUSKAoQc2VnbWVudF90dGxfc2VjcxgGIAEoBFIO'
+    'c2VnbWVudFR0bFNlY3MSKwoSc3RhbGVfbWF4X2FnZV9zZWNzGAcgASgEUg9zdGFsZU1heEFnZV'
+    'NlY3MSNAoWc3RhbGVfd2hpbGVfcmV2YWxpZGF0ZRgIIAEoCFIUc3RhbGVXaGlsZVJldmFsaWRh'
+    'dGUSNAoWZXZpY3Rpb25faW50ZXJ2YWxfc2VjcxgJIAEoBFIUZXZpY3Rpb25JbnRlcnZhbFNlY3'
+    'MSJwoPd2F0ZXJtYXJrX3JhdGlvGAogASgBUg53YXRlcm1hcmtSYXRpbw==');
+
+@$core.Deprecated('Use sliceCacheStatsNodeDescriptor instead')
+const SliceCacheStatsNode$json = {
+  '1': 'SliceCacheStatsNode',
+  '2': [
+    {'1': 'node_id', '3': 1, '4': 1, '5': 9, '10': 'nodeId'},
+    {
+      '1': 'config',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.SliceCacheConfigInfo',
+      '10': 'config'
+    },
+    {
+      '1': 'current_size_bytes',
+      '3': 3,
+      '4': 1,
+      '5': 4,
+      '10': 'currentSizeBytes'
+    },
+    {'1': 'entry_count', '3': 4, '4': 1, '5': 4, '10': 'entryCount'},
+    {'1': 'metadata_entries', '3': 5, '4': 1, '5': 4, '10': 'metadataEntries'},
+    {'1': 'updating_entries', '3': 6, '4': 1, '5': 4, '10': 'updatingEntries'},
+    {'1': 'lock_count', '3': 7, '4': 1, '5': 4, '10': 'lockCount'},
+    {'1': 'usage_ratio', '3': 8, '4': 1, '5': 1, '10': 'usageRatio'},
+  ],
+};
+
+/// Descriptor for `SliceCacheStatsNode`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sliceCacheStatsNodeDescriptor = $convert.base64Decode(
+    'ChNTbGljZUNhY2hlU3RhdHNOb2RlEhcKB25vZGVfaWQYASABKAlSBm5vZGVJZBI6CgZjb25maW'
+    'cYAiABKAsyIi5zeW5jdHYuYWRtaW4uU2xpY2VDYWNoZUNvbmZpZ0luZm9SBmNvbmZpZxIsChJj'
+    'dXJyZW50X3NpemVfYnl0ZXMYAyABKARSEGN1cnJlbnRTaXplQnl0ZXMSHwoLZW50cnlfY291bn'
+    'QYBCABKARSCmVudHJ5Q291bnQSKQoQbWV0YWRhdGFfZW50cmllcxgFIAEoBFIPbWV0YWRhdGFF'
+    'bnRyaWVzEikKEHVwZGF0aW5nX2VudHJpZXMYBiABKARSD3VwZGF0aW5nRW50cmllcxIdCgpsb2'
+    'NrX2NvdW50GAcgASgEUglsb2NrQ291bnQSHwoLdXNhZ2VfcmF0aW8YCCABKAFSCnVzYWdlUmF0'
+    'aW8=');
+
+@$core.Deprecated('Use sliceCacheNodeFailureDescriptor instead')
+const SliceCacheNodeFailure$json = {
+  '1': 'SliceCacheNodeFailure',
+  '2': [
+    {'1': 'node_id', '3': 1, '4': 1, '5': 9, '10': 'nodeId'},
+    {'1': 'error', '3': 2, '4': 1, '5': 9, '10': 'error'},
+  ],
+};
+
+/// Descriptor for `SliceCacheNodeFailure`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sliceCacheNodeFailureDescriptor = $convert.base64Decode(
+    'ChVTbGljZUNhY2hlTm9kZUZhaWx1cmUSFwoHbm9kZV9pZBgBIAEoCVIGbm9kZUlkEhQKBWVycm'
+    '9yGAIgASgJUgVlcnJvcg==');
+
+@$core.Deprecated('Use getSliceCacheStatsResponseDescriptor instead')
+const GetSliceCacheStatsResponse$json = {
+  '1': 'GetSliceCacheStatsResponse',
+  '2': [
+    {
+      '1': 'nodes',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.admin.SliceCacheStatsNode',
+      '10': 'nodes'
+    },
+    {
+      '1': 'failures',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.admin.SliceCacheNodeFailure',
+      '10': 'failures'
+    },
+  ],
+};
+
+/// Descriptor for `GetSliceCacheStatsResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getSliceCacheStatsResponseDescriptor =
+    $convert.base64Decode(
+        'ChpHZXRTbGljZUNhY2hlU3RhdHNSZXNwb25zZRI3CgVub2RlcxgBIAMoCzIhLnN5bmN0di5hZG'
+        '1pbi5TbGljZUNhY2hlU3RhdHNOb2RlUgVub2RlcxI/CghmYWlsdXJlcxgCIAMoCzIjLnN5bmN0'
+        'di5hZG1pbi5TbGljZUNhY2hlTm9kZUZhaWx1cmVSCGZhaWx1cmVz');
+
+@$core.Deprecated('Use purgeSliceCacheNodeResultDescriptor instead')
+const PurgeSliceCacheNodeResult$json = {
+  '1': 'PurgeSliceCacheNodeResult',
+  '2': [
+    {'1': 'node_id', '3': 1, '4': 1, '5': 9, '10': 'nodeId'},
+    {'1': 'success', '3': 2, '4': 1, '5': 8, '10': 'success'},
+    {'1': 'removed_entries', '3': 3, '4': 1, '5': 4, '10': 'removedEntries'},
+    {'1': 'freed_bytes', '3': 4, '4': 1, '5': 4, '10': 'freedBytes'},
+    {
+      '1': 'stats',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.SliceCacheStatsNode',
+      '10': 'stats'
+    },
+  ],
+};
+
+/// Descriptor for `PurgeSliceCacheNodeResult`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List purgeSliceCacheNodeResultDescriptor = $convert.base64Decode(
+    'ChlQdXJnZVNsaWNlQ2FjaGVOb2RlUmVzdWx0EhcKB25vZGVfaWQYASABKAlSBm5vZGVJZBIYCg'
+    'dzdWNjZXNzGAIgASgIUgdzdWNjZXNzEicKD3JlbW92ZWRfZW50cmllcxgDIAEoBFIOcmVtb3Zl'
+    'ZEVudHJpZXMSHwoLZnJlZWRfYnl0ZXMYBCABKARSCmZyZWVkQnl0ZXMSNwoFc3RhdHMYBSABKA'
+    'syIS5zeW5jdHYuYWRtaW4uU2xpY2VDYWNoZVN0YXRzTm9kZVIFc3RhdHM=');
+
+@$core.Deprecated('Use purgeSliceCacheResponseDescriptor instead')
+const PurgeSliceCacheResponse$json = {
+  '1': 'PurgeSliceCacheResponse',
+  '2': [
+    {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
+    {'1': 'removed_entries', '3': 2, '4': 1, '5': 4, '10': 'removedEntries'},
+    {'1': 'freed_bytes', '3': 3, '4': 1, '5': 4, '10': 'freedBytes'},
+    {
+      '1': 'stats',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.SliceCacheStatsNode',
+      '10': 'stats'
+    },
+    {
+      '1': 'nodes',
+      '3': 5,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.admin.PurgeSliceCacheNodeResult',
+      '10': 'nodes'
+    },
+    {
+      '1': 'failures',
+      '3': 6,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.admin.SliceCacheNodeFailure',
+      '10': 'failures'
+    },
+  ],
+};
+
+/// Descriptor for `PurgeSliceCacheResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List purgeSliceCacheResponseDescriptor = $convert.base64Decode(
+    'ChdQdXJnZVNsaWNlQ2FjaGVSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNzEicKD3'
+    'JlbW92ZWRfZW50cmllcxgCIAEoBFIOcmVtb3ZlZEVudHJpZXMSHwoLZnJlZWRfYnl0ZXMYAyAB'
+    'KARSCmZyZWVkQnl0ZXMSNwoFc3RhdHMYBCABKAsyIS5zeW5jdHYuYWRtaW4uU2xpY2VDYWNoZV'
+    'N0YXRzTm9kZVIFc3RhdHMSPQoFbm9kZXMYBSADKAsyJy5zeW5jdHYuYWRtaW4uUHVyZ2VTbGlj'
+    'ZUNhY2hlTm9kZVJlc3VsdFIFbm9kZXMSPwoIZmFpbHVyZXMYBiADKAsyIy5zeW5jdHYuYWRtaW'
+    '4uU2xpY2VDYWNoZU5vZGVGYWlsdXJlUghmYWlsdXJlcw==');
+
+@$core.Deprecated('Use evictExpiredSliceCacheNodeResultDescriptor instead')
+const EvictExpiredSliceCacheNodeResult$json = {
+  '1': 'EvictExpiredSliceCacheNodeResult',
+  '2': [
+    {'1': 'node_id', '3': 1, '4': 1, '5': 9, '10': 'nodeId'},
+    {'1': 'success', '3': 2, '4': 1, '5': 8, '10': 'success'},
+    {
+      '1': 'removed_expired_entries',
+      '3': 3,
+      '4': 1,
+      '5': 4,
+      '10': 'removedExpiredEntries'
+    },
+    {
+      '1': 'stats',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.SliceCacheStatsNode',
+      '10': 'stats'
+    },
+  ],
+};
+
+/// Descriptor for `EvictExpiredSliceCacheNodeResult`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List evictExpiredSliceCacheNodeResultDescriptor =
+    $convert.base64Decode(
+        'CiBFdmljdEV4cGlyZWRTbGljZUNhY2hlTm9kZVJlc3VsdBIXCgdub2RlX2lkGAEgASgJUgZub2'
+        'RlSWQSGAoHc3VjY2VzcxgCIAEoCFIHc3VjY2VzcxI2ChdyZW1vdmVkX2V4cGlyZWRfZW50cmll'
+        'cxgDIAEoBFIVcmVtb3ZlZEV4cGlyZWRFbnRyaWVzEjcKBXN0YXRzGAQgASgLMiEuc3luY3R2Lm'
+        'FkbWluLlNsaWNlQ2FjaGVTdGF0c05vZGVSBXN0YXRz');
+
+@$core.Deprecated('Use evictExpiredSliceCacheResponseDescriptor instead')
+const EvictExpiredSliceCacheResponse$json = {
+  '1': 'EvictExpiredSliceCacheResponse',
+  '2': [
+    {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
+    {
+      '1': 'removed_expired_entries',
+      '3': 2,
+      '4': 1,
+      '5': 4,
+      '10': 'removedExpiredEntries'
+    },
+    {
+      '1': 'stats',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.SliceCacheStatsNode',
+      '10': 'stats'
+    },
+    {
+      '1': 'nodes',
+      '3': 4,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.admin.EvictExpiredSliceCacheNodeResult',
+      '10': 'nodes'
+    },
+    {
+      '1': 'failures',
+      '3': 5,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.admin.SliceCacheNodeFailure',
+      '10': 'failures'
+    },
+  ],
+};
+
+/// Descriptor for `EvictExpiredSliceCacheResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List evictExpiredSliceCacheResponseDescriptor = $convert.base64Decode(
+    'Ch5FdmljdEV4cGlyZWRTbGljZUNhY2hlUmVzcG9uc2USGAoHc3VjY2VzcxgBIAEoCFIHc3VjY2'
+    'VzcxI2ChdyZW1vdmVkX2V4cGlyZWRfZW50cmllcxgCIAEoBFIVcmVtb3ZlZEV4cGlyZWRFbnRy'
+    'aWVzEjcKBXN0YXRzGAMgASgLMiEuc3luY3R2LmFkbWluLlNsaWNlQ2FjaGVTdGF0c05vZGVSBX'
+    'N0YXRzEkQKBW5vZGVzGAQgAygLMi4uc3luY3R2LmFkbWluLkV2aWN0RXhwaXJlZFNsaWNlQ2Fj'
+    'aGVOb2RlUmVzdWx0UgVub2RlcxI/CghmYWlsdXJlcxgFIAMoCzIjLnN5bmN0di5hZG1pbi5TbG'
+    'ljZUNhY2hlTm9kZUZhaWx1cmVSCGZhaWx1cmVz');
 
 @$core.Deprecated('Use batchResultItemDescriptor instead')
 const BatchResultItem$json = {
@@ -4872,9 +5258,24 @@ const $core.Map<$core.String, $core.dynamic> AdminServiceBase$json = {
       '3': '.synctv.admin.ListAdminsResponse'
     },
     {
-      '1': 'GetSystemStats',
-      '2': '.synctv.admin.GetSystemStatsRequest',
-      '3': '.synctv.admin.GetSystemStatsResponse'
+      '1': 'GetServiceState',
+      '2': '.synctv.admin.GetServiceStateRequest',
+      '3': '.synctv.admin.GetServiceStateResponse'
+    },
+    {
+      '1': 'GetSliceCacheStats',
+      '2': '.synctv.admin.GetSliceCacheStatsRequest',
+      '3': '.synctv.admin.GetSliceCacheStatsResponse'
+    },
+    {
+      '1': 'PurgeSliceCache',
+      '2': '.synctv.admin.PurgeSliceCacheRequest',
+      '3': '.synctv.admin.PurgeSliceCacheResponse'
+    },
+    {
+      '1': 'EvictExpiredSliceCache',
+      '2': '.synctv.admin.EvictExpiredSliceCacheRequest',
+      '3': '.synctv.admin.EvictExpiredSliceCacheResponse'
     },
     {
       '1': 'ListActiveStreams',
@@ -4979,6 +5380,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.IceServer': $1.IceServer$json,
   '.synctv.admin.ChatSettings': ChatSettings$json,
   '.synctv.admin.CorsSettings': CorsSettings$json,
+  '.synctv.admin.ServerSettings': ServerSettings$json,
   '.synctv.admin.UpdateSettingsRequest': UpdateSettingsRequest$json,
   '.synctv.admin.RuntimeSettingsPatch': RuntimeSettingsPatch$json,
   '.synctv.admin.RoomDefaultsSettingsPatch': RoomDefaultsSettingsPatch$json,
@@ -4992,6 +5394,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.WebRtcSettingsPatch': WebRtcSettingsPatch$json,
   '.synctv.admin.ChatSettingsPatch': ChatSettingsPatch$json,
   '.synctv.admin.CorsSettingsPatch': CorsSettingsPatch$json,
+  '.synctv.admin.ServerSettingsPatch': ServerSettingsPatch$json,
   '.google.protobuf.FieldMask': $2.FieldMask$json,
   '.synctv.admin.SendTestEmailRequest': SendTestEmailRequest$json,
   '.synctv.admin.SendTestEmailResponse': SendTestEmailResponse$json,
@@ -5084,11 +5487,25 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.RemoveAdminResponse': RemoveAdminResponse$json,
   '.synctv.admin.ListAdminsRequest': ListAdminsRequest$json,
   '.synctv.admin.ListAdminsResponse': ListAdminsResponse$json,
-  '.synctv.admin.GetSystemStatsRequest': GetSystemStatsRequest$json,
-  '.synctv.admin.GetSystemStatsResponse': GetSystemStatsResponse$json,
-  '.synctv.admin.SystemAdditionalStats': SystemAdditionalStats$json,
+  '.synctv.admin.GetServiceStateRequest': GetServiceStateRequest$json,
+  '.synctv.admin.GetServiceStateResponse': GetServiceStateResponse$json,
+  '.synctv.admin.ServiceAdditionalState': ServiceAdditionalState$json,
   '.synctv.common.PresenceOverview': $0.PresenceOverview$json,
   '.synctv.common.NodePresenceStats': $0.NodePresenceStats$json,
+  '.synctv.admin.GetSliceCacheStatsRequest': GetSliceCacheStatsRequest$json,
+  '.synctv.admin.GetSliceCacheStatsResponse': GetSliceCacheStatsResponse$json,
+  '.synctv.admin.SliceCacheStatsNode': SliceCacheStatsNode$json,
+  '.synctv.admin.SliceCacheConfigInfo': SliceCacheConfigInfo$json,
+  '.synctv.admin.SliceCacheNodeFailure': SliceCacheNodeFailure$json,
+  '.synctv.admin.PurgeSliceCacheRequest': PurgeSliceCacheRequest$json,
+  '.synctv.admin.PurgeSliceCacheResponse': PurgeSliceCacheResponse$json,
+  '.synctv.admin.PurgeSliceCacheNodeResult': PurgeSliceCacheNodeResult$json,
+  '.synctv.admin.EvictExpiredSliceCacheRequest':
+      EvictExpiredSliceCacheRequest$json,
+  '.synctv.admin.EvictExpiredSliceCacheResponse':
+      EvictExpiredSliceCacheResponse$json,
+  '.synctv.admin.EvictExpiredSliceCacheNodeResult':
+      EvictExpiredSliceCacheNodeResult$json,
   '.synctv.admin.ListActiveStreamsRequest': ListActiveStreamsRequest$json,
   '.synctv.admin.ListActiveStreamsResponse': ListActiveStreamsResponse$json,
   '.synctv.admin.ActiveStreamInfo': ActiveStreamInfo$json,
@@ -5208,35 +5625,41 @@ final $typed_data.Uint8List adminServiceDescriptor = $convert.base64Decode(
     'N5bmN0di5hZG1pbi5BZG1pblVzZXISUgoLUmVtb3ZlQWRtaW4SIC5zeW5jdHYuYWRtaW4uUmVt'
     'b3ZlQWRtaW5SZXF1ZXN0GiEuc3luY3R2LmFkbWluLlJlbW92ZUFkbWluUmVzcG9uc2USTwoKTG'
     'lzdEFkbWlucxIfLnN5bmN0di5hZG1pbi5MaXN0QWRtaW5zUmVxdWVzdBogLnN5bmN0di5hZG1p'
-    'bi5MaXN0QWRtaW5zUmVzcG9uc2USWwoOR2V0U3lzdGVtU3RhdHMSIy5zeW5jdHYuYWRtaW4uR2'
-    'V0U3lzdGVtU3RhdHNSZXF1ZXN0GiQuc3luY3R2LmFkbWluLkdldFN5c3RlbVN0YXRzUmVzcG9u'
-    'c2USZAoRTGlzdEFjdGl2ZVN0cmVhbXMSJi5zeW5jdHYuYWRtaW4uTGlzdEFjdGl2ZVN0cmVhbX'
-    'NSZXF1ZXN0Gicuc3luY3R2LmFkbWluLkxpc3RBY3RpdmVTdHJlYW1zUmVzcG9uc2USTwoKS2lj'
-    'a1N0cmVhbRIfLnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUmVxdWVzdBogLnN5bmN0di5hZG1pbi'
-    '5LaWNrU3RyZWFtUmVzcG9uc2USggEKG0xpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3cxIwLnN5'
-    'bmN0di5hZG1pbi5MaXN0VXNlclJlZ2lzdHJhdGlvblJldmlld3NSZXF1ZXN0GjEuc3luY3R2Lm'
-    'FkbWluLkxpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3c1Jlc3BvbnNlEogBCh1BcHByb3ZlVXNl'
-    'clJlZ2lzdHJhdGlvblJldmlldxIyLnN5bmN0di5hZG1pbi5BcHByb3ZlVXNlclJlZ2lzdHJhdG'
-    'lvblJldmlld1JlcXVlc3QaMy5zeW5jdHYuYWRtaW4uQXBwcm92ZVVzZXJSZWdpc3RyYXRpb25S'
-    'ZXZpZXdSZXNwb25zZRJ3ChxSZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3EjEuc3luY3R2Lm'
-    'FkbWluLlJlamVjdFVzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXF1ZXN0GiQuc3luY3R2LmFkbWlu'
-    'LlVzZXJSZWdpc3RyYXRpb25SZXZpZXcSdgoXTGlzdFJvb21DcmVhdGlvblJldmlld3MSLC5zeW'
-    '5jdHYuYWRtaW4uTGlzdFJvb21DcmVhdGlvblJldmlld3NSZXF1ZXN0Gi0uc3luY3R2LmFkbWlu'
-    'Lkxpc3RSb29tQ3JlYXRpb25SZXZpZXdzUmVzcG9uc2USfAoZQXBwcm92ZVJvb21DcmVhdGlvbl'
-    'JldmlldxIuLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVxdWVzdBov'
-    'LnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USawoYUmVqZW'
-    'N0Um9vbUNyZWF0aW9uUmV2aWV3Ei0uc3luY3R2LmFkbWluLlJlamVjdFJvb21DcmVhdGlvblJl'
-    'dmlld1JlcXVlc3QaIC5zeW5jdHYuYWRtaW4uUm9vbUNyZWF0aW9uUmV2aWV3EmoKE0xpc3RSb2'
-    '9tSm9pblJldmlld3MSKC5zeW5jdHYuYWRtaW4uTGlzdFJvb21Kb2luUmV2aWV3c1JlcXVlc3Qa'
-    'KS5zeW5jdHYuYWRtaW4uTGlzdFJvb21Kb2luUmV2aWV3c1Jlc3BvbnNlEnAKFUFwcHJvdmVSb2'
-    '9tSm9pblJldmlldxIqLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUpvaW5SZXZpZXdSZXF1ZXN0'
-    'Gisuc3luY3R2LmFkbWluLkFwcHJvdmVSb29tSm9pblJldmlld1Jlc3BvbnNlEl8KFFJlamVjdF'
-    'Jvb21Kb2luUmV2aWV3Eikuc3luY3R2LmFkbWluLlJlamVjdFJvb21Kb2luUmV2aWV3UmVxdWVz'
-    'dBocLnN5bmN0di5hZG1pbi5Sb29tSm9pblJldmlldxJbCg5MaXN0QmFuUmVjb3JkcxIjLnN5bm'
-    'N0di5hZG1pbi5MaXN0QmFuUmVjb3Jkc1JlcXVlc3QaJC5zeW5jdHYuYWRtaW4uTGlzdEJhblJl'
-    'Y29yZHNSZXNwb25zZRJnChJMaXN0Q29udGVudFJlcG9ydHMSJy5zeW5jdHYuYWRtaW4uTGlzdE'
-    'NvbnRlbnRSZXBvcnRzUmVxdWVzdBooLnN5bmN0di5hZG1pbi5MaXN0Q29udGVudFJlcG9ydHNS'
-    'ZXNwb25zZRJWChBHZXRDb250ZW50UmVwb3J0EiUuc3luY3R2LmFkbWluLkdldENvbnRlbnRSZX'
-    'BvcnRSZXF1ZXN0Ghsuc3luY3R2LmFkbWluLkNvbnRlbnRSZXBvcnQSfAoZVXBkYXRlQ29udGVu'
-    'dFJlcG9ydFN0YXR1cxIuLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUm'
-    'VxdWVzdBovLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVzcG9uc2U=');
+    'bi5MaXN0QWRtaW5zUmVzcG9uc2USXgoPR2V0U2VydmljZVN0YXRlEiQuc3luY3R2LmFkbWluLk'
+    'dldFNlcnZpY2VTdGF0ZVJlcXVlc3QaJS5zeW5jdHYuYWRtaW4uR2V0U2VydmljZVN0YXRlUmVz'
+    'cG9uc2USZwoSR2V0U2xpY2VDYWNoZVN0YXRzEicuc3luY3R2LmFkbWluLkdldFNsaWNlQ2FjaG'
+    'VTdGF0c1JlcXVlc3QaKC5zeW5jdHYuYWRtaW4uR2V0U2xpY2VDYWNoZVN0YXRzUmVzcG9uc2US'
+    'XgoPUHVyZ2VTbGljZUNhY2hlEiQuc3luY3R2LmFkbWluLlB1cmdlU2xpY2VDYWNoZVJlcXVlc3'
+    'QaJS5zeW5jdHYuYWRtaW4uUHVyZ2VTbGljZUNhY2hlUmVzcG9uc2UScwoWRXZpY3RFeHBpcmVk'
+    'U2xpY2VDYWNoZRIrLnN5bmN0di5hZG1pbi5FdmljdEV4cGlyZWRTbGljZUNhY2hlUmVxdWVzdB'
+    'osLnN5bmN0di5hZG1pbi5FdmljdEV4cGlyZWRTbGljZUNhY2hlUmVzcG9uc2USZAoRTGlzdEFj'
+    'dGl2ZVN0cmVhbXMSJi5zeW5jdHYuYWRtaW4uTGlzdEFjdGl2ZVN0cmVhbXNSZXF1ZXN0Gicuc3'
+    'luY3R2LmFkbWluLkxpc3RBY3RpdmVTdHJlYW1zUmVzcG9uc2USTwoKS2lja1N0cmVhbRIfLnN5'
+    'bmN0di5hZG1pbi5LaWNrU3RyZWFtUmVxdWVzdBogLnN5bmN0di5hZG1pbi5LaWNrU3RyZWFtUm'
+    'VzcG9uc2USggEKG0xpc3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3cxIwLnN5bmN0di5hZG1pbi5M'
+    'aXN0VXNlclJlZ2lzdHJhdGlvblJldmlld3NSZXF1ZXN0GjEuc3luY3R2LmFkbWluLkxpc3RVc2'
+    'VyUmVnaXN0cmF0aW9uUmV2aWV3c1Jlc3BvbnNlEogBCh1BcHByb3ZlVXNlclJlZ2lzdHJhdGlv'
+    'blJldmlldxIyLnN5bmN0di5hZG1pbi5BcHByb3ZlVXNlclJlZ2lzdHJhdGlvblJldmlld1JlcX'
+    'Vlc3QaMy5zeW5jdHYuYWRtaW4uQXBwcm92ZVVzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXNwb25z'
+    'ZRJ3ChxSZWplY3RVc2VyUmVnaXN0cmF0aW9uUmV2aWV3EjEuc3luY3R2LmFkbWluLlJlamVjdF'
+    'VzZXJSZWdpc3RyYXRpb25SZXZpZXdSZXF1ZXN0GiQuc3luY3R2LmFkbWluLlVzZXJSZWdpc3Ry'
+    'YXRpb25SZXZpZXcSdgoXTGlzdFJvb21DcmVhdGlvblJldmlld3MSLC5zeW5jdHYuYWRtaW4uTG'
+    'lzdFJvb21DcmVhdGlvblJldmlld3NSZXF1ZXN0Gi0uc3luY3R2LmFkbWluLkxpc3RSb29tQ3Jl'
+    'YXRpb25SZXZpZXdzUmVzcG9uc2USfAoZQXBwcm92ZVJvb21DcmVhdGlvblJldmlldxIuLnN5bm'
+    'N0di5hZG1pbi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVxdWVzdBovLnN5bmN0di5hZG1p'
+    'bi5BcHByb3ZlUm9vbUNyZWF0aW9uUmV2aWV3UmVzcG9uc2USawoYUmVqZWN0Um9vbUNyZWF0aW'
+    '9uUmV2aWV3Ei0uc3luY3R2LmFkbWluLlJlamVjdFJvb21DcmVhdGlvblJldmlld1JlcXVlc3Qa'
+    'IC5zeW5jdHYuYWRtaW4uUm9vbUNyZWF0aW9uUmV2aWV3EmoKE0xpc3RSb29tSm9pblJldmlld3'
+    'MSKC5zeW5jdHYuYWRtaW4uTGlzdFJvb21Kb2luUmV2aWV3c1JlcXVlc3QaKS5zeW5jdHYuYWRt'
+    'aW4uTGlzdFJvb21Kb2luUmV2aWV3c1Jlc3BvbnNlEnAKFUFwcHJvdmVSb29tSm9pblJldmlldx'
+    'IqLnN5bmN0di5hZG1pbi5BcHByb3ZlUm9vbUpvaW5SZXZpZXdSZXF1ZXN0Gisuc3luY3R2LmFk'
+    'bWluLkFwcHJvdmVSb29tSm9pblJldmlld1Jlc3BvbnNlEl8KFFJlamVjdFJvb21Kb2luUmV2aW'
+    'V3Eikuc3luY3R2LmFkbWluLlJlamVjdFJvb21Kb2luUmV2aWV3UmVxdWVzdBocLnN5bmN0di5h'
+    'ZG1pbi5Sb29tSm9pblJldmlldxJbCg5MaXN0QmFuUmVjb3JkcxIjLnN5bmN0di5hZG1pbi5MaX'
+    'N0QmFuUmVjb3Jkc1JlcXVlc3QaJC5zeW5jdHYuYWRtaW4uTGlzdEJhblJlY29yZHNSZXNwb25z'
+    'ZRJnChJMaXN0Q29udGVudFJlcG9ydHMSJy5zeW5jdHYuYWRtaW4uTGlzdENvbnRlbnRSZXBvcn'
+    'RzUmVxdWVzdBooLnN5bmN0di5hZG1pbi5MaXN0Q29udGVudFJlcG9ydHNSZXNwb25zZRJWChBH'
+    'ZXRDb250ZW50UmVwb3J0EiUuc3luY3R2LmFkbWluLkdldENvbnRlbnRSZXBvcnRSZXF1ZXN0Gh'
+    'suc3luY3R2LmFkbWluLkNvbnRlbnRSZXBvcnQSfAoZVXBkYXRlQ29udGVudFJlcG9ydFN0YXR1'
+    'cxIuLnN5bmN0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVxdWVzdBovLnN5bm'
+    'N0di5hZG1pbi5VcGRhdGVDb250ZW50UmVwb3J0U3RhdHVzUmVzcG9uc2U=');

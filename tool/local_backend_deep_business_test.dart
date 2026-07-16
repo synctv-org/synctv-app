@@ -165,7 +165,7 @@ Future<void> _exerciseWatchers(String roomId, int stamp) async {
   print('watchers_pin_chat');
   await SyncTvService.pinChatMessage(roomId, msg.id, note: 'watch pin');
   print('watchers_switch_playback');
-  await SyncTvService.switchMovieAndPlay(roomId, mediaId);
+  await SyncTvService.switchMediaAndPlay(roomId, mediaId);
 
   print('watchers_update_settings');
   final settings = await SyncTvService.getRoomSettings(roomId, refresh: true);
@@ -278,7 +278,7 @@ Future<void> _exerciseMediaAndRealtime(
     url: 'https://example.com/deep-playback-$stamp.mp4',
     name: 'playback direct $stamp',
   );
-  await SyncTvService.switchMovieAndPlay(roomId, directId);
+  await SyncTvService.switchMediaAndPlay(roomId, directId);
   await SyncTvService.updatePlaybackState(
     roomId,
     action: PlaybackControlAction.seek,
@@ -293,14 +293,14 @@ Future<void> _exerciseMediaAndRealtime(
   );
   print('playback_messages=${playbackMessages.length}');
 
-  await SyncTvService.clearMovies(roomId, parentId: nested.id);
+  await SyncTvService.clearMediaLibrary(roomId, parentId: nested.id);
   final afterClear = await SyncTvService.listMediaLibrary(
     roomId,
     playlistId: nested.id,
     refresh: true,
   );
   if (afterClear.media.isNotEmpty) {
-    throw StateError('clearMovies left media=${afterClear.media.length}');
+    throw StateError('clearMediaLibrary left media=${afterClear.media.length}');
   }
 
   final alistBinds = await SyncTvService.getAllAlistBindInfos();
@@ -543,7 +543,7 @@ Future<void> _exerciseAdminLifecycle({
 
   final streams = await SyncTvService.adminListActiveStreams(roomId: roomId);
   print('active_streams=${streams.length}');
-  final stats = await SyncTvService.adminGetSystemStats();
+  final stats = await SyncTvService.adminGetServiceState();
   if (stats.totalUsers < 1 || stats.totalRooms < 1) {
     throw StateError('admin stats incomplete');
   }

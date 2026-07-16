@@ -5,9 +5,9 @@ package synctv.provider.seafile;
 import "proto/buf/validate/validate.proto";
 
 message LoginRequest {
-  string endpoint = 1 [ (buf.validate.field).string.min_len = 1 ];
-  string username = 2 [ (buf.validate.field).string.min_len = 1 ];
-  string password = 3 [ (buf.validate.field).string.min_len = 1 ];
+  string endpoint = 1 [(buf.validate.field).string.min_len = 1];
+  string username = 2 [(buf.validate.field).string.min_len = 1];
+  string password = 3 [(buf.validate.field).string.min_len = 1];
   string instance_name = 4;
 }
 
@@ -22,35 +22,37 @@ message LoginResponse {
 }
 
 message UnlockLibraryRequest {
-  string server_id = 1 [ (buf.validate.field).string.min_len = 1 ];
-  string repository_id = 2 [ (buf.validate.field).string.min_len = 1 ];
-  string password = 3 [ (buf.validate.field).string.min_len = 1 ];
+  string server_id = 1 [(buf.validate.field).string.min_len = 1];
+  string repository_id = 2 [(buf.validate.field).string.min_len = 1];
+  string password = 3 [(buf.validate.field).string.min_len = 1];
   string instance_name = 4;
 }
 
-message UnlockLibraryResponse { bool success = 1; }
+message UnlockLibraryResponse {
+  bool success = 1;
+}
 
 message ListRepositoriesRequest {
-  string server_id = 1 [ (buf.validate.field).string.min_len = 1 ];
-  uint64 page = 2 [ (buf.validate.field).uint64.gte = 1 ];
-  uint32 page_size = 3 [ (buf.validate.field).uint32 = {gte : 1, lte : 200} ];
+  string server_id = 1 [(buf.validate.field).string.min_len = 1];
+  uint64 page = 2 [(buf.validate.field).uint64.gte = 1];
+  uint32 page_size = 3 [(buf.validate.field).uint32 = {gte: 1, lte: 200}];
   string instance_name = 4;
 }
 
 message ListRequest {
-  string server_id = 1 [ (buf.validate.field).string.min_len = 1 ];
-  string repository_id = 2 [ (buf.validate.field).string.min_len = 1 ];
+  string server_id = 1 [(buf.validate.field).string.min_len = 1];
+  string repository_id = 2 [(buf.validate.field).string.min_len = 1];
   string path = 3;
-  uint64 page = 4 [ (buf.validate.field).uint64.gte = 1 ];
-  uint32 page_size = 5 [ (buf.validate.field).uint32 = {gte : 1, lte : 200} ];
+  uint64 page = 4 [(buf.validate.field).uint64.gte = 1];
+  uint32 page_size = 5 [(buf.validate.field).uint32 = {gte: 1, lte: 200}];
   optional string search = 6;
   string instance_name = 7;
 }
 
 message ListStarredRequest {
-  string server_id = 1 [ (buf.validate.field).string.min_len = 1 ];
-  uint64 page = 2 [ (buf.validate.field).uint64.gte = 1 ];
-  uint32 page_size = 3 [ (buf.validate.field).uint32 = {gte : 1, lte : 200} ];
+  string server_id = 1 [(buf.validate.field).string.min_len = 1];
+  uint64 page = 2 [(buf.validate.field).uint64.gte = 1];
+  uint32 page_size = 3 [(buf.validate.field).uint32 = {gte: 1, lte: 200}];
   string instance_name = 4;
 }
 
@@ -79,11 +81,17 @@ message ListResponse {
 }
 
 message LogoutRequest {
-  string server_id = 1 [ (buf.validate.field).string.min_len = 1 ];
+  string server_id = 1 [(buf.validate.field).string.min_len = 1];
   string instance_name = 2;
 }
-message LogoutResponse { bool success = 1; }
-message GetBindsRequest { string instance_name = 1; }
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+message GetBindsRequest {
+  string instance_name = 1;
+}
 
 message BindInfo {
   string id = 1;
@@ -96,4 +104,6 @@ message BindInfo {
   string provider_instance_name = 8;
 }
 
-message GetBindsResponse { repeated BindInfo binds = 1; }
+message GetBindsResponse {
+  repeated BindInfo binds = 1;
+}

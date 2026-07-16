@@ -612,18 +612,19 @@ class SourceConfigCodec {
       'pgctimeline' => source_config.BilibiliPlaylistSourceConfig(
         shared: shared,
         pgcTimeline: source_config.BilibiliPgcTimelinePlaylistSource(
-          type: switch (
-            _string(source['timelineType']).trim().toLowerCase()
-          ) {
-            'cinema' => source_enum
-                .BilibiliPgcTimelineType
-                .BILIBILI_PGC_TIMELINE_TYPE_CINEMA,
-            'guochuang' => source_enum
-                .BilibiliPgcTimelineType
-                .BILIBILI_PGC_TIMELINE_TYPE_GUOCHUANG,
-            _ => source_enum
-                .BilibiliPgcTimelineType
-                .BILIBILI_PGC_TIMELINE_TYPE_ANIME,
+          type: switch (_string(source['timelineType']).trim().toLowerCase()) {
+            'cinema' =>
+              source_enum
+                  .BilibiliPgcTimelineType
+                  .BILIBILI_PGC_TIMELINE_TYPE_CINEMA,
+            'guochuang' =>
+              source_enum
+                  .BilibiliPgcTimelineType
+                  .BILIBILI_PGC_TIMELINE_TYPE_GUOCHUANG,
+            _ =>
+              source_enum
+                  .BilibiliPgcTimelineType
+                  .BILIBILI_PGC_TIMELINE_TYPE_ANIME,
           },
           beforeDays: _int(source['beforeDays']),
           afterDays: _int(source['afterDays']),
@@ -700,10 +701,12 @@ class SourceConfigCodec {
         'timelineType': switch (config.pgcTimeline.type) {
           source_enum
               .BilibiliPgcTimelineType
-              .BILIBILI_PGC_TIMELINE_TYPE_CINEMA => 'cinema',
+              .BILIBILI_PGC_TIMELINE_TYPE_CINEMA =>
+            'cinema',
           source_enum
               .BilibiliPgcTimelineType
-              .BILIBILI_PGC_TIMELINE_TYPE_GUOCHUANG => 'guochuang',
+              .BILIBILI_PGC_TIMELINE_TYPE_GUOCHUANG =>
+            'guochuang',
           _ => 'anime',
         },
         'beforeDays': config.pgcTimeline.beforeDays,

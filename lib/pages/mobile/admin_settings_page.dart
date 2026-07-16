@@ -597,7 +597,7 @@ class AdminOverviewTab extends StatefulWidget {
 }
 
 class _AdminOverviewTabState extends State<AdminOverviewTab> {
-  AdminSystemStats? _stats;
+  AdminServiceState? _stats;
   bool _isLoading = true;
 
   @override
@@ -609,7 +609,7 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
   Future<void> _load({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     try {
-      final stats = await SyncTvService.adminGetSystemStats();
+      final stats = await SyncTvService.adminGetServiceState();
       if (!mounted) return;
       setState(() {
         _stats = stats;

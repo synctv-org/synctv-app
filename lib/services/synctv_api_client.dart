@@ -102,6 +102,8 @@ class SyncTvApiException implements Exception {
   final int? grpcCode;
   final String? requestId;
   final oauth2_enum.OAuth2Operation? oauth2Operation;
+  final String? requestMethod;
+  final Uri? requestUri;
 
   SyncTvApiException(
     this.message, {
@@ -110,10 +112,17 @@ class SyncTvApiException implements Exception {
     this.grpcCode,
     this.requestId,
     this.oauth2Operation,
+    this.requestMethod,
+    this.requestUri,
   });
 
   @override
-  String toString() => message;
+  String toString() {
+    final method = requestMethod;
+    final uri = requestUri;
+    if (method == null || uri == null) return message;
+    return '$method ${uri.path}: $message';
+  }
 }
 
 class SyncTvSession {
@@ -225,7 +234,7 @@ class SyncTvApiClient {
       onAuthError?.call();
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw _apiException(response);
+      throw _apiException(response, method: 'PUT', uri: uri);
     }
     return response;
   }
@@ -244,12 +253,13 @@ class SyncTvApiClient {
       if (contentRange != null)
         'content-range': _contentRangeHeader(contentRange),
     };
-    final response = await _http.put(_uri(path), headers: headers, body: data);
+    final uri = _uri(path);
+    final response = await _http.put(uri, headers: headers, body: data);
     if (response.statusCode == 401) {
       onAuthError?.call();
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw _apiException(response);
+      throw _apiException(response, method: 'PUT', uri: uri);
     }
     return _FileObjectUploadResult(
       complete:
@@ -274,15 +284,13 @@ class SyncTvApiClient {
   }) async {
     final rangeHeader = range == null ? null : _rangeHeader(range);
     final headers = <String, String>{'accept': '*/*', 'range': ?rangeHeader};
-    final response = await _http.get(
-      _uri(path, {'token': token}),
-      headers: headers,
-    );
+    final uri = _uri(path, {'token': token});
+    final response = await _http.get(uri, headers: headers);
     if (response.statusCode == 401) {
       onAuthError?.call();
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw _apiException(response);
+      throw _apiException(response, method: 'GET', uri: uri);
     }
 
     final parsedRange = _parseContentRange(
@@ -466,11 +474,11 @@ class SyncTvApiClient {
           headers: _headers(auth: auth),
           body: encodedBody,
         );
-        return _decodeResponse(retry, create);
+        return _decodeResponse(retry, create, method: method, uri: uri);
       }
     }
 
-    return _decodeResponse(response, create);
+    return _decodeResponse(response, create, method: method, uri: uri);
   }
 
   Future<http.Response> _sendHttp(
@@ -552,7 +560,7 @@ class SyncTvApiClient {
       body: encodedBody,
     );
 
-    return _decodeResponse(response, create);
+    return _decodeResponse(response, create, method: method, uri: uri);
   }
 
   String? _encodeBody(Object? body) {
@@ -786,13 +794,15 @@ class SyncTvApiClient {
 
   T _decodeResponse<T extends GeneratedMessage>(
     http.Response response,
-    T Function() create,
-  ) {
+    T Function() create, {
+    required String method,
+    required Uri uri,
+  }) {
     if (response.statusCode == 401) {
       onAuthError?.call();
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw _apiException(response);
+      throw _apiException(response, method: method, uri: uri);
     }
     final message = create();
     if (response.body.trim().isEmpty) {
@@ -808,13 +818,32 @@ class SyncTvApiClient {
     return message;
   }
 
-  SyncTvApiException _apiException(http.Response response) {
-    var message = response.body;
+  SyncTvApiException _apiException(
+    http.Response response, {
+    required String method,
+    required Uri uri,
+  }) {
+    final responseBody = response.body.trim();
+    var message = responseBody.isEmpty
+        ? 'HTTP ${response.statusCode}'
+        : response.body;
     int? code;
     int? grpcCode;
     String? requestId;
     oauth2_enum.OAuth2Operation? oauth2Operation;
     try {
+      if (responseBody.isEmpty) {
+        return SyncTvApiException(
+          message,
+          statusCode: response.statusCode,
+          code: code,
+          grpcCode: grpcCode,
+          requestId: requestId,
+          oauth2Operation: oauth2Operation,
+          requestMethod: method,
+          requestUri: uri,
+        );
+      }
       final decoded = jsonDecode(response.body);
       if (decoded is Map<String, dynamic>) {
         message = _stringValue(decoded['message']) ?? message;
@@ -845,6 +874,8 @@ class SyncTvApiClient {
       grpcCode: grpcCode,
       requestId: requestId,
       oauth2Operation: oauth2Operation,
+      requestMethod: method,
+      requestUri: uri,
     );
   }
 
@@ -898,7 +929,11 @@ class SyncTvApiClient {
         response.statusCode,
         headers: response.headers,
       );
-      throw _apiException(errorResponse);
+      throw _apiException(
+        errorResponse,
+        method: request.method,
+        uri: request.url,
+      );
     }
 
     yield* _decodeSseStream(response.stream, create);

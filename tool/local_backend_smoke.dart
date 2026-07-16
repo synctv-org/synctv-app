@@ -84,10 +84,10 @@ Future<void> runSmoke(String baseUrl) async {
   );
   print('media=$mediaId page_total=${mediaPage.total}');
 
-  await SyncTvService.switchMovieAndPlay(room.roomId, mediaId);
-  final playback = await SyncTvService.getCurrentMovie(room.roomId);
-  if (playback.movie?.id != mediaId) {
-    throw StateError('playback media mismatch: ${playback.movie?.id}');
+  await SyncTvService.switchMediaAndPlay(room.roomId, mediaId);
+  final playback = await SyncTvService.getCurrentMedia(room.roomId);
+  if (playback.entry?.id != mediaId) {
+    throw StateError('playback media mismatch: ${playback.entry?.id}');
   }
   await SyncTvService.updatePlaybackState(
     room.roomId,
@@ -153,7 +153,7 @@ Future<void> runSmoke(String baseUrl) async {
     username: 'root',
     password: rootPassword,
   );
-  final stats = await SyncTvService.adminGetSystemStats();
+  final stats = await SyncTvService.adminGetServiceState();
   final users = await SyncTvService.adminListUsersPage(pageSize: 5);
   final rooms = await SyncTvService.adminListRoomsPage(pageSize: 5);
   final streams = await SyncTvService.adminListActiveStreamsPage();

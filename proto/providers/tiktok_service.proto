@@ -12,4 +12,3 @@ service TikTokProviderService {
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
   rpc ListUserPosts(ListUserPostsRequest) returns (ListUserPostsResponse);
 }
-

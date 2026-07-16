@@ -3460,8 +3460,8 @@ class SyncTvService {
     return _domains.admin.sendTestEmail(to);
   }
 
-  static Future<AdminSystemStats> adminGetSystemStats() {
-    return _domains.admin.getSystemStats();
+  static Future<AdminServiceState> adminGetServiceState() {
+    return _domains.admin.getServiceState();
   }
 
   static Future<AdminsPage> adminListAdminsPage({

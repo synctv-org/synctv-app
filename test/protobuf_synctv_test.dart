@@ -152,6 +152,39 @@ passkey.PasskeyRegistrationCredential testPasskeyRegistrationCredential(
 }
 
 void main() {
+  test('empty HTTP error responses retain their status code', () async {
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test',
+      session: SyncTvSession(),
+      httpClient: MockClient((_) async => http.Response('', 429)),
+    );
+
+    await expectLater(
+      api.auth.loginWithDirectPassword(
+        client.LoginWithDirectPasswordRequest(
+          username: 'user',
+          password: 'password',
+        ),
+      ),
+      throwsA(
+        isA<SyncTvApiException>()
+            .having((error) => error.statusCode, 'statusCode', 429)
+            .having((error) => error.message, 'message', 'HTTP 429')
+            .having((error) => error.requestMethod, 'requestMethod', 'POST')
+            .having(
+              (error) => error.requestUri?.path,
+              'requestUri.path',
+              '/api/auth/direct-password/login',
+            )
+            .having(
+              (error) => error.toString(),
+              'toString',
+              'POST /api/auth/direct-password/login: HTTP 429',
+            ),
+      ),
+    );
+  });
+
   test('Cloudreve media source config round trips through protobuf', () {
     final config = SourceConfigCodec.mediaSourceConfigFromMap(
       sourceProvider: 'cloudreve',

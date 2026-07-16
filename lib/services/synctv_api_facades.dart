@@ -2663,13 +2663,13 @@ class SyncTvAdminApi {
     );
   }
 
-  Future<admin.GetSystemStatsResponse> getSystemStats(
-    admin.GetSystemStatsRequest request,
+  Future<admin.GetServiceStateResponse> getServiceState(
+    admin.GetServiceStateRequest request,
   ) {
     return _api._send(
       'GET',
-      '/api/admin/stats',
-      admin.GetSystemStatsResponse.create,
+      '/api/admin/service-state',
+      admin.GetServiceStateResponse.create,
     );
   }
 

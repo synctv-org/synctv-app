@@ -1,7 +1,10 @@
 syntax = "proto3";
+
 package synctv.playback_provider.youtube;
+
 import "proto/buf/validate/validate.proto";
 import "proto/playback_provider/common.proto";
+
 message GetYoutubeResourceRequest {
   string version = 1 [(buf.validate.field).string.min_len = 1];
   string mode_name = 2 [(buf.validate.field).string.min_len = 1];
@@ -13,7 +16,11 @@ message GetYoutubeResourceRequest {
   optional string range = 8;
   bool head = 9;
 }
-message YoutubeResourceResponse { synctv.playback_provider.common.StreamChunk chunk = 1; }
+
+message YoutubeResourceResponse {
+  synctv.playback_provider.common.StreamChunk chunk = 1;
+}
+
 message GetYoutubeSegmentRequest {
   string version = 1 [(buf.validate.field).string.min_len = 1];
   string target_url = 2 [(buf.validate.field).string.min_len = 1];
@@ -24,7 +31,11 @@ message GetYoutubeSegmentRequest {
   optional string range = 7;
   bool head = 8;
 }
-message YoutubeSegmentResponse { synctv.playback_provider.common.StreamChunk chunk = 1; }
+
+message YoutubeSegmentResponse {
+  synctv.playback_provider.common.StreamChunk chunk = 1;
+}
+
 message GetYoutubeSubtitleRequest {
   string version = 1 [(buf.validate.field).string.min_len = 1];
   string mode_name = 2 [(buf.validate.field).string.min_len = 1];
@@ -36,7 +47,11 @@ message GetYoutubeSubtitleRequest {
   optional string range = 8;
   bool head = 9;
 }
-message YoutubeSubtitleResponse { synctv.playback_provider.common.StreamChunk chunk = 1; }
+
+message YoutubeSubtitleResponse {
+  synctv.playback_provider.common.StreamChunk chunk = 1;
+}
+
 service YoutubePlaybackProviderService {
   rpc GetResource(GetYoutubeResourceRequest) returns (stream YoutubeResourceResponse);
   rpc GetSegment(GetYoutubeSegmentRequest) returns (stream YoutubeSegmentResponse);

@@ -521,19 +521,19 @@ class SyncTvAdminDomainService {
     return response.message;
   }
 
-  Future<AdminSystemStats> getSystemStats() async {
-    final response = await _api.adminService.getSystemStats(
-      admin.GetSystemStatsRequest(),
+  Future<AdminServiceState> getServiceState() async {
+    final response = await _api.adminService.getServiceState(
+      admin.GetServiceStateRequest(),
     );
-    return AdminSystemStats(
-      totalUsers: response.totalUsers,
-      activeUsers: response.activeUsers,
-      bannedUsers: response.bannedUsers,
-      totalRooms: response.totalRooms,
-      activeRooms: response.activeRooms,
-      bannedRooms: response.bannedRooms,
-      totalMedia: response.totalMedia,
-      providerInstances: response.providerInstances,
+    return AdminServiceState(
+      totalUsers: response.totalUsers.toInt(),
+      activeUsers: response.activeUsers.toInt(),
+      bannedUsers: response.bannedUsers.toInt(),
+      totalRooms: response.totalRooms.toInt(),
+      activeRooms: response.activeRooms.toInt(),
+      bannedRooms: response.bannedRooms.toInt(),
+      totalMedia: response.totalMedia.toInt(),
+      providerInstances: response.providerInstances.toInt(),
       onlineUsers: response.hasPresence()
           ? response.presence.onlineUserCount
           : 0,
@@ -543,7 +543,12 @@ class SyncTvAdminDomainService {
       activePresenceRooms: response.hasPresence()
           ? response.presence.activeRoomCount
           : 0,
-      additionalStats: protoMessageToJsonMap(response.additionalStats),
+      activeStreams: response.hasAdditionalState()
+          ? response.additionalState.activeStreams.toInt()
+          : 0,
+      openReports: response.hasAdditionalState()
+          ? response.additionalState.openReports.toInt()
+          : 0,
     );
   }
 

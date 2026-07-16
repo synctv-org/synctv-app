@@ -508,6 +508,7 @@ class RuntimeSettings extends $pb.GeneratedMessage {
     WebRtcSettings? webrtc,
     ChatSettings? chat,
     CorsSettings? cors,
+    ServerSettings? server,
   }) {
     final result = create();
     if (roomDefaults != null) result.roomDefaults = roomDefaults;
@@ -521,6 +522,7 @@ class RuntimeSettings extends $pb.GeneratedMessage {
     if (webrtc != null) result.webrtc = webrtc;
     if (chat != null) result.chat = chat;
     if (cors != null) result.cors = cors;
+    if (server != null) result.server = server;
     return result;
   }
 
@@ -559,6 +561,8 @@ class RuntimeSettings extends $pb.GeneratedMessage {
         subBuilder: ChatSettings.create)
     ..aOM<CorsSettings>(11, _omitFieldNames ? '' : 'cors',
         subBuilder: CorsSettings.create)
+    ..aOM<ServerSettings>(12, _omitFieldNames ? '' : 'server',
+        subBuilder: ServerSettings.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -700,6 +704,71 @@ class RuntimeSettings extends $pb.GeneratedMessage {
   void clearCors() => $_clearField(11);
   @$pb.TagNumber(11)
   CorsSettings ensureCors() => $_ensure(10);
+
+  @$pb.TagNumber(12)
+  ServerSettings get server => $_getN(11);
+  @$pb.TagNumber(12)
+  set server(ServerSettings value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasServer() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearServer() => $_clearField(12);
+  @$pb.TagNumber(12)
+  ServerSettings ensureServer() => $_ensure(11);
+}
+
+class ServerSettings extends $pb.GeneratedMessage {
+  factory ServerSettings({
+    $core.String? name,
+  }) {
+    final result = create();
+    if (name != null) result.name = name;
+    return result;
+  }
+
+  ServerSettings._();
+
+  factory ServerSettings.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ServerSettings.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ServerSettings',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServerSettings clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServerSettings copyWith(void Function(ServerSettings) updates) =>
+      super.copyWith((message) => updates(message as ServerSettings))
+          as ServerSettings;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ServerSettings create() => ServerSettings._();
+  @$core.override
+  ServerSettings createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ServerSettings getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ServerSettings>(create);
+  static ServerSettings? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get name => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set name($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasName() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearName() => $_clearField(1);
 }
 
 class RoomDefaultsSettings extends $pb.GeneratedMessage {
@@ -2545,6 +2614,7 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
     WebRtcSettingsPatch? webrtc,
     ChatSettingsPatch? chat,
     CorsSettingsPatch? cors,
+    ServerSettingsPatch? server,
   }) {
     final result = create();
     if (roomDefaults != null) result.roomDefaults = roomDefaults;
@@ -2558,6 +2628,7 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
     if (webrtc != null) result.webrtc = webrtc;
     if (chat != null) result.chat = chat;
     if (cors != null) result.cors = cors;
+    if (server != null) result.server = server;
     return result;
   }
 
@@ -2596,6 +2667,8 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
         subBuilder: ChatSettingsPatch.create)
     ..aOM<CorsSettingsPatch>(11, _omitFieldNames ? '' : 'cors',
         subBuilder: CorsSettingsPatch.create)
+    ..aOM<ServerSettingsPatch>(12, _omitFieldNames ? '' : 'server',
+        subBuilder: ServerSettingsPatch.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2737,6 +2810,71 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
   void clearCors() => $_clearField(11);
   @$pb.TagNumber(11)
   CorsSettingsPatch ensureCors() => $_ensure(10);
+
+  @$pb.TagNumber(12)
+  ServerSettingsPatch get server => $_getN(11);
+  @$pb.TagNumber(12)
+  set server(ServerSettingsPatch value) => $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasServer() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearServer() => $_clearField(12);
+  @$pb.TagNumber(12)
+  ServerSettingsPatch ensureServer() => $_ensure(11);
+}
+
+class ServerSettingsPatch extends $pb.GeneratedMessage {
+  factory ServerSettingsPatch({
+    $core.String? name,
+  }) {
+    final result = create();
+    if (name != null) result.name = name;
+    return result;
+  }
+
+  ServerSettingsPatch._();
+
+  factory ServerSettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ServerSettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ServerSettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'name')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServerSettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ServerSettingsPatch copyWith(void Function(ServerSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as ServerSettingsPatch))
+          as ServerSettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ServerSettingsPatch create() => ServerSettingsPatch._();
+  @$core.override
+  ServerSettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ServerSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ServerSettingsPatch>(create);
+  static ServerSettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get name => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set name($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasName() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearName() => $_clearField(1);
 }
 
 class RoomDefaultsSettingsPatch extends $pb.GeneratedMessage {
@@ -10375,56 +10513,56 @@ class ListAdminsResponse extends $pb.GeneratedMessage {
   void clearTotal() => $_clearField(2);
 }
 
-class GetSystemStatsRequest extends $pb.GeneratedMessage {
-  factory GetSystemStatsRequest() => create();
+class GetServiceStateRequest extends $pb.GeneratedMessage {
+  factory GetServiceStateRequest() => create();
 
-  GetSystemStatsRequest._();
+  GetServiceStateRequest._();
 
-  factory GetSystemStatsRequest.fromBuffer($core.List<$core.int> data,
+  factory GetServiceStateRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetSystemStatsRequest.fromJson($core.String json,
+  factory GetServiceStateRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetSystemStatsRequest',
+      _omitMessageNames ? '' : 'GetServiceStateRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSystemStatsRequest clone() => deepCopy();
+  GetServiceStateRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSystemStatsRequest copyWith(
-          void Function(GetSystemStatsRequest) updates) =>
-      super.copyWith((message) => updates(message as GetSystemStatsRequest))
-          as GetSystemStatsRequest;
+  GetServiceStateRequest copyWith(
+          void Function(GetServiceStateRequest) updates) =>
+      super.copyWith((message) => updates(message as GetServiceStateRequest))
+          as GetServiceStateRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetSystemStatsRequest create() => GetSystemStatsRequest._();
+  static GetServiceStateRequest create() => GetServiceStateRequest._();
   @$core.override
-  GetSystemStatsRequest createEmptyInstance() => create();
+  GetServiceStateRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetSystemStatsRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetSystemStatsRequest>(create);
-  static GetSystemStatsRequest? _defaultInstance;
+  static GetServiceStateRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetServiceStateRequest>(create);
+  static GetServiceStateRequest? _defaultInstance;
 }
 
-class GetSystemStatsResponse extends $pb.GeneratedMessage {
-  factory GetSystemStatsResponse({
-    $core.int? totalUsers,
-    $core.int? activeUsers,
-    $core.int? bannedUsers,
-    $core.int? totalRooms,
-    $core.int? activeRooms,
-    $core.int? bannedRooms,
-    $core.int? totalMedia,
-    $core.int? providerInstances,
-    SystemAdditionalStats? additionalStats,
+class GetServiceStateResponse extends $pb.GeneratedMessage {
+  factory GetServiceStateResponse({
+    $fixnum.Int64? totalUsers,
+    $fixnum.Int64? activeUsers,
+    $fixnum.Int64? bannedUsers,
+    $fixnum.Int64? totalRooms,
+    $fixnum.Int64? activeRooms,
+    $fixnum.Int64? bannedRooms,
+    $fixnum.Int64? totalMedia,
+    $fixnum.Int64? providerInstances,
+    ServiceAdditionalState? additionalState,
     $0.PresenceOverview? presence,
   }) {
     final result = create();
@@ -10436,140 +10574,140 @@ class GetSystemStatsResponse extends $pb.GeneratedMessage {
     if (bannedRooms != null) result.bannedRooms = bannedRooms;
     if (totalMedia != null) result.totalMedia = totalMedia;
     if (providerInstances != null) result.providerInstances = providerInstances;
-    if (additionalStats != null) result.additionalStats = additionalStats;
+    if (additionalState != null) result.additionalState = additionalState;
     if (presence != null) result.presence = presence;
     return result;
   }
 
-  GetSystemStatsResponse._();
+  GetServiceStateResponse._();
 
-  factory GetSystemStatsResponse.fromBuffer($core.List<$core.int> data,
+  factory GetServiceStateResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetSystemStatsResponse.fromJson($core.String json,
+  factory GetServiceStateResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetSystemStatsResponse',
+      _omitMessageNames ? '' : 'GetServiceStateResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'totalUsers')
-    ..aI(2, _omitFieldNames ? '' : 'activeUsers')
-    ..aI(3, _omitFieldNames ? '' : 'bannedUsers')
-    ..aI(4, _omitFieldNames ? '' : 'totalRooms')
-    ..aI(5, _omitFieldNames ? '' : 'activeRooms')
-    ..aI(6, _omitFieldNames ? '' : 'bannedRooms')
-    ..aI(7, _omitFieldNames ? '' : 'totalMedia')
-    ..aI(8, _omitFieldNames ? '' : 'providerInstances')
-    ..aOM<SystemAdditionalStats>(9, _omitFieldNames ? '' : 'additionalStats',
-        subBuilder: SystemAdditionalStats.create)
+    ..aInt64(1, _omitFieldNames ? '' : 'totalUsers')
+    ..aInt64(2, _omitFieldNames ? '' : 'activeUsers')
+    ..aInt64(3, _omitFieldNames ? '' : 'bannedUsers')
+    ..aInt64(4, _omitFieldNames ? '' : 'totalRooms')
+    ..aInt64(5, _omitFieldNames ? '' : 'activeRooms')
+    ..aInt64(6, _omitFieldNames ? '' : 'bannedRooms')
+    ..aInt64(7, _omitFieldNames ? '' : 'totalMedia')
+    ..aInt64(8, _omitFieldNames ? '' : 'providerInstances')
+    ..aOM<ServiceAdditionalState>(9, _omitFieldNames ? '' : 'additionalState',
+        subBuilder: ServiceAdditionalState.create)
     ..aOM<$0.PresenceOverview>(10, _omitFieldNames ? '' : 'presence',
         subBuilder: $0.PresenceOverview.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSystemStatsResponse clone() => deepCopy();
+  GetServiceStateResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetSystemStatsResponse copyWith(
-          void Function(GetSystemStatsResponse) updates) =>
-      super.copyWith((message) => updates(message as GetSystemStatsResponse))
-          as GetSystemStatsResponse;
+  GetServiceStateResponse copyWith(
+          void Function(GetServiceStateResponse) updates) =>
+      super.copyWith((message) => updates(message as GetServiceStateResponse))
+          as GetServiceStateResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetSystemStatsResponse create() => GetSystemStatsResponse._();
+  static GetServiceStateResponse create() => GetServiceStateResponse._();
   @$core.override
-  GetSystemStatsResponse createEmptyInstance() => create();
+  GetServiceStateResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetSystemStatsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetSystemStatsResponse>(create);
-  static GetSystemStatsResponse? _defaultInstance;
+  static GetServiceStateResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetServiceStateResponse>(create);
+  static GetServiceStateResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.int get totalUsers => $_getIZ(0);
+  $fixnum.Int64 get totalUsers => $_getI64(0);
   @$pb.TagNumber(1)
-  set totalUsers($core.int value) => $_setSignedInt32(0, value);
+  set totalUsers($fixnum.Int64 value) => $_setInt64(0, value);
   @$pb.TagNumber(1)
   $core.bool hasTotalUsers() => $_has(0);
   @$pb.TagNumber(1)
   void clearTotalUsers() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.int get activeUsers => $_getIZ(1);
+  $fixnum.Int64 get activeUsers => $_getI64(1);
   @$pb.TagNumber(2)
-  set activeUsers($core.int value) => $_setSignedInt32(1, value);
+  set activeUsers($fixnum.Int64 value) => $_setInt64(1, value);
   @$pb.TagNumber(2)
   $core.bool hasActiveUsers() => $_has(1);
   @$pb.TagNumber(2)
   void clearActiveUsers() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.int get bannedUsers => $_getIZ(2);
+  $fixnum.Int64 get bannedUsers => $_getI64(2);
   @$pb.TagNumber(3)
-  set bannedUsers($core.int value) => $_setSignedInt32(2, value);
+  set bannedUsers($fixnum.Int64 value) => $_setInt64(2, value);
   @$pb.TagNumber(3)
   $core.bool hasBannedUsers() => $_has(2);
   @$pb.TagNumber(3)
   void clearBannedUsers() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.int get totalRooms => $_getIZ(3);
+  $fixnum.Int64 get totalRooms => $_getI64(3);
   @$pb.TagNumber(4)
-  set totalRooms($core.int value) => $_setSignedInt32(3, value);
+  set totalRooms($fixnum.Int64 value) => $_setInt64(3, value);
   @$pb.TagNumber(4)
   $core.bool hasTotalRooms() => $_has(3);
   @$pb.TagNumber(4)
   void clearTotalRooms() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.int get activeRooms => $_getIZ(4);
+  $fixnum.Int64 get activeRooms => $_getI64(4);
   @$pb.TagNumber(5)
-  set activeRooms($core.int value) => $_setSignedInt32(4, value);
+  set activeRooms($fixnum.Int64 value) => $_setInt64(4, value);
   @$pb.TagNumber(5)
   $core.bool hasActiveRooms() => $_has(4);
   @$pb.TagNumber(5)
   void clearActiveRooms() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.int get bannedRooms => $_getIZ(5);
+  $fixnum.Int64 get bannedRooms => $_getI64(5);
   @$pb.TagNumber(6)
-  set bannedRooms($core.int value) => $_setSignedInt32(5, value);
+  set bannedRooms($fixnum.Int64 value) => $_setInt64(5, value);
   @$pb.TagNumber(6)
   $core.bool hasBannedRooms() => $_has(5);
   @$pb.TagNumber(6)
   void clearBannedRooms() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $core.int get totalMedia => $_getIZ(6);
+  $fixnum.Int64 get totalMedia => $_getI64(6);
   @$pb.TagNumber(7)
-  set totalMedia($core.int value) => $_setSignedInt32(6, value);
+  set totalMedia($fixnum.Int64 value) => $_setInt64(6, value);
   @$pb.TagNumber(7)
   $core.bool hasTotalMedia() => $_has(6);
   @$pb.TagNumber(7)
   void clearTotalMedia() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $core.int get providerInstances => $_getIZ(7);
+  $fixnum.Int64 get providerInstances => $_getI64(7);
   @$pb.TagNumber(8)
-  set providerInstances($core.int value) => $_setSignedInt32(7, value);
+  set providerInstances($fixnum.Int64 value) => $_setInt64(7, value);
   @$pb.TagNumber(8)
   $core.bool hasProviderInstances() => $_has(7);
   @$pb.TagNumber(8)
   void clearProviderInstances() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  SystemAdditionalStats get additionalStats => $_getN(8);
+  ServiceAdditionalState get additionalState => $_getN(8);
   @$pb.TagNumber(9)
-  set additionalStats(SystemAdditionalStats value) => $_setField(9, value);
+  set additionalState(ServiceAdditionalState value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasAdditionalStats() => $_has(8);
+  $core.bool hasAdditionalState() => $_has(8);
   @$pb.TagNumber(9)
-  void clearAdditionalStats() => $_clearField(9);
+  void clearAdditionalState() => $_clearField(9);
   @$pb.TagNumber(9)
-  SystemAdditionalStats ensureAdditionalStats() => $_ensure(8);
+  ServiceAdditionalState ensureAdditionalState() => $_ensure(8);
 
   @$pb.TagNumber(10)
   $0.PresenceOverview get presence => $_getN(9);
@@ -10583,10 +10721,10 @@ class GetSystemStatsResponse extends $pb.GeneratedMessage {
   $0.PresenceOverview ensurePresence() => $_ensure(9);
 }
 
-class SystemAdditionalStats extends $pb.GeneratedMessage {
-  factory SystemAdditionalStats({
-    $core.int? activeStreams,
-    $core.int? openReports,
+class ServiceAdditionalState extends $pb.GeneratedMessage {
+  factory ServiceAdditionalState({
+    $fixnum.Int64? activeStreams,
+    $fixnum.Int64? openReports,
   }) {
     final result = create();
     if (activeStreams != null) result.activeStreams = activeStreams;
@@ -10594,56 +10732,56 @@ class SystemAdditionalStats extends $pb.GeneratedMessage {
     return result;
   }
 
-  SystemAdditionalStats._();
+  ServiceAdditionalState._();
 
-  factory SystemAdditionalStats.fromBuffer($core.List<$core.int> data,
+  factory ServiceAdditionalState.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory SystemAdditionalStats.fromJson($core.String json,
+  factory ServiceAdditionalState.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'SystemAdditionalStats',
+      _omitMessageNames ? '' : 'ServiceAdditionalState',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'activeStreams')
-    ..aI(2, _omitFieldNames ? '' : 'openReports')
+    ..aInt64(1, _omitFieldNames ? '' : 'activeStreams')
+    ..aInt64(2, _omitFieldNames ? '' : 'openReports')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SystemAdditionalStats clone() => deepCopy();
+  ServiceAdditionalState clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  SystemAdditionalStats copyWith(
-          void Function(SystemAdditionalStats) updates) =>
-      super.copyWith((message) => updates(message as SystemAdditionalStats))
-          as SystemAdditionalStats;
+  ServiceAdditionalState copyWith(
+          void Function(ServiceAdditionalState) updates) =>
+      super.copyWith((message) => updates(message as ServiceAdditionalState))
+          as ServiceAdditionalState;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static SystemAdditionalStats create() => SystemAdditionalStats._();
+  static ServiceAdditionalState create() => ServiceAdditionalState._();
   @$core.override
-  SystemAdditionalStats createEmptyInstance() => create();
+  ServiceAdditionalState createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static SystemAdditionalStats getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<SystemAdditionalStats>(create);
-  static SystemAdditionalStats? _defaultInstance;
+  static ServiceAdditionalState getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ServiceAdditionalState>(create);
+  static ServiceAdditionalState? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.int get activeStreams => $_getIZ(0);
+  $fixnum.Int64 get activeStreams => $_getI64(0);
   @$pb.TagNumber(1)
-  set activeStreams($core.int value) => $_setSignedInt32(0, value);
+  set activeStreams($fixnum.Int64 value) => $_setInt64(0, value);
   @$pb.TagNumber(1)
   $core.bool hasActiveStreams() => $_has(0);
   @$pb.TagNumber(1)
   void clearActiveStreams() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.int get openReports => $_getIZ(1);
+  $fixnum.Int64 get openReports => $_getI64(1);
   @$pb.TagNumber(2)
-  set openReports($core.int value) => $_setSignedInt32(1, value);
+  set openReports($fixnum.Int64 value) => $_setInt64(1, value);
   @$pb.TagNumber(2)
   $core.bool hasOpenReports() => $_has(1);
   @$pb.TagNumber(2)
@@ -11069,6 +11207,1083 @@ class KickStreamResponse extends $pb.GeneratedMessage {
   static KickStreamResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<KickStreamResponse>(create);
   static KickStreamResponse? _defaultInstance;
+}
+
+class GetSliceCacheStatsRequest extends $pb.GeneratedMessage {
+  factory GetSliceCacheStatsRequest({
+    $core.String? nodeId,
+    $core.bool? allNodes,
+  }) {
+    final result = create();
+    if (nodeId != null) result.nodeId = nodeId;
+    if (allNodes != null) result.allNodes = allNodes;
+    return result;
+  }
+
+  GetSliceCacheStatsRequest._();
+
+  factory GetSliceCacheStatsRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetSliceCacheStatsRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetSliceCacheStatsRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'nodeId')
+    ..aOB(2, _omitFieldNames ? '' : 'allNodes')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetSliceCacheStatsRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetSliceCacheStatsRequest copyWith(
+          void Function(GetSliceCacheStatsRequest) updates) =>
+      super.copyWith((message) => updates(message as GetSliceCacheStatsRequest))
+          as GetSliceCacheStatsRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetSliceCacheStatsRequest create() => GetSliceCacheStatsRequest._();
+  @$core.override
+  GetSliceCacheStatsRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetSliceCacheStatsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetSliceCacheStatsRequest>(create);
+  static GetSliceCacheStatsRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get nodeId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set nodeId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNodeId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNodeId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get allNodes => $_getBF(1);
+  @$pb.TagNumber(2)
+  set allNodes($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAllNodes() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAllNodes() => $_clearField(2);
+}
+
+class PurgeSliceCacheRequest extends $pb.GeneratedMessage {
+  factory PurgeSliceCacheRequest({
+    $core.String? nodeId,
+    $core.bool? allNodes,
+  }) {
+    final result = create();
+    if (nodeId != null) result.nodeId = nodeId;
+    if (allNodes != null) result.allNodes = allNodes;
+    return result;
+  }
+
+  PurgeSliceCacheRequest._();
+
+  factory PurgeSliceCacheRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PurgeSliceCacheRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PurgeSliceCacheRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'nodeId')
+    ..aOB(2, _omitFieldNames ? '' : 'allNodes')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeSliceCacheRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeSliceCacheRequest copyWith(
+          void Function(PurgeSliceCacheRequest) updates) =>
+      super.copyWith((message) => updates(message as PurgeSliceCacheRequest))
+          as PurgeSliceCacheRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PurgeSliceCacheRequest create() => PurgeSliceCacheRequest._();
+  @$core.override
+  PurgeSliceCacheRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PurgeSliceCacheRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PurgeSliceCacheRequest>(create);
+  static PurgeSliceCacheRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get nodeId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set nodeId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNodeId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNodeId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get allNodes => $_getBF(1);
+  @$pb.TagNumber(2)
+  set allNodes($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAllNodes() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAllNodes() => $_clearField(2);
+}
+
+class EvictExpiredSliceCacheRequest extends $pb.GeneratedMessage {
+  factory EvictExpiredSliceCacheRequest({
+    $core.String? nodeId,
+    $core.bool? allNodes,
+  }) {
+    final result = create();
+    if (nodeId != null) result.nodeId = nodeId;
+    if (allNodes != null) result.allNodes = allNodes;
+    return result;
+  }
+
+  EvictExpiredSliceCacheRequest._();
+
+  factory EvictExpiredSliceCacheRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EvictExpiredSliceCacheRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EvictExpiredSliceCacheRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'nodeId')
+    ..aOB(2, _omitFieldNames ? '' : 'allNodes')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EvictExpiredSliceCacheRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EvictExpiredSliceCacheRequest copyWith(
+          void Function(EvictExpiredSliceCacheRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as EvictExpiredSliceCacheRequest))
+          as EvictExpiredSliceCacheRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EvictExpiredSliceCacheRequest create() =>
+      EvictExpiredSliceCacheRequest._();
+  @$core.override
+  EvictExpiredSliceCacheRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EvictExpiredSliceCacheRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EvictExpiredSliceCacheRequest>(create);
+  static EvictExpiredSliceCacheRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get nodeId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set nodeId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNodeId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNodeId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get allNodes => $_getBF(1);
+  @$pb.TagNumber(2)
+  set allNodes($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAllNodes() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAllNodes() => $_clearField(2);
+}
+
+class SliceCacheConfigInfo extends $pb.GeneratedMessage {
+  factory SliceCacheConfigInfo({
+    $core.bool? engineEnabled,
+    $core.String? backend,
+    $core.String? fileCacheDir,
+    $fixnum.Int64? sliceSize,
+    $fixnum.Int64? maxCacheSize,
+    $fixnum.Int64? segmentTtlSecs,
+    $fixnum.Int64? staleMaxAgeSecs,
+    $core.bool? staleWhileRevalidate,
+    $fixnum.Int64? evictionIntervalSecs,
+    $core.double? watermarkRatio,
+  }) {
+    final result = create();
+    if (engineEnabled != null) result.engineEnabled = engineEnabled;
+    if (backend != null) result.backend = backend;
+    if (fileCacheDir != null) result.fileCacheDir = fileCacheDir;
+    if (sliceSize != null) result.sliceSize = sliceSize;
+    if (maxCacheSize != null) result.maxCacheSize = maxCacheSize;
+    if (segmentTtlSecs != null) result.segmentTtlSecs = segmentTtlSecs;
+    if (staleMaxAgeSecs != null) result.staleMaxAgeSecs = staleMaxAgeSecs;
+    if (staleWhileRevalidate != null)
+      result.staleWhileRevalidate = staleWhileRevalidate;
+    if (evictionIntervalSecs != null)
+      result.evictionIntervalSecs = evictionIntervalSecs;
+    if (watermarkRatio != null) result.watermarkRatio = watermarkRatio;
+    return result;
+  }
+
+  SliceCacheConfigInfo._();
+
+  factory SliceCacheConfigInfo.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SliceCacheConfigInfo.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SliceCacheConfigInfo',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'engineEnabled')
+    ..aOS(2, _omitFieldNames ? '' : 'backend')
+    ..aOS(3, _omitFieldNames ? '' : 'fileCacheDir')
+    ..a<$fixnum.Int64>(
+        4, _omitFieldNames ? '' : 'sliceSize', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        5, _omitFieldNames ? '' : 'maxCacheSize', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        6, _omitFieldNames ? '' : 'segmentTtlSecs', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        7, _omitFieldNames ? '' : 'staleMaxAgeSecs', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(8, _omitFieldNames ? '' : 'staleWhileRevalidate')
+    ..a<$fixnum.Int64>(
+        9, _omitFieldNames ? '' : 'evictionIntervalSecs', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aD(10, _omitFieldNames ? '' : 'watermarkRatio')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SliceCacheConfigInfo clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SliceCacheConfigInfo copyWith(void Function(SliceCacheConfigInfo) updates) =>
+      super.copyWith((message) => updates(message as SliceCacheConfigInfo))
+          as SliceCacheConfigInfo;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SliceCacheConfigInfo create() => SliceCacheConfigInfo._();
+  @$core.override
+  SliceCacheConfigInfo createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SliceCacheConfigInfo getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SliceCacheConfigInfo>(create);
+  static SliceCacheConfigInfo? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get engineEnabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set engineEnabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEngineEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEngineEnabled() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get backend => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set backend($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasBackend() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearBackend() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get fileCacheDir => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set fileCacheDir($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFileCacheDir() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFileCacheDir() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get sliceSize => $_getI64(3);
+  @$pb.TagNumber(4)
+  set sliceSize($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSliceSize() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSliceSize() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get maxCacheSize => $_getI64(4);
+  @$pb.TagNumber(5)
+  set maxCacheSize($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMaxCacheSize() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMaxCacheSize() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get segmentTtlSecs => $_getI64(5);
+  @$pb.TagNumber(6)
+  set segmentTtlSecs($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSegmentTtlSecs() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSegmentTtlSecs() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get staleMaxAgeSecs => $_getI64(6);
+  @$pb.TagNumber(7)
+  set staleMaxAgeSecs($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasStaleMaxAgeSecs() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearStaleMaxAgeSecs() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.bool get staleWhileRevalidate => $_getBF(7);
+  @$pb.TagNumber(8)
+  set staleWhileRevalidate($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasStaleWhileRevalidate() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearStaleWhileRevalidate() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $fixnum.Int64 get evictionIntervalSecs => $_getI64(8);
+  @$pb.TagNumber(9)
+  set evictionIntervalSecs($fixnum.Int64 value) => $_setInt64(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasEvictionIntervalSecs() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearEvictionIntervalSecs() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.double get watermarkRatio => $_getN(9);
+  @$pb.TagNumber(10)
+  set watermarkRatio($core.double value) => $_setDouble(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasWatermarkRatio() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearWatermarkRatio() => $_clearField(10);
+}
+
+class SliceCacheStatsNode extends $pb.GeneratedMessage {
+  factory SliceCacheStatsNode({
+    $core.String? nodeId,
+    SliceCacheConfigInfo? config,
+    $fixnum.Int64? currentSizeBytes,
+    $fixnum.Int64? entryCount,
+    $fixnum.Int64? metadataEntries,
+    $fixnum.Int64? updatingEntries,
+    $fixnum.Int64? lockCount,
+    $core.double? usageRatio,
+  }) {
+    final result = create();
+    if (nodeId != null) result.nodeId = nodeId;
+    if (config != null) result.config = config;
+    if (currentSizeBytes != null) result.currentSizeBytes = currentSizeBytes;
+    if (entryCount != null) result.entryCount = entryCount;
+    if (metadataEntries != null) result.metadataEntries = metadataEntries;
+    if (updatingEntries != null) result.updatingEntries = updatingEntries;
+    if (lockCount != null) result.lockCount = lockCount;
+    if (usageRatio != null) result.usageRatio = usageRatio;
+    return result;
+  }
+
+  SliceCacheStatsNode._();
+
+  factory SliceCacheStatsNode.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SliceCacheStatsNode.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SliceCacheStatsNode',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'nodeId')
+    ..aOM<SliceCacheConfigInfo>(2, _omitFieldNames ? '' : 'config',
+        subBuilder: SliceCacheConfigInfo.create)
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'currentSizeBytes', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        4, _omitFieldNames ? '' : 'entryCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        5, _omitFieldNames ? '' : 'metadataEntries', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        6, _omitFieldNames ? '' : 'updatingEntries', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        7, _omitFieldNames ? '' : 'lockCount', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aD(8, _omitFieldNames ? '' : 'usageRatio')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SliceCacheStatsNode clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SliceCacheStatsNode copyWith(void Function(SliceCacheStatsNode) updates) =>
+      super.copyWith((message) => updates(message as SliceCacheStatsNode))
+          as SliceCacheStatsNode;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SliceCacheStatsNode create() => SliceCacheStatsNode._();
+  @$core.override
+  SliceCacheStatsNode createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SliceCacheStatsNode getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SliceCacheStatsNode>(create);
+  static SliceCacheStatsNode? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get nodeId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set nodeId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNodeId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNodeId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  SliceCacheConfigInfo get config => $_getN(1);
+  @$pb.TagNumber(2)
+  set config(SliceCacheConfigInfo value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasConfig() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearConfig() => $_clearField(2);
+  @$pb.TagNumber(2)
+  SliceCacheConfigInfo ensureConfig() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get currentSizeBytes => $_getI64(2);
+  @$pb.TagNumber(3)
+  set currentSizeBytes($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasCurrentSizeBytes() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCurrentSizeBytes() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get entryCount => $_getI64(3);
+  @$pb.TagNumber(4)
+  set entryCount($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasEntryCount() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearEntryCount() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get metadataEntries => $_getI64(4);
+  @$pb.TagNumber(5)
+  set metadataEntries($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMetadataEntries() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMetadataEntries() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get updatingEntries => $_getI64(5);
+  @$pb.TagNumber(6)
+  set updatingEntries($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasUpdatingEntries() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearUpdatingEntries() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get lockCount => $_getI64(6);
+  @$pb.TagNumber(7)
+  set lockCount($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasLockCount() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearLockCount() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.double get usageRatio => $_getN(7);
+  @$pb.TagNumber(8)
+  set usageRatio($core.double value) => $_setDouble(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasUsageRatio() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearUsageRatio() => $_clearField(8);
+}
+
+class SliceCacheNodeFailure extends $pb.GeneratedMessage {
+  factory SliceCacheNodeFailure({
+    $core.String? nodeId,
+    $core.String? error,
+  }) {
+    final result = create();
+    if (nodeId != null) result.nodeId = nodeId;
+    if (error != null) result.error = error;
+    return result;
+  }
+
+  SliceCacheNodeFailure._();
+
+  factory SliceCacheNodeFailure.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SliceCacheNodeFailure.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SliceCacheNodeFailure',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'nodeId')
+    ..aOS(2, _omitFieldNames ? '' : 'error')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SliceCacheNodeFailure clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SliceCacheNodeFailure copyWith(
+          void Function(SliceCacheNodeFailure) updates) =>
+      super.copyWith((message) => updates(message as SliceCacheNodeFailure))
+          as SliceCacheNodeFailure;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SliceCacheNodeFailure create() => SliceCacheNodeFailure._();
+  @$core.override
+  SliceCacheNodeFailure createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SliceCacheNodeFailure getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SliceCacheNodeFailure>(create);
+  static SliceCacheNodeFailure? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get nodeId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set nodeId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNodeId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNodeId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get error => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set error($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasError() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearError() => $_clearField(2);
+}
+
+class GetSliceCacheStatsResponse extends $pb.GeneratedMessage {
+  factory GetSliceCacheStatsResponse({
+    $core.Iterable<SliceCacheStatsNode>? nodes,
+    $core.Iterable<SliceCacheNodeFailure>? failures,
+  }) {
+    final result = create();
+    if (nodes != null) result.nodes.addAll(nodes);
+    if (failures != null) result.failures.addAll(failures);
+    return result;
+  }
+
+  GetSliceCacheStatsResponse._();
+
+  factory GetSliceCacheStatsResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetSliceCacheStatsResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetSliceCacheStatsResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..pPM<SliceCacheStatsNode>(1, _omitFieldNames ? '' : 'nodes',
+        subBuilder: SliceCacheStatsNode.create)
+    ..pPM<SliceCacheNodeFailure>(2, _omitFieldNames ? '' : 'failures',
+        subBuilder: SliceCacheNodeFailure.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetSliceCacheStatsResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetSliceCacheStatsResponse copyWith(
+          void Function(GetSliceCacheStatsResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as GetSliceCacheStatsResponse))
+          as GetSliceCacheStatsResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetSliceCacheStatsResponse create() => GetSliceCacheStatsResponse._();
+  @$core.override
+  GetSliceCacheStatsResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetSliceCacheStatsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetSliceCacheStatsResponse>(create);
+  static GetSliceCacheStatsResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<SliceCacheStatsNode> get nodes => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<SliceCacheNodeFailure> get failures => $_getList(1);
+}
+
+class PurgeSliceCacheNodeResult extends $pb.GeneratedMessage {
+  factory PurgeSliceCacheNodeResult({
+    $core.String? nodeId,
+    $core.bool? success,
+    $fixnum.Int64? removedEntries,
+    $fixnum.Int64? freedBytes,
+    SliceCacheStatsNode? stats,
+  }) {
+    final result = create();
+    if (nodeId != null) result.nodeId = nodeId;
+    if (success != null) result.success = success;
+    if (removedEntries != null) result.removedEntries = removedEntries;
+    if (freedBytes != null) result.freedBytes = freedBytes;
+    if (stats != null) result.stats = stats;
+    return result;
+  }
+
+  PurgeSliceCacheNodeResult._();
+
+  factory PurgeSliceCacheNodeResult.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PurgeSliceCacheNodeResult.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PurgeSliceCacheNodeResult',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'nodeId')
+    ..aOB(2, _omitFieldNames ? '' : 'success')
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'removedEntries', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        4, _omitFieldNames ? '' : 'freedBytes', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<SliceCacheStatsNode>(5, _omitFieldNames ? '' : 'stats',
+        subBuilder: SliceCacheStatsNode.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeSliceCacheNodeResult clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeSliceCacheNodeResult copyWith(
+          void Function(PurgeSliceCacheNodeResult) updates) =>
+      super.copyWith((message) => updates(message as PurgeSliceCacheNodeResult))
+          as PurgeSliceCacheNodeResult;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PurgeSliceCacheNodeResult create() => PurgeSliceCacheNodeResult._();
+  @$core.override
+  PurgeSliceCacheNodeResult createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PurgeSliceCacheNodeResult getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PurgeSliceCacheNodeResult>(create);
+  static PurgeSliceCacheNodeResult? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get nodeId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set nodeId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNodeId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNodeId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get success => $_getBF(1);
+  @$pb.TagNumber(2)
+  set success($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSuccess() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSuccess() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get removedEntries => $_getI64(2);
+  @$pb.TagNumber(3)
+  set removedEntries($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRemovedEntries() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRemovedEntries() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get freedBytes => $_getI64(3);
+  @$pb.TagNumber(4)
+  set freedBytes($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasFreedBytes() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearFreedBytes() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  SliceCacheStatsNode get stats => $_getN(4);
+  @$pb.TagNumber(5)
+  set stats(SliceCacheStatsNode value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasStats() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearStats() => $_clearField(5);
+  @$pb.TagNumber(5)
+  SliceCacheStatsNode ensureStats() => $_ensure(4);
+}
+
+class PurgeSliceCacheResponse extends $pb.GeneratedMessage {
+  factory PurgeSliceCacheResponse({
+    $core.bool? success,
+    $fixnum.Int64? removedEntries,
+    $fixnum.Int64? freedBytes,
+    SliceCacheStatsNode? stats,
+    $core.Iterable<PurgeSliceCacheNodeResult>? nodes,
+    $core.Iterable<SliceCacheNodeFailure>? failures,
+  }) {
+    final result = create();
+    if (success != null) result.success = success;
+    if (removedEntries != null) result.removedEntries = removedEntries;
+    if (freedBytes != null) result.freedBytes = freedBytes;
+    if (stats != null) result.stats = stats;
+    if (nodes != null) result.nodes.addAll(nodes);
+    if (failures != null) result.failures.addAll(failures);
+    return result;
+  }
+
+  PurgeSliceCacheResponse._();
+
+  factory PurgeSliceCacheResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PurgeSliceCacheResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PurgeSliceCacheResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'success')
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'removedEntries', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'freedBytes', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<SliceCacheStatsNode>(4, _omitFieldNames ? '' : 'stats',
+        subBuilder: SliceCacheStatsNode.create)
+    ..pPM<PurgeSliceCacheNodeResult>(5, _omitFieldNames ? '' : 'nodes',
+        subBuilder: PurgeSliceCacheNodeResult.create)
+    ..pPM<SliceCacheNodeFailure>(6, _omitFieldNames ? '' : 'failures',
+        subBuilder: SliceCacheNodeFailure.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeSliceCacheResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeSliceCacheResponse copyWith(
+          void Function(PurgeSliceCacheResponse) updates) =>
+      super.copyWith((message) => updates(message as PurgeSliceCacheResponse))
+          as PurgeSliceCacheResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PurgeSliceCacheResponse create() => PurgeSliceCacheResponse._();
+  @$core.override
+  PurgeSliceCacheResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PurgeSliceCacheResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PurgeSliceCacheResponse>(create);
+  static PurgeSliceCacheResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get removedEntries => $_getI64(1);
+  @$pb.TagNumber(2)
+  set removedEntries($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRemovedEntries() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRemovedEntries() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get freedBytes => $_getI64(2);
+  @$pb.TagNumber(3)
+  set freedBytes($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFreedBytes() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFreedBytes() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  SliceCacheStatsNode get stats => $_getN(3);
+  @$pb.TagNumber(4)
+  set stats(SliceCacheStatsNode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasStats() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearStats() => $_clearField(4);
+  @$pb.TagNumber(4)
+  SliceCacheStatsNode ensureStats() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  $pb.PbList<PurgeSliceCacheNodeResult> get nodes => $_getList(4);
+
+  @$pb.TagNumber(6)
+  $pb.PbList<SliceCacheNodeFailure> get failures => $_getList(5);
+}
+
+class EvictExpiredSliceCacheNodeResult extends $pb.GeneratedMessage {
+  factory EvictExpiredSliceCacheNodeResult({
+    $core.String? nodeId,
+    $core.bool? success,
+    $fixnum.Int64? removedExpiredEntries,
+    SliceCacheStatsNode? stats,
+  }) {
+    final result = create();
+    if (nodeId != null) result.nodeId = nodeId;
+    if (success != null) result.success = success;
+    if (removedExpiredEntries != null)
+      result.removedExpiredEntries = removedExpiredEntries;
+    if (stats != null) result.stats = stats;
+    return result;
+  }
+
+  EvictExpiredSliceCacheNodeResult._();
+
+  factory EvictExpiredSliceCacheNodeResult.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EvictExpiredSliceCacheNodeResult.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EvictExpiredSliceCacheNodeResult',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'nodeId')
+    ..aOB(2, _omitFieldNames ? '' : 'success')
+    ..a<$fixnum.Int64>(
+        3, _omitFieldNames ? '' : 'removedExpiredEntries', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<SliceCacheStatsNode>(4, _omitFieldNames ? '' : 'stats',
+        subBuilder: SliceCacheStatsNode.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EvictExpiredSliceCacheNodeResult clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EvictExpiredSliceCacheNodeResult copyWith(
+          void Function(EvictExpiredSliceCacheNodeResult) updates) =>
+      super.copyWith(
+              (message) => updates(message as EvictExpiredSliceCacheNodeResult))
+          as EvictExpiredSliceCacheNodeResult;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EvictExpiredSliceCacheNodeResult create() =>
+      EvictExpiredSliceCacheNodeResult._();
+  @$core.override
+  EvictExpiredSliceCacheNodeResult createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EvictExpiredSliceCacheNodeResult getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EvictExpiredSliceCacheNodeResult>(
+          create);
+  static EvictExpiredSliceCacheNodeResult? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get nodeId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set nodeId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNodeId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNodeId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get success => $_getBF(1);
+  @$pb.TagNumber(2)
+  set success($core.bool value) => $_setBool(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSuccess() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSuccess() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get removedExpiredEntries => $_getI64(2);
+  @$pb.TagNumber(3)
+  set removedExpiredEntries($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRemovedExpiredEntries() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRemovedExpiredEntries() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  SliceCacheStatsNode get stats => $_getN(3);
+  @$pb.TagNumber(4)
+  set stats(SliceCacheStatsNode value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasStats() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearStats() => $_clearField(4);
+  @$pb.TagNumber(4)
+  SliceCacheStatsNode ensureStats() => $_ensure(3);
+}
+
+class EvictExpiredSliceCacheResponse extends $pb.GeneratedMessage {
+  factory EvictExpiredSliceCacheResponse({
+    $core.bool? success,
+    $fixnum.Int64? removedExpiredEntries,
+    SliceCacheStatsNode? stats,
+    $core.Iterable<EvictExpiredSliceCacheNodeResult>? nodes,
+    $core.Iterable<SliceCacheNodeFailure>? failures,
+  }) {
+    final result = create();
+    if (success != null) result.success = success;
+    if (removedExpiredEntries != null)
+      result.removedExpiredEntries = removedExpiredEntries;
+    if (stats != null) result.stats = stats;
+    if (nodes != null) result.nodes.addAll(nodes);
+    if (failures != null) result.failures.addAll(failures);
+    return result;
+  }
+
+  EvictExpiredSliceCacheResponse._();
+
+  factory EvictExpiredSliceCacheResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EvictExpiredSliceCacheResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EvictExpiredSliceCacheResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'success')
+    ..a<$fixnum.Int64>(
+        2, _omitFieldNames ? '' : 'removedExpiredEntries', $pb.PbFieldType.OU6,
+        defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<SliceCacheStatsNode>(3, _omitFieldNames ? '' : 'stats',
+        subBuilder: SliceCacheStatsNode.create)
+    ..pPM<EvictExpiredSliceCacheNodeResult>(4, _omitFieldNames ? '' : 'nodes',
+        subBuilder: EvictExpiredSliceCacheNodeResult.create)
+    ..pPM<SliceCacheNodeFailure>(5, _omitFieldNames ? '' : 'failures',
+        subBuilder: SliceCacheNodeFailure.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EvictExpiredSliceCacheResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EvictExpiredSliceCacheResponse copyWith(
+          void Function(EvictExpiredSliceCacheResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as EvictExpiredSliceCacheResponse))
+          as EvictExpiredSliceCacheResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EvictExpiredSliceCacheResponse create() =>
+      EvictExpiredSliceCacheResponse._();
+  @$core.override
+  EvictExpiredSliceCacheResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static EvictExpiredSliceCacheResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EvictExpiredSliceCacheResponse>(create);
+  static EvictExpiredSliceCacheResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get success => $_getBF(0);
+  @$pb.TagNumber(1)
+  set success($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSuccess() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSuccess() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get removedExpiredEntries => $_getI64(1);
+  @$pb.TagNumber(2)
+  set removedExpiredEntries($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRemovedExpiredEntries() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRemovedExpiredEntries() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  SliceCacheStatsNode get stats => $_getN(2);
+  @$pb.TagNumber(3)
+  set stats(SliceCacheStatsNode value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStats() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStats() => $_clearField(3);
+  @$pb.TagNumber(3)
+  SliceCacheStatsNode ensureStats() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  $pb.PbList<EvictExpiredSliceCacheNodeResult> get nodes => $_getList(3);
+
+  @$pb.TagNumber(5)
+  $pb.PbList<SliceCacheNodeFailure> get failures => $_getList(4);
 }
 
 /// Batch result for a single item
@@ -12533,12 +13748,28 @@ class AdminServiceApi {
           ctx, 'AdminService', 'ListAdmins', request, ListAdminsResponse());
 
   /// =========================
-  /// System Statistics
+  /// Service State
   /// =========================
-  $async.Future<GetSystemStatsResponse> getSystemStats(
-          $pb.ClientContext? ctx, GetSystemStatsRequest request) =>
-      _client.invoke<GetSystemStatsResponse>(ctx, 'AdminService',
-          'GetSystemStats', request, GetSystemStatsResponse());
+  $async.Future<GetServiceStateResponse> getServiceState(
+          $pb.ClientContext? ctx, GetServiceStateRequest request) =>
+      _client.invoke<GetServiceStateResponse>(ctx, 'AdminService',
+          'GetServiceState', request, GetServiceStateResponse());
+
+  /// =========================
+  /// Slice Cache Management
+  /// =========================
+  $async.Future<GetSliceCacheStatsResponse> getSliceCacheStats(
+          $pb.ClientContext? ctx, GetSliceCacheStatsRequest request) =>
+      _client.invoke<GetSliceCacheStatsResponse>(ctx, 'AdminService',
+          'GetSliceCacheStats', request, GetSliceCacheStatsResponse());
+  $async.Future<PurgeSliceCacheResponse> purgeSliceCache(
+          $pb.ClientContext? ctx, PurgeSliceCacheRequest request) =>
+      _client.invoke<PurgeSliceCacheResponse>(ctx, 'AdminService',
+          'PurgeSliceCache', request, PurgeSliceCacheResponse());
+  $async.Future<EvictExpiredSliceCacheResponse> evictExpiredSliceCache(
+          $pb.ClientContext? ctx, EvictExpiredSliceCacheRequest request) =>
+      _client.invoke<EvictExpiredSliceCacheResponse>(ctx, 'AdminService',
+          'EvictExpiredSliceCache', request, EvictExpiredSliceCacheResponse());
 
   /// =========================
   /// Livestream Management

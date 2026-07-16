@@ -28,7 +28,7 @@ class AdminProviderInstance {
   });
 }
 
-class AdminSystemStats {
+class AdminServiceState {
   final int totalUsers;
   final int activeUsers;
   final int bannedUsers;
@@ -40,9 +40,10 @@ class AdminSystemStats {
   final int onlineUsers;
   final int onlineConnections;
   final int activePresenceRooms;
-  final Map<String, dynamic> additionalStats;
+  final int activeStreams;
+  final int openReports;
 
-  const AdminSystemStats({
+  const AdminServiceState({
     required this.totalUsers,
     required this.activeUsers,
     required this.bannedUsers,
@@ -54,7 +55,8 @@ class AdminSystemStats {
     this.onlineUsers = 0,
     this.onlineConnections = 0,
     this.activePresenceRooms = 0,
-    required this.additionalStats,
+    required this.activeStreams,
+    required this.openReports,
   });
 }
 

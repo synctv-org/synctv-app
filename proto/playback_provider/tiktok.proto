@@ -57,4 +57,3 @@ service TikTokPlaybackProviderService {
   rpc GetSegment(GetTikTokSegmentRequest) returns (stream TikTokSegmentResponse);
   rpc GetSubtitle(GetTikTokSubtitleRequest) returns (stream TikTokSubtitleResponse);
 }
-
