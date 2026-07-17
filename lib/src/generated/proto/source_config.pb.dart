@@ -4294,50 +4294,6 @@ class YoutubePlaylistSourceConfig_Search extends $pb.GeneratedMessage {
   void clearQuery() => $_clearField(1);
 }
 
-class YoutubePlaylistSourceConfig_Trending extends $pb.GeneratedMessage {
-  factory YoutubePlaylistSourceConfig_Trending() => create();
-
-  YoutubePlaylistSourceConfig_Trending._();
-
-  factory YoutubePlaylistSourceConfig_Trending.fromBuffer(
-          $core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory YoutubePlaylistSourceConfig_Trending.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'YoutubePlaylistSourceConfig.Trending',
-      package: const $pb.PackageName(
-          _omitMessageNames ? '' : 'synctv.source_config'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  YoutubePlaylistSourceConfig_Trending clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  YoutubePlaylistSourceConfig_Trending copyWith(
-          void Function(YoutubePlaylistSourceConfig_Trending) updates) =>
-      super.copyWith((message) =>
-              updates(message as YoutubePlaylistSourceConfig_Trending))
-          as YoutubePlaylistSourceConfig_Trending;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static YoutubePlaylistSourceConfig_Trending create() =>
-      YoutubePlaylistSourceConfig_Trending._();
-  @$core.override
-  YoutubePlaylistSourceConfig_Trending createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static YoutubePlaylistSourceConfig_Trending getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          YoutubePlaylistSourceConfig_Trending>(create);
-  static YoutubePlaylistSourceConfig_Trending? _defaultInstance;
-}
-
 class YoutubePlaylistSourceConfig_Subscriptions extends $pb.GeneratedMessage {
   factory YoutubePlaylistSourceConfig_Subscriptions() => create();
 
@@ -4474,7 +4430,6 @@ enum YoutubePlaylistSourceConfig_Source {
   playlist,
   channel,
   search,
-  trending,
   subscriptions,
   likedVideos,
   watchLater,
@@ -4487,7 +4442,6 @@ class YoutubePlaylistSourceConfig extends $pb.GeneratedMessage {
     YoutubePlaylistSourceConfig_Playlist? playlist,
     YoutubePlaylistSourceConfig_Channel? channel,
     YoutubePlaylistSourceConfig_Search? search,
-    YoutubePlaylistSourceConfig_Trending? trending,
     YoutubePlaylistSourceConfig_Subscriptions? subscriptions,
     YoutubePlaylistSourceConfig_LikedVideos? likedVideos,
     YoutubePlaylistSourceConfig_WatchLater? watchLater,
@@ -4497,7 +4451,6 @@ class YoutubePlaylistSourceConfig extends $pb.GeneratedMessage {
     if (playlist != null) result.playlist = playlist;
     if (channel != null) result.channel = channel;
     if (search != null) result.search = search;
-    if (trending != null) result.trending = trending;
     if (subscriptions != null) result.subscriptions = subscriptions;
     if (likedVideos != null) result.likedVideos = likedVideos;
     if (watchLater != null) result.watchLater = watchLater;
@@ -4518,10 +4471,9 @@ class YoutubePlaylistSourceConfig extends $pb.GeneratedMessage {
     2: YoutubePlaylistSourceConfig_Source.playlist,
     3: YoutubePlaylistSourceConfig_Source.channel,
     4: YoutubePlaylistSourceConfig_Source.search,
-    5: YoutubePlaylistSourceConfig_Source.trending,
-    6: YoutubePlaylistSourceConfig_Source.subscriptions,
-    7: YoutubePlaylistSourceConfig_Source.likedVideos,
-    8: YoutubePlaylistSourceConfig_Source.watchLater,
+    5: YoutubePlaylistSourceConfig_Source.subscriptions,
+    6: YoutubePlaylistSourceConfig_Source.likedVideos,
+    7: YoutubePlaylistSourceConfig_Source.watchLater,
     0: YoutubePlaylistSourceConfig_Source.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -4529,7 +4481,7 @@ class YoutubePlaylistSourceConfig extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.source_config'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7, 8])
+    ..oo(0, [2, 3, 4, 5, 6, 7])
     ..aOB(1, _omitFieldNames ? '' : 'shared')
     ..aOM<YoutubePlaylistSourceConfig_Playlist>(
         2, _omitFieldNames ? '' : 'playlist',
@@ -4540,17 +4492,14 @@ class YoutubePlaylistSourceConfig extends $pb.GeneratedMessage {
     ..aOM<YoutubePlaylistSourceConfig_Search>(
         4, _omitFieldNames ? '' : 'search',
         subBuilder: YoutubePlaylistSourceConfig_Search.create)
-    ..aOM<YoutubePlaylistSourceConfig_Trending>(
-        5, _omitFieldNames ? '' : 'trending',
-        subBuilder: YoutubePlaylistSourceConfig_Trending.create)
     ..aOM<YoutubePlaylistSourceConfig_Subscriptions>(
-        6, _omitFieldNames ? '' : 'subscriptions',
+        5, _omitFieldNames ? '' : 'subscriptions',
         subBuilder: YoutubePlaylistSourceConfig_Subscriptions.create)
     ..aOM<YoutubePlaylistSourceConfig_LikedVideos>(
-        7, _omitFieldNames ? '' : 'likedVideos',
+        6, _omitFieldNames ? '' : 'likedVideos',
         subBuilder: YoutubePlaylistSourceConfig_LikedVideos.create)
     ..aOM<YoutubePlaylistSourceConfig_WatchLater>(
-        8, _omitFieldNames ? '' : 'watchLater',
+        7, _omitFieldNames ? '' : 'watchLater',
         subBuilder: YoutubePlaylistSourceConfig_WatchLater.create)
     ..hasRequiredFields = false;
 
@@ -4582,7 +4531,6 @@ class YoutubePlaylistSourceConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
   YoutubePlaylistSourceConfig_Source whichSource() =>
       _YoutubePlaylistSourceConfig_SourceByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
@@ -4591,7 +4539,6 @@ class YoutubePlaylistSourceConfig extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
-  @$pb.TagNumber(8)
   void clearSource() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -4639,53 +4586,41 @@ class YoutubePlaylistSourceConfig extends $pb.GeneratedMessage {
   YoutubePlaylistSourceConfig_Search ensureSearch() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  YoutubePlaylistSourceConfig_Trending get trending => $_getN(4);
+  YoutubePlaylistSourceConfig_Subscriptions get subscriptions => $_getN(4);
   @$pb.TagNumber(5)
-  set trending(YoutubePlaylistSourceConfig_Trending value) =>
+  set subscriptions(YoutubePlaylistSourceConfig_Subscriptions value) =>
       $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasTrending() => $_has(4);
+  $core.bool hasSubscriptions() => $_has(4);
   @$pb.TagNumber(5)
-  void clearTrending() => $_clearField(5);
+  void clearSubscriptions() => $_clearField(5);
   @$pb.TagNumber(5)
-  YoutubePlaylistSourceConfig_Trending ensureTrending() => $_ensure(4);
+  YoutubePlaylistSourceConfig_Subscriptions ensureSubscriptions() =>
+      $_ensure(4);
 
   @$pb.TagNumber(6)
-  YoutubePlaylistSourceConfig_Subscriptions get subscriptions => $_getN(5);
+  YoutubePlaylistSourceConfig_LikedVideos get likedVideos => $_getN(5);
   @$pb.TagNumber(6)
-  set subscriptions(YoutubePlaylistSourceConfig_Subscriptions value) =>
+  set likedVideos(YoutubePlaylistSourceConfig_LikedVideos value) =>
       $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasSubscriptions() => $_has(5);
+  $core.bool hasLikedVideos() => $_has(5);
   @$pb.TagNumber(6)
-  void clearSubscriptions() => $_clearField(6);
+  void clearLikedVideos() => $_clearField(6);
   @$pb.TagNumber(6)
-  YoutubePlaylistSourceConfig_Subscriptions ensureSubscriptions() =>
-      $_ensure(5);
+  YoutubePlaylistSourceConfig_LikedVideos ensureLikedVideos() => $_ensure(5);
 
   @$pb.TagNumber(7)
-  YoutubePlaylistSourceConfig_LikedVideos get likedVideos => $_getN(6);
+  YoutubePlaylistSourceConfig_WatchLater get watchLater => $_getN(6);
   @$pb.TagNumber(7)
-  set likedVideos(YoutubePlaylistSourceConfig_LikedVideos value) =>
+  set watchLater(YoutubePlaylistSourceConfig_WatchLater value) =>
       $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasLikedVideos() => $_has(6);
+  $core.bool hasWatchLater() => $_has(6);
   @$pb.TagNumber(7)
-  void clearLikedVideos() => $_clearField(7);
+  void clearWatchLater() => $_clearField(7);
   @$pb.TagNumber(7)
-  YoutubePlaylistSourceConfig_LikedVideos ensureLikedVideos() => $_ensure(6);
-
-  @$pb.TagNumber(8)
-  YoutubePlaylistSourceConfig_WatchLater get watchLater => $_getN(7);
-  @$pb.TagNumber(8)
-  set watchLater(YoutubePlaylistSourceConfig_WatchLater value) =>
-      $_setField(8, value);
-  @$pb.TagNumber(8)
-  $core.bool hasWatchLater() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearWatchLater() => $_clearField(8);
-  @$pb.TagNumber(8)
-  YoutubePlaylistSourceConfig_WatchLater ensureWatchLater() => $_ensure(7);
+  YoutubePlaylistSourceConfig_WatchLater ensureWatchLater() => $_ensure(6);
 }
 
 class HuyaLiveSourceConfig extends $pb.GeneratedMessage {

@@ -316,8 +316,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       $1.YoutubePlaylistSourceConfig_Channel$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig.Search':
       $1.YoutubePlaylistSourceConfig_Search$json,
-  '.synctv.source_config.YoutubePlaylistSourceConfig.Trending':
-      $1.YoutubePlaylistSourceConfig_Trending$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig.Subscriptions':
       $1.YoutubePlaylistSourceConfig_Subscriptions$json,
   '.synctv.source_config.YoutubePlaylistSourceConfig.LikedVideos':

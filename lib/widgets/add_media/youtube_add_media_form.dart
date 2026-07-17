@@ -17,7 +17,6 @@ enum YoutubeAddMode {
   playlist,
   channel,
   search,
-  trending,
   subscriptions,
   likedVideos,
   watchLater,
@@ -433,9 +432,6 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
         query: normalized,
       ),
     ),
-    YoutubeAddMode.trending => source_config.YoutubePlaylistSourceConfig(
-      trending: source_config.YoutubePlaylistSourceConfig_Trending(),
-    ),
     YoutubeAddMode.subscriptions => source_config.YoutubePlaylistSourceConfig(
       subscriptions: source_config.YoutubePlaylistSourceConfig_Subscriptions(),
     ),
@@ -545,7 +541,6 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     YoutubeAddMode.playlist => 'YouTube Playlist',
     YoutubeAddMode.channel => 'YouTube Channel',
     YoutubeAddMode.search => 'YouTube: ${request.value}',
-    YoutubeAddMode.trending => 'YouTube Trending',
     YoutubeAddMode.subscriptions => 'YouTube Subscriptions',
     YoutubeAddMode.likedVideos => 'YouTube Liked Videos',
     YoutubeAddMode.watchLater => 'YouTube Watch Later',
@@ -554,7 +549,6 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
 
   static String? _normalizeValue(YoutubeAddMode mode, String raw) {
     final value = raw.trim();
-    if (mode == YoutubeAddMode.trending) return 'trending';
     if (mode == YoutubeAddMode.subscriptions) return 'subscriptions';
     if (mode == YoutubeAddMode.likedVideos) return 'likedVideos';
     if (mode == YoutubeAddMode.watchLater) return 'watchLater';
@@ -637,7 +631,6 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
     YoutubeAddMode.playlist => 'Playlist',
     YoutubeAddMode.channel => 'Channel',
     YoutubeAddMode.search => 'Search',
-    YoutubeAddMode.trending => 'Trending',
     YoutubeAddMode.subscriptions => 'Subscriptions',
     YoutubeAddMode.likedVideos => 'Liked Videos',
     YoutubeAddMode.watchLater => 'Watch Later',

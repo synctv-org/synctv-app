@@ -1009,10 +1009,6 @@ class SourceConfigCodec {
           query: _string(config['query']),
         ),
       ),
-      'trending' => source_config.YoutubePlaylistSourceConfig(
-        shared: shared,
-        trending: source_config.YoutubePlaylistSourceConfig_Trending(),
-      ),
       'subscriptions' => source_config.YoutubePlaylistSourceConfig(
         shared: shared,
         subscriptions:
@@ -1130,10 +1126,6 @@ class SourceConfigCodec {
       source_config.YoutubePlaylistSourceConfig_Source.search => {
         'kind': 'search',
         'query': config.search.query,
-        if (config.shared) 'shared': true,
-      },
-      source_config.YoutubePlaylistSourceConfig_Source.trending => {
-        'kind': 'trending',
         if (config.shared) 'shared': true,
       },
       source_config.YoutubePlaylistSourceConfig_Source.subscriptions => {

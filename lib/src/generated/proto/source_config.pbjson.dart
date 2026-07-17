@@ -1463,17 +1463,8 @@ const YoutubePlaylistSourceConfig$json = {
       '10': 'search'
     },
     {
-      '1': 'trending',
-      '3': 5,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.source_config.YoutubePlaylistSourceConfig.Trending',
-      '9': 0,
-      '10': 'trending'
-    },
-    {
       '1': 'subscriptions',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 11,
       '6': '.synctv.source_config.YoutubePlaylistSourceConfig.Subscriptions',
@@ -1482,7 +1473,7 @@ const YoutubePlaylistSourceConfig$json = {
     },
     {
       '1': 'liked_videos',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 11,
       '6': '.synctv.source_config.YoutubePlaylistSourceConfig.LikedVideos',
@@ -1491,7 +1482,7 @@ const YoutubePlaylistSourceConfig$json = {
     },
     {
       '1': 'watch_later',
-      '3': 8,
+      '3': 7,
       '4': 1,
       '5': 11,
       '6': '.synctv.source_config.YoutubePlaylistSourceConfig.WatchLater',
@@ -1503,7 +1494,6 @@ const YoutubePlaylistSourceConfig$json = {
     YoutubePlaylistSourceConfig_Playlist$json,
     YoutubePlaylistSourceConfig_Channel$json,
     YoutubePlaylistSourceConfig_Search$json,
-    YoutubePlaylistSourceConfig_Trending$json,
     YoutubePlaylistSourceConfig_Subscriptions$json,
     YoutubePlaylistSourceConfig_LikedVideos$json,
     YoutubePlaylistSourceConfig_WatchLater$json
@@ -1547,11 +1537,6 @@ const YoutubePlaylistSourceConfig_Search$json = {
 };
 
 @$core.Deprecated('Use youtubePlaylistSourceConfigDescriptor instead')
-const YoutubePlaylistSourceConfig_Trending$json = {
-  '1': 'Trending',
-};
-
-@$core.Deprecated('Use youtubePlaylistSourceConfigDescriptor instead')
 const YoutubePlaylistSourceConfig_Subscriptions$json = {
   '1': 'Subscriptions',
 };
@@ -1573,20 +1558,18 @@ final $typed_data.Uint8List youtubePlaylistSourceConfigDescriptor = $convert.bas
     'b3VyY2VDb25maWcuUGxheWxpc3RIAFIIcGxheWxpc3QSVQoHY2hhbm5lbBgDIAEoCzI5LnN5bm'
     'N0di5zb3VyY2VfY29uZmlnLllvdXR1YmVQbGF5bGlzdFNvdXJjZUNvbmZpZy5DaGFubmVsSABS'
     'B2NoYW5uZWwSUgoGc2VhcmNoGAQgASgLMjguc3luY3R2LnNvdXJjZV9jb25maWcuWW91dHViZV'
-    'BsYXlsaXN0U291cmNlQ29uZmlnLlNlYXJjaEgAUgZzZWFyY2gSWAoIdHJlbmRpbmcYBSABKAsy'
-    'Oi5zeW5jdHYuc291cmNlX2NvbmZpZy5Zb3V0dWJlUGxheWxpc3RTb3VyY2VDb25maWcuVHJlbm'
-    'RpbmdIAFIIdHJlbmRpbmcSZwoNc3Vic2NyaXB0aW9ucxgGIAEoCzI/LnN5bmN0di5zb3VyY2Vf'
-    'Y29uZmlnLllvdXR1YmVQbGF5bGlzdFNvdXJjZUNvbmZpZy5TdWJzY3JpcHRpb25zSABSDXN1Yn'
-    'NjcmlwdGlvbnMSYgoMbGlrZWRfdmlkZW9zGAcgASgLMj0uc3luY3R2LnNvdXJjZV9jb25maWcu'
-    'WW91dHViZVBsYXlsaXN0U291cmNlQ29uZmlnLkxpa2VkVmlkZW9zSABSC2xpa2VkVmlkZW9zEl'
-    '8KC3dhdGNoX2xhdGVyGAggASgLMjwuc3luY3R2LnNvdXJjZV9jb25maWcuWW91dHViZVBsYXls'
-    'aXN0U291cmNlQ29uZmlnLldhdGNoTGF0ZXJIAFIKd2F0Y2hMYXRlcho0CghQbGF5bGlzdBIoCg'
-    'twbGF5bGlzdF9pZBgBIAEoCUIHukgEcgIQAVIKcGxheWxpc3RJZBqCAQoHQ2hhbm5lbBImCgpj'
-    'aGFubmVsX2lkGAEgASgJQge6SARyAhABUgljaGFubmVsSWQSTwoHY29udGVudBgCIAEoDjIrLn'
-    'N5bmN0di5zb3VyY2VfY29uZmlnLllvdXR1YmVDaGFubmVsQ29udGVudEIIukgFggECEAFSB2Nv'
-    'bnRlbnQaJwoGU2VhcmNoEh0KBXF1ZXJ5GAEgASgJQge6SARyAhABUgVxdWVyeRoKCghUcmVuZG'
-    'luZxoPCg1TdWJzY3JpcHRpb25zGg0KC0xpa2VkVmlkZW9zGgwKCldhdGNoTGF0ZXJCCAoGc291'
-    'cmNl');
+    'BsYXlsaXN0U291cmNlQ29uZmlnLlNlYXJjaEgAUgZzZWFyY2gSZwoNc3Vic2NyaXB0aW9ucxgF'
+    'IAEoCzI/LnN5bmN0di5zb3VyY2VfY29uZmlnLllvdXR1YmVQbGF5bGlzdFNvdXJjZUNvbmZpZy'
+    '5TdWJzY3JpcHRpb25zSABSDXN1YnNjcmlwdGlvbnMSYgoMbGlrZWRfdmlkZW9zGAYgASgLMj0u'
+    'c3luY3R2LnNvdXJjZV9jb25maWcuWW91dHViZVBsYXlsaXN0U291cmNlQ29uZmlnLkxpa2VkVm'
+    'lkZW9zSABSC2xpa2VkVmlkZW9zEl8KC3dhdGNoX2xhdGVyGAcgASgLMjwuc3luY3R2LnNvdXJj'
+    'ZV9jb25maWcuWW91dHViZVBsYXlsaXN0U291cmNlQ29uZmlnLldhdGNoTGF0ZXJIAFIKd2F0Y2'
+    'hMYXRlcho0CghQbGF5bGlzdBIoCgtwbGF5bGlzdF9pZBgBIAEoCUIHukgEcgIQAVIKcGxheWxp'
+    'c3RJZBqCAQoHQ2hhbm5lbBImCgpjaGFubmVsX2lkGAEgASgJQge6SARyAhABUgljaGFubmVsSW'
+    'QSTwoHY29udGVudBgCIAEoDjIrLnN5bmN0di5zb3VyY2VfY29uZmlnLllvdXR1YmVDaGFubmVs'
+    'Q29udGVudEIIukgFggECEAFSB2NvbnRlbnQaJwoGU2VhcmNoEh0KBXF1ZXJ5GAEgASgJQge6SA'
+    'RyAhABUgVxdWVyeRoPCg1TdWJzY3JpcHRpb25zGg0KC0xpa2VkVmlkZW9zGgwKCldhdGNoTGF0'
+    'ZXJCCAoGc291cmNl');
 
 @$core.Deprecated('Use huyaLiveSourceConfigDescriptor instead')
 const HuyaLiveSourceConfig$json = {

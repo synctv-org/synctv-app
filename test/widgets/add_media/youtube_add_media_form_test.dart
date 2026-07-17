@@ -61,36 +61,6 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
   });
 
-  testWidgets('supports feed sources without guessed input', (tester) async {
-    YoutubeAddRequest? submitted;
-    await tester.binding.setSurfaceSize(const Size(900, 800));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: YoutubeAddMediaForm(
-            roomId: 'room',
-            playlistId: '',
-            binds: const [],
-            onDraftChanged: (_) {},
-            onSubmit: (request) async => submitted = request,
-          ),
-        ),
-      ),
-    );
-
-    await _selectMode(tester, 'Trending');
-    expect(find.byKey(const Key('youtube-value')), findsNothing);
-    await tester.tap(find.byKey(const Key('youtube-submit')));
-    await tester.pumpAndSettle();
-    expect(submitted?.mode, YoutubeAddMode.trending);
-    expect(submitted?.value, 'trending');
-    await tester.pump(const Duration(seconds: 4));
-  });
-
   testWidgets('requires a Cookie capability for personal feeds', (
     tester,
   ) async {
