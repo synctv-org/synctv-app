@@ -1846,33 +1846,13 @@ class SyncTvService {
     String entryId, {
     String? subPath,
     String? playlistId,
-  }) async {
-    final switched = await switchMedia(
+  }) {
+    return switchMedia(
       roomId,
       entryId,
       subPath: subPath,
       playlistId: playlistId,
     );
-    final playback = await updatePlaybackState(
-      roomId,
-      action: PlaybackControlAction.play,
-      isPlaying: true,
-      position: 0,
-      speed: 1,
-    );
-    return playback.entry == null && switched.entry != null
-        ? SyncTvPlaybackStatus(
-            entry: switched.entry,
-            isPlaying: true,
-            currentTime: 0,
-            playbackRate: playback.playbackRate,
-            generatedAtMillis: SyncedClock.nowMillis(),
-            version: playback.version,
-            playingMediaId: playback.playingMediaId,
-            playingPlaylistId: playback.playingPlaylistId,
-            targetHash: playback.targetHash,
-          )
-        : playback;
   }
 
   static Future<SyncTvPlaybackStatus> updatePlaybackState(

@@ -2579,150 +2579,130 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               ),
                                               SizedBox(width: horizontalGap),
                                             ],
-                                            Expanded(
-                                              child: Semantics(
-                                                slider: true,
-                                                enabled: !widget.isLive,
-                                                label: widget.isLive
-                                                    ? context.l10n.live
-                                                    : context
-                                                          .l10n
-                                                          .playbackProgress,
-                                                value: widget.isLive
-                                                    ? context.l10n.live
-                                                    : '${_formatDuration(videoValue.position)} / ${_formatDuration(videoValue.duration)}',
-                                                child: GestureDetector(
-                                                  behavior:
-                                                      HitTestBehavior.opaque,
-                                                  onHorizontalDragStart: (details) {
-                                                    if (widget.isLive) return;
-                                                    _startHideTimer();
-                                                    final RenderBox box =
-                                                        context.findRenderObject()
-                                                            as RenderBox;
-                                                    final double
-                                                    relativePosition =
-                                                        details
-                                                            .localPosition
-                                                            .dx /
-                                                        box.size.width;
-                                                    final double value =
-                                                        (relativePosition *
+                                            if (widget.isLive)
+                                              const Spacer()
+                                            else
+                                              Expanded(
+                                                child: Semantics(
+                                                  slider: true,
+                                                  label: context
+                                                      .l10n
+                                                      .playbackProgress,
+                                                  value:
+                                                      '${_formatDuration(videoValue.position)} / ${_formatDuration(videoValue.duration)}',
+                                                  child: GestureDetector(
+                                                    behavior:
+                                                        HitTestBehavior.opaque,
+                                                    onHorizontalDragStart: (details) {
+                                                      _startHideTimer();
+                                                      final RenderBox box =
+                                                          context.findRenderObject()
+                                                              as RenderBox;
+                                                      final double
+                                                      relativePosition =
+                                                          details
+                                                              .localPosition
+                                                              .dx /
+                                                          box.size.width;
+                                                      final double value =
+                                                          (relativePosition *
+                                                                  videoValue
+                                                                      .duration
+                                                                      .inMilliseconds
+                                                                      .toDouble())
+                                                              .clamp(
+                                                                0,
                                                                 videoValue
                                                                     .duration
                                                                     .inMilliseconds
-                                                                    .toDouble())
-                                                            .clamp(
-                                                              0,
-                                                              videoValue
-                                                                  .duration
-                                                                  .inMilliseconds
-                                                                  .toDouble(),
-                                                            );
-                                                    setState(() {
-                                                      _isSliderDragging = true;
-                                                      _sliderDragValue = value;
-                                                    });
-                                                  },
-                                                  onHorizontalDragUpdate: (details) {
-                                                    if (widget.isLive) return;
-                                                    _startHideTimer();
-                                                    final RenderBox box =
-                                                        context.findRenderObject()
-                                                            as RenderBox;
-                                                    final double
-                                                    relativePosition =
-                                                        details
-                                                            .localPosition
-                                                            .dx /
-                                                        box.size.width;
-                                                    final double value =
-                                                        (relativePosition *
-                                                                videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble())
-                                                            .clamp(
-                                                              0,
-                                                              videoValue
-                                                                  .duration
-                                                                  .inMilliseconds
-                                                                  .toDouble(),
-                                                            );
-                                                    setState(() {
-                                                      _sliderDragValue = value;
-                                                    });
-                                                  },
-                                                  onHorizontalDragEnd:
-                                                      (details) {
-                                                        if (widget.isLive) {
-                                                          return;
-                                                        }
-                                                        _startHideTimer();
-                                                        final target = Duration(
-                                                          milliseconds:
-                                                              _sliderDragValue
-                                                                  .toInt(),
-                                                        );
-                                                        _seekFromUser(
-                                                          target,
-                                                        ).then((_) {
-                                                          setState(() {
-                                                            _isSliderDragging =
-                                                                false;
-                                                          });
-                                                        });
-                                                      },
-                                                  onTapDown: (details) {
-                                                    if (widget.isLive) return;
-                                                    _startHideTimer();
-                                                    final RenderBox box =
-                                                        context.findRenderObject()
-                                                            as RenderBox;
-                                                    final double
-                                                    relativePosition =
-                                                        details
-                                                            .localPosition
-                                                            .dx /
-                                                        box.size.width;
-                                                    final double value =
-                                                        (relativePosition *
-                                                                videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble())
-                                                            .clamp(
-                                                              0,
-                                                              videoValue
-                                                                  .duration
-                                                                  .inMilliseconds
-                                                                  .toDouble(),
-                                                            );
-                                                    setState(() {
-                                                      _isSliderDragging = true;
-                                                      _sliderDragValue = value;
-                                                    });
-                                                  },
-                                                  onTapUp: (details) {
-                                                    if (widget.isLive) return;
-                                                    _startHideTimer();
-                                                    final target = Duration(
-                                                      milliseconds:
-                                                          _sliderDragValue
-                                                              .toInt(),
-                                                    );
-                                                    _seekFromUser(target).then((
-                                                      _,
-                                                    ) {
+                                                                    .toDouble(),
+                                                              );
                                                       setState(() {
                                                         _isSliderDragging =
-                                                            false;
+                                                            true;
+                                                        _sliderDragValue =
+                                                            value;
                                                       });
-                                                    });
-                                                  },
-                                                  onTapCancel: () {
-                                                    if (widget.isLive) return;
-                                                    if (_isSliderDragging) {
+                                                    },
+                                                    onHorizontalDragUpdate: (details) {
+                                                      _startHideTimer();
+                                                      final RenderBox box =
+                                                          context.findRenderObject()
+                                                              as RenderBox;
+                                                      final double
+                                                      relativePosition =
+                                                          details
+                                                              .localPosition
+                                                              .dx /
+                                                          box.size.width;
+                                                      final double value =
+                                                          (relativePosition *
+                                                                  videoValue
+                                                                      .duration
+                                                                      .inMilliseconds
+                                                                      .toDouble())
+                                                              .clamp(
+                                                                0,
+                                                                videoValue
+                                                                    .duration
+                                                                    .inMilliseconds
+                                                                    .toDouble(),
+                                                              );
+                                                      setState(() {
+                                                        _sliderDragValue =
+                                                            value;
+                                                      });
+                                                    },
+                                                    onHorizontalDragEnd:
+                                                        (details) {
+                                                          _startHideTimer();
+                                                          final target = Duration(
+                                                            milliseconds:
+                                                                _sliderDragValue
+                                                                    .toInt(),
+                                                          );
+                                                          _seekFromUser(
+                                                            target,
+                                                          ).then((_) {
+                                                            setState(() {
+                                                              _isSliderDragging =
+                                                                  false;
+                                                            });
+                                                          });
+                                                        },
+                                                    onTapDown: (details) {
+                                                      _startHideTimer();
+                                                      final RenderBox box =
+                                                          context.findRenderObject()
+                                                              as RenderBox;
+                                                      final double
+                                                      relativePosition =
+                                                          details
+                                                              .localPosition
+                                                              .dx /
+                                                          box.size.width;
+                                                      final double value =
+                                                          (relativePosition *
+                                                                  videoValue
+                                                                      .duration
+                                                                      .inMilliseconds
+                                                                      .toDouble())
+                                                              .clamp(
+                                                                0,
+                                                                videoValue
+                                                                    .duration
+                                                                    .inMilliseconds
+                                                                    .toDouble(),
+                                                              );
+                                                      setState(() {
+                                                        _isSliderDragging =
+                                                            true;
+                                                        _sliderDragValue =
+                                                            value;
+                                                      });
+                                                    },
+                                                    onTapUp: (details) {
+                                                      _startHideTimer();
                                                       final target = Duration(
                                                         milliseconds:
                                                             _sliderDragValue
@@ -2736,57 +2716,70 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                               false;
                                                         });
                                                       });
-                                                    }
-                                                  },
-                                                  child: SizedBox(
-                                                    height: 40,
-                                                    child: Align(
-                                                      alignment:
-                                                          Alignment.center,
-                                                      child: SliderTheme(
-                                                        data: SliderTheme.of(context).copyWith(
-                                                          thumbShape: RoundSliderThumbShape(
-                                                            enabledThumbRadius:
+                                                    },
+                                                    onTapCancel: () {
+                                                      if (_isSliderDragging) {
+                                                        final target = Duration(
+                                                          milliseconds:
+                                                              _sliderDragValue
+                                                                  .toInt(),
+                                                        );
+                                                        _seekFromUser(
+                                                          target,
+                                                        ).then((_) {
+                                                          setState(() {
+                                                            _isSliderDragging =
+                                                                false;
+                                                          });
+                                                        });
+                                                      }
+                                                    },
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: SliderTheme(
+                                                          data: SliderTheme.of(context).copyWith(
+                                                            thumbShape: RoundSliderThumbShape(
+                                                              enabledThumbRadius:
+                                                                  _isSliderDragging
+                                                                  ? (widget.isFullScreen
+                                                                        ? 8
+                                                                        : 10)
+                                                                  : (widget.isFullScreen
+                                                                        ? 6
+                                                                        : 8),
+                                                            ),
+                                                            trackHeight:
                                                                 _isSliderDragging
                                                                 ? (widget.isFullScreen
-                                                                      ? 8
-                                                                      : 10)
+                                                                      ? 4
+                                                                      : 6)
                                                                 : (widget.isFullScreen
-                                                                      ? 6
-                                                                      : 8),
-                                                          ),
-                                                          trackHeight:
-                                                              _isSliderDragging
-                                                              ? (widget.isFullScreen
-                                                                    ? 4
-                                                                    : 6)
-                                                              : (widget.isFullScreen
-                                                                    ? 2
-                                                                    : 4),
-                                                          overlayShape:
-                                                              const RoundSliderOverlayShape(
-                                                                overlayRadius:
-                                                                    24,
-                                                              ),
-                                                          activeTrackColor:
-                                                              widget.isLive
-                                                              ? Colors.redAccent
-                                                              : const Color(
+                                                                      ? 2
+                                                                      : 4),
+                                                            overlayShape:
+                                                                const RoundSliderOverlayShape(
+                                                                  overlayRadius:
+                                                                      24,
+                                                                ),
+                                                            activeTrackColor:
+                                                                const Color(
                                                                   0xFF5D5FEF,
                                                                 ),
-                                                          inactiveTrackColor:
-                                                              Colors.white24,
-                                                          thumbColor:
-                                                              Colors.white,
-                                                          trackShape:
-                                                              const RectangularSliderTrackShape(), // 确保轨道充满可用宽度
-                                                        ),
-                                                        child: IgnorePointer(
-                                                          // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
-                                                          child: AppSlider(
-                                                            value: widget.isLive
-                                                                ? 1.0
-                                                                : (_isSliderDragging
+                                                            inactiveTrackColor:
+                                                                Colors.white24,
+                                                            thumbColor:
+                                                                Colors.white,
+                                                            trackShape:
+                                                                const RectangularSliderTrackShape(), // 确保轨道充满可用宽度
+                                                          ),
+                                                          child: IgnorePointer(
+                                                            // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
+                                                            child: AppSlider(
+                                                              value:
+                                                                  (_isSliderDragging
                                                                           ? _sliderDragValue
                                                                           : videoValue.position.inMilliseconds.toDouble())
                                                                       .clamp(
@@ -2796,23 +2789,23 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                                             ? videoValue.duration.inMilliseconds.toDouble()
                                                                             : 1.0,
                                                                       ),
-                                                            min: 0,
-                                                            max: widget.isLive
-                                                                ? 1.0
-                                                                : videoValue
+                                                              min: 0,
+                                                              max:
+                                                                  videoValue
                                                                           .duration
                                                                           .inMilliseconds
                                                                           .toDouble() >
                                                                       0
-                                                                ? videoValue
-                                                                      .duration
-                                                                      .inMilliseconds
-                                                                      .toDouble()
-                                                                : 1.0,
-                                                            onChanged:
-                                                                (
-                                                                  value,
-                                                                ) {}, // 忽略，由外层接管
+                                                                  ? videoValue
+                                                                        .duration
+                                                                        .inMilliseconds
+                                                                        .toDouble()
+                                                                  : 1.0,
+                                                              onChanged:
+                                                                  (
+                                                                    value,
+                                                                  ) {}, // 忽略，由外层接管
+                                                            ),
                                                           ),
                                                         ),
                                                       ),
@@ -2820,7 +2813,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   ),
                                                 ),
                                               ),
-                                            ),
                                             if (showTime && !widget.isLive) ...[
                                               SizedBox(width: horizontalGap),
                                               Text(

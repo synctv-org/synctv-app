@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:synctv_app/l10n/l10n.dart';
-import 'package:synctv_app/pages/splash_page.dart';
+import 'package:synctv_app/pages/home_screen.dart';
 import 'package:synctv_app/services/app_locale_controller.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/services/synctv_service.dart';
@@ -85,7 +85,7 @@ class MyApp extends StatelessWidget {
 
           return FTheme(data: foruiTheme, child: appChild);
         },
-        home: const ResponsiveHome(),
+        home: const HomeScreen(),
       ),
     );
   }

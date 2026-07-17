@@ -60,6 +60,8 @@ class _RoomScreenState extends State<RoomScreen>
   late TabController _tabController;
   late PlaybackSyncConfig _playbackSyncConfig;
   VideoPlayerController? _videoPlayerController;
+  Future<void>? _currentPlaybackLoad;
+  Future<void>? _videoInitialization;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   final List<RoomRealtimeChatEntry> _messages = [];
@@ -335,7 +337,21 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Future<void> _loadCurrentPlayback() async {
+  Future<void> _loadCurrentPlayback() {
+    final activeLoad = _currentPlaybackLoad;
+    if (activeLoad != null) return activeLoad;
+
+    late final Future<void> trackedLoad;
+    trackedLoad = _loadCurrentPlaybackOnce().whenComplete(() {
+      if (identical(_currentPlaybackLoad, trackedLoad)) {
+        _currentPlaybackLoad = null;
+      }
+    });
+    _currentPlaybackLoad = trackedLoad;
+    return trackedLoad;
+  }
+
+  Future<void> _loadCurrentPlaybackOnce() async {
     try {
       final status = await SyncTvService.getCurrentMedia(widget.room.roomId);
       if (!mounted) return;
@@ -1521,6 +1537,28 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _initVideo(String url, {Map<String, String>? headers}) async {
     if (url.isEmpty) return;
+    while (_videoInitialization != null) {
+      final activeInitialization = _videoInitialization!;
+      await activeInitialization;
+      if (!mounted || _videoPlayerController?.dataSource == url) return;
+    }
+
+    late final Future<void> trackedInitialization;
+    trackedInitialization = _initVideoOnce(url, headers: headers).whenComplete(
+      () {
+        if (identical(_videoInitialization, trackedInitialization)) {
+          _videoInitialization = null;
+        }
+      },
+    );
+    _videoInitialization = trackedInitialization;
+    await trackedInitialization;
+  }
+
+  Future<void> _initVideoOnce(
+    String url, {
+    Map<String, String>? headers,
+  }) async {
     _warnPlaybackCredentialHeaders(headers ?? const {});
     final generation = ++_videoInitGeneration;
     if (mounted) {
@@ -1536,7 +1574,7 @@ class _RoomScreenState extends State<RoomScreen>
     );
 
     try {
-      await newController.initialize();
+      await newController.initialize().timeout(const Duration(seconds: 20));
 
       if (!mounted || generation != _videoInitGeneration) {
         newController.dispose();

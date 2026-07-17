@@ -3647,7 +3647,7 @@ void main() {
   );
 
   test(
-    'switch playback entry and play starts media then sends play state update',
+    'switch playback entry and play uses the start response',
     () async {
       final requestUris = <Uri>[];
       final requestBodies = <String>[];
@@ -3733,19 +3733,11 @@ void main() {
           [
             'POST /api/rooms/room_1/playback/start',
             'GET /api/rooms/room_1/playback',
-            'GET /api/rooms/room_1/playback',
-            'PATCH /api/rooms/room_1/playback',
           ],
         );
         expect(jsonDecode(requestBodies[0]), {
           'mediaId': 'med_1',
           'playlistId': '',
-        });
-        expect(jsonDecode(requestBodies[3]), {
-          'type': client.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PLAY.value,
-          'playing': true,
-          'position': 0.0,
-          'speed': 1.0,
         });
       } finally {
         await subscription.cancel();
