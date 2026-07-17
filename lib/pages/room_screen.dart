@@ -189,6 +189,9 @@ class _RoomScreenState extends State<RoomScreen>
     RealtimeEventLogPreferences.load().then((_) {
       if (mounted) _handleRealtimeLogMaxEntriesChanged();
     });
+    _danmakuController.onStreamAccessExpired = () {
+      unawaited(_loadCurrentPlayback());
+    };
 
     // Initialize WebRTC Manager
     _webrtcManager = WebRTCManager(
@@ -1995,7 +1998,9 @@ class _RoomScreenState extends State<RoomScreen>
                         onUserSeek: _handleUserSeek,
                         onUserPlaybackSpeedChanged:
                             _handleUserPlaybackSpeedChanged,
-                        interactionMode: VideoPlayerInteractionMode.desktop,
+                        interactionMode: videoPlayerInteractionModeForPlatform(
+                          defaultTargetPlatform,
+                        ),
                         diagnosticsBuilder: (_) =>
                             _buildPlaybackDiagnosticsBadges(
                               compact: true,
@@ -2312,7 +2317,9 @@ class _RoomScreenState extends State<RoomScreen>
           onUserPlaybackSpeedChanged: _handleUserPlaybackSpeedChanged,
           onSendDanmaku: _sendDanmaku,
           isFullScreen: true,
-          interactionMode: VideoPlayerInteractionMode.desktop,
+          interactionMode: videoPlayerInteractionModeForPlatform(
+            defaultTargetPlatform,
+          ),
           diagnosticsBuilder: (_) => _buildPlaybackDiagnosticsBadges(
             compact: true,
             includeLatency: true,

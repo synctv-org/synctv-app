@@ -21,11 +21,17 @@ import 'package:synctv_app/services/xml_parser.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 
 class DanmakuController extends ChangeNotifier {
+  DanmakuController({this.onStreamAccessExpired});
+
   List<DanmakuItem> _items = [];
   List<DanmakuItem> get items => _items;
 
+  VoidCallback? onStreamAccessExpired;
   http.Client? _sseClient;
+  StreamSubscription<String>? _sseSubscription;
   Timer? _reconnectTimer;
+  int _streamGeneration = 0;
+  bool _disposed = false;
   VideoPlayerController? videoController;
 
   String? _danmakuUrl;
@@ -35,8 +41,11 @@ class DanmakuController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    _streamGeneration++;
     _reconnectTimer?.cancel();
     _sseClient?.close();
+    unawaited(_sseSubscription?.cancel());
     super.dispose();
   }
 
@@ -62,7 +71,7 @@ class DanmakuController extends ChangeNotifier {
         !_sameHeaders(streamDanmakuHeaders, _streamDanmakuHeaders)) {
       _streamDanmakuUrl = streamDanmakuUrl;
       _streamDanmakuHeaders = Map<String, String>.from(streamDanmakuHeaders);
-      _connectDanmakuStream();
+      unawaited(_replaceDanmakuStream());
     }
   }
 
@@ -191,22 +200,36 @@ class DanmakuController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _connectDanmakuStream() async {
+  Future<void> _replaceDanmakuStream() async {
+    final generation = ++_streamGeneration;
     _reconnectTimer?.cancel();
     _sseClient?.close();
+    await _sseSubscription?.cancel();
+    _sseSubscription = null;
+    _sseClient = null;
 
-    if (_streamDanmakuUrl == null || _streamDanmakuUrl!.isEmpty) return;
+    if (_disposed || _streamDanmakuUrl?.isNotEmpty != true) return;
+    await _connectDanmakuStream(generation);
+  }
 
-    _sseClient = http.Client();
+  Future<void> _connectDanmakuStream(int generation) async {
+    if (_disposed || generation != _streamGeneration) return;
+
+    final client = http.Client();
+    _sseClient = client;
     try {
       final request = http.Request('GET', Uri.parse(_streamDanmakuUrl!));
       request.headers.addAll(_streamDanmakuHeaders);
       request.headers['Accept'] = 'text/event-stream';
 
-      final response = await _sseClient!.send(request);
+      final response = await client.send(request);
+      if (_disposed || generation != _streamGeneration) {
+        client.close();
+        return;
+      }
 
       if (response.statusCode == 200) {
-        response.stream
+        _sseSubscription = response.stream
             .transform(utf8.decoder)
             .transform(const LineSplitter())
             .listen(
@@ -217,28 +240,37 @@ class DanmakuController extends ChangeNotifier {
                 }
               },
               onError: (e) {
+                if (generation != _streamGeneration || _disposed) return;
                 debugPrint('SSE Error: $e');
-                _scheduleReconnect();
+                _scheduleReconnect(generation);
               },
               onDone: () {
+                if (generation != _streamGeneration || _disposed) return;
                 debugPrint('SSE Done');
-                _scheduleReconnect();
+                _scheduleReconnect(generation);
               },
             );
       } else {
         debugPrint('SSE Failed: ${response.statusCode}');
-        _scheduleReconnect();
+        client.close();
+        if (response.statusCode == 401 || response.statusCode == 403) {
+          onStreamAccessExpired?.call();
+          return;
+        }
+        _scheduleReconnect(generation);
       }
     } catch (e) {
+      if (generation != _streamGeneration || _disposed) return;
       debugPrint('SSE Connection failed: $e');
-      _scheduleReconnect();
+      _scheduleReconnect(generation);
     }
   }
 
-  void _scheduleReconnect() {
+  void _scheduleReconnect(int generation) {
+    if (_disposed || generation != _streamGeneration) return;
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(const Duration(seconds: 3), () {
-      _connectDanmakuStream();
+      unawaited(_connectDanmakuStream(generation));
     });
   }
 
@@ -334,6 +366,14 @@ class CustomVideoPlayer extends StatefulWidget {
 
 enum VideoPlayerInteractionMode { mobile, desktop }
 
+VideoPlayerInteractionMode videoPlayerInteractionModeForPlatform(
+  TargetPlatform platform,
+) => switch (platform) {
+  TargetPlatform.android ||
+  TargetPlatform.iOS => VideoPlayerInteractionMode.mobile,
+  _ => VideoPlayerInteractionMode.desktop,
+};
+
 class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     with SingleTickerProviderStateMixin {
   static const String _volumePrefKey = 'synctv.player.volume';
@@ -346,6 +386,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   bool _isVerticalDragging = false;
   bool _showDanmaku = true;
   double _lastAudibleVolume = 1.0;
+  final LayerLink _volumeControlLink = LayerLink();
+  OverlayEntry? _volumeOverlayEntry;
+  Timer? _volumeOverlayHideTimer;
+  bool _showVolumeSlider = false;
 
   // Gesture State
   double? _dragStartVolume;
@@ -399,6 +443,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _restorePersistedVolume();
     _startHideTimer();
     _loadSubtitles();
+    if (_isDesktopMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _insertVolumeOverlay();
+      });
+    }
   }
 
   void _onDanmakuUpdate() {
@@ -422,6 +471,16 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (widget.subtitles != oldWidget.subtitles) {
       _loadSubtitles();
     }
+
+    if (widget.interactionMode != oldWidget.interactionMode) {
+      if (_isDesktopMode) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _insertVolumeOverlay();
+        });
+      } else {
+        _removeVolumeOverlay();
+      }
+    }
   }
 
   @override
@@ -440,6 +499,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     widget.controller.removeListener(_videoListener);
     widget.danmakuController?.removeListener(_onDanmakuUpdate);
     _hideTimer?.cancel();
+    _volumeOverlayHideTimer?.cancel();
+    _removeVolumeOverlay();
     _subtitleTimer?.cancel();
     _stopDlna();
     super.dispose();
@@ -1052,6 +1113,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     }
     final key = event.logicalKey;
     if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.keyK) {
+      if (widget.isLive) return KeyEventResult.handled;
       _togglePlayPause();
       return KeyEventResult.handled;
     }
@@ -1303,6 +1365,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     if (nextVolume > 0.01) _lastAudibleVolume = nextVolume;
     await widget.controller.setVolume(nextVolume);
     unawaited(_persistVolume(nextVolume));
+    _volumeOverlayEntry?.markNeedsBuild();
     _startHideTimer();
     if (mounted) setState(() {});
   }
@@ -1321,125 +1384,119 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     }
   }
 
-  Widget _buildInlineVolumeControl(
-    VideoPlayerValue videoValue, {
-    required double sliderWidth,
-    required double iconSize,
-    required bool compact,
-  }) {
-    final buttonWidth = max(28.0, iconSize + (compact ? 4 : 8));
-    final gap = compact ? 4.0 : 8.0;
-    return SizedBox(
-      width: buttonWidth + gap + sliderWidth,
-      height: 40,
-      child: Row(
-        children: [
-          AppIconButton(
-            tooltip: videoValue.volume <= 0.01
-                ? context.l10n.unmute
-                : context.l10n.mute,
-            icon: _volumeIcon(videoValue.volume),
-            padding: EdgeInsets.zero,
-            constraints: BoxConstraints.tightFor(
-              width: buttonWidth,
-              height: 40,
-            ),
-            iconSize: iconSize,
-            onPressed: _toggleMute,
-          ),
-          SizedBox(width: gap),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: compact ? 2.5 : 3,
-                activeTrackColor: const Color(0xFF5D5FEF),
-                inactiveTrackColor: Colors.white24,
-                thumbColor: Colors.white,
-                thumbShape: RoundSliderThumbShape(
-                  enabledThumbRadius: compact ? 5 : 6,
-                ),
-                overlayShape: RoundSliderOverlayShape(
-                  overlayRadius: compact ? 12 : 14,
-                ),
-              ),
-              child: Slider(
-                value: videoValue.volume.clamp(0.0, 1.0).toDouble(),
-                min: 0,
-                max: 1,
-                onChanged: _setPlayerVolume,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  void _showVolumeOverlay() {
+    _volumeOverlayHideTimer?.cancel();
+    _hideTimer?.cancel();
+    if (mounted && !_showVolumeSlider) {
+      _showVolumeSlider = true;
+      _volumeOverlayEntry?.markNeedsBuild();
+    }
   }
 
-  void _showVolumePanel() {
-    _startHideTimer();
-    showAppBottomSheet<void>(
-      context: context,
-      backgroundColor: const Color(0xFF15151F),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setPanelState) {
-          final volume = widget.controller.value.volume.clamp(0.0, 1.0);
-          return AppSafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-              child: Row(
-                children: [
-                  AppIconButton(
-                    tooltip: volume <= 0.01
-                        ? context.l10n.unmute
-                        : context.l10n.mute,
-                    icon: _volumeIcon(volume.toDouble()),
-                    onPressed: () async {
-                      await _toggleMute();
-                      setPanelState(() {});
-                    },
-                  ),
-                  Expanded(
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: const Color(0xFF5D5FEF),
-                        inactiveTrackColor: Colors.white24,
-                        thumbColor: Colors.white,
-                        overlayShape: const RoundSliderOverlayShape(
-                          overlayRadius: 18,
-                        ),
+  void _scheduleVolumeOverlayHide() {
+    _volumeOverlayHideTimer?.cancel();
+    _volumeOverlayHideTimer = Timer(const Duration(milliseconds: 180), () {
+      if (mounted && _showVolumeSlider) {
+        _showVolumeSlider = false;
+        _volumeOverlayEntry?.markNeedsBuild();
+      }
+      _startHideTimer();
+    });
+  }
+
+  void _insertVolumeOverlay() {
+    if (_volumeOverlayEntry != null) return;
+    final entry = OverlayEntry(builder: _buildVolumeOverlay);
+    _volumeOverlayEntry = entry;
+    Overlay.of(context, rootOverlay: true).insert(entry);
+  }
+
+  void _removeVolumeOverlay() {
+    final entry = _volumeOverlayEntry;
+    _volumeOverlayEntry = null;
+    entry?.remove();
+    entry?.dispose();
+  }
+
+  Widget _buildVolumeOverlay(BuildContext overlayContext) => Positioned(
+    width: 44,
+    height: 132,
+    child: ExcludeSemantics(
+      child: CompositedTransformFollower(
+        link: _volumeControlLink,
+        showWhenUnlinked: false,
+        targetAnchor: Alignment.topCenter,
+        followerAnchor: Alignment.bottomCenter,
+        offset: const Offset(0, -4),
+        child: IgnorePointer(
+          ignoring: !_showVolumeSlider,
+          child: Opacity(
+            opacity: _showVolumeSlider ? 1 : 0,
+            child: MouseRegion(
+              onEnter: (_) => _showVolumeOverlay(),
+              onExit: (_) => _scheduleVolumeOverlayHide(),
+              child: Material(
+                color: const Color(0xF21A1A24),
+                elevation: 8,
+                shadowColor: Colors.black54,
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: SliderTheme(
+                    data: SliderTheme.of(overlayContext).copyWith(
+                      trackHeight: 3,
+                      activeTrackColor: const Color(0xFF5D5FEF),
+                      inactiveTrackColor: Colors.white24,
+                      thumbColor: Colors.white,
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 6,
                       ),
-                      child: AppSlider(
-                        value: volume.toDouble(),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 14,
+                      ),
+                    ),
+                    child: RotatedBox(
+                      quarterTurns: 3,
+                      child: Slider(
+                        value: widget.controller.value.volume
+                            .clamp(0.0, 1.0)
+                            .toDouble(),
                         min: 0,
                         max: 1,
-                        onChanged: (value) async {
-                          await _setPlayerVolume(value);
-                          setPanelState(() {});
-                        },
+                        onChanged: _setPlayerVolume,
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 44,
-                    child: Text(
-                      '${(volume * 100).round()}%',
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          );
-        },
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Widget _buildHoverVolumeControl(
+    VideoPlayerValue videoValue, {
+    required double iconSize,
+  }) {
+    final buttonSize = max(32.0, iconSize + 12);
+    return CompositedTransformTarget(
+      link: _volumeControlLink,
+      child: MouseRegion(
+        onEnter: (_) => _showVolumeOverlay(),
+        onExit: (_) => _scheduleVolumeOverlayHide(),
+        child: AppIconButton(
+          tooltip: videoValue.volume <= 0.01
+              ? context.l10n.unmute
+              : context.l10n.mute,
+          icon: _volumeIcon(videoValue.volume),
+          padding: EdgeInsets.zero,
+          constraints: BoxConstraints.tightFor(width: buttonSize, height: 40),
+          iconSize: iconSize,
+          showTooltip: false,
+          onPressed: _toggleMute,
+        ),
       ),
     );
   }
@@ -2236,8 +2293,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           onExit: _handleDesktopPointerExit,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: _isDesktopMode ? _togglePlayPause : _toggleControls,
-            onDoubleTap: _isDesktopMode ? null : _togglePlayPause,
+            onTap: _isDesktopMode
+                ? (widget.isLive ? null : _togglePlayPause)
+                : _toggleControls,
+            onDoubleTap: _isDesktopMode || widget.isLive
+                ? null
+                : _togglePlayPause,
             onHorizontalDragStart: _isDesktopMode
                 ? null
                 : _onHorizontalDragStart,
@@ -2521,13 +2582,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                     final showTime = controlsWidth >= 300;
                                     final showSecondaryButtons =
                                         controlsWidth >= 360;
-                                    final showInlineVolume =
-                                        controlsWidth >= 520 &&
-                                        (widget.isFullScreen ||
-                                            Platform.isMacOS ||
-                                            Platform.isWindows ||
-                                            Platform.isLinux ||
-                                            controlsWidth >= 720);
+                                    final showHoverVolume = _isDesktopMode;
                                     final iconSize = controlsWidth < 360
                                         ? 18.0
                                         : 20.0;
@@ -2826,31 +2881,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               ),
                                             ],
                                             SizedBox(width: horizontalGap),
-                                            if (showInlineVolume)
-                                              _buildInlineVolumeControl(
+                                            if (showHoverVolume)
+                                              _buildHoverVolumeControl(
                                                 videoValue,
-                                                sliderWidth: widget.isFullScreen
-                                                    ? 96
-                                                    : 76,
                                                 iconSize: widget.isFullScreen
                                                     ? 24
                                                     : 20,
-                                                compact: !widget.isFullScreen,
-                                              )
-                                            else
-                                              AppIconButton(
-                                                tooltip:
-                                                    videoValue.volume <= 0.01
-                                                    ? context.l10n.unmute
-                                                    : context.l10n.volume,
-                                                icon: _volumeIcon(
-                                                  videoValue.volume,
-                                                ),
-                                                padding: EdgeInsets.zero,
-                                                constraints:
-                                                    const BoxConstraints(),
-                                                iconSize: iconSize,
-                                                onPressed: _showVolumePanel,
                                               ),
                                             if (showSecondaryButtons &&
                                                 widget.subtitles != null &&

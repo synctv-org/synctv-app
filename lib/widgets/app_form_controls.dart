@@ -1103,6 +1103,7 @@ class AppIconButton extends StatelessWidget {
   final AppIconButtonSize size;
   final EdgeInsetsGeometry? padding;
   final BoxConstraints? constraints;
+  final bool showTooltip;
 
   const AppIconButton({
     super.key,
@@ -1119,6 +1120,7 @@ class AppIconButton extends StatelessWidget {
     this.size = AppIconButtonSize.md,
     this.padding,
     this.constraints,
+    this.showTooltip = true,
   });
 
   @override
@@ -1169,7 +1171,7 @@ class AppIconButton extends StatelessWidget {
       label: tooltip,
       selected: selected,
       onTap: effectiveOnPressed,
-      child: Tooltip(message: tooltip, child: button),
+      child: showTooltip ? Tooltip(message: tooltip, child: button) : button,
     );
   }
 }

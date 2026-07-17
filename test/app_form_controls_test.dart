@@ -612,6 +612,31 @@ void main() {
     expect(presses, 2);
   });
 
+  testWidgets('AppIconButton can keep semantics without a hover tooltip', (
+    tester,
+  ) async {
+    var presses = 0;
+    final semantics = tester.ensureSemantics();
+
+    await tester.pumpWidget(
+      _app(
+        AppIconButton(
+          onPressed: () => presses += 1,
+          icon: Icons.volume_up_rounded,
+          tooltip: '音量',
+          showTooltip: false,
+        ),
+      ),
+    );
+
+    expect(find.byTooltip('音量'), findsNothing);
+    expect(find.bySemanticsLabel('音量'), findsWidgets);
+    await tester.tap(find.byIcon(Icons.volume_up_rounded));
+    await tester.pump(const Duration(milliseconds: 150));
+    expect(presses, 1);
+    semantics.dispose();
+  });
+
   testWidgets('AppGlassIconButton centralizes glass icon taps', (tester) async {
     var presses = 0;
 
