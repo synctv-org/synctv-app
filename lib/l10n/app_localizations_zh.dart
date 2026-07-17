@@ -2461,6 +2461,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get removeAvatar => '移除头像';
+
+  @override
+  String get confirmRemoveAvatar => '确认移除当前头像吗？账号将恢复使用默认头像。';
+
+  @override
   String get avatarRemoved => '头像已移除';
 
   @override
@@ -2924,10 +2930,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get alistAccountDescription => '个人网盘与目录资源';
 
   @override
+  String get cloudreveAccountDescription => '连接 Cloudreve 账号并浏览云盘媒体';
+
+  @override
   String get embyAccountDescription => '个人媒体库与影视资源';
 
   @override
   String get bilibiliAccountDescription => 'Bilibili 账号与收藏资源';
+
+  @override
+  String get twitchAccountDescription => '连接 Twitch 账号并播放直播、VOD 与 Clip';
+
+  @override
+  String get fnosAccountDescription => '连接 FNOS 文件与影视媒体库';
+
+  @override
+  String get qnapAccountDescription => '连接 QTS / QuTS hero File Station';
+
+  @override
+  String get synologyAccountDescription => '连接 File Station 与 Video Station';
+
+  @override
+  String get nextcloudAccountDescription => '连接 Nextcloud 文件、收藏与搜索媒体';
+
+  @override
+  String get seafileAccountDescription => '连接 Seafile 资料库、星标与搜索媒体';
+
+  @override
+  String get truenasAccountDescription => '连接 TrueNAS ZFS 文件系统媒体';
+
+  @override
+  String get youtubeAccountDescription =>
+      '连接 Cookie、Visitor Data 或 PO Token 并播放视频、直播与动态列表';
+
+  @override
+  String get douyinAccountDescription => '连接 Cookie 并播放短视频、直播、弹幕与用户作品列表';
+
+  @override
+  String get tiktokAccountDescription => '连接 Cookie 并播放视频、直播、字幕与用户作品列表';
 
   @override
   String get linkedOAuth2 => '已绑定 OAuth2';

@@ -4460,6 +4460,18 @@ abstract class AppLocalizations {
   /// **'Could not update the avatar: {error}'**
   String updateAvatarFailed(String error);
 
+  /// No description provided for @removeAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove avatar'**
+  String get removeAvatar;
+
+  /// No description provided for @confirmRemoveAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the current avatar? Your account will use the default avatar.'**
+  String get confirmRemoveAvatar;
+
   /// No description provided for @avatarRemoved.
   ///
   /// In en, this message translates to:
@@ -5264,6 +5276,12 @@ abstract class AppLocalizations {
   /// **'Personal storage and directory resources'**
   String get alistAccountDescription;
 
+  /// No description provided for @cloudreveAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud storage media and directory resources'**
+  String get cloudreveAccountDescription;
+
   /// No description provided for @embyAccountDescription.
   ///
   /// In en, this message translates to:
@@ -5275,6 +5293,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bilibili account and favorite resources'**
   String get bilibiliAccountDescription;
+
+  /// No description provided for @twitchAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Twitch live streams, VODs, and clips'**
+  String get twitchAccountDescription;
+
+  /// No description provided for @fnosAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'FNOS files and media libraries'**
+  String get fnosAccountDescription;
+
+  /// No description provided for @qnapAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'QTS and QuTS hero File Station resources'**
+  String get qnapAccountDescription;
+
+  /// No description provided for @synologyAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'File Station and Video Station resources'**
+  String get synologyAccountDescription;
+
+  /// No description provided for @nextcloudAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Nextcloud files, favorites, and media search'**
+  String get nextcloudAccountDescription;
+
+  /// No description provided for @seafileAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Seafile libraries, starred files, and media search'**
+  String get seafileAccountDescription;
+
+  /// No description provided for @truenasAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'TrueNAS ZFS filesystem media'**
+  String get truenasAccountDescription;
+
+  /// No description provided for @youtubeAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'YouTube videos, live streams, and dynamic playlists with Cookie, Visitor Data, or PO Token'**
+  String get youtubeAccountDescription;
+
+  /// No description provided for @douyinAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Douyin videos, live streams, comments, and creator posts with Cookie'**
+  String get douyinAccountDescription;
+
+  /// No description provided for @tiktokAccountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'TikTok videos, live streams, captions, and creator posts with Cookie'**
+  String get tiktokAccountDescription;
 
   /// No description provided for @linkedOAuth2.
   ///

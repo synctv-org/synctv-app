@@ -97,4 +97,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(requestedSearch, 'movie');
   });
+
+  testWidgets('uses the active locale for an unbound account', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: Locale('en'),
+        home: Scaffold(
+          body: TrueNasAddMediaForm(
+            roomId: 'room_1',
+            playlistId: '',
+            binds: [],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Bind an account to access resources'), findsOneWidget);
+  });
 }

@@ -371,6 +371,20 @@ class _AccountCenterPageState extends State<AccountCenterPage>
 
   Future<void> _clearAvatar() async {
     if (_updatingAvatar || _user.avatarUrl.isEmpty) return;
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      builder: (context) => AppConfirmDialog(
+        icon: const Icon(Icons.delete_outline_rounded),
+        title: context.l10n.removeAvatar,
+        content: Text(context.l10n.confirmRemoveAvatar),
+        confirmLabel: context.l10n.remove,
+        confirmIcon: Icons.delete_outline_rounded,
+        destructive: true,
+        onConfirm: () => Navigator.pop(context, true),
+      ),
+    );
+    if (confirmed != true) return;
+
     try {
       setState(() => _updatingAvatar = true);
       final user = await SyncTvService.clearUserAvatar();
@@ -2546,7 +2560,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'Cloudreve',
-                  description: '连接 Cloudreve 账号并浏览云盘媒体',
+                  description: context.l10n.cloudreveAccountDescription,
                   icon: Icons.cloud_rounded,
                   color: Colors.teal,
                   onTap: () =>
@@ -2570,7 +2584,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'Twitch',
-                  description: '连接 Twitch 账号并播放直播、VOD 与 Clip',
+                  description: context.l10n.twitchAccountDescription,
                   icon: Icons.live_tv_rounded,
                   color: const Color(0xFF9146FF),
                   onTap: () =>
@@ -2578,7 +2592,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'FNOS',
-                  description: '连接 FNOS 文件与影视媒体库',
+                  description: context.l10n.fnosAccountDescription,
                   icon: Icons.storage_rounded,
                   color: const Color(0xFF087F5B),
                   onTap: () =>
@@ -2586,7 +2600,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'QNAP',
-                  description: '连接 QTS / QuTS hero File Station',
+                  description: context.l10n.qnapAccountDescription,
                   icon: Icons.storage_rounded,
                   color: const Color(0xFF0076A8),
                   onTap: () =>
@@ -2594,7 +2608,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'Synology DSM',
-                  description: '连接 File Station 与 Video Station',
+                  description: context.l10n.synologyAccountDescription,
                   icon: Icons.video_library_rounded,
                   color: const Color(0xFF1578D3),
                   onTap: () =>
@@ -2602,7 +2616,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'Nextcloud',
-                  description: '连接 Nextcloud 文件、收藏与搜索媒体',
+                  description: context.l10n.nextcloudAccountDescription,
                   icon: Icons.cloud_outlined,
                   color: const Color(0xFF0082C9),
                   onTap: () =>
@@ -2610,7 +2624,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'Seafile',
-                  description: '连接 Seafile 资料库、星标与搜索媒体',
+                  description: context.l10n.seafileAccountDescription,
                   icon: Icons.cloud_queue_rounded,
                   color: const Color(0xFFED7109),
                   onTap: () =>
@@ -2618,7 +2632,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'TrueNAS',
-                  description: '连接 TrueNAS ZFS 文件系统媒体',
+                  description: context.l10n.truenasAccountDescription,
                   icon: Icons.dns_rounded,
                   color: const Color(0xFF0095D5),
                   onTap: () =>
@@ -2626,8 +2640,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'YouTube',
-                  description:
-                      '连接 Cookie、Visitor Data 或 PO Token 并播放视频、直播与动态列表',
+                  description: context.l10n.youtubeAccountDescription,
                   icon: Icons.smart_display_rounded,
                   color: const Color(0xFFFF0033),
                   onTap: () =>
@@ -2635,7 +2648,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'Douyin',
-                  description: '连接 Cookie 并播放短视频、直播、弹幕与用户作品列表',
+                  description: context.l10n.douyinAccountDescription,
                   icon: Icons.music_video_rounded,
                   color: const Color(0xFF00AFA7),
                   onTap: () =>
@@ -2643,7 +2656,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                 ),
                 _MediaProviderBindCard(
                   label: 'TikTok',
-                  description: '连接 Cookie 并播放视频、直播、字幕与用户作品列表',
+                  description: context.l10n.tiktokAccountDescription,
                   icon: Icons.music_video_rounded,
                   color: const Color(0xFFFE2C55),
                   onTap: () =>

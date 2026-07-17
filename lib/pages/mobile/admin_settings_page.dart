@@ -4344,7 +4344,6 @@ class _UserManagementTabState extends State<UserManagementTab> {
   }
 
   Future<void> _loadUsers({bool silent = false}) async {
-    final l10n = context.l10n;
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = await SyncTvService.adminListUsersPage(
@@ -4371,7 +4370,7 @@ class _UserManagementTabState extends State<UserManagementTab> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        MessageUtils.showError(context, l10n.loadUsersFailed('$e'));
+        MessageUtils.showError(context, context.l10n.loadUsersFailed('$e'));
       }
     }
   }
@@ -5793,7 +5792,6 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
   }
 
   Future<void> _loadReviews({bool silent = false}) async {
-    final l10n = context.l10n;
     if (!silent) setState(() => _isLoading = true);
     try {
       final data = await SyncTvService.adminListReviewsPage(
@@ -5815,7 +5813,7 @@ class _AdminReviewTabState extends State<AdminReviewTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, l10n.loadReviewsFailed('$e'));
+      MessageUtils.showError(context, context.l10n.loadReviewsFailed('$e'));
     }
   }
 
@@ -6293,7 +6291,6 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
   }
 
   Future<void> _loadInstances({bool silent = false}) async {
-    final l10n = context.l10n;
     if (!silent) setState(() => _isLoading = true);
     try {
       final results = await Future.wait([
@@ -6322,7 +6319,10 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, l10n.loadProviderInstancesFailed('$e'));
+      MessageUtils.showError(
+        context,
+        context.l10n.loadProviderInstancesFailed('$e'),
+      );
     }
   }
 
@@ -8940,7 +8940,6 @@ class _RuntimeSettingsSectionsTabState
     bool silent = false,
     bool refresh = false,
   }) async {
-    final l10n = context.l10n;
     if (!silent) setState(() => _isLoading = true);
     try {
       final settings = await SyncTvService.runtimeGetSettings(refresh: refresh);
@@ -8956,7 +8955,7 @@ class _RuntimeSettingsSectionsTabState
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      MessageUtils.showError(context, l10n.loadSettingsFailed('$e'));
+      MessageUtils.showError(context, context.l10n.loadSettingsFailed('$e'));
     }
   }
 

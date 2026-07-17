@@ -64,11 +64,11 @@ class _TrueNasAddMediaFormState extends State<TrueNasAddMediaForm> {
   @override
   Widget build(BuildContext context) {
     if (widget.binds.isEmpty) {
-      return const Center(
+      return Center(
         child: AppEmptyState(
           icon: Icons.storage_outlined,
           title: 'TrueNAS',
-          subtitle: '请先绑定 TrueNAS API Key',
+          subtitle: context.l10n.bindAccountToAccessResources,
         ),
       );
     }

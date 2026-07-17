@@ -30,6 +30,7 @@ import 'package:synctv_app/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
 import 'package:synctv_app/widgets/playback_empty_state.dart';
 import 'package:synctv_app/widgets/playlist_empty_state.dart';
+import 'package:synctv_app/widgets/playback_sync_settings_fields.dart';
 import 'package:synctv_app/widgets/room_invite_actions.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 import 'package:synctv_app/widgets/chat_input_area.dart';
@@ -133,6 +134,8 @@ class _RoomScreenState extends State<RoomScreen>
 
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
+  bool _reconnectExhaustedNotificationPending = false;
+  bool _isDisposing = false;
   static const int _maxReconnectAttempts = 5;
 
   StreamSubscription? _realtimeSubscription;
@@ -446,6 +449,7 @@ class _RoomScreenState extends State<RoomScreen>
       _realtimeSubscription = _channel!.stream.listen(
         (data) {
           _reconnectAttempts = 0;
+          _reconnectExhaustedNotificationPending = false;
           try {
             final message = RoomRealtimeCodec.decode(data);
             if (!_realtimeMessageBus.isClosed) {
@@ -531,10 +535,16 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _scheduleReconnect() {
+    if (_isDisposing) return;
+    if (_reconnectTimer?.isActive ?? false) return;
     if (_reconnectAttempts >= _maxReconnectAttempts) {
-      if (mounted) {
+      if (_reconnectExhaustedNotificationPending) return;
+      _reconnectExhaustedNotificationPending = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _reconnectExhaustedNotificationPending = false;
+        if (!mounted || _isDisposing) return;
         MessageUtils.showError(context, context.l10n.connectionClosedRetry);
-      }
+      });
       return;
     }
 
@@ -686,6 +696,19 @@ class _RoomScreenState extends State<RoomScreen>
           !_isPrimaryObserveId(message.resourceObserveId)) {
         return;
       }
+      if (message.resourceObserveId == 'playlist_items' && mounted) {
+        setState(() {
+          _mediaEntries = const [];
+          _currentPage = 1;
+          _usesCursorPagination = false;
+          _nextCursor = '';
+          _hasMoreMediaEntries = false;
+          _isLoadingMediaEntries = false;
+          _isLoadingMoreMediaEntries = false;
+          _selectedMediaEntryIds.clear();
+          _isSelectionMode = false;
+        });
+      }
       final errorMsg = message.error?.message ?? '';
       if (errorMsg.isNotEmpty && mounted) {
         MessageUtils.showError(context, context.l10n.errorMessage(errorMsg));
@@ -753,7 +776,7 @@ class _RoomScreenState extends State<RoomScreen>
   void _indexChatMessage(RoomRealtimeChatEntry message) {
     if (message.id.isEmpty) return;
     if (message.isDeleted) {
-      _chatMessageCache.remove(message.id);
+      _chatMessageCache[message.id] = message;
       _chatReceiptCache.remove(message.id);
       _chatMessageKeys.remove(message.id);
       return;
@@ -1747,6 +1770,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   @override
   void dispose() {
+    _isDisposing = true;
     RealtimeEventLogPreferences.maxEntries.removeListener(
       _handleRealtimeLogMaxEntriesChanged,
     );
@@ -1854,22 +1878,6 @@ class _RoomScreenState extends State<RoomScreen>
               includeLatency: true,
             )!,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: compactChrome
-                ? AppIconButton(
-                    onPressed: _openPlaybackSyncSettings,
-                    icon: Icons.sync_alt_rounded,
-                    tooltip: context.l10n.syncSettings,
-                    style: AppIconButtonStyle.tonal,
-                  )
-                : AppActionButton(
-                    onPressed: _openPlaybackSyncSettings,
-                    icon: Icons.sync_alt_rounded,
-                    label: context.l10n.syncSettings,
-                    style: AppActionButtonStyle.tonal,
-                  ),
-          ),
           if (_currentStatus?.entry != null)
             AppActionButton(
               onPressed: _stopPlayback,
@@ -1888,7 +1896,7 @@ class _RoomScreenState extends State<RoomScreen>
                       icon: _canManageRoom
                           ? Icons.tune_rounded
                           : Icons.lock_outline_rounded,
-                      tooltip: context.l10n.roomManagement,
+                      tooltip: context.l10n.roomSettings,
                       style: AppIconButtonStyle.tonal,
                     )
                   : AppActionButton(
@@ -1896,7 +1904,7 @@ class _RoomScreenState extends State<RoomScreen>
                       icon: _canManageRoom
                           ? Icons.tune_rounded
                           : Icons.lock_outline_rounded,
-                      label: context.l10n.roomManagement,
+                      label: context.l10n.roomSettings,
                       style: AppActionButtonStyle.tonal,
                     ),
             ),
@@ -2081,73 +2089,17 @@ class _RoomScreenState extends State<RoomScreen>
         var draft = _playbackSyncConfig;
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final autoThresholdLabel = context.l10n.secondsValue(
-              draft.autoSeekDriftThresholdSeconds.toStringAsFixed(1),
-            );
-            final manualThresholdLabel = context.l10n.secondsValue(
-              draft.manualSeekDriftThresholdSeconds.toStringAsFixed(1),
-            );
-
             return AppDialog(
               title: Text(context.l10n.syncSettings),
               icon: const Icon(Icons.sync_alt_rounded),
               body: SizedBox(
                 width: 520,
                 child: AppSingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppSwitchTile(
-                        value: draft.autoSyncEnabled,
-                        onChanged: (value) {
-                          setDialogState(() {
-                            draft = draft.copyWith(autoSyncEnabled: value);
-                          });
-                        },
-                        prefix: const Icon(Icons.auto_mode_rounded),
-                        title: Text(context.l10n.automaticProgressCorrection),
-                        subtitle: Text(
-                          context.l10n.automaticProgressCorrectionDescription,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      _PlaybackSyncSlider(
-                        icon: Icons.linear_scale_rounded,
-                        title: context.l10n.automaticCorrectionThreshold,
-                        valueLabel: autoThresholdLabel,
-                        value: draft.autoSeekDriftThresholdSeconds,
-                        min: 0.1,
-                        max: 10.0,
-                        divisions: 99,
-                        enabled: draft.autoSyncEnabled,
-                        onChanged: (value) {
-                          setDialogState(() {
-                            draft = draft.copyWith(
-                              autoSeekDriftThresholdSeconds: value,
-                            );
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 18),
-                      _PlaybackSyncSlider(
-                        icon: Icons.touch_app_rounded,
-                        title: context.l10n.manualSyncMinimumError,
-                        valueLabel: manualThresholdLabel,
-                        value: draft.manualSeekDriftThresholdSeconds,
-                        min: 0.1,
-                        max: 1.0,
-                        divisions: 18,
-                        enabled: true,
-                        onChanged: (value) {
-                          setDialogState(() {
-                            draft = draft.copyWith(
-                              manualSeekDriftThresholdSeconds: value,
-                            );
-                          });
-                        },
-                      ),
-                    ],
+                  child: PlaybackSyncSettingsFields(
+                    config: draft,
+                    onChanged: (value) {
+                      setDialogState(() => draft = value);
+                    },
                   ),
                 ),
               ),
@@ -3753,6 +3705,20 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _deleteChatMessage(RoomRealtimeChatEntry message) async {
     if (message.id.isEmpty) return;
+    final confirmed = await showAppDialog<bool>(
+      context: context,
+      builder: (context) => AppConfirmDialog(
+        icon: const Icon(Icons.delete_outline_rounded),
+        title: context.l10n.deleteMessage,
+        content: Text(context.l10n.confirmDeleteChatMessage),
+        confirmLabel: context.l10n.delete,
+        confirmIcon: Icons.delete_outline_rounded,
+        destructive: true,
+        onConfirm: () => Navigator.pop(context, true),
+      ),
+    );
+    if (confirmed != true) return;
+
     try {
       await SyncTvService.deleteChatMessage(
         widget.room.roomId,
@@ -3763,9 +3729,19 @@ class _RoomScreenState extends State<RoomScreen>
       if (!mounted) return;
       setState(() {
         _messages.removeWhere((entry) => entry.dedupeKey == message.dedupeKey);
-        _chatMessageCache.remove(message.id);
+        _indexChatMessage(
+          message.copyWith(
+            content: '',
+            images: const [],
+            reactions: const [],
+            reactionCount: 0,
+            mentions: const [],
+            version: message.version + 1,
+            isDeleted: true,
+            clearPin: true,
+          ),
+        );
         _chatReceiptCache.remove(message.id);
-        _chatMessageKeys.remove(message.id);
         if (_replyingToMessage?.id == message.id) {
           _replyingToMessage = null;
         }
@@ -5120,7 +5096,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _openRoomSettings() async {
     if (!_canManageRoom) {
-      MessageUtils.showWarning(context, context.l10n.roomManagersOnly);
+      await _openPlaybackSyncSettings();
       return;
     }
     showAppDialog<void>(
@@ -5154,6 +5130,9 @@ class _RoomScreenState extends State<RoomScreen>
           ),
         );
         if (!mounted) return;
+        setState(() {
+          _playbackSyncConfig = SyncTvService.playbackSyncConfig;
+        });
         if (deleted == true) {
           Navigator.pop(context, true);
         }
@@ -5405,79 +5384,6 @@ class _RoomMiniBadge extends StatelessWidget {
       borderSide: borderSide,
       textStyle: TextStyle(fontSize: 10, color: color),
       label: Text(label),
-    );
-  }
-}
-
-class _PlaybackSyncSlider extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String valueLabel;
-  final double value;
-  final double min;
-  final double max;
-  final int divisions;
-  final bool enabled;
-  final ValueChanged<double> onChanged;
-
-  const _PlaybackSyncSlider({
-    required this.icon,
-    required this.title,
-    required this.valueLabel,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.divisions,
-    required this.enabled,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = enabled
-        ? theme.colorScheme.primary
-        : theme.colorScheme.onSurface.withValues(alpha: 0.38);
-    return AppPanelSurface(
-      padding: const EdgeInsets.all(14),
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
-      borderRadius: BorderRadius.circular(8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 20, color: color),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Text(
-                valueLabel,
-                style: theme.textTheme.labelLarge?.copyWith(color: color),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Material(
-            type: MaterialType.transparency,
-            child: AppSlider(
-              value: value.clamp(min, max).toDouble(),
-              min: min,
-              max: max,
-              divisions: divisions,
-              label: valueLabel,
-              onChanged: enabled ? onChanged : null,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

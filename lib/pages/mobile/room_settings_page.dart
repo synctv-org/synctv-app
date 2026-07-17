@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/l10n/l10n.dart';
+import 'package:synctv_app/models/playback_sync_config.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/room_management_models.dart';
@@ -24,6 +25,7 @@ import 'package:synctv_app/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/widgets/add_media_dialog.dart';
 import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/widgets/chat_reaction_users_dialog.dart';
+import 'package:synctv_app/widgets/playback_sync_settings_fields.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 
 const String _settingsObserveId = 'manage_room_settings';
@@ -159,7 +161,7 @@ class RoomSettingsPage extends StatefulWidget {
 
 class _RoomSettingsPageState extends State<RoomSettingsPage>
     with SingleTickerProviderStateMixin {
-  static const int _sectionCount = 10;
+  static const int _sectionCount = 11;
   late final TabController _tabController;
   late final TextEditingController _passwordController;
   late final TextEditingController _maxMembersController;
@@ -169,6 +171,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   late final TextEditingController _mediaSearchController;
   late final TextEditingController _chatSearchController;
   late SyncTvRoomSettings _settings;
+  late PlaybackSyncConfig _playbackSyncConfig;
 
   final List<RoomStreamEntryInfo> _streams = [];
   final List<RoomJoinReviewInfo> _reviews = [];
@@ -245,6 +248,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _iceLoading = false;
   bool _coverUpdating = false;
   bool _passwordUpdating = false;
+  bool _playbackSyncSaving = false;
   ChatReadStateInfo? _chatReadState;
   late String _currentUserId;
   SyncTvRoom? _roomInfo;
@@ -261,6 +265,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _tabController = TabController(length: _sectionCount, vsync: this);
     _tabController.addListener(_handleTabChanged);
     _settings = widget.currentSettings;
+    _playbackSyncConfig = SyncTvService.playbackSyncConfig;
     _currentUserId = widget.currentUserId;
     _passwordController = TextEditingController();
     _maxMembersController = TextEditingController();
@@ -1444,6 +1449,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       label: context.l10n.settings,
       icon: Icons.tune_rounded,
       builder: _buildSettingsTab,
+    ),
+    _RoomSettingsSection(
+      label: context.l10n.syncSettings,
+      icon: Icons.sync_alt_rounded,
+      builder: _buildPlaybackSyncTab,
     ),
     _RoomSettingsSection(
       label: context.l10n.members,
@@ -3525,6 +3535,84 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       ),
+    );
+  }
+
+  Future<void> _savePlaybackSyncSettings({PlaybackSyncConfig? config}) async {
+    if (_playbackSyncSaving) return;
+    setState(() => _playbackSyncSaving = true);
+    try {
+      await SyncTvService.savePlaybackSyncConfig(
+        (config ?? _playbackSyncConfig).normalized(),
+      );
+      if (!mounted) return;
+      setState(() {
+        _playbackSyncConfig = SyncTvService.playbackSyncConfig;
+      });
+      MessageUtils.showSuccess(context, context.l10n.syncSettingsSaved);
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.savePreferencesFailed('$error'),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _playbackSyncSaving = false);
+    }
+  }
+
+  Widget _buildPlaybackSyncTab(ThemeData theme, bool isDark) {
+    return AppListView(
+      padding: const EdgeInsets.only(bottom: 32, top: 8),
+      children: [
+        _buildSectionHeader(context.l10n.syncSettings, theme),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: PlaybackSyncSettingsFields(
+            config: _playbackSyncConfig,
+            onChanged: (value) {
+              setState(() => _playbackSyncConfig = value);
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildSurface(
+          isDark: isDark,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    AppActionButton(
+                      onPressed: _playbackSyncSaving
+                          ? null
+                          : () => _savePlaybackSyncSettings(
+                              config: PlaybackSyncConfig.defaults,
+                            ),
+                      label: context.l10n.restoreDefaults,
+                      style: AppActionButtonStyle.tonal,
+                    ),
+                    AppActionButton(
+                      onPressed: _playbackSyncSaving
+                          ? null
+                          : _savePlaybackSyncSettings,
+                      loading: _playbackSyncSaving,
+                      icon: Icons.save_outlined,
+                      label: context.l10n.save,
+                      style: AppActionButtonStyle.filled,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

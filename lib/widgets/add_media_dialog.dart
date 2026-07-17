@@ -382,7 +382,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     final availableHeight = AppMetrics.dialogMaxHeight(context, null);
     final contentHeight = compact
         ? (availableHeight - 84).clamp(500.0, 660.0)
-        : (availableHeight * 0.62).clamp(380.0, 520.0);
+        : (availableHeight - 84).clamp(460.0, 660.0);
 
     return PopScope(
       canPop: !_hasUnsavedDraft,

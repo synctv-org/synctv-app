@@ -44,6 +44,7 @@ class RoomRealtimeConnection {
     Iterable<List<int>> initialMessages = const [],
     void Function(List<int> bytes, [client.ClientMessage? message])? onOutgoing,
     void Function(Uint8List bytes)? onIncoming,
+    Future<Uri> Function(String roomId)? createWebSocketUri,
   }) {
     late final WebSocket socket;
     StreamSubscription<List<int>>? outgoingSubscription;
@@ -51,9 +52,10 @@ class RoomRealtimeConnection {
     final incoming = StreamController<Uint8List>();
     final outgoing = StreamController<List<int>>();
 
-    final socketFuture = SyncTvService.createRoomWebSocketUri(roomId)
-        .then((uri) => WebSocket.connect(uri.toString()))
-        .then((connected) {
+    final socketFuture =
+        (createWebSocketUri ?? SyncTvService.createRoomWebSocketUri)(
+          roomId,
+        ).then((uri) => WebSocket.connect(uri.toString())).then((connected) {
           socket = connected;
           socket.listen(
             (frame) {
@@ -88,11 +90,15 @@ class RoomRealtimeConnection {
           return connected;
         });
 
-    socketFuture.catchError((Object error, StackTrace stackTrace) {
-      incoming.addError(error, stackTrace);
-      unawaited(incoming.close());
-      throw error;
-    });
+    unawaited(
+      socketFuture.then<void>(
+        (_) {},
+        onError: (Object error, StackTrace stackTrace) async {
+          incoming.addError(error, stackTrace);
+          await incoming.close();
+        },
+      ),
+    );
     incoming.onCancel = () async {
       heartbeatTimer?.cancel();
       await outgoing.close();

@@ -1061,6 +1061,9 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
             padding: const EdgeInsets.all(4),
             child: AppTabBar(
               controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 14),
               labelColor: isDark ? Colors.white : theme.primaryColor,
               unselectedLabelColor: theme.hintColor,
               indicator: appTabPillIndicator(

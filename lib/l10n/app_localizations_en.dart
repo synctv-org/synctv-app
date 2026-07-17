@@ -2681,6 +2681,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get removeAvatar => 'Remove avatar';
+
+  @override
+  String get confirmRemoveAvatar =>
+      'Remove the current avatar? Your account will use the default avatar.';
+
+  @override
   String get avatarRemoved => 'Avatar removed';
 
   @override
@@ -3171,12 +3178,53 @@ class AppLocalizationsEn extends AppLocalizations {
       'Personal storage and directory resources';
 
   @override
+  String get cloudreveAccountDescription =>
+      'Cloud storage media and directory resources';
+
+  @override
   String get embyAccountDescription =>
       'Personal media library and video resources';
 
   @override
   String get bilibiliAccountDescription =>
       'Bilibili account and favorite resources';
+
+  @override
+  String get twitchAccountDescription => 'Twitch live streams, VODs, and clips';
+
+  @override
+  String get fnosAccountDescription => 'FNOS files and media libraries';
+
+  @override
+  String get qnapAccountDescription =>
+      'QTS and QuTS hero File Station resources';
+
+  @override
+  String get synologyAccountDescription =>
+      'File Station and Video Station resources';
+
+  @override
+  String get nextcloudAccountDescription =>
+      'Nextcloud files, favorites, and media search';
+
+  @override
+  String get seafileAccountDescription =>
+      'Seafile libraries, starred files, and media search';
+
+  @override
+  String get truenasAccountDescription => 'TrueNAS ZFS filesystem media';
+
+  @override
+  String get youtubeAccountDescription =>
+      'YouTube videos, live streams, and dynamic playlists with Cookie, Visitor Data, or PO Token';
+
+  @override
+  String get douyinAccountDescription =>
+      'Douyin videos, live streams, comments, and creator posts with Cookie';
+
+  @override
+  String get tiktokAccountDescription =>
+      'TikTok videos, live streams, captions, and creator posts with Cookie';
 
   @override
   String get linkedOAuth2 => 'Linked OAuth2';

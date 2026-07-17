@@ -2433,19 +2433,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                 left: 16,
                                 right: 16,
                               ),
-                              color: Colors.transparent,
+                              color: const Color(0x66000000),
                               borderRadius: BorderRadius.zero,
                               clipBehavior: Clip.none,
-                              gradient: widget.isFullScreen
-                                  ? const LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.black87,
-                                        Colors.transparent,
-                                      ],
-                                    )
-                                  : null,
+                              gradient: const LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [Colors.black87, Colors.transparent],
+                              ),
                               child: Row(
                                 children: [
                                   if (widget.isFullScreen)
@@ -2512,19 +2507,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   vertical: 8,
                                   horizontal: 16,
                                 ),
-                                color: Colors.transparent,
+                                color: const Color(0x99000000),
                                 borderRadius: BorderRadius.zero,
                                 clipBehavior: Clip.none,
-                                gradient: widget.isFullScreen
-                                    ? const LinearGradient(
-                                        begin: Alignment.bottomCenter,
-                                        end: Alignment.topCenter,
-                                        colors: [
-                                          Colors.black87,
-                                          Colors.transparent,
-                                        ],
-                                      )
-                                    : null,
+                                gradient: const LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [Colors.black87, Colors.transparent],
+                                ),
                                 child: LayoutBuilder(
                                   builder: (context, constraints) {
                                     final controlsWidth = constraints.maxWidth;
