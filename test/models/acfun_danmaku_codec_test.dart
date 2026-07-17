@@ -36,5 +36,15 @@ void main() {
       expect(items, hasLength(1));
       expect(items!.single.text, 'ok');
     });
+
+    test('returns a mutable list for controller lifecycle updates', () {
+      final items = decodeAcFunDanmakuDocument(
+        '{"comments":[{"text":"first","positionMs":0}]}',
+      );
+
+      expect(items, hasLength(1));
+      items!.clear();
+      expect(items, isEmpty);
+    });
   });
 }

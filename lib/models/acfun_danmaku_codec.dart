@@ -18,7 +18,7 @@ List<DanmakuItem>? decodeAcFunDanmakuDocument(String content) {
       .whereType<Map>()
       .map((value) => _decodeComment(Map<String, dynamic>.from(value)))
       .whereType<DanmakuItem>()
-      .toList(growable: false);
+      .toList();
 }
 
 DanmakuItem? _decodeComment(Map<String, dynamic> value) {

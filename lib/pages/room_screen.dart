@@ -1507,10 +1507,10 @@ class _RoomScreenState extends State<RoomScreen>
         if (mounted &&
             _videoPlayerController != null &&
             _videoPlayerController!.value.isInitialized) {
-          _performSync(status);
+          await _performSync(status, forceSeek: true);
         }
       } else {
-        _performSync(status);
+        unawaited(_performSync(status));
       }
 
       final streamUrl = status.entry!.streamDanmu == null
@@ -1904,6 +1904,7 @@ class _RoomScreenState extends State<RoomScreen>
       resizeToAvoidBottomInset: true,
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppAppBar(
+        toolbarHeight: 44,
         leading: AppIconButton(
           onPressed: () => Navigator.of(context).maybePop(),
           icon: Icons.arrow_back_rounded,

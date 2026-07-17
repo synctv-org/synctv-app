@@ -1065,6 +1065,19 @@ void main() {
     expect(find.text('内容'), findsOneWidget);
   });
 
+  testWidgets('AppAppBar supports compact page chrome', (tester) async {
+    const appBar = AppAppBar(
+      title: Text('紧凑页面'),
+      toolbarHeight: 44,
+      avoidMacOsTitleBar: false,
+    );
+
+    await tester.pumpWidget(_app(const AppScaffold(appBar: appBar)));
+
+    expect(appBar.preferredSize.height, 44);
+    expect(tester.widget<AppBar>(find.byType(AppBar)).toolbarHeight, 44);
+  });
+
   testWidgets('AppTransparentRouteSurface keeps transparent material route', (
     tester,
   ) async {

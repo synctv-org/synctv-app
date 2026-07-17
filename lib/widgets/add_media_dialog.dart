@@ -681,7 +681,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   Widget _buildCompactSourceRail(ThemeData theme) {
     return AppPanelSurface(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       color: theme.colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.zero,
       border: Border(
@@ -690,16 +690,32 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         ),
       ),
       clipBehavior: Clip.none,
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
+      child: DropdownButtonFormField<int>(
+        key: ValueKey('add-media-source-selector-$_selectedIndex'),
+        initialValue: _selectedIndex,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: context.l10n.source,
+          prefixIcon: Icon(
+            _sourceSpecs[_selectedIndex].icon,
+            color: _sourceSpecs[_selectedIndex].color,
+          ),
+        ),
+        menuMaxHeight: 420,
+        items: [
           for (final spec in _sourceSpecs)
-            SizedBox(
-              width: 160,
-              child: _buildSourceTile(theme, spec, compact: true),
+            DropdownMenuItem<int>(
+              value: spec.index,
+              child: Text(
+                spec.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
         ],
+        onChanged: (index) {
+          if (index != null) _selectSource(index);
+        },
       ),
     );
   }

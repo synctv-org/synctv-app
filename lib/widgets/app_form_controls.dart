@@ -1778,6 +1778,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final PreferredSizeWidget? bottom;
   final bool automaticallyImplyLeading;
   final bool avoidMacOsTitleBar;
+  final double toolbarHeight;
 
   const AppAppBar({
     super.key,
@@ -1791,6 +1792,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
     this.automaticallyImplyLeading = true,
     this.avoidMacOsTitleBar = true,
+    this.toolbarHeight = kToolbarHeight,
   });
 
   static const double _macOsTitleBarCompensation = 24;
@@ -1804,7 +1806,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-    kToolbarHeight + _topCompensation + (bottom?.preferredSize.height ?? 0),
+    toolbarHeight + _topCompensation + (bottom?.preferredSize.height ?? 0),
   );
 
   @override
@@ -1845,7 +1847,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
       systemOverlayStyle: systemOverlayStyle,
       bottom: bottom,
       automaticallyImplyLeading: automaticallyImplyLeading,
-      toolbarHeight: kToolbarHeight + compensation,
+      toolbarHeight: toolbarHeight + compensation,
     );
   }
 }
