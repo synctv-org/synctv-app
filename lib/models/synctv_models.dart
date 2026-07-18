@@ -951,6 +951,7 @@ class SyncTvPlaybackStatus {
   final String playingMediaId;
   final String playingPlaylistId;
   final String targetHash;
+  final String historyCursorId;
 
   SyncTvPlaybackStatus({
     this.entry,
@@ -962,6 +963,7 @@ class SyncTvPlaybackStatus {
     this.playingMediaId = '',
     this.playingPlaylistId = '',
     this.targetHash = '',
+    this.historyCursorId = '',
   });
 
   double derivedCurrentTime({DateTime? now}) {
@@ -989,6 +991,7 @@ class SyncTvPlaybackStatus {
     String? playingMediaId,
     String? playingPlaylistId,
     String? targetHash,
+    String? historyCursorId,
   }) {
     return SyncTvPlaybackStatus(
       entry: entry ?? this.entry,
@@ -1000,40 +1003,64 @@ class SyncTvPlaybackStatus {
       playingMediaId: playingMediaId ?? this.playingMediaId,
       playingPlaylistId: playingPlaylistId ?? this.playingPlaylistId,
       targetHash: targetHash ?? this.targetHash,
+      historyCursorId: historyCursorId ?? this.historyCursorId,
     );
   }
 }
 
 class RoomMemberPermissions {
-  static const int chat = 1 << 0;
-  static const int createMediaResource = 1 << 1;
-  static const int viewMediaResources = 1 << 2;
-  static const int viewMemberList = 1 << 3;
+  static const int sendChatMessages = 1 << 0;
+  static const int manageOwnMedia = 1 << 1;
+  static const int viewMedia = 1 << 2;
+  static const int viewMembers = 1 << 3;
   static const int viewChatHistory = 1 << 4;
   static const int useWebRTC = 1 << 5;
   static const int all =
-      chat |
-      createMediaResource |
-      viewMediaResources |
-      viewMemberList |
+      sendChatMessages |
+      manageOwnMedia |
+      viewMedia |
+      viewMembers |
       viewChatHistory |
       useWebRTC;
 
   static const List<int> values = [
-    chat,
-    createMediaResource,
-    viewMediaResources,
-    viewMemberList,
+    sendChatMessages,
+    manageOwnMedia,
+    viewMedia,
+    viewMembers,
     viewChatHistory,
     useWebRTC,
   ];
 }
 
 class RoomGuestPermissions {
-  static const int viewMemberList = 1 << 32;
+  static const int viewMembers = 1 << 32;
   static const int viewChatHistory = 1 << 33;
   static const int useWebRTC = 1 << 34;
-  static const int all = viewMemberList | viewChatHistory | useWebRTC;
+  static const int all = viewMembers | viewChatHistory | useWebRTC;
+}
+
+class RoomEffectivePermissions {
+  static const int sendChatMessages = 1 << 0;
+  static const int manageOwnMedia = 1 << 1;
+  static const int viewMedia = 1 << 2;
+  static const int viewMembers = 1 << 3;
+  static const int viewChatHistory = 1 << 4;
+  static const int useWebRTC = 1 << 5;
+  static const int deleteMedia = 1 << 6;
+  static const int reorderMedia = 1 << 7;
+  static const int clearMedia = 1 << 8;
+  static const int manageLiveStreams = 1 << 9;
+  static const int controlPlaybackState = 1 << 10;
+  static const int navigatePlayback = 1 << 11;
+  static const int reviewJoinRequests = 1 << 12;
+  static const int removeMembers = 1 << 13;
+  static const int manageMemberPermissions = 1 << 14;
+  static const int addMembers = 1 << 15;
+  static const int manageRoomSettings = 1 << 16;
+  static const int deleteChatMessages = 1 << 17;
+  static const int deleteRoom = 1 << 18;
+  static const int viewPlaybackHistory = 1 << 19;
 }
 
 class SyncTvRoomSettings {

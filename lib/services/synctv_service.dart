@@ -867,8 +867,35 @@ class SyncTvService {
     );
   }
 
-  static Future<SyncTvPlaybackStatus> getCurrentMedia(String roomId) async {
-    return _domains.roomMedia.getCurrentMedia(roomId);
+  static Future<SyncTvPlaybackStatus> getPlaybackStatus(String roomId) async {
+    return _domains.roomMedia.getPlaybackStatus(roomId);
+  }
+
+  static Future<SyncTvPlaybackStatus> playPrevious(String roomId) {
+    return _domains.roomMedia.playPrevious(roomId);
+  }
+
+  static Future<SyncTvPlaybackStatus> playNext(String roomId) {
+    return _domains.roomMedia.playNext(roomId);
+  }
+
+  static Future<client.ListPlaybackHistoryResponse> listPlaybackHistory(
+    String roomId, {
+    String beforeEntryId = '',
+    int limit = 50,
+  }) {
+    return _domains.roomMedia.listPlaybackHistory(
+      roomId,
+      beforeEntryId: beforeEntryId,
+      limit: limit,
+    );
+  }
+
+  static Future<SyncTvPlaybackStatus> playHistoryEntry(
+    String roomId,
+    String entryId,
+  ) {
+    return _domains.roomMedia.playHistoryEntry(roomId, entryId);
   }
 
   static Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>>

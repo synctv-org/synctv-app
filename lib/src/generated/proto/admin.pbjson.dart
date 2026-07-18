@@ -472,6 +472,15 @@ const RuntimeSettings$json = {
       '8': {},
       '10': 'server'
     },
+    {
+      '1': 'playback_history',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.PlaybackHistorySettings',
+      '8': {},
+      '10': 'playbackHistory'
+    },
   ],
 };
 
@@ -491,7 +500,8 @@ final $typed_data.Uint8List runtimeSettingsDescriptor = $convert.base64Decode(
     'YKBGNoYXQYCiABKAsyGi5zeW5jdHYuYWRtaW4uQ2hhdFNldHRpbmdzQga6SAPIAQFSBGNoYXQS'
     'NgoEY29ycxgLIAEoCzIaLnN5bmN0di5hZG1pbi5Db3JzU2V0dGluZ3NCBrpIA8gBAVIEY29ycx'
     'I8CgZzZXJ2ZXIYDCABKAsyHC5zeW5jdHYuYWRtaW4uU2VydmVyU2V0dGluZ3NCBrpIA8gBAVIG'
-    'c2VydmVy');
+    'c2VydmVyElgKEHBsYXliYWNrX2hpc3RvcnkYDSABKAsyJS5zeW5jdHYuYWRtaW4uUGxheWJhY2'
+    'tIaXN0b3J5U2V0dGluZ3NCBrpIA8gBAVIPcGxheWJhY2tIaXN0b3J5');
 
 @$core.Deprecated('Use serverSettingsDescriptor instead')
 const ServerSettings$json = {
@@ -1162,6 +1172,27 @@ final $typed_data.Uint8List chatSettingsDescriptor = $convert.base64Decode(
     'bmVkTWVzc2FnZXNQZXJSb29tEjQKFm1lc3NhZ2VfcmV0ZW50aW9uX2RheXMYAyABKANSFG1lc3'
     'NhZ2VSZXRlbnRpb25EYXlz');
 
+@$core.Deprecated('Use playbackHistorySettingsDescriptor instead')
+const PlaybackHistorySettings$json = {
+  '1': 'PlaybackHistorySettings',
+  '2': [
+    {'1': 'retention_days', '3': 1, '4': 1, '5': 13, '10': 'retentionDays'},
+    {
+      '1': 'max_entries_per_room',
+      '3': 2,
+      '4': 1,
+      '5': 3,
+      '10': 'maxEntriesPerRoom'
+    },
+  ],
+};
+
+/// Descriptor for `PlaybackHistorySettings`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List playbackHistorySettingsDescriptor = $convert.base64Decode(
+    'ChdQbGF5YmFja0hpc3RvcnlTZXR0aW5ncxIlCg5yZXRlbnRpb25fZGF5cxgBIAEoDVINcmV0ZW'
+    '50aW9uRGF5cxIvChRtYXhfZW50cmllc19wZXJfcm9vbRgCIAEoA1IRbWF4RW50cmllc1BlclJv'
+    'b20=');
+
 @$core.Deprecated('Use corsSettingsDescriptor instead')
 const CorsSettings$json = {
   '1': 'CorsSettings',
@@ -1306,6 +1337,14 @@ const RuntimeSettingsPatch$json = {
       '6': '.synctv.admin.ServerSettingsPatch',
       '10': 'server'
     },
+    {
+      '1': 'playback_history',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.PlaybackHistorySettingsPatch',
+      '10': 'playbackHistory'
+    },
   ],
 };
 
@@ -1324,7 +1363,9 @@ final $typed_data.Uint8List runtimeSettingsPatchDescriptor = $convert.base64Deco
     'ZG1pbi5XZWJSdGNTZXR0aW5nc1BhdGNoUgZ3ZWJydGMSMwoEY2hhdBgKIAEoCzIfLnN5bmN0di'
     '5hZG1pbi5DaGF0U2V0dGluZ3NQYXRjaFIEY2hhdBIzCgRjb3JzGAsgASgLMh8uc3luY3R2LmFk'
     'bWluLkNvcnNTZXR0aW5nc1BhdGNoUgRjb3JzEjkKBnNlcnZlchgMIAEoCzIhLnN5bmN0di5hZG'
-    '1pbi5TZXJ2ZXJTZXR0aW5nc1BhdGNoUgZzZXJ2ZXI=');
+    '1pbi5TZXJ2ZXJTZXR0aW5nc1BhdGNoUgZzZXJ2ZXISVQoQcGxheWJhY2tfaGlzdG9yeRgNIAEo'
+    'CzIqLnN5bmN0di5hZG1pbi5QbGF5YmFja0hpc3RvcnlTZXR0aW5nc1BhdGNoUg9wbGF5YmFja0'
+    'hpc3Rvcnk=');
 
 @$core.Deprecated('Use serverSettingsPatchDescriptor instead')
 const ServerSettingsPatch$json = {
@@ -1862,6 +1903,42 @@ final $typed_data.Uint8List chatSettingsPatchDescriptor = $convert.base64Decode(
     'RheXMYAyABKANIAlIUbWVzc2FnZVJldGVudGlvbkRheXOIAQFCGAoWX21heF9tZXNzYWdlc19w'
     'ZXJfcm9vbUIfCh1fbWF4X3Bpbm5lZF9tZXNzYWdlc19wZXJfcm9vbUIZChdfbWVzc2FnZV9yZX'
     'RlbnRpb25fZGF5cw==');
+
+@$core.Deprecated('Use playbackHistorySettingsPatchDescriptor instead')
+const PlaybackHistorySettingsPatch$json = {
+  '1': 'PlaybackHistorySettingsPatch',
+  '2': [
+    {
+      '1': 'retention_days',
+      '3': 1,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'retentionDays',
+      '17': true
+    },
+    {
+      '1': 'max_entries_per_room',
+      '3': 2,
+      '4': 1,
+      '5': 3,
+      '9': 1,
+      '10': 'maxEntriesPerRoom',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_retention_days'},
+    {'1': '_max_entries_per_room'},
+  ],
+};
+
+/// Descriptor for `PlaybackHistorySettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List playbackHistorySettingsPatchDescriptor = $convert.base64Decode(
+    'ChxQbGF5YmFja0hpc3RvcnlTZXR0aW5nc1BhdGNoEioKDnJldGVudGlvbl9kYXlzGAEgASgNSA'
+    'BSDXJldGVudGlvbkRheXOIAQESNAoUbWF4X2VudHJpZXNfcGVyX3Jvb20YAiABKANIAVIRbWF4'
+    'RW50cmllc1BlclJvb22IAQFCEQoPX3JldGVudGlvbl9kYXlzQhcKFV9tYXhfZW50cmllc19wZX'
+    'Jfcm9vbQ==');
 
 @$core.Deprecated('Use corsSettingsPatchDescriptor instead')
 const CorsSettingsPatch$json = {
@@ -5381,6 +5458,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ChatSettings': ChatSettings$json,
   '.synctv.admin.CorsSettings': CorsSettings$json,
   '.synctv.admin.ServerSettings': ServerSettings$json,
+  '.synctv.admin.PlaybackHistorySettings': PlaybackHistorySettings$json,
   '.synctv.admin.UpdateSettingsRequest': UpdateSettingsRequest$json,
   '.synctv.admin.RuntimeSettingsPatch': RuntimeSettingsPatch$json,
   '.synctv.admin.RoomDefaultsSettingsPatch': RoomDefaultsSettingsPatch$json,
@@ -5395,6 +5473,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ChatSettingsPatch': ChatSettingsPatch$json,
   '.synctv.admin.CorsSettingsPatch': CorsSettingsPatch$json,
   '.synctv.admin.ServerSettingsPatch': ServerSettingsPatch$json,
+  '.synctv.admin.PlaybackHistorySettingsPatch':
+      PlaybackHistorySettingsPatch$json,
   '.google.protobuf.FieldMask': $2.FieldMask$json,
   '.synctv.admin.SendTestEmailRequest': SendTestEmailRequest$json,
   '.synctv.admin.SendTestEmailResponse': SendTestEmailResponse$json,

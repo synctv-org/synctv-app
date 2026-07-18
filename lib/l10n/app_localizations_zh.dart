@@ -4742,7 +4742,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get useWebRtc => '使用 WebRTC';
 
   @override
-  String get deleteAnyMedia => '删除任意媒体';
+  String get deleteMedia => '删除媒体';
 
   @override
   String get reorderPlaylist => '调整播放列表';
@@ -4754,7 +4754,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playbackControl => '播放控制';
 
   @override
-  String get changeCurrentMedia => '切换影片';
+  String get roomPermissionNavigatePlayback => '切换播放内容';
+
+  @override
+  String get previousVideo => '上一个视频';
+
+  @override
+  String get nextVideo => '下一个视频';
+
+  @override
+  String get playbackHistory => '播放历史';
+
+  @override
+  String get playbackHistoryEmpty => '暂无播放历史';
+
+  @override
+  String get playHistoryEntry => '播放此记录';
+
+  @override
+  String get viewPlaybackHistory => '查看播放历史';
+
+  @override
+  String get playbackHistoryRetentionDays => '播放历史保留天数';
+
+  @override
+  String get playbackHistoryRetentionDaysDescription =>
+      '播放历史的保留天数，设为 0 可关闭按时间清理。';
+
+  @override
+  String get playbackHistoryMaxEntries => '播放历史数量上限';
+
+  @override
+  String get playbackHistoryMaxEntriesDescription =>
+      '每个房间最多保留的记录数，设为 0 可关闭按数量清理。';
 
   @override
   String get changePlaybackRate => '调整倍速';
@@ -4770,6 +4802,36 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deleteChat => '删除聊天';
+
+  @override
+  String get roomPermissionManageOwnMedia => '管理自己的媒体';
+
+  @override
+  String get roomPermissionReorderMedia => '调整媒体与播放列表顺序';
+
+  @override
+  String get roomPermissionClearMedia => '清空媒体队列';
+
+  @override
+  String get roomPermissionManageLiveStreams => '管理直播';
+
+  @override
+  String get roomPermissionReviewJoinRequests => '审核加入申请';
+
+  @override
+  String get roomPermissionRemoveMembers => '移除成员';
+
+  @override
+  String get roomPermissionManageMemberPermissions => '管理成员权限';
+
+  @override
+  String get roomPermissionAddMembers => '添加成员';
+
+  @override
+  String get roomPermissionManageRoomSettings => '管理房间设置';
+
+  @override
+  String get roomPermissionDeleteChatMessages => '删除聊天消息';
 
   @override
   String get defaultRoomMemberLimit => '默认房间成员上限';

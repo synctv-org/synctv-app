@@ -190,7 +190,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
     _AdminSection(
       label: context.l10n.administrators,
       icon: Icons.admin_panel_settings_rounded,
-      page: const AdminAdminsTab(),
+      page: const AdministratorsTab(),
     ),
     _AdminSection(
       label: context.l10n.rooms,
@@ -293,7 +293,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
         backgroundColor: isDark
             ? const Color(0xFF121212)
             : const Color(0xFFF7F7FC),
-        appBar: AppAppBar(
+        appBar: AppPageBar(
           title: Text(
             context.l10n.adminSettings,
             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -718,14 +718,14 @@ class _AdminOverviewTabState extends State<AdminOverviewTab> {
   }
 }
 
-class AdminAdminsTab extends StatefulWidget {
-  const AdminAdminsTab({super.key});
+class AdministratorsTab extends StatefulWidget {
+  const AdministratorsTab({super.key});
 
   @override
-  State<AdminAdminsTab> createState() => _AdminAdminsTabState();
+  State<AdministratorsTab> createState() => _AdministratorsTabState();
 }
 
-class _AdminAdminsTabState extends State<AdminAdminsTab> {
+class _AdministratorsTabState extends State<AdministratorsTab> {
   List<SyncTvUser> _admins = const [];
   String _currentUserId = '';
   int _adminTotal = 0;
@@ -9482,80 +9482,80 @@ const Map<String, String> _oauth2ProviderTypeLabels = {
 };
 
 const List<String> _knownPermissions = [
-  'chat',
-  'create_media_resource',
-  'view_media_resources',
-  'view_member_list',
+  'send_chat_messages',
+  'manage_own_media',
+  'view_media',
+  'view_members',
   'view_chat_history',
   'use_webrtc',
-  'delete_media_resource_any',
-  'reorder_media_resources',
-  'clear_media_resources',
-  'live_control',
-  'play_control',
-  'change_current_media',
-  'change_playback_rate',
-  'approve_member',
-  'kick_member',
-  'set_member_permissions',
-  'add_member',
-  'set_room_settings',
-  'delete_chat',
+  'delete_media',
+  'reorder_media',
+  'clear_media',
+  'manage_live_streams',
+  'control_playback_state',
+  'navigate_playback',
+  'review_join_requests',
+  'remove_members',
+  'manage_member_permissions',
+  'add_members',
+  'manage_room_settings',
+  'delete_chat_messages',
   'delete_room',
+  'view_playback_history',
 ];
 
 const List<String> _guestPermissions = [
-  'view_member_list',
+  'view_members',
   'view_chat_history',
   'use_webrtc',
 ];
 
 String _permissionLabel(AppLocalizations l10n, String permission) =>
     switch (permission) {
-      'chat' => l10n.sendChat,
-      'create_media_resource' => l10n.addMedia,
-      'view_media_resources' => l10n.viewMedia,
-      'view_member_list' => l10n.viewMembers,
+      'send_chat_messages' => l10n.sendChat,
+      'manage_own_media' => l10n.roomPermissionManageOwnMedia,
+      'view_media' => l10n.viewMedia,
+      'view_members' => l10n.viewMembers,
       'view_chat_history' => l10n.viewChatHistory,
       'use_webrtc' => l10n.useWebRtc,
-      'delete_media_resource_any' => l10n.deleteAnyMedia,
-      'reorder_media_resources' => l10n.reorderPlaylist,
-      'clear_media_resources' => l10n.clearPlaylist,
-      'live_control' => l10n.liveControl,
-      'play_control' => l10n.playbackControl,
-      'change_current_media' => l10n.changeCurrentMedia,
-      'change_playback_rate' => l10n.changePlaybackRate,
-      'approve_member' => l10n.approveMember,
-      'kick_member' => l10n.kickMember,
-      'set_member_permissions' => l10n.setMemberPermissions,
-      'add_member' => l10n.addMember,
-      'set_room_settings' => l10n.changeRoomSettings,
-      'delete_chat' => l10n.deleteChat,
+      'delete_media' => l10n.deleteMedia,
+      'reorder_media' => l10n.roomPermissionReorderMedia,
+      'clear_media' => l10n.roomPermissionClearMedia,
+      'manage_live_streams' => l10n.roomPermissionManageLiveStreams,
+      'control_playback_state' => l10n.playbackControl,
+      'navigate_playback' => l10n.roomPermissionNavigatePlayback,
+      'review_join_requests' => l10n.roomPermissionReviewJoinRequests,
+      'remove_members' => l10n.roomPermissionRemoveMembers,
+      'manage_member_permissions' => l10n.roomPermissionManageMemberPermissions,
+      'add_members' => l10n.roomPermissionAddMembers,
+      'manage_room_settings' => l10n.roomPermissionManageRoomSettings,
+      'delete_chat_messages' => l10n.roomPermissionDeleteChatMessages,
       'delete_room' => l10n.deleteRoom,
+      'view_playback_history' => l10n.viewPlaybackHistory,
       _ => permission,
     };
 
 const Map<String, int> _runtimePermissionBits = {
-  'chat': 1 << 0,
-  'create_media_resource': 1 << 1,
-  'view_media_resources': 1 << 2,
-  'view_member_list': 1 << 3,
-  'view_chat_history': 1 << 4,
-  'use_webrtc': 1 << 5,
-  'delete_media_resource_any': 1 << 6,
-  'reorder_media_resources': 1 << 7,
-  'clear_media_resources': 1 << 8,
-  'live_control': 1 << 9,
-  'play_control': 1 << 10,
-  'change_current_media': 1 << 11,
-  'change_playback_rate': 1 << 12,
-  'approve_member': 1 << 13,
-  'kick_member': 1 << 14,
-  'set_member_permissions': 1 << 15,
-  'add_member': 1 << 16,
-  'set_room_settings': 1 << 17,
-  'delete_chat': 1 << 18,
-  'delete_room': 1 << 19,
+  'send_chat_messages': RoomEffectivePermissions.sendChatMessages,
+  'manage_own_media': RoomEffectivePermissions.manageOwnMedia,
+  'view_media': RoomEffectivePermissions.viewMedia,
+  'view_members': RoomEffectivePermissions.viewMembers,
+  'view_chat_history': RoomEffectivePermissions.viewChatHistory,
+  'use_webrtc': RoomEffectivePermissions.useWebRTC,
+  'delete_media': RoomEffectivePermissions.deleteMedia,
+  'reorder_media': RoomEffectivePermissions.reorderMedia,
+  'clear_media': RoomEffectivePermissions.clearMedia,
+  'manage_live_streams': RoomEffectivePermissions.manageLiveStreams,
+  'control_playback_state': RoomEffectivePermissions.controlPlaybackState,
+  'navigate_playback': RoomEffectivePermissions.navigatePlayback,
+  'review_join_requests': RoomEffectivePermissions.reviewJoinRequests,
+  'remove_members': RoomEffectivePermissions.removeMembers,
+  'manage_member_permissions': RoomEffectivePermissions.manageMemberPermissions,
+  'add_members': RoomEffectivePermissions.addMembers,
+  'manage_room_settings': RoomEffectivePermissions.manageRoomSettings,
+  'delete_chat_messages': RoomEffectivePermissions.deleteChatMessages,
+  'delete_room': RoomEffectivePermissions.deleteRoom,
+  'view_playback_history': RoomEffectivePermissions.viewPlaybackHistory,
 };
 
 _SettingDescriptor _settingDescriptor(
@@ -9822,6 +9822,22 @@ _SettingDescriptor _settingDescriptor(
       title: l10n.chatRetentionDays,
       description: l10n.chatRetentionDaysDescription,
       icon: Icons.history_toggle_off_rounded,
+      kind: _SettingEditorKind.number,
+    ),
+    'playbackHistory.retentionDays': _SettingDescriptor(
+      group: 'playbackHistory',
+      key: 'retentionDays',
+      title: l10n.playbackHistoryRetentionDays,
+      description: l10n.playbackHistoryRetentionDaysDescription,
+      icon: Icons.history_toggle_off_rounded,
+      kind: _SettingEditorKind.number,
+    ),
+    'playbackHistory.maxEntriesPerRoom': _SettingDescriptor(
+      group: 'playbackHistory',
+      key: 'maxEntriesPerRoom',
+      title: l10n.playbackHistoryMaxEntries,
+      description: l10n.playbackHistoryMaxEntriesDescription,
+      icon: Icons.format_list_numbered_rounded,
       kind: _SettingEditorKind.number,
     ),
     'cors.allowedOrigins': _SettingDescriptor(

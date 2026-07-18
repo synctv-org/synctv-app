@@ -10,10 +10,10 @@ extension AppLocalizationsContext on BuildContext {
 
 extension RoomPermissionLocalizations on AppLocalizations {
   String roomMemberPermissionLabel(int permission) => switch (permission) {
-    RoomMemberPermissions.chat => sendChatAndDanmaku,
-    RoomMemberPermissions.createMediaResource => addMedia,
-    RoomMemberPermissions.viewMediaResources => viewMediaList,
-    RoomMemberPermissions.viewMemberList => viewMemberList,
+    RoomMemberPermissions.sendChatMessages => sendChatAndDanmaku,
+    RoomMemberPermissions.manageOwnMedia => addMedia,
+    RoomMemberPermissions.viewMedia => viewMediaList,
+    RoomMemberPermissions.viewMembers => viewMemberList,
     RoomMemberPermissions.viewChatHistory => viewChatHistory,
     RoomMemberPermissions.useWebRTC => webrtcCalls,
     _ => permission.toString(),

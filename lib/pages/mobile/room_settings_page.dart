@@ -12,6 +12,7 @@ import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/pages/mobile/admin_settings_page.dart';
 import 'package:synctv_app/services/realtime_event_log_preferences.dart';
 import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
@@ -26,6 +27,7 @@ import 'package:synctv_app/widgets/add_media_dialog.dart';
 import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/widgets/playback_sync_settings_fields.dart';
+import 'package:synctv_app/widgets/playback_history_list.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 
 const String _settingsObserveId = 'manage_room_settings';
@@ -33,11 +35,13 @@ const String _membersObserveId = 'manage_room_member_events';
 const String _membersOnlineCountObserveId = 'manage_member_online_count';
 const String _mediaObserveIdPrefix = 'manage_playlist_items';
 const String _chatObserveId = 'manage_chat_events';
+const String _playbackHistoryObserveId = 'manage_playback_history';
 const Set<String> _managementObserveIds = {
   _settingsObserveId,
   _membersObserveId,
   _membersOnlineCountObserveId,
   _chatObserveId,
+  _playbackHistoryObserveId,
 };
 
 const Set<String> _mediaSourcesWithProviderInstances = {
@@ -143,6 +147,8 @@ class RoomSettingsPage extends StatefulWidget {
   final String currentUserId;
   final SyncTvRoomSettings currentSettings;
   final RoomRealtimeSession realtime;
+  final bool canViewPlaybackHistory;
+  final bool canNavigatePlayback;
 
   const RoomSettingsPage({
     super.key,
@@ -152,6 +158,8 @@ class RoomSettingsPage extends StatefulWidget {
     this.currentUserId = '',
     required this.currentSettings,
     required this.realtime,
+    this.canViewPlaybackHistory = false,
+    this.canNavigatePlayback = false,
   });
 
   @override
@@ -160,7 +168,7 @@ class RoomSettingsPage extends StatefulWidget {
 
 class _RoomSettingsPageState extends State<RoomSettingsPage>
     with SingleTickerProviderStateMixin {
-  static const int _sectionCount = 11;
+  int get _sectionCount => widget.canViewPlaybackHistory ? 12 : 11;
   late final TabController _tabController;
   late final TextEditingController _passwordController;
   late final TextEditingController _maxMembersController;
@@ -176,6 +184,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   final List<RoomJoinReviewInfo> _reviews = [];
   final List<AdminRoomMember> _members = [];
   final List<RoomChatMessageInfo> _chatMessages = [];
+  List<client.PlaybackHistoryEntry> _playbackHistory = const [];
+  String _playbackHistoryCursorId = '';
+  String _playbackHistoryVersion = '';
+  bool _playbackHistoryLoading = false;
+  String _playingHistoryEntryId = '';
   final Map<String, ChatMessageReadReceiptsInfo> _chatReceiptCache = {};
   final List<IceServerInfo> _iceServers = [];
   final List<RealtimeEventLogEntry> _realtimeEvents = [];
@@ -289,6 +302,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _loadMediaLibrary();
     _loadRoomInfo();
     _loadChatHistory();
+    if (widget.canViewPlaybackHistory) _loadPlaybackHistory();
     _loadIceServers();
     _loadCurrentUserIfNeeded();
     _realtimeMessageSubscription = widget.realtime.messages.listen(
@@ -320,6 +334,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
     _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_mediaObserveId));
     _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(_chatObserveId));
+    _sendRealtime(
+      RoomRealtimeCodec.encodeUnobserveResource(_playbackHistoryObserveId),
+    );
     _realtimeMessageSubscription?.cancel();
     _realtimeEventSubscription?.cancel();
     _realtimeReconnectSubscription?.cancel();
@@ -360,6 +377,47 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _startMembersWatch();
     _startMediaWatch();
     _startChatWatch();
+    if (widget.canViewPlaybackHistory) _startPlaybackHistoryWatch();
+  }
+
+  void _startPlaybackHistoryWatch() {
+    _sendRealtime(
+      RoomRealtimeCodec.encodePlaybackHistoryObservation(
+        observeId: _playbackHistoryObserveId,
+        version: _playbackHistoryVersion,
+      ),
+    );
+  }
+
+  Future<void> _loadPlaybackHistory() async {
+    if (_playbackHistoryLoading) return;
+    setState(() => _playbackHistoryLoading = true);
+    try {
+      final page = await SyncTvService.listPlaybackHistory(widget.roomId);
+      if (mounted) {
+        setState(() {
+          _playbackHistory = page.entries;
+          _playbackHistoryCursorId = page.historyCursorId;
+        });
+      }
+    } catch (error) {
+      if (mounted) MessageUtils.showError(context, error.toString());
+    } finally {
+      if (mounted) setState(() => _playbackHistoryLoading = false);
+    }
+  }
+
+  Future<void> _playHistoryEntry(String entryId) async {
+    if (_playingHistoryEntryId.isNotEmpty) return;
+    setState(() => _playingHistoryEntryId = entryId);
+    try {
+      await SyncTvService.playHistoryEntry(widget.roomId, entryId);
+      await _loadPlaybackHistory();
+    } catch (error) {
+      if (mounted) MessageUtils.showError(context, error.toString());
+    } finally {
+      if (mounted) setState(() => _playingHistoryEntryId = '');
+    }
   }
 
   Future<void> _loadCurrentUserIfNeeded() async {
@@ -597,6 +655,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         break;
       case _chatObserveId:
         _handleRealtimeChatMessage(message);
+        break;
+      case _playbackHistoryObserveId:
+        if (message.kind == RoomRealtimeMessageKind.playbackHistory &&
+            message.playbackHistory != null) {
+          setState(() {
+            _playbackHistory = message.playbackHistory!.entries;
+            _playbackHistoryCursorId = message.playbackHistory!.historyCursorId;
+            _playbackHistoryVersion = message.resourceVersion;
+          });
+        } else if (message.kind == RoomRealtimeMessageKind.checkStatus &&
+            message.resourceEvent) {
+          _loadPlaybackHistory();
+        }
         break;
     }
   }
@@ -1488,6 +1559,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       icon: Icons.forum_rounded,
       builder: _buildChatHistoryTab,
     ),
+    if (widget.canViewPlaybackHistory)
+      _RoomSettingsSection(
+        label: context.l10n.playbackHistory,
+        icon: Icons.history_rounded,
+        builder: _buildPlaybackHistoryTab,
+      ),
     _RoomSettingsSection(
       label: context.l10n.reports,
       icon: Icons.report_gmailerrorred_rounded,
@@ -1509,6 +1586,27 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       builder: _buildReviewsTab,
     ),
   ];
+
+  Widget _buildPlaybackHistoryTab(ThemeData theme, bool isDark) {
+    if (_playbackHistoryLoading && _playbackHistory.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_playbackHistory.isEmpty) {
+      return Center(child: Text(context.l10n.playbackHistoryEmpty));
+    }
+    return AppRefreshIndicator(
+      onRefresh: _loadPlaybackHistory,
+      child: PlaybackHistoryList(
+        entries: _playbackHistory,
+        historyCursorId: _playbackHistoryCursorId,
+        unknownSourceLabel: context.l10n.unknownVideo,
+        playTooltip: context.l10n.playHistoryEntry,
+        playingEntryId: _playingHistoryEntryId,
+        canPlay: widget.canNavigatePlayback,
+        onPlay: _playHistoryEntry,
+      ),
+    );
+  }
 
   Map<String, String> get _mediaSourceLabels => {
     '': context.l10n.allSources,
@@ -3700,8 +3798,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildPermissionSwitch(
               context.l10n.sendChatAndDanmaku,
               _memberPermissions,
-              RoomMemberPermissions.chat,
-              (v) => _setMemberPermission(RoomMemberPermissions.chat, v),
+              RoomMemberPermissions.sendChatMessages,
+              (v) => _setMemberPermission(
+                RoomMemberPermissions.sendChatMessages,
+                v,
+              ),
               theme,
               isDark,
             ),
@@ -3709,11 +3810,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildPermissionSwitch(
               context.l10n.addMedia,
               _memberPermissions,
-              RoomMemberPermissions.createMediaResource,
-              (v) => _setMemberPermission(
-                RoomMemberPermissions.createMediaResource,
-                v,
-              ),
+              RoomMemberPermissions.manageOwnMedia,
+              (v) =>
+                  _setMemberPermission(RoomMemberPermissions.manageOwnMedia, v),
               theme,
               isDark,
             ),
@@ -3721,11 +3820,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildPermissionSwitch(
               context.l10n.viewMediaList,
               _memberPermissions,
-              RoomMemberPermissions.viewMediaResources,
-              (v) => _setMemberPermission(
-                RoomMemberPermissions.viewMediaResources,
-                v,
-              ),
+              RoomMemberPermissions.viewMedia,
+              (v) => _setMemberPermission(RoomMemberPermissions.viewMedia, v),
               theme,
               isDark,
             ),
@@ -3733,9 +3829,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildPermissionSwitch(
               context.l10n.viewMemberList,
               _memberPermissions,
-              RoomMemberPermissions.viewMemberList,
-              (v) =>
-                  _setMemberPermission(RoomMemberPermissions.viewMemberList, v),
+              RoomMemberPermissions.viewMembers,
+              (v) => _setMemberPermission(RoomMemberPermissions.viewMembers, v),
               theme,
               isDark,
             ),
@@ -3769,9 +3864,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             _buildPermissionSwitch(
               context.l10n.viewMemberList,
               _guestPermissions,
-              RoomGuestPermissions.viewMemberList,
-              (v) =>
-                  _setGuestPermission(RoomGuestPermissions.viewMemberList, v),
+              RoomGuestPermissions.viewMembers,
+              (v) => _setGuestPermission(RoomGuestPermissions.viewMembers, v),
               theme,
               isDark,
             ),
@@ -6811,7 +6905,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         backgroundColor: isDark
             ? const Color(0xFF121214)
             : const Color(0xFFF6F7FB),
-        appBar: AppAppBar(
+        appBar: AppPageBar(
           title: Text(
             widget.roomName,
             style: const TextStyle(fontWeight: FontWeight.bold),

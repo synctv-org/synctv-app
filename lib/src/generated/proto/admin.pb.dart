@@ -509,6 +509,7 @@ class RuntimeSettings extends $pb.GeneratedMessage {
     ChatSettings? chat,
     CorsSettings? cors,
     ServerSettings? server,
+    PlaybackHistorySettings? playbackHistory,
   }) {
     final result = create();
     if (roomDefaults != null) result.roomDefaults = roomDefaults;
@@ -523,6 +524,7 @@ class RuntimeSettings extends $pb.GeneratedMessage {
     if (chat != null) result.chat = chat;
     if (cors != null) result.cors = cors;
     if (server != null) result.server = server;
+    if (playbackHistory != null) result.playbackHistory = playbackHistory;
     return result;
   }
 
@@ -563,6 +565,8 @@ class RuntimeSettings extends $pb.GeneratedMessage {
         subBuilder: CorsSettings.create)
     ..aOM<ServerSettings>(12, _omitFieldNames ? '' : 'server',
         subBuilder: ServerSettings.create)
+    ..aOM<PlaybackHistorySettings>(13, _omitFieldNames ? '' : 'playbackHistory',
+        subBuilder: PlaybackHistorySettings.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -715,6 +719,17 @@ class RuntimeSettings extends $pb.GeneratedMessage {
   void clearServer() => $_clearField(12);
   @$pb.TagNumber(12)
   ServerSettings ensureServer() => $_ensure(11);
+
+  @$pb.TagNumber(13)
+  PlaybackHistorySettings get playbackHistory => $_getN(12);
+  @$pb.TagNumber(13)
+  set playbackHistory(PlaybackHistorySettings value) => $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasPlaybackHistory() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearPlaybackHistory() => $_clearField(13);
+  @$pb.TagNumber(13)
+  PlaybackHistorySettings ensurePlaybackHistory() => $_ensure(12);
 }
 
 class ServerSettings extends $pb.GeneratedMessage {
@@ -2480,6 +2495,74 @@ class ChatSettings extends $pb.GeneratedMessage {
   void clearMessageRetentionDays() => $_clearField(3);
 }
 
+class PlaybackHistorySettings extends $pb.GeneratedMessage {
+  factory PlaybackHistorySettings({
+    $core.int? retentionDays,
+    $fixnum.Int64? maxEntriesPerRoom,
+  }) {
+    final result = create();
+    if (retentionDays != null) result.retentionDays = retentionDays;
+    if (maxEntriesPerRoom != null) result.maxEntriesPerRoom = maxEntriesPerRoom;
+    return result;
+  }
+
+  PlaybackHistorySettings._();
+
+  factory PlaybackHistorySettings.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlaybackHistorySettings.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlaybackHistorySettings',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'retentionDays',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aInt64(2, _omitFieldNames ? '' : 'maxEntriesPerRoom')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackHistorySettings clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackHistorySettings copyWith(
+          void Function(PlaybackHistorySettings) updates) =>
+      super.copyWith((message) => updates(message as PlaybackHistorySettings))
+          as PlaybackHistorySettings;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlaybackHistorySettings create() => PlaybackHistorySettings._();
+  @$core.override
+  PlaybackHistorySettings createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlaybackHistorySettings getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlaybackHistorySettings>(create);
+  static PlaybackHistorySettings? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get retentionDays => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set retentionDays($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRetentionDays() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRetentionDays() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get maxEntriesPerRoom => $_getI64(1);
+  @$pb.TagNumber(2)
+  set maxEntriesPerRoom($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMaxEntriesPerRoom() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMaxEntriesPerRoom() => $_clearField(2);
+}
+
 class CorsSettings extends $pb.GeneratedMessage {
   factory CorsSettings({
     $core.Iterable<$core.String>? allowedOrigins,
@@ -2615,6 +2698,7 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
     ChatSettingsPatch? chat,
     CorsSettingsPatch? cors,
     ServerSettingsPatch? server,
+    PlaybackHistorySettingsPatch? playbackHistory,
   }) {
     final result = create();
     if (roomDefaults != null) result.roomDefaults = roomDefaults;
@@ -2629,6 +2713,7 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
     if (chat != null) result.chat = chat;
     if (cors != null) result.cors = cors;
     if (server != null) result.server = server;
+    if (playbackHistory != null) result.playbackHistory = playbackHistory;
     return result;
   }
 
@@ -2669,6 +2754,9 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
         subBuilder: CorsSettingsPatch.create)
     ..aOM<ServerSettingsPatch>(12, _omitFieldNames ? '' : 'server',
         subBuilder: ServerSettingsPatch.create)
+    ..aOM<PlaybackHistorySettingsPatch>(
+        13, _omitFieldNames ? '' : 'playbackHistory',
+        subBuilder: PlaybackHistorySettingsPatch.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2821,6 +2909,18 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
   void clearServer() => $_clearField(12);
   @$pb.TagNumber(12)
   ServerSettingsPatch ensureServer() => $_ensure(11);
+
+  @$pb.TagNumber(13)
+  PlaybackHistorySettingsPatch get playbackHistory => $_getN(12);
+  @$pb.TagNumber(13)
+  set playbackHistory(PlaybackHistorySettingsPatch value) =>
+      $_setField(13, value);
+  @$pb.TagNumber(13)
+  $core.bool hasPlaybackHistory() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearPlaybackHistory() => $_clearField(13);
+  @$pb.TagNumber(13)
+  PlaybackHistorySettingsPatch ensurePlaybackHistory() => $_ensure(12);
 }
 
 class ServerSettingsPatch extends $pb.GeneratedMessage {
@@ -3735,6 +3835,76 @@ class ChatSettingsPatch extends $pb.GeneratedMessage {
   $core.bool hasMessageRetentionDays() => $_has(2);
   @$pb.TagNumber(3)
   void clearMessageRetentionDays() => $_clearField(3);
+}
+
+class PlaybackHistorySettingsPatch extends $pb.GeneratedMessage {
+  factory PlaybackHistorySettingsPatch({
+    $core.int? retentionDays,
+    $fixnum.Int64? maxEntriesPerRoom,
+  }) {
+    final result = create();
+    if (retentionDays != null) result.retentionDays = retentionDays;
+    if (maxEntriesPerRoom != null) result.maxEntriesPerRoom = maxEntriesPerRoom;
+    return result;
+  }
+
+  PlaybackHistorySettingsPatch._();
+
+  factory PlaybackHistorySettingsPatch.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlaybackHistorySettingsPatch.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlaybackHistorySettingsPatch',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'retentionDays',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aInt64(2, _omitFieldNames ? '' : 'maxEntriesPerRoom')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackHistorySettingsPatch clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackHistorySettingsPatch copyWith(
+          void Function(PlaybackHistorySettingsPatch) updates) =>
+      super.copyWith(
+              (message) => updates(message as PlaybackHistorySettingsPatch))
+          as PlaybackHistorySettingsPatch;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlaybackHistorySettingsPatch create() =>
+      PlaybackHistorySettingsPatch._();
+  @$core.override
+  PlaybackHistorySettingsPatch createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlaybackHistorySettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlaybackHistorySettingsPatch>(create);
+  static PlaybackHistorySettingsPatch? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get retentionDays => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set retentionDays($core.int value) => $_setUnsignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRetentionDays() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRetentionDays() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get maxEntriesPerRoom => $_getI64(1);
+  @$pb.TagNumber(2)
+  set maxEntriesPerRoom($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMaxEntriesPerRoom() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMaxEntriesPerRoom() => $_clearField(2);
 }
 
 class CorsSettingsPatch extends $pb.GeneratedMessage {

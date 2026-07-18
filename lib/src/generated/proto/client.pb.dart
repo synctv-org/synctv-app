@@ -3329,16 +3329,130 @@ class ChatMemberJoinedMetadata extends $pb.GeneratedMessage {
   void clearRole() => $_clearField(5);
 }
 
-enum ChatMetadata_Metadata { user, memberJoined, notSet }
+class ChatPlaybackChangedMetadata extends $pb.GeneratedMessage {
+  factory ChatPlaybackChangedMetadata({
+    ChatPlaybackMetadata? from,
+    ChatPlaybackMetadata? to,
+    PlaybackChangeReason? reason,
+    $core.String? actorUserId,
+    $core.String? actorUsername,
+  }) {
+    final result = create();
+    if (from != null) result.from = from;
+    if (to != null) result.to = to;
+    if (reason != null) result.reason = reason;
+    if (actorUserId != null) result.actorUserId = actorUserId;
+    if (actorUsername != null) result.actorUsername = actorUsername;
+    return result;
+  }
+
+  ChatPlaybackChangedMetadata._();
+
+  factory ChatPlaybackChangedMetadata.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ChatPlaybackChangedMetadata.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ChatPlaybackChangedMetadata',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<ChatPlaybackMetadata>(1, _omitFieldNames ? '' : 'from',
+        subBuilder: ChatPlaybackMetadata.create)
+    ..aOM<ChatPlaybackMetadata>(2, _omitFieldNames ? '' : 'to',
+        subBuilder: ChatPlaybackMetadata.create)
+    ..aE<PlaybackChangeReason>(3, _omitFieldNames ? '' : 'reason',
+        enumValues: PlaybackChangeReason.values)
+    ..aOS(4, _omitFieldNames ? '' : 'actorUserId')
+    ..aOS(5, _omitFieldNames ? '' : 'actorUsername')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatPlaybackChangedMetadata clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ChatPlaybackChangedMetadata copyWith(
+          void Function(ChatPlaybackChangedMetadata) updates) =>
+      super.copyWith(
+              (message) => updates(message as ChatPlaybackChangedMetadata))
+          as ChatPlaybackChangedMetadata;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ChatPlaybackChangedMetadata create() =>
+      ChatPlaybackChangedMetadata._();
+  @$core.override
+  ChatPlaybackChangedMetadata createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ChatPlaybackChangedMetadata getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ChatPlaybackChangedMetadata>(create);
+  static ChatPlaybackChangedMetadata? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ChatPlaybackMetadata get from => $_getN(0);
+  @$pb.TagNumber(1)
+  set from(ChatPlaybackMetadata value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFrom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFrom() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ChatPlaybackMetadata ensureFrom() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  ChatPlaybackMetadata get to => $_getN(1);
+  @$pb.TagNumber(2)
+  set to(ChatPlaybackMetadata value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTo() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTo() => $_clearField(2);
+  @$pb.TagNumber(2)
+  ChatPlaybackMetadata ensureTo() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  PlaybackChangeReason get reason => $_getN(2);
+  @$pb.TagNumber(3)
+  set reason(PlaybackChangeReason value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasReason() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearReason() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get actorUserId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set actorUserId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasActorUserId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearActorUserId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get actorUsername => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set actorUsername($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasActorUsername() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearActorUsername() => $_clearField(5);
+}
+
+enum ChatMetadata_Metadata { user, memberJoined, playbackChanged, notSet }
 
 class ChatMetadata extends $pb.GeneratedMessage {
   factory ChatMetadata({
     ChatUserMetadata? user,
     ChatMemberJoinedMetadata? memberJoined,
+    ChatPlaybackChangedMetadata? playbackChanged,
   }) {
     final result = create();
     if (user != null) result.user = user;
     if (memberJoined != null) result.memberJoined = memberJoined;
+    if (playbackChanged != null) result.playbackChanged = playbackChanged;
     return result;
   }
 
@@ -3355,17 +3469,21 @@ class ChatMetadata extends $pb.GeneratedMessage {
       _ChatMetadata_MetadataByTag = {
     1: ChatMetadata_Metadata.user,
     2: ChatMetadata_Metadata.memberJoined,
+    3: ChatMetadata_Metadata.playbackChanged,
     0: ChatMetadata_Metadata.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ChatMetadata',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2])
+    ..oo(0, [1, 2, 3])
     ..aOM<ChatUserMetadata>(1, _omitFieldNames ? '' : 'user',
         subBuilder: ChatUserMetadata.create)
     ..aOM<ChatMemberJoinedMetadata>(2, _omitFieldNames ? '' : 'memberJoined',
         subBuilder: ChatMemberJoinedMetadata.create)
+    ..aOM<ChatPlaybackChangedMetadata>(
+        3, _omitFieldNames ? '' : 'playbackChanged',
+        subBuilder: ChatPlaybackChangedMetadata.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3389,10 +3507,12 @@ class ChatMetadata extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   ChatMetadata_Metadata whichMetadata() =>
       _ChatMetadata_MetadataByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
   void clearMetadata() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -3416,6 +3536,18 @@ class ChatMetadata extends $pb.GeneratedMessage {
   void clearMemberJoined() => $_clearField(2);
   @$pb.TagNumber(2)
   ChatMemberJoinedMetadata ensureMemberJoined() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  ChatPlaybackChangedMetadata get playbackChanged => $_getN(2);
+  @$pb.TagNumber(3)
+  set playbackChanged(ChatPlaybackChangedMetadata value) =>
+      $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPlaybackChanged() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPlaybackChanged() => $_clearField(3);
+  @$pb.TagNumber(3)
+  ChatPlaybackChangedMetadata ensurePlaybackChanged() => $_ensure(2);
 }
 
 class ContentReportMetadata extends $pb.GeneratedMessage {
@@ -4701,6 +4833,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     ProviderTarget? target,
     $core.String? targetHash,
     $fixnum.Int64? generatedAtMillis,
+    $core.String? historyCursorId,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
@@ -4714,6 +4847,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     if (target != null) result.target = target;
     if (targetHash != null) result.targetHash = targetHash;
     if (generatedAtMillis != null) result.generatedAtMillis = generatedAtMillis;
+    if (historyCursorId != null) result.historyCursorId = historyCursorId;
     return result;
   }
 
@@ -4742,6 +4876,7 @@ class PlaybackState extends $pb.GeneratedMessage {
         subBuilder: ProviderTarget.create)
     ..aOS(10, _omitFieldNames ? '' : 'targetHash')
     ..aInt64(11, _omitFieldNames ? '' : 'generatedAtMillis')
+    ..aOS(12, _omitFieldNames ? '' : 'historyCursorId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4863,6 +4998,15 @@ class PlaybackState extends $pb.GeneratedMessage {
   $core.bool hasGeneratedAtMillis() => $_has(10);
   @$pb.TagNumber(11)
   void clearGeneratedAtMillis() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get historyCursorId => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set historyCursorId($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasHistoryCursorId() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearHistoryCursorId() => $_clearField(12);
 }
 
 class RegisterResponse extends $pb.GeneratedMessage {
@@ -14631,45 +14775,6 @@ class StartPlaybackRequest extends $pb.GeneratedMessage {
   ProviderTarget ensureTarget() => $_ensure(2);
 }
 
-class StartPlaybackResponse extends $pb.GeneratedMessage {
-  factory StartPlaybackResponse() => create();
-
-  StartPlaybackResponse._();
-
-  factory StartPlaybackResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory StartPlaybackResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'StartPlaybackResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  StartPlaybackResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  StartPlaybackResponse copyWith(
-          void Function(StartPlaybackResponse) updates) =>
-      super.copyWith((message) => updates(message as StartPlaybackResponse))
-          as StartPlaybackResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static StartPlaybackResponse create() => StartPlaybackResponse._();
-  @$core.override
-  StartPlaybackResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static StartPlaybackResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<StartPlaybackResponse>(create);
-  static StartPlaybackResponse? _defaultInstance;
-}
-
 /// HTTP API: Stop current playback
 class StopPlaybackRequest extends $pb.GeneratedMessage {
   factory StopPlaybackRequest() => create();
@@ -14709,42 +14814,420 @@ class StopPlaybackRequest extends $pb.GeneratedMessage {
   static StopPlaybackRequest? _defaultInstance;
 }
 
-class StopPlaybackResponse extends $pb.GeneratedMessage {
-  factory StopPlaybackResponse() => create();
+class PlayNextRequest extends $pb.GeneratedMessage {
+  factory PlayNextRequest() => create();
 
-  StopPlaybackResponse._();
+  PlayNextRequest._();
 
-  factory StopPlaybackResponse.fromBuffer($core.List<$core.int> data,
+  factory PlayNextRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory StopPlaybackResponse.fromJson($core.String json,
+  factory PlayNextRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'StopPlaybackResponse',
+      _omitMessageNames ? '' : 'PlayNextRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  StopPlaybackResponse clone() => deepCopy();
+  PlayNextRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  StopPlaybackResponse copyWith(void Function(StopPlaybackResponse) updates) =>
-      super.copyWith((message) => updates(message as StopPlaybackResponse))
-          as StopPlaybackResponse;
+  PlayNextRequest copyWith(void Function(PlayNextRequest) updates) =>
+      super.copyWith((message) => updates(message as PlayNextRequest))
+          as PlayNextRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static StopPlaybackResponse create() => StopPlaybackResponse._();
+  static PlayNextRequest create() => PlayNextRequest._();
   @$core.override
-  StopPlaybackResponse createEmptyInstance() => create();
+  PlayNextRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static StopPlaybackResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<StopPlaybackResponse>(create);
-  static StopPlaybackResponse? _defaultInstance;
+  static PlayNextRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlayNextRequest>(create);
+  static PlayNextRequest? _defaultInstance;
+}
+
+class PlayPreviousRequest extends $pb.GeneratedMessage {
+  factory PlayPreviousRequest() => create();
+
+  PlayPreviousRequest._();
+
+  factory PlayPreviousRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlayPreviousRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlayPreviousRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlayPreviousRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlayPreviousRequest copyWith(void Function(PlayPreviousRequest) updates) =>
+      super.copyWith((message) => updates(message as PlayPreviousRequest))
+          as PlayPreviousRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlayPreviousRequest create() => PlayPreviousRequest._();
+  @$core.override
+  PlayPreviousRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlayPreviousRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlayPreviousRequest>(create);
+  static PlayPreviousRequest? _defaultInstance;
+}
+
+class PlaybackHistoryEntry extends $pb.GeneratedMessage {
+  factory PlaybackHistoryEntry({
+    $core.String? id,
+    $core.String? mediaId,
+    $core.String? playlistId,
+    ProviderTarget? target,
+    $core.double? positionSeconds,
+    $core.String? selectedByUserId,
+    $fixnum.Int64? createdAt,
+    $fixnum.Int64? updatedAt,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (mediaId != null) result.mediaId = mediaId;
+    if (playlistId != null) result.playlistId = playlistId;
+    if (target != null) result.target = target;
+    if (positionSeconds != null) result.positionSeconds = positionSeconds;
+    if (selectedByUserId != null) result.selectedByUserId = selectedByUserId;
+    if (createdAt != null) result.createdAt = createdAt;
+    if (updatedAt != null) result.updatedAt = updatedAt;
+    return result;
+  }
+
+  PlaybackHistoryEntry._();
+
+  factory PlaybackHistoryEntry.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlaybackHistoryEntry.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlaybackHistoryEntry',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'mediaId')
+    ..aOS(3, _omitFieldNames ? '' : 'playlistId')
+    ..aOM<ProviderTarget>(4, _omitFieldNames ? '' : 'target',
+        subBuilder: ProviderTarget.create)
+    ..aD(5, _omitFieldNames ? '' : 'positionSeconds')
+    ..aOS(6, _omitFieldNames ? '' : 'selectedByUserId')
+    ..aInt64(7, _omitFieldNames ? '' : 'createdAt')
+    ..aInt64(8, _omitFieldNames ? '' : 'updatedAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackHistoryEntry clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlaybackHistoryEntry copyWith(void Function(PlaybackHistoryEntry) updates) =>
+      super.copyWith((message) => updates(message as PlaybackHistoryEntry))
+          as PlaybackHistoryEntry;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlaybackHistoryEntry create() => PlaybackHistoryEntry._();
+  @$core.override
+  PlaybackHistoryEntry createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlaybackHistoryEntry getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlaybackHistoryEntry>(create);
+  static PlaybackHistoryEntry? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get mediaId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set mediaId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMediaId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMediaId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get playlistId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set playlistId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasPlaylistId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearPlaylistId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  ProviderTarget get target => $_getN(3);
+  @$pb.TagNumber(4)
+  set target(ProviderTarget value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasTarget() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearTarget() => $_clearField(4);
+  @$pb.TagNumber(4)
+  ProviderTarget ensureTarget() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  $core.double get positionSeconds => $_getN(4);
+  @$pb.TagNumber(5)
+  set positionSeconds($core.double value) => $_setDouble(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasPositionSeconds() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearPositionSeconds() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get selectedByUserId => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set selectedByUserId($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSelectedByUserId() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSelectedByUserId() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get createdAt => $_getI64(6);
+  @$pb.TagNumber(7)
+  set createdAt($fixnum.Int64 value) => $_setInt64(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasCreatedAt() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearCreatedAt() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get updatedAt => $_getI64(7);
+  @$pb.TagNumber(8)
+  set updatedAt($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasUpdatedAt() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearUpdatedAt() => $_clearField(8);
+}
+
+class ListPlaybackHistoryRequest extends $pb.GeneratedMessage {
+  factory ListPlaybackHistoryRequest({
+    $core.String? beforeEntryId,
+    $core.int? limit,
+  }) {
+    final result = create();
+    if (beforeEntryId != null) result.beforeEntryId = beforeEntryId;
+    if (limit != null) result.limit = limit;
+    return result;
+  }
+
+  ListPlaybackHistoryRequest._();
+
+  factory ListPlaybackHistoryRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListPlaybackHistoryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListPlaybackHistoryRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'beforeEntryId')
+    ..aI(2, _omitFieldNames ? '' : 'limit')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListPlaybackHistoryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListPlaybackHistoryRequest copyWith(
+          void Function(ListPlaybackHistoryRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as ListPlaybackHistoryRequest))
+          as ListPlaybackHistoryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListPlaybackHistoryRequest create() => ListPlaybackHistoryRequest._();
+  @$core.override
+  ListPlaybackHistoryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListPlaybackHistoryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListPlaybackHistoryRequest>(create);
+  static ListPlaybackHistoryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get beforeEntryId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set beforeEntryId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasBeforeEntryId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBeforeEntryId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get limit => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set limit($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLimit() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLimit() => $_clearField(2);
+}
+
+class ListPlaybackHistoryResponse extends $pb.GeneratedMessage {
+  factory ListPlaybackHistoryResponse({
+    $core.Iterable<PlaybackHistoryEntry>? entries,
+    $core.String? historyCursorId,
+    $core.String? nextBeforeEntryId,
+  }) {
+    final result = create();
+    if (entries != null) result.entries.addAll(entries);
+    if (historyCursorId != null) result.historyCursorId = historyCursorId;
+    if (nextBeforeEntryId != null) result.nextBeforeEntryId = nextBeforeEntryId;
+    return result;
+  }
+
+  ListPlaybackHistoryResponse._();
+
+  factory ListPlaybackHistoryResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ListPlaybackHistoryResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ListPlaybackHistoryResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pPM<PlaybackHistoryEntry>(1, _omitFieldNames ? '' : 'entries',
+        subBuilder: PlaybackHistoryEntry.create)
+    ..aOS(2, _omitFieldNames ? '' : 'historyCursorId')
+    ..aOS(3, _omitFieldNames ? '' : 'nextBeforeEntryId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListPlaybackHistoryResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ListPlaybackHistoryResponse copyWith(
+          void Function(ListPlaybackHistoryResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ListPlaybackHistoryResponse))
+          as ListPlaybackHistoryResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ListPlaybackHistoryResponse create() =>
+      ListPlaybackHistoryResponse._();
+  @$core.override
+  ListPlaybackHistoryResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ListPlaybackHistoryResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ListPlaybackHistoryResponse>(create);
+  static ListPlaybackHistoryResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<PlaybackHistoryEntry> get entries => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.String get historyCursorId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set historyCursorId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasHistoryCursorId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearHistoryCursorId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get nextBeforeEntryId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set nextBeforeEntryId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasNextBeforeEntryId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearNextBeforeEntryId() => $_clearField(3);
+}
+
+class PlayHistoryEntryRequest extends $pb.GeneratedMessage {
+  factory PlayHistoryEntryRequest({
+    $core.String? entryId,
+  }) {
+    final result = create();
+    if (entryId != null) result.entryId = entryId;
+    return result;
+  }
+
+  PlayHistoryEntryRequest._();
+
+  factory PlayHistoryEntryRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PlayHistoryEntryRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PlayHistoryEntryRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'entryId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlayHistoryEntryRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PlayHistoryEntryRequest copyWith(
+          void Function(PlayHistoryEntryRequest) updates) =>
+      super.copyWith((message) => updates(message as PlayHistoryEntryRequest))
+          as PlayHistoryEntryRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlayHistoryEntryRequest create() => PlayHistoryEntryRequest._();
+  @$core.override
+  PlayHistoryEntryRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PlayHistoryEntryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PlayHistoryEntryRequest>(create);
+  static PlayHistoryEntryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get entryId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set entryId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEntryId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEntryId() => $_clearField(1);
 }
 
 /// Realtime API: update the current playback source. Empty media_id, playlist_id, and target clears playback.
@@ -23326,6 +23809,7 @@ enum ObserveResource_Resource {
   onlineEvent,
   selfRoomMember,
   chatPinEvents,
+  playbackHistory,
   notSet
 }
 
@@ -23343,6 +23827,7 @@ class ObserveResource extends $pb.GeneratedMessage {
     ObserveOnlineEvent? onlineEvent,
     ObserveSelfRoomMember? selfRoomMember,
     ObserveChatPinEvents? chatPinEvents,
+    ObservePlaybackHistory? playbackHistory,
   }) {
     final result = create();
     if (observeId != null) result.observeId = observeId;
@@ -23357,6 +23842,7 @@ class ObserveResource extends $pb.GeneratedMessage {
     if (onlineEvent != null) result.onlineEvent = onlineEvent;
     if (selfRoomMember != null) result.selfRoomMember = selfRoomMember;
     if (chatPinEvents != null) result.chatPinEvents = chatPinEvents;
+    if (playbackHistory != null) result.playbackHistory = playbackHistory;
     return result;
   }
 
@@ -23381,13 +23867,14 @@ class ObserveResource extends $pb.GeneratedMessage {
     11: ObserveResource_Resource.onlineEvent,
     12: ObserveResource_Resource.selfRoomMember,
     13: ObserveResource_Resource.chatPinEvents,
+    14: ObserveResource_Resource.playbackHistory,
     0: ObserveResource_Resource.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ObserveResource',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
+    ..oo(0, [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
     ..aOS(1, _omitFieldNames ? '' : 'observeId')
     ..aE<ResourceDeliveryMode>(3, _omitFieldNames ? '' : 'deliveryMode',
         enumValues: ResourceDeliveryMode.values)
@@ -23411,6 +23898,8 @@ class ObserveResource extends $pb.GeneratedMessage {
         subBuilder: ObserveSelfRoomMember.create)
     ..aOM<ObserveChatPinEvents>(13, _omitFieldNames ? '' : 'chatPinEvents',
         subBuilder: ObserveChatPinEvents.create)
+    ..aOM<ObservePlaybackHistory>(14, _omitFieldNames ? '' : 'playbackHistory',
+        subBuilder: ObservePlaybackHistory.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -23442,6 +23931,7 @@ class ObserveResource extends $pb.GeneratedMessage {
   @$pb.TagNumber(11)
   @$pb.TagNumber(12)
   @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
   ObserveResource_Resource whichResource() =>
       _ObserveResource_ResourceByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(4)
@@ -23454,6 +23944,7 @@ class ObserveResource extends $pb.GeneratedMessage {
   @$pb.TagNumber(11)
   @$pb.TagNumber(12)
   @$pb.TagNumber(13)
+  @$pb.TagNumber(14)
   void clearResource() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -23583,6 +24074,17 @@ class ObserveResource extends $pb.GeneratedMessage {
   void clearChatPinEvents() => $_clearField(13);
   @$pb.TagNumber(13)
   ObserveChatPinEvents ensureChatPinEvents() => $_ensure(11);
+
+  @$pb.TagNumber(14)
+  ObservePlaybackHistory get playbackHistory => $_getN(12);
+  @$pb.TagNumber(14)
+  set playbackHistory(ObservePlaybackHistory value) => $_setField(14, value);
+  @$pb.TagNumber(14)
+  $core.bool hasPlaybackHistory() => $_has(12);
+  @$pb.TagNumber(14)
+  void clearPlaybackHistory() => $_clearField(14);
+  @$pb.TagNumber(14)
+  ObservePlaybackHistory ensurePlaybackHistory() => $_ensure(12);
 }
 
 class UnobserveResource extends $pb.GeneratedMessage {
@@ -23695,6 +24197,77 @@ class ObservePlaybackState extends $pb.GeneratedMessage {
   $core.bool hasEventSequence() => $_has(0);
   @$pb.TagNumber(1)
   void clearEventSequence() => $_clearField(1);
+}
+
+class ObservePlaybackHistory extends $pb.GeneratedMessage {
+  factory ObservePlaybackHistory({
+    ListPlaybackHistoryRequest? request,
+    $fixnum.Int64? afterEventSequence,
+  }) {
+    final result = create();
+    if (request != null) result.request = request;
+    if (afterEventSequence != null)
+      result.afterEventSequence = afterEventSequence;
+    return result;
+  }
+
+  ObservePlaybackHistory._();
+
+  factory ObservePlaybackHistory.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ObservePlaybackHistory.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ObservePlaybackHistory',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<ListPlaybackHistoryRequest>(1, _omitFieldNames ? '' : 'request',
+        subBuilder: ListPlaybackHistoryRequest.create)
+    ..aInt64(2, _omitFieldNames ? '' : 'afterEventSequence')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ObservePlaybackHistory clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ObservePlaybackHistory copyWith(
+          void Function(ObservePlaybackHistory) updates) =>
+      super.copyWith((message) => updates(message as ObservePlaybackHistory))
+          as ObservePlaybackHistory;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ObservePlaybackHistory create() => ObservePlaybackHistory._();
+  @$core.override
+  ObservePlaybackHistory createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ObservePlaybackHistory getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ObservePlaybackHistory>(create);
+  static ObservePlaybackHistory? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ListPlaybackHistoryRequest get request => $_getN(0);
+  @$pb.TagNumber(1)
+  set request(ListPlaybackHistoryRequest value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRequest() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRequest() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ListPlaybackHistoryRequest ensureRequest() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get afterEventSequence => $_getI64(1);
+  @$pb.TagNumber(2)
+  set afterEventSequence($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasAfterEventSequence() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAfterEventSequence() => $_clearField(2);
 }
 
 class ObservePlayback extends $pb.GeneratedMessage {
@@ -24196,7 +24769,8 @@ class ObserveChatEvents extends $pb.GeneratedMessage {
   void clearAfterEventSequence() => $_clearField(1);
 
   /// Empty uses the default user-visible set: USER.
-  /// System message types, such as SYSTEM_MEMBER_JOINED, are included explicitly.
+  /// System message types, such as SYSTEM_MEMBER_JOINED and SYSTEM_PLAYBACK_CHANGED,
+  /// are included explicitly.
   @$pb.TagNumber(2)
   $pb.PbList<ChatMessageType> get includeMessageTypes => $_getList(1);
 }
@@ -25815,6 +26389,7 @@ enum ResourceEvent_Payload {
   webrtcEvent,
   selfRoomMember,
   chatPinEvent,
+  playbackHistory,
   notSet
 }
 
@@ -25834,6 +26409,7 @@ class ResourceEvent extends $pb.GeneratedMessage {
     WebRtcEvent? webrtcEvent,
     $0.RoomMember? selfRoomMember,
     ChatPinEvent? chatPinEvent,
+    ListPlaybackHistoryResponse? playbackHistory,
   }) {
     final result = create();
     if (observeId != null) result.observeId = observeId;
@@ -25850,6 +26426,7 @@ class ResourceEvent extends $pb.GeneratedMessage {
     if (webrtcEvent != null) result.webrtcEvent = webrtcEvent;
     if (selfRoomMember != null) result.selfRoomMember = selfRoomMember;
     if (chatPinEvent != null) result.chatPinEvent = chatPinEvent;
+    if (playbackHistory != null) result.playbackHistory = playbackHistory;
     return result;
   }
 
@@ -25876,13 +26453,14 @@ class ResourceEvent extends $pb.GeneratedMessage {
     13: ResourceEvent_Payload.webrtcEvent,
     14: ResourceEvent_Payload.selfRoomMember,
     15: ResourceEvent_Payload.chatPinEvent,
+    16: ResourceEvent_Payload.playbackHistory,
     0: ResourceEvent_Payload.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ResourceEvent',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15])
+    ..oo(0, [3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16])
     ..aOS(1, _omitFieldNames ? '' : 'observeId')
     ..aOM<ResourceEventOnly>(3, _omitFieldNames ? '' : 'changedOnly',
         subBuilder: ResourceEventOnly.create)
@@ -25910,6 +26488,9 @@ class ResourceEvent extends $pb.GeneratedMessage {
         subBuilder: $0.RoomMember.create)
     ..aOM<ChatPinEvent>(15, _omitFieldNames ? '' : 'chatPinEvent',
         subBuilder: ChatPinEvent.create)
+    ..aOM<ListPlaybackHistoryResponse>(
+        16, _omitFieldNames ? '' : 'playbackHistory',
+        subBuilder: ListPlaybackHistoryResponse.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -25943,6 +26524,7 @@ class ResourceEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(13)
   @$pb.TagNumber(14)
   @$pb.TagNumber(15)
+  @$pb.TagNumber(16)
   ResourceEvent_Payload whichPayload() =>
       _ResourceEvent_PayloadByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(3)
@@ -25957,6 +26539,7 @@ class ResourceEvent extends $pb.GeneratedMessage {
   @$pb.TagNumber(13)
   @$pb.TagNumber(14)
   @$pb.TagNumber(15)
+  @$pb.TagNumber(16)
   void clearPayload() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -26110,6 +26693,18 @@ class ResourceEvent extends $pb.GeneratedMessage {
   void clearChatPinEvent() => $_clearField(15);
   @$pb.TagNumber(15)
   ChatPinEvent ensureChatPinEvent() => $_ensure(13);
+
+  @$pb.TagNumber(16)
+  ListPlaybackHistoryResponse get playbackHistory => $_getN(14);
+  @$pb.TagNumber(16)
+  set playbackHistory(ListPlaybackHistoryResponse value) =>
+      $_setField(16, value);
+  @$pb.TagNumber(16)
+  $core.bool hasPlaybackHistory() => $_has(14);
+  @$pb.TagNumber(16)
+  void clearPlaybackHistory() => $_clearField(16);
+  @$pb.TagNumber(16)
+  ListPlaybackHistoryResponse ensurePlaybackHistory() => $_ensure(14);
 }
 
 class ResourceObserveError extends $pb.GeneratedMessage {
@@ -47040,14 +47635,30 @@ class RoomServiceApi {
   /// Real-time playback commands (play/pause/seek/speed) are sent as
   /// ClientMessage frames over the room realtime stream, either WebSocket or
   /// gRPC MessageStream.
-  $async.Future<StartPlaybackResponse> startPlayback(
+  $async.Future<PlaybackState> startPlayback(
           $pb.ClientContext? ctx, StartPlaybackRequest request) =>
-      _client.invoke<StartPlaybackResponse>(ctx, 'RoomService', 'StartPlayback',
-          request, StartPlaybackResponse());
-  $async.Future<StopPlaybackResponse> stopPlayback(
+      _client.invoke<PlaybackState>(
+          ctx, 'RoomService', 'StartPlayback', request, PlaybackState());
+  $async.Future<PlaybackState> stopPlayback(
           $pb.ClientContext? ctx, StopPlaybackRequest request) =>
-      _client.invoke<StopPlaybackResponse>(
-          ctx, 'RoomService', 'StopPlayback', request, StopPlaybackResponse());
+      _client.invoke<PlaybackState>(
+          ctx, 'RoomService', 'StopPlayback', request, PlaybackState());
+  $async.Future<PlaybackState> playNext(
+          $pb.ClientContext? ctx, PlayNextRequest request) =>
+      _client.invoke<PlaybackState>(
+          ctx, 'RoomService', 'PlayNext', request, PlaybackState());
+  $async.Future<PlaybackState> playPrevious(
+          $pb.ClientContext? ctx, PlayPreviousRequest request) =>
+      _client.invoke<PlaybackState>(
+          ctx, 'RoomService', 'PlayPrevious', request, PlaybackState());
+  $async.Future<ListPlaybackHistoryResponse> listPlaybackHistory(
+          $pb.ClientContext? ctx, ListPlaybackHistoryRequest request) =>
+      _client.invoke<ListPlaybackHistoryResponse>(ctx, 'RoomService',
+          'ListPlaybackHistory', request, ListPlaybackHistoryResponse());
+  $async.Future<PlaybackState> playHistoryEntry(
+          $pb.ClientContext? ctx, PlayHistoryEntryRequest request) =>
+      _client.invoke<PlaybackState>(
+          ctx, 'RoomService', 'PlayHistoryEntry', request, PlaybackState());
   $async.Future<GetPlaybackResponse> getPlayback(
           $pb.ClientContext? ctx, GetPlaybackRequest request) =>
       _client.invoke<GetPlaybackResponse>(

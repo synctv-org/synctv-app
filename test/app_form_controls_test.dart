@@ -1047,11 +1047,15 @@ void main() {
     expect(longPressed, isTrue);
   });
 
-  testWidgets('AppScaffold and AppAppBar wrap page chrome', (tester) async {
+  testWidgets('AppScaffold and AppPageBar wrap page chrome', (tester) async {
     await tester.pumpWidget(
       _app(
         const AppScaffold(
-          appBar: AppAppBar(title: Text('页面'), centerTitle: true, elevation: 0),
+          appBar: AppPageBar(
+            title: Text('页面'),
+            centerTitle: true,
+            elevation: 0,
+          ),
           body: Center(child: Text('内容')),
           backgroundColor: Colors.white,
         ),
@@ -1065,8 +1069,8 @@ void main() {
     expect(find.text('内容'), findsOneWidget);
   });
 
-  testWidgets('AppAppBar supports compact page chrome', (tester) async {
-    const appBar = AppAppBar(
+  testWidgets('AppPageBar supports compact page chrome', (tester) async {
+    const appBar = AppPageBar(
       title: Text('紧凑页面'),
       toolbarHeight: 44,
       avoidMacOsTitleBar: false,

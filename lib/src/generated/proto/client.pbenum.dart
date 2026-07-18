@@ -68,6 +68,43 @@ class TwitchTargetKind extends $pb.ProtobufEnum {
   const TwitchTargetKind._(super.value, super.name);
 }
 
+class PlaybackChangeReason extends $pb.ProtobufEnum {
+  static const PlaybackChangeReason PLAYBACK_CHANGE_REASON_UNSPECIFIED =
+      PlaybackChangeReason._(
+          0, _omitEnumNames ? '' : 'PLAYBACK_CHANGE_REASON_UNSPECIFIED');
+  static const PlaybackChangeReason PLAYBACK_CHANGE_REASON_SELECTED =
+      PlaybackChangeReason._(
+          1, _omitEnumNames ? '' : 'PLAYBACK_CHANGE_REASON_SELECTED');
+  static const PlaybackChangeReason PLAYBACK_CHANGE_REASON_NEXT =
+      PlaybackChangeReason._(
+          2, _omitEnumNames ? '' : 'PLAYBACK_CHANGE_REASON_NEXT');
+  static const PlaybackChangeReason PLAYBACK_CHANGE_REASON_PREVIOUS =
+      PlaybackChangeReason._(
+          3, _omitEnumNames ? '' : 'PLAYBACK_CHANGE_REASON_PREVIOUS');
+  static const PlaybackChangeReason PLAYBACK_CHANGE_REASON_HISTORY_ENTRY =
+      PlaybackChangeReason._(
+          4, _omitEnumNames ? '' : 'PLAYBACK_CHANGE_REASON_HISTORY_ENTRY');
+  static const PlaybackChangeReason PLAYBACK_CHANGE_REASON_AUTO_ADVANCE =
+      PlaybackChangeReason._(
+          5, _omitEnumNames ? '' : 'PLAYBACK_CHANGE_REASON_AUTO_ADVANCE');
+
+  static const $core.List<PlaybackChangeReason> values = <PlaybackChangeReason>[
+    PLAYBACK_CHANGE_REASON_UNSPECIFIED,
+    PLAYBACK_CHANGE_REASON_SELECTED,
+    PLAYBACK_CHANGE_REASON_NEXT,
+    PLAYBACK_CHANGE_REASON_PREVIOUS,
+    PLAYBACK_CHANGE_REASON_HISTORY_ENTRY,
+    PLAYBACK_CHANGE_REASON_AUTO_ADVANCE,
+  ];
+
+  static final $core.List<PlaybackChangeReason?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
+  static PlaybackChangeReason? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackChangeReason._(super.value, super.name);
+}
+
 class ResourceAvailability extends $pb.ProtobufEnum {
   static const ResourceAvailability RESOURCE_AVAILABILITY_UNSPECIFIED =
       ResourceAvailability._(
@@ -804,11 +841,15 @@ class ChatMessageType extends $pb.ProtobufEnum {
   static const ChatMessageType CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED =
       ChatMessageType._(
           1001, _omitEnumNames ? '' : 'CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED');
+  static const ChatMessageType CHAT_MESSAGE_TYPE_SYSTEM_PLAYBACK_CHANGED =
+      ChatMessageType._(1002,
+          _omitEnumNames ? '' : 'CHAT_MESSAGE_TYPE_SYSTEM_PLAYBACK_CHANGED');
 
   static const $core.List<ChatMessageType> values = <ChatMessageType>[
     CHAT_MESSAGE_TYPE_UNSPECIFIED,
     CHAT_MESSAGE_TYPE_USER,
     CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED,
+    CHAT_MESSAGE_TYPE_SYSTEM_PLAYBACK_CHANGED,
   ];
 
   static final $core.Map<$core.int, ChatMessageType> _byValue =

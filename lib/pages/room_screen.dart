@@ -106,6 +106,7 @@ class _RoomScreenState extends State<RoomScreen>
   List<RoomMediaEntry> _mediaEntries = [];
   bool _isLoadingMediaEntries = true;
   bool _isVideoLoading = false;
+  bool _playbackNavigationInFlight = false;
   String? _videoError;
   String? _roomSessionError;
   int _videoInitGeneration = 0;
@@ -171,6 +172,51 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   bool get _isCurrentPlaybackLive => _currentStatus?.entry?.live == true;
+  bool get _isSystemAdmin =>
+      _currentUser?.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
+      _currentUser?.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
+  bool get _isRoomCreator =>
+      _currentUser?.id.isNotEmpty == true &&
+      _currentUser?.id == widget.room.creatorId;
+  bool get _canNavigatePlayback {
+    final member = _selfMember;
+    if (member != null) {
+      return (member.permissions & RoomEffectivePermissions.navigatePlayback) !=
+          0;
+    }
+    return _isSystemAdmin || _isRoomCreator;
+  }
+
+  bool get _canViewPlaybackHistory {
+    final member = _selfMember;
+    if (member == null) return _isSystemAdmin || _isRoomCreator;
+    if ((member.permissions & RoomEffectivePermissions.viewPlaybackHistory) ==
+        0) {
+      return false;
+    }
+    return member.role ==
+            common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_CREATOR.value ||
+        member.role == common_enum.RoomMemberRole.ROOM_MEMBER_ROLE_ADMIN.value;
+  }
+
+  Future<void> _navigatePlayback({required bool previous}) async {
+    if (_playbackNavigationInFlight || !_canNavigatePlayback) return;
+    setState(() => _playbackNavigationInFlight = true);
+    try {
+      if (previous) {
+        await SyncTvService.playPrevious(widget.room.roomId);
+      } else {
+        await SyncTvService.playNext(widget.room.roomId);
+      }
+      await _loadCurrentPlayback();
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, error.toString());
+      }
+    } finally {
+      if (mounted) setState(() => _playbackNavigationInFlight = false);
+    }
+  }
 
   @override
   void initState() {
@@ -357,7 +403,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _loadCurrentPlaybackOnce() async {
     try {
-      final status = await SyncTvService.getCurrentMedia(widget.room.roomId);
+      final status = await SyncTvService.getPlaybackStatus(widget.room.roomId);
       if (!mounted) return;
       await _applyPlaybackStatus(
         _mergePlaybackStatus(
@@ -1552,7 +1598,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _refreshPlaybackAfterConflict() async {
     try {
-      final status = await SyncTvService.getCurrentMedia(widget.room.roomId);
+      final status = await SyncTvService.getPlaybackStatus(widget.room.roomId);
       if (!mounted) return;
       await _applyPlaybackStatus(
         _mergePlaybackStatus(
@@ -1931,7 +1977,7 @@ class _RoomScreenState extends State<RoomScreen>
     return AppScaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppAppBar(
+      appBar: AppPageBar(
         toolbarHeight: 44,
         leading: AppIconButton(
           onPressed: () => Navigator.of(context).maybePop(),
@@ -2044,6 +2090,13 @@ class _RoomScreenState extends State<RoomScreen>
                         isLive: _currentStatus?.entry?.live == true,
                         onToggleFullScreen: _toggleFullScreen,
                         onSync: _handleSync,
+                        onPrevious: _canNavigatePlayback
+                            ? () => unawaited(_navigatePlayback(previous: true))
+                            : null,
+                        onNext: _canNavigatePlayback
+                            ? () =>
+                                  unawaited(_navigatePlayback(previous: false))
+                            : null,
                         onUserPlaybackStateChanged:
                             _handleUserPlaybackStateChanged,
                         onUserSeek: _handleUserSeek,
@@ -2065,6 +2118,34 @@ class _RoomScreenState extends State<RoomScreen>
               ),
               if (playbackOptionButton != null)
                 Positioned(top: 12, right: 12, child: playbackOptionButton),
+              if (_videoPlayerController == null && _canNavigatePlayback)
+                Positioned(
+                  left: 12,
+                  bottom: 12,
+                  child: Row(
+                    children: [
+                      AppIconButton(
+                        key: const Key('empty_playback_previous_button'),
+                        icon: Icons.skip_previous_rounded,
+                        tooltip: context.l10n.previousVideo,
+                        onPressed: _playbackNavigationInFlight
+                            ? null
+                            : () =>
+                                  unawaited(_navigatePlayback(previous: true)),
+                      ),
+                      const SizedBox(width: 8),
+                      AppIconButton(
+                        key: const Key('empty_playback_next_button'),
+                        icon: Icons.skip_next_rounded,
+                        tooltip: context.l10n.nextVideo,
+                        onPressed: _playbackNavigationInFlight
+                            ? null
+                            : () =>
+                                  unawaited(_navigatePlayback(previous: false)),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           );
         },
@@ -2149,7 +2230,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _reloadCurrentPlaybackUrl() async {
     try {
-      final status = await SyncTvService.getCurrentMedia(widget.room.roomId);
+      final status = await SyncTvService.getPlaybackStatus(widget.room.roomId);
       if (!mounted) return;
       await _applyPlaybackStatus(
         _mergePlaybackStatus(
@@ -2363,6 +2444,12 @@ class _RoomScreenState extends State<RoomScreen>
           isLive: _currentStatus?.entry?.live == true,
           onToggleFullScreen: () => Navigator.of(context).pop(),
           onSync: _handleSync,
+          onPrevious: _canNavigatePlayback
+              ? () => unawaited(_navigatePlayback(previous: true))
+              : null,
+          onNext: _canNavigatePlayback
+              ? () => unawaited(_navigatePlayback(previous: false))
+              : null,
           onUserPlaybackStateChanged: _handleUserPlaybackStateChanged,
           onUserSeek: _handleUserSeek,
           onUserPlaybackSpeedChanged: _handleUserPlaybackSpeedChanged,
@@ -5245,6 +5332,8 @@ class _RoomScreenState extends State<RoomScreen>
               roomName: widget.room.roomName,
               creatorId: widget.room.creatorId,
               currentUserId: _currentUser?.id ?? '',
+              canViewPlaybackHistory: _canViewPlaybackHistory,
+              canNavigatePlayback: _canNavigatePlayback,
               currentSettings: settings,
               realtime: RoomRealtimeSession(
                 send: _sendRealtimeMessage,

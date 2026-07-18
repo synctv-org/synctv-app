@@ -322,6 +322,8 @@ class CustomVideoPlayer extends StatefulWidget {
   final Map<String, dynamic>? subtitles;
   final VoidCallback? onToggleFullScreen;
   final VoidCallback? onSync;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
   final ValueChanged<bool>? onUserPlaybackStateChanged;
   final ValueChanged<Duration>? onUserSeek;
   final ValueChanged<double>? onUserPlaybackSpeedChanged;
@@ -342,6 +344,8 @@ class CustomVideoPlayer extends StatefulWidget {
     this.subtitles,
     this.onToggleFullScreen,
     this.onSync,
+    this.onPrevious,
+    this.onNext,
     this.onUserPlaybackStateChanged,
     this.onUserSeek,
     this.onUserPlaybackSpeedChanged,
@@ -357,6 +361,51 @@ class CustomVideoPlayer extends StatefulWidget {
 
   @override
   State<CustomVideoPlayer> createState() => _CustomVideoPlayerState();
+}
+
+class PlaybackNavigationControls extends StatelessWidget {
+  const PlaybackNavigationControls({
+    super.key,
+    required this.previousTooltip,
+    required this.nextTooltip,
+    this.onPrevious,
+    this.onNext,
+    this.iconSize = 20,
+    this.gap = 8,
+  });
+
+  final String previousTooltip;
+  final String nextTooltip;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+  final double iconSize;
+  final double gap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppIconButton(
+          key: const Key('playback_previous_button'),
+          icon: Icons.skip_previous_rounded,
+          tooltip: previousTooltip,
+          onPressed: onPrevious,
+          constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+          iconSize: iconSize,
+        ),
+        SizedBox(width: gap),
+        AppIconButton(
+          key: const Key('playback_next_button'),
+          icon: Icons.skip_next_rounded,
+          tooltip: nextTooltip,
+          onPressed: onNext,
+          constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+          iconSize: iconSize,
+        ),
+      ],
+    );
+  }
 }
 
 enum VideoPlayerInteractionMode { mobile, desktop }
@@ -1854,6 +1903,20 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               ),
                                             ),
                                           ),
+                                          if (widget.onPrevious != null ||
+                                              widget.onNext != null) ...[
+                                            SizedBox(width: horizontalGap),
+                                            PlaybackNavigationControls(
+                                              previousTooltip:
+                                                  context.l10n.previousVideo,
+                                              nextTooltip:
+                                                  context.l10n.nextVideo,
+                                              onPrevious: widget.onPrevious,
+                                              onNext: widget.onNext,
+                                              iconSize: iconSize,
+                                              gap: horizontalGap,
+                                            ),
+                                          ],
                                           SizedBox(width: horizontalGap),
                                           if (showTime) ...[
                                             Text(

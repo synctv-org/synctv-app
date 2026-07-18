@@ -28,6 +28,7 @@ enum RoomRealtimeMessageKind {
   current,
   roomSettings,
   mediaLibrary,
+  playbackHistory,
   viewerCount,
   memberEvent,
   onlineEvent,
@@ -159,6 +160,7 @@ class RoomRealtimeMessage {
     this.playbackStatus,
     this.roomSettings,
     this.mediaLibrary,
+    this.playbackHistory,
     this.members,
     this.adminMembers,
     this.selfMember,
@@ -198,6 +200,7 @@ class RoomRealtimeMessage {
   final SyncTvPlaybackStatus? playbackStatus;
   final SyncTvRoomSettings? roomSettings;
   final RoomMediaLibraryPage? mediaLibrary;
+  final client.ListPlaybackHistoryResponse? playbackHistory;
   final List<SyncTvUser>? members;
   final List<AdminRoomMember>? adminMembers;
   final AdminRoomMember? selfMember;
@@ -887,6 +890,20 @@ class RoomRealtimeCodec {
     );
   }
 
+  static List<int> encodePlaybackHistoryObservation({
+    String observeId = 'playback_history',
+    String version = '',
+    int limit = 50,
+  }) {
+    return _observe(
+      observeId,
+      playbackHistory: client.ObservePlaybackHistory(
+        afterEventSequence: _watchSequence(version),
+        request: client.ListPlaybackHistoryRequest(limit: limit),
+      ),
+    );
+  }
+
   static List<int> encodeChatEventsObservation({
     String observeId = 'chat_events',
     String version = '',
@@ -935,6 +952,7 @@ class RoomRealtimeCodec {
     client.ObservePlayback? playback,
     client.ObserveRoomSettings? roomSettings,
     client.ObservePlaylistItems? playlistItems,
+    client.ObservePlaybackHistory? playbackHistory,
     client.ObserveRoomMemberEvents? roomMemberEvents,
     client.ObserveChatEvents? chatEvents,
     client.ObserveChatPinEvents? chatPinEvents,
@@ -953,6 +971,7 @@ class RoomRealtimeCodec {
         playback: playback,
         roomSettings: roomSettings,
         playlistItems: playlistItems,
+        playbackHistory: playbackHistory,
         roomMemberEvents: roomMemberEvents,
         chatEvents: chatEvents,
         chatPinEvents: chatPinEvents,
@@ -1248,6 +1267,13 @@ class RoomRealtimeCodec {
           observeId: changed.observeId,
           version: _cursorVersion(changed.eventCursor),
         );
+      case client.ResourceEvent_Payload.playbackHistory:
+        return RoomRealtimeMessage(
+          kind: RoomRealtimeMessageKind.playbackHistory,
+          playbackHistory: changed.playbackHistory,
+          resourceObserveId: changed.observeId,
+          resourceVersion: _cursorVersion(changed.eventCursor),
+        );
       case client.ResourceEvent_Payload.roomMemberEvent:
         return _roomMemberEvent(
           changed.roomMemberEvent,
@@ -1474,6 +1500,7 @@ class RoomRealtimeCodec {
       playingMediaId: state.playingMediaId,
       playingPlaylistId: state.playingPlaylistId,
       targetHash: state.targetHash,
+      historyCursorId: state.historyCursorId,
     );
   }
 

@@ -1887,27 +1887,77 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.StartPlaybackResponse> startPlayback(
+  Future<client.PlaybackState> startPlayback(
     String roomId,
     client.StartPlaybackRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/playback/start',
-      client.StartPlaybackResponse.create,
+      client.PlaybackState.create,
       body: request,
     );
   }
 
-  Future<client.StopPlaybackResponse> stopPlayback(
+  Future<client.PlaybackState> stopPlayback(
     String roomId,
     client.StopPlaybackRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/rooms/$roomId/playback/stop',
-      client.StopPlaybackResponse.create,
+      client.PlaybackState.create,
       body: request,
+    );
+  }
+
+  Future<client.PlaybackState> playPrevious(
+    String roomId,
+    client.PlayPreviousRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/playback/previous',
+      client.PlaybackState.create,
+      body: request,
+    );
+  }
+
+  Future<client.PlaybackState> playNext(
+    String roomId,
+    client.PlayNextRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/playback/next',
+      client.PlaybackState.create,
+      body: request,
+    );
+  }
+
+  Future<client.ListPlaybackHistoryResponse> listPlaybackHistory(
+    String roomId,
+    client.ListPlaybackHistoryRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/$roomId/playback/history',
+      client.ListPlaybackHistoryResponse.create,
+      query: {
+        if (request.hasBeforeEntryId()) 'beforeEntryId': request.beforeEntryId,
+        if (request.limit != 0) 'limit': request.limit.toString(),
+      },
+    );
+  }
+
+  Future<client.PlaybackState> playHistoryEntry(
+    String roomId,
+    client.PlayHistoryEntryRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/rooms/$roomId/playback/history/${request.entryId}/play',
+      client.PlaybackState.create,
     );
   }
 

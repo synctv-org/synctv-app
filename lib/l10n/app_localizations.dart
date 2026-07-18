@@ -8436,11 +8436,11 @@ abstract class AppLocalizations {
   /// **'Use WebRTC'**
   String get useWebRtc;
 
-  /// No description provided for @deleteAnyMedia.
+  /// No description provided for @deleteMedia.
   ///
   /// In en, this message translates to:
-  /// **'Delete any media'**
-  String get deleteAnyMedia;
+  /// **'Delete media'**
+  String get deleteMedia;
 
   /// No description provided for @reorderPlaylist.
   ///
@@ -8460,11 +8460,71 @@ abstract class AppLocalizations {
   /// **'Playback control'**
   String get playbackControl;
 
-  /// No description provided for @changeCurrentMedia.
+  /// No description provided for @roomPermissionNavigatePlayback.
   ///
   /// In en, this message translates to:
-  /// **'Change current media'**
-  String get changeCurrentMedia;
+  /// **'Navigate playback'**
+  String get roomPermissionNavigatePlayback;
+
+  /// No description provided for @previousVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous video'**
+  String get previousVideo;
+
+  /// No description provided for @nextVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Next video'**
+  String get nextVideo;
+
+  /// No description provided for @playbackHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback history'**
+  String get playbackHistory;
+
+  /// No description provided for @playbackHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No playback history'**
+  String get playbackHistoryEmpty;
+
+  /// No description provided for @playHistoryEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Play this entry'**
+  String get playHistoryEntry;
+
+  /// No description provided for @viewPlaybackHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'View playback history'**
+  String get viewPlaybackHistory;
+
+  /// No description provided for @playbackHistoryRetentionDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback history retention'**
+  String get playbackHistoryRetentionDays;
+
+  /// No description provided for @playbackHistoryRetentionDaysDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Days to retain playback history. Use 0 to disable age-based cleanup.'**
+  String get playbackHistoryRetentionDaysDescription;
+
+  /// No description provided for @playbackHistoryMaxEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback history limit'**
+  String get playbackHistoryMaxEntries;
+
+  /// No description provided for @playbackHistoryMaxEntriesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum entries retained per room. Use 0 to disable count-based cleanup.'**
+  String get playbackHistoryMaxEntriesDescription;
 
   /// No description provided for @changePlaybackRate.
   ///
@@ -8495,6 +8555,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete chat messages'**
   String get deleteChat;
+
+  /// No description provided for @roomPermissionManageOwnMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage own media'**
+  String get roomPermissionManageOwnMedia;
+
+  /// No description provided for @roomPermissionReorderMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder media and playlists'**
+  String get roomPermissionReorderMedia;
+
+  /// No description provided for @roomPermissionClearMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear media queue'**
+  String get roomPermissionClearMedia;
+
+  /// No description provided for @roomPermissionManageLiveStreams.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage live streams'**
+  String get roomPermissionManageLiveStreams;
+
+  /// No description provided for @roomPermissionReviewJoinRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Review join requests'**
+  String get roomPermissionReviewJoinRequests;
+
+  /// No description provided for @roomPermissionRemoveMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove members'**
+  String get roomPermissionRemoveMembers;
+
+  /// No description provided for @roomPermissionManageMemberPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage member permissions'**
+  String get roomPermissionManageMemberPermissions;
+
+  /// No description provided for @roomPermissionAddMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Add members'**
+  String get roomPermissionAddMembers;
+
+  /// No description provided for @roomPermissionManageRoomSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage room settings'**
+  String get roomPermissionManageRoomSettings;
+
+  /// No description provided for @roomPermissionDeleteChatMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat messages'**
+  String get roomPermissionDeleteChatMessages;
 
   /// No description provided for @defaultRoomMemberLimit.
   ///

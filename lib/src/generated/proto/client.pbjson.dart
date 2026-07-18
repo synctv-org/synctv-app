@@ -57,6 +57,27 @@ final $typed_data.Uint8List twitchTargetKindDescriptor = $convert.base64Decode(
     'wKGFRXSVRDSF9UQVJHRVRfS0lORF9WSURFTxABEhsKF1RXSVRDSF9UQVJHRVRfS0lORF9DTElQ'
     'EAISGwoXVFdJVENIX1RBUkdFVF9LSU5EX0xJVkUQAw==');
 
+@$core.Deprecated('Use playbackChangeReasonDescriptor instead')
+const PlaybackChangeReason$json = {
+  '1': 'PlaybackChangeReason',
+  '2': [
+    {'1': 'PLAYBACK_CHANGE_REASON_UNSPECIFIED', '2': 0},
+    {'1': 'PLAYBACK_CHANGE_REASON_SELECTED', '2': 1},
+    {'1': 'PLAYBACK_CHANGE_REASON_NEXT', '2': 2},
+    {'1': 'PLAYBACK_CHANGE_REASON_PREVIOUS', '2': 3},
+    {'1': 'PLAYBACK_CHANGE_REASON_HISTORY_ENTRY', '2': 4},
+    {'1': 'PLAYBACK_CHANGE_REASON_AUTO_ADVANCE', '2': 5},
+  ],
+};
+
+/// Descriptor for `PlaybackChangeReason`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playbackChangeReasonDescriptor = $convert.base64Decode(
+    'ChRQbGF5YmFja0NoYW5nZVJlYXNvbhImCiJQTEFZQkFDS19DSEFOR0VfUkVBU09OX1VOU1BFQ0'
+    'lGSUVEEAASIwofUExBWUJBQ0tfQ0hBTkdFX1JFQVNPTl9TRUxFQ1RFRBABEh8KG1BMQVlCQUNL'
+    'X0NIQU5HRV9SRUFTT05fTkVYVBACEiMKH1BMQVlCQUNLX0NIQU5HRV9SRUFTT05fUFJFVklPVV'
+    'MQAxIoCiRQTEFZQkFDS19DSEFOR0VfUkVBU09OX0hJU1RPUllfRU5UUlkQBBInCiNQTEFZQkFD'
+    'S19DSEFOR0VfUkVBU09OX0FVVE9fQURWQU5DRRAF');
+
 @$core.Deprecated('Use resourceAvailabilityDescriptor instead')
 const ResourceAvailability$json = {
   '1': 'ResourceAvailability',
@@ -497,6 +518,7 @@ const ChatMessageType$json = {
     {'1': 'CHAT_MESSAGE_TYPE_UNSPECIFIED', '2': 0},
     {'1': 'CHAT_MESSAGE_TYPE_USER', '2': 1},
     {'1': 'CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED', '2': 1001},
+    {'1': 'CHAT_MESSAGE_TYPE_SYSTEM_PLAYBACK_CHANGED', '2': 1002},
   ],
 };
 
@@ -504,7 +526,8 @@ const ChatMessageType$json = {
 final $typed_data.Uint8List chatMessageTypeDescriptor = $convert.base64Decode(
     'Cg9DaGF0TWVzc2FnZVR5cGUSIQodQ0hBVF9NRVNTQUdFX1RZUEVfVU5TUEVDSUZJRUQQABIaCh'
     'ZDSEFUX01FU1NBR0VfVFlQRV9VU0VSEAESKwomQ0hBVF9NRVNTQUdFX1RZUEVfU1lTVEVNX01F'
-    'TUJFUl9KT0lORUQQ6Qc=');
+    'TUJFUl9KT0lORUQQ6QcSLgopQ0hBVF9NRVNTQUdFX1RZUEVfU1lTVEVNX1BMQVlCQUNLX0NIQU'
+    '5HRUQQ6gc=');
 
 @$core.Deprecated('Use chatMessageEventKindDescriptor instead')
 const ChatMessageEventKind$json = {
@@ -1793,6 +1816,47 @@ final $typed_data.Uint8List chatMemberJoinedMetadataDescriptor = $convert.base64
     'ZXJJZBIlCg5hY3Rvcl91c2VybmFtZRgEIAEoCVINYWN0b3JVc2VybmFtZRIxCgRyb2xlGAUgAS'
     'gOMh0uc3luY3R2LmNvbW1vbi5Sb29tTWVtYmVyUm9sZVIEcm9sZQ==');
 
+@$core.Deprecated('Use chatPlaybackChangedMetadataDescriptor instead')
+const ChatPlaybackChangedMetadata$json = {
+  '1': 'ChatPlaybackChangedMetadata',
+  '2': [
+    {
+      '1': 'from',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ChatPlaybackMetadata',
+      '10': 'from'
+    },
+    {
+      '1': 'to',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ChatPlaybackMetadata',
+      '10': 'to'
+    },
+    {
+      '1': 'reason',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.PlaybackChangeReason',
+      '10': 'reason'
+    },
+    {'1': 'actor_user_id', '3': 4, '4': 1, '5': 9, '10': 'actorUserId'},
+    {'1': 'actor_username', '3': 5, '4': 1, '5': 9, '10': 'actorUsername'},
+  ],
+};
+
+/// Descriptor for `ChatPlaybackChangedMetadata`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List chatPlaybackChangedMetadataDescriptor = $convert.base64Decode(
+    'ChtDaGF0UGxheWJhY2tDaGFuZ2VkTWV0YWRhdGESNwoEZnJvbRgBIAEoCzIjLnN5bmN0di5jbG'
+    'llbnQuQ2hhdFBsYXliYWNrTWV0YWRhdGFSBGZyb20SMwoCdG8YAiABKAsyIy5zeW5jdHYuY2xp'
+    'ZW50LkNoYXRQbGF5YmFja01ldGFkYXRhUgJ0bxI7CgZyZWFzb24YAyABKA4yIy5zeW5jdHYuY2'
+    'xpZW50LlBsYXliYWNrQ2hhbmdlUmVhc29uUgZyZWFzb24SIgoNYWN0b3JfdXNlcl9pZBgEIAEo'
+    'CVILYWN0b3JVc2VySWQSJQoOYWN0b3JfdXNlcm5hbWUYBSABKAlSDWFjdG9yVXNlcm5hbWU=');
+
 @$core.Deprecated('Use chatMetadataDescriptor instead')
 const ChatMetadata$json = {
   '1': 'ChatMetadata',
@@ -1815,6 +1879,15 @@ const ChatMetadata$json = {
       '9': 0,
       '10': 'memberJoined'
     },
+    {
+      '1': 'playback_changed',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ChatPlaybackChangedMetadata',
+      '9': 0,
+      '10': 'playbackChanged'
+    },
   ],
   '8': [
     {'1': 'metadata'},
@@ -1825,7 +1898,9 @@ const ChatMetadata$json = {
 final $typed_data.Uint8List chatMetadataDescriptor = $convert.base64Decode(
     'CgxDaGF0TWV0YWRhdGESNQoEdXNlchgBIAEoCzIfLnN5bmN0di5jbGllbnQuQ2hhdFVzZXJNZX'
     'RhZGF0YUgAUgR1c2VyEk4KDW1lbWJlcl9qb2luZWQYAiABKAsyJy5zeW5jdHYuY2xpZW50LkNo'
-    'YXRNZW1iZXJKb2luZWRNZXRhZGF0YUgAUgxtZW1iZXJKb2luZWRCCgoIbWV0YWRhdGE=');
+    'YXRNZW1iZXJKb2luZWRNZXRhZGF0YUgAUgxtZW1iZXJKb2luZWQSVwoQcGxheWJhY2tfY2hhbm'
+    'dlZBgDIAEoCzIqLnN5bmN0di5jbGllbnQuQ2hhdFBsYXliYWNrQ2hhbmdlZE1ldGFkYXRhSABS'
+    'D3BsYXliYWNrQ2hhbmdlZEIKCghtZXRhZGF0YQ==');
 
 @$core.Deprecated('Use contentReportMetadataDescriptor instead')
 const ContentReportMetadata$json = {
@@ -2302,6 +2377,13 @@ const PlaybackState$json = {
       '5': 3,
       '10': 'generatedAtMillis'
     },
+    {
+      '1': 'history_cursor_id',
+      '3': 12,
+      '4': 1,
+      '5': 9,
+      '10': 'historyCursorId'
+    },
   ],
 };
 
@@ -2314,7 +2396,8 @@ final $typed_data.Uint8List playbackStateDescriptor = $convert.base64Decode(
     'ChNwbGF5aW5nX3BsYXlsaXN0X2lkGAggASgJUhFwbGF5aW5nUGxheWxpc3RJZBI1CgZ0YXJnZX'
     'QYCSABKAsyHS5zeW5jdHYuY2xpZW50LlByb3ZpZGVyVGFyZ2V0UgZ0YXJnZXQSHwoLdGFyZ2V0'
     'X2hhc2gYCiABKAlSCnRhcmdldEhhc2gSLgoTZ2VuZXJhdGVkX2F0X21pbGxpcxgLIAEoA1IRZ2'
-    'VuZXJhdGVkQXRNaWxsaXM=');
+    'VuZXJhdGVkQXRNaWxsaXMSKgoRaGlzdG9yeV9jdXJzb3JfaWQYDCABKAlSD2hpc3RvcnlDdXJz'
+    'b3JJZA==');
 
 @$core.Deprecated('Use registerResponseDescriptor instead')
 const RegisterResponse$json = {
@@ -5556,15 +5639,6 @@ final $typed_data.Uint8List startPlaybackRequestDescriptor = $convert.base64Deco
     'VkIHdoZW4gc3dpdGNoaW5nIHRvIGEgZHluYW1pYyBwbGF5bGlzdCBpdGVtGip0aGlzLnBsYXls'
     'aXN0X2lkID09ICcnIHx8IGhhcyh0aGlzLnRhcmdldCk=');
 
-@$core.Deprecated('Use startPlaybackResponseDescriptor instead')
-const StartPlaybackResponse$json = {
-  '1': 'StartPlaybackResponse',
-};
-
-/// Descriptor for `StartPlaybackResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List startPlaybackResponseDescriptor =
-    $convert.base64Decode('ChVTdGFydFBsYXliYWNrUmVzcG9uc2U=');
-
 @$core.Deprecated('Use stopPlaybackRequestDescriptor instead')
 const StopPlaybackRequest$json = {
   '1': 'StopPlaybackRequest',
@@ -5574,14 +5648,132 @@ const StopPlaybackRequest$json = {
 final $typed_data.Uint8List stopPlaybackRequestDescriptor =
     $convert.base64Decode('ChNTdG9wUGxheWJhY2tSZXF1ZXN0');
 
-@$core.Deprecated('Use stopPlaybackResponseDescriptor instead')
-const StopPlaybackResponse$json = {
-  '1': 'StopPlaybackResponse',
+@$core.Deprecated('Use playNextRequestDescriptor instead')
+const PlayNextRequest$json = {
+  '1': 'PlayNextRequest',
 };
 
-/// Descriptor for `StopPlaybackResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List stopPlaybackResponseDescriptor =
-    $convert.base64Decode('ChRTdG9wUGxheWJhY2tSZXNwb25zZQ==');
+/// Descriptor for `PlayNextRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List playNextRequestDescriptor =
+    $convert.base64Decode('Cg9QbGF5TmV4dFJlcXVlc3Q=');
+
+@$core.Deprecated('Use playPreviousRequestDescriptor instead')
+const PlayPreviousRequest$json = {
+  '1': 'PlayPreviousRequest',
+};
+
+/// Descriptor for `PlayPreviousRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List playPreviousRequestDescriptor =
+    $convert.base64Decode('ChNQbGF5UHJldmlvdXNSZXF1ZXN0');
+
+@$core.Deprecated('Use playbackHistoryEntryDescriptor instead')
+const PlaybackHistoryEntry$json = {
+  '1': 'PlaybackHistoryEntry',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'media_id', '3': 2, '4': 1, '5': 9, '10': 'mediaId'},
+    {'1': 'playlist_id', '3': 3, '4': 1, '5': 9, '10': 'playlistId'},
+    {
+      '1': 'target',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ProviderTarget',
+      '10': 'target'
+    },
+    {'1': 'position_seconds', '3': 5, '4': 1, '5': 1, '10': 'positionSeconds'},
+    {
+      '1': 'selected_by_user_id',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '10': 'selectedByUserId'
+    },
+    {'1': 'created_at', '3': 7, '4': 1, '5': 3, '10': 'createdAt'},
+    {'1': 'updated_at', '3': 8, '4': 1, '5': 3, '10': 'updatedAt'},
+  ],
+};
+
+/// Descriptor for `PlaybackHistoryEntry`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List playbackHistoryEntryDescriptor = $convert.base64Decode(
+    'ChRQbGF5YmFja0hpc3RvcnlFbnRyeRIOCgJpZBgBIAEoCVICaWQSGQoIbWVkaWFfaWQYAiABKA'
+    'lSB21lZGlhSWQSHwoLcGxheWxpc3RfaWQYAyABKAlSCnBsYXlsaXN0SWQSNQoGdGFyZ2V0GAQg'
+    'ASgLMh0uc3luY3R2LmNsaWVudC5Qcm92aWRlclRhcmdldFIGdGFyZ2V0EikKEHBvc2l0aW9uX3'
+    'NlY29uZHMYBSABKAFSD3Bvc2l0aW9uU2Vjb25kcxItChNzZWxlY3RlZF9ieV91c2VyX2lkGAYg'
+    'ASgJUhBzZWxlY3RlZEJ5VXNlcklkEh0KCmNyZWF0ZWRfYXQYByABKANSCWNyZWF0ZWRBdBIdCg'
+    'p1cGRhdGVkX2F0GAggASgDUgl1cGRhdGVkQXQ=');
+
+@$core.Deprecated('Use listPlaybackHistoryRequestDescriptor instead')
+const ListPlaybackHistoryRequest$json = {
+  '1': 'ListPlaybackHistoryRequest',
+  '2': [
+    {
+      '1': 'before_entry_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 0,
+      '10': 'beforeEntryId',
+      '17': true
+    },
+    {'1': 'limit', '3': 2, '4': 1, '5': 5, '8': {}, '10': 'limit'},
+  ],
+  '8': [
+    {'1': '_before_entry_id'},
+  ],
+};
+
+/// Descriptor for `ListPlaybackHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listPlaybackHistoryRequestDescriptor =
+    $convert.base64Decode(
+        'ChpMaXN0UGxheWJhY2tIaXN0b3J5UmVxdWVzdBJJCg9iZWZvcmVfZW50cnlfaWQYASABKAlCHL'
+        'pIGXIXEAQYQDIRXnBoX1tBLVphLXowLTldKyRIAFINYmVmb3JlRW50cnlJZIgBARIfCgVsaW1p'
+        'dBgCIAEoBUIJukgGGgQYZCgAUgVsaW1pdEISChBfYmVmb3JlX2VudHJ5X2lk');
+
+@$core.Deprecated('Use listPlaybackHistoryResponseDescriptor instead')
+const ListPlaybackHistoryResponse$json = {
+  '1': 'ListPlaybackHistoryResponse',
+  '2': [
+    {
+      '1': 'entries',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.PlaybackHistoryEntry',
+      '10': 'entries'
+    },
+    {'1': 'history_cursor_id', '3': 2, '4': 1, '5': 9, '10': 'historyCursorId'},
+    {
+      '1': 'next_before_entry_id',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '10': 'nextBeforeEntryId'
+    },
+  ],
+};
+
+/// Descriptor for `ListPlaybackHistoryResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List listPlaybackHistoryResponseDescriptor = $convert.base64Decode(
+    'ChtMaXN0UGxheWJhY2tIaXN0b3J5UmVzcG9uc2USPQoHZW50cmllcxgBIAMoCzIjLnN5bmN0di'
+    '5jbGllbnQuUGxheWJhY2tIaXN0b3J5RW50cnlSB2VudHJpZXMSKgoRaGlzdG9yeV9jdXJzb3Jf'
+    'aWQYAiABKAlSD2hpc3RvcnlDdXJzb3JJZBIvChRuZXh0X2JlZm9yZV9lbnRyeV9pZBgDIAEoCV'
+    'IRbmV4dEJlZm9yZUVudHJ5SWQ=');
+
+@$core.Deprecated('Use playHistoryEntryRequestDescriptor instead')
+const PlayHistoryEntryRequest$json = {
+  '1': 'PlayHistoryEntryRequest',
+  '2': [
+    {'1': 'entry_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'entryId'},
+  ],
+};
+
+/// Descriptor for `PlayHistoryEntryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List playHistoryEntryRequestDescriptor =
+    $convert.base64Decode(
+        'ChdQbGF5SGlzdG9yeUVudHJ5UmVxdWVzdBI3CghlbnRyeV9pZBgBIAEoCUIcukgZchcQBBhAMh'
+        'FecGhfW0EtWmEtejAtOV0rJFIHZW50cnlJZA==');
 
 @$core.Deprecated('Use updatePlaybackRequestDescriptor instead')
 const UpdatePlaybackRequest$json = {
@@ -9295,6 +9487,15 @@ const ObserveResource$json = {
       '9': 0,
       '10': 'chatPinEvents'
     },
+    {
+      '1': 'playback_history',
+      '3': 14,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ObservePlaybackHistory',
+      '9': 0,
+      '10': 'playbackHistory'
+    },
   ],
   '8': [
     {'1': 'resource'},
@@ -9319,7 +9520,8 @@ final $typed_data.Uint8List observeResourceDescriptor = $convert.base64Decode(
     '50SABSC29ubGluZUV2ZW50ElAKEHNlbGZfcm9vbV9tZW1iZXIYDCABKAsyJC5zeW5jdHYuY2xp'
     'ZW50Lk9ic2VydmVTZWxmUm9vbU1lbWJlckgAUg5zZWxmUm9vbU1lbWJlchJNCg9jaGF0X3Bpbl'
     '9ldmVudHMYDSABKAsyIy5zeW5jdHYuY2xpZW50Lk9ic2VydmVDaGF0UGluRXZlbnRzSABSDWNo'
-    'YXRQaW5FdmVudHNCCgoIcmVzb3VyY2U=');
+    'YXRQaW5FdmVudHMSUgoQcGxheWJhY2tfaGlzdG9yeRgOIAEoCzIlLnN5bmN0di5jbGllbnQuT2'
+    'JzZXJ2ZVBsYXliYWNrSGlzdG9yeUgAUg9wbGF5YmFja0hpc3RvcnlCCgoIcmVzb3VyY2U=');
 
 @$core.Deprecated('Use unobserveResourceDescriptor instead')
 const UnobserveResource$json = {
@@ -9357,6 +9559,40 @@ const ObservePlaybackState$json = {
 final $typed_data.Uint8List observePlaybackStateDescriptor = $convert.base64Decode(
     'ChRPYnNlcnZlUGxheWJhY2tTdGF0ZRIqCg5ldmVudF9zZXF1ZW5jZRgBIAEoA0gAUg1ldmVudF'
     'NlcXVlbmNliAEBQhEKD19ldmVudF9zZXF1ZW5jZQ==');
+
+@$core.Deprecated('Use observePlaybackHistoryDescriptor instead')
+const ObservePlaybackHistory$json = {
+  '1': 'ObservePlaybackHistory',
+  '2': [
+    {
+      '1': 'request',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ListPlaybackHistoryRequest',
+      '10': 'request'
+    },
+    {
+      '1': 'after_event_sequence',
+      '3': 2,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'afterEventSequence',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_after_event_sequence'},
+  ],
+};
+
+/// Descriptor for `ObservePlaybackHistory`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List observePlaybackHistoryDescriptor = $convert.base64Decode(
+    'ChZPYnNlcnZlUGxheWJhY2tIaXN0b3J5EkMKB3JlcXVlc3QYASABKAsyKS5zeW5jdHYuY2xpZW'
+    '50Lkxpc3RQbGF5YmFja0hpc3RvcnlSZXF1ZXN0UgdyZXF1ZXN0EjUKFGFmdGVyX2V2ZW50X3Nl'
+    'cXVlbmNlGAIgASgDSABSEmFmdGVyRXZlbnRTZXF1ZW5jZYgBAUIXChVfYWZ0ZXJfZXZlbnRfc2'
+    'VxdWVuY2U=');
 
 @$core.Deprecated('Use observePlaybackDescriptor instead')
 const ObservePlayback$json = {
@@ -10354,6 +10590,15 @@ const ResourceEvent$json = {
       '10': 'chatPinEvent'
     },
     {
+      '1': 'playback_history',
+      '3': 16,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.ListPlaybackHistoryResponse',
+      '9': 0,
+      '10': 'playbackHistory'
+    },
+    {
       '1': 'event_cursor',
       '3': 11,
       '4': 1,
@@ -10384,9 +10629,10 @@ final $typed_data.Uint8List resourceEventDescriptor = $convert.base64Decode(
     'UgtvbmxpbmVFdmVudBI/Cgx3ZWJydGNfZXZlbnQYDSABKAsyGi5zeW5jdHYuY2xpZW50LldlYl'
     'J0Y0V2ZW50SABSC3dlYnJ0Y0V2ZW50EkUKEHNlbGZfcm9vbV9tZW1iZXIYDiABKAsyGS5zeW5j'
     'dHYuY29tbW9uLlJvb21NZW1iZXJIAFIOc2VsZlJvb21NZW1iZXISQwoOY2hhdF9waW5fZXZlbn'
-    'QYDyABKAsyGy5zeW5jdHYuY2xpZW50LkNoYXRQaW5FdmVudEgAUgxjaGF0UGluRXZlbnQSPQoM'
-    'ZXZlbnRfY3Vyc29yGAsgASgLMhouc3luY3R2LmNsaWVudC5FdmVudEN1cnNvclILZXZlbnRDdX'
-    'Jzb3JCCQoHcGF5bG9hZA==');
+    'QYDyABKAsyGy5zeW5jdHYuY2xpZW50LkNoYXRQaW5FdmVudEgAUgxjaGF0UGluRXZlbnQSVwoQ'
+    'cGxheWJhY2tfaGlzdG9yeRgQIAEoCzIqLnN5bmN0di5jbGllbnQuTGlzdFBsYXliYWNrSGlzdG'
+    '9yeVJlc3BvbnNlSABSD3BsYXliYWNrSGlzdG9yeRI9CgxldmVudF9jdXJzb3IYCyABKAsyGi5z'
+    'eW5jdHYuY2xpZW50LkV2ZW50Q3Vyc29yUgtldmVudEN1cnNvckIJCgdwYXlsb2Fk');
 
 @$core.Deprecated('Use resourceObserveErrorDescriptor instead')
 const ResourceObserveError$json = {
@@ -18622,12 +18868,32 @@ const $core.Map<$core.String, $core.dynamic> RoomServiceBase$json = {
     {
       '1': 'StartPlayback',
       '2': '.synctv.client.StartPlaybackRequest',
-      '3': '.synctv.client.StartPlaybackResponse'
+      '3': '.synctv.client.PlaybackState'
     },
     {
       '1': 'StopPlayback',
       '2': '.synctv.client.StopPlaybackRequest',
-      '3': '.synctv.client.StopPlaybackResponse'
+      '3': '.synctv.client.PlaybackState'
+    },
+    {
+      '1': 'PlayNext',
+      '2': '.synctv.client.PlayNextRequest',
+      '3': '.synctv.client.PlaybackState'
+    },
+    {
+      '1': 'PlayPrevious',
+      '2': '.synctv.client.PlayPreviousRequest',
+      '3': '.synctv.client.PlaybackState'
+    },
+    {
+      '1': 'ListPlaybackHistory',
+      '2': '.synctv.client.ListPlaybackHistoryRequest',
+      '3': '.synctv.client.ListPlaybackHistoryResponse'
+    },
+    {
+      '1': 'PlayHistoryEntry',
+      '2': '.synctv.client.PlayHistoryEntryRequest',
+      '3': '.synctv.client.PlaybackState'
     },
     {
       '1': 'GetPlayback',
@@ -18748,6 +19014,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.BilibiliPgcEpisodeTarget': BilibiliPgcEpisodeTarget$json,
   '.synctv.client.BilibiliLiveTarget': BilibiliLiveTarget$json,
   '.synctv.client.ChatMemberJoinedMetadata': ChatMemberJoinedMetadata$json,
+  '.synctv.client.ChatPlaybackChangedMetadata':
+      ChatPlaybackChangedMetadata$json,
   '.synctv.client.ChatMentionInput': ChatMentionInput$json,
   '.synctv.client.HeartbeatMessage': HeartbeatMessage$json,
   '.synctv.client.UpdatePlaybackStateRequest': UpdatePlaybackStateRequest$json,
@@ -18902,6 +19170,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ObserveOnlineEvent': ObserveOnlineEvent$json,
   '.synctv.client.ObserveSelfRoomMember': ObserveSelfRoomMember$json,
   '.synctv.client.ObserveChatPinEvents': ObserveChatPinEvents$json,
+  '.synctv.client.ObservePlaybackHistory': ObservePlaybackHistory$json,
+  '.synctv.client.ListPlaybackHistoryRequest': ListPlaybackHistoryRequest$json,
   '.synctv.client.UnobserveResource': UnobserveResource$json,
   '.synctv.client.WebRtcCommand': WebRtcCommand$json,
   '.synctv.client.WebRTCOffer': WebRTCOffer$json,
@@ -19066,6 +19336,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.OnlineEvent': OnlineEvent$json,
   '.synctv.client.WebRtcEvent': WebRtcEvent$json,
   '.synctv.client.ChatPinEvent': ChatPinEvent$json,
+  '.synctv.client.ListPlaybackHistoryResponse':
+      ListPlaybackHistoryResponse$json,
+  '.synctv.client.PlaybackHistoryEntry': PlaybackHistoryEntry$json,
   '.synctv.client.ResourceObserveError': ResourceObserveError$json,
   '.synctv.client.WatchPlaybackStateRequest': WatchPlaybackStateRequest$json,
   '.synctv.client.WatchPlaybackStateEvent': WatchPlaybackStateEvent$json,
@@ -19291,9 +19564,10 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.AddMediaBatchRequest': AddMediaBatchRequest$json,
   '.synctv.client.AddMediaBatchResponse': AddMediaBatchResponse$json,
   '.synctv.client.StartPlaybackRequest': StartPlaybackRequest$json,
-  '.synctv.client.StartPlaybackResponse': StartPlaybackResponse$json,
   '.synctv.client.StopPlaybackRequest': StopPlaybackRequest$json,
-  '.synctv.client.StopPlaybackResponse': StopPlaybackResponse$json,
+  '.synctv.client.PlayNextRequest': PlayNextRequest$json,
+  '.synctv.client.PlayPreviousRequest': PlayPreviousRequest$json,
+  '.synctv.client.PlayHistoryEntryRequest': PlayHistoryEntryRequest$json,
   '.synctv.client.GetPlaybackRequest': GetPlaybackRequest$json,
   '.synctv.client.GetPlaybackResponse': GetPlaybackResponse$json,
 };
@@ -19481,14 +19755,20 @@ final $typed_data.Uint8List roomServiceDescriptor = $convert.base64Decode(
     'ZWRpYVJlc3BvbnNlEloKDUNsZWFyUGxheWxpc3QSIy5zeW5jdHYuY2xpZW50LkNsZWFyUGxheW'
     'xpc3RSZXF1ZXN0GiQuc3luY3R2LmNsaWVudC5DbGVhclBsYXlsaXN0UmVzcG9uc2USWgoNQWRk'
     'TWVkaWFCYXRjaBIjLnN5bmN0di5jbGllbnQuQWRkTWVkaWFCYXRjaFJlcXVlc3QaJC5zeW5jdH'
-    'YuY2xpZW50LkFkZE1lZGlhQmF0Y2hSZXNwb25zZRJaCg1TdGFydFBsYXliYWNrEiMuc3luY3R2'
-    'LmNsaWVudC5TdGFydFBsYXliYWNrUmVxdWVzdBokLnN5bmN0di5jbGllbnQuU3RhcnRQbGF5Ym'
-    'Fja1Jlc3BvbnNlElcKDFN0b3BQbGF5YmFjaxIiLnN5bmN0di5jbGllbnQuU3RvcFBsYXliYWNr'
-    'UmVxdWVzdBojLnN5bmN0di5jbGllbnQuU3RvcFBsYXliYWNrUmVzcG9uc2USVAoLR2V0UGxheW'
-    'JhY2sSIS5zeW5jdHYuY2xpZW50LkdldFBsYXliYWNrUmVxdWVzdBoiLnN5bmN0di5jbGllbnQu'
-    'R2V0UGxheWJhY2tSZXNwb25zZRJeChNVcGRhdGVQbGF5YmFja1N0YXRlEikuc3luY3R2LmNsaW'
-    'VudC5VcGRhdGVQbGF5YmFja1N0YXRlUmVxdWVzdBocLnN5bmN0di5jbGllbnQuUGxheWJhY2tT'
-    'dGF0ZQ==');
+    'YuY2xpZW50LkFkZE1lZGlhQmF0Y2hSZXNwb25zZRJSCg1TdGFydFBsYXliYWNrEiMuc3luY3R2'
+    'LmNsaWVudC5TdGFydFBsYXliYWNrUmVxdWVzdBocLnN5bmN0di5jbGllbnQuUGxheWJhY2tTdG'
+    'F0ZRJQCgxTdG9wUGxheWJhY2sSIi5zeW5jdHYuY2xpZW50LlN0b3BQbGF5YmFja1JlcXVlc3Qa'
+    'HC5zeW5jdHYuY2xpZW50LlBsYXliYWNrU3RhdGUSSAoIUGxheU5leHQSHi5zeW5jdHYuY2xpZW'
+    '50LlBsYXlOZXh0UmVxdWVzdBocLnN5bmN0di5jbGllbnQuUGxheWJhY2tTdGF0ZRJQCgxQbGF5'
+    'UHJldmlvdXMSIi5zeW5jdHYuY2xpZW50LlBsYXlQcmV2aW91c1JlcXVlc3QaHC5zeW5jdHYuY2'
+    'xpZW50LlBsYXliYWNrU3RhdGUSbAoTTGlzdFBsYXliYWNrSGlzdG9yeRIpLnN5bmN0di5jbGll'
+    'bnQuTGlzdFBsYXliYWNrSGlzdG9yeVJlcXVlc3QaKi5zeW5jdHYuY2xpZW50Lkxpc3RQbGF5Ym'
+    'Fja0hpc3RvcnlSZXNwb25zZRJYChBQbGF5SGlzdG9yeUVudHJ5EiYuc3luY3R2LmNsaWVudC5Q'
+    'bGF5SGlzdG9yeUVudHJ5UmVxdWVzdBocLnN5bmN0di5jbGllbnQuUGxheWJhY2tTdGF0ZRJUCg'
+    'tHZXRQbGF5YmFjaxIhLnN5bmN0di5jbGllbnQuR2V0UGxheWJhY2tSZXF1ZXN0GiIuc3luY3R2'
+    'LmNsaWVudC5HZXRQbGF5YmFja1Jlc3BvbnNlEl4KE1VwZGF0ZVBsYXliYWNrU3RhdGUSKS5zeW'
+    '5jdHYuY2xpZW50LlVwZGF0ZVBsYXliYWNrU3RhdGVSZXF1ZXN0Ghwuc3luY3R2LmNsaWVudC5Q'
+    'bGF5YmFja1N0YXRl');
 
 const $core.Map<$core.String, $core.dynamic> PublicServiceBase$json = {
   '1': 'PublicService',

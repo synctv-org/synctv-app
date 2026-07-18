@@ -1335,6 +1335,11 @@ class SyncTvAdminDomainService {
       case 'chat':
         settings.chat = optionalPatchSection(admin.ChatSettingsPatch());
         break;
+      case 'playbackHistory':
+        settings.playbackHistory = optionalPatchSection(
+          admin.PlaybackHistorySettingsPatch(),
+        );
+        break;
       case 'cors':
         if (key != 'allowedOrigins') {
           throw ArgumentError.value(key, 'key', 'unsupported cors setting');

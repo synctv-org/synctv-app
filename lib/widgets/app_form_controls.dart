@@ -1767,7 +1767,7 @@ class AppScaffold extends StatelessWidget {
   }
 }
 
-class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
+class AppPageBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? title;
   final List<Widget>? actions;
   final Widget? leading;
@@ -1780,7 +1780,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool avoidMacOsTitleBar;
   final double toolbarHeight;
 
-  const AppAppBar({
+  const AppPageBar({
     super.key,
     this.title,
     this.actions,

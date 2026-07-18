@@ -69,10 +69,7 @@ void main() {
       final json = SourceConfigCodec.playlistSourceConfigJson(config);
       expect(
         json['youtube']['channel']['content'],
-        source_enum
-            .YoutubeChannelContent
-            .YOUTUBE_CHANNEL_CONTENT_SHORTS
-            .value,
+        source_enum.YoutubeChannelContent.YOUTUBE_CHANNEL_CONTENT_SHORTS.value,
       );
     });
   });

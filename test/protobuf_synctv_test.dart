@@ -3646,105 +3646,99 @@ void main() {
     },
   );
 
-  test(
-    'switch playback entry and play uses the start response',
-    () async {
-      final requestUris = <Uri>[];
-      final requestBodies = <String>[];
-      final requestMethods = <String>[];
-      final server = await io.HttpServer.bind(
-        io.InternetAddress.loopbackIPv4,
-        0,
-      );
-      final subscription = server.listen((request) async {
-        requestUris.add(request.uri);
-        requestMethods.add(request.method);
-        requestBodies.add(await utf8.decoder.bind(request).join());
-        switch (request.uri.path) {
-          case '/api/rooms/room_1/playback/start':
+  test('switch playback entry and play uses the start response', () async {
+    final requestUris = <Uri>[];
+    final requestBodies = <String>[];
+    final requestMethods = <String>[];
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      requestUris.add(request.uri);
+      requestMethods.add(request.method);
+      requestBodies.add(await utf8.decoder.bind(request).join());
+      switch (request.uri.path) {
+        case '/api/rooms/room_1/playback/start':
+          request.response
+            ..statusCode = 200
+            ..headers.contentType = io.ContentType.json
+            ..write('{}');
+        case '/api/rooms/room_1/playback':
+          if (request.method == 'GET') {
             request.response
               ..statusCode = 200
               ..headers.contentType = io.ContentType.json
-              ..write('{}');
-          case '/api/rooms/room_1/playback':
-            if (request.method == 'GET') {
-              request.response
-                ..statusCode = 200
-                ..headers.contentType = io.ContentType.json
-                ..write(
-                  jsonEncode({
-                    'playbackState': {
-                      'roomId': 'room_1',
-                      'playingMediaId': 'med_1',
-                      'position': 0.0,
-                      'speed': 1.0,
-                      'isPlaying': true,
-                      'version': '8',
-                    },
-                    'playback': {
-                      'mediaId': 'med_1',
-                      'roomId': 'room_1',
-                      'name': 'Episode 1',
-                    },
-                  }),
-                );
-            } else {
-              request.response
-                ..statusCode = 200
-                ..headers.contentType = io.ContentType.json
-                ..write(
-                  jsonEncode({
+              ..write(
+                jsonEncode({
+                  'playbackState': {
                     'roomId': 'room_1',
                     'playingMediaId': 'med_1',
                     'position': 0.0,
                     'speed': 1.0,
                     'isPlaying': true,
-                    'version': '9',
-                  }),
-                );
-            }
-          default:
+                    'version': '8',
+                  },
+                  'playback': {
+                    'mediaId': 'med_1',
+                    'roomId': 'room_1',
+                    'name': 'Episode 1',
+                  },
+                }),
+              );
+          } else {
             request.response
-              ..statusCode = 404
-              ..write('unexpected ${request.method} ${request.uri}');
-        }
-        await request.response.close();
-      });
-
-      try {
-        SharedPreferences.setMockInitialValues({});
-        await SyncTvService.init();
-        await SyncTvService.setBaseUrl(
-          'http://${server.address.host}:${server.port}',
-        );
-
-        final playback = await SyncTvService.switchMediaAndPlay(
-          'room_1',
-          'med_1',
-        );
-
-        expect(playback.entry?.id, 'med_1');
-        expect(playback.isPlaying, isTrue);
-        expect(
-          List.generate(
-            requestUris.length,
-            (index) => '${requestMethods[index]} ${requestUris[index].path}',
-          ),
-          [
-            'POST /api/rooms/room_1/playback/start',
-            'GET /api/rooms/room_1/playback',
-          ],
-        );
-        expect(jsonDecode(requestBodies[0]), {
-          'mediaId': 'med_1',
-          'playlistId': '',
-        });
-      } finally {
-        await subscription.cancel();
-        await server.close(force: true);
+              ..statusCode = 200
+              ..headers.contentType = io.ContentType.json
+              ..write(
+                jsonEncode({
+                  'roomId': 'room_1',
+                  'playingMediaId': 'med_1',
+                  'position': 0.0,
+                  'speed': 1.0,
+                  'isPlaying': true,
+                  'version': '9',
+                }),
+              );
+          }
+        default:
+          request.response
+            ..statusCode = 404
+            ..write('unexpected ${request.method} ${request.uri}');
       }
-    },
-  );
+      await request.response.close();
+    });
+
+    try {
+      SharedPreferences.setMockInitialValues({});
+      await SyncTvService.init();
+      await SyncTvService.setBaseUrl(
+        'http://${server.address.host}:${server.port}',
+      );
+
+      final playback = await SyncTvService.switchMediaAndPlay(
+        'room_1',
+        'med_1',
+      );
+
+      expect(playback.entry?.id, 'med_1');
+      expect(playback.isPlaying, isTrue);
+      expect(
+        List.generate(
+          requestUris.length,
+          (index) => '${requestMethods[index]} ${requestUris[index].path}',
+        ),
+        [
+          'POST /api/rooms/room_1/playback/start',
+          'GET /api/rooms/room_1/playback',
+        ],
+      );
+      expect(jsonDecode(requestBodies[0]), {
+        'mediaId': 'med_1',
+        'playlistId': '',
+      });
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+  });
 
   test('dynamic playback state keeps playlist target identity', () {
     final api = SyncTvApiClient(
@@ -6122,7 +6116,7 @@ void main() {
             requireApproval: true,
             maxMembers: 42,
             chatEnabled: false,
-            guestAddedPermissions: RoomGuestPermissions.viewMemberList,
+            guestAddedPermissions: RoomGuestPermissions.viewMembers,
           ),
         );
       } finally {
@@ -6140,7 +6134,7 @@ void main() {
       expect(settings['chatEnabled'], isFalse);
       expect(
         settings['guestAddedPermissions'],
-        RoomGuestPermissions.viewMemberList.toString(),
+        RoomGuestPermissions.viewMembers.toString(),
       );
       expect(
         body['updateMask'],

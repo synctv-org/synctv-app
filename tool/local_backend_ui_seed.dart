@@ -19,8 +19,8 @@ void main() {
         defaultValue: 'LocalDevRootPass2026!',
       );
       final stamp = DateTime.now().microsecondsSinceEpoch;
-    final username = 'uiadmin$stamp';
-    final password = 'UiAdmin$stamp-A9';
+      final username = 'uiadmin$stamp';
+      final password = 'UiAdmin$stamp-A9';
 
       SharedPreferences.setMockInitialValues({});
       await SyncTvService.init();

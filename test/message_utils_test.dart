@@ -63,7 +63,9 @@ void main() {
     expect(find.text('same-frame success'), findsNothing);
   });
 
-  testWidgets('toast uses the root overlay across route changes', (tester) async {
+  testWidgets('toast uses the root overlay across route changes', (
+    tester,
+  ) async {
     late BuildContext rootContext;
     await tester.pumpWidget(
       MaterialApp(

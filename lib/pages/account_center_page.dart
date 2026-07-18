@@ -1047,6 +1047,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             roomName: room.roomName,
             creatorId: room.creatorId,
             currentUserId: _user.id,
+            canViewPlaybackHistory: _user.id == room.creatorId,
+            canNavigatePlayback: _user.id == room.creatorId,
             currentSettings: settings,
             realtime: RoomRealtimeSession(
               send: (_) {},
@@ -1205,7 +1207,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       backgroundColor: isDark
           ? const Color(0xFF121212)
           : const Color(0xFFF4F6FA),
-      appBar: AppAppBar(
+      appBar: AppPageBar(
         title: Text(
           context.l10n.accountCenter,
           style: const TextStyle(fontWeight: FontWeight.w800),

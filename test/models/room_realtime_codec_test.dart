@@ -9,6 +9,39 @@ import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_config;
 
 void main() {
+  test(
+    'playback history observation and snapshot preserve public cursor ids',
+    () {
+      final observe = client.ClientMessage.fromBuffer(
+        RoomRealtimeCodec.encodePlaybackHistoryObservation(
+          observeId: 'manage_playback_history',
+          version: '42',
+        ),
+      );
+      expect(
+        observe.observeResource.playbackHistory.afterEventSequence,
+        Int64(42),
+      );
+
+      final message = client.ServerMessage(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'manage_playback_history',
+          playbackHistory: client.ListPlaybackHistoryResponse(
+            historyCursorId: 'ph_current',
+            entries: [
+              client.PlaybackHistoryEntry(id: 'ph_current', mediaId: 'med_1'),
+            ],
+          ),
+        ),
+      );
+      final decoded = RoomRealtimeCodec.decode(
+        Uint8List.fromList(message.writeToBuffer()),
+      );
+      expect(decoded.playbackHistory?.historyCursorId, 'ph_current');
+      expect(decoded.playbackHistory?.entries.single.id, 'ph_current');
+    },
+  );
+
   test('playlist realtime snapshot preserves source providers', () {
     final response = client.ListPlaylistItemsResponse(
       playlists: [

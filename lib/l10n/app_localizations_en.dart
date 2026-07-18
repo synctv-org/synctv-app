@@ -5126,7 +5126,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get useWebRtc => 'Use WebRTC';
 
   @override
-  String get deleteAnyMedia => 'Delete any media';
+  String get deleteMedia => 'Delete media';
 
   @override
   String get reorderPlaylist => 'Reorder playlist';
@@ -5138,7 +5138,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackControl => 'Playback control';
 
   @override
-  String get changeCurrentMedia => 'Change current media';
+  String get roomPermissionNavigatePlayback => 'Navigate playback';
+
+  @override
+  String get previousVideo => 'Previous video';
+
+  @override
+  String get nextVideo => 'Next video';
+
+  @override
+  String get playbackHistory => 'Playback history';
+
+  @override
+  String get playbackHistoryEmpty => 'No playback history';
+
+  @override
+  String get playHistoryEntry => 'Play this entry';
+
+  @override
+  String get viewPlaybackHistory => 'View playback history';
+
+  @override
+  String get playbackHistoryRetentionDays => 'Playback history retention';
+
+  @override
+  String get playbackHistoryRetentionDaysDescription =>
+      'Days to retain playback history. Use 0 to disable age-based cleanup.';
+
+  @override
+  String get playbackHistoryMaxEntries => 'Playback history limit';
+
+  @override
+  String get playbackHistoryMaxEntriesDescription =>
+      'Maximum entries retained per room. Use 0 to disable count-based cleanup.';
 
   @override
   String get changePlaybackRate => 'Change playback rate';
@@ -5154,6 +5186,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteChat => 'Delete chat messages';
+
+  @override
+  String get roomPermissionManageOwnMedia => 'Manage own media';
+
+  @override
+  String get roomPermissionReorderMedia => 'Reorder media and playlists';
+
+  @override
+  String get roomPermissionClearMedia => 'Clear media queue';
+
+  @override
+  String get roomPermissionManageLiveStreams => 'Manage live streams';
+
+  @override
+  String get roomPermissionReviewJoinRequests => 'Review join requests';
+
+  @override
+  String get roomPermissionRemoveMembers => 'Remove members';
+
+  @override
+  String get roomPermissionManageMemberPermissions =>
+      'Manage member permissions';
+
+  @override
+  String get roomPermissionAddMembers => 'Add members';
+
+  @override
+  String get roomPermissionManageRoomSettings => 'Manage room settings';
+
+  @override
+  String get roomPermissionDeleteChatMessages => 'Delete chat messages';
 
   @override
   String get defaultRoomMemberLimit => 'Default room member limit';
