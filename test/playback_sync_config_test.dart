@@ -101,7 +101,7 @@ void main() {
     );
     expect(play.playbackStateUpdate.playing, isTrue);
     expect(play.playbackStateUpdate.position, 1.234);
-    expect(play.playbackStateUpdate.speed, 1.5);
+    expect(play.playbackStateUpdate.hasSpeed(), isFalse);
     expect(play.playbackStateUpdate.expectedMediaId, 'media_public');
     expect(play.playbackStateUpdate.expectedPlaylistId, 'playlist_public');
     expect(play.playbackStateUpdate.expectedTargetHash, 'target_hash');
@@ -115,6 +115,7 @@ void main() {
       client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SEEK,
     );
     expect(seek.playbackStateUpdate.position, 10.0);
+    expect(seek.playbackStateUpdate.hasSpeed(), isFalse);
 
     final speed = reporter.playbackSpeedChanged(value: value, speed: 2.0)!;
     expect(

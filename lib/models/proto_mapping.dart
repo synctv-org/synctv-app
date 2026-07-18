@@ -22,6 +22,43 @@ Map<String, dynamic> protoMessageToJsonMap(pb.GeneratedMessage message) {
   return const {};
 }
 
+Map<String, dynamic> protoMessageToIntegerEnumJsonMap(
+  pb.GeneratedMessage message,
+) {
+  final result = <String, dynamic>{};
+  for (final field in message.info_.sortedByTag) {
+    if (!message.hasField(field.tagNumber)) continue;
+    result[field.name] = _protoJsonValue(
+      message.getField(field.tagNumber),
+      isBytes: pb.PbFieldType.isBytes(field.type),
+    );
+  }
+  return result;
+}
+
+dynamic _protoJsonValue(Object? value, {bool isBytes = false}) {
+  if (value == null) return null;
+  if (isBytes && value is List<int>) return base64Encode(value);
+  if (isBytes && value is Iterable) {
+    return value
+        .map((entry) => entry is List<int> ? base64Encode(entry) : entry)
+        .toList();
+  }
+  if (value is pb.GeneratedMessage) {
+    return protoMessageToIntegerEnumJsonMap(value);
+  }
+  if (value is pb.ProtobufEnum) return value.value;
+  if (value is Int64) return value.toString();
+  if (value is Iterable) return value.map(_protoJsonValue).toList();
+  if (value is Map) {
+    return value.map(
+      (key, entryValue) =>
+          MapEntry(key.toString(), _protoJsonValue(entryValue)),
+    );
+  }
+  return value;
+}
+
 Map<String, dynamic> roomSettingsToJson(client.RoomSettings settings) {
   return {
     'allowGuestJoin': settings.allowGuestJoin,

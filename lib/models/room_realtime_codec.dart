@@ -67,6 +67,8 @@ class RoomRealtimeError {
   final String message;
   final int code;
   final String detail;
+
+  bool get isConflict => code == 2003;
 }
 
 class RoomRealtimeOnlineEvent {

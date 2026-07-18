@@ -31,13 +31,12 @@ import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 const String _settingsObserveId = 'manage_room_settings';
 const String _membersObserveId = 'manage_room_member_events';
 const String _membersOnlineCountObserveId = 'manage_member_online_count';
-const String _mediaObserveId = 'manage_playlist_items';
+const String _mediaObserveIdPrefix = 'manage_playlist_items';
 const String _chatObserveId = 'manage_chat_events';
 const Set<String> _managementObserveIds = {
   _settingsObserveId,
   _membersObserveId,
   _membersOnlineCountObserveId,
-  _mediaObserveId,
   _chatObserveId,
 };
 
@@ -198,6 +197,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   String _settingsWatchVersion = '';
   String _membersWatchVersion = '';
   String _mediaWatchVersion = '';
+  String _mediaObserveId = '${_mediaObserveIdPrefix}_0';
+  int _mediaObserveGeneration = 0;
+  int _mediaLoadGeneration = 0;
   String _chatWatchVersion = '';
   client_enum.MediaListSortBy _mediaSortBy =
       client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION;
@@ -529,6 +531,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   void _startMediaWatch() {
+    final previousObserveId = _mediaObserveId;
+    _mediaObserveGeneration += 1;
+    _mediaObserveId = '${_mediaObserveIdPrefix}_$_mediaObserveGeneration';
+    _sendRealtime(RoomRealtimeCodec.encodeUnobserveResource(previousObserveId));
     _sendRealtime(
       RoomRealtimeCodec.encodePlaylistObservation(
         observeId: _mediaObserveId,
@@ -567,11 +573,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     final observeId = payload is Map
         ? payload['observeId']?.toString() ?? ''
         : '';
-    if (!_managementObserveIds.contains(observeId)) return;
+    if (observeId != _mediaObserveId &&
+        !_managementObserveIds.contains(observeId)) {
+      return;
+    }
     _appendRealtimeEvent(entry);
   }
 
   void _handleRealtimeMessage(RoomRealtimeMessage message) {
+    if (message.resourceObserveId == _mediaObserveId) {
+      _handleRealtimeMediaMessage(message);
+      return;
+    }
     switch (message.resourceObserveId) {
       case _settingsObserveId:
         _handleRealtimeSettingsMessage(message);
@@ -581,9 +594,6 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         break;
       case _membersOnlineCountObserveId:
         _handleRealtimeMembersOnlineMessage(message);
-        break;
-      case _mediaObserveId:
-        _handleRealtimeMediaMessage(message);
         break;
       case _chatObserveId:
         _handleRealtimeChatMessage(message);
@@ -1082,6 +1092,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Future<void> _loadMediaLibrary({bool refresh = false}) async {
     if (!mounted) return;
+    final loadGeneration = ++_mediaLoadGeneration;
     setState(() => _mediaLoading = true);
     try {
       final page = await SyncTvService.listMediaLibrary(
@@ -1096,20 +1107,22 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         availability: _mediaAvailability,
         refresh: refresh,
       );
-      if (!mounted) return;
+      if (!mounted || loadGeneration != _mediaLoadGeneration) return;
       setState(() {
         _mediaPage = page;
         _mediaWatchVersion = page.version;
       });
     } catch (e) {
-      if (mounted) {
+      if (mounted && loadGeneration == _mediaLoadGeneration) {
         MessageUtils.showError(
           context,
           context.l10n.loadMediaLibraryFailed('$e'),
         );
       }
     } finally {
-      if (mounted) setState(() => _mediaLoading = false);
+      if (mounted && loadGeneration == _mediaLoadGeneration) {
+        setState(() => _mediaLoading = false);
+      }
     }
   }
 
@@ -1562,6 +1575,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       } else {
         _mediaTargetStack.add(target);
       }
+      _mediaPage = null;
       _mediaWatchVersion = '';
     });
     _startMediaWatch();
@@ -1572,6 +1586,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     if (_mediaTargetStack.isNotEmpty) {
       setState(() {
         _mediaTargetStack.removeLast();
+        _mediaPage = null;
         _mediaWatchVersion = '';
       });
       _startMediaWatch();
@@ -1584,6 +1599,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         if (_mediaPlaylistEntryStack.isNotEmpty) {
           _mediaPlaylistEntryStack.removeLast();
         }
+        _mediaPage = null;
         _mediaWatchVersion = '';
       });
       _startMediaWatch();
@@ -3291,11 +3307,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                 width: 440,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: RoomMemberPermissions.descriptions.entries
+                  children: RoomMemberPermissions.values
                       .map(
-                        (entry) => _buildPermissionOverrideRow(
-                          entry.value,
-                          entry.key,
+                        (permission) => _buildPermissionOverrideRow(
+                          context.l10n.roomMemberPermissionLabel(permission),
+                          permission,
                           added,
                           removed,
                           setOverride,
@@ -4412,8 +4428,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         summary: mediaPage == null
             ? context.l10n.waitingForMediaSnapshot
             : context.l10n.folderMediaSummary(
-                mediaPage.folderCount,
-                mediaPage.fileCount,
+                mediaPage.effectiveFolderCount,
+                mediaPage.effectiveFileCount,
               ),
         stats: _mediaWatchStats,
         details: {
@@ -4951,7 +4967,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
           ),
           if (page != null)
             Text(
-              context.l10n.folderMediaSummary(page.folderCount, page.fileCount),
+              context.l10n.folderMediaSummary(
+                page.effectiveFolderCount,
+                page.effectiveFileCount,
+              ),
               style: TextStyle(color: theme.hintColor, fontSize: 12),
             ),
         ],
@@ -5200,7 +5219,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 76,
+            width: 104,
             child: Text(
               label,
               style: TextStyle(color: Theme.of(context).hintColor),
@@ -5497,17 +5516,18 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                     child: Text(context.l10n.removeThumbnail),
                   ),
                 ],
-                PopupMenuItem(
-                  value: _MediaAction.moveUp,
-                  enabled: playlistIndex > 0,
-                  child: Text(context.l10n.moveUp),
-                ),
-                PopupMenuItem(
-                  value: _MediaAction.moveDown,
-                  enabled:
-                      playlistIndex >= 0 && playlistIndex < playlistCount - 1,
-                  child: Text(context.l10n.moveDown),
-                ),
+                if (entry.id.startsWith('pl_')) ...[
+                  PopupMenuItem(
+                    value: _MediaAction.moveUp,
+                    enabled: playlistIndex > 0,
+                    child: Text(context.l10n.moveUp),
+                  ),
+                  PopupMenuItem(
+                    value: _MediaAction.moveDown,
+                    enabled: playlistIndex < playlistCount - 1,
+                    child: Text(context.l10n.moveDown),
+                  ),
+                ],
                 if (entry.id.startsWith('med_'))
                   PopupMenuItem(
                     value: _MediaAction.move,
@@ -5721,13 +5741,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                             ? null
                             : () => _toggleChatPin(message),
                       ),
-                      _buildChatMessageActionButton(
-                        tooltip: context.l10n.edit,
-                        icon: Icons.edit_outlined,
-                        onPressed: message.isDeleted
-                            ? null
-                            : () => _editChatMessage(message),
-                      ),
+                      if (message.canEditBy(_currentUserId))
+                        _buildChatMessageActionButton(
+                          tooltip: context.l10n.edit,
+                          icon: Icons.edit_outlined,
+                          onPressed: () => _editChatMessage(message),
+                        ),
                       _buildChatMessageActionButton(
                         tooltip: context.l10n.delete,
                         icon: Icons.delete_outline,
@@ -6144,7 +6163,9 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     if (_mediaPlaylistStack.isEmpty) return context.l10n.rootDirectory;
     final path = page?.currentPath.map((node) => node.name).join(' / ') ?? '';
-    return path.isEmpty ? _currentPlaylistId : path;
+    if (path.isNotEmpty) return path;
+    final entryName = _mediaPlaylistEntryStack.lastOrNull?.name.trim() ?? '';
+    return entryName.isEmpty ? _currentPlaylistId : entryName;
   }
 
   Widget _buildMemberTile(

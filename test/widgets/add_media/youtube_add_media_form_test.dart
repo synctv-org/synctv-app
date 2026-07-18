@@ -7,6 +7,7 @@ import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/widgets/add_media/youtube_add_media_form.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 void main() {
   testWidgets('normalizes playlist URL and submits native playlist config', (
@@ -43,7 +44,18 @@ void main() {
       ),
     );
 
+    await tester.enterText(
+      find.byKey(const Key('youtube-value')),
+      'dQw4w9WgXcQ',
+    );
     await _selectMode(tester, 'Playlist');
+    expect(
+      tester
+          .widget<AppTextField>(find.byKey(const Key('youtube-value')))
+          .controller
+          .text,
+      isEmpty,
+    );
     await tester.enterText(
       find.byKey(const Key('youtube-value')),
       'https://www.youtube.com/playlist?list=PL123',

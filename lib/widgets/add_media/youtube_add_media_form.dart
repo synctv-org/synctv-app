@@ -124,7 +124,9 @@ class _YoutubeAddMediaFormState extends State<YoutubeAddMediaForm> {
                 ? null
                 : (mode) {
                     if (mode == null) return;
+                    if (mode == _mode) return;
                     _mode = mode;
+                    _valueController.clear();
                     _changed();
                   },
           ),

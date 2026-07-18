@@ -39,4 +39,22 @@ void main() {
       );
     });
   });
+
+  test('playback source identity distinguishes duplicate static media', () {
+    final first = SyncTvPlaybackStatus(
+      playingMediaId: 'med_73',
+      targetHash: 'empty-target',
+    );
+    final duplicate = SyncTvPlaybackStatus(
+      playingMediaId: 'med_74',
+      targetHash: 'empty-target',
+    );
+    final refreshed = SyncTvPlaybackStatus(
+      playingMediaId: 'med_73',
+      targetHash: 'empty-target',
+    );
+
+    expect(first.hasSamePlaybackSource(duplicate), isFalse);
+    expect(first.hasSamePlaybackSource(refreshed), isTrue);
+  });
 }

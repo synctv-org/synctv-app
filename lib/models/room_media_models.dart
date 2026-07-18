@@ -44,6 +44,12 @@ class RoomMediaLibraryPage {
   });
 
   List<RoomMediaEntry> get entries => [...playlists, ...media, ...dynamicItems];
+
+  int get effectiveFolderCount =>
+      folderCount + dynamicItems.where((item) => item.isFolder).length;
+
+  int get effectiveFileCount =>
+      fileCount + dynamicItems.where((item) => !item.isFolder).length;
 }
 
 class RoomPlaylistsPage {
@@ -315,6 +321,11 @@ class RoomChatMessageInfo {
   bool get isUserMessage =>
       messageType == client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER.value;
   bool get isSystemMessage => !isUserMessage;
+  bool canEditBy(String currentUserId) =>
+      currentUserId.isNotEmpty &&
+      userId == currentUserId &&
+      isUserMessage &&
+      !isDeleted;
 
   RoomChatMessageInfo copyWith({
     String? id,

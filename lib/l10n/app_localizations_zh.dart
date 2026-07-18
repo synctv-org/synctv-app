@@ -1008,63 +1008,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get muted => '静音';
 
   @override
-  String get castDevices => '投屏设备';
-
-  @override
-  String castingTo(String device) {
-    return '正在投屏：$device';
-  }
-
-  @override
-  String get stopCasting => '退出投屏';
-
-  @override
-  String get searchingForDevices => '正在搜索设备...';
-
-  @override
-  String castFailed(String error) {
-    return '投屏失败：$error';
-  }
-
-  @override
-  String castVolumeFailed(String error) {
-    return '调节投屏音量失败：$error';
-  }
-
-  @override
-  String castMuteFailed(String error) {
-    return '切换投屏静音失败：$error';
-  }
-
-  @override
-  String castSeekFailed(String error) {
-    return '投屏跳转失败：$error';
-  }
-
-  @override
-  String get castDeviceInfo => '投屏设备信息';
-
-  @override
-  String get device => '设备';
-
-  @override
-  String get transportStatus => '传输状态';
-
-  @override
-  String get availableActions => '可用动作';
-
-  @override
-  String get mediaDuration => '媒体时长';
-
-  @override
-  String get capabilities => '能力';
-
-  @override
-  String castDeviceInfoFailed(String error) {
-    return '读取投屏设备信息失败：$error';
-  }
-
-  @override
   String get chooseSubtitles => '选择字幕';
 
   @override
@@ -1077,70 +1020,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get danmakuHint => '发个弹幕见证当下...';
 
   @override
-  String get unknownDevice => '未知设备';
-
-  @override
-  String get previousTrack => '上一首';
-
-  @override
-  String get previousTrackSelected => '已切换上一首';
-
-  @override
-  String get previousTrackFailed => '上一首失败';
-
-  @override
-  String get rewindTenSeconds => '后退 10 秒';
-
-  @override
   String get pause => '暂停';
 
   @override
   String get play => '播放';
 
   @override
-  String get forwardTenSeconds => '前进 10 秒';
-
-  @override
-  String get nextTrack => '下一首';
-
-  @override
-  String get nextTrackSelected => '已切换下一首';
-
-  @override
-  String get nextTrackFailed => '下一首失败';
-
-  @override
-  String get sequentialModeSet => '已设置顺序播放';
-
-  @override
-  String get setPlaybackModeFailed => '设置播放模式失败';
-
-  @override
-  String get sequential => '顺序';
-
-  @override
-  String get repeatModeSet => '已设置循环播放';
-
-  @override
-  String get repeat => '循环';
-
-  @override
   String get info => '信息';
-
-  @override
-  String get syncStatus => '同步状态';
-
-  @override
-  String get switchDevice => '切换设备';
-
-  @override
-  String get castingInProgress => '正在投屏中';
-
-  @override
-  String get remoteControl => '遥控器';
-
-  @override
-  String get cast => '投屏';
 
   @override
   String get live => '直播';
@@ -3857,6 +3743,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get roomSettings => '房间设置';
+
+  @override
+  String get roomSettingsShort => '设置';
 
   @override
   String get watchingSettingChanges => '监听设置变更';

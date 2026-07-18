@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/models/provider_models.dart';
 import 'package:synctv_app/widgets/add_media/douyin_add_media_form.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 void main() {
   testWidgets('Douyin form submits live source with shared credential scope', (
@@ -37,8 +38,19 @@ void main() {
       ),
     );
 
+    await tester.enterText(
+      find.byKey(const Key('douyin-value')),
+      '7123456789012345678',
+    );
     await tester.tap(find.text('Live'));
     await tester.pump();
+    expect(
+      tester
+          .widget<AppTextField>(find.byKey(const Key('douyin-value')))
+          .controller
+          .text,
+      isEmpty,
+    );
     await tester.enterText(
       find.byKey(const Key('douyin-value')),
       'https://live.douyin.com/123456',

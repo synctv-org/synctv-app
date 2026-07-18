@@ -16,9 +16,6 @@ import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
 import 'package:synctv_app/models/acfun_danmaku_codec.dart';
 import 'package:synctv_app/services/synctv_service.dart';
-import 'package:synctv_app/services/dlna.dart';
-import 'package:synctv_app/services/xml_parser.dart';
-import 'package:synctv_app/utils/message_utils.dart';
 
 class DanmakuController extends ChangeNotifier {
   DanmakuController({this.onStreamAccessExpired});
@@ -333,7 +330,6 @@ class CustomVideoPlayer extends StatefulWidget {
   final Function(String)? onSendDanmaku;
   final IconData? fullScreenIcon;
   final IconData? exitFullScreenIcon;
-  final bool showCastButton;
   final Widget? extraBottomWidget;
   final Widget? Function(BuildContext context)? diagnosticsBuilder;
   final VideoPlayerInteractionMode interactionMode;
@@ -354,7 +350,6 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onSendDanmaku,
     this.fullScreenIcon,
     this.exitFullScreenIcon,
-    this.showCastButton = true,
     this.extraBottomWidget,
     this.diagnosticsBuilder,
     this.interactionMode = VideoPlayerInteractionMode.mobile,
@@ -373,6 +368,30 @@ VideoPlayerInteractionMode videoPlayerInteractionModeForPlatform(
   TargetPlatform.iOS => VideoPlayerInteractionMode.mobile,
   _ => VideoPlayerInteractionMode.desktop,
 };
+
+String sanitizeSubtitleText(String text) {
+  return text
+      .replaceAll(RegExp(r'<(?:\d{2}:)?\d{2}:\d{2}[.,]\d{3}>'), '')
+      .replaceAll(RegExp(r'<[^>]+>'), '')
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .split('\n')
+      .map((line) => line.trim())
+      .where((line) => line.isNotEmpty)
+      .join('\n');
+}
+
+String subtitleDisplayLabel(String key, dynamic value) {
+  if (value is Map) {
+    final name = value['name']?.toString().trim() ?? '';
+    if (name.isNotEmpty) return name;
+    final language = value['language']?.toString().trim() ?? '';
+    if (language.isNotEmpty) return language;
+  }
+  return key;
+}
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     with SingleTickerProviderStateMixin {
@@ -406,20 +425,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   final List<_SubtitleItem> _subtitleItems = [];
   String _currentSubtitle = '';
   Timer? _subtitleTimer;
-
-  // DLNA
-  final DLNAManager _dlnaManager = DLNAManager();
-  Map<String, DLNADevice> _dlnaDevices = {};
-  DLNADevice? _currentDlnaDevice;
-  bool _isCasting = false;
-  bool _isSearchingDlna = false;
-  bool _dlnaIsPlaying = false;
-  bool _dlnaMuted = false;
-  int _dlnaVolume = 50;
-  Duration _dlnaPosition = Duration.zero;
-  Duration _dlnaDuration = Duration.zero;
-  StreamSubscription? _dlnaDevicesSubscription;
-  StreamSubscription? _dlnaPositionSubscription;
 
   bool get _isDesktopMode =>
       widget.interactionMode == VideoPlayerInteractionMode.desktop;
@@ -502,17 +507,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _volumeOverlayHideTimer?.cancel();
     _removeVolumeOverlay();
     _subtitleTimer?.cancel();
-    _stopDlna();
     super.dispose();
-  }
-
-  void _stopDlna() {
-    _dlnaManager.stop();
-    _dlnaDevicesSubscription?.cancel();
-    _dlnaPositionSubscription?.cancel();
-    _currentDlnaDevice?.positionPoller.stop();
-    _currentDlnaDevice = null;
-    _isCasting = false;
   }
 
   void _videoListener() {
@@ -520,9 +515,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       _rememberAudibleVolume();
       setState(() {});
       if (_subtitleItems.isNotEmpty) {
-        final position = _isCasting
-            ? _dlnaPosition
-            : widget.controller.value.position;
+        final position = widget.controller.value.position;
         try {
           final current = _subtitleItems.firstWhere(
             (item) => item.start <= position && item.end >= position,
@@ -949,8 +942,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             j++;
           }
 
-          if (text.isNotEmpty) {
-            _subtitleItems.add(_SubtitleItem(start, end, text.trim()));
+          final sanitizedText = sanitizeSubtitleText(text);
+          if (sanitizedText.isNotEmpty) {
+            _subtitleItems.add(_SubtitleItem(start, end, sanitizedText));
           }
           i = j;
         } catch (e) {
@@ -1030,21 +1024,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Future<void> _togglePlayPause() async {
-    if (_isCasting) {
-      if (_dlnaIsPlaying) {
-        await _currentDlnaDevice?.pause();
-      } else {
-        await _currentDlnaDevice?.play();
-      }
-      if (mounted) {
-        setState(() {
-          _dlnaIsPlaying = !_dlnaIsPlaying;
-          _showControls = true;
-        });
-      }
-      return;
-    }
-
     final nextIsPlaying = !widget.controller.value.isPlaying;
     if (widget.controller.value.isPlaying) {
       await widget.controller.pause();
@@ -1059,7 +1038,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Future<void> _seekFromUser(Duration target) async {
-    if (_isCasting) return;
     if (widget.isLive) return;
     final duration = widget.controller.value.duration;
     final clamped = target < Duration.zero
@@ -1073,7 +1051,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Future<void> _setPlaybackSpeedFromUser(double speed) async {
-    if (_isCasting) return;
     await widget.controller.setPlaybackSpeed(speed);
     widget.onUserPlaybackSpeedChanged?.call(speed);
     _startHideTimer();
@@ -1093,7 +1070,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Future<void> _seekRelative(Duration offset) async {
-    if (_isCasting) return;
     if (widget.isLive) return;
     final value = widget.controller.value;
     final duration = value.duration;
@@ -1148,7 +1124,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onHorizontalDragStart(DragStartDetails details) {
     if (_isDesktopMode) return;
-    if (_isCasting) return;
     if (widget.isLive) return;
     _isDragging = true;
     _dragStartPosition = widget.controller.value.position;
@@ -1162,7 +1137,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     if (_isDesktopMode) return;
-    if (_isCasting) return;
     if (widget.isLive) return;
     if (_dragStartPosition == null) return;
 
@@ -1184,7 +1158,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onHorizontalDragEnd(DragEndDetails details) {
     if (_isDesktopMode) return;
-    if (_isCasting) return;
     if (widget.isLive) return;
     _isDragging = false;
     if (_dragStartPosition != null) {
@@ -1198,7 +1171,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onVerticalDragStart(DragStartDetails details) async {
     if (_isDesktopMode) return;
-    if (_isCasting) return;
     _isVerticalDragging = true;
     final width = MediaQuery.of(context).size.width;
     final isLeft = details.globalPosition.dx < width / 2;
@@ -1234,7 +1206,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onVerticalDragUpdate(DragUpdateDetails details) async {
     if (_isDesktopMode) return;
-    if (_isCasting || !_isVerticalDragging) return;
+    if (!_isVerticalDragging) return;
     final delta = details.primaryDelta! / -200; // Up is negative, so invert
 
     if (_dragStartBrightness != null) {
@@ -1273,7 +1245,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onVerticalDragEnd(DragEndDetails details) {
     _isVerticalDragging = false;
-    if (_isCasting) return;
     _dragStartBrightness = null;
     _dragStartVolume = null;
 
@@ -1289,7 +1260,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onVerticalDragCancel() {
     _isVerticalDragging = false;
-    if (_isCasting) return;
     _dragStartBrightness = null;
     _dragStartVolume = null;
 
@@ -1501,392 +1471,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     );
   }
 
-  void _showDlnaMenu() {
-    _dlnaDevices.clear();
-    _isSearchingDlna = true;
-
-    StateSetter? sheetSetState;
-
-    _dlnaManager.start().then((manager) {
-      _dlnaDevicesSubscription?.cancel();
-      _dlnaDevicesSubscription = manager.devices.stream.listen((devices) {
-        if (mounted) {
-          setState(() {
-            _dlnaDevices = devices;
-          });
-          sheetSetState?.call(() {});
-        }
-      });
-    });
-
-    showAppBottomSheet<void>(
-      context: context,
-      backgroundColor: const Color(0xFF1E1E2C),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          sheetSetState = setSheetState;
-          return AppSafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        context.l10n.castDevices,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (_isSearchingDlna)
-                        const AppLoadingIndicator(
-                          size: AppLoadingSize.sm,
-                          centered: false,
-                          color: Colors.white,
-                        ),
-                    ],
-                  ),
-                ),
-                const AppDivider(color: Colors.white24, height: 1),
-                if (_isCasting && _currentDlnaDevice != null)
-                  AppTile(
-                    prefix: const Icon(
-                      Icons.cast_connected,
-                      color: Color(0xFF5D5FEF),
-                    ),
-                    title: Text(
-                      context.l10n.castingTo(
-                        _currentDlnaDevice!.info.friendlyName,
-                      ),
-                      style: const TextStyle(color: Color(0xFF5D5FEF)),
-                    ),
-                    suffix: AppActionButton(
-                      onPressed: () {
-                        _stopDlnaCasting();
-                        Navigator.pop(context);
-                      },
-                      label: context.l10n.stopCasting,
-                      style: AppActionButtonStyle.destructive,
-                    ),
-                  ),
-                if (_dlnaDevices.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Text(
-                      context.l10n.searchingForDevices,
-                      style: const TextStyle(color: Colors.white54),
-                    ),
-                  ),
-                Flexible(
-                  child: AppSingleChildScrollView(
-                    child: Column(
-                      children: _dlnaDevices.values.map((device) {
-                        final isSelected = _currentDlnaDevice == device;
-                        return AppTile(
-                          prefix: Icon(
-                            Icons.tv,
-                            color: isSelected
-                                ? const Color(0xFF5D5FEF)
-                                : Colors.white,
-                          ),
-                          title: Text(
-                            device.info.friendlyName,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? const Color(0xFF5D5FEF)
-                                  : Colors.white,
-                            ),
-                          ),
-                          onPressed: () async {
-                            Navigator.pop(context);
-                            _connectToDlnaDevice(device);
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    ).whenComplete(() {
-      _isSearchingDlna = false;
-      _dlnaManager.stop();
-    });
-  }
-
-  Future<void> _connectToDlnaDevice(DLNADevice device) async {
-    widget.controller.pause();
-
-    setState(() {
-      _currentDlnaDevice = device;
-      _isCasting = true;
-      _dlnaIsPlaying = true;
-      _dlnaMuted = false;
-      _dlnaVolume = 50;
-    });
-
-    try {
-      final url = widget.controller.dataSource;
-      debugPrint('Casting to ${device.info.friendlyName}: $url');
-
-      PlayType type = VideoMime.any;
-      if (url.endsWith('.mp4')) type = VideoMime.mp4;
-      if (url.endsWith('.mkv')) type = VideoMime.xMatroska;
-
-      await device.setUrl(url, title: widget.title, type: type);
-      await device.play();
-
-      device.positionPoller.start();
-      _dlnaPositionSubscription?.cancel();
-      _dlnaPositionSubscription = device.currPosition.stream.listen((position) {
-        if (mounted) {
-          setState(() {
-            _dlnaPosition = Duration(seconds: position.relTimeSeconds);
-            _dlnaDuration = Duration(seconds: position.trackDurationSeconds);
-          });
-        }
-      });
-
-      final currentPos = widget.controller.value.position;
-      if (currentPos > Duration.zero) {
-        await device.seek(_formatDurationDlna(currentPos));
-      }
-      _syncDlnaRenderingState(device);
-    } catch (e) {
-      debugPrint('DLNA Error: $e');
-      if (mounted) {
-        MessageUtils.showError(context, context.l10n.castFailed('$e'));
-        setState(() {
-          _isCasting = false;
-          _currentDlnaDevice = null;
-        });
-      }
-    }
-  }
-
-  Future<void> _stopDlnaCasting({bool resumeLocal = true}) async {
-    final device = _currentDlnaDevice;
-    final position = _dlnaPosition;
-    if (device != null) {
-      try {
-        await device.stop();
-      } catch (e) {
-        debugPrint('DLNA stop failed: $e');
-      }
-      device.positionPoller.stop();
-    }
-    await _dlnaPositionSubscription?.cancel();
-    if (!mounted) return;
-    setState(() {
-      _isCasting = false;
-      _currentDlnaDevice = null;
-      _dlnaIsPlaying = false;
-      _dlnaMuted = false;
-    });
-    if (resumeLocal) {
-      await widget.controller.seekTo(position);
-      await widget.controller.play();
-    }
-  }
-
-  Future<void> _syncDlnaRenderingState([DLNADevice? target]) async {
-    final device = target ?? _currentDlnaDevice;
-    if (device == null) return;
-    try {
-      final results = await Future.wait([
-        device.getVolume(),
-        device.getMute(),
-        device.getTransportInfo(),
-      ]);
-      final volume = VolumeParser(results[0]).current.clamp(0, 100);
-      final muted = MuteParser(results[1]).muted;
-      final transport = TransportInfoParser(results[2]);
-      final playing =
-          transport.currentTransportState.toUpperCase() == 'PLAYING';
-      if (!mounted || _currentDlnaDevice != device) return;
-      setState(() {
-        _dlnaVolume = volume;
-        _dlnaMuted = muted;
-        _dlnaIsPlaying = playing || _dlnaIsPlaying;
-      });
-    } catch (e) {
-      debugPrint('DLNA state sync failed: $e');
-    }
-  }
-
-  Future<void> _setDlnaVolume(int volume) async {
-    final device = _currentDlnaDevice;
-    if (device == null) return;
-    final nextVolume = volume.clamp(0, 100);
-    setState(() {
-      _dlnaVolume = nextVolume;
-      if (nextVolume > 0) _dlnaMuted = false;
-    });
-    try {
-      await device.volume(nextVolume);
-      if (nextVolume > 0) await device.mute(false);
-    } catch (e) {
-      debugPrint('DLNA volume failed: $e');
-      if (mounted) {
-        MessageUtils.showError(context, context.l10n.castVolumeFailed('$e'));
-      }
-    }
-  }
-
-  Future<void> _toggleDlnaMute() async {
-    final device = _currentDlnaDevice;
-    if (device == null) return;
-    final nextMuted = !_dlnaMuted;
-    setState(() => _dlnaMuted = nextMuted);
-    try {
-      await device.mute(nextMuted);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _dlnaMuted = !nextMuted);
-      MessageUtils.showError(context, context.l10n.castMuteFailed('$e'));
-    }
-  }
-
-  Future<void> _seekDlnaBy(Duration delta) async {
-    final device = _currentDlnaDevice;
-    if (device == null) return;
-    final upperBound = _dlnaDuration > Duration.zero
-        ? _dlnaDuration
-        : const Duration(hours: 24);
-    final target = _dlnaPosition + delta;
-    final bounded = target < Duration.zero
-        ? Duration.zero
-        : target > upperBound
-        ? upperBound
-        : target;
-    setState(() => _dlnaPosition = bounded);
-    try {
-      await device.seek(_formatDurationDlna(bounded));
-    } catch (e) {
-      if (mounted) {
-        MessageUtils.showError(context, context.l10n.castSeekFailed('$e'));
-      }
-    }
-  }
-
-  Future<void> _runDlnaCommand(
-    Future<String> Function(DLNADevice device) command, {
-    required String successMessage,
-    required String errorPrefix,
-  }) async {
-    final device = _currentDlnaDevice;
-    if (device == null) return;
-    try {
-      await command(device);
-      if (mounted) {
-        MessageUtils.showInfo(
-          context,
-          successMessage,
-          duration: const Duration(seconds: 1),
-        );
-      }
-    } catch (e) {
-      if (mounted) MessageUtils.showError(context, '$errorPrefix: $e');
-    }
-  }
-
-  Future<void> _showDlnaInfoDialog() async {
-    final device = _currentDlnaDevice;
-    if (device == null) return;
-    try {
-      final results = await Future.wait([
-        device.getTransportInfo(),
-        device.getCurrentTransportActions(),
-        device.getMediaInfo(),
-        device.getDeviceCapabilities(),
-      ]);
-      if (!mounted) return;
-      await showAppDialog<void>(
-        context: context,
-        builder: (dialogContext) => AppDialog(
-          title: Text(context.l10n.castDeviceInfo),
-          icon: const Icon(Icons.info_outline_rounded),
-          body: SizedBox(
-            width: 560,
-            child: AppSingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _DlnaInfoLine(
-                    label: context.l10n.device,
-                    value: device.info.friendlyName,
-                  ),
-                  _DlnaInfoLine(
-                    label: context.l10n.transportStatus,
-                    value: TransportInfoParser(
-                      results[0],
-                    ).currentTransportState.trim(),
-                  ),
-                  _DlnaInfoLine(
-                    label: context.l10n.availableActions,
-                    value: _extractDlnaTag(results[1], 'Actions'),
-                  ),
-                  _DlnaInfoLine(
-                    label: context.l10n.mediaDuration,
-                    value: _extractDlnaTag(results[2], 'MediaDuration'),
-                  ),
-                  _DlnaInfoLine(
-                    label: context.l10n.capabilities,
-                    value: [
-                      _extractDlnaTag(results[3], 'PlayMedia'),
-                      _extractDlnaTag(results[3], 'RecMedia'),
-                      _extractDlnaTag(results[3], 'RecQualityModes'),
-                    ].where((value) => value.isNotEmpty).join(' / '),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            AppActionButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              label: context.l10n.close,
-              style: AppActionButtonStyle.tonal,
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      if (mounted) {
-        MessageUtils.showError(
-          context,
-          context.l10n.castDeviceInfoFailed('$e'),
-        );
-      }
-    }
-  }
-
-  String _extractDlnaTag(String xml, String tagName) {
-    final start = xml.indexOf('<$tagName>');
-    final end = xml.indexOf('</$tagName>');
-    if (start < 0 || end <= start) return '';
-    return xml.substring(start + tagName.length + 2, end).trim();
-  }
-
-  String _formatDurationDlna(Duration d) {
-    // HH:MM:SS
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(d.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(d.inSeconds.remainder(60));
-    return "${twoDigits(d.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
-  }
-
   void _showSubtitleMenu() {
     if (widget.subtitles == null || widget.subtitles!.isEmpty) {
       return;
@@ -1932,7 +1516,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
               child: AppSingleChildScrollView(
                 child: Column(
                   children: widget.subtitles!.entries.map((e) {
-                    final label = e.key;
+                    final label = subtitleDisplayLabel(e.key, e.value);
                     final url = e.value is Map ? e.value['url'] : null;
                     return AppTile(
                       title: Text(
@@ -2023,262 +1607,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     );
   }
 
-  void _showDlnaControlPanel() {
-    showAppBottomSheet<void>(
-      context: context,
-      backgroundColor: const Color(0xFF1E1E2C),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setPanelState) {
-          // Listen to DLNA updates to refresh this panel
-          final subscription = _currentDlnaDevice?.currPosition.stream.listen((
-            _,
-          ) {
-            if (mounted) setPanelState(() {});
-          });
-
-          return PopScope(
-            onPopInvokedWithResult: (_, _) {
-              subscription?.cancel();
-            },
-            child: AppSafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _currentDlnaDevice?.info.friendlyName ??
-                          context.l10n.unknownDevice,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    // Progress
-                    Row(
-                      children: [
-                        Text(
-                          _formatDuration(_dlnaPosition),
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                        Expanded(
-                          child: AppSlider(
-                            value: _dlnaPosition.inSeconds.toDouble().clamp(
-                              0,
-                              _dlnaDuration.inSeconds.toDouble(),
-                            ),
-                            min: 0,
-                            max: _dlnaDuration.inSeconds.toDouble() > 0
-                                ? _dlnaDuration.inSeconds.toDouble()
-                                : 1.0,
-                            activeColor: const Color(0xFF5D5FEF),
-                            inactiveColor: Colors.white24,
-                            thumbColor: Colors.white,
-                            onChanged: (val) {
-                              final target = Duration(seconds: val.toInt());
-                              _currentDlnaDevice?.seek(
-                                _formatDurationDlna(target),
-                              );
-                              setState(() {
-                                _dlnaPosition = target;
-                              });
-                              setPanelState(() {});
-                            },
-                          ),
-                        ),
-                        Text(
-                          _formatDuration(_dlnaDuration),
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        AppIconButton(
-                          icon: _dlnaMuted ? Icons.volume_off : Icons.volume_up,
-                          tooltip: _dlnaMuted
-                              ? context.l10n.unmute
-                              : context.l10n.mute,
-                          onPressed: () async {
-                            await _toggleDlnaMute();
-                            setPanelState(() {});
-                          },
-                        ),
-                        Expanded(
-                          child: AppSlider(
-                            value: _dlnaVolume.toDouble(),
-                            min: 0,
-                            max: 100,
-                            activeColor: const Color(0xFF5D5FEF),
-                            inactiveColor: Colors.white24,
-                            thumbColor: Colors.white,
-                            onChanged: (value) {
-                              _setDlnaVolume(value.round());
-                              setPanelState(() {});
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                          width: 42,
-                          child: Text(
-                            _dlnaMuted ? context.l10n.muted : '$_dlnaVolume',
-                            textAlign: TextAlign.end,
-                            style: const TextStyle(color: Colors.white70),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AppIconButton(
-                          icon: Icons.skip_previous_rounded,
-                          tooltip: context.l10n.previousTrack,
-                          onPressed: () async {
-                            await _runDlnaCommand(
-                              (device) => device.previous(),
-                              successMessage:
-                                  context.l10n.previousTrackSelected,
-                              errorPrefix: context.l10n.previousTrackFailed,
-                            );
-                            setPanelState(() {});
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        AppIconButton(
-                          icon: Icons.replay_10_rounded,
-                          tooltip: context.l10n.rewindTenSeconds,
-                          onPressed: () async {
-                            await _seekDlnaBy(const Duration(seconds: -10));
-                            setPanelState(() {});
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        AppIconButton(
-                          iconSize: 64,
-                          icon: _dlnaIsPlaying
-                              ? Icons.pause_circle_filled
-                              : Icons.play_circle_filled,
-                          tooltip: _dlnaIsPlaying
-                              ? context.l10n.pause
-                              : context.l10n.play,
-                          onPressed: () {
-                            if (_dlnaIsPlaying) {
-                              _currentDlnaDevice?.pause();
-                            } else {
-                              _currentDlnaDevice?.play();
-                            }
-                            setState(() {
-                              _dlnaIsPlaying = !_dlnaIsPlaying;
-                            });
-                            setPanelState(() {});
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        AppIconButton(
-                          icon: Icons.forward_10_rounded,
-                          tooltip: context.l10n.forwardTenSeconds,
-                          onPressed: () async {
-                            await _seekDlnaBy(const Duration(seconds: 10));
-                            setPanelState(() {});
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        AppIconButton(
-                          icon: Icons.skip_next_rounded,
-                          tooltip: context.l10n.nextTrack,
-                          onPressed: () async {
-                            await _runDlnaCommand(
-                              (device) => device.next(),
-                              successMessage: context.l10n.nextTrackSelected,
-                              errorPrefix: context.l10n.nextTrackFailed,
-                            );
-                            setPanelState(() {});
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        AppActionButton(
-                          onPressed: () async {
-                            await _runDlnaCommand(
-                              (device) => device.setPlayMode('NORMAL'),
-                              successMessage: context.l10n.sequentialModeSet,
-                              errorPrefix: context.l10n.setPlaybackModeFailed,
-                            );
-                          },
-                          icon: Icons.format_list_numbered_rounded,
-                          label: context.l10n.sequential,
-                          style: AppActionButtonStyle.outlined,
-                        ),
-                        AppActionButton(
-                          onPressed: () async {
-                            await _runDlnaCommand(
-                              (device) => device.setPlayMode('REPEAT_ALL'),
-                              successMessage: context.l10n.repeatModeSet,
-                              errorPrefix: context.l10n.setPlaybackModeFailed,
-                            );
-                          },
-                          icon: Icons.repeat_rounded,
-                          label: context.l10n.repeat,
-                          style: AppActionButtonStyle.outlined,
-                        ),
-                        AppActionButton(
-                          onPressed: _showDlnaInfoDialog,
-                          icon: Icons.info_outline_rounded,
-                          label: context.l10n.info,
-                          style: AppActionButtonStyle.outlined,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AppActionButton(
-                          onPressed: () async {
-                            await _syncDlnaRenderingState();
-                            setPanelState(() {});
-                          },
-                          icon: Icons.sync_rounded,
-                          label: context.l10n.syncStatus,
-                          style: AppActionButtonStyle.tonal,
-                        ),
-                        const SizedBox(width: 12),
-                        AppActionButton(
-                          onPressed: () async {
-                            await _stopDlnaCasting();
-                            if (context.mounted) Navigator.pop(context);
-                          },
-                          icon: Icons.cast_connected_rounded,
-                          label: context.l10n.stopCasting,
-                          style: AppActionButtonStyle.destructive,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final videoValue = widget.controller.value;
@@ -2313,106 +1641,28 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                if (_isCasting)
-                  AppPanelSurface(
-                    color: Colors.black,
-                    width: double.infinity,
-                    height: double.infinity,
-                    borderRadius: BorderRadius.zero,
-                    clipBehavior: Clip.none,
-                    child: Stack(
-                      children: [
-                        // Top Right Switch Button
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: AppSafeArea(
-                            child: AppOverlayActionButton(
-                              icon: Icons.swap_horiz,
-                              label: context.l10n.switchDevice,
-                              onPressed: _showDlnaMenu,
-                              foregroundColor: Colors.white70,
-                              backgroundColor: Colors.black26,
-                              textStyle: const TextStyle(fontSize: 13),
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: AppSingleChildScrollView(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.cast_connected,
-                                  color: Colors.white54,
-                                  size: 48,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  context.l10n.castingInProgress,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                  ),
-                                  child: Text(
-                                    _currentDlnaDevice?.info.friendlyName ??
-                                        context.l10n.unknownDevice,
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 14,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                // Control Button
-                                AppOverlayActionButton(
-                                  onPressed: _showDlnaControlPanel,
-                                  icon: Icons.tune,
-                                  label: context.l10n.remoteControl,
-                                  backgroundColor: Colors.white10,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  textStyle: const TextStyle(fontSize: 14),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Center(
-                    child: AspectRatio(
-                      aspectRatio: videoValue.aspectRatio > 0
-                          ? videoValue.aspectRatio
-                          : 16 / 9,
-                      child: VideoPlayer(widget.controller),
-                    ),
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: videoValue.aspectRatio > 0
+                        ? videoValue.aspectRatio
+                        : 16 / 9,
+                    child: VideoPlayer(widget.controller),
                   ),
+                ),
                 Positioned.fill(
-                  child: DanmakuOverlay(
-                    videoController: widget.controller,
-                    danmakuList: widget.danmakuController?.items ?? [],
-                    isEnabled: _showDanmaku,
+                  child: IgnorePointer(
+                    child: DanmakuOverlay(
+                      videoController: widget.controller,
+                      danmakuList: widget.danmakuController?.items ?? [],
+                      isEnabled: _showDanmaku,
+                    ),
                   ),
                 ),
                 if (_currentSubtitle.isNotEmpty)
                   Positioned(
-                    bottom: widget.isFullScreen ? 40 : 10,
+                    bottom: _showControls
+                        ? (widget.isFullScreen ? 112 : 76)
+                        : (widget.isFullScreen ? 40 : 10),
                     left: 16,
                     right: 16,
                     child: AppPanelSurface(
@@ -2452,6 +1702,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                           ],
                         ),
                         textAlign: TextAlign.center,
+                        maxLines: widget.isFullScreen ? 4 : 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
@@ -2474,306 +1726,223 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       ],
                     ),
                   ),
-                if (!_isCasting)
-                  IgnorePointer(
-                    ignoring: !_showControls,
-                    child: AnimatedOpacity(
-                      opacity: _showControls ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 300),
-                      child: Stack(
-                        children: [
-                          // Top Bar
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
+                IgnorePointer(
+                  ignoring: !_showControls,
+                  child: AnimatedOpacity(
+                    opacity: _showControls ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: Stack(
+                      children: [
+                        // Top Bar
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: AppPanelSurface(
+                            padding: EdgeInsets.only(
+                              top: MediaQuery.of(context).padding.top + 8,
+                              bottom: 8,
+                              left: 16,
+                              right: 16,
+                            ),
+                            color: const Color(0x66000000),
+                            borderRadius: BorderRadius.zero,
+                            clipBehavior: Clip.none,
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Colors.black87, Colors.transparent],
+                            ),
+                            child: Row(
+                              children: [
+                                if (widget.isFullScreen)
+                                  BackButton(
+                                    color: Colors.white,
+                                    onPressed: widget.onToggleFullScreen,
+                                  ),
+                                Expanded(
+                                  child: Text(
+                                    widget.title,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Builder(
+                                  builder: (context) {
+                                    final diagnostics = widget
+                                        .diagnosticsBuilder
+                                        ?.call(context);
+                                    if (diagnostics == null) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(left: 8),
+                                      child: diagnostics,
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Bottom Bar
+                        Positioned(
+                          bottom: widget.isFullScreen ? 24 : 0, // 全屏模式下抬高 24 像素
+                          left: 0,
+                          right: 0,
+                          child: AppSafeArea(
+                            top: false,
+                            bottom:
+                                false, // 无论是全屏还是非全屏，都禁用 SafeArea 的底部填充，完全由 Positioned 控制
                             child: AppPanelSurface(
-                              padding: EdgeInsets.only(
-                                top: MediaQuery.of(context).padding.top + 8,
-                                bottom: 8,
-                                left: 16,
-                                right: 16,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 16,
                               ),
-                              color: const Color(0x66000000),
+                              color: const Color(0x99000000),
                               borderRadius: BorderRadius.zero,
                               clipBehavior: Clip.none,
                               gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
                                 colors: [Colors.black87, Colors.transparent],
                               ),
-                              child: Row(
-                                children: [
-                                  if (widget.isFullScreen)
-                                    BackButton(
-                                      color: Colors.white,
-                                      onPressed: widget.onToggleFullScreen,
-                                    ),
-                                  Expanded(
-                                    child: Text(
-                                      widget.title,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Builder(
-                                    builder: (context) {
-                                      final diagnostics = widget
-                                          .diagnosticsBuilder
-                                          ?.call(context);
-                                      if (diagnostics == null) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      return Padding(
-                                        padding: const EdgeInsets.only(left: 8),
-                                        child: diagnostics,
-                                      );
-                                    },
-                                  ),
-                                  if (widget.showCastButton)
-                                    AppIconButton(
-                                      icon: _isCasting
-                                          ? Icons.cast_connected
-                                          : Icons.cast,
-                                      tooltip: _isCasting
-                                          ? context.l10n.castingInProgress
-                                          : context.l10n.cast,
-                                      selected: _isCasting,
-                                      style: _isCasting
-                                          ? AppIconButtonStyle.tonal
-                                          : AppIconButtonStyle.ghost,
-                                      onPressed: _showDlnaMenu,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final controlsWidth = constraints.maxWidth;
+                                  final showTime = controlsWidth >= 300;
+                                  final showSecondaryButtons =
+                                      controlsWidth >= 360;
+                                  final showHoverVolume = _isDesktopMode;
+                                  final iconSize = controlsWidth < 360
+                                      ? 18.0
+                                      : 20.0;
+                                  final playIconSize = controlsWidth < 360
+                                      ? 28.0
+                                      : 32.0;
+                                  final horizontalGap = controlsWidth < 360
+                                      ? 4.0
+                                      : 8.0;
 
-                          // Bottom Bar
-                          Positioned(
-                            bottom: widget.isFullScreen
-                                ? 24
-                                : 0, // 全屏模式下抬高 24 像素
-                            left: 0,
-                            right: 0,
-                            child: AppSafeArea(
-                              top: false,
-                              bottom:
-                                  false, // 无论是全屏还是非全屏，都禁用 SafeArea 的底部填充，完全由 Positioned 控制
-                              child: AppPanelSurface(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 16,
-                                ),
-                                color: const Color(0x99000000),
-                                borderRadius: BorderRadius.zero,
-                                clipBehavior: Clip.none,
-                                gradient: const LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [Colors.black87, Colors.transparent],
-                                ),
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final controlsWidth = constraints.maxWidth;
-                                    final showTime = controlsWidth >= 300;
-                                    final showSecondaryButtons =
-                                        controlsWidth >= 360;
-                                    final showHoverVolume = _isDesktopMode;
-                                    final iconSize = controlsWidth < 360
-                                        ? 18.0
-                                        : 20.0;
-                                    final playIconSize = controlsWidth < 360
-                                        ? 28.0
-                                        : 32.0;
-                                    final horizontalGap = controlsWidth < 360
-                                        ? 4.0
-                                        : 8.0;
-
-                                    return Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Semantics(
-                                              button: true,
-                                              label: videoValue.isPlaying
-                                                  ? context.l10n.pause
-                                                  : context.l10n.play,
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Semantics(
+                                            button: true,
+                                            label: videoValue.isPlaying
+                                                ? context.l10n.pause
+                                                : context.l10n.play,
+                                            onTap: _togglePlayPause,
+                                            child: GestureDetector(
                                               onTap: _togglePlayPause,
-                                              child: GestureDetector(
-                                                onTap: _togglePlayPause,
-                                                child: SizedBox.square(
-                                                  dimension: 40,
-                                                  child: Icon(
-                                                    videoValue.isPlaying
-                                                        ? Icons.pause_rounded
-                                                        : Icons
-                                                              .play_arrow_rounded,
-                                                    color: Colors.white,
-                                                    size: playIconSize,
-                                                  ),
+                                              child: SizedBox.square(
+                                                dimension: 40,
+                                                child: Icon(
+                                                  videoValue.isPlaying
+                                                      ? Icons.pause_rounded
+                                                      : Icons
+                                                            .play_arrow_rounded,
+                                                  color: Colors.white,
+                                                  size: playIconSize,
                                                 ),
                                               ),
                                             ),
-                                            SizedBox(width: horizontalGap),
-                                            if (showTime) ...[
-                                              Text(
-                                                widget.isLive
-                                                    ? context.l10n.live
-                                                    : _formatDuration(
-                                                        videoValue.position,
-                                                      ),
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                ),
+                                          ),
+                                          SizedBox(width: horizontalGap),
+                                          if (showTime) ...[
+                                            Text(
+                                              widget.isLive
+                                                  ? context.l10n.live
+                                                  : _formatDuration(
+                                                      videoValue.position,
+                                                    ),
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
                                               ),
-                                              SizedBox(width: horizontalGap),
-                                            ],
-                                            if (widget.isLive)
-                                              const Spacer()
-                                            else
-                                              Expanded(
-                                                child: Semantics(
-                                                  slider: true,
-                                                  label: context
-                                                      .l10n
-                                                      .playbackProgress,
-                                                  value:
-                                                      '${_formatDuration(videoValue.position)} / ${_formatDuration(videoValue.duration)}',
-                                                  child: GestureDetector(
-                                                    behavior:
-                                                        HitTestBehavior.opaque,
-                                                    onHorizontalDragStart: (details) {
-                                                      _startHideTimer();
-                                                      final RenderBox box =
-                                                          context.findRenderObject()
-                                                              as RenderBox;
-                                                      final double
-                                                      relativePosition =
-                                                          details
-                                                              .localPosition
-                                                              .dx /
-                                                          box.size.width;
-                                                      final double value =
-                                                          (relativePosition *
-                                                                  videoValue
-                                                                      .duration
-                                                                      .inMilliseconds
-                                                                      .toDouble())
-                                                              .clamp(
-                                                                0,
+                                            ),
+                                            SizedBox(width: horizontalGap),
+                                          ],
+                                          if (widget.isLive)
+                                            const Spacer()
+                                          else
+                                            Expanded(
+                                              child: Semantics(
+                                                slider: true,
+                                                label: context
+                                                    .l10n
+                                                    .playbackProgress,
+                                                value:
+                                                    '${_formatDuration(videoValue.position)} / ${_formatDuration(videoValue.duration)}',
+                                                child: GestureDetector(
+                                                  behavior:
+                                                      HitTestBehavior.opaque,
+                                                  onHorizontalDragStart: (details) {
+                                                    _startHideTimer();
+                                                    final RenderBox box =
+                                                        context.findRenderObject()
+                                                            as RenderBox;
+                                                    final double
+                                                    relativePosition =
+                                                        details
+                                                            .localPosition
+                                                            .dx /
+                                                        box.size.width;
+                                                    final double value =
+                                                        (relativePosition *
                                                                 videoValue
                                                                     .duration
                                                                     .inMilliseconds
-                                                                    .toDouble(),
-                                                              );
-                                                      setState(() {
-                                                        _isSliderDragging =
-                                                            true;
-                                                        _sliderDragValue =
-                                                            value;
-                                                      });
-                                                    },
-                                                    onHorizontalDragUpdate: (details) {
-                                                      _startHideTimer();
-                                                      final RenderBox box =
-                                                          context.findRenderObject()
-                                                              as RenderBox;
-                                                      final double
-                                                      relativePosition =
-                                                          details
-                                                              .localPosition
-                                                              .dx /
-                                                          box.size.width;
-                                                      final double value =
-                                                          (relativePosition *
-                                                                  videoValue
-                                                                      .duration
-                                                                      .inMilliseconds
-                                                                      .toDouble())
-                                                              .clamp(
-                                                                0,
+                                                                    .toDouble())
+                                                            .clamp(
+                                                              0,
+                                                              videoValue
+                                                                  .duration
+                                                                  .inMilliseconds
+                                                                  .toDouble(),
+                                                            );
+                                                    setState(() {
+                                                      _isSliderDragging = true;
+                                                      _sliderDragValue = value;
+                                                    });
+                                                  },
+                                                  onHorizontalDragUpdate: (details) {
+                                                    _startHideTimer();
+                                                    final RenderBox box =
+                                                        context.findRenderObject()
+                                                            as RenderBox;
+                                                    final double
+                                                    relativePosition =
+                                                        details
+                                                            .localPosition
+                                                            .dx /
+                                                        box.size.width;
+                                                    final double value =
+                                                        (relativePosition *
                                                                 videoValue
                                                                     .duration
                                                                     .inMilliseconds
-                                                                    .toDouble(),
-                                                              );
-                                                      setState(() {
-                                                        _sliderDragValue =
-                                                            value;
-                                                      });
-                                                    },
-                                                    onHorizontalDragEnd:
-                                                        (details) {
-                                                          _startHideTimer();
-                                                          final target = Duration(
-                                                            milliseconds:
-                                                                _sliderDragValue
-                                                                    .toInt(),
-                                                          );
-                                                          _seekFromUser(
-                                                            target,
-                                                          ).then((_) {
-                                                            setState(() {
-                                                              _isSliderDragging =
-                                                                  false;
-                                                            });
-                                                          });
-                                                        },
-                                                    onTapDown: (details) {
-                                                      _startHideTimer();
-                                                      final RenderBox box =
-                                                          context.findRenderObject()
-                                                              as RenderBox;
-                                                      final double
-                                                      relativePosition =
-                                                          details
-                                                              .localPosition
-                                                              .dx /
-                                                          box.size.width;
-                                                      final double value =
-                                                          (relativePosition *
-                                                                  videoValue
-                                                                      .duration
-                                                                      .inMilliseconds
-                                                                      .toDouble())
-                                                              .clamp(
-                                                                0,
-                                                                videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble(),
-                                                              );
-                                                      setState(() {
-                                                        _isSliderDragging =
-                                                            true;
-                                                        _sliderDragValue =
-                                                            value;
-                                                      });
-                                                    },
-                                                    onTapUp: (details) {
-                                                      _startHideTimer();
-                                                      final target = Duration(
-                                                        milliseconds:
-                                                            _sliderDragValue
-                                                                .toInt(),
-                                                      );
-                                                      _seekFromUser(
-                                                        target,
-                                                      ).then((_) {
-                                                        setState(() {
-                                                          _isSliderDragging =
-                                                              false;
-                                                        });
-                                                      });
-                                                    },
-                                                    onTapCancel: () {
-                                                      if (_isSliderDragging) {
+                                                                    .toDouble())
+                                                            .clamp(
+                                                              0,
+                                                              videoValue
+                                                                  .duration
+                                                                  .inMilliseconds
+                                                                  .toDouble(),
+                                                            );
+                                                    setState(() {
+                                                      _sliderDragValue = value;
+                                                    });
+                                                  },
+                                                  onHorizontalDragEnd:
+                                                      (details) {
+                                                        _startHideTimer();
                                                         final target = Duration(
                                                           milliseconds:
                                                               _sliderDragValue
@@ -2787,80 +1956,143 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                                 false;
                                                           });
                                                         });
-                                                      }
-                                                    },
-                                                    child: SizedBox(
-                                                      height: 40,
-                                                      child: Align(
-                                                        alignment:
-                                                            Alignment.center,
-                                                        child: SliderTheme(
-                                                          data: SliderTheme.of(context).copyWith(
-                                                            thumbShape: RoundSliderThumbShape(
-                                                              enabledThumbRadius:
-                                                                  _isSliderDragging
-                                                                  ? (widget.isFullScreen
-                                                                        ? 8
-                                                                        : 10)
-                                                                  : (widget.isFullScreen
-                                                                        ? 6
-                                                                        : 8),
-                                                            ),
-                                                            trackHeight:
+                                                      },
+                                                  onTapDown: (details) {
+                                                    _startHideTimer();
+                                                    final RenderBox box =
+                                                        context.findRenderObject()
+                                                            as RenderBox;
+                                                    final double
+                                                    relativePosition =
+                                                        details
+                                                            .localPosition
+                                                            .dx /
+                                                        box.size.width;
+                                                    final double value =
+                                                        (relativePosition *
+                                                                videoValue
+                                                                    .duration
+                                                                    .inMilliseconds
+                                                                    .toDouble())
+                                                            .clamp(
+                                                              0,
+                                                              videoValue
+                                                                  .duration
+                                                                  .inMilliseconds
+                                                                  .toDouble(),
+                                                            );
+                                                    setState(() {
+                                                      _isSliderDragging = true;
+                                                      _sliderDragValue = value;
+                                                    });
+                                                  },
+                                                  onTapUp: (details) {
+                                                    _startHideTimer();
+                                                    final target = Duration(
+                                                      milliseconds:
+                                                          _sliderDragValue
+                                                              .toInt(),
+                                                    );
+                                                    _seekFromUser(target).then((
+                                                      _,
+                                                    ) {
+                                                      setState(() {
+                                                        _isSliderDragging =
+                                                            false;
+                                                      });
+                                                    });
+                                                  },
+                                                  onTapCancel: () {
+                                                    if (_isSliderDragging) {
+                                                      final target = Duration(
+                                                        milliseconds:
+                                                            _sliderDragValue
+                                                                .toInt(),
+                                                      );
+                                                      _seekFromUser(
+                                                        target,
+                                                      ).then((_) {
+                                                        setState(() {
+                                                          _isSliderDragging =
+                                                              false;
+                                                        });
+                                                      });
+                                                    }
+                                                  },
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.center,
+                                                      child: SliderTheme(
+                                                        data: SliderTheme.of(context).copyWith(
+                                                          thumbShape: RoundSliderThumbShape(
+                                                            enabledThumbRadius:
                                                                 _isSliderDragging
                                                                 ? (widget.isFullScreen
-                                                                      ? 4
-                                                                      : 6)
+                                                                      ? 8
+                                                                      : 10)
                                                                 : (widget.isFullScreen
-                                                                      ? 2
-                                                                      : 4),
-                                                            overlayShape:
-                                                                const RoundSliderOverlayShape(
-                                                                  overlayRadius:
-                                                                      24,
-                                                                ),
-                                                            activeTrackColor:
-                                                                const Color(
-                                                                  0xFF5D5FEF,
-                                                                ),
-                                                            inactiveTrackColor:
-                                                                Colors.white24,
-                                                            thumbColor:
-                                                                Colors.white,
-                                                            trackShape:
-                                                                const RectangularSliderTrackShape(), // 确保轨道充满可用宽度
+                                                                      ? 6
+                                                                      : 8),
                                                           ),
-                                                          child: IgnorePointer(
-                                                            // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
-                                                            child: AppSlider(
-                                                              value:
-                                                                  (_isSliderDragging
-                                                                          ? _sliderDragValue
-                                                                          : videoValue.position.inMilliseconds.toDouble())
-                                                                      .clamp(
-                                                                        0,
-                                                                        videoValue.duration.inMilliseconds.toDouble() >
-                                                                                0
-                                                                            ? videoValue.duration.inMilliseconds.toDouble()
-                                                                            : 1.0,
-                                                                      ),
-                                                              min: 0,
-                                                              max:
-                                                                  videoValue
-                                                                          .duration
-                                                                          .inMilliseconds
-                                                                          .toDouble() >
-                                                                      0
-                                                                  ? videoValue
+                                                          trackHeight:
+                                                              _isSliderDragging
+                                                              ? (widget.isFullScreen
+                                                                    ? 4
+                                                                    : 6)
+                                                              : (widget.isFullScreen
+                                                                    ? 2
+                                                                    : 4),
+                                                          overlayShape:
+                                                              const RoundSliderOverlayShape(
+                                                                overlayRadius:
+                                                                    24,
+                                                              ),
+                                                          activeTrackColor:
+                                                              const Color(
+                                                                0xFF5D5FEF,
+                                                              ),
+                                                          inactiveTrackColor:
+                                                              Colors.white24,
+                                                          thumbColor:
+                                                              Colors.white,
+                                                          trackShape:
+                                                              const RectangularSliderTrackShape(), // 确保轨道充满可用宽度
+                                                        ),
+                                                        child: IgnorePointer(
+                                                          // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
+                                                          child: AppSlider(
+                                                            value:
+                                                                (_isSliderDragging
+                                                                        ? _sliderDragValue
+                                                                        : videoValue
+                                                                              .position
+                                                                              .inMilliseconds
+                                                                              .toDouble())
+                                                                    .clamp(
+                                                                      0,
+                                                                      videoValue.duration.inMilliseconds.toDouble() >
+                                                                              0
+                                                                          ? videoValue.duration.inMilliseconds.toDouble()
+                                                                          : 1.0,
+                                                                    ),
+                                                            min: 0,
+                                                            max:
+                                                                videoValue
                                                                         .duration
                                                                         .inMilliseconds
-                                                                        .toDouble()
-                                                                  : 1.0,
-                                                              onChanged:
-                                                                  (
-                                                                    value,
-                                                                  ) {}, // 忽略，由外层接管
-                                                            ),
+                                                                        .toDouble() >
+                                                                    0
+                                                                ? videoValue
+                                                                      .duration
+                                                                      .inMilliseconds
+                                                                      .toDouble()
+                                                                : 1.0,
+                                                            onChanged:
+                                                                (
+                                                                  value,
+                                                                ) {}, // 忽略，由外层接管
                                                           ),
                                                         ),
                                                       ),
@@ -2868,231 +2100,184 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   ),
                                                 ),
                                               ),
-                                            if (showTime && !widget.isLive) ...[
-                                              SizedBox(width: horizontalGap),
-                                              Text(
-                                                _formatDuration(
-                                                  videoValue.duration,
-                                                ),
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
+                                            ),
+                                          if (showTime && !widget.isLive) ...[
                                             SizedBox(width: horizontalGap),
-                                            if (showHoverVolume)
-                                              _buildHoverVolumeControl(
-                                                videoValue,
-                                                iconSize: widget.isFullScreen
-                                                    ? 24
-                                                    : 20,
+                                            Text(
+                                              _formatDuration(
+                                                videoValue.duration,
                                               ),
-                                            if (showSecondaryButtons &&
-                                                widget.subtitles != null &&
-                                                widget.subtitles!.isNotEmpty)
-                                              AppIconButton(
-                                                icon: Icons
-                                                    .closed_caption_rounded,
-                                                tooltip: context.l10n.subtitles,
-                                                onPressed: _showSubtitleMenu,
-                                                padding: widget.isFullScreen
-                                                    ? const EdgeInsets.all(8)
-                                                    : EdgeInsets.zero,
-                                                constraints: widget.isFullScreen
-                                                    ? null
-                                                    : const BoxConstraints(),
-                                                iconSize: widget.isFullScreen
-                                                    ? 24
-                                                    : iconSize,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
                                               ),
-                                            if (showSecondaryButtons) ...[
-                                              SizedBox(
-                                                width: widget.isFullScreen
-                                                    ? 0
-                                                    : 4,
-                                              ),
-                                              _PlaybackSpeedMenuButton(
-                                                currentSpeed:
-                                                    videoValue.playbackSpeed,
-                                                options:
-                                                    _playbackSpeedOptions(),
-                                                dimension: widget.isFullScreen
-                                                    ? 40
-                                                    : max(32.0, iconSize + 12),
-                                                iconSize: widget.isFullScreen
-                                                    ? 24
-                                                    : iconSize,
-                                                onSelected:
-                                                    _setPlaybackSpeedFromUser,
-                                              ),
-                                            ],
-                                            if (showSecondaryButtons) ...[
-                                              SizedBox(
-                                                width: widget.isFullScreen
-                                                    ? 0
-                                                    : 4,
-                                              ),
-                                              AppIconButton(
-                                                icon: Icons.comment_rounded,
-                                                tooltip: _showDanmaku
-                                                    ? context
-                                                          .l10n
-                                                          .disableDanmaku
-                                                    : context
-                                                          .l10n
-                                                          .enableDanmaku,
-                                                selected: _showDanmaku,
-                                                style: _showDanmaku
-                                                    ? AppIconButtonStyle.tonal
-                                                    : AppIconButtonStyle.ghost,
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _showDanmaku =
-                                                        !_showDanmaku;
-                                                  });
-                                                },
-                                                padding: widget.isFullScreen
-                                                    ? const EdgeInsets.all(8)
-                                                    : EdgeInsets.zero,
-                                                constraints: widget.isFullScreen
-                                                    ? null
-                                                    : const BoxConstraints(),
-                                                iconSize: widget.isFullScreen
-                                                    ? 24
-                                                    : iconSize,
-                                              ),
-                                            ],
-                                            if (widget.onSync != null) ...[
-                                              SizedBox(
-                                                width: widget.isFullScreen
-                                                    ? 0
-                                                    : 4,
-                                              ),
-                                              AppIconButton(
-                                                icon: widget.isLive
-                                                    ? Icons.refresh_rounded
-                                                    : Icons.sync_rounded,
-                                                tooltip: widget.isLive
-                                                    ? context.l10n.reload
-                                                    : context.l10n.sync,
-                                                onPressed: widget.onSync,
-                                                padding: widget.isFullScreen
-                                                    ? const EdgeInsets.all(8)
-                                                    : EdgeInsets.zero,
-                                                constraints: widget.isFullScreen
-                                                    ? null
-                                                    : const BoxConstraints(),
-                                                iconSize: widget.isFullScreen
-                                                    ? 24
-                                                    : iconSize,
-                                              ),
-                                            ],
-                                            if (showSecondaryButtons &&
-                                                widget.extraBottomWidget !=
-                                                    null) ...[
-                                              SizedBox(
-                                                width: widget.isFullScreen
-                                                    ? 0
-                                                    : 4,
-                                              ),
-                                              widget.extraBottomWidget!,
-                                            ],
-                                            if (widget.isFullScreen &&
-                                                widget.onSendDanmaku != null)
-                                              AppIconButton(
-                                                icon: Icons.send_rounded,
-                                                onPressed: _showDanmakuInput,
-                                                tooltip:
-                                                    context.l10n.sendDanmaku,
-                                              ),
-                                            if (widget.onToggleFullScreen !=
-                                                null) ...[
-                                              SizedBox(
-                                                width: widget.isFullScreen
-                                                    ? 0
-                                                    : 4,
-                                              ),
-                                              AppIconButton(
-                                                icon: widget.isFullScreen
-                                                    ? (widget.exitFullScreenIcon ??
-                                                          Icons.fullscreen_exit)
-                                                    : (widget.fullScreenIcon ??
-                                                          Icons.fullscreen),
-                                                tooltip: widget.isFullScreen
-                                                    ? context
-                                                          .l10n
-                                                          .exitFullscreen
-                                                    : context.l10n.fullscreen,
-                                                onPressed:
-                                                    widget.onToggleFullScreen,
-                                                padding: widget.isFullScreen
-                                                    ? const EdgeInsets.all(8)
-                                                    : EdgeInsets.zero,
-                                                constraints: widget.isFullScreen
-                                                    ? null
-                                                    : const BoxConstraints(),
-                                                iconSize: widget.isFullScreen
-                                                    ? 24
-                                                    : iconSize,
-                                              ),
-                                            ],
+                                            ),
                                           ],
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
+                                          SizedBox(width: horizontalGap),
+                                          if (showHoverVolume)
+                                            _buildHoverVolumeControl(
+                                              videoValue,
+                                              iconSize: widget.isFullScreen
+                                                  ? 24
+                                                  : 20,
+                                            ),
+                                          if (showSecondaryButtons &&
+                                              widget.subtitles != null &&
+                                              widget.subtitles!.isNotEmpty)
+                                            AppIconButton(
+                                              icon:
+                                                  Icons.closed_caption_rounded,
+                                              tooltip: context.l10n.subtitles,
+                                              onPressed: _showSubtitleMenu,
+                                              padding: widget.isFullScreen
+                                                  ? const EdgeInsets.all(8)
+                                                  : EdgeInsets.zero,
+                                              constraints: widget.isFullScreen
+                                                  ? null
+                                                  : const BoxConstraints(),
+                                              iconSize: widget.isFullScreen
+                                                  ? 24
+                                                  : iconSize,
+                                            ),
+                                          if (showSecondaryButtons) ...[
+                                            SizedBox(
+                                              width: widget.isFullScreen
+                                                  ? 0
+                                                  : 4,
+                                            ),
+                                            _PlaybackSpeedMenuButton(
+                                              currentSpeed:
+                                                  videoValue.playbackSpeed,
+                                              options: _playbackSpeedOptions(),
+                                              dimension: widget.isFullScreen
+                                                  ? 40
+                                                  : max(32.0, iconSize + 12),
+                                              iconSize: widget.isFullScreen
+                                                  ? 24
+                                                  : iconSize,
+                                              onSelected:
+                                                  _setPlaybackSpeedFromUser,
+                                            ),
+                                          ],
+                                          if (showSecondaryButtons) ...[
+                                            SizedBox(
+                                              width: widget.isFullScreen
+                                                  ? 0
+                                                  : 4,
+                                            ),
+                                            AppIconButton(
+                                              icon: Icons.comment_rounded,
+                                              tooltip: _showDanmaku
+                                                  ? context.l10n.disableDanmaku
+                                                  : context.l10n.enableDanmaku,
+                                              selected: _showDanmaku,
+                                              style: _showDanmaku
+                                                  ? AppIconButtonStyle.tonal
+                                                  : AppIconButtonStyle.ghost,
+                                              onPressed: () {
+                                                setState(() {
+                                                  _showDanmaku = !_showDanmaku;
+                                                });
+                                              },
+                                              padding: widget.isFullScreen
+                                                  ? const EdgeInsets.all(8)
+                                                  : EdgeInsets.zero,
+                                              constraints: widget.isFullScreen
+                                                  ? null
+                                                  : const BoxConstraints(),
+                                              iconSize: widget.isFullScreen
+                                                  ? 24
+                                                  : iconSize,
+                                            ),
+                                          ],
+                                          if (widget.onSync != null) ...[
+                                            SizedBox(
+                                              width: widget.isFullScreen
+                                                  ? 0
+                                                  : 4,
+                                            ),
+                                            AppIconButton(
+                                              icon: widget.isLive
+                                                  ? Icons.refresh_rounded
+                                                  : Icons.sync_rounded,
+                                              tooltip: widget.isLive
+                                                  ? context.l10n.reload
+                                                  : context.l10n.sync,
+                                              onPressed: widget.onSync,
+                                              padding: widget.isFullScreen
+                                                  ? const EdgeInsets.all(8)
+                                                  : EdgeInsets.zero,
+                                              constraints: widget.isFullScreen
+                                                  ? null
+                                                  : const BoxConstraints(),
+                                              iconSize: widget.isFullScreen
+                                                  ? 24
+                                                  : iconSize,
+                                            ),
+                                          ],
+                                          if (showSecondaryButtons &&
+                                              widget.extraBottomWidget !=
+                                                  null) ...[
+                                            SizedBox(
+                                              width: widget.isFullScreen
+                                                  ? 0
+                                                  : 4,
+                                            ),
+                                            widget.extraBottomWidget!,
+                                          ],
+                                          if (widget.isFullScreen &&
+                                              widget.onSendDanmaku != null)
+                                            AppIconButton(
+                                              icon: Icons.send_rounded,
+                                              onPressed: _showDanmakuInput,
+                                              tooltip: context.l10n.sendDanmaku,
+                                            ),
+                                          if (widget.onToggleFullScreen !=
+                                              null) ...[
+                                            SizedBox(
+                                              width: widget.isFullScreen
+                                                  ? 0
+                                                  : 4,
+                                            ),
+                                            AppIconButton(
+                                              icon: widget.isFullScreen
+                                                  ? (widget.exitFullScreenIcon ??
+                                                        Icons.fullscreen_exit)
+                                                  : (widget.fullScreenIcon ??
+                                                        Icons.fullscreen),
+                                              tooltip: widget.isFullScreen
+                                                  ? context.l10n.exitFullscreen
+                                                  : context.l10n.fullscreen,
+                                              onPressed:
+                                                  widget.onToggleFullScreen,
+                                              padding: widget.isFullScreen
+                                                  ? const EdgeInsets.all(8)
+                                                  : EdgeInsets.zero,
+                                              constraints: widget.isFullScreen
+                                                  ? null
+                                                  : const BoxConstraints(),
+                                              iconSize: widget.isFullScreen
+                                                  ? 24
+                                                  : iconSize,
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
+                ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DlnaInfoLine extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _DlnaInfoLine({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final displayValue = value.trim().isEmpty
-        ? context.l10n.unknown
-        : value.trim();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 84,
-            child: Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Expanded(
-            child: AppSelectableText(
-              displayValue,
-              style: theme.textTheme.bodySmall,
-            ),
-          ),
-        ],
       ),
     );
   }

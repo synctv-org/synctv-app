@@ -121,7 +121,10 @@ class _DouyinAddMediaFormState extends State<DouyinAddMediaForm> {
             onSelectionChanged: _loading
                 ? null
                 : (values) {
-                    _mode = values.first;
+                    final mode = values.first;
+                    if (mode == _mode) return;
+                    _mode = mode;
+                    _valueController.clear();
                     _changed();
                   },
           ),

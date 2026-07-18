@@ -7,6 +7,7 @@ import 'package:synctv_app/src/generated/proto/providers/tiktok.pb.dart'
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/widgets/add_media/tiktok_add_media_form.dart';
+import 'package:synctv_app/widgets/app_form_controls.dart';
 
 void main() {
   testWidgets('TikTok form submits live source with shared credential scope', (
@@ -41,8 +42,19 @@ void main() {
       ),
     );
 
+    await tester.enterText(
+      find.byKey(const Key('tiktok-value')),
+      '7123456789012345678',
+    );
     await tester.tap(find.text('Live'));
     await tester.pump();
+    expect(
+      tester
+          .widget<AppTextField>(find.byKey(const Key('tiktok-value')))
+          .controller
+          .text,
+      isEmpty,
+    );
     await tester.enterText(
       find.byKey(const Key('tiktok-value')),
       'https://www.tiktok.com/@creator/live',

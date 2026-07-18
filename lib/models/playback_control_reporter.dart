@@ -25,7 +25,6 @@ class PlaybackControlReporter {
       isPlaying ? PlaybackControlAction.play : PlaybackControlAction.pause,
       isPlaying: isPlaying,
       position: isLive ? null : value.position.inMilliseconds / 1000.0,
-      playbackRate: value.playbackSpeed,
     );
   }
 
@@ -39,7 +38,6 @@ class PlaybackControlReporter {
       PlaybackControlAction.seek,
       isPlaying: value.isPlaying,
       position: position.inMilliseconds / 1000.0,
-      playbackRate: value.playbackSpeed,
     );
   }
 
@@ -62,7 +60,7 @@ class PlaybackControlReporter {
     PlaybackControlAction action, {
     required bool isPlaying,
     required double? position,
-    required double playbackRate,
+    double? playbackRate,
   }) {
     final boundedPosition = position == null ? null : boundPosition(position);
     return RoomRealtimeCodec.buildGuardedPlaybackStateUpdateMessage(

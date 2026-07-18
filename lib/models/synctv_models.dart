@@ -973,6 +973,12 @@ class SyncTvPlaybackStatus {
     return base + elapsedMillis / 1000.0 * playbackRate;
   }
 
+  bool hasSamePlaybackSource(SyncTvPlaybackStatus other) {
+    return playingMediaId == other.playingMediaId &&
+        playingPlaylistId == other.playingPlaylistId &&
+        targetHash == other.targetHash;
+  }
+
   SyncTvPlaybackStatus copyWith({
     RoomMediaEntry? entry,
     bool? isPlaying,
@@ -1013,14 +1019,14 @@ class RoomMemberPermissions {
       viewChatHistory |
       useWebRTC;
 
-  static const Map<int, String> descriptions = {
-    chat: '发送聊天/弹幕',
-    createMediaResource: '添加媒体',
-    viewMediaResources: '查看媒体列表',
-    viewMemberList: '查看成员列表',
-    viewChatHistory: '查看聊天历史',
-    useWebRTC: 'WebRTC 通话',
-  };
+  static const List<int> values = [
+    chat,
+    createMediaResource,
+    viewMediaResources,
+    viewMemberList,
+    viewChatHistory,
+    useWebRTC,
+  ];
 }
 
 class RoomGuestPermissions {

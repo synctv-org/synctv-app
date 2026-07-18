@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -14,6 +16,26 @@ class _ToastAction {
 class MessageUtils {
   /// 私有构造函数，防止实例化
   MessageUtils._();
+
+  static OverlayEntry? _activeToast;
+  static Timer? _activeToastTimer;
+
+  static void dismissAll() {
+    _activeToastTimer?.cancel();
+    _activeToastTimer = null;
+    final entry = _activeToast;
+    _activeToast = null;
+    _removeToast(entry);
+  }
+
+  static void _removeToast(OverlayEntry? entry) {
+    if (entry == null) return;
+    try {
+      entry.remove();
+    } on StateError {
+      // The owning overlay was disposed before the queued removal ran.
+    }
+  }
 
   /// 显示成功消息
   static void showSuccess(
@@ -96,7 +118,8 @@ class MessageUtils {
     bool loading = false,
     Color? indicatorColor,
   }) {
-    final overlayState = Overlay.of(context);
+    dismissAll();
+    final overlayState = Overlay.of(context, rootOverlay: true);
     late final OverlayEntry overlayEntry;
     overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
@@ -173,7 +196,12 @@ class MessageUtils {
                             size: FButtonSizeVariant.sm,
                             variant: FButtonVariant.ghost,
                             onPress: () {
-                              overlayEntry.remove();
+                              _removeToast(overlayEntry);
+                              if (identical(_activeToast, overlayEntry)) {
+                                _activeToast = null;
+                                _activeToastTimer?.cancel();
+                                _activeToastTimer = null;
+                              }
                               action.onPressed();
                             },
                             child: Text(action.label),
@@ -191,10 +219,12 @@ class MessageUtils {
     );
 
     overlayState.insert(overlayEntry);
-
-    Future.delayed(duration, () {
-      if (overlayEntry.mounted) {
-        overlayEntry.remove();
+    _activeToast = overlayEntry;
+    _activeToastTimer = Timer(duration, () {
+      _removeToast(overlayEntry);
+      if (identical(_activeToast, overlayEntry)) {
+        _activeToast = null;
+        _activeToastTimer = null;
       }
     });
   }

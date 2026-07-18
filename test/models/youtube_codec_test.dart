@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
     as youtube;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 void main() {
   group('YouTube source config codec', () {
@@ -53,5 +55,25 @@ void main() {
         expect(SourceConfigCodec.playlistSourceConfigToMap(config), source);
       });
     }
+
+    test('encodes nested channel content enum as an integer', () {
+      final config = SourceConfigCodec.playlistSourceConfigFromMap(
+        sourceProvider: 'youtube',
+        sourceConfig: const {
+          'kind': 'channel',
+          'channelId': 'UCuAXFkgsw1L7xaCfnd5JJOw',
+          'content': 'shorts',
+        },
+      )!;
+
+      final json = SourceConfigCodec.playlistSourceConfigJson(config);
+      expect(
+        json['youtube']['channel']['content'],
+        source_enum
+            .YoutubeChannelContent
+            .YOUTUBE_CHANNEL_CONTENT_SHORTS
+            .value,
+      );
+    });
   });
 }

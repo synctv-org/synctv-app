@@ -1115,63 +1115,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get muted => 'Muted';
 
   @override
-  String get castDevices => 'Cast devices';
-
-  @override
-  String castingTo(String device) {
-    return 'Casting to $device';
-  }
-
-  @override
-  String get stopCasting => 'Stop casting';
-
-  @override
-  String get searchingForDevices => 'Searching for devices...';
-
-  @override
-  String castFailed(String error) {
-    return 'Casting failed: $error';
-  }
-
-  @override
-  String castVolumeFailed(String error) {
-    return 'Could not adjust cast volume: $error';
-  }
-
-  @override
-  String castMuteFailed(String error) {
-    return 'Could not change cast mute state: $error';
-  }
-
-  @override
-  String castSeekFailed(String error) {
-    return 'Could not seek while casting: $error';
-  }
-
-  @override
-  String get castDeviceInfo => 'Cast device information';
-
-  @override
-  String get device => 'Device';
-
-  @override
-  String get transportStatus => 'Transport status';
-
-  @override
-  String get availableActions => 'Available actions';
-
-  @override
-  String get mediaDuration => 'Media duration';
-
-  @override
-  String get capabilities => 'Capabilities';
-
-  @override
-  String castDeviceInfoFailed(String error) {
-    return 'Could not read cast device information: $error';
-  }
-
-  @override
   String get chooseSubtitles => 'Choose subtitles';
 
   @override
@@ -1184,70 +1127,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get danmakuHint => 'Send a danmaku for this moment...';
 
   @override
-  String get unknownDevice => 'Unknown device';
-
-  @override
-  String get previousTrack => 'Previous track';
-
-  @override
-  String get previousTrackSelected => 'Switched to the previous track';
-
-  @override
-  String get previousTrackFailed => 'Could not switch to the previous track';
-
-  @override
-  String get rewindTenSeconds => 'Rewind 10 seconds';
-
-  @override
   String get pause => 'Pause';
 
   @override
   String get play => 'Play';
 
   @override
-  String get forwardTenSeconds => 'Forward 10 seconds';
-
-  @override
-  String get nextTrack => 'Next track';
-
-  @override
-  String get nextTrackSelected => 'Switched to the next track';
-
-  @override
-  String get nextTrackFailed => 'Could not switch to the next track';
-
-  @override
-  String get sequentialModeSet => 'Sequential playback enabled';
-
-  @override
-  String get setPlaybackModeFailed => 'Could not set playback mode';
-
-  @override
-  String get sequential => 'Sequential';
-
-  @override
-  String get repeatModeSet => 'Repeat playback enabled';
-
-  @override
-  String get repeat => 'Repeat';
-
-  @override
   String get info => 'Information';
-
-  @override
-  String get syncStatus => 'Sync status';
-
-  @override
-  String get switchDevice => 'Switch device';
-
-  @override
-  String get castingInProgress => 'Casting';
-
-  @override
-  String get remoteControl => 'Remote control';
-
-  @override
-  String get cast => 'Cast';
 
   @override
   String get live => 'Live';
@@ -4150,6 +4036,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomSettings => 'Room settings';
+
+  @override
+  String get roomSettingsShort => 'Setting';
 
   @override
   String get watchingSettingChanges => 'Watching setting changes';

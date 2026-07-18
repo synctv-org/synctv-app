@@ -1904,96 +1904,6 @@ abstract class AppLocalizations {
   /// **'Muted'**
   String get muted;
 
-  /// No description provided for @castDevices.
-  ///
-  /// In en, this message translates to:
-  /// **'Cast devices'**
-  String get castDevices;
-
-  /// No description provided for @castingTo.
-  ///
-  /// In en, this message translates to:
-  /// **'Casting to {device}'**
-  String castingTo(String device);
-
-  /// No description provided for @stopCasting.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop casting'**
-  String get stopCasting;
-
-  /// No description provided for @searchingForDevices.
-  ///
-  /// In en, this message translates to:
-  /// **'Searching for devices...'**
-  String get searchingForDevices;
-
-  /// No description provided for @castFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Casting failed: {error}'**
-  String castFailed(String error);
-
-  /// No description provided for @castVolumeFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not adjust cast volume: {error}'**
-  String castVolumeFailed(String error);
-
-  /// No description provided for @castMuteFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not change cast mute state: {error}'**
-  String castMuteFailed(String error);
-
-  /// No description provided for @castSeekFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not seek while casting: {error}'**
-  String castSeekFailed(String error);
-
-  /// No description provided for @castDeviceInfo.
-  ///
-  /// In en, this message translates to:
-  /// **'Cast device information'**
-  String get castDeviceInfo;
-
-  /// No description provided for @device.
-  ///
-  /// In en, this message translates to:
-  /// **'Device'**
-  String get device;
-
-  /// No description provided for @transportStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Transport status'**
-  String get transportStatus;
-
-  /// No description provided for @availableActions.
-  ///
-  /// In en, this message translates to:
-  /// **'Available actions'**
-  String get availableActions;
-
-  /// No description provided for @mediaDuration.
-  ///
-  /// In en, this message translates to:
-  /// **'Media duration'**
-  String get mediaDuration;
-
-  /// No description provided for @capabilities.
-  ///
-  /// In en, this message translates to:
-  /// **'Capabilities'**
-  String get capabilities;
-
-  /// No description provided for @castDeviceInfoFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not read cast device information: {error}'**
-  String castDeviceInfoFailed(String error);
-
   /// No description provided for @chooseSubtitles.
   ///
   /// In en, this message translates to:
@@ -2018,36 +1928,6 @@ abstract class AppLocalizations {
   /// **'Send a danmaku for this moment...'**
   String get danmakuHint;
 
-  /// No description provided for @unknownDevice.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown device'**
-  String get unknownDevice;
-
-  /// No description provided for @previousTrack.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous track'**
-  String get previousTrack;
-
-  /// No description provided for @previousTrackSelected.
-  ///
-  /// In en, this message translates to:
-  /// **'Switched to the previous track'**
-  String get previousTrackSelected;
-
-  /// No description provided for @previousTrackFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not switch to the previous track'**
-  String get previousTrackFailed;
-
-  /// No description provided for @rewindTenSeconds.
-  ///
-  /// In en, this message translates to:
-  /// **'Rewind 10 seconds'**
-  String get rewindTenSeconds;
-
   /// No description provided for @pause.
   ///
   /// In en, this message translates to:
@@ -2060,95 +1940,11 @@ abstract class AppLocalizations {
   /// **'Play'**
   String get play;
 
-  /// No description provided for @forwardTenSeconds.
-  ///
-  /// In en, this message translates to:
-  /// **'Forward 10 seconds'**
-  String get forwardTenSeconds;
-
-  /// No description provided for @nextTrack.
-  ///
-  /// In en, this message translates to:
-  /// **'Next track'**
-  String get nextTrack;
-
-  /// No description provided for @nextTrackSelected.
-  ///
-  /// In en, this message translates to:
-  /// **'Switched to the next track'**
-  String get nextTrackSelected;
-
-  /// No description provided for @nextTrackFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not switch to the next track'**
-  String get nextTrackFailed;
-
-  /// No description provided for @sequentialModeSet.
-  ///
-  /// In en, this message translates to:
-  /// **'Sequential playback enabled'**
-  String get sequentialModeSet;
-
-  /// No description provided for @setPlaybackModeFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not set playback mode'**
-  String get setPlaybackModeFailed;
-
-  /// No description provided for @sequential.
-  ///
-  /// In en, this message translates to:
-  /// **'Sequential'**
-  String get sequential;
-
-  /// No description provided for @repeatModeSet.
-  ///
-  /// In en, this message translates to:
-  /// **'Repeat playback enabled'**
-  String get repeatModeSet;
-
-  /// No description provided for @repeat.
-  ///
-  /// In en, this message translates to:
-  /// **'Repeat'**
-  String get repeat;
-
   /// No description provided for @info.
   ///
   /// In en, this message translates to:
   /// **'Information'**
   String get info;
-
-  /// No description provided for @syncStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync status'**
-  String get syncStatus;
-
-  /// No description provided for @switchDevice.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch device'**
-  String get switchDevice;
-
-  /// No description provided for @castingInProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Casting'**
-  String get castingInProgress;
-
-  /// No description provided for @remoteControl.
-  ///
-  /// In en, this message translates to:
-  /// **'Remote control'**
-  String get remoteControl;
-
-  /// No description provided for @cast.
-  ///
-  /// In en, this message translates to:
-  /// **'Cast'**
-  String get cast;
 
   /// No description provided for @live.
   ///
@@ -6913,6 +6709,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Room settings'**
   String get roomSettings;
+
+  /// No description provided for @roomSettingsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting'**
+  String get roomSettingsShort;
 
   /// No description provided for @watchingSettingChanges.
   ///

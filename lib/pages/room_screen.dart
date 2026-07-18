@@ -117,6 +117,7 @@ class _RoomScreenState extends State<RoomScreen>
   final int _pageSize = 20;
   bool _hasMoreMediaEntries = true;
   bool _isLoadingMoreMediaEntries = false;
+  bool _isRefreshingMediaEntries = false;
   final ScrollController _mediaEntryScrollController = ScrollController();
 
   // Folder navigation
@@ -438,7 +439,9 @@ class _RoomScreenState extends State<RoomScreen>
       if (mounted) {
         setState(() {
           _isLoadingMoreMediaEntries = false;
+          _hasMoreMediaEntries = false;
         });
+        MessageUtils.showError(context, context.l10n.errorMessage('$e'));
       }
     }
   }
@@ -728,7 +731,12 @@ class _RoomScreenState extends State<RoomScreen>
           _isSelectionMode = false;
         });
       }
-      final errorMsg = message.error?.message ?? '';
+      final error = message.error;
+      if (error?.isConflict == true) {
+        unawaited(_refreshPlaybackAfterConflict());
+        return;
+      }
+      final errorMsg = error?.message ?? '';
       if (errorMsg.isNotEmpty && mounted) {
         MessageUtils.showError(context, context.l10n.errorMessage(errorMsg));
       }
@@ -1479,10 +1487,14 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _applyPlaybackStatus(
     SyncTvPlaybackStatus status, {
     bool forceReloadVideo = false,
+    bool forceSeek = false,
   }) async {
     if (!mounted) return;
-    final oldMovieId = _currentStatus?.entry?.id;
+    final previousStatus = _currentStatus;
+    final oldMovieId = previousStatus?.entry?.id;
     final nextMovieId = status.entry?.id;
+    final sourceChanged =
+        previousStatus != null && !previousStatus.hasSamePlaybackSource(status);
     if (oldMovieId != nextMovieId) {
       _danmakuController.clear();
       _playbackDanmakuWindow = null;
@@ -1510,7 +1522,7 @@ class _RoomScreenState extends State<RoomScreen>
           await _performSync(status, forceSeek: true);
         }
       } else {
-        unawaited(_performSync(status));
+        unawaited(_performSync(status, forceSeek: forceSeek || sourceChanged));
       }
 
       final streamUrl = status.entry!.streamDanmu == null
@@ -1535,6 +1547,22 @@ class _RoomScreenState extends State<RoomScreen>
         _disposeVideoController();
         if (mounted) setState(() {});
       }
+    }
+  }
+
+  Future<void> _refreshPlaybackAfterConflict() async {
+    try {
+      final status = await SyncTvService.getCurrentMedia(widget.room.roomId);
+      if (!mounted) return;
+      await _applyPlaybackStatus(
+        _mergePlaybackStatus(
+          status,
+          incomingHasTiming: status.entry?.url.isEmpty != true,
+        ),
+        forceSeek: true,
+      );
+    } catch (e) {
+      debugPrint('Refresh playback after conflict error: $e');
     }
   }
 
@@ -1920,15 +1948,34 @@ class _RoomScreenState extends State<RoomScreen>
               includeLatency: true,
             )!,
           ),
-          if (_currentStatus?.entry != null)
-            AppActionButton(
-              onPressed: _stopPlayback,
-              icon: Icons.stop_circle_outlined,
-              label: compactChrome
-                  ? context.l10n.stop
-                  : context.l10n.stopPlayback,
-              style: AppActionButtonStyle.destructive,
-            ),
+          Tooltip(
+            message: context.l10n.stopPlayback,
+            child: _currentStatus?.entry != null
+                ? AppActionButton(
+                    onPressed: _stopPlayback,
+                    icon: Icons.stop_circle_outlined,
+                    label: context.l10n.stop,
+                    style: AppActionButtonStyle.destructive,
+                  )
+                : Semantics(
+                    button: true,
+                    enabled: false,
+                    label: context.l10n.stop,
+                    child: ExcludeSemantics(
+                      child: IgnorePointer(
+                        child: Opacity(
+                          opacity: 0.45,
+                          child: AppActionButton(
+                            onPressed: () {},
+                            icon: Icons.stop_circle_outlined,
+                            label: context.l10n.stop,
+                            style: AppActionButtonStyle.destructive,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
           if (_currentUser != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -1941,13 +1988,16 @@ class _RoomScreenState extends State<RoomScreen>
                       tooltip: context.l10n.roomSettings,
                       style: AppIconButtonStyle.tonal,
                     )
-                  : AppActionButton(
-                      onPressed: _openRoomSettings,
-                      icon: _canManageRoom
-                          ? Icons.tune_rounded
-                          : Icons.lock_outline_rounded,
-                      label: context.l10n.roomSettings,
-                      style: AppActionButtonStyle.tonal,
+                  : Tooltip(
+                      message: context.l10n.roomSettings,
+                      child: AppActionButton(
+                        onPressed: _openRoomSettings,
+                        icon: _canManageRoom
+                            ? Icons.tune_rounded
+                            : Icons.lock_outline_rounded,
+                        label: context.l10n.roomSettingsShort,
+                        style: AppActionButtonStyle.tonal,
+                      ),
                     ),
             ),
           const SizedBox(width: 16),
@@ -4101,6 +4151,14 @@ class _RoomScreenState extends State<RoomScreen>
                       : AppIconButtonStyle.ghost,
                 ),
               ],
+              if (_isInsideProviderTargetScope)
+                AppIconButton(
+                  icon: Icons.sync,
+                  onPressed: _isRefreshingMediaEntries
+                      ? null
+                      : _refreshCurrentPlaylist,
+                  tooltip: context.l10n.refreshDynamicList,
+                ),
               _buildPlaylistViewModeButton(_PlaylistViewMode.compact),
               _buildPlaylistViewModeButton(_PlaylistViewMode.detailed),
               _buildPlaylistViewModeButton(_PlaylistViewMode.grid),
@@ -4966,6 +5024,28 @@ class _RoomScreenState extends State<RoomScreen>
       if (mounted) {
         MessageUtils.showError(context, context.l10n.playlistSubscribeFailed);
       }
+    }
+  }
+
+  Future<void> _refreshCurrentPlaylist() async {
+    if (_folderStack.isEmpty || _isRefreshingMediaEntries) return;
+    final folder = _folderStack.last;
+    setState(() => _isRefreshingMediaEntries = true);
+    try {
+      final mediaLibrary = await SyncTvService.listMediaLibrary(
+        widget.room.roomId,
+        playlistId: folder.playbackPlaylistId,
+        target: folder.playbackTarget,
+        pageSize: _pageSize,
+        refresh: true,
+      );
+      _applyMediaLibrary(mediaLibrary);
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(context, context.l10n.errorMessage('$error'));
+      }
+    } finally {
+      if (mounted) setState(() => _isRefreshingMediaEntries = false);
     }
   }
 

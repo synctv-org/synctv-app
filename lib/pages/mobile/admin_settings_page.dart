@@ -2718,11 +2718,11 @@ class _RoomManagementTabState extends State<RoomManagementTab> {
             width: 460,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: RoomMemberPermissions.descriptions.entries
+              children: RoomMemberPermissions.values
                   .map(
-                    (entry) => _permissionOverrideRow(
-                      entry.value,
-                      entry.key,
+                    (permission) => _permissionOverrideRow(
+                      context.l10n.roomMemberPermissionLabel(permission),
+                      permission,
                       added,
                       removed,
                       setOverride,
@@ -12102,7 +12102,7 @@ class _InfoLine extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 76,
+            width: 104,
             child: Text(label, style: TextStyle(color: theme.hintColor)),
           ),
           Expanded(

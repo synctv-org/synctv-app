@@ -150,6 +150,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       MessageUtils.showInfo(context, message);
       return;
     }
+    MessageUtils.dismissAll();
     Navigator.pop(context, true);
   }
 
@@ -337,7 +338,10 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     }
     await _withLoading(() async {
       await SyncTvService.createGuestToken(roomId);
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        MessageUtils.dismissAll();
+        Navigator.pop(context, true);
+      }
     });
   }
 
@@ -407,7 +411,10 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         mfaSessionId: challenge.sessionId,
         emailToken: token,
       );
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        MessageUtils.dismissAll();
+        Navigator.pop(context, true);
+      }
     });
   }
 
@@ -428,7 +435,10 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         passkeySessionId: start.passkeySessionId,
         credential: credential,
       );
-      if (mounted) Navigator.pop(context, true);
+      if (mounted) {
+        MessageUtils.dismissAll();
+        Navigator.pop(context, true);
+      }
     });
   }
 

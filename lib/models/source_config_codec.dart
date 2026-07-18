@@ -16,7 +16,11 @@ class SourceConfigCodec {
       return source_enum.SourceProvider.valueOf(numeric) ??
           source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED;
     }
-    return switch (normalized.toLowerCase()) {
+    final lowercase = normalized.toLowerCase();
+    final providerName = lowercase.startsWith('source_provider_')
+        ? lowercase.substring('source_provider_'.length)
+        : lowercase;
+    return switch (providerName) {
       '' ||
       'unspecified' => source_enum.SourceProvider.SOURCE_PROVIDER_UNSPECIFIED,
       'direct_url' ||
@@ -493,13 +497,13 @@ class SourceConfigCodec {
   static Map<String, dynamic> mediaSourceConfigJson(
     source_config.MediaSourceConfig config,
   ) {
-    return protoMessageToJsonMap(config);
+    return protoMessageToIntegerEnumJsonMap(config);
   }
 
   static Map<String, dynamic> playlistSourceConfigJson(
     source_config.PlaylistSourceConfig config,
   ) {
-    return protoMessageToJsonMap(config);
+    return protoMessageToIntegerEnumJsonMap(config);
   }
 
   static source_config.SynologyMediaSourceConfig _synologyMediaSourceConfig(
