@@ -1,8 +1,37 @@
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
+import 'package:synctv_app/services/picture_in_picture_service.dart';
 
 void main() {
+  test('picture-in-picture selects the native or desktop platform backend', () {
+    expect(
+      pictureInPictureBackendForPlatform(TargetPlatform.android),
+      PictureInPictureBackend.android,
+    );
+    expect(
+      pictureInPictureBackendForPlatform(TargetPlatform.iOS),
+      PictureInPictureBackend.ios,
+    );
+    for (final platform in [
+      TargetPlatform.macOS,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    ]) {
+      expect(
+        pictureInPictureBackendForPlatform(platform),
+        PictureInPictureBackend.desktopWindow,
+      );
+    }
+    expect(
+      pictureInPictureBackendForPlatform(TargetPlatform.android, isWeb: true),
+      PictureInPictureBackend.unavailable,
+    );
+  });
+
   test('mobile platforms use gesture-only player interaction', () {
     expect(
       videoPlayerInteractionModeForPlatform(TargetPlatform.android),
@@ -83,6 +112,130 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(invocationCount, 1);
+  });
+
+  testWidgets('picture-in-picture playback options switch source and quality', (
+    tester,
+  ) async {
+    String? selected;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PictureInPicturePlaybackOptionsControl(
+            tooltip: 'Playback route',
+            choices: const [
+              PictureInPicturePlaybackChoice(
+                value: 'direct|0',
+                groupLabel: 'Direct',
+                label: '360p',
+                selected: true,
+              ),
+              PictureInPicturePlaybackChoice(
+                value: 'direct|1',
+                groupLabel: 'Direct',
+                label: '1080p',
+                selected: false,
+              ),
+              PictureInPicturePlaybackChoice(
+                value: 'proxy|0',
+                groupLabel: 'Proxy',
+                label: '360p',
+                selected: false,
+              ),
+            ],
+            onSelected: (value) => selected = value,
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const Key('picture_in_picture_playback_options_list')),
+      findsNothing,
+    );
+    await tester.tap(
+      find.byKey(const Key('picture_in_picture_playback_options_toggle')),
+    );
+    await tester.pump();
+    expect(find.text('Direct'), findsOneWidget);
+    expect(find.text('Proxy'), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey('picture_in_picture_playback_option_direct|1')),
+    );
+    await tester.pump();
+    expect(selected, 'direct|1');
+  });
+
+  testWidgets('picture-in-picture keeps an empty playback surface mounted', (
+    tester,
+  ) async {
+    final danmakuController = DanmakuController();
+    var exitCount = 0;
+    var previousCount = 0;
+    var nextCount = 0;
+    var syncCount = 0;
+    var dragCount = 0;
+    addTearDown(danmakuController.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: PictureInPicturePlaybackSurface(
+          controller: null,
+          danmakuController: danmakuController,
+          emptyState: const Text('Waiting for playback'),
+          exitTooltip: 'Return to room',
+          playbackOptionsControl: const SizedBox(
+            key: Key('test_playback_options'),
+          ),
+          onPrevious: () => previousCount++,
+          onNext: () => nextCount++,
+          onSync: () => syncCount++,
+          onDragStart: () => dragCount++,
+          onExit: () => exitCount++,
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('picture_in_picture_surface')), findsOneWidget);
+    expect(find.text('Waiting for playback'), findsOneWidget);
+    expect(
+      find.byKey(const Key('picture_in_picture_exit_button')),
+      findsNothing,
+    );
+    expect(find.byKey(const Key('test_playback_options')), findsNothing);
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const Key('picture_in_picture_surface'))),
+    );
+    await tester.pump();
+    expect(
+      find.byKey(const Key('picture_in_picture_exit_button')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('test_playback_options')), findsOneWidget);
+    await tester.tap(
+      find.byKey(const Key('picture_in_picture_previous_button')),
+    );
+    await tester.tap(find.byKey(const Key('picture_in_picture_next_button')));
+    await tester.tap(find.byKey(const Key('picture_in_picture_sync_button')));
+    expect(previousCount, 1);
+    expect(nextCount, 1);
+    expect(syncCount, 1);
+    final surface = find.byKey(const Key('picture_in_picture_surface'));
+    await tester.tap(surface);
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.dragFrom(tester.getCenter(surface), const Offset(20, 0));
+    expect(dragCount, 1);
+    expect(exitCount, 0);
+    await tester.tap(find.byKey(const Key('picture_in_picture_exit_button')));
+    expect(exitCount, 1);
+    await tester.tap(surface);
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tap(surface);
+    await tester.pumpAndSettle();
+    expect(exitCount, 2);
   });
 
   testWidgets('playback navigation invokes previous and next callbacks', (

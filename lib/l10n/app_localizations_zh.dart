@@ -1062,6 +1062,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pictureInPicture => '画中画';
 
   @override
+  String get exitPictureInPicture => '返回房间';
+
+  @override
   String get unknown => '未知';
 
   @override

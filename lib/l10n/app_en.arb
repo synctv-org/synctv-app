@@ -390,6 +390,7 @@
   "exitFullscreen": "Exit fullscreen",
   "fullscreen": "Fullscreen",
   "pictureInPicture": "Picture in picture",
+  "exitPictureInPicture": "Return to room",
   "unknown": "Unknown",
   "playbackSpeed": "Playback speed",
   "playbackSpeedValue": "Playback speed {speed}x",

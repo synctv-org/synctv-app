@@ -2012,6 +2012,12 @@ abstract class AppLocalizations {
   /// **'Picture in picture'**
   String get pictureInPicture;
 
+  /// No description provided for @exitPictureInPicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to room'**
+  String get exitPictureInPicture;
+
   /// No description provided for @unknown.
   ///
   /// In en, this message translates to:

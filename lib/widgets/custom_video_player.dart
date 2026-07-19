@@ -326,7 +326,6 @@ class CustomVideoPlayer extends StatefulWidget {
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
   final VoidCallback? onEnterPictureInPicture;
-  final ValueListenable<bool>? pictureInPictureActive;
   final ValueChanged<bool>? onUserPlaybackStateChanged;
   final ValueChanged<Duration>? onUserSeek;
   final ValueChanged<double>? onUserPlaybackSpeedChanged;
@@ -350,7 +349,6 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onPrevious,
     this.onNext,
     this.onEnterPictureInPicture,
-    this.pictureInPictureActive,
     this.onUserPlaybackStateChanged,
     this.onUserSeek,
     this.onUserPlaybackSpeedChanged,
@@ -434,6 +432,554 @@ class PictureInPictureControl extends StatelessWidget {
       onPressed: onPressed,
       constraints: const BoxConstraints.tightFor(width: 40, height: 40),
       iconSize: iconSize,
+    );
+  }
+}
+
+@immutable
+class PictureInPicturePlaybackChoice {
+  const PictureInPicturePlaybackChoice({
+    required this.value,
+    required this.groupLabel,
+    required this.label,
+    required this.selected,
+  });
+
+  final String value;
+  final String groupLabel;
+  final String label;
+  final bool selected;
+}
+
+class PictureInPicturePlaybackOptionsControl extends StatefulWidget {
+  const PictureInPicturePlaybackOptionsControl({
+    super.key,
+    required this.tooltip,
+    required this.choices,
+    required this.onSelected,
+  });
+
+  final String tooltip;
+  final List<PictureInPicturePlaybackChoice> choices;
+  final ValueChanged<String> onSelected;
+
+  @override
+  State<PictureInPicturePlaybackOptionsControl> createState() =>
+      _PictureInPicturePlaybackOptionsControlState();
+}
+
+class _PictureInPicturePlaybackOptionsControlState
+    extends State<PictureInPicturePlaybackOptionsControl> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _expanded = true),
+      onExit: (_) => setState(() => _expanded = false),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Material(
+            color: Colors.black.withValues(alpha: 0.62),
+            shape: const CircleBorder(),
+            child: IconButton(
+              key: const Key('picture_in_picture_playback_options_toggle'),
+              onPressed: () => setState(() => _expanded = !_expanded),
+              tooltip: widget.tooltip,
+              icon: const Icon(Icons.route_rounded),
+              color: Colors.white,
+              iconSize: 18,
+              constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+              padding: EdgeInsets.zero,
+            ),
+          ),
+          if (_expanded) ...[
+            const SizedBox(height: 4),
+            Material(
+              color: Colors.black.withValues(alpha: 0.88),
+              borderRadius: BorderRadius.circular(6),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minWidth: 150,
+                  maxWidth: 190,
+                  maxHeight: 145,
+                ),
+                child: ListView(
+                  key: const Key('picture_in_picture_playback_options_list'),
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  children: _buildChoices(),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildChoices() {
+    final children = <Widget>[];
+    String? previousGroup;
+    for (final choice in widget.choices) {
+      if (choice.groupLabel != previousGroup) {
+        previousGroup = choice.groupLabel;
+        children.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 5, 10, 3),
+            child: Text(
+              choice.groupLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        );
+      }
+      children.add(
+        InkWell(
+          key: ValueKey('picture_in_picture_playback_option_${choice.value}'),
+          onTap: () {
+            setState(() => _expanded = false);
+            widget.onSelected(choice.value);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            child: Row(
+              children: [
+                Icon(
+                  choice.selected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 16,
+                  color: choice.selected
+                      ? const Color(0xFF7CFFB2)
+                      : Colors.white70,
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    choice.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    return children;
+  }
+}
+
+class PictureInPicturePlaybackSurface extends StatefulWidget {
+  const PictureInPicturePlaybackSurface({
+    super.key,
+    required this.controller,
+    required this.danmakuController,
+    required this.emptyState,
+    this.danmakuEnabled = true,
+    this.exitTooltip,
+    this.volumeTooltip,
+    this.playbackOptionsControl,
+    this.isLive = false,
+    this.canControlPlayback = false,
+    this.onPlaybackStateChanged,
+    this.onSeek,
+    this.onSync,
+    this.onPrevious,
+    this.onNext,
+    this.onDragStart,
+    this.onExit,
+  });
+
+  final VideoPlayerController? controller;
+  final DanmakuController danmakuController;
+  final Widget emptyState;
+  final bool danmakuEnabled;
+  final String? exitTooltip;
+  final String? volumeTooltip;
+  final Widget? playbackOptionsControl;
+  final bool isLive;
+  final bool canControlPlayback;
+  final ValueChanged<bool>? onPlaybackStateChanged;
+  final ValueChanged<Duration>? onSeek;
+  final VoidCallback? onSync;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+  final VoidCallback? onDragStart;
+  final VoidCallback? onExit;
+
+  @override
+  State<PictureInPicturePlaybackSurface> createState() =>
+      _PictureInPicturePlaybackSurfaceState();
+}
+
+class _PictureInPicturePlaybackSurfaceState
+    extends State<PictureInPicturePlaybackSurface> {
+  bool _showControls = false;
+  bool _showVolumeSlider = false;
+  double _lastAudibleVolume = 1;
+  double? _pendingSeekSeconds;
+
+  Future<void> _setVolume(double volume) async {
+    final controller = widget.controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (volume > 0.01) _lastAudibleVolume = volume;
+    await controller.setVolume(volume);
+  }
+
+  void _toggleMute() {
+    final volume = widget.controller?.value.volume ?? 0;
+    unawaited(_setVolume(volume <= 0.01 ? _lastAudibleVolume : 0));
+  }
+
+  @override
+  void didUpdateWidget(PictureInPicturePlaybackSurface oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(widget.controller, oldWidget.controller)) {
+      _pendingSeekSeconds = null;
+    }
+  }
+
+  Future<void> _togglePlayback() async {
+    final controller = widget.controller;
+    if (!widget.canControlPlayback ||
+        controller == null ||
+        !controller.value.isInitialized) {
+      return;
+    }
+    final nextIsPlaying = !controller.value.isPlaying;
+    if (nextIsPlaying) {
+      await controller.play();
+    } else {
+      await controller.pause();
+    }
+    widget.onPlaybackStateChanged?.call(nextIsPlaying);
+  }
+
+  Future<void> _commitSeek(double seconds) async {
+    final controller = widget.controller;
+    if (!widget.canControlPlayback ||
+        widget.isLive ||
+        controller == null ||
+        !controller.value.isInitialized) {
+      return;
+    }
+    final target = Duration(milliseconds: (seconds * 1000).round());
+    await controller.seekTo(target);
+    if (mounted) setState(() => _pendingSeekSeconds = null);
+    widget.onSeek?.call(target);
+  }
+
+  Widget _buildTransportButton({
+    required Key key,
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onPressed,
+  }) {
+    return IconButton(
+      key: key,
+      onPressed: onPressed,
+      tooltip: tooltip,
+      icon: Icon(icon),
+      color: Colors.white,
+      disabledColor: Colors.white38,
+      iconSize: 18,
+      constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+      padding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _buildTransportControls(VideoPlayerValue? value) {
+    final duration = value?.duration ?? Duration.zero;
+    final position = value?.position ?? Duration.zero;
+    final maxSeconds = duration.inMilliseconds / 1000.0;
+    final positionSeconds = position.inMilliseconds / 1000.0;
+    final sliderValue = (_pendingSeekSeconds ?? positionSeconds).clamp(
+      0.0,
+      maxSeconds > 0 ? maxSeconds : 1.0,
+    );
+    final canSeek =
+        widget.canControlPlayback &&
+        !widget.isLive &&
+        value != null &&
+        maxSeconds > 0;
+    final canToggle = widget.canControlPlayback && value != null;
+
+    return Material(
+      color: Colors.black.withValues(alpha: 0.72),
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!widget.isLive && value != null)
+              SizedBox(
+                height: 18,
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 2,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 5,
+                      disabledThumbRadius: 4,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 10,
+                    ),
+                  ),
+                  child: Slider(
+                    key: const Key('picture_in_picture_progress_slider'),
+                    value: sliderValue,
+                    max: maxSeconds > 0 ? maxSeconds : 1,
+                    onChanged: canSeek
+                        ? (seconds) =>
+                              setState(() => _pendingSeekSeconds = seconds)
+                        : null,
+                    onChangeEnd: canSeek
+                        ? (seconds) => unawaited(_commitSeek(seconds))
+                        : null,
+                    semanticFormatterCallback: (seconds) =>
+                        formatPlayerDuration(
+                          Duration(seconds: seconds.round()),
+                        ),
+                  ),
+                ),
+              ),
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                if (widget.onPrevious != null)
+                  _buildTransportButton(
+                    key: const Key('picture_in_picture_previous_button'),
+                    icon: Icons.skip_previous_rounded,
+                    tooltip: context.l10n.previousVideo,
+                    onPressed: widget.onPrevious,
+                  ),
+                _buildTransportButton(
+                  key: const Key('picture_in_picture_play_pause_button'),
+                  icon: value?.isPlaying == true
+                      ? Icons.pause_rounded
+                      : Icons.play_arrow_rounded,
+                  tooltip: value?.isPlaying == true
+                      ? context.l10n.pause
+                      : context.l10n.play,
+                  onPressed: canToggle
+                      ? () => unawaited(_togglePlayback())
+                      : null,
+                ),
+                if (widget.onNext != null)
+                  _buildTransportButton(
+                    key: const Key('picture_in_picture_next_button'),
+                    icon: Icons.skip_next_rounded,
+                    tooltip: context.l10n.nextVideo,
+                    onPressed: widget.onNext,
+                  ),
+                if (widget.onSync != null)
+                  _buildTransportButton(
+                    key: const Key('picture_in_picture_sync_button'),
+                    icon: widget.isLive
+                        ? Icons.refresh_rounded
+                        : Icons.sync_rounded,
+                    tooltip: widget.isLive
+                        ? context.l10n.reload
+                        : context.l10n.sync,
+                    onPressed: widget.onSync,
+                  ),
+                const Spacer(),
+                if (value != null)
+                  Text(
+                    playbackPositionLabel(
+                          isLive: widget.isLive,
+                          position: position,
+                          liveLabel: context.l10n.live,
+                        ) +
+                        (widget.isLive
+                            ? ''
+                            : ' / ${formatPlayerDuration(duration)}'),
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final videoController = widget.controller;
+    return ColoredBox(
+      key: const Key('picture_in_picture_surface'),
+      color: Colors.black,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _showControls = true),
+        onExit: (_) => setState(() {
+          _showControls = false;
+          _showVolumeSlider = false;
+        }),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            videoController == null || !videoController.value.isInitialized
+                ? widget.emptyState
+                : ListenableBuilder(
+                    listenable: widget.danmakuController,
+                    builder: (context, _) => Stack(
+                      fit: StackFit.expand,
+                      alignment: Alignment.center,
+                      children: [
+                        Center(
+                          child: AspectRatio(
+                            aspectRatio: videoController.value.aspectRatio > 0
+                                ? videoController.value.aspectRatio
+                                : 16 / 9,
+                            child: VideoPlayer(videoController),
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: DanmakuOverlay(
+                              videoController: videoController,
+                              danmakuList: widget.danmakuController.items,
+                              isEnabled: widget.danmakuEnabled,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanStart: widget.onDragStart == null
+                    ? null
+                    : (_) => widget.onDragStart?.call(),
+                onDoubleTap: widget.onExit,
+              ),
+            ),
+            if (_showControls &&
+                widget.onExit != null &&
+                videoController?.value.isInitialized == true)
+              Positioned(
+                right: 8,
+                bottom: 70,
+                child: ValueListenableBuilder<VideoPlayerValue>(
+                  valueListenable: videoController!,
+                  builder: (context, value, _) => MouseRegion(
+                    onEnter: (_) => setState(() => _showVolumeSlider = true),
+                    onExit: (_) => setState(() => _showVolumeSlider = false),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_showVolumeSlider)
+                          Material(
+                            color: Colors.black.withValues(alpha: 0.62),
+                            borderRadius: BorderRadius.circular(18),
+                            child: SizedBox(
+                              width: 34,
+                              height: 94,
+                              child: RotatedBox(
+                                quarterTurns: 3,
+                                child: Slider(
+                                  key: const Key(
+                                    'picture_in_picture_volume_slider',
+                                  ),
+                                  value: value.volume.clamp(0.0, 1.0),
+                                  onChanged: (volume) =>
+                                      unawaited(_setVolume(volume)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 4),
+                        Material(
+                          color: Colors.black.withValues(alpha: 0.62),
+                          shape: const CircleBorder(),
+                          child: IconButton(
+                            key: const Key('picture_in_picture_volume_button'),
+                            onPressed: _toggleMute,
+                            tooltip: widget.volumeTooltip,
+                            icon: Icon(
+                              value.volume <= 0.01
+                                  ? Icons.volume_off_rounded
+                                  : Icons.volume_up_rounded,
+                            ),
+                            color: Colors.white,
+                            iconSize: 18,
+                            constraints: const BoxConstraints.tightFor(
+                              width: 34,
+                              height: 34,
+                            ),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            if (_showControls && widget.onExit != null)
+              Positioned(
+                left: 8,
+                right: 8,
+                bottom: 6,
+                child: videoController?.value.isInitialized == true
+                    ? ValueListenableBuilder<VideoPlayerValue>(
+                        valueListenable: videoController!,
+                        builder: (context, value, _) =>
+                            _buildTransportControls(value),
+                      )
+                    : _buildTransportControls(null),
+              ),
+            if (_showControls)
+              if (widget.onExit case final onExit?)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Material(
+                    color: Colors.black.withValues(alpha: 0.62),
+                    shape: const CircleBorder(),
+                    child: IconButton(
+                      key: const Key('picture_in_picture_exit_button'),
+                      onPressed: onExit,
+                      tooltip: widget.exitTooltip,
+                      icon: const Icon(Icons.fullscreen_exit_rounded),
+                      color: Colors.white,
+                      iconSize: 19,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 34,
+                        height: 34,
+                      ),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+            if (_showControls &&
+                widget.onExit != null &&
+                widget.playbackOptionsControl != null)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: KeyedSubtree(
+                  key: const Key('picture_in_picture_playback_options_button'),
+                  child: widget.playbackOptionsControl!,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1701,33 +2247,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   @override
   Widget build(BuildContext context) {
-    final pictureInPictureActive = widget.pictureInPictureActive;
-    if (pictureInPictureActive != null) {
-      return ValueListenableBuilder<bool>(
-        valueListenable: pictureInPictureActive,
-        builder: (context, active, _) => _buildPlayer(context, active),
-      );
-    }
-    return _buildPlayer(context, false);
-  }
-
-  Widget _buildPlayer(BuildContext context, bool pictureInPictureActive) {
     final videoValue = widget.controller.value;
-
-    if (pictureInPictureActive) {
-      return ColoredBox(
-        color: Colors.black,
-        child: Center(
-          child: AspectRatio(
-            aspectRatio: videoValue.aspectRatio > 0
-                ? videoValue.aspectRatio
-                : 16 / 9,
-            child: VideoPlayer(widget.controller),
-          ),
-        ),
-      );
-    }
-
     return AppScaffold(
       backgroundColor: Colors.black,
       body: Focus(

@@ -320,6 +320,7 @@
   "exitFullscreen": "退出全屏",
   "fullscreen": "全屏",
   "pictureInPicture": "画中画",
+  "exitPictureInPicture": "返回房间",
   "unknown": "未知",
   "playbackSpeed": "倍速",
   "playbackSpeedValue": "倍速 {speed}x",

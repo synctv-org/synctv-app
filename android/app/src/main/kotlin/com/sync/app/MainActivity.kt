@@ -2,6 +2,7 @@ package com.sync.app
 
 import android.app.PictureInPictureParams
 import android.content.pm.PackageManager
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.util.Rational
@@ -32,6 +33,16 @@ class MainActivity : FlutterActivity() {
                         .setAspectRatio(Rational(width.coerceAtLeast(1), height.coerceAtLeast(1)))
                         .build()
                     result.success(enterPictureInPictureMode(params))
+                }
+                "exit" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode) {
+                        startActivity(
+                            Intent(this, MainActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                            },
+                        )
+                    }
+                    result.success(null)
                 }
                 else -> result.notImplemented()
             }

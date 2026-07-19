@@ -113,6 +113,7 @@ class _RoomScreenState extends State<RoomScreen>
   final PictureInPictureService _pictureInPicture =
       PictureInPictureService.instance;
   bool _pictureInPictureAvailable = false;
+  bool _fullScreenRouteOpen = false;
   String? _videoError;
   String? _roomSessionError;
   int _videoInitGeneration = 0;
@@ -188,6 +189,16 @@ class _RoomScreenState extends State<RoomScreen>
     final member = _selfMember;
     if (member != null) {
       return (member.permissions & RoomEffectivePermissions.navigatePlayback) !=
+          0;
+    }
+    return _isSystemAdmin || _isRoomCreator;
+  }
+
+  bool get _canControlPlaybackState {
+    final member = _selfMember;
+    if (member != null) {
+      return (member.permissions &
+              RoomEffectivePermissions.controlPlaybackState) !=
           0;
     }
     return _isSystemAdmin || _isRoomCreator;
@@ -280,6 +291,11 @@ class _RoomScreenState extends State<RoomScreen>
   Future<void> _enterPictureInPicture() async {
     final controller = _videoPlayerController;
     if (controller == null || !controller.value.isInitialized) return;
+    if (_fullScreenRouteOpen && mounted) {
+      Navigator.of(context).pop();
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+    }
     await _pictureInPicture.enter(aspectRatio: controller.value.aspectRatio);
   }
 
@@ -327,7 +343,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _handleRoomSessionClosed(String message) async {
     _reconnectTimer?.cancel();
-    _disposeVideoController();
+    await _disposeVideoController();
     await _realtimeSubscription?.cancel();
     _realtimeSubscription = null;
     await _channel?.sink.close();
@@ -1613,7 +1629,7 @@ class _RoomScreenState extends State<RoomScreen>
       }
     } else {
       if (_videoPlayerController != null) {
-        _disposeVideoController();
+        await _disposeVideoController();
         if (mounted) setState(() {});
       }
     }
@@ -1677,11 +1693,18 @@ class _RoomScreenState extends State<RoomScreen>
       await newController.initialize().timeout(const Duration(seconds: 20));
 
       if (!mounted || generation != _videoInitGeneration) {
-        newController.dispose();
+        await newController.dispose();
         return;
       }
 
-      _disposeVideoController();
+      final disposal = _disposeVideoController(invalidateInitialization: false);
+      if (mounted) setState(() {});
+      await disposal;
+
+      if (!mounted || generation != _videoInitGeneration) {
+        await newController.dispose();
+        return;
+      }
 
       _videoPlayerController = newController;
       _videoPlayerController!.addListener(_videoListener);
@@ -1693,7 +1716,7 @@ class _RoomScreenState extends State<RoomScreen>
         });
       }
     } catch (e) {
-      newController.dispose();
+      await newController.dispose();
       if (mounted && generation == _videoInitGeneration) {
         final message = playbackLoadErrorMessage(context.l10n, e);
         setState(() {
@@ -1753,16 +1776,7 @@ class _RoomScreenState extends State<RoomScreen>
       return AppPopupMenuButton<String>(
         tooltip: context.l10n.playbackRoute,
         color: Colors.black87,
-        onSelected: (value) {
-          final parts = value.split('|');
-          if (parts.length != 2) return;
-          final mode = entry.playbackModes.firstWhere(
-            (entry) => entry.key == parts[0],
-            orElse: () => entry.playbackModes.first,
-          );
-          final index = int.tryParse(parts[1]) ?? mode.safeDefaultUrlIndex;
-          _selectPlaybackOption(mode, index);
-        },
+        onSelected: (value) => _selectPlaybackOptionValue(entry, value),
         itemBuilder: (context) => _buildPlaybackOptionMenuItems(entry),
         child: Tooltip(
           message: entry.playbackChoiceLabel,
@@ -1786,16 +1800,7 @@ class _RoomScreenState extends State<RoomScreen>
     return AppPopupMenuButton<String>(
       tooltip: context.l10n.playbackRoute,
       color: Colors.black87,
-      onSelected: (value) {
-        final parts = value.split('|');
-        if (parts.length != 2) return;
-        final mode = entry.playbackModes.firstWhere(
-          (entry) => entry.key == parts[0],
-          orElse: () => entry.playbackModes.first,
-        );
-        final index = int.tryParse(parts[1]) ?? mode.safeDefaultUrlIndex;
-        _selectPlaybackOption(mode, index);
-      },
+      onSelected: (value) => _selectPlaybackOptionValue(entry, value),
       itemBuilder: (context) => _buildPlaybackOptionMenuItems(entry),
       child: Tooltip(
         message: entry.playbackChoiceLabel,
@@ -1822,6 +1827,38 @@ class _RoomScreenState extends State<RoomScreen>
                 ),
         ),
       ),
+    );
+  }
+
+  void _selectPlaybackOptionValue(RoomMediaEntry entry, String value) {
+    final parts = value.split('|');
+    if (parts.length != 2) return;
+    final mode = entry.playbackModes.firstWhere(
+      (entry) => entry.key == parts[0],
+      orElse: () => entry.playbackModes.first,
+    );
+    final index = int.tryParse(parts[1]) ?? mode.safeDefaultUrlIndex;
+    unawaited(_selectPlaybackOption(mode, index));
+  }
+
+  Widget? _buildPictureInPicturePlaybackOptions() {
+    final entry = _currentStatus?.entry;
+    if (entry == null || !entry.hasPlaybackChoices) return null;
+    return PictureInPicturePlaybackOptionsControl(
+      tooltip: context.l10n.playbackRoute,
+      choices: [
+        for (final mode in entry.playbackModes)
+          for (var index = 0; index < mode.urls.length; index++)
+            PictureInPicturePlaybackChoice(
+              value: '${mode.key}|$index',
+              groupLabel: mode.label,
+              label: mode.urls[index].label(index),
+              selected:
+                  mode.key == entry.selectedPlaybackMode &&
+                  index == entry.selectedPlaybackUrlIndex,
+            ),
+      ],
+      onSelected: (value) => _selectPlaybackOptionValue(entry, value),
     );
   }
 
@@ -1899,12 +1936,16 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  void _disposeVideoController() {
-    _videoInitGeneration++;
-    _videoPlayerController?.removeListener(_videoListener);
-    _videoPlayerController?.dispose();
+  Future<void> _disposeVideoController({
+    bool invalidateInitialization = true,
+  }) async {
+    if (invalidateInitialization) _videoInitGeneration++;
+    final controller = _videoPlayerController;
     _videoPlayerController = null;
     _playbackDeviationSnapshot = null;
+    if (controller == null) return;
+    controller.removeListener(_videoListener);
+    await controller.dispose();
   }
 
   @override
@@ -1917,7 +1958,8 @@ class _RoomScreenState extends State<RoomScreen>
     _authErrorSubscription?.cancel();
     _realtimeSubscription?.cancel();
     _tabController.dispose();
-    _disposeVideoController();
+    unawaited(_disposeVideoController());
+    unawaited(_pictureInPicture.exit());
     _syncTimer?.cancel();
     _diagnosticsTimer?.cancel();
     _chatHighlightTimer?.cancel();
@@ -1995,6 +2037,49 @@ class _RoomScreenState extends State<RoomScreen>
 
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _pictureInPicture.active,
+      builder: (context, active, _) => active
+          ? _buildPictureInPictureSurface()
+          : _buildRoomScaffold(context),
+    );
+  }
+
+  Widget _buildPictureInPictureSurface() {
+    return PictureInPicturePlaybackSurface(
+      controller: _videoPlayerController,
+      danmakuController: _danmakuController,
+      emptyState: PlaybackEmptyState(
+        error: _roomSessionError ?? _videoError,
+        loading: _isVideoLoading,
+        hasPlayback: _currentStatus?.entry?.url.isNotEmpty == true,
+        iconSize: 30,
+        textSize: 13,
+      ),
+      exitTooltip: context.l10n.exitPictureInPicture,
+      volumeTooltip: context.l10n.volume,
+      playbackOptionsControl: _buildPictureInPicturePlaybackOptions(),
+      isLive: _isCurrentPlaybackLive,
+      canControlPlayback: _canControlPlaybackState,
+      onPlaybackStateChanged: _canControlPlaybackState
+          ? _handleUserPlaybackStateChanged
+          : null,
+      onSeek: _canControlPlaybackState ? _handleUserSeek : null,
+      onSync: _currentStatus == null ? null : _handleSync,
+      onPrevious: _canNavigatePlayback
+          ? () => unawaited(_navigatePlayback(previous: true))
+          : null,
+      onNext: _canNavigatePlayback
+          ? () => unawaited(_navigatePlayback(previous: false))
+          : null,
+      onDragStart: _pictureInPicture.startDragging,
+      onExit: _pictureInPicture.backend == PictureInPictureBackend.desktopWindow
+          ? () => unawaited(_pictureInPicture.exit())
+          : null,
+    );
+  }
+
+  Widget _buildRoomScaffold(BuildContext context) {
     final theme = Theme.of(context);
     final compactChrome = MediaQuery.sizeOf(context).width < 560;
 
@@ -2124,12 +2209,12 @@ class _RoomScreenState extends State<RoomScreen>
                         onEnterPictureInPicture: _pictureInPictureAvailable
                             ? () => unawaited(_enterPictureInPicture())
                             : null,
-                        pictureInPictureActive: _pictureInPicture.active,
                         onUserPlaybackStateChanged:
                             _handleUserPlaybackStateChanged,
                         onUserSeek: _handleUserSeek,
                         onUserPlaybackSpeedChanged:
                             _handleUserPlaybackSpeedChanged,
+                        onSendDanmaku: _sendDanmaku,
                         interactionMode: videoPlayerInteractionModeForPlatform(
                           defaultTargetPlatform,
                         ),
@@ -2456,13 +2541,14 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  void _toggleFullScreen() {
+  Future<void> _toggleFullScreen() async {
     if (_videoPlayerController == null ||
         !_videoPlayerController!.value.isInitialized) {
       return;
     }
 
-    Navigator.of(context).push(
+    _fullScreenRouteOpen = true;
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => CustomVideoPlayer(
           controller: _videoPlayerController!,
@@ -2481,7 +2567,6 @@ class _RoomScreenState extends State<RoomScreen>
           onEnterPictureInPicture: _pictureInPictureAvailable
               ? () => unawaited(_enterPictureInPicture())
               : null,
-          pictureInPictureActive: _pictureInPicture.active,
           onUserPlaybackStateChanged: _handleUserPlaybackStateChanged,
           onUserSeek: _handleUserSeek,
           onUserPlaybackSpeedChanged: _handleUserPlaybackSpeedChanged,
@@ -2499,6 +2584,7 @@ class _RoomScreenState extends State<RoomScreen>
         ),
       ),
     );
+    _fullScreenRouteOpen = false;
   }
 
   void _sendDanmaku(String text) {
@@ -5327,7 +5413,7 @@ class _RoomScreenState extends State<RoomScreen>
       await SyncTvService.switchMedia(widget.room.roomId, '', subPath: '');
       if (mounted) {
         MessageUtils.showSuccess(context, context.l10n.playbackStopped);
-        _disposeVideoController();
+        await _disposeVideoController();
         setState(() {
           _currentStatus = null;
         });

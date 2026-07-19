@@ -1169,6 +1169,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pictureInPicture => 'Picture in picture';
 
   @override
+  String get exitPictureInPicture => 'Return to room';
+
+  @override
   String get unknown => 'Unknown';
 
   @override

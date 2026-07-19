@@ -65,6 +65,8 @@ dependencies:
   webview_flutter: ^4.14.1
   desktop_webview_window: ^0.3.0
   media_kit_libs_macos_video: ^1.1.4
+  fl_pip: ^3.2.3
+  window_manager: ^0.5.2
   forui: ^0.23.0
   flex_color_scheme: ^8.4.0
   responsive_framework: ^1.5.1
