@@ -661,6 +661,8 @@ void main() {
         isPlaying: false,
         position: 0.658,
         playbackRate: 1,
+        clientOperationId: '3d918f61-3959-49ef-a962-5d94b8ac8470',
+        clientTimeMillis: 123456,
       );
 
       expect(message.hasPlaybackStateUpdate(), isTrue);
@@ -678,6 +680,11 @@ void main() {
         message.playbackStateUpdate.expectedTargetHash,
         'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
       );
+      expect(
+        message.playbackStateUpdate.clientOperationId,
+        '3d918f61-3959-49ef-a962-5d94b8ac8470',
+      );
+      expect(message.playbackStateUpdate.clientTimeMillis, Int64(123456));
     },
   );
 
@@ -818,6 +825,19 @@ void main() {
     expect(chat.senderUserId, 'usr_sender');
     expect(chat.senderUsername, 'alice');
     expect(chat.timestampMillis, 123000);
+
+    final anonymousChat = RoomRealtimeCodec.decode(
+      client.ServerMessage(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'chat_events',
+          chatEvent: client.ChatMessageEvent(
+            eventId: 'evt_chat_without_author',
+            message: client.ChatMessageReceive(content: 'system event'),
+          ),
+        ),
+      ).writeToBuffer(),
+    );
+    expect(anonymousChat.senderUsername, isNull);
 
     final playback = RoomRealtimeCodec.decode(
       client.ServerMessage(
@@ -3730,10 +3750,17 @@ void main() {
           'GET /api/rooms/room_1/playback',
         ],
       );
-      expect(jsonDecode(requestBodies[0]), {
-        'mediaId': 'med_1',
-        'playlistId': '',
-      });
+      final startBody = jsonDecode(requestBodies[0]) as Map<String, dynamic>;
+      final operationId = startBody.remove('clientOperationId');
+      expect(startBody, {'mediaId': 'med_1', 'playlistId': ''});
+      expect(
+        operationId,
+        matches(
+          RegExp(
+            r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+          ),
+        ),
+      );
     } finally {
       await subscription.cancel();
       await server.close(force: true);

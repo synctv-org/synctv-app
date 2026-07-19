@@ -46,6 +46,7 @@ import 'package:synctv_app/src/generated/proto/providers/twitch.pb.dart'
     as twitch;
 import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
     as youtube;
+import 'package:synctv_app/models/chat_message_selection.dart';
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 
@@ -57,10 +58,6 @@ export 'package:synctv_app/services/synctv_file_upload_service.dart';
 
 class SyncTvService {
   static const String _playbackSyncConfigKey = 'synctv.playback.sync.config';
-  static const List<client_enum.ChatMessageType> chatVisibleMessageTypes = [
-    client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
-    client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED,
-  ];
   static PlaybackSyncConfig _playbackSyncConfig = PlaybackSyncConfig.defaults;
 
   static String get baseUrl => _runtime.baseUrl;
@@ -1243,7 +1240,7 @@ class SyncTvService {
     int limit = 50,
     String cursor = '',
     List<client_enum.ChatMessageType> includeMessageTypes =
-        chatVisibleMessageTypes,
+        chatTimelineMessageTypes,
   }) async {
     return _domains.roomMedia.getChatHistory(
       roomId,

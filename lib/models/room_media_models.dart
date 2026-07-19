@@ -274,7 +274,7 @@ class RoomChatMessageInfo {
   final String id;
   final String roomId;
   final String userId;
-  final String username;
+  final String? username;
   final String content;
   final int timestamp;
   final int messageType;
@@ -295,7 +295,7 @@ class RoomChatMessageInfo {
     required this.id,
     required this.roomId,
     required this.userId,
-    required this.username,
+    this.username,
     required this.content,
     required this.timestamp,
     this.messageType = 1,

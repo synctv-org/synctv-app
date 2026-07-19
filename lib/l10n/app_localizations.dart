@@ -3830,6 +3830,30 @@ abstract class AppLocalizations {
   /// **'Grid'**
   String get grid;
 
+  /// No description provided for @sourceType.
+  ///
+  /// In en, this message translates to:
+  /// **'Source type'**
+  String get sourceType;
+
+  /// No description provided for @sourcePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get sourcePath;
+
+  /// No description provided for @sourceQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Query'**
+  String get sourceQuery;
+
+  /// No description provided for @sharedSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared source'**
+  String get sharedSource;
+
   /// No description provided for @multipleRoutes.
   ///
   /// In en, this message translates to:

@@ -2092,6 +2092,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get grid => '网格';
 
   @override
+  String get sourceType => '来源类型';
+
+  @override
+  String get sourcePath => '路径';
+
+  @override
+  String get sourceQuery => '查询';
+
+  @override
+  String get sharedSource => '共享来源';
+
+  @override
   String get multipleRoutes => '多线路';
 
   @override

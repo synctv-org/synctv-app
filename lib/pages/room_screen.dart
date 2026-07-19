@@ -6,7 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
+import 'package:synctv_app/models/latest_async_operation_coordinator.dart';
+import 'package:synctv_app/models/chat_message_selection.dart';
+import 'package:synctv_app/models/chat_context_menu_layout.dart';
 import 'package:synctv_app/models/playback_control_reporter.dart';
+import 'package:synctv_app/models/playback_operation_tracker.dart';
+import 'package:synctv_app/models/playlist_source_presentation.dart';
 import 'package:synctv_app/models/playback_sync_config.dart';
 import 'package:synctv_app/models/playback_sync_target.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
@@ -23,6 +28,7 @@ import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/chat_reactions.dart';
 import 'package:synctv_app/utils/chat_playback_danmaku.dart';
 import 'package:synctv_app/utils/playback_error_messages.dart';
+import 'package:synctv_app/utils/client_operation_id.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/pages/mobile/room_settings_page.dart';
 import 'package:synctv_app/widgets/add_media_dialog.dart';
@@ -35,6 +41,7 @@ import 'package:synctv_app/widgets/playback_sync_settings_fields.dart';
 import 'package:synctv_app/widgets/room_invite_actions.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 import 'package:synctv_app/widgets/chat_input_area.dart';
+import 'package:synctv_app/widgets/chat_message_hover_layout.dart';
 import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/managers/webrtc_manager.dart';
@@ -44,6 +51,40 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+
+enum _PlaybackControlIntentKind { playbackState, seek, speed }
+
+class _PlaybackControlIntent {
+  const _PlaybackControlIntent({
+    required this.kind,
+    required this.clientOperationId,
+    required this.clientTimeMillis,
+    this.isPlaying,
+    this.position,
+    this.speed,
+  });
+
+  final _PlaybackControlIntentKind kind;
+  final String clientOperationId;
+  final int clientTimeMillis;
+  final bool? isPlaying;
+  final Duration? position;
+  final double? speed;
+}
+
+String videoPlayerSourceKey(String url, Map<String, String> headers) {
+  final names = headers.keys.toList()..sort();
+  final buffer = StringBuffer('${url.length}:$url');
+  for (final name in names) {
+    final value = headers[name]!;
+    buffer
+      ..write('|${name.length}:')
+      ..write(name)
+      ..write('|${value.length}:')
+      ..write(value);
+  }
+  return buffer.toString();
+}
 
 class RoomScreen extends StatefulWidget {
   final SyncTvRoom room;
@@ -61,8 +102,13 @@ class _RoomScreenState extends State<RoomScreen>
   late TabController _tabController;
   late PlaybackSyncConfig _playbackSyncConfig;
   VideoPlayerController? _videoPlayerController;
+  VideoPlayerController? _initializingVideoPlayerController;
+  String? _videoPlayerSourceKey;
+  String? _initializingVideoSourceKey;
+  int _forcedVideoLoadGeneration = 0;
   Future<void>? _currentPlaybackLoad;
-  Future<void>? _videoInitialization;
+  final LatestAsyncOperationCoordinator _videoInitialization =
+      LatestAsyncOperationCoordinator();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   final List<RoomRealtimeChatEntry> _messages = [];
@@ -116,7 +162,6 @@ class _RoomScreenState extends State<RoomScreen>
   bool _fullScreenRouteOpen = false;
   String? _videoError;
   String? _roomSessionError;
-  int _videoInitGeneration = 0;
 
   // Pagination
   int _currentPage = 1;
@@ -137,6 +182,8 @@ class _RoomScreenState extends State<RoomScreen>
 
   // Sync state
   bool _isSyncing = false;
+  final PlaybackOperationTracker<SyncTvPlaybackStatus>
+  _playbackOperationTracker = PlaybackOperationTracker();
   bool _serverTimeSyncInFlight = false;
   bool _joiningVoice = false;
   final Set<String> _warnedPlaybackCredentialHeaderKeys = {};
@@ -179,6 +226,14 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   bool get _isCurrentPlaybackLive => _currentStatus?.entry?.live == true;
+  bool get _hasCurrentPlayback {
+    final status = _currentStatus;
+    return status != null &&
+        (status.entry != null ||
+            status.playingMediaId.isNotEmpty ||
+            status.playingPlaylistId.isNotEmpty);
+  }
+
   bool get _isSystemAdmin =>
       _currentUser?.role == common_enum.UserRole.USER_ROLE_ROOT.value ||
       _currentUser?.role == common_enum.UserRole.USER_ROLE_ADMIN.value;
@@ -606,19 +661,21 @@ class _RoomScreenState extends State<RoomScreen>
     _appendRealtimeEvent(entry);
   }
 
-  void _sendRealtimeMessage(List<int> bytes) {
-    if (bytes.isEmpty) return;
+  bool _sendRealtimeMessage(List<int> bytes) {
+    if (bytes.isEmpty) return false;
     final channel = _channel;
     if (channel == null) {
       _scheduleReconnect();
-      return;
+      return false;
     }
     try {
       channel.sink.add(bytes);
+      return true;
     } catch (e) {
       debugPrint('Realtime send error: $e');
       _channel = null;
       _scheduleReconnect();
+      return false;
     }
   }
 
@@ -680,6 +737,9 @@ class _RoomScreenState extends State<RoomScreen>
       }
 
       if (message.isChatCreated &&
+          chatDanmakuMessageTypes.any(
+            (type) => type.value == message.chatMessageType,
+          ) &&
           _videoPlayerController != null &&
           _videoPlayerController!.value.isInitialized) {
         final currentPos = _videoPlayerController!.value.position;
@@ -737,9 +797,19 @@ class _RoomScreenState extends State<RoomScreen>
         final shouldLoadSnapshot = _needsPlaybackResourceSnapshot(
           playbackStatus,
         );
-        _applyPlaybackStatus(
-          _mergePlaybackStatus(playbackStatus, incomingHasTiming: true),
+        final mergedStatus = _mergePlaybackStatus(
+          playbackStatus,
+          incomingHasTiming: true,
         );
+        final operationResolution = _playbackOperationTracker.acknowledge(
+          playbackStatus.clientOperationId,
+          mergedStatus,
+        );
+        if (!operationResolution.handled) {
+          _applyPlaybackStatus(mergedStatus);
+        } else if (operationResolution.stateToApply case final state?) {
+          _applyPlaybackStatus(state, skipPlayerSync: true);
+        }
         if (shouldLoadSnapshot) {
           unawaited(_loadCurrentPlayback());
         }
@@ -817,6 +887,9 @@ class _RoomScreenState extends State<RoomScreen>
         });
       }
       final error = message.error;
+      if (error != null && error.clientOperationId.isNotEmpty) {
+        _rejectLocalPlaybackOperation(error.clientOperationId);
+      }
       if (error?.isConflict == true) {
         unawaited(_refreshPlaybackAfterConflict());
         return;
@@ -861,11 +934,13 @@ class _RoomScreenState extends State<RoomScreen>
         currentUser != null &&
         message.senderUserId.isNotEmpty &&
         message.senderUserId == currentUser.id;
-    final username = message.senderUsername.isNotEmpty
-        ? message.senderUsername
-        : isCurrentUserMessage
-        ? currentUser.username
-        : 'Unknown';
+    final username = chatMessageDisplayUsername(
+      messageType: message.chatMessageType,
+      username: message.senderUsername,
+      missingUsername: isCurrentUserMessage
+          ? currentUser.username
+          : context.l10n.deletedUser,
+    );
     return RoomRealtimeChatEntry(
       id: message.chatId,
       userId: message.senderUserId,
@@ -1157,6 +1232,10 @@ class _RoomScreenState extends State<RoomScreen>
       targetHash: incoming.targetHash.isNotEmpty
           ? incoming.targetHash
           : current?.targetHash ?? incoming.targetHash,
+      historyCursorId: incoming.historyCursorId.isNotEmpty
+          ? incoming.historyCursorId
+          : current?.historyCursorId ?? incoming.historyCursorId,
+      clientOperationId: incoming.clientOperationId,
     );
   }
 
@@ -1478,11 +1557,9 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _handleUserPlaybackStateChanged(bool isPlaying) {
-    final value = _videoPlayerController?.value;
-    if (value == null) return;
-    _sendPlaybackControlMessage(
-      _playbackControlReporter().playbackStateChanged(
-        value: value,
+    _dispatchPlaybackControlIntent(
+      _newPlaybackControlIntent(
+        _PlaybackControlIntentKind.playbackState,
         isPlaying: isPlaying,
       ),
     );
@@ -1490,43 +1567,114 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _handleUserSeek(Duration position) {
     if (_isCurrentPlaybackLive) return;
-    final value = _videoPlayerController?.value;
-    if (value == null) return;
-    _sendPlaybackControlMessage(
-      _playbackControlReporter().seek(value: value, position: position),
+    _dispatchPlaybackControlIntent(
+      _newPlaybackControlIntent(
+        _PlaybackControlIntentKind.seek,
+        position: position,
+      ),
     );
   }
 
   void _handleUserPlaybackSpeedChanged(double speed) {
-    final value = _videoPlayerController?.value;
-    if (value == null) return;
-    _sendPlaybackControlMessage(
-      _playbackControlReporter().playbackSpeedChanged(
-        value: value,
-        speed: speed,
-      ),
+    _dispatchPlaybackControlIntent(
+      _newPlaybackControlIntent(_PlaybackControlIntentKind.speed, speed: speed),
     );
+  }
+
+  _PlaybackControlIntent _newPlaybackControlIntent(
+    _PlaybackControlIntentKind kind, {
+    bool? isPlaying,
+    Duration? position,
+    double? speed,
+  }) {
+    return _PlaybackControlIntent(
+      kind: kind,
+      clientOperationId: newClientOperationId(),
+      clientTimeMillis: SyncedClock.nowMillis(),
+      isPlaying: isPlaying,
+      position: position,
+      speed: speed,
+    );
+  }
+
+  void _dispatchPlaybackControlIntent(_PlaybackControlIntent intent) {
+    final message = _buildPlaybackControlMessage(intent);
+    if (message == null) return;
+    final previousStatus = _currentStatus;
+    final optimisticStatus = _optimisticPlaybackStatus(intent);
+    if (previousStatus == null || optimisticStatus == null) return;
+
+    _playbackOperationTracker.remember(
+      intent.clientOperationId,
+      previousStatus,
+    );
+    setState(() => _currentStatus = optimisticStatus);
+    if (!_sendRealtimeMessage(message.writeToBuffer())) {
+      _rejectLocalPlaybackOperation(intent.clientOperationId);
+    }
+  }
+
+  client.ClientMessage? _buildPlaybackControlMessage(
+    _PlaybackControlIntent intent,
+  ) {
+    final value = _videoPlayerController?.value;
+    if (value == null) return null;
+    final reporter = _playbackControlReporter();
+    return switch (intent.kind) {
+      _PlaybackControlIntentKind.playbackState => reporter.playbackStateChanged(
+        value: value,
+        isPlaying: intent.isPlaying!,
+        clientOperationId: intent.clientOperationId,
+        clientTimeMillis: intent.clientTimeMillis,
+      ),
+      _PlaybackControlIntentKind.seek => reporter.seek(
+        value: value,
+        position: intent.position!,
+        clientOperationId: intent.clientOperationId,
+        clientTimeMillis: intent.clientTimeMillis,
+      ),
+      _PlaybackControlIntentKind.speed => reporter.playbackSpeedChanged(
+        value: value,
+        speed: intent.speed!,
+        clientOperationId: intent.clientOperationId,
+        clientTimeMillis: intent.clientTimeMillis,
+      ),
+    };
+  }
+
+  SyncTvPlaybackStatus? _optimisticPlaybackStatus(
+    _PlaybackControlIntent intent,
+  ) {
+    final status = _currentStatus;
+    final value = _videoPlayerController?.value;
+    if (status == null || value == null) return null;
+    final currentTime = _isCurrentPlaybackLive
+        ? status.currentTime
+        : intent.position?.inMilliseconds.toDouble() ??
+              value.position.inMilliseconds.toDouble();
+    return status.copyWith(
+      isPlaying: intent.isPlaying ?? value.isPlaying,
+      currentTime: _isCurrentPlaybackLive ? currentTime : currentTime / 1000.0,
+      playbackRate: intent.speed ?? value.playbackSpeed,
+      generatedAtMillis: intent.clientTimeMillis,
+      clientOperationId: intent.clientOperationId,
+    );
+  }
+
+  void _rejectLocalPlaybackOperation(String operationId) {
+    final resolution = _playbackOperationTracker.reject(operationId);
+    final state = resolution.stateToApply;
+    if (state != null) {
+      unawaited(_applyPlaybackStatus(state, forceSeek: true));
+    }
   }
 
   PlaybackControlReporter _playbackControlReporter() {
     return PlaybackControlReporter(
       currentStatus: _currentStatus,
-      isSyncing: _isSyncing,
       isLive: _isCurrentPlaybackLive,
       boundPosition: _boundedPlaybackTime,
     );
-  }
-
-  void _sendPlaybackControlMessage(client.ClientMessage? message) {
-    if (message == null) return;
-    try {
-      _sendRealtimeMessage(message.writeToBuffer());
-    } catch (e) {
-      debugPrint('Realtime playback state update error: $e');
-      if (mounted) {
-        MessageUtils.showError(context, context.l10n.playbackUpdateFailed);
-      }
-    }
   }
 
   void _requestPlaybackSnapshot() {
@@ -1573,6 +1721,7 @@ class _RoomScreenState extends State<RoomScreen>
     SyncTvPlaybackStatus status, {
     bool forceReloadVideo = false,
     bool forceSeek = false,
+    bool skipPlayerSync = false,
   }) async {
     if (!mounted) return;
     final previousStatus = _currentStatus;
@@ -1588,19 +1737,28 @@ class _RoomScreenState extends State<RoomScreen>
     setState(() {
       _currentStatus = status;
       if (status.entry == null || status.entry!.url.isEmpty) {
-        _videoInitGeneration++;
+        _videoInitialization.invalidate();
         _isVideoLoading = false;
         _videoError = null;
       }
     });
 
+    if (skipPlayerSync) return;
+
     if (status.entry != null && status.entry!.url.isNotEmpty) {
       final newUrl = SyncTvService.resolveResourceUrl(status.entry!.url);
+      final newSourceKey = videoPlayerSourceKey(newUrl, status.entry!.headers);
 
       if (_videoPlayerController == null ||
           forceReloadVideo ||
-          _videoPlayerController!.dataSource != newUrl) {
-        await _initVideo(newUrl, headers: status.entry!.headers);
+          _videoPlayerController!.dataSource != newUrl ||
+          _videoPlayerSourceKey != newSourceKey) {
+        await _initVideo(
+          newUrl,
+          headers: status.entry!.headers,
+          forceReload: forceReloadVideo,
+        );
+        if (!mounted || !_isCurrentPlaybackUrl(newUrl)) return;
         if (mounted &&
             _videoPlayerController != null &&
             _videoPlayerController!.value.isInitialized) {
@@ -1635,6 +1793,13 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
+  bool _isCurrentPlaybackUrl(String url) {
+    final currentUrl = _currentStatus?.entry?.url;
+    return currentUrl != null &&
+        currentUrl.isNotEmpty &&
+        SyncTvService.resolveResourceUrl(currentUrl) == url;
+  }
+
   Future<void> _refreshPlaybackAfterConflict() async {
     try {
       final status = await SyncTvService.getPlaybackStatus(widget.room.roomId);
@@ -1651,62 +1816,78 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
-  Future<void> _initVideo(String url, {Map<String, String>? headers}) async {
-    if (url.isEmpty) return;
-    while (_videoInitialization != null) {
-      final activeInitialization = _videoInitialization!;
-      await activeInitialization;
-      if (!mounted || _videoPlayerController?.dataSource == url) return;
-    }
-
-    late final Future<void> trackedInitialization;
-    trackedInitialization = _initVideoOnce(url, headers: headers).whenComplete(
-      () {
-        if (identical(_videoInitialization, trackedInitialization)) {
-          _videoInitialization = null;
-        }
-      },
-    );
-    _videoInitialization = trackedInitialization;
-    await trackedInitialization;
-  }
-
-  Future<void> _initVideoOnce(
+  Future<void> _initVideo(
     String url, {
     Map<String, String>? headers,
+    bool forceReload = false,
   }) async {
-    _warnPlaybackCredentialHeaders(headers ?? const {});
-    final generation = ++_videoInitGeneration;
+    if (url.isEmpty) return;
+    final sourceHeaders = Map<String, String>.unmodifiable(headers ?? const {});
+    final sourceKey = videoPlayerSourceKey(url, sourceHeaders);
+    if (!forceReload && _videoPlayerSourceKey == sourceKey) {
+      final controller = _videoPlayerController;
+      if (controller != null && controller.value.isInitialized) {
+        if (mounted) {
+          setState(() {
+            _isVideoLoading = false;
+            _videoError = null;
+          });
+        }
+        return;
+      }
+    }
+
+    final reusesPendingLoad =
+        !forceReload && _initializingVideoSourceKey == sourceKey;
+    if (!reusesPendingLoad) {
+      _cancelSupersededVideoLoad();
+      _disposeVideoControllerImmediately(invalidateInitialization: false);
+    }
     if (mounted) {
       setState(() {
         _isVideoLoading = true;
         _videoError = null;
       });
     }
+    final operationKey = forceReload
+        ? '$sourceKey#reload:${++_forcedVideoLoadGeneration}'
+        : sourceKey;
+    await _videoInitialization.run(
+      operationKey,
+      (isLatest) => _initVideoOnce(
+        url,
+        sourceKey: sourceKey,
+        headers: sourceHeaders,
+        isLatest: isLatest,
+      ),
+    );
+  }
+
+  Future<void> _initVideoOnce(
+    String url, {
+    required String sourceKey,
+    required Map<String, String> headers,
+    required IsLatestOperation isLatest,
+  }) async {
+    _warnPlaybackCredentialHeaders(headers);
 
     final newController = VideoPlayerController.networkUrl(
       Uri.parse(url),
-      httpHeaders: headers ?? {},
+      httpHeaders: headers,
     );
+    _initializingVideoPlayerController = newController;
+    _initializingVideoSourceKey = sourceKey;
 
     try {
       await newController.initialize().timeout(const Duration(seconds: 20));
 
-      if (!mounted || generation != _videoInitGeneration) {
-        await newController.dispose();
-        return;
-      }
-
-      final disposal = _disposeVideoController(invalidateInitialization: false);
-      if (mounted) setState(() {});
-      await disposal;
-
-      if (!mounted || generation != _videoInitGeneration) {
-        await newController.dispose();
+      if (!mounted || !isLatest()) {
+        _disposeControllerEventually(newController);
         return;
       }
 
       _videoPlayerController = newController;
+      _videoPlayerSourceKey = sourceKey;
       _videoPlayerController!.addListener(_videoListener);
 
       if (mounted) {
@@ -1716,14 +1897,19 @@ class _RoomScreenState extends State<RoomScreen>
         });
       }
     } catch (e) {
-      await newController.dispose();
-      if (mounted && generation == _videoInitGeneration) {
+      _disposeControllerEventually(newController);
+      if (mounted && isLatest()) {
         final message = playbackLoadErrorMessage(context.l10n, e);
         setState(() {
           _isVideoLoading = false;
           _videoError = message;
         });
         MessageUtils.showError(context, message);
+      }
+    } finally {
+      if (identical(_initializingVideoPlayerController, newController)) {
+        _initializingVideoPlayerController = null;
+        _initializingVideoSourceKey = null;
       }
     }
   }
@@ -1936,16 +2122,57 @@ class _RoomScreenState extends State<RoomScreen>
     );
   }
 
-  Future<void> _disposeVideoController({
+  void _cancelSupersededVideoLoad() {
+    _videoInitialization.invalidate();
+    final controller = _initializingVideoPlayerController;
+    _initializingVideoPlayerController = null;
+    _initializingVideoSourceKey = null;
+    if (controller != null) {
+      _disposeControllerEventually(controller);
+    }
+  }
+
+  void _disposeVideoControllerImmediately({
     bool invalidateInitialization = true,
-  }) async {
-    if (invalidateInitialization) _videoInitGeneration++;
+  }) {
+    if (invalidateInitialization) _cancelSupersededVideoLoad();
     final controller = _videoPlayerController;
     _videoPlayerController = null;
+    _videoPlayerSourceKey = null;
     _playbackDeviationSnapshot = null;
     if (controller == null) return;
     controller.removeListener(_videoListener);
-    await controller.dispose();
+    _danmakuController.detachVideoController(controller);
+    _disposeControllerEventually(controller);
+  }
+
+  void _disposeControllerEventually(VideoPlayerController controller) {
+    unawaited(_disposeController(controller));
+  }
+
+  Future<void> _disposeController(VideoPlayerController controller) async {
+    try {
+      await controller.dispose();
+    } on Exception catch (error) {
+      debugPrint('Video controller disposal error: $error');
+    }
+  }
+
+  Future<void> _disposeVideoController({
+    bool invalidateInitialization = true,
+  }) async {
+    if (invalidateInitialization) {
+      _cancelSupersededVideoLoad();
+    }
+    final controller = _videoPlayerController;
+    _videoPlayerController = null;
+    _videoPlayerSourceKey = null;
+    _playbackDeviationSnapshot = null;
+    if (controller != null) {
+      controller.removeListener(_videoListener);
+      _danmakuController.detachVideoController(controller);
+      await _disposeController(controller);
+    }
   }
 
   @override
@@ -2059,6 +2286,10 @@ class _RoomScreenState extends State<RoomScreen>
       exitTooltip: context.l10n.exitPictureInPicture,
       volumeTooltip: context.l10n.volume,
       playbackOptionsControl: _buildPictureInPicturePlaybackOptions(),
+      diagnostics: _buildPlaybackDiagnosticsBadges(
+        compact: true,
+        videoStyle: true,
+      ),
       isLive: _isCurrentPlaybackLive,
       canControlPlayback: _canControlPlaybackState,
       onPlaybackStateChanged: _canControlPlaybackState
@@ -2098,39 +2329,18 @@ class _RoomScreenState extends State<RoomScreen>
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: _buildPlaybackDiagnosticsBadges(
-              compact: compactChrome,
-              includeLatency: true,
-            )!,
+            child: _buildServerLatencyBadge(compact: compactChrome),
           ),
-          Tooltip(
-            message: context.l10n.stopPlayback,
-            child: _currentStatus?.entry != null
-                ? AppActionButton(
-                    onPressed: _stopPlayback,
-                    icon: Icons.stop_circle_outlined,
-                    label: context.l10n.stop,
-                    style: AppActionButtonStyle.destructive,
-                  )
-                : Semantics(
-                    button: true,
-                    enabled: false,
-                    label: context.l10n.stop,
-                    child: ExcludeSemantics(
-                      child: IgnorePointer(
-                        child: Opacity(
-                          opacity: 0.45,
-                          child: AppActionButton(
-                            onPressed: () {},
-                            icon: Icons.stop_circle_outlined,
-                            label: context.l10n.stop,
-                            style: AppActionButtonStyle.destructive,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
+          if (_hasCurrentPlayback)
+            Tooltip(
+              message: context.l10n.stopPlayback,
+              child: AppActionButton(
+                onPressed: _stopPlayback,
+                icon: Icons.stop_circle_outlined,
+                label: context.l10n.stop,
+                style: AppActionButtonStyle.destructive,
+              ),
+            ),
           if (_currentUser != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -2179,10 +2389,7 @@ class _RoomScreenState extends State<RoomScreen>
       color: Colors.black,
       borderRadius: BorderRadius.circular(8),
       child: LayoutBuilder(
-        builder: (context, constraints) {
-          final playbackOptionButton = _buildPlaybackOptionButton(
-            compact: true,
-          );
+        builder: (context, _) {
           return Stack(
             children: [
               Center(
@@ -2229,8 +2436,6 @@ class _RoomScreenState extends State<RoomScreen>
                       )
                     : _buildVideoEmptyState(),
               ),
-              if (playbackOptionButton != null)
-                Positioned(top: 12, right: 12, child: playbackOptionButton),
               if (_videoPlayerController == null && _canNavigatePlayback)
                 Positioned(
                   left: 12,
@@ -3070,139 +3275,126 @@ class _RoomScreenState extends State<RoomScreen>
             alignment: alignment,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (isMine && actionsVisible) ...[
-                    _buildChatMessageActionBar(
-                      message,
-                      isMine,
-                      showReactions: reactionsVisible,
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: isMine
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        AppPanelSurface(
-                          color: bubbleColor,
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(8),
-                            topRight: const Radius.circular(8),
-                            bottomLeft: Radius.circular(isMine ? 8 : 3),
-                            bottomRight: Radius.circular(isMine ? 3 : 8),
-                          ),
-                          border: Border.all(color: borderColor),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 11,
-                            vertical: 8,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      message.username,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.labelMedium
-                                          ?.copyWith(
-                                            color: authorColor,
-                                            fontWeight: FontWeight.w700,
-                                            height: 1.15,
-                                          ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    message.timeLabel,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: scheme.onSurfaceVariant.withValues(
-                                        alpha: 0.68,
-                                      ),
-                                      height: 1.15,
-                                    ),
-                                  ),
-                                  if (message.isEdited) ...[
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      context.l10n.edited,
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: scheme.onSurfaceVariant
-                                                .withValues(alpha: 0.62),
-                                            height: 1.15,
-                                          ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              if (message.replyToMessageId.isNotEmpty) ...[
-                                const SizedBox(height: 7),
-                                _buildQuotedChatMessage(
-                                  replyPreview,
-                                  messageId: message.replyToMessageId,
-                                  isMine: isMine,
-                                ),
-                              ],
-                              if (message.content.isNotEmpty) ...[
-                                const SizedBox(height: 5),
-                                Text(
-                                  message.content,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: textColor,
-                                    height: 1.32,
-                                  ),
-                                ),
-                              ],
-                              if (message.images.isNotEmpty) ...[
-                                if (message.content.isNotEmpty)
-                                  const SizedBox(height: 8),
-                                _buildChatImageGrid(message.images),
-                              ],
-                            ],
-                          ),
-                        ),
-                        if (message.id.isNotEmpty &&
-                            (message.reactions.isNotEmpty || isMine)) ...[
-                          const SizedBox(height: 5),
+              child: ChatMessageHoverLayout(
+                alignEnd: isMine,
+                actions: actionsVisible
+                    ? _buildChatMessageActionBar(
+                        message,
+                        isMine,
+                        showReactions: reactionsVisible,
+                      )
+                    : null,
+                message: Column(
+                  crossAxisAlignment: isMine
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    AppPanelSurface(
+                      color: bubbleColor,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(8),
+                        topRight: const Radius.circular(8),
+                        bottomLeft: Radius.circular(isMine ? 8 : 3),
+                        bottomRight: Radius.circular(isMine ? 3 : 8),
+                      ),
+                      border: Border.all(color: borderColor),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 8,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
                           Row(
                             mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: isMine
-                                ? MainAxisAlignment.end
-                                : MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              if (message.reactions.isNotEmpty)
-                                Flexible(child: _buildChatReactionBar(message)),
-                              if (isMine) ...[
-                                if (message.reactions.isNotEmpty)
-                                  const SizedBox(width: 6),
-                                _buildChatReadReceiptButton(message),
+                              Flexible(
+                                child: Text(
+                                  message.username,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: authorColor,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.15,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                message.timeLabel,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: scheme.onSurfaceVariant.withValues(
+                                    alpha: 0.68,
+                                  ),
+                                  height: 1.15,
+                                ),
+                              ),
+                              if (message.isEdited) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  context.l10n.edited,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: scheme.onSurfaceVariant.withValues(
+                                      alpha: 0.62,
+                                    ),
+                                    height: 1.15,
+                                  ),
+                                ),
                               ],
                             ],
                           ),
+                          if (message.replyToMessageId.isNotEmpty) ...[
+                            const SizedBox(height: 7),
+                            _buildQuotedChatMessage(
+                              replyPreview,
+                              messageId: message.replyToMessageId,
+                              isMine: isMine,
+                            ),
+                          ],
+                          if (message.content.isNotEmpty) ...[
+                            const SizedBox(height: 5),
+                            AppSelectableText(
+                              message.content,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: textColor,
+                                height: 1.32,
+                              ),
+                            ),
+                          ],
+                          if (message.images.isNotEmpty) ...[
+                            if (message.content.isNotEmpty)
+                              const SizedBox(height: 8),
+                            _buildChatImageGrid(message.images),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                  if (!isMine && actionsVisible) ...[
-                    const SizedBox(width: 6),
-                    _buildChatMessageActionBar(
-                      message,
-                      isMine,
-                      showReactions: reactionsVisible,
-                    ),
+                    if (message.id.isNotEmpty &&
+                        (message.reactions.isNotEmpty || isMine)) ...[
+                      const SizedBox(height: 5),
+                      Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: isMine
+                            ? MainAxisAlignment.end
+                            : MainAxisAlignment.start,
+                        children: [
+                          if (message.reactions.isNotEmpty)
+                            Expanded(child: _buildChatReactionBar(message))
+                          else if (isMine)
+                            const Spacer(),
+                          if (isMine) ...[
+                            if (message.reactions.isNotEmpty)
+                              const SizedBox(width: 6),
+                            _buildChatReadReceiptButton(message),
+                          ],
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -3789,15 +3981,14 @@ class _RoomScreenState extends State<RoomScreen>
   ) async {
     final isMine = _currentUser != null && message.userId == _currentUser!.id;
     final screen = MediaQuery.sizeOf(context);
-    final panelWidth = math.min(260.0, math.max(180.0, screen.width - 24));
-    final panelHeight = isMine || _canManageRoom ? 122.0 : 92.0;
-    final maxLeft = math.max(12.0, screen.width - panelWidth - 12);
-    final maxTop = math.max(12.0, screen.height - panelHeight - 12);
-    final left = math.min(
-      math.max(12.0, position.dx - panelWidth / 2),
-      maxLeft,
+    final layout = calculateChatContextMenuLayout(
+      viewportWidth: screen.width,
+      viewportHeight: screen.height,
+      anchorX: position.dx,
+      anchorY: position.dy,
+      reactionCount: commonChatReactionKeys.length,
+      actionCount: isMine || _canManageRoom ? 5 : 4,
     );
-    final top = math.min(math.max(12.0, position.dy - 10), maxTop);
     await showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -3807,12 +3998,12 @@ class _RoomScreenState extends State<RoomScreen>
         return Stack(
           children: [
             Positioned(
-              left: left,
-              top: top,
+              left: layout.left,
+              top: layout.top,
               child: Material(
                 color: Colors.transparent,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: panelWidth),
+                child: SizedBox(
+                  width: layout.width,
                   child: _buildChatContextActionPanel(
                     message,
                     isMine,
@@ -3870,8 +4061,9 @@ class _RoomScreenState extends State<RoomScreen>
               color: scheme.outlineVariant.withValues(alpha: 0.45),
             ),
             const SizedBox(height: 5),
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            Wrap(
+              spacing: chatContextMenuItemSpacing,
+              runSpacing: chatContextMenuItemSpacing,
               children: [
                 _buildContextActionIcon(
                   tooltip: context.l10n.reply,
@@ -4313,60 +4505,81 @@ class _RoomScreenState extends State<RoomScreen>
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (_folderStack.isNotEmpty)
-                AppIconButton(
-                  icon: Icons.arrow_back,
-                  onPressed: _exitFolder,
-                  tooltip: context.l10n.parentDirectory,
-                ),
-              Expanded(
-                child: Text(
-                  _folderStack.isNotEmpty
-                      ? (_folderNameStack.last.isEmpty
-                            ? context.l10n.rootDirectory
-                            : _folderNameStack.last)
-                      : context.l10n.playlist,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Row(
+                children: [
+                  AppIconButton(
+                    key: const Key('playlist-parent-button'),
+                    icon: Icons.arrow_back_rounded,
+                    onPressed: _folderStack.isEmpty ? null : _exitFolder,
+                    tooltip: context.l10n.parentDirectory,
+                    style: _folderStack.isEmpty
+                        ? AppIconButtonStyle.ghost
+                        : AppIconButtonStyle.tonal,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _folderStack.isEmpty
+                          ? context.l10n.playlist
+                          : _folderNameStack.last,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  if (_isRefreshingMediaEntries)
+                    const SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: AppLoadingIndicator(
+                        size: AppLoadingSize.sm,
+                        centered: false,
+                      ),
+                    )
+                  else
+                    AppIconButton(
+                      key: const Key('playlist-refresh-button'),
+                      icon: Icons.refresh_rounded,
+                      onPressed: _refreshCurrentPlaylist,
+                      tooltip: _isInsideProviderTargetScope
+                          ? context.l10n.refreshDynamicList
+                          : context.l10n.refresh,
+                    ),
+                  _buildPlaylistViewModeMenu(),
+                  if (canMutatePlaylist) ...[
+                    AppIconButton(
+                      icon: Icons.add_rounded,
+                      onPressed: _showAddMediaDialog,
+                      tooltip: context.l10n.add,
+                    ),
+                    AppIconButton(
+                      icon: selectionMode
+                          ? Icons.close_rounded
+                          : Icons.checklist_rounded,
+                      onPressed: () {
+                        setState(() {
+                          _isSelectionMode = !_isSelectionMode;
+                          _selectedMediaEntryIds.clear();
+                        });
+                      },
+                      tooltip: selectionMode
+                          ? context.l10n.cancelSelection
+                          : context.l10n.batchManage,
+                      style: selectionMode
+                          ? AppIconButtonStyle.tonal
+                          : AppIconButtonStyle.ghost,
+                    ),
+                  ],
+                ],
               ),
-              if (canMutatePlaylist) ...[
-                AppActionButton(
-                  icon: Icons.add,
-                  label: context.l10n.add,
-                  onPressed: _showAddMediaDialog,
-                  style: AppActionButtonStyle.text,
-                ),
-                AppIconButton(
-                  icon: selectionMode ? Icons.close : Icons.checklist,
-                  onPressed: () {
-                    setState(() {
-                      _isSelectionMode = !_isSelectionMode;
-                      _selectedMediaEntryIds.clear();
-                    });
-                  },
-                  tooltip: selectionMode
-                      ? context.l10n.cancelSelection
-                      : context.l10n.batchManage,
-                  style: selectionMode
-                      ? AppIconButtonStyle.tonal
-                      : AppIconButtonStyle.ghost,
-                ),
-              ],
-              if (_isInsideProviderTargetScope)
-                AppIconButton(
-                  icon: Icons.sync,
-                  onPressed: _isRefreshingMediaEntries
-                      ? null
-                      : _refreshCurrentPlaylist,
-                  tooltip: context.l10n.refreshDynamicList,
-                ),
-              _buildPlaylistViewModeButton(_PlaylistViewMode.compact),
-              _buildPlaylistViewModeButton(_PlaylistViewMode.detailed),
-              _buildPlaylistViewModeButton(_PlaylistViewMode.grid),
+              const SizedBox(height: 6),
+              _buildPlaylistBreadcrumbs(),
             ],
           ),
         ),
@@ -4437,7 +4650,7 @@ class _RoomScreenState extends State<RoomScreen>
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 180,
-          mainAxisExtent: 164,
+          mainAxisExtent: 184,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
         ),
@@ -4454,9 +4667,8 @@ class _RoomScreenState extends State<RoomScreen>
     };
   }
 
-  AppIconButton _buildPlaylistViewModeButton(_PlaylistViewMode mode) {
-    final selected = _playlistViewMode == mode;
-    final (icon, tooltip) = switch (mode) {
+  (IconData, String) _playlistViewModePresentation(_PlaylistViewMode mode) {
+    return switch (mode) {
       _PlaylistViewMode.compact => (
         Icons.view_headline_rounded,
         context.l10n.compactList,
@@ -4467,16 +4679,112 @@ class _RoomScreenState extends State<RoomScreen>
       ),
       _PlaylistViewMode.grid => (Icons.grid_view_rounded, context.l10n.grid),
     };
-    return AppIconButton(
-      icon: icon,
+  }
+
+  Widget _buildPlaylistViewModeMenu() {
+    final (icon, tooltip) = _playlistViewModePresentation(_playlistViewMode);
+    return AppPopupMenuButton<_PlaylistViewMode>(
+      key: const Key('playlist-view-mode-menu'),
       tooltip: tooltip,
-      selected: selected,
-      style: selected ? AppIconButtonStyle.tonal : AppIconButtonStyle.ghost,
-      onPressed: selected
-          ? null
-          : () => setState(() {
-              _playlistViewMode = mode;
-            }),
+      initialValue: _playlistViewMode,
+      onSelected: (mode) => setState(() => _playlistViewMode = mode),
+      itemBuilder: (context) => _PlaylistViewMode.values
+          .map((mode) {
+            final (itemIcon, label) = _playlistViewModePresentation(mode);
+            return PopupMenuItem<_PlaylistViewMode>(
+              value: mode,
+              child: Row(
+                children: [
+                  Icon(itemIcon, size: 19),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(label)),
+                  if (_playlistViewMode == mode)
+                    Icon(
+                      Icons.check_rounded,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                ],
+              ),
+            );
+          })
+          .toList(growable: false),
+      child: Tooltip(
+        message: tooltip,
+        child: AppPanelSurface(
+          width: 36,
+          height: 36,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(7),
+          alignment: Alignment.center,
+          child: Icon(icon, size: 19),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaylistBreadcrumbs() {
+    final theme = Theme.of(context);
+    final crumbs = <(String, int)>[
+      (context.l10n.playlist, 0),
+      for (var index = 0; index < _folderStack.length; index++)
+        (_folderNameStack[index + 1], index + 1),
+    ];
+    return SizedBox(
+      height: 28,
+      child: SingleChildScrollView(
+        key: const Key('playlist-breadcrumbs'),
+        scrollDirection: Axis.horizontal,
+        reverse: _folderStack.isNotEmpty,
+        child: Row(
+          children: [
+            for (var index = 0; index < crumbs.length; index++) ...[
+              if (index > 0)
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 17,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              InkWell(
+                borderRadius: BorderRadius.circular(5),
+                onTap: index == crumbs.length - 1
+                    ? null
+                    : () => _navigateToFolderDepth(crumbs[index].$2),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (index == 0) ...[
+                        Icon(
+                          Icons.video_library_outlined,
+                          size: 15,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 5),
+                      ],
+                      Text(
+                        crumbs[index].$1,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: index == crumbs.length - 1
+                              ? theme.colorScheme.onSurface
+                              : theme.colorScheme.onSurfaceVariant,
+                          fontWeight: index == crumbs.length - 1
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -4518,6 +4826,11 @@ class _RoomScreenState extends State<RoomScreen>
           color: isCurrent ? primaryColor : null,
           fontWeight: isCurrent ? FontWeight.bold : null,
         ),
+      ),
+      subtitle: Text(
+        _playlistEntryShortMeta(entry),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
       suffix: _buildPlaylistSelectionIcon(
         isSelected,
@@ -4824,6 +5137,10 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   IconData _playlistEntryIcon(RoomMediaEntry entry) {
+    final providerIcon = _playlistProviderIcon(entry);
+    if (providerIcon != null && entry.isProviderDynamicEntry) {
+      return providerIcon;
+    }
     if (entry.isFolder) {
       return entry.isDynamicPlaylist || entry.isProviderDynamicItem
           ? Icons.folder_special_rounded
@@ -4836,12 +5153,47 @@ class _RoomScreenState extends State<RoomScreen>
     return Icons.movie_rounded;
   }
 
+  IconData? _playlistProviderIcon(RoomMediaEntry entry) {
+    final provider = entry.sourceProvider.trim().toLowerCase();
+    return switch (provider) {
+      'youtube' => Icons.play_circle_outline_rounded,
+      'bilibili' => Icons.smart_display_outlined,
+      'twitch' || 'huya' || 'douyu' => Icons.live_tv_rounded,
+      'douyin' || 'tiktok' => Icons.video_collection_outlined,
+      'alist' ||
+      'cloudreve' ||
+      'nextcloud' ||
+      'seafile' ||
+      'truenas' => Icons.cloud_outlined,
+      'emby' || 'fnos' || 'qnap' || 'synology' => Icons.dns_outlined,
+      'directurl' || 'direct_url' || 'direct' => Icons.link_rounded,
+      _ => null,
+    };
+  }
+
   Color _playlistEntryAccent(
     RoomMediaEntry entry,
     bool isCurrent,
     Color primaryColor,
   ) {
     if (isCurrent) return primaryColor;
+    final provider = entry.sourceProvider.trim().toLowerCase();
+    final providerColor = switch (provider) {
+      'youtube' => const Color(0xFFE5484D),
+      'bilibili' => const Color(0xFFE45C96),
+      'twitch' => const Color(0xFF7C5CFC),
+      'douyin' || 'tiktok' => const Color(0xFF20B8A6),
+      'alist' ||
+      'cloudreve' ||
+      'nextcloud' ||
+      'seafile' ||
+      'truenas' => const Color(0xFF3B82C4),
+      'emby' || 'fnos' || 'qnap' || 'synology' => const Color(0xFF4E9F6D),
+      _ => null,
+    };
+    if (providerColor != null && entry.isProviderDynamicEntry) {
+      return providerColor;
+    }
     if (entry.isFolder) return Colors.amber;
     if (entry.live) return Colors.redAccent;
     return Theme.of(context).colorScheme.onSurfaceVariant;
@@ -4860,6 +5212,7 @@ class _RoomScreenState extends State<RoomScreen>
     }
     final provider = _playlistProviderLabel(entry);
     if (provider.isNotEmpty) parts.add(provider);
+    parts.addAll(_playlistSourceDetails(entry).take(2));
     if (!entry.isFolder && entry.hasPlaybackChoices) {
       parts.add(context.l10n.multipleRoutes);
     }
@@ -4878,6 +5231,7 @@ class _RoomScreenState extends State<RoomScreen>
     }
     final provider = _playlistProviderLabel(entry);
     if (provider.isNotEmpty) chips.add(provider);
+    chips.addAll(_playlistSourceDetails(entry));
     if (entry.live) chips.add(context.l10n.live);
     if (entry.proxy) chips.add(context.l10n.proxy);
     if (!entry.isFolder && entry.hasPlaybackChoices) {
@@ -4885,6 +5239,28 @@ class _RoomScreenState extends State<RoomScreen>
     }
     if (entry.version > 0) chips.add('v${entry.version}');
     return chips;
+  }
+
+  List<String> _playlistSourceDetails(RoomMediaEntry entry) {
+    return playlistSourceFacts(entry)
+        .map((fact) {
+          return switch (fact.kind) {
+            PlaylistSourceFactKind.instance =>
+              '${context.l10n.instance}: ${fact.value}',
+            PlaylistSourceFactKind.type =>
+              '${context.l10n.sourceType}: ${fact.value}',
+            PlaylistSourceFactKind.path =>
+              '${context.l10n.sourcePath}: ${fact.value}',
+            PlaylistSourceFactKind.query =>
+              '${context.l10n.sourceQuery}: ${fact.value}',
+            PlaylistSourceFactKind.identifier =>
+              '${context.l10n.identifier}: ${fact.value}',
+            PlaylistSourceFactKind.host =>
+              '${context.l10n.source}: ${fact.value}',
+            PlaylistSourceFactKind.shared => context.l10n.sharedSource,
+          };
+        })
+        .toList(growable: false);
   }
 
   String _playlistEntryTypeLabel(RoomMediaEntry entry) {
@@ -4919,7 +5295,7 @@ class _RoomScreenState extends State<RoomScreen>
       'cctv' => 'CCTV',
       'fnos' => 'FNOS',
       'qnap' => 'QNAP',
-      'direct_url' || 'direct' => context.l10n.directLink,
+      'directurl' || 'direct_url' || 'direct' => context.l10n.directLink,
       '' => '',
       _ => provider,
     };
@@ -5213,6 +5589,20 @@ class _RoomScreenState extends State<RoomScreen>
     _observeCurrentPlaylist();
   }
 
+  void _navigateToFolderDepth(int depth) {
+    if (depth < 0 || depth >= _folderStack.length) {
+      if (depth != 0 || _folderStack.isEmpty) return;
+    }
+    setState(() {
+      _folderStack.removeRange(depth, _folderStack.length);
+      _folderNameStack.removeRange(depth + 1, _folderNameStack.length);
+      _isLoadingMediaEntries = true;
+      _selectedMediaEntryIds.clear();
+      _isSelectionMode = false;
+    });
+    _observeCurrentPlaylist();
+  }
+
   void _observeCurrentPlaylist() {
     final parentFolder = _folderStack.isNotEmpty ? _folderStack.last : null;
     try {
@@ -5233,16 +5623,16 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _refreshCurrentPlaylist() async {
-    if (_folderStack.isEmpty || _isRefreshingMediaEntries) return;
-    final folder = _folderStack.last;
+    if (_isRefreshingMediaEntries) return;
+    final folder = _folderStack.isEmpty ? null : _folderStack.last;
     setState(() => _isRefreshingMediaEntries = true);
     try {
       final mediaLibrary = await SyncTvService.listMediaLibrary(
         widget.room.roomId,
-        playlistId: folder.playbackPlaylistId,
-        target: folder.playbackTarget,
+        playlistId: folder?.playbackPlaylistId ?? '',
+        target: folder?.playbackTarget,
         pageSize: _pageSize,
-        refresh: true,
+        refresh: _isInsideProviderTargetScope,
       );
       _applyMediaLibrary(mediaLibrary);
     } catch (error) {

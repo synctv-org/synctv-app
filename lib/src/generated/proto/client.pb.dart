@@ -4822,6 +4822,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     $core.String? targetHash,
     $fixnum.Int64? generatedAtMillis,
     $core.String? historyCursorId,
+    $core.String? clientOperationId,
   }) {
     final result = create();
     if (roomId != null) result.roomId = roomId;
@@ -4836,6 +4837,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     if (targetHash != null) result.targetHash = targetHash;
     if (generatedAtMillis != null) result.generatedAtMillis = generatedAtMillis;
     if (historyCursorId != null) result.historyCursorId = historyCursorId;
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
     return result;
   }
 
@@ -4865,6 +4867,7 @@ class PlaybackState extends $pb.GeneratedMessage {
     ..aOS(10, _omitFieldNames ? '' : 'targetHash')
     ..aInt64(11, _omitFieldNames ? '' : 'generatedAtMillis')
     ..aOS(12, _omitFieldNames ? '' : 'historyCursorId')
+    ..aOS(13, _omitFieldNames ? '' : 'clientOperationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4995,6 +4998,15 @@ class PlaybackState extends $pb.GeneratedMessage {
   $core.bool hasHistoryCursorId() => $_has(11);
   @$pb.TagNumber(12)
   void clearHistoryCursorId() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get clientOperationId => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set clientOperationId($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasClientOperationId() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearClientOperationId() => $_clearField(13);
 }
 
 class RegisterResponse extends $pb.GeneratedMessage {
@@ -14687,11 +14699,13 @@ class StartPlaybackRequest extends $pb.GeneratedMessage {
     $core.String? mediaId,
     $core.String? playlistId,
     ProviderTarget? target,
+    $core.String? clientOperationId,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
     if (playlistId != null) result.playlistId = playlistId;
     if (target != null) result.target = target;
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
     return result;
   }
 
@@ -14712,6 +14726,7 @@ class StartPlaybackRequest extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'playlistId')
     ..aOM<ProviderTarget>(3, _omitFieldNames ? '' : 'target',
         subBuilder: ProviderTarget.create)
+    ..aOS(4, _omitFieldNames ? '' : 'clientOperationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -14761,11 +14776,26 @@ class StartPlaybackRequest extends $pb.GeneratedMessage {
   void clearTarget() => $_clearField(3);
   @$pb.TagNumber(3)
   ProviderTarget ensureTarget() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  $core.String get clientOperationId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set clientOperationId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasClientOperationId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearClientOperationId() => $_clearField(4);
 }
 
 /// HTTP API: Stop current playback
 class StopPlaybackRequest extends $pb.GeneratedMessage {
-  factory StopPlaybackRequest() => create();
+  factory StopPlaybackRequest({
+    $core.String? clientOperationId,
+  }) {
+    final result = create();
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
+    return result;
+  }
 
   StopPlaybackRequest._();
 
@@ -14780,6 +14810,7 @@ class StopPlaybackRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'StopPlaybackRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientOperationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -14800,10 +14831,25 @@ class StopPlaybackRequest extends $pb.GeneratedMessage {
   static StopPlaybackRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<StopPlaybackRequest>(create);
   static StopPlaybackRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientOperationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientOperationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientOperationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientOperationId() => $_clearField(1);
 }
 
 class PlayNextRequest extends $pb.GeneratedMessage {
-  factory PlayNextRequest() => create();
+  factory PlayNextRequest({
+    $core.String? clientOperationId,
+  }) {
+    final result = create();
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
+    return result;
+  }
 
   PlayNextRequest._();
 
@@ -14818,6 +14864,7 @@ class PlayNextRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'PlayNextRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientOperationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -14838,10 +14885,25 @@ class PlayNextRequest extends $pb.GeneratedMessage {
   static PlayNextRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PlayNextRequest>(create);
   static PlayNextRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientOperationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientOperationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientOperationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientOperationId() => $_clearField(1);
 }
 
 class PlayPreviousRequest extends $pb.GeneratedMessage {
-  factory PlayPreviousRequest() => create();
+  factory PlayPreviousRequest({
+    $core.String? clientOperationId,
+  }) {
+    final result = create();
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
+    return result;
+  }
 
   PlayPreviousRequest._();
 
@@ -14856,6 +14918,7 @@ class PlayPreviousRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'PlayPreviousRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientOperationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -14876,6 +14939,15 @@ class PlayPreviousRequest extends $pb.GeneratedMessage {
   static PlayPreviousRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PlayPreviousRequest>(create);
   static PlayPreviousRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientOperationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientOperationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientOperationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientOperationId() => $_clearField(1);
 }
 
 class PlaybackHistoryEntry extends $pb.GeneratedMessage {
@@ -15166,9 +15238,11 @@ class ListPlaybackHistoryResponse extends $pb.GeneratedMessage {
 class PlayHistoryEntryRequest extends $pb.GeneratedMessage {
   factory PlayHistoryEntryRequest({
     $core.String? entryId,
+    $core.String? clientOperationId,
   }) {
     final result = create();
     if (entryId != null) result.entryId = entryId;
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
     return result;
   }
 
@@ -15186,6 +15260,7 @@ class PlayHistoryEntryRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'entryId')
+    ..aOS(2, _omitFieldNames ? '' : 'clientOperationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -15216,6 +15291,15 @@ class PlayHistoryEntryRequest extends $pb.GeneratedMessage {
   $core.bool hasEntryId() => $_has(0);
   @$pb.TagNumber(1)
   void clearEntryId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get clientOperationId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set clientOperationId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasClientOperationId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearClientOperationId() => $_clearField(2);
 }
 
 /// Realtime API: update the current playback source. Empty media_id, playlist_id, and target clears playback.
@@ -15224,11 +15308,13 @@ class UpdatePlaybackRequest extends $pb.GeneratedMessage {
     $core.String? mediaId,
     $core.String? playlistId,
     ProviderTarget? target,
+    $core.String? clientOperationId,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
     if (playlistId != null) result.playlistId = playlistId;
     if (target != null) result.target = target;
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
     return result;
   }
 
@@ -15249,6 +15335,7 @@ class UpdatePlaybackRequest extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'playlistId')
     ..aOM<ProviderTarget>(3, _omitFieldNames ? '' : 'target',
         subBuilder: ProviderTarget.create)
+    ..aOS(4, _omitFieldNames ? '' : 'clientOperationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -15299,6 +15386,15 @@ class UpdatePlaybackRequest extends $pb.GeneratedMessage {
   void clearTarget() => $_clearField(3);
   @$pb.TagNumber(3)
   ProviderTarget ensureTarget() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  $core.String get clientOperationId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set clientOperationId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasClientOperationId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearClientOperationId() => $_clearField(4);
 }
 
 class AddMediaRequest extends $pb.GeneratedMessage {
@@ -17040,6 +17136,8 @@ class UpdatePlaybackStateRequest extends $pb.GeneratedMessage {
     $core.String? expectedMediaId,
     $core.String? expectedPlaylistId,
     $core.String? expectedTargetHash,
+    $core.String? clientOperationId,
+    $fixnum.Int64? clientTimeMillis,
   }) {
     final result = create();
     if (type != null) result.type = type;
@@ -17052,6 +17150,8 @@ class UpdatePlaybackStateRequest extends $pb.GeneratedMessage {
       result.expectedPlaylistId = expectedPlaylistId;
     if (expectedTargetHash != null)
       result.expectedTargetHash = expectedTargetHash;
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
+    if (clientTimeMillis != null) result.clientTimeMillis = clientTimeMillis;
     return result;
   }
 
@@ -17077,6 +17177,8 @@ class UpdatePlaybackStateRequest extends $pb.GeneratedMessage {
     ..aOS(6, _omitFieldNames ? '' : 'expectedMediaId')
     ..aOS(7, _omitFieldNames ? '' : 'expectedPlaylistId')
     ..aOS(8, _omitFieldNames ? '' : 'expectedTargetHash')
+    ..aOS(9, _omitFieldNames ? '' : 'clientOperationId')
+    ..aInt64(10, _omitFieldNames ? '' : 'clientTimeMillis')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -17175,6 +17277,24 @@ class UpdatePlaybackStateRequest extends $pb.GeneratedMessage {
   $core.bool hasExpectedTargetHash() => $_has(7);
   @$pb.TagNumber(8)
   void clearExpectedTargetHash() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get clientOperationId => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set clientOperationId($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasClientOperationId() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearClientOperationId() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get clientTimeMillis => $_getI64(9);
+  @$pb.TagNumber(10)
+  set clientTimeMillis($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasClientTimeMillis() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearClientTimeMillis() => $_clearField(10);
 }
 
 class PlaybackClientProfile extends $pb.GeneratedMessage {
@@ -38133,11 +38253,13 @@ class ErrorMessage extends $pb.GeneratedMessage {
     $core.String? message,
     $core.int? code,
     $core.String? detail,
+    $core.String? clientOperationId,
   }) {
     final result = create();
     if (message != null) result.message = message;
     if (code != null) result.code = code;
     if (detail != null) result.detail = detail;
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
     return result;
   }
 
@@ -38157,6 +38279,7 @@ class ErrorMessage extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'message')
     ..aI(2, _omitFieldNames ? '' : 'code')
     ..aOS(3, _omitFieldNames ? '' : 'detail')
+    ..aOS(4, _omitFieldNames ? '' : 'clientOperationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -38204,6 +38327,15 @@ class ErrorMessage extends $pb.GeneratedMessage {
   $core.bool hasDetail() => $_has(2);
   @$pb.TagNumber(3)
   void clearDetail() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get clientOperationId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set clientOperationId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasClientOperationId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearClientOperationId() => $_clearField(4);
 }
 
 /// User Notification

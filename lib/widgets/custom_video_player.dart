@@ -116,6 +116,12 @@ class DanmakuController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void detachVideoController(VideoPlayerController controller) {
+    if (identical(videoController, controller)) {
+      videoController = null;
+    }
+  }
+
   void _loadDanmaku() async {
     _items.clear();
     notifyListeners();
@@ -373,6 +379,7 @@ class PlaybackNavigationControls extends StatelessWidget {
     required this.nextTooltip,
     this.onPrevious,
     this.onNext,
+    this.center,
     this.iconSize = 20,
     this.gap = 8,
   });
@@ -381,6 +388,7 @@ class PlaybackNavigationControls extends StatelessWidget {
   final String nextTooltip;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
+  final Widget? center;
   final double iconSize;
   final double gap;
 
@@ -398,6 +406,7 @@ class PlaybackNavigationControls extends StatelessWidget {
           iconSize: iconSize,
         ),
         SizedBox(width: gap),
+        if (center != null) ...[center!, SizedBox(width: gap)],
         AppIconButton(
           key: const Key('playback_next_button'),
           icon: Icons.skip_next_rounded,
@@ -451,7 +460,7 @@ class PictureInPicturePlaybackChoice {
   final bool selected;
 }
 
-class PictureInPicturePlaybackOptionsControl extends StatefulWidget {
+class PictureInPicturePlaybackOptionsControl extends StatelessWidget {
   const PictureInPicturePlaybackOptionsControl({
     super.key,
     required this.tooltip,
@@ -464,71 +473,32 @@ class PictureInPicturePlaybackOptionsControl extends StatefulWidget {
   final ValueChanged<String> onSelected;
 
   @override
-  State<PictureInPicturePlaybackOptionsControl> createState() =>
-      _PictureInPicturePlaybackOptionsControlState();
-}
-
-class _PictureInPicturePlaybackOptionsControlState
-    extends State<PictureInPicturePlaybackOptionsControl> {
-  bool _expanded = false;
-
-  @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _expanded = true),
-      onExit: (_) => setState(() => _expanded = false),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Material(
-            color: Colors.black.withValues(alpha: 0.62),
-            shape: const CircleBorder(),
-            child: IconButton(
-              key: const Key('picture_in_picture_playback_options_toggle'),
-              onPressed: () => setState(() => _expanded = !_expanded),
-              tooltip: widget.tooltip,
-              icon: const Icon(Icons.route_rounded),
-              color: Colors.white,
-              iconSize: 18,
-              constraints: const BoxConstraints.tightFor(width: 34, height: 34),
-              padding: EdgeInsets.zero,
-            ),
-          ),
-          if (_expanded) ...[
-            const SizedBox(height: 4),
-            Material(
-              color: Colors.black.withValues(alpha: 0.88),
-              borderRadius: BorderRadius.circular(6),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  minWidth: 150,
-                  maxWidth: 190,
-                  maxHeight: 145,
-                ),
-                child: ListView(
-                  key: const Key('picture_in_picture_playback_options_list'),
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  children: _buildChoices(),
-                ),
-              ),
-            ),
-          ],
-        ],
+    return AppPopupMenuButton<String>(
+      key: const Key('picture_in_picture_playback_options_toggle'),
+      tooltip: tooltip,
+      color: const Color(0xF21A1A24),
+      offset: const Offset(0, -8),
+      padding: EdgeInsets.zero,
+      onSelected: onSelected,
+      itemBuilder: (_) => _buildChoices(),
+      child: const SizedBox.square(
+        dimension: 30,
+        child: Icon(Icons.route_rounded, color: Colors.white, size: 18),
       ),
     );
   }
 
-  List<Widget> _buildChoices() {
-    final children = <Widget>[];
+  List<PopupMenuEntry<String>> _buildChoices() {
+    final children = <PopupMenuEntry<String>>[];
     String? previousGroup;
-    for (final choice in widget.choices) {
+    for (final choice in choices) {
       if (choice.groupLabel != previousGroup) {
         previousGroup = choice.groupLabel;
         children.add(
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 5, 10, 3),
+          PopupMenuItem<String>(
+            enabled: false,
+            height: 28,
             child: Text(
               choice.groupLabel,
               maxLines: 1,
@@ -543,36 +513,31 @@ class _PictureInPicturePlaybackOptionsControlState
         );
       }
       children.add(
-        InkWell(
+        PopupMenuItem<String>(
           key: ValueKey('picture_in_picture_playback_option_${choice.value}'),
-          onTap: () {
-            setState(() => _expanded = false);
-            widget.onSelected(choice.value);
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            child: Row(
-              children: [
-                Icon(
-                  choice.selected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  size: 16,
-                  color: choice.selected
-                      ? const Color(0xFF7CFFB2)
-                      : Colors.white70,
+          value: choice.value,
+          height: 36,
+          child: Row(
+            children: [
+              Icon(
+                choice.selected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                size: 16,
+                color: choice.selected
+                    ? const Color(0xFF7CFFB2)
+                    : Colors.white70,
+              ),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  choice.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
                 ),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    choice.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
@@ -591,6 +556,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
     this.exitTooltip,
     this.volumeTooltip,
     this.playbackOptionsControl,
+    this.diagnostics,
     this.isLive = false,
     this.canControlPlayback = false,
     this.onPlaybackStateChanged,
@@ -609,6 +575,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
   final String? exitTooltip;
   final String? volumeTooltip;
   final Widget? playbackOptionsControl;
+  final Widget? diagnostics;
   final bool isLive;
   final bool canControlPlayback;
   final ValueChanged<bool>? onPlaybackStateChanged;
@@ -742,6 +709,10 @@ class _PictureInPicturePlaybackSurfaceState
                     key: const Key('picture_in_picture_progress_slider'),
                     value: sliderValue,
                     max: maxSeconds > 0 ? maxSeconds : 1,
+                    onChangeStart: canSeek
+                        ? (seconds) =>
+                              setState(() => _pendingSeekSeconds = seconds)
+                        : null,
                     onChanged: canSeek
                         ? (seconds) =>
                               setState(() => _pendingSeekSeconds = seconds)
@@ -795,6 +766,13 @@ class _PictureInPicturePlaybackSurfaceState
                         ? context.l10n.reload
                         : context.l10n.sync,
                     onPressed: widget.onSync,
+                  ),
+                if (widget.playbackOptionsControl != null)
+                  KeyedSubtree(
+                    key: const Key(
+                      'picture_in_picture_playback_options_button',
+                    ),
+                    child: widget.playbackOptionsControl!,
                   ),
                 const Spacer(),
                 if (value != null)
@@ -869,9 +847,7 @@ class _PictureInPicturePlaybackSurfaceState
                 onDoubleTap: widget.onExit,
               ),
             ),
-            if (_showControls &&
-                widget.onExit != null &&
-                videoController?.value.isInitialized == true)
+            if (_showControls && videoController?.value.isInitialized == true)
               Positioned(
                 right: 8,
                 bottom: 70,
@@ -930,7 +906,7 @@ class _PictureInPicturePlaybackSurfaceState
                   ),
                 ),
               ),
-            if (_showControls && widget.onExit != null)
+            if (_showControls)
               Positioned(
                 left: 8,
                 right: 8,
@@ -966,15 +942,13 @@ class _PictureInPicturePlaybackSurfaceState
                     ),
                   ),
                 ),
-            if (_showControls &&
-                widget.onExit != null &&
-                widget.playbackOptionsControl != null)
+            if (_showControls && widget.diagnostics != null)
               Positioned(
                 top: 8,
                 right: 8,
                 child: KeyedSubtree(
-                  key: const Key('picture_in_picture_playback_options_button'),
-                  child: widget.playbackOptionsControl!,
+                  key: const Key('picture_in_picture_diagnostics'),
+                  child: widget.diagnostics!,
                 ),
               ),
           ],
@@ -985,6 +959,52 @@ class _PictureInPicturePlaybackSurfaceState
 }
 
 enum VideoPlayerInteractionMode { mobile, desktop }
+
+const playerPlaybackSpeedOptions = <double>[2.0, 1.5, 1.25, 1.0, 0.75, 0.5];
+
+class PlayerControlVisibility {
+  const PlayerControlVisibility({
+    required this.showTime,
+    required this.showFullscreen,
+    required this.showVolume,
+    required this.showSync,
+    required this.showPlaybackRoute,
+    required this.showSpeed,
+    required this.showDanmaku,
+    required this.showSubtitles,
+    required this.showPictureInPicture,
+    required this.showSendDanmaku,
+  });
+
+  factory PlayerControlVisibility.forWidth(
+    double width, {
+    required bool desktop,
+  }) {
+    return PlayerControlVisibility(
+      showTime: width >= 520,
+      showFullscreen: width >= 380,
+      showVolume: desktop && width >= 460,
+      showSync: width >= 520,
+      showPlaybackRoute: width >= 600,
+      showSpeed: width >= 680,
+      showDanmaku: width >= 740,
+      showSubtitles: width >= 800,
+      showPictureInPicture: width >= 860,
+      showSendDanmaku: width >= 920,
+    );
+  }
+
+  final bool showTime;
+  final bool showFullscreen;
+  final bool showVolume;
+  final bool showSync;
+  final bool showPlaybackRoute;
+  final bool showSpeed;
+  final bool showDanmaku;
+  final bool showSubtitles;
+  final bool showPictureInPicture;
+  final bool showSendDanmaku;
+}
 
 VideoPlayerInteractionMode videoPlayerInteractionModeForPlatform(
   TargetPlatform platform,
@@ -1044,6 +1064,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       'synctv.player.last_audible_volume';
 
   bool _showControls = true;
+  bool _showOverflowControls = false;
   Timer? _hideTimer;
   bool _isDragging = false;
   bool _isVerticalDragging = false;
@@ -1636,6 +1657,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           !_isDesktopMode) {
         setState(() {
           _showControls = false;
+          _showOverflowControls = false;
         });
       }
     });
@@ -1655,7 +1677,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(milliseconds: 900), () {
       if (mounted && widget.controller.value.isPlaying && !_isSliderDragging) {
-        setState(() => _showControls = false);
+        setState(() {
+          _showControls = false;
+          _showOverflowControls = false;
+        });
       }
     });
   }
@@ -1663,6 +1688,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   void _toggleControls() {
     setState(() {
       _showControls = !_showControls;
+      if (!_showControls) _showOverflowControls = false;
     });
     if (_showControls) _startHideTimer();
   }
@@ -1702,15 +1728,84 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   List<_PlaybackSpeedOption> _playbackSpeedOptions() {
-    const speeds = <double>[0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
     return [
-      for (final speed in speeds)
+      for (final speed in playerPlaybackSpeedOptions)
         _PlaybackSpeedOption(
           speed: speed,
           label:
               '${speed.toStringAsFixed(speed == speed.roundToDouble() ? 0 : 2)}x',
         ),
     ];
+  }
+
+  Widget _buildSubtitleControl(double iconSize) {
+    return AppIconButton(
+      icon: Icons.closed_caption_rounded,
+      tooltip: context.l10n.subtitles,
+      onPressed: _showSubtitleMenu,
+      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
+      constraints: widget.isFullScreen ? null : const BoxConstraints(),
+      iconSize: widget.isFullScreen ? 24 : iconSize,
+    );
+  }
+
+  Widget _buildSpeedControl(VideoPlayerValue value, double iconSize) {
+    return _PlaybackSpeedMenuButton(
+      currentSpeed: value.playbackSpeed,
+      options: _playbackSpeedOptions(),
+      dimension: widget.isFullScreen ? 40 : max(32.0, iconSize + 12),
+      iconSize: widget.isFullScreen ? 24 : iconSize,
+      onSelected: _setPlaybackSpeedFromUser,
+    );
+  }
+
+  Widget _buildDanmakuControl(double iconSize) {
+    return AppIconButton(
+      icon: Icons.comment_rounded,
+      tooltip: _showDanmaku
+          ? context.l10n.disableDanmaku
+          : context.l10n.enableDanmaku,
+      selected: _showDanmaku,
+      style: _showDanmaku ? AppIconButtonStyle.tonal : AppIconButtonStyle.ghost,
+      onPressed: () => setState(() => _showDanmaku = !_showDanmaku),
+      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
+      constraints: widget.isFullScreen ? null : const BoxConstraints(),
+      iconSize: widget.isFullScreen ? 24 : iconSize,
+    );
+  }
+
+  Widget _buildSyncControl(double iconSize) {
+    return AppIconButton(
+      icon: widget.isLive ? Icons.refresh_rounded : Icons.sync_rounded,
+      tooltip: widget.isLive ? context.l10n.reload : context.l10n.sync,
+      onPressed: widget.onSync,
+      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
+      constraints: widget.isFullScreen ? null : const BoxConstraints(),
+      iconSize: widget.isFullScreen ? 24 : iconSize,
+    );
+  }
+
+  Widget _buildFullscreenControl(double iconSize) {
+    return AppIconButton(
+      icon: widget.isFullScreen
+          ? (widget.exitFullScreenIcon ?? Icons.fullscreen_exit)
+          : (widget.fullScreenIcon ?? Icons.fullscreen),
+      tooltip: widget.isFullScreen
+          ? context.l10n.exitFullscreen
+          : context.l10n.fullscreen,
+      onPressed: widget.onToggleFullScreen,
+      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
+      constraints: widget.isFullScreen ? null : const BoxConstraints(),
+      iconSize: widget.isFullScreen ? 24 : iconSize,
+    );
+  }
+
+  Widget _buildSendDanmakuControl() {
+    return AppIconButton(
+      icon: Icons.send_rounded,
+      onPressed: _showDanmakuInput,
+      tooltip: context.l10n.sendDanmaku,
+    );
   }
 
   Future<void> _seekRelative(Duration offset) async {
@@ -1725,6 +1820,31 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
         ? duration
         : target;
     await _seekFromUser(clamped);
+  }
+
+  void _handleProgressChangeStart(double value) {
+    _hideTimer?.cancel();
+    setState(() {
+      _isSliderDragging = true;
+      _sliderDragValue = value;
+      _showControls = true;
+    });
+  }
+
+  void _handleProgressChanged(double value) {
+    setState(() => _sliderDragValue = value);
+  }
+
+  void _handleProgressChangeEnd(double value) {
+    _sliderDragValue = value;
+    unawaited(_commitProgressSeek(value));
+  }
+
+  Future<void> _commitProgressSeek(double value) async {
+    await _seekFromUser(Duration(milliseconds: value.round()));
+    if (!mounted) return;
+    setState(() => _isSliderDragging = false);
+    _startHideTimer();
   }
 
   KeyEventResult _handleDesktopKeyEvent(FocusNode node, KeyEvent event) {
@@ -2451,10 +2571,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
                                   final controlsWidth = constraints.maxWidth;
-                                  final showTime = controlsWidth >= 300;
-                                  final showSecondaryButtons =
-                                      controlsWidth >= 360;
-                                  final showHoverVolume = _isDesktopMode;
+                                  final visibility =
+                                      PlayerControlVisibility.forWidth(
+                                        controlsWidth,
+                                        desktop: _isDesktopMode,
+                                      );
                                   final iconSize = controlsWidth < 360
                                       ? 18.0
                                       : 20.0;
@@ -2464,36 +2585,114 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   final horizontalGap = controlsWidth < 360
                                       ? 4.0
                                       : 8.0;
+                                  final playPauseControl = Semantics(
+                                    button: true,
+                                    label: videoValue.isPlaying
+                                        ? context.l10n.pause
+                                        : context.l10n.play,
+                                    onTap: _togglePlayPause,
+                                    child: GestureDetector(
+                                      onTap: _togglePlayPause,
+                                      child: SizedBox.square(
+                                        dimension: 40,
+                                        child: Icon(
+                                          videoValue.isPlaying
+                                              ? Icons.pause_rounded
+                                              : Icons.play_arrow_rounded,
+                                          color: Colors.white,
+                                          size: playIconSize,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                  final controls =
+                                      <({Widget control, bool visible})>[
+                                        if (_isDesktopMode)
+                                          (
+                                            control: _buildHoverVolumeControl(
+                                              videoValue,
+                                              iconSize: widget.isFullScreen
+                                                  ? 24
+                                                  : 20,
+                                            ),
+                                            visible: visibility.showVolume,
+                                          ),
+                                        if (widget.subtitles != null &&
+                                            widget.subtitles!.isNotEmpty)
+                                          (
+                                            control: _buildSubtitleControl(
+                                              iconSize,
+                                            ),
+                                            visible: visibility.showSubtitles,
+                                          ),
+                                        (
+                                          control: _buildSpeedControl(
+                                            videoValue,
+                                            iconSize,
+                                          ),
+                                          visible: visibility.showSpeed,
+                                        ),
+                                        (
+                                          control: _buildDanmakuControl(
+                                            iconSize,
+                                          ),
+                                          visible: visibility.showDanmaku,
+                                        ),
+                                        if (widget.onSync != null)
+                                          (
+                                            control: _buildSyncControl(
+                                              iconSize,
+                                            ),
+                                            visible: visibility.showSync,
+                                          ),
+                                        if (widget.extraBottomWidget
+                                            case final control?)
+                                          (
+                                            control: control,
+                                            visible:
+                                                visibility.showPlaybackRoute,
+                                          ),
+                                        if (widget.isFullScreen &&
+                                            widget.onSendDanmaku != null)
+                                          (
+                                            control: _buildSendDanmakuControl(),
+                                            visible: visibility.showSendDanmaku,
+                                          ),
+                                        if (widget.onEnterPictureInPicture !=
+                                            null)
+                                          (
+                                            control: PictureInPictureControl(
+                                              tooltip:
+                                                  context.l10n.pictureInPicture,
+                                              onPressed: widget
+                                                  .onEnterPictureInPicture!,
+                                              iconSize: widget.isFullScreen
+                                                  ? 24
+                                                  : iconSize,
+                                            ),
+                                            visible:
+                                                visibility.showPictureInPicture,
+                                          ),
+                                        if (widget.onToggleFullScreen != null)
+                                          (
+                                            control: _buildFullscreenControl(
+                                              iconSize,
+                                            ),
+                                            visible: visibility.showFullscreen,
+                                          ),
+                                      ];
+                                  final hiddenControls = [
+                                    for (final entry in controls)
+                                      if (!entry.visible) entry.control,
+                                  ];
 
                                   return Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Row(
                                         children: [
-                                          Semantics(
-                                            button: true,
-                                            label: videoValue.isPlaying
-                                                ? context.l10n.pause
-                                                : context.l10n.play,
-                                            onTap: _togglePlayPause,
-                                            child: GestureDetector(
-                                              onTap: _togglePlayPause,
-                                              child: SizedBox.square(
-                                                dimension: 40,
-                                                child: Icon(
-                                                  videoValue.isPlaying
-                                                      ? Icons.pause_rounded
-                                                      : Icons
-                                                            .play_arrow_rounded,
-                                                  color: Colors.white,
-                                                  size: playIconSize,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
                                           if (widget.onPrevious != null ||
-                                              widget.onNext != null) ...[
-                                            SizedBox(width: horizontalGap),
+                                              widget.onNext != null)
                                             PlaybackNavigationControls(
                                               previousTooltip:
                                                   context.l10n.previousVideo,
@@ -2501,12 +2700,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                   context.l10n.nextVideo,
                                               onPrevious: widget.onPrevious,
                                               onNext: widget.onNext,
+                                              center: playPauseControl,
                                               iconSize: iconSize,
                                               gap: horizontalGap,
-                                            ),
-                                          ],
+                                            )
+                                          else
+                                            playPauseControl,
                                           SizedBox(width: horizontalGap),
-                                          if (showTime) ...[
+                                          if (visibility.showTime) ...[
                                             Text(
                                               playbackPositionLabel(
                                                 isLive: widget.isLive,
@@ -2531,228 +2732,93 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                                     .playbackProgress,
                                                 value:
                                                     '${_formatDuration(videoValue.position)} / ${_formatDuration(videoValue.duration)}',
-                                                child: GestureDetector(
-                                                  behavior:
-                                                      HitTestBehavior.opaque,
-                                                  onHorizontalDragStart: (details) {
-                                                    _startHideTimer();
-                                                    final RenderBox box =
-                                                        context.findRenderObject()
-                                                            as RenderBox;
-                                                    final double
-                                                    relativePosition =
-                                                        details
-                                                            .localPosition
-                                                            .dx /
-                                                        box.size.width;
-                                                    final double value =
-                                                        (relativePosition *
-                                                                videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble())
-                                                            .clamp(
-                                                              0,
-                                                              videoValue
-                                                                  .duration
-                                                                  .inMilliseconds
-                                                                  .toDouble(),
-                                                            );
-                                                    setState(() {
-                                                      _isSliderDragging = true;
-                                                      _sliderDragValue = value;
-                                                    });
-                                                  },
-                                                  onHorizontalDragUpdate: (details) {
-                                                    _startHideTimer();
-                                                    final RenderBox box =
-                                                        context.findRenderObject()
-                                                            as RenderBox;
-                                                    final double
-                                                    relativePosition =
-                                                        details
-                                                            .localPosition
-                                                            .dx /
-                                                        box.size.width;
-                                                    final double value =
-                                                        (relativePosition *
-                                                                videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble())
-                                                            .clamp(
-                                                              0,
-                                                              videoValue
-                                                                  .duration
-                                                                  .inMilliseconds
-                                                                  .toDouble(),
-                                                            );
-                                                    setState(() {
-                                                      _sliderDragValue = value;
-                                                    });
-                                                  },
-                                                  onHorizontalDragEnd:
-                                                      (details) {
-                                                        _startHideTimer();
-                                                        final target = Duration(
-                                                          milliseconds:
-                                                              _sliderDragValue
-                                                                  .toInt(),
-                                                        );
-                                                        _seekFromUser(
-                                                          target,
-                                                        ).then((_) {
-                                                          setState(() {
-                                                            _isSliderDragging =
-                                                                false;
-                                                          });
-                                                        });
-                                                      },
-                                                  onTapDown: (details) {
-                                                    _startHideTimer();
-                                                    final RenderBox box =
-                                                        context.findRenderObject()
-                                                            as RenderBox;
-                                                    final double
-                                                    relativePosition =
-                                                        details
-                                                            .localPosition
-                                                            .dx /
-                                                        box.size.width;
-                                                    final double value =
-                                                        (relativePosition *
-                                                                videoValue
-                                                                    .duration
-                                                                    .inMilliseconds
-                                                                    .toDouble())
-                                                            .clamp(
-                                                              0,
-                                                              videoValue
-                                                                  .duration
-                                                                  .inMilliseconds
-                                                                  .toDouble(),
-                                                            );
-                                                    setState(() {
-                                                      _isSliderDragging = true;
-                                                      _sliderDragValue = value;
-                                                    });
-                                                  },
-                                                  onTapUp: (details) {
-                                                    _startHideTimer();
-                                                    final target = Duration(
-                                                      milliseconds:
-                                                          _sliderDragValue
-                                                              .toInt(),
-                                                    );
-                                                    _seekFromUser(target).then((
-                                                      _,
-                                                    ) {
-                                                      setState(() {
-                                                        _isSliderDragging =
-                                                            false;
-                                                      });
-                                                    });
-                                                  },
-                                                  onTapCancel: () {
-                                                    if (_isSliderDragging) {
-                                                      final target = Duration(
-                                                        milliseconds:
-                                                            _sliderDragValue
-                                                                .toInt(),
-                                                      );
-                                                      _seekFromUser(
-                                                        target,
-                                                      ).then((_) {
-                                                        setState(() {
-                                                          _isSliderDragging =
-                                                              false;
-                                                        });
-                                                      });
-                                                    }
-                                                  },
-                                                  child: SizedBox(
-                                                    height: 40,
-                                                    child: Align(
-                                                      alignment:
-                                                          Alignment.center,
-                                                      child: SliderTheme(
-                                                        data: SliderTheme.of(context).copyWith(
-                                                          thumbShape: RoundSliderThumbShape(
-                                                            enabledThumbRadius:
-                                                                _isSliderDragging
-                                                                ? (widget.isFullScreen
-                                                                      ? 8
-                                                                      : 10)
-                                                                : (widget.isFullScreen
-                                                                      ? 6
-                                                                      : 8),
-                                                          ),
-                                                          trackHeight:
+                                                child: SizedBox(
+                                                  height: 40,
+                                                  child: Align(
+                                                    alignment: Alignment.center,
+                                                    child: SliderTheme(
+                                                      data: SliderTheme.of(context).copyWith(
+                                                        thumbShape: RoundSliderThumbShape(
+                                                          enabledThumbRadius:
                                                               _isSliderDragging
                                                               ? (widget.isFullScreen
-                                                                    ? 4
-                                                                    : 6)
+                                                                    ? 8
+                                                                    : 10)
                                                               : (widget.isFullScreen
-                                                                    ? 2
-                                                                    : 4),
-                                                          overlayShape:
-                                                              const RoundSliderOverlayShape(
-                                                                overlayRadius:
-                                                                    24,
-                                                              ),
-                                                          activeTrackColor:
-                                                              const Color(
-                                                                0xFF5D5FEF,
-                                                              ),
-                                                          inactiveTrackColor:
-                                                              Colors.white24,
-                                                          thumbColor:
-                                                              Colors.white,
-                                                          trackShape:
-                                                              const RectangularSliderTrackShape(), // 确保轨道充满可用宽度
+                                                                    ? 6
+                                                                    : 8),
                                                         ),
-                                                        child: IgnorePointer(
-                                                          // 禁用原生 Slider 的手势，完全由外层 GestureDetector 接管
-                                                          child: AppSlider(
-                                                            value:
-                                                                (_isSliderDragging
-                                                                        ? _sliderDragValue
-                                                                        : videoValue
-                                                                              .position
-                                                                              .inMilliseconds
-                                                                              .toDouble())
-                                                                    .clamp(
-                                                                      0,
-                                                                      videoValue.duration.inMilliseconds.toDouble() >
-                                                                              0
-                                                                          ? videoValue.duration.inMilliseconds.toDouble()
-                                                                          : 1.0,
-                                                                    ),
-                                                            min: 0,
-                                                            max:
-                                                                videoValue
-                                                                        .duration
-                                                                        .inMilliseconds
-                                                                        .toDouble() >
-                                                                    0
-                                                                ? videoValue
-                                                                      .duration
-                                                                      .inMilliseconds
-                                                                      .toDouble()
-                                                                : 1.0,
-                                                            onChanged:
-                                                                (
-                                                                  value,
-                                                                ) {}, // 忽略，由外层接管
-                                                          ),
+                                                        trackHeight:
+                                                            _isSliderDragging
+                                                            ? (widget.isFullScreen
+                                                                  ? 4
+                                                                  : 6)
+                                                            : (widget.isFullScreen
+                                                                  ? 2
+                                                                  : 4),
+                                                        overlayShape:
+                                                            const RoundSliderOverlayShape(
+                                                              overlayRadius: 24,
+                                                            ),
+                                                        activeTrackColor:
+                                                            const Color(
+                                                              0xFF5D5FEF,
+                                                            ),
+                                                        inactiveTrackColor:
+                                                            Colors.white24,
+                                                        thumbColor:
+                                                            Colors.white,
+                                                        trackShape:
+                                                            const RectangularSliderTrackShape(),
+                                                      ),
+                                                      child: AppSlider(
+                                                        key: const Key(
+                                                          'playback_progress_slider',
                                                         ),
+                                                        value:
+                                                            (_isSliderDragging
+                                                                    ? _sliderDragValue
+                                                                    : videoValue
+                                                                          .position
+                                                                          .inMilliseconds
+                                                                          .toDouble())
+                                                                .clamp(
+                                                                  0,
+                                                                  videoValue.duration.inMilliseconds
+                                                                              .toDouble() >
+                                                                          0
+                                                                      ? videoValue
+                                                                            .duration
+                                                                            .inMilliseconds
+                                                                            .toDouble()
+                                                                      : 1.0,
+                                                                ),
+                                                        min: 0,
+                                                        max:
+                                                            videoValue
+                                                                    .duration
+                                                                    .inMilliseconds
+                                                                    .toDouble() >
+                                                                0
+                                                            ? videoValue
+                                                                  .duration
+                                                                  .inMilliseconds
+                                                                  .toDouble()
+                                                            : 1.0,
+                                                        onChangeStart:
+                                                            _handleProgressChangeStart,
+                                                        onChanged:
+                                                            _handleProgressChanged,
+                                                        onChangeEnd:
+                                                            _handleProgressChangeEnd,
                                                       ),
                                                     ),
                                                   ),
                                                 ),
                                               ),
                                             ),
-                                          if (showTime && !widget.isLive) ...[
+                                          if (visibility.showTime &&
+                                              !widget.isLive) ...[
                                             SizedBox(width: horizontalGap),
                                             Text(
                                               _formatDuration(
@@ -2764,175 +2830,68 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                               ),
                                             ),
                                           ],
-                                          SizedBox(width: horizontalGap),
-                                          if (showHoverVolume)
-                                            _buildHoverVolumeControl(
-                                              videoValue,
-                                              iconSize: widget.isFullScreen
-                                                  ? 24
-                                                  : 20,
-                                            ),
-                                          if (showSecondaryButtons &&
-                                              widget.subtitles != null &&
-                                              widget.subtitles!.isNotEmpty)
-                                            AppIconButton(
-                                              icon:
-                                                  Icons.closed_caption_rounded,
-                                              tooltip: context.l10n.subtitles,
-                                              onPressed: _showSubtitleMenu,
-                                              padding: widget.isFullScreen
-                                                  ? const EdgeInsets.all(8)
-                                                  : EdgeInsets.zero,
-                                              constraints: widget.isFullScreen
-                                                  ? null
-                                                  : const BoxConstraints(),
-                                              iconSize: widget.isFullScreen
-                                                  ? 24
-                                                  : iconSize,
-                                            ),
-                                          if (showSecondaryButtons) ...[
-                                            SizedBox(
-                                              width: widget.isFullScreen
-                                                  ? 0
-                                                  : 4,
-                                            ),
-                                            _PlaybackSpeedMenuButton(
-                                              currentSpeed:
-                                                  videoValue.playbackSpeed,
-                                              options: _playbackSpeedOptions(),
-                                              dimension: widget.isFullScreen
-                                                  ? 40
-                                                  : max(32.0, iconSize + 12),
-                                              iconSize: widget.isFullScreen
-                                                  ? 24
-                                                  : iconSize,
-                                              onSelected:
-                                                  _setPlaybackSpeedFromUser,
-                                            ),
-                                          ],
-                                          if (showSecondaryButtons) ...[
-                                            SizedBox(
-                                              width: widget.isFullScreen
-                                                  ? 0
-                                                  : 4,
-                                            ),
-                                            AppIconButton(
-                                              icon: Icons.comment_rounded,
-                                              tooltip: _showDanmaku
-                                                  ? context.l10n.disableDanmaku
-                                                  : context.l10n.enableDanmaku,
-                                              selected: _showDanmaku,
-                                              style: _showDanmaku
-                                                  ? AppIconButtonStyle.tonal
-                                                  : AppIconButtonStyle.ghost,
-                                              onPressed: () {
-                                                setState(() {
-                                                  _showDanmaku = !_showDanmaku;
-                                                });
-                                              },
-                                              padding: widget.isFullScreen
-                                                  ? const EdgeInsets.all(8)
-                                                  : EdgeInsets.zero,
-                                              constraints: widget.isFullScreen
-                                                  ? null
-                                                  : const BoxConstraints(),
-                                              iconSize: widget.isFullScreen
-                                                  ? 24
-                                                  : iconSize,
-                                            ),
-                                          ],
-                                          if (widget.onSync != null) ...[
-                                            SizedBox(
-                                              width: widget.isFullScreen
-                                                  ? 0
-                                                  : 4,
-                                            ),
-                                            AppIconButton(
-                                              icon: widget.isLive
-                                                  ? Icons.refresh_rounded
-                                                  : Icons.sync_rounded,
-                                              tooltip: widget.isLive
-                                                  ? context.l10n.reload
-                                                  : context.l10n.sync,
-                                              onPressed: widget.onSync,
-                                              padding: widget.isFullScreen
-                                                  ? const EdgeInsets.all(8)
-                                                  : EdgeInsets.zero,
-                                              constraints: widget.isFullScreen
-                                                  ? null
-                                                  : const BoxConstraints(),
-                                              iconSize: widget.isFullScreen
-                                                  ? 24
-                                                  : iconSize,
-                                            ),
-                                          ],
-                                          if (showSecondaryButtons &&
-                                              widget.extraBottomWidget !=
-                                                  null) ...[
-                                            SizedBox(
-                                              width: widget.isFullScreen
-                                                  ? 0
-                                                  : 4,
-                                            ),
-                                            widget.extraBottomWidget!,
-                                          ],
-                                          if (widget.isFullScreen &&
-                                              widget.onSendDanmaku != null)
-                                            AppIconButton(
-                                              icon: Icons.send_rounded,
-                                              onPressed: _showDanmakuInput,
-                                              tooltip: context.l10n.sendDanmaku,
-                                            ),
-                                          if (widget.onToggleFullScreen !=
-                                              null) ...[
-                                            if (widget
-                                                    .onEnterPictureInPicture !=
-                                                null) ...[
+                                          for (final entry in controls)
+                                            if (entry.visible) ...[
                                               SizedBox(
                                                 width: widget.isFullScreen
                                                     ? 0
                                                     : 4,
                                               ),
-                                              PictureInPictureControl(
-                                                tooltip: context
-                                                    .l10n
-                                                    .pictureInPicture,
-                                                onPressed: widget
-                                                    .onEnterPictureInPicture!,
-                                                iconSize: widget.isFullScreen
-                                                    ? 24
-                                                    : iconSize,
-                                              ),
+                                              entry.control,
                                             ],
-                                            SizedBox(
-                                              width: widget.isFullScreen
-                                                  ? 0
-                                                  : 4,
-                                            ),
+                                          if (hiddenControls.isNotEmpty) ...[
+                                            SizedBox(width: horizontalGap),
                                             AppIconButton(
-                                              icon: widget.isFullScreen
-                                                  ? (widget.exitFullScreenIcon ??
-                                                        Icons.fullscreen_exit)
-                                                  : (widget.fullScreenIcon ??
-                                                        Icons.fullscreen),
-                                              tooltip: widget.isFullScreen
-                                                  ? context.l10n.exitFullscreen
-                                                  : context.l10n.fullscreen,
-                                              onPressed:
-                                                  widget.onToggleFullScreen,
-                                              padding: widget.isFullScreen
-                                                  ? const EdgeInsets.all(8)
-                                                  : EdgeInsets.zero,
-                                              constraints: widget.isFullScreen
-                                                  ? null
-                                                  : const BoxConstraints(),
-                                              iconSize: widget.isFullScreen
-                                                  ? 24
-                                                  : iconSize,
+                                              key: const Key(
+                                                'playback_overflow_button',
+                                              ),
+                                              icon: _showOverflowControls
+                                                  ? Icons.expand_more_rounded
+                                                  : Icons.more_horiz_rounded,
+                                              tooltip: context.l10n.moreActions,
+                                              selected: _showOverflowControls,
+                                              onPressed: () => setState(
+                                                () => _showOverflowControls =
+                                                    !_showOverflowControls,
+                                              ),
+                                              constraints:
+                                                  const BoxConstraints.tightFor(
+                                                    width: 40,
+                                                    height: 40,
+                                                  ),
+                                              padding: EdgeInsets.zero,
+                                              iconSize: iconSize,
                                             ),
                                           ],
                                         ],
                                       ),
+                                      if (_showOverflowControls &&
+                                          hiddenControls.isNotEmpty) ...[
+                                        const SizedBox(height: 6),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: AppPanelSurface(
+                                            key: const Key(
+                                              'playback_overflow_controls',
+                                            ),
+                                            color: const Color(0xD91A1A24),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.white24,
+                                            ),
+                                            padding: const EdgeInsets.all(4),
+                                            child: Wrap(
+                                              spacing: 4,
+                                              runSpacing: 4,
+                                              crossAxisAlignment:
+                                                  WrapCrossAlignment.center,
+                                              children: hiddenControls,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   );
                                 },

@@ -5,10 +5,50 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_config;
 
 void main() {
+  test('playback errors preserve their client operation id', () {
+    final encoded = client.ServerMessage(
+      error: client.ErrorMessage(
+        message: 'clock skew',
+        code: 1001,
+        clientOperationId: '3d918f61-3959-49ef-a962-5d94b8ac8470',
+      ),
+    ).writeToBuffer();
+
+    final decoded = RoomRealtimeCodec.decode(Uint8List.fromList(encoded));
+
+    expect(
+      decoded.error?.clientOperationId,
+      '3d918f61-3959-49ef-a962-5d94b8ac8470',
+    );
+  });
+
+  test('system chat messages use the product identity', () {
+    expect(
+      chatMessageDisplayUsername(
+        messageType: client_enum
+            .ChatMessageType
+            .CHAT_MESSAGE_TYPE_SYSTEM_PLAYBACK_CHANGED
+            .value,
+        username: null,
+      ),
+      'SyncTV',
+    );
+    expect(
+      chatMessageDisplayUsername(
+        messageType: client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER.value,
+        username: null,
+        missingUsername: 'Deleted user',
+      ),
+      'Deleted user',
+    );
+  });
+
   test(
     'playback history observation and snapshot preserve public cursor ids',
     () {

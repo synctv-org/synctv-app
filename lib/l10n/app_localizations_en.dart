@@ -2289,6 +2289,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get grid => 'Grid';
 
   @override
+  String get sourceType => 'Source type';
+
+  @override
+  String get sourcePath => 'Path';
+
+  @override
+  String get sourceQuery => 'Query';
+
+  @override
+  String get sharedSource => 'Shared source';
+
+  @override
   String get multipleRoutes => 'Multiple routes';
 
   @override

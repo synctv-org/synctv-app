@@ -12,7 +12,7 @@ import 'package:synctv_app/services/picture_in_picture_service.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/theme/app_theme.dart';
-import 'package:video_player_media_kit/video_player_media_kit.dart';
+import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main(List<String> args) async {
@@ -46,7 +46,7 @@ void main(List<String> args) async {
   }
 
   try {
-    VideoPlayerMediaKit.ensureInitialized(
+    SyncTvVideoPlayerMediaKit.ensureInitialized(
       android: true,
       iOS: false,
       windows: true,

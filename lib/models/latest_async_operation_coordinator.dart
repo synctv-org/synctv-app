@@ -1,0 +1,39 @@
+typedef IsLatestOperation = bool Function();
+
+class LatestAsyncOperationCoordinator {
+  int _generation = 0;
+  Future<void>? _activeOperation;
+  String? _activeKey;
+
+  Future<void> run(
+    String key,
+    Future<void> Function(IsLatestOperation isLatest) operation,
+  ) async {
+    final activeOperation = _activeOperation;
+    if (activeOperation != null && _activeKey == key) {
+      await activeOperation;
+      return;
+    }
+
+    final generation = ++_generation;
+    late final Future<void> trackedOperation;
+    trackedOperation =
+        Future<void>.sync(
+          () => operation(() => generation == _generation),
+        ).whenComplete(() {
+          if (identical(_activeOperation, trackedOperation)) {
+            _activeOperation = null;
+            _activeKey = null;
+          }
+        });
+    _activeOperation = trackedOperation;
+    _activeKey = key;
+    await trackedOperation;
+  }
+
+  void invalidate() {
+    _generation++;
+    _activeOperation = null;
+    _activeKey = null;
+  }
+}

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/room_management_models.dart';
+import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/admin.pbenum.dart' as admin_enum;
@@ -12249,12 +12250,17 @@ class _RoomChatHistoryDialogState extends State<_RoomChatHistoryDialog> {
 
   Future<void> _deleteMessage(RoomChatMessageInfo message) async {
     if (message.id.isEmpty) return;
+    final authorName = chatMessageDisplayUsername(
+      messageType: message.messageType,
+      username: message.username,
+      missingUsername: context.l10n.deletedUser,
+    );
     final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (context) => AppConfirmDialog(
         title: context.l10n.deleteMessage,
         icon: const Icon(Icons.delete_outline_rounded),
-        content: Text(context.l10n.confirmDeleteUserMessage(message.username)),
+        content: Text(context.l10n.confirmDeleteUserMessage(authorName)),
         confirmLabel: context.l10n.delete,
         confirmIcon: Icons.delete_outline_rounded,
         destructive: true,
@@ -12621,6 +12627,11 @@ class _AdminChatMessageCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDeleted = message.isDeleted;
+    final authorName = chatMessageDisplayUsername(
+      messageType: message.messageType,
+      username: message.username,
+      missingUsername: context.l10n.deletedUser,
+    );
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       margin: const EdgeInsets.only(bottom: 10),
@@ -12648,7 +12659,7 @@ class _AdminChatMessageCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 AppAvatar(
-                  name: message.username,
+                  name: authorName,
                   radius: 15,
                   backgroundColor: scheme.primary.withValues(alpha: 0.10),
                   foregroundColor: scheme.primary,
@@ -12659,9 +12670,7 @@ class _AdminChatMessageCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        message.username.isEmpty
-                            ? context.l10n.deletedUser
-                            : message.username,
+                        authorName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.labelLarge?.copyWith(
@@ -12802,9 +12811,13 @@ class _AdminQuotedMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final title = quoted?.username.trim().isNotEmpty == true
-        ? quoted!.username
-        : context.l10n.quotedMessage;
+    final title = quoted == null
+        ? context.l10n.quotedMessage
+        : chatMessageDisplayUsername(
+            messageType: quoted!.messageType,
+            username: quoted!.username,
+            missingUsername: context.l10n.deletedUser,
+          );
     final preview = quoted == null
         ? context.l10n.tapToViewContext
         : _messagePreview(context, quoted!);

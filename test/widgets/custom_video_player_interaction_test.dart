@@ -57,6 +57,50 @@ void main() {
     }
   });
 
+  test('playback speed menu orders slower speeds toward the bottom', () {
+    expect(playerPlaybackSpeedOptions, [2.0, 1.5, 1.25, 1.0, 0.75, 0.5]);
+  });
+
+  test('narrow playback controls retain only essential visible actions', () {
+    final visibility = PlayerControlVisibility.forWidth(300, desktop: true);
+
+    expect(visibility.showTime, isFalse);
+    expect(visibility.showFullscreen, isFalse);
+    expect(visibility.showVolume, isFalse);
+    expect(visibility.showSync, isFalse);
+    expect(visibility.showPlaybackRoute, isFalse);
+    expect(visibility.showSpeed, isFalse);
+    expect(visibility.showDanmaku, isFalse);
+    expect(visibility.showSubtitles, isFalse);
+    expect(visibility.showPictureInPicture, isFalse);
+  });
+
+  test('medium playback controls prioritize fullscreen volume and sync', () {
+    final visibility = PlayerControlVisibility.forWidth(550, desktop: true);
+
+    expect(visibility.showTime, isTrue);
+    expect(visibility.showFullscreen, isTrue);
+    expect(visibility.showVolume, isTrue);
+    expect(visibility.showSync, isTrue);
+    expect(visibility.showPlaybackRoute, isFalse);
+    expect(visibility.showSpeed, isFalse);
+  });
+
+  test('wide playback controls expose all secondary actions', () {
+    final visibility = PlayerControlVisibility.forWidth(1000, desktop: true);
+
+    expect(visibility.showTime, isTrue);
+    expect(visibility.showFullscreen, isTrue);
+    expect(visibility.showVolume, isTrue);
+    expect(visibility.showSync, isTrue);
+    expect(visibility.showPlaybackRoute, isTrue);
+    expect(visibility.showSpeed, isTrue);
+    expect(visibility.showDanmaku, isTrue);
+    expect(visibility.showSubtitles, isTrue);
+    expect(visibility.showPictureInPicture, isTrue);
+    expect(visibility.showSendDanmaku, isTrue);
+  });
+
   test('subtitle text removes WebVTT inline timing and style tags', () {
     expect(
       sanitizeSubtitleText(
@@ -121,48 +165,47 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: PictureInPicturePlaybackOptionsControl(
-            tooltip: 'Playback route',
-            choices: const [
-              PictureInPicturePlaybackChoice(
-                value: 'direct|0',
-                groupLabel: 'Direct',
-                label: '360p',
-                selected: true,
-              ),
-              PictureInPicturePlaybackChoice(
-                value: 'direct|1',
-                groupLabel: 'Direct',
-                label: '1080p',
-                selected: false,
-              ),
-              PictureInPicturePlaybackChoice(
-                value: 'proxy|0',
-                groupLabel: 'Proxy',
-                label: '360p',
-                selected: false,
-              ),
-            ],
-            onSelected: (value) => selected = value,
+          body: Center(
+            child: PictureInPicturePlaybackOptionsControl(
+              tooltip: 'Playback route',
+              choices: const [
+                PictureInPicturePlaybackChoice(
+                  value: 'direct|0',
+                  groupLabel: 'Direct',
+                  label: '360p',
+                  selected: true,
+                ),
+                PictureInPicturePlaybackChoice(
+                  value: 'direct|1',
+                  groupLabel: 'Direct',
+                  label: '1080p',
+                  selected: false,
+                ),
+                PictureInPicturePlaybackChoice(
+                  value: 'proxy|0',
+                  groupLabel: 'Proxy',
+                  label: '360p',
+                  selected: false,
+                ),
+              ],
+              onSelected: (value) => selected = value,
+            ),
           ),
         ),
       ),
     );
 
-    expect(
-      find.byKey(const Key('picture_in_picture_playback_options_list')),
-      findsNothing,
-    );
+    expect(find.text('Direct'), findsNothing);
     await tester.tap(
       find.byKey(const Key('picture_in_picture_playback_options_toggle')),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('Direct'), findsOneWidget);
     expect(find.text('Proxy'), findsOneWidget);
     await tester.tap(
       find.byKey(const ValueKey('picture_in_picture_playback_option_direct|1')),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(selected, 'direct|1');
   });
 
@@ -188,6 +231,7 @@ void main() {
           playbackOptionsControl: const SizedBox(
             key: Key('test_playback_options'),
           ),
+          diagnostics: const SizedBox(key: Key('test_playback_diagnostics')),
           onPrevious: () => previousCount++,
           onNext: () => nextCount++,
           onSync: () => syncCount++,
@@ -204,6 +248,7 @@ void main() {
       findsNothing,
     );
     expect(find.byKey(const Key('test_playback_options')), findsNothing);
+    expect(find.byKey(const Key('test_playback_diagnostics')), findsNothing);
     final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await mouse.addPointer(location: Offset.zero);
     await mouse.moveTo(
@@ -215,6 +260,11 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const Key('test_playback_options')), findsOneWidget);
+    expect(
+      find.byKey(const Key('picture_in_picture_playback_options_button')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('test_playback_diagnostics')), findsOneWidget);
     await tester.tap(
       find.byKey(const Key('picture_in_picture_previous_button')),
     );
@@ -251,6 +301,11 @@ void main() {
             nextTooltip: 'Next video',
             onPrevious: () => previousCount++,
             onNext: () => nextCount++,
+            center: const SizedBox(
+              key: Key('playback_center_control'),
+              width: 40,
+              height: 40,
+            ),
           ),
         ),
       ),
@@ -258,6 +313,17 @@ void main() {
 
     expect(find.byKey(const Key('playback_previous_button')), findsOneWidget);
     expect(find.byKey(const Key('playback_next_button')), findsOneWidget);
+    final previousCenter = tester.getCenter(
+      find.byKey(const Key('playback_previous_button')),
+    );
+    final playbackCenter = tester.getCenter(
+      find.byKey(const Key('playback_center_control')),
+    );
+    final nextCenter = tester.getCenter(
+      find.byKey(const Key('playback_next_button')),
+    );
+    expect(previousCenter.dx, lessThan(playbackCenter.dx));
+    expect(playbackCenter.dx, lessThan(nextCenter.dx));
     await tester.tap(find.byKey(const Key('playback_previous_button')));
     await tester.tap(find.byKey(const Key('playback_next_button')));
     await tester.pump(const Duration(milliseconds: 200));

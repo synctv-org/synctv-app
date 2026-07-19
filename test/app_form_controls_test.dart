@@ -501,6 +501,25 @@ void main() {
     expect(selectable.style?.fontFamily, 'monospace');
   });
 
+  testWidgets('AppSelectableText builds a content-sized selection toolbar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(const AppSelectableText('copy me')));
+
+    final selectable = tester.widget<SelectableText>(
+      find.byType(SelectableText),
+    );
+    final editableState = tester.state<EditableTextState>(
+      find.byType(EditableText),
+    );
+    final toolbar = selectable.contextMenuBuilder!(
+      tester.element(find.byType(SelectableText)),
+      editableState,
+    );
+
+    expect(toolbar, isA<TextSelectionToolbar>());
+  });
+
   testWidgets(
     'AppActionButton uses ForUI button variants and disables loading',
     (tester) async {
@@ -686,6 +705,8 @@ void main() {
 
   testWidgets('AppSlider reports value changes', (tester) async {
     var value = 0.2;
+    var changeStartCount = 0;
+    double? committedValue;
 
     await tester.pumpWidget(
       _app(
@@ -697,7 +718,9 @@ void main() {
               max: 1,
               divisions: 10,
               label: value.toStringAsFixed(1),
+              onChangeStart: (_) => changeStartCount += 1,
               onChanged: (next) => setState(() => value = next),
+              onChangeEnd: (next) => committedValue = next,
             );
           },
         ),
@@ -708,6 +731,8 @@ void main() {
     await tester.drag(find.byType(Slider), const Offset(120, 0));
     await tester.pump(const Duration(milliseconds: 150));
     expect(value, isNot(0.2));
+    expect(changeStartCount, 1);
+    expect(committedValue, value);
   });
 
   testWidgets('AppSegmentedControl reports selected value', (tester) async {

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
+import 'package:synctv_app/models/chat_message_selection.dart';
 import 'package:synctv_app/models/playback_client_profile.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/proto_mapping.dart';
@@ -17,14 +18,10 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
+import 'package:synctv_app/utils/client_operation_id.dart';
 
 class SyncTvRoomMediaDomainService {
   SyncTvRoomMediaDomainService(this._api);
-
-  static const List<client_enum.ChatMessageType> chatVisibleMessageTypes = [
-    client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
-    client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED,
-  ];
 
   final SyncTvApiClient _api;
 
@@ -39,13 +36,16 @@ class SyncTvRoomMediaDomainService {
   Future<SyncTvPlaybackStatus> playPrevious(String roomId) async {
     final state = await _api.room.playPrevious(
       roomId,
-      client.PlayPreviousRequest(),
+      client.PlayPreviousRequest(clientOperationId: newClientOperationId()),
     );
     return _playbackStatusFromState(state);
   }
 
   Future<SyncTvPlaybackStatus> playNext(String roomId) async {
-    final state = await _api.room.playNext(roomId, client.PlayNextRequest());
+    final state = await _api.room.playNext(
+      roomId,
+      client.PlayNextRequest(clientOperationId: newClientOperationId()),
+    );
     return _playbackStatusFromState(state);
   }
 
@@ -69,7 +69,10 @@ class SyncTvRoomMediaDomainService {
   ) async {
     final state = await _api.room.playHistoryEntry(
       roomId,
-      client.PlayHistoryEntryRequest(entryId: entryId),
+      client.PlayHistoryEntryRequest(
+        entryId: entryId,
+        clientOperationId: newClientOperationId(),
+      ),
     );
     return _playbackStatusFromState(state);
   }
@@ -458,7 +461,7 @@ class SyncTvRoomMediaDomainService {
     int limit = 50,
     String cursor = '',
     List<client_enum.ChatMessageType> includeMessageTypes =
-        chatVisibleMessageTypes,
+        chatTimelineMessageTypes,
   }) async {
     final response = await _api.room.getChatHistory(
       roomId,
@@ -517,7 +520,7 @@ class SyncTvRoomMediaDomainService {
       roomId,
       client.SendChatMessageRequest(
         content: content,
-        clientMessageId: 'msg_${DateTime.now().microsecondsSinceEpoch}',
+        clientMessageId: newClientOperationId(),
         attachments: images.map(chatAttachmentReferenceFromStoredImage),
         displayPosition: displayPosition,
         displayColor: displayColor,
@@ -555,7 +558,7 @@ class SyncTvRoomMediaDomainService {
       client.PinChatMessageRequest(
         messageId: messageId,
         note: note,
-        clientOperationId: 'pin_${DateTime.now().microsecondsSinceEpoch}',
+        clientOperationId: newClientOperationId(),
       ),
     );
     return _chatPinEventFromProto(response.event);
@@ -569,7 +572,7 @@ class SyncTvRoomMediaDomainService {
       roomId,
       client.UnpinChatMessageRequest(
         messageId: messageId,
-        clientOperationId: 'unpin_${DateTime.now().microsecondsSinceEpoch}',
+        clientOperationId: newClientOperationId(),
       ),
     );
     return _chatPinEventFromProto(response.event);
@@ -621,7 +624,7 @@ class SyncTvRoomMediaDomainService {
         messageId: messageId,
         content: content,
         expectedVersion: Int64(expectedVersion),
-        clientOperationId: 'edit_${DateTime.now().microsecondsSinceEpoch}',
+        clientOperationId: newClientOperationId(),
       ),
     );
     return _chatMessageFromProto(response.event.message);
@@ -639,7 +642,7 @@ class SyncTvRoomMediaDomainService {
         messageId: messageId,
         expectedVersion: Int64(expectedVersion),
         reason: reason,
-        clientOperationId: 'delete_${DateTime.now().microsecondsSinceEpoch}',
+        clientOperationId: newClientOperationId(),
       ),
     );
     return _chatMessageFromProto(response.event.message);
@@ -1485,10 +1488,11 @@ class SyncTvRoomMediaDomainService {
     String? subPath,
     String? playlistId,
   }) async {
+    final clientOperationId = newClientOperationId();
     if (entryId.isEmpty) {
       final state = await _api.room.stopPlayback(
         roomId,
-        client.StopPlaybackRequest(),
+        client.StopPlaybackRequest(clientOperationId: clientOperationId),
       );
       return _playbackStatusFromState(state);
     }
@@ -1505,6 +1509,7 @@ class SyncTvRoomMediaDomainService {
             ? entryId
             : '',
         target: target,
+        clientOperationId: clientOperationId,
       ),
     );
     final current = await getPlaybackStatus(roomId);
@@ -1661,7 +1666,7 @@ class SyncTvRoomMediaDomainService {
       id: message.id,
       roomId: message.roomId,
       userId: message.userId,
-      username: message.username,
+      username: message.hasUsername() ? message.username : null,
       content: message.content,
       timestamp: message.timestamp.toInt(),
       messageType: message.messageType.value,

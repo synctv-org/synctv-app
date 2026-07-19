@@ -7,6 +7,7 @@ import 'package:synctv_app/models/playback_client_profile.dart';
 import 'package:synctv_app/models/realtime_event_log.dart';
 import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/room_media_models.dart';
+import 'package:synctv_app/models/chat_message_selection.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/services/synctv_clock.dart';
@@ -63,11 +64,13 @@ class RoomRealtimeError {
     required this.message,
     required this.code,
     required this.detail,
+    this.clientOperationId = '',
   });
 
   final String message;
   final int code;
   final String detail;
+  final String clientOperationId;
 
   bool get isConflict => code == 2003;
 }
@@ -137,7 +140,7 @@ class RoomRealtimeMessage {
     this.chatId = '',
     this.chatContent = '',
     this.senderUserId = '',
-    this.senderUsername = '',
+    this.senderUsername,
     this.timestampMillis = 0,
     this.images = const [],
     this.reactions = const [],
@@ -177,7 +180,7 @@ class RoomRealtimeMessage {
   final String chatId;
   final String chatContent;
   final String senderUserId;
-  final String senderUsername;
+  final String? senderUsername;
   final int timestampMillis;
   final List<StoredImageInfo> images;
   final List<ChatReactionSummaryInfo> reactions;
@@ -250,13 +253,18 @@ class RoomRealtimeChatEntry {
     this.pin,
   });
 
-  factory RoomRealtimeChatEntry.fromMessage(RoomRealtimeMessage message) {
+  factory RoomRealtimeChatEntry.fromMessage(
+    RoomRealtimeMessage message, {
+    String missingUsername = 'Deleted user',
+  }) {
     return RoomRealtimeChatEntry(
       id: message.chatId,
       userId: message.senderUserId,
-      username: message.senderUsername.isEmpty
-          ? 'Unknown'
-          : message.senderUsername,
+      username: chatMessageDisplayUsername(
+        messageType: message.chatMessageType,
+        username: message.senderUsername,
+        missingUsername: missingUsername,
+      ),
       content: message.chatContent,
       images: message.images,
       reactions: message.reactions,
@@ -273,11 +281,18 @@ class RoomRealtimeChatEntry {
     );
   }
 
-  factory RoomRealtimeChatEntry.fromHistory(RoomChatMessageInfo message) {
+  factory RoomRealtimeChatEntry.fromHistory(
+    RoomChatMessageInfo message, {
+    String missingUsername = 'Deleted user',
+  }) {
     return RoomRealtimeChatEntry(
       id: message.id,
       userId: message.userId,
-      username: message.username.isEmpty ? 'Unknown' : message.username,
+      username: chatMessageDisplayUsername(
+        messageType: message.messageType,
+        username: message.username,
+        missingUsername: missingUsername,
+      ),
       content: message.content,
       images: message.images,
       reactions: message.reactions,
@@ -356,6 +371,26 @@ class RoomRealtimeChatEntry {
       pin: clearPin ? null : pin ?? this.pin,
     );
   }
+}
+
+String chatMessageDisplayUsername({
+  required int messageType,
+  String? username,
+  String missingUsername = 'Deleted user',
+}) {
+  final type = client_enum.ChatMessageType.valueOf(messageType);
+  if (type ==
+          client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED ||
+      type ==
+          client_enum
+              .ChatMessageType
+              .CHAT_MESSAGE_TYPE_SYSTEM_PLAYBACK_CHANGED) {
+    return 'SyncTV';
+  }
+  final normalized = username?.trim();
+  return normalized == null || normalized.isEmpty
+      ? missingUsername
+      : normalized;
 }
 
 extension RoomRealtimeChatEntries on List<RoomRealtimeChatEntry> {
@@ -659,6 +694,8 @@ class RoomRealtimeCodec {
     String? expectedMediaId,
     String? expectedPlaylistId,
     String? expectedTargetHash,
+    String? clientOperationId,
+    int? clientTimeMillis,
   }) {
     final update = client.UpdatePlaybackStateRequest(
       type: switch (action) {
@@ -683,6 +720,10 @@ class RoomRealtimeCodec {
     if (expectedTargetHash != null) {
       update.expectedTargetHash = expectedTargetHash;
     }
+    if (clientOperationId != null) update.clientOperationId = clientOperationId;
+    if (clientTimeMillis != null) {
+      update.clientTimeMillis = Int64(clientTimeMillis);
+    }
     return client.ClientMessage(playbackStateUpdate: update);
   }
 
@@ -695,6 +736,8 @@ class RoomRealtimeCodec {
     String? expectedMediaId,
     String? expectedPlaylistId,
     String? expectedTargetHash,
+    String? clientOperationId,
+    int? clientTimeMillis,
   }) {
     return buildPlaybackStateUpdateMessage(
       action,
@@ -705,6 +748,8 @@ class RoomRealtimeCodec {
       expectedMediaId: expectedMediaId,
       expectedPlaylistId: expectedPlaylistId,
       expectedTargetHash: expectedTargetHash,
+      clientOperationId: clientOperationId,
+      clientTimeMillis: clientTimeMillis,
     ).writeToBuffer();
   }
 
@@ -714,6 +759,8 @@ class RoomRealtimeCodec {
     bool? isPlaying,
     double? position,
     double? playbackRate,
+    String? clientOperationId,
+    int? clientTimeMillis,
   }) {
     final status = currentStatus;
     return buildPlaybackStateUpdateMessage(
@@ -724,6 +771,8 @@ class RoomRealtimeCodec {
       expectedMediaId: status?.playingMediaId,
       expectedPlaylistId: status?.playingPlaylistId,
       expectedTargetHash: status?.targetHash,
+      clientOperationId: clientOperationId,
+      clientTimeMillis: clientTimeMillis,
     );
   }
 
@@ -916,10 +965,7 @@ class RoomRealtimeCodec {
           client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
       chatEvents: client.ObserveChatEvents(
         afterEventSequence: _watchSequence(cursor),
-        includeMessageTypes: const [
-          client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_USER,
-          client_enum.ChatMessageType.CHAT_MESSAGE_TYPE_SYSTEM_MEMBER_JOINED,
-        ],
+        includeMessageTypes: chatTimelineMessageTypes,
       ),
     );
   }
@@ -1044,6 +1090,7 @@ class RoomRealtimeCodec {
             message: message.error.message,
             code: message.error.code,
             detail: message.error.detail,
+            clientOperationId: message.error.clientOperationId,
           ),
         );
       case client.ServerMessage_Message.resourceEvent:
@@ -1063,6 +1110,8 @@ class RoomRealtimeCodec {
             message: message.resourceObserveError.error.message,
             code: message.resourceObserveError.error.code,
             detail: message.resourceObserveError.error.detail,
+            clientOperationId:
+                message.resourceObserveError.error.clientOperationId,
           ),
         );
       default:
@@ -1100,7 +1149,7 @@ class RoomRealtimeCodec {
       chatContent: chat.content,
       timestampMillis: chat.timestamp.toInt() * 1000,
       senderUserId: chat.userId,
-      senderUsername: chat.username,
+      senderUsername: chat.hasUsername() ? chat.username : null,
       chatEventId: eventId,
       chatEventKind: eventKind,
       chatDeleted:
@@ -1362,7 +1411,9 @@ class RoomRealtimeCodec {
       chatContent: event.message.content,
       timestampMillis: event.occurredAt.toInt() * 1000,
       senderUserId: event.message.userId,
-      senderUsername: event.message.username,
+      senderUsername: event.message.hasUsername()
+          ? event.message.username
+          : null,
       chatPinEvent: ChatPinEventInfo(
         eventId: event.eventId,
         roomId: event.roomId,
@@ -1384,7 +1435,7 @@ class RoomRealtimeCodec {
       id: message.id,
       roomId: message.roomId,
       userId: message.userId,
-      username: message.username,
+      username: message.hasUsername() ? message.username : null,
       content: message.content,
       timestamp: message.timestamp.toInt(),
       messageType: message.messageType.value,
@@ -1501,6 +1552,7 @@ class RoomRealtimeCodec {
       playingPlaylistId: state.playingPlaylistId,
       targetHash: state.targetHash,
       historyCursorId: state.historyCursorId,
+      clientOperationId: state.clientOperationId,
     );
   }
 

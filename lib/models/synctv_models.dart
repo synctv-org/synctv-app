@@ -952,6 +952,7 @@ class SyncTvPlaybackStatus {
   final String playingPlaylistId;
   final String targetHash;
   final String historyCursorId;
+  final String clientOperationId;
 
   SyncTvPlaybackStatus({
     this.entry,
@@ -964,6 +965,7 @@ class SyncTvPlaybackStatus {
     this.playingPlaylistId = '',
     this.targetHash = '',
     this.historyCursorId = '',
+    this.clientOperationId = '',
   });
 
   double derivedCurrentTime({DateTime? now}) {
@@ -992,6 +994,7 @@ class SyncTvPlaybackStatus {
     String? playingPlaylistId,
     String? targetHash,
     String? historyCursorId,
+    String? clientOperationId,
   }) {
     return SyncTvPlaybackStatus(
       entry: entry ?? this.entry,
@@ -1004,6 +1007,7 @@ class SyncTvPlaybackStatus {
       playingPlaylistId: playingPlaylistId ?? this.playingPlaylistId,
       targetHash: targetHash ?? this.targetHash,
       historyCursorId: historyCursorId ?? this.historyCursorId,
+      clientOperationId: clientOperationId ?? this.clientOperationId,
     );
   }
 }

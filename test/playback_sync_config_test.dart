@@ -82,7 +82,6 @@ void main() {
         playingPlaylistId: 'playlist_public',
         targetHash: 'target_hash',
       ),
-      isSyncing: false,
       isLive: false,
       boundPosition: (position) => position.clamp(0.0, 10.0).toDouble(),
     );
@@ -126,10 +125,9 @@ void main() {
     expect(speed.playbackStateUpdate.playing, isTrue);
   });
 
-  test('programmatic playback sync suppresses realtime update messages', () {
+  test('explicit playback controls remain reportable during local sync', () {
     final reporter = PlaybackControlReporter(
       currentStatus: SyncTvPlaybackStatus(),
-      isSyncing: true,
       isLive: false,
       boundPosition: (position) => position,
     );
@@ -143,19 +141,18 @@ void main() {
 
     expect(
       reporter.playbackStateChanged(value: value, isPlaying: false),
-      isNull,
+      isNotNull,
     );
     expect(
       reporter.seek(value: value, position: const Duration(seconds: 8)),
-      isNull,
+      isNotNull,
     );
-    expect(reporter.playbackSpeedChanged(value: value, speed: 1.25), isNull);
+    expect(reporter.playbackSpeedChanged(value: value, speed: 1.25), isNotNull);
   });
 
   test('live playback controls omit progress and suppress seeking', () {
     final reporter = PlaybackControlReporter(
       currentStatus: SyncTvPlaybackStatus(),
-      isSyncing: false,
       isLive: true,
       boundPosition: (position) => position,
     );

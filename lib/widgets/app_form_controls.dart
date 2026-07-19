@@ -608,11 +608,41 @@ class AppSelectableText extends StatelessWidget {
             textWidthBasis: textWidthBasis,
             textHeightBehavior: textHeightBehavior,
             onSelectionChanged: onSelectionChanged,
+            contextMenuBuilder: _buildCompactTextSelectionToolbar,
           ),
         ),
       ),
     );
   }
+}
+
+Widget _buildCompactTextSelectionToolbar(
+  BuildContext context,
+  EditableTextState editableTextState,
+) {
+  final buttonItems = editableTextState.contextMenuButtonItems;
+  if (buttonItems.isEmpty) return const SizedBox.shrink();
+  final anchors = editableTextState.contextMenuAnchors;
+  return TextSelectionToolbar(
+    anchorAbove: anchors.primaryAnchor,
+    anchorBelow: anchors.secondaryAnchor ?? anchors.primaryAnchor,
+    children: [
+      for (var index = 0; index < buttonItems.length; index++)
+        TextSelectionToolbarTextButton(
+          padding: TextSelectionToolbarTextButton.getPadding(
+            index,
+            buttonItems.length,
+          ),
+          onPressed: buttonItems[index].onPressed,
+          child: Text(
+            AdaptiveTextSelectionToolbar.getButtonLabel(
+              context,
+              buttonItems[index],
+            ),
+          ),
+        ),
+    ],
+  );
 }
 
 class AppTextField extends StatefulWidget {
@@ -1385,6 +1415,8 @@ class AppOverlayActionButton extends StatelessWidget {
 class AppSlider extends StatelessWidget {
   final double value;
   final ValueChanged<double>? onChanged;
+  final ValueChanged<double>? onChangeStart;
+  final ValueChanged<double>? onChangeEnd;
   final double min;
   final double max;
   final int? divisions;
@@ -1397,6 +1429,8 @@ class AppSlider extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
+    this.onChangeStart,
+    this.onChangeEnd,
     this.min = 0,
     this.max = 1,
     this.divisions,
@@ -1418,6 +1452,8 @@ class AppSlider extends StatelessWidget {
       inactiveColor: inactiveColor,
       thumbColor: thumbColor,
       onChanged: onChanged,
+      onChangeStart: onChangeStart,
+      onChangeEnd: onChangeEnd,
     );
   }
 }

@@ -5645,7 +5645,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     bool isDark,
   ) {
     final scheme = theme.colorScheme;
-    final title = message.username.isEmpty ? message.userId : message.username;
+    final title = chatMessageDisplayUsername(
+      messageType: message.messageType,
+      username: message.username,
+      missingUsername: context.l10n.deletedUser,
+    );
     final isMine =
         _currentUserId.isNotEmpty && message.userId == _currentUserId;
     final receipt = _chatReceiptCache[message.id];
@@ -5747,7 +5751,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
                           const SizedBox(height: 7),
                         ],
                         if (content.isNotEmpty)
-                          Text(
+                          AppSelectableText(
                             content,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               height: 1.32,
@@ -5875,7 +5879,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     }
     final title = quoted == null
         ? context.l10n.quotedMessage
-        : (quoted.username.isEmpty ? quoted.userId : quoted.username);
+        : chatMessageDisplayUsername(
+            messageType: quoted.messageType,
+            username: quoted.username,
+            missingUsername: context.l10n.deletedUser,
+          );
     final preview = quoted == null
         ? context.l10n.tapToViewContext
         : quoted.isDeleted
