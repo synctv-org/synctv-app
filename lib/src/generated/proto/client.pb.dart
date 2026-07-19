@@ -3335,14 +3335,12 @@ class ChatPlaybackChangedMetadata extends $pb.GeneratedMessage {
     ChatPlaybackMetadata? to,
     PlaybackChangeReason? reason,
     $core.String? actorUserId,
-    $core.String? actorUsername,
   }) {
     final result = create();
     if (from != null) result.from = from;
     if (to != null) result.to = to;
     if (reason != null) result.reason = reason;
     if (actorUserId != null) result.actorUserId = actorUserId;
-    if (actorUsername != null) result.actorUsername = actorUsername;
     return result;
   }
 
@@ -3366,7 +3364,6 @@ class ChatPlaybackChangedMetadata extends $pb.GeneratedMessage {
     ..aE<PlaybackChangeReason>(3, _omitFieldNames ? '' : 'reason',
         enumValues: PlaybackChangeReason.values)
     ..aOS(4, _omitFieldNames ? '' : 'actorUserId')
-    ..aOS(5, _omitFieldNames ? '' : 'actorUsername')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3430,15 +3427,6 @@ class ChatPlaybackChangedMetadata extends $pb.GeneratedMessage {
   $core.bool hasActorUserId() => $_has(3);
   @$pb.TagNumber(4)
   void clearActorUserId() => $_clearField(4);
-
-  @$pb.TagNumber(5)
-  $core.String get actorUsername => $_getSZ(4);
-  @$pb.TagNumber(5)
-  set actorUsername($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasActorUsername() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearActorUsername() => $_clearField(5);
 }
 
 enum ChatMetadata_Metadata { user, memberJoined, playbackChanged, notSet }

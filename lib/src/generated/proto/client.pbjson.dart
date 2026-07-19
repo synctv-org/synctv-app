@@ -1845,7 +1845,6 @@ const ChatPlaybackChangedMetadata$json = {
       '10': 'reason'
     },
     {'1': 'actor_user_id', '3': 4, '4': 1, '5': 9, '10': 'actorUserId'},
-    {'1': 'actor_username', '3': 5, '4': 1, '5': 9, '10': 'actorUsername'},
   ],
 };
 
@@ -1855,7 +1854,7 @@ final $typed_data.Uint8List chatPlaybackChangedMetadataDescriptor = $convert.bas
     'llbnQuQ2hhdFBsYXliYWNrTWV0YWRhdGFSBGZyb20SMwoCdG8YAiABKAsyIy5zeW5jdHYuY2xp'
     'ZW50LkNoYXRQbGF5YmFja01ldGFkYXRhUgJ0bxI7CgZyZWFzb24YAyABKA4yIy5zeW5jdHYuY2'
     'xpZW50LlBsYXliYWNrQ2hhbmdlUmVhc29uUgZyZWFzb24SIgoNYWN0b3JfdXNlcl9pZBgEIAEo'
-    'CVILYWN0b3JVc2VySWQSJQoOYWN0b3JfdXNlcm5hbWUYBSABKAlSDWFjdG9yVXNlcm5hbWU=');
+    'CVILYWN0b3JVc2VySWQ=');
 
 @$core.Deprecated('Use chatMetadataDescriptor instead')
 const ChatMetadata$json = {
