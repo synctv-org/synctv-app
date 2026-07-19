@@ -2006,6 +2006,12 @@ abstract class AppLocalizations {
   /// **'Fullscreen'**
   String get fullscreen;
 
+  /// No description provided for @pictureInPicture.
+  ///
+  /// In en, this message translates to:
+  /// **'Picture in picture'**
+  String get pictureInPicture;
+
   /// No description provided for @unknown.
   ///
   /// In en, this message translates to:

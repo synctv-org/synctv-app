@@ -53,6 +53,38 @@ void main() {
     expect(subtitleDisplayLabel('sub_2', const {}), 'sub_2');
   });
 
+  test('live playback position includes elapsed time without a duration', () {
+    expect(
+      playbackPositionLabel(
+        isLive: true,
+        position: const Duration(hours: 1, minutes: 2, seconds: 3),
+        liveLabel: 'Live',
+      ),
+      'Live · 01:02:03',
+    );
+  });
+
+  testWidgets('picture-in-picture control invokes its callback', (
+    tester,
+  ) async {
+    var invocationCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PictureInPictureControl(
+            tooltip: 'Picture in picture',
+            onPressed: () => invocationCount++,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('picture_in_picture_button')));
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(invocationCount, 1);
+  });
+
   testWidgets('playback navigation invokes previous and next callbacks', (
     tester,
   ) async {

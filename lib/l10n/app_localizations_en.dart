@@ -1166,6 +1166,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullscreen => 'Fullscreen';
 
   @override
+  String get pictureInPicture => 'Picture in picture';
+
+  @override
   String get unknown => 'Unknown';
 
   @override

@@ -14,6 +14,7 @@ import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/services/realtime_event_log_preferences.dart';
+import 'package:synctv_app/services/picture_in_picture_service.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/services/room_realtime_connection.dart';
 import 'package:synctv_app/utils/message_utils.dart';
@@ -88,6 +89,8 @@ class _RoomScreenState extends State<RoomScreen>
   String? _highlightedChatMessageId;
   Timer? _syncTimer;
   Timer? _diagnosticsTimer;
+  Duration? _serverLatencySnapshot;
+  double? _playbackDeviationSnapshot;
   Timer? _chatHighlightTimer;
   SyncTvPlaybackStatus? _currentStatus;
   RoomRealtimeConnection? _channel;
@@ -107,6 +110,9 @@ class _RoomScreenState extends State<RoomScreen>
   bool _isLoadingMediaEntries = true;
   bool _isVideoLoading = false;
   bool _playbackNavigationInFlight = false;
+  final PictureInPictureService _pictureInPicture =
+      PictureInPictureService.instance;
+  bool _pictureInPictureAvailable = false;
   String? _videoError;
   String? _roomSessionError;
   int _videoInitGeneration = 0;
@@ -260,7 +266,21 @@ class _RoomScreenState extends State<RoomScreen>
 
     _mediaEntryScrollController.addListener(_onMediaEntryScroll);
     _startDiagnosticsTimers();
+    unawaited(_initializePictureInPicture());
     _joinRoom();
+  }
+
+  Future<void> _initializePictureInPicture() async {
+    final available = await _pictureInPicture.initialize();
+    if (mounted) {
+      setState(() => _pictureInPictureAvailable = available);
+    }
+  }
+
+  Future<void> _enterPictureInPicture() async {
+    final controller = _videoPlayerController;
+    if (controller == null || !controller.value.isInitialized) return;
+    await _pictureInPicture.enter(aspectRatio: controller.value.aspectRatio);
   }
 
   void _startDiagnosticsTimers() {
@@ -268,13 +288,16 @@ class _RoomScreenState extends State<RoomScreen>
     _syncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       unawaited(_syncRoomServerTime());
     });
-    _diagnosticsTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+    _samplePlaybackDiagnostics();
+    _diagnosticsTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (!mounted) return;
-      if (_currentStatus?.entry != null &&
-          _videoPlayerController?.value.isInitialized == true) {
-        setState(() {});
-      }
+      setState(_samplePlaybackDiagnostics);
     });
+  }
+
+  void _samplePlaybackDiagnostics() {
+    _serverLatencySnapshot = SyncedClock.estimatedLatency;
+    _playbackDeviationSnapshot = _playbackDeviationSeconds();
   }
 
   Future<void> _syncRoomServerTime() async {
@@ -1323,7 +1346,7 @@ class _RoomScreenState extends State<RoomScreen>
     required bool compact,
     bool videoStyle = false,
   }) {
-    final latency = SyncedClock.estimatedLatency;
+    final latency = _serverLatencySnapshot;
     final color = _serverLatencyColor(latency, videoStyle: videoStyle);
     final background = videoStyle
         ? Colors.white.withValues(alpha: 0.12)
@@ -1352,7 +1375,7 @@ class _RoomScreenState extends State<RoomScreen>
     required bool compact,
     bool videoStyle = false,
   }) {
-    final deviation = _playbackDeviationSeconds();
+    final deviation = _playbackDeviationSnapshot;
     if (deviation == null) return null;
     final color = _playbackDeviationColor(deviation, videoStyle: videoStyle);
     final background = videoStyle
@@ -1881,6 +1904,7 @@ class _RoomScreenState extends State<RoomScreen>
     _videoPlayerController?.removeListener(_videoListener);
     _videoPlayerController?.dispose();
     _videoPlayerController = null;
+    _playbackDeviationSnapshot = null;
   }
 
   @override
@@ -2097,6 +2121,10 @@ class _RoomScreenState extends State<RoomScreen>
                             ? () =>
                                   unawaited(_navigatePlayback(previous: false))
                             : null,
+                        onEnterPictureInPicture: _pictureInPictureAvailable
+                            ? () => unawaited(_enterPictureInPicture())
+                            : null,
+                        pictureInPictureActive: _pictureInPicture.active,
                         onUserPlaybackStateChanged:
                             _handleUserPlaybackStateChanged,
                         onUserSeek: _handleUserSeek,
@@ -2450,6 +2478,10 @@ class _RoomScreenState extends State<RoomScreen>
           onNext: _canNavigatePlayback
               ? () => unawaited(_navigatePlayback(previous: false))
               : null,
+          onEnterPictureInPicture: _pictureInPictureAvailable
+              ? () => unawaited(_enterPictureInPicture())
+              : null,
+          pictureInPictureActive: _pictureInPicture.active,
           onUserPlaybackStateChanged: _handleUserPlaybackStateChanged,
           onUserSeek: _handleUserSeek,
           onUserPlaybackSpeedChanged: _handleUserPlaybackSpeedChanged,

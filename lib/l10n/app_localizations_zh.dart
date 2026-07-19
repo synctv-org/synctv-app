@@ -1059,6 +1059,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fullscreen => '全屏';
 
   @override
+  String get pictureInPicture => '画中画';
+
+  @override
   String get unknown => '未知';
 
   @override

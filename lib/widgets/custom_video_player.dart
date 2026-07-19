@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
@@ -324,6 +325,8 @@ class CustomVideoPlayer extends StatefulWidget {
   final VoidCallback? onSync;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
+  final VoidCallback? onEnterPictureInPicture;
+  final ValueListenable<bool>? pictureInPictureActive;
   final ValueChanged<bool>? onUserPlaybackStateChanged;
   final ValueChanged<Duration>? onUserSeek;
   final ValueChanged<double>? onUserPlaybackSpeedChanged;
@@ -346,6 +349,8 @@ class CustomVideoPlayer extends StatefulWidget {
     this.onSync,
     this.onPrevious,
     this.onNext,
+    this.onEnterPictureInPicture,
+    this.pictureInPictureActive,
     this.onUserPlaybackStateChanged,
     this.onUserSeek,
     this.onUserPlaybackSpeedChanged,
@@ -408,6 +413,31 @@ class PlaybackNavigationControls extends StatelessWidget {
   }
 }
 
+class PictureInPictureControl extends StatelessWidget {
+  const PictureInPictureControl({
+    super.key,
+    required this.tooltip,
+    required this.onPressed,
+    this.iconSize = 20,
+  });
+
+  final String tooltip;
+  final VoidCallback onPressed;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppIconButton(
+      key: const Key('picture_in_picture_button'),
+      icon: Icons.picture_in_picture_alt_rounded,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+      iconSize: iconSize,
+    );
+  }
+}
+
 enum VideoPlayerInteractionMode { mobile, desktop }
 
 VideoPlayerInteractionMode videoPlayerInteractionModeForPlatform(
@@ -440,6 +470,25 @@ String subtitleDisplayLabel(String key, dynamic value) {
     if (language.isNotEmpty) return language;
   }
   return key;
+}
+
+String formatPlayerDuration(Duration duration) {
+  String twoDigits(int value) => value.toString().padLeft(2, '0');
+  final minutes = twoDigits(duration.inMinutes.remainder(60));
+  final seconds = twoDigits(duration.inSeconds.remainder(60));
+  if (duration.inHours > 0) {
+    return '${twoDigits(duration.inHours)}:$minutes:$seconds';
+  }
+  return '$minutes:$seconds';
+}
+
+String playbackPositionLabel({
+  required bool isLive,
+  required Duration position,
+  required String liveLabel,
+}) {
+  final formattedPosition = formatPlayerDuration(position);
+  return isLive ? '$liveLabel · $formattedPosition' : formattedPosition;
 }
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer>
@@ -1322,13 +1371,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    if (duration.inHours > 0) {
-      return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
-    }
-    return "$twoDigitMinutes:$twoDigitSeconds";
+    return formatPlayerDuration(duration);
   }
 
   void _rememberAudibleVolume() {
@@ -1658,7 +1701,32 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   @override
   Widget build(BuildContext context) {
+    final pictureInPictureActive = widget.pictureInPictureActive;
+    if (pictureInPictureActive != null) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: pictureInPictureActive,
+        builder: (context, active, _) => _buildPlayer(context, active),
+      );
+    }
+    return _buildPlayer(context, false);
+  }
+
+  Widget _buildPlayer(BuildContext context, bool pictureInPictureActive) {
     final videoValue = widget.controller.value;
+
+    if (pictureInPictureActive) {
+      return ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: AspectRatio(
+            aspectRatio: videoValue.aspectRatio > 0
+                ? videoValue.aspectRatio
+                : 16 / 9,
+            child: VideoPlayer(widget.controller),
+          ),
+        ),
+      );
+    }
 
     return AppScaffold(
       backgroundColor: Colors.black,
@@ -1920,11 +1988,11 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                           SizedBox(width: horizontalGap),
                                           if (showTime) ...[
                                             Text(
-                                              widget.isLive
-                                                  ? context.l10n.live
-                                                  : _formatDuration(
-                                                      videoValue.position,
-                                                    ),
+                                              playbackPositionLabel(
+                                                isLive: widget.isLive,
+                                                position: videoValue.position,
+                                                liveLabel: context.l10n.live,
+                                              ),
                                               style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 12,
@@ -2297,6 +2365,25 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             ),
                                           if (widget.onToggleFullScreen !=
                                               null) ...[
+                                            if (widget
+                                                    .onEnterPictureInPicture !=
+                                                null) ...[
+                                              SizedBox(
+                                                width: widget.isFullScreen
+                                                    ? 0
+                                                    : 4,
+                                              ),
+                                              PictureInPictureControl(
+                                                tooltip: context
+                                                    .l10n
+                                                    .pictureInPicture,
+                                                onPressed: widget
+                                                    .onEnterPictureInPicture!,
+                                                iconSize: widget.isFullScreen
+                                                    ? 24
+                                                    : iconSize,
+                                              ),
+                                            ],
                                             SizedBox(
                                               width: widget.isFullScreen
                                                   ? 0
