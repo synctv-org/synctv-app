@@ -10,7 +10,7 @@ void main() {
     () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       final requestCounts = <String, int>{};
-      final responses = <HttpResponse>[];
+      final firstStreamReady = Completer<void>();
       final serverSubscription = server.listen((request) async {
         requestCounts.update(
           request.uri.path,
@@ -24,22 +24,24 @@ void main() {
         );
         request.response.write(': connected\n\n');
         await request.response.flush();
-        responses.add(request.response);
+        if (request.uri.path == '/first') {
+          firstStreamReady.complete();
+          Timer(const Duration(milliseconds: 500), () {
+            unawaited(request.response.close());
+          });
+        }
       });
       final controller = DanmakuController();
       addTearDown(() async {
         controller.dispose();
-        for (final response in responses) {
-          await response.close();
-        }
-        await serverSubscription.cancel();
         await server.close(force: true);
+        await serverSubscription.cancel();
       });
 
       controller.updateConfig(
         streamDanmakuUrl: 'http://127.0.0.1:${server.port}/first',
       );
-      await _waitFor(() => requestCounts['/first'] == 1);
+      await firstStreamReady.future.timeout(const Duration(seconds: 2));
 
       controller.updateConfig(
         streamDanmakuUrl: 'http://127.0.0.1:${server.port}/second',

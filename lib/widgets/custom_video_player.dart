@@ -208,10 +208,14 @@ class DanmakuController extends ChangeNotifier {
   Future<void> _replaceDanmakuStream() async {
     final generation = ++_streamGeneration;
     _reconnectTimer?.cancel();
-    _sseClient?.close();
-    await _sseSubscription?.cancel();
+    final previousClient = _sseClient;
+    final previousSubscription = _sseSubscription;
     _sseSubscription = null;
     _sseClient = null;
+    previousClient?.close();
+    if (previousSubscription != null) {
+      unawaited(previousSubscription.cancel());
+    }
 
     if (_disposed || _streamDanmakuUrl?.isNotEmpty != true) return;
     await _connectDanmakuStream(generation);
@@ -246,18 +250,20 @@ class DanmakuController extends ChangeNotifier {
               },
               onError: (e) {
                 if (generation != _streamGeneration || _disposed) return;
+                _releaseDanmakuStream(client);
                 debugPrint('SSE Error: $e');
                 _scheduleReconnect(generation);
               },
               onDone: () {
                 if (generation != _streamGeneration || _disposed) return;
+                _releaseDanmakuStream(client);
                 debugPrint('SSE Done');
                 _scheduleReconnect(generation);
               },
             );
       } else {
         debugPrint('SSE Failed: ${response.statusCode}');
-        client.close();
+        _releaseDanmakuStream(client);
         if (response.statusCode == 401 || response.statusCode == 403) {
           onStreamAccessExpired?.call();
           return;
@@ -266,8 +272,17 @@ class DanmakuController extends ChangeNotifier {
       }
     } catch (e) {
       if (generation != _streamGeneration || _disposed) return;
+      _releaseDanmakuStream(client);
       debugPrint('SSE Connection failed: $e');
       _scheduleReconnect(generation);
+    }
+  }
+
+  void _releaseDanmakuStream(http.Client client) {
+    client.close();
+    if (identical(_sseClient, client)) {
+      _sseClient = null;
+      _sseSubscription = null;
     }
   }
 

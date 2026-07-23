@@ -40,7 +40,9 @@ jobs:
       - name: Install protobuf compiler
         run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends protobuf-compiler
+          sudo apt-get install --yes --no-install-recommends \
+            libprotobuf-dev \
+            protobuf-compiler
           dart pub global activate protoc_plugin 25.0.0
 
       - name: Check Dart formatting
