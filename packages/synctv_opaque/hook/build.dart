@@ -233,6 +233,8 @@ String _rustTarget(CodeConfig code) {
       return 'aarch64-unknown-linux-gnu';
     case (OS.windows, Architecture.x64):
       return 'x86_64-pc-windows-msvc';
+    case (OS.windows, Architecture.arm64):
+      return 'aarch64-pc-windows-msvc';
     case (OS.android, Architecture.arm64):
       return 'aarch64-linux-android';
     case (OS.android, Architecture.arm):
