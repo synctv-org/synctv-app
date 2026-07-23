@@ -31,13 +31,12 @@ void main(List<String> args) async {
     ];
 
     final env = Map<String, String>.from(Platform.environment);
-    if (code.targetOS == OS.macOS || code.targetOS == OS.iOS) {
-      env['IPHONEOS_DEPLOYMENT_TARGET'] = code.targetOS == OS.iOS
-          ? code.iOS.targetVersion.toString()
-          : '';
-      env['MACOSX_DEPLOYMENT_TARGET'] = code.targetOS == OS.macOS
-          ? code.macOS.targetVersion.toString()
-          : '';
+    if (code.targetOS == OS.iOS) {
+      env['IPHONEOS_DEPLOYMENT_TARGET'] = code.iOS.targetVersion.toString();
+      env.remove('MACOSX_DEPLOYMENT_TARGET');
+    } else if (code.targetOS == OS.macOS) {
+      env['MACOSX_DEPLOYMENT_TARGET'] = code.macOS.targetVersion.toString();
+      env.remove('IPHONEOS_DEPLOYMENT_TARGET');
     }
 
     final result = await Process.run(
