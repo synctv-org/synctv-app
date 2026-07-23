@@ -940,6 +940,20 @@ const RoomSettings$json = {
       '5': 4,
       '10': 'guestRemovedPermissions'
     },
+    {
+      '1': 'voice_chat_enabled',
+      '3': 13,
+      '4': 1,
+      '5': 8,
+      '10': 'voiceChatEnabled'
+    },
+    {
+      '1': 'p2p_media_enabled',
+      '3': 14,
+      '4': 1,
+      '5': 8,
+      '10': 'p2pMediaEnabled'
+    },
   ],
 };
 
@@ -956,7 +970,8 @@ final $typed_data.Uint8List roomSettingsDescriptor = $convert.base64Decode(
     'PAoabWVtYmVyX3JlbW92ZWRfcGVybWlzc2lvbnMYCiABKARSGG1lbWJlclJlbW92ZWRQZXJtaX'
     'NzaW9ucxI2ChdndWVzdF9hZGRlZF9wZXJtaXNzaW9ucxgLIAEoBFIVZ3Vlc3RBZGRlZFBlcm1p'
     'c3Npb25zEjoKGWd1ZXN0X3JlbW92ZWRfcGVybWlzc2lvbnMYDCABKARSF2d1ZXN0UmVtb3ZlZF'
-    'Blcm1pc3Npb25z');
+    'Blcm1pc3Npb25zEiwKEnZvaWNlX2NoYXRfZW5hYmxlZBgNIAEoCFIQdm9pY2VDaGF0RW5hYmxl'
+    'ZBIqChFwMnBfbWVkaWFfZW5hYmxlZBgOIAEoCFIPcDJwTWVkaWFFbmFibGVk');
 
 @$core.Deprecated('Use alistTargetDescriptor instead')
 const AlistTarget$json = {
@@ -4458,6 +4473,24 @@ const RoomSettingsPatch$json = {
       '10': 'guestRemovedPermissions',
       '17': true
     },
+    {
+      '1': 'voice_chat_enabled',
+      '3': 13,
+      '4': 1,
+      '5': 8,
+      '9': 11,
+      '10': 'voiceChatEnabled',
+      '17': true
+    },
+    {
+      '1': 'p2p_media_enabled',
+      '3': 14,
+      '4': 1,
+      '5': 8,
+      '9': 12,
+      '10': 'p2pMediaEnabled',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_allow_guest_join'},
@@ -4471,6 +4504,8 @@ const RoomSettingsPatch$json = {
     {'1': '_member_removed_permissions'},
     {'1': '_guest_added_permissions'},
     {'1': '_guest_removed_permissions'},
+    {'1': '_voice_chat_enabled'},
+    {'1': '_p2p_media_enabled'},
   ],
 };
 
@@ -4488,12 +4523,14 @@ final $typed_data.Uint8List roomSettingsPatchDescriptor = $convert.base64Decode(
     '1iZXJfcmVtb3ZlZF9wZXJtaXNzaW9ucxgKIAEoBEgIUhhtZW1iZXJSZW1vdmVkUGVybWlzc2lv'
     'bnOIAQESOwoXZ3Vlc3RfYWRkZWRfcGVybWlzc2lvbnMYCyABKARICVIVZ3Vlc3RBZGRlZFBlcm'
     '1pc3Npb25ziAEBEj8KGWd1ZXN0X3JlbW92ZWRfcGVybWlzc2lvbnMYDCABKARIClIXZ3Vlc3RS'
-    'ZW1vdmVkUGVybWlzc2lvbnOIAQFCEwoRX2FsbG93X2d1ZXN0X2pvaW5CDgoMX21heF9tZW1iZX'
-    'JzQhMKEV9yZXF1aXJlX2FwcHJvdmFsQhIKEF9hbGxvd19hdXRvX2pvaW5CDwoNX2NoYXRfZW5h'
-    'YmxlZEIaChhfYWRtaW5fYWRkZWRfcGVybWlzc2lvbnNCHAoaX2FkbWluX3JlbW92ZWRfcGVybW'
-    'lzc2lvbnNCGwoZX21lbWJlcl9hZGRlZF9wZXJtaXNzaW9uc0IdChtfbWVtYmVyX3JlbW92ZWRf'
-    'cGVybWlzc2lvbnNCGgoYX2d1ZXN0X2FkZGVkX3Blcm1pc3Npb25zQhwKGl9ndWVzdF9yZW1vdm'
-    'VkX3Blcm1pc3Npb25z');
+    'ZW1vdmVkUGVybWlzc2lvbnOIAQESMQoSdm9pY2VfY2hhdF9lbmFibGVkGA0gASgISAtSEHZvaW'
+    'NlQ2hhdEVuYWJsZWSIAQESLwoRcDJwX21lZGlhX2VuYWJsZWQYDiABKAhIDFIPcDJwTWVkaWFF'
+    'bmFibGVkiAEBQhMKEV9hbGxvd19ndWVzdF9qb2luQg4KDF9tYXhfbWVtYmVyc0ITChFfcmVxdW'
+    'lyZV9hcHByb3ZhbEISChBfYWxsb3dfYXV0b19qb2luQg8KDV9jaGF0X2VuYWJsZWRCGgoYX2Fk'
+    'bWluX2FkZGVkX3Blcm1pc3Npb25zQhwKGl9hZG1pbl9yZW1vdmVkX3Blcm1pc3Npb25zQhsKGV'
+    '9tZW1iZXJfYWRkZWRfcGVybWlzc2lvbnNCHQobX21lbWJlcl9yZW1vdmVkX3Blcm1pc3Npb25z'
+    'QhoKGF9ndWVzdF9hZGRlZF9wZXJtaXNzaW9uc0IcChpfZ3Vlc3RfcmVtb3ZlZF9wZXJtaXNzaW'
+    '9uc0IVChNfdm9pY2VfY2hhdF9lbmFibGVkQhQKEl9wMnBfbWVkaWFfZW5hYmxlZA==');
 
 @$core.Deprecated('Use updateRoomSettingsRequestDescriptor instead')
 const UpdateRoomSettingsRequest$json = {
@@ -5647,18 +5684,16 @@ final $typed_data.Uint8List startPlaybackRequestDescriptor = $convert.base64Deco
     'ChRTdGFydFBsYXliYWNrUmVxdWVzdBIZCghtZWRpYV9pZBgBIAEoCVIHbWVkaWFJZBIfCgtwbG'
     'F5bGlzdF9pZBgCIAEoCVIKcGxheWxpc3RJZBI1CgZ0YXJnZXQYAyABKAsyHS5zeW5jdHYuY2xp'
     'ZW50LlByb3ZpZGVyVGFyZ2V0UgZ0YXJnZXQSPQoTY2xpZW50X29wZXJhdGlvbl9pZBgEIAEoCU'
-    'IIukgFcgOwAQFIAFIRY2xpZW50T3BlcmF0aW9uSWSIAQE6rgS6SKoEGn0KHHN0YXJ0X3BsYXli'
-    'YWNrLnNpbmdsZV90YXJnZXQSK21lZGlhX2lkIGFuZCBwbGF5bGlzdF9pZCBjYW5ub3QgYm90aC'
-    'BiZSBzZXQaMCEodGhpcy5tZWRpYV9pZCAhPSAnJyAmJiB0aGlzLnBsYXlsaXN0X2lkICE9ICcn'
-    'KRqSAQobc3RhcnRfcGxheWJhY2suY2xlYXJfdGFyZ2V0Ei10YXJnZXQgbXVzdCBiZSBvbWl0dG'
-    'VkIHdoZW4gY2xlYXJpbmcgcGxheWJhY2saRCh0aGlzLm1lZGlhX2lkICE9ICcnIHx8IHRoaXMu'
-    'cGxheWxpc3RfaWQgIT0gJycpIHx8ICFoYXModGhpcy50YXJnZXQpGoYBChxzdGFydF9wbGF5Ym'
-    'Fjay5zdGF0aWNfdGFyZ2V0Ejx0YXJnZXQgbXVzdCBiZSBvbWl0dGVkIHdoZW4gc3dpdGNoaW5n'
-    'IHRvIGEgc3RhdGljIG1lZGlhIGl0ZW0aKHRoaXMubWVkaWFfaWQgPT0gJycgfHwgIWhhcyh0aG'
-    'lzLnRhcmdldCkaigEKHnN0YXJ0X3BsYXliYWNrLnBsYXlsaXN0X3RhcmdldBI8dGFyZ2V0IGlz'
-    'IHJlcXVpcmVkIHdoZW4gc3dpdGNoaW5nIHRvIGEgZHluYW1pYyBwbGF5bGlzdCBpdGVtGip0aG'
-    'lzLnBsYXlsaXN0X2lkID09ICcnIHx8IGhhcyh0aGlzLnRhcmdldClCFgoUX2NsaWVudF9vcGVy'
-    'YXRpb25faWQ=');
+    'IIukgFcgOwAQFIAFIRY2xpZW50T3BlcmF0aW9uSWSIAQE6wwO6SL8DGpMBCh1zdGFydF9wbGF5'
+    'YmFjay5keW5hbWljX3RhcmdldBIsdGFyZ2V0IHJlcXVpcmVzIHBsYXlsaXN0X2lkIHdpdGhvdX'
+    'QgbWVkaWFfaWQaRCFoYXModGhpcy50YXJnZXQpIHx8ICh0aGlzLnBsYXlsaXN0X2lkICE9ICcn'
+    'ICYmIHRoaXMubWVkaWFfaWQgPT0gJycpGpIBChtzdGFydF9wbGF5YmFjay5jbGVhcl90YXJnZX'
+    'QSLXRhcmdldCBtdXN0IGJlIG9taXR0ZWQgd2hlbiBjbGVhcmluZyBwbGF5YmFjaxpEKHRoaXMu'
+    'bWVkaWFfaWQgIT0gJycgfHwgdGhpcy5wbGF5bGlzdF9pZCAhPSAnJykgfHwgIWhhcyh0aGlzLn'
+    'RhcmdldCkakQEKHnN0YXJ0X3BsYXliYWNrLnBsYXlsaXN0X3NvdXJjZRIscGxheWxpc3RfaWQg'
+    'd2l0aG91dCBtZWRpYV9pZCByZXF1aXJlcyB0YXJnZXQaQXRoaXMucGxheWxpc3RfaWQgPT0gJy'
+    'cgfHwgdGhpcy5tZWRpYV9pZCAhPSAnJyB8fCBoYXModGhpcy50YXJnZXQpQhYKFF9jbGllbnRf'
+    'b3BlcmF0aW9uX2lk');
 
 @$core.Deprecated('Use stopPlaybackRequestDescriptor instead')
 const StopPlaybackRequest$json = {
@@ -9274,11 +9309,22 @@ const PlaybackMedia$json = {
       '10': 'metadata',
       '17': true
     },
+    {
+      '1': 'p2p_delivery',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.P2pMediaDelivery',
+      '9': 2,
+      '10': 'p2pDelivery',
+      '17': true
+    },
   ],
   '3': [PlaybackMedia_HeadersEntry$json],
   '8': [
     {'1': '_expire_at'},
     {'1': '_metadata'},
+    {'1': '_p2p_delivery'},
   ],
 };
 
@@ -9298,9 +9344,24 @@ final $typed_data.Uint8List playbackMediaDescriptor = $convert.base64Decode(
     'oHaGVhZGVycxgDIAMoCzIpLnN5bmN0di5jbGllbnQuUGxheWJhY2tNZWRpYS5IZWFkZXJzRW50'
     'cnlSB2hlYWRlcnMSFgoGZm9ybWF0GAYgASgJUgZmb3JtYXQSIAoJZXhwaXJlX2F0GAQgASgDSA'
     'BSCGV4cGlyZUF0iAEBEkUKCG1ldGFkYXRhGAUgASgLMiQuc3luY3R2LmNsaWVudC5QbGF5YmFj'
-    'a01lZGlhTWV0YWRhdGFIAVIIbWV0YWRhdGGIAQEaOgoMSGVhZGVyc0VudHJ5EhAKA2tleRgBIA'
-    'EoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAFCDAoKX2V4cGlyZV9hdEILCglfbWV0'
-    'YWRhdGE=');
+    'a01lZGlhTWV0YWRhdGFIAVIIbWV0YWRhdGGIAQESRwoMcDJwX2RlbGl2ZXJ5GAcgASgLMh8uc3'
+    'luY3R2LmNsaWVudC5QMnBNZWRpYURlbGl2ZXJ5SAJSC3AycERlbGl2ZXJ5iAEBGjoKDEhlYWRl'
+    'cnNFbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU6AjgBQgwKCl'
+    '9leHBpcmVfYXRCCwoJX21ldGFkYXRhQg8KDV9wMnBfZGVsaXZlcnk=');
+
+@$core.Deprecated('Use p2pMediaDeliveryDescriptor instead')
+const P2pMediaDelivery$json = {
+  '1': 'P2pMediaDelivery',
+  '2': [
+    {'1': 'swarm_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'swarmId'},
+    {'1': 'swarm_ticket', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'swarmTicket'},
+  ],
+};
+
+/// Descriptor for `P2pMediaDelivery`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List p2pMediaDeliveryDescriptor = $convert.base64Decode(
+    'ChBQMnBNZWRpYURlbGl2ZXJ5EiUKCHN3YXJtX2lkGAEgASgJQgq6SAdyBRABGIABUgdzd2FybU'
+    'lkEi0KDHN3YXJtX3RpY2tldBgCIAEoCUIKukgHcgUQARiAAlILc3dhcm1UaWNrZXQ=');
 
 @$core.Deprecated('Use playbackMediaMetadataDescriptor instead')
 const PlaybackMediaMetadata$json = {
@@ -9483,7 +9544,7 @@ const ClientMessage$json = {
       '3': 7,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRtcCommand',
+      '6': '.synctv.client.WebRTCCommand',
       '9': 0,
       '10': 'webrtc'
     },
@@ -9504,7 +9565,7 @@ final $typed_data.Uint8List clientMessageDescriptor = $convert.base64Decode(
     'BSABKAsyHi5zeW5jdHYuY2xpZW50Lk9ic2VydmVSZXNvdXJjZUgAUg9vYnNlcnZlUmVzb3VyY2'
     'USUQoSdW5vYnNlcnZlX3Jlc291cmNlGAYgASgLMiAuc3luY3R2LmNsaWVudC5Vbm9ic2VydmVS'
     'ZXNvdXJjZUgAUhF1bm9ic2VydmVSZXNvdXJjZRI2CgZ3ZWJydGMYByABKAsyHC5zeW5jdHYuY2'
-    'xpZW50LldlYlJ0Y0NvbW1hbmRIAFIGd2VicnRjQgkKB21lc3NhZ2U=');
+    'xpZW50LldlYlJUQ0NvbW1hbmRIAFIGd2VicnRjQgkKB21lc3NhZ2U=');
 
 @$core.Deprecated('Use observeResourceDescriptor instead')
 const ObserveResource$json = {
@@ -10690,7 +10751,7 @@ const ResourceEvent$json = {
       '3': 13,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRtcEvent',
+      '6': '.synctv.client.WebRTCEvent',
       '9': 0,
       '10': 'webrtcEvent'
     },
@@ -10750,7 +10811,7 @@ final $typed_data.Uint8List resourceEventDescriptor = $convert.base64Decode(
     'bGluZV9jb3VudBgKIAEoCzIaLnN5bmN0di5jbGllbnQuT25saW5lQ291bnRIAFILb25saW5lQ2'
     '91bnQSPwoMb25saW5lX2V2ZW50GAwgASgLMhouc3luY3R2LmNsaWVudC5PbmxpbmVFdmVudEgA'
     'UgtvbmxpbmVFdmVudBI/Cgx3ZWJydGNfZXZlbnQYDSABKAsyGi5zeW5jdHYuY2xpZW50LldlYl'
-    'J0Y0V2ZW50SABSC3dlYnJ0Y0V2ZW50EkUKEHNlbGZfcm9vbV9tZW1iZXIYDiABKAsyGS5zeW5j'
+    'JUQ0V2ZW50SABSC3dlYnJ0Y0V2ZW50EkUKEHNlbGZfcm9vbV9tZW1iZXIYDiABKAsyGS5zeW5j'
     'dHYuY29tbW9uLlJvb21NZW1iZXJIAFIOc2VsZlJvb21NZW1iZXISQwoOY2hhdF9waW5fZXZlbn'
     'QYDyABKAsyGy5zeW5jdHYuY2xpZW50LkNoYXRQaW5FdmVudEgAUgxjaGF0UGluRXZlbnQSVwoQ'
     'cGxheWJhY2tfaGlzdG9yeRgQIAEoCzIqLnN5bmN0di5jbGllbnQuTGlzdFBsYXliYWNrSGlzdG'
@@ -17115,54 +17176,131 @@ final $typed_data.Uint8List confirmPasswordResetResponseDescriptor =
         'ChxDb25maXJtUGFzc3dvcmRSZXNldFJlc3BvbnNlEhgKB21lc3NhZ2UYASABKAlSB21lc3NhZ2'
         'USFwoHdXNlcl9pZBgCIAEoCVIGdXNlcklk');
 
-@$core.Deprecated('Use webRTCOfferDescriptor instead')
-const WebRTCOffer$json = {
-  '1': 'WebRTCOffer',
+@$core.Deprecated('Use webRTCVoiceOfferCommandDescriptor instead')
+const WebRTCVoiceOfferCommand$json = {
+  '1': 'WebRTCVoiceOfferCommand',
   '2': [
     {'1': 'to', '3': 1, '4': 1, '5': 9, '10': 'to'},
-    {'1': 'from', '3': 2, '4': 1, '5': 9, '10': 'from'},
-    {'1': 'data', '3': 3, '4': 1, '5': 9, '10': 'data'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
   ],
 };
 
-/// Descriptor for `WebRTCOffer`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRTCOfferDescriptor = $convert.base64Decode(
-    'CgtXZWJSVENPZmZlchIOCgJ0bxgBIAEoCVICdG8SEgoEZnJvbRgCIAEoCVIEZnJvbRISCgRkYX'
-    'RhGAMgASgJUgRkYXRh');
+/// Descriptor for `WebRTCVoiceOfferCommand`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoiceOfferCommandDescriptor =
+    $convert.base64Decode(
+        'ChdXZWJSVENWb2ljZU9mZmVyQ29tbWFuZBIOCgJ0bxgBIAEoCVICdG8SEgoEZGF0YRgCIAEoCV'
+        'IEZGF0YQ==');
 
-@$core.Deprecated('Use webRTCAnswerDescriptor instead')
-const WebRTCAnswer$json = {
-  '1': 'WebRTCAnswer',
+@$core.Deprecated('Use webRTCVoiceAnswerCommandDescriptor instead')
+const WebRTCVoiceAnswerCommand$json = {
+  '1': 'WebRTCVoiceAnswerCommand',
   '2': [
     {'1': 'to', '3': 1, '4': 1, '5': 9, '10': 'to'},
-    {'1': 'from', '3': 2, '4': 1, '5': 9, '10': 'from'},
-    {'1': 'data', '3': 3, '4': 1, '5': 9, '10': 'data'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
   ],
 };
 
-/// Descriptor for `WebRTCAnswer`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRTCAnswerDescriptor = $convert.base64Decode(
-    'CgxXZWJSVENBbnN3ZXISDgoCdG8YASABKAlSAnRvEhIKBGZyb20YAiABKAlSBGZyb20SEgoEZG'
-    'F0YRgDIAEoCVIEZGF0YQ==');
+/// Descriptor for `WebRTCVoiceAnswerCommand`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoiceAnswerCommandDescriptor =
+    $convert.base64Decode(
+        'ChhXZWJSVENWb2ljZUFuc3dlckNvbW1hbmQSDgoCdG8YASABKAlSAnRvEhIKBGRhdGEYAiABKA'
+        'lSBGRhdGE=');
 
-@$core.Deprecated('Use webRTCIceCandidateDescriptor instead')
-const WebRTCIceCandidate$json = {
-  '1': 'WebRTCIceCandidate',
+@$core.Deprecated('Use webRTCVoiceIceCandidateCommandDescriptor instead')
+const WebRTCVoiceIceCandidateCommand$json = {
+  '1': 'WebRTCVoiceIceCandidateCommand',
   '2': [
     {'1': 'to', '3': 1, '4': 1, '5': 9, '10': 'to'},
-    {'1': 'from', '3': 2, '4': 1, '5': 9, '10': 'from'},
-    {'1': 'data', '3': 3, '4': 1, '5': 9, '10': 'data'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
   ],
 };
 
-/// Descriptor for `WebRTCIceCandidate`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRTCIceCandidateDescriptor = $convert.base64Decode(
-    'ChJXZWJSVENJY2VDYW5kaWRhdGUSDgoCdG8YASABKAlSAnRvEhIKBGZyb20YAiABKAlSBGZyb2'
-    '0SEgoEZGF0YRgDIAEoCVIEZGF0YQ==');
+/// Descriptor for `WebRTCVoiceIceCandidateCommand`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoiceIceCandidateCommandDescriptor =
+    $convert.base64Decode(
+        'Ch5XZWJSVENWb2ljZUljZUNhbmRpZGF0ZUNvbW1hbmQSDgoCdG8YASABKAlSAnRvEhIKBGRhdG'
+        'EYAiABKAlSBGRhdGE=');
 
-@$core.Deprecated('Use webRTCJoinDescriptor instead')
-const WebRTCJoin$json = {
-  '1': 'WebRTCJoin',
+@$core.Deprecated('Use webRTCVoiceOfferDescriptor instead')
+const WebRTCVoiceOffer$json = {
+  '1': 'WebRTCVoiceOffer',
+  '2': [
+    {'1': 'from', '3': 1, '4': 1, '5': 9, '10': 'from'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
+  ],
+};
+
+/// Descriptor for `WebRTCVoiceOffer`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoiceOfferDescriptor = $convert.base64Decode(
+    'ChBXZWJSVENWb2ljZU9mZmVyEhIKBGZyb20YASABKAlSBGZyb20SEgoEZGF0YRgCIAEoCVIEZG'
+    'F0YQ==');
+
+@$core.Deprecated('Use webRTCVoiceAnswerDescriptor instead')
+const WebRTCVoiceAnswer$json = {
+  '1': 'WebRTCVoiceAnswer',
+  '2': [
+    {'1': 'from', '3': 1, '4': 1, '5': 9, '10': 'from'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
+  ],
+};
+
+/// Descriptor for `WebRTCVoiceAnswer`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoiceAnswerDescriptor = $convert.base64Decode(
+    'ChFXZWJSVENWb2ljZUFuc3dlchISCgRmcm9tGAEgASgJUgRmcm9tEhIKBGRhdGEYAiABKAlSBG'
+    'RhdGE=');
+
+@$core.Deprecated('Use webRTCVoiceIceCandidateDescriptor instead')
+const WebRTCVoiceIceCandidate$json = {
+  '1': 'WebRTCVoiceIceCandidate',
+  '2': [
+    {'1': 'from', '3': 1, '4': 1, '5': 9, '10': 'from'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
+  ],
+};
+
+/// Descriptor for `WebRTCVoiceIceCandidate`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoiceIceCandidateDescriptor =
+    $convert.base64Decode(
+        'ChdXZWJSVENWb2ljZUljZUNhbmRpZGF0ZRISCgRmcm9tGAEgASgJUgRmcm9tEhIKBGRhdGEYAi'
+        'ABKAlSBGRhdGE=');
+
+@$core.Deprecated('Use webRTCVoiceJoinCommandDescriptor instead')
+const WebRTCVoiceJoinCommand$json = {
+  '1': 'WebRTCVoiceJoinCommand',
+  '2': [
+    {
+      '1': 'client_operation_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'clientOperationId',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_client_operation_id'},
+  ],
+};
+
+/// Descriptor for `WebRTCVoiceJoinCommand`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoiceJoinCommandDescriptor =
+    $convert.base64Decode(
+        'ChZXZWJSVENWb2ljZUpvaW5Db21tYW5kEjMKE2NsaWVudF9vcGVyYXRpb25faWQYASABKAlIAF'
+        'IRY2xpZW50T3BlcmF0aW9uSWSIAQFCFgoUX2NsaWVudF9vcGVyYXRpb25faWQ=');
+
+@$core.Deprecated('Use webRTCVoiceLeaveCommandDescriptor instead')
+const WebRTCVoiceLeaveCommand$json = {
+  '1': 'WebRTCVoiceLeaveCommand',
+};
+
+/// Descriptor for `WebRTCVoiceLeaveCommand`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoiceLeaveCommandDescriptor =
+    $convert.base64Decode('ChdXZWJSVENWb2ljZUxlYXZlQ29tbWFuZA==');
+
+@$core.Deprecated('Use webRTCVoicePeerJoinedDescriptor instead')
+const WebRTCVoicePeerJoined$json = {
+  '1': 'WebRTCVoicePeerJoined',
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 9, '10': 'userId'},
     {'1': 'conn_id', '3': 2, '4': 1, '5': 9, '10': 'connId'},
@@ -17170,73 +17308,291 @@ const WebRTCJoin$json = {
   ],
 };
 
-/// Descriptor for `WebRTCJoin`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRTCJoinDescriptor = $convert.base64Decode(
-    'CgpXZWJSVENKb2luEhcKB3VzZXJfaWQYASABKAlSBnVzZXJJZBIXCgdjb25uX2lkGAIgASgJUg'
-    'Zjb25uSWQSGgoIdXNlcm5hbWUYAyABKAlSCHVzZXJuYW1l');
+/// Descriptor for `WebRTCVoicePeerJoined`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoicePeerJoinedDescriptor = $convert.base64Decode(
+    'ChVXZWJSVENWb2ljZVBlZXJKb2luZWQSFwoHdXNlcl9pZBgBIAEoCVIGdXNlcklkEhcKB2Nvbm'
+    '5faWQYAiABKAlSBmNvbm5JZBIaCgh1c2VybmFtZRgDIAEoCVIIdXNlcm5hbWU=');
 
-@$core.Deprecated('Use webRTCLeaveDescriptor instead')
-const WebRTCLeave$json = {
-  '1': 'WebRTCLeave',
+@$core.Deprecated('Use webRTCVoicePeerLeftDescriptor instead')
+const WebRTCVoicePeerLeft$json = {
+  '1': 'WebRTCVoicePeerLeft',
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 9, '10': 'userId'},
     {'1': 'conn_id', '3': 2, '4': 1, '5': 9, '10': 'connId'},
   ],
 };
 
-/// Descriptor for `WebRTCLeave`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRTCLeaveDescriptor = $convert.base64Decode(
-    'CgtXZWJSVENMZWF2ZRIXCgd1c2VyX2lkGAEgASgJUgZ1c2VySWQSFwoHY29ubl9pZBgCIAEoCV'
-    'IGY29ubklk');
+/// Descriptor for `WebRTCVoicePeerLeft`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCVoicePeerLeftDescriptor = $convert.base64Decode(
+    'ChNXZWJSVENWb2ljZVBlZXJMZWZ0EhcKB3VzZXJfaWQYASABKAlSBnVzZXJJZBIXCgdjb25uX2'
+    'lkGAIgASgJUgZjb25uSWQ=');
 
-@$core.Deprecated('Use webRtcCommandDescriptor instead')
-const WebRtcCommand$json = {
-  '1': 'WebRtcCommand',
+@$core.Deprecated('Use webRTCMediaOfferCommandDescriptor instead')
+const WebRTCMediaOfferCommand$json = {
+  '1': 'WebRTCMediaOfferCommand',
+  '2': [
+    {'1': 'to', '3': 1, '4': 1, '5': 9, '10': 'to'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
+    {'1': 'swarm_id', '3': 3, '4': 1, '5': 9, '10': 'swarmId'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaOfferCommand`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaOfferCommandDescriptor =
+    $convert.base64Decode(
+        'ChdXZWJSVENNZWRpYU9mZmVyQ29tbWFuZBIOCgJ0bxgBIAEoCVICdG8SEgoEZGF0YRgCIAEoCV'
+        'IEZGF0YRIZCghzd2FybV9pZBgDIAEoCVIHc3dhcm1JZA==');
+
+@$core.Deprecated('Use webRTCMediaAnswerCommandDescriptor instead')
+const WebRTCMediaAnswerCommand$json = {
+  '1': 'WebRTCMediaAnswerCommand',
+  '2': [
+    {'1': 'to', '3': 1, '4': 1, '5': 9, '10': 'to'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
+    {'1': 'swarm_id', '3': 3, '4': 1, '5': 9, '10': 'swarmId'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaAnswerCommand`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaAnswerCommandDescriptor =
+    $convert.base64Decode(
+        'ChhXZWJSVENNZWRpYUFuc3dlckNvbW1hbmQSDgoCdG8YASABKAlSAnRvEhIKBGRhdGEYAiABKA'
+        'lSBGRhdGESGQoIc3dhcm1faWQYAyABKAlSB3N3YXJtSWQ=');
+
+@$core.Deprecated('Use webRTCMediaIceCandidateCommandDescriptor instead')
+const WebRTCMediaIceCandidateCommand$json = {
+  '1': 'WebRTCMediaIceCandidateCommand',
+  '2': [
+    {'1': 'to', '3': 1, '4': 1, '5': 9, '10': 'to'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
+    {'1': 'swarm_id', '3': 3, '4': 1, '5': 9, '10': 'swarmId'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaIceCandidateCommand`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaIceCandidateCommandDescriptor =
+    $convert.base64Decode(
+        'Ch5XZWJSVENNZWRpYUljZUNhbmRpZGF0ZUNvbW1hbmQSDgoCdG8YASABKAlSAnRvEhIKBGRhdG'
+        'EYAiABKAlSBGRhdGESGQoIc3dhcm1faWQYAyABKAlSB3N3YXJtSWQ=');
+
+@$core.Deprecated('Use webRTCMediaOfferDescriptor instead')
+const WebRTCMediaOffer$json = {
+  '1': 'WebRTCMediaOffer',
+  '2': [
+    {'1': 'from', '3': 1, '4': 1, '5': 9, '10': 'from'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
+    {'1': 'swarm_id', '3': 3, '4': 1, '5': 9, '10': 'swarmId'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaOffer`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaOfferDescriptor = $convert.base64Decode(
+    'ChBXZWJSVENNZWRpYU9mZmVyEhIKBGZyb20YASABKAlSBGZyb20SEgoEZGF0YRgCIAEoCVIEZG'
+    'F0YRIZCghzd2FybV9pZBgDIAEoCVIHc3dhcm1JZA==');
+
+@$core.Deprecated('Use webRTCMediaAnswerDescriptor instead')
+const WebRTCMediaAnswer$json = {
+  '1': 'WebRTCMediaAnswer',
+  '2': [
+    {'1': 'from', '3': 1, '4': 1, '5': 9, '10': 'from'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
+    {'1': 'swarm_id', '3': 3, '4': 1, '5': 9, '10': 'swarmId'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaAnswer`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaAnswerDescriptor = $convert.base64Decode(
+    'ChFXZWJSVENNZWRpYUFuc3dlchISCgRmcm9tGAEgASgJUgRmcm9tEhIKBGRhdGEYAiABKAlSBG'
+    'RhdGESGQoIc3dhcm1faWQYAyABKAlSB3N3YXJtSWQ=');
+
+@$core.Deprecated('Use webRTCMediaIceCandidateDescriptor instead')
+const WebRTCMediaIceCandidate$json = {
+  '1': 'WebRTCMediaIceCandidate',
+  '2': [
+    {'1': 'from', '3': 1, '4': 1, '5': 9, '10': 'from'},
+    {'1': 'data', '3': 2, '4': 1, '5': 9, '10': 'data'},
+    {'1': 'swarm_id', '3': 3, '4': 1, '5': 9, '10': 'swarmId'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaIceCandidate`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaIceCandidateDescriptor =
+    $convert.base64Decode(
+        'ChdXZWJSVENNZWRpYUljZUNhbmRpZGF0ZRISCgRmcm9tGAEgASgJUgRmcm9tEhIKBGRhdGEYAi'
+        'ABKAlSBGRhdGESGQoIc3dhcm1faWQYAyABKAlSB3N3YXJtSWQ=');
+
+@$core.Deprecated('Use webRTCMediaSwarmJoinDescriptor instead')
+const WebRTCMediaSwarmJoin$json = {
+  '1': 'WebRTCMediaSwarmJoin',
+  '2': [
+    {'1': 'swarm_id', '3': 1, '4': 1, '5': 9, '10': 'swarmId'},
+    {'1': 'swarm_ticket', '3': 2, '4': 1, '5': 9, '10': 'swarmTicket'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaSwarmJoin`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaSwarmJoinDescriptor = $convert.base64Decode(
+    'ChRXZWJSVENNZWRpYVN3YXJtSm9pbhIZCghzd2FybV9pZBgBIAEoCVIHc3dhcm1JZBIhCgxzd2'
+    'FybV90aWNrZXQYAiABKAlSC3N3YXJtVGlja2V0');
+
+@$core.Deprecated('Use webRTCMediaSwarmLeaveDescriptor instead')
+const WebRTCMediaSwarmLeave$json = {
+  '1': 'WebRTCMediaSwarmLeave',
+  '2': [
+    {'1': 'swarm_id', '3': 1, '4': 1, '5': 9, '10': 'swarmId'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaSwarmLeave`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaSwarmLeaveDescriptor =
+    $convert.base64Decode(
+        'ChVXZWJSVENNZWRpYVN3YXJtTGVhdmUSGQoIc3dhcm1faWQYASABKAlSB3N3YXJtSWQ=');
+
+@$core.Deprecated('Use webRTCMediaPeerLeftDescriptor instead')
+const WebRTCMediaPeerLeft$json = {
+  '1': 'WebRTCMediaPeerLeft',
+  '2': [
+    {'1': 'swarm_id', '3': 1, '4': 1, '5': 9, '10': 'swarmId'},
+    {'1': 'user_id', '3': 2, '4': 1, '5': 9, '10': 'userId'},
+    {'1': 'conn_id', '3': 3, '4': 1, '5': 9, '10': 'connId'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaPeerLeft`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaPeerLeftDescriptor = $convert.base64Decode(
+    'ChNXZWJSVENNZWRpYVBlZXJMZWZ0EhkKCHN3YXJtX2lkGAEgASgJUgdzd2FybUlkEhcKB3VzZX'
+    'JfaWQYAiABKAlSBnVzZXJJZBIXCgdjb25uX2lkGAMgASgJUgZjb25uSWQ=');
+
+@$core.Deprecated('Use webRTCMediaSwarmPeerDescriptor instead')
+const WebRTCMediaSwarmPeer$json = {
+  '1': 'WebRTCMediaSwarmPeer',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 9, '10': 'userId'},
+    {'1': 'conn_id', '3': 2, '4': 1, '5': 9, '10': 'connId'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaSwarmPeer`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaSwarmPeerDescriptor = $convert.base64Decode(
+    'ChRXZWJSVENNZWRpYVN3YXJtUGVlchIXCgd1c2VyX2lkGAEgASgJUgZ1c2VySWQSFwoHY29ubl'
+    '9pZBgCIAEoCVIGY29ubklk');
+
+@$core.Deprecated('Use webRTCMediaSwarmPeersDescriptor instead')
+const WebRTCMediaSwarmPeers$json = {
+  '1': 'WebRTCMediaSwarmPeers',
+  '2': [
+    {'1': 'swarm_id', '3': 1, '4': 1, '5': 9, '10': 'swarmId'},
+    {
+      '1': 'peers',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaSwarmPeer',
+      '10': 'peers'
+    },
+    {'1': 'swarm_ticket', '3': 3, '4': 1, '5': 9, '10': 'swarmTicket'},
+  ],
+};
+
+/// Descriptor for `WebRTCMediaSwarmPeers`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCMediaSwarmPeersDescriptor = $convert.base64Decode(
+    'ChVXZWJSVENNZWRpYVN3YXJtUGVlcnMSGQoIc3dhcm1faWQYASABKAlSB3N3YXJtSWQSOQoFcG'
+    'VlcnMYAiADKAsyIy5zeW5jdHYuY2xpZW50LldlYlJUQ01lZGlhU3dhcm1QZWVyUgVwZWVycxIh'
+    'Cgxzd2FybV90aWNrZXQYAyABKAlSC3N3YXJtVGlja2V0');
+
+@$core.Deprecated('Use webRTCCommandDescriptor instead')
+const WebRTCCommand$json = {
+  '1': 'WebRTCCommand',
   '2': [
     {
-      '1': 'offer',
+      '1': 'voice_offer',
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCOffer',
+      '6': '.synctv.client.WebRTCVoiceOfferCommand',
       '9': 0,
-      '10': 'offer'
+      '10': 'voiceOffer'
     },
     {
-      '1': 'answer',
+      '1': 'voice_answer',
       '3': 2,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCAnswer',
+      '6': '.synctv.client.WebRTCVoiceAnswerCommand',
       '9': 0,
-      '10': 'answer'
+      '10': 'voiceAnswer'
     },
     {
-      '1': 'ice_candidate',
+      '1': 'voice_ice_candidate',
       '3': 3,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCIceCandidate',
+      '6': '.synctv.client.WebRTCVoiceIceCandidateCommand',
       '9': 0,
-      '10': 'iceCandidate'
+      '10': 'voiceIceCandidate'
     },
     {
-      '1': 'join',
+      '1': 'voice_join',
       '3': 4,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCJoin',
+      '6': '.synctv.client.WebRTCVoiceJoinCommand',
       '9': 0,
-      '10': 'join'
+      '10': 'voiceJoin'
     },
     {
-      '1': 'leave',
+      '1': 'voice_leave',
       '3': 5,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCLeave',
+      '6': '.synctv.client.WebRTCVoiceLeaveCommand',
       '9': 0,
-      '10': 'leave'
+      '10': 'voiceLeave'
+    },
+    {
+      '1': 'media_offer',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaOfferCommand',
+      '9': 0,
+      '10': 'mediaOffer'
+    },
+    {
+      '1': 'media_answer',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaAnswerCommand',
+      '9': 0,
+      '10': 'mediaAnswer'
+    },
+    {
+      '1': 'media_ice_candidate',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaIceCandidateCommand',
+      '9': 0,
+      '10': 'mediaIceCandidate'
+    },
+    {
+      '1': 'media_swarm_join',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaSwarmJoin',
+      '9': 0,
+      '10': 'mediaSwarmJoin'
+    },
+    {
+      '1': 'media_swarm_leave',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaSwarmLeave',
+      '9': 0,
+      '10': 'mediaSwarmLeave'
     },
   ],
   '8': [
@@ -17244,63 +17600,118 @@ const WebRtcCommand$json = {
   ],
 };
 
-/// Descriptor for `WebRtcCommand`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRtcCommandDescriptor = $convert.base64Decode(
-    'Cg1XZWJSdGNDb21tYW5kEjIKBW9mZmVyGAEgASgLMhouc3luY3R2LmNsaWVudC5XZWJSVENPZm'
-    'ZlckgAUgVvZmZlchI1CgZhbnN3ZXIYAiABKAsyGy5zeW5jdHYuY2xpZW50LldlYlJUQ0Fuc3dl'
-    'ckgAUgZhbnN3ZXISSAoNaWNlX2NhbmRpZGF0ZRgDIAEoCzIhLnN5bmN0di5jbGllbnQuV2ViUl'
-    'RDSWNlQ2FuZGlkYXRlSABSDGljZUNhbmRpZGF0ZRIvCgRqb2luGAQgASgLMhkuc3luY3R2LmNs'
-    'aWVudC5XZWJSVENKb2luSABSBGpvaW4SMgoFbGVhdmUYBSABKAsyGi5zeW5jdHYuY2xpZW50Ll'
-    'dlYlJUQ0xlYXZlSABSBWxlYXZlQgkKB2NvbW1hbmQ=');
+/// Descriptor for `WebRTCCommand`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCCommandDescriptor = $convert.base64Decode(
+    'Cg1XZWJSVENDb21tYW5kEkkKC3ZvaWNlX29mZmVyGAEgASgLMiYuc3luY3R2LmNsaWVudC5XZW'
+    'JSVENWb2ljZU9mZmVyQ29tbWFuZEgAUgp2b2ljZU9mZmVyEkwKDHZvaWNlX2Fuc3dlchgCIAEo'
+    'CzInLnN5bmN0di5jbGllbnQuV2ViUlRDVm9pY2VBbnN3ZXJDb21tYW5kSABSC3ZvaWNlQW5zd2'
+    'VyEl8KE3ZvaWNlX2ljZV9jYW5kaWRhdGUYAyABKAsyLS5zeW5jdHYuY2xpZW50LldlYlJUQ1Zv'
+    'aWNlSWNlQ2FuZGlkYXRlQ29tbWFuZEgAUhF2b2ljZUljZUNhbmRpZGF0ZRJGCgp2b2ljZV9qb2'
+    'luGAQgASgLMiUuc3luY3R2LmNsaWVudC5XZWJSVENWb2ljZUpvaW5Db21tYW5kSABSCXZvaWNl'
+    'Sm9pbhJJCgt2b2ljZV9sZWF2ZRgFIAEoCzImLnN5bmN0di5jbGllbnQuV2ViUlRDVm9pY2VMZW'
+    'F2ZUNvbW1hbmRIAFIKdm9pY2VMZWF2ZRJJCgttZWRpYV9vZmZlchgGIAEoCzImLnN5bmN0di5j'
+    'bGllbnQuV2ViUlRDTWVkaWFPZmZlckNvbW1hbmRIAFIKbWVkaWFPZmZlchJMCgxtZWRpYV9hbn'
+    'N3ZXIYByABKAsyJy5zeW5jdHYuY2xpZW50LldlYlJUQ01lZGlhQW5zd2VyQ29tbWFuZEgAUgtt'
+    'ZWRpYUFuc3dlchJfChNtZWRpYV9pY2VfY2FuZGlkYXRlGAggASgLMi0uc3luY3R2LmNsaWVudC'
+    '5XZWJSVENNZWRpYUljZUNhbmRpZGF0ZUNvbW1hbmRIAFIRbWVkaWFJY2VDYW5kaWRhdGUSTwoQ'
+    'bWVkaWFfc3dhcm1fam9pbhgJIAEoCzIjLnN5bmN0di5jbGllbnQuV2ViUlRDTWVkaWFTd2FybU'
+    'pvaW5IAFIObWVkaWFTd2FybUpvaW4SUgoRbWVkaWFfc3dhcm1fbGVhdmUYCiABKAsyJC5zeW5j'
+    'dHYuY2xpZW50LldlYlJUQ01lZGlhU3dhcm1MZWF2ZUgAUg9tZWRpYVN3YXJtTGVhdmVCCQoHY2'
+    '9tbWFuZA==');
 
-@$core.Deprecated('Use webRtcEventDescriptor instead')
-const WebRtcEvent$json = {
-  '1': 'WebRtcEvent',
+@$core.Deprecated('Use webRTCEventDescriptor instead')
+const WebRTCEvent$json = {
+  '1': 'WebRTCEvent',
   '2': [
     {
-      '1': 'offer',
+      '1': 'voice_offer',
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCOffer',
+      '6': '.synctv.client.WebRTCVoiceOffer',
       '9': 0,
-      '10': 'offer'
+      '10': 'voiceOffer'
     },
     {
-      '1': 'answer',
+      '1': 'voice_answer',
       '3': 2,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCAnswer',
+      '6': '.synctv.client.WebRTCVoiceAnswer',
       '9': 0,
-      '10': 'answer'
+      '10': 'voiceAnswer'
     },
     {
-      '1': 'ice_candidate',
+      '1': 'voice_ice_candidate',
       '3': 3,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCIceCandidate',
+      '6': '.synctv.client.WebRTCVoiceIceCandidate',
       '9': 0,
-      '10': 'iceCandidate'
+      '10': 'voiceIceCandidate'
     },
     {
-      '1': 'join',
+      '1': 'voice_peer_joined',
       '3': 4,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCJoin',
+      '6': '.synctv.client.WebRTCVoicePeerJoined',
       '9': 0,
-      '10': 'join'
+      '10': 'voicePeerJoined'
     },
     {
-      '1': 'leave',
+      '1': 'voice_peer_left',
       '3': 5,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRTCLeave',
+      '6': '.synctv.client.WebRTCVoicePeerLeft',
       '9': 0,
-      '10': 'leave'
+      '10': 'voicePeerLeft'
+    },
+    {
+      '1': 'media_offer',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaOffer',
+      '9': 0,
+      '10': 'mediaOffer'
+    },
+    {
+      '1': 'media_answer',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaAnswer',
+      '9': 0,
+      '10': 'mediaAnswer'
+    },
+    {
+      '1': 'media_ice_candidate',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaIceCandidate',
+      '9': 0,
+      '10': 'mediaIceCandidate'
+    },
+    {
+      '1': 'media_swarm_peers',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaSwarmPeers',
+      '9': 0,
+      '10': 'mediaSwarmPeers'
+    },
+    {
+      '1': 'media_peer_left',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.WebRTCMediaPeerLeft',
+      '9': 0,
+      '10': 'mediaPeerLeft'
     },
   ],
   '8': [
@@ -17308,14 +17719,23 @@ const WebRtcEvent$json = {
   ],
 };
 
-/// Descriptor for `WebRtcEvent`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRtcEventDescriptor = $convert.base64Decode(
-    'CgtXZWJSdGNFdmVudBIyCgVvZmZlchgBIAEoCzIaLnN5bmN0di5jbGllbnQuV2ViUlRDT2ZmZX'
-    'JIAFIFb2ZmZXISNQoGYW5zd2VyGAIgASgLMhsuc3luY3R2LmNsaWVudC5XZWJSVENBbnN3ZXJI'
-    'AFIGYW5zd2VyEkgKDWljZV9jYW5kaWRhdGUYAyABKAsyIS5zeW5jdHYuY2xpZW50LldlYlJUQ0'
-    'ljZUNhbmRpZGF0ZUgAUgxpY2VDYW5kaWRhdGUSLwoEam9pbhgEIAEoCzIZLnN5bmN0di5jbGll'
-    'bnQuV2ViUlRDSm9pbkgAUgRqb2luEjIKBWxlYXZlGAUgASgLMhouc3luY3R2LmNsaWVudC5XZW'
-    'JSVENMZWF2ZUgAUgVsZWF2ZUIHCgVldmVudA==');
+/// Descriptor for `WebRTCEvent`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCEventDescriptor = $convert.base64Decode(
+    'CgtXZWJSVENFdmVudBJCCgt2b2ljZV9vZmZlchgBIAEoCzIfLnN5bmN0di5jbGllbnQuV2ViUl'
+    'RDVm9pY2VPZmZlckgAUgp2b2ljZU9mZmVyEkUKDHZvaWNlX2Fuc3dlchgCIAEoCzIgLnN5bmN0'
+    'di5jbGllbnQuV2ViUlRDVm9pY2VBbnN3ZXJIAFILdm9pY2VBbnN3ZXISWAoTdm9pY2VfaWNlX2'
+    'NhbmRpZGF0ZRgDIAEoCzImLnN5bmN0di5jbGllbnQuV2ViUlRDVm9pY2VJY2VDYW5kaWRhdGVI'
+    'AFIRdm9pY2VJY2VDYW5kaWRhdGUSUgoRdm9pY2VfcGVlcl9qb2luZWQYBCABKAsyJC5zeW5jdH'
+    'YuY2xpZW50LldlYlJUQ1ZvaWNlUGVlckpvaW5lZEgAUg92b2ljZVBlZXJKb2luZWQSTAoPdm9p'
+    'Y2VfcGVlcl9sZWZ0GAUgASgLMiIuc3luY3R2LmNsaWVudC5XZWJSVENWb2ljZVBlZXJMZWZ0SA'
+    'BSDXZvaWNlUGVlckxlZnQSQgoLbWVkaWFfb2ZmZXIYBiABKAsyHy5zeW5jdHYuY2xpZW50Lldl'
+    'YlJUQ01lZGlhT2ZmZXJIAFIKbWVkaWFPZmZlchJFCgxtZWRpYV9hbnN3ZXIYByABKAsyIC5zeW'
+    '5jdHYuY2xpZW50LldlYlJUQ01lZGlhQW5zd2VySABSC21lZGlhQW5zd2VyElgKE21lZGlhX2lj'
+    'ZV9jYW5kaWRhdGUYCCABKAsyJi5zeW5jdHYuY2xpZW50LldlYlJUQ01lZGlhSWNlQ2FuZGlkYX'
+    'RlSABSEW1lZGlhSWNlQ2FuZGlkYXRlElIKEW1lZGlhX3N3YXJtX3BlZXJzGAkgASgLMiQuc3lu'
+    'Y3R2LmNsaWVudC5XZWJSVENNZWRpYVN3YXJtUGVlcnNIAFIPbWVkaWFTd2FybVBlZXJzEkwKD2'
+    '1lZGlhX3BlZXJfbGVmdBgKIAEoCzIiLnN5bmN0di5jbGllbnQuV2ViUlRDTWVkaWFQZWVyTGVm'
+    'dEgAUg1tZWRpYVBlZXJMZWZ0QgcKBWV2ZW50');
 
 @$core.Deprecated('Use iceServerDescriptor instead')
 const IceServer$json = {
@@ -17379,7 +17799,7 @@ const GetIceServersResponse$json = {
       '3': 2,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRtcStatus',
+      '6': '.synctv.client.WebRTCStatus',
       '9': 0,
       '10': 'webrtc',
       '17': true
@@ -17394,7 +17814,7 @@ const GetIceServersResponse$json = {
 final $typed_data.Uint8List getIceServersResponseDescriptor = $convert.base64Decode(
     'ChVHZXRJY2VTZXJ2ZXJzUmVzcG9uc2USMgoHc2VydmVycxgBIAMoCzIYLnN5bmN0di5jbGllbn'
     'QuSWNlU2VydmVyUgdzZXJ2ZXJzEjgKBndlYnJ0YxgCIAEoCzIbLnN5bmN0di5jbGllbnQuV2Vi'
-    'UnRjU3RhdHVzSABSBndlYnJ0Y4gBAUIJCgdfd2VicnRj');
+    'UlRDU3RhdHVzSABSBndlYnJ0Y4gBAUIJCgdfd2VicnRj');
 
 @$core.Deprecated('Use memoryHealthDescriptor instead')
 const MemoryHealth$json = {
@@ -17410,9 +17830,9 @@ final $typed_data.Uint8List memoryHealthDescriptor = $convert.base64Decode(
     'CgxNZW1vcnlIZWFsdGgSIwoNdXNhZ2VfcGVyY2VudBgBIAEoAVIMdXNhZ2VQZXJjZW50EhYKBn'
     'N0YXR1cxgCIAEoCVIGc3RhdHVz');
 
-@$core.Deprecated('Use webRtcStatusDescriptor instead')
-const WebRtcStatus$json = {
-  '1': 'WebRtcStatus',
+@$core.Deprecated('Use webRTCStatusDescriptor instead')
+const WebRTCStatus$json = {
+  '1': 'WebRTCStatus',
   '2': [
     {'1': 'mode', '3': 1, '4': 1, '5': 9, '10': 'mode'},
     {
@@ -17465,9 +17885,9 @@ const WebRtcStatus$json = {
   ],
 };
 
-/// Descriptor for `WebRtcStatus`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRtcStatusDescriptor = $convert.base64Decode(
-    'CgxXZWJSdGNTdGF0dXMSEgoEbW9kZRgBIAEoCVIEbW9kZRIsChJidWlsdGluX3N0dW5fc3RhdG'
+/// Descriptor for `WebRTCStatus`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCStatusDescriptor = $convert.base64Decode(
+    'CgxXZWJSVENTdGF0dXMSEgoEbW9kZRgBIAEoCVIEbW9kZRIsChJidWlsdGluX3N0dW5fc3RhdG'
     'UYAiABKAlSEGJ1aWx0aW5TdHVuU3RhdGUSNgoXYnVpbHRpbl9zdHVuX2NvbmZpZ3VyZWQYAyAB'
     'KAhSFWJ1aWx0aW5TdHVuQ29uZmlndXJlZBIWCgZyZWFzb24YBCABKAlSBnJlYXNvbhIiCgpsb2'
     'NhbF9hZGRyGAUgASgJSABSCWxvY2FsQWRkcogBARIoCg1leHRlcm5hbF9hZGRyGAYgASgJSAFS'
@@ -17532,7 +17952,7 @@ const HealthDetails$json = {
       '3': 9,
       '4': 1,
       '5': 11,
-      '6': '.synctv.client.WebRtcStatus',
+      '6': '.synctv.client.WebRTCStatus',
       '9': 6,
       '10': 'webrtc',
       '17': true
@@ -17556,7 +17976,7 @@ final $typed_data.Uint8List healthDetailsDescriptor = $convert.base64Decode(
     'IAEoCUgBUgh3c1RpY2tldIgBARIZCgVlbWFpbBgFIAEoCUgCUgVlbWFpbIgBARIjCgpsaXZlc3'
     'RyZWFtGAYgASgJSANSCmxpdmVzdHJlYW2IAQESOAoGbWVtb3J5GAcgASgLMhsuc3luY3R2LmNs'
     'aWVudC5NZW1vcnlIZWFsdGhIBFIGbWVtb3J5iAEBEh0KB21lc3NhZ2UYCCABKAlIBVIHbWVzc2'
-    'FnZYgBARI4CgZ3ZWJydGMYCSABKAsyGy5zeW5jdHYuY2xpZW50LldlYlJ0Y1N0YXR1c0gGUgZ3'
+    'FnZYgBARI4CgZ3ZWJydGMYCSABKAsyGy5zeW5jdHYuY2xpZW50LldlYlJUQ1N0YXR1c0gGUgZ3'
     'ZWJydGOIAQFCCgoIX2NsdXN0ZXJCDAoKX3dzX3RpY2tldEIICgZfZW1haWxCDQoLX2xpdmVzdH'
     'JlYW1CCQoHX21lbW9yeUIKCghfbWVzc2FnZUIJCgdfd2VicnRj');
 
@@ -19313,12 +19733,19 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ObservePlaybackHistory': ObservePlaybackHistory$json,
   '.synctv.client.ListPlaybackHistoryRequest': ListPlaybackHistoryRequest$json,
   '.synctv.client.UnobserveResource': UnobserveResource$json,
-  '.synctv.client.WebRtcCommand': WebRtcCommand$json,
-  '.synctv.client.WebRTCOffer': WebRTCOffer$json,
-  '.synctv.client.WebRTCAnswer': WebRTCAnswer$json,
-  '.synctv.client.WebRTCIceCandidate': WebRTCIceCandidate$json,
-  '.synctv.client.WebRTCJoin': WebRTCJoin$json,
-  '.synctv.client.WebRTCLeave': WebRTCLeave$json,
+  '.synctv.client.WebRTCCommand': WebRTCCommand$json,
+  '.synctv.client.WebRTCVoiceOfferCommand': WebRTCVoiceOfferCommand$json,
+  '.synctv.client.WebRTCVoiceAnswerCommand': WebRTCVoiceAnswerCommand$json,
+  '.synctv.client.WebRTCVoiceIceCandidateCommand':
+      WebRTCVoiceIceCandidateCommand$json,
+  '.synctv.client.WebRTCVoiceJoinCommand': WebRTCVoiceJoinCommand$json,
+  '.synctv.client.WebRTCVoiceLeaveCommand': WebRTCVoiceLeaveCommand$json,
+  '.synctv.client.WebRTCMediaOfferCommand': WebRTCMediaOfferCommand$json,
+  '.synctv.client.WebRTCMediaAnswerCommand': WebRTCMediaAnswerCommand$json,
+  '.synctv.client.WebRTCMediaIceCandidateCommand':
+      WebRTCMediaIceCandidateCommand$json,
+  '.synctv.client.WebRTCMediaSwarmJoin': WebRTCMediaSwarmJoin$json,
+  '.synctv.client.WebRTCMediaSwarmLeave': WebRTCMediaSwarmLeave$json,
   '.synctv.client.ServerMessage': ServerMessage$json,
   '.synctv.client.HeartbeatAck': HeartbeatAck$json,
   '.synctv.client.ErrorMessage': ErrorMessage$json,
@@ -19336,6 +19763,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.PlaybackMedia': PlaybackMedia$json,
   '.synctv.client.PlaybackMedia.HeadersEntry': PlaybackMedia_HeadersEntry$json,
   '.synctv.client.PlaybackMediaMetadata': PlaybackMediaMetadata$json,
+  '.synctv.client.P2pMediaDelivery': P2pMediaDelivery$json,
   '.synctv.client.PlaybackSubtitle': PlaybackSubtitle$json,
   '.synctv.client.PlaybackSubtitle.HeadersEntry':
       PlaybackSubtitle_HeadersEntry$json,
@@ -19474,7 +19902,18 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ChatMessagePin': ChatMessagePin$json,
   '.synctv.client.OnlineCount': OnlineCount$json,
   '.synctv.client.OnlineEvent': OnlineEvent$json,
-  '.synctv.client.WebRtcEvent': WebRtcEvent$json,
+  '.synctv.client.WebRTCEvent': WebRTCEvent$json,
+  '.synctv.client.WebRTCVoiceOffer': WebRTCVoiceOffer$json,
+  '.synctv.client.WebRTCVoiceAnswer': WebRTCVoiceAnswer$json,
+  '.synctv.client.WebRTCVoiceIceCandidate': WebRTCVoiceIceCandidate$json,
+  '.synctv.client.WebRTCVoicePeerJoined': WebRTCVoicePeerJoined$json,
+  '.synctv.client.WebRTCVoicePeerLeft': WebRTCVoicePeerLeft$json,
+  '.synctv.client.WebRTCMediaOffer': WebRTCMediaOffer$json,
+  '.synctv.client.WebRTCMediaAnswer': WebRTCMediaAnswer$json,
+  '.synctv.client.WebRTCMediaIceCandidate': WebRTCMediaIceCandidate$json,
+  '.synctv.client.WebRTCMediaSwarmPeers': WebRTCMediaSwarmPeers$json,
+  '.synctv.client.WebRTCMediaSwarmPeer': WebRTCMediaSwarmPeer$json,
+  '.synctv.client.WebRTCMediaPeerLeft': WebRTCMediaPeerLeft$json,
   '.synctv.client.ChatPinEvent': ChatPinEvent$json,
   '.synctv.client.ListPlaybackHistoryResponse':
       ListPlaybackHistoryResponse$json,
@@ -19615,7 +20054,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.GetIceServersRequest': GetIceServersRequest$json,
   '.synctv.client.GetIceServersResponse': GetIceServersResponse$json,
   '.synctv.client.IceServer': IceServer$json,
-  '.synctv.client.WebRtcStatus': WebRtcStatus$json,
+  '.synctv.client.WebRTCStatus': WebRTCStatus$json,
   '.synctv.client.CreatePlaylistRequest': CreatePlaylistRequest$json,
   '.synctv.client.GetPlaylistRequest': GetPlaylistRequest$json,
   '.synctv.client.GetPlaylistResponse': GetPlaylistResponse$json,

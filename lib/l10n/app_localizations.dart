@@ -2150,17 +2150,23 @@ abstract class AppLocalizations {
   /// **'The SyncTV server forwards media requests'**
   String get proxyPlaybackDescription;
 
+  /// No description provided for @proxyOnlyPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy playback only'**
+  String get proxyOnlyPlayback;
+
+  /// No description provided for @proxyOnlyPlaybackDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Route every media request through the SyncTV server proxy'**
+  String get proxyOnlyPlaybackDescription;
+
   /// No description provided for @addToPlaylist.
   ///
   /// In en, this message translates to:
   /// **'Add to playlist'**
   String get addToPlaylist;
-
-  /// No description provided for @credentialHeaderRisk.
-  ///
-  /// In en, this message translates to:
-  /// **'Credential headers such as Authorization and Cookie are stored with the media playback information and may be visible to room members during playback. Use them only with trusted rooms and links.'**
-  String get credentialHeaderRisk;
 
   /// No description provided for @requestHeaders.
   ///
@@ -2485,18 +2491,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not add media: {error}'**
   String addFailed(String error);
-
-  /// No description provided for @confirmCredentialHeaderSharing.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm credential header sharing'**
-  String get confirmCredentialHeaderSharing;
-
-  /// No description provided for @credentialHeaderSharingDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'{names} will be provided to room members with playback information to request the media resource. Confirm that the room members are trusted and that exposing these credentials will not affect your account security.'**
-  String credentialHeaderSharingDescription(String names);
 
   /// No description provided for @confirmAdd.
   ///
@@ -3290,11 +3284,83 @@ abstract class AppLocalizations {
   /// **'Playback route'**
   String get playbackRoute;
 
-  /// No description provided for @playbackCredentialWarning.
+  /// No description provided for @route.
   ///
   /// In en, this message translates to:
-  /// **'The current playback address contains {names}. These credentials come from playback information and may be visible to room members for media requests.'**
-  String playbackCredentialWarning(String names);
+  /// **'Route'**
+  String get route;
+
+  /// No description provided for @qualityAndMediaLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Quality and media links'**
+  String get qualityAndMediaLinks;
+
+  /// No description provided for @manifestQualities.
+  ///
+  /// In en, this message translates to:
+  /// **'Manifest qualities'**
+  String get manifestQualities;
+
+  /// No description provided for @automatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get automatic;
+
+  /// No description provided for @selectPlaybackRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose route'**
+  String get selectPlaybackRoute;
+
+  /// No description provided for @playbackRouteMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Main route'**
+  String get playbackRouteMain;
+
+  /// No description provided for @playbackRouteBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup route {index}'**
+  String playbackRouteBackup(int index);
+
+  /// No description provided for @playbackRouteOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get playbackRouteOriginal;
+
+  /// No description provided for @playbackRouteProgressive.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard video'**
+  String get playbackRouteProgressive;
+
+  /// No description provided for @playbackRouteTranscoded.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcoded'**
+  String get playbackRouteTranscoded;
+
+  /// No description provided for @playbackRouteVideoHls.
+  ///
+  /// In en, this message translates to:
+  /// **'Video HLS'**
+  String get playbackRouteVideoHls;
+
+  /// No description provided for @playbackRouteAudioHls.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio HLS'**
+  String get playbackRouteAudioHls;
+
+  /// No description provided for @qualityTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Quality {id}'**
+  String qualityTrack(String id);
 
   /// No description provided for @back.
   ///
@@ -3769,6 +3835,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Voice chat'**
   String get voiceChat;
+
+  /// No description provided for @roomRealtimeFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Realtime communication'**
+  String get roomRealtimeFeatures;
+
+  /// No description provided for @voiceChatRoomEnabledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow members to join voice calls in this room'**
+  String get voiceChatRoomEnabledDescription;
+
+  /// No description provided for @voiceChatDisabledByRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'A room administrator disabled voice chat'**
+  String get voiceChatDisabledByRoom;
+
+  /// No description provided for @p2pMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'P2P media delivery'**
+  String get p2pMedia;
+
+  /// No description provided for @p2pMediaRoomEnabledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow members to share media data with peers in this room'**
+  String get p2pMediaRoomEnabledDescription;
+
+  /// No description provided for @p2pMediaDisabledByRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'A room administrator disabled P2P media delivery'**
+  String get p2pMediaDisabledByRoom;
+
+  /// No description provided for @p2pMediaDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Share cached media directly with room members. Peers can see your network address and use your upload bandwidth. Swarm tickets isolate rooms, users, and resources.'**
+  String get p2pMediaDescription;
+
+  /// No description provided for @p2pCacheSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache capacity'**
+  String get p2pCacheSize;
+
+  /// No description provided for @p2pCacheSizeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Persistent LRU cache shared across playback sessions. Entries expire after 10 minutes without access.'**
+  String get p2pCacheSizeDescription;
+
+  /// No description provided for @p2pSecurityMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer data validation'**
+  String get p2pSecurityMode;
+
+  /// No description provided for @p2pSecurityStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get p2pSecurityStandard;
+
+  /// No description provided for @p2pSecurityStandardDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Checks framing, declared length, size limits, and timeouts. Validation adds no network traffic; scheduling can still race origins and peers.'**
+  String get p2pSecurityStandardDescription;
+
+  /// No description provided for @p2pSecuritySampled.
+  ///
+  /// In en, this message translates to:
+  /// **'Origin sampling'**
+  String get p2pSecuritySampled;
+
+  /// No description provided for @p2pSecuritySampledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Compares 10% of peer pieces with the origin using SHA-256. Conflicting peers are isolated for the current swarm session.'**
+  String get p2pSecuritySampledDescription;
+
+  /// No description provided for @p2pIntegrityChecks.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrity checks'**
+  String get p2pIntegrityChecks;
+
+  /// No description provided for @p2pIntegrityMismatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrity conflicts'**
+  String get p2pIntegrityMismatches;
+
+  /// No description provided for @p2pIntegrityUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Origin checks unavailable'**
+  String get p2pIntegrityUnavailable;
+
+  /// No description provided for @p2pMetrics.
+  ///
+  /// In en, this message translates to:
+  /// **'P2P transfer metrics'**
+  String get p2pMetrics;
+
+  /// No description provided for @totalDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Total download'**
+  String get totalDownload;
+
+  /// No description provided for @totalUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Total upload'**
+  String get totalUpload;
+
+  /// No description provided for @httpDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP download'**
+  String get httpDownload;
+
+  /// No description provided for @p2pDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'P2P download'**
+  String get p2pDownload;
+
+  /// No description provided for @p2pUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'P2P upload'**
+  String get p2pUpload;
+
+  /// No description provided for @connectedPeers.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected peers'**
+  String get connectedPeers;
+
+  /// No description provided for @p2pCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached data'**
+  String get p2pCache;
+
+  /// No description provided for @cacheHitRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache hit rate'**
+  String get cacheHitRate;
 
   /// No description provided for @leaveVoice.
   ///
@@ -6512,11 +6734,11 @@ abstract class AppLocalizations {
   /// **'Send chat and danmaku'**
   String get sendChatAndDanmaku;
 
-  /// No description provided for @viewMediaList.
+  /// No description provided for @browseLibraryList.
   ///
   /// In en, this message translates to:
-  /// **'View media list'**
-  String get viewMediaList;
+  /// **'Browse library'**
+  String get browseLibraryList;
 
   /// No description provided for @viewMemberList.
   ///
@@ -8454,11 +8676,11 @@ abstract class AppLocalizations {
   /// **'Send chat messages'**
   String get sendChat;
 
-  /// No description provided for @viewMedia.
+  /// No description provided for @browseLibrary.
   ///
   /// In en, this message translates to:
-  /// **'View media'**
-  String get viewMedia;
+  /// **'Browse library'**
+  String get browseLibrary;
 
   /// No description provided for @viewMembers.
   ///
@@ -9053,6 +9275,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'TURN usernames and credentials are sent to clients. Use limited, renewable credentials.'**
   String get externalIceServersWarning;
+
+  /// No description provided for @maxVoiceParticipantsPerRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice participants per room'**
+  String get maxVoiceParticipantsPerRoom;
+
+  /// No description provided for @maxVoiceParticipantsPerRoomDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum simultaneous voice participants in one room. Mesh voice supports 2 to 32; 8 is recommended for mobile clients.'**
+  String get maxVoiceParticipantsPerRoomDescription;
 
   /// No description provided for @chatMessagesPerRoom.
   ///

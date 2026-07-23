@@ -1,10 +1,41 @@
 import 'dart:ui' show PointerDeviceKind;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
 import 'package:synctv_app/services/picture_in_picture_service.dart';
+import 'package:video_player/video_player.dart';
+
+class _RecordingVideoPlayerController extends VideoPlayerController {
+  _RecordingVideoPlayerController(VideoPlayerValue initialValue)
+    : super.networkUrl(Uri.parse('https://example.com/video.mp4')) {
+    value = initialValue;
+  }
+
+  final List<Duration> seekPositions = [];
+  var playCalls = 0;
+  var pauseCalls = 0;
+
+  @override
+  Future<void> seekTo(Duration position) async {
+    seekPositions.add(position);
+    value = value.copyWith(position: position, isCompleted: false);
+  }
+
+  @override
+  Future<void> play() async {
+    playCalls++;
+    value = value.copyWith(isPlaying: true, isCompleted: false);
+  }
+
+  @override
+  Future<void> pause() async {
+    pauseCalls++;
+    value = value.copyWith(isPlaying: false);
+  }
+}
 
 void main() {
   test('picture-in-picture selects the native or desktop platform backend', () {
@@ -73,6 +104,7 @@ void main() {
     expect(visibility.showDanmaku, isFalse);
     expect(visibility.showSubtitles, isFalse);
     expect(visibility.showPictureInPicture, isFalse);
+    expect(visibility.showSettings, isFalse);
   });
 
   test('medium playback controls prioritize fullscreen volume and sync', () {
@@ -84,6 +116,7 @@ void main() {
     expect(visibility.showSync, isTrue);
     expect(visibility.showPlaybackRoute, isFalse);
     expect(visibility.showSpeed, isFalse);
+    expect(visibility.showSettings, isTrue);
   });
 
   test('wide playback controls expose all secondary actions', () {
@@ -99,6 +132,7 @@ void main() {
     expect(visibility.showSubtitles, isTrue);
     expect(visibility.showPictureInPicture, isTrue);
     expect(visibility.showSendDanmaku, isTrue);
+    expect(visibility.showSettings, isTrue);
   });
 
   test('subtitle text removes WebVTT inline timing and style tags', () {
@@ -137,12 +171,113 @@ void main() {
     );
   });
 
+  test('completed VOD playback restarts within the EOF tolerance', () {
+    final value = VideoPlayerValue(
+      duration: const Duration(seconds: 30),
+      position: const Duration(milliseconds: 29900),
+      isInitialized: true,
+    );
+
+    expect(shouldRestartCompletedPlayback(value, isLive: false), isTrue);
+    expect(shouldRestartCompletedPlayback(value, isLive: true), isFalse);
+  });
+
+  test('active VOD playback resumes from its current position', () {
+    final value = VideoPlayerValue(
+      duration: const Duration(seconds: 30),
+      position: const Duration(seconds: 20),
+      isInitialized: true,
+    );
+
+    expect(shouldRestartCompletedPlayback(value, isLive: false), isFalse);
+  });
+
+  test(
+    'seek resumes an EOF-stopped player when room playback is active',
+    () async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(seconds: 30),
+          position: Duration(seconds: 30),
+          isInitialized: true,
+          isCompleted: true,
+        ),
+      );
+
+      await seekVideoPlayback(
+        controller,
+        position: const Duration(seconds: 10),
+        expectedToBePlaying: true,
+      );
+
+      expect(controller.seekPositions, [const Duration(seconds: 10)]);
+      expect(controller.playCalls, 1);
+      expect(controller.pauseCalls, 0);
+      expect(controller.value.isPlaying, isTrue);
+    },
+  );
+
+  test(
+    'seek keeps local playback paused when room playback is paused',
+    () async {
+      final controller = _RecordingVideoPlayerController(
+        const VideoPlayerValue(
+          duration: Duration(seconds: 30),
+          position: Duration(seconds: 5),
+          isInitialized: true,
+          isPlaying: true,
+        ),
+      );
+
+      await seekVideoPlayback(
+        controller,
+        position: const Duration(seconds: 10),
+        expectedToBePlaying: false,
+      );
+
+      expect(controller.seekPositions, [const Duration(seconds: 10)]);
+      expect(controller.playCalls, 0);
+      expect(controller.pauseCalls, 1);
+      expect(controller.value.isPlaying, isFalse);
+    },
+  );
+
+  testWidgets('live playback hides playback speed control', (tester) async {
+    final controller = VideoPlayerController.networkUrl(
+      Uri.parse('https://example.com/live.m3u8'),
+    );
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SizedBox(
+            width: 900,
+            height: 500,
+            child: CustomVideoPlayer(
+              controller: controller,
+              title: 'Live',
+              isLive: true,
+              canControlPlayback: true,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byTooltip('Playback speed'), findsNothing);
+  });
+
   testWidgets('picture-in-picture control invokes its callback', (
     tester,
   ) async {
     var invocationCount = 0;
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: PictureInPictureControl(
             tooltip: 'Picture in picture',
@@ -154,6 +289,33 @@ void main() {
 
     await tester.tap(find.byKey(const Key('picture_in_picture_button')));
     await tester.pump(const Duration(milliseconds: 200));
+
+    expect(invocationCount, 1);
+  });
+
+  testWidgets('desktop P shortcut enters picture-in-picture', (tester) async {
+    final controller = VideoPlayerController.networkUrl(
+      Uri.parse('https://example.com/video.mp4'),
+    );
+    var invocationCount = 0;
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CustomVideoPlayer(
+            controller: controller,
+            title: 'Video',
+            interactionMode: VideoPlayerInteractionMode.desktop,
+            onEnterPictureInPicture: () => invocationCount++,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
 
     expect(invocationCount, 1);
   });

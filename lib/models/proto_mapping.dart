@@ -66,6 +66,8 @@ Map<String, dynamic> roomSettingsToJson(client.RoomSettings settings) {
     'requireApproval': settings.requireApproval,
     'allowAutoJoin': settings.allowAutoJoin,
     'chatEnabled': settings.chatEnabled,
+    'voiceChatEnabled': settings.voiceChatEnabled,
+    'p2pMediaEnabled': settings.p2pMediaEnabled,
     'autoPlay': {
       'enabled': settings.hasAutoPlay() && settings.autoPlay.enabled,
       'mode': settings.hasAutoPlay() ? settings.autoPlay.mode.value : 0,
@@ -88,6 +90,8 @@ client.RoomSettings roomSettingsFromJson(Map<String, dynamic> json) {
     requireApproval: json['requireApproval'] == true,
     allowAutoJoin: json['allowAutoJoin'] == true,
     chatEnabled: json['chatEnabled'] != false,
+    voiceChatEnabled: json['voiceChatEnabled'] != false,
+    p2pMediaEnabled: json['p2pMediaEnabled'] != false,
     adminAddedPermissions: Int64(_intValue(json['adminAddedPermissions'])),
     adminRemovedPermissions: Int64(_intValue(json['adminRemovedPermissions'])),
     memberAddedPermissions: Int64(_intValue(json['memberAddedPermissions'])),
@@ -133,6 +137,8 @@ client.UpdateRoomSettingsRequest roomSettingsUpdateRequestFromJson(
   setBool('requireApproval', (value) => patch.requireApproval = value);
   setBool('allowAutoJoin', (value) => patch.allowAutoJoin = value);
   setBool('chatEnabled', (value) => patch.chatEnabled = value);
+  setBool('voiceChatEnabled', (value) => patch.voiceChatEnabled = value);
+  setBool('p2pMediaEnabled', (value) => patch.p2pMediaEnabled = value);
   final autoPlay = json['autoPlay'];
   if (autoPlay is Map) {
     final autoPlayPatch = client.AutoPlaySettingsPatch();

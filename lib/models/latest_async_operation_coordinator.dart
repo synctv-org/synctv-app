@@ -1,3 +1,5 @@
+import 'dart:async';
+
 typedef IsLatestOperation = bool Function();
 
 class LatestAsyncOperationCoordinator {
@@ -35,5 +37,21 @@ class LatestAsyncOperationCoordinator {
     _generation++;
     _activeOperation = null;
     _activeKey = null;
+  }
+}
+
+class SerialAsyncOperationCoordinator {
+  Future<void> _tail = Future.value();
+
+  Future<T> run<T>(Future<T> Function() operation) {
+    final result = Completer<T>();
+    _tail = _tail.then((_) async {
+      try {
+        result.complete(await operation());
+      } catch (error, stackTrace) {
+        result.completeError(error, stackTrace);
+      }
+    });
+    return result.future;
   }
 }

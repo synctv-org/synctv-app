@@ -89,4 +89,35 @@ void main() {
     await Future.wait([first, second]);
     expect(events, ['first-start', 'second-start', 'first-stale']);
   });
+
+  test('serial coordinator preserves operation order across awaits', () async {
+    final coordinator = SerialAsyncOperationCoordinator();
+    final releaseFirst = Completer<void>();
+    final events = <String>[];
+
+    final first = coordinator.run(() async {
+      events.add('first:start');
+      await releaseFirst.future;
+      events.add('first:end');
+    });
+    final second = coordinator.run(() async {
+      events.add('second:start');
+      events.add('second:end');
+    });
+
+    await Future<void>.delayed(Duration.zero);
+    expect(events, ['first:start']);
+    releaseFirst.complete();
+    await Future.wait([first, second]);
+    expect(events, ['first:start', 'first:end', 'second:start', 'second:end']);
+  });
+
+  test('failed operation does not poison later operations', () async {
+    final coordinator = SerialAsyncOperationCoordinator();
+    final first = coordinator.run<void>(() async => throw StateError('failed'));
+    final second = coordinator.run(() async => 42);
+
+    await expectLater(first, throwsStateError);
+    expect(await second, 42);
+  });
 }

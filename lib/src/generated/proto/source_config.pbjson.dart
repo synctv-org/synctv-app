@@ -347,6 +347,15 @@ const DirectUrlMediaSourceConfig$json = {
       '10': 'preferProxy',
       '17': true
     },
+    {
+      '1': 'proxy_only',
+      '3': 10,
+      '4': 1,
+      '5': 8,
+      '9': 6,
+      '10': 'proxyOnly',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_default_media_index'},
@@ -355,6 +364,7 @@ const DirectUrlMediaSourceConfig$json = {
     {'1': '_is_live'},
     {'1': '_duration_seconds'},
     {'1': '_prefer_proxy'},
+    {'1': '_proxy_only'},
   ],
 };
 
@@ -369,10 +379,11 @@ final $typed_data.Uint8List directUrlMediaSourceConfigDescriptor = $convert.base
     'X2NvbmZpZy5EaXJlY3RVcmxEYW5tYWt1U291cmNlQ29uZmlnUghkYW5tYWt1cxI3ChVkZWZhdW'
     'x0X2Rhbm1ha3VfaW5kZXgYBiABKA1IAlITZGVmYXVsdERhbm1ha3VJbmRleIgBARIcCgdpc19s'
     'aXZlGAcgASgISANSBmlzTGl2ZYgBARIuChBkdXJhdGlvbl9zZWNvbmRzGAggASgBSARSD2R1cm'
-    'F0aW9uU2Vjb25kc4gBARImCgxwcmVmZXJfcHJveHkYCSABKAhIBVILcHJlZmVyUHJveHmIAQFC'
-    'FgoUX2RlZmF1bHRfbWVkaWFfaW5kZXhCGQoXX2RlZmF1bHRfc3VidGl0bGVfaW5kZXhCGAoWX2'
-    'RlZmF1bHRfZGFubWFrdV9pbmRleEIKCghfaXNfbGl2ZUITChFfZHVyYXRpb25fc2Vjb25kc0IP'
-    'Cg1fcHJlZmVyX3Byb3h5');
+    'F0aW9uU2Vjb25kc4gBARImCgxwcmVmZXJfcHJveHkYCSABKAhIBVILcHJlZmVyUHJveHmIAQES'
+    'IgoKcHJveHlfb25seRgKIAEoCEgGUglwcm94eU9ubHmIAQFCFgoUX2RlZmF1bHRfbWVkaWFfaW'
+    '5kZXhCGQoXX2RlZmF1bHRfc3VidGl0bGVfaW5kZXhCGAoWX2RlZmF1bHRfZGFubWFrdV9pbmRl'
+    'eEIKCghfaXNfbGl2ZUITChFfZHVyYXRpb25fc2Vjb25kc0IPCg1fcHJlZmVyX3Byb3h5Qg0KC1'
+    '9wcm94eV9vbmx5');
 
 @$core.Deprecated('Use alistMediaSourceConfigDescriptor instead')
 const AlistMediaSourceConfig$json = {

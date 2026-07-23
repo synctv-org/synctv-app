@@ -1537,6 +1537,7 @@ class SyncTvService {
     Map<String, String> headers = const {},
     String name = '',
     bool preferProxy = false,
+    bool proxyOnly = false,
   }) {
     return _domains.roomMedia.addDirectUrlMedia(
       roomId,
@@ -1545,6 +1546,7 @@ class SyncTvService {
       headers: headers,
       name: name,
       preferProxy: preferProxy,
+      proxyOnly: proxyOnly,
     );
   }
 

@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
+import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
 import 'package:synctv_app/l10n/l10n.dart';
-import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/latest_async_operation_coordinator.dart';
 import 'package:synctv_app/models/chat_message_selection.dart';
 import 'package:synctv_app/models/chat_context_menu_layout.dart';
@@ -20,6 +22,9 @@ import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/services/realtime_event_log_preferences.dart';
 import 'package:synctv_app/services/picture_in_picture_service.dart';
+import 'package:synctv_app/services/p2p_media_cache.dart';
+import 'package:synctv_app/services/p2p_media_engine.dart';
+import 'package:synctv_app/services/p2p_media_preferences.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/services/room_realtime_connection.dart';
 import 'package:synctv_app/utils/message_utils.dart';
@@ -36,15 +41,18 @@ import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/widgets/custom_video_player.dart';
 import 'package:synctv_app/widgets/playback_empty_state.dart';
+import 'package:synctv_app/widgets/playback_options_control.dart';
 import 'package:synctv_app/widgets/playlist_empty_state.dart';
 import 'package:synctv_app/widgets/playback_sync_settings_fields.dart';
+import 'package:synctv_app/widgets/p2p_media_settings_fields.dart';
 import 'package:synctv_app/widgets/room_invite_actions.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 import 'package:synctv_app/widgets/chat_input_area.dart';
 import 'package:synctv_app/widgets/chat_message_hover_layout.dart';
 import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/widgets/chat_reaction_users_dialog.dart';
-import 'package:synctv_app/managers/webrtc_manager.dart';
+import 'package:synctv_app/managers/voice_chat_manager.dart';
+import 'package:synctv_app/managers/p2p_media_manager.dart';
 import 'package:synctv_app/models/danmaku_model.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -70,6 +78,43 @@ class _PlaybackControlIntent {
   final bool? isPlaying;
   final Duration? position;
   final double? speed;
+}
+
+class _P2pMetricsSnapshot {
+  const _P2pMetricsSnapshot({
+    this.httpBytes = 0,
+    this.p2pDownloadBytes = 0,
+    this.p2pUploadBytes = 0,
+    this.httpDownloadRate = 0,
+    this.p2pDownloadRate = 0,
+    this.p2pUploadRate = 0,
+    this.cacheBytes = 0,
+    this.cacheHits = 0,
+    this.cacheMisses = 0,
+    this.integrityChecks = 0,
+    this.integrityMismatches = 0,
+    this.integrityUnavailable = 0,
+  });
+
+  final int httpBytes;
+  final int p2pDownloadBytes;
+  final int p2pUploadBytes;
+  final double httpDownloadRate;
+  final double p2pDownloadRate;
+  final double p2pUploadRate;
+  final int cacheBytes;
+  final int cacheHits;
+  final int cacheMisses;
+  final int integrityChecks;
+  final int integrityMismatches;
+  final int integrityUnavailable;
+
+  int get totalDownloadBytes => httpBytes + p2pDownloadBytes;
+  double get totalDownloadRate => httpDownloadRate + p2pDownloadRate;
+  double get cacheHitRatio {
+    final total = cacheHits + cacheMisses;
+    return total == 0 ? 0 : cacheHits / total;
+  }
 }
 
 String videoPlayerSourceKey(String url, Map<String, String> headers) {
@@ -103,12 +148,20 @@ class _RoomScreenState extends State<RoomScreen>
   late PlaybackSyncConfig _playbackSyncConfig;
   VideoPlayerController? _videoPlayerController;
   VideoPlayerController? _initializingVideoPlayerController;
+  StreamSubscription<AdaptiveVideoTrackSnapshot>?
+  _adaptiveVideoTracksSubscription;
+  AdaptiveVideoTrackSnapshot _adaptiveVideoTracks =
+      const AdaptiveVideoTrackSnapshot();
   String? _videoPlayerSourceKey;
   String? _initializingVideoSourceKey;
   int _forcedVideoLoadGeneration = 0;
   Future<void>? _currentPlaybackLoad;
   final LatestAsyncOperationCoordinator _videoInitialization =
       LatestAsyncOperationCoordinator();
+  final SerialAsyncOperationCoordinator _p2pEngineOperations =
+      SerialAsyncOperationCoordinator();
+  bool _p2pPreferenceUpdateRunning = false;
+  bool _p2pPreferenceUpdateRequested = false;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   final List<RoomRealtimeChatEntry> _messages = [];
@@ -144,6 +197,7 @@ class _RoomScreenState extends State<RoomScreen>
   List<SyncTvUser> _mentionCandidates = [];
   List<ChatMentionInfo> _pendingChatMentions = [];
   AdminRoomMember? _selfMember;
+  SyncTvRoomSettings _roomSettings = SyncTvRoomSettings();
   int _roomOnlineCount = 0;
   bool _membersLoading = false;
   bool _pinnedMessagesLoading = false;
@@ -182,24 +236,37 @@ class _RoomScreenState extends State<RoomScreen>
 
   // Sync state
   bool _isSyncing = false;
+  int _playbackSyncGeneration = 0;
   final PlaybackOperationTracker<SyncTvPlaybackStatus>
   _playbackOperationTracker = PlaybackOperationTracker();
   bool _serverTimeSyncInFlight = false;
   bool _joiningVoice = false;
-  final Set<String> _warnedPlaybackCredentialHeaderKeys = {};
   PlaybackDanmakuWindow? _playbackDanmakuWindow;
   bool _loadingPlaybackDanmaku = false;
 
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
-  bool _reconnectExhaustedNotificationPending = false;
   bool _isDisposing = false;
-  static const int _maxReconnectAttempts = 5;
 
-  StreamSubscription? _realtimeSubscription;
+  StreamSubscription<Uint8List>? _realtimeSubscription;
   StreamSubscription? _authErrorSubscription;
 
-  WebRTCManager? _webrtcManager;
+  VoiceChatManager? _voiceChatManager;
+  P2pMediaManager? _p2pMediaManager;
+  P2pMediaEngine? _p2pMediaEngine;
+  String _activeP2pSwarmId = '';
+  _P2pMetricsSnapshot _p2pMetrics = const _P2pMetricsSnapshot();
+  DateTime _p2pMetricsSampledAt = DateTime.now();
+  int _lastP2pHttpBytes = 0;
+  int _lastP2pDownloadBytes = 0;
+  int _lastP2pUploadBytes = 0;
+  int _retainedP2pHttpBytes = 0;
+  int _retainedP2pDownloadBytes = 0;
+  int _retainedP2pCacheHits = 0;
+  int _retainedP2pCacheMisses = 0;
+  int _retainedP2pIntegrityChecks = 0;
+  int _retainedP2pIntegrityMismatches = 0;
+  int _retainedP2pIntegrityUnavailable = 0;
 
   // Danmaku Stream
   final DanmakuController _danmakuController = DanmakuController();
@@ -259,6 +326,24 @@ class _RoomScreenState extends State<RoomScreen>
     return _isSystemAdmin || _isRoomCreator;
   }
 
+  bool get _canUseVoiceChat {
+    if (!_roomSettings.voiceChatEnabled) return false;
+    final member = _selfMember;
+    if (member != null) {
+      return (member.permissions & RoomEffectivePermissions.useVoiceChat) != 0;
+    }
+    return _isSystemAdmin || _isRoomCreator;
+  }
+
+  bool get _canUseP2pMedia {
+    if (!_roomSettings.p2pMediaEnabled) return false;
+    final member = _selfMember;
+    if (member != null) {
+      return (member.permissions & RoomEffectivePermissions.useP2pMedia) != 0;
+    }
+    return _isSystemAdmin || _isRoomCreator;
+  }
+
   bool get _canViewPlaybackHistory {
     final member = _selfMember;
     if (member == null) return _isSystemAdmin || _isRoomCreator;
@@ -312,13 +397,13 @@ class _RoomScreenState extends State<RoomScreen>
       unawaited(_loadCurrentPlayback());
     };
 
-    // Initialize WebRTC Manager
-    _webrtcManager = WebRTCManager(
+    // Initialize independent voice-chat and P2P-media sessions.
+    _voiceChatManager = VoiceChatManager(
       loadIceServers: () => _loadWebRtcIceServers(),
       onSignalingMessage: (type, data) {
         if (_channel != null) {
           try {
-            final bytes = RoomRealtimeCodec.encodeWebRtcSignal(type, data);
+            final bytes = RoomRealtimeCodec.encodeWebRtcVoiceSignal(type, data);
             _sendRealtimeMessage(bytes);
           } catch (e) {
             debugPrint('WebRTC encode error: $e');
@@ -328,6 +413,36 @@ class _RoomScreenState extends State<RoomScreen>
       onStateChange: () {
         if (mounted) setState(() {});
       },
+    );
+    _p2pMediaManager = P2pMediaManager(
+      loadIceServers: () => _loadWebRtcIceServers(),
+      loadCachedPiece: (swarmId, pieceKey) =>
+          _p2pEngineOperations.run(() async {
+            final engine = _p2pMediaEngine;
+            if (engine == null) return null;
+            return engine.cachedPiece(swarmId, pieceKey);
+          }),
+      onSignalingMessage: (type, data) {
+        if (_channel == null) return;
+        try {
+          _sendRealtimeMessage(
+            RoomRealtimeCodec.encodeWebRtcMediaSignal(type, data),
+          );
+        } catch (error) {
+          debugPrint('P2P media signaling encode error: $error');
+        }
+      },
+      onStateChange: () {
+        if (mounted) setState(() {});
+      },
+    );
+    P2pMediaPreferences.enabled.addListener(_handleP2pPreferenceChanged);
+    P2pMediaPreferences.securityMode.addListener(_handleP2pPreferenceChanged);
+    P2pMediaPreferences.cacheSizeMiB.addListener(_handleP2pPreferenceChanged);
+    unawaited(
+      P2pMediaPreferences.load().then((_) {
+        if (mounted) _handleP2pPreferenceChanged();
+      }),
     );
 
     _mediaEntryScrollController.addListener(_onMediaEntryScroll);
@@ -342,6 +457,128 @@ class _RoomScreenState extends State<RoomScreen>
       setState(() => _pictureInPictureAvailable = available);
     }
   }
+
+  void _handleP2pPreferenceChanged() {
+    _p2pPreferenceUpdateRequested = true;
+    if (_p2pPreferenceUpdateRunning) return;
+    _p2pPreferenceUpdateRunning = true;
+    unawaited(Future<void>.microtask(_drainP2pPreferenceUpdates));
+  }
+
+  Future<void> _drainP2pPreferenceUpdates() async {
+    try {
+      while (_p2pPreferenceUpdateRequested && mounted && !_isDisposing) {
+        _p2pPreferenceUpdateRequested = false;
+        try {
+          await _applyP2pPreference();
+        } catch (error) {
+          debugPrint('P2P media preference update failed: $error');
+        }
+      }
+    } finally {
+      _p2pPreferenceUpdateRunning = false;
+      if (_p2pPreferenceUpdateRequested && mounted && !_isDisposing) {
+        _handleP2pPreferenceChanged();
+      }
+    }
+  }
+
+  Future<void> _applyP2pPreference() async {
+    if (!mounted || _isDisposing) return;
+    await _p2pEngineOperations.run(() async {
+      final currentEngine = _p2pMediaEngine;
+      final modeChanged =
+          currentEngine != null &&
+          currentEngine.securityMode != P2pMediaPreferences.securityMode.value;
+      final cacheSizeChanged =
+          currentEngine != null &&
+          currentEngine.maxCacheBytes !=
+              P2pMediaPreferences.cacheSizeMiB.value * 1024 * 1024;
+      final delivery =
+          _currentStatus?.entry?.selectedPlaybackUrlOption?.p2pDelivery;
+      final currentSwarmActive =
+          delivery != null &&
+          delivery.swarmId == _activeP2pSwarmId &&
+          _p2pMediaManager?.activeSwarms.contains(delivery.swarmId) == true;
+      if (P2pMediaPreferences.enabled.value &&
+          _canUseP2pMedia &&
+          currentEngine != null &&
+          !modeChanged &&
+          !cacheSizeChanged &&
+          currentSwarmActive) {
+        return;
+      }
+      await _deactivateP2pMedia();
+      if (identical(_p2pMediaEngine, currentEngine)) {
+        _p2pMediaEngine = null;
+      }
+      if (currentEngine != null) {
+        _retainP2pEngineStats(currentEngine.stats.value);
+        await currentEngine.dispose();
+      }
+    });
+    if (!mounted || _isDisposing) return;
+    final status = _currentStatus;
+    final rawUrl = status?.entry?.url ?? '';
+    if (!mounted || rawUrl.isEmpty) return;
+    await _applyPlaybackStatus(
+      status!,
+      forceReloadVideo: true,
+      forceSeek: true,
+    );
+  }
+
+  Future<void> _deactivateP2pMedia() async {
+    if (_activeP2pSwarmId.isEmpty) return;
+    _activeP2pSwarmId = '';
+    await _p2pMediaManager?.setActiveSwarms(const {});
+  }
+
+  void _retainP2pEngineStats(P2pMediaStats stats) {
+    _retainedP2pHttpBytes += stats.httpBytes;
+    _retainedP2pDownloadBytes += stats.p2pBytes;
+    _retainedP2pCacheHits += stats.cacheHits;
+    _retainedP2pCacheMisses += stats.cacheMisses;
+    _retainedP2pIntegrityChecks += stats.integrityChecks;
+    _retainedP2pIntegrityMismatches += stats.integrityMismatches;
+    _retainedP2pIntegrityUnavailable += stats.integrityUnavailable;
+  }
+
+  Future<String> _resolveSubtitlePlaybackUrl(
+    String url,
+    Map<String, String> headers,
+  ) => _p2pEngineOperations.run(() async {
+    final delivery =
+        _currentStatus?.entry?.selectedPlaybackUrlOption?.p2pDelivery;
+    final engine = _p2pMediaEngine;
+    if (delivery == null ||
+        engine == null ||
+        delivery.swarmId != _activeP2pSwarmId) {
+      return url;
+    }
+    final subtitles = _currentStatus?.entry?.subtitles;
+    var subtitleIndex = 0;
+    if (subtitles != null) {
+      final entries = subtitles.entries.toList(growable: false);
+      final found = entries.indexWhere((entry) {
+        final value = entry.value;
+        return value is Map &&
+            SyncTvService.resolveResourceUrl('${value['url'] ?? ''}') == url;
+      });
+      if (found >= 0) subtitleIndex = found;
+    }
+    try {
+      return (await engine.localizeStatic(
+        upstream: Uri.parse(url),
+        headers: headers,
+        swarmId: delivery.swarmId,
+        logicalKey: 'subtitle:$subtitleIndex',
+      )).toString();
+    } catch (error) {
+      debugPrint('P2P subtitle gateway setup failed: $error');
+      return url;
+    }
+  });
 
   Future<void> _enterPictureInPicture() async {
     final controller = _videoPlayerController;
@@ -369,6 +606,38 @@ class _RoomScreenState extends State<RoomScreen>
   void _samplePlaybackDiagnostics() {
     _serverLatencySnapshot = SyncedClock.estimatedLatency;
     _playbackDeviationSnapshot = _playbackDeviationSeconds();
+    _sampleP2pMetrics();
+  }
+
+  void _sampleP2pMetrics() {
+    final now = DateTime.now();
+    final elapsed = now.difference(_p2pMetricsSampledAt).inMilliseconds / 1000;
+    final stats = _p2pMediaEngine?.stats.value ?? const P2pMediaStats();
+    final uploadedBytes = _p2pMediaManager?.uploadedBytes ?? 0;
+    final httpBytes = _retainedP2pHttpBytes + stats.httpBytes;
+    final p2pDownloadBytes = _retainedP2pDownloadBytes + stats.p2pBytes;
+    final seconds = elapsed > 0 ? elapsed : 1;
+    _p2pMetrics = _P2pMetricsSnapshot(
+      httpBytes: httpBytes,
+      p2pDownloadBytes: p2pDownloadBytes,
+      p2pUploadBytes: uploadedBytes,
+      httpDownloadRate: math.max(0, httpBytes - _lastP2pHttpBytes) / seconds,
+      p2pDownloadRate:
+          math.max(0, p2pDownloadBytes - _lastP2pDownloadBytes) / seconds,
+      p2pUploadRate: math.max(0, uploadedBytes - _lastP2pUploadBytes) / seconds,
+      cacheBytes: stats.cacheBytes,
+      cacheHits: _retainedP2pCacheHits + stats.cacheHits,
+      cacheMisses: _retainedP2pCacheMisses + stats.cacheMisses,
+      integrityChecks: _retainedP2pIntegrityChecks + stats.integrityChecks,
+      integrityMismatches:
+          _retainedP2pIntegrityMismatches + stats.integrityMismatches,
+      integrityUnavailable:
+          _retainedP2pIntegrityUnavailable + stats.integrityUnavailable,
+    );
+    _lastP2pHttpBytes = httpBytes;
+    _lastP2pDownloadBytes = p2pDownloadBytes;
+    _lastP2pUploadBytes = uploadedBytes;
+    _p2pMetricsSampledAt = now;
   }
 
   Future<void> _syncRoomServerTime() async {
@@ -403,7 +672,8 @@ class _RoomScreenState extends State<RoomScreen>
     _realtimeSubscription = null;
     await _channel?.sink.close();
     _channel = null;
-    _webrtcManager?.leave();
+    _voiceChatManager?.leave();
+    await _p2pMediaManager?.setActiveSwarms(const {});
     if (!mounted) return;
     setState(() {
       _roomSessionError = message;
@@ -588,13 +858,20 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _connectRealtime() async {
     _reconnectTimer?.cancel();
+    RoomRealtimeConnection? connectingChannel;
 
     try {
-      await _realtimeSubscription?.cancel();
+      final previousSubscription = _realtimeSubscription;
+      final previousChannel = _channel;
       _realtimeSubscription = null;
-      await _channel?.sink.close();
       _channel = null;
-      _channel = RoomRealtimeConnection.connect(
+      unawaited(
+        _disposePreviousRealtimeConnection(
+          previousSubscription,
+          previousChannel,
+        ),
+      );
+      final channel = RoomRealtimeConnection.connect(
         widget.room.roomId,
         initialMessages: RoomRealtimeCodec.encodeInitialObservations(
           afterChatEventId: _lastChatEventId,
@@ -602,16 +879,13 @@ class _RoomScreenState extends State<RoomScreen>
         onOutgoing: _recordRealtimeOutgoing,
         onIncoming: _recordRealtimeIncoming,
       );
-      if (!_realtimeReconnectBus.isClosed) {
-        _realtimeReconnectBus.add(null);
-      }
-      _syncMemberTabObservation();
-      unawaited(_loadCurrentPlayback());
+      connectingChannel = channel;
+      _channel = channel;
+      unawaited(_p2pMediaManager?.resetSignalingSession());
 
-      _realtimeSubscription = _channel!.stream.listen(
+      _realtimeSubscription = channel.stream.listen(
         (data) {
           _reconnectAttempts = 0;
-          _reconnectExhaustedNotificationPending = false;
           try {
             final message = RoomRealtimeCodec.decode(data);
             if (!_realtimeMessageBus.isClosed) {
@@ -624,19 +898,48 @@ class _RoomScreenState extends State<RoomScreen>
         },
         onError: (error) {
           debugPrint('Realtime stream error: $error');
+          if (_channel != channel) return;
           _channel = null;
           _scheduleReconnect();
         },
         onDone: () {
           debugPrint('Realtime stream closed');
+          if (_channel != channel) return;
           _channel = null;
           _scheduleReconnect();
         },
       );
+      await channel.ready;
+      if (!mounted || _channel != channel) return;
+      _reconnectAttempts = 0;
+      if (!_realtimeReconnectBus.isClosed) {
+        _realtimeReconnectBus.add(null);
+      }
+      _syncMemberTabObservation();
+      unawaited(_loadCurrentPlayback());
     } catch (e) {
       debugPrint('Realtime stream connection error: $e');
+      if (_channel == connectingChannel) _channel = null;
       _scheduleReconnect();
     }
+  }
+
+  Future<void> _disposePreviousRealtimeConnection(
+    StreamSubscription<Uint8List>? subscription,
+    RoomRealtimeConnection? channel,
+  ) async {
+    await Future.wait<void>([
+      if (subscription != null)
+        subscription.cancel().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () {},
+        ),
+      if (channel != null)
+        channel.close().timeout(const Duration(seconds: 2), onTimeout: () {}),
+    ]).catchError((Object error) {
+      debugPrint('Realtime connection cleanup error: $error');
+      return <void>[];
+    });
   }
 
   void _recordRealtimeIncoming(Uint8List bytes) {
@@ -701,18 +1004,7 @@ class _RoomScreenState extends State<RoomScreen>
   void _scheduleReconnect() {
     if (_isDisposing) return;
     if (_reconnectTimer?.isActive ?? false) return;
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
-      if (_reconnectExhaustedNotificationPending) return;
-      _reconnectExhaustedNotificationPending = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _reconnectExhaustedNotificationPending = false;
-        if (!mounted || _isDisposing) return;
-        MessageUtils.showError(context, context.l10n.connectionClosedRetry);
-      });
-      return;
-    }
-
-    _reconnectAttempts++;
+    _reconnectAttempts = math.min(_reconnectAttempts + 1, 5);
     final delay = Duration(seconds: _reconnectAttempts * 2);
     debugPrint(
       'Scheduling reconnect attempt $_reconnectAttempts in ${delay.inSeconds}s',
@@ -836,11 +1128,38 @@ class _RoomScreenState extends State<RoomScreen>
       }
     } else if (type == RoomRealtimeMessageKind.roomSettings) {
       if (!_isPrimaryResourceMessage(message, 'room_settings')) return;
+      final settings = message.roomSettings;
+      if (settings == null) return;
+      final voiceWasEnabled = _roomSettings.voiceChatEnabled;
+      final p2pWasEnabled = _roomSettings.p2pMediaEnabled;
+      final voiceWasActive = _voiceChatManager?.isConnected == true;
+      final p2pWasActive = _activeP2pSwarmId.isNotEmpty;
+      if (mounted) setState(() => _roomSettings = settings);
+      if (voiceWasEnabled && !settings.voiceChatEnabled) {
+        unawaited(_voiceChatManager?.leave());
+        if (voiceWasActive && mounted) {
+          MessageUtils.showInfo(context, context.l10n.voiceChatDisabledByRoom);
+        }
+      }
+      if (p2pWasEnabled != settings.p2pMediaEnabled) {
+        _handleP2pPreferenceChanged();
+        if (!settings.p2pMediaEnabled && p2pWasActive && mounted) {
+          MessageUtils.showInfo(context, context.l10n.p2pMediaDisabledByRoom);
+        }
+      }
       return;
     } else if (type == RoomRealtimeMessageKind.myStatus) {
       if (!_isPrimaryResourceMessage(message, 'self_room_member')) return;
       if (mounted) {
+        final couldUseVoiceChat = _canUseVoiceChat;
+        final couldUseP2pMedia = _canUseP2pMedia;
         setState(() => _selfMember = message.selfMember);
+        if (couldUseVoiceChat && !_canUseVoiceChat) {
+          unawaited(_voiceChatManager?.leave());
+        }
+        if (couldUseP2pMedia != _canUseP2pMedia) {
+          _handleP2pPreferenceChanged();
+        }
       }
       return;
     } else if (type == RoomRealtimeMessageKind.memberEvent) {
@@ -888,6 +1207,12 @@ class _RoomScreenState extends State<RoomScreen>
       }
       final error = message.error;
       if (error != null && error.clientOperationId.isNotEmpty) {
+        final voiceChatManager = _voiceChatManager;
+        if (voiceChatManager != null) {
+          unawaited(voiceChatManager.rejectJoin(error.clientOperationId));
+        }
+      }
+      if (error != null && error.clientOperationId.isNotEmpty) {
         _rejectLocalPlaybackOperation(error.clientOperationId);
       }
       if (error?.isConflict == true) {
@@ -902,26 +1227,38 @@ class _RoomScreenState extends State<RoomScreen>
       if (mounted) {
         _handleRoomSessionClosed(context.l10n.loginExpired);
       }
-    } else if (type == RoomRealtimeMessageKind.webrtcOffer ||
-        type == RoomRealtimeMessageKind.webrtcAnswer ||
-        type == RoomRealtimeMessageKind.webrtcIceCandidate ||
-        type == RoomRealtimeMessageKind.webrtcJoin ||
-        type == RoomRealtimeMessageKind.webrtcLeave) {
-      if (_webrtcManager != null) {
-        final signal = message.webRtc;
-        if (signal == null) return;
-
-        try {
-          final signalType = signal.signalType;
-          if (signalType.isNotEmpty) {
-            _webrtcManager!.handleSignalingMessage(
-              signalType,
-              signal.payload(),
-            );
+    } else if (type == RoomRealtimeMessageKind.webrtcVoiceOffer ||
+        type == RoomRealtimeMessageKind.webrtcVoiceAnswer ||
+        type == RoomRealtimeMessageKind.webrtcVoiceIceCandidate ||
+        type == RoomRealtimeMessageKind.webrtcVoicePeerJoined ||
+        type == RoomRealtimeMessageKind.webrtcVoicePeerLeft ||
+        type == RoomRealtimeMessageKind.webrtcMediaOffer ||
+        type == RoomRealtimeMessageKind.webrtcMediaAnswer ||
+        type == RoomRealtimeMessageKind.webrtcMediaIceCandidate ||
+        type == RoomRealtimeMessageKind.webrtcMediaPeerLeft ||
+        type == RoomRealtimeMessageKind.webrtcMediaSwarmPeers) {
+      final signal = message.webRtc;
+      if (signal == null) return;
+      try {
+        final signalType = signal.signalType;
+        if (signalType.isNotEmpty) {
+          switch (signal) {
+            case RoomRealtimeWebRtcMediaSignal():
+              if (!_canUseP2pMedia) return;
+              _p2pMediaManager?.handleSignalingMessage(
+                signalType,
+                signal.payload(),
+              );
+            case RoomRealtimeWebRtcVoiceSignal():
+              if (!_canUseVoiceChat) return;
+              _voiceChatManager?.handleSignalingMessage(
+                signalType,
+                signal.payload(),
+              );
           }
-        } catch (e) {
-          debugPrint('WebRTC signaling processing error: $e');
         }
+      } catch (e) {
+        debugPrint('WebRTC signaling processing error: $e');
       }
     }
   }
@@ -1186,58 +1523,11 @@ class _RoomScreenState extends State<RoomScreen>
   SyncTvPlaybackStatus _mergePlaybackStatus(
     SyncTvPlaybackStatus incoming, {
     required bool incomingHasTiming,
-  }) {
-    final current = _currentStatus;
-    final incomingEntry = incoming.entry;
-    final currentEntry = current?.entry;
-    final hasSameEntry =
-        currentEntry != null &&
-        incomingEntry != null &&
-        currentEntry.hasSamePlaybackIdentity(incomingEntry);
-    final mergedEntry = incomingEntry == null
-        ? incomingHasTiming
-              ? null
-              : currentEntry
-        : incomingEntry.url.isEmpty &&
-              currentEntry != null &&
-              currentEntry.url.isNotEmpty &&
-              hasSameEntry
-        ? currentEntry
-        : hasSameEntry
-        ? incomingEntry.url.isEmpty
-              ? currentEntry
-              : incomingEntry.withPlaybackIdentityFrom(currentEntry)
-        : incomingEntry;
-    return SyncTvPlaybackStatus(
-      entry: mergedEntry,
-      isPlaying: incomingHasTiming
-          ? incoming.isPlaying
-          : current?.isPlaying ?? incoming.isPlaying,
-      currentTime: incomingHasTiming
-          ? incoming.currentTime
-          : current?.currentTime ?? incoming.currentTime,
-      playbackRate: incomingHasTiming
-          ? incoming.playbackRate
-          : current?.playbackRate ?? incoming.playbackRate,
-      generatedAtMillis: incomingHasTiming
-          ? incoming.generatedAtMillis
-          : current?.generatedAtMillis ?? incoming.generatedAtMillis,
-      version: incoming.version ?? current?.version,
-      playingMediaId: incoming.playingMediaId.isNotEmpty
-          ? incoming.playingMediaId
-          : current?.playingMediaId ?? incoming.playingMediaId,
-      playingPlaylistId: incoming.playingPlaylistId.isNotEmpty
-          ? incoming.playingPlaylistId
-          : current?.playingPlaylistId ?? incoming.playingPlaylistId,
-      targetHash: incoming.targetHash.isNotEmpty
-          ? incoming.targetHash
-          : current?.targetHash ?? incoming.targetHash,
-      historyCursorId: incoming.historyCursorId.isNotEmpty
-          ? incoming.historyCursorId
-          : current?.historyCursorId ?? incoming.historyCursorId,
-      clientOperationId: incoming.clientOperationId,
-    );
-  }
+  }) => mergePlaybackStatusSnapshot(
+    current: _currentStatus,
+    incoming: incoming,
+    incomingHasTiming: incomingHasTiming,
+  );
 
   bool _needsPlaybackResourceSnapshot(SyncTvPlaybackStatus incoming) {
     if (incoming.entry != null && incoming.entry!.url.isNotEmpty) {
@@ -1299,12 +1589,19 @@ class _RoomScreenState extends State<RoomScreen>
       return;
     }
 
+    final syncGeneration = ++_playbackSyncGeneration;
+    bool isCurrentSync() =>
+        mounted &&
+        syncGeneration == _playbackSyncGeneration &&
+        identical(_currentStatus, status) &&
+        identical(_videoPlayerController, controller);
+    if (!isCurrentSync()) return;
     _isSyncing = true;
 
     try {
       if (controller.value.playbackSpeed != status.playbackRate) {
         await controller.setPlaybackSpeed(status.playbackRate);
-        if (!mounted || !identical(_videoPlayerController, controller)) return;
+        if (!isCurrentSync()) return;
         _refreshPlaybackUi(controller);
       }
 
@@ -1315,7 +1612,7 @@ class _RoomScreenState extends State<RoomScreen>
           : status.isPlaying;
       if (!targetIsPlaying && controller.value.isPlaying) {
         await controller.pause();
-        if (!mounted || !identical(_videoPlayerController, controller)) return;
+        if (!isCurrentSync()) return;
         _refreshPlaybackUi(controller);
       }
       if (target != null) {
@@ -1332,26 +1629,26 @@ class _RoomScreenState extends State<RoomScreen>
           await controller.seekTo(
             Duration(milliseconds: (target.positionSeconds * 1000).toInt()),
           );
-          if (!mounted || !identical(_videoPlayerController, controller)) {
-            return;
-          }
+          if (!isCurrentSync()) return;
           _refreshPlaybackUi(controller);
         }
       }
 
       if (targetIsPlaying && controller.value.isPlaying == false) {
         await controller.play();
-        if (!mounted || !identical(_videoPlayerController, controller)) return;
+        if (!isCurrentSync()) return;
         _refreshPlaybackUi(controller);
       }
-      _refreshPlaybackUi(controller);
+      if (isCurrentSync()) _refreshPlaybackUi(controller);
     } catch (e) {
       if (!_isDisposedVideoControllerError(e)) {
         debugPrint('Sync execution error: $e');
       }
     } finally {
       Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) _isSyncing = false;
+        if (mounted && syncGeneration == _playbackSyncGeneration) {
+          _isSyncing = false;
+        }
       });
     }
   }
@@ -1449,7 +1746,7 @@ class _RoomScreenState extends State<RoomScreen>
     final label = compact
         ? _formatLatency(latency)
         : context.l10n.latencyValue(_formatLatency(latency));
-    return Tooltip(
+    return AppTooltip(
       message: context.l10n.serverLatency,
       child: AppBadge(
         constraints: const BoxConstraints(minHeight: 28, maxWidth: 128),
@@ -1479,7 +1776,7 @@ class _RoomScreenState extends State<RoomScreen>
     final label = compact
         ? _formatDeviation(deviation)
         : context.l10n.deviationValue(_formatDeviation(deviation));
-    return Tooltip(
+    return AppTooltip(
       message: context.l10n.playbackDeviation,
       child: AppBadge(
         constraints: const BoxConstraints(minHeight: 28, maxWidth: 128),
@@ -1492,6 +1789,146 @@ class _RoomScreenState extends State<RoomScreen>
         backgroundColor: background,
         textStyle: TextStyle(color: color, fontSize: 12),
         label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+    );
+  }
+
+  Widget? _buildP2pMediaBadge({bool videoStyle = false}) {
+    if (!_canUseP2pMedia ||
+        _activeP2pSwarmId.isEmpty ||
+        !P2pMediaPreferences.enabled.value) {
+      return null;
+    }
+    final peers = _p2pMediaManager?.connectedPeerCount ?? 0;
+    final color = peers > 0
+        ? (videoStyle ? const Color(0xFF7CFFB2) : Colors.green)
+        : (videoStyle
+              ? Colors.white70
+              : Theme.of(context).colorScheme.onSurfaceVariant);
+    final rate = _formatByteRate(_p2pMetrics.totalDownloadRate);
+    return AppTooltip(
+      message:
+          '${context.l10n.p2pMediaDescription}\n'
+          '${context.l10n.totalDownload}: $rate',
+      child: GestureDetector(
+        onTap: _showP2pMetricsDialog,
+        child: AppBadge(
+          constraints: const BoxConstraints(minHeight: 28, maxWidth: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: videoStyle
+              ? const BorderSide(color: Colors.white24)
+              : null,
+          icon: Icons.hub_rounded,
+          iconSize: 15,
+          color: color,
+          backgroundColor: videoStyle
+              ? Colors.white.withValues(alpha: 0.12)
+              : color.withValues(alpha: 0.10),
+          textStyle: TextStyle(color: color, fontSize: 12),
+          label: Text('P2P · $peers · $rate'),
+        ),
+      ),
+    );
+  }
+
+  String _formatBytes(num bytes) {
+    const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
+    var value = bytes.toDouble();
+    var unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+      value /= 1024;
+      unit++;
+    }
+    return '${value.toStringAsFixed(unit == 0 || value >= 100 ? 0 : 1)} ${units[unit]}';
+  }
+
+  String _formatByteRate(num bytesPerSecond) =>
+      '${_formatBytes(bytesPerSecond)}/s';
+
+  String _formatTransferMetric(int bytes, double rate) =>
+      '${_formatByteRate(rate)} · ${_formatBytes(bytes)}';
+
+  Future<void> _showP2pMetricsDialog() {
+    final metrics = _p2pMetrics;
+    final peers = _p2pMediaManager?.connectedPeerCount ?? 0;
+    final rows = <(String, String)>[
+      (
+        context.l10n.totalDownload,
+        _formatTransferMetric(
+          metrics.totalDownloadBytes,
+          metrics.totalDownloadRate,
+        ),
+      ),
+      (
+        context.l10n.totalUpload,
+        _formatTransferMetric(metrics.p2pUploadBytes, metrics.p2pUploadRate),
+      ),
+      (
+        context.l10n.httpDownload,
+        _formatTransferMetric(metrics.httpBytes, metrics.httpDownloadRate),
+      ),
+      (
+        context.l10n.p2pDownload,
+        _formatTransferMetric(
+          metrics.p2pDownloadBytes,
+          metrics.p2pDownloadRate,
+        ),
+      ),
+      (
+        context.l10n.p2pUpload,
+        _formatTransferMetric(metrics.p2pUploadBytes, metrics.p2pUploadRate),
+      ),
+      (context.l10n.connectedPeers, peers.toString()),
+      (context.l10n.p2pCache, _formatBytes(metrics.cacheBytes)),
+      (
+        context.l10n.cacheHitRate,
+        '${(metrics.cacheHitRatio * 100).toStringAsFixed(1)}%',
+      ),
+      (context.l10n.p2pIntegrityChecks, metrics.integrityChecks.toString()),
+      (
+        context.l10n.p2pIntegrityMismatches,
+        metrics.integrityMismatches.toString(),
+      ),
+      (
+        context.l10n.p2pIntegrityUnavailable,
+        metrics.integrityUnavailable.toString(),
+      ),
+    ];
+    return showAppDialog<void>(
+      context: context,
+      builder: (dialogContext) => AppDialog(
+        icon: const Icon(Icons.hub_rounded),
+        title: Text(context.l10n.p2pMetrics),
+        body: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: rows
+              .map(
+                (row) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(row.$1)),
+                      const SizedBox(width: 20),
+                      Text(
+                        row.$2,
+                        style: const TextStyle(
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(growable: false),
+        ),
+        actions: [
+          AppActionButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            label: context.l10n.close,
+            style: AppActionButtonStyle.text,
+          ),
+        ],
       ),
     );
   }
@@ -1510,6 +1947,8 @@ class _RoomScreenState extends State<RoomScreen>
       videoStyle: videoStyle,
     );
     if (deviationBadge != null) badges.add(deviationBadge);
+    final p2pBadge = _buildP2pMediaBadge(videoStyle: videoStyle);
+    if (p2pBadge != null) badges.add(p2pBadge);
     if (badges.isEmpty) return null;
     return Wrap(
       spacing: 6,
@@ -1653,7 +2092,7 @@ class _RoomScreenState extends State<RoomScreen>
         : intent.position?.inMilliseconds.toDouble() ??
               value.position.inMilliseconds.toDouble();
     return status.copyWith(
-      isPlaying: intent.isPlaying ?? value.isPlaying,
+      isPlaying: intent.isPlaying ?? status.isPlaying,
       currentTime: _isCurrentPlaybackLive ? currentTime : currentTime / 1000.0,
       playbackRate: intent.speed ?? value.playbackSpeed,
       generatedAtMillis: intent.clientTimeMillis,
@@ -1692,6 +2131,10 @@ class _RoomScreenState extends State<RoomScreen>
     bool force = false,
   }) async {
     final entry = _currentStatus?.entry;
+    if (entry == null || entry.live) {
+      _playbackDanmakuWindow = null;
+      return;
+    }
     final sourceKey = playbackDanmakuSourceKey(entry);
     if (sourceKey.isEmpty || _loadingPlaybackDanmaku) return;
     if (!force &&
@@ -1707,7 +2150,14 @@ class _RoomScreenState extends State<RoomScreen>
         entry: entry,
         positionSeconds: positionSeconds,
       );
-      if (!mounted || result == null) return;
+      final currentEntry = _currentStatus?.entry;
+      if (!mounted ||
+          result == null ||
+          currentEntry == null ||
+          currentEntry.live ||
+          playbackDanmakuSourceKey(currentEntry) != sourceKey) {
+        return;
+      }
       _playbackDanmakuWindow = result.window;
       _danmakuController.addUniqueItems(result.items);
     } catch (e) {
@@ -1725,11 +2175,18 @@ class _RoomScreenState extends State<RoomScreen>
   }) async {
     if (!mounted) return;
     final previousStatus = _currentStatus;
+    final previousVersion = previousStatus?.version;
+    final incomingVersion = status.version;
+    if (previousVersion != null &&
+        incomingVersion != null &&
+        incomingVersion < previousVersion) {
+      return;
+    }
     final oldMovieId = previousStatus?.entry?.id;
     final nextMovieId = status.entry?.id;
     final sourceChanged =
         previousStatus != null && !previousStatus.hasSamePlaybackSource(status);
-    if (oldMovieId != nextMovieId) {
+    if (oldMovieId != nextMovieId || sourceChanged) {
       _danmakuController.clear();
       _playbackDanmakuWindow = null;
     }
@@ -1751,7 +2208,6 @@ class _RoomScreenState extends State<RoomScreen>
 
       if (_videoPlayerController == null ||
           forceReloadVideo ||
-          _videoPlayerController!.dataSource != newUrl ||
           _videoPlayerSourceKey != newSourceKey) {
         await _initVideo(
           newUrl,
@@ -1759,10 +2215,10 @@ class _RoomScreenState extends State<RoomScreen>
           forceReload: forceReloadVideo,
         );
         if (!mounted || !_isCurrentPlaybackUrl(newUrl)) return;
-        if (mounted &&
-            _videoPlayerController != null &&
-            _videoPlayerController!.value.isInitialized) {
-          await _performSync(status, forceSeek: true);
+        final latestStatus = _currentStatus;
+        if (latestStatus != null &&
+            _videoPlayerController?.value.isInitialized == true) {
+          await _performSync(latestStatus, forceSeek: true);
         }
       } else {
         unawaited(_performSync(status, forceSeek: forceSeek || sourceChanged));
@@ -1786,6 +2242,7 @@ class _RoomScreenState extends State<RoomScreen>
         unawaited(_maybeFetchPlaybackDanmaku(status.currentTime));
       }
     } else {
+      await _deactivateP2pMedia();
       if (_videoPlayerController != null) {
         await _disposeVideoController();
         if (mounted) setState(() {});
@@ -1869,11 +2326,84 @@ class _RoomScreenState extends State<RoomScreen>
     required Map<String, String> headers,
     required IsLatestOperation isLatest,
   }) async {
-    _warnPlaybackCredentialHeaders(headers);
+    if (!isLatest()) return;
+    await P2pMediaPreferences.load();
+    if (!isLatest()) return;
+
+    var playbackUrl = url;
+    var playbackHeaders = headers;
+    final status = _currentStatus;
+    final canUseP2p =
+        P2pMediaPreferences.enabled.value &&
+        _canUseP2pMedia &&
+        status != null &&
+        (Uri.tryParse(url)?.scheme == 'http' ||
+            Uri.tryParse(url)?.scheme == 'https');
+    await _p2pEngineOperations.run(() async {
+      if (!isLatest()) return;
+      if (canUseP2p) {
+        final delivery = status.entry?.selectedPlaybackUrlOption?.p2pDelivery;
+        if (delivery != null && delivery.swarmId.isNotEmpty) {
+          final swarmId = delivery.swarmId;
+          try {
+            var engine = _p2pMediaEngine;
+            if (engine == null) {
+              final cacheSizeBytes =
+                  P2pMediaPreferences.cacheSizeMiB.value * 1024 * 1024;
+              final persistentCache = await _openP2pMediaCache(cacheSizeBytes);
+              if (!isLatest()) {
+                await persistentCache?.close();
+                return;
+              }
+              engine = P2pMediaEngine(
+                requestPeerPiece: (swarm, piece, cancellation) async =>
+                    _p2pMediaManager?.requestPiece(swarm, piece, cancellation),
+                reportPeerIntegrity: (source, valid) async =>
+                    _p2pMediaManager?.reportPeerIntegrity(source, valid),
+                maxCacheBytes: cacheSizeBytes,
+                persistentCache: persistentCache,
+                securityMode: P2pMediaPreferences.securityMode.value,
+              );
+              _p2pMediaEngine = engine;
+            }
+            playbackUrl = (await engine.localize(
+              upstream: Uri.parse(url),
+              headers: headers,
+              swarmId: swarmId,
+              format:
+                  status.entry?.selectedPlaybackUrlOption?.format ??
+                  status.entry?.type ??
+                  '',
+            )).toString();
+            if (!isLatest()) return;
+            _activeP2pSwarmId = swarmId;
+            await _p2pMediaManager?.setActiveSwarms({
+              swarmId: delivery.swarmTicket,
+            });
+            if (!isLatest()) return;
+            playbackHeaders = const {};
+          } catch (error) {
+            debugPrint('P2P media gateway setup failed, using HTTP: $error');
+            if (isLatest()) await _deactivateP2pMedia();
+          }
+        } else if (isLatest()) {
+          await _deactivateP2pMedia();
+        }
+      } else if (isLatest()) {
+        await _deactivateP2pMedia();
+      }
+    });
+    if (!isLatest()) return;
 
     final newController = VideoPlayerController.networkUrl(
-      Uri.parse(url),
-      httpHeaders: headers,
+      Uri.parse(playbackUrl),
+      httpHeaders: playbackHeaders,
+      formatHint: _videoFormatHint(
+        status?.entry?.selectedPlaybackUrlOption?.format ??
+            status?.entry?.type ??
+            '',
+        Uri.parse(url),
+      ),
     );
     _initializingVideoPlayerController = newController;
     _initializingVideoSourceKey = sourceKey;
@@ -1889,6 +2419,7 @@ class _RoomScreenState extends State<RoomScreen>
       _videoPlayerController = newController;
       _videoPlayerSourceKey = sourceKey;
       _videoPlayerController!.addListener(_videoListener);
+      _observeAdaptiveVideoTracks(newController);
 
       if (mounted) {
         setState(() {
@@ -1899,6 +2430,11 @@ class _RoomScreenState extends State<RoomScreen>
     } catch (e) {
       _disposeControllerEventually(newController);
       if (mounted && isLatest()) {
+        debugPrint(
+          'Video initialization failed '
+          '(source: $url, playback: $playbackUrl, '
+          'format: ${status?.entry?.selectedPlaybackUrlOption?.format ?? status?.entry?.type ?? ''}): $e',
+        );
         final message = playbackLoadErrorMessage(context.l10n, e);
         setState(() {
           _isVideoLoading = false;
@@ -1911,6 +2447,35 @@ class _RoomScreenState extends State<RoomScreen>
         _initializingVideoPlayerController = null;
         _initializingVideoSourceKey = null;
       }
+    }
+  }
+
+  VideoFormat? _videoFormatHint(String format, Uri uri) {
+    final normalized = format.trim().toLowerCase();
+    final path = uri.path.toLowerCase();
+    if (normalized.contains('m3u8') ||
+        normalized.contains('hls') ||
+        path.endsWith('.m3u8')) {
+      return VideoFormat.hls;
+    }
+    if (normalized.contains('mpd') ||
+        normalized.contains('dash') ||
+        path.endsWith('.mpd')) {
+      return VideoFormat.dash;
+    }
+    return null;
+  }
+
+  Future<P2pMediaPersistentCache?> _openP2pMediaCache(int maxCacheBytes) async {
+    try {
+      final root = await getApplicationCacheDirectory();
+      return P2pMediaPersistentCache(
+        directory: Directory('${root.path}/p2p_media'),
+        maxBytes: maxCacheBytes,
+      );
+    } catch (error) {
+      debugPrint('P2P media persistent cache unavailable: $error');
+      return null;
     }
   }
 
@@ -1955,64 +2520,49 @@ class _RoomScreenState extends State<RoomScreen>
     }
   }
 
+  void _observeAdaptiveVideoTracks(VideoPlayerController controller) {
+    unawaited(_adaptiveVideoTracksSubscription?.cancel());
+    _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
+    _adaptiveVideoTracksSubscription = controller.adaptiveVideoTracks.listen((
+      snapshot,
+    ) {
+      if (!mounted || !identical(_videoPlayerController, controller)) {
+        return;
+      }
+      setState(() => _adaptiveVideoTracks = snapshot);
+    });
+  }
+
+  Future<void> _selectAdaptiveVideoTrack(String trackId) async {
+    final controller = _videoPlayerController;
+    if (controller == null) return;
+    try {
+      await controller.selectAdaptiveVideoTrack(trackId);
+    } catch (error) {
+      debugPrint('Adaptive video track selection failed: $error');
+      if (mounted) MessageUtils.showError(context, error.toString());
+    }
+  }
+
   Widget? _buildPlaybackOptionButton({bool compact = false}) {
     final entry = _currentStatus?.entry;
-    if (entry == null || !entry.hasPlaybackChoices) return null;
-    if (compact) {
-      return AppPopupMenuButton<String>(
-        tooltip: context.l10n.playbackRoute,
-        color: Colors.black87,
-        onSelected: (value) => _selectPlaybackOptionValue(entry, value),
-        itemBuilder: (context) => _buildPlaybackOptionMenuItems(entry),
-        child: Tooltip(
-          message: entry.playbackChoiceLabel,
-          child: AppPanelSurface(
-            width: 32,
-            height: 32,
-            color: Colors.white.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white24),
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.route_rounded,
-              size: 18,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      );
+    if (entry == null ||
+        (!entry.hasPlaybackChoices &&
+            _adaptiveVideoTracks.tracks.length <= 1)) {
+      return null;
     }
-    final maxLabelWidth = compact ? 0.0 : 170.0;
-    return AppPopupMenuButton<String>(
-      tooltip: context.l10n.playbackRoute,
-      color: Colors.black87,
-      onSelected: (value) => _selectPlaybackOptionValue(entry, value),
-      itemBuilder: (context) => _buildPlaybackOptionMenuItems(entry),
-      child: Tooltip(
-        message: entry.playbackChoiceLabel,
-        child: AppBadge(
-          constraints: BoxConstraints(minHeight: compact ? 28 : 32),
-          padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.white24),
-          icon: Icons.route_rounded,
-          iconSize: 18,
-          color: Colors.white,
-          backgroundColor: Colors.white.withValues(alpha: 0.12),
-          textStyle: const TextStyle(color: Colors.white, fontSize: 12),
-          label: compact
-              ? const SizedBox.shrink()
-              : ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxLabelWidth),
-                  child: Text(
-                    entry.playbackChoiceLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: false,
-                  ),
-                ),
-        ),
+    return PlaybackOptionsControl(
+      key: ValueKey(
+        'playback_options_${entry.id}_${entry.selectedPlaybackMode}_$compact',
       ),
+      modes: entry.playbackModes,
+      selectedModeKey: entry.selectedPlaybackMode,
+      selectedMediaIndex: entry.selectedPlaybackUrlIndex,
+      adaptiveTracks: _adaptiveVideoTracks,
+      tooltip: context.l10n.playbackRoute,
+      compact: compact,
+      onMediaSelected: _selectPlaybackOption,
+      onAdaptiveTrackSelected: _selectAdaptiveVideoTrack,
     );
   }
 
@@ -2029,7 +2579,10 @@ class _RoomScreenState extends State<RoomScreen>
 
   Widget? _buildPictureInPicturePlaybackOptions() {
     final entry = _currentStatus?.entry;
-    if (entry == null || !entry.hasPlaybackChoices) return null;
+    final hasAdaptiveQualities = _adaptiveVideoTracks.tracks.length > 1;
+    if (entry == null || (!entry.hasPlaybackChoices && !hasAdaptiveQualities)) {
+      return null;
+    }
     return PictureInPicturePlaybackOptionsControl(
       tooltip: context.l10n.playbackRoute,
       choices: [
@@ -2043,62 +2596,36 @@ class _RoomScreenState extends State<RoomScreen>
                   mode.key == entry.selectedPlaybackMode &&
                   index == entry.selectedPlaybackUrlIndex,
             ),
+        if (hasAdaptiveQualities)
+          PictureInPicturePlaybackChoice(
+            value: 'track:auto',
+            groupLabel: '清单内画质',
+            label: '自动',
+            selected: _adaptiveVideoTracks.selectedTrackId == 'auto',
+          ),
+        if (hasAdaptiveQualities)
+          for (final track in _adaptiveVideoTracks.tracks)
+            PictureInPicturePlaybackChoice(
+              value: 'track:${track.id}',
+              groupLabel: '清单内画质',
+              label: track.resolution.isEmpty
+                  ? (track.title?.trim().isNotEmpty == true
+                        ? track.title!.trim()
+                        : '画质 ${track.id}')
+                  : track.resolution,
+              selected: _adaptiveVideoTracks.selectedTrackId == track.id,
+            ),
       ],
-      onSelected: (value) => _selectPlaybackOptionValue(entry, value),
+      onSelected: (value) {
+        if (value.startsWith('track:')) {
+          unawaited(
+            _selectAdaptiveVideoTrack(value.substring('track:'.length)),
+          );
+        } else {
+          _selectPlaybackOptionValue(entry, value);
+        }
+      },
     );
-  }
-
-  List<PopupMenuEntry<String>> _buildPlaybackOptionMenuItems(
-    RoomMediaEntry entry,
-  ) {
-    final items = <PopupMenuEntry<String>>[];
-    for (final mode in entry.playbackModes) {
-      if (items.isNotEmpty) items.add(const PopupMenuDivider(height: 8));
-      items.add(
-        PopupMenuItem<String>(
-          enabled: false,
-          height: 28,
-          child: Text(
-            mode.label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      );
-      for (var i = 0; i < mode.urls.length; i++) {
-        final selected =
-            mode.key == entry.selectedPlaybackMode &&
-            i == entry.selectedPlaybackUrlIndex;
-        items.add(
-          PopupMenuItem<String>(
-            value: '${mode.key}|$i',
-            height: 36,
-            child: Row(
-              children: [
-                Icon(
-                  selected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  size: 18,
-                  color: selected ? const Color(0xFF7CFFB2) : Colors.white70,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    mode.urls[i].label(i),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-    }
-    return items;
   }
 
   Widget _buildVideoEmptyState() {
@@ -2107,18 +2634,6 @@ class _RoomScreenState extends State<RoomScreen>
       error: _roomSessionError ?? _videoError,
       loading: _isVideoLoading,
       hasPlayback: hasPlayback,
-    );
-  }
-
-  void _warnPlaybackCredentialHeaders(Map<String, String> headers) {
-    final key = DirectUrlSourceConfig.credentialHeaderRiskKey(headers);
-    if (key.isEmpty || !_warnedPlaybackCredentialHeaderKeys.add(key)) return;
-    final names = DirectUrlSourceConfig.credentialHeaderNames(
-      headers,
-    ).join('、');
-    MessageUtils.showWarning(
-      context,
-      context.l10n.playbackCredentialWarning(names),
     );
   }
 
@@ -2137,6 +2652,9 @@ class _RoomScreenState extends State<RoomScreen>
   }) {
     if (invalidateInitialization) _cancelSupersededVideoLoad();
     final controller = _videoPlayerController;
+    unawaited(_adaptiveVideoTracksSubscription?.cancel());
+    _adaptiveVideoTracksSubscription = null;
+    _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
     _videoPlayerController = null;
     _videoPlayerSourceKey = null;
     _playbackDeviationSnapshot = null;
@@ -2165,6 +2683,9 @@ class _RoomScreenState extends State<RoomScreen>
       _cancelSupersededVideoLoad();
     }
     final controller = _videoPlayerController;
+    await _adaptiveVideoTracksSubscription?.cancel();
+    _adaptiveVideoTracksSubscription = null;
+    _adaptiveVideoTracks = const AdaptiveVideoTrackSnapshot();
     _videoPlayerController = null;
     _videoPlayerSourceKey = null;
     _playbackDeviationSnapshot = null;
@@ -2181,9 +2702,17 @@ class _RoomScreenState extends State<RoomScreen>
     RealtimeEventLogPreferences.maxEntries.removeListener(
       _handleRealtimeLogMaxEntriesChanged,
     );
+    P2pMediaPreferences.enabled.removeListener(_handleP2pPreferenceChanged);
+    P2pMediaPreferences.securityMode.removeListener(
+      _handleP2pPreferenceChanged,
+    );
+    P2pMediaPreferences.cacheSizeMiB.removeListener(
+      _handleP2pPreferenceChanged,
+    );
     _tabController.removeListener(_handleRoomTabChanged);
     _authErrorSubscription?.cancel();
     _realtimeSubscription?.cancel();
+    unawaited(_adaptiveVideoTracksSubscription?.cancel());
     _tabController.dispose();
     unawaited(_disposeVideoController());
     unawaited(_pictureInPicture.exit());
@@ -2195,7 +2724,13 @@ class _RoomScreenState extends State<RoomScreen>
     _messageController.dispose();
     _chatScrollController.dispose();
     _mediaEntryScrollController.dispose();
-    _webrtcManager?.dispose();
+    unawaited(_voiceChatManager?.dispose());
+    unawaited(_p2pMediaManager?.dispose());
+    final p2pEngine = _p2pMediaEngine;
+    _p2pMediaEngine = null;
+    if (p2pEngine != null) {
+      unawaited(_p2pEngineOperations.run(p2pEngine.dispose));
+    }
     _danmakuController.dispose();
     _channel = null;
     _realtimeMessageBus.close();
@@ -2292,6 +2827,7 @@ class _RoomScreenState extends State<RoomScreen>
       ),
       isLive: _isCurrentPlaybackLive,
       canControlPlayback: _canControlPlaybackState,
+      isPlaybackExpectedToBePlaying: () => _currentStatus?.isPlaying == true,
       onPlaybackStateChanged: _canControlPlaybackState
           ? _handleUserPlaybackStateChanged
           : null,
@@ -2331,8 +2867,8 @@ class _RoomScreenState extends State<RoomScreen>
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: _buildServerLatencyBadge(compact: compactChrome),
           ),
-          if (_hasCurrentPlayback)
-            Tooltip(
+          if (_hasCurrentPlayback && _canControlPlaybackState)
+            AppTooltip(
               message: context.l10n.stopPlayback,
               child: AppActionButton(
                 onPressed: _stopPlayback,
@@ -2353,7 +2889,7 @@ class _RoomScreenState extends State<RoomScreen>
                       tooltip: context.l10n.roomSettings,
                       style: AppIconButtonStyle.tonal,
                     )
-                  : Tooltip(
+                  : AppTooltip(
                       message: context.l10n.roomSettings,
                       child: AppActionButton(
                         onPressed: _openRoomSettings,
@@ -2403,6 +2939,7 @@ class _RoomScreenState extends State<RoomScreen>
                             context.l10n.unknownVideo,
                         danmakuController: _danmakuController,
                         subtitles: _currentStatus?.entry?.subtitles,
+                        resolveSubtitleUrl: _resolveSubtitlePlaybackUrl,
                         isLive: _currentStatus?.entry?.live == true,
                         onToggleFullScreen: _toggleFullScreen,
                         onSync: _handleSync,
@@ -2416,11 +2953,20 @@ class _RoomScreenState extends State<RoomScreen>
                         onEnterPictureInPicture: _pictureInPictureAvailable
                             ? () => unawaited(_enterPictureInPicture())
                             : null,
-                        onUserPlaybackStateChanged:
-                            _handleUserPlaybackStateChanged,
-                        onUserSeek: _handleUserSeek,
-                        onUserPlaybackSpeedChanged:
-                            _handleUserPlaybackSpeedChanged,
+                        onOpenSettings: () =>
+                            unawaited(_openPlaybackSyncSettings()),
+                        canControlPlayback: _canControlPlaybackState,
+                        isPlaybackExpectedToBePlaying: () =>
+                            _currentStatus?.isPlaying == true,
+                        onUserPlaybackStateChanged: _canControlPlaybackState
+                            ? _handleUserPlaybackStateChanged
+                            : null,
+                        onUserSeek: _canControlPlaybackState
+                            ? _handleUserSeek
+                            : null,
+                        onUserPlaybackSpeedChanged: _canControlPlaybackState
+                            ? _handleUserPlaybackSpeedChanged
+                            : null,
                         onSendDanmaku: _sendDanmaku,
                         interactionMode: videoPlayerInteractionModeForPlatform(
                           defaultTargetPlatform,
@@ -2463,6 +3009,13 @@ class _RoomScreenState extends State<RoomScreen>
                       ),
                     ],
                   ),
+                ),
+              if (_videoPlayerController == null &&
+                  _currentStatus?.entry?.hasPlaybackChoices == true)
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: _buildPlaybackOptionButton(compact: true)!,
                 ),
             ],
           );
@@ -2588,11 +3141,20 @@ class _RoomScreenState extends State<RoomScreen>
               body: SizedBox(
                 width: 520,
                 child: AppSingleChildScrollView(
-                  child: PlaybackSyncSettingsFields(
-                    config: draft,
-                    onChanged: (value) {
-                      setDialogState(() => draft = value);
-                    },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PlaybackSyncSettingsFields(
+                        config: draft,
+                        onChanged: (value) {
+                          setDialogState(() => draft = value);
+                        },
+                      ),
+                      if (_canUseP2pMedia) ...[
+                        const SizedBox(height: 16),
+                        const P2pMediaSettingsFields(),
+                      ],
+                    ],
                   ),
                 ),
               ),
@@ -2760,6 +3322,7 @@ class _RoomScreenState extends State<RoomScreen>
           title: _currentStatus?.entry?.name ?? context.l10n.unknownVideo,
           danmakuController: _danmakuController,
           subtitles: _currentStatus?.entry?.subtitles,
+          resolveSubtitleUrl: _resolveSubtitlePlaybackUrl,
           isLive: _currentStatus?.entry?.live == true,
           onToggleFullScreen: () => Navigator.of(context).pop(),
           onSync: _handleSync,
@@ -2772,9 +3335,17 @@ class _RoomScreenState extends State<RoomScreen>
           onEnterPictureInPicture: _pictureInPictureAvailable
               ? () => unawaited(_enterPictureInPicture())
               : null,
-          onUserPlaybackStateChanged: _handleUserPlaybackStateChanged,
-          onUserSeek: _handleUserSeek,
-          onUserPlaybackSpeedChanged: _handleUserPlaybackSpeedChanged,
+          onOpenSettings: () => unawaited(_openPlaybackSyncSettings()),
+          canControlPlayback: _canControlPlaybackState,
+          isPlaybackExpectedToBePlaying: () =>
+              _currentStatus?.isPlaying == true,
+          onUserPlaybackStateChanged: _canControlPlaybackState
+              ? _handleUserPlaybackStateChanged
+              : null,
+          onUserSeek: _canControlPlaybackState ? _handleUserSeek : null,
+          onUserPlaybackSpeedChanged: _canControlPlaybackState
+              ? _handleUserPlaybackSpeedChanged
+              : null,
           onSendDanmaku: _sendDanmaku,
           isFullScreen: true,
           interactionMode: videoPlayerInteractionModeForPlatform(
@@ -2920,7 +3491,7 @@ class _RoomScreenState extends State<RoomScreen>
             children: [
               AppListView.builder(
                 controller: _chatScrollController,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 56),
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
                   final msg = _messages[index];
@@ -3442,7 +4013,7 @@ class _RoomScreenState extends State<RoomScreen>
     final label = isMentionReceipt
         ? context.l10n.viewMentionReadDetails
         : context.l10n.viewReadDetails;
-    return Tooltip(
+    return AppTooltip(
       message: label,
       child: Semantics(
         button: true,
@@ -3633,7 +4204,7 @@ class _RoomScreenState extends State<RoomScreen>
     final preview = quote == null
         ? context.l10n.loadingQuotedMessage
         : _chatPreviewText(quote);
-    return Tooltip(
+    return AppTooltip(
       message: context.l10n.jumpToQuotedMessage,
       child: Material(
         color: Colors.transparent,
@@ -3707,7 +4278,7 @@ class _RoomScreenState extends State<RoomScreen>
         ? scheme.primary.withValues(alpha: 0.42)
         : scheme.outlineVariant.withValues(alpha: 0.68);
 
-    return Tooltip(
+    return AppTooltip(
       message: selected
           ? context.l10n.reactionSelectedHint
           : context.l10n.reactionUnselectedHint,
@@ -3868,7 +4439,7 @@ class _RoomScreenState extends State<RoomScreen>
 
   Widget _buildQuickReactionButton(RoomRealtimeChatEntry message, String key) {
     final reactedByMe = _chatReactionReactedByMe(message, key);
-    return Tooltip(
+    return AppTooltip(
       message: reactedByMe
           ? context.l10n.removeReaction(key)
           : context.l10n.addReaction(key),
@@ -3893,7 +4464,7 @@ class _RoomScreenState extends State<RoomScreen>
     VoidCallback onClose,
   ) {
     final reactedByMe = _chatReactionReactedByMe(message, key);
-    return Tooltip(
+    return AppTooltip(
       message: reactedByMe
           ? context.l10n.removeReaction(key)
           : context.l10n.addReaction(key),
@@ -3926,7 +4497,7 @@ class _RoomScreenState extends State<RoomScreen>
     Color? color,
     bool keepExpanded = false,
   }) {
-    return Tooltip(
+    return AppTooltip(
       message: tooltip,
       child: AppIconButton(
         tooltip: tooltip,
@@ -3955,7 +4526,7 @@ class _RoomScreenState extends State<RoomScreen>
     required VoidCallback onPressed,
     Color? color,
   }) {
-    return Tooltip(
+    return AppTooltip(
       message: tooltip,
       child: AppIconButton(
         tooltip: tooltip,
@@ -4396,32 +4967,34 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Widget _buildVoiceControl(ThemeData theme) {
-    if (_webrtcManager == null) return const SizedBox.shrink();
+    if (_voiceChatManager == null || !_canUseVoiceChat) {
+      return const SizedBox.shrink();
+    }
 
     return AppInfoBanner(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: _webrtcManager!.isConnected
-          ? (_webrtcManager!.isMuted ? Colors.red : Colors.green)
+      color: _voiceChatManager!.isConnected
+          ? (_voiceChatManager!.isMuted ? Colors.red : Colors.green)
           : theme.disabledColor,
       backgroundColor: theme.cardColor,
       borderRadius: BorderRadius.zero,
       border: Border(
         bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
       ),
-      icon: _webrtcManager!.isConnected
+      icon: _voiceChatManager!.isConnected
           ? Icons.mic_rounded
           : Icons.mic_off_rounded,
       title: Text(
-        _webrtcManager!.isConnected
-            ? (_webrtcManager!.hasPeersConnected
-                  ? (_webrtcManager!.isMuted
+        _voiceChatManager!.isConnected
+            ? (_voiceChatManager!.hasPeersConnected
+                  ? (_voiceChatManager!.isMuted
                         ? context.l10n.voiceConnectedMuted(
-                            _webrtcManager!.participantCount,
+                            _voiceChatManager!.participantCount,
                           )
                         : context.l10n.voiceConnected(
-                            _webrtcManager!.participantCount,
+                            _voiceChatManager!.participantCount,
                           ))
-                  : (_webrtcManager!.isMuted
+                  : (_voiceChatManager!.isMuted
                         ? context.l10n.waitingToJoinVoiceMuted(1)
                         : context.l10n.waitingToJoinVoice(1)))
             : context.l10n.voiceChat,
@@ -4431,26 +5004,26 @@ class _RoomScreenState extends State<RoomScreen>
           fontSize: 13,
         ),
       ),
-      trailing: _webrtcManager!.isConnected
+      trailing: _voiceChatManager!.isConnected
           ? Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppIconButton(
-                  icon: _webrtcManager!.isMuted
+                  icon: _voiceChatManager!.isMuted
                       ? Icons.mic_off_rounded
                       : Icons.mic_rounded,
-                  onPressed: () => _webrtcManager!.toggleMute(),
-                  tooltip: _webrtcManager!.isMuted
+                  onPressed: () => _voiceChatManager!.toggleMute(),
+                  tooltip: _voiceChatManager!.isMuted
                       ? context.l10n.unmute
                       : context.l10n.mute,
                   size: AppIconButtonSize.sm,
-                  style: _webrtcManager!.isMuted
+                  style: _voiceChatManager!.isMuted
                       ? AppIconButtonStyle.destructive
                       : AppIconButtonStyle.tonal,
                 ),
                 AppIconButton(
                   icon: Icons.call_end_rounded,
-                  onPressed: () => _webrtcManager!.leave(),
+                  onPressed: () => _voiceChatManager!.leave(),
                   tooltip: context.l10n.leaveVoice,
                   size: AppIconButtonSize.sm,
                   style: AppIconButtonStyle.destructive,
@@ -4471,17 +5044,19 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   Future<void> _joinVoice() async {
-    final manager = _webrtcManager;
-    if (manager == null || _joiningVoice) return;
+    final manager = _voiceChatManager;
+    if (manager == null || _joiningVoice || !_canUseVoiceChat) return;
     final l10n = context.l10n;
     setState(() {
       _joiningVoice = true;
     });
     try {
-      await manager.join().timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => throw TimeoutException(l10n.joinVoiceTimeout),
-      );
+      await manager
+          .join(clientOperationId: newClientOperationId())
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException(l10n.joinVoiceTimeout),
+          );
     } catch (e, stackTrace) {
       debugPrint('WebRTC voice join failed: $e');
       debugPrint('$stackTrace');
@@ -4709,7 +5284,7 @@ class _RoomScreenState extends State<RoomScreen>
             );
           })
           .toList(growable: false),
-      child: Tooltip(
+      child: AppTooltip(
         message: tooltip,
         child: AppPanelSurface(
           width: 36,
@@ -4732,7 +5307,7 @@ class _RoomScreenState extends State<RoomScreen>
     ];
     return SizedBox(
       height: 28,
-      child: SingleChildScrollView(
+      child: AppSingleChildScrollView(
         key: const Key('playlist-breadcrumbs'),
         scrollDirection: Axis.horizontal,
         reverse: _folderStack.isNotEmpty,
@@ -5646,11 +6221,16 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _switchMedia(RoomMediaEntry entry) async {
     try {
+      final currentFolder = _folderStack.isEmpty ? null : _folderStack.last;
+      final playlistId = switch (entry.parentId) {
+        final parentId? when parentId.isNotEmpty => parentId,
+        _ => currentFolder?.playbackPlaylistId ?? '',
+      };
       final playback = await SyncTvService.switchMediaAndPlay(
         widget.room.roomId,
         entry.id,
         subPath: entry.subPath,
-        playlistId: entry.parentId,
+        playlistId: playlistId,
       );
       await _applyPlaybackStatus(playback);
       _requestPlaybackSnapshot();
@@ -5842,6 +6422,7 @@ class _RoomScreenState extends State<RoomScreen>
               currentUserId: _currentUser?.id ?? '',
               canViewPlaybackHistory: _canViewPlaybackHistory,
               canNavigatePlayback: _canNavigatePlayback,
+              canUseWebRtc: _canUseVoiceChat || _canUseP2pMedia,
               currentSettings: settings,
               realtime: RoomRealtimeSession(
                 send: _sendRealtimeMessage,

@@ -49,7 +49,7 @@ Future<PlaybackDanmakuFetchResult?> fetchPlaybackDanmakuWindow({
   double afterSeconds = 90,
   int limit = 300,
 }) async {
-  if (entry == null) return null;
+  if (entry == null || entry.live) return null;
   final sourceKey = playbackDanmakuSourceKey(entry);
   if (sourceKey.isEmpty) return null;
 

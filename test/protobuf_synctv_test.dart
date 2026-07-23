@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:synctv_app/managers/webrtc_manager.dart';
+import 'package:synctv_app/managers/voice_chat_manager.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/direct_url_source_config.dart';
 import 'package:synctv_app/models/playback_client_profile.dart';
@@ -675,7 +675,7 @@ void main() {
       expect(message.playbackStateUpdate.speed, 1);
       expect(message.playbackStateUpdate.hasVersion(), isFalse);
       expect(message.playbackStateUpdate.expectedMediaId, 'med_1');
-      expect(message.playbackStateUpdate.expectedPlaylistId, '');
+      expect(message.playbackStateUpdate.hasExpectedPlaylistId(), isFalse);
       expect(
         message.playbackStateUpdate.expectedTargetHash,
         'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
@@ -857,14 +857,13 @@ void main() {
     expect(playback.status?.currentTime, 42.5);
     expect(playback.status?.playbackRate, 1.25);
 
-    final webrtc = RoomRealtimeCodec.decode(
+    final voiceOffer = RoomRealtimeCodec.decode(
       client.ServerMessage(
         resourceEvent: client.ResourceEvent(
           observeId: 'webrtc',
-          webrtcEvent: client.WebRtcEvent(
-            offer: client.WebRTCOffer(
+          webrtcEvent: client.WebRTCEvent(
+            voiceOffer: client.WebRTCVoiceOffer(
               from: 'usr_peer:conn_1',
-              to: 'usr_me:conn_2',
               data: '{"sdp":"offer"}',
             ),
           ),
@@ -872,14 +871,97 @@ void main() {
       ).writeToBuffer(),
     );
 
-    expect(webrtc.kind, RoomRealtimeMessageKind.webrtcOffer);
-    expect(webrtc.webRtc?.signalType, 'offer');
-    expect(webrtc.webRtc?.from, 'usr_peer:conn_1');
-    expect(webrtc.webRtc?.to, 'usr_me:conn_2');
-    expect(webrtc.webRtc?.payload(), {
+    expect(voiceOffer.kind, RoomRealtimeMessageKind.webrtcVoiceOffer);
+    expect(
+      voiceOffer.webRtc,
+      isA<RoomRealtimeWebRtcVoiceNegotiationSignal>().having(
+        (signal) => signal.from,
+        'from',
+        'usr_peer:conn_1',
+      ),
+    );
+    expect(voiceOffer.webRtc?.signalType, 'offer');
+    expect(voiceOffer.webRtc?.payload(), {
       'sdp': 'offer',
       'from': 'usr_peer:conn_1',
       'type': 'offer',
+    });
+
+    final mediaOffer = RoomRealtimeCodec.decode(
+      client.ServerMessage(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'webrtc',
+          webrtcEvent: client.WebRTCEvent(
+            mediaOffer: client.WebRTCMediaOffer(
+              from: 'usr_peer:conn_1',
+              data: '{"sdp":"media-offer"}',
+              swarmId: 'sm1_test',
+            ),
+          ),
+        ),
+      ).writeToBuffer(),
+    );
+    expect(mediaOffer.kind, RoomRealtimeMessageKind.webrtcMediaOffer);
+    expect(mediaOffer.webRtc, isA<RoomRealtimeWebRtcMediaNegotiationSignal>());
+    expect(mediaOffer.webRtc?.payload(), {
+      'sdp': 'media-offer',
+      'from': 'usr_peer:conn_1',
+      'type': 'offer',
+      'media_swarm_id': 'sm1_test',
+    });
+
+    final swarmPeers = RoomRealtimeCodec.decode(
+      client.ServerMessage(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'webrtc',
+          webrtcEvent: client.WebRTCEvent(
+            mediaSwarmPeers: client.WebRTCMediaSwarmPeers(
+              swarmId: 'sm1_test',
+              swarmTicket: 'renewed-ticket',
+              peers: [
+                client.WebRTCMediaSwarmPeer(
+                  userId: 'usr_peer',
+                  connId: 'conn_1',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ).writeToBuffer(),
+    );
+    expect(swarmPeers.kind, RoomRealtimeMessageKind.webrtcMediaSwarmPeers);
+    expect(swarmPeers.webRtc, isA<RoomRealtimeWebRtcMediaSwarmPeersSignal>());
+    expect(swarmPeers.webRtc?.signalType, 'media_swarm_peers');
+    expect(swarmPeers.webRtc?.payload(), {
+      'media_swarm_id': 'sm1_test',
+      'peers': [
+        {'user_id': 'usr_peer', 'conn_id': 'conn_1'},
+      ],
+      'media_swarm_ticket': 'renewed-ticket',
+    });
+
+    final peerLeft = RoomRealtimeCodec.decode(
+      client.ServerMessage(
+        resourceEvent: client.ResourceEvent(
+          observeId: 'webrtc',
+          webrtcEvent: client.WebRTCEvent(
+            mediaPeerLeft: client.WebRTCMediaPeerLeft(
+              swarmId: 'sm1_test',
+              userId: 'usr_peer',
+              connId: 'conn_1',
+            ),
+          ),
+        ),
+      ).writeToBuffer(),
+    );
+    expect(peerLeft.kind, RoomRealtimeMessageKind.webrtcMediaPeerLeft);
+    expect(peerLeft.webRtc, isA<RoomRealtimeWebRtcMediaPeerLeftSignal>());
+    expect(peerLeft.webRtc?.signalType, 'media_swarm_leave');
+    expect(peerLeft.webRtc?.payload(), {
+      'user_id': 'usr_peer',
+      'conn_id': 'conn_1',
+      'media_swarm_id': 'sm1_test',
+      'from': 'usr_peer:conn_1',
     });
 
     final onlineEvent = RoomRealtimeCodec.decode(
@@ -1380,11 +1462,11 @@ void main() {
       expect(pinEvent.pin?.pinnedAt, 1760000200);
 
       expect(requests[3].method, 'DELETE');
-      final unpinBody = jsonDecode(requests[3].body) as Map<String, dynamic>;
-      expect(unpinBody..remove('clientOperationId'), {'messageId': 'msg_1'});
+      expect(requests[3].body, isEmpty);
+      expect(requests[3].url.queryParameters.keys, ['clientOperationId']);
       expect(
-        jsonDecode(requests[3].body),
-        containsPair('clientOperationId', isA<String>()),
+        requests[3].url.queryParameters['clientOperationId'],
+        isA<String>().having((value) => value.isNotEmpty, 'isNotEmpty', isTrue),
       );
       expect(
         unpinEvent.kind,
@@ -1629,6 +1711,21 @@ void main() {
 
     expect(chatReactionSummarySuffix(reactions), '  😂5 🎉3');
     expect(danmaku.text, 'sender: hello  😂5 🎉3');
+  });
+
+  test('live playback skips historical chat danmaku fetches', () async {
+    final result = await fetchPlaybackDanmakuWindow(
+      roomId: 'room_1',
+      entry: RoomMediaEntry(
+        id: 'med_live',
+        name: 'Live',
+        url: 'https://example.test/live.m3u8',
+        live: true,
+      ),
+      positionSeconds: 30,
+    );
+
+    expect(result, isNull);
   });
 
   test('avatar upload completes ownership proof before update', () async {
@@ -2509,9 +2606,9 @@ void main() {
     );
   });
 
-  test('WebRTC manager uses server-provided ICE servers', () async {
+  test('voice chat manager uses server-provided ICE servers', () async {
     var loadCount = 0;
-    final manager = WebRTCManager(
+    final manager = VoiceChatManager(
       loadIceServers: () async {
         loadCount += 1;
         return [
@@ -2541,29 +2638,75 @@ void main() {
   });
 
   test('WebRTC signaling encoder maps manager events to protobuf messages', () {
-    final offer = client.ClientMessage.fromBuffer(
-      RoomRealtimeCodec.encodeWebRtcSignal('offer', {
+    final voiceOffer = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodeWebRtcVoiceSignal('offer', {
         'sdp': 'sdp-offer',
         'type': 'offer',
         'to': 'usr_peer:conn_1',
       }),
     );
-    expect(offer.hasWebrtc(), isTrue);
-    expect(offer.webrtc.hasOffer(), isTrue);
-    expect(offer.webrtc.offer.to, 'usr_peer:conn_1');
-    expect(jsonDecode(offer.webrtc.offer.data), {
+    expect(voiceOffer.hasWebrtc(), isTrue);
+    expect(voiceOffer.webrtc.hasVoiceOffer(), isTrue);
+    expect(voiceOffer.webrtc.voiceOffer.to, 'usr_peer:conn_1');
+    expect(jsonDecode(voiceOffer.webrtc.voiceOffer.data), {
       'sdp': 'sdp-offer',
       'type': 'offer',
-      'to': 'usr_peer:conn_1',
     });
 
     final join = client.ClientMessage.fromBuffer(
-      RoomRealtimeCodec.encodeWebRtcSignal('join', const {}),
+      RoomRealtimeCodec.encodeWebRtcVoiceSignal('join', const {
+        'client_operation_id': 'ed537455-83d3-43a4-b244-08f3963a4710',
+      }),
     );
     expect(join.hasWebrtc(), isTrue);
-    expect(join.webrtc.hasJoin(), isTrue);
+    expect(join.webrtc.hasVoiceJoin(), isTrue);
+    expect(
+      join.webrtc.voiceJoin.clientOperationId,
+      'ed537455-83d3-43a4-b244-08f3963a4710',
+    );
 
-    expect(RoomRealtimeCodec.encodeWebRtcSignal('unknown', const {}), isEmpty);
+    final mediaSwarmJoin = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodeWebRtcMediaSignal('media_swarm_join', const {
+        'media_swarm_id': 'sm1_test',
+        'media_swarm_ticket': 'ticket.test',
+      }),
+    );
+    expect(mediaSwarmJoin.webrtc.mediaSwarmJoin.swarmId, 'sm1_test');
+    expect(mediaSwarmJoin.webrtc.mediaSwarmJoin.swarmTicket, 'ticket.test');
+
+    final mediaSwarmLeave = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodeWebRtcMediaSignal('media_swarm_leave', const {
+        'media_swarm_id': 'sm1_test',
+        'media_swarm_ticket': 'ticket.test',
+      }),
+    );
+    expect(mediaSwarmLeave.webrtc.mediaSwarmLeave.swarmId, 'sm1_test');
+
+    final mediaOffer = client.ClientMessage.fromBuffer(
+      RoomRealtimeCodec.encodeWebRtcMediaSignal('offer', const {
+        'sdp': 'media-sdp',
+        'type': 'offer',
+        'to': 'usr_peer:conn_1',
+        'media_swarm_id': 'sm1_test',
+        'media_swarm_ticket': 'ticket.test',
+      }),
+    );
+    expect(mediaOffer.webrtc.hasMediaOffer(), isTrue);
+    expect(mediaOffer.webrtc.mediaOffer.to, 'usr_peer:conn_1');
+    expect(mediaOffer.webrtc.mediaOffer.swarmId, 'sm1_test');
+    expect(jsonDecode(mediaOffer.webrtc.mediaOffer.data), {
+      'sdp': 'media-sdp',
+      'type': 'offer',
+    });
+
+    expect(
+      RoomRealtimeCodec.encodeWebRtcVoiceSignal('unknown', const {}),
+      isEmpty,
+    );
+    expect(
+      RoomRealtimeCodec.encodeWebRtcMediaSignal('unknown', const {}),
+      isEmpty,
+    );
   });
 
   test('API client resolves server-relative resource URLs', () {
@@ -3521,7 +3664,7 @@ void main() {
             'roomSettings': {
               'roomId': 'room_1',
               'version': 99,
-              'settings': {'allowGuestJoin': true, 'requireApproval': true, 'maxMembers': 42, 'chatEnabled': false},
+              'settings': {'allowGuestJoin': true, 'requireApproval': true, 'maxMembers': 42, 'chatEnabled': false, 'voiceChatEnabled': false, 'p2pMediaEnabled': false},
             },
           })}\n\n',
         );
@@ -3545,6 +3688,8 @@ void main() {
       expect(event.snapshot!.requireApproval, isTrue);
       expect(event.snapshot!.maxMembers, 42);
       expect(event.snapshot!.chatEnabled, isFalse);
+      expect(event.snapshot!.voiceChatEnabled, isFalse);
+      expect(event.snapshot!.p2pMediaEnabled, isFalse);
     } finally {
       await subscription.cancel();
       await server.close(force: true);
@@ -3663,6 +3808,28 @@ void main() {
       expect(body['target'], {
         'alist': {'relativePath': '/shows/ep1.mkv'},
       });
+    },
+  );
+
+  test(
+    'invalid playback entry IDs are rejected before a stop-like request',
+    () async {
+      var requestCount = 0;
+      final api = SyncTvApiClient(
+        baseUrl: 'https://example.test/api',
+        session: SyncTvSession()..accessToken = 'token',
+        httpClient: MockClient((request) async {
+          requestCount++;
+          return http.Response('{}', 200);
+        }),
+      );
+      final domain = SyncTvRoomMediaDomainService(api);
+
+      await expectLater(
+        domain.switchMedia('room_1', 'media_10'),
+        throwsA(isA<ArgumentError>()),
+      );
+      expect(requestCount, 0);
     },
   );
 
@@ -3844,6 +4011,11 @@ void main() {
                   ),
                   format: 'mp4',
                 ),
+                client.PlaybackMedia(
+                  name: 'Original DASH',
+                  url: 'http://origin.test/video.mpd',
+                  format: 'dash',
+                ),
               ],
               subtitles: [
                 client.PlaybackSubtitle(
@@ -3884,6 +4056,10 @@ void main() {
                     codec: 'hevc',
                   ),
                   format: 'hls',
+                  p2pDelivery: client.P2pMediaDelivery(
+                    swarmId: 'sm2_server_approved',
+                    swarmTicket: 'ticket',
+                  ),
                 ),
               ],
               defaultMediaIndex: 1,
@@ -3909,7 +4085,11 @@ void main() {
     expect(entry.selectedPlaybackMode, 'proxied');
     expect(entry.selectedPlaybackUrlIndex, 1);
     expect(entry.playbackModes.first.key, 'proxied');
-
+    expect(
+      entry.selectedPlaybackUrlOption?.p2pDelivery?.swarmId,
+      'sm2_server_approved',
+    );
+    expect(entry.selectedPlaybackUrlOption?.format, 'hls');
     final switched = entry.selectPlayback(
       modeKey: 'direct',
       urlIndex: 0,
@@ -3925,6 +4105,13 @@ void main() {
     expect(switched.danmu, 'http://origin.test/danmaku.xml');
     expect(switched.danmuHeaders, {'User-Agent': 'danmaku-client'});
     expect(switched.playbackChoiceLabel, contains('原始'));
+
+    final selectedAlternateFormat = entry.selectPlayback(
+      modeKey: 'direct',
+      urlIndex: 1,
+      resolveUrl: (url) => url,
+    );
+    expect(selectedAlternateFormat.type, 'dash');
   });
 
   test('playback mapping routes live danmaku to stream channel', () {
@@ -4429,16 +4616,11 @@ void main() {
       'Authorization': 'Bearer token',
       'Cookie': 'session=secret',
     });
-    expect(DirectUrlSourceConfig.hasCredentialHeaders(parsed), isTrue);
-    expect(DirectUrlSourceConfig.credentialHeaderNames(parsed), {
-      'Authorization',
-      'Cookie',
-    });
-
     final config = DirectUrlSourceConfig.fromUserInput(
       url: ' https://media.example.test/feature.mp4 ',
       headers: parsed,
       preferProxy: true,
+      proxyOnly: true,
     );
     expect(config.toJson(), {
       'url': 'https://media.example.test/feature.mp4',
@@ -4449,26 +4631,8 @@ void main() {
         'Cookie': 'session=secret',
       },
       'preferProxy': true,
+      'proxyOnly': true,
     });
-    expect(
-      DirectUrlSourceConfig.credentialHeaderRiskKey(parsed),
-      'authorization|cookie',
-    );
-    expect(
-      DirectUrlSourceConfig.credentialHeaderRiskKey({
-        'cookie': 'session=secret',
-        ' AUTHORIZATION ': 'Bearer token',
-        'User-Agent': 'SyncTV',
-      }),
-      'authorization|cookie',
-    );
-    expect(
-      DirectUrlSourceConfig.credentialHeaderRiskKey({
-        'Referer': 'https://example.test',
-        'User-Agent': 'SyncTV',
-      }),
-      isEmpty,
-    );
     expect(
       DirectUrlSourceConfig.validateUrl('http//media.example.test/file.mp4'),
       'http://media.example.test/file.mp4',
@@ -5886,6 +6050,7 @@ void main() {
         headers: const {'User-Agent': 'Mozilla/5.0'},
         name: 'Direct HLS',
         preferProxy: true,
+        proxyOnly: true,
       );
       final rtmpId = await domain.addRtmpMedia(
         'room_1',
@@ -5919,6 +6084,7 @@ void main() {
             },
           ],
           'preferProxy': true,
+          'proxyOnly': true,
         },
       });
 
@@ -6143,6 +6309,8 @@ void main() {
             requireApproval: true,
             maxMembers: 42,
             chatEnabled: false,
+            voiceChatEnabled: false,
+            p2pMediaEnabled: false,
             guestAddedPermissions: RoomGuestPermissions.viewMembers,
           ),
         );
@@ -6159,6 +6327,8 @@ void main() {
       expect(settings['requireApproval'], isTrue);
       expect(settings['maxMembers'], '42');
       expect(settings['chatEnabled'], isFalse);
+      expect(settings['voiceChatEnabled'], isFalse);
+      expect(settings['p2pMediaEnabled'], isFalse);
       expect(
         settings['guestAddedPermissions'],
         RoomGuestPermissions.viewMembers.toString(),
@@ -6166,6 +6336,7 @@ void main() {
       expect(
         body['updateMask'],
         'allowGuestJoin,maxMembers,requireApproval,allowAutoJoin,chatEnabled,'
+        'voiceChatEnabled,p2pMediaEnabled,'
         'adminAddedPermissions,adminRemovedPermissions,memberAddedPermissions,'
         'memberRemovedPermissions,guestAddedPermissions,guestRemovedPermissions',
       );

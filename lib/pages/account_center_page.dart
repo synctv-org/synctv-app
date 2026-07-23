@@ -1049,6 +1049,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             currentUserId: _user.id,
             canViewPlaybackHistory: _user.id == room.creatorId,
             canNavigatePlayback: _user.id == room.creatorId,
+            canUseWebRtc: false,
             currentSettings: settings,
             realtime: RoomRealtimeSession(
               send: (_) {},

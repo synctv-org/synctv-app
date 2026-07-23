@@ -9485,10 +9485,11 @@ const Map<String, String> _oauth2ProviderTypeLabels = {
 const List<String> _knownPermissions = [
   'send_chat_messages',
   'manage_own_media',
-  'view_media',
+  'browse_library',
   'view_members',
   'view_chat_history',
-  'use_webrtc',
+  'use_voice_chat',
+  'use_p2p_media',
   'delete_media',
   'reorder_media',
   'clear_media',
@@ -9508,17 +9509,19 @@ const List<String> _knownPermissions = [
 const List<String> _guestPermissions = [
   'view_members',
   'view_chat_history',
-  'use_webrtc',
+  'use_voice_chat',
+  'use_p2p_media',
 ];
 
 String _permissionLabel(AppLocalizations l10n, String permission) =>
     switch (permission) {
       'send_chat_messages' => l10n.sendChat,
       'manage_own_media' => l10n.roomPermissionManageOwnMedia,
-      'view_media' => l10n.viewMedia,
+      'browse_library' => l10n.browseLibrary,
       'view_members' => l10n.viewMembers,
       'view_chat_history' => l10n.viewChatHistory,
-      'use_webrtc' => l10n.useWebRtc,
+      'use_voice_chat' => l10n.voiceChat,
+      'use_p2p_media' => l10n.p2pMedia,
       'delete_media' => l10n.deleteMedia,
       'reorder_media' => l10n.roomPermissionReorderMedia,
       'clear_media' => l10n.roomPermissionClearMedia,
@@ -9539,10 +9542,11 @@ String _permissionLabel(AppLocalizations l10n, String permission) =>
 const Map<String, int> _runtimePermissionBits = {
   'send_chat_messages': RoomEffectivePermissions.sendChatMessages,
   'manage_own_media': RoomEffectivePermissions.manageOwnMedia,
-  'view_media': RoomEffectivePermissions.viewMedia,
+  'browse_library': RoomEffectivePermissions.browseLibrary,
   'view_members': RoomEffectivePermissions.viewMembers,
   'view_chat_history': RoomEffectivePermissions.viewChatHistory,
-  'use_webrtc': RoomEffectivePermissions.useWebRTC,
+  'use_voice_chat': RoomEffectivePermissions.useVoiceChat,
+  'use_p2p_media': RoomEffectivePermissions.useP2pMedia,
   'delete_media': RoomEffectivePermissions.deleteMedia,
   'reorder_media': RoomEffectivePermissions.reorderMedia,
   'clear_media': RoomEffectivePermissions.clearMedia,
@@ -9808,6 +9812,14 @@ _SettingDescriptor _settingDescriptor(
       icon: Icons.settings_input_antenna_rounded,
       kind: _SettingEditorKind.iceServers,
       warning: l10n.externalIceServersWarning,
+    ),
+    'webrtc.maxVoiceParticipantsPerRoom': _SettingDescriptor(
+      group: 'webrtc',
+      key: 'maxVoiceParticipantsPerRoom',
+      title: l10n.maxVoiceParticipantsPerRoom,
+      description: l10n.maxVoiceParticipantsPerRoomDescription,
+      icon: Icons.groups_2_outlined,
+      kind: _SettingEditorKind.number,
     ),
     'chat.maxMessagesPerRoom': _SettingDescriptor(
       group: 'chat',

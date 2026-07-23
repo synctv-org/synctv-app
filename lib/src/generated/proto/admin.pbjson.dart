@@ -441,7 +441,7 @@ const RuntimeSettings$json = {
       '3': 9,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.WebRtcSettings',
+      '6': '.synctv.admin.WebRTCSettings',
       '8': {},
       '10': 'webrtc'
     },
@@ -496,7 +496,7 @@ final $typed_data.Uint8List runtimeSettingsDescriptor = $convert.base64Decode(
     'IbLnN5bmN0di5hZG1pbi5Qcm94eVNldHRpbmdzQga6SAPIAQFSBXByb3h5EjYKBHJ0bXAYByAB'
     'KAsyGi5zeW5jdHYuYWRtaW4uUnRtcFNldHRpbmdzQga6SAPIAQFSBHJ0bXASOQoFZW1haWwYCC'
     'ABKAsyGy5zeW5jdHYuYWRtaW4uRW1haWxTZXR0aW5nc0IGukgDyAEBUgVlbWFpbBI8CgZ3ZWJy'
-    'dGMYCSABKAsyHC5zeW5jdHYuYWRtaW4uV2ViUnRjU2V0dGluZ3NCBrpIA8gBAVIGd2VicnRjEj'
+    'dGMYCSABKAsyHC5zeW5jdHYuYWRtaW4uV2ViUlRDU2V0dGluZ3NCBrpIA8gBAVIGd2VicnRjEj'
     'YKBGNoYXQYCiABKAsyGi5zeW5jdHYuYWRtaW4uQ2hhdFNldHRpbmdzQga6SAPIAQFSBGNoYXQS'
     'NgoEY29ycxgLIAEoCzIaLnN5bmN0di5hZG1pbi5Db3JzU2V0dGluZ3NCBrpIA8gBAVIEY29ycx'
     'I8CgZzZXJ2ZXIYDCABKAsyHC5zeW5jdHYuYWRtaW4uU2VydmVyU2V0dGluZ3NCBrpIA8gBAVIG'
@@ -1117,9 +1117,9 @@ final $typed_data.Uint8List smtpProxyDescriptor = $convert.base64Decode(
     'CglTbXRwUHJveHkSEAoDdXJsGAEgASgJUgN1cmwSPwoLY3JlZGVudGlhbHMYAiABKAsyHS5zeW'
     '5jdHYuYWRtaW4uU210cENyZWRlbnRpYWxzUgtjcmVkZW50aWFscw==');
 
-@$core.Deprecated('Use webRtcSettingsDescriptor instead')
-const WebRtcSettings$json = {
-  '1': 'WebRtcSettings',
+@$core.Deprecated('Use webRTCSettingsDescriptor instead')
+const WebRTCSettings$json = {
+  '1': 'WebRTCSettings',
   '2': [
     {
       '1': 'external_ice_servers',
@@ -1129,13 +1129,21 @@ const WebRtcSettings$json = {
       '6': '.synctv.client.IceServer',
       '10': 'externalIceServers'
     },
+    {
+      '1': 'max_voice_participants_per_room',
+      '3': 2,
+      '4': 1,
+      '5': 13,
+      '10': 'maxVoiceParticipantsPerRoom'
+    },
   ],
 };
 
-/// Descriptor for `WebRtcSettings`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRtcSettingsDescriptor = $convert.base64Decode(
-    'Cg5XZWJSdGNTZXR0aW5ncxJKChRleHRlcm5hbF9pY2Vfc2VydmVycxgBIAMoCzIYLnN5bmN0di'
-    '5jbGllbnQuSWNlU2VydmVyUhJleHRlcm5hbEljZVNlcnZlcnM=');
+/// Descriptor for `WebRTCSettings`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCSettingsDescriptor = $convert.base64Decode(
+    'Cg5XZWJSVENTZXR0aW5ncxJKChRleHRlcm5hbF9pY2Vfc2VydmVycxgBIAMoCzIYLnN5bmN0di'
+    '5jbGllbnQuSWNlU2VydmVyUhJleHRlcm5hbEljZVNlcnZlcnMSRAofbWF4X3ZvaWNlX3BhcnRp'
+    'Y2lwYW50c19wZXJfcm9vbRgCIAEoDVIbbWF4Vm9pY2VQYXJ0aWNpcGFudHNQZXJSb29t');
 
 @$core.Deprecated('Use chatSettingsDescriptor instead')
 const ChatSettings$json = {
@@ -1310,7 +1318,7 @@ const RuntimeSettingsPatch$json = {
       '3': 9,
       '4': 1,
       '5': 11,
-      '6': '.synctv.admin.WebRtcSettingsPatch',
+      '6': '.synctv.admin.WebRTCSettingsPatch',
       '10': 'webrtc'
     },
     {
@@ -1360,7 +1368,7 @@ final $typed_data.Uint8List runtimeSettingsPatchDescriptor = $convert.base64Deco
     'FkbWluLlByb3h5U2V0dGluZ3NQYXRjaFIFcHJveHkSMwoEcnRtcBgHIAEoCzIfLnN5bmN0di5h'
     'ZG1pbi5SdG1wU2V0dGluZ3NQYXRjaFIEcnRtcBI2CgVlbWFpbBgIIAEoCzIgLnN5bmN0di5hZG'
     '1pbi5FbWFpbFNldHRpbmdzUGF0Y2hSBWVtYWlsEjkKBndlYnJ0YxgJIAEoCzIhLnN5bmN0di5h'
-    'ZG1pbi5XZWJSdGNTZXR0aW5nc1BhdGNoUgZ3ZWJydGMSMwoEY2hhdBgKIAEoCzIfLnN5bmN0di'
+    'ZG1pbi5XZWJSVENTZXR0aW5nc1BhdGNoUgZ3ZWJydGMSMwoEY2hhdBgKIAEoCzIfLnN5bmN0di'
     '5hZG1pbi5DaGF0U2V0dGluZ3NQYXRjaFIEY2hhdBIzCgRjb3JzGAsgASgLMh8uc3luY3R2LmFk'
     'bWluLkNvcnNTZXR0aW5nc1BhdGNoUgRjb3JzEjkKBnNlcnZlchgMIAEoCzIhLnN5bmN0di5hZG'
     '1pbi5TZXJ2ZXJTZXR0aW5nc1BhdGNoUgZzZXJ2ZXISVQoQcGxheWJhY2tfaGlzdG9yeRgNIAEo'
@@ -1836,9 +1844,9 @@ final $typed_data.Uint8List emailSettingsPatchDescriptor = $convert.base64Decode
     'QgoKCF9lbmFibGVkQgwKCl9zbXRwX2hvc3RCDAoKX3NtdHBfcG9ydEIKCghfdXNlX3Rsc0INCg'
     'tfZnJvbV9lbWFpbEIMCgpfZnJvbV9uYW1lQhQKEl93aGl0ZWxpc3RfZW5hYmxlZA==');
 
-@$core.Deprecated('Use webRtcSettingsPatchDescriptor instead')
-const WebRtcSettingsPatch$json = {
-  '1': 'WebRtcSettingsPatch',
+@$core.Deprecated('Use webRTCSettingsPatchDescriptor instead')
+const WebRTCSettingsPatch$json = {
+  '1': 'WebRTCSettingsPatch',
   '2': [
     {
       '1': 'external_ice_servers',
@@ -1848,13 +1856,27 @@ const WebRtcSettingsPatch$json = {
       '6': '.synctv.client.IceServer',
       '10': 'externalIceServers'
     },
+    {
+      '1': 'max_voice_participants_per_room',
+      '3': 2,
+      '4': 1,
+      '5': 13,
+      '9': 0,
+      '10': 'maxVoiceParticipantsPerRoom',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_max_voice_participants_per_room'},
   ],
 };
 
-/// Descriptor for `WebRtcSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List webRtcSettingsPatchDescriptor = $convert.base64Decode(
-    'ChNXZWJSdGNTZXR0aW5nc1BhdGNoEkoKFGV4dGVybmFsX2ljZV9zZXJ2ZXJzGAEgAygLMhguc3'
-    'luY3R2LmNsaWVudC5JY2VTZXJ2ZXJSEmV4dGVybmFsSWNlU2VydmVycw==');
+/// Descriptor for `WebRTCSettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List webRTCSettingsPatchDescriptor = $convert.base64Decode(
+    'ChNXZWJSVENTZXR0aW5nc1BhdGNoEkoKFGV4dGVybmFsX2ljZV9zZXJ2ZXJzGAEgAygLMhguc3'
+    'luY3R2LmNsaWVudC5JY2VTZXJ2ZXJSEmV4dGVybmFsSWNlU2VydmVycxJJCh9tYXhfdm9pY2Vf'
+    'cGFydGljaXBhbnRzX3Blcl9yb29tGAIgASgNSABSG21heFZvaWNlUGFydGljaXBhbnRzUGVyUm'
+    '9vbYgBAUIiCiBfbWF4X3ZvaWNlX3BhcnRpY2lwYW50c19wZXJfcm9vbQ==');
 
 @$core.Deprecated('Use chatSettingsPatchDescriptor instead')
 const ChatSettingsPatch$json = {
@@ -5453,7 +5475,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.EmailSettings': EmailSettings$json,
   '.synctv.admin.SmtpCredentials': SmtpCredentials$json,
   '.synctv.admin.SmtpProxy': SmtpProxy$json,
-  '.synctv.admin.WebRtcSettings': WebRtcSettings$json,
+  '.synctv.admin.WebRTCSettings': WebRTCSettings$json,
   '.synctv.client.IceServer': $1.IceServer$json,
   '.synctv.admin.ChatSettings': ChatSettings$json,
   '.synctv.admin.CorsSettings': CorsSettings$json,
@@ -5469,7 +5491,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.ProxySettingsPatch': ProxySettingsPatch$json,
   '.synctv.admin.RtmpSettingsPatch': RtmpSettingsPatch$json,
   '.synctv.admin.EmailSettingsPatch': EmailSettingsPatch$json,
-  '.synctv.admin.WebRtcSettingsPatch': WebRtcSettingsPatch$json,
+  '.synctv.admin.WebRTCSettingsPatch': WebRTCSettingsPatch$json,
   '.synctv.admin.ChatSettingsPatch': ChatSettingsPatch$json,
   '.synctv.admin.CorsSettingsPatch': CorsSettingsPatch$json,
   '.synctv.admin.ServerSettingsPatch': ServerSettingsPatch$json,

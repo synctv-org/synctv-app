@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:screen_brightness/screen_brightness.dart';
@@ -327,14 +328,19 @@ class CustomVideoPlayer extends StatefulWidget {
   final String title;
   final DanmakuController? danmakuController;
   final Map<String, dynamic>? subtitles;
+  final Future<String> Function(String url, Map<String, String> headers)?
+  resolveSubtitleUrl;
   final VoidCallback? onToggleFullScreen;
   final VoidCallback? onSync;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
   final VoidCallback? onEnterPictureInPicture;
+  final VoidCallback? onOpenSettings;
   final ValueChanged<bool>? onUserPlaybackStateChanged;
   final ValueChanged<Duration>? onUserSeek;
   final ValueChanged<double>? onUserPlaybackSpeedChanged;
+  final ValueGetter<bool>? isPlaybackExpectedToBePlaying;
+  final bool canControlPlayback;
   final bool isFullScreen;
   final bool isLive;
   final Function(String)? onSendDanmaku;
@@ -350,14 +356,18 @@ class CustomVideoPlayer extends StatefulWidget {
     required this.title,
     this.danmakuController,
     this.subtitles,
+    this.resolveSubtitleUrl,
     this.onToggleFullScreen,
     this.onSync,
     this.onPrevious,
     this.onNext,
     this.onEnterPictureInPicture,
+    this.onOpenSettings,
     this.onUserPlaybackStateChanged,
     this.onUserSeek,
     this.onUserPlaybackSpeedChanged,
+    this.isPlaybackExpectedToBePlaying,
+    this.canControlPlayback = true,
     this.isFullScreen = false,
     this.isLive = false,
     this.onSendDanmaku,
@@ -561,6 +571,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
     this.canControlPlayback = false,
     this.onPlaybackStateChanged,
     this.onSeek,
+    this.isPlaybackExpectedToBePlaying,
     this.onSync,
     this.onPrevious,
     this.onNext,
@@ -580,6 +591,7 @@ class PictureInPicturePlaybackSurface extends StatefulWidget {
   final bool canControlPlayback;
   final ValueChanged<bool>? onPlaybackStateChanged;
   final ValueChanged<Duration>? onSeek;
+  final ValueGetter<bool>? isPlaybackExpectedToBePlaying;
   final VoidCallback? onSync;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
@@ -627,7 +639,7 @@ class _PictureInPicturePlaybackSurfaceState
     }
     final nextIsPlaying = !controller.value.isPlaying;
     if (nextIsPlaying) {
-      await controller.play();
+      await resumeVideoPlayback(controller, isLive: widget.isLive);
     } else {
       await controller.pause();
     }
@@ -643,7 +655,13 @@ class _PictureInPicturePlaybackSurfaceState
       return;
     }
     final target = Duration(milliseconds: (seconds * 1000).round());
-    await controller.seekTo(target);
+    await seekVideoPlayback(
+      controller,
+      position: target,
+      expectedToBePlaying:
+          widget.isPlaybackExpectedToBePlaying?.call() ??
+          controller.value.isPlaying,
+    );
     if (mounted) setState(() => _pendingSeekSeconds = null);
     widget.onSeek?.call(target);
   }
@@ -960,6 +978,44 @@ class _PictureInPicturePlaybackSurfaceState
 
 enum VideoPlayerInteractionMode { mobile, desktop }
 
+class _PlayerVisualIgnorePointer extends SingleChildRenderObjectWidget {
+  const _PlayerVisualIgnorePointer({
+    required this.ignoring,
+    required super.child,
+  });
+
+  final bool ignoring;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderPlayerVisualIgnorePointer(ignoring);
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderPlayerVisualIgnorePointer renderObject,
+  ) {
+    renderObject.ignoring = ignoring;
+  }
+}
+
+class _RenderPlayerVisualIgnorePointer extends RenderProxyBox {
+  _RenderPlayerVisualIgnorePointer(this._ignoring);
+
+  bool _ignoring;
+
+  set ignoring(bool value) {
+    if (_ignoring == value) return;
+    _ignoring = value;
+  }
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    return !_ignoring && super.hitTest(result, position: position);
+  }
+}
+
 const playerPlaybackSpeedOptions = <double>[2.0, 1.5, 1.25, 1.0, 0.75, 0.5];
 
 class PlayerControlVisibility {
@@ -974,6 +1030,7 @@ class PlayerControlVisibility {
     required this.showSubtitles,
     required this.showPictureInPicture,
     required this.showSendDanmaku,
+    required this.showSettings,
   });
 
   factory PlayerControlVisibility.forWidth(
@@ -991,6 +1048,7 @@ class PlayerControlVisibility {
       showSubtitles: width >= 800,
       showPictureInPicture: width >= 860,
       showSendDanmaku: width >= 920,
+      showSettings: width >= 460,
     );
   }
 
@@ -1004,6 +1062,7 @@ class PlayerControlVisibility {
   final bool showSubtitles;
   final bool showPictureInPicture;
   final bool showSendDanmaku;
+  final bool showSettings;
 }
 
 VideoPlayerInteractionMode videoPlayerInteractionModeForPlatform(
@@ -1046,6 +1105,44 @@ String formatPlayerDuration(Duration duration) {
     return '${twoDigits(duration.inHours)}:$minutes:$seconds';
   }
   return '$minutes:$seconds';
+}
+
+const _completedPlaybackTolerance = Duration(milliseconds: 500);
+
+bool shouldRestartCompletedPlayback(
+  VideoPlayerValue value, {
+  required bool isLive,
+}) {
+  if (isLive ||
+      value.duration <= Duration.zero ||
+      value.position <= Duration.zero) {
+    return false;
+  }
+  return value.position >= value.duration - _completedPlaybackTolerance;
+}
+
+Future<void> resumeVideoPlayback(
+  VideoPlayerController controller, {
+  required bool isLive,
+}) async {
+  if (shouldRestartCompletedPlayback(controller.value, isLive: isLive)) {
+    await controller.seekTo(Duration.zero);
+  }
+  await controller.play();
+}
+
+Future<void> seekVideoPlayback(
+  VideoPlayerController controller, {
+  required Duration position,
+  required bool expectedToBePlaying,
+}) async {
+  await controller.seekTo(position);
+  if (controller.value.isPlaying == expectedToBePlaying) return;
+  if (expectedToBePlaying) {
+    await controller.play();
+  } else {
+    await controller.pause();
+  }
 }
 
 String playbackPositionLabel({
@@ -1257,9 +1354,19 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     Map<String, String> headers = const {},
   }) async {
     try {
-      final uri = Uri.parse(SyncTvService.resolveResourceUrl(url));
+      final resolvedUrl = SyncTvService.resolveResourceUrl(url);
+      final localizedUrl = await widget.resolveSubtitleUrl?.call(
+        resolvedUrl,
+        headers,
+      );
+      final uri = Uri.parse(localizedUrl ?? resolvedUrl);
 
-      final response = await http.get(uri, headers: headers);
+      final response = await http.get(
+        uri,
+        headers: localizedUrl == null || localizedUrl == resolvedUrl
+            ? headers
+            : const {},
+      );
       if (response.statusCode == 200) {
         // Robust decoding (handles UTF-16 BOM)
         String content = _decodeSubtitleContent(response.bodyBytes);
@@ -1694,11 +1801,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Future<void> _togglePlayPause() async {
+    if (!widget.canControlPlayback) return;
     final nextIsPlaying = !widget.controller.value.isPlaying;
     if (widget.controller.value.isPlaying) {
       await widget.controller.pause();
     } else {
-      await widget.controller.play();
+      await resumeVideoPlayback(widget.controller, isLive: widget.isLive);
     }
     widget.onUserPlaybackStateChanged?.call(nextIsPlaying);
     if (mounted) {
@@ -1708,19 +1816,26 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Future<void> _seekFromUser(Duration target) async {
-    if (widget.isLive) return;
+    if (!widget.canControlPlayback || widget.isLive) return;
     final duration = widget.controller.value.duration;
     final clamped = target < Duration.zero
         ? Duration.zero
         : duration > Duration.zero && target > duration
         ? duration
         : target;
-    await widget.controller.seekTo(clamped);
+    await seekVideoPlayback(
+      widget.controller,
+      position: clamped,
+      expectedToBePlaying:
+          widget.isPlaybackExpectedToBePlaying?.call() ??
+          widget.controller.value.isPlaying,
+    );
     widget.onUserSeek?.call(clamped);
     _showDesktopControls();
   }
 
   Future<void> _setPlaybackSpeedFromUser(double speed) async {
+    if (!widget.canControlPlayback) return;
     await widget.controller.setPlaybackSpeed(speed);
     widget.onUserPlaybackSpeedChanged?.call(speed);
     _startHideTimer();
@@ -1785,6 +1900,18 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     );
   }
 
+  Widget _buildSettingsControl(double iconSize) {
+    return AppIconButton(
+      key: const Key('playback_settings_button'),
+      icon: Icons.settings_rounded,
+      tooltip: context.l10n.syncSettings,
+      onPressed: widget.onOpenSettings,
+      padding: widget.isFullScreen ? const EdgeInsets.all(8) : EdgeInsets.zero,
+      constraints: widget.isFullScreen ? null : const BoxConstraints(),
+      iconSize: widget.isFullScreen ? 24 : iconSize,
+    );
+  }
+
   Widget _buildFullscreenControl(double iconSize) {
     return AppIconButton(
       icon: widget.isFullScreen
@@ -1809,7 +1936,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
   }
 
   Future<void> _seekRelative(Duration offset) async {
-    if (widget.isLive) return;
+    if (!widget.canControlPlayback || widget.isLive) return;
     final value = widget.controller.value;
     final duration = value.duration;
     if (duration <= Duration.zero) return;
@@ -1853,17 +1980,23 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
     }
     final key = event.logicalKey;
     if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.keyK) {
-      if (widget.isLive) return KeyEventResult.handled;
+      if (!widget.canControlPlayback || widget.isLive) {
+        return KeyEventResult.ignored;
+      }
       _togglePlayPause();
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowLeft) {
-      if (widget.isLive) return KeyEventResult.handled;
+      if (!widget.canControlPlayback || widget.isLive) {
+        return KeyEventResult.ignored;
+      }
       _seekRelative(const Duration(seconds: -5));
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowRight) {
-      if (widget.isLive) return KeyEventResult.handled;
+      if (!widget.canControlPlayback || widget.isLive) {
+        return KeyEventResult.ignored;
+      }
       _seekRelative(const Duration(seconds: 5));
       return KeyEventResult.handled;
     }
@@ -1883,12 +2016,17 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       widget.onToggleFullScreen?.call();
       return KeyEventResult.handled;
     }
+    if (key == LogicalKeyboardKey.keyP &&
+        widget.onEnterPictureInPicture != null) {
+      widget.onEnterPictureInPicture?.call();
+      return KeyEventResult.handled;
+    }
     return KeyEventResult.ignored;
   }
 
   void _onHorizontalDragStart(DragStartDetails details) {
     if (_isDesktopMode) return;
-    if (widget.isLive) return;
+    if (!widget.canControlPlayback || widget.isLive) return;
     _isDragging = true;
     _dragStartPosition = widget.controller.value.position;
     _hideTimer?.cancel();
@@ -1901,7 +2039,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     if (_isDesktopMode) return;
-    if (widget.isLive) return;
+    if (!widget.canControlPlayback || widget.isLive) return;
     if (_dragStartPosition == null) return;
 
     final duration = widget.controller.value.duration.inMilliseconds.toDouble();
@@ -1922,7 +2060,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
 
   void _onHorizontalDragEnd(DragEndDetails details) {
     if (_isDesktopMode) return;
-    if (widget.isLive) return;
+    if (!widget.canControlPlayback || widget.isLive) return;
     _isDragging = false;
     if (_dragStartPosition != null) {
       unawaited(_seekFromUser(_dragStartPosition!));
@@ -2379,9 +2517,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: _isDesktopMode
-                ? (widget.isLive ? null : _togglePlayPause)
+                ? (!widget.canControlPlayback || widget.isLive
+                      ? null
+                      : _togglePlayPause)
                 : _toggleControls,
-            onDoubleTap: _isDesktopMode || widget.isLive
+            onDoubleTap:
+                _isDesktopMode || !widget.canControlPlayback || widget.isLive
                 ? null
                 : _togglePlayPause,
             onHorizontalDragStart: _isDesktopMode
@@ -2483,11 +2624,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                       ],
                     ),
                   ),
-                IgnorePointer(
+                _PlayerVisualIgnorePointer(
                   ignoring: !_showControls,
                   child: AnimatedOpacity(
                     opacity: _showControls ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 300),
+                    alwaysIncludeSemantics: true,
                     child: Stack(
                       children: [
                         // Top Bar
@@ -2585,24 +2727,24 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                   final horizontalGap = controlsWidth < 360
                                       ? 4.0
                                       : 8.0;
-                                  final playPauseControl = Semantics(
-                                    button: true,
-                                    label: videoValue.isPlaying
+                                  final playPauseControl = IconButton(
+                                    onPressed: widget.canControlPlayback
+                                        ? _togglePlayPause
+                                        : null,
+                                    tooltip: videoValue.isPlaying
                                         ? context.l10n.pause
                                         : context.l10n.play,
-                                    onTap: _togglePlayPause,
-                                    child: GestureDetector(
-                                      onTap: _togglePlayPause,
-                                      child: SizedBox.square(
-                                        dimension: 40,
-                                        child: Icon(
-                                          videoValue.isPlaying
-                                              ? Icons.pause_rounded
-                                              : Icons.play_arrow_rounded,
-                                          color: Colors.white,
-                                          size: playIconSize,
-                                        ),
-                                      ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints.tightFor(
+                                      width: 40,
+                                      height: 40,
+                                    ),
+                                    icon: Icon(
+                                      videoValue.isPlaying
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      color: Colors.white,
+                                      size: playIconSize,
                                     ),
                                   );
                                   final controls =
@@ -2625,13 +2767,15 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             ),
                                             visible: visibility.showSubtitles,
                                           ),
-                                        (
-                                          control: _buildSpeedControl(
-                                            videoValue,
-                                            iconSize,
+                                        if (widget.canControlPlayback &&
+                                            !widget.isLive)
+                                          (
+                                            control: _buildSpeedControl(
+                                              videoValue,
+                                              iconSize,
+                                            ),
+                                            visible: visibility.showSpeed,
                                           ),
-                                          visible: visibility.showSpeed,
-                                        ),
                                         (
                                           control: _buildDanmakuControl(
                                             iconSize,
@@ -2672,6 +2816,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             ),
                                             visible:
                                                 visibility.showPictureInPicture,
+                                          ),
+                                        if (widget.onOpenSettings != null)
+                                          (
+                                            control: _buildSettingsControl(
+                                              iconSize,
+                                            ),
+                                            visible: visibility.showSettings,
                                           ),
                                         if (widget.onToggleFullScreen != null)
                                           (
@@ -2727,90 +2878,136 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
                                             Expanded(
                                               child: Semantics(
                                                 slider: true,
+                                                enabled:
+                                                    widget.canControlPlayback,
                                                 label: context
                                                     .l10n
                                                     .playbackProgress,
                                                 value:
                                                     '${_formatDuration(videoValue.position)} / ${_formatDuration(videoValue.duration)}',
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: SliderTheme(
-                                                      data: SliderTheme.of(context).copyWith(
-                                                        thumbShape: RoundSliderThumbShape(
-                                                          enabledThumbRadius:
+                                                increasedValue: _formatDuration(
+                                                  videoValue.position +
+                                                      const Duration(
+                                                        seconds: 5,
+                                                      ),
+                                                ),
+                                                decreasedValue: _formatDuration(
+                                                  videoValue.position -
+                                                      const Duration(
+                                                        seconds: 5,
+                                                      ),
+                                                ),
+                                                onIncrease:
+                                                    widget.canControlPlayback
+                                                    ? () => unawaited(
+                                                        _seekRelative(
+                                                          const Duration(
+                                                            seconds: 5,
+                                                          ),
+                                                        ),
+                                                      )
+                                                    : null,
+                                                onDecrease:
+                                                    widget.canControlPlayback
+                                                    ? () => unawaited(
+                                                        _seekRelative(
+                                                          const Duration(
+                                                            seconds: -5,
+                                                          ),
+                                                        ),
+                                                      )
+                                                    : null,
+                                                child: ExcludeSemantics(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.center,
+                                                      child: SliderTheme(
+                                                        data: SliderTheme.of(context).copyWith(
+                                                          thumbShape: RoundSliderThumbShape(
+                                                            enabledThumbRadius:
+                                                                _isSliderDragging
+                                                                ? (widget.isFullScreen
+                                                                      ? 8
+                                                                      : 10)
+                                                                : (widget.isFullScreen
+                                                                      ? 6
+                                                                      : 8),
+                                                          ),
+                                                          trackHeight:
                                                               _isSliderDragging
                                                               ? (widget.isFullScreen
-                                                                    ? 8
-                                                                    : 10)
+                                                                    ? 4
+                                                                    : 6)
                                                               : (widget.isFullScreen
-                                                                    ? 6
-                                                                    : 8),
+                                                                    ? 2
+                                                                    : 4),
+                                                          overlayShape:
+                                                              const RoundSliderOverlayShape(
+                                                                overlayRadius:
+                                                                    24,
+                                                              ),
+                                                          activeTrackColor:
+                                                              const Color(
+                                                                0xFF5D5FEF,
+                                                              ),
+                                                          inactiveTrackColor:
+                                                              Colors.white24,
+                                                          thumbColor:
+                                                              Colors.white,
+                                                          trackShape:
+                                                              const RectangularSliderTrackShape(),
                                                         ),
-                                                        trackHeight:
-                                                            _isSliderDragging
-                                                            ? (widget.isFullScreen
-                                                                  ? 4
-                                                                  : 6)
-                                                            : (widget.isFullScreen
-                                                                  ? 2
-                                                                  : 4),
-                                                        overlayShape:
-                                                            const RoundSliderOverlayShape(
-                                                              overlayRadius: 24,
-                                                            ),
-                                                        activeTrackColor:
-                                                            const Color(
-                                                              0xFF5D5FEF,
-                                                            ),
-                                                        inactiveTrackColor:
-                                                            Colors.white24,
-                                                        thumbColor:
-                                                            Colors.white,
-                                                        trackShape:
-                                                            const RectangularSliderTrackShape(),
-                                                      ),
-                                                      child: AppSlider(
-                                                        key: const Key(
-                                                          'playback_progress_slider',
-                                                        ),
-                                                        value:
-                                                            (_isSliderDragging
-                                                                    ? _sliderDragValue
-                                                                    : videoValue
-                                                                          .position
-                                                                          .inMilliseconds
-                                                                          .toDouble())
-                                                                .clamp(
-                                                                  0,
-                                                                  videoValue.duration.inMilliseconds
-                                                                              .toDouble() >
-                                                                          0
-                                                                      ? videoValue
-                                                                            .duration
+                                                        child: AppSlider(
+                                                          key: const Key(
+                                                            'playback_progress_slider',
+                                                          ),
+                                                          value:
+                                                              (_isSliderDragging
+                                                                      ? _sliderDragValue
+                                                                      : videoValue
+                                                                            .position
                                                                             .inMilliseconds
-                                                                            .toDouble()
-                                                                      : 1.0,
-                                                                ),
-                                                        min: 0,
-                                                        max:
-                                                            videoValue
+                                                                            .toDouble())
+                                                                  .clamp(
+                                                                    0,
+                                                                    videoValue.duration.inMilliseconds.toDouble() >
+                                                                            0
+                                                                        ? videoValue
+                                                                              .duration
+                                                                              .inMilliseconds
+                                                                              .toDouble()
+                                                                        : 1.0,
+                                                                  ),
+                                                          min: 0,
+                                                          max:
+                                                              videoValue
+                                                                      .duration
+                                                                      .inMilliseconds
+                                                                      .toDouble() >
+                                                                  0
+                                                              ? videoValue
                                                                     .duration
                                                                     .inMilliseconds
-                                                                    .toDouble() >
-                                                                0
-                                                            ? videoValue
-                                                                  .duration
-                                                                  .inMilliseconds
-                                                                  .toDouble()
-                                                            : 1.0,
-                                                        onChangeStart:
-                                                            _handleProgressChangeStart,
-                                                        onChanged:
-                                                            _handleProgressChanged,
-                                                        onChangeEnd:
-                                                            _handleProgressChangeEnd,
+                                                                    .toDouble()
+                                                              : 1.0,
+                                                          onChangeStart:
+                                                              widget
+                                                                  .canControlPlayback
+                                                              ? _handleProgressChangeStart
+                                                              : null,
+                                                          onChanged:
+                                                              widget
+                                                                  .canControlPlayback
+                                                              ? _handleProgressChanged
+                                                              : null,
+                                                          onChangeEnd:
+                                                              widget
+                                                                  .canControlPlayback
+                                                              ? _handleProgressChangeEnd
+                                                              : null,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -2985,7 +3182,7 @@ class _PlaybackSpeedMenuButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: context.l10n.playbackSpeed,
-      child: Tooltip(
+      child: AppTooltip(
         message: context.l10n.playbackSpeedValue(
           currentSpeed.toStringAsFixed(2),
         ),

@@ -1252,11 +1252,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'The SyncTV server forwards media requests';
 
   @override
-  String get addToPlaylist => 'Add to playlist';
+  String get proxyOnlyPlayback => 'Proxy playback only';
 
   @override
-  String get credentialHeaderRisk =>
-      'Credential headers such as Authorization and Cookie are stored with the media playback information and may be visible to room members during playback. Use them only with trusted rooms and links.';
+  String get proxyOnlyPlaybackDescription =>
+      'Route every media request through the SyncTV server proxy';
+
+  @override
+  String get addToPlaylist => 'Add to playlist';
 
   @override
   String get requestHeaders => 'Request headers';
@@ -1460,15 +1463,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String addFailed(String error) {
     return 'Could not add media: $error';
-  }
-
-  @override
-  String get confirmCredentialHeaderSharing =>
-      'Confirm credential header sharing';
-
-  @override
-  String credentialHeaderSharingDescription(String names) {
-    return '$names will be provided to room members with playback information to request the media resource. Confirm that the room members are trusted and that exposing these credentials will not affect your account security.';
   }
 
   @override
@@ -1942,8 +1936,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackRoute => 'Playback route';
 
   @override
-  String playbackCredentialWarning(String names) {
-    return 'The current playback address contains $names. These credentials come from playback information and may be visible to room members for media requests.';
+  String get route => 'Route';
+
+  @override
+  String get qualityAndMediaLinks => 'Quality and media links';
+
+  @override
+  String get manifestQualities => 'Manifest qualities';
+
+  @override
+  String get automatic => 'Auto';
+
+  @override
+  String get selectPlaybackRoute => 'Choose route';
+
+  @override
+  String get playbackRouteMain => 'Main route';
+
+  @override
+  String playbackRouteBackup(int index) {
+    return 'Backup route $index';
+  }
+
+  @override
+  String get playbackRouteOriginal => 'Original';
+
+  @override
+  String get playbackRouteProgressive => 'Standard video';
+
+  @override
+  String get playbackRouteTranscoded => 'Transcoded';
+
+  @override
+  String get playbackRouteVideoHls => 'Video HLS';
+
+  @override
+  String get playbackRouteAudioHls => 'Audio HLS';
+
+  @override
+  String qualityTrack(String id) {
+    return 'Quality $id';
   }
 
   @override
@@ -2254,6 +2286,92 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceChat => 'Voice chat';
+
+  @override
+  String get roomRealtimeFeatures => 'Realtime communication';
+
+  @override
+  String get voiceChatRoomEnabledDescription =>
+      'Allow members to join voice calls in this room';
+
+  @override
+  String get voiceChatDisabledByRoom =>
+      'A room administrator disabled voice chat';
+
+  @override
+  String get p2pMedia => 'P2P media delivery';
+
+  @override
+  String get p2pMediaRoomEnabledDescription =>
+      'Allow members to share media data with peers in this room';
+
+  @override
+  String get p2pMediaDisabledByRoom =>
+      'A room administrator disabled P2P media delivery';
+
+  @override
+  String get p2pMediaDescription =>
+      'Share cached media directly with room members. Peers can see your network address and use your upload bandwidth. Swarm tickets isolate rooms, users, and resources.';
+
+  @override
+  String get p2pCacheSize => 'Cache capacity';
+
+  @override
+  String get p2pCacheSizeDescription =>
+      'Persistent LRU cache shared across playback sessions. Entries expire after 10 minutes without access.';
+
+  @override
+  String get p2pSecurityMode => 'Peer data validation';
+
+  @override
+  String get p2pSecurityStandard => 'Standard';
+
+  @override
+  String get p2pSecurityStandardDescription =>
+      'Checks framing, declared length, size limits, and timeouts. Validation adds no network traffic; scheduling can still race origins and peers.';
+
+  @override
+  String get p2pSecuritySampled => 'Origin sampling';
+
+  @override
+  String get p2pSecuritySampledDescription =>
+      'Compares 10% of peer pieces with the origin using SHA-256. Conflicting peers are isolated for the current swarm session.';
+
+  @override
+  String get p2pIntegrityChecks => 'Integrity checks';
+
+  @override
+  String get p2pIntegrityMismatches => 'Integrity conflicts';
+
+  @override
+  String get p2pIntegrityUnavailable => 'Origin checks unavailable';
+
+  @override
+  String get p2pMetrics => 'P2P transfer metrics';
+
+  @override
+  String get totalDownload => 'Total download';
+
+  @override
+  String get totalUpload => 'Total upload';
+
+  @override
+  String get httpDownload => 'HTTP download';
+
+  @override
+  String get p2pDownload => 'P2P download';
+
+  @override
+  String get p2pUpload => 'P2P upload';
+
+  @override
+  String get connectedPeers => 'Connected peers';
+
+  @override
+  String get p2pCache => 'Cached data';
+
+  @override
+  String get cacheHitRate => 'Cache hit rate';
 
   @override
   String get leaveVoice => 'Leave voice chat';
@@ -3934,7 +4052,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendChatAndDanmaku => 'Send chat and danmaku';
 
   @override
-  String get viewMediaList => 'View media list';
+  String get browseLibraryList => 'Browse library';
 
   @override
   String get viewMemberList => 'View member list';
@@ -5135,7 +5253,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendChat => 'Send chat messages';
 
   @override
-  String get viewMedia => 'View media';
+  String get browseLibrary => 'Browse library';
 
   @override
   String get viewMembers => 'View members';
@@ -5472,6 +5590,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get externalIceServersWarning =>
       'TURN usernames and credentials are sent to clients. Use limited, renewable credentials.';
+
+  @override
+  String get maxVoiceParticipantsPerRoom => 'Voice participants per room';
+
+  @override
+  String get maxVoiceParticipantsPerRoomDescription =>
+      'Maximum simultaneous voice participants in one room. Mesh voice supports 2 to 32; 8 is recommended for mobile clients.';
 
   @override
   String get chatMessagesPerRoom => 'Chat messages retained per room';

@@ -22,6 +22,34 @@ Widget _app(Widget child) {
 }
 
 void main() {
+  testWidgets('AppSlider exposes one formatted adjustable semantics node', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+
+    await tester.pumpWidget(
+      _app(
+        AppSlider(
+          value: 25,
+          min: 0,
+          max: 30,
+          onChanged: (_) {},
+          semanticFormatterCallback: (_) => '播放进度: 00:25 / 00:30',
+        ),
+      ),
+    );
+
+    final adjustable = find.semantics.byPredicate((node) {
+      final data = node.getSemanticsData();
+      return data.hasAction(ui.SemanticsAction.increase) &&
+          data.hasAction(ui.SemanticsAction.decrease) &&
+          data.value == '播放进度: 00:25 / 00:30';
+    }, describeMatch: (_) => 'adjustable slider semantics');
+    expect(adjustable, findsOneWidget);
+
+    semantics.dispose();
+  });
+
   testWidgets('AppTextField clear keeps controller and onChanged in sync', (
     tester,
   ) async {
@@ -857,6 +885,8 @@ void main() {
     tester,
   ) async {
     var selected = 0;
+    var opened = 0;
+    var canceled = 0;
 
     await tester.pumpWidget(
       _app(
@@ -864,6 +894,8 @@ void main() {
           children: [
             AppPopupMenuButton<int>(
               tooltip: '数量',
+              onOpened: () => opened++,
+              onCanceled: () => canceled++,
               onSelected: (value) => selected = value,
               itemBuilder: (context) => const [
                 PopupMenuItem(value: 50, child: Text('50')),
@@ -892,6 +924,14 @@ void main() {
 
     await tester.tap(find.text('打开菜单'));
     await tester.pumpAndSettle();
+    expect(opened, 1);
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
+    expect(canceled, 1);
+
+    await tester.tap(find.text('打开菜单'));
+    await tester.pumpAndSettle();
+    expect(opened, 2);
     await tester.tap(find.text('50'));
     await tester.pumpAndSettle();
     expect(selected, 50);

@@ -7,6 +7,9 @@ import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 
 class RoomRealtimeConnection {
+  static const _connectTimeout = Duration(seconds: 10);
+  static const _closeTimeout = Duration(seconds: 2);
+
   RoomRealtimeConnection._({
     required this._outgoing,
     required this._socket,
@@ -21,6 +24,10 @@ class RoomRealtimeConnection {
   onOutgoing;
 
   StreamSink<List<int>> get sink => _outgoing.sink;
+
+  Future<void> get ready async {
+    await _socket;
+  }
 
   void sendMessage(client.ClientMessage message) {
     unawaited(_sendMessage(message));
@@ -55,8 +62,16 @@ class RoomRealtimeConnection {
     final socketFuture =
         (createWebSocketUri ?? SyncTvService.createRoomWebSocketUri)(
           roomId,
-        ).then((uri) => WebSocket.connect(uri.toString())).then((connected) {
+        )
+            .timeout(_connectTimeout)
+            .then(
+              (uri) => WebSocket.connect(
+                uri.toString(),
+              ).timeout(_connectTimeout),
+            )
+            .then((connected) {
           socket = connected;
+          socket.pingInterval = const Duration(seconds: 10);
           socket.listen(
             (frame) {
               try {
@@ -103,7 +118,9 @@ class RoomRealtimeConnection {
       heartbeatTimer?.cancel();
       await outgoing.close();
       await outgoingSubscription?.cancel();
-      await socketFuture.then((_) => socket.close()).catchError((_) {});
+      await socketFuture
+          .then((_) => socket.close().timeout(_closeTimeout))
+          .catchError((_) {});
     };
 
     return RoomRealtimeConnection._(

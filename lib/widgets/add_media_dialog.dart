@@ -169,7 +169,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   final _embySearchController = TextEditingController();
   final _cloudreveSearchController = TextEditingController();
 
-  bool _isProxy = false;
+  bool _preferProxy = false;
+  bool _proxyOnly = false;
   bool _isLoading = false;
   String _directHeaderError = '';
 
@@ -791,7 +792,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppPanelSurface(
-          height: 58,
+          height: 52,
           padding: EdgeInsets.symmetric(horizontal: compact ? 16 : 22),
           color: Colors.transparent,
           borderRadius: BorderRadius.zero,
@@ -840,7 +841,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         ),
         Expanded(
           child: Padding(
-            padding: EdgeInsets.all(compact ? 14 : 18),
+            padding: compact
+                ? const EdgeInsets.all(10)
+                : const EdgeInsets.fromLTRB(18, 10, 18, 18),
             child: _buildContent(theme),
           ),
         ),
@@ -1003,20 +1006,26 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           _buildDirectHeadersEditor(theme),
           const SizedBox(height: 12),
           AppSwitchTile(
-            value: _isProxy,
+            value: _preferProxy,
             onChanged: _isLoading
                 ? null
-                : (val) => setState(() => _isProxy = val),
+                : (val) => setState(() => _preferProxy = val),
             title: Text(context.l10n.preferProxyPlayback),
             subtitle: Text(context.l10n.proxyPlaybackDescription),
             prefix: const Icon(Icons.route_rounded),
             semanticsLabel: context.l10n.preferProxyPlayback,
           ),
-          if (_directHeadersContainCredentials())
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: _buildDirectHeaderRiskNotice(theme),
-            ),
+          const SizedBox(height: 8),
+          AppSwitchTile(
+            value: _proxyOnly,
+            onChanged: _isLoading
+                ? null
+                : (value) => setState(() => _proxyOnly = value),
+            title: Text(context.l10n.proxyOnlyPlayback),
+            subtitle: Text(context.l10n.proxyOnlyPlaybackDescription),
+            prefix: const Icon(Icons.lock_outline_rounded),
+            semanticsLabel: context.l10n.proxyOnlyPlayback,
+          ),
           const SizedBox(height: 18),
           _buildActionButton(
             context.l10n.addToPlaylist,
@@ -1072,26 +1081,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       focusedBorderSide: BorderSide(color: scheme.primary, width: 1.4),
       disabledBorderSide: BorderSide(
         color: scheme.outlineVariant.withValues(alpha: 0.35),
-      ),
-    );
-  }
-
-  Widget _buildDirectHeaderRiskNotice(ThemeData theme) {
-    final warningColor = Colors.orange.shade700;
-    return AppInfoBanner(
-      padding: const EdgeInsets.all(12),
-      icon: Icons.warning_amber_rounded,
-      color: warningColor,
-      backgroundColor: warningColor.withValues(alpha: 0.08),
-      border: Border.all(color: warningColor.withValues(alpha: 0.28)),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      title: Text(
-        context.l10n.credentialHeaderRisk,
-        style: TextStyle(
-          fontSize: 12,
-          height: 1.4,
-          color: theme.textTheme.bodyMedium?.color,
-        ),
       ),
     );
   }
@@ -2436,20 +2425,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  bool _directHeadersContainCredentials() {
-    return DirectUrlSourceConfig.hasCredentialHeaders(
-      _directHeaders
-          .where((header) => header.nameController.text.trim().isNotEmpty)
-          .fold<Map<String, String>>({}, (headers, header) {
-            headers[header.nameController.text.trim()] = header
-                .valueController
-                .text
-                .trim();
-            return headers;
-          }),
-    );
-  }
-
   Map<String, String> _collectDirectHeaders({
     bool validateCompleteRows = true,
   }) {
@@ -2568,11 +2543,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       return;
     }
 
-    if (DirectUrlSourceConfig.hasCredentialHeaders(headers)) {
-      final confirmed = await _confirmDirectCredentialHeaders(headers);
-      if (!confirmed) return;
-    }
-
     setState(() => _isLoading = true);
     try {
       final name = _nameController.text.trim();
@@ -2583,7 +2553,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           url: urls.single,
           name: name.isEmpty ? _directUrlDisplayName(urls.single) : name,
           headers: headers,
-          preferProxy: _isProxy,
+          preferProxy: _preferProxy,
+          proxyOnly: _proxyOnly,
         );
       } else {
         await SyncTvService.addMediaBatch(
@@ -2596,7 +2567,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   'sourceConfig': DirectUrlSourceConfig.fromUserInput(
                     url: url,
                     headers: headers,
-                    preferProxy: _isProxy,
+                    preferProxy: _preferProxy,
+                    proxyOnly: _proxyOnly,
                   ).toJson(),
                   'name': _directUrlDisplayName(url),
                 },
@@ -2620,36 +2592,6 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  Future<bool> _confirmDirectCredentialHeaders(
-    Map<String, String> headers,
-  ) async {
-    final names = DirectUrlSourceConfig.credentialHeaderNames(
-      headers,
-    ).join('、');
-    final confirmed = await ChatUtils.showStyledDialog<bool>(
-      context: context,
-      title: context.l10n.confirmCredentialHeaderSharing,
-      icon: Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
-      iconColor: Colors.orange.shade700,
-      content: Text(
-        context.l10n.credentialHeaderSharingDescription(names),
-        style: TextStyle(
-          height: 1.5,
-          color: Theme.of(context).textTheme.bodyMedium?.color,
-        ),
-      ),
-      actions: [
-        ChatUtils.createCancelButton(context),
-        ChatUtils.createConfirmButton(
-          context,
-          () => Navigator.pop(context, true),
-          text: context.l10n.confirmAdd,
-        ),
-      ],
-    );
-    return confirmed == true;
   }
 
   List<String> _parseDirectUrls(String input) {

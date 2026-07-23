@@ -11,6 +11,7 @@ import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/pages/mobile/admin_settings_page.dart';
 import 'package:synctv_app/services/realtime_event_log_preferences.dart';
+import 'package:synctv_app/services/p2p_media_preferences.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -27,6 +28,7 @@ import 'package:synctv_app/widgets/add_media_dialog.dart';
 import 'package:synctv_app/widgets/chat_read_receipts_dialog.dart';
 import 'package:synctv_app/widgets/chat_reaction_users_dialog.dart';
 import 'package:synctv_app/widgets/playback_sync_settings_fields.dart';
+import 'package:synctv_app/widgets/p2p_media_settings_fields.dart';
 import 'package:synctv_app/widgets/playback_history_list.dart';
 import 'package:synctv_app/widgets/realtime_event_log_view.dart';
 
@@ -149,6 +151,7 @@ class RoomSettingsPage extends StatefulWidget {
   final RoomRealtimeSession realtime;
   final bool canViewPlaybackHistory;
   final bool canNavigatePlayback;
+  final bool canUseWebRtc;
 
   const RoomSettingsPage({
     super.key,
@@ -160,6 +163,7 @@ class RoomSettingsPage extends StatefulWidget {
     required this.realtime,
     this.canViewPlaybackHistory = false,
     this.canNavigatePlayback = false,
+    required this.canUseWebRtc,
   });
 
   @override
@@ -168,7 +172,10 @@ class RoomSettingsPage extends StatefulWidget {
 
 class _RoomSettingsPageState extends State<RoomSettingsPage>
     with SingleTickerProviderStateMixin {
-  int get _sectionCount => widget.canViewPlaybackHistory ? 12 : 11;
+  int get _sectionCount =>
+      10 +
+      (widget.canViewPlaybackHistory ? 1 : 0) +
+      (widget.canUseWebRtc ? 1 : 0);
   late final TabController _tabController;
   late final TextEditingController _passwordController;
   late final TextEditingController _maxMembersController;
@@ -188,6 +195,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   String _playbackHistoryCursorId = '';
   String _playbackHistoryVersion = '';
   bool _playbackHistoryLoading = false;
+  String _pendingPlaybackHistoryCursorId = '';
   String _playingHistoryEntryId = '';
   final Map<String, ChatMessageReadReceiptsInfo> _chatReceiptCache = {};
   final List<IceServerInfo> _iceServers = [];
@@ -249,6 +257,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   bool _allowAutoJoin = true;
   bool _chatEnabled = true;
   bool _danmakuEnabled = true;
+  bool _voiceChatEnabled = true;
+  bool _p2pMediaEnabled = true;
   int _memberPermissions = RoomMemberPermissions.all;
   int _guestPermissions = 0;
   bool _isSaving = false;
@@ -295,6 +305,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     RealtimeEventLogPreferences.load().then((_) {
       if (mounted) _handleRealtimeLogMaxEntriesChanged();
     });
+    unawaited(P2pMediaPreferences.load());
     _applySettings(_settings);
     _loadStreams();
     _loadMembers();
@@ -303,7 +314,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _loadRoomInfo();
     _loadChatHistory();
     if (widget.canViewPlaybackHistory) _loadPlaybackHistory();
-    _loadIceServers();
+    if (widget.canUseWebRtc) _loadIceServers();
     _loadCurrentUserIfNeeded();
     _realtimeMessageSubscription = widget.realtime.messages.listen(
       _handleRealtimeMessage,
@@ -315,6 +326,10 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       if (!mounted) return;
       _chatHistoryLoaded = false;
       _loadChatHistory();
+      if (widget.canViewPlaybackHistory) {
+        _playbackHistoryVersion = '';
+        _requestPlaybackHistoryRefresh();
+      }
       _startResourceWatches();
     });
     _startResourceWatches();
@@ -367,6 +382,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     _allowAutoJoin = settings.allowAutoJoin;
     _chatEnabled = settings.chatEnabled;
     _danmakuEnabled = settings.danmakuEnabled;
+    _voiceChatEnabled = settings.voiceChatEnabled;
+    _p2pMediaEnabled = settings.p2pMediaEnabled;
     _memberPermissions = settings.effectiveMemberPermissions;
     _guestPermissions = settings.effectiveGuestPermissions;
     _maxMembersController.text = settings.maxMembers.toString();
@@ -389,17 +406,28 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
     );
   }
 
+  void _requestPlaybackHistoryRefresh([String expectedCursorId = '']) {
+    if (!widget.canViewPlaybackHistory || !mounted) return;
+    if (expectedCursorId.isNotEmpty) {
+      if (expectedCursorId == _playbackHistoryCursorId) return;
+      _pendingPlaybackHistoryCursorId = expectedCursorId;
+    }
+    if (!_playbackHistoryLoading) unawaited(_loadPlaybackHistory());
+  }
+
   Future<void> _loadPlaybackHistory() async {
     if (_playbackHistoryLoading) return;
     setState(() => _playbackHistoryLoading = true);
     try {
-      final page = await SyncTvService.listPlaybackHistory(widget.roomId);
-      if (mounted) {
+      do {
+        _pendingPlaybackHistoryCursorId = '';
+        final page = await SyncTvService.listPlaybackHistory(widget.roomId);
+        if (!mounted) return;
         setState(() {
           _playbackHistory = page.entries;
           _playbackHistoryCursorId = page.historyCursorId;
         });
-      }
+      } while (_pendingPlaybackHistoryCursorId.isNotEmpty);
     } catch (error) {
       if (mounted) MessageUtils.showError(context, error.toString());
     } finally {
@@ -639,6 +667,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
   }
 
   void _handleRealtimeMessage(RoomRealtimeMessage message) {
+    final playbackHistoryCursorId =
+        message.playbackStatus?.historyCursorId ?? '';
+    if (playbackHistoryCursorId.isNotEmpty &&
+        playbackHistoryCursorId != _playbackHistoryCursorId) {
+      _requestPlaybackHistoryRefresh(playbackHistoryCursorId);
+    }
     if (message.resourceObserveId == _mediaObserveId) {
       _handleRealtimeMediaMessage(message);
       return;
@@ -1043,6 +1077,8 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
         maxMembers: maxMembers,
         chatEnabled: _chatEnabled,
         danmakuEnabled: _danmakuEnabled,
+        voiceChatEnabled: _voiceChatEnabled,
+        p2pMediaEnabled: _p2pMediaEnabled,
         memberAddedPermissions: 0,
         memberRemovedPermissions: _memberRemovedPermissions(),
         guestAddedPermissions: _guestPermissions,
@@ -1570,11 +1606,12 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       icon: Icons.report_gmailerrorred_rounded,
       builder: _buildReportsTab,
     ),
-    _RoomSettingsSection(
-      label: context.l10n.network,
-      icon: Icons.hub_rounded,
-      builder: _buildNetworkTab,
-    ),
+    if (widget.canUseWebRtc)
+      _RoomSettingsSection(
+        label: context.l10n.network,
+        icon: Icons.hub_rounded,
+        builder: _buildNetworkTab,
+      ),
     _RoomSettingsSection(
       label: context.l10n.streaming,
       icon: Icons.podcasts_rounded,
@@ -1589,7 +1626,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
 
   Widget _buildPlaybackHistoryTab(ThemeData theme, bool isDark) {
     if (_playbackHistoryLoading && _playbackHistory.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator();
     }
     if (_playbackHistory.isEmpty) {
       return Center(child: Text(context.l10n.playbackHistoryEmpty));
@@ -3726,6 +3763,14 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
           ],
         ),
+        if (_p2pMediaEnabled) ...[
+          const SizedBox(height: 20),
+          _buildSectionHeader(context.l10n.p2pMedia, theme),
+          _buildSurface(
+            isDark: isDark,
+            children: const [P2pMediaSettingsFields()],
+          ),
+        ],
       ],
     );
   }
@@ -3766,6 +3811,29 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildMaxMembersField(theme),
+          ],
+        ),
+        _buildSectionHeader(context.l10n.roomRealtimeFeatures, theme),
+        _buildSurface(
+          isDark: isDark,
+          children: [
+            _buildSwitchItem(
+              context.l10n.voiceChat,
+              context.l10n.voiceChatRoomEnabledDescription,
+              _voiceChatEnabled,
+              (value) => setState(() => _voiceChatEnabled = value),
+              theme,
+              isDark,
+            ),
+            _buildDivider(theme),
+            _buildSwitchItem(
+              context.l10n.p2pMedia,
+              context.l10n.p2pMediaRoomEnabledDescription,
+              _p2pMediaEnabled,
+              (value) => setState(() => _p2pMediaEnabled = value),
+              theme,
+              isDark,
+            ),
           ],
         ),
         _buildSectionHeader(context.l10n.message, theme),
@@ -3818,10 +3886,11 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              context.l10n.viewMediaList,
+              context.l10n.browseLibraryList,
               _memberPermissions,
-              RoomMemberPermissions.viewMedia,
-              (v) => _setMemberPermission(RoomMemberPermissions.viewMedia, v),
+              RoomMemberPermissions.browseLibrary,
+              (v) =>
+                  _setMemberPermission(RoomMemberPermissions.browseLibrary, v),
               theme,
               isDark,
             ),
@@ -3848,10 +3917,20 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              context.l10n.webrtcCalls,
+              context.l10n.voiceChat,
               _memberPermissions,
-              RoomMemberPermissions.useWebRTC,
-              (v) => _setMemberPermission(RoomMemberPermissions.useWebRTC, v),
+              RoomMemberPermissions.useVoiceChat,
+              (v) =>
+                  _setMemberPermission(RoomMemberPermissions.useVoiceChat, v),
+              theme,
+              isDark,
+            ),
+            _buildDivider(theme),
+            _buildPermissionSwitch(
+              context.l10n.p2pMedia,
+              _memberPermissions,
+              RoomMemberPermissions.useP2pMedia,
+              (v) => _setMemberPermission(RoomMemberPermissions.useP2pMedia, v),
               theme,
               isDark,
             ),
@@ -3881,10 +3960,19 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
             ),
             _buildDivider(theme),
             _buildPermissionSwitch(
-              context.l10n.webrtcCalls,
+              context.l10n.voiceChat,
               _guestPermissions,
-              RoomGuestPermissions.useWebRTC,
-              (v) => _setGuestPermission(RoomGuestPermissions.useWebRTC, v),
+              RoomGuestPermissions.useVoiceChat,
+              (v) => _setGuestPermission(RoomGuestPermissions.useVoiceChat, v),
+              theme,
+              isDark,
+            ),
+            _buildDivider(theme),
+            _buildPermissionSwitch(
+              context.l10n.p2pMedia,
+              _guestPermissions,
+              RoomGuestPermissions.useP2pMedia,
+              (v) => _setGuestPermission(RoomGuestPermissions.useP2pMedia, v),
               theme,
               isDark,
             ),
@@ -5950,7 +6038,7 @@ class _RoomSettingsPageState extends State<RoomSettingsPage>
       spacing: 5,
       runSpacing: 5,
       children: sorted.take(6).map((reaction) {
-        return Tooltip(
+        return AppTooltip(
           message: context.l10n.viewReactionMembers,
           child: InkWell(
             borderRadius: BorderRadius.circular(999),

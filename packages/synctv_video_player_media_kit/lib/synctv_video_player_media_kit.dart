@@ -4,7 +4,11 @@ import 'package:media_kit/media_kit.dart';
 import 'src/cancellable_media_kit_video_player.dart';
 
 export 'src/cancellable_media_kit_video_player.dart'
-    show CancellableMediaKitVideoPlayer;
+    show
+        AdaptiveVideoTrackInfo,
+        AdaptiveVideoTrackSnapshot,
+        AdaptiveVideoTrackController,
+        CancellableMediaKitVideoPlayer;
 
 class SyncTvVideoPlayerMediaKit {
   const SyncTvVideoPlayerMediaKit._();

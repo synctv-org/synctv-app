@@ -445,6 +445,35 @@ class SourceConfigCodec {
     };
   }
 
+  static bool isLiveMediaSourceConfig(source_config.MediaSourceConfig config) {
+    return switch (config.whichProvider()) {
+      source_config.MediaSourceConfig_Provider.directUrl =>
+        config.directUrl.hasIsLive() && config.directUrl.isLive,
+      source_config.MediaSourceConfig_Provider.bilibili =>
+        config.bilibili.whichSource() ==
+            source_config.BilibiliMediaSourceConfig_Source.live,
+      source_config.MediaSourceConfig_Provider.rtmp ||
+      source_config.MediaSourceConfig_Provider.liveProxy ||
+      source_config.MediaSourceConfig_Provider.douyu => true,
+      source_config.MediaSourceConfig_Provider.twitch =>
+        config.twitch.whichSource() ==
+            source_config.TwitchMediaSourceConfig_Source.live,
+      source_config.MediaSourceConfig_Provider.huya =>
+        config.huya.whichSource() ==
+            source_config.HuyaMediaSourceConfig_Source.live,
+      source_config.MediaSourceConfig_Provider.douyin =>
+        config.douyin.whichSource() ==
+            source_config.DouyinMediaSourceConfig_Source.live,
+      source_config.MediaSourceConfig_Provider.tiktok =>
+        config.tiktok.whichSource() ==
+            source_config.TikTokMediaSourceConfig_Source.live,
+      source_config.MediaSourceConfig_Provider.acFun =>
+        config.acFun.whichSource() ==
+            source_config.AcFunMediaSourceConfig_Source.live,
+      _ => false,
+    };
+  }
+
   static Map<String, dynamic> playlistSourceConfigToMap(
     source_config.PlaylistSourceConfig config,
   ) {
@@ -1657,6 +1686,7 @@ class SourceConfigCodec {
       isLive: _optionalBool(config['isLive']),
       durationSeconds: _optionalDouble(config['durationSeconds']),
       preferProxy: _optionalBool(config['preferProxy']),
+      proxyOnly: _optionalBool(config['proxyOnly']),
     );
   }
 
@@ -1742,6 +1772,7 @@ class SourceConfigCodec {
       if (config.hasDurationSeconds())
         'durationSeconds': config.durationSeconds,
       if (config.hasPreferProxy()) 'preferProxy': config.preferProxy,
+      if (config.hasProxyOnly()) 'proxyOnly': config.proxyOnly,
     };
     if (config.medias.length == 1) {
       final media = config.medias.single;

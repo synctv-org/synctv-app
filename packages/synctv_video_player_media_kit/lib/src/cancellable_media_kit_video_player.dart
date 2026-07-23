@@ -1,14 +1,76 @@
 // Derived from package:video_player_media_kit under the MIT license.
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
-import 'package:video_player_platform_interface/video_player_platform_interface.dart';
+import 'package:video_player/video_player.dart';
+import 'package:video_player_platform_interface/video_player_platform_interface.dart'
+    hide VideoTrack;
+
+import 'hls_master_playlist.dart';
 
 typedef VideoPlayerRuntimeFactory = VideoPlayerRuntime Function(int textureId);
+
+class AdaptiveVideoTrackInfo {
+  const AdaptiveVideoTrackInfo({
+    required this.id,
+    this.title,
+    this.width,
+    this.height,
+    this.fps,
+    this.bitrate,
+    this.codec,
+  });
+
+  final String id;
+  final String? title;
+  final int? width;
+  final int? height;
+  final double? fps;
+  final int? bitrate;
+  final String? codec;
+
+  String get resolution =>
+      width != null && height != null ? '${width}x$height' : '';
+}
+
+class AdaptiveVideoTrackSnapshot {
+  const AdaptiveVideoTrackSnapshot({
+    this.tracks = const [],
+    this.selectedTrackId = 'auto',
+    this.automaticSelectionAvailable = true,
+  });
+
+  final List<AdaptiveVideoTrackInfo> tracks;
+  final String selectedTrackId;
+  final bool automaticSelectionAvailable;
+}
+
+extension AdaptiveVideoTrackController on VideoPlayerController {
+  Stream<AdaptiveVideoTrackSnapshot> get adaptiveVideoTracks {
+    // The backend session uses the same identifier assigned by video_player.
+    // ignore: invalid_use_of_visible_for_testing_member
+    return CancellableMediaKitVideoPlayer.adaptiveVideoTracksFor(playerId);
+  }
+
+  Future<void> selectAdaptiveVideoTrack(String trackId) {
+    // ignore: invalid_use_of_visible_for_testing_member
+    final id = playerId;
+    return CancellableMediaKitVideoPlayer.selectAdaptiveVideoTrack(id, trackId);
+  }
+}
+
+abstract interface class AdaptiveVideoTrackRuntime {
+  Stream<AdaptiveVideoTrackSnapshot> get adaptiveVideoTracks;
+
+  Future<void> selectAdaptiveVideoTrack(String trackId);
+}
 
 abstract interface class VideoPlayerRuntime {
   Stream<VideoEvent> get events;
@@ -46,6 +108,34 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
 
   static void registerWith() {
     VideoPlayerPlatform.instance = CancellableMediaKitVideoPlayer();
+  }
+
+  static Stream<AdaptiveVideoTrackSnapshot> adaptiveVideoTracksFor(
+    int playerId,
+  ) {
+    final platform = VideoPlayerPlatform.instance;
+    if (platform is! CancellableMediaKitVideoPlayer) {
+      return const Stream<AdaptiveVideoTrackSnapshot>.empty();
+    }
+    final runtime = platform._sessions[playerId]?.runtime;
+    if (runtime is! AdaptiveVideoTrackRuntime) {
+      return const Stream<AdaptiveVideoTrackSnapshot>.empty();
+    }
+    return (runtime as AdaptiveVideoTrackRuntime).adaptiveVideoTracks;
+  }
+
+  static Future<void> selectAdaptiveVideoTrack(
+    int playerId,
+    String trackId,
+  ) async {
+    final platform = VideoPlayerPlatform.instance;
+    if (platform is! CancellableMediaKitVideoPlayer) return;
+    final runtime = platform._sessions[playerId]?.runtime;
+    if (runtime is AdaptiveVideoTrackRuntime) {
+      await (runtime as AdaptiveVideoTrackRuntime).selectAdaptiveVideoTrack(
+        trackId,
+      );
+    }
   }
 
   @override
@@ -144,7 +234,11 @@ class CancellableMediaKitVideoPlayer extends VideoPlayerPlatform {
               'A URI is required for ${dataSource.sourceType}',
             )),
     };
-    return Media(resource, httpHeaders: dataSource.httpHeaders);
+    return Media(
+      resource,
+      httpHeaders: dataSource.httpHeaders,
+      extras: {'formatHint': dataSource.formatHint?.name},
+    );
   }
 }
 
@@ -169,7 +263,8 @@ class _VideoPlayerSession {
   }
 }
 
-class _MediaKitVideoPlayerRuntime implements VideoPlayerRuntime {
+class _MediaKitVideoPlayerRuntime
+    implements VideoPlayerRuntime, AdaptiveVideoTrackRuntime {
   _MediaKitVideoPlayerRuntime(int textureId)
     : _player = Player(),
       _events = StreamController<VideoEvent>() {
@@ -179,6 +274,8 @@ class _MediaKitVideoPlayerRuntime implements VideoPlayerRuntime {
 
   final Player _player;
   final StreamController<VideoEvent> _events;
+  final StreamController<AdaptiveVideoTrackSnapshot> _adaptiveTracks =
+      StreamController<AdaptiveVideoTrackSnapshot>.broadcast();
   final List<StreamSubscription<Object?>> _subscriptions = [];
   late final VideoController _videoController;
   bool _initialized = false;
@@ -187,6 +284,34 @@ class _MediaKitVideoPlayerRuntime implements VideoPlayerRuntime {
   int? _width;
   int? _height;
   Duration? _duration;
+  static const int _maxAdaptiveManifestBytes = 4 * 1024 * 1024;
+  Media? _sourceMedia;
+  List<AdaptiveVideoTrackInfo> _manifestTracks = const [];
+  final Map<String, Uri> _manifestTrackUris = {};
+  final Map<String, int> _manifestTrackBitrates = {};
+  String _selectedAdaptiveTrackId = 'auto';
+  int _manifestLoadGeneration = 0;
+
+  @override
+  Stream<AdaptiveVideoTrackSnapshot> get adaptiveVideoTracks async* {
+    yield _adaptiveVideoTrackSnapshot();
+    yield* _adaptiveTracks.stream;
+  }
+
+  @override
+  Future<void> selectAdaptiveVideoTrack(String trackId) async {
+    if (_manifestTracks.any((track) => track.id == trackId) ||
+        (trackId == 'auto' && _manifestTracks.isNotEmpty)) {
+      await _selectHlsVariant(trackId);
+      return;
+    }
+    final track = trackId == 'auto'
+        ? VideoTrack.auto()
+        : _player.state.tracks.video
+              .where((track) => track.id == trackId)
+              .firstOrNull;
+    if (track != null) await _player.setVideoTrack(track);
+  }
 
   @override
   Stream<VideoEvent> get events => _events.stream;
@@ -195,7 +320,20 @@ class _MediaKitVideoPlayerRuntime implements VideoPlayerRuntime {
   Duration get position => _player.platform?.state.position ?? Duration.zero;
 
   @override
-  Future<void> open(Media media) => _player.open(media, play: false);
+  Future<void> open(Media media) async {
+    _sourceMedia = media;
+    _manifestTracks = const [];
+    _manifestTrackUris.clear();
+    _manifestTrackBitrates.clear();
+    _selectedAdaptiveTrackId = 'auto';
+    final generation = ++_manifestLoadGeneration;
+    final platform = _player.platform;
+    if (_isHlsMedia(media) && platform is NativePlayer) {
+      await (platform as dynamic).setProperty('hls-bitrate', 'max');
+    }
+    await _player.open(media, play: false);
+    unawaited(_loadHlsVariants(media, generation));
+  }
 
   @override
   Future<void> play() => _player.play();
@@ -249,11 +387,13 @@ class _MediaKitVideoPlayerRuntime implements VideoPlayerRuntime {
 
   Future<void> _disposeOnce() async {
     _disposed = true;
+    _manifestLoadGeneration++;
     await Future.wait(
       _subscriptions.map((subscription) => subscription.cancel()),
     );
     _subscriptions.clear();
     await _events.close();
+    await _adaptiveTracks.close();
     try {
       await _player.stop();
     } finally {
@@ -286,7 +426,11 @@ class _MediaKitVideoPlayerRuntime implements VideoPlayerRuntime {
           _height = 0;
           _notifyInitialized();
         }
+        _emitAdaptiveVideoTracks();
       }),
+    );
+    _subscriptions.add(
+      _player.stream.track.listen((_) => _emitAdaptiveVideoTracks()),
     );
     _subscriptions.add(
       _player.stream.playing.listen((playing) {
@@ -340,6 +484,150 @@ class _MediaKitVideoPlayerRuntime implements VideoPlayerRuntime {
         );
       }),
     );
+  }
+
+  AdaptiveVideoTrackSnapshot _adaptiveVideoTrackSnapshot() {
+    if (_manifestTracks.length > 1) {
+      return AdaptiveVideoTrackSnapshot(
+        tracks: _manifestTracks,
+        selectedTrackId: _selectedAdaptiveTrackId,
+        automaticSelectionAvailable: _player.platform is! NativePlayer,
+      );
+    }
+    return AdaptiveVideoTrackSnapshot(
+      tracks: _player.state.tracks.video
+          .where((track) => track.id != 'auto' && track.id != 'no')
+          .map(
+            (track) => AdaptiveVideoTrackInfo(
+              id: track.id,
+              title: track.title,
+              width: track.w,
+              height: track.h,
+              fps: track.fps,
+              bitrate: track.bitrate,
+              codec: track.codec,
+            ),
+          )
+          .toList(growable: false),
+      selectedTrackId: _player.state.track.video.id,
+    );
+  }
+
+  void _emitAdaptiveVideoTracks() {
+    if (!_disposed && !_adaptiveTracks.isClosed) {
+      _adaptiveTracks.add(_adaptiveVideoTrackSnapshot());
+    }
+  }
+
+  Future<void> _loadHlsVariants(Media media, int generation) async {
+    if (!_isHlsMedia(media)) return;
+    try {
+      final request = http.Request('GET', Uri.parse(media.uri));
+      request.headers.addAll(media.httpHeaders ?? const {});
+      final response = await request.send().timeout(const Duration(seconds: 8));
+      if (response.statusCode < 200 || response.statusCode >= 300) return;
+      if (response.contentLength case final length?
+          when length > _maxAdaptiveManifestBytes) {
+        return;
+      }
+      final bodyBytes = BytesBuilder(copy: false);
+      await for (final chunk in response.stream) {
+        if (bodyBytes.length + chunk.length > _maxAdaptiveManifestBytes) return;
+        bodyBytes.add(chunk);
+      }
+      final variants = parseHlsMasterPlaylist(
+        utf8.decode(bodyBytes.takeBytes()),
+        response.request!.url,
+      );
+      if (_disposed || generation != _manifestLoadGeneration) return;
+      final tracks = <AdaptiveVideoTrackInfo>[];
+      _manifestTrackUris.clear();
+      _manifestTrackBitrates.clear();
+      for (final (index, variant) in variants.indexed) {
+        final id = 'hls:$index:${variant.bandwidth}';
+        tracks.add(
+          AdaptiveVideoTrackInfo(
+            id: id,
+            width: variant.width,
+            height: variant.height,
+            fps: variant.fps,
+            bitrate: variant.averageBandwidth ?? variant.bandwidth,
+            codec: variant.codecs,
+          ),
+        );
+        _manifestTrackUris[id] = variant.uri;
+        _manifestTrackBitrates[id] = variant.bandwidth;
+      }
+      _manifestTracks = List.unmodifiable(tracks);
+      if (_player.platform is NativePlayer &&
+          _selectedAdaptiveTrackId == 'auto' &&
+          tracks.isNotEmpty) {
+        final highestBitrate = tracks.last.bitrate;
+        final highestBitrateTracks = tracks
+            .where((track) => track.bitrate == highestBitrate)
+            .length;
+        _selectedAdaptiveTrackId = highestBitrateTracks == 1
+            ? tracks.last.id
+            : '';
+      }
+      _emitAdaptiveVideoTracks();
+    } catch (_) {
+      // Playback remains available when manifest inspection is unavailable.
+    }
+  }
+
+  bool _isHlsMedia(Media media) {
+    if (media.extras?['formatHint'] == 'hls') return true;
+    return Uri.tryParse(media.uri)?.path.toLowerCase().endsWith('.m3u8') ==
+        true;
+  }
+
+  Future<void> _selectHlsVariant(String trackId) async {
+    final source = _sourceMedia;
+    if (source == null) return;
+    final wasPlaying = _player.state.playing;
+    final previousPosition = position;
+    final platform = _player.platform;
+    if (platform is NativePlayer) {
+      final bitrate = _manifestTrackBitrates[trackId];
+      final duplicateBitrate =
+          bitrate != null &&
+          _manifestTrackBitrates.values
+                  .where((candidate) => candidate == bitrate)
+                  .length >
+              1;
+      final variantUri = _manifestTrackUris[trackId];
+      if (duplicateBitrate && variantUri != null) {
+        _selectedAdaptiveTrackId = trackId;
+        await _player.open(
+          Media(variantUri.toString(), httpHeaders: source.httpHeaders),
+          play: false,
+        );
+      } else {
+        final selectedBitrate = trackId == 'auto' ? 'max' : bitrate?.toString();
+        if (selectedBitrate == null) return;
+        await (platform as dynamic).setProperty('hls-bitrate', selectedBitrate);
+        _selectedAdaptiveTrackId = trackId == 'auto'
+            ? _manifestTracks.last.id
+            : trackId;
+        await _player.open(source, play: false);
+      }
+    } else {
+      final variantUri = _manifestTrackUris[trackId];
+      _selectedAdaptiveTrackId = trackId;
+      await _player.open(
+        trackId == 'auto' || variantUri == null
+            ? source
+            : Media(variantUri.toString(), httpHeaders: source.httpHeaders),
+        play: false,
+      );
+    }
+    if ((_duration ?? Duration.zero) > Duration.zero &&
+        previousPosition > Duration.zero) {
+      await _player.seek(previousPosition);
+    }
+    if (wasPlaying) await _player.play();
+    _emitAdaptiveVideoTracks();
   }
 
   bool get _canEmitPlaybackEvent =>

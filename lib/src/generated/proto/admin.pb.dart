@@ -505,7 +505,7 @@ class RuntimeSettings extends $pb.GeneratedMessage {
     ProxySettings? proxy,
     RtmpSettings? rtmp,
     EmailSettings? email,
-    WebRtcSettings? webrtc,
+    WebRTCSettings? webrtc,
     ChatSettings? chat,
     CorsSettings? cors,
     ServerSettings? server,
@@ -557,8 +557,8 @@ class RuntimeSettings extends $pb.GeneratedMessage {
         subBuilder: RtmpSettings.create)
     ..aOM<EmailSettings>(8, _omitFieldNames ? '' : 'email',
         subBuilder: EmailSettings.create)
-    ..aOM<WebRtcSettings>(9, _omitFieldNames ? '' : 'webrtc',
-        subBuilder: WebRtcSettings.create)
+    ..aOM<WebRTCSettings>(9, _omitFieldNames ? '' : 'webrtc',
+        subBuilder: WebRTCSettings.create)
     ..aOM<ChatSettings>(10, _omitFieldNames ? '' : 'chat',
         subBuilder: ChatSettings.create)
     ..aOM<CorsSettings>(11, _omitFieldNames ? '' : 'cors',
@@ -677,15 +677,15 @@ class RuntimeSettings extends $pb.GeneratedMessage {
   EmailSettings ensureEmail() => $_ensure(7);
 
   @$pb.TagNumber(9)
-  WebRtcSettings get webrtc => $_getN(8);
+  WebRTCSettings get webrtc => $_getN(8);
   @$pb.TagNumber(9)
-  set webrtc(WebRtcSettings value) => $_setField(9, value);
+  set webrtc(WebRTCSettings value) => $_setField(9, value);
   @$pb.TagNumber(9)
   $core.bool hasWebrtc() => $_has(8);
   @$pb.TagNumber(9)
   void clearWebrtc() => $_clearField(9);
   @$pb.TagNumber(9)
-  WebRtcSettings ensureWebrtc() => $_ensure(8);
+  WebRTCSettings ensureWebrtc() => $_ensure(8);
 
   @$pb.TagNumber(10)
   ChatSettings get chat => $_getN(9);
@@ -2360,54 +2360,69 @@ class SmtpProxy extends $pb.GeneratedMessage {
   SmtpCredentials ensureCredentials() => $_ensure(1);
 }
 
-class WebRtcSettings extends $pb.GeneratedMessage {
-  factory WebRtcSettings({
+class WebRTCSettings extends $pb.GeneratedMessage {
+  factory WebRTCSettings({
     $core.Iterable<$1.IceServer>? externalIceServers,
+    $core.int? maxVoiceParticipantsPerRoom,
   }) {
     final result = create();
     if (externalIceServers != null)
       result.externalIceServers.addAll(externalIceServers);
+    if (maxVoiceParticipantsPerRoom != null)
+      result.maxVoiceParticipantsPerRoom = maxVoiceParticipantsPerRoom;
     return result;
   }
 
-  WebRtcSettings._();
+  WebRTCSettings._();
 
-  factory WebRtcSettings.fromBuffer($core.List<$core.int> data,
+  factory WebRTCSettings.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRtcSettings.fromJson($core.String json,
+  factory WebRTCSettings.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRtcSettings',
+      _omitMessageNames ? '' : 'WebRTCSettings',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..pPM<$1.IceServer>(1, _omitFieldNames ? '' : 'externalIceServers',
         subBuilder: $1.IceServer.create)
+    ..aI(2, _omitFieldNames ? '' : 'maxVoiceParticipantsPerRoom',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcSettings clone() => deepCopy();
+  WebRTCSettings clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcSettings copyWith(void Function(WebRtcSettings) updates) =>
-      super.copyWith((message) => updates(message as WebRtcSettings))
-          as WebRtcSettings;
+  WebRTCSettings copyWith(void Function(WebRTCSettings) updates) =>
+      super.copyWith((message) => updates(message as WebRTCSettings))
+          as WebRTCSettings;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRtcSettings create() => WebRtcSettings._();
+  static WebRTCSettings create() => WebRTCSettings._();
   @$core.override
-  WebRtcSettings createEmptyInstance() => create();
+  WebRTCSettings createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRtcSettings getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRtcSettings>(create);
-  static WebRtcSettings? _defaultInstance;
+  static WebRTCSettings getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCSettings>(create);
+  static WebRTCSettings? _defaultInstance;
 
   @$pb.TagNumber(1)
   $pb.PbList<$1.IceServer> get externalIceServers => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.int get maxVoiceParticipantsPerRoom => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set maxVoiceParticipantsPerRoom($core.int value) =>
+      $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMaxVoiceParticipantsPerRoom() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMaxVoiceParticipantsPerRoom() => $_clearField(2);
 }
 
 class ChatSettings extends $pb.GeneratedMessage {
@@ -2694,7 +2709,7 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
     ProxySettingsPatch? proxy,
     RtmpSettingsPatch? rtmp,
     EmailSettingsPatch? email,
-    WebRtcSettingsPatch? webrtc,
+    WebRTCSettingsPatch? webrtc,
     ChatSettingsPatch? chat,
     CorsSettingsPatch? cors,
     ServerSettingsPatch? server,
@@ -2746,8 +2761,8 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
         subBuilder: RtmpSettingsPatch.create)
     ..aOM<EmailSettingsPatch>(8, _omitFieldNames ? '' : 'email',
         subBuilder: EmailSettingsPatch.create)
-    ..aOM<WebRtcSettingsPatch>(9, _omitFieldNames ? '' : 'webrtc',
-        subBuilder: WebRtcSettingsPatch.create)
+    ..aOM<WebRTCSettingsPatch>(9, _omitFieldNames ? '' : 'webrtc',
+        subBuilder: WebRTCSettingsPatch.create)
     ..aOM<ChatSettingsPatch>(10, _omitFieldNames ? '' : 'chat',
         subBuilder: ChatSettingsPatch.create)
     ..aOM<CorsSettingsPatch>(11, _omitFieldNames ? '' : 'cors',
@@ -2867,15 +2882,15 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
   EmailSettingsPatch ensureEmail() => $_ensure(7);
 
   @$pb.TagNumber(9)
-  WebRtcSettingsPatch get webrtc => $_getN(8);
+  WebRTCSettingsPatch get webrtc => $_getN(8);
   @$pb.TagNumber(9)
-  set webrtc(WebRtcSettingsPatch value) => $_setField(9, value);
+  set webrtc(WebRTCSettingsPatch value) => $_setField(9, value);
   @$pb.TagNumber(9)
   $core.bool hasWebrtc() => $_has(8);
   @$pb.TagNumber(9)
   void clearWebrtc() => $_clearField(9);
   @$pb.TagNumber(9)
-  WebRtcSettingsPatch ensureWebrtc() => $_ensure(8);
+  WebRTCSettingsPatch ensureWebrtc() => $_ensure(8);
 
   @$pb.TagNumber(10)
   ChatSettingsPatch get chat => $_getN(9);
@@ -3702,54 +3717,69 @@ class EmailSettingsPatch extends $pb.GeneratedMessage {
   $pb.PbList<$core.String> get whitelistDomains => $_getList(9);
 }
 
-class WebRtcSettingsPatch extends $pb.GeneratedMessage {
-  factory WebRtcSettingsPatch({
+class WebRTCSettingsPatch extends $pb.GeneratedMessage {
+  factory WebRTCSettingsPatch({
     $core.Iterable<$1.IceServer>? externalIceServers,
+    $core.int? maxVoiceParticipantsPerRoom,
   }) {
     final result = create();
     if (externalIceServers != null)
       result.externalIceServers.addAll(externalIceServers);
+    if (maxVoiceParticipantsPerRoom != null)
+      result.maxVoiceParticipantsPerRoom = maxVoiceParticipantsPerRoom;
     return result;
   }
 
-  WebRtcSettingsPatch._();
+  WebRTCSettingsPatch._();
 
-  factory WebRtcSettingsPatch.fromBuffer($core.List<$core.int> data,
+  factory WebRTCSettingsPatch.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRtcSettingsPatch.fromJson($core.String json,
+  factory WebRTCSettingsPatch.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRtcSettingsPatch',
+      _omitMessageNames ? '' : 'WebRTCSettingsPatch',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
     ..pPM<$1.IceServer>(1, _omitFieldNames ? '' : 'externalIceServers',
         subBuilder: $1.IceServer.create)
+    ..aI(2, _omitFieldNames ? '' : 'maxVoiceParticipantsPerRoom',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcSettingsPatch clone() => deepCopy();
+  WebRTCSettingsPatch clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcSettingsPatch copyWith(void Function(WebRtcSettingsPatch) updates) =>
-      super.copyWith((message) => updates(message as WebRtcSettingsPatch))
-          as WebRtcSettingsPatch;
+  WebRTCSettingsPatch copyWith(void Function(WebRTCSettingsPatch) updates) =>
+      super.copyWith((message) => updates(message as WebRTCSettingsPatch))
+          as WebRTCSettingsPatch;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRtcSettingsPatch create() => WebRtcSettingsPatch._();
+  static WebRTCSettingsPatch create() => WebRTCSettingsPatch._();
   @$core.override
-  WebRtcSettingsPatch createEmptyInstance() => create();
+  WebRTCSettingsPatch createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRtcSettingsPatch getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRtcSettingsPatch>(create);
-  static WebRtcSettingsPatch? _defaultInstance;
+  static WebRTCSettingsPatch getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCSettingsPatch>(create);
+  static WebRTCSettingsPatch? _defaultInstance;
 
   @$pb.TagNumber(1)
   $pb.PbList<$1.IceServer> get externalIceServers => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.int get maxVoiceParticipantsPerRoom => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set maxVoiceParticipantsPerRoom($core.int value) =>
+      $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMaxVoiceParticipantsPerRoom() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMaxVoiceParticipantsPerRoom() => $_clearField(2);
 }
 
 class ChatSettingsPatch extends $pb.GeneratedMessage {

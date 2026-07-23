@@ -40,7 +40,7 @@ class PlaybackControlReporter {
     if (isLive) return null;
     return _message(
       PlaybackControlAction.seek,
-      isPlaying: value.isPlaying,
+      isPlaying: currentStatus?.isPlaying ?? value.isPlaying,
       position: position.inMilliseconds / 1000.0,
       clientOperationId: clientOperationId,
       clientTimeMillis: clientTimeMillis,
@@ -56,7 +56,7 @@ class PlaybackControlReporter {
     if (!_canReport(value)) return null;
     return _message(
       PlaybackControlAction.speed,
-      isPlaying: value.isPlaying,
+      isPlaying: currentStatus?.isPlaying ?? value.isPlaying,
       position: isLive ? null : value.position.inMilliseconds / 1000.0,
       playbackRate: speed,
       clientOperationId: clientOperationId,

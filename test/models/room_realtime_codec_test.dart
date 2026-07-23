@@ -2,11 +2,14 @@ import 'dart:typed_data';
 
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config_pb;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_config;
 
@@ -99,6 +102,18 @@ void main() {
           sourceProvider:
               source_config.SourceProvider.SOURCE_PROVIDER_DIRECT_URL,
         ),
+        client.Media(
+          id: 'med_2',
+          name: 'TikTok Live',
+          sourceProvider: source_config.SourceProvider.SOURCE_PROVIDER_TIKTOK,
+          sourceConfig: source_config_pb.MediaSourceConfig(
+            tiktok: source_config_pb.TikTokMediaSourceConfig(
+              live: source_config_pb.TikTokLiveSourceConfig(
+                uniqueId: 'creator',
+              ),
+            ),
+          ),
+        ),
       ],
       folderCount: Int64.ONE,
       fileCount: Int64.ONE,
@@ -116,7 +131,53 @@ void main() {
     );
 
     expect(decoded.mediaLibrary?.playlists.single.sourceProvider, 'bilibili');
-    expect(decoded.mediaLibrary?.media.single.sourceProvider, 'directUrl');
+    expect(decoded.mediaLibrary?.media.first.sourceProvider, 'directUrl');
+    expect(decoded.mediaLibrary?.media.last.sourceProvider, 'tiktok');
+    expect(decoded.mediaLibrary?.media.last.live, isTrue);
+  });
+
+  test('playback resource snapshot preserves dynamic target identity', () {
+    final target = client.ProviderTarget(
+      alist: client.AlistTarget(relativePath: '/video.mp4'),
+    );
+    final message = client.ServerMessage(
+      resourceEvent: client.ResourceEvent(
+        observeId: 'playback',
+        playback: client.Playback(
+          playlistId: 'pl_1',
+          roomId: 'room_1',
+          name: 'Dynamic video',
+          target: target,
+          defaultMode: 'direct',
+          playbackInfos: [
+            MapEntry(
+              'direct',
+              client.PlaybackInfo(
+                medias: [
+                  client.PlaybackMedia(
+                    name: 'Direct',
+                    url: 'https://media.example/video.mp4',
+                    format: 'mp4',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final decoded = RoomRealtimeCodec.decode(
+      Uint8List.fromList(message.writeToBuffer()),
+    );
+    final status = decoded.playbackStatus!;
+    final encodedTarget = providerTargetToBase64(target);
+
+    expect(status.playingMediaId, isEmpty);
+    expect(status.playingPlaylistId, 'pl_1');
+    expect(status.entry?.id, encodedTarget);
+    expect(status.entry?.parentId, 'pl_1');
+    expect(status.entry?.subPath, encodedTarget);
   });
 
   test('websocket JSON preserves protobuf source provider enum names', () {

@@ -12,10 +12,11 @@ extension RoomPermissionLocalizations on AppLocalizations {
   String roomMemberPermissionLabel(int permission) => switch (permission) {
     RoomMemberPermissions.sendChatMessages => sendChatAndDanmaku,
     RoomMemberPermissions.manageOwnMedia => addMedia,
-    RoomMemberPermissions.viewMedia => viewMediaList,
+    RoomMemberPermissions.browseLibrary => browseLibraryList,
     RoomMemberPermissions.viewMembers => viewMemberList,
     RoomMemberPermissions.viewChatHistory => viewChatHistory,
-    RoomMemberPermissions.useWebRTC => webrtcCalls,
+    RoomMemberPermissions.useVoiceChat => voiceChat,
+    RoomMemberPermissions.useP2pMedia => p2pMedia,
     _ => permission.toString(),
   };
 }

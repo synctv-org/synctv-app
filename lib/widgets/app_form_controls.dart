@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
@@ -19,6 +20,161 @@ enum AppIconButtonStyle { ghost, tonal, outlined, filled, destructive }
 enum AppIconButtonSize { sm, md }
 
 enum AppChipStyle { filled, tonal, outlined }
+
+/// Tooltip implementation backed by a plain [OverlayEntry].
+///
+/// Flutter's OverlayPortal tooltip can corrupt the desktop semantics tree when
+/// an anchored control disappears during a route or media transition.
+class AppTooltip extends Tooltip {
+  const AppTooltip({super.key, required super.message, required super.child});
+
+  @override
+  State<Tooltip> createState() => _AppTooltipState();
+}
+
+class _AppTooltipState extends State<Tooltip> {
+  static const _showDelay = Duration(milliseconds: 500);
+  static const _margin = 8.0;
+  static const _gap = 8.0;
+  static const _horizontalPadding = 10.0;
+  static const _verticalPadding = 6.0;
+  static const _maxTextWidth = 280.0;
+
+  OverlayEntry? _entry;
+  Timer? _showTimer;
+
+  String get _message => widget.message ?? '';
+
+  void _scheduleShow() {
+    _showTimer?.cancel();
+    _showTimer = Timer(_showDelay, _show);
+  }
+
+  void _show() {
+    _showTimer?.cancel();
+    if (!mounted || _entry != null || _message.isEmpty) return;
+    final overlay = Overlay.of(context, rootOverlay: true);
+    final target = context.findRenderObject() as RenderBox?;
+    final overlayBox = overlay.context.findRenderObject() as RenderBox?;
+    if (target == null || overlayBox == null || !target.hasSize) return;
+
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onInverseSurface,
+    );
+    final textPainter = TextPainter(
+      text: TextSpan(text: _message, style: textStyle),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 8,
+    )..layout(maxWidth: _maxTextWidth);
+    final width = textPainter.width + _horizontalPadding * 2;
+    final height = textPainter.height + _verticalPadding * 2;
+    final targetOrigin = target.localToGlobal(
+      Offset.zero,
+      ancestor: overlayBox,
+    );
+    final targetRect = targetOrigin & target.size;
+    final left = (targetRect.center.dx - width / 2)
+        .clamp(
+          _margin,
+          math.max(_margin, overlayBox.size.width - width - _margin),
+        )
+        .toDouble();
+    final below = targetRect.bottom + _gap;
+    final top = below + height <= overlayBox.size.height - _margin
+        ? below
+        : math.max(_margin, targetRect.top - height - _gap).toDouble();
+    final background = theme.colorScheme.inverseSurface;
+    final borderRadius = BorderRadius.circular(6);
+
+    _entry = OverlayEntry(
+      builder: (_) => Positioned(
+        left: left,
+        top: top,
+        width: width,
+        child: IgnorePointer(
+          child: ExcludeSemantics(
+            child: Material(
+              color: Colors.transparent,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: background,
+                  borderRadius: borderRadius,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _horizontalPadding,
+                    vertical: _verticalPadding,
+                  ),
+                  child: Text(
+                    _message,
+                    style: textStyle,
+                    maxLines: 8,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_entry!);
+  }
+
+  void _hide() {
+    _showTimer?.cancel();
+    _showTimer = null;
+    final entry = _entry;
+    _entry = null;
+    entry?.remove();
+    entry?.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant Tooltip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message != widget.message) _hide();
+  }
+
+  @override
+  void dispose() {
+    _hide();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TooltipVisibility(
+      visible: false,
+      child: Tooltip(
+        message: _message,
+        excludeFromSemantics: true,
+        child: Focus(
+          onFocusChange: (focused) => focused ? _scheduleShow() : _hide(),
+          child: MouseRegion(
+            onEnter: (_) => _scheduleShow(),
+            onExit: (_) => _hide(),
+            child: GestureDetector(
+              behavior: HitTestBehavior.deferToChild,
+              onLongPressStart: (_) => _show(),
+              onLongPressEnd: (_) => _hide(),
+              child: widget.child,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class AppRefreshIndicator extends StatelessWidget {
   final RefreshCallback onRefresh;
@@ -158,7 +314,7 @@ class AppAvatar extends StatelessWidget {
       );
     }
     if (tooltip != null) {
-      result = Tooltip(message: tooltip!, child: result);
+      result = AppTooltip(message: tooltip!, child: result);
     }
     return result;
   }
@@ -1201,7 +1357,7 @@ class AppIconButton extends StatelessWidget {
       label: tooltip,
       selected: selected,
       onTap: effectiveOnPressed,
-      child: showTooltip ? Tooltip(message: tooltip, child: button) : button,
+      child: showTooltip ? AppTooltip(message: tooltip, child: button) : button,
     );
   }
 }
@@ -1424,6 +1580,7 @@ class AppSlider extends StatelessWidget {
   final Color? activeColor;
   final Color? inactiveColor;
   final Color? thumbColor;
+  final SemanticFormatterCallback? semanticFormatterCallback;
 
   const AppSlider({
     super.key,
@@ -1438,6 +1595,7 @@ class AppSlider extends StatelessWidget {
     this.activeColor,
     this.inactiveColor,
     this.thumbColor,
+    this.semanticFormatterCallback,
   });
 
   @override
@@ -1451,6 +1609,7 @@ class AppSlider extends StatelessWidget {
       activeColor: activeColor,
       inactiveColor: inactiveColor,
       thumbColor: thumbColor,
+      semanticFormatterCallback: semanticFormatterCallback,
       onChanged: onChanged,
       onChangeStart: onChangeStart,
       onChangeEnd: onChangeEnd,
@@ -2181,7 +2340,7 @@ class _AppGlassIconButtonState extends State<AppGlassIconButton>
             ? Colors.grey.shade800.withValues(alpha: 0.5)
             : Colors.grey.shade100.withValues(alpha: 0.8));
 
-    return Tooltip(
+    return AppTooltip(
       message: widget.tooltip,
       child: Semantics(
         button: true,
@@ -3084,6 +3243,8 @@ class AppPopupMenuButton<T> extends StatelessWidget {
   final T? initialValue;
   final PopupMenuItemBuilder<T> itemBuilder;
   final PopupMenuItemSelected<T>? onSelected;
+  final VoidCallback? onOpened;
+  final VoidCallback? onCanceled;
   final EdgeInsetsGeometry padding;
   final Offset offset;
   final Color? color;
@@ -3096,6 +3257,8 @@ class AppPopupMenuButton<T> extends StatelessWidget {
     this.child,
     this.initialValue,
     this.onSelected,
+    this.onOpened,
+    this.onCanceled,
     this.padding = const EdgeInsets.all(8),
     this.offset = Offset.zero,
     this.color,
@@ -3108,6 +3271,8 @@ class AppPopupMenuButton<T> extends StatelessWidget {
       icon: icon,
       initialValue: initialValue,
       onSelected: onSelected,
+      onOpened: onOpened,
+      onCanceled: onCanceled,
       itemBuilder: itemBuilder,
       padding: padding,
       offset: offset,

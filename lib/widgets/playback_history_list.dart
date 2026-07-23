@@ -24,10 +24,10 @@ class PlaybackHistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
+    return AppListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: entries.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const AppDivider(height: 1),
       itemBuilder: (context, index) {
         final entry = entries[index];
         final isCurrent = entry.id == historyCursorId;
@@ -50,7 +50,10 @@ class PlaybackHistoryList extends StatelessWidget {
           trailing: playingEntryId == entry.id
               ? const SizedBox.square(
                   dimension: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: AppLoadingIndicator(
+                    size: AppLoadingSize.sm,
+                    centered: false,
+                  ),
                 )
               : AppIconButton(
                   key: Key('play_history_entry_${entry.id}'),

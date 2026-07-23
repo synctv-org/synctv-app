@@ -1137,11 +1137,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get proxyPlaybackDescription => '由 SyncTV 服务端转发媒体请求';
 
   @override
-  String get addToPlaylist => '添加到播放列表';
+  String get proxyOnlyPlayback => '仅使用代理播放';
 
   @override
-  String get credentialHeaderRisk =>
-      'Authorization、Cookie 等凭据请求头会写入媒体播放信息，房间成员播放时可能获取这些值。只对可信房间和可信链接使用。';
+  String get proxyOnlyPlaybackDescription => '所有媒体请求均经由 SyncTV 服务端代理线路';
+
+  @override
+  String get addToPlaylist => '添加到播放列表';
 
   @override
   String get requestHeaders => '请求头';
@@ -1320,14 +1322,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String addFailed(String error) {
     return '添加失败：$error';
-  }
-
-  @override
-  String get confirmCredentialHeaderSharing => '确认共享凭据请求头';
-
-  @override
-  String credentialHeaderSharingDescription(String names) {
-    return '$names 会随播放信息提供给房间成员，用于请求媒体资源。继续添加前请确认房间成员可信，且这些凭据泄漏不会影响你的账号安全。';
   }
 
   @override
@@ -1781,8 +1775,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playbackRoute => '播放线路';
 
   @override
-  String playbackCredentialWarning(String names) {
-    return '当前播放地址携带 $names。此类凭据来自播放信息，房间成员可能获取并用于请求媒体资源。';
+  String get route => '线路';
+
+  @override
+  String get qualityAndMediaLinks => '画质与媒体链接';
+
+  @override
+  String get manifestQualities => '清单内画质';
+
+  @override
+  String get automatic => '自动';
+
+  @override
+  String get selectPlaybackRoute => '选择线路';
+
+  @override
+  String get playbackRouteMain => '主线路';
+
+  @override
+  String playbackRouteBackup(int index) {
+    return '备用线路 $index';
+  }
+
+  @override
+  String get playbackRouteOriginal => '原始';
+
+  @override
+  String get playbackRouteProgressive => '普通视频';
+
+  @override
+  String get playbackRouteTranscoded => '转码';
+
+  @override
+  String get playbackRouteVideoHls => '视频 HLS';
+
+  @override
+  String get playbackRouteAudioHls => '音频 HLS';
+
+  @override
+  String qualityTrack(String id) {
+    return '画质 $id';
   }
 
   @override
@@ -2058,6 +2090,87 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceChat => '语音聊天';
+
+  @override
+  String get roomRealtimeFeatures => '实时通信';
+
+  @override
+  String get voiceChatRoomEnabledDescription => '允许成员在此房间加入语音通话';
+
+  @override
+  String get voiceChatDisabledByRoom => '房间管理员已关闭语音通话';
+
+  @override
+  String get p2pMedia => 'P2P 媒体传输';
+
+  @override
+  String get p2pMediaRoomEnabledDescription => '允许成员在此房间通过 Peer 共享媒体数据';
+
+  @override
+  String get p2pMediaDisabledByRoom => '房间管理员已关闭 P2P 媒体传输';
+
+  @override
+  String get p2pMediaDescription =>
+      '与房间成员直连共享缓存媒体。Peer 可看到你的网络地址并使用上行带宽。Swarm ticket 用于隔离房间、用户和资源。';
+
+  @override
+  String get p2pCacheSize => '缓存容量';
+
+  @override
+  String get p2pCacheSizeDescription => '跨播放会话复用的持久化 LRU 缓存。条目连续 10 分钟未访问后过期。';
+
+  @override
+  String get p2pSecurityMode => 'Peer 数据校验';
+
+  @override
+  String get p2pSecurityStandard => '标准';
+
+  @override
+  String get p2pSecurityStandardDescription =>
+      '检查传输帧、声明长度、大小上限与超时。安全校验本身不增加网络流量；调度仍可能并行竞速来源与 Peer。';
+
+  @override
+  String get p2pSecuritySampled => '来源抽样';
+
+  @override
+  String get p2pSecuritySampledDescription =>
+      '使用 SHA-256 对比 10% 的 Peer 分片与来源数据，并在当前 swarm 会话隔离冲突 Peer。';
+
+  @override
+  String get p2pIntegrityChecks => '完整性检查';
+
+  @override
+  String get p2pIntegrityMismatches => '完整性冲突';
+
+  @override
+  String get p2pIntegrityUnavailable => '来源校验不可用';
+
+  @override
+  String get p2pMetrics => 'P2P 传输指标';
+
+  @override
+  String get totalDownload => '总下载';
+
+  @override
+  String get totalUpload => '总上传';
+
+  @override
+  String get httpDownload => 'HTTP 下载';
+
+  @override
+  String get p2pDownload => 'P2P 下载';
+
+  @override
+  String get p2pUpload => 'P2P 上传';
+
+  @override
+  String get connectedPeers => '已连接节点';
+
+  @override
+  String get p2pCache => '缓存数据';
+
+  @override
+  String get cacheHitRate => '缓存命中率';
 
   @override
   String get leaveVoice => '退出语音';
@@ -3644,7 +3757,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendChatAndDanmaku => '发送聊天/弹幕';
 
   @override
-  String get viewMediaList => '查看媒体列表';
+  String get browseLibraryList => '浏览媒体库';
 
   @override
   String get viewMemberList => '查看成员列表';
@@ -4751,7 +4864,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendChat => '发送聊天';
 
   @override
-  String get viewMedia => '查看媒体';
+  String get browseLibrary => '浏览媒体库';
 
   @override
   String get viewMembers => '查看成员';
@@ -5056,6 +5169,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get externalIceServersWarning => 'TURN 用户名和凭据会下发给客户端，请使用最小权限且可轮换的账号。';
+
+  @override
+  String get maxVoiceParticipantsPerRoom => '每房间语音人数上限';
+
+  @override
+  String get maxVoiceParticipantsPerRoomDescription =>
+      '单个房间同时参与语音的人数上限。Mesh 语音允许 2 至 32，移动端推荐 8。';
 
   @override
   String get chatMessagesPerRoom => '每个房间保留聊天数';

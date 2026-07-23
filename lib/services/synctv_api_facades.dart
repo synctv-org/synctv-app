@@ -1176,7 +1176,7 @@ class SyncTvRoomApi {
       'DELETE',
       '/api/rooms/$roomId/chat/messages/$messageId/pin',
       client.ChatPinEventResponse.create,
-      body: request,
+      query: _api._messageQuery(request)..remove('messageId'),
     );
   }
 

@@ -239,9 +239,17 @@ class SyncTvRoom {
   }
 }
 
+class P2pMediaDelivery {
+  const P2pMediaDelivery({required this.swarmId, required this.swarmTicket});
+
+  final String swarmId;
+  final String swarmTicket;
+}
+
 class SyncTvPlaybackUrlOption {
   final String name;
   final String url;
+  final String format;
   final Map<String, String> headers;
   final int? expireAt;
   final String resolution;
@@ -249,10 +257,12 @@ class SyncTvPlaybackUrlOption {
   final String codec;
   final int? fps;
   final Map<String, String> metadata;
+  final P2pMediaDelivery? p2pDelivery;
 
   const SyncTvPlaybackUrlOption({
     required this.name,
     required this.url,
+    this.format = '',
     this.headers = const {},
     this.expireAt,
     this.resolution = '',
@@ -260,18 +270,33 @@ class SyncTvPlaybackUrlOption {
     this.codec = '',
     this.fps,
     this.metadata = const {},
+    this.p2pDelivery,
   });
 
   String label(int index) {
     final parts = <String>[];
-    if (name.trim().isNotEmpty) parts.add(name.trim());
-    if (resolution.trim().isNotEmpty) parts.add(resolution.trim());
-    if (codec.trim().isNotEmpty) parts.add(codec.trim().toUpperCase());
-    if (fps != null && fps! > 0) parts.add('${fps}fps');
+    void addUnique(String value) {
+      final normalized = value.trim();
+      if (normalized.isEmpty) return;
+      final lower = normalized.toLowerCase();
+      if (parts.any((part) => part.toLowerCase().contains(lower))) return;
+      parts.add(normalized);
+    }
+
+    addUnique(name);
+    addUnique(resolution);
+    addUnique(codec.toUpperCase());
+    if (fps != null && fps! > 0) addUnique('${fps}fps');
     if (bitrate != null && bitrate! > 0) {
       final mbps = bitrate! / 1000000;
-      parts.add('${mbps.toStringAsFixed(mbps >= 10 ? 0 : 1)}Mbps');
+      addUnique('${mbps.toStringAsFixed(mbps >= 10 ? 0 : 1)}Mbps');
     }
+    final formatLabel = switch (format.trim().toLowerCase()) {
+      'm3u8' || 'hls' => 'HLS',
+      'mpd' || 'dash' => 'DASH',
+      final value => value.toUpperCase(),
+    };
+    addUnique(formatLabel);
     return parts.isEmpty ? '线路 ${index + 1}' : parts.join(' · ');
   }
 }
@@ -300,13 +325,33 @@ class SyncTvPlaybackModeOption {
   });
 
   String get label {
+    final display = _playbackModeLabel(key);
+    if (format.trim().isEmpty) return display;
+    return '$display · ${format.trim().toUpperCase()}';
+  }
+
+  static String _playbackModeLabel(String key) {
     final lower = key.toLowerCase();
-    final display = switch (lower) {
+    if (lower.startsWith('proxy_') && lower != 'proxy_direct') {
+      return '${_playbackModeLabel(key.substring('proxy_'.length))} · 代理';
+    }
+    if (lower.endsWith('_proxy') && lower != 'direct_proxy') {
+      return '${_playbackModeLabel(key.substring(0, key.length - '_proxy'.length))} · 代理';
+    }
+    return switch (lower) {
+      'main' => '主线路',
+      _ when lower.startsWith('backup_') =>
+        '备用线路 ${int.tryParse(lower.substring('backup_'.length)) ?? 1}',
       'direct' => '原始',
-      'proxy' || 'proxied' => '代理',
+      'raw' || 'original' => '原始',
+      'proxy' || 'proxied' || 'proxy_direct' || 'direct_proxy' => '代理',
       'dash' => 'DASH',
       'hls' => 'HLS',
       'mp4' => 'MP4',
+      'progressive' => '普通视频',
+      'transcoded' => '转码',
+      'video_hls' => '视频 HLS',
+      'audio_hls' => '音频 HLS',
       _ when lower.endsWith('_transcode') =>
         '${key.substring(0, key.length - '_transcode'.length)} 转码',
       _ when lower.startsWith('transcoded_') => key.substring(
@@ -314,8 +359,6 @@ class SyncTvPlaybackModeOption {
       ),
       _ => key,
     };
-    if (format.trim().isEmpty) return display;
-    return '$display · ${format.trim().toUpperCase()}';
   }
 
   int get safeDefaultUrlIndex =>
@@ -515,7 +558,11 @@ class RoomMediaEntry {
     return copyWith(
       url: resolveUrl == null ? rawUrl : resolveUrl(rawUrl),
       headers: selectedUrl?.headers ?? headers,
-      type: mode.format.isEmpty ? type : mode.format,
+      type: selectedUrl?.format.isNotEmpty == true
+          ? selectedUrl!.format
+          : mode.format.isEmpty
+          ? type
+          : mode.format,
       subtitles: mode.subtitles,
       danmu: mode.danmu,
       danmuHeaders: mode.danmuHeaders,
@@ -639,6 +686,17 @@ class RoomMediaEntry {
     );
   }
 
+  RoomMediaEntry withPlaybackSelectionFrom(RoomMediaEntry? source) {
+    if (source == null || !hasSamePlaybackIdentity(source)) return this;
+    final modeKey = source.selectedPlaybackMode;
+    final mode = playbackModes.where((mode) => mode.key == modeKey).firstOrNull;
+    final urlIndex = source.selectedPlaybackUrlIndex;
+    if (mode == null || urlIndex < 0 || urlIndex >= mode.urls.length) {
+      return this;
+    }
+    return selectPlayback(modeKey: modeKey, urlIndex: urlIndex);
+  }
+
   static RoomMediaEntry fromPlaybackProto(
     client.Playback playback, {
     String id = '',
@@ -672,7 +730,7 @@ class RoomMediaEntry {
       url: selectedUrlValue,
       live: playback.isLive,
       headers: selectedUrl?.headers ?? const {},
-      type: selectedMode.format,
+      type: selectedUrl?.format ?? selectedMode.format,
       roomId: playback.roomId,
       position: playback.playlistPosition,
       subPath: subPath,
@@ -713,9 +771,16 @@ class RoomMediaEntry {
       final info = entry.value;
       final urls = info.medias.map((media) {
         final metadata = media.hasMetadata() ? media.metadata : null;
+        final p2pDelivery = media.hasP2pDelivery()
+            ? P2pMediaDelivery(
+                swarmId: media.p2pDelivery.swarmId,
+                swarmTicket: media.p2pDelivery.swarmTicket,
+              )
+            : null;
         return SyncTvPlaybackUrlOption(
           name: media.name,
           url: resolveUrl == null ? media.url : resolveUrl(media.url),
+          format: media.format,
           headers: Map<String, String>.from(media.headers),
           expireAt: media.hasExpireAt() ? media.expireAt.toInt() : null,
           resolution: metadata?.resolution ?? '',
@@ -729,6 +794,7 @@ class RoomMediaEntry {
               : protoMessageToJsonMap(
                   metadata,
                 ).map((key, value) => MapEntry(key, value.toString())),
+          p2pDelivery: p2pDelivery,
         );
       }).toList();
       final defaultMediaIndex = info.hasDefaultMediaIndex()
@@ -1012,45 +1078,131 @@ class SyncTvPlaybackStatus {
   }
 }
 
+SyncTvPlaybackStatus mergePlaybackStatusSnapshot({
+  required SyncTvPlaybackStatus? current,
+  required SyncTvPlaybackStatus incoming,
+  required bool incomingHasTiming,
+}) {
+  final incomingEntry = incoming.entry;
+  final currentEntry = current?.entry;
+  final hasIncomingSource =
+      incoming.playingMediaId.isNotEmpty ||
+      incoming.playingPlaylistId.isNotEmpty ||
+      incoming.targetHash.isNotEmpty;
+  final hasSameEntry =
+      currentEntry != null &&
+      incomingEntry != null &&
+      currentEntry.hasSamePlaybackIdentity(incomingEntry);
+  final hasSameSource =
+      current != null &&
+      hasIncomingSource &&
+      incoming.playingMediaId == current.playingMediaId &&
+      incoming.playingPlaylistId == current.playingPlaylistId &&
+      incoming.targetHash == current.targetHash;
+  final canApplyIncomingEntry =
+      incomingHasTiming || current == null || hasSameEntry;
+
+  final RoomMediaEntry? mergedEntry;
+  if (!hasIncomingSource && incomingEntry == null) {
+    mergedEntry = null;
+  } else if (incomingEntry != null && !canApplyIncomingEntry) {
+    // Playback state and playback resources are observed independently. Keep
+    // the resource bound to the newest state when an older snapshot arrives.
+    mergedEntry = currentEntry;
+  } else if (incomingEntry == null) {
+    mergedEntry = !incomingHasTiming && hasSameSource ? currentEntry : null;
+  } else if (incomingEntry.url.isEmpty &&
+      currentEntry != null &&
+      currentEntry.url.isNotEmpty &&
+      hasSameEntry) {
+    mergedEntry = currentEntry;
+  } else if (hasSameEntry) {
+    mergedEntry = incomingEntry.url.isEmpty
+        ? currentEntry
+        : incomingEntry
+              .withPlaybackIdentityFrom(currentEntry)
+              .withPlaybackSelectionFrom(currentEntry);
+  } else {
+    mergedEntry = incomingEntry;
+  }
+
+  return SyncTvPlaybackStatus(
+    entry: mergedEntry,
+    isPlaying: incomingHasTiming
+        ? incoming.isPlaying
+        : current?.isPlaying ?? incoming.isPlaying,
+    currentTime: incomingHasTiming
+        ? incoming.currentTime
+        : current?.currentTime ?? incoming.currentTime,
+    playbackRate: incomingHasTiming
+        ? incoming.playbackRate
+        : current?.playbackRate ?? incoming.playbackRate,
+    generatedAtMillis: incomingHasTiming
+        ? incoming.generatedAtMillis
+        : current?.generatedAtMillis ?? incoming.generatedAtMillis,
+    version: incoming.version ?? current?.version,
+    playingMediaId: incomingHasTiming
+        ? incoming.playingMediaId
+        : current?.playingMediaId ?? incoming.playingMediaId,
+    playingPlaylistId: incomingHasTiming
+        ? incoming.playingPlaylistId
+        : current?.playingPlaylistId ?? incoming.playingPlaylistId,
+    targetHash: incomingHasTiming
+        ? incoming.targetHash
+        : current?.targetHash ?? incoming.targetHash,
+    historyCursorId: incomingHasTiming
+        ? incoming.historyCursorId
+        : current?.historyCursorId ?? incoming.historyCursorId,
+    clientOperationId: incomingHasTiming
+        ? incoming.clientOperationId
+        : current?.clientOperationId ?? incoming.clientOperationId,
+  );
+}
+
 class RoomMemberPermissions {
   static const int sendChatMessages = 1 << 0;
   static const int manageOwnMedia = 1 << 1;
-  static const int viewMedia = 1 << 2;
+  static const int browseLibrary = 1 << 2;
   static const int viewMembers = 1 << 3;
   static const int viewChatHistory = 1 << 4;
-  static const int useWebRTC = 1 << 5;
+  static const int useVoiceChat = 1 << 5;
+  static const int useP2pMedia = 1 << 6;
   static const int all =
       sendChatMessages |
       manageOwnMedia |
-      viewMedia |
+      browseLibrary |
       viewMembers |
       viewChatHistory |
-      useWebRTC;
+      useVoiceChat |
+      useP2pMedia;
 
   static const List<int> values = [
     sendChatMessages,
     manageOwnMedia,
-    viewMedia,
+    browseLibrary,
     viewMembers,
     viewChatHistory,
-    useWebRTC,
+    useVoiceChat,
+    useP2pMedia,
   ];
 }
 
 class RoomGuestPermissions {
   static const int viewMembers = 1 << 32;
   static const int viewChatHistory = 1 << 33;
-  static const int useWebRTC = 1 << 34;
-  static const int all = viewMembers | viewChatHistory | useWebRTC;
+  static const int useVoiceChat = 1 << 34;
+  static const int useP2pMedia = 1 << 35;
+  static const int all =
+      viewMembers | viewChatHistory | useVoiceChat | useP2pMedia;
 }
 
 class RoomEffectivePermissions {
   static const int sendChatMessages = 1 << 0;
   static const int manageOwnMedia = 1 << 1;
-  static const int viewMedia = 1 << 2;
+  static const int browseLibrary = 1 << 2;
   static const int viewMembers = 1 << 3;
   static const int viewChatHistory = 1 << 4;
-  static const int useWebRTC = 1 << 5;
+  static const int useVoiceChat = 1 << 5;
   static const int deleteMedia = 1 << 6;
   static const int reorderMedia = 1 << 7;
   static const int clearMedia = 1 << 8;
@@ -1065,6 +1217,7 @@ class RoomEffectivePermissions {
   static const int deleteChatMessages = 1 << 17;
   static const int deleteRoom = 1 << 18;
   static const int viewPlaybackHistory = 1 << 19;
+  static const int useP2pMedia = 1 << 20;
 }
 
 class SyncTvRoomSettings {
@@ -1075,6 +1228,8 @@ class SyncTvRoomSettings {
   int maxMembers;
   bool chatEnabled;
   bool danmakuEnabled;
+  bool voiceChatEnabled;
+  bool p2pMediaEnabled;
   int adminAddedPermissions;
   int adminRemovedPermissions;
   int memberAddedPermissions;
@@ -1090,6 +1245,8 @@ class SyncTvRoomSettings {
     this.maxMembers = 100,
     this.chatEnabled = true,
     this.danmakuEnabled = true,
+    this.voiceChatEnabled = true,
+    this.p2pMediaEnabled = true,
     this.adminAddedPermissions = 0,
     this.adminRemovedPermissions = 0,
     this.memberAddedPermissions = 0,
@@ -1107,6 +1264,8 @@ class SyncTvRoomSettings {
       maxMembers: _readInt(json, 'maxMembers', 100),
       chatEnabled: _readBool(json, 'chatEnabled', true),
       danmakuEnabled: _readBool(json, 'danmakuEnabled', true),
+      voiceChatEnabled: _readBool(json, 'voiceChatEnabled', true),
+      p2pMediaEnabled: _readBool(json, 'p2pMediaEnabled', true),
       adminAddedPermissions: _readInt(json, 'adminAddedPermissions', 0),
       adminRemovedPermissions: _readInt(json, 'adminRemovedPermissions', 0),
       memberAddedPermissions: _readInt(json, 'memberAddedPermissions', 0),
@@ -1134,6 +1293,8 @@ class SyncTvRoomSettings {
       'maxMembers': maxMembers,
       'chatEnabled': chatEnabled,
       'danmakuEnabled': danmakuEnabled,
+      'voiceChatEnabled': voiceChatEnabled,
+      'p2pMediaEnabled': p2pMediaEnabled,
       'adminAddedPermissions': adminAddedPermissions,
       'adminRemovedPermissions': adminRemovedPermissions,
       'memberAddedPermissions': memberAddedPermissions,

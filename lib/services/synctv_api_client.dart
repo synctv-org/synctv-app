@@ -778,19 +778,17 @@ class SyncTvApiClient {
         : SourceConfigCodec.mediaSourceConfigJson(proto);
   }
 
-  bool _hasSourceConfigWrapper(Map<String, dynamic> value) {
-    return value.containsKey('directUrl') ||
-        value.containsKey('bilibili') ||
-        value.containsKey('alist') ||
-        value.containsKey('emby') ||
-        value.containsKey('rtmp') ||
-        value.containsKey('liveProxy') ||
-        value.containsKey('cloudreve') ||
-        value.containsKey('twitch') ||
-        value.containsKey('huya') ||
-        value.containsKey('douyu') ||
-        value.containsKey('acFun');
-  }
+  static final Set<String> _sourceConfigWrapperFields = {
+    ...source_config.MediaSourceConfig.create().info_.sortedByTag.map(
+      (field) => field.name,
+    ),
+    ...source_config.PlaylistSourceConfig.create().info_.sortedByTag.map(
+      (field) => field.name,
+    ),
+  };
+
+  bool _hasSourceConfigWrapper(Map<String, dynamic> value) =>
+      value.keys.any(_sourceConfigWrapperFields.contains);
 
   T _decodeResponse<T extends GeneratedMessage>(
     http.Response response,
@@ -1365,6 +1363,10 @@ extension SyncTvModelMapping on SyncTvApiClient {
         sourceConfig: sourceConfig,
       ),
     );
+    final isLive =
+        metadata['isLive'] == true ||
+        (media.hasSourceConfig() &&
+            SourceConfigCodec.isLiveMediaSourceConfig(media.sourceConfig));
     return RoomMediaItem(
       id: media.id,
       name: media.name,
@@ -1378,10 +1380,7 @@ extension SyncTvModelMapping on SyncTvApiClient {
       type: sourceProvider,
       headers: _stringMap(metadata['headers']),
       proxy: metadata['proxy'] == true,
-      live:
-          sourceProvider == 'rtmp' ||
-          (sourceProvider == 'bilibili' && sourceConfig['type'] == 'live') ||
-          metadata['isLive'] == true,
+      live: isLive,
       sourceProvider: sourceProvider,
       providerInstanceName: media.providerInstanceName,
       sourceConfig: sourceConfig,

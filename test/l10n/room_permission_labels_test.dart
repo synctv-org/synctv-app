@@ -16,17 +16,18 @@ void main() {
       [
         'Send chat and danmaku',
         'Add media',
-        'View media list',
+        'Browse library',
         'View member list',
         'View chat history',
-        'WebRTC calls',
+        'Voice chat',
+        'P2P media delivery',
       ],
     );
     expect(
       RoomMemberPermissions.values
           .map(chinese.roomMemberPermissionLabel)
           .toList(),
-      ['发送聊天/弹幕', '添加媒体', '查看媒体列表', '查看成员列表', '查看聊天历史', 'WebRTC 通话'],
+      ['发送聊天/弹幕', '添加媒体', '浏览媒体库', '查看成员列表', '查看聊天历史', '语音聊天', 'P2P 媒体传输'],
     );
   });
 }

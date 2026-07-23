@@ -36,11 +36,16 @@ enum RoomRealtimeMessageKind {
   chatPin,
   sync,
   myStatus,
-  webrtcOffer,
-  webrtcAnswer,
-  webrtcIceCandidate,
-  webrtcJoin,
-  webrtcLeave,
+  webrtcVoiceOffer,
+  webrtcVoiceAnswer,
+  webrtcVoiceIceCandidate,
+  webrtcVoicePeerJoined,
+  webrtcVoicePeerLeft,
+  webrtcMediaOffer,
+  webrtcMediaAnswer,
+  webrtcMediaIceCandidate,
+  webrtcMediaSwarmPeers,
+  webrtcMediaPeerLeft,
 }
 
 enum RoomRealtimeChatEventKind { created, edited, deleted, reactionsChanged }
@@ -93,45 +98,185 @@ class RoomRealtimeOnlineEvent {
   bool get isOnline => kind == client.OnlineEventKind.ONLINE_EVENT_KIND_JOINED;
 }
 
-class RoomRealtimeWebRtcSignal {
-  const RoomRealtimeWebRtcSignal({
-    required this.kind,
-    required this.from,
-    required this.to,
-    required this.data,
-  });
+sealed class RoomRealtimeWebRtcSignal {
+  const RoomRealtimeWebRtcSignal({required this.kind});
 
   final RoomRealtimeMessageKind kind;
-  final String from;
-  final String to;
-  final String data;
 
   String get signalType {
     return switch (kind) {
-      RoomRealtimeMessageKind.webrtcOffer => 'offer',
-      RoomRealtimeMessageKind.webrtcAnswer => 'answer',
-      RoomRealtimeMessageKind.webrtcIceCandidate => 'candidate',
-      RoomRealtimeMessageKind.webrtcJoin => 'join',
-      RoomRealtimeMessageKind.webrtcLeave => 'leave',
+      RoomRealtimeMessageKind.webrtcVoiceOffer ||
+      RoomRealtimeMessageKind.webrtcMediaOffer => 'offer',
+      RoomRealtimeMessageKind.webrtcVoiceAnswer ||
+      RoomRealtimeMessageKind.webrtcMediaAnswer => 'answer',
+      RoomRealtimeMessageKind.webrtcVoiceIceCandidate ||
+      RoomRealtimeMessageKind.webrtcMediaIceCandidate => 'candidate',
+      RoomRealtimeMessageKind.webrtcVoicePeerJoined => 'join',
+      RoomRealtimeMessageKind.webrtcVoicePeerLeft => 'leave',
+      RoomRealtimeMessageKind.webrtcMediaSwarmPeers => 'media_swarm_peers',
+      RoomRealtimeMessageKind.webrtcMediaPeerLeft => 'media_swarm_leave',
       _ => '',
     };
   }
 
-  Map<String, dynamic> payload() {
-    final result = <String, dynamic>{};
-    if (data.isNotEmpty) {
-      final decoded = jsonDecode(data);
-      if (decoded is Map<String, dynamic>) {
-        result.addAll(decoded);
-      }
+  Map<String, dynamic> payload();
+}
+
+sealed class RoomRealtimeWebRtcVoiceSignal extends RoomRealtimeWebRtcSignal {
+  const RoomRealtimeWebRtcVoiceSignal({required super.kind});
+}
+
+final class RoomRealtimeWebRtcVoiceNegotiationSignal
+    extends RoomRealtimeWebRtcVoiceSignal {
+  const RoomRealtimeWebRtcVoiceNegotiationSignal({
+    required super.kind,
+    required this.from,
+    required this.data,
+  });
+
+  final String from;
+  final String data;
+
+  @override
+  Map<String, dynamic> payload() =>
+      _webRtcNegotiationPayload(data, from, signalType);
+}
+
+final class RoomRealtimeWebRtcVoicePeerJoinedSignal
+    extends RoomRealtimeWebRtcVoiceSignal {
+  const RoomRealtimeWebRtcVoicePeerJoinedSignal({
+    required super.kind,
+    required this.userId,
+    required this.connId,
+    required this.username,
+  });
+
+  final String userId;
+  final String connId;
+  final String username;
+
+  @override
+  Map<String, dynamic> payload() => {
+    'user_id': userId,
+    'conn_id': connId,
+    'username': username,
+    'from': '$userId:$connId',
+  };
+}
+
+final class RoomRealtimeWebRtcVoicePeerLeftSignal
+    extends RoomRealtimeWebRtcVoiceSignal {
+  const RoomRealtimeWebRtcVoicePeerLeftSignal({
+    required super.kind,
+    required this.userId,
+    required this.connId,
+  });
+
+  final String userId;
+  final String connId;
+
+  @override
+  Map<String, dynamic> payload() => {
+    'user_id': userId,
+    'conn_id': connId,
+    'from': '$userId:$connId',
+  };
+}
+
+sealed class RoomRealtimeWebRtcMediaSignal extends RoomRealtimeWebRtcSignal {
+  const RoomRealtimeWebRtcMediaSignal({required super.kind});
+}
+
+final class RoomRealtimeWebRtcMediaNegotiationSignal
+    extends RoomRealtimeWebRtcMediaSignal {
+  const RoomRealtimeWebRtcMediaNegotiationSignal({
+    required super.kind,
+    required this.from,
+    required this.data,
+    required this.swarmId,
+  });
+
+  final String from;
+  final String data;
+  final String swarmId;
+
+  @override
+  Map<String, dynamic> payload() => {
+    ..._webRtcNegotiationPayload(data, from, signalType),
+    'media_swarm_id': swarmId,
+  };
+}
+
+final class RoomRealtimeWebRtcMediaSwarmPeersSignal
+    extends RoomRealtimeWebRtcMediaSignal {
+  const RoomRealtimeWebRtcMediaSwarmPeersSignal({
+    required super.kind,
+    required this.swarmId,
+    required this.swarmTicket,
+    required this.peers,
+  });
+
+  final String swarmId;
+  final String swarmTicket;
+  final List<RoomRealtimeWebRtcPeer> peers;
+
+  @override
+  Map<String, dynamic> payload() => {
+    'media_swarm_id': swarmId,
+    'media_swarm_ticket': swarmTicket,
+    'peers': peers.map((peer) => peer.toJson()).toList(growable: false),
+  };
+}
+
+final class RoomRealtimeWebRtcMediaPeerLeftSignal
+    extends RoomRealtimeWebRtcMediaSignal {
+  const RoomRealtimeWebRtcMediaPeerLeftSignal({
+    required super.kind,
+    required this.swarmId,
+    required this.userId,
+    required this.connId,
+  });
+
+  final String swarmId;
+  final String userId;
+  final String connId;
+
+  @override
+  Map<String, dynamic> payload() => {
+    'user_id': userId,
+    'conn_id': connId,
+    'media_swarm_id': swarmId,
+    'from': '$userId:$connId',
+  };
+}
+
+class RoomRealtimeWebRtcPeer {
+  const RoomRealtimeWebRtcPeer({required this.userId, required this.connId});
+
+  final String userId;
+  final String connId;
+
+  Map<String, String> toJson() => {'user_id': userId, 'conn_id': connId};
+}
+
+Map<String, dynamic> _webRtcNegotiationPayload(
+  String data,
+  String from,
+  String signalType,
+) {
+  final result = <String, dynamic>{};
+  if (data.isNotEmpty) {
+    final decoded = jsonDecode(data);
+    if (decoded is Map<String, dynamic>) {
+      result.addAll(decoded);
     }
-    if (from.isNotEmpty) result['from'] = from;
-    if ((signalType == 'offer' || signalType == 'answer') &&
-        result['type'] == null) {
-      result['type'] = signalType;
-    }
-    return result;
   }
+  result['from'] = from;
+  if ((signalType == 'offer' || signalType == 'answer') &&
+      result['type'] == null) {
+    result['type'] = signalType;
+  }
+  return result;
 }
 
 class RoomRealtimeMessage {
@@ -763,14 +908,16 @@ class RoomRealtimeCodec {
     int? clientTimeMillis,
   }) {
     final status = currentStatus;
+    String? present(String? value) =>
+        value == null || value.isEmpty ? null : value;
     return buildPlaybackStateUpdateMessage(
       action,
       isPlaying: isPlaying,
       position: position,
       playbackRate: playbackRate,
-      expectedMediaId: status?.playingMediaId,
-      expectedPlaylistId: status?.playingPlaylistId,
-      expectedTargetHash: status?.targetHash,
+      expectedMediaId: present(status?.playingMediaId),
+      expectedPlaylistId: present(status?.playingPlaylistId),
+      expectedTargetHash: present(status?.targetHash),
       clientOperationId: clientOperationId,
       clientTimeMillis: clientTimeMillis,
     );
@@ -1028,51 +1175,100 @@ class RoomRealtimeCodec {
     ).writeToBuffer();
   }
 
-  static List<int> encodeWebRTC(
-    RoomRealtimeMessageKind type,
+  static String _webRtcSignalData(Map<String, dynamic> data) {
+    final payload = Map<String, dynamic>.from(data)
+      ..remove('to')
+      ..remove('media_swarm_id')
+      ..remove('media_swarm_ticket');
+    return jsonEncode(payload);
+  }
+
+  static List<int> encodeWebRtcVoiceSignal(
+    String type,
     Map<String, dynamic> data,
   ) {
-    final payload = (data['data'] ?? '').toString();
+    final payload = _webRtcSignalData(data);
     final to = (data['to'] ?? '').toString();
-    final command = client.WebRtcCommand();
+    final command = client.WebRTCCommand();
     switch (type) {
-      case RoomRealtimeMessageKind.webrtcOffer:
-        command.offer = client.WebRTCOffer(to: to, data: payload);
+      case 'offer':
+        command.voiceOffer = client.WebRTCVoiceOfferCommand(
+          to: to,
+          data: payload,
+        );
         break;
-      case RoomRealtimeMessageKind.webrtcAnswer:
-        command.answer = client.WebRTCAnswer(to: to, data: payload);
+      case 'answer':
+        command.voiceAnswer = client.WebRTCVoiceAnswerCommand(
+          to: to,
+          data: payload,
+        );
         break;
-      case RoomRealtimeMessageKind.webrtcIceCandidate:
-        command.iceCandidate = client.WebRTCIceCandidate(to: to, data: payload);
+      case 'candidate':
+        command.voiceIceCandidate = client.WebRTCVoiceIceCandidateCommand(
+          to: to,
+          data: payload,
+        );
         break;
-      case RoomRealtimeMessageKind.webrtcJoin:
-        command.join = client.WebRTCJoin();
+      case 'join':
+        command.voiceJoin = client.WebRTCVoiceJoinCommand(
+          clientOperationId: (data['client_operation_id'] ?? '').toString(),
+        );
         break;
-      case RoomRealtimeMessageKind.webrtcLeave:
-        command.leave = client.WebRTCLeave();
+      case 'leave':
+        command.voiceLeave = client.WebRTCVoiceLeaveCommand();
         break;
       default:
         return Uint8List(0);
     }
-    final message = client.ClientMessage(webrtc: command);
-    return message.writeToBuffer();
+    return client.ClientMessage(webrtc: command).writeToBuffer();
   }
 
-  static List<int> encodeWebRtcSignal(String type, Map<String, dynamic> data) {
-    final messageKind = switch (type) {
-      'offer' => RoomRealtimeMessageKind.webrtcOffer,
-      'answer' => RoomRealtimeMessageKind.webrtcAnswer,
-      'candidate' => RoomRealtimeMessageKind.webrtcIceCandidate,
-      'join' => RoomRealtimeMessageKind.webrtcJoin,
-      'leave' => RoomRealtimeMessageKind.webrtcLeave,
-      _ => RoomRealtimeMessageKind.unknown,
-    };
-    if (messageKind == RoomRealtimeMessageKind.unknown) return Uint8List(0);
-
-    final payload = <String, dynamic>{'data': jsonEncode(data)};
-    final to = data['to'];
-    if (to != null) payload['to'] = to;
-    return encodeWebRTC(messageKind, payload);
+  static List<int> encodeWebRtcMediaSignal(
+    String type,
+    Map<String, dynamic> data,
+  ) {
+    final payload = _webRtcSignalData(data);
+    final to = (data['to'] ?? '').toString();
+    final swarmId = (data['media_swarm_id'] ?? '').toString();
+    final swarmTicket = (data['media_swarm_ticket'] ?? '').toString();
+    final command = client.WebRTCCommand();
+    switch (type) {
+      case 'offer':
+        command.mediaOffer = client.WebRTCMediaOfferCommand(
+          to: to,
+          data: payload,
+          swarmId: swarmId,
+        );
+        break;
+      case 'answer':
+        command.mediaAnswer = client.WebRTCMediaAnswerCommand(
+          to: to,
+          data: payload,
+          swarmId: swarmId,
+        );
+        break;
+      case 'candidate':
+        command.mediaIceCandidate = client.WebRTCMediaIceCandidateCommand(
+          to: to,
+          data: payload,
+          swarmId: swarmId,
+        );
+        break;
+      case 'media_swarm_join':
+        command.mediaSwarmJoin = client.WebRTCMediaSwarmJoin(
+          swarmId: swarmId,
+          swarmTicket: swarmTicket,
+        );
+        break;
+      case 'media_swarm_leave':
+        command.mediaSwarmLeave = client.WebRTCMediaSwarmLeave(
+          swarmId: swarmId,
+        );
+        break;
+      default:
+        return Uint8List(0);
+    }
+    return client.ClientMessage(webrtc: command).writeToBuffer();
   }
 
   static RoomRealtimeMessage decode(Uint8List data) {
@@ -1559,10 +1755,20 @@ class RoomRealtimeCodec {
   static SyncTvPlaybackStatus _playbackStatusFromPlayback(
     client.Playback playback,
   ) {
+    final encodedTarget = providerTargetToBase64(playback.target);
     final entry = playback.mediaId.isEmpty && playback.playlistId.isEmpty
         ? null
-        : RoomMediaEntry.fromPlaybackProto(playback);
-    return SyncTvPlaybackStatus(entry: entry);
+        : RoomMediaEntry.fromPlaybackProto(
+            playback,
+            id: encodedTarget,
+            subPath: encodedTarget.isEmpty ? null : encodedTarget,
+            parentId: encodedTarget.isEmpty ? null : playback.playlistId,
+          );
+    return SyncTvPlaybackStatus(
+      entry: entry,
+      playingMediaId: playback.mediaId,
+      playingPlaylistId: playback.playlistId,
+    );
   }
 
   static Int64? _watchSequence(String version) {
@@ -1643,9 +1849,9 @@ class RoomRealtimeCodec {
       headers: _stringMap(metadata['headers']),
       proxy: metadata['proxy'] == true,
       live:
-          sourceProvider == 'rtmp' ||
-          (sourceProvider == 'bilibili' && sourceConfig['type'] == 'live') ||
-          metadata['isLive'] == true,
+          metadata['isLive'] == true ||
+          (media.hasSourceConfig() &&
+              SourceConfigCodec.isLiveMediaSourceConfig(media.sourceConfig)),
       sourceProvider: sourceProvider,
       providerInstanceName: media.providerInstanceName,
       sourceConfig: sourceConfig,
@@ -1746,66 +1952,124 @@ class RoomRealtimeCodec {
     );
   }
 
-  static RoomRealtimeMessage _webrtc(
+  static RoomRealtimeMessage _webrtcVoiceNegotiation(
     RoomRealtimeMessageKind type,
     String from,
-    String to,
     String data,
   ) {
     return RoomRealtimeMessage(
       kind: type,
-      webRtc: RoomRealtimeWebRtcSignal(
+      webRtc: RoomRealtimeWebRtcVoiceNegotiationSignal(
         kind: type,
         from: from,
-        to: to,
         data: data,
       ),
     );
   }
 
-  static RoomRealtimeMessage _webrtcEvent(client.WebRtcEvent event) {
+  static RoomRealtimeMessage _webrtcMediaNegotiation(
+    RoomRealtimeMessageKind type,
+    String from,
+    String data,
+    String swarmId,
+  ) {
+    return RoomRealtimeMessage(
+      kind: type,
+      webRtc: RoomRealtimeWebRtcMediaNegotiationSignal(
+        kind: type,
+        from: from,
+        data: data,
+        swarmId: swarmId,
+      ),
+    );
+  }
+
+  static RoomRealtimeMessage _webrtcEvent(client.WebRTCEvent event) {
     switch (event.whichEvent()) {
-      case client.WebRtcEvent_Event.offer:
-        return _webrtc(
-          RoomRealtimeMessageKind.webrtcOffer,
-          event.offer.from,
-          event.offer.to,
-          event.offer.data,
+      case client.WebRTCEvent_Event.voiceOffer:
+        return _webrtcVoiceNegotiation(
+          RoomRealtimeMessageKind.webrtcVoiceOffer,
+          event.voiceOffer.from,
+          event.voiceOffer.data,
         );
-      case client.WebRtcEvent_Event.answer:
-        return _webrtc(
-          RoomRealtimeMessageKind.webrtcAnswer,
-          event.answer.from,
-          event.answer.to,
-          event.answer.data,
+      case client.WebRTCEvent_Event.voiceAnswer:
+        return _webrtcVoiceNegotiation(
+          RoomRealtimeMessageKind.webrtcVoiceAnswer,
+          event.voiceAnswer.from,
+          event.voiceAnswer.data,
         );
-      case client.WebRtcEvent_Event.iceCandidate:
-        return _webrtc(
-          RoomRealtimeMessageKind.webrtcIceCandidate,
-          event.iceCandidate.from,
-          event.iceCandidate.to,
-          event.iceCandidate.data,
+      case client.WebRTCEvent_Event.voiceIceCandidate:
+        return _webrtcVoiceNegotiation(
+          RoomRealtimeMessageKind.webrtcVoiceIceCandidate,
+          event.voiceIceCandidate.from,
+          event.voiceIceCandidate.data,
         );
-      case client.WebRtcEvent_Event.join:
-        return _webrtc(
-          RoomRealtimeMessageKind.webrtcJoin,
-          '${event.join.userId}:${event.join.connId}',
-          '',
-          jsonEncode({
-            'user_id': event.join.userId,
-            'conn_id': event.join.connId,
-            'username': event.join.username,
-          }),
+      case client.WebRTCEvent_Event.voicePeerJoined:
+        return RoomRealtimeMessage(
+          kind: RoomRealtimeMessageKind.webrtcVoicePeerJoined,
+          webRtc: RoomRealtimeWebRtcVoicePeerJoinedSignal(
+            kind: RoomRealtimeMessageKind.webrtcVoicePeerJoined,
+            userId: event.voicePeerJoined.userId,
+            connId: event.voicePeerJoined.connId,
+            username: event.voicePeerJoined.username,
+          ),
         );
-      case client.WebRtcEvent_Event.leave:
-        return _webrtc(
-          RoomRealtimeMessageKind.webrtcLeave,
-          '${event.leave.userId}:${event.leave.connId}',
-          '',
-          jsonEncode({
-            'user_id': event.leave.userId,
-            'conn_id': event.leave.connId,
-          }),
+      case client.WebRTCEvent_Event.voicePeerLeft:
+        return RoomRealtimeMessage(
+          kind: RoomRealtimeMessageKind.webrtcVoicePeerLeft,
+          webRtc: RoomRealtimeWebRtcVoicePeerLeftSignal(
+            kind: RoomRealtimeMessageKind.webrtcVoicePeerLeft,
+            userId: event.voicePeerLeft.userId,
+            connId: event.voicePeerLeft.connId,
+          ),
+        );
+      case client.WebRTCEvent_Event.mediaOffer:
+        return _webrtcMediaNegotiation(
+          RoomRealtimeMessageKind.webrtcMediaOffer,
+          event.mediaOffer.from,
+          event.mediaOffer.data,
+          event.mediaOffer.swarmId,
+        );
+      case client.WebRTCEvent_Event.mediaAnswer:
+        return _webrtcMediaNegotiation(
+          RoomRealtimeMessageKind.webrtcMediaAnswer,
+          event.mediaAnswer.from,
+          event.mediaAnswer.data,
+          event.mediaAnswer.swarmId,
+        );
+      case client.WebRTCEvent_Event.mediaIceCandidate:
+        return _webrtcMediaNegotiation(
+          RoomRealtimeMessageKind.webrtcMediaIceCandidate,
+          event.mediaIceCandidate.from,
+          event.mediaIceCandidate.data,
+          event.mediaIceCandidate.swarmId,
+        );
+      case client.WebRTCEvent_Event.mediaSwarmPeers:
+        return RoomRealtimeMessage(
+          kind: RoomRealtimeMessageKind.webrtcMediaSwarmPeers,
+          webRtc: RoomRealtimeWebRtcMediaSwarmPeersSignal(
+            kind: RoomRealtimeMessageKind.webrtcMediaSwarmPeers,
+            swarmId: event.mediaSwarmPeers.swarmId,
+            swarmTicket: event.mediaSwarmPeers.swarmTicket,
+            peers: event.mediaSwarmPeers.peers
+                .map(
+                  (peer) => RoomRealtimeWebRtcPeer(
+                    userId: peer.userId,
+                    connId: peer.connId,
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        );
+      case client.WebRTCEvent_Event.mediaPeerLeft:
+        return RoomRealtimeMessage(
+          kind: RoomRealtimeMessageKind.webrtcMediaPeerLeft,
+          webRtc: RoomRealtimeWebRtcMediaPeerLeftSignal(
+            kind: RoomRealtimeMessageKind.webrtcMediaPeerLeft,
+            swarmId: event.mediaPeerLeft.swarmId,
+            userId: event.mediaPeerLeft.userId,
+            connId: event.mediaPeerLeft.connId,
+          ),
         );
       default:
         return const RoomRealtimeMessage(kind: RoomRealtimeMessageKind.unknown);

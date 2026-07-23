@@ -914,11 +914,13 @@ class SyncTvRoomMediaDomainService {
     Map<String, String> headers = const {},
     String name = '',
     bool preferProxy = false,
+    bool proxyOnly = false,
   }) async {
     final sourceConfig = DirectUrlSourceConfig.fromUserInput(
       url: url,
       headers: headers,
       preferProxy: preferProxy,
+      proxyOnly: proxyOnly,
     );
     return _addMedia(
       roomId,
@@ -1499,13 +1501,31 @@ class SyncTvRoomMediaDomainService {
     final target = providerTargetFromBase64(subPath);
     final hasTarget = !providerTargetIsEmpty(target);
     final dynamicPlaylistId = playlistId ?? '';
+    final isStaticMedia = entryId.startsWith('med_');
+    final isDynamicPlaylist = entryId.startsWith('pl_');
+    if (!hasTarget && !isStaticMedia && !isDynamicPlaylist) {
+      throw ArgumentError.value(
+        entryId,
+        'entryId',
+        'Expected a med_ media ID or pl_ playlist ID',
+      );
+    }
+    if (hasTarget && dynamicPlaylistId.isEmpty) {
+      throw ArgumentError.value(
+        playlistId,
+        'playlistId',
+        'A dynamic provider target requires a pl_ playlist ID',
+      );
+    }
     await _api.room.startPlayback(
       roomId,
       client.StartPlaybackRequest(
-        mediaId: !hasTarget && entryId.startsWith('med_') ? entryId : '',
+        mediaId: !hasTarget && isStaticMedia ? entryId : '',
         playlistId: hasTarget
             ? dynamicPlaylistId
-            : entryId.startsWith('pl_')
+            : isStaticMedia
+            ? dynamicPlaylistId
+            : isDynamicPlaylist
             ? entryId
             : '',
         target: target,

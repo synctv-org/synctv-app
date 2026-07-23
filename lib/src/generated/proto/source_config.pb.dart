@@ -320,6 +320,7 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
     $core.bool? isLive,
     $core.double? durationSeconds,
     $core.bool? preferProxy,
+    $core.bool? proxyOnly,
   }) {
     final result = create();
     if (medias != null) result.medias.addAll(medias);
@@ -333,6 +334,7 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
     if (isLive != null) result.isLive = isLive;
     if (durationSeconds != null) result.durationSeconds = durationSeconds;
     if (preferProxy != null) result.preferProxy = preferProxy;
+    if (proxyOnly != null) result.proxyOnly = proxyOnly;
     return result;
   }
 
@@ -365,6 +367,7 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
     ..aOB(7, _omitFieldNames ? '' : 'isLive')
     ..aD(8, _omitFieldNames ? '' : 'durationSeconds')
     ..aOB(9, _omitFieldNames ? '' : 'preferProxy')
+    ..aOB(10, _omitFieldNames ? '' : 'proxyOnly')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -450,6 +453,15 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
   $core.bool hasPreferProxy() => $_has(8);
   @$pb.TagNumber(9)
   void clearPreferProxy() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.bool get proxyOnly => $_getBF(9);
+  @$pb.TagNumber(10)
+  set proxyOnly($core.bool value) => $_setBool(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasProxyOnly() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearProxyOnly() => $_clearField(10);
 }
 
 class AlistMediaSourceConfig extends $pb.GeneratedMessage {

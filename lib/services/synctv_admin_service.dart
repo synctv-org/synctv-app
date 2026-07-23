@@ -1327,10 +1327,11 @@ class SyncTvAdminDomainService {
         settings.email = optionalPatchSection(admin.EmailSettingsPatch());
         break;
       case 'webrtc':
-        if (key != 'externalIceServers') {
+        if (key != 'externalIceServers' &&
+            key != 'maxVoiceParticipantsPerRoom') {
           throw ArgumentError.value(key, 'key', 'unsupported webrtc setting');
         }
-        settings.webrtc = optionalPatchSection(admin.WebRtcSettingsPatch());
+        settings.webrtc = optionalPatchSection(admin.WebRTCSettingsPatch());
         break;
       case 'chat':
         settings.chat = optionalPatchSection(admin.ChatSettingsPatch());

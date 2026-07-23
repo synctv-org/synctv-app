@@ -506,6 +506,8 @@ class RoomSettings extends $pb.GeneratedMessage {
     $fixnum.Int64? memberRemovedPermissions,
     $fixnum.Int64? guestAddedPermissions,
     $fixnum.Int64? guestRemovedPermissions,
+    $core.bool? voiceChatEnabled,
+    $core.bool? p2pMediaEnabled,
   }) {
     final result = create();
     if (allowGuestJoin != null) result.allowGuestJoin = allowGuestJoin;
@@ -526,6 +528,8 @@ class RoomSettings extends $pb.GeneratedMessage {
       result.guestAddedPermissions = guestAddedPermissions;
     if (guestRemovedPermissions != null)
       result.guestRemovedPermissions = guestRemovedPermissions;
+    if (voiceChatEnabled != null) result.voiceChatEnabled = voiceChatEnabled;
+    if (p2pMediaEnabled != null) result.p2pMediaEnabled = p2pMediaEnabled;
     return result;
   }
 
@@ -569,6 +573,8 @@ class RoomSettings extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(12, _omitFieldNames ? '' : 'guestRemovedPermissions',
         $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(13, _omitFieldNames ? '' : 'voiceChatEnabled')
+    ..aOB(14, _omitFieldNames ? '' : 'p2pMediaEnabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -699,6 +705,24 @@ class RoomSettings extends $pb.GeneratedMessage {
   $core.bool hasGuestRemovedPermissions() => $_has(11);
   @$pb.TagNumber(12)
   void clearGuestRemovedPermissions() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.bool get voiceChatEnabled => $_getBF(12);
+  @$pb.TagNumber(13)
+  set voiceChatEnabled($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasVoiceChatEnabled() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearVoiceChatEnabled() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.bool get p2pMediaEnabled => $_getBF(13);
+  @$pb.TagNumber(14)
+  set p2pMediaEnabled($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasP2pMediaEnabled() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearP2pMediaEnabled() => $_clearField(14);
 }
 
 class AlistTarget extends $pb.GeneratedMessage {
@@ -11106,6 +11130,8 @@ class RoomSettingsPatch extends $pb.GeneratedMessage {
     $fixnum.Int64? memberRemovedPermissions,
     $fixnum.Int64? guestAddedPermissions,
     $fixnum.Int64? guestRemovedPermissions,
+    $core.bool? voiceChatEnabled,
+    $core.bool? p2pMediaEnabled,
   }) {
     final result = create();
     if (allowGuestJoin != null) result.allowGuestJoin = allowGuestJoin;
@@ -11126,6 +11152,8 @@ class RoomSettingsPatch extends $pb.GeneratedMessage {
       result.guestAddedPermissions = guestAddedPermissions;
     if (guestRemovedPermissions != null)
       result.guestRemovedPermissions = guestRemovedPermissions;
+    if (voiceChatEnabled != null) result.voiceChatEnabled = voiceChatEnabled;
+    if (p2pMediaEnabled != null) result.p2pMediaEnabled = p2pMediaEnabled;
     return result;
   }
 
@@ -11169,6 +11197,8 @@ class RoomSettingsPatch extends $pb.GeneratedMessage {
     ..a<$fixnum.Int64>(12, _omitFieldNames ? '' : 'guestRemovedPermissions',
         $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOB(13, _omitFieldNames ? '' : 'voiceChatEnabled')
+    ..aOB(14, _omitFieldNames ? '' : 'p2pMediaEnabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -11299,6 +11329,24 @@ class RoomSettingsPatch extends $pb.GeneratedMessage {
   $core.bool hasGuestRemovedPermissions() => $_has(11);
   @$pb.TagNumber(12)
   void clearGuestRemovedPermissions() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.bool get voiceChatEnabled => $_getBF(12);
+  @$pb.TagNumber(13)
+  set voiceChatEnabled($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasVoiceChatEnabled() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearVoiceChatEnabled() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.bool get p2pMediaEnabled => $_getBF(13);
+  @$pb.TagNumber(14)
+  set p2pMediaEnabled($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasP2pMediaEnabled() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearP2pMediaEnabled() => $_clearField(14);
 }
 
 class UpdateRoomSettingsRequest extends $pb.GeneratedMessage {
@@ -14692,7 +14740,8 @@ class ListPlaylistsResponse extends $pb.GeneratedMessage {
 }
 
 /// HTTP API: Start playback of either:
-/// 1. A concrete media item (`media_id`)
+/// 1. A concrete media item (`media_id`), optionally with its static playlist context
+///    (`media_id` + `playlist_id`)
 /// 2. A dynamic playlist item (`playlist_id` + `target`)
 class StartPlaybackRequest extends $pb.GeneratedMessage {
   factory StartPlaybackRequest({
@@ -23304,6 +23353,7 @@ class PlaybackMedia extends $pb.GeneratedMessage {
     $fixnum.Int64? expireAt,
     PlaybackMediaMetadata? metadata,
     $core.String? format,
+    P2pMediaDelivery? p2pDelivery,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -23312,6 +23362,7 @@ class PlaybackMedia extends $pb.GeneratedMessage {
     if (expireAt != null) result.expireAt = expireAt;
     if (metadata != null) result.metadata = metadata;
     if (format != null) result.format = format;
+    if (p2pDelivery != null) result.p2pDelivery = p2pDelivery;
     return result;
   }
 
@@ -23339,6 +23390,8 @@ class PlaybackMedia extends $pb.GeneratedMessage {
     ..aOM<PlaybackMediaMetadata>(5, _omitFieldNames ? '' : 'metadata',
         subBuilder: PlaybackMediaMetadata.create)
     ..aOS(6, _omitFieldNames ? '' : 'format')
+    ..aOM<P2pMediaDelivery>(7, _omitFieldNames ? '' : 'p2pDelivery',
+        subBuilder: P2pMediaDelivery.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -23415,6 +23468,85 @@ class PlaybackMedia extends $pb.GeneratedMessage {
   $core.bool hasFormat() => $_has(5);
   @$pb.TagNumber(6)
   void clearFormat() => $_clearField(6);
+
+  /// Server-approved room-scoped P2P delivery identity and resource strategy.
+  /// Omitted when this representation must use its origin directly.
+  @$pb.TagNumber(7)
+  P2pMediaDelivery get p2pDelivery => $_getN(6);
+  @$pb.TagNumber(7)
+  set p2pDelivery(P2pMediaDelivery value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasP2pDelivery() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearP2pDelivery() => $_clearField(7);
+  @$pb.TagNumber(7)
+  P2pMediaDelivery ensureP2pDelivery() => $_ensure(6);
+}
+
+class P2pMediaDelivery extends $pb.GeneratedMessage {
+  factory P2pMediaDelivery({
+    $core.String? swarmId,
+    $core.String? swarmTicket,
+  }) {
+    final result = create();
+    if (swarmId != null) result.swarmId = swarmId;
+    if (swarmTicket != null) result.swarmTicket = swarmTicket;
+    return result;
+  }
+
+  P2pMediaDelivery._();
+
+  factory P2pMediaDelivery.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory P2pMediaDelivery.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'P2pMediaDelivery',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'swarmId')
+    ..aOS(2, _omitFieldNames ? '' : 'swarmTicket')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  P2pMediaDelivery clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  P2pMediaDelivery copyWith(void Function(P2pMediaDelivery) updates) =>
+      super.copyWith((message) => updates(message as P2pMediaDelivery))
+          as P2pMediaDelivery;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static P2pMediaDelivery create() => P2pMediaDelivery._();
+  @$core.override
+  P2pMediaDelivery createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static P2pMediaDelivery getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<P2pMediaDelivery>(create);
+  static P2pMediaDelivery? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get swarmId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set swarmId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSwarmId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSwarmId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get swarmTicket => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set swarmTicket($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSwarmTicket() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSwarmTicket() => $_clearField(2);
 }
 
 /// Media-level metadata
@@ -23732,7 +23864,7 @@ class ClientMessage extends $pb.GeneratedMessage {
     UpdatePlaybackRequest? playbackUpdate,
     ObserveResource? observeResource,
     UnobserveResource? unobserveResource,
-    WebRtcCommand? webrtc,
+    WebRTCCommand? webrtc,
   }) {
     final result = create();
     if (chat != null) result.chat = chat;
@@ -23784,8 +23916,8 @@ class ClientMessage extends $pb.GeneratedMessage {
         subBuilder: ObserveResource.create)
     ..aOM<UnobserveResource>(6, _omitFieldNames ? '' : 'unobserveResource',
         subBuilder: UnobserveResource.create)
-    ..aOM<WebRtcCommand>(7, _omitFieldNames ? '' : 'webrtc',
-        subBuilder: WebRtcCommand.create)
+    ..aOM<WebRTCCommand>(7, _omitFieldNames ? '' : 'webrtc',
+        subBuilder: WebRTCCommand.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -23895,15 +24027,15 @@ class ClientMessage extends $pb.GeneratedMessage {
   UnobserveResource ensureUnobserveResource() => $_ensure(5);
 
   @$pb.TagNumber(7)
-  WebRtcCommand get webrtc => $_getN(6);
+  WebRTCCommand get webrtc => $_getN(6);
   @$pb.TagNumber(7)
-  set webrtc(WebRtcCommand value) => $_setField(7, value);
+  set webrtc(WebRTCCommand value) => $_setField(7, value);
   @$pb.TagNumber(7)
   $core.bool hasWebrtc() => $_has(6);
   @$pb.TagNumber(7)
   void clearWebrtc() => $_clearField(7);
   @$pb.TagNumber(7)
-  WebRtcCommand ensureWebrtc() => $_ensure(6);
+  WebRTCCommand ensureWebrtc() => $_ensure(6);
 }
 
 enum ObserveResource_Resource {
@@ -26514,7 +26646,7 @@ class ResourceEvent extends $pb.GeneratedMessage {
     OnlineCount? onlineCount,
     EventCursor? eventCursor,
     OnlineEvent? onlineEvent,
-    WebRtcEvent? webrtcEvent,
+    WebRTCEvent? webrtcEvent,
     $0.RoomMember? selfRoomMember,
     ChatPinEvent? chatPinEvent,
     ListPlaybackHistoryResponse? playbackHistory,
@@ -26590,8 +26722,8 @@ class ResourceEvent extends $pb.GeneratedMessage {
         subBuilder: EventCursor.create)
     ..aOM<OnlineEvent>(12, _omitFieldNames ? '' : 'onlineEvent',
         subBuilder: OnlineEvent.create)
-    ..aOM<WebRtcEvent>(13, _omitFieldNames ? '' : 'webrtcEvent',
-        subBuilder: WebRtcEvent.create)
+    ..aOM<WebRTCEvent>(13, _omitFieldNames ? '' : 'webrtcEvent',
+        subBuilder: WebRTCEvent.create)
     ..aOM<$0.RoomMember>(14, _omitFieldNames ? '' : 'selfRoomMember',
         subBuilder: $0.RoomMember.create)
     ..aOM<ChatPinEvent>(15, _omitFieldNames ? '' : 'chatPinEvent',
@@ -26770,15 +26902,15 @@ class ResourceEvent extends $pb.GeneratedMessage {
   OnlineEvent ensureOnlineEvent() => $_ensure(10);
 
   @$pb.TagNumber(13)
-  WebRtcEvent get webrtcEvent => $_getN(11);
+  WebRTCEvent get webrtcEvent => $_getN(11);
   @$pb.TagNumber(13)
-  set webrtcEvent(WebRtcEvent value) => $_setField(13, value);
+  set webrtcEvent(WebRTCEvent value) => $_setField(13, value);
   @$pb.TagNumber(13)
   $core.bool hasWebrtcEvent() => $_has(11);
   @$pb.TagNumber(13)
   void clearWebrtcEvent() => $_clearField(13);
   @$pb.TagNumber(13)
-  WebRtcEvent ensureWebrtcEvent() => $_ensure(11);
+  WebRTCEvent ensureWebrtcEvent() => $_ensure(11);
 
   @$pb.TagNumber(14)
   $0.RoomMember get selfRoomMember => $_getN(12);
@@ -44946,57 +45078,53 @@ class ConfirmPasswordResetResponse extends $pb.GeneratedMessage {
   void clearUserId() => $_clearField(2);
 }
 
-/// WebRTC Offer (SDP offer from initiator)
-/// Client sends this to another specific peer through the server
-class WebRTCOffer extends $pb.GeneratedMessage {
-  factory WebRTCOffer({
+class WebRTCVoiceOfferCommand extends $pb.GeneratedMessage {
+  factory WebRTCVoiceOfferCommand({
     $core.String? to,
-    $core.String? from,
     $core.String? data,
   }) {
     final result = create();
     if (to != null) result.to = to;
-    if (from != null) result.from = from;
     if (data != null) result.data = data;
     return result;
   }
 
-  WebRTCOffer._();
+  WebRTCVoiceOfferCommand._();
 
-  factory WebRTCOffer.fromBuffer($core.List<$core.int> data,
+  factory WebRTCVoiceOfferCommand.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRTCOffer.fromJson($core.String json,
+  factory WebRTCVoiceOfferCommand.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRTCOffer',
+      _omitMessageNames ? '' : 'WebRTCVoiceOfferCommand',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'to')
-    ..aOS(2, _omitFieldNames ? '' : 'from')
-    ..aOS(3, _omitFieldNames ? '' : 'data')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCOffer clone() => deepCopy();
+  WebRTCVoiceOfferCommand clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCOffer copyWith(void Function(WebRTCOffer) updates) =>
-      super.copyWith((message) => updates(message as WebRTCOffer))
-          as WebRTCOffer;
+  WebRTCVoiceOfferCommand copyWith(
+          void Function(WebRTCVoiceOfferCommand) updates) =>
+      super.copyWith((message) => updates(message as WebRTCVoiceOfferCommand))
+          as WebRTCVoiceOfferCommand;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRTCOffer create() => WebRTCOffer._();
+  static WebRTCVoiceOfferCommand create() => WebRTCVoiceOfferCommand._();
   @$core.override
-  WebRTCOffer createEmptyInstance() => create();
+  WebRTCVoiceOfferCommand createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRTCOffer getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRTCOffer>(create);
-  static WebRTCOffer? _defaultInstance;
+  static WebRTCVoiceOfferCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoiceOfferCommand>(create);
+  static WebRTCVoiceOfferCommand? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get to => $_getSZ(0);
@@ -45008,75 +45136,62 @@ class WebRTCOffer extends $pb.GeneratedMessage {
   void clearTo() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get from => $_getSZ(1);
+  $core.String get data => $_getSZ(1);
   @$pb.TagNumber(2)
-  set from($core.String value) => $_setString(1, value);
+  set data($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasFrom() => $_has(1);
+  $core.bool hasData() => $_has(1);
   @$pb.TagNumber(2)
-  void clearFrom() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get data => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set data($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasData() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearData() => $_clearField(3);
+  void clearData() => $_clearField(2);
 }
 
-/// WebRTC Answer (SDP answer from receiver)
-/// Response to an offer
-class WebRTCAnswer extends $pb.GeneratedMessage {
-  factory WebRTCAnswer({
+class WebRTCVoiceAnswerCommand extends $pb.GeneratedMessage {
+  factory WebRTCVoiceAnswerCommand({
     $core.String? to,
-    $core.String? from,
     $core.String? data,
   }) {
     final result = create();
     if (to != null) result.to = to;
-    if (from != null) result.from = from;
     if (data != null) result.data = data;
     return result;
   }
 
-  WebRTCAnswer._();
+  WebRTCVoiceAnswerCommand._();
 
-  factory WebRTCAnswer.fromBuffer($core.List<$core.int> data,
+  factory WebRTCVoiceAnswerCommand.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRTCAnswer.fromJson($core.String json,
+  factory WebRTCVoiceAnswerCommand.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRTCAnswer',
+      _omitMessageNames ? '' : 'WebRTCVoiceAnswerCommand',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'to')
-    ..aOS(2, _omitFieldNames ? '' : 'from')
-    ..aOS(3, _omitFieldNames ? '' : 'data')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCAnswer clone() => deepCopy();
+  WebRTCVoiceAnswerCommand clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCAnswer copyWith(void Function(WebRTCAnswer) updates) =>
-      super.copyWith((message) => updates(message as WebRTCAnswer))
-          as WebRTCAnswer;
+  WebRTCVoiceAnswerCommand copyWith(
+          void Function(WebRTCVoiceAnswerCommand) updates) =>
+      super.copyWith((message) => updates(message as WebRTCVoiceAnswerCommand))
+          as WebRTCVoiceAnswerCommand;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRTCAnswer create() => WebRTCAnswer._();
+  static WebRTCVoiceAnswerCommand create() => WebRTCVoiceAnswerCommand._();
   @$core.override
-  WebRTCAnswer createEmptyInstance() => create();
+  WebRTCVoiceAnswerCommand createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRTCAnswer getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRTCAnswer>(create);
-  static WebRTCAnswer? _defaultInstance;
+  static WebRTCVoiceAnswerCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoiceAnswerCommand>(create);
+  static WebRTCVoiceAnswerCommand? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get to => $_getSZ(0);
@@ -45088,75 +45203,64 @@ class WebRTCAnswer extends $pb.GeneratedMessage {
   void clearTo() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get from => $_getSZ(1);
+  $core.String get data => $_getSZ(1);
   @$pb.TagNumber(2)
-  set from($core.String value) => $_setString(1, value);
+  set data($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasFrom() => $_has(1);
+  $core.bool hasData() => $_has(1);
   @$pb.TagNumber(2)
-  void clearFrom() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get data => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set data($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasData() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearData() => $_clearField(3);
+  void clearData() => $_clearField(2);
 }
 
-/// WebRTC ICE Candidate
-/// Sent repeatedly during ICE negotiation
-class WebRTCIceCandidate extends $pb.GeneratedMessage {
-  factory WebRTCIceCandidate({
+class WebRTCVoiceIceCandidateCommand extends $pb.GeneratedMessage {
+  factory WebRTCVoiceIceCandidateCommand({
     $core.String? to,
-    $core.String? from,
     $core.String? data,
   }) {
     final result = create();
     if (to != null) result.to = to;
-    if (from != null) result.from = from;
     if (data != null) result.data = data;
     return result;
   }
 
-  WebRTCIceCandidate._();
+  WebRTCVoiceIceCandidateCommand._();
 
-  factory WebRTCIceCandidate.fromBuffer($core.List<$core.int> data,
+  factory WebRTCVoiceIceCandidateCommand.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRTCIceCandidate.fromJson($core.String json,
+  factory WebRTCVoiceIceCandidateCommand.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRTCIceCandidate',
+      _omitMessageNames ? '' : 'WebRTCVoiceIceCandidateCommand',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'to')
-    ..aOS(2, _omitFieldNames ? '' : 'from')
-    ..aOS(3, _omitFieldNames ? '' : 'data')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCIceCandidate clone() => deepCopy();
+  WebRTCVoiceIceCandidateCommand clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCIceCandidate copyWith(void Function(WebRTCIceCandidate) updates) =>
-      super.copyWith((message) => updates(message as WebRTCIceCandidate))
-          as WebRTCIceCandidate;
+  WebRTCVoiceIceCandidateCommand copyWith(
+          void Function(WebRTCVoiceIceCandidateCommand) updates) =>
+      super.copyWith(
+              (message) => updates(message as WebRTCVoiceIceCandidateCommand))
+          as WebRTCVoiceIceCandidateCommand;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRTCIceCandidate create() => WebRTCIceCandidate._();
+  static WebRTCVoiceIceCandidateCommand create() =>
+      WebRTCVoiceIceCandidateCommand._();
   @$core.override
-  WebRTCIceCandidate createEmptyInstance() => create();
+  WebRTCVoiceIceCandidateCommand createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRTCIceCandidate getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRTCIceCandidate>(create);
-  static WebRTCIceCandidate? _defaultInstance;
+  static WebRTCVoiceIceCandidateCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoiceIceCandidateCommand>(create);
+  static WebRTCVoiceIceCandidateCommand? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get to => $_getSZ(0);
@@ -45168,28 +45272,310 @@ class WebRTCIceCandidate extends $pb.GeneratedMessage {
   void clearTo() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get from => $_getSZ(1);
+  $core.String get data => $_getSZ(1);
   @$pb.TagNumber(2)
-  set from($core.String value) => $_setString(1, value);
+  set data($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasFrom() => $_has(1);
+  $core.bool hasData() => $_has(1);
   @$pb.TagNumber(2)
-  void clearFrom() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get data => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set data($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasData() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearData() => $_clearField(3);
+  void clearData() => $_clearField(2);
 }
 
-/// WebRTC Join (user joins WebRTC session)
-/// Broadcast to all users who already joined RTC in the room
-class WebRTCJoin extends $pb.GeneratedMessage {
-  factory WebRTCJoin({
+class WebRTCVoiceOffer extends $pb.GeneratedMessage {
+  factory WebRTCVoiceOffer({
+    $core.String? from,
+    $core.String? data,
+  }) {
+    final result = create();
+    if (from != null) result.from = from;
+    if (data != null) result.data = data;
+    return result;
+  }
+
+  WebRTCVoiceOffer._();
+
+  factory WebRTCVoiceOffer.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCVoiceOffer.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCVoiceOffer',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'from')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceOffer clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceOffer copyWith(void Function(WebRTCVoiceOffer) updates) =>
+      super.copyWith((message) => updates(message as WebRTCVoiceOffer))
+          as WebRTCVoiceOffer;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceOffer create() => WebRTCVoiceOffer._();
+  @$core.override
+  WebRTCVoiceOffer createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceOffer getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoiceOffer>(create);
+  static WebRTCVoiceOffer? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get from => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set from($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFrom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFrom() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get data => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set data($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
+}
+
+class WebRTCVoiceAnswer extends $pb.GeneratedMessage {
+  factory WebRTCVoiceAnswer({
+    $core.String? from,
+    $core.String? data,
+  }) {
+    final result = create();
+    if (from != null) result.from = from;
+    if (data != null) result.data = data;
+    return result;
+  }
+
+  WebRTCVoiceAnswer._();
+
+  factory WebRTCVoiceAnswer.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCVoiceAnswer.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCVoiceAnswer',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'from')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceAnswer clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceAnswer copyWith(void Function(WebRTCVoiceAnswer) updates) =>
+      super.copyWith((message) => updates(message as WebRTCVoiceAnswer))
+          as WebRTCVoiceAnswer;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceAnswer create() => WebRTCVoiceAnswer._();
+  @$core.override
+  WebRTCVoiceAnswer createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceAnswer getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoiceAnswer>(create);
+  static WebRTCVoiceAnswer? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get from => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set from($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFrom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFrom() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get data => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set data($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
+}
+
+class WebRTCVoiceIceCandidate extends $pb.GeneratedMessage {
+  factory WebRTCVoiceIceCandidate({
+    $core.String? from,
+    $core.String? data,
+  }) {
+    final result = create();
+    if (from != null) result.from = from;
+    if (data != null) result.data = data;
+    return result;
+  }
+
+  WebRTCVoiceIceCandidate._();
+
+  factory WebRTCVoiceIceCandidate.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCVoiceIceCandidate.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCVoiceIceCandidate',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'from')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceIceCandidate clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceIceCandidate copyWith(
+          void Function(WebRTCVoiceIceCandidate) updates) =>
+      super.copyWith((message) => updates(message as WebRTCVoiceIceCandidate))
+          as WebRTCVoiceIceCandidate;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceIceCandidate create() => WebRTCVoiceIceCandidate._();
+  @$core.override
+  WebRTCVoiceIceCandidate createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceIceCandidate getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoiceIceCandidate>(create);
+  static WebRTCVoiceIceCandidate? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get from => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set from($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFrom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFrom() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get data => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set data($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
+}
+
+class WebRTCVoiceJoinCommand extends $pb.GeneratedMessage {
+  factory WebRTCVoiceJoinCommand({
+    $core.String? clientOperationId,
+  }) {
+    final result = create();
+    if (clientOperationId != null) result.clientOperationId = clientOperationId;
+    return result;
+  }
+
+  WebRTCVoiceJoinCommand._();
+
+  factory WebRTCVoiceJoinCommand.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCVoiceJoinCommand.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCVoiceJoinCommand',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientOperationId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceJoinCommand clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceJoinCommand copyWith(
+          void Function(WebRTCVoiceJoinCommand) updates) =>
+      super.copyWith((message) => updates(message as WebRTCVoiceJoinCommand))
+          as WebRTCVoiceJoinCommand;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceJoinCommand create() => WebRTCVoiceJoinCommand._();
+  @$core.override
+  WebRTCVoiceJoinCommand createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceJoinCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoiceJoinCommand>(create);
+  static WebRTCVoiceJoinCommand? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientOperationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientOperationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientOperationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientOperationId() => $_clearField(1);
+}
+
+class WebRTCVoiceLeaveCommand extends $pb.GeneratedMessage {
+  factory WebRTCVoiceLeaveCommand() => create();
+
+  WebRTCVoiceLeaveCommand._();
+
+  factory WebRTCVoiceLeaveCommand.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCVoiceLeaveCommand.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCVoiceLeaveCommand',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceLeaveCommand clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCVoiceLeaveCommand copyWith(
+          void Function(WebRTCVoiceLeaveCommand) updates) =>
+      super.copyWith((message) => updates(message as WebRTCVoiceLeaveCommand))
+          as WebRTCVoiceLeaveCommand;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceLeaveCommand create() => WebRTCVoiceLeaveCommand._();
+  @$core.override
+  WebRTCVoiceLeaveCommand createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCVoiceLeaveCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoiceLeaveCommand>(create);
+  static WebRTCVoiceLeaveCommand? _defaultInstance;
+}
+
+class WebRTCVoicePeerJoined extends $pb.GeneratedMessage {
+  factory WebRTCVoicePeerJoined({
     $core.String? userId,
     $core.String? connId,
     $core.String? username,
@@ -45201,17 +45587,17 @@ class WebRTCJoin extends $pb.GeneratedMessage {
     return result;
   }
 
-  WebRTCJoin._();
+  WebRTCVoicePeerJoined._();
 
-  factory WebRTCJoin.fromBuffer($core.List<$core.int> data,
+  factory WebRTCVoicePeerJoined.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRTCJoin.fromJson($core.String json,
+  factory WebRTCVoicePeerJoined.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRTCJoin',
+      _omitMessageNames ? '' : 'WebRTCVoicePeerJoined',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'userId')
@@ -45220,22 +45606,24 @@ class WebRTCJoin extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCJoin clone() => deepCopy();
+  WebRTCVoicePeerJoined clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCJoin copyWith(void Function(WebRTCJoin) updates) =>
-      super.copyWith((message) => updates(message as WebRTCJoin)) as WebRTCJoin;
+  WebRTCVoicePeerJoined copyWith(
+          void Function(WebRTCVoicePeerJoined) updates) =>
+      super.copyWith((message) => updates(message as WebRTCVoicePeerJoined))
+          as WebRTCVoicePeerJoined;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRTCJoin create() => WebRTCJoin._();
+  static WebRTCVoicePeerJoined create() => WebRTCVoicePeerJoined._();
   @$core.override
-  WebRTCJoin createEmptyInstance() => create();
+  WebRTCVoicePeerJoined createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRTCJoin getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRTCJoin>(create);
-  static WebRTCJoin? _defaultInstance;
+  static WebRTCVoicePeerJoined getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoicePeerJoined>(create);
+  static WebRTCVoicePeerJoined? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get userId => $_getSZ(0);
@@ -45265,10 +45653,8 @@ class WebRTCJoin extends $pb.GeneratedMessage {
   void clearUsername() => $_clearField(3);
 }
 
-/// WebRTC Leave (user leaves WebRTC session)
-/// Broadcast to all users in the WebRTC session
-class WebRTCLeave extends $pb.GeneratedMessage {
-  factory WebRTCLeave({
+class WebRTCVoicePeerLeft extends $pb.GeneratedMessage {
+  factory WebRTCVoicePeerLeft({
     $core.String? userId,
     $core.String? connId,
   }) {
@@ -45278,17 +45664,17 @@ class WebRTCLeave extends $pb.GeneratedMessage {
     return result;
   }
 
-  WebRTCLeave._();
+  WebRTCVoicePeerLeft._();
 
-  factory WebRTCLeave.fromBuffer($core.List<$core.int> data,
+  factory WebRTCVoicePeerLeft.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRTCLeave.fromJson($core.String json,
+  factory WebRTCVoicePeerLeft.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRTCLeave',
+      _omitMessageNames ? '' : 'WebRTCVoicePeerLeft',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'userId')
@@ -45296,23 +45682,23 @@ class WebRTCLeave extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCLeave clone() => deepCopy();
+  WebRTCVoicePeerLeft clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRTCLeave copyWith(void Function(WebRTCLeave) updates) =>
-      super.copyWith((message) => updates(message as WebRTCLeave))
-          as WebRTCLeave;
+  WebRTCVoicePeerLeft copyWith(void Function(WebRTCVoicePeerLeft) updates) =>
+      super.copyWith((message) => updates(message as WebRTCVoicePeerLeft))
+          as WebRTCVoicePeerLeft;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRTCLeave create() => WebRTCLeave._();
+  static WebRTCVoicePeerLeft create() => WebRTCVoicePeerLeft._();
   @$core.override
-  WebRTCLeave createEmptyInstance() => create();
+  WebRTCVoicePeerLeft createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRTCLeave getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRTCLeave>(create);
-  static WebRTCLeave? _defaultInstance;
+  static WebRTCVoicePeerLeft getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCVoicePeerLeft>(create);
+  static WebRTCVoicePeerLeft? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get userId => $_getSZ(0);
@@ -45333,289 +45719,1312 @@ class WebRTCLeave extends $pb.GeneratedMessage {
   void clearConnId() => $_clearField(2);
 }
 
-enum WebRtcCommand_Command { offer, answer, iceCandidate, join, leave, notSet }
-
-class WebRtcCommand extends $pb.GeneratedMessage {
-  factory WebRtcCommand({
-    WebRTCOffer? offer,
-    WebRTCAnswer? answer,
-    WebRTCIceCandidate? iceCandidate,
-    WebRTCJoin? join,
-    WebRTCLeave? leave,
+class WebRTCMediaOfferCommand extends $pb.GeneratedMessage {
+  factory WebRTCMediaOfferCommand({
+    $core.String? to,
+    $core.String? data,
+    $core.String? swarmId,
   }) {
     final result = create();
-    if (offer != null) result.offer = offer;
-    if (answer != null) result.answer = answer;
-    if (iceCandidate != null) result.iceCandidate = iceCandidate;
-    if (join != null) result.join = join;
-    if (leave != null) result.leave = leave;
+    if (to != null) result.to = to;
+    if (data != null) result.data = data;
+    if (swarmId != null) result.swarmId = swarmId;
     return result;
   }
 
-  WebRtcCommand._();
+  WebRTCMediaOfferCommand._();
 
-  factory WebRtcCommand.fromBuffer($core.List<$core.int> data,
+  factory WebRTCMediaOfferCommand.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRtcCommand.fromJson($core.String json,
+  factory WebRTCMediaOfferCommand.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, WebRtcCommand_Command>
-      _WebRtcCommand_CommandByTag = {
-    1: WebRtcCommand_Command.offer,
-    2: WebRtcCommand_Command.answer,
-    3: WebRtcCommand_Command.iceCandidate,
-    4: WebRtcCommand_Command.join,
-    5: WebRtcCommand_Command.leave,
-    0: WebRtcCommand_Command.notSet
-  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRtcCommand',
+      _omitMessageNames ? '' : 'WebRTCMediaOfferCommand',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5])
-    ..aOM<WebRTCOffer>(1, _omitFieldNames ? '' : 'offer',
-        subBuilder: WebRTCOffer.create)
-    ..aOM<WebRTCAnswer>(2, _omitFieldNames ? '' : 'answer',
-        subBuilder: WebRTCAnswer.create)
-    ..aOM<WebRTCIceCandidate>(3, _omitFieldNames ? '' : 'iceCandidate',
-        subBuilder: WebRTCIceCandidate.create)
-    ..aOM<WebRTCJoin>(4, _omitFieldNames ? '' : 'join',
-        subBuilder: WebRTCJoin.create)
-    ..aOM<WebRTCLeave>(5, _omitFieldNames ? '' : 'leave',
-        subBuilder: WebRTCLeave.create)
+    ..aOS(1, _omitFieldNames ? '' : 'to')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
+    ..aOS(3, _omitFieldNames ? '' : 'swarmId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcCommand clone() => deepCopy();
+  WebRTCMediaOfferCommand clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcCommand copyWith(void Function(WebRtcCommand) updates) =>
-      super.copyWith((message) => updates(message as WebRtcCommand))
-          as WebRtcCommand;
+  WebRTCMediaOfferCommand copyWith(
+          void Function(WebRTCMediaOfferCommand) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaOfferCommand))
+          as WebRTCMediaOfferCommand;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRtcCommand create() => WebRtcCommand._();
+  static WebRTCMediaOfferCommand create() => WebRTCMediaOfferCommand._();
   @$core.override
-  WebRtcCommand createEmptyInstance() => create();
+  WebRTCMediaOfferCommand createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRtcCommand getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRtcCommand>(create);
-  static WebRtcCommand? _defaultInstance;
+  static WebRTCMediaOfferCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaOfferCommand>(create);
+  static WebRTCMediaOfferCommand? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get to => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set to($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTo() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTo() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get data => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set data($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get swarmId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set swarmId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSwarmId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSwarmId() => $_clearField(3);
+}
+
+class WebRTCMediaAnswerCommand extends $pb.GeneratedMessage {
+  factory WebRTCMediaAnswerCommand({
+    $core.String? to,
+    $core.String? data,
+    $core.String? swarmId,
+  }) {
+    final result = create();
+    if (to != null) result.to = to;
+    if (data != null) result.data = data;
+    if (swarmId != null) result.swarmId = swarmId;
+    return result;
+  }
+
+  WebRTCMediaAnswerCommand._();
+
+  factory WebRTCMediaAnswerCommand.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaAnswerCommand.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaAnswerCommand',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'to')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
+    ..aOS(3, _omitFieldNames ? '' : 'swarmId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaAnswerCommand clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaAnswerCommand copyWith(
+          void Function(WebRTCMediaAnswerCommand) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaAnswerCommand))
+          as WebRTCMediaAnswerCommand;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaAnswerCommand create() => WebRTCMediaAnswerCommand._();
+  @$core.override
+  WebRTCMediaAnswerCommand createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaAnswerCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaAnswerCommand>(create);
+  static WebRTCMediaAnswerCommand? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get to => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set to($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTo() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTo() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get data => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set data($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get swarmId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set swarmId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSwarmId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSwarmId() => $_clearField(3);
+}
+
+class WebRTCMediaIceCandidateCommand extends $pb.GeneratedMessage {
+  factory WebRTCMediaIceCandidateCommand({
+    $core.String? to,
+    $core.String? data,
+    $core.String? swarmId,
+  }) {
+    final result = create();
+    if (to != null) result.to = to;
+    if (data != null) result.data = data;
+    if (swarmId != null) result.swarmId = swarmId;
+    return result;
+  }
+
+  WebRTCMediaIceCandidateCommand._();
+
+  factory WebRTCMediaIceCandidateCommand.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaIceCandidateCommand.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaIceCandidateCommand',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'to')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
+    ..aOS(3, _omitFieldNames ? '' : 'swarmId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaIceCandidateCommand clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaIceCandidateCommand copyWith(
+          void Function(WebRTCMediaIceCandidateCommand) updates) =>
+      super.copyWith(
+              (message) => updates(message as WebRTCMediaIceCandidateCommand))
+          as WebRTCMediaIceCandidateCommand;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaIceCandidateCommand create() =>
+      WebRTCMediaIceCandidateCommand._();
+  @$core.override
+  WebRTCMediaIceCandidateCommand createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaIceCandidateCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaIceCandidateCommand>(create);
+  static WebRTCMediaIceCandidateCommand? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get to => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set to($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTo() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTo() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get data => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set data($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get swarmId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set swarmId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSwarmId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSwarmId() => $_clearField(3);
+}
+
+class WebRTCMediaOffer extends $pb.GeneratedMessage {
+  factory WebRTCMediaOffer({
+    $core.String? from,
+    $core.String? data,
+    $core.String? swarmId,
+  }) {
+    final result = create();
+    if (from != null) result.from = from;
+    if (data != null) result.data = data;
+    if (swarmId != null) result.swarmId = swarmId;
+    return result;
+  }
+
+  WebRTCMediaOffer._();
+
+  factory WebRTCMediaOffer.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaOffer.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaOffer',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'from')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
+    ..aOS(3, _omitFieldNames ? '' : 'swarmId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaOffer clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaOffer copyWith(void Function(WebRTCMediaOffer) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaOffer))
+          as WebRTCMediaOffer;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaOffer create() => WebRTCMediaOffer._();
+  @$core.override
+  WebRTCMediaOffer createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaOffer getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaOffer>(create);
+  static WebRTCMediaOffer? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get from => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set from($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFrom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFrom() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get data => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set data($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get swarmId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set swarmId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSwarmId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSwarmId() => $_clearField(3);
+}
+
+class WebRTCMediaAnswer extends $pb.GeneratedMessage {
+  factory WebRTCMediaAnswer({
+    $core.String? from,
+    $core.String? data,
+    $core.String? swarmId,
+  }) {
+    final result = create();
+    if (from != null) result.from = from;
+    if (data != null) result.data = data;
+    if (swarmId != null) result.swarmId = swarmId;
+    return result;
+  }
+
+  WebRTCMediaAnswer._();
+
+  factory WebRTCMediaAnswer.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaAnswer.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaAnswer',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'from')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
+    ..aOS(3, _omitFieldNames ? '' : 'swarmId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaAnswer clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaAnswer copyWith(void Function(WebRTCMediaAnswer) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaAnswer))
+          as WebRTCMediaAnswer;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaAnswer create() => WebRTCMediaAnswer._();
+  @$core.override
+  WebRTCMediaAnswer createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaAnswer getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaAnswer>(create);
+  static WebRTCMediaAnswer? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get from => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set from($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFrom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFrom() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get data => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set data($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get swarmId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set swarmId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSwarmId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSwarmId() => $_clearField(3);
+}
+
+class WebRTCMediaIceCandidate extends $pb.GeneratedMessage {
+  factory WebRTCMediaIceCandidate({
+    $core.String? from,
+    $core.String? data,
+    $core.String? swarmId,
+  }) {
+    final result = create();
+    if (from != null) result.from = from;
+    if (data != null) result.data = data;
+    if (swarmId != null) result.swarmId = swarmId;
+    return result;
+  }
+
+  WebRTCMediaIceCandidate._();
+
+  factory WebRTCMediaIceCandidate.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaIceCandidate.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaIceCandidate',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'from')
+    ..aOS(2, _omitFieldNames ? '' : 'data')
+    ..aOS(3, _omitFieldNames ? '' : 'swarmId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaIceCandidate clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaIceCandidate copyWith(
+          void Function(WebRTCMediaIceCandidate) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaIceCandidate))
+          as WebRTCMediaIceCandidate;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaIceCandidate create() => WebRTCMediaIceCandidate._();
+  @$core.override
+  WebRTCMediaIceCandidate createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaIceCandidate getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaIceCandidate>(create);
+  static WebRTCMediaIceCandidate? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get from => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set from($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFrom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFrom() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get data => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set data($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasData() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearData() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get swarmId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set swarmId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSwarmId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSwarmId() => $_clearField(3);
+}
+
+class WebRTCMediaSwarmJoin extends $pb.GeneratedMessage {
+  factory WebRTCMediaSwarmJoin({
+    $core.String? swarmId,
+    $core.String? swarmTicket,
+  }) {
+    final result = create();
+    if (swarmId != null) result.swarmId = swarmId;
+    if (swarmTicket != null) result.swarmTicket = swarmTicket;
+    return result;
+  }
+
+  WebRTCMediaSwarmJoin._();
+
+  factory WebRTCMediaSwarmJoin.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaSwarmJoin.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaSwarmJoin',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'swarmId')
+    ..aOS(2, _omitFieldNames ? '' : 'swarmTicket')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaSwarmJoin clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaSwarmJoin copyWith(void Function(WebRTCMediaSwarmJoin) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaSwarmJoin))
+          as WebRTCMediaSwarmJoin;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaSwarmJoin create() => WebRTCMediaSwarmJoin._();
+  @$core.override
+  WebRTCMediaSwarmJoin createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaSwarmJoin getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaSwarmJoin>(create);
+  static WebRTCMediaSwarmJoin? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get swarmId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set swarmId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSwarmId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSwarmId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get swarmTicket => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set swarmTicket($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSwarmTicket() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSwarmTicket() => $_clearField(2);
+}
+
+class WebRTCMediaSwarmLeave extends $pb.GeneratedMessage {
+  factory WebRTCMediaSwarmLeave({
+    $core.String? swarmId,
+  }) {
+    final result = create();
+    if (swarmId != null) result.swarmId = swarmId;
+    return result;
+  }
+
+  WebRTCMediaSwarmLeave._();
+
+  factory WebRTCMediaSwarmLeave.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaSwarmLeave.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaSwarmLeave',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'swarmId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaSwarmLeave clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaSwarmLeave copyWith(
+          void Function(WebRTCMediaSwarmLeave) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaSwarmLeave))
+          as WebRTCMediaSwarmLeave;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaSwarmLeave create() => WebRTCMediaSwarmLeave._();
+  @$core.override
+  WebRTCMediaSwarmLeave createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaSwarmLeave getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaSwarmLeave>(create);
+  static WebRTCMediaSwarmLeave? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get swarmId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set swarmId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSwarmId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSwarmId() => $_clearField(1);
+}
+
+class WebRTCMediaPeerLeft extends $pb.GeneratedMessage {
+  factory WebRTCMediaPeerLeft({
+    $core.String? swarmId,
+    $core.String? userId,
+    $core.String? connId,
+  }) {
+    final result = create();
+    if (swarmId != null) result.swarmId = swarmId;
+    if (userId != null) result.userId = userId;
+    if (connId != null) result.connId = connId;
+    return result;
+  }
+
+  WebRTCMediaPeerLeft._();
+
+  factory WebRTCMediaPeerLeft.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaPeerLeft.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaPeerLeft',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'swarmId')
+    ..aOS(2, _omitFieldNames ? '' : 'userId')
+    ..aOS(3, _omitFieldNames ? '' : 'connId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaPeerLeft clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaPeerLeft copyWith(void Function(WebRTCMediaPeerLeft) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaPeerLeft))
+          as WebRTCMediaPeerLeft;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaPeerLeft create() => WebRTCMediaPeerLeft._();
+  @$core.override
+  WebRTCMediaPeerLeft createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaPeerLeft getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaPeerLeft>(create);
+  static WebRTCMediaPeerLeft? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get swarmId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set swarmId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSwarmId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSwarmId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get userId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set userId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUserId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get connId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set connId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasConnId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearConnId() => $_clearField(3);
+}
+
+class WebRTCMediaSwarmPeer extends $pb.GeneratedMessage {
+  factory WebRTCMediaSwarmPeer({
+    $core.String? userId,
+    $core.String? connId,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    if (connId != null) result.connId = connId;
+    return result;
+  }
+
+  WebRTCMediaSwarmPeer._();
+
+  factory WebRTCMediaSwarmPeer.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaSwarmPeer.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaSwarmPeer',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'userId')
+    ..aOS(2, _omitFieldNames ? '' : 'connId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaSwarmPeer clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaSwarmPeer copyWith(void Function(WebRTCMediaSwarmPeer) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaSwarmPeer))
+          as WebRTCMediaSwarmPeer;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaSwarmPeer create() => WebRTCMediaSwarmPeer._();
+  @$core.override
+  WebRTCMediaSwarmPeer createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaSwarmPeer getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaSwarmPeer>(create);
+  static WebRTCMediaSwarmPeer? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get userId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set userId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get connId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set connId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasConnId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearConnId() => $_clearField(2);
+}
+
+class WebRTCMediaSwarmPeers extends $pb.GeneratedMessage {
+  factory WebRTCMediaSwarmPeers({
+    $core.String? swarmId,
+    $core.Iterable<WebRTCMediaSwarmPeer>? peers,
+    $core.String? swarmTicket,
+  }) {
+    final result = create();
+    if (swarmId != null) result.swarmId = swarmId;
+    if (peers != null) result.peers.addAll(peers);
+    if (swarmTicket != null) result.swarmTicket = swarmTicket;
+    return result;
+  }
+
+  WebRTCMediaSwarmPeers._();
+
+  factory WebRTCMediaSwarmPeers.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCMediaSwarmPeers.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCMediaSwarmPeers',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'swarmId')
+    ..pPM<WebRTCMediaSwarmPeer>(2, _omitFieldNames ? '' : 'peers',
+        subBuilder: WebRTCMediaSwarmPeer.create)
+    ..aOS(3, _omitFieldNames ? '' : 'swarmTicket')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaSwarmPeers clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCMediaSwarmPeers copyWith(
+          void Function(WebRTCMediaSwarmPeers) updates) =>
+      super.copyWith((message) => updates(message as WebRTCMediaSwarmPeers))
+          as WebRTCMediaSwarmPeers;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaSwarmPeers create() => WebRTCMediaSwarmPeers._();
+  @$core.override
+  WebRTCMediaSwarmPeers createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCMediaSwarmPeers getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCMediaSwarmPeers>(create);
+  static WebRTCMediaSwarmPeers? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get swarmId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set swarmId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSwarmId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSwarmId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<WebRTCMediaSwarmPeer> get peers => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.String get swarmTicket => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set swarmTicket($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSwarmTicket() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSwarmTicket() => $_clearField(3);
+}
+
+enum WebRTCCommand_Command {
+  voiceOffer,
+  voiceAnswer,
+  voiceIceCandidate,
+  voiceJoin,
+  voiceLeave,
+  mediaOffer,
+  mediaAnswer,
+  mediaIceCandidate,
+  mediaSwarmJoin,
+  mediaSwarmLeave,
+  notSet
+}
+
+class WebRTCCommand extends $pb.GeneratedMessage {
+  factory WebRTCCommand({
+    WebRTCVoiceOfferCommand? voiceOffer,
+    WebRTCVoiceAnswerCommand? voiceAnswer,
+    WebRTCVoiceIceCandidateCommand? voiceIceCandidate,
+    WebRTCVoiceJoinCommand? voiceJoin,
+    WebRTCVoiceLeaveCommand? voiceLeave,
+    WebRTCMediaOfferCommand? mediaOffer,
+    WebRTCMediaAnswerCommand? mediaAnswer,
+    WebRTCMediaIceCandidateCommand? mediaIceCandidate,
+    WebRTCMediaSwarmJoin? mediaSwarmJoin,
+    WebRTCMediaSwarmLeave? mediaSwarmLeave,
+  }) {
+    final result = create();
+    if (voiceOffer != null) result.voiceOffer = voiceOffer;
+    if (voiceAnswer != null) result.voiceAnswer = voiceAnswer;
+    if (voiceIceCandidate != null) result.voiceIceCandidate = voiceIceCandidate;
+    if (voiceJoin != null) result.voiceJoin = voiceJoin;
+    if (voiceLeave != null) result.voiceLeave = voiceLeave;
+    if (mediaOffer != null) result.mediaOffer = mediaOffer;
+    if (mediaAnswer != null) result.mediaAnswer = mediaAnswer;
+    if (mediaIceCandidate != null) result.mediaIceCandidate = mediaIceCandidate;
+    if (mediaSwarmJoin != null) result.mediaSwarmJoin = mediaSwarmJoin;
+    if (mediaSwarmLeave != null) result.mediaSwarmLeave = mediaSwarmLeave;
+    return result;
+  }
+
+  WebRTCCommand._();
+
+  factory WebRTCCommand.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory WebRTCCommand.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, WebRTCCommand_Command>
+      _WebRTCCommand_CommandByTag = {
+    1: WebRTCCommand_Command.voiceOffer,
+    2: WebRTCCommand_Command.voiceAnswer,
+    3: WebRTCCommand_Command.voiceIceCandidate,
+    4: WebRTCCommand_Command.voiceJoin,
+    5: WebRTCCommand_Command.voiceLeave,
+    6: WebRTCCommand_Command.mediaOffer,
+    7: WebRTCCommand_Command.mediaAnswer,
+    8: WebRTCCommand_Command.mediaIceCandidate,
+    9: WebRTCCommand_Command.mediaSwarmJoin,
+    10: WebRTCCommand_Command.mediaSwarmLeave,
+    0: WebRTCCommand_Command.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'WebRTCCommand',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    ..aOM<WebRTCVoiceOfferCommand>(1, _omitFieldNames ? '' : 'voiceOffer',
+        subBuilder: WebRTCVoiceOfferCommand.create)
+    ..aOM<WebRTCVoiceAnswerCommand>(2, _omitFieldNames ? '' : 'voiceAnswer',
+        subBuilder: WebRTCVoiceAnswerCommand.create)
+    ..aOM<WebRTCVoiceIceCandidateCommand>(
+        3, _omitFieldNames ? '' : 'voiceIceCandidate',
+        subBuilder: WebRTCVoiceIceCandidateCommand.create)
+    ..aOM<WebRTCVoiceJoinCommand>(4, _omitFieldNames ? '' : 'voiceJoin',
+        subBuilder: WebRTCVoiceJoinCommand.create)
+    ..aOM<WebRTCVoiceLeaveCommand>(5, _omitFieldNames ? '' : 'voiceLeave',
+        subBuilder: WebRTCVoiceLeaveCommand.create)
+    ..aOM<WebRTCMediaOfferCommand>(6, _omitFieldNames ? '' : 'mediaOffer',
+        subBuilder: WebRTCMediaOfferCommand.create)
+    ..aOM<WebRTCMediaAnswerCommand>(7, _omitFieldNames ? '' : 'mediaAnswer',
+        subBuilder: WebRTCMediaAnswerCommand.create)
+    ..aOM<WebRTCMediaIceCandidateCommand>(
+        8, _omitFieldNames ? '' : 'mediaIceCandidate',
+        subBuilder: WebRTCMediaIceCandidateCommand.create)
+    ..aOM<WebRTCMediaSwarmJoin>(9, _omitFieldNames ? '' : 'mediaSwarmJoin',
+        subBuilder: WebRTCMediaSwarmJoin.create)
+    ..aOM<WebRTCMediaSwarmLeave>(10, _omitFieldNames ? '' : 'mediaSwarmLeave',
+        subBuilder: WebRTCMediaSwarmLeave.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCCommand clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  WebRTCCommand copyWith(void Function(WebRTCCommand) updates) =>
+      super.copyWith((message) => updates(message as WebRTCCommand))
+          as WebRTCCommand;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static WebRTCCommand create() => WebRTCCommand._();
+  @$core.override
+  WebRTCCommand createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static WebRTCCommand getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCCommand>(create);
+  static WebRTCCommand? _defaultInstance;
 
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
-  WebRtcCommand_Command whichCommand() =>
-      _WebRtcCommand_CommandByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  WebRTCCommand_Command whichCommand() =>
+      _WebRTCCommand_CommandByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
   void clearCommand() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
-  WebRTCOffer get offer => $_getN(0);
+  WebRTCVoiceOfferCommand get voiceOffer => $_getN(0);
   @$pb.TagNumber(1)
-  set offer(WebRTCOffer value) => $_setField(1, value);
+  set voiceOffer(WebRTCVoiceOfferCommand value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasOffer() => $_has(0);
+  $core.bool hasVoiceOffer() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOffer() => $_clearField(1);
+  void clearVoiceOffer() => $_clearField(1);
   @$pb.TagNumber(1)
-  WebRTCOffer ensureOffer() => $_ensure(0);
+  WebRTCVoiceOfferCommand ensureVoiceOffer() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  WebRTCAnswer get answer => $_getN(1);
+  WebRTCVoiceAnswerCommand get voiceAnswer => $_getN(1);
   @$pb.TagNumber(2)
-  set answer(WebRTCAnswer value) => $_setField(2, value);
+  set voiceAnswer(WebRTCVoiceAnswerCommand value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasAnswer() => $_has(1);
+  $core.bool hasVoiceAnswer() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAnswer() => $_clearField(2);
+  void clearVoiceAnswer() => $_clearField(2);
   @$pb.TagNumber(2)
-  WebRTCAnswer ensureAnswer() => $_ensure(1);
+  WebRTCVoiceAnswerCommand ensureVoiceAnswer() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  WebRTCIceCandidate get iceCandidate => $_getN(2);
+  WebRTCVoiceIceCandidateCommand get voiceIceCandidate => $_getN(2);
   @$pb.TagNumber(3)
-  set iceCandidate(WebRTCIceCandidate value) => $_setField(3, value);
+  set voiceIceCandidate(WebRTCVoiceIceCandidateCommand value) =>
+      $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasIceCandidate() => $_has(2);
+  $core.bool hasVoiceIceCandidate() => $_has(2);
   @$pb.TagNumber(3)
-  void clearIceCandidate() => $_clearField(3);
+  void clearVoiceIceCandidate() => $_clearField(3);
   @$pb.TagNumber(3)
-  WebRTCIceCandidate ensureIceCandidate() => $_ensure(2);
+  WebRTCVoiceIceCandidateCommand ensureVoiceIceCandidate() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  WebRTCJoin get join => $_getN(3);
+  WebRTCVoiceJoinCommand get voiceJoin => $_getN(3);
   @$pb.TagNumber(4)
-  set join(WebRTCJoin value) => $_setField(4, value);
+  set voiceJoin(WebRTCVoiceJoinCommand value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasJoin() => $_has(3);
+  $core.bool hasVoiceJoin() => $_has(3);
   @$pb.TagNumber(4)
-  void clearJoin() => $_clearField(4);
+  void clearVoiceJoin() => $_clearField(4);
   @$pb.TagNumber(4)
-  WebRTCJoin ensureJoin() => $_ensure(3);
+  WebRTCVoiceJoinCommand ensureVoiceJoin() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  WebRTCLeave get leave => $_getN(4);
+  WebRTCVoiceLeaveCommand get voiceLeave => $_getN(4);
   @$pb.TagNumber(5)
-  set leave(WebRTCLeave value) => $_setField(5, value);
+  set voiceLeave(WebRTCVoiceLeaveCommand value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasLeave() => $_has(4);
+  $core.bool hasVoiceLeave() => $_has(4);
   @$pb.TagNumber(5)
-  void clearLeave() => $_clearField(5);
+  void clearVoiceLeave() => $_clearField(5);
   @$pb.TagNumber(5)
-  WebRTCLeave ensureLeave() => $_ensure(4);
+  WebRTCVoiceLeaveCommand ensureVoiceLeave() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  WebRTCMediaOfferCommand get mediaOffer => $_getN(5);
+  @$pb.TagNumber(6)
+  set mediaOffer(WebRTCMediaOfferCommand value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasMediaOffer() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearMediaOffer() => $_clearField(6);
+  @$pb.TagNumber(6)
+  WebRTCMediaOfferCommand ensureMediaOffer() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  WebRTCMediaAnswerCommand get mediaAnswer => $_getN(6);
+  @$pb.TagNumber(7)
+  set mediaAnswer(WebRTCMediaAnswerCommand value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasMediaAnswer() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearMediaAnswer() => $_clearField(7);
+  @$pb.TagNumber(7)
+  WebRTCMediaAnswerCommand ensureMediaAnswer() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  WebRTCMediaIceCandidateCommand get mediaIceCandidate => $_getN(7);
+  @$pb.TagNumber(8)
+  set mediaIceCandidate(WebRTCMediaIceCandidateCommand value) =>
+      $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasMediaIceCandidate() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearMediaIceCandidate() => $_clearField(8);
+  @$pb.TagNumber(8)
+  WebRTCMediaIceCandidateCommand ensureMediaIceCandidate() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  WebRTCMediaSwarmJoin get mediaSwarmJoin => $_getN(8);
+  @$pb.TagNumber(9)
+  set mediaSwarmJoin(WebRTCMediaSwarmJoin value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasMediaSwarmJoin() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearMediaSwarmJoin() => $_clearField(9);
+  @$pb.TagNumber(9)
+  WebRTCMediaSwarmJoin ensureMediaSwarmJoin() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  WebRTCMediaSwarmLeave get mediaSwarmLeave => $_getN(9);
+  @$pb.TagNumber(10)
+  set mediaSwarmLeave(WebRTCMediaSwarmLeave value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMediaSwarmLeave() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMediaSwarmLeave() => $_clearField(10);
+  @$pb.TagNumber(10)
+  WebRTCMediaSwarmLeave ensureMediaSwarmLeave() => $_ensure(9);
 }
 
-enum WebRtcEvent_Event { offer, answer, iceCandidate, join, leave, notSet }
+enum WebRTCEvent_Event {
+  voiceOffer,
+  voiceAnswer,
+  voiceIceCandidate,
+  voicePeerJoined,
+  voicePeerLeft,
+  mediaOffer,
+  mediaAnswer,
+  mediaIceCandidate,
+  mediaSwarmPeers,
+  mediaPeerLeft,
+  notSet
+}
 
-class WebRtcEvent extends $pb.GeneratedMessage {
-  factory WebRtcEvent({
-    WebRTCOffer? offer,
-    WebRTCAnswer? answer,
-    WebRTCIceCandidate? iceCandidate,
-    WebRTCJoin? join,
-    WebRTCLeave? leave,
+class WebRTCEvent extends $pb.GeneratedMessage {
+  factory WebRTCEvent({
+    WebRTCVoiceOffer? voiceOffer,
+    WebRTCVoiceAnswer? voiceAnswer,
+    WebRTCVoiceIceCandidate? voiceIceCandidate,
+    WebRTCVoicePeerJoined? voicePeerJoined,
+    WebRTCVoicePeerLeft? voicePeerLeft,
+    WebRTCMediaOffer? mediaOffer,
+    WebRTCMediaAnswer? mediaAnswer,
+    WebRTCMediaIceCandidate? mediaIceCandidate,
+    WebRTCMediaSwarmPeers? mediaSwarmPeers,
+    WebRTCMediaPeerLeft? mediaPeerLeft,
   }) {
     final result = create();
-    if (offer != null) result.offer = offer;
-    if (answer != null) result.answer = answer;
-    if (iceCandidate != null) result.iceCandidate = iceCandidate;
-    if (join != null) result.join = join;
-    if (leave != null) result.leave = leave;
+    if (voiceOffer != null) result.voiceOffer = voiceOffer;
+    if (voiceAnswer != null) result.voiceAnswer = voiceAnswer;
+    if (voiceIceCandidate != null) result.voiceIceCandidate = voiceIceCandidate;
+    if (voicePeerJoined != null) result.voicePeerJoined = voicePeerJoined;
+    if (voicePeerLeft != null) result.voicePeerLeft = voicePeerLeft;
+    if (mediaOffer != null) result.mediaOffer = mediaOffer;
+    if (mediaAnswer != null) result.mediaAnswer = mediaAnswer;
+    if (mediaIceCandidate != null) result.mediaIceCandidate = mediaIceCandidate;
+    if (mediaSwarmPeers != null) result.mediaSwarmPeers = mediaSwarmPeers;
+    if (mediaPeerLeft != null) result.mediaPeerLeft = mediaPeerLeft;
     return result;
   }
 
-  WebRtcEvent._();
+  WebRTCEvent._();
 
-  factory WebRtcEvent.fromBuffer($core.List<$core.int> data,
+  factory WebRTCEvent.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRtcEvent.fromJson($core.String json,
+  factory WebRTCEvent.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, WebRtcEvent_Event> _WebRtcEvent_EventByTag =
+  static const $core.Map<$core.int, WebRTCEvent_Event> _WebRTCEvent_EventByTag =
       {
-    1: WebRtcEvent_Event.offer,
-    2: WebRtcEvent_Event.answer,
-    3: WebRtcEvent_Event.iceCandidate,
-    4: WebRtcEvent_Event.join,
-    5: WebRtcEvent_Event.leave,
-    0: WebRtcEvent_Event.notSet
+    1: WebRTCEvent_Event.voiceOffer,
+    2: WebRTCEvent_Event.voiceAnswer,
+    3: WebRTCEvent_Event.voiceIceCandidate,
+    4: WebRTCEvent_Event.voicePeerJoined,
+    5: WebRTCEvent_Event.voicePeerLeft,
+    6: WebRTCEvent_Event.mediaOffer,
+    7: WebRTCEvent_Event.mediaAnswer,
+    8: WebRTCEvent_Event.mediaIceCandidate,
+    9: WebRTCEvent_Event.mediaSwarmPeers,
+    10: WebRTCEvent_Event.mediaPeerLeft,
+    0: WebRTCEvent_Event.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRtcEvent',
+      _omitMessageNames ? '' : 'WebRTCEvent',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5])
-    ..aOM<WebRTCOffer>(1, _omitFieldNames ? '' : 'offer',
-        subBuilder: WebRTCOffer.create)
-    ..aOM<WebRTCAnswer>(2, _omitFieldNames ? '' : 'answer',
-        subBuilder: WebRTCAnswer.create)
-    ..aOM<WebRTCIceCandidate>(3, _omitFieldNames ? '' : 'iceCandidate',
-        subBuilder: WebRTCIceCandidate.create)
-    ..aOM<WebRTCJoin>(4, _omitFieldNames ? '' : 'join',
-        subBuilder: WebRTCJoin.create)
-    ..aOM<WebRTCLeave>(5, _omitFieldNames ? '' : 'leave',
-        subBuilder: WebRTCLeave.create)
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    ..aOM<WebRTCVoiceOffer>(1, _omitFieldNames ? '' : 'voiceOffer',
+        subBuilder: WebRTCVoiceOffer.create)
+    ..aOM<WebRTCVoiceAnswer>(2, _omitFieldNames ? '' : 'voiceAnswer',
+        subBuilder: WebRTCVoiceAnswer.create)
+    ..aOM<WebRTCVoiceIceCandidate>(
+        3, _omitFieldNames ? '' : 'voiceIceCandidate',
+        subBuilder: WebRTCVoiceIceCandidate.create)
+    ..aOM<WebRTCVoicePeerJoined>(4, _omitFieldNames ? '' : 'voicePeerJoined',
+        subBuilder: WebRTCVoicePeerJoined.create)
+    ..aOM<WebRTCVoicePeerLeft>(5, _omitFieldNames ? '' : 'voicePeerLeft',
+        subBuilder: WebRTCVoicePeerLeft.create)
+    ..aOM<WebRTCMediaOffer>(6, _omitFieldNames ? '' : 'mediaOffer',
+        subBuilder: WebRTCMediaOffer.create)
+    ..aOM<WebRTCMediaAnswer>(7, _omitFieldNames ? '' : 'mediaAnswer',
+        subBuilder: WebRTCMediaAnswer.create)
+    ..aOM<WebRTCMediaIceCandidate>(
+        8, _omitFieldNames ? '' : 'mediaIceCandidate',
+        subBuilder: WebRTCMediaIceCandidate.create)
+    ..aOM<WebRTCMediaSwarmPeers>(9, _omitFieldNames ? '' : 'mediaSwarmPeers',
+        subBuilder: WebRTCMediaSwarmPeers.create)
+    ..aOM<WebRTCMediaPeerLeft>(10, _omitFieldNames ? '' : 'mediaPeerLeft',
+        subBuilder: WebRTCMediaPeerLeft.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcEvent clone() => deepCopy();
+  WebRTCEvent clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcEvent copyWith(void Function(WebRtcEvent) updates) =>
-      super.copyWith((message) => updates(message as WebRtcEvent))
-          as WebRtcEvent;
+  WebRTCEvent copyWith(void Function(WebRTCEvent) updates) =>
+      super.copyWith((message) => updates(message as WebRTCEvent))
+          as WebRTCEvent;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRtcEvent create() => WebRtcEvent._();
+  static WebRTCEvent create() => WebRTCEvent._();
   @$core.override
-  WebRtcEvent createEmptyInstance() => create();
+  WebRTCEvent createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRtcEvent getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRtcEvent>(create);
-  static WebRtcEvent? _defaultInstance;
+  static WebRTCEvent getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCEvent>(create);
+  static WebRTCEvent? _defaultInstance;
 
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
-  WebRtcEvent_Event whichEvent() => _WebRtcEvent_EventByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
+  WebRTCEvent_Event whichEvent() => _WebRTCEvent_EventByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
   @$pb.TagNumber(2)
   @$pb.TagNumber(3)
   @$pb.TagNumber(4)
   @$pb.TagNumber(5)
+  @$pb.TagNumber(6)
+  @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
+  @$pb.TagNumber(10)
   void clearEvent() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
-  WebRTCOffer get offer => $_getN(0);
+  WebRTCVoiceOffer get voiceOffer => $_getN(0);
   @$pb.TagNumber(1)
-  set offer(WebRTCOffer value) => $_setField(1, value);
+  set voiceOffer(WebRTCVoiceOffer value) => $_setField(1, value);
   @$pb.TagNumber(1)
-  $core.bool hasOffer() => $_has(0);
+  $core.bool hasVoiceOffer() => $_has(0);
   @$pb.TagNumber(1)
-  void clearOffer() => $_clearField(1);
+  void clearVoiceOffer() => $_clearField(1);
   @$pb.TagNumber(1)
-  WebRTCOffer ensureOffer() => $_ensure(0);
+  WebRTCVoiceOffer ensureVoiceOffer() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  WebRTCAnswer get answer => $_getN(1);
+  WebRTCVoiceAnswer get voiceAnswer => $_getN(1);
   @$pb.TagNumber(2)
-  set answer(WebRTCAnswer value) => $_setField(2, value);
+  set voiceAnswer(WebRTCVoiceAnswer value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasAnswer() => $_has(1);
+  $core.bool hasVoiceAnswer() => $_has(1);
   @$pb.TagNumber(2)
-  void clearAnswer() => $_clearField(2);
+  void clearVoiceAnswer() => $_clearField(2);
   @$pb.TagNumber(2)
-  WebRTCAnswer ensureAnswer() => $_ensure(1);
+  WebRTCVoiceAnswer ensureVoiceAnswer() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  WebRTCIceCandidate get iceCandidate => $_getN(2);
+  WebRTCVoiceIceCandidate get voiceIceCandidate => $_getN(2);
   @$pb.TagNumber(3)
-  set iceCandidate(WebRTCIceCandidate value) => $_setField(3, value);
+  set voiceIceCandidate(WebRTCVoiceIceCandidate value) => $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasIceCandidate() => $_has(2);
+  $core.bool hasVoiceIceCandidate() => $_has(2);
   @$pb.TagNumber(3)
-  void clearIceCandidate() => $_clearField(3);
+  void clearVoiceIceCandidate() => $_clearField(3);
   @$pb.TagNumber(3)
-  WebRTCIceCandidate ensureIceCandidate() => $_ensure(2);
+  WebRTCVoiceIceCandidate ensureVoiceIceCandidate() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  WebRTCJoin get join => $_getN(3);
+  WebRTCVoicePeerJoined get voicePeerJoined => $_getN(3);
   @$pb.TagNumber(4)
-  set join(WebRTCJoin value) => $_setField(4, value);
+  set voicePeerJoined(WebRTCVoicePeerJoined value) => $_setField(4, value);
   @$pb.TagNumber(4)
-  $core.bool hasJoin() => $_has(3);
+  $core.bool hasVoicePeerJoined() => $_has(3);
   @$pb.TagNumber(4)
-  void clearJoin() => $_clearField(4);
+  void clearVoicePeerJoined() => $_clearField(4);
   @$pb.TagNumber(4)
-  WebRTCJoin ensureJoin() => $_ensure(3);
+  WebRTCVoicePeerJoined ensureVoicePeerJoined() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  WebRTCLeave get leave => $_getN(4);
+  WebRTCVoicePeerLeft get voicePeerLeft => $_getN(4);
   @$pb.TagNumber(5)
-  set leave(WebRTCLeave value) => $_setField(5, value);
+  set voicePeerLeft(WebRTCVoicePeerLeft value) => $_setField(5, value);
   @$pb.TagNumber(5)
-  $core.bool hasLeave() => $_has(4);
+  $core.bool hasVoicePeerLeft() => $_has(4);
   @$pb.TagNumber(5)
-  void clearLeave() => $_clearField(5);
+  void clearVoicePeerLeft() => $_clearField(5);
   @$pb.TagNumber(5)
-  WebRTCLeave ensureLeave() => $_ensure(4);
+  WebRTCVoicePeerLeft ensureVoicePeerLeft() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  WebRTCMediaOffer get mediaOffer => $_getN(5);
+  @$pb.TagNumber(6)
+  set mediaOffer(WebRTCMediaOffer value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasMediaOffer() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearMediaOffer() => $_clearField(6);
+  @$pb.TagNumber(6)
+  WebRTCMediaOffer ensureMediaOffer() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  WebRTCMediaAnswer get mediaAnswer => $_getN(6);
+  @$pb.TagNumber(7)
+  set mediaAnswer(WebRTCMediaAnswer value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasMediaAnswer() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearMediaAnswer() => $_clearField(7);
+  @$pb.TagNumber(7)
+  WebRTCMediaAnswer ensureMediaAnswer() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  WebRTCMediaIceCandidate get mediaIceCandidate => $_getN(7);
+  @$pb.TagNumber(8)
+  set mediaIceCandidate(WebRTCMediaIceCandidate value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasMediaIceCandidate() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearMediaIceCandidate() => $_clearField(8);
+  @$pb.TagNumber(8)
+  WebRTCMediaIceCandidate ensureMediaIceCandidate() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  WebRTCMediaSwarmPeers get mediaSwarmPeers => $_getN(8);
+  @$pb.TagNumber(9)
+  set mediaSwarmPeers(WebRTCMediaSwarmPeers value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasMediaSwarmPeers() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearMediaSwarmPeers() => $_clearField(9);
+  @$pb.TagNumber(9)
+  WebRTCMediaSwarmPeers ensureMediaSwarmPeers() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  WebRTCMediaPeerLeft get mediaPeerLeft => $_getN(9);
+  @$pb.TagNumber(10)
+  set mediaPeerLeft(WebRTCMediaPeerLeft value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMediaPeerLeft() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMediaPeerLeft() => $_clearField(10);
+  @$pb.TagNumber(10)
+  WebRTCMediaPeerLeft ensureMediaPeerLeft() => $_ensure(9);
 }
 
 class IceServer extends $pb.GeneratedMessage {
@@ -45731,7 +47140,7 @@ class GetIceServersRequest extends $pb.GeneratedMessage {
 class GetIceServersResponse extends $pb.GeneratedMessage {
   factory GetIceServersResponse({
     $core.Iterable<IceServer>? servers,
-    WebRtcStatus? webrtc,
+    WebRTCStatus? webrtc,
   }) {
     final result = create();
     if (servers != null) result.servers.addAll(servers);
@@ -45754,8 +47163,8 @@ class GetIceServersResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..pPM<IceServer>(1, _omitFieldNames ? '' : 'servers',
         subBuilder: IceServer.create)
-    ..aOM<WebRtcStatus>(2, _omitFieldNames ? '' : 'webrtc',
-        subBuilder: WebRtcStatus.create)
+    ..aOM<WebRTCStatus>(2, _omitFieldNames ? '' : 'webrtc',
+        subBuilder: WebRTCStatus.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -45782,15 +47191,15 @@ class GetIceServersResponse extends $pb.GeneratedMessage {
   $pb.PbList<IceServer> get servers => $_getList(0);
 
   @$pb.TagNumber(2)
-  WebRtcStatus get webrtc => $_getN(1);
+  WebRTCStatus get webrtc => $_getN(1);
   @$pb.TagNumber(2)
-  set webrtc(WebRtcStatus value) => $_setField(2, value);
+  set webrtc(WebRTCStatus value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasWebrtc() => $_has(1);
   @$pb.TagNumber(2)
   void clearWebrtc() => $_clearField(2);
   @$pb.TagNumber(2)
-  WebRtcStatus ensureWebrtc() => $_ensure(1);
+  WebRTCStatus ensureWebrtc() => $_ensure(1);
 }
 
 class MemoryHealth extends $pb.GeneratedMessage {
@@ -45859,8 +47268,8 @@ class MemoryHealth extends $pb.GeneratedMessage {
   void clearStatus() => $_clearField(2);
 }
 
-class WebRtcStatus extends $pb.GeneratedMessage {
-  factory WebRtcStatus({
+class WebRTCStatus extends $pb.GeneratedMessage {
+  factory WebRTCStatus({
     $core.String? mode,
     $core.String? builtinStunState,
     $core.bool? builtinStunConfigured,
@@ -45881,17 +47290,17 @@ class WebRtcStatus extends $pb.GeneratedMessage {
     return result;
   }
 
-  WebRtcStatus._();
+  WebRTCStatus._();
 
-  factory WebRtcStatus.fromBuffer($core.List<$core.int> data,
+  factory WebRTCStatus.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory WebRtcStatus.fromJson($core.String json,
+  factory WebRTCStatus.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'WebRtcStatus',
+      _omitMessageNames ? '' : 'WebRTCStatus',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'mode')
@@ -45904,23 +47313,23 @@ class WebRtcStatus extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcStatus clone() => deepCopy();
+  WebRTCStatus clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  WebRtcStatus copyWith(void Function(WebRtcStatus) updates) =>
-      super.copyWith((message) => updates(message as WebRtcStatus))
-          as WebRtcStatus;
+  WebRTCStatus copyWith(void Function(WebRTCStatus) updates) =>
+      super.copyWith((message) => updates(message as WebRTCStatus))
+          as WebRTCStatus;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static WebRtcStatus create() => WebRtcStatus._();
+  static WebRTCStatus create() => WebRTCStatus._();
   @$core.override
-  WebRtcStatus createEmptyInstance() => create();
+  WebRTCStatus createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static WebRtcStatus getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<WebRtcStatus>(create);
-  static WebRtcStatus? _defaultInstance;
+  static WebRTCStatus getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<WebRTCStatus>(create);
+  static WebRTCStatus? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get mode => $_getSZ(0);
@@ -45996,7 +47405,7 @@ class HealthDetails extends $pb.GeneratedMessage {
     $core.String? livestream,
     MemoryHealth? memory,
     $core.String? message,
-    WebRtcStatus? webrtc,
+    WebRTCStatus? webrtc,
   }) {
     final result = create();
     if (database != null) result.database = database;
@@ -46033,8 +47442,8 @@ class HealthDetails extends $pb.GeneratedMessage {
     ..aOM<MemoryHealth>(7, _omitFieldNames ? '' : 'memory',
         subBuilder: MemoryHealth.create)
     ..aOS(8, _omitFieldNames ? '' : 'message')
-    ..aOM<WebRtcStatus>(9, _omitFieldNames ? '' : 'webrtc',
-        subBuilder: WebRtcStatus.create)
+    ..aOM<WebRTCStatus>(9, _omitFieldNames ? '' : 'webrtc',
+        subBuilder: WebRTCStatus.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -46131,15 +47540,15 @@ class HealthDetails extends $pb.GeneratedMessage {
   void clearMessage() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  WebRtcStatus get webrtc => $_getN(8);
+  WebRTCStatus get webrtc => $_getN(8);
   @$pb.TagNumber(9)
-  set webrtc(WebRtcStatus value) => $_setField(9, value);
+  set webrtc(WebRTCStatus value) => $_setField(9, value);
   @$pb.TagNumber(9)
   $core.bool hasWebrtc() => $_has(8);
   @$pb.TagNumber(9)
   void clearWebrtc() => $_clearField(9);
   @$pb.TagNumber(9)
-  WebRtcStatus ensureWebrtc() => $_ensure(8);
+  WebRTCStatus ensureWebrtc() => $_ensure(8);
 }
 
 class HealthResponse extends $pb.GeneratedMessage {

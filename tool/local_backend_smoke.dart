@@ -85,7 +85,7 @@ Future<void> runSmoke(String baseUrl) async {
   print('media=$mediaId page_total=${mediaPage.total}');
 
   await SyncTvService.switchMediaAndPlay(room.roomId, mediaId);
-  final playback = await SyncTvService.getCurrentMedia(room.roomId);
+  final playback = await SyncTvService.getPlaybackStatus(room.roomId);
   if (playback.entry?.id != mediaId) {
     throw StateError('playback media mismatch: ${playback.entry?.id}');
   }

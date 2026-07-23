@@ -4,15 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/utils/audio_util.dart';
+import 'package:synctv_app/managers/webrtc_negotiation_state.dart';
 
 typedef SignalingCallback =
     void Function(String type, Map<String, dynamic> data);
 typedef IceServersLoader = Future<List<IceServerInfo>> Function();
 
-class WebRTCManager {
+class VoiceChatManager {
   static const Duration _getUserMediaTimeout = Duration(seconds: 12);
 
   final Map<String, RTCPeerConnection> _peerConnections = {};
+  final WebRtcNegotiationState<String, RTCIceCandidate> _negotiation =
+      WebRtcNegotiationState();
   MediaStream? _localStream;
   final Map<String, MediaStream> _remoteStreams = {};
   final Set<String> _connectedPeers = {};
@@ -22,11 +25,12 @@ class WebRTCManager {
   List<Map<String, dynamic>>? _iceServers;
 
   bool _isConnected = false;
+  String? _joinOperationId;
   bool get isConnected => _isConnected;
   bool get hasPeersConnected => _connectedPeers.isNotEmpty;
   int get participantCount => _connectedPeers.length + (_isConnected ? 1 : 0);
 
-  WebRTCManager({
+  VoiceChatManager({
     required this.onSignalingMessage,
     required this.onStateChange,
     required this.loadIceServers,
@@ -60,7 +64,7 @@ class WebRTCManager {
     return _loadIceServerConfiguration();
   }
 
-  Future<void> join() async {
+  Future<void> join({required String clientOperationId}) async {
     if (_isConnected) return;
 
     try {
@@ -82,7 +86,8 @@ class WebRTCManager {
 
       await _setSpeakerphoneOn(true);
 
-      onSignalingMessage('join', {});
+      _joinOperationId = clientOperationId;
+      onSignalingMessage('join', {'client_operation_id': clientOperationId});
 
       _isConnected = true;
       onStateChange();
@@ -162,7 +167,8 @@ class WebRTCManager {
 
   Future<void> handleJoin(String fromId) async {
     try {
-      final pc = await _createPeerConnection(fromId);
+      final pc = await _replacePeerConnection(fromId);
+      final tieBreaker = _negotiation.beginLocalOffer(fromId);
       final offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
@@ -170,6 +176,7 @@ class WebRTCManager {
         'sdp': offer.sdp,
         'type': offer.type,
         'to': fromId,
+        'tie_breaker': tieBreaker,
       });
     } catch (e) {
       debugPrint('Handle Join Error: $e');
@@ -177,10 +184,15 @@ class WebRTCManager {
   }
 
   Future<void> handleOffer(String fromId, Map<String, dynamic> data) async {
+    final incomingTieBreaker = (data['tie_breaker'] as num?)?.toInt() ?? 0;
+    if (!_negotiation.shouldAcceptRemoteOffer(fromId, incomingTieBreaker)) {
+      return;
+    }
     try {
-      final pc = await _createPeerConnection(fromId);
+      final pc = await _replacePeerConnection(fromId);
       final description = RTCSessionDescription(data['sdp'], data['type']);
       await pc.setRemoteDescription(description);
+      _negotiation.markRemoteDescription(fromId);
 
       final answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
@@ -190,6 +202,7 @@ class WebRTCManager {
         'type': answer.type,
         'to': fromId,
       });
+      await _flushCandidates(fromId, pc);
     } catch (e) {
       debugPrint('Handle Offer Error: $e');
     }
@@ -202,6 +215,8 @@ class WebRTCManager {
 
       final description = RTCSessionDescription(data['sdp'], data['type']);
       await pc.setRemoteDescription(description);
+      _negotiation.markRemoteDescription(fromId, completesLocalOffer: true);
+      await _flushCandidates(fromId, pc);
     } catch (e) {
       debugPrint('Handle Answer Error: $e');
     }
@@ -216,7 +231,8 @@ class WebRTCManager {
       );
 
       final pc = _peerConnections[fromId];
-      if (pc == null) {
+      if (pc == null || !_negotiation.hasRemoteDescription(fromId)) {
+        _negotiation.queueCandidate(fromId, candidate);
         return;
       }
 
@@ -227,8 +243,7 @@ class WebRTCManager {
   }
 
   Future<void> handleLeave(String fromId) async {
-    final pc = _peerConnections.remove(fromId);
-    await pc?.close();
+    await _closePeer(fromId);
 
     // Cleanup remote stream
     final stream = _remoteStreams.remove(fromId);
@@ -236,10 +251,38 @@ class WebRTCManager {
     await stream?.dispose();
   }
 
-  Future<void> leave() async {
+  Future<RTCPeerConnection> _replacePeerConnection(String remoteId) async {
+    final pending = _negotiation.takeCandidates(remoteId);
+    await _closePeer(remoteId);
+    _negotiation.restoreCandidates(remoteId, pending);
+    return _createPeerConnection(remoteId);
+  }
+
+  Future<void> _flushCandidates(String remoteId, RTCPeerConnection pc) async {
+    for (final candidate in _negotiation.takeCandidates(remoteId)) {
+      await pc.addCandidate(candidate);
+    }
+  }
+
+  Future<void> _closePeer(String remoteId) async {
+    final pc = _peerConnections.remove(remoteId);
+    await pc?.close();
+    _connectedPeers.remove(remoteId);
+    _negotiation.clearPeer(remoteId);
+  }
+
+  Future<bool> rejectJoin(String clientOperationId) async {
+    if (_joinOperationId != clientOperationId) return false;
+    await _leave(notifyServer: false);
+    return true;
+  }
+
+  Future<void> leave() => _leave(notifyServer: true);
+
+  Future<void> _leave({required bool notifyServer}) async {
     await _setSpeakerphoneOn(false);
     await AudioUtil.setVoiceCallMode(false);
-    if (_isConnected) {
+    if (_isConnected && notifyServer) {
       onSignalingMessage('leave', {});
     }
 
@@ -258,14 +301,14 @@ class WebRTCManager {
     }
     _peerConnections.clear();
     _connectedPeers.clear();
+    _negotiation.clear();
 
     _isConnected = false;
+    _joinOperationId = null;
     onStateChange();
   }
 
-  void dispose() {
-    leave();
-  }
+  Future<void> dispose() => _leave(notifyServer: false);
 
   void toggleMute() {
     if (_localStream != null) {
