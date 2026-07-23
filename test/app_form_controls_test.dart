@@ -9,15 +9,15 @@ import 'package:synctv_app/widgets/app_responsive_layout.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/playlist_empty_state.dart';
 
+import 'test_app.dart';
+
 Widget _app(Widget child) {
   return MaterialApp(
     locale: const Locale('zh'),
     supportedLocales: AppLocalizations.supportedLocales,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
-    home: FTheme(
-      data: FThemes.blue.light.desktop,
-      child: Scaffold(body: child),
-    ),
+    builder: buildThemedTestApp,
+    home: Scaffold(body: child),
   );
 }
 

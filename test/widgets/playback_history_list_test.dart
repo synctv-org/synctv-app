@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/widgets/playback_history_list.dart';
 
+import '../test_app.dart';
+
 void main() {
   testWidgets('history list highlights cursor entry and plays another', (
     tester,
@@ -11,6 +13,7 @@ void main() {
     String playedEntryId = '';
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         home: Scaffold(
           body: PlaybackHistoryList(
             entries: [
@@ -46,6 +49,7 @@ void main() {
       var playCount = 0;
       await tester.pumpWidget(
         MaterialApp(
+          builder: buildThemedTestApp,
           home: Scaffold(
             body: PlaybackHistoryList(
               entries: [

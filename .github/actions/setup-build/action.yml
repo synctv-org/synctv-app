@@ -5,7 +5,15 @@ inputs:
   flutter-version:
     description: Flutter SDK version.
     required: false
-    default: "3.44.0"
+    default: "3.44.7"
+  flutter-revision:
+    description: Immutable Flutter framework revision for source installations.
+    required: false
+    default: "84fc5cbb223bc12f83d65b647ff8a56caf779ffd"
+  flutter-architecture:
+    description: Flutter SDK host architecture.
+    required: false
+    default: "x64"
   rust-version:
     description: Rust toolchain version used by the OPAQUE native asset.
     required: false
@@ -19,11 +27,61 @@ runs:
   using: composite
   steps:
     - name: Set up Flutter
+      if: >-
+        (runner.os != 'Linux' && runner.os != 'Windows') ||
+        inputs.flutter-architecture != 'arm64'
       uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
       with:
         channel: stable
         flutter-version: ${{ inputs.flutter-version }}
+        architecture: ${{ inputs.flutter-architecture }}
         cache: true
+
+    - name: Set up Flutter bootstrap on Windows arm64
+      if: runner.os == 'Windows' && inputs.flutter-architecture == 'arm64'
+      uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+      with:
+        channel: stable
+        flutter-version: ${{ inputs.flutter-version }}
+        architecture: x64
+        cache: false
+
+    - name: Switch Flutter to native Windows arm64 artifacts
+      if: runner.os == 'Windows' && inputs.flutter-architecture == 'arm64'
+      shell: pwsh
+      run: |
+        if ($env:PROCESSOR_ARCHITECTURE -ne 'ARM64' -and $env:PROCESSOR_ARCHITEW6432 -ne 'ARM64') {
+          throw 'Windows arm64 Flutter setup requires an ARM64 runner'
+        }
+        $flutterCommand = (Get-Command flutter).Source
+        $flutterRoot = Split-Path (Split-Path $flutterCommand -Parent) -Parent
+        Remove-Item "$flutterRoot/bin/cache/engine-dart-sdk.stamp" -Force -ErrorAction SilentlyContinue
+        Remove-Item "$flutterRoot/bin/cache/dart-sdk" -Recurse -Force -ErrorAction SilentlyContinue
+        $env:PROCESSOR_ARCHITECTURE = 'ARM64'
+        & $flutterCommand --version
+
+    - name: Cache Flutter source SDK
+      if: runner.os == 'Linux' && inputs.flutter-architecture == 'arm64'
+      uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      with:
+        path: ${{ runner.tool_cache }}/flutter-${{ inputs.flutter-version }}-arm64
+        key: flutter-source-${{ runner.os }}-arm64-${{ inputs.flutter-revision }}
+
+    - name: Set up Flutter from source on Linux arm64
+      if: runner.os == 'Linux' && inputs.flutter-architecture == 'arm64'
+      shell: bash
+      env:
+        FLUTTER_ROOT: ${{ runner.tool_cache }}/flutter-${{ inputs.flutter-version }}-arm64
+        FLUTTER_REVISION: ${{ inputs.flutter-revision }}
+      run: |
+        if [[ ! -x "$FLUTTER_ROOT/bin/flutter" ]]; then
+          git init "$FLUTTER_ROOT"
+          git -C "$FLUTTER_ROOT" remote add origin https://github.com/flutter/flutter.git
+          git -C "$FLUTTER_ROOT" fetch --depth 1 origin "$FLUTTER_REVISION"
+          git -C "$FLUTTER_ROOT" checkout --detach FETCH_HEAD
+        fi
+        echo "$FLUTTER_ROOT/bin" >> "$GITHUB_PATH"
+        "$FLUTTER_ROOT/bin/flutter" --version
 
     - name: Set up Rust
       uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
@@ -32,7 +90,7 @@ runs:
         targets: ${{ inputs.rust-targets }}
 
     - name: Disable tool analytics
-      shell: bash
+      shell: ${{ runner.os == 'Windows' && 'pwsh' || 'bash' }}
       run: |
         flutter config --no-analytics
         dart --disable-analytics

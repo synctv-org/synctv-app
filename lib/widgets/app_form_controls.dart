@@ -3317,7 +3317,7 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FCard.raw(
+    return FCard(
       clipBehavior: clipBehavior,
       child: Padding(
         padding: padding ?? AppMetrics.cardPadding(context),
@@ -3541,26 +3541,42 @@ class AppConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FDialog.adaptive(
-      image: icon,
-      title: Text(title),
-      body: content,
-      actions: [
-        AppActionButton(
-          onPressed: onConfirm,
-          icon: confirmIcon,
-          label: confirmLabel ?? context.l10n.confirm,
-          style: destructive
-              ? AppActionButtonStyle.destructive
-              : AppActionButtonStyle.filled,
-        ),
-        AppActionButton(
-          onPressed: onCancel ?? () => Navigator.pop(context, false),
-          label: cancelLabel ?? context.l10n.cancel,
-          style: AppActionButtonStyle.outlined,
-        ),
-      ],
+      horizontalBuilder: (context, style) => _buildAppDialogContent(
+        context,
+        style,
+        horizontal: true,
+        icon: icon,
+        title: Text(title),
+        body: content,
+        actions: _actions(context),
+      ),
+      verticalBuilder: (context, style) => _buildAppDialogContent(
+        context,
+        style,
+        horizontal: false,
+        icon: icon,
+        title: Text(title),
+        body: content,
+        actions: _actions(context),
+      ),
     );
   }
+
+  List<Widget> _actions(BuildContext context) => [
+    AppActionButton(
+      onPressed: onConfirm,
+      icon: confirmIcon,
+      label: confirmLabel ?? context.l10n.confirm,
+      style: destructive
+          ? AppActionButtonStyle.destructive
+          : AppActionButtonStyle.filled,
+    ),
+    AppActionButton(
+      onPressed: onCancel ?? () => Navigator.pop(context, false),
+      label: cancelLabel ?? context.l10n.cancel,
+      style: AppActionButtonStyle.outlined,
+    ),
+  ];
 }
 
 class AppDialog extends StatelessWidget {
@@ -3582,13 +3598,99 @@ class AppDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FDialog.adaptive(
-      image: icon,
-      title: title,
-      body: body,
-      actions: actions,
       constraints: constraints,
+      horizontalBuilder: (context, style) => _buildAppDialogContent(
+        context,
+        style,
+        horizontal: true,
+        icon: icon,
+        title: title,
+        body: body,
+        actions: actions,
+      ),
+      verticalBuilder: (context, style) => _buildAppDialogContent(
+        context,
+        style,
+        horizontal: false,
+        icon: icon,
+        title: title,
+        body: body,
+        actions: actions,
+      ),
     );
   }
+}
+
+Widget _buildAppDialogContent(
+  BuildContext context,
+  FDialogStyle style, {
+  required bool horizontal,
+  required Widget? icon,
+  required Widget? title,
+  required Widget? body,
+  required List<Widget> actions,
+}) {
+  final textContent = Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      if (title != null)
+        DefaultTextStyle(style: style.titleTextStyle, child: title),
+      if (title != null && body != null) const SizedBox(height: 8),
+      if (body != null)
+        DefaultTextStyle(style: style.bodyTextStyle, child: body),
+    ],
+  );
+  final content = horizontal && icon != null
+      ? Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            IconTheme.merge(
+              data: IconThemeData(color: context.theme.colors.primary),
+              child: icon,
+            ),
+            const SizedBox(width: 16),
+            Flexible(child: textContent),
+          ],
+        )
+      : Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (icon != null) ...[
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: IconTheme.merge(
+                  data: IconThemeData(color: context.theme.colors.primary),
+                  child: icon,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            textContent,
+          ],
+        );
+
+  return Padding(
+    padding: const EdgeInsets.all(24),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        content,
+        if (actions.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          Wrap(
+            alignment: WrapAlignment.end,
+            runAlignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 8,
+            children: actions,
+          ),
+        ],
+      ],
+    ),
+  );
 }
 
 Future<T?> showAppDialog<T>({

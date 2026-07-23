@@ -6,6 +6,8 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/services/p2p_media_preferences.dart';
 import 'package:synctv_app/widgets/p2p_media_settings_fields.dart';
 
+import '../test_app.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -28,10 +30,8 @@ void main() {
           ...AppLocalizations.localizationsDelegates,
           FLocalizations.delegate,
         ],
-        home: FTheme(
-          data: FThemes.blue.light.desktop,
-          child: const Scaffold(body: P2pMediaSettingsFields()),
-        ),
+        builder: buildThemedTestApp,
+        home: const Scaffold(body: P2pMediaSettingsFields()),
       ),
     );
 

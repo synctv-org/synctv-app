@@ -13,3 +13,8 @@ sha2 = "0.10"
 
 [dev-dependencies]
 rand_chacha = "0.3"
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+strip = "symbols"

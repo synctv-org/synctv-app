@@ -6,6 +6,8 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/services/app_locale_controller.dart';
 import 'package:synctv_app/widgets/language_selector_dialog.dart';
 
+import 'test_app.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -23,14 +25,12 @@ void main() {
           ...AppLocalizations.localizationsDelegates,
           FLocalizations.delegate,
         ],
-        home: FTheme(
-          data: FThemes.blue.light.desktop,
-          child: Builder(
-            builder: (context) => Scaffold(
-              body: TextButton(
-                onPressed: () => showLanguageSelectorDialog(context),
-                child: const Text('Open'),
-              ),
+        builder: buildThemedTestApp,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showLanguageSelectorDialog(context),
+              child: const Text('Open'),
             ),
           ),
         ),

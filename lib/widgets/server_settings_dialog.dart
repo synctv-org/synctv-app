@@ -8,16 +8,24 @@ import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 
-Future<bool?> showServerSettingsDialog({required BuildContext context}) {
+Future<bool?> showServerSettingsDialog({
+  required BuildContext context,
+  bool requireServer = false,
+}) {
   return showAppBottomSheet<bool>(
     context: context,
     constraints: const BoxConstraints(maxWidth: 720),
-    builder: (context) => const _ServerSettingsSheet(),
+    isDismissible: !requireServer,
+    enableDrag: !requireServer,
+    showDragHandle: !requireServer,
+    builder: (context) => _ServerSettingsSheet(requireServer: requireServer),
   );
 }
 
 class _ServerSettingsSheet extends StatefulWidget {
-  const _ServerSettingsSheet();
+  const _ServerSettingsSheet({required this.requireServer});
+
+  final bool requireServer;
 
   @override
   State<_ServerSettingsSheet> createState() => _ServerSettingsSheetState();
@@ -34,7 +42,11 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   @override
   void initState() {
     super.initState();
-    _loadServerInfo();
+    if (SyncTvService.activeServer == null) {
+      _loadingServerInfo = false;
+    } else {
+      _loadServerInfo();
+    }
   }
 
   @override
@@ -74,6 +86,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     setState(() => _busy = true);
     try {
       final profile = await SyncTvService.addServer(input);
+      await SyncTvService.syncServerTime(refresh: true);
       _controller.clear();
       _changed = true;
       if (mounted) {
@@ -81,6 +94,10 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
           context,
           context.l10n.serverConnected(profile.name),
         );
+      }
+      if (widget.requireServer && mounted) {
+        Navigator.pop(context, true);
+        return;
       }
       setState(() {});
     } on SyncTvApiException catch (error) {
@@ -164,93 +181,100 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     final servers = SyncTvService.servers;
     final activeServer = SyncTvService.activeServer;
 
-    return AppBottomSheetFrame(
-      child: AppSingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.dns_rounded, color: theme.colorScheme.primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    l10n.server,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
+    return PopScope(
+      canPop: !widget.requireServer || activeServer != null,
+      child: AppBottomSheetFrame(
+        child: AppSingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.dns_rounded, color: theme.colorScheme.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.server,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                AppActionButton(
-                  onPressed: () => Navigator.pop(context, _changed),
-                  label: l10n.done,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _CurrentServerInfoCard(
-              info: _serverInfo,
-              fallback: activeServer,
-              loading: _loadingServerInfo,
-              error: _serverInfoError,
-              onRefresh: _busy ? null : () => _loadServerInfo(refresh: true),
-            ),
-            const SizedBox(height: 16),
-            ChatUtils.createFormField(
-              context: context,
-              label: l10n.serverAddress,
-              controller: _controller,
-              hintText: l10n.serverAddressExample,
-              prefixIcon: Icons.link_rounded,
-              onSubmitted: (_) => _busy ? null : _addServer(),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.serverAutoDiscoverDescription,
-                    style: TextStyle(
-                      color: isDark
-                          ? Colors.grey.shade400
-                          : Colors.grey.shade600,
-                      fontSize: 12,
-                      height: 1.35,
+                  AppActionButton(
+                    onPressed: widget.requireServer && activeServer == null
+                        ? null
+                        : () => Navigator.pop(context, _changed),
+                    label: l10n.done,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _CurrentServerInfoCard(
+                info: _serverInfo,
+                fallback: activeServer,
+                loading: _loadingServerInfo,
+                error: _serverInfoError,
+                onRefresh: _busy || activeServer == null
+                    ? null
+                    : () => _loadServerInfo(refresh: true),
+              ),
+              const SizedBox(height: 16),
+              ChatUtils.createFormField(
+                context: context,
+                label: l10n.serverAddress,
+                controller: _controller,
+                hintText: l10n.serverAddressExample,
+                prefixIcon: Icons.link_rounded,
+                onSubmitted: (_) => _busy ? null : _addServer(),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.serverAutoDiscoverDescription,
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                AppActionButton(
-                  onPressed: _busy ? null : _addServer,
-                  icon: Icons.add_link_rounded,
-                  label: l10n.add,
-                  loading: _busy,
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Text(
-              l10n.savedServers,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
+                  const SizedBox(width: 12),
+                  AppActionButton(
+                    onPressed: _busy ? null : _addServer,
+                    icon: Icons.add_link_rounded,
+                    label: l10n.add,
+                    loading: _busy,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 10),
-            if (servers.isEmpty)
-              _EmptyServerState(isDark: isDark)
-            else
-              ...servers.map(
-                (profile) => _ServerProfileTile(
-                  profile: profile,
-                  active: profile.serverId == activeServer?.serverId,
-                  canRemove: !_busy && !profile.isBuiltIn,
-                  busy: _busy,
-                  onActivate: () => _activateServer(profile),
-                  onRemove: () => _removeServer(profile),
+              const SizedBox(height: 18),
+              Text(
+                l10n.savedServers,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-          ],
+              const SizedBox(height: 10),
+              if (servers.isEmpty)
+                _EmptyServerState(isDark: isDark)
+              else
+                ...servers.map(
+                  (profile) => _ServerProfileTile(
+                    profile: profile,
+                    active: profile.serverId == activeServer?.serverId,
+                    canRemove: !_busy && !profile.isBuiltIn,
+                    busy: _busy,
+                    onActivate: () => _activateServer(profile),
+                    onRemove: () => _removeServer(profile),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

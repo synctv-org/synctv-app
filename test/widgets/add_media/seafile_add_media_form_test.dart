@@ -4,6 +4,8 @@ import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/models/provider_models.dart';
 import 'package:synctv_app/widgets/add_media/seafile_add_media_form.dart';
 
+import '../../test_app.dart';
+
 void main() {
   const bind = SeafileBindInfo(
     id: '1',
@@ -26,6 +28,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(

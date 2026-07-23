@@ -4,6 +4,8 @@ import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/platform_binding_dialog.dart';
 
+import '../test_app.dart';
+
 void main() {
   testWidgets('Twitch binding hides secrets and submits integrity context', (
     tester,
@@ -18,6 +20,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(

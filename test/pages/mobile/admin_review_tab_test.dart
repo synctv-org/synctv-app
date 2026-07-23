@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/pages/mobile/admin_settings_page.dart';
+
+import '../../test_app.dart';
 
 void main() {
   for (final testCase in <(String, Widget)>[
@@ -18,10 +19,8 @@ void main() {
         MaterialApp(
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: FTheme(
-            data: FThemes.blue.light.desktop,
-            child: Scaffold(body: testCase.$2),
-          ),
+          builder: buildThemedTestApp,
+          home: Scaffold(body: testCase.$2),
         ),
       );
 

@@ -79,6 +79,11 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
     _checkLoginAndLoadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && SyncTvService.activeServer == null) {
+        _showServerSettingsDialog(requireServer: true);
+      }
+    });
   }
 
   @override
@@ -562,12 +567,15 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _showServerSettingsDialog() {
+  void _showServerSettingsDialog({bool requireServer = false}) {
     if (_modalOpen) return;
     _modalOpen = true;
     () async {
       try {
-        final changed = await showServerSettingsDialog(context: context);
+        final changed = await showServerSettingsDialog(
+          context: context,
+          requireServer: requireServer,
+        );
         if (!mounted || changed != true) return;
         setState(() {
           _clearRoomSessionState(clearTaxonomy: true);

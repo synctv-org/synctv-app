@@ -14,8 +14,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FLUTTER_VERSION: "3.44.0"
+  FLUTTER_VERSION: "3.44.7"
   RUST_VERSION: "1.97.1"
+  SYNCTV_BUILT_IN_SERVER_URL: ${{ vars.SYNCTV_BUILT_IN_SERVER_URL }}
 
 jobs:
   quality:
@@ -97,15 +98,23 @@ jobs:
           rust-targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
 
       - name: Build split release APKs
-        run: >-
-          flutter build apk
-          --release
-          --split-per-abi
-          --build-name "${{ needs.metadata.outputs.version }}"
-          --build-number "${{ needs.metadata.outputs.build-number }}"
+        run: |
+          flutter build apk \
+            --release \
+            --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
+            --build-name "${{ needs.metadata.outputs.version }}" \
+            --build-number "${{ needs.metadata.outputs.build-number }}" \
+            --split-debug-info build/symbols/android-all
+          flutter build apk \
+            --release \
+            --split-per-abi \
+            --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
+            --build-name "${{ needs.metadata.outputs.version }}" \
+            --build-number "${{ needs.metadata.outputs.build-number }}" \
+            --split-debug-info build/symbols/android-all
 
       - name: Package Android artifacts
-        run: bash tool/ci/package_release.sh android "${{ needs.metadata.outputs.artifact-version }}" dist
+        run: bash tool/ci/package_release.sh android all "${{ needs.metadata.outputs.artifact-version }}" dist
 
       - name: Upload Android artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -117,10 +126,24 @@ jobs:
           compression-level: 0
 
   linux:
-    name: Linux x64
+    name: Linux ${{ matrix.architecture }}
     needs: metadata
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: ubuntu-24.04
+            flutter-architecture: x64
+            flutter-target: linux-x64
+            rust-target: x86_64-unknown-linux-gnu
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
+            flutter-architecture: arm64
+            flutter-target: linux-arm64
+            rust-target: aarch64-unknown-linux-gnu
 
     steps:
       - name: Check out source
@@ -148,33 +171,52 @@ jobs:
         uses: ./.github/actions/setup-build
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-architecture: ${{ matrix.flutter-architecture }}
           rust-version: ${{ env.RUST_VERSION }}
-          rust-targets: x86_64-unknown-linux-gnu
+          rust-targets: ${{ matrix.rust-target }}
 
       - name: Build Linux release
         run: >-
           flutter build linux
           --release
+          --target-platform "${{ matrix.flutter-target }}"
+          --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
+          --split-debug-info "build/symbols/linux-${{ matrix.architecture }}"
+
+      - name: Strip Linux native binaries
+        run: bash tool/ci/strip_linux_release.sh
 
       - name: Package Linux artifact
-        run: bash tool/ci/package_release.sh linux "${{ needs.metadata.outputs.artifact-version }}" dist
+        run: bash tool/ci/package_release.sh linux "${{ matrix.architecture }}" "${{ needs.metadata.outputs.artifact-version }}" dist
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: release-linux
+          name: release-linux-${{ matrix.architecture }}
           path: dist/*
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
 
   windows:
-    name: Windows x64
+    name: Windows ${{ matrix.architecture }}
     needs: metadata
-    runs-on: windows-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: windows-latest
+            flutter-architecture: x64
+            rust-target: x86_64-pc-windows-msvc
+          - architecture: arm64
+            runner: windows-11-vs2026-arm
+            flutter-architecture: arm64
+            rust-target: aarch64-pc-windows-msvc
 
     steps:
       - name: Enable long paths
@@ -190,34 +232,45 @@ jobs:
         uses: ./.github/actions/setup-build
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-architecture: ${{ matrix.flutter-architecture }}
           rust-version: ${{ env.RUST_VERSION }}
-          rust-targets: x86_64-pc-windows-msvc
+          rust-targets: ${{ matrix.rust-target }}
 
       - name: Build Windows release
         shell: pwsh
         run: >-
           flutter build windows
           --release
+          --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$env:SYNCTV_BUILT_IN_SERVER_URL"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
+          --split-debug-info "build/symbols/windows-${{ matrix.architecture }}"
+
+      - name: Verify Windows binary architecture
+        shell: pwsh
+        run: ./tool/ci/verify_windows_architecture.ps1 -Architecture "${{ matrix.architecture }}"
 
       - name: Package Windows artifact
         shell: pwsh
-        run: ./tool/ci/package_release.ps1 -Version "${{ needs.metadata.outputs.artifact-version }}" -OutputDirectory dist
+        run: >-
+          ./tool/ci/package_release.ps1
+          -Version "${{ needs.metadata.outputs.artifact-version }}"
+          -Architecture "${{ matrix.architecture }}"
+          -OutputDirectory dist
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: release-windows
+          name: release-windows-${{ matrix.architecture }}
           path: dist/*
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
 
   macos:
-    name: macOS
+    name: macOS universal
     needs: metadata
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 45
 
     steps:
@@ -230,6 +283,7 @@ jobs:
         uses: ./.github/actions/setup-build
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-architecture: arm64
           rust-version: ${{ env.RUST_VERSION }}
           rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
 
@@ -237,16 +291,21 @@ jobs:
         run: >-
           flutter build macos
           --release
+          --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
+          --split-debug-info build/symbols/macos-universal
+
+      - name: Verify universal macOS binaries
+        run: bash tool/ci/verify_macos_universal.sh
 
       - name: Package macOS artifact
-        run: bash tool/ci/package_release.sh macos "${{ needs.metadata.outputs.artifact-version }}" dist
+        run: bash tool/ci/package_release.sh macos universal "${{ needs.metadata.outputs.artifact-version }}" dist
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: release-macos
+          name: release-macos-universal
           path: dist/*
           if-no-files-found: error
           retention-days: 14
@@ -255,7 +314,7 @@ jobs:
   ios:
     name: iOS unsigned
     needs: metadata
-    runs-on: macos-latest
+    runs-on: macos-15
     timeout-minutes: 45
 
     steps:
@@ -268,6 +327,7 @@ jobs:
         uses: ./.github/actions/setup-build
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-architecture: arm64
           rust-version: ${{ env.RUST_VERSION }}
           rust-targets: aarch64-apple-ios
 
@@ -276,11 +336,13 @@ jobs:
           flutter build ios
           --release
           --no-codesign
+          --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
+          --split-debug-info build/symbols/ios-arm64
 
       - name: Package unsigned iOS artifact
-        run: bash tool/ci/package_release.sh ios "${{ needs.metadata.outputs.artifact-version }}" dist
+        run: bash tool/ci/package_release.sh ios arm64 "${{ needs.metadata.outputs.artifact-version }}" dist
 
       - name: Upload unsigned iOS artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

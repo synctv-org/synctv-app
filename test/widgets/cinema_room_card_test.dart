@@ -6,8 +6,11 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
 
+import '../test_app.dart';
+
 Widget _app(Widget child) {
   return MaterialApp(
+    builder: buildThemedTestApp,
     locale: const Locale('en'),
     supportedLocales: AppLocalizations.supportedLocales,
     localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -8,6 +8,8 @@ import 'package:synctv_app/widgets/custom_video_player.dart';
 import 'package:synctv_app/services/picture_in_picture_service.dart';
 import 'package:video_player/video_player.dart';
 
+import '../test_app.dart';
+
 class _RecordingVideoPlayerController extends VideoPlayerController {
   _RecordingVideoPlayerController(VideoPlayerValue initialValue)
     : super.networkUrl(Uri.parse('https://example.com/video.mp4')) {
@@ -250,6 +252,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -276,6 +279,7 @@ void main() {
     var invocationCount = 0;
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -302,6 +306,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -326,6 +331,7 @@ void main() {
     String? selected;
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         home: Scaffold(
           body: Center(
             child: PictureInPicturePlaybackOptionsControl(
@@ -383,6 +389,7 @@ void main() {
     addTearDown(danmakuController.dispose);
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: PictureInPicturePlaybackSurface(
@@ -457,6 +464,7 @@ void main() {
     var nextCount = 0;
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         home: Scaffold(
           body: PlaybackNavigationControls(
             previousTooltip: 'Previous video',
@@ -499,6 +507,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
+        builder: buildThemedTestApp,
         home: Scaffold(
           body: PlaybackNavigationControls(
             previousTooltip: 'Previous video',

@@ -22,7 +22,9 @@ void main(List<String> args) async {
   }
   await appLocaleController.load();
   await SyncTvService.init();
-  await SyncTvService.syncServerTime();
+  if (SyncTvService.activeServer != null) {
+    await SyncTvService.syncServerTime();
+  }
   await OAuth2DeepLinkService.initialize();
 
   if (!kIsWeb &&
@@ -90,8 +92,8 @@ class MyApp extends StatelessWidget {
             ),
           );
           final foruiTheme = Theme.of(context).brightness == Brightness.dark
-              ? FThemes.blue.dark.desktop
-              : FThemes.blue.light.desktop;
+              ? FTheme.neutral.dark.desktop
+              : FTheme.neutral.light.desktop;
           Widget appChild = MediaQuery(data: newMediaQueryData, child: child!);
           appChild = ResponsiveBreakpoints.builder(
             breakpoints: AppBreakpoints.values,

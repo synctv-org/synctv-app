@@ -7,6 +7,8 @@ import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 import 'package:synctv_app/widgets/add_media/emby_playlist_form.dart';
 
+import '../../test_app.dart';
+
 void main() {
   testWidgets('previews native Emby home and collection sources', (
     tester,
@@ -18,6 +20,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         home: Scaffold(
           body: EmbyPlaylistForm(
             roomId: 'room',

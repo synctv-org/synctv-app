@@ -4,6 +4,8 @@ import 'package:synctv_app/l10n/app_localizations.dart';
 import 'package:synctv_app/models/provider_models.dart';
 import 'package:synctv_app/widgets/add_media/truenas_add_media_form.dart';
 
+import '../../test_app.dart';
+
 void main() {
   const bind = TrueNasBindInfo(
     id: '1',
@@ -24,6 +26,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -101,6 +104,7 @@ void main() {
   testWidgets('uses the active locale for an unbound account', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
+        builder: buildThemedTestApp,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: Locale('en'),

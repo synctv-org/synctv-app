@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:synctv_app/services/synctv_api_client.dart';
@@ -114,9 +115,21 @@ class SyncTvSessionStore {
   static const String activeServerKey = 'synctv_active_server_id_v1';
 
   static String get builtInServerUrl {
-    final value = configuredBuiltInServerUrl.trim();
-    if (value.isEmpty) return '';
-    return SyncTvApiClient.normalizeBaseUrl(value);
+    return resolveBuiltInServerUrl(
+      configuredUrl: configuredBuiltInServerUrl,
+      debugMode: kDebugMode,
+    );
+  }
+
+  static String resolveBuiltInServerUrl({
+    required String configuredUrl,
+    required bool debugMode,
+  }) {
+    final value = configuredUrl.trim();
+    if (value.isNotEmpty) {
+      return SyncTvApiClient.normalizeBaseUrl(value);
+    }
+    return debugMode ? fallbackClientBaseUrl : '';
   }
 
   static bool get hasBuiltInServer => builtInServerUrl.isNotEmpty;

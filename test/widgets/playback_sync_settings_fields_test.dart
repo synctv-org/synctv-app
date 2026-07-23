@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/playback_sync_config.dart';
 import 'package:synctv_app/widgets/playback_sync_settings_fields.dart';
+
+import '../test_app.dart';
 
 void main() {
   testWidgets('updates the playback sync draft from room settings', (
@@ -18,19 +19,17 @@ void main() {
       MaterialApp(
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: FTheme(
-          data: FThemes.blue.light.desktop,
-          child: Scaffold(
-            body: StatefulBuilder(
-              builder: (context, setState) {
-                return PlaybackSyncSettingsFields(
-                  config: config,
-                  onChanged: (value) {
-                    setState(() => config = value);
-                  },
-                );
-              },
-            ),
+        builder: buildThemedTestApp,
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) {
+              return PlaybackSyncSettingsFields(
+                config: config,
+                onChanged: (value) {
+                  setState(() => config = value);
+                },
+              );
+            },
           ),
         ),
       ),

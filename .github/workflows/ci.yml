@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: "3.44.0"
+  FLUTTER_VERSION: "3.44.7"
   PROTOC_VERSION: "35.1"
   RUST_VERSION: "1.97.1"
 

@@ -37,6 +37,8 @@ void main(List<String> args) async {
     } else if (code.targetOS == OS.macOS) {
       env['MACOSX_DEPLOYMENT_TARGET'] = code.macOS.targetVersion.toString();
       env.remove('IPHONEOS_DEPLOYMENT_TARGET');
+    } else if (code.targetOS == OS.android) {
+      _configureAndroidToolchain(code, target, env);
     }
 
     final result = await Process.run(
@@ -85,6 +87,137 @@ void main(List<String> args) async {
     );
   });
 }
+
+void _configureAndroidToolchain(
+  CodeConfig code,
+  String rustTarget,
+  Map<String, String> environment,
+) {
+  final ndkRoot = _findAndroidNdk(environment);
+  final toolchainBin = _findNdkToolchainBin(ndkRoot);
+  final api = code.android.targetNdkApi;
+  final clangTarget = switch (code.targetArchitecture) {
+    Architecture.arm64 => 'aarch64-linux-android',
+    Architecture.arm => 'armv7a-linux-androideabi',
+    Architecture.x64 => 'x86_64-linux-android',
+    Architecture.ia32 => 'i686-linux-android',
+    _ => throw UnsupportedError(
+      'Unsupported Android architecture: ${code.targetArchitecture}',
+    ),
+  };
+  final linker = _findTool(toolchainBin, '$clangTarget$api-clang');
+  final archiver = _findTool(toolchainBin, 'llvm-ar');
+  final cargoTarget = rustTarget.replaceAll('-', '_').toUpperCase();
+  final ccTarget = rustTarget.replaceAll('-', '_');
+
+  environment['CARGO_TARGET_${cargoTarget}_LINKER'] = linker.path;
+  environment['CC_$ccTarget'] = linker.path;
+  environment['AR_$ccTarget'] = archiver.path;
+}
+
+Directory _findAndroidNdk(Map<String, String> environment) {
+  final candidates = <Directory>[];
+  for (final name in const [
+    'ANDROID_NDK_HOME',
+    'ANDROID_NDK_ROOT',
+    'ANDROID_NDK',
+    'ANDROID_NDK_LATEST_HOME',
+  ]) {
+    final path = environment[name];
+    if (path != null && path.isNotEmpty) candidates.add(Directory(path));
+  }
+
+  final sdkRoots = <Directory>[];
+  final androidHome = environment['ANDROID_HOME'];
+  if (androidHome != null && androidHome.isNotEmpty) {
+    sdkRoots.add(Directory(androidHome));
+  }
+  final home = environment['HOME'] ?? environment['USERPROFILE'];
+  if (home != null && home.isNotEmpty) {
+    sdkRoots.addAll([
+      Directory(_joinPath([home, 'Library', 'Android', 'sdk'])),
+      Directory(_joinPath([home, 'Android', 'Sdk'])),
+      Directory(_joinPath([home, 'AppData', 'Local', 'Android', 'Sdk'])),
+    ]);
+  }
+
+  for (final sdkRoot in sdkRoots) {
+    candidates.add(Directory(_joinPath([sdkRoot.path, 'ndk-bundle'])));
+    final sideBySide = Directory(_joinPath([sdkRoot.path, 'ndk']));
+    if (sideBySide.existsSync()) {
+      final versions =
+          sideBySide
+              .listSync(followLinks: false)
+              .whereType<Directory>()
+              .toList()
+            ..sort((left, right) => _compareNdkVersions(right, left));
+      candidates.addAll(versions);
+    }
+  }
+
+  for (final candidate in candidates) {
+    if (_tryFindNdkToolchainBin(candidate) != null) return candidate;
+  }
+  throw StateError(
+    'Android NDK LLVM toolchain was not found. Install the Android NDK or set '
+    'ANDROID_NDK_HOME/ANDROID_HOME to its SDK location.',
+  );
+}
+
+Directory _findNdkToolchainBin(Directory ndkRoot) {
+  final result = _tryFindNdkToolchainBin(ndkRoot);
+  if (result != null) return result;
+  throw StateError(
+    'Android NDK LLVM toolchain is missing under ${ndkRoot.path}.',
+  );
+}
+
+Directory? _tryFindNdkToolchainBin(Directory ndkRoot) {
+  final prebuilt = Directory(
+    _joinPath([ndkRoot.path, 'toolchains', 'llvm', 'prebuilt']),
+  );
+  if (!prebuilt.existsSync()) return null;
+  for (final entry in prebuilt.listSync(followLinks: false)) {
+    if (entry is Directory) {
+      final bin = Directory(_joinPath([entry.path, 'bin']));
+      if (bin.existsSync()) return bin;
+    }
+  }
+  return null;
+}
+
+File _findTool(Directory bin, String name) {
+  for (final suffix in const ['', '.cmd', '.exe']) {
+    final tool = File(_joinPath([bin.path, '$name$suffix']));
+    if (tool.existsSync()) return tool;
+  }
+  throw StateError('Android NDK tool $name was not found in ${bin.path}.');
+}
+
+int _compareNdkVersions(Directory left, Directory right) {
+  final leftVersion = _versionComponents(left);
+  final rightVersion = _versionComponents(right);
+  final length = leftVersion.length > rightVersion.length
+      ? leftVersion.length
+      : rightVersion.length;
+  for (var index = 0; index < length; index++) {
+    final leftPart = index < leftVersion.length ? leftVersion[index] : 0;
+    final rightPart = index < rightVersion.length ? rightVersion[index] : 0;
+    final comparison = leftPart.compareTo(rightPart);
+    if (comparison != 0) return comparison;
+  }
+  return left.path.compareTo(right.path);
+}
+
+List<int> _versionComponents(Directory directory) => directory.path
+    .split(Platform.pathSeparator)
+    .last
+    .split('.')
+    .map((part) => int.tryParse(part) ?? 0)
+    .toList();
+
+String _joinPath(List<String> components) =>
+    components.join(Platform.pathSeparator);
 
 String _rustTarget(CodeConfig code) {
   switch ((code.targetOS, code.targetArchitecture)) {

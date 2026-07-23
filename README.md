@@ -74,8 +74,8 @@ App 会根据 Provider instance 的绑定能力控制账号来源。例如 Twitc
 ## 🚀 快速开始
 
 ### 1. 环境要求
-*   Flutter SDK >= 3.44.0
-*   Dart SDK >= 3.12.0
+*   Flutter SDK >= 3.44.7
+*   Dart SDK >= 3.12.2
 *   `protoc` 与 Dart `protoc_plugin`
 
 ### 2. 获取代码
@@ -104,6 +104,15 @@ flutter run
 ```
 
 运行 App 前先启动 SyncTV 后端。首页长按 `SyncTV` 标题可以切换服务器根地址。
+
+开发构建默认连接 `http://127.0.0.1:8080`。Release 构建默认要求用户首次启动时添加服务器，也可以在构建时内置一个服务器：
+
+```bash
+flutter build apk --release \
+  --dart-define SYNCTV_BUILT_IN_SERVER_URL=https://tv.example.com
+```
+
+Release workflow 会读取同名 GitHub repository variable。未配置 `SYNCTV_BUILT_IN_SERVER_URL` 的仓库会生成通用安装包，并在首次启动时进入服务器配置流程。
 
 ## Provider 使用
 

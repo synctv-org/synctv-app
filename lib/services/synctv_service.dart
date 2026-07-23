@@ -123,7 +123,9 @@ class SyncTvService {
   }
 
   static Future<SyncTvServerProfile> addServer(String url) async {
-    return _runtime.addServer(url);
+    final profile = await _runtime.addServer(url);
+    _domains.cache.clear();
+    return profile;
   }
 
   static Future<void> activateServer(String serverId) async {

@@ -19,7 +19,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.1.0+4
 
 environment:
-  sdk: ^3.12.0
+  sdk: ^3.12.2
+  flutter: ">=3.44.7"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -68,9 +69,10 @@ dependencies:
   desktop_webview_window: ^0.3.0
   media_kit_libs_macos_video: ^1.1.4
   # 3.2.2+ assumes FlutterEngine is optional and fails against Flutter 3.44 on iOS.
+  # 3.2.2+ assumes FlutterEngine is optional and fails against Flutter 3.44 on iOS.
   fl_pip: 3.2.1
   window_manager: ^0.5.2
-  forui: ^0.23.0
+  forui: ^0.24.3
   flex_color_scheme: ^8.4.0
   responsive_framework: ^1.5.1
   flutter_layout_grid: ^2.0.8

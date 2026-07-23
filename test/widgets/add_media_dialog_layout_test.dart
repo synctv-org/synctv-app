@@ -3,10 +3,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:forui/forui.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/widgets/add_media_dialog.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
+
+import '../test_app.dart';
 
 void main() {
   testWidgets('desktop direct-link action stays fully visible', (tester) async {
@@ -19,14 +20,12 @@ void main() {
       MaterialApp(
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: FTheme(
-          data: FThemes.blue.light.desktop,
-          child: const Scaffold(
-            body: Center(
-              child: SizedBox(
-                width: 620,
-                child: AddMediaDialog(roomId: 'room_layout_test'),
-              ),
+        builder: buildThemedTestApp,
+        home: const Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 620,
+              child: AddMediaDialog(roomId: 'room_layout_test'),
             ),
           ),
         ),
@@ -61,12 +60,8 @@ void main() {
       MaterialApp(
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: FTheme(
-          data: FThemes.blue.light.desktop,
-          child: const Scaffold(
-            body: AddMediaDialog(roomId: 'room_layout_test'),
-          ),
-        ),
+        builder: buildThemedTestApp,
+        home: const Scaffold(body: AddMediaDialog(roomId: 'room_layout_test')),
       ),
     );
     await tester.pump();

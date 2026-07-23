@@ -39,6 +39,43 @@ void main() {
     expect(restored!.isBuiltIn, isTrue);
   });
 
+  test('explicit server configuration has priority in every build mode', () {
+    expect(
+      SyncTvSessionStore.resolveBuiltInServerUrl(
+        configuredUrl: ' https://release.example.com/ ',
+        debugMode: true,
+      ),
+      'https://release.example.com',
+    );
+    expect(
+      SyncTvSessionStore.resolveBuiltInServerUrl(
+        configuredUrl: 'https://release.example.com/',
+        debugMode: false,
+      ),
+      'https://release.example.com',
+    );
+  });
+
+  test('development builds use the local server by default', () {
+    expect(
+      SyncTvSessionStore.resolveBuiltInServerUrl(
+        configuredUrl: '',
+        debugMode: true,
+      ),
+      SyncTvSessionStore.fallbackClientBaseUrl,
+    );
+  });
+
+  test('release builds have no built-in server by default', () {
+    expect(
+      SyncTvSessionStore.resolveBuiltInServerUrl(
+        configuredUrl: '',
+        debugMode: false,
+      ),
+      isEmpty,
+    );
+  });
+
   test(
     'built-in server survives removal while regular servers can be removed',
     () async {
