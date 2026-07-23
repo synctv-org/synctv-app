@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.44.0"
+  RUST_VERSION: "1.97.1"
+
+jobs:
+  quality:
+    name: Format, analyze, generate, and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          rust-version: ${{ env.RUST_VERSION }}
+
+      - name: Install protobuf compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends protobuf-compiler
+          dart pub global activate protoc_plugin 25.0.0
+
+      - name: Check Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool packages
+
+      - name: Analyze Dart and Flutter code
+        run: dart analyze --fatal-infos
+
+      - name: Run Flutter tests
+        run: flutter test
+
+      - name: Run OPAQUE native tests
+        run: cargo test --locked --manifest-path packages/synctv_opaque/Cargo.toml
+
+      - name: Verify generated localization and protobuf code
+        run: |
+          flutter gen-l10n
+          bash tool/generate_proto.sh
+          git diff --exit-code -- lib/l10n lib/src/generated

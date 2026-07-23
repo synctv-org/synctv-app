@@ -1,0 +1,42 @@
+name: Set up SyncTV build toolchain
+description: Install pinned Flutter and Rust toolchains and restore project dependencies.
+
+inputs:
+  flutter-version:
+    description: Flutter SDK version.
+    required: false
+    default: "3.44.0"
+  rust-version:
+    description: Rust toolchain version used by the OPAQUE native asset.
+    required: false
+    default: "1.97.1"
+  rust-targets:
+    description: Optional comma-separated Rust compilation targets.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Flutter
+      uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+      with:
+        channel: stable
+        flutter-version: ${{ inputs.flutter-version }}
+        cache: true
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      with:
+        toolchain: ${{ inputs.rust-version }}
+        targets: ${{ inputs.rust-targets }}
+
+    - name: Disable tool analytics
+      shell: bash
+      run: |
+        flutter config --no-analytics
+        dart --disable-analytics
+
+    - name: Restore Dart dependencies
+      shell: bash
+      run: flutter pub get --enforce-lockfile

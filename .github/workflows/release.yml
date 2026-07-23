@@ -1,0 +1,348 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: "3.44.0"
+  RUST_VERSION: "1.97.1"
+
+jobs:
+  quality:
+    name: Quality gate
+    uses: ./.github/workflows/ci.yml
+
+  metadata:
+    name: Validate release metadata
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build-number: ${{ steps.version.outputs.build-number }}
+      artifact-version: ${{ steps.version.outputs.artifact-version }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Read and validate pubspec version
+        id: version
+        shell: bash
+        run: |
+          raw_version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n 1)"
+          if [[ ! "$raw_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)*$ ]]; then
+            echo "Invalid pubspec version: $raw_version" >&2
+            exit 1
+          fi
+
+          version="${raw_version%%+*}"
+          if [[ "$raw_version" == *+* ]]; then
+            build_number="${raw_version##*+}"
+          else
+            build_number="1"
+          fi
+
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            tag_version="${GITHUB_REF_NAME#v}"
+            if [[ "$tag_version" != "$version" ]]; then
+              echo "Tag $GITHUB_REF_NAME must match pubspec version $version" >&2
+              exit 1
+            fi
+          fi
+
+          {
+            echo "version=$version"
+            echo "build-number=$build_number"
+            echo "artifact-version=$version+$build_number"
+          } >> "$GITHUB_OUTPUT"
+
+  android:
+    name: Android APKs
+    needs: metadata
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          rust-version: ${{ env.RUST_VERSION }}
+          rust-targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Build split release APKs
+        run: >-
+          flutter build apk
+          --release
+          --split-per-abi
+          --build-name "${{ needs.metadata.outputs.version }}"
+          --build-number "${{ needs.metadata.outputs.build-number }}"
+
+      - name: Package Android artifacts
+        run: bash tool/ci/package_release.sh android "${{ needs.metadata.outputs.artifact-version }}" dist
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-android
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  linux:
+    name: Linux x64
+    needs: metadata
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            clang \
+            cmake \
+            libasound2-dev \
+            libepoxy-dev \
+            libgtk-3-dev \
+            liblzma-dev \
+            libmpv-dev \
+            libsoup-3.0-dev \
+            libwebkit2gtk-4.1-dev \
+            ninja-build \
+            pkg-config
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          rust-version: ${{ env.RUST_VERSION }}
+          rust-targets: x86_64-unknown-linux-gnu
+
+      - name: Build Linux release
+        run: >-
+          flutter build linux
+          --release
+          --build-name "${{ needs.metadata.outputs.version }}"
+          --build-number "${{ needs.metadata.outputs.build-number }}"
+
+      - name: Package Linux artifact
+        run: bash tool/ci/package_release.sh linux "${{ needs.metadata.outputs.artifact-version }}" dist
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-linux
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  windows:
+    name: Windows x64
+    needs: metadata
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Enable long paths
+        shell: pwsh
+        run: git config --system core.longpaths true
+
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          rust-version: ${{ env.RUST_VERSION }}
+          rust-targets: x86_64-pc-windows-msvc
+
+      - name: Build Windows release
+        shell: pwsh
+        run: >-
+          flutter build windows
+          --release
+          --build-name "${{ needs.metadata.outputs.version }}"
+          --build-number "${{ needs.metadata.outputs.build-number }}"
+
+      - name: Package Windows artifact
+        shell: pwsh
+        run: ./tool/ci/package_release.ps1 -Version "${{ needs.metadata.outputs.artifact-version }}" -OutputDirectory dist
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-windows
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  macos:
+    name: macOS
+    needs: metadata
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          rust-version: ${{ env.RUST_VERSION }}
+          rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Build macOS release
+        run: >-
+          flutter build macos
+          --release
+          --build-name "${{ needs.metadata.outputs.version }}"
+          --build-number "${{ needs.metadata.outputs.build-number }}"
+
+      - name: Package macOS artifact
+        run: bash tool/ci/package_release.sh macos "${{ needs.metadata.outputs.artifact-version }}" dist
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-macos
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  ios:
+    name: iOS unsigned
+    needs: metadata
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          rust-version: ${{ env.RUST_VERSION }}
+          rust-targets: aarch64-apple-ios
+
+      - name: Build unsigned iOS release
+        run: >-
+          flutter build ios
+          --release
+          --no-codesign
+          --build-name "${{ needs.metadata.outputs.version }}"
+          --build-number "${{ needs.metadata.outputs.build-number }}"
+
+      - name: Package unsigned iOS artifact
+        run: bash tool/ci/package_release.sh ios "${{ needs.metadata.outputs.artifact-version }}" dist
+
+      - name: Upload unsigned iOS artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-ios-unsigned
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  publish:
+    name: Publish GitHub Release
+    if: github.ref_type == 'tag'
+    needs: [metadata, android, linux, windows, macos, ios]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Generate SHA-256 checksums
+        shell: bash
+        run: |
+          cd dist
+          sha256sum SyncTV-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create or update GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          cat > release-notes.md <<'EOF'
+          ## Installation notes
+
+          - Android APKs use the repository's current signing configuration. A fresh fork uses the development signing fallback.
+          - macOS, Windows, and iOS artifacts are distributed without platform-vendor notarization or production signing.
+          - The iOS archive is intended for downstream signing and device deployment workflows.
+          - `SHA256SUMS.txt` authenticates every attached binary archive.
+          EOF
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/* --clobber
+            exit 0
+          fi
+
+          release_args=(
+            "$RELEASE_TAG"
+            dist/*
+            --target "$GITHUB_SHA"
+            --title "$RELEASE_TAG"
+            --generate-notes
+            --notes-file release-notes.md
+          )
+          if [[ "$RELEASE_TAG" == *-* ]]; then
+            release_args+=(--prerelease --latest=false)
+          fi
+          gh release create "${release_args[@]}"

@@ -154,32 +154,35 @@ void main() {
     expect(reporter.playbackSpeedChanged(value: value, speed: 1.25), isNotNull);
   });
 
-  test('seek and speed preserve paused server intent during controller races', () {
-    final reporter = PlaybackControlReporter(
-      currentStatus: SyncTvPlaybackStatus(isPlaying: false),
-      isLive: false,
-      boundPosition: (position) => position,
-    );
-    const transientlyPlayingValue = VideoPlayerValue(
-      duration: Duration(seconds: 20),
-      position: Duration(seconds: 3),
-      isInitialized: true,
-      isPlaying: true,
-      playbackSpeed: 1.0,
-    );
+  test(
+    'seek and speed preserve paused server intent during controller races',
+    () {
+      final reporter = PlaybackControlReporter(
+        currentStatus: SyncTvPlaybackStatus(isPlaying: false),
+        isLive: false,
+        boundPosition: (position) => position,
+      );
+      const transientlyPlayingValue = VideoPlayerValue(
+        duration: Duration(seconds: 20),
+        position: Duration(seconds: 3),
+        isInitialized: true,
+        isPlaying: true,
+        playbackSpeed: 1.0,
+      );
 
-    final seek = reporter.seek(
-      value: transientlyPlayingValue,
-      position: const Duration(seconds: 8),
-    )!;
-    expect(seek.playbackStateUpdate.playing, isFalse);
+      final seek = reporter.seek(
+        value: transientlyPlayingValue,
+        position: const Duration(seconds: 8),
+      )!;
+      expect(seek.playbackStateUpdate.playing, isFalse);
 
-    final speed = reporter.playbackSpeedChanged(
-      value: transientlyPlayingValue,
-      speed: 1.25,
-    )!;
-    expect(speed.playbackStateUpdate.playing, isFalse);
-  });
+      final speed = reporter.playbackSpeedChanged(
+        value: transientlyPlayingValue,
+        speed: 1.25,
+      )!;
+      expect(speed.playbackStateUpdate.playing, isFalse);
+    },
+  );
 
   test('live playback controls omit progress and suppress seeking', () {
     final reporter = PlaybackControlReporter(

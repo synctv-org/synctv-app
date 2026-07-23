@@ -60,50 +60,51 @@ class RoomRealtimeConnection {
     final outgoing = StreamController<List<int>>();
 
     final socketFuture =
-        (createWebSocketUri ?? SyncTvService.createRoomWebSocketUri)(
-          roomId,
-        )
+        (createWebSocketUri ?? SyncTvService.createRoomWebSocketUri)(roomId)
             .timeout(_connectTimeout)
             .then(
-              (uri) => WebSocket.connect(
-                uri.toString(),
-              ).timeout(_connectTimeout),
+              (uri) =>
+                  WebSocket.connect(uri.toString()).timeout(_connectTimeout),
             )
             .then((connected) {
-          socket = connected;
-          socket.pingInterval = const Duration(seconds: 10);
-          socket.listen(
-            (frame) {
-              try {
-                if (frame is! String) return;
-                final message = SyncTvService.decodeRealtimeMessageJson(frame);
-                final bytes = Uint8List.fromList(message.writeToBuffer());
-                onIncoming?.call(bytes);
-                incoming.add(bytes);
-              } catch (error, stackTrace) {
-                incoming.addError(error, stackTrace);
-              }
-            },
-            onError: incoming.addError,
-            onDone: incoming.close,
-          );
-          outgoingSubscription = outgoing.stream
-              .where((bytes) => bytes.isNotEmpty)
-              .listen((bytes) {
-                final message = client.ClientMessage.fromBuffer(bytes);
-                onOutgoing?.call(bytes, message);
-                socket.add(SyncTvService.encodeRealtimeMessageJson(message));
+              socket = connected;
+              socket.pingInterval = const Duration(seconds: 10);
+              socket.listen(
+                (frame) {
+                  try {
+                    if (frame is! String) return;
+                    final message = SyncTvService.decodeRealtimeMessageJson(
+                      frame,
+                    );
+                    final bytes = Uint8List.fromList(message.writeToBuffer());
+                    onIncoming?.call(bytes);
+                    incoming.add(bytes);
+                  } catch (error, stackTrace) {
+                    incoming.addError(error, stackTrace);
+                  }
+                },
+                onError: incoming.addError,
+                onDone: incoming.close,
+              );
+              outgoingSubscription = outgoing.stream
+                  .where((bytes) => bytes.isNotEmpty)
+                  .listen((bytes) {
+                    final message = client.ClientMessage.fromBuffer(bytes);
+                    onOutgoing?.call(bytes, message);
+                    socket.add(
+                      SyncTvService.encodeRealtimeMessageJson(message),
+                    );
+                  });
+              heartbeatTimer = Timer.periodic(const Duration(seconds: 25), (_) {
+                if (!outgoing.isClosed) {
+                  outgoing.add(RoomRealtimeCodec.encodeSync());
+                }
               });
-          heartbeatTimer = Timer.periodic(const Duration(seconds: 25), (_) {
-            if (!outgoing.isClosed) {
-              outgoing.add(RoomRealtimeCodec.encodeSync());
-            }
-          });
-          for (final message in initialMessages) {
-            if (message.isNotEmpty) outgoing.add(message);
-          }
-          return connected;
-        });
+              for (final message in initialMessages) {
+                if (message.isNotEmpty) outgoing.add(message);
+              }
+              return connected;
+            });
 
     unawaited(
       socketFuture.then<void>(
