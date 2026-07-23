@@ -39,10 +39,11 @@ jobs:
           rust-version: ${{ env.RUST_VERSION }}
 
       - name: Set up Protobuf compiler
-        uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # v3.0.0
+        uses: taiki-e/install-action@7572810d7dd469b651bb7793945692cf78da5dd7 # v2.85.0
         with:
-          version: ${{ env.PROTOC_VERSION }}
-          repo-token: ${{ github.token }}
+          # install-action represents protoc 35.1 with its semver-compatible 3.35.1 alias.
+          tool: protoc@3.${{ env.PROTOC_VERSION }}
+          fallback: none
 
       - name: Install Dart Protobuf generator
         run: |
