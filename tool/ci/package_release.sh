@@ -40,7 +40,11 @@ case "$platform" in
       "$output_directory/SyncTV-$version-linux-$architecture.tar.gz" .
     ;;
   macos)
-    app_path="build/macos/Build/Products/Release/SyncTV.app"
+    if [[ "$architecture" == "universal" ]]; then
+      app_path="build/macos/Build/Products/Release/SyncTV.app"
+    else
+      app_path="build/macos/Build/Products/Release/$architecture/SyncTV.app"
+    fi
     if [[ ! -d "$app_path" ]]; then
       echo "macOS release app was not found: $app_path" >&2
       exit 1

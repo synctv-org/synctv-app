@@ -285,16 +285,53 @@ jobs:
           --split-debug-info build/symbols/macos-universal
 
       - name: Verify universal macOS binaries
-        run: bash tool/ci/verify_macos_universal.sh
+        run: >-
+          bash tool/ci/verify_macos_architecture.sh
+          build/macos/Build/Products/Release/SyncTV.app
+          universal
 
-      - name: Package macOS artifact
-        run: bash tool/ci/package_release.sh macos universal "${{ needs.metadata.outputs.artifact-version }}" dist
+      - name: Create architecture-specific macOS apps
+        run: bash tool/ci/create_macos_architecture_apps.sh
 
-      - name: Upload macOS artifact
+      - name: Verify architecture-specific macOS binaries
+        run: |
+          bash tool/ci/verify_macos_architecture.sh \
+            build/macos/Build/Products/Release/arm64/SyncTV.app arm64
+          bash tool/ci/verify_macos_architecture.sh \
+            build/macos/Build/Products/Release/x64/SyncTV.app x64
+
+      - name: Package macOS artifacts
+        run: |
+          bash tool/ci/package_release.sh macos universal \
+            "${{ needs.metadata.outputs.artifact-version }}" dist/universal
+          bash tool/ci/package_release.sh macos arm64 \
+            "${{ needs.metadata.outputs.artifact-version }}" dist/arm64
+          bash tool/ci/package_release.sh macos x64 \
+            "${{ needs.metadata.outputs.artifact-version }}" dist/x64
+
+      - name: Upload universal macOS artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: release-macos-universal
-          path: dist/*
+          path: dist/universal/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Upload arm64 macOS artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-macos-arm64
+          path: dist/arm64/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Upload x64 macOS artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-macos-x64
+          path: dist/x64/*
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
