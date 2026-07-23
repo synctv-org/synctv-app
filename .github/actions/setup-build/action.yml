@@ -33,38 +33,13 @@ runs:
         xcode-version: latest-stable
 
     - name: Set up Flutter
-      if: >-
-        (runner.os != 'Linux' && runner.os != 'Windows') ||
-        inputs.flutter-architecture != 'arm64'
+      if: runner.os != 'Linux' || inputs.flutter-architecture != 'arm64'
       uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
       with:
         channel: stable
         flutter-version: ${{ inputs.flutter-version }}
         architecture: ${{ inputs.flutter-architecture }}
         cache: true
-
-    - name: Set up Flutter bootstrap on Windows arm64
-      if: runner.os == 'Windows' && inputs.flutter-architecture == 'arm64'
-      uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
-      with:
-        channel: stable
-        flutter-version: ${{ inputs.flutter-version }}
-        architecture: x64
-        cache: false
-
-    - name: Switch Flutter to native Windows arm64 artifacts
-      if: runner.os == 'Windows' && inputs.flutter-architecture == 'arm64'
-      shell: pwsh
-      run: |
-        if ($env:PROCESSOR_ARCHITECTURE -ne 'ARM64' -and $env:PROCESSOR_ARCHITEW6432 -ne 'ARM64') {
-          throw 'Windows arm64 Flutter setup requires an ARM64 runner'
-        }
-        $flutterCommand = (Get-Command flutter).Source
-        $flutterRoot = Split-Path (Split-Path $flutterCommand -Parent) -Parent
-        Remove-Item "$flutterRoot/bin/cache/engine-dart-sdk.stamp" -Force -ErrorAction SilentlyContinue
-        Remove-Item "$flutterRoot/bin/cache/dart-sdk" -Recurse -Force -ErrorAction SilentlyContinue
-        $env:PROCESSOR_ARCHITECTURE = 'ARM64'
-        & $flutterCommand --version
 
     - name: Cache Flutter source SDK
       if: runner.os == 'Linux' && inputs.flutter-architecture == 'arm64'

@@ -201,22 +201,10 @@ jobs:
           compression-level: 0
 
   windows:
-    name: Windows ${{ matrix.architecture }}
+    name: Windows x64
     needs: metadata
-    runs-on: ${{ matrix.runner }}
+    runs-on: windows-latest
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - architecture: x64
-            runner: windows-latest
-            flutter-architecture: x64
-            rust-target: x86_64-pc-windows-msvc
-          - architecture: arm64
-            runner: windows-11-vs2026-arm
-            flutter-architecture: arm64
-            rust-target: aarch64-pc-windows-msvc
 
     steps:
       - name: Enable long paths
@@ -232,9 +220,9 @@ jobs:
         uses: ./.github/actions/setup-build
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          flutter-architecture: ${{ matrix.flutter-architecture }}
+          flutter-architecture: x64
           rust-version: ${{ env.RUST_VERSION }}
-          rust-targets: ${{ matrix.rust-target }}
+          rust-targets: x86_64-pc-windows-msvc
 
       - name: Build Windows release
         shell: pwsh
@@ -244,24 +232,24 @@ jobs:
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$env:SYNCTV_BUILT_IN_SERVER_URL"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
-          --split-debug-info "build/symbols/windows-${{ matrix.architecture }}"
+          --split-debug-info build/symbols/windows-x64
 
       - name: Verify Windows binary architecture
         shell: pwsh
-        run: ./tool/ci/verify_windows_architecture.ps1 -Architecture "${{ matrix.architecture }}"
+        run: ./tool/ci/verify_windows_architecture.ps1 -Architecture x64
 
       - name: Package Windows artifact
         shell: pwsh
         run: >-
           ./tool/ci/package_release.ps1
           -Version "${{ needs.metadata.outputs.artifact-version }}"
-          -Architecture "${{ matrix.architecture }}"
+          -Architecture x64
           -OutputDirectory dist
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: release-windows-${{ matrix.architecture }}
+          name: release-windows-x64
           path: dist/*
           if-no-files-found: error
           retention-days: 14
