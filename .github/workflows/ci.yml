@@ -17,6 +17,7 @@ concurrency:
 
 env:
   FLUTTER_VERSION: "3.44.0"
+  PROTOC_VERSION: "35.1"
   RUST_VERSION: "1.97.1"
 
 jobs:
@@ -37,12 +38,15 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           rust-version: ${{ env.RUST_VERSION }}
 
-      - name: Install protobuf compiler
+      - name: Set up Protobuf compiler
+        uses: arduino/setup-protoc@c65c819552d16ad3c9b72d9dfd5ba5237b9c906b # v3.0.0
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ github.token }}
+
+      - name: Install Dart Protobuf generator
         run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
-            libprotobuf-dev \
-            protobuf-compiler
+          test "$(protoc --version)" = "libprotoc $PROTOC_VERSION"
           dart pub global activate protoc_plugin 25.0.0
 
       - name: Check Dart formatting
