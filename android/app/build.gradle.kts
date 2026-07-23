@@ -1,3 +1,7 @@
+import java.net.URI
+import java.util.Base64
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -12,7 +16,7 @@ fun flutterDartDefine(name: String): String? {
         .asSequence()
         .mapNotNull { value ->
             runCatching {
-                String(java.util.Base64.getDecoder().decode(value))
+                String(Base64.getDecoder().decode(value))
             }.getOrNull()
         }
         .firstOrNull { value -> value.startsWith("$name=") }
@@ -25,7 +29,7 @@ fun oauth2AppLinkHost(): String {
         if (value.isNotBlank()) return validateOauth2AppLinkHost(value)
     }
     flutterDartDefine("SYNC_TV_OAUTH2_APP_LINK_ORIGIN")?.let { value ->
-        val uri = java.net.URI(value)
+        val uri = URI(value)
         if (
             uri.scheme != "https" ||
             uri.host.isNullOrBlank() ||
@@ -67,10 +71,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     defaultConfig {
         applicationId = "com.sync.app"
         minSdk = flutter.minSdkVersion
@@ -85,6 +85,12 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
