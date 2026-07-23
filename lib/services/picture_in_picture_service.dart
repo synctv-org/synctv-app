@@ -57,9 +57,9 @@ class PictureInPictureService with WindowListener {
           _available =
               await _androidChannel.invokeMethod<bool>('isAvailable') ?? false;
         case PictureInPictureBackend.ios:
-          FlPiP.instance.status.addListener(_handleIosStatusChanged);
-          _available = await FlPiP.instance.isAvailable;
-          await FlPiP.instance.isActive;
+          FlPiP().status.addListener(_handleIosStatusChanged);
+          _available = await FlPiP().isAvailable;
+          await FlPiP().isActive;
           _handleIosStatusChanged();
         case PictureInPictureBackend.desktopWindow:
           await windowManager.ensureInitialized();
@@ -89,7 +89,7 @@ class PictureInPictureService with WindowListener {
                 'height': 1000,
               }) ??
               false,
-        PictureInPictureBackend.ios => await FlPiP.instance.enable(
+        PictureInPictureBackend.ios => await FlPiP().enable(
           ios: const FlPiPiOSConfig(
             enableControls: false,
             enablePlayback: false,
@@ -114,7 +114,7 @@ class PictureInPictureService with WindowListener {
         case PictureInPictureBackend.android:
           await _androidChannel.invokeMethod<void>('exit');
         case PictureInPictureBackend.ios:
-          await FlPiP.instance.disable();
+          await FlPiP().disable();
         case PictureInPictureBackend.desktopWindow:
           await _exitDesktopWindow(restoreBounds: restoreDesktopBounds);
         case PictureInPictureBackend.unavailable:
@@ -197,7 +197,7 @@ class PictureInPictureService with WindowListener {
   }
 
   void _handleIosStatusChanged() {
-    active.value = FlPiP.instance.status.value?.status == PiPStatus.enabled;
+    active.value = FlPiP().status.value?.status == PiPStatus.enabled;
   }
 
   Future<void> _handleAndroidMethodCall(MethodCall call) async {
