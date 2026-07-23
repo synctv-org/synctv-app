@@ -695,25 +695,19 @@ class SyncTvService {
     _domains.cache.invalidate('account:oauth2:linked');
   }
 
-  static Future<RoomsPage> getRoomsPage({
+  static Future<RoomDiscoveryPage> discoverRooms({
     int page = 1,
     int pageSize = 100,
     String? search,
     String categoryId = '',
     List<String> labelIds = const [],
-    client_enum.RoomListSortBy sortBy =
-        client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-    client_enum.SortDirection sortDirection =
-        client_enum.SortDirection.SORT_DIRECTION_DESC,
   }) async {
-    return _domains.publicRooms.getRoomsPage(
+    return _domains.publicRooms.discoverRooms(
       page: page,
       pageSize: pageSize,
       search: search,
       categoryId: categoryId,
       labelIds: labelIds,
-      sortBy: sortBy,
-      sortDirection: sortDirection,
     );
   }
 
@@ -798,12 +792,8 @@ class SyncTvService {
     return room;
   }
 
-  static Future<List<SyncTvRoom>> getHotRooms({int limit = 20}) async {
-    return _domains.publicRooms.getHotRooms(limit: limit);
-  }
-
-  static Future<RoomCheckInfo> checkRoom(String roomId) async {
-    return _domains.publicRooms.checkRoom(roomId);
+  static Future<SyncTvRoom> getRoomDiscovery(String roomId) async {
+    return _domains.publicRooms.getRoomDiscovery(roomId);
   }
 
   static Future<SyncTvRoom> createRoom(
@@ -829,9 +819,10 @@ class SyncTvService {
     _domains.cache.invalidatePrefix('account:rooms');
   }
 
-  static Future<void> joinRoom(String roomId, String password) async {
-    await _domains.publicRooms.joinRoom(roomId, password);
+  static Future<JoinRoomResult> joinRoom(String roomId, String password) async {
+    final result = await _domains.publicRooms.joinRoom(roomId, password);
     _domains.cache.invalidatePrefix('account:rooms');
+    return result;
   }
 
   static Future<SyncTvRoom> getRoomInfo(String roomId) async {

@@ -4,6 +4,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/models/latest_async_operation_coordinator.dart';
 
 void main() {
+  test('state epoch invalidates results captured before a session change', () {
+    final epoch = AsyncStateEpoch();
+    final previousSession = epoch.capture();
+
+    expect(epoch.isCurrent(previousSession), isTrue);
+    epoch.advance();
+
+    expect(epoch.isCurrent(previousSession), isFalse);
+    expect(epoch.isCurrent(epoch.capture()), isTrue);
+  });
+
   test('coalesces concurrent operations for the same key', () async {
     final coordinator = LatestAsyncOperationCoordinator();
     final release = Completer<void>();

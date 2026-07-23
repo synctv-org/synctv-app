@@ -225,42 +225,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get roomFeedPublic => 'Public';
-
-  @override
-  String get roomFeedMine => 'Mine';
-
-  @override
-  String get roomFeedPopular => 'Popular';
-
-  @override
-  String get roomFeedFavorites => 'Favorites';
-
-  @override
-  String popularRoomsSummary(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Showing $count popular rooms',
-      one: 'Showing 1 popular room',
-      zero: 'No popular rooms',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String favoriteRoomsPageSummary(int total, int page, int pageCount) {
-    String _temp0 = intl.Intl.pluralLogic(
-      total,
-      locale: localeName,
-      other: '$total favorites',
-      one: '1 favorite',
-      zero: 'No favorites',
-    );
-    return '$_temp0 · Page $page of $pageCount';
-  }
-
-  @override
   String roomsPageSummary(int total, int page, int pageCount) {
     String _temp0 = intl.Intl.pluralLogic(
       total,
@@ -273,17 +237,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get popularRoomsSearchDisabled =>
-      'Search is unavailable for popular rooms';
-
-  @override
   String get searchRooms => 'Search rooms';
 
   @override
   String get allCategories => 'All categories';
-
-  @override
-  String get publicRoomsOnly => 'Public rooms only';
 
   @override
   String get labels => 'Labels';
@@ -303,22 +260,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addServerToStart => 'Add a server to get started';
 
   @override
-  String get noFavoriteRooms => 'No favorite rooms yet';
-
-  @override
   String get noRooms => 'No rooms';
 
   @override
   String get addServerDescription =>
       'Enter a server address to browse public rooms, log in, and join a watch room.';
-
-  @override
-  String get myRoomsEmptyDescription =>
-      'Rooms you join or create will appear here';
-
-  @override
-  String get favoriteRoomsEmptyDescription =>
-      'Rooms you favorite will appear here';
 
   @override
   String get filteredRoomsEmptyDescription =>
@@ -490,13 +436,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomJoinable => 'Joinable';
 
   @override
-  String roomAudienceWithMembers(int viewerCount, int memberCount) {
-    return '$viewerCount online / $memberCount members';
-  }
+  String get roomGuestAccess => 'Enter as guest';
 
   @override
-  String roomAudience(int viewerCount) {
-    return '$viewerCount online';
+  String get featuredRooms => 'Featured rooms';
+
+  @override
+  String get featuredRoomsDescription => 'Active spaces for watching together';
+
+  @override
+  String get continueWatchingRooms => 'Continue watching';
+
+  @override
+  String get continueWatchingRoomsDescription =>
+      'Return to rooms you have already joined';
+
+  @override
+  String get popularRooms => 'Popular rooms';
+
+  @override
+  String get popularRoomsDescription =>
+      'Ranked by live activity, membership, and recent use';
+
+  @override
+  String get roomJoined => 'Joined';
+
+  @override
+  String get passwordRequiredShort => 'Password required';
+
+  @override
+  String get roomApprovalRequired => 'Approval required';
+
+  @override
+  String get roomApprovalPending => 'Approval pending';
+
+  @override
+  String get roomJoinRequestSubmitted => 'Join request submitted for approval';
+
+  @override
+  String get signInToJoin => 'Sign in to join';
+
+  @override
+  String get roomInvitationOnly => 'Invitation only';
+
+  @override
+  String get roomFull => 'Room full';
+
+  @override
+  String get roomJoinCooldown => 'Join unavailable';
+
+  @override
+  String roomAudienceWithMembers(int viewerCount, int memberCount) {
+    return '$viewerCount online / $memberCount members';
   }
 
   @override
@@ -818,6 +809,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nextPage => 'Next page';
+
+  @override
+  String get previousRooms => 'Previous rooms';
+
+  @override
+  String get nextRooms => 'Next rooms';
 
   @override
   String get confirm => 'Confirm';

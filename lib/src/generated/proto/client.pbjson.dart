@@ -188,6 +188,37 @@ final $typed_data.Uint8List opaquePasswordUpdateVerificationMethodDescriptor =
         'SUxfVE9LRU4QAhI2CjJPUEFRVUVfUEFTU1dPUkRfVVBEQVRFX1ZFUklGSUNBVElPTl9NRVRIT0'
         'RfUEFTU0tFWRAD');
 
+@$core.Deprecated('Use roomDiscoveryAccessDescriptor instead')
+const RoomDiscoveryAccess$json = {
+  '1': 'RoomDiscoveryAccess',
+  '2': [
+    {'1': 'ROOM_DISCOVERY_ACCESS_UNSPECIFIED', '2': 0},
+    {'1': 'ROOM_DISCOVERY_ACCESS_ENTER', '2': 1},
+    {'1': 'ROOM_DISCOVERY_ACCESS_JOIN', '2': 2},
+    {'1': 'ROOM_DISCOVERY_ACCESS_PASSWORD', '2': 3},
+    {'1': 'ROOM_DISCOVERY_ACCESS_REQUEST_APPROVAL', '2': 4},
+    {'1': 'ROOM_DISCOVERY_ACCESS_PENDING_APPROVAL', '2': 5},
+    {'1': 'ROOM_DISCOVERY_ACCESS_SIGN_IN', '2': 6},
+    {'1': 'ROOM_DISCOVERY_ACCESS_INVITATION', '2': 7},
+    {'1': 'ROOM_DISCOVERY_ACCESS_FULL', '2': 8},
+    {'1': 'ROOM_DISCOVERY_ACCESS_UNAVAILABLE', '2': 9},
+    {'1': 'ROOM_DISCOVERY_ACCESS_COOLDOWN', '2': 10},
+    {'1': 'ROOM_DISCOVERY_ACCESS_GUEST', '2': 11},
+  ],
+};
+
+/// Descriptor for `RoomDiscoveryAccess`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List roomDiscoveryAccessDescriptor = $convert.base64Decode(
+    'ChNSb29tRGlzY292ZXJ5QWNjZXNzEiUKIVJPT01fRElTQ09WRVJZX0FDQ0VTU19VTlNQRUNJRk'
+    'lFRBAAEh8KG1JPT01fRElTQ09WRVJZX0FDQ0VTU19FTlRFUhABEh4KGlJPT01fRElTQ09WRVJZ'
+    'X0FDQ0VTU19KT0lOEAISIgoeUk9PTV9ESVNDT1ZFUllfQUNDRVNTX1BBU1NXT1JEEAMSKgomUk'
+    '9PTV9ESVNDT1ZFUllfQUNDRVNTX1JFUVVFU1RfQVBQUk9WQUwQBBIqCiZST09NX0RJU0NPVkVS'
+    'WV9BQ0NFU1NfUEVORElOR19BUFBST1ZBTBAFEiEKHVJPT01fRElTQ09WRVJZX0FDQ0VTU19TSU'
+    'dOX0lOEAYSJAogUk9PTV9ESVNDT1ZFUllfQUNDRVNTX0lOVklUQVRJT04QBxIeChpST09NX0RJ'
+    'U0NPVkVSWV9BQ0NFU1NfRlVMTBAIEiUKIVJPT01fRElTQ09WRVJZX0FDQ0VTU19VTkFWQUlMQU'
+    'JMRRAJEiIKHlJPT01fRElTQ09WRVJZX0FDQ0VTU19DT09MRE9XThAKEh8KG1JPT01fRElTQ09W'
+    'RVJZX0FDQ0VTU19HVUVTVBAL');
+
 @$core.Deprecated('Use sortDirectionDescriptor instead')
 const SortDirection$json = {
   '1': 'SortDirection',
@@ -234,25 +265,6 @@ final $typed_data.Uint8List roomMemberListSortByDescriptor = $convert.base64Deco
     'VDSUZJRUQQABImCiJST09NX01FTUJFUl9MSVNUX1NPUlRfQllfSk9JTkVEX0FUEAESJQohUk9P'
     'TV9NRU1CRVJfTElTVF9TT1JUX0JZX1VTRVJOQU1FEAISIQodUk9PTV9NRU1CRVJfTElTVF9TT1'
     'JUX0JZX1JPTEUQAw==');
-
-@$core.Deprecated('Use roomListSortByDescriptor instead')
-const RoomListSortBy$json = {
-  '1': 'RoomListSortBy',
-  '2': [
-    {'1': 'ROOM_LIST_SORT_BY_UNSPECIFIED', '2': 0},
-    {'1': 'ROOM_LIST_SORT_BY_CREATED_AT', '2': 1},
-    {'1': 'ROOM_LIST_SORT_BY_UPDATED_AT', '2': 2},
-    {'1': 'ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT', '2': 3},
-    {'1': 'ROOM_LIST_SORT_BY_NAME', '2': 4},
-  ],
-};
-
-/// Descriptor for `RoomListSortBy`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List roomListSortByDescriptor = $convert.base64Decode(
-    'Cg5Sb29tTGlzdFNvcnRCeRIhCh1ST09NX0xJU1RfU09SVF9CWV9VTlNQRUNJRklFRBAAEiAKHF'
-    'JPT01fTElTVF9TT1JUX0JZX0NSRUFURURfQVQQARIgChxST09NX0xJU1RfU09SVF9CWV9VUERB'
-    'VEVEX0FUEAISJgoiUk9PTV9MSVNUX1NPUlRfQllfTEFTVF9BQ1RJVklUWV9BVBADEhoKFlJPT0'
-    '1fTElTVF9TT1JUX0JZX05BTUUQBA==');
 
 @$core.Deprecated('Use playlistListSortByDescriptor instead')
 const PlaylistListSortBy$json = {
@@ -2095,7 +2107,6 @@ const Room$json = {
       '6': '.synctv.client.RoomLabel',
       '10': 'labels'
     },
-    {'1': 'favorited', '3': 18, '4': 1, '5': 8, '10': 'favorited'},
   ],
 };
 
@@ -2113,8 +2124,7 @@ final $typed_data.Uint8List roomDescriptor = $convert.base64Decode(
     'NlbmNlGA4gASgLMiAuc3luY3R2LmNvbW1vbi5Sb29tUHJlc2VuY2VTdGF0c1IIcHJlc2VuY2US'
     'NwoHY3JlYXRvchgPIAEoCzIdLnN5bmN0di5jbGllbnQuVXNlclB1YmxpY1ZpZXdSB2NyZWF0b3'
     'ISNwoIY2F0ZWdvcnkYECABKAsyGy5zeW5jdHYuY2xpZW50LlJvb21DYXRlZ29yeVIIY2F0ZWdv'
-    'cnkSMAoGbGFiZWxzGBEgAygLMhguc3luY3R2LmNsaWVudC5Sb29tTGFiZWxSBmxhYmVscxIcCg'
-    'lmYXZvcml0ZWQYEiABKAhSCWZhdm9yaXRlZA==');
+    'cnkSMAoGbGFiZWxzGBEgAygLMhguc3luY3R2LmNsaWVudC5Sb29tTGFiZWxSBmxhYmVscw==');
 
 @$core.Deprecated('Use roomCategoryDescriptor instead')
 const RoomCategory$json = {
@@ -4099,6 +4109,7 @@ const GetRoomResponse$json = {
       '6': '.synctv.client.PlaybackState',
       '10': 'playbackState'
     },
+    {'1': 'favorited', '3': 3, '4': 1, '5': 8, '10': 'favorited'},
   ],
 };
 
@@ -4106,7 +4117,7 @@ const GetRoomResponse$json = {
 final $typed_data.Uint8List getRoomResponseDescriptor = $convert.base64Decode(
     'Cg9HZXRSb29tUmVzcG9uc2USJwoEcm9vbRgBIAEoCzITLnN5bmN0di5jbGllbnQuUm9vbVIEcm'
     '9vbRJDCg5wbGF5YmFja19zdGF0ZRgCIAEoCzIcLnN5bmN0di5jbGllbnQuUGxheWJhY2tTdGF0'
-    'ZVINcGxheWJhY2tTdGF0ZQ==');
+    'ZVINcGxheWJhY2tTdGF0ZRIcCglmYXZvcml0ZWQYAyABKAhSCWZhdm9yaXRlZA==');
 
 @$core.Deprecated('Use joinRoomRequestDescriptor instead')
 const JoinRoomRequest$json = {
@@ -4202,72 +4213,95 @@ const LeaveRoomResponse$json = {
 final $typed_data.Uint8List leaveRoomResponseDescriptor = $convert.base64Decode(
     'ChFMZWF2ZVJvb21SZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
 
-@$core.Deprecated('Use listRoomsRequestDescriptor instead')
-const ListRoomsRequest$json = {
-  '1': 'ListRoomsRequest',
+@$core.Deprecated('Use discoverRoomsRequestDescriptor instead')
+const DiscoverRoomsRequest$json = {
+  '1': 'DiscoverRoomsRequest',
   '2': [
     {'1': 'page', '3': 1, '4': 1, '5': 5, '10': 'page'},
     {'1': 'page_size', '3': 2, '4': 1, '5': 5, '10': 'pageSize'},
     {'1': 'search', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'search'},
-    {
-      '1': 'sort_by',
-      '3': 4,
-      '4': 1,
-      '5': 14,
-      '6': '.synctv.client.RoomListSortBy',
-      '8': {},
-      '10': 'sortBy'
-    },
-    {
-      '1': 'sort_direction',
-      '3': 5,
-      '4': 1,
-      '5': 14,
-      '6': '.synctv.client.SortDirection',
-      '8': {},
-      '10': 'sortDirection'
-    },
-    {'1': 'category_id', '3': 6, '4': 1, '5': 9, '8': {}, '10': 'categoryId'},
-    {'1': 'label_ids', '3': 7, '4': 3, '5': 9, '8': {}, '10': 'labelIds'},
+    {'1': 'category_id', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'categoryId'},
+    {'1': 'label_ids', '3': 5, '4': 3, '5': 9, '8': {}, '10': 'labelIds'},
   ],
   '7': {},
 };
 
-/// Descriptor for `ListRoomsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List listRoomsRequestDescriptor = $convert.base64Decode(
-    'ChBMaXN0Um9vbXNSZXF1ZXN0EhIKBHBhZ2UYASABKAVSBHBhZ2USGwoJcGFnZV9zaXplGAIgAS'
-    'gFUghwYWdlU2l6ZRIfCgZzZWFyY2gYAyABKAlCB7pIBHICGGRSBnNlYXJjaBJACgdzb3J0X2J5'
-    'GAQgASgOMh0uc3luY3R2LmNsaWVudC5Sb29tTGlzdFNvcnRCeUIIukgFggECEAFSBnNvcnRCeR'
-    'JNCg5zb3J0X2RpcmVjdGlvbhgFIAEoDjIcLnN5bmN0di5jbGllbnQuU29ydERpcmVjdGlvbkII'
-    'ukgFggECEAFSDXNvcnREaXJlY3Rpb24SQwoLY2F0ZWdvcnlfaWQYBiABKAlCIrpIH3IdGEAyGV'
-    '4kfF5yb29tY2F0X1tBLVphLXowLTldKyRSCmNhdGVnb3J5SWQSRQoJbGFiZWxfaWRzGAcgAygJ'
-    'Qii6SCWSASIQCiIechwQARhAMhZecm9vbWxibF9bQS1aYS16MC05XSskUghsYWJlbElkczr9Ab'
-    'pI+QEaXwoPbGlzdF9yb29tcy5wYWdlEipwYWdlIG11c3QgYmUgMCAodXNlIGRlZmF1bHQpIG9y'
-    'IGF0IGxlYXN0IDEaIHRoaXMucGFnZSA9PSAwIHx8IHRoaXMucGFnZSA+PSAxGpUBChRsaXN0X3'
-    'Jvb21zLnBhZ2Vfc2l6ZRI2cGFnZV9zaXplIG11c3QgYmUgMCAodXNlIGRlZmF1bHQpIG9yIGJl'
-    'dHdlZW4gMSBhbmQgMTAwGkV0aGlzLnBhZ2Vfc2l6ZSA9PSAwIHx8ICh0aGlzLnBhZ2Vfc2l6ZS'
-    'A+PSAxICYmIHRoaXMucGFnZV9zaXplIDw9IDEwMCk=');
+/// Descriptor for `DiscoverRoomsRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List discoverRoomsRequestDescriptor = $convert.base64Decode(
+    'ChREaXNjb3ZlclJvb21zUmVxdWVzdBISCgRwYWdlGAEgASgFUgRwYWdlEhsKCXBhZ2Vfc2l6ZR'
+    'gCIAEoBVIIcGFnZVNpemUSHwoGc2VhcmNoGAMgASgJQge6SARyAhhkUgZzZWFyY2gSQwoLY2F0'
+    'ZWdvcnlfaWQYBCABKAlCIrpIH3IdGEAyGV4kfF5yb29tY2F0X1tBLVphLXowLTldKyRSCmNhdG'
+    'Vnb3J5SWQSRQoJbGFiZWxfaWRzGAUgAygJQii6SCWSASIQCiIechwQARhAMhZecm9vbWxibF9b'
+    'QS1aYS16MC05XSskUghsYWJlbElkczqFArpIgQIaYwoTZGlzY292ZXJfcm9vbXMucGFnZRIqcG'
+    'FnZSBtdXN0IGJlIDAgKHVzZSBkZWZhdWx0KSBvciBhdCBsZWFzdCAxGiB0aGlzLnBhZ2UgPT0g'
+    'MCB8fCB0aGlzLnBhZ2UgPj0gMRqZAQoYZGlzY292ZXJfcm9vbXMucGFnZV9zaXplEjZwYWdlX3'
+    'NpemUgbXVzdCBiZSAwICh1c2UgZGVmYXVsdCkgb3IgYmV0d2VlbiAxIGFuZCAxMDAaRXRoaXMu'
+    'cGFnZV9zaXplID09IDAgfHwgKHRoaXMucGFnZV9zaXplID49IDEgJiYgdGhpcy5wYWdlX3Npem'
+    'UgPD0gMTAwKQ==');
 
-@$core.Deprecated('Use listRoomsResponseDescriptor instead')
-const ListRoomsResponse$json = {
-  '1': 'ListRoomsResponse',
+@$core.Deprecated('Use discoverRoomsResponseDescriptor instead')
+const DiscoverRoomsResponse$json = {
+  '1': 'DiscoverRoomsResponse',
   '2': [
     {
-      '1': 'rooms',
+      '1': 'featured_rooms',
       '3': 1,
       '4': 3,
       '5': 11,
-      '6': '.synctv.client.Room',
+      '6': '.synctv.client.RoomDiscoveryItem',
+      '10': 'featuredRooms'
+    },
+    {
+      '1': 'rooms',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.synctv.client.RoomDiscoveryItem',
       '10': 'rooms'
     },
-    {'1': 'total', '3': 2, '4': 1, '5': 5, '10': 'total'},
+    {'1': 'total', '3': 3, '4': 1, '5': 5, '10': 'total'},
   ],
 };
 
-/// Descriptor for `ListRoomsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List listRoomsResponseDescriptor = $convert.base64Decode(
-    'ChFMaXN0Um9vbXNSZXNwb25zZRIpCgVyb29tcxgBIAMoCzITLnN5bmN0di5jbGllbnQuUm9vbV'
-    'IFcm9vbXMSFAoFdG90YWwYAiABKAVSBXRvdGFs');
+/// Descriptor for `DiscoverRoomsResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List discoverRoomsResponseDescriptor = $convert.base64Decode(
+    'ChVEaXNjb3ZlclJvb21zUmVzcG9uc2USRwoOZmVhdHVyZWRfcm9vbXMYASADKAsyIC5zeW5jdH'
+    'YuY2xpZW50LlJvb21EaXNjb3ZlcnlJdGVtUg1mZWF0dXJlZFJvb21zEjYKBXJvb21zGAIgAygL'
+    'MiAuc3luY3R2LmNsaWVudC5Sb29tRGlzY292ZXJ5SXRlbVIFcm9vbXMSFAoFdG90YWwYAyABKA'
+    'VSBXRvdGFs');
+
+@$core.Deprecated('Use roomDiscoveryItemDescriptor instead')
+const RoomDiscoveryItem$json = {
+  '1': 'RoomDiscoveryItem',
+  '2': [
+    {
+      '1': 'room',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.client.Room',
+      '10': 'room'
+    },
+    {'1': 'joined', '3': 2, '4': 1, '5': 8, '10': 'joined'},
+    {'1': 'favorited', '3': 3, '4': 1, '5': 8, '10': 'favorited'},
+    {'1': 'can_join', '3': 4, '4': 1, '5': 8, '10': 'canJoin'},
+    {
+      '1': 'access',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.client.RoomDiscoveryAccess',
+      '10': 'access'
+    },
+  ],
+};
+
+/// Descriptor for `RoomDiscoveryItem`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List roomDiscoveryItemDescriptor = $convert.base64Decode(
+    'ChFSb29tRGlzY292ZXJ5SXRlbRInCgRyb29tGAEgASgLMhMuc3luY3R2LmNsaWVudC5Sb29tUg'
+    'Ryb29tEhYKBmpvaW5lZBgCIAEoCFIGam9pbmVkEhwKCWZhdm9yaXRlZBgDIAEoCFIJZmF2b3Jp'
+    'dGVkEhkKCGNhbl9qb2luGAQgASgIUgdjYW5Kb2luEjoKBmFjY2VzcxgFIAEoDjIiLnN5bmN0di'
+    '5jbGllbnQuUm9vbURpc2NvdmVyeUFjY2Vzc1IGYWNjZXNz');
 
 @$core.Deprecated('Use listRoomCategoriesRequestDescriptor instead')
 const ListRoomCategoriesRequest$json = {
@@ -16526,6 +16560,7 @@ const MyRoom$json = {
       '6': '.synctv.client.MyRoomRelation',
       '10': 'relation'
     },
+    {'1': 'favorited', '3': 5, '4': 1, '5': 8, '10': 'favorited'},
   ],
 };
 
@@ -16534,7 +16569,8 @@ final $typed_data.Uint8List myRoomDescriptor = $convert.base64Decode(
     'CgZNeVJvb20SJwoEcm9vbRgBIAEoCzITLnN5bmN0di5jbGllbnQuUm9vbVIEcm9vbRIgCgtwZX'
     'JtaXNzaW9ucxgCIAEoBFILcGVybWlzc2lvbnMSMQoEcm9sZRgDIAEoDjIdLnN5bmN0di5jb21t'
     'b24uUm9vbU1lbWJlclJvbGVSBHJvbGUSOQoIcmVsYXRpb24YBCABKA4yHS5zeW5jdHYuY2xpZW'
-    '50Lk15Um9vbVJlbGF0aW9uUghyZWxhdGlvbg==');
+    '50Lk15Um9vbVJlbGF0aW9uUghyZWxhdGlvbhIcCglmYXZvcml0ZWQYBSABKAhSCWZhdm9yaXRl'
+    'ZA==');
 
 @$core.Deprecated('Use favoriteRoomRequestDescriptor instead')
 const FavoriteRoomRequest$json = {
@@ -16646,18 +16682,19 @@ final $typed_data.Uint8List listFavoriteRoomsResponseDescriptor =
         'ChlMaXN0RmF2b3JpdGVSb29tc1Jlc3BvbnNlEikKBXJvb21zGAEgAygLMhMuc3luY3R2LmNsaW'
         'VudC5Sb29tUgVyb29tcxIUCgV0b3RhbBgCIAEoBVIFdG90YWw=');
 
-@$core.Deprecated('Use checkRoomRequestDescriptor instead')
-const CheckRoomRequest$json = {
-  '1': 'CheckRoomRequest',
+@$core.Deprecated('Use getRoomDiscoveryRequestDescriptor instead')
+const GetRoomDiscoveryRequest$json = {
+  '1': 'GetRoomDiscoveryRequest',
   '2': [
     {'1': 'room_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'roomId'},
   ],
 };
 
-/// Descriptor for `CheckRoomRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List checkRoomRequestDescriptor = $convert.base64Decode(
-    'ChBDaGVja1Jvb21SZXF1ZXN0EjcKB3Jvb21faWQYASABKAlCHrpIG3IZEAEYQDITXnJvb21fW0'
-    'EtWmEtejAtOV0rJFIGcm9vbUlk');
+/// Descriptor for `GetRoomDiscoveryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getRoomDiscoveryRequestDescriptor =
+    $convert.base64Decode(
+        'ChdHZXRSb29tRGlzY292ZXJ5UmVxdWVzdBI3Cgdyb29tX2lkGAEgASgJQh66SBtyGRABGEAyE1'
+        '5yb29tX1tBLVphLXowLTldKyRSBnJvb21JZA==');
 
 @$core.Deprecated('Use roomMemberTargetPathRequestDescriptor instead')
 const RoomMemberTargetPathRequest$json = {
@@ -16734,96 +16771,6 @@ final $typed_data.Uint8List roomPlaylistTargetPathRequestDescriptor =
         'Ch1Sb29tUGxheWxpc3RUYXJnZXRQYXRoUmVxdWVzdBI3Cgdyb29tX2lkGAEgASgJQh66SBtyGR'
         'ABGEAyE15yb29tX1tBLVphLXowLTldKyRSBnJvb21JZBI9CgtwbGF5bGlzdF9pZBgCIAEoCUIc'
         'ukgZchcQARhAMhFecGxfW0EtWmEtejAtOV0rJFIKcGxheWxpc3RJZA==');
-
-@$core.Deprecated('Use checkRoomResponseDescriptor instead')
-const CheckRoomResponse$json = {
-  '1': 'CheckRoomResponse',
-  '2': [
-    {'1': 'exists', '3': 1, '4': 1, '5': 8, '10': 'exists'},
-    {
-      '1': 'requires_password',
-      '3': 2,
-      '4': 1,
-      '5': 8,
-      '10': 'requiresPassword'
-    },
-    {'1': 'name', '3': 3, '4': 1, '5': 9, '10': 'name'},
-    {
-      '1': 'availability',
-      '3': 4,
-      '4': 1,
-      '5': 14,
-      '6': '.synctv.client.ResourceAvailability',
-      '10': 'availability'
-    },
-  ],
-};
-
-/// Descriptor for `CheckRoomResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List checkRoomResponseDescriptor = $convert.base64Decode(
-    'ChFDaGVja1Jvb21SZXNwb25zZRIWCgZleGlzdHMYASABKAhSBmV4aXN0cxIrChFyZXF1aXJlc1'
-    '9wYXNzd29yZBgCIAEoCFIQcmVxdWlyZXNQYXNzd29yZBISCgRuYW1lGAMgASgJUgRuYW1lEkcK'
-    'DGF2YWlsYWJpbGl0eRgEIAEoDjIjLnN5bmN0di5jbGllbnQuUmVzb3VyY2VBdmFpbGFiaWxpdH'
-    'lSDGF2YWlsYWJpbGl0eQ==');
-
-@$core.Deprecated('Use getHotRoomsRequestDescriptor instead')
-const GetHotRoomsRequest$json = {
-  '1': 'GetHotRoomsRequest',
-  '2': [
-    {'1': 'limit', '3': 1, '4': 1, '5': 5, '10': 'limit'},
-  ],
-  '7': {},
-};
-
-/// Descriptor for `GetHotRoomsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getHotRoomsRequestDescriptor = $convert.base64Decode(
-    'ChJHZXRIb3RSb29tc1JlcXVlc3QSFAoFbGltaXQYASABKAVSBWxpbWl0OokBukiFARqCAQoTZ2'
-    'V0X2hvdF9yb29tcy5saW1pdBIxbGltaXQgbXVzdCBiZSAwICh1c2UgZGVmYXVsdCkgb3IgYmV0'
-    'd2VlbiAxIGFuZCA1MBo4dGhpcy5saW1pdCA9PSAwIHx8ICh0aGlzLmxpbWl0ID49IDEgJiYgdG'
-    'hpcy5saW1pdCA8PSA1MCk=');
-
-@$core.Deprecated('Use getHotRoomsResponseDescriptor instead')
-const GetHotRoomsResponse$json = {
-  '1': 'GetHotRoomsResponse',
-  '2': [
-    {
-      '1': 'rooms',
-      '3': 1,
-      '4': 3,
-      '5': 11,
-      '6': '.synctv.client.RoomWithStats',
-      '10': 'rooms'
-    },
-  ],
-};
-
-/// Descriptor for `GetHotRoomsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getHotRoomsResponseDescriptor = $convert.base64Decode(
-    'ChNHZXRIb3RSb29tc1Jlc3BvbnNlEjIKBXJvb21zGAEgAygLMhwuc3luY3R2LmNsaWVudC5Sb2'
-    '9tV2l0aFN0YXRzUgVyb29tcw==');
-
-@$core.Deprecated('Use roomWithStatsDescriptor instead')
-const RoomWithStats$json = {
-  '1': 'RoomWithStats',
-  '2': [
-    {
-      '1': 'room',
-      '3': 1,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.client.Room',
-      '10': 'room'
-    },
-    {'1': 'online_count', '3': 2, '4': 1, '5': 5, '10': 'onlineCount'},
-    {'1': 'total_members', '3': 3, '4': 1, '5': 5, '10': 'totalMembers'},
-  ],
-};
-
-/// Descriptor for `RoomWithStats`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List roomWithStatsDescriptor = $convert.base64Decode(
-    'Cg1Sb29tV2l0aFN0YXRzEicKBHJvb20YASABKAsyEy5zeW5jdHYuY2xpZW50LlJvb21SBHJvb2'
-    '0SIQoMb25saW5lX2NvdW50GAIgASgFUgtvbmxpbmVDb3VudBIjCg10b3RhbF9tZW1iZXJzGAMg'
-    'ASgFUgx0b3RhbE1lbWJlcnM=');
 
 @$core.Deprecated('Use getPublicSettingsRequestDescriptor instead')
 const GetPublicSettingsRequest$json = {
@@ -18653,6 +18600,16 @@ const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
       '3': '.synctv.client.JoinRoomResponse'
     },
     {
+      '1': 'GetRoomDiscovery',
+      '2': '.synctv.client.GetRoomDiscoveryRequest',
+      '3': '.synctv.client.RoomDiscoveryItem'
+    },
+    {
+      '1': 'DiscoverRooms',
+      '2': '.synctv.client.DiscoverRoomsRequest',
+      '3': '.synctv.client.DiscoverRoomsResponse'
+    },
+    {
       '1': 'ListMyRooms',
       '2': '.synctv.client.ListMyRoomsRequest',
       '3': '.synctv.client.ListMyRoomsResponse'
@@ -18850,6 +18807,10 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       StartRoomPasswordLoginResponse$json,
   '.synctv.client.FinishRoomPasswordLoginRequest':
       FinishRoomPasswordLoginRequest$json,
+  '.synctv.client.GetRoomDiscoveryRequest': GetRoomDiscoveryRequest$json,
+  '.synctv.client.RoomDiscoveryItem': RoomDiscoveryItem$json,
+  '.synctv.client.DiscoverRoomsRequest': DiscoverRoomsRequest$json,
+  '.synctv.client.DiscoverRoomsResponse': DiscoverRoomsResponse$json,
   '.synctv.client.ListMyRoomsRequest': ListMyRoomsRequest$json,
   '.synctv.client.ListMyRoomsResponse': ListMyRoomsResponse$json,
   '.synctv.client.MyRoom': MyRoom$json,
@@ -18919,14 +18880,17 @@ final $typed_data.Uint8List userServiceDescriptor = $convert.base64Decode(
     'YuY2xpZW50LlN0YXJ0Um9vbVBhc3N3b3JkTG9naW5SZXF1ZXN0Gi0uc3luY3R2LmNsaWVudC5T'
     'dGFydFJvb21QYXNzd29yZExvZ2luUmVzcG9uc2USaQoXRmluaXNoUm9vbVBhc3N3b3JkTG9naW'
     '4SLS5zeW5jdHYuY2xpZW50LkZpbmlzaFJvb21QYXNzd29yZExvZ2luUmVxdWVzdBofLnN5bmN0'
-    'di5jbGllbnQuSm9pblJvb21SZXNwb25zZRJUCgtMaXN0TXlSb29tcxIhLnN5bmN0di5jbGllbn'
-    'QuTGlzdE15Um9vbXNSZXF1ZXN0GiIuc3luY3R2LmNsaWVudC5MaXN0TXlSb29tc1Jlc3BvbnNl'
-    'ElcKDEZhdm9yaXRlUm9vbRIiLnN5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVxdWVzdBojLn'
-    'N5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVzcG9uc2USXQoOVW5mYXZvcml0ZVJvb20SJC5z'
-    'eW5jdHYuY2xpZW50LlVuZmF2b3JpdGVSb29tUmVxdWVzdBolLnN5bmN0di5jbGllbnQuVW5mYX'
-    'Zvcml0ZVJvb21SZXNwb25zZRJmChFMaXN0RmF2b3JpdGVSb29tcxInLnN5bmN0di5jbGllbnQu'
-    'TGlzdEZhdm9yaXRlUm9vbXNSZXF1ZXN0Giguc3luY3R2LmNsaWVudC5MaXN0RmF2b3JpdGVSb2'
-    '9tc1Jlc3BvbnNl');
+    'di5jbGllbnQuSm9pblJvb21SZXNwb25zZRJcChBHZXRSb29tRGlzY292ZXJ5EiYuc3luY3R2Lm'
+    'NsaWVudC5HZXRSb29tRGlzY292ZXJ5UmVxdWVzdBogLnN5bmN0di5jbGllbnQuUm9vbURpc2Nv'
+    'dmVyeUl0ZW0SWgoNRGlzY292ZXJSb29tcxIjLnN5bmN0di5jbGllbnQuRGlzY292ZXJSb29tc1'
+    'JlcXVlc3QaJC5zeW5jdHYuY2xpZW50LkRpc2NvdmVyUm9vbXNSZXNwb25zZRJUCgtMaXN0TXlS'
+    'b29tcxIhLnN5bmN0di5jbGllbnQuTGlzdE15Um9vbXNSZXF1ZXN0GiIuc3luY3R2LmNsaWVudC'
+    '5MaXN0TXlSb29tc1Jlc3BvbnNlElcKDEZhdm9yaXRlUm9vbRIiLnN5bmN0di5jbGllbnQuRmF2'
+    'b3JpdGVSb29tUmVxdWVzdBojLnN5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVzcG9uc2USXQ'
+    'oOVW5mYXZvcml0ZVJvb20SJC5zeW5jdHYuY2xpZW50LlVuZmF2b3JpdGVSb29tUmVxdWVzdBol'
+    'LnN5bmN0di5jbGllbnQuVW5mYXZvcml0ZVJvb21SZXNwb25zZRJmChFMaXN0RmF2b3JpdGVSb2'
+    '9tcxInLnN5bmN0di5jbGllbnQuTGlzdEZhdm9yaXRlUm9vbXNSZXF1ZXN0Giguc3luY3R2LmNs'
+    'aWVudC5MaXN0RmF2b3JpdGVSb29tc1Jlc3BvbnNl');
 
 const $core.Map<$core.String, $core.dynamic> RoomServiceBase$json = {
   '1': 'RoomService',
@@ -20353,19 +20317,14 @@ const $core.Map<$core.String, $core.dynamic> PublicServiceBase$json = {
   '1': 'PublicService',
   '2': [
     {
-      '1': 'CheckRoom',
-      '2': '.synctv.client.CheckRoomRequest',
-      '3': '.synctv.client.CheckRoomResponse'
+      '1': 'GetRoomDiscovery',
+      '2': '.synctv.client.GetRoomDiscoveryRequest',
+      '3': '.synctv.client.RoomDiscoveryItem'
     },
     {
-      '1': 'ListRooms',
-      '2': '.synctv.client.ListRoomsRequest',
-      '3': '.synctv.client.ListRoomsResponse'
-    },
-    {
-      '1': 'GetHotRooms',
-      '2': '.synctv.client.GetHotRoomsRequest',
-      '3': '.synctv.client.GetHotRoomsResponse'
+      '1': 'DiscoverRooms',
+      '2': '.synctv.client.DiscoverRoomsRequest',
+      '3': '.synctv.client.DiscoverRoomsResponse'
     },
     {
       '1': 'GetPublicSettings',
@@ -20388,10 +20347,8 @@ const $core.Map<$core.String, $core.dynamic> PublicServiceBase$json = {
 @$core.Deprecated('Use publicServiceDescriptor instead')
 const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
     PublicServiceBase$messageJson = {
-  '.synctv.client.CheckRoomRequest': CheckRoomRequest$json,
-  '.synctv.client.CheckRoomResponse': CheckRoomResponse$json,
-  '.synctv.client.ListRoomsRequest': ListRoomsRequest$json,
-  '.synctv.client.ListRoomsResponse': ListRoomsResponse$json,
+  '.synctv.client.GetRoomDiscoveryRequest': GetRoomDiscoveryRequest$json,
+  '.synctv.client.RoomDiscoveryItem': RoomDiscoveryItem$json,
   '.synctv.client.Room': Room$json,
   '.synctv.client.RoomSettings': RoomSettings$json,
   '.synctv.client.AutoPlaySettings': AutoPlaySettings$json,
@@ -20405,9 +20362,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.UserAvatar': UserAvatar$json,
   '.synctv.client.RoomCategory': RoomCategory$json,
   '.synctv.client.RoomLabel': RoomLabel$json,
-  '.synctv.client.GetHotRoomsRequest': GetHotRoomsRequest$json,
-  '.synctv.client.GetHotRoomsResponse': GetHotRoomsResponse$json,
-  '.synctv.client.RoomWithStats': RoomWithStats$json,
+  '.synctv.client.DiscoverRoomsRequest': DiscoverRoomsRequest$json,
+  '.synctv.client.DiscoverRoomsResponse': DiscoverRoomsResponse$json,
   '.synctv.client.GetPublicSettingsRequest': GetPublicSettingsRequest$json,
   '.synctv.client.GetPublicSettingsResponse': GetPublicSettingsResponse$json,
   '.synctv.client.GetServerInfoRequest': GetServerInfoRequest$json,
@@ -20418,16 +20374,15 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
 
 /// Descriptor for `PublicService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
 final $typed_data.Uint8List publicServiceDescriptor = $convert.base64Decode(
-    'Cg1QdWJsaWNTZXJ2aWNlEk4KCUNoZWNrUm9vbRIfLnN5bmN0di5jbGllbnQuQ2hlY2tSb29tUm'
-    'VxdWVzdBogLnN5bmN0di5jbGllbnQuQ2hlY2tSb29tUmVzcG9uc2USTgoJTGlzdFJvb21zEh8u'
-    'c3luY3R2LmNsaWVudC5MaXN0Um9vbXNSZXF1ZXN0GiAuc3luY3R2LmNsaWVudC5MaXN0Um9vbX'
-    'NSZXNwb25zZRJUCgtHZXRIb3RSb29tcxIhLnN5bmN0di5jbGllbnQuR2V0SG90Um9vbXNSZXF1'
-    'ZXN0GiIuc3luY3R2LmNsaWVudC5HZXRIb3RSb29tc1Jlc3BvbnNlEmYKEUdldFB1YmxpY1NldH'
-    'RpbmdzEicuc3luY3R2LmNsaWVudC5HZXRQdWJsaWNTZXR0aW5nc1JlcXVlc3QaKC5zeW5jdHYu'
-    'Y2xpZW50LkdldFB1YmxpY1NldHRpbmdzUmVzcG9uc2USWgoNR2V0U2VydmVySW5mbxIjLnN5bm'
-    'N0di5jbGllbnQuR2V0U2VydmVySW5mb1JlcXVlc3QaJC5zeW5jdHYuY2xpZW50LkdldFNlcnZl'
-    'ckluZm9SZXNwb25zZRJaCg1HZXRTZXJ2ZXJUaW1lEiMuc3luY3R2LmNsaWVudC5HZXRTZXJ2ZX'
-    'JUaW1lUmVxdWVzdBokLnN5bmN0di5jbGllbnQuR2V0U2VydmVyVGltZVJlc3BvbnNl');
+    'Cg1QdWJsaWNTZXJ2aWNlElwKEEdldFJvb21EaXNjb3ZlcnkSJi5zeW5jdHYuY2xpZW50LkdldF'
+    'Jvb21EaXNjb3ZlcnlSZXF1ZXN0GiAuc3luY3R2LmNsaWVudC5Sb29tRGlzY292ZXJ5SXRlbRJa'
+    'Cg1EaXNjb3ZlclJvb21zEiMuc3luY3R2LmNsaWVudC5EaXNjb3ZlclJvb21zUmVxdWVzdBokLn'
+    'N5bmN0di5jbGllbnQuRGlzY292ZXJSb29tc1Jlc3BvbnNlEmYKEUdldFB1YmxpY1NldHRpbmdz'
+    'Eicuc3luY3R2LmNsaWVudC5HZXRQdWJsaWNTZXR0aW5nc1JlcXVlc3QaKC5zeW5jdHYuY2xpZW'
+    '50LkdldFB1YmxpY1NldHRpbmdzUmVzcG9uc2USWgoNR2V0U2VydmVySW5mbxIjLnN5bmN0di5j'
+    'bGllbnQuR2V0U2VydmVySW5mb1JlcXVlc3QaJC5zeW5jdHYuY2xpZW50LkdldFNlcnZlckluZm'
+    '9SZXNwb25zZRJaCg1HZXRTZXJ2ZXJUaW1lEiMuc3luY3R2LmNsaWVudC5HZXRTZXJ2ZXJUaW1l'
+    'UmVxdWVzdBokLnN5bmN0di5jbGllbnQuR2V0U2VydmVyVGltZVJlc3BvbnNl');
 
 const $core.Map<$core.String, $core.dynamic> EmailServiceBase$json = {
   '1': 'EmailService',

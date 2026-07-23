@@ -932,27 +932,30 @@ class RoomRealtimeCodec {
   }
 
   static List<List<int>> encodeInitialObservations({
-    String afterChatEventId = '',
+    bool includeResolvedPlayback = true,
   }) {
     return [
-      ...encodePlaybackObservations(),
+      ...encodePlaybackObservations(
+        includeResolvedPlayback: includeResolvedPlayback,
+      ),
       encodeRoomSettingsObservation(),
-      encodePlaylistObservation(),
       encodeSelfRoomMemberObservation(),
       encodeOnlineCountObservation(),
-      encodeChatEventsObservation(afterEventId: afterChatEventId),
     ];
   }
 
-  static List<List<int>> encodePlaybackObservations() {
+  static List<List<int>> encodePlaybackObservations({
+    bool includeResolvedPlayback = true,
+  }) {
     return [
       _observe('playback_state', playbackState: client.ObservePlaybackState()),
-      _observe(
-        'playback',
-        playback: client.ObservePlayback(
-          playbackClientProfile: defaultPlaybackClientProfile(),
+      if (includeResolvedPlayback)
+        _observe(
+          'playback',
+          playback: client.ObservePlayback(
+            playbackClientProfile: defaultPlaybackClientProfile(),
+          ),
         ),
-      ),
     ];
   }
 

@@ -600,6 +600,27 @@ class SyncTvUserApi {
     );
   }
 
+  Future<client.RoomDiscoveryItem> getRoomDiscovery(
+    client.GetRoomDiscoveryRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/user/rooms/${request.roomId}/discovery',
+      client.RoomDiscoveryItem.create,
+    );
+  }
+
+  Future<client.DiscoverRoomsResponse> discoverRooms(
+    client.DiscoverRoomsRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/user/rooms/discover',
+      client.DiscoverRoomsResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
   Future<client.ListMyRoomsResponse> listMyRooms(
     client.ListMyRoomsRequest request,
   ) {
@@ -1994,32 +2015,24 @@ class SyncTvPublicApi {
 
   final SyncTvApiClient _api;
 
-  Future<client.CheckRoomResponse> checkRoom(client.CheckRoomRequest request) {
-    return _api._send(
-      'GET',
-      '/api/rooms/${request.roomId}/check',
-      client.CheckRoomResponse.create,
-      auth: false,
-    );
-  }
-
-  Future<client.ListRoomsResponse> listRooms(client.ListRoomsRequest request) {
-    return _api._send(
-      'GET',
-      '/api/rooms',
-      client.ListRoomsResponse.create,
-      auth: false,
-      query: _api._messageQuery(request),
-    );
-  }
-
-  Future<client.GetHotRoomsResponse> getHotRooms(
-    client.GetHotRoomsRequest request,
+  Future<client.RoomDiscoveryItem> getRoomDiscovery(
+    client.GetRoomDiscoveryRequest request,
   ) {
     return _api._send(
       'GET',
-      '/api/rooms/hot',
-      client.GetHotRoomsResponse.create,
+      '/api/rooms/${request.roomId}/discovery',
+      client.RoomDiscoveryItem.create,
+      auth: false,
+    );
+  }
+
+  Future<client.DiscoverRoomsResponse> discoverRooms(
+    client.DiscoverRoomsRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/rooms/discover',
+      client.DiscoverRoomsResponse.create,
       auth: false,
       query: _api._messageQuery(request),
     );

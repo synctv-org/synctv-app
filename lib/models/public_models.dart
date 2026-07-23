@@ -87,6 +87,22 @@ class RoomsPage {
   });
 }
 
+class RoomDiscoveryPage {
+  final List<SyncTvRoom> featuredRooms;
+  final List<SyncTvRoom> rooms;
+  final int total;
+  final int page;
+  final int pageSize;
+
+  const RoomDiscoveryPage({
+    required this.featuredRooms,
+    required this.rooms,
+    required this.total,
+    required this.page,
+    required this.pageSize,
+  });
+}
+
 class AuthException implements Exception {
   final String message;
   AuthException(this.message);

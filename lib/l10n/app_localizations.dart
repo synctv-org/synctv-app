@@ -470,53 +470,11 @@ abstract class AppLocalizations {
   /// **'Could not update the favorite: {error}'**
   String updateFavoriteFailed(String error);
 
-  /// No description provided for @roomFeedPublic.
-  ///
-  /// In en, this message translates to:
-  /// **'Public'**
-  String get roomFeedPublic;
-
-  /// No description provided for @roomFeedMine.
-  ///
-  /// In en, this message translates to:
-  /// **'Mine'**
-  String get roomFeedMine;
-
-  /// No description provided for @roomFeedPopular.
-  ///
-  /// In en, this message translates to:
-  /// **'Popular'**
-  String get roomFeedPopular;
-
-  /// No description provided for @roomFeedFavorites.
-  ///
-  /// In en, this message translates to:
-  /// **'Favorites'**
-  String get roomFeedFavorites;
-
-  /// No description provided for @popularRoomsSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No popular rooms} =1{Showing 1 popular room} other{Showing {count} popular rooms}}'**
-  String popularRoomsSummary(int count);
-
-  /// No description provided for @favoriteRoomsPageSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'{total, plural, =0{No favorites} =1{1 favorite} other{{total} favorites}} · Page {page} of {pageCount}'**
-  String favoriteRoomsPageSummary(int total, int page, int pageCount);
-
   /// No description provided for @roomsPageSummary.
   ///
   /// In en, this message translates to:
   /// **'{total, plural, =0{No rooms} =1{1 room} other{{total} rooms}} · Page {page} of {pageCount}'**
   String roomsPageSummary(int total, int page, int pageCount);
-
-  /// No description provided for @popularRoomsSearchDisabled.
-  ///
-  /// In en, this message translates to:
-  /// **'Search is unavailable for popular rooms'**
-  String get popularRoomsSearchDisabled;
 
   /// No description provided for @searchRooms.
   ///
@@ -529,12 +487,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All categories'**
   String get allCategories;
-
-  /// No description provided for @publicRoomsOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Public rooms only'**
-  String get publicRoomsOnly;
 
   /// No description provided for @labels.
   ///
@@ -566,12 +518,6 @@ abstract class AppLocalizations {
   /// **'Add a server to get started'**
   String get addServerToStart;
 
-  /// No description provided for @noFavoriteRooms.
-  ///
-  /// In en, this message translates to:
-  /// **'No favorite rooms yet'**
-  String get noFavoriteRooms;
-
   /// No description provided for @noRooms.
   ///
   /// In en, this message translates to:
@@ -583,18 +529,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter a server address to browse public rooms, log in, and join a watch room.'**
   String get addServerDescription;
-
-  /// No description provided for @myRoomsEmptyDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Rooms you join or create will appear here'**
-  String get myRoomsEmptyDescription;
-
-  /// No description provided for @favoriteRoomsEmptyDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Rooms you favorite will appear here'**
-  String get favoriteRoomsEmptyDescription;
 
   /// No description provided for @filteredRoomsEmptyDescription.
   ///
@@ -902,17 +836,107 @@ abstract class AppLocalizations {
   /// **'Joinable'**
   String get roomJoinable;
 
+  /// No description provided for @roomGuestAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter as guest'**
+  String get roomGuestAccess;
+
+  /// No description provided for @featuredRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured rooms'**
+  String get featuredRooms;
+
+  /// No description provided for @featuredRoomsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Active spaces for watching together'**
+  String get featuredRoomsDescription;
+
+  /// No description provided for @continueWatchingRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue watching'**
+  String get continueWatchingRooms;
+
+  /// No description provided for @continueWatchingRoomsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to rooms you have already joined'**
+  String get continueWatchingRoomsDescription;
+
+  /// No description provided for @popularRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular rooms'**
+  String get popularRooms;
+
+  /// No description provided for @popularRoomsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Ranked by live activity, membership, and recent use'**
+  String get popularRoomsDescription;
+
+  /// No description provided for @roomJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get roomJoined;
+
+  /// No description provided for @passwordRequiredShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password required'**
+  String get passwordRequiredShort;
+
+  /// No description provided for @roomApprovalRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval required'**
+  String get roomApprovalRequired;
+
+  /// No description provided for @roomApprovalPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval pending'**
+  String get roomApprovalPending;
+
+  /// No description provided for @roomJoinRequestSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Join request submitted for approval'**
+  String get roomJoinRequestSubmitted;
+
+  /// No description provided for @signInToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to join'**
+  String get signInToJoin;
+
+  /// No description provided for @roomInvitationOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation only'**
+  String get roomInvitationOnly;
+
+  /// No description provided for @roomFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Room full'**
+  String get roomFull;
+
+  /// No description provided for @roomJoinCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'Join unavailable'**
+  String get roomJoinCooldown;
+
   /// No description provided for @roomAudienceWithMembers.
   ///
   /// In en, this message translates to:
   /// **'{viewerCount} online / {memberCount} members'**
   String roomAudienceWithMembers(int viewerCount, int memberCount);
-
-  /// No description provided for @roomAudience.
-  ///
-  /// In en, this message translates to:
-  /// **'{viewerCount} online'**
-  String roomAudience(int viewerCount);
 
   /// No description provided for @roomConnections.
   ///
@@ -1471,6 +1495,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next page'**
   String get nextPage;
+
+  /// No description provided for @previousRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous rooms'**
+  String get previousRooms;
+
+  /// No description provided for @nextRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Next rooms'**
+  String get nextRooms;
 
   /// No description provided for @confirm.
   ///

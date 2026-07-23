@@ -30,6 +30,16 @@ class SyncTvPublicRoomDomainService {
   final SyncTvMemoryCache _cache;
   final opaque.SyncTvOpaqueClient _opaqueClient;
 
+  Future<bool> _hasAuthenticatedUserSession() async {
+    if (_api.session.isGuest) return false;
+    if (_api.session.hasAccessToken) return true;
+    final refreshToken = _api.session.refreshToken;
+    if (refreshToken == null || refreshToken.isEmpty) return false;
+    final refreshed = await _api.refreshAccessTokenIfPossible();
+    if (refreshed) await _sessionStore.persistTokens();
+    return refreshed;
+  }
+
   Future<PublicSettingsInfo> getPublicSettings({bool refresh = false}) async {
     return _cache.get<PublicSettingsInfo>(
       'public:settings',
@@ -138,30 +148,42 @@ class SyncTvPublicRoomDomainService {
     );
   }
 
-  Future<RoomsPage> getRoomsPage({
+  Future<RoomDiscoveryPage> discoverRooms({
     int page = 1,
     int pageSize = 100,
     String? search,
     String categoryId = '',
     List<String> labelIds = const [],
-    client_enum.RoomListSortBy sortBy =
-        client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-    client_enum.SortDirection sortDirection =
-        client_enum.SortDirection.SORT_DIRECTION_DESC,
   }) async {
-    final response = await _api.publicService.listRooms(
-      client.ListRoomsRequest(
+    final request = client.DiscoverRoomsRequest(
+      page: page,
+      pageSize: pageSize,
+      search: search ?? '',
+      categoryId: categoryId,
+      labelIds: labelIds,
+    );
+    if (await _hasAuthenticatedUserSession()) {
+      final response = await _api.user.discoverRooms(request);
+      return RoomDiscoveryPage(
+        featuredRooms: response.featuredRooms
+            .map(_api.mapRoomDiscoveryItem)
+            .toList(growable: false),
+        rooms: response.rooms
+            .map(_api.mapRoomDiscoveryItem)
+            .toList(growable: false),
+        total: response.total,
         page: page,
         pageSize: pageSize,
-        search: search ?? '',
-        categoryId: categoryId,
-        labelIds: labelIds,
-        sortBy: sortBy,
-        sortDirection: sortDirection,
-      ),
-    );
-    return RoomsPage(
-      rooms: response.rooms.map(_api.mapRoom).toList(growable: false),
+      );
+    }
+    final response = await _api.publicService.discoverRooms(request);
+    return RoomDiscoveryPage(
+      featuredRooms: response.featuredRooms
+          .map(_api.mapRoomDiscoveryItem)
+          .toList(growable: false),
+      rooms: response.rooms
+          .map(_api.mapRoomDiscoveryItem)
+          .toList(growable: false),
       total: response.total,
       page: page,
       pageSize: pageSize,
@@ -196,7 +218,15 @@ class SyncTvPublicRoomDomainService {
         client.GetRoomRequest(roomId: roomId),
       );
       return RoomsPage(
-        rooms: [_api.mapRoom(response.room)],
+        rooms: [
+          _api
+              .mapRoom(response.room)
+              .copyWith(
+                joined: true,
+                canJoin: false,
+                isFavorite: response.favorited,
+              ),
+        ],
         total: 1,
         page: page,
         pageSize: pageSize,
@@ -243,7 +273,13 @@ class SyncTvPublicRoomDomainService {
       ),
     );
     return RoomsPage(
-      rooms: response.rooms.map(_api.mapRoom).toList(growable: false),
+      rooms: response.rooms
+          .map(
+            (room) => _api
+                .mapRoom(room)
+                .copyWith(joined: true, canJoin: false, isFavorite: true),
+          )
+          .toList(growable: false),
       total: response.total,
       page: page,
       pageSize: pageSize,
@@ -254,42 +290,29 @@ class SyncTvPublicRoomDomainService {
     final response = await _api.user.favoriteRoom(
       client.FavoriteRoomRequest(roomId: roomId),
     );
-    return _api.mapRoom(response.room);
+    return _api
+        .mapRoom(response.room)
+        .copyWith(joined: true, canJoin: false, isFavorite: true);
   }
 
   Future<SyncTvRoom> unfavoriteRoom(String roomId) async {
     final response = await _api.user.unfavoriteRoom(
       client.UnfavoriteRoomRequest(roomId: roomId),
     );
-    return _api.mapRoom(response.room);
+    return _api
+        .mapRoom(response.room)
+        .copyWith(joined: true, canJoin: false, isFavorite: false);
   }
 
-  Future<List<SyncTvRoom>> getHotRooms({int limit = 20}) async {
-    final response = await _api.publicService.getHotRooms(
-      client.GetHotRoomsRequest(limit: limit),
-    );
-    return response.rooms
-        .map((item) {
-          final room = _api.mapRoom(item.room);
-          return room.copyWith(
-            viewerCount: item.room.hasPresence()
-                ? room.viewerCount
-                : item.onlineCount,
-            memberCount: item.totalMembers,
-          );
-        })
-        .toList(growable: false);
-  }
-
-  Future<RoomCheckInfo> checkRoom(String roomId) async {
-    final response = await _api.publicService.checkRoom(
-      client.CheckRoomRequest(roomId: roomId),
-    );
-    return RoomCheckInfo(
-      exists: response.exists,
-      requiresPassword: response.requiresPassword,
-      name: response.name,
-      availability: response.availability.value,
+  Future<SyncTvRoom> getRoomDiscovery(String roomId) async {
+    final request = client.GetRoomDiscoveryRequest(roomId: roomId);
+    if (await _hasAuthenticatedUserSession()) {
+      return _api.mapRoomDiscoveryItem(
+        await _api.user.getRoomDiscovery(request),
+      );
+    }
+    return _api.mapRoomDiscoveryItem(
+      await _api.publicService.getRoomDiscovery(request),
     );
   }
 
@@ -315,14 +338,22 @@ class SyncTvPublicRoomDomainService {
     }
     request.labelIds.addAll(labelIds);
     final room = await _api.user.createRoom(request);
-    return _api.mapRoom(room);
+    return _api
+        .mapRoom(room)
+        .copyWith(
+          joined: true,
+          canJoin: false,
+          discoveryAccess:
+              client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_ENTER.value,
+          myRelation: client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED.value,
+        );
   }
 
   Future<void> deleteRoom(String roomId) async {
     await _api.room.deleteRoom(roomId, client.DeleteRoomRequest());
   }
 
-  Future<void> joinRoom(String roomId, String password) async {
+  Future<JoinRoomResult> joinRoom(String roomId, String password) async {
     if (_api.session.isGuest) {
       if (password.isNotEmpty) {
         throw AuthException('访客 token 不能进入带密码房间，请使用用户账号加入。');
@@ -330,16 +361,18 @@ class SyncTvPublicRoomDomainService {
       if (_sessionStore.guestRoomId != roomId) {
         await _authService.createGuestToken(roomId);
       }
-      return;
+      return const JoinRoomResult(requiresApproval: false);
     }
     if (password.isNotEmpty) {
-      await _joinRoomWithOpaquePassword(roomId, password);
-      return;
+      return _joinRoomWithOpaquePassword(roomId, password);
     }
-    await _api.user.joinRoom(client.JoinRoomRequest(roomId: roomId));
+    final response = await _api.user.joinRoom(
+      client.JoinRoomRequest(roomId: roomId),
+    );
+    return JoinRoomResult(requiresApproval: response.requiresApproval);
   }
 
-  Future<void> _joinRoomWithOpaquePassword(
+  Future<JoinRoomResult> _joinRoomWithOpaquePassword(
     String roomId,
     String password,
   ) async {
@@ -356,19 +389,22 @@ class SyncTvPublicRoomDomainService {
       state: start.state,
       credentialResponse: Uint8List.fromList(challenge.credentialResponse),
     );
-    await _api.user.finishRoomPasswordLogin(
+    final response = await _api.user.finishRoomPasswordLogin(
       roomId,
       client.FinishRoomPasswordLoginRequest(
         sessionId: challenge.sessionId,
         credentialFinalization: finish.credentialFinalization,
       ),
     );
+    return JoinRoomResult(requiresApproval: response.requiresApproval);
   }
 
   Future<SyncTvRoom> getRoomInfo(String roomId) async {
     final response = await _api.user.getRoom(
       client.GetRoomRequest(roomId: roomId),
     );
-    return _api.mapRoom(response.room);
+    return _api
+        .mapRoom(response.room)
+        .copyWith(joined: true, canJoin: false, isFavorite: response.favorited);
   }
 }

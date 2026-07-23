@@ -2,6 +2,8 @@ import 'package:synctv_app/models/proto_mapping.dart';
 import 'package:synctv_app/models/source_config_codec.dart';
 import 'package:synctv_app/services/synctv_clock.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
+    as common_enum;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 
@@ -144,6 +146,12 @@ class SyncTvRoom {
   final RoomCategoryInfo? category;
   final List<RoomLabelInfo> labels;
   final bool isFavorite;
+  final bool joined;
+  final bool canJoin;
+  final int discoveryAccess;
+
+  bool get isActive =>
+      status == common_enum.RoomStatus.ROOM_STATUS_ACTIVE.value;
 
   SyncTvRoom({
     required this.roomId,
@@ -174,6 +182,9 @@ class SyncTvRoom {
     this.category,
     this.labels = const [],
     this.isFavorite = false,
+    this.joined = false,
+    this.canJoin = false,
+    this.discoveryAccess = 0,
   });
 
   SyncTvRoom copyWith({
@@ -205,6 +216,9 @@ class SyncTvRoom {
     RoomCategoryInfo? category,
     List<RoomLabelInfo>? labels,
     bool? isFavorite,
+    bool? joined,
+    bool? canJoin,
+    int? discoveryAccess,
   }) {
     return SyncTvRoom(
       roomId: roomId ?? this.roomId,
@@ -235,6 +249,9 @@ class SyncTvRoom {
       category: category ?? this.category,
       labels: labels ?? this.labels,
       isFavorite: isFavorite ?? this.isFavorite,
+      joined: joined ?? this.joined,
+      canJoin: canJoin ?? this.canJoin,
+      discoveryAccess: discoveryAccess ?? this.discoveryAccess,
     );
   }
 }
@@ -989,20 +1006,10 @@ class RoomPlaybackEntry extends RoomMediaEntry {
   });
 }
 
-class RoomCheckInfo {
-  final bool exists;
-  final bool requiresPassword;
-  final String name;
-  final int availability;
+class JoinRoomResult {
+  final bool requiresApproval;
 
-  const RoomCheckInfo({
-    required this.exists,
-    required this.requiresPassword,
-    required this.name,
-    required this.availability,
-  });
-
-  bool get isAvailable => availability == 1;
+  const JoinRoomResult({required this.requiresApproval});
 }
 
 class SyncTvPlaybackStatus {

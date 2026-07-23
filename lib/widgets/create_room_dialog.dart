@@ -4,8 +4,6 @@ import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/public_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/services/synctv_service.dart';
-import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
-    as common_enum;
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/utils/room_taxonomy.dart';
@@ -229,11 +227,8 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
         labelIds: _selectedLabelIdList,
       );
       if (!mounted) return;
+      final pendingReview = !room.isActive;
       Navigator.pop(context);
-      await widget.onCreated(room);
-      final pendingReview =
-          _settings?.roomCreationApprovalRequired == true ||
-          room.status != common_enum.RoomStatus.ROOM_STATUS_ACTIVE.value;
       if (!widget.pageContext.mounted) return;
       MessageUtils.showSuccess(
         widget.pageContext,
@@ -241,6 +236,11 @@ class _CreateRoomDialogBodyState extends State<_CreateRoomDialogBody> {
             ? widget.pageContext.l10n.roomSubmittedForReview
             : widget.successMessage,
       );
+      try {
+        await widget.onCreated(room);
+      } catch (error) {
+        debugPrint('Post-create room action failed: $error');
+      }
     } catch (error) {
       if (mounted) {
         MessageUtils.showError(

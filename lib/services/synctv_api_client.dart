@@ -421,14 +421,17 @@ class SyncTvApiClient {
     return parsed.replace(path: path.isEmpty ? '' : path);
   }
 
-  Uri _uri(String path, [Map<String, String?> query = const {}]) {
+  Uri _uri(String path, [Map<String, Object?> query = const {}]) {
     final basePath = _baseUri.path.endsWith('/')
         ? _baseUri.path.substring(0, _baseUri.path.length - 1)
         : _baseUri.path;
     final requestPath = path.startsWith('/') ? path : '/$path';
-    final filteredQuery = <String, String>{};
+    final filteredQuery = <String, dynamic>{};
     query.forEach((key, value) {
-      if (value != null && value.isNotEmpty) filteredQuery[key] = value;
+      if (value == null) return;
+      if (value is String && value.isEmpty) return;
+      if (value is Iterable && value.isEmpty) return;
+      filteredQuery[key] = value;
     });
     return _baseUri.replace(
       path: '$basePath$requestPath',
@@ -453,7 +456,7 @@ class SyncTvApiClient {
     String path,
     T Function() create, {
     Object? body,
-    Map<String, String?> query = const {},
+    Map<String, Object?> query = const {},
     bool auth = true,
   }) async {
     final uri = _uri(path, query);
@@ -596,7 +599,7 @@ class SyncTvApiClient {
     return message;
   }
 
-  Map<String, String?> _messageQuery(GeneratedMessage message) {
+  Map<String, Object?> _messageQuery(GeneratedMessage message) {
     return _messageJson(
       message,
     ).map((key, value) => MapEntry(key, _queryValue(value)));
@@ -649,8 +652,15 @@ class SyncTvApiClient {
     return value;
   }
 
-  String? _queryValue(Object? value) {
+  Object? _queryValue(Object? value) {
     if (value == null) return null;
+    if (value is Iterable) {
+      return value.map(_queryScalarValue).toList(growable: false);
+    }
+    return _queryScalarValue(value);
+  }
+
+  String _queryScalarValue(Object? value) {
     if (value is String) return value;
     if (value is num || value is bool) return value.toString();
     return jsonEncode(value);
@@ -906,7 +916,7 @@ class SyncTvApiClient {
   Stream<T> _watchSse<T extends GeneratedMessage>(
     String path,
     T Function() create, {
-    Map<String, String?> query = const {},
+    Map<String, Object?> query = const {},
   }) async* {
     var request = _sseRequest(path, query);
     var response = await _http.send(request);
@@ -937,7 +947,7 @@ class SyncTvApiClient {
     yield* _decodeSseStream(response.stream, create);
   }
 
-  http.Request _sseRequest(String path, Map<String, String?> query) {
+  http.Request _sseRequest(String path, Map<String, Object?> query) {
     final request = http.Request('GET', _uri(path, query));
     request.headers.addAll(_headers());
     request.headers['accept'] = 'text/event-stream';
@@ -1154,7 +1164,7 @@ class SyncTvApiClient {
     };
   }
 
-  Map<String, String?> _watchQuery({
+  Map<String, Object?> _watchQuery({
     client_enum.ResourceDeliveryMode deliveryMode =
         client_enum.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
     Int64? afterEventSequence,
@@ -1313,14 +1323,24 @@ extension SyncTvModelMapping on SyncTvApiClient {
       guestCanAdd: true,
       category: room.hasCategory() ? mapRoomCategory(room.category) : null,
       labels: room.labels.map(mapRoomLabel).toList(growable: false),
-      isFavorite: room.favorited,
     );
   }
+
+  SyncTvRoom mapRoomDiscoveryItem(client.RoomDiscoveryItem item) =>
+      mapRoom(item.room).copyWith(
+        joined: item.joined,
+        isFavorite: item.favorited,
+        canJoin: item.canJoin,
+        discoveryAccess: item.access.value,
+      );
 
   SyncTvRoom mapMyRoom(client.MyRoom myRoom) => mapRoom(myRoom.room).copyWith(
     myPermissions: myRoom.permissions.toInt(),
     myRole: myRoom.role.value,
     myRelation: myRoom.relation.value,
+    joined: true,
+    canJoin: false,
+    isFavorite: myRoom.favorited,
   );
 
   RoomCategoryInfo mapRoomCategory(client.RoomCategory category) {

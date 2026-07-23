@@ -301,6 +301,67 @@ class OpaquePasswordUpdateVerificationMethod extends $pb.ProtobufEnum {
   const OpaquePasswordUpdateVerificationMethod._(super.value, super.name);
 }
 
+class RoomDiscoveryAccess extends $pb.ProtobufEnum {
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_UNSPECIFIED =
+      RoomDiscoveryAccess._(
+          0, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_UNSPECIFIED');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_ENTER =
+      RoomDiscoveryAccess._(
+          1, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_ENTER');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_JOIN =
+      RoomDiscoveryAccess._(
+          2, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_JOIN');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_PASSWORD =
+      RoomDiscoveryAccess._(
+          3, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_PASSWORD');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_REQUEST_APPROVAL =
+      RoomDiscoveryAccess._(
+          4, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_REQUEST_APPROVAL');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_PENDING_APPROVAL =
+      RoomDiscoveryAccess._(
+          5, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_PENDING_APPROVAL');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_SIGN_IN =
+      RoomDiscoveryAccess._(
+          6, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_SIGN_IN');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_INVITATION =
+      RoomDiscoveryAccess._(
+          7, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_INVITATION');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_FULL =
+      RoomDiscoveryAccess._(
+          8, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_FULL');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_UNAVAILABLE =
+      RoomDiscoveryAccess._(
+          9, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_UNAVAILABLE');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_COOLDOWN =
+      RoomDiscoveryAccess._(
+          10, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_COOLDOWN');
+  static const RoomDiscoveryAccess ROOM_DISCOVERY_ACCESS_GUEST =
+      RoomDiscoveryAccess._(
+          11, _omitEnumNames ? '' : 'ROOM_DISCOVERY_ACCESS_GUEST');
+
+  static const $core.List<RoomDiscoveryAccess> values = <RoomDiscoveryAccess>[
+    ROOM_DISCOVERY_ACCESS_UNSPECIFIED,
+    ROOM_DISCOVERY_ACCESS_ENTER,
+    ROOM_DISCOVERY_ACCESS_JOIN,
+    ROOM_DISCOVERY_ACCESS_PASSWORD,
+    ROOM_DISCOVERY_ACCESS_REQUEST_APPROVAL,
+    ROOM_DISCOVERY_ACCESS_PENDING_APPROVAL,
+    ROOM_DISCOVERY_ACCESS_SIGN_IN,
+    ROOM_DISCOVERY_ACCESS_INVITATION,
+    ROOM_DISCOVERY_ACCESS_FULL,
+    ROOM_DISCOVERY_ACCESS_UNAVAILABLE,
+    ROOM_DISCOVERY_ACCESS_COOLDOWN,
+    ROOM_DISCOVERY_ACCESS_GUEST,
+  ];
+
+  static final $core.List<RoomDiscoveryAccess?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 11);
+  static RoomDiscoveryAccess? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RoomDiscoveryAccess._(super.value, super.name);
+}
+
 class SortDirection extends $pb.ProtobufEnum {
   static const SortDirection SORT_DIRECTION_UNSPECIFIED =
       SortDirection._(0, _omitEnumNames ? '' : 'SORT_DIRECTION_UNSPECIFIED');
@@ -371,35 +432,6 @@ class RoomMemberListSortBy extends $pb.ProtobufEnum {
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
   const RoomMemberListSortBy._(super.value, super.name);
-}
-
-class RoomListSortBy extends $pb.ProtobufEnum {
-  static const RoomListSortBy ROOM_LIST_SORT_BY_UNSPECIFIED = RoomListSortBy._(
-      0, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_UNSPECIFIED');
-  static const RoomListSortBy ROOM_LIST_SORT_BY_CREATED_AT =
-      RoomListSortBy._(1, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_CREATED_AT');
-  static const RoomListSortBy ROOM_LIST_SORT_BY_UPDATED_AT =
-      RoomListSortBy._(2, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_UPDATED_AT');
-  static const RoomListSortBy ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT =
-      RoomListSortBy._(
-          3, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT');
-  static const RoomListSortBy ROOM_LIST_SORT_BY_NAME =
-      RoomListSortBy._(4, _omitEnumNames ? '' : 'ROOM_LIST_SORT_BY_NAME');
-
-  static const $core.List<RoomListSortBy> values = <RoomListSortBy>[
-    ROOM_LIST_SORT_BY_UNSPECIFIED,
-    ROOM_LIST_SORT_BY_CREATED_AT,
-    ROOM_LIST_SORT_BY_UPDATED_AT,
-    ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT,
-    ROOM_LIST_SORT_BY_NAME,
-  ];
-
-  static final $core.List<RoomListSortBy?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 4);
-  static RoomListSortBy? valueOf($core.int value) =>
-      value < 0 || value >= _byValue.length ? null : _byValue[value];
-
-  const RoomListSortBy._(super.value, super.name);
 }
 
 class PlaylistListSortBy extends $pb.ProtobufEnum {

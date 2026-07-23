@@ -202,6 +202,10 @@ class _RoomScreenState extends State<RoomScreen>
   bool _membersLoading = false;
   bool _pinnedMessagesLoading = false;
   bool _memberEventsObserved = false;
+  bool _playlistItemsObserved = false;
+  bool _chatEventsObserved = false;
+  bool _chatHistoryRequested = false;
+  bool _mentionCandidatesRequested = false;
   bool _mentionCandidatesLoading = false;
   String _mentionCandidateQuery = '';
   int _mentionCandidatePage = 0;
@@ -341,6 +345,21 @@ class _RoomScreenState extends State<RoomScreen>
     if (member != null) {
       return (member.permissions & RoomEffectivePermissions.useP2pMedia) != 0;
     }
+    return _isSystemAdmin || _isRoomCreator;
+  }
+
+  bool get _canBrowseLibrary =>
+      _hasEffectivePermission(RoomEffectivePermissions.browseLibrary);
+  bool get _canViewMembers =>
+      _hasEffectivePermission(RoomEffectivePermissions.viewMembers);
+  bool get _canViewChatHistory =>
+      _hasEffectivePermission(RoomEffectivePermissions.viewChatHistory);
+  bool get _canSendChatMessages =>
+      _hasEffectivePermission(RoomEffectivePermissions.sendChatMessages);
+
+  bool _hasEffectivePermission(int permission) {
+    final member = _selfMember;
+    if (member != null) return (member.permissions & permission) != 0;
     return _isSystemAdmin || _isRoomCreator;
   }
 
@@ -653,16 +672,82 @@ class _RoomScreenState extends State<RoomScreen>
 
   Future<void> _joinRoom() async {
     _connectRealtime();
+    if (!SyncTvService.isGuestSession) unawaited(_fetchCurrentUser());
+  }
 
-    Future.wait([
-      _fetchCurrentUser(),
-      _loadChatHistory(),
-      _loadPinnedChatMessages(),
-      _loadMentionCandidates(query: ''),
-    ]).catchError((e) {
-      debugPrint('Background data fetch error: $e');
-      return <void>[];
-    });
+  void _syncPermissionScopedRoomData() {
+    final channel = _channel;
+    if (channel == null || _selfMember == null) return;
+
+    if (_canBrowseLibrary) {
+      if (!_playlistItemsObserved) {
+        _playlistItemsObserved = _sendRealtimeMessage(
+          RoomRealtimeCodec.encodePlaylistObservation(),
+        );
+      }
+    } else {
+      if (_playlistItemsObserved) {
+        _sendRealtimeMessage(
+          RoomRealtimeCodec.encodeUnobserveResource('playlist_items'),
+        );
+        _playlistItemsObserved = false;
+      }
+      if (mounted) {
+        setState(() {
+          _mediaEntries = const [];
+          _isLoadingMediaEntries = false;
+          _isLoadingMoreMediaEntries = false;
+          _hasMoreMediaEntries = false;
+        });
+      }
+    }
+
+    if (_canViewChatHistory) {
+      if (!_chatEventsObserved) {
+        _chatEventsObserved = _sendRealtimeMessage(
+          RoomRealtimeCodec.encodeChatEventsObservation(
+            afterEventId: _lastChatEventId,
+          ),
+        );
+      }
+      if (!_chatHistoryRequested) {
+        _chatHistoryRequested = true;
+        unawaited(_loadChatHistory());
+        unawaited(_loadPinnedChatMessages());
+      }
+    } else {
+      if (_chatEventsObserved) {
+        _sendRealtimeMessage(
+          RoomRealtimeCodec.encodeUnobserveResource('chat_events'),
+        );
+        _chatEventsObserved = false;
+      }
+      _chatHistoryRequested = false;
+      if (mounted) {
+        setState(() {
+          _messages.clear();
+          _pinnedMessages.clear();
+          _pinnedMessagesLoading = false;
+        });
+      }
+    }
+
+    if (_canViewMembers) {
+      if (!_mentionCandidatesRequested) {
+        _mentionCandidatesRequested = true;
+        unawaited(_loadMentionCandidates(query: '', reset: true));
+      }
+    } else {
+      _mentionCandidatesRequested = false;
+      if (mounted) {
+        setState(() {
+          _mentionCandidates = const [];
+          _mentionCandidatesLoading = false;
+          _mentionCandidatesHasMore = false;
+        });
+      }
+    }
+    _syncMemberTabObservation();
   }
 
   Future<void> _handleRoomSessionClosed(String message) async {
@@ -874,13 +959,16 @@ class _RoomScreenState extends State<RoomScreen>
       final channel = RoomRealtimeConnection.connect(
         widget.room.roomId,
         initialMessages: RoomRealtimeCodec.encodeInitialObservations(
-          afterChatEventId: _lastChatEventId,
+          includeResolvedPlayback: !SyncTvService.isGuestSession,
         ),
         onOutgoing: _recordRealtimeOutgoing,
         onIncoming: _recordRealtimeIncoming,
       );
       connectingChannel = channel;
       _channel = channel;
+      _playlistItemsObserved = false;
+      _chatEventsObserved = false;
+      _memberEventsObserved = false;
       unawaited(_p2pMediaManager?.resetSignalingSession());
 
       _realtimeSubscription = channel.stream.listen(
@@ -1160,6 +1248,7 @@ class _RoomScreenState extends State<RoomScreen>
         if (couldUseP2pMedia != _canUseP2pMedia) {
           _handleP2pPreferenceChanged();
         }
+        _syncPermissionScopedRoomData();
       }
       return;
     } else if (type == RoomRealtimeMessageKind.memberEvent) {
@@ -2118,7 +2207,9 @@ class _RoomScreenState extends State<RoomScreen>
 
   void _requestPlaybackSnapshot() {
     try {
-      for (final bytes in RoomRealtimeCodec.encodePlaybackObservations()) {
+      for (final bytes in RoomRealtimeCodec.encodePlaybackObservations(
+        includeResolvedPlayback: !SyncTvService.isGuestSession,
+      )) {
         _sendRealtimeMessage(bytes);
       }
     } catch (e) {
@@ -2757,7 +2848,7 @@ class _RoomScreenState extends State<RoomScreen>
   }
 
   void _syncMemberTabObservation() {
-    if (_roomTabIndex == 2) {
+    if (_roomTabIndex == 2 && _canViewMembers) {
       unawaited(_observeRoomMembers());
       return;
     }
@@ -3051,7 +3142,7 @@ class _RoomScreenState extends State<RoomScreen>
                 ),
                 const SizedBox(width: 8),
                 AppIconButton(
-                  onPressed: () => _selectRoomTab(1),
+                  onPressed: _canBrowseLibrary ? () => _selectRoomTab(1) : null,
                   icon: Icons.playlist_play_rounded,
                   tooltip: context.l10n.playlist,
                 ),
@@ -3418,6 +3509,12 @@ class _RoomScreenState extends State<RoomScreen>
                     icon: icons[i],
                     index: i,
                     selected: _roomTabIndex == i,
+                    enabled: switch (i) {
+                      0 => _canViewChatHistory || _canSendChatMessages,
+                      1 => _canBrowseLibrary,
+                      2 => _canViewMembers,
+                      _ => true,
+                    },
                   ),
                 ),
             ],
@@ -3433,6 +3530,7 @@ class _RoomScreenState extends State<RoomScreen>
     required IconData icon,
     required int index,
     required bool selected,
+    required bool enabled,
   }) {
     return AppPanelSurface(
       color: selected
@@ -3443,7 +3541,7 @@ class _RoomScreenState extends State<RoomScreen>
         children: [
           Center(
             child: AppIconButton(
-              onPressed: () => _selectRoomTab(index),
+              onPressed: enabled ? () => _selectRoomTab(index) : null,
               icon: icon,
               tooltip: label,
               iconSize: 22,
@@ -3513,16 +3611,18 @@ class _RoomScreenState extends State<RoomScreen>
             ],
           ),
         ),
-        const AppDivider(height: 1),
-        Padding(
-          padding: EdgeInsets.only(
-            left: 8.0,
-            right: 8.0,
-            top: 8.0,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 8.0,
+        if (_canSendChatMessages) ...[
+          const AppDivider(height: 1),
+          Padding(
+            padding: EdgeInsets.only(
+              left: 8.0,
+              right: 8.0,
+              top: 8.0,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 8.0,
+            ),
+            child: _buildChatInputArea(),
           ),
-          child: _buildChatInputArea(),
-        ),
+        ],
       ],
     );
   }

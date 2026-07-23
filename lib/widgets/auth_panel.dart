@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -13,9 +15,14 @@ import 'package:synctv_app/widgets/user_agreement_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AuthPanel extends StatefulWidget {
-  const AuthPanel({super.key, this.initialGuestRoomId});
+  const AuthPanel({
+    super.key,
+    this.initialGuestRoomId,
+    this.startWithGuest = false,
+  });
 
   final String? initialGuestRoomId;
+  final bool startWithGuest;
 
   @override
   State<AuthPanel> createState() => _AuthPanelState();
@@ -42,7 +49,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   List<OAuth2ProviderOption> _oauth2Providers = const [];
   MfaChallengeInfo? _mfaChallenge;
   bool _loading = false;
-  bool _loadingOptions = true;
+  bool _loadingPublicSettings = true;
+  bool _loadingOAuth2Providers = true;
+  bool _loadingPasskeySupport = true;
   bool _emailTokenRequested = false;
   bool _registerEmailTokenRequested = false;
   bool _mfaEmailRequested = false;
@@ -60,7 +69,11 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.startWithGuest ? 2 : 0,
+    );
     _tabController.addListener(_handleTabChanged);
     _opaqueAuthenticator = OpaqueAuthenticatorService();
     _guestRoomController.text = widget.initialGuestRoomId ?? '';
@@ -89,28 +102,65 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (mounted) setState(() {});
   }
 
-  Future<void> _loadOptions() async {
+  bool get _loadingOptions =>
+      _loadingPublicSettings ||
+      _loadingOAuth2Providers ||
+      _loadingPasskeySupport;
+
+  void _loadOptions() {
+    unawaited(_loadPublicSettings());
+    unawaited(_loadOAuth2Providers());
+    unawaited(_loadPasskeySupport());
+  }
+
+  Future<void> _loadPublicSettings() async {
     try {
-      final results = await Future.wait<dynamic>([
-        SyncTvService.getPublicSettings(),
-        SyncTvService.listOAuth2Providers(),
-        PasskeyAuthenticatorService.isSupported().catchError((_) => false),
-      ]);
+      final settings = await SyncTvService.getPublicSettings();
       if (!mounted) return;
       setState(() {
-        _settings = results[0] as PublicSettingsInfo;
-        _oauth2Providers = results[1] as List<OAuth2ProviderOption>;
-        _passkeyAvailable = results[2] as bool;
-        _loadingOptions = false;
+        _settings = settings;
+        _loadingPublicSettings = false;
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loadingOptions = false);
+      setState(() => _loadingPublicSettings = false);
       MessageUtils.showError(
         context,
         context.l10n.authConfigLoadFailed(e.toString()),
       );
     }
+  }
+
+  Future<void> _loadOAuth2Providers() async {
+    try {
+      final providers = await SyncTvService.listOAuth2Providers();
+      if (!mounted) return;
+      setState(() {
+        _oauth2Providers = providers;
+        _loadingOAuth2Providers = false;
+      });
+    } catch (error) {
+      debugPrint('Failed to load OAuth2 providers: $error');
+      if (!mounted) return;
+      setState(() => _loadingOAuth2Providers = false);
+    }
+  }
+
+  Future<void> _loadPasskeySupport() async {
+    var available = false;
+    try {
+      available = await PasskeyAuthenticatorService.isSupported().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => false,
+      );
+    } catch (error) {
+      debugPrint('Failed to detect passkey support: $error');
+    }
+    if (!mounted) return;
+    setState(() {
+      _passkeyAvailable = available;
+      _loadingPasskeySupport = false;
+    });
   }
 
   Future<void> _withLoading(Future<void> Function() action) async {

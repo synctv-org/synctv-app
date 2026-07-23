@@ -703,76 +703,95 @@ void main() {
     expect(chat.chat.displayColor, '#ff6600');
   });
 
-  test('initial realtime observations include playback client profile', () {
-    final messages = RoomRealtimeCodec.encodeInitialObservations()
-        .map(client.ClientMessage.fromBuffer)
-        .toList(growable: false);
-    expect(
-      messages
+  test(
+    'initial realtime observations include only permission-safe resources',
+    () {
+      final messages = RoomRealtimeCodec.encodeInitialObservations()
+          .map(client.ClientMessage.fromBuffer)
+          .toList(growable: false);
+      final observeIds = messages
           .map((message) => message.observeResource.observeId)
-          .contains('chat_events'),
-      isTrue,
-    );
-    expect(
-      messages
-          .map((message) => message.observeResource.observeId)
-          .contains('webrtc_events'),
-      isFalse,
-    );
+          .toSet();
+      expect(
+        observeIds,
+        containsAll([
+          'playback_state',
+          'playback',
+          'room_settings',
+          'self_room_member',
+          'online_count',
+        ]),
+      );
+      expect(observeIds, isNot(contains('playlist_items')));
+      expect(observeIds, isNot(contains('chat_events')));
+      expect(
+        messages
+            .map((message) => message.observeResource.observeId)
+            .contains('webrtc_events'),
+        isFalse,
+      );
 
-    final snapshotObserve = messages
-        .map((message) => message.observeResource)
-        .firstWhere((observe) => observe.observeId == 'playback');
+      final snapshotObserve = messages
+          .map((message) => message.observeResource)
+          .firstWhere((observe) => observe.observeId == 'playback');
 
-    expect(
-      snapshotObserve.deliveryMode,
-      client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
-    );
-    expect(snapshotObserve.hasPlayback(), isTrue);
-    final profile = snapshotObserve.playback.playbackClientProfile;
-    expect(
-      profile.streamPreference,
-      client.PlaybackStreamPreference.PLAYBACK_STREAM_PREFERENCE_AUTO,
-    );
-    expect(profile.maxAudioChannels, 2);
-    expect(profile.supportedVideoCodecs, [
-      client.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
-      client.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
-      client.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_VP9,
-      client.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_AV1,
-    ]);
-    expect(profile.supportedContainers, [
-      client.PlaybackContainer.PLAYBACK_CONTAINER_MP4,
-      client.PlaybackContainer.PLAYBACK_CONTAINER_MKV,
-      client.PlaybackContainer.PLAYBACK_CONTAINER_WEBM,
-    ]);
-    expect(
-      profile.audioCapability,
-      client.PlaybackAudioCapability.PLAYBACK_AUDIO_CAPABILITY_STEREO,
-    );
-    expect(
-      profile.subtitlePreference,
-      client.PlaybackSubtitlePreference.PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL,
-    );
+      expect(
+        snapshotObserve.deliveryMode,
+        client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT,
+      );
+      expect(snapshotObserve.hasPlayback(), isTrue);
+      final profile = snapshotObserve.playback.playbackClientProfile;
+      expect(
+        profile.streamPreference,
+        client.PlaybackStreamPreference.PLAYBACK_STREAM_PREFERENCE_AUTO,
+      );
+      expect(profile.maxAudioChannels, 2);
+      expect(profile.supportedVideoCodecs, [
+        client.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_H264,
+        client.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_HEVC,
+        client.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_VP9,
+        client.PlaybackVideoCodec.PLAYBACK_VIDEO_CODEC_AV1,
+      ]);
+      expect(profile.supportedContainers, [
+        client.PlaybackContainer.PLAYBACK_CONTAINER_MP4,
+        client.PlaybackContainer.PLAYBACK_CONTAINER_MKV,
+        client.PlaybackContainer.PLAYBACK_CONTAINER_WEBM,
+      ]);
+      expect(
+        profile.audioCapability,
+        client.PlaybackAudioCapability.PLAYBACK_AUDIO_CAPABILITY_STEREO,
+      );
+      expect(
+        profile.subtitlePreference,
+        client.PlaybackSubtitlePreference.PLAYBACK_SUBTITLE_PREFERENCE_EXTERNAL,
+      );
 
-    final chatObserve = messages
-        .map((message) => message.observeResource)
-        .firstWhere((observe) => observe.observeId == 'chat_events');
-    expect(chatObserve.hasChatEvents(), isTrue);
-    expect(
-      chatObserve.deliveryMode,
-      client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
-    );
+      final chatObserve = client.ClientMessage.fromBuffer(
+        RoomRealtimeCodec.encodeChatEventsObservation(),
+      ).observeResource;
+      expect(chatObserve.hasChatEvents(), isTrue);
+      expect(
+        chatObserve.deliveryMode,
+        client.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_NOTIFY_ONLY,
+      );
+    },
+  );
+
+  test('guest realtime observations resolve playback over guest HTTP', () {
+    final observeIds =
+        RoomRealtimeCodec.encodeInitialObservations(
+              includeResolvedPlayback: false,
+            )
+            .map(client.ClientMessage.fromBuffer)
+            .map((message) => message.observeResource.observeId);
+
+    expect(observeIds, contains('playback_state'));
+    expect(observeIds, isNot(contains('playback')));
   });
 
   test('chat event observation uses event sequence cursor', () {
     final message = client.ClientMessage.fromBuffer(
-      RoomRealtimeCodec.encodeInitialObservations(afterChatEventId: 'evt_42')
-          .map(client.ClientMessage.fromBuffer)
-          .firstWhere(
-            (message) => message.observeResource.observeId == 'chat_events',
-          )
-          .writeToBuffer(),
+      RoomRealtimeCodec.encodeChatEventsObservation(afterEventId: 'evt_42'),
     );
 
     expect(message.hasObserveResource(), isTrue);
@@ -5335,87 +5354,104 @@ void main() {
     expect(room.version, 88);
   });
 
-  test('public room service preserves pagination sorting and total', () async {
-    Uri? requestedUri;
-    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
-    final subscription = server.listen((request) async {
-      requestedUri = request.uri;
-      request.response
-        ..statusCode = 200
-        ..headers.contentType = io.ContentType.json
-        ..write(
-          jsonEncode({
-            'rooms': [
-              {
-                'id': 'room_1',
-                'name': 'Public Room',
-                'createdBy': 'usr_1',
-                'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
-                'description': 'Public room description',
-                'updatedAt': '1760000020',
-                'isBanned': true,
-                'availability': client
-                    .ResourceAvailability
-                    .RESOURCE_AVAILABILITY_CREATOR_INACTIVE
-                    .value,
-                'version': '89',
-              },
-            ],
-            'total': 12,
-          }),
+  test(
+    'public room discovery preserves filters and omits viewer state',
+    () async {
+      Uri? requestedUri;
+      final server = await io.HttpServer.bind(
+        io.InternetAddress.loopbackIPv4,
+        0,
+      );
+      final subscription = server.listen((request) async {
+        requestedUri = request.uri;
+        request.response
+          ..statusCode = 200
+          ..headers.contentType = io.ContentType.json
+          ..write(
+            jsonEncode({
+              'rooms': [
+                {
+                  'room': {
+                    'id': 'room_1',
+                    'name': 'Public Room',
+                    'createdBy': 'usr_1',
+                    'status': common.RoomStatus.ROOM_STATUS_ACTIVE.value,
+                    'description': 'Public room description',
+                    'updatedAt': '1760000020',
+                    'isBanned': true,
+                    'availability': client
+                        .ResourceAvailability
+                        .RESOURCE_AVAILABILITY_CREATOR_INACTIVE
+                        .value,
+                    'version': '89',
+                  },
+                  'access': client_enum
+                      .RoomDiscoveryAccess
+                      .ROOM_DISCOVERY_ACCESS_UNAVAILABLE
+                      .value,
+                },
+              ],
+              'total': 12,
+            }),
+          );
+        await request.response.close();
+      });
+
+      try {
+        SharedPreferences.setMockInitialValues({});
+        await SyncTvService.init();
+        await SyncTvService.setBaseUrl(
+          'http://${server.address.host}:${server.port}',
         );
-      await request.response.close();
-    });
 
-    try {
-      SharedPreferences.setMockInitialValues({});
-      await SyncTvService.init();
-      await SyncTvService.setBaseUrl(
-        'http://${server.address.host}:${server.port}',
-      );
+        final page = await SyncTvService.discoverRooms(
+          page: 2,
+          pageSize: 30,
+          search: 'Public',
+          categoryId: 'roomcat_anime',
+          labelIds: const ['roomlbl_weekly', 'roomlbl_friends'],
+        );
 
-      final page = await SyncTvService.getRoomsPage(
-        page: 2,
-        pageSize: 30,
-        search: 'Public',
-        categoryId: 'roomcat_anime',
-        labelIds: const ['roomlbl_weekly', 'roomlbl_friends'],
-        sortBy: client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME,
-        sortDirection: client_enum.SortDirection.SORT_DIRECTION_ASC,
-      );
+        expect(page.total, 12);
+        expect(page.page, 2);
+        expect(page.pageSize, 30);
+        expect(page.rooms.single.roomId, 'room_1');
+        expect(page.rooms.single.description, 'Public room description');
+        expect(page.rooms.single.updatedAt, 1760000020);
+        expect(page.rooms.single.isBanned, isTrue);
+        expect(
+          page.rooms.single.availability,
+          client
+              .ResourceAvailability
+              .RESOURCE_AVAILABILITY_CREATOR_INACTIVE
+              .value,
+        );
+        expect(page.rooms.single.version, 89);
+        expect(page.rooms.single.joined, isFalse);
+        expect(page.rooms.single.isFavorite, isFalse);
+        expect(
+          page.rooms.single.discoveryAccess,
+          client_enum
+              .RoomDiscoveryAccess
+              .ROOM_DISCOVERY_ACCESS_UNAVAILABLE
+              .value,
+        );
+      } finally {
+        await subscription.cancel();
+        await server.close(force: true);
+      }
 
-      expect(page.total, 12);
-      expect(page.page, 2);
-      expect(page.pageSize, 30);
-      expect(page.rooms.single.roomId, 'room_1');
-      expect(page.rooms.single.description, 'Public room description');
-      expect(page.rooms.single.updatedAt, 1760000020);
-      expect(page.rooms.single.isBanned, isTrue);
-      expect(
-        page.rooms.single.availability,
-        client
-            .ResourceAvailability
-            .RESOURCE_AVAILABILITY_CREATOR_INACTIVE
-            .value,
-      );
-      expect(page.rooms.single.version, 89);
-    } finally {
-      await subscription.cancel();
-      await server.close(force: true);
-    }
-
-    expect(requestedUri, isNotNull);
-    expect(requestedUri!.path, '/api/rooms');
-    expect(requestedUri!.queryParameters, {
-      'page': '2',
-      'pageSize': '30',
-      'search': 'Public',
-      'categoryId': 'roomcat_anime',
-      'labelIds': '["roomlbl_weekly","roomlbl_friends"]',
-      'sortBy': '${client_enum.RoomListSortBy.ROOM_LIST_SORT_BY_NAME.value}',
-      'sortDirection': '${client_enum.SortDirection.SORT_DIRECTION_ASC.value}',
-    });
-  });
+      expect(requestedUri, isNotNull);
+      expect(requestedUri!.path, '/api/rooms/discover');
+      expect(requestedUri!.queryParametersAll, {
+        'page': ['2'],
+        'pageSize': ['30'],
+        'search': ['Public'],
+        'categoryId': ['roomcat_anime'],
+        'labelIds': ['roomlbl_weekly', 'roomlbl_friends'],
+      });
+    },
+  );
 
   test('my room service preserves relation filters sorting and total', () async {
     Uri? requestedUri;
@@ -5549,17 +5585,20 @@ void main() {
 
       expect(requestedUri, isNotNull);
       expect(requestedUri!.path, '/api/admin/rooms');
-      expect(requestedUri!.queryParameters, {
-        'page': '3',
-        'pageSize': '50',
-        'status': '${common.RoomStatus.ROOM_STATUS_ACTIVE.value}',
-        'search': 'Room',
-        'categoryId': 'roomcat_anime',
-        'labelIds': '["roomlbl_weekly"]',
-        'isBanned': 'false',
-        'sortBy':
-            '${admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT.value}',
-        'sortDirection': '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+      expect(requestedUri!.queryParametersAll, {
+        'page': ['3'],
+        'pageSize': ['50'],
+        'status': ['${common.RoomStatus.ROOM_STATUS_ACTIVE.value}'],
+        'search': ['Room'],
+        'categoryId': ['roomcat_anime'],
+        'labelIds': ['roomlbl_weekly'],
+        'isBanned': ['false'],
+        'sortBy': [
+          '${admin_enum.RoomListSortBy.ROOM_LIST_SORT_BY_LAST_ACTIVITY_AT.value}',
+        ],
+        'sortDirection': [
+          '${admin_enum.SortDirection.SORT_DIRECTION_ASC.value}',
+        ],
       });
     },
   );
@@ -5662,10 +5701,10 @@ void main() {
       requestedUri!.queryParameters,
       containsPair('cursor', '2026-05-27T01:02:03Z|msg_1'),
     );
-    expect(
-      requestedUri!.queryParameters,
-      containsPair('includeMessageTypes', '[1,1001]'),
-    );
+    expect(requestedUri!.queryParametersAll['includeMessageTypes'], [
+      '1',
+      '1001',
+    ]);
   });
 
   test('chat playback query includes requested message types', () async {
@@ -5704,10 +5743,7 @@ void main() {
       requestedUri!.queryParameters,
       containsPair('positionSeconds', '12.5'),
     );
-    expect(
-      requestedUri!.queryParameters,
-      containsPair('includeMessageTypes', '[1]'),
-    );
+    expect(requestedUri!.queryParametersAll['includeMessageTypes'], ['1']);
   });
 
   test('account preferences preserve protobuf settings payload', () async {
@@ -9907,11 +9943,22 @@ void main() {
       });
       expect(room.roomId, 'room_pending');
       expect(room.status, common.RoomStatus.ROOM_STATUS_UNSPECIFIED.value);
+      expect(room.isActive, isFalse);
+      expect(room.joined, isTrue);
+      expect(room.canJoin, isFalse);
+      expect(
+        room.discoveryAccess,
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_ENTER.value,
+      );
+      expect(
+        room.myRelation,
+        client_enum.MyRoomRelation.MY_ROOM_RELATION_CREATED.value,
+      );
       expect(room.needPassword, isFalse);
     },
   );
 
-  test('hot rooms endpoint maps online and total member counts', () async {
+  test('room discovery maps live presence and member counts', () async {
     Uri? requestedUri;
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
     final subscription = server.listen((request) async {
@@ -9928,10 +9975,14 @@ void main() {
                   'name': 'Hot Room',
                   'createdBy': 'usr_owner',
                   'status': 1,
-                  'memberCount': 2,
+                  'memberCount': 12,
+                  'presence': {'onlineUserCount': 7, 'connectionCount': 8},
                 },
-                'onlineCount': 7,
-                'totalMembers': 12,
+                'canJoin': true,
+                'access': client_enum
+                    .RoomDiscoveryAccess
+                    .ROOM_DISCOVERY_ACCESS_GUEST
+                    .value,
               },
             ],
           }),
@@ -9939,40 +9990,53 @@ void main() {
       await request.response.close();
     });
 
-    late final List<SyncTvRoom> serviceRooms;
+    late final RoomDiscoveryPage discovery;
     try {
       SharedPreferences.setMockInitialValues({});
       await SyncTvService.init();
       await SyncTvService.setBaseUrl(
         'http://${server.address.host}:${server.port}',
       );
-      serviceRooms = await SyncTvService.getHotRooms(limit: 8);
+      discovery = await SyncTvService.discoverRooms(pageSize: 8);
     } finally {
       await subscription.cancel();
       await server.close(force: true);
     }
 
     expect(requestedUri, isNotNull);
-    expect(requestedUri!.path, '/api/rooms/hot');
-    expect(requestedUri!.queryParameters, {'limit': '8'});
-    expect(serviceRooms.single.roomId, 'room_hot');
-    expect(serviceRooms.single.viewerCount, 7);
-    expect(serviceRooms.single.memberCount, 12);
+    expect(requestedUri!.path, '/api/rooms/discover');
+    expect(requestedUri!.queryParameters, {'page': '1', 'pageSize': '8'});
+    expect(discovery.rooms.single.roomId, 'room_hot');
+    expect(discovery.rooms.single.viewerCount, 7);
+    expect(discovery.rooms.single.memberCount, 12);
+    expect(discovery.rooms.single.joined, isFalse);
+    expect(discovery.rooms.single.isFavorite, isFalse);
+    expect(
+      discovery.rooms.single.discoveryAccess,
+      client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST.value,
+    );
   });
 
-  test('check room endpoint maps availability preflight details', () async {
+  test('room discovery endpoint maps viewer access details', () async {
     Uri? requestedUri;
     final api = SyncTvApiClient(
       baseUrl: 'https://example.test/api',
-      session: SyncTvSession(),
+      session: SyncTvSession()..accessToken = 'user-token',
       httpClient: MockClient((request) async {
         requestedUri = request.url;
         return http.Response(
           jsonEncode({
-            'exists': true,
-            'requiresPassword': true,
-            'name': 'Private Room',
-            'availability': 1,
+            'room': {
+              'id': 'room_private',
+              'name': 'Private Room',
+              'createdBy': 'usr_owner',
+              'availability': 1,
+            },
+            'canJoin': true,
+            'access': client_enum
+                .RoomDiscoveryAccess
+                .ROOM_DISCOVERY_ACCESS_PASSWORD
+                .value,
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -9980,22 +10044,206 @@ void main() {
       }),
     );
 
-    final response = await api.publicService.checkRoom(
-      client.CheckRoomRequest(roomId: 'room_private'),
+    final response = await api.user.getRoomDiscovery(
+      client.GetRoomDiscoveryRequest(roomId: 'room_private'),
     );
 
     expect(requestedUri, isNotNull);
-    expect(requestedUri!.path, '/api/rooms/room_private/check');
-    expect(response.exists, isTrue);
-    expect(response.requiresPassword, isTrue);
-    expect(response.name, 'Private Room');
+    expect(requestedUri!.path, '/api/user/rooms/room_private/discovery');
+    expect(response.room.name, 'Private Room');
+    expect(response.canJoin, isTrue);
     expect(
-      response.availability,
-      client.ResourceAvailability.RESOURCE_AVAILABILITY_AVAILABLE,
+      response.access,
+      client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_PASSWORD,
     );
   });
 
-  test('SyncTV service preserves check room preflight details', () async {
+  test('signed-in room discovery uses the authenticated endpoint', () async {
+    Uri? requestedUri;
+    String? authorization;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'user-token',
+      httpClient: MockClient((request) async {
+        requestedUri = request.url;
+        authorization = request.headers['authorization'];
+        return http.Response(
+          jsonEncode({
+            'rooms': [
+              {
+                'room': {
+                  'id': 'room_joined',
+                  'name': 'Joined Room',
+                  'createdBy': 'usr_owner',
+                  'availability': 1,
+                },
+                'joined': true,
+                'favorited': true,
+                'canJoin': false,
+                'access': client_enum
+                    .RoomDiscoveryAccess
+                    .ROOM_DISCOVERY_ACCESS_ENTER
+                    .value,
+              },
+            ],
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+
+    final response = await api.user.discoverRooms(
+      client.DiscoverRoomsRequest(page: 1, pageSize: 24),
+    );
+
+    expect(requestedUri!.path, '/api/user/rooms/discover');
+    expect(requestedUri!.queryParameters, {'page': '1', 'pageSize': '24'});
+    expect(authorization, 'Bearer user-token');
+    expect(response.rooms.single.joined, isTrue);
+    expect(response.rooms.single.favorited, isTrue);
+  });
+
+  test('guest room tokens are omitted from discovery requests', () async {
+    final requests = <({String path, String? authorization})>[];
+    final session = SyncTvSession()
+      ..accessToken = 'guest-room-token'
+      ..isGuest = true;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: session,
+      httpClient: MockClient((request) async {
+        requests.add((
+          path: request.url.path,
+          authorization: request.headers['authorization'],
+        ));
+        if (request.url.path == '/api/rooms/discover') {
+          return http.Response(
+            jsonEncode({'rooms': <Object>[], 'featuredRooms': <Object>[]}),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }
+        return http.Response(
+          jsonEncode({
+            'room': {
+              'id': 'room_guest',
+              'name': 'Guest Room',
+              'createdBy': 'usr_owner',
+              'availability': 1,
+            },
+            'canJoin': true,
+            'access': client_enum
+                .RoomDiscoveryAccess
+                .ROOM_DISCOVERY_ACCESS_GUEST
+                .value,
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+
+    await api.publicService.discoverRooms(client.DiscoverRoomsRequest());
+    await api.publicService.getRoomDiscovery(
+      client.GetRoomDiscoveryRequest(roomId: 'room_guest'),
+    );
+
+    expect(requests.map((request) => request.path), [
+      '/api/rooms/discover',
+      '/api/rooms/room_guest/discovery',
+    ]);
+    expect(requests.every((request) => request.authorization == null), isTrue);
+  });
+
+  test('refresh-only session restores authenticated room discovery', () async {
+    final requestedPaths = <String>[];
+    String? discoveryAuthorization;
+    final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
+    final subscription = server.listen((request) async {
+      requestedPaths.add(request.uri.path);
+      request.response.headers.contentType = io.ContentType.json;
+      if (request.uri.path == '/api/auth/refresh') {
+        request.response.write(
+          jsonEncode({
+            'accessToken': 'fresh-access',
+            'refreshToken': 'fresh-refresh',
+          }),
+        );
+      } else if (request.uri.path == '/api/user/rooms/discover') {
+        discoveryAuthorization = request.headers.value('authorization');
+        request.response.write(
+          jsonEncode({'rooms': <Object>[], 'featuredRooms': <Object>[]}),
+        );
+      } else {
+        request.response.statusCode = 404;
+        request.response.write(jsonEncode({'message': 'not found'}));
+      }
+      await request.response.close();
+    });
+
+    try {
+      final baseUrl = 'http://${server.address.host}:${server.port}';
+      SharedPreferences.setMockInitialValues(
+        testActiveServerPreferences(
+          baseUrl: baseUrl,
+          accessToken: '',
+          refreshToken: 'refresh-only-token',
+        ),
+      );
+      await SyncTvService.init();
+
+      await SyncTvService.discoverRooms(pageSize: 8);
+
+      expect(requestedPaths, ['/api/auth/refresh', '/api/user/rooms/discover']);
+      expect(discoveryAuthorization, 'Bearer fresh-access');
+    } finally {
+      await subscription.cancel();
+      await server.close(force: true);
+    }
+  });
+
+  test('room discovery maps pending approval as non-joinable', () async {
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession()..accessToken = 'user-token',
+      httpClient: MockClient(
+        (_) async => http.Response(
+          jsonEncode({
+            'room': {
+              'id': 'room_pending',
+              'name': 'Pending Room',
+              'createdBy': 'usr_owner',
+              'availability': 1,
+            },
+            'canJoin': false,
+            'access': client_enum
+                .RoomDiscoveryAccess
+                .ROOM_DISCOVERY_ACCESS_PENDING_APPROVAL
+                .value,
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        ),
+      ),
+    );
+
+    final response = await api.user.getRoomDiscovery(
+      client.GetRoomDiscoveryRequest(roomId: 'room_pending'),
+    );
+    final room = api.mapRoomDiscoveryItem(response);
+
+    expect(room.canJoin, isFalse);
+    expect(
+      room.discoveryAccess,
+      client_enum
+          .RoomDiscoveryAccess
+          .ROOM_DISCOVERY_ACCESS_PENDING_APPROVAL
+          .value,
+    );
+  });
+
+  test('SyncTV service preserves room discovery state', () async {
     http.Request? capturedRequest;
     final server = await io.HttpServer.bind('127.0.0.1', 0);
     final listener = server.listen((request) async {
@@ -10005,37 +10253,42 @@ void main() {
         ..headers.contentType = io.ContentType.json
         ..write(
           jsonEncode({
-            'exists': true,
-            'requiresPassword': false,
-            'name': 'Lobby',
-            'availability': 2,
+            'room': {
+              'id': 'room_lobby',
+              'name': 'Lobby',
+              'createdBy': 'usr_owner',
+              'availability': 1,
+            },
+            'joined': true,
+            'favorited': true,
+            'access': client_enum
+                .RoomDiscoveryAccess
+                .ROOM_DISCOVERY_ACCESS_ENTER
+                .value,
           }),
         );
       await request.response.close();
     });
 
     try {
-      SharedPreferences.setMockInitialValues({});
-      await SyncTvService.init();
-      await SyncTvService.setBaseUrl(
-        'http://${server.address.host}:${server.port}',
+      SharedPreferences.setMockInitialValues(
+        testActiveServerPreferences(
+          baseUrl: 'http://${server.address.host}:${server.port}',
+        ),
       );
+      await SyncTvService.init();
 
-      final check = await SyncTvService.checkRoom('room_lobby');
+      final room = await SyncTvService.getRoomDiscovery('room_lobby');
 
       expect(capturedRequest, isNotNull);
-      expect(capturedRequest!.url.path, '/api/rooms/room_lobby/check');
-      expect(check.exists, isTrue);
-      expect(check.requiresPassword, isFalse);
-      expect(check.name, 'Lobby');
+      expect(capturedRequest!.url.path, '/api/user/rooms/room_lobby/discovery');
+      expect(room.roomName, 'Lobby');
+      expect(room.joined, isTrue);
+      expect(room.isFavorite, isTrue);
       expect(
-        check.availability,
-        client
-            .ResourceAvailability
-            .RESOURCE_AVAILABILITY_CREATOR_INACTIVE
-            .value,
+        room.discoveryAccess,
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_ENTER.value,
       );
-      expect(check.isAvailable, isFalse);
     } finally {
       await listener.cancel();
       await server.close(force: true);

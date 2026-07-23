@@ -1029,7 +1029,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       context: context,
       onCreated: (room) async {
         await _reloadRooms(page: 1, refresh: true);
-        if (!mounted) return;
+        if (!mounted || !room.isActive) return;
         await _openRoom(room);
       },
     );

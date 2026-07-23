@@ -2,6 +2,18 @@ import 'dart:async';
 
 typedef IsLatestOperation = bool Function();
 
+class AsyncStateEpoch {
+  Object _current = Object();
+
+  Object capture() => _current;
+
+  bool isCurrent(Object epoch) => identical(epoch, _current);
+
+  void advance() {
+    _current = Object();
+  }
+}
+
 class LatestAsyncOperationCoordinator {
   int _generation = 0;
   Future<void>? _activeOperation;

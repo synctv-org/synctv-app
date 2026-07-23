@@ -3750,7 +3750,6 @@ class Room extends $pb.GeneratedMessage {
     UserPublicView? creator,
     RoomCategory? category,
     $core.Iterable<RoomLabel>? labels,
-    $core.bool? favorited,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -3770,7 +3769,6 @@ class Room extends $pb.GeneratedMessage {
     if (creator != null) result.creator = creator;
     if (category != null) result.category = category;
     if (labels != null) result.labels.addAll(labels);
-    if (favorited != null) result.favorited = favorited;
     return result;
   }
 
@@ -3812,7 +3810,6 @@ class Room extends $pb.GeneratedMessage {
         subBuilder: RoomCategory.create)
     ..pPM<RoomLabel>(17, _omitFieldNames ? '' : 'labels',
         subBuilder: RoomLabel.create)
-    ..aOB(18, _omitFieldNames ? '' : 'favorited')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3989,15 +3986,6 @@ class Room extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(17)
   $pb.PbList<RoomLabel> get labels => $_getList(16);
-
-  @$pb.TagNumber(18)
-  $core.bool get favorited => $_getBF(17);
-  @$pb.TagNumber(18)
-  set favorited($core.bool value) => $_setBool(17, value);
-  @$pb.TagNumber(18)
-  $core.bool hasFavorited() => $_has(17);
-  @$pb.TagNumber(18)
-  void clearFavorited() => $_clearField(18);
 }
 
 class RoomCategory extends $pb.GeneratedMessage {
@@ -10267,10 +10255,12 @@ class GetRoomResponse extends $pb.GeneratedMessage {
   factory GetRoomResponse({
     Room? room,
     PlaybackState? playbackState,
+    $core.bool? favorited,
   }) {
     final result = create();
     if (room != null) result.room = room;
     if (playbackState != null) result.playbackState = playbackState;
+    if (favorited != null) result.favorited = favorited;
     return result;
   }
 
@@ -10290,6 +10280,7 @@ class GetRoomResponse extends $pb.GeneratedMessage {
     ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
     ..aOM<PlaybackState>(2, _omitFieldNames ? '' : 'playbackState',
         subBuilder: PlaybackState.create)
+    ..aOB(3, _omitFieldNames ? '' : 'favorited')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -10332,6 +10323,15 @@ class GetRoomResponse extends $pb.GeneratedMessage {
   void clearPlaybackState() => $_clearField(2);
   @$pb.TagNumber(2)
   PlaybackState ensurePlaybackState() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $core.bool get favorited => $_getBF(2);
+  @$pb.TagNumber(3)
+  set favorited($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFavorited() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFavorited() => $_clearField(3);
 }
 
 class JoinRoomRequest extends $pb.GeneratedMessage {
@@ -10619,13 +10619,11 @@ class LeaveRoomResponse extends $pb.GeneratedMessage {
   void clearSuccess() => $_clearField(1);
 }
 
-class ListRoomsRequest extends $pb.GeneratedMessage {
-  factory ListRoomsRequest({
+class DiscoverRoomsRequest extends $pb.GeneratedMessage {
+  factory DiscoverRoomsRequest({
     $core.int? page,
     $core.int? pageSize,
     $core.String? search,
-    RoomListSortBy? sortBy,
-    SortDirection? sortDirection,
     $core.String? categoryId,
     $core.Iterable<$core.String>? labelIds,
   }) {
@@ -10633,55 +10631,49 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
     if (page != null) result.page = page;
     if (pageSize != null) result.pageSize = pageSize;
     if (search != null) result.search = search;
-    if (sortBy != null) result.sortBy = sortBy;
-    if (sortDirection != null) result.sortDirection = sortDirection;
     if (categoryId != null) result.categoryId = categoryId;
     if (labelIds != null) result.labelIds.addAll(labelIds);
     return result;
   }
 
-  ListRoomsRequest._();
+  DiscoverRoomsRequest._();
 
-  factory ListRoomsRequest.fromBuffer($core.List<$core.int> data,
+  factory DiscoverRoomsRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory ListRoomsRequest.fromJson($core.String json,
+  factory DiscoverRoomsRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ListRoomsRequest',
+      _omitMessageNames ? '' : 'DiscoverRoomsRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aI(1, _omitFieldNames ? '' : 'page')
     ..aI(2, _omitFieldNames ? '' : 'pageSize')
     ..aOS(3, _omitFieldNames ? '' : 'search')
-    ..aE<RoomListSortBy>(4, _omitFieldNames ? '' : 'sortBy',
-        enumValues: RoomListSortBy.values)
-    ..aE<SortDirection>(5, _omitFieldNames ? '' : 'sortDirection',
-        enumValues: SortDirection.values)
-    ..aOS(6, _omitFieldNames ? '' : 'categoryId')
-    ..pPS(7, _omitFieldNames ? '' : 'labelIds')
+    ..aOS(4, _omitFieldNames ? '' : 'categoryId')
+    ..pPS(5, _omitFieldNames ? '' : 'labelIds')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ListRoomsRequest clone() => deepCopy();
+  DiscoverRoomsRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ListRoomsRequest copyWith(void Function(ListRoomsRequest) updates) =>
-      super.copyWith((message) => updates(message as ListRoomsRequest))
-          as ListRoomsRequest;
+  DiscoverRoomsRequest copyWith(void Function(DiscoverRoomsRequest) updates) =>
+      super.copyWith((message) => updates(message as DiscoverRoomsRequest))
+          as DiscoverRoomsRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ListRoomsRequest create() => ListRoomsRequest._();
+  static DiscoverRoomsRequest create() => DiscoverRoomsRequest._();
   @$core.override
-  ListRoomsRequest createEmptyInstance() => create();
+  DiscoverRoomsRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ListRoomsRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ListRoomsRequest>(create);
-  static ListRoomsRequest? _defaultInstance;
+  static DiscoverRoomsRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DiscoverRoomsRequest>(create);
+  static DiscoverRoomsRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.int get page => $_getIZ(0);
@@ -10711,94 +10703,190 @@ class ListRoomsRequest extends $pb.GeneratedMessage {
   void clearSearch() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  RoomListSortBy get sortBy => $_getN(3);
+  $core.String get categoryId => $_getSZ(3);
   @$pb.TagNumber(4)
-  set sortBy(RoomListSortBy value) => $_setField(4, value);
+  set categoryId($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasSortBy() => $_has(3);
+  $core.bool hasCategoryId() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSortBy() => $_clearField(4);
+  void clearCategoryId() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  SortDirection get sortDirection => $_getN(4);
-  @$pb.TagNumber(5)
-  set sortDirection(SortDirection value) => $_setField(5, value);
-  @$pb.TagNumber(5)
-  $core.bool hasSortDirection() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearSortDirection() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.String get categoryId => $_getSZ(5);
-  @$pb.TagNumber(6)
-  set categoryId($core.String value) => $_setString(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasCategoryId() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearCategoryId() => $_clearField(6);
-
-  @$pb.TagNumber(7)
-  $pb.PbList<$core.String> get labelIds => $_getList(6);
+  $pb.PbList<$core.String> get labelIds => $_getList(4);
 }
 
-class ListRoomsResponse extends $pb.GeneratedMessage {
-  factory ListRoomsResponse({
-    $core.Iterable<Room>? rooms,
+class DiscoverRoomsResponse extends $pb.GeneratedMessage {
+  factory DiscoverRoomsResponse({
+    $core.Iterable<RoomDiscoveryItem>? featuredRooms,
+    $core.Iterable<RoomDiscoveryItem>? rooms,
     $core.int? total,
   }) {
     final result = create();
+    if (featuredRooms != null) result.featuredRooms.addAll(featuredRooms);
     if (rooms != null) result.rooms.addAll(rooms);
     if (total != null) result.total = total;
     return result;
   }
 
-  ListRoomsResponse._();
+  DiscoverRoomsResponse._();
 
-  factory ListRoomsResponse.fromBuffer($core.List<$core.int> data,
+  factory DiscoverRoomsResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory ListRoomsResponse.fromJson($core.String json,
+  factory DiscoverRoomsResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ListRoomsResponse',
+      _omitMessageNames ? '' : 'DiscoverRoomsResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..pPM<Room>(1, _omitFieldNames ? '' : 'rooms', subBuilder: Room.create)
-    ..aI(2, _omitFieldNames ? '' : 'total')
+    ..pPM<RoomDiscoveryItem>(1, _omitFieldNames ? '' : 'featuredRooms',
+        subBuilder: RoomDiscoveryItem.create)
+    ..pPM<RoomDiscoveryItem>(2, _omitFieldNames ? '' : 'rooms',
+        subBuilder: RoomDiscoveryItem.create)
+    ..aI(3, _omitFieldNames ? '' : 'total')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ListRoomsResponse clone() => deepCopy();
+  DiscoverRoomsResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ListRoomsResponse copyWith(void Function(ListRoomsResponse) updates) =>
-      super.copyWith((message) => updates(message as ListRoomsResponse))
-          as ListRoomsResponse;
+  DiscoverRoomsResponse copyWith(
+          void Function(DiscoverRoomsResponse) updates) =>
+      super.copyWith((message) => updates(message as DiscoverRoomsResponse))
+          as DiscoverRoomsResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ListRoomsResponse create() => ListRoomsResponse._();
+  static DiscoverRoomsResponse create() => DiscoverRoomsResponse._();
   @$core.override
-  ListRoomsResponse createEmptyInstance() => create();
+  DiscoverRoomsResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ListRoomsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ListRoomsResponse>(create);
-  static ListRoomsResponse? _defaultInstance;
+  static DiscoverRoomsResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DiscoverRoomsResponse>(create);
+  static DiscoverRoomsResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbList<Room> get rooms => $_getList(0);
+  $pb.PbList<RoomDiscoveryItem> get featuredRooms => $_getList(0);
 
   @$pb.TagNumber(2)
-  $core.int get total => $_getIZ(1);
+  $pb.PbList<RoomDiscoveryItem> get rooms => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $core.int get total => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set total($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTotal() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTotal() => $_clearField(3);
+}
+
+class RoomDiscoveryItem extends $pb.GeneratedMessage {
+  factory RoomDiscoveryItem({
+    Room? room,
+    $core.bool? joined,
+    $core.bool? favorited,
+    $core.bool? canJoin,
+    RoomDiscoveryAccess? access,
+  }) {
+    final result = create();
+    if (room != null) result.room = room;
+    if (joined != null) result.joined = joined;
+    if (favorited != null) result.favorited = favorited;
+    if (canJoin != null) result.canJoin = canJoin;
+    if (access != null) result.access = access;
+    return result;
+  }
+
+  RoomDiscoveryItem._();
+
+  factory RoomDiscoveryItem.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RoomDiscoveryItem.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RoomDiscoveryItem',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
+    ..aOB(2, _omitFieldNames ? '' : 'joined')
+    ..aOB(3, _omitFieldNames ? '' : 'favorited')
+    ..aOB(4, _omitFieldNames ? '' : 'canJoin')
+    ..aE<RoomDiscoveryAccess>(5, _omitFieldNames ? '' : 'access',
+        enumValues: RoomDiscoveryAccess.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RoomDiscoveryItem clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RoomDiscoveryItem copyWith(void Function(RoomDiscoveryItem) updates) =>
+      super.copyWith((message) => updates(message as RoomDiscoveryItem))
+          as RoomDiscoveryItem;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RoomDiscoveryItem create() => RoomDiscoveryItem._();
+  @$core.override
+  RoomDiscoveryItem createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RoomDiscoveryItem getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RoomDiscoveryItem>(create);
+  static RoomDiscoveryItem? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  Room get room => $_getN(0);
+  @$pb.TagNumber(1)
+  set room(Room value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoom() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoom() => $_clearField(1);
+  @$pb.TagNumber(1)
+  Room ensureRoom() => $_ensure(0);
+
   @$pb.TagNumber(2)
-  set total($core.int value) => $_setSignedInt32(1, value);
+  $core.bool get joined => $_getBF(1);
   @$pb.TagNumber(2)
-  $core.bool hasTotal() => $_has(1);
+  set joined($core.bool value) => $_setBool(1, value);
   @$pb.TagNumber(2)
-  void clearTotal() => $_clearField(2);
+  $core.bool hasJoined() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearJoined() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get favorited => $_getBF(2);
+  @$pb.TagNumber(3)
+  set favorited($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFavorited() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFavorited() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get canJoin => $_getBF(3);
+  @$pb.TagNumber(4)
+  set canJoin($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasCanJoin() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCanJoin() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  RoomDiscoveryAccess get access => $_getN(4);
+  @$pb.TagNumber(5)
+  set access(RoomDiscoveryAccess value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasAccess() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearAccess() => $_clearField(5);
 }
 
 class ListRoomCategoriesRequest extends $pb.GeneratedMessage {
@@ -42948,12 +43036,14 @@ class MyRoom extends $pb.GeneratedMessage {
     $fixnum.Int64? permissions,
     $0.RoomMemberRole? role,
     MyRoomRelation? relation,
+    $core.bool? favorited,
   }) {
     final result = create();
     if (room != null) result.room = room;
     if (permissions != null) result.permissions = permissions;
     if (role != null) result.role = role;
     if (relation != null) result.relation = relation;
+    if (favorited != null) result.favorited = favorited;
     return result;
   }
 
@@ -42978,6 +43068,7 @@ class MyRoom extends $pb.GeneratedMessage {
         enumValues: $0.RoomMemberRole.values)
     ..aE<MyRoomRelation>(4, _omitFieldNames ? '' : 'relation',
         enumValues: MyRoomRelation.values)
+    ..aOB(5, _omitFieldNames ? '' : 'favorited')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -43035,6 +43126,15 @@ class MyRoom extends $pb.GeneratedMessage {
   $core.bool hasRelation() => $_has(3);
   @$pb.TagNumber(4)
   void clearRelation() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get favorited => $_getBF(4);
+  @$pb.TagNumber(5)
+  set favorited($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasFavorited() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearFavorited() => $_clearField(5);
 }
 
 class FavoriteRoomRequest extends $pb.GeneratedMessage {
@@ -43400,8 +43500,8 @@ class ListFavoriteRoomsResponse extends $pb.GeneratedMessage {
 }
 
 /// Room Discovery
-class CheckRoomRequest extends $pb.GeneratedMessage {
-  factory CheckRoomRequest({
+class GetRoomDiscoveryRequest extends $pb.GeneratedMessage {
+  factory GetRoomDiscoveryRequest({
     $core.String? roomId,
   }) {
     final result = create();
@@ -43409,40 +43509,41 @@ class CheckRoomRequest extends $pb.GeneratedMessage {
     return result;
   }
 
-  CheckRoomRequest._();
+  GetRoomDiscoveryRequest._();
 
-  factory CheckRoomRequest.fromBuffer($core.List<$core.int> data,
+  factory GetRoomDiscoveryRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory CheckRoomRequest.fromJson($core.String json,
+  factory GetRoomDiscoveryRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'CheckRoomRequest',
+      _omitMessageNames ? '' : 'GetRoomDiscoveryRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'roomId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CheckRoomRequest clone() => deepCopy();
+  GetRoomDiscoveryRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CheckRoomRequest copyWith(void Function(CheckRoomRequest) updates) =>
-      super.copyWith((message) => updates(message as CheckRoomRequest))
-          as CheckRoomRequest;
+  GetRoomDiscoveryRequest copyWith(
+          void Function(GetRoomDiscoveryRequest) updates) =>
+      super.copyWith((message) => updates(message as GetRoomDiscoveryRequest))
+          as GetRoomDiscoveryRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static CheckRoomRequest create() => CheckRoomRequest._();
+  static GetRoomDiscoveryRequest create() => GetRoomDiscoveryRequest._();
   @$core.override
-  CheckRoomRequest createEmptyInstance() => create();
+  GetRoomDiscoveryRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static CheckRoomRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<CheckRoomRequest>(create);
-  static CheckRoomRequest? _defaultInstance;
+  static GetRoomDiscoveryRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetRoomDiscoveryRequest>(create);
+  static GetRoomDiscoveryRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get roomId => $_getSZ(0);
@@ -43779,280 +43880,6 @@ class RoomPlaylistTargetPathRequest extends $pb.GeneratedMessage {
   $core.bool hasPlaylistId() => $_has(1);
   @$pb.TagNumber(2)
   void clearPlaylistId() => $_clearField(2);
-}
-
-class CheckRoomResponse extends $pb.GeneratedMessage {
-  factory CheckRoomResponse({
-    $core.bool? exists,
-    $core.bool? requiresPassword,
-    $core.String? name,
-    ResourceAvailability? availability,
-  }) {
-    final result = create();
-    if (exists != null) result.exists = exists;
-    if (requiresPassword != null) result.requiresPassword = requiresPassword;
-    if (name != null) result.name = name;
-    if (availability != null) result.availability = availability;
-    return result;
-  }
-
-  CheckRoomResponse._();
-
-  factory CheckRoomResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory CheckRoomResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'CheckRoomResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'exists')
-    ..aOB(2, _omitFieldNames ? '' : 'requiresPassword')
-    ..aOS(3, _omitFieldNames ? '' : 'name')
-    ..aE<ResourceAvailability>(4, _omitFieldNames ? '' : 'availability',
-        enumValues: ResourceAvailability.values)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CheckRoomResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  CheckRoomResponse copyWith(void Function(CheckRoomResponse) updates) =>
-      super.copyWith((message) => updates(message as CheckRoomResponse))
-          as CheckRoomResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static CheckRoomResponse create() => CheckRoomResponse._();
-  @$core.override
-  CheckRoomResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static CheckRoomResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<CheckRoomResponse>(create);
-  static CheckRoomResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.bool get exists => $_getBF(0);
-  @$pb.TagNumber(1)
-  set exists($core.bool value) => $_setBool(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasExists() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearExists() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.bool get requiresPassword => $_getBF(1);
-  @$pb.TagNumber(2)
-  set requiresPassword($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasRequiresPassword() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearRequiresPassword() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get name => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set name($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasName() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearName() => $_clearField(3);
-
-  @$pb.TagNumber(4)
-  ResourceAvailability get availability => $_getN(3);
-  @$pb.TagNumber(4)
-  set availability(ResourceAvailability value) => $_setField(4, value);
-  @$pb.TagNumber(4)
-  $core.bool hasAvailability() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearAvailability() => $_clearField(4);
-}
-
-class GetHotRoomsRequest extends $pb.GeneratedMessage {
-  factory GetHotRoomsRequest({
-    $core.int? limit,
-  }) {
-    final result = create();
-    if (limit != null) result.limit = limit;
-    return result;
-  }
-
-  GetHotRoomsRequest._();
-
-  factory GetHotRoomsRequest.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetHotRoomsRequest.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetHotRoomsRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aI(1, _omitFieldNames ? '' : 'limit')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetHotRoomsRequest clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetHotRoomsRequest copyWith(void Function(GetHotRoomsRequest) updates) =>
-      super.copyWith((message) => updates(message as GetHotRoomsRequest))
-          as GetHotRoomsRequest;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetHotRoomsRequest create() => GetHotRoomsRequest._();
-  @$core.override
-  GetHotRoomsRequest createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static GetHotRoomsRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetHotRoomsRequest>(create);
-  static GetHotRoomsRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.int get limit => $_getIZ(0);
-  @$pb.TagNumber(1)
-  set limit($core.int value) => $_setSignedInt32(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasLimit() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearLimit() => $_clearField(1);
-}
-
-class GetHotRoomsResponse extends $pb.GeneratedMessage {
-  factory GetHotRoomsResponse({
-    $core.Iterable<RoomWithStats>? rooms,
-  }) {
-    final result = create();
-    if (rooms != null) result.rooms.addAll(rooms);
-    return result;
-  }
-
-  GetHotRoomsResponse._();
-
-  factory GetHotRoomsResponse.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory GetHotRoomsResponse.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetHotRoomsResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..pPM<RoomWithStats>(1, _omitFieldNames ? '' : 'rooms',
-        subBuilder: RoomWithStats.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetHotRoomsResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetHotRoomsResponse copyWith(void Function(GetHotRoomsResponse) updates) =>
-      super.copyWith((message) => updates(message as GetHotRoomsResponse))
-          as GetHotRoomsResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static GetHotRoomsResponse create() => GetHotRoomsResponse._();
-  @$core.override
-  GetHotRoomsResponse createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static GetHotRoomsResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetHotRoomsResponse>(create);
-  static GetHotRoomsResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $pb.PbList<RoomWithStats> get rooms => $_getList(0);
-}
-
-class RoomWithStats extends $pb.GeneratedMessage {
-  factory RoomWithStats({
-    Room? room,
-    $core.int? onlineCount,
-    $core.int? totalMembers,
-  }) {
-    final result = create();
-    if (room != null) result.room = room;
-    if (onlineCount != null) result.onlineCount = onlineCount;
-    if (totalMembers != null) result.totalMembers = totalMembers;
-    return result;
-  }
-
-  RoomWithStats._();
-
-  factory RoomWithStats.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory RoomWithStats.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'RoomWithStats',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOM<Room>(1, _omitFieldNames ? '' : 'room', subBuilder: Room.create)
-    ..aI(2, _omitFieldNames ? '' : 'onlineCount')
-    ..aI(3, _omitFieldNames ? '' : 'totalMembers')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomWithStats clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  RoomWithStats copyWith(void Function(RoomWithStats) updates) =>
-      super.copyWith((message) => updates(message as RoomWithStats))
-          as RoomWithStats;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static RoomWithStats create() => RoomWithStats._();
-  @$core.override
-  RoomWithStats createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static RoomWithStats getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<RoomWithStats>(create);
-  static RoomWithStats? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  Room get room => $_getN(0);
-  @$pb.TagNumber(1)
-  set room(Room value) => $_setField(1, value);
-  @$pb.TagNumber(1)
-  $core.bool hasRoom() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRoom() => $_clearField(1);
-  @$pb.TagNumber(1)
-  Room ensureRoom() => $_ensure(0);
-
-  @$pb.TagNumber(2)
-  $core.int get onlineCount => $_getIZ(1);
-  @$pb.TagNumber(2)
-  set onlineCount($core.int value) => $_setSignedInt32(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasOnlineCount() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearOnlineCount() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.int get totalMembers => $_getIZ(2);
-  @$pb.TagNumber(3)
-  set totalMembers($core.int value) => $_setSignedInt32(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasTotalMembers() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearTotalMembers() => $_clearField(3);
 }
 
 class GetPublicSettingsRequest extends $pb.GeneratedMessage {
@@ -48654,6 +48481,14 @@ class UserServiceApi {
           $pb.ClientContext? ctx, FinishRoomPasswordLoginRequest request) =>
       _client.invoke<JoinRoomResponse>(ctx, 'UserService',
           'FinishRoomPasswordLogin', request, JoinRoomResponse());
+  $async.Future<RoomDiscoveryItem> getRoomDiscovery(
+          $pb.ClientContext? ctx, GetRoomDiscoveryRequest request) =>
+      _client.invoke<RoomDiscoveryItem>(
+          ctx, 'UserService', 'GetRoomDiscovery', request, RoomDiscoveryItem());
+  $async.Future<DiscoverRoomsResponse> discoverRooms(
+          $pb.ClientContext? ctx, DiscoverRoomsRequest request) =>
+      _client.invoke<DiscoverRoomsResponse>(ctx, 'UserService', 'DiscoverRooms',
+          request, DiscoverRoomsResponse());
   $async.Future<ListMyRoomsResponse> listMyRooms(
           $pb.ClientContext? ctx, ListMyRoomsRequest request) =>
       _client.invoke<ListMyRoomsResponse>(
@@ -49207,18 +49042,14 @@ class PublicServiceApi {
 
   PublicServiceApi(this._client);
 
-  $async.Future<CheckRoomResponse> checkRoom(
-          $pb.ClientContext? ctx, CheckRoomRequest request) =>
-      _client.invoke<CheckRoomResponse>(
-          ctx, 'PublicService', 'CheckRoom', request, CheckRoomResponse());
-  $async.Future<ListRoomsResponse> listRooms(
-          $pb.ClientContext? ctx, ListRoomsRequest request) =>
-      _client.invoke<ListRoomsResponse>(
-          ctx, 'PublicService', 'ListRooms', request, ListRoomsResponse());
-  $async.Future<GetHotRoomsResponse> getHotRooms(
-          $pb.ClientContext? ctx, GetHotRoomsRequest request) =>
-      _client.invoke<GetHotRoomsResponse>(
-          ctx, 'PublicService', 'GetHotRooms', request, GetHotRoomsResponse());
+  $async.Future<RoomDiscoveryItem> getRoomDiscovery(
+          $pb.ClientContext? ctx, GetRoomDiscoveryRequest request) =>
+      _client.invoke<RoomDiscoveryItem>(ctx, 'PublicService',
+          'GetRoomDiscovery', request, RoomDiscoveryItem());
+  $async.Future<DiscoverRoomsResponse> discoverRooms(
+          $pb.ClientContext? ctx, DiscoverRoomsRequest request) =>
+      _client.invoke<DiscoverRoomsResponse>(ctx, 'PublicService',
+          'DiscoverRooms', request, DiscoverRoomsResponse());
   $async.Future<GetPublicSettingsResponse> getPublicSettings(
           $pb.ClientContext? ctx, GetPublicSettingsRequest request) =>
       _client.invoke<GetPublicSettingsResponse>(ctx, 'PublicService',

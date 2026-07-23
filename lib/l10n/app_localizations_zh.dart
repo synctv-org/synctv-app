@@ -222,43 +222,15 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get roomFeedPublic => '公开';
-
-  @override
-  String get roomFeedMine => '我的';
-
-  @override
-  String get roomFeedPopular => '热门';
-
-  @override
-  String get roomFeedFavorites => '收藏';
-
-  @override
-  String popularRoomsSummary(int count) {
-    return '显示 $count 个热门房间';
-  }
-
-  @override
-  String favoriteRoomsPageSummary(int total, int page, int pageCount) {
-    return '共 $total 个收藏 · 第 $page / $pageCount 页';
-  }
-
-  @override
   String roomsPageSummary(int total, int page, int pageCount) {
     return '共 $total 个房间 · 第 $page / $pageCount 页';
   }
-
-  @override
-  String get popularRoomsSearchDisabled => '热门房间暂不支持搜索';
 
   @override
   String get searchRooms => '搜索房间';
 
   @override
   String get allCategories => '全部分类';
-
-  @override
-  String get publicRoomsOnly => '仅公开房间';
 
   @override
   String get labels => '标签';
@@ -278,19 +250,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addServerToStart => '添加服务器后开始使用';
 
   @override
-  String get noFavoriteRooms => '还没有收藏的房间';
-
-  @override
   String get noRooms => '暂无房间';
 
   @override
   String get addServerDescription => '输入服务器地址即可浏览公开房间、登录账号和加入观影房间。';
-
-  @override
-  String get myRoomsEmptyDescription => '加入或创建房间后会出现在这里';
-
-  @override
-  String get favoriteRoomsEmptyDescription => '收藏房间后会出现在这里';
 
   @override
   String get filteredRoomsEmptyDescription => '当前筛选下没有可显示的房间';
@@ -450,13 +413,56 @@ class AppLocalizationsZh extends AppLocalizations {
   String get roomJoinable => '可加入';
 
   @override
-  String roomAudienceWithMembers(int viewerCount, int memberCount) {
-    return '在线 $viewerCount / 成员 $memberCount';
-  }
+  String get roomGuestAccess => '游客可进入';
 
   @override
-  String roomAudience(int viewerCount) {
-    return '在线 $viewerCount';
+  String get featuredRooms => '精选房间';
+
+  @override
+  String get featuredRoomsDescription => '正在活跃的同步观影空间';
+
+  @override
+  String get continueWatchingRooms => '继续观看';
+
+  @override
+  String get continueWatchingRoomsDescription => '快速回到你已经加入的房间';
+
+  @override
+  String get popularRooms => '热门房间';
+
+  @override
+  String get popularRoomsDescription => '按在线热度、成员规模和近期活跃排序';
+
+  @override
+  String get roomJoined => '已加入';
+
+  @override
+  String get passwordRequiredShort => '需要密码';
+
+  @override
+  String get roomApprovalRequired => '需要审核';
+
+  @override
+  String get roomApprovalPending => '等待审核';
+
+  @override
+  String get roomJoinRequestSubmitted => '加入申请已提交，等待管理员审核';
+
+  @override
+  String get signInToJoin => '登录后加入';
+
+  @override
+  String get roomInvitationOnly => '仅限邀请';
+
+  @override
+  String get roomFull => '人数已满';
+
+  @override
+  String get roomJoinCooldown => '暂时无法加入';
+
+  @override
+  String roomAudienceWithMembers(int viewerCount, int memberCount) {
+    return '在线 $viewerCount / 成员 $memberCount';
   }
 
   @override
@@ -757,6 +763,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nextPage => '下一页';
+
+  @override
+  String get previousRooms => '上一组房间';
+
+  @override
+  String get nextRooms => '下一组房间';
 
   @override
   String get confirm => '确定';
