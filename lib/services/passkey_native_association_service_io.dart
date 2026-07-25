@@ -14,6 +14,14 @@ class PasskeyNativeAssociationService {
   static const _maxAssociationFileBytes = 256 * 1024;
   static const _successTtl = Duration(minutes: 10);
   static const _failureTtl = Duration(minutes: 1);
+  static const _configuredRpIdsValue = String.fromEnvironment(
+    'SYNCTV_PASSKEY_RP_IDS',
+  );
+  static final Set<String> _configuredAppleRpIds = _configuredRpIdsValue
+      .split(';')
+      .map((value) => value.trim().toLowerCase())
+      .where((value) => value.isNotEmpty)
+      .toSet();
   static final Map<String, _AssociationCacheEntry> _cache = {};
   static final Map<String, Future<bool>> _inFlight = {};
 
@@ -109,21 +117,13 @@ class PasskeyNativeAssociationService {
   }
 
   static Future<bool> _isAppleAssociated(String rpId) async {
+    if (!_configuredAppleRpIds.contains(rpId.toLowerCase())) return false;
     final identity = await _identityChannel.invokeMapMethod<String, dynamic>(
       'getAppleIdentity',
     );
     final applicationIdentifier =
         identity?['applicationIdentifier'] as String? ?? '';
-    final associatedDomains =
-        (identity?['associatedDomains'] as List?)
-            ?.whereType<String>()
-            .map((value) => value.split('?').first)
-            .toSet() ??
-        const <String>{};
-    if (applicationIdentifier.isEmpty ||
-        !associatedDomains.contains('webcredentials:$rpId')) {
-      return false;
-    }
+    if (applicationIdentifier.isEmpty) return false;
 
     final document = await _readJson(
       Uri.https(rpId, '/.well-known/apple-app-site-association'),

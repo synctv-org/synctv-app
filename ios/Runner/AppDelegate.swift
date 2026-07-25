@@ -1,6 +1,5 @@
 import fl_pip
 import Flutter
-import Security
 import UIKit
 
 @main
@@ -31,19 +30,11 @@ import UIKit
   }
 
   private static func appleIdentity() -> [String: Any] {
-    guard let task = SecTaskCreateFromSelf(nil) else { return [:] }
-    let applicationIdentifier =
-      entitlement(task, "application-identifier") as? String ??
-      entitlement(task, "com.apple.application-identifier") as? String ?? ""
-    let associatedDomains =
-      entitlement(task, "com.apple.developer.associated-domains") as? [String] ?? []
+    let applicationIdentifier = Bundle.main.object(
+      forInfoDictionaryKey: "SyncTVApplicationIdentifier"
+    ) as? String ?? ""
     return [
-      "applicationIdentifier": applicationIdentifier,
-      "associatedDomains": associatedDomains,
+      "applicationIdentifier": applicationIdentifier
     ]
-  }
-
-  private static func entitlement(_ task: SecTask, _ name: String) -> CFTypeRef? {
-    SecTaskCopyValueForEntitlement(task, name as CFString, nil)
   }
 }
