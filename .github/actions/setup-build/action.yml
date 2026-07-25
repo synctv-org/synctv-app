@@ -56,8 +56,13 @@ runs:
         FLUTTER_REVISION: ${{ inputs.flutter-revision }}
         FLUTTER_VERSION: ${{ inputs.flutter-version }}
       run: |
-        if [[ ! -x "$FLUTTER_ROOT/bin/flutter" ]]; then
+        mkdir -p "$FLUTTER_ROOT"
+        if ! git -C "$FLUTTER_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
           git init "$FLUTTER_ROOT"
+        fi
+        if git -C "$FLUTTER_ROOT" remote get-url origin >/dev/null 2>&1; then
+          git -C "$FLUTTER_ROOT" remote set-url origin https://github.com/flutter/flutter.git
+        else
           git -C "$FLUTTER_ROOT" remote add origin https://github.com/flutter/flutter.git
         fi
         git -C "$FLUTTER_ROOT" fetch --depth 1 origin \

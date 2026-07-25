@@ -70,8 +70,6 @@ EOF
 	<true/>
 	<key>com.apple.security.device.audio-input</key>
 	<true/>
-	<key>com.apple.security.device.camera</key>
-	<true/>
 	<key>com.apple.security.files.user-selected.read-only</key>
 	<true/>
 EOF

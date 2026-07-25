@@ -65,6 +65,8 @@ jobs:
   quality:
     name: Quality gate
     uses: ./.github/workflows/ci.yml
+    with:
+      native-build-mode: skip
 
   metadata:
     name: Validate release metadata
@@ -92,17 +94,13 @@ jobs:
         run: |
           raw_version="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -n 1)"
           raw_version="${raw_version%$'\r'}"
-          if [[ ! "$raw_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)*$ ]]; then
+          if [[ ! "$raw_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?\+[1-9][0-9]*$ ]]; then
             echo "Invalid pubspec version: $raw_version" >&2
             exit 1
           fi
 
           version="${raw_version%%+*}"
-          if [[ "$raw_version" == *+* ]]; then
-            build_number="${raw_version##*+}"
-          else
-            build_number="1"
-          fi
+          build_number="${raw_version##*+}"
 
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
             tag_version="${GITHUB_REF_NAME#v}"
@@ -117,6 +115,10 @@ jobs:
                 "$PUBLISH_MACOS_APP_STORE" == "true" ]]; then
             if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then
               echo "Store publication must be dispatched from a version tag" >&2
+              exit 1
+            fi
+            if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Store publication requires a stable x.y.z version" >&2
               exit 1
             fi
           fi
@@ -207,6 +209,7 @@ jobs:
         run: |
           flutter build apk \
             --release \
+            --no-pub \
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
             --build-name "${{ needs.metadata.outputs.version }}" \
@@ -214,6 +217,7 @@ jobs:
             --split-debug-info build/symbols/android-all
           flutter build apk \
             --release \
+            --no-pub \
             --split-per-abi \
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
@@ -225,6 +229,7 @@ jobs:
         run: >-
           flutter build appbundle
           --release
+          --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"
@@ -281,20 +286,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends \
-            clang \
-            cmake \
-            libasound2-dev \
-            libepoxy-dev \
-            libgtk-3-dev \
-            liblzma-dev \
-            libmpv-dev \
-            libsoup-3.0-dev \
-            libwebkit2gtk-4.1-dev \
-            ninja-build \
-            pkg-config
+        run: bash tool/ci/install_linux_build_dependencies.sh
 
       - name: Set up build toolchain
         uses: ./.github/actions/setup-build
@@ -308,6 +300,7 @@ jobs:
         run: >-
           flutter build linux
           --release
+          --no-pub
           --target-platform "${{ matrix.flutter-target }}"
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
@@ -334,7 +327,7 @@ jobs:
     name: Windows x64
     needs: metadata
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Enable long paths
@@ -359,6 +352,7 @@ jobs:
         run: >-
           flutter build windows
           --release
+          --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$env:SYNCTV_BUILT_IN_SERVER_URL"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$env:SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"
@@ -367,7 +361,32 @@ jobs:
 
       - name: Verify Windows binary architecture
         shell: pwsh
-        run: ./tool/ci/verify_windows_architecture.ps1 -Architecture x64
+        run: >-
+          ./tool/ci/verify_windows_architecture.ps1
+          -Architecture x64
+
+      - name: Sign Windows application bundle
+        id: signing
+        shell: pwsh
+        env:
+          SYNCTV_WINDOWS_CERTIFICATE_BASE64: ${{ secrets.SYNCTV_WINDOWS_CERTIFICATE_BASE64 }}
+          SYNCTV_WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.SYNCTV_WINDOWS_CERTIFICATE_PASSWORD }}
+          SYNCTV_WINDOWS_TIMESTAMP_URL: ${{ vars.SYNCTV_WINDOWS_TIMESTAMP_URL }}
+        run: |
+          $bundle = Get-ChildItem -Path build/windows -Directory -Recurse |
+            Where-Object { $_.FullName -match '[\\/]runner[\\/]Release$' } |
+            Select-Object -First 1
+          if ($null -eq $bundle) {
+            throw 'Windows release bundle was not found.'
+          }
+          $artifacts = @(
+            Get-ChildItem -Path $bundle.FullName -File -Recurse |
+              Where-Object { $_.Extension -in '.exe', '.dll' }
+          )
+          if ($artifacts.Count -eq 0) {
+            throw 'Windows release bundle contains no executable artifacts.'
+          }
+          ./tool/ci/sign_windows_artifacts.ps1 -Path $artifacts.FullName
 
       - name: Package Windows artifact
         shell: pwsh
@@ -377,6 +396,17 @@ jobs:
           -Architecture x64
           -OutputDirectory dist
           -RepositoryUrl "${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Sign Windows installer
+        if: steps.signing.outputs.mode == 'signed'
+        shell: pwsh
+        env:
+          SYNCTV_WINDOWS_CERTIFICATE_BASE64: ${{ secrets.SYNCTV_WINDOWS_CERTIFICATE_BASE64 }}
+          SYNCTV_WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.SYNCTV_WINDOWS_CERTIFICATE_PASSWORD }}
+          SYNCTV_WINDOWS_TIMESTAMP_URL: ${{ vars.SYNCTV_WINDOWS_TIMESTAMP_URL }}
+        run: >-
+          ./tool/ci/sign_windows_artifacts.ps1
+          -Path "dist/SyncTV-${{ needs.metadata.outputs.artifact-version }}-windows-x64-setup.exe"
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -421,6 +451,7 @@ jobs:
         run: >-
           flutter build macos
           --release
+          --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"
@@ -599,6 +630,7 @@ jobs:
         run: |
           build_args=(
             --release
+            --no-pub
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
             --build-name "${{ needs.metadata.outputs.version }}"
@@ -769,6 +801,7 @@ jobs:
         run: >-
           flutter build macos
           --release
+          --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"

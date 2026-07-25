@@ -10,6 +10,33 @@ platform="$1"
 architecture="$2"
 version="$3"
 output_directory="$4"
+repository_url="${SYNCTV_REPOSITORY_URL:-}"
+if [[ -z "$repository_url" && -n "${GITHUB_REPOSITORY:-}" ]]; then
+  repository_url="${GITHUB_SERVER_URL:-https://github.com}/$GITHUB_REPOSITORY"
+fi
+if [[ -z "$repository_url" ]]; then
+  remote_url="$(git remote get-url origin 2>/dev/null || true)"
+  case "$remote_url" in
+    http://*|https://*) repository_url="${remote_url%.git}" ;;
+    git@*:* )
+      remote_host_and_path="${remote_url#git@}"
+      remote_host="${remote_host_and_path%%:*}"
+      remote_path="${remote_host_and_path#*:}"
+      repository_url="https://$remote_host/${remote_path%.git}"
+      ;;
+    *)
+      echo "Unable to determine the repository URL; set SYNCTV_REPOSITORY_URL" >&2
+      exit 1
+      ;;
+  esac
+fi
+package_maintainer="${SYNCTV_PACKAGE_MAINTAINER:-SyncTV contributors <noreply@example.invalid>}"
+for control_field in "$repository_url" "$package_maintainer"; do
+  if [[ "$control_field" == *$'\n'* || "$control_field" == *$'\r'* ]]; then
+    echo "Debian control metadata must use single-line values" >&2
+    exit 1
+  fi
+done
 mkdir -p "$output_directory"
 output_directory="$(cd "$output_directory" && pwd)"
 
@@ -47,6 +74,50 @@ case "$platform" in
     fi
     tar -C "$bundle_directory" -czf \
       "$output_directory/SyncTV-$version-linux-$architecture.tar.gz" .
+
+    case "$architecture" in
+      x64) debian_architecture="amd64" ;;
+      arm64) debian_architecture="arm64" ;;
+      *)
+        echo "unsupported Debian architecture: $architecture" >&2
+        exit 2
+        ;;
+    esac
+    debian_root="$(mktemp -d)"
+    trap 'rm -rf "${debian_root:-}"' EXIT
+    install -d \
+      "$debian_root/DEBIAN" \
+      "$debian_root/opt/synctv" \
+      "$debian_root/usr/bin" \
+      "$debian_root/usr/share/applications" \
+      "$debian_root/usr/share/doc/synctv" \
+      "$debian_root/usr/share/icons/hicolor/512x512/apps"
+    cp -a "$bundle_directory/." "$debian_root/opt/synctv/"
+    ln -s /opt/synctv/synctv "$debian_root/usr/bin/synctv"
+    install -m 0644 linux/packaging/org.synctv.app.desktop \
+      "$debian_root/usr/share/applications/org.synctv.app.desktop"
+    install -m 0644 assets/icon/robot_3.png \
+      "$debian_root/usr/share/icons/hicolor/512x512/apps/org.synctv.app.png"
+    install -m 0644 LICENSE "$debian_root/usr/share/doc/synctv/copyright"
+    installed_size="$(du -sk "$debian_root" | cut -f1)"
+    cat > "$debian_root/DEBIAN/control" <<EOF
+Package: synctv
+Version: $version
+Architecture: $debian_architecture
+Maintainer: $package_maintainer
+Installed-Size: $installed_size
+Depends: libasound2, libgtk-3-0, libmpv2, libwebkit2gtk-4.1-0
+Section: video
+Priority: optional
+Homepage: $repository_url
+Description: Synchronized room media player
+ SyncTV plays media in sync for everyone in a room and includes chat,
+ voice chat, media P2P, playlists, and provider integrations.
+EOF
+    dpkg-deb --root-owner-group --build "$debian_root" \
+      "$output_directory/SyncTV-$version-linux-$architecture.deb"
+    rm -rf "$debian_root"
+    trap - EXIT
     ;;
   macos)
     signing_label="${SYNCTV_MACOS_SIGNING_LABEL:-ad-hoc}"

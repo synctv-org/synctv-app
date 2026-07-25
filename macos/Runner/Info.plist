@@ -17,7 +17,7 @@
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
-		<string>zh</string>
+		<string>zh-Hans</string>
 	</array>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
@@ -32,11 +32,9 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>我们需要您的麦克风权限来进行语音聊天。</string>
-	<key>NSCameraUsageDescription</key>
-	<string>我们需要您的相机权限来进行视频通话。</string>
+	<string>SyncTV uses the microphone for room voice chat.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>我们需要本地网络权限来发现和连接附近的设备。</string>
+	<string>SyncTV uses the local network for media peer-to-peer connections.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

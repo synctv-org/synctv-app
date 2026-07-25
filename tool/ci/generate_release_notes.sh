@@ -28,7 +28,7 @@ cat > "$output_file" <<'EOF'
 ## Quick downloads
 
 > [!TIP]
-> Choose the Universal build on Android and macOS. Windows users should choose the EXE installer; macOS users should choose the DMG installer.
+> Choose the Universal build on Android and macOS. Windows users should choose the EXE installer; Linux users should choose the DEB package on Debian and Ubuntu.
 
 | Platform | Device | Recommended download | Alternative | Best for |
 |:---|:---|:---:|:---|:---|
@@ -134,13 +134,17 @@ append_download "Windows" "x64" \
   "SyncTV-$ARTIFACT_VERSION-windows-x64.zip" \
   "Portable ZIP"
 append_download "Linux" "x64" \
+  "SyncTV-$ARTIFACT_VERSION-linux-x64.deb" \
+  "DEB" "FCC624" "linux" \
+  "Debian and Ubuntu on Intel or AMD" \
   "SyncTV-$ARTIFACT_VERSION-linux-x64.tar.gz" \
-  "TAR.GZ" "FCC624" "linux" \
-  "64-bit Intel and AMD systems"
+  "Portable TAR.GZ"
 append_download "Linux" "arm64" \
+  "SyncTV-$ARTIFACT_VERSION-linux-arm64.deb" \
+  "DEB" "FCC624" "linux" \
+  "Debian and Ubuntu on ARM64" \
   "SyncTV-$ARTIFACT_VERSION-linux-arm64.tar.gz" \
-  "TAR.GZ" "FCC624" "linux" \
-  "64-bit ARM systems"
+  "Portable TAR.GZ"
 
 printf "| **Checksums** | All files | [![Verify SHA-256](https://img.shields.io/badge/Verify-SHA--256-24292F?style=for-the-badge&logo=github&logoColor=white)](%s/SHA256SUMS.txt) | - | Integrity verification |\n" \
   "$asset_base" >> "$output_file"
@@ -151,7 +155,8 @@ cat >> "$output_file" <<'EOF'
 
 - Android filenames identify stable `signed` and ephemeral `development` signing modes.
 - Signed Android releases include a public `android-passkey-server-config.yaml` file for self-hosted servers.
-- Windows publishes an EXE installer and a portable ZIP.
+- Windows publishes an x64 EXE installer and portable ZIP. Official builds use Authenticode when signing secrets are configured.
+- Linux publishes DEB installers and portable TAR.GZ archives for x64 and ARM64.
 - macOS publishes DMG installers and portable ZIPs for Universal, Apple silicon, and Intel builds. Signed releases carry stapled Apple notarization tickets.
 - iOS publishes a signed IPA when signing secrets are configured and an unsigned re-signable archive for fork builds.
 - `SHA256SUMS.txt` authenticates every attached SyncTV artifact.

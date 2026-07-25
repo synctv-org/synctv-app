@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "SyncTV uses the microphone for room voice chat.";
+"NSLocalNetworkUsageDescription" = "SyncTV uses the local network for media peer-to-peer connections.";

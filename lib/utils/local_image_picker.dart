@@ -27,18 +27,11 @@ Future<PickedLocalImage?> pickLocalImageUpload(
   BuildContext context, {
   double? aspectRatio,
 }) async {
-  final result = await FilePicker.pickFiles(
-    type: FileType.image,
-    allowMultiple: false,
-    withData: true,
-  );
-  final file = result?.files.single;
+  final file = await FilePicker.pickFile(type: FileType.image);
   if (file == null) return null;
 
-  final originalBytes =
-      file.bytes ??
-      (file.path == null ? null : await File(file.path!).readAsBytes());
-  if (originalBytes == null || originalBytes.isEmpty) return null;
+  final originalBytes = await file.readAsBytes();
+  if (originalBytes.isEmpty) return null;
 
   if (!context.mounted) return null;
   final edited = await showAppDialog<_PreparedLocalImage>(

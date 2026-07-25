@@ -6,7 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:screen_brightness/screen_brightness.dart';
-import 'package:flutter_volume_controller/flutter_volume_controller.dart';
+import 'package:volume_controller/volume_controller.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -2107,7 +2107,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       }
     } else {
       try {
-        _dragStartVolume = await FlutterVolumeController.getVolume();
+        _dragStartVolume = await VolumeController.instance.getVolume();
       } catch (e) {
         _dragStartVolume = widget.controller.value.volume;
       }
@@ -2145,7 +2145,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer>
       final newVal = (_dragStartVolume! + delta).clamp(0.0, 1.0);
 
       try {
-        await FlutterVolumeController.setVolume(newVal);
+        await VolumeController.instance.setVolume(newVal);
       } catch (e) {
         // System volume is unavailable on some desktop targets.
       }

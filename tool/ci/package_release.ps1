@@ -43,6 +43,7 @@ $installerName = "SyncTV-$Version-windows-$Architecture-setup"
   "/DOutputDirectory=$resolvedOutputDirectory" `
   "/DOutputBaseFilename=$installerName" `
   "/DAppUrl=$RepositoryUrl" `
+  "/DAppArchitecture=$Architecture" `
   $installerScript
 if ($LASTEXITCODE -ne 0) {
   throw "Inno Setup failed with exit code $LASTEXITCODE."

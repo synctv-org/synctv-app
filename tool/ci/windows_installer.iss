@@ -18,6 +18,10 @@
   #error AppUrl is required
 #endif
 
+#ifndef AppArchitecture
+  #error AppArchitecture is required
+#endif
+
 #define AppExecutable "SyncTV.exe"
 #define AppPublisher "SyncTV"
 
@@ -41,8 +45,13 @@ SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
+#if AppArchitecture == "arm64"
+ArchitecturesAllowed=arm64
+ArchitecturesInstallIn64BitMode=arm64
+#else
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#endif
 CloseApplications=yes
 RestartApplications=yes
 MinVersion=10.0.17763

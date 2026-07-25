@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SyncTV
+Comment=Watch synchronized media with your room
+Exec=/opt/synctv/synctv
+Icon=org.synctv.app
+Terminal=false
+Categories=AudioVideo;Video;Network;
+StartupWMClass=org.synctv.app

@@ -7,12 +7,20 @@ on:
     branches: ["**"]
   workflow_dispatch:
   workflow_call:
+    inputs:
+      native-build-mode:
+        description: Use "skip" when the caller already builds release artifacts.
+        required: false
+        type: string
+        default: all
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Keep this group distinct from callers of the reusable workflow. GitHub
+  # treats concurrency group names as case-insensitive.
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -57,6 +65,16 @@ jobs:
       - name: Check Dart formatting
         run: dart format --output=none --set-exit-if-changed lib test tool packages
 
+      - name: Check automation scripts
+        run: |
+          find tool -type f -name '*.sh' -print0 | xargs -0 bash -n
+          find tool -type f -name '*.sh' -print0 | xargs -0 shellcheck
+
+      - name: Check GitHub Actions workflows
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+        with:
+          version: 1.7.12
+
       - name: Analyze Dart and Flutter code
         run: dart analyze --fatal-infos
 
@@ -75,3 +93,176 @@ jobs:
           flutter gen-l10n
           bash tool/generate_proto.sh
           git diff --exit-code -- lib/l10n lib/src/generated
+
+  android-native:
+    name: Android native release
+    if: >-
+      inputs.native-build-mode != 'skip' &&
+      (github.event_name != 'push' ||
+      github.ref_name == github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          rust-version: ${{ env.RUST_VERSION }}
+          rust-targets: aarch64-linux-android
+
+      - name: Build Android release
+        run: >-
+          flutter build apk
+          --release
+          --no-pub
+          --target-platform android-arm64
+          --split-debug-info build/symbols/ci-android-arm64
+
+  linux-native:
+    name: Linux ${{ matrix.architecture }} native release
+    if: >-
+      inputs.native-build-mode != 'skip' &&
+      (github.event_name != 'push' ||
+      github.ref_name == github.event.repository.default_branch)
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            runner: ubuntu-24.04
+            flutter-architecture: x64
+            flutter-target: linux-x64
+            rust-target: x86_64-unknown-linux-gnu
+          - architecture: arm64
+            runner: ubuntu-24.04-arm
+            flutter-architecture: arm64
+            flutter-target: linux-arm64
+            rust-target: aarch64-unknown-linux-gnu
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Install Linux build dependencies
+        run: bash tool/ci/install_linux_build_dependencies.sh
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-architecture: ${{ matrix.flutter-architecture }}
+          rust-version: ${{ env.RUST_VERSION }}
+          rust-targets: ${{ matrix.rust-target }}
+
+      - name: Build and package Linux release
+        run: |
+          flutter build linux \
+            --release \
+            --no-pub \
+            --target-platform "${{ matrix.flutter-target }}" \
+            --split-debug-info "build/symbols/linux-${{ matrix.architecture }}"
+          bash tool/ci/strip_linux_release.sh
+          bash tool/ci/package_release.sh linux \
+            "${{ matrix.architecture }}" "0.0.0+0-ci" dist
+          test -f "dist/SyncTV-0.0.0+0-ci-linux-${{ matrix.architecture }}.deb"
+
+  windows-native:
+    name: Windows x64 native release
+    if: >-
+      inputs.native-build-mode != 'skip' &&
+      (github.event_name != 'push' ||
+      github.ref_name == github.event.repository.default_branch)
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Enable long paths
+        shell: pwsh
+        run: git config --system core.longpaths true
+
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-architecture: x64
+          rust-version: ${{ env.RUST_VERSION }}
+          rust-targets: x86_64-pc-windows-msvc
+
+      - name: Build and package Windows release
+        shell: pwsh
+        run: |
+          flutter build windows `
+            --release `
+            --no-pub `
+            --split-debug-info build/symbols/windows-x64
+          ./tool/ci/verify_windows_architecture.ps1 -Architecture x64
+          ./tool/ci/package_release.ps1 `
+            -Version "0.0.0+0-ci" `
+            -Architecture x64 `
+            -OutputDirectory dist `
+            -RepositoryUrl "${{ github.server_url }}/${{ github.repository }}"
+
+  apple-native:
+    name: Apple native releases
+    if: >-
+      inputs.native-build-mode != 'skip' &&
+      (github.event_name != 'push' ||
+      github.ref_name == github.event.repository.default_branch)
+    runs-on: macos-15
+    timeout-minutes: 75
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-architecture: arm64
+          rust-version: ${{ env.RUST_VERSION }}
+          rust-targets: aarch64-apple-darwin,x86_64-apple-darwin,aarch64-apple-ios
+
+      - name: Build and package macOS release
+        run: |
+          flutter build macos \
+            --release \
+            --no-pub \
+            --split-debug-info build/symbols/macos-universal
+          bash tool/ci/verify_macos_architecture.sh \
+            build/macos/Build/Products/Release/SyncTV.app universal
+          bash tool/ci/package_release.sh macos universal "0.0.0+0-ci" dist/macos
+
+      - name: Build and package unsigned iOS release
+        run: |
+          bash tool/ci/verify_ios_app_icons.sh
+          flutter build ios \
+            --release \
+            --no-pub \
+            --no-codesign \
+            --split-debug-info build/symbols/ios-arm64
+          bash tool/ci/package_release.sh ios arm64 "0.0.0+0-ci" dist/ios

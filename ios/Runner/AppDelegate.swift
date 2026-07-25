@@ -3,26 +3,27 @@ import Flutter
 import UIKit
 
 @main
-@objc class AppDelegate: FlFlutterAppDelegate {
+@objc class AppDelegate: FlFlutterAppDelegate, FlutterImplicitEngineDelegate {
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let channel = FlutterMethodChannel(
-        name: "org.synctv.app/passkey_identity",
-        binaryMessenger: controller.binaryMessenger
-      )
-      channel.setMethodCallHandler { call, result in
-        guard call.method == "getAppleIdentity" else {
-          result(FlutterMethodNotImplemented)
-          return
-        }
-        result(Self.appleIdentity())
-      }
-    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    let channel = FlutterMethodChannel(
+      name: "org.synctv.app/passkey_identity",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "getAppleIdentity" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      result(Self.appleIdentity())
+    }
   }
 
   override func registerPlugin(_ registry: FlutterPluginRegistry) {
