@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:passkeys/authenticator.dart';
 import 'package:passkeys/types.dart';
+import 'package:synctv_app/services/passkey_native_association_service.dart';
 
 class PasskeyUnavailableException implements Exception {
   final String message;
@@ -17,50 +16,144 @@ class PasskeyUnavailableException implements Exception {
 }
 
 class PasskeyAuthenticatorService {
+  static const _platformAvailabilityTimeout = Duration(seconds: 2);
+  static const _associationTimeout = Duration(seconds: 3);
   static final PasskeyAuthenticator _authenticator = PasskeyAuthenticator(
-    debugMode: kDebugMode,
+    debugMode: false,
   );
 
-  static Future<bool> isSupported() async {
-    if (Platform.isAndroid) {
-      final availability = await _authenticator.getAvailability().android();
-      return availability.hasPasskeySupport;
+  static Future<bool> isSupported({
+    required String serverBaseUrl,
+    required String rpId,
+  }) async {
+    final normalizedRpId = rpId.trim().toLowerCase();
+    if (!_isValidRpId(normalizedRpId)) return false;
+    if (kIsWeb) return false;
+    if (!_serverCanUseRpId(serverBaseUrl, normalizedRpId)) return false;
+    if (kDebugMode) {
+      debugPrint(
+        'Checking Passkey capability for ${defaultTargetPlatform.name}',
+      );
     }
-    if (Platform.isIOS || Platform.isMacOS) {
-      final availability = await _authenticator.getAvailability().iOS();
-      return availability.hasPasskeySupport;
+    final platformAvailable = await _platformAvailable();
+    if (kDebugMode) {
+      debugPrint('Passkey platform capability: $platformAvailable');
     }
-    if (Platform.isWindows) {
-      final availability = await _authenticator.getAvailability().windows();
-      return availability.hasPasskeySupport;
+    final associated = await PasskeyNativeAssociationService.isAssociated(
+      serverBaseUrl: serverBaseUrl,
+      rpId: normalizedRpId,
+    ).timeout(_associationTimeout, onTimeout: () => false);
+    if (kDebugMode) {
+      debugPrint(
+        'Passkey capability: platform=$platformAvailable, '
+        'associated=$associated, platform=${defaultTargetPlatform.name}',
+      );
+    }
+    return platformAvailable && associated;
+  }
+
+  static Future<bool> _platformAvailable() async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return _authenticator
+          .getAvailability()
+          .android()
+          .then((availability) => availability.hasPasskeySupport)
+          .timeout(_platformAvailabilityTimeout, onTimeout: () => false);
+    }
+    if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      return _authenticator
+          .getAvailability()
+          .iOS()
+          .then((availability) => availability.hasPasskeySupport)
+          .timeout(_platformAvailabilityTimeout, onTimeout: () => false);
+    }
+    if (defaultTargetPlatform == TargetPlatform.windows) {
+      return _authenticator
+          .getAvailability()
+          .windows()
+          .then((availability) => availability.hasPasskeySupport)
+          .timeout(_platformAvailabilityTimeout, onTimeout: () => false);
     }
     return false;
   }
 
   static Future<Map<String, dynamic>> createCredential(
-    List<int> optionsJson,
-  ) async {
-    await _ensureSupported();
-    final request = RegisterRequestType.fromJson(_decodeOptions(optionsJson));
+    List<int> optionsJson, {
+    required String serverBaseUrl,
+  }) async {
+    final options = _decodeOptions(optionsJson);
+    final rp = options['rp'];
+    final rpId = rp is Map ? rp['id']?.toString() ?? '' : '';
+    await _ensureSupported(serverBaseUrl: serverBaseUrl, rpId: rpId);
+    final request = RegisterRequestType.fromJson(options);
     return _wrapAuthenticatorErrors(() async {
       final response = await _authenticator.register(request);
-      return response.toJson();
+      return _credentialResponseJson(
+        response.toJson(),
+        response.clientExtensionResults,
+      );
     });
   }
 
   static Future<Map<String, dynamic>> getCredential(
-    List<int> optionsJson,
-  ) async {
-    await _ensureSupported();
+    List<int> optionsJson, {
+    required String serverBaseUrl,
+  }) async {
+    final options = _decodeOptions(optionsJson);
+    await _ensureSupported(
+      serverBaseUrl: serverBaseUrl,
+      rpId: options['rpId']?.toString() ?? '',
+    );
     final request = AuthenticateRequestType.fromJson(
-      _decodeOptions(optionsJson),
-      mediation: MediationType.Required,
+      options,
+      mediation: _mediationFromOptions(options),
       preferImmediatelyAvailableCredentials: false,
     );
     return _wrapAuthenticatorErrors(() async {
       final response = await _authenticator.authenticate(request);
-      return response.toJson();
+      return _credentialResponseJson(
+        response.toJson(),
+        response.clientExtensionResults,
+      );
     });
+  }
+
+  static MediationType _mediationFromOptions(Map<String, dynamic> options) {
+    return switch (options['mediation']) {
+      'conditional' => MediationType.Conditional,
+      'optional' => MediationType.Optional,
+      'silent' => MediationType.Silent,
+      _ => MediationType.Required,
+    };
+  }
+
+  static Map<String, dynamic> _credentialResponseJson(
+    Map<String, dynamic> response,
+    Map<String?, Object?>? extensionResults,
+  ) {
+    if (extensionResults == null || extensionResults.isEmpty) return response;
+    return {...response, 'clientExtensionResults': _jsonMap(extensionResults)};
+  }
+
+  static Map<String, dynamic> _jsonMap(Map<Object?, Object?> values) {
+    return {
+      for (final entry in values.entries)
+        if (entry.key != null)
+          entry.key.toString(): switch (entry.value) {
+            final Map<Object?, Object?> nested => _jsonMap(nested),
+            final Iterable<Object?> entries =>
+              entries
+                  .map(
+                    (entry) => switch (entry) {
+                      final Map<Object?, Object?> nested => _jsonMap(nested),
+                      _ => entry,
+                    },
+                  )
+                  .toList(growable: false),
+            _ => entry.value,
+          },
+    };
   }
 
   static Map<String, dynamic> _decodeOptions(List<int> optionsJson) {
@@ -71,9 +164,12 @@ class PasskeyAuthenticatorService {
     return decoded;
   }
 
-  static Future<void> _ensureSupported() async {
+  static Future<void> _ensureSupported({
+    required String serverBaseUrl,
+    required String rpId,
+  }) async {
     try {
-      if (await isSupported()) return;
+      if (await isSupported(serverBaseUrl: serverBaseUrl, rpId: rpId)) return;
     } on MissingPluginException {
       throw const PasskeyUnavailableException('当前平台暂不支持 Passkey');
     } on UnimplementedError {
@@ -82,6 +178,29 @@ class PasskeyAuthenticatorService {
       throw PasskeyUnavailableException(_platformErrorMessage(e));
     }
     throw const PasskeyUnavailableException('当前设备暂不支持 Passkey');
+  }
+
+  static bool _serverCanUseRpId(String serverBaseUrl, String rpId) {
+    final server = Uri.tryParse(serverBaseUrl.trim());
+    if (server == null || !_hostCanUseRpId(server.host, rpId)) return false;
+    return server.scheme == 'https' ||
+        (server.scheme == 'http' && _isLoopbackHost(server.host));
+  }
+
+  static bool _hostCanUseRpId(String host, String rpId) {
+    final normalizedHost = host.trim().toLowerCase();
+    return normalizedHost == rpId || normalizedHost.endsWith('.$rpId');
+  }
+
+  static bool _isValidRpId(String rpId) =>
+      rpId.isNotEmpty && !rpId.contains('/') && !rpId.contains(':');
+
+  static bool _isLoopbackHost(String host) {
+    final normalized = host.toLowerCase();
+    return normalized == 'localhost' ||
+        normalized == '127.0.0.1' ||
+        normalized == '::1' ||
+        normalized == '[::1]';
   }
 
   static Future<T> _wrapAuthenticatorErrors<T>(Future<T> Function() action) {

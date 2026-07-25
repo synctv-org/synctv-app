@@ -15,18 +15,16 @@ class OpaqueAuthenticatorService {
   final opaque.SyncTvOpaqueClient _client;
 
   Future<AuthResult> login({
-    required String identifier,
+    required String loginSessionId,
     required String password,
   }) async {
-    final normalized = identifier.trim();
-    if (normalized.isEmpty || password.isEmpty) {
+    if (loginSessionId.isEmpty || password.isEmpty) {
       throw const FormatException('请输入账号和密码');
     }
 
     final start = _client.startLogin(password);
     final challenge = await SyncTvService.startOpaqueLogin(
-      username: normalized.contains('@') ? '' : normalized,
-      email: normalized.contains('@') ? normalized : '',
+      loginSessionId: loginSessionId,
       credentialRequest: start.credentialRequest,
     );
     final finish = _client.finishLogin(
@@ -151,6 +149,7 @@ class OpaqueAuthenticatorService {
     }
     final credential = await PasskeyAuthenticatorService.getCredential(
       challenge.passkeyOptions,
+      serverBaseUrl: SyncTvService.baseUrl,
     );
     final registrationFinish = _client.finishRegistration(
       password: newPassword,

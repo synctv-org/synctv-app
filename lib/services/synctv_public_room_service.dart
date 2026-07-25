@@ -35,9 +35,7 @@ class SyncTvPublicRoomDomainService {
     if (_api.session.hasAccessToken) return true;
     final refreshToken = _api.session.refreshToken;
     if (refreshToken == null || refreshToken.isEmpty) return false;
-    final refreshed = await _api.refreshAccessTokenIfPossible();
-    if (refreshed) await _sessionStore.persistTokens();
-    return refreshed;
+    return _api.refreshAccessTokenIfPossible();
   }
 
   Future<PublicSettingsInfo> getPublicSettings({bool refresh = false}) async {
@@ -133,6 +131,7 @@ class SyncTvPublicRoomDomainService {
       enableGuest: settings.enableGuest,
       emailSignupNeedReview: settings.emailSignupNeedReview,
       enableWebauthn: settings.enableWebauthn,
+      webauthnRpId: settings.webauthnRpId,
       enableWebauthnSignup: settings.enableWebauthnSignup,
       webauthnSignupNeedReview: settings.webauthnSignupNeedReview,
       movieProxy: settings.movieProxy,

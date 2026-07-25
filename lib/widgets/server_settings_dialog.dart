@@ -11,6 +11,7 @@ import 'package:synctv_app/widgets/app_form_controls.dart';
 Future<bool?> showServerSettingsDialog({
   required BuildContext context,
   bool requireServer = false,
+  String initialAddress = '',
 }) {
   return showAppBottomSheet<bool>(
     context: context,
@@ -18,14 +19,21 @@ Future<bool?> showServerSettingsDialog({
     isDismissible: !requireServer,
     enableDrag: !requireServer,
     showDragHandle: !requireServer,
-    builder: (context) => _ServerSettingsSheet(requireServer: requireServer),
+    builder: (context) => _ServerSettingsSheet(
+      requireServer: requireServer,
+      initialAddress: initialAddress,
+    ),
   );
 }
 
 class _ServerSettingsSheet extends StatefulWidget {
-  const _ServerSettingsSheet({required this.requireServer});
+  const _ServerSettingsSheet({
+    required this.requireServer,
+    required this.initialAddress,
+  });
 
   final bool requireServer;
+  final String initialAddress;
 
   @override
   State<_ServerSettingsSheet> createState() => _ServerSettingsSheetState();
@@ -42,6 +50,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   @override
   void initState() {
     super.initState();
+    _controller.text = widget.initialAddress;
     if (SyncTvService.activeServer == null) {
       _loadingServerInfo = false;
     } else {
@@ -121,7 +130,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
   Future<void> _activateServer(SyncTvServerProfile profile) async {
     setState(() => _busy = true);
     try {
-      await SyncTvService.activateServer(profile.serverId);
+      await SyncTvService.activateServer(profile.endpoint);
       await SyncTvService.syncServerTime(refresh: true);
       await _loadServerInfo(refresh: true);
       _changed = true;
@@ -153,7 +162,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
     }
     setState(() => _busy = true);
     try {
-      await SyncTvService.removeServer(profile.serverId);
+      await SyncTvService.removeServer(profile.endpoint);
       _changed = true;
       if (mounted) {
         MessageUtils.showSuccess(context, context.l10n.serverRemoved);
@@ -266,7 +275,7 @@ class _ServerSettingsSheetState extends State<_ServerSettingsSheet> {
                 ...servers.map(
                   (profile) => _ServerProfileTile(
                     profile: profile,
-                    active: profile.serverId == activeServer?.serverId,
+                    active: profile.endpoint == activeServer?.endpoint,
                     canRemove: !_busy && !profile.isBuiltIn,
                     busy: _busy,
                     onActivate: () => _activateServer(profile),
@@ -332,10 +341,10 @@ class _CurrentServerInfoCard extends StatelessWidget {
     final serverName = (info?.serverName.trim().isNotEmpty ?? false)
         ? info!.serverName.trim()
         : fallback?.name ?? l10n.currentServer;
-    final serverId = (info?.serverId.trim().isNotEmpty ?? false)
+    final declaredServerId = (info?.serverId.trim().isNotEmpty ?? false)
         ? info!.serverId.trim()
-        : fallback?.serverId ?? '';
-    final endpoint = fallback?.activeEndpoint ?? SyncTvService.baseUrl;
+        : fallback?.declaredServerId ?? '';
+    final endpoint = fallback?.endpoint ?? SyncTvService.baseUrl;
 
     return AppPanelSurface(
       width: double.infinity,
@@ -380,8 +389,11 @@ class _CurrentServerInfoCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                if (serverId.isNotEmpty) ...[
-                  _MetaLine(icon: Icons.fingerprint_rounded, text: serverId),
+                if (declaredServerId.isNotEmpty) ...[
+                  _MetaLine(
+                    icon: Icons.fingerprint_rounded,
+                    text: l10n.serverDeclaredId(declaredServerId),
+                  ),
                   const SizedBox(height: 4),
                 ],
                 if (endpoint.isNotEmpty)
@@ -389,6 +401,16 @@ class _CurrentServerInfoCard extends StatelessWidget {
                     icon: Icons.radio_button_checked_rounded,
                     text: endpoint,
                   ),
+                if (endpoint.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.serverAddressIdentityDescription,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
                 if (error != null) ...[
                   const SizedBox(height: 6),
                   Text(
@@ -506,19 +528,14 @@ class _ServerProfileTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _MetaLine(icon: Icons.fingerprint_rounded, text: profile.serverId),
-          const SizedBox(height: 6),
-          ...profile.endpoints.map(
-            (endpoint) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: _MetaLine(
-                icon: endpoint == profile.activeEndpoint
-                    ? Icons.radio_button_checked_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                text: endpoint,
-              ),
+          _MetaLine(icon: Icons.link_rounded, text: profile.endpoint),
+          if (profile.declaredServerId.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _MetaLine(
+              icon: Icons.fingerprint_rounded,
+              text: l10n.serverDeclaredId(profile.declaredServerId),
             ),
-          ),
+          ],
         ],
       ),
     );

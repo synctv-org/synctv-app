@@ -5,11 +5,11 @@ inputs:
   flutter-version:
     description: Flutter SDK version.
     required: false
-    default: "3.44.7"
+    default: "3.44.8"
   flutter-revision:
     description: Immutable Flutter framework revision for source installations.
     required: false
-    default: "84fc5cbb223bc12f83d65b647ff8a56caf779ffd"
+    default: "058e0af2c2b57e369d905a03ac9748b0ebf543c6"
   flutter-architecture:
     description: Flutter SDK host architecture.
     required: false

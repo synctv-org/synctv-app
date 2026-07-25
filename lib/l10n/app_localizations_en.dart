@@ -124,7 +124,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverAutoDiscoverDescription =>
-      'SyncTV identifies the server automatically. Callback URLs, codes, and server IDs are handled for you.';
+      'Each address is stored as an independent server. SyncTV keeps its account, session, and cached data isolated by address.';
+
+  @override
+  String get serverAddressIdentityDescription =>
+      'The address above identifies this server on this device. The ID below is declared by the server and may be shared or imitated by another address.';
+
+  @override
+  String serverDeclaredId(String serverId) {
+    return 'Server-declared ID: $serverId';
+  }
 
   @override
   String get savedServers => 'Saved servers';
@@ -597,6 +606,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mfaPasskeyUnavailable => 'This account has no available passkey';
 
   @override
+  String get noLoginMethodAvailable =>
+      'This account has no sign-in method available on this device';
+
+  @override
   String get passwordResetSuccess =>
       'Password reset. Log in with your new password.';
 
@@ -682,6 +695,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passkeyRegistration => 'Passkey registration';
+
+  @override
+  String get registrationMethod => 'Registration method';
 
   @override
   String get deviceNameHint => 'Device name, such as MacBook or phone';
@@ -1836,6 +1852,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get loginSessionExpired =>
       'The login session expired. Verify again before sending an SMS.';
+
+  @override
+  String get authenticationSessionExpired =>
+      'The authentication session expired. Start again.';
 
   @override
   String get phoneNumber => 'Phone number';
@@ -6449,4 +6469,116 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get image => 'Image';
+
+  @override
+  String get enterAuthenticatorCode => 'Enter the 6-digit authenticator code';
+
+  @override
+  String get enterRecoveryCode => 'Enter a recovery code';
+
+  @override
+  String get authenticatorCode => 'Authenticator code';
+
+  @override
+  String get verifyWithAuthenticator => 'Verify with authenticator';
+
+  @override
+  String get verifyWithEmail => 'Verify with email';
+
+  @override
+  String get recoveryCode => 'Recovery code';
+
+  @override
+  String get useRecoveryCode => 'Use a recovery code';
+
+  @override
+  String get backToVerificationMethods => 'Back to verification methods';
+
+  @override
+  String get verifyWithRecoveryCode => 'Verify with recovery code';
+
+  @override
+  String get authenticatorApp => 'Authenticator app';
+
+  @override
+  String setupAuthenticatorFailed(String error) {
+    return 'Could not set up the authenticator app: $error';
+  }
+
+  @override
+  String regenerateRecoveryCodesFailed(String error) {
+    return 'Could not generate new recovery codes: $error';
+  }
+
+  @override
+  String get removeAuthenticatorApp => 'Remove authenticator app';
+
+  @override
+  String get removeAuthenticatorAppConfirmation =>
+      'Remove the authenticator app and all of its recovery codes?';
+
+  @override
+  String get authenticatorAppRemoved => 'Authenticator app removed';
+
+  @override
+  String removeAuthenticatorFailed(String error) {
+    return 'Could not remove the authenticator app: $error';
+  }
+
+  @override
+  String get authenticatorAppDescription =>
+      'Use time-based codes from a standard authenticator app for multi-factor verification';
+
+  @override
+  String get authenticatorAppConfigured => 'Configured';
+
+  @override
+  String get authenticatorAppNotConfigured => 'Not configured';
+
+  @override
+  String recoveryCodesRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recovery codes remaining',
+      one: '1 recovery code remaining',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get authenticatorAppSetupHint =>
+      'Add an authenticator app to strengthen account security';
+
+  @override
+  String get recoveryCodes => 'Recovery codes';
+
+  @override
+  String get setup => 'Set up';
+
+  @override
+  String get setupAuthenticatorApp => 'Set up authenticator app';
+
+  @override
+  String get setupAuthenticatorAppDescription =>
+      'Scan the QR code with a standard authenticator app, or enter the setup key manually.';
+
+  @override
+  String get manualSetupKey => 'Manual setup key';
+
+  @override
+  String get confirmSetup => 'Confirm setup';
+
+  @override
+  String get saveRecoveryCodes => 'Save recovery codes';
+
+  @override
+  String get recoveryCodesShownOnce =>
+      'Each code works once. Store these codes securely; they are shown only on this screen.';
+
+  @override
+  String get copyAll => 'Copy all';
+
+  @override
+  String get savedRecoveryCodes => 'I saved the codes';
 }

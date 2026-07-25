@@ -32,16 +32,13 @@ class SyncTvAuthDomainService {
   }
 
   Future<AuthResult> loginWithDirectPassword({
-    String username = '',
-    String email = '',
+    required String loginSessionId,
     required String password,
   }) async {
-    final request = client.LoginWithDirectPasswordRequest(password: password);
-    if (email.isNotEmpty) {
-      request.email = email;
-    } else {
-      request.username = username;
-    }
+    final request = client.LoginWithDirectPasswordRequest(
+      loginSessionId: loginSessionId,
+      password: password,
+    );
     final response = await _api.auth.loginWithDirectPassword(request);
     return _loginResponseToAuthResult(response);
   }
@@ -69,16 +66,43 @@ class SyncTvAuthDomainService {
     return _registerResponseToAuthResult(response);
   }
 
-  Future<AuthResult> confirmEmailLoginResult(String email, String token) async {
+  Future<LoginStart> startLogin(String identifier) async {
+    final normalized = identifier.trim();
+    final request = client.StartLoginRequest();
+    if (normalized.contains('@')) {
+      request.email = normalized;
+    } else {
+      request.username = normalized;
+    }
+    final response = await _api.auth.startLogin(request);
+    return LoginStart(
+      sessionId: response.loginSessionId,
+      availableMethods: response.availableMethods
+          .map((method) => method.value)
+          .toList(growable: false),
+      expiresAt: DateTime.fromMillisecondsSinceEpoch(
+        response.expiresAt.toInt() * 1000,
+        isUtc: true,
+      ),
+    );
+  }
+
+  Future<AuthResult> confirmEmailLoginResult(
+    String loginSessionId,
+    String token,
+  ) async {
     final response = await _api.auth.confirmEmailLogin(
-      client.ConfirmEmailLoginRequest(email: email, emailToken: token),
+      client.ConfirmEmailLoginRequest(
+        loginSessionId: loginSessionId,
+        emailToken: token,
+      ),
     );
     return _loginResponseToAuthResult(response);
   }
 
-  Future<void> requestEmailLogin(String email) async {
+  Future<void> requestEmailLogin(String loginSessionId) async {
     await _api.auth.requestEmailLogin(
-      client.RequestEmailLoginRequest(email: email),
+      client.RequestEmailLoginRequest(loginSessionId: loginSessionId),
     );
   }
 
@@ -116,18 +140,13 @@ class SyncTvAuthDomainService {
   }
 
   Future<OpaqueLoginStart> startOpaqueLogin({
-    String username = '',
-    String email = '',
+    required String loginSessionId,
     required List<int> credentialRequest,
   }) async {
     final request = client.StartOpaqueLoginRequest(
+      loginSessionId: loginSessionId,
       credentialRequest: credentialRequest,
     );
-    if (email.isNotEmpty) {
-      request.email = email;
-    } else {
-      request.username = username;
-    }
     final response = await _api.auth.startOpaqueLogin(request);
     return OpaqueLoginStart(
       sessionId: response.sessionId,
@@ -180,12 +199,13 @@ class SyncTvAuthDomainService {
   }
 
   Future<PasskeyChallengeStart> startPasskeyLogin({
-    String username = '',
-    String email = '',
+    String? loginSessionId,
   }) async {
-    final response = await _api.auth.startPasskeyLogin(
-      client.StartPasskeyLoginRequest(username: username, email: email),
-    );
+    final request = client.StartPasskeyLoginRequest();
+    if (loginSessionId != null && loginSessionId.isNotEmpty) {
+      request.loginSessionId = loginSessionId;
+    }
+    final response = await _api.auth.startPasskeyLogin(request);
     return PasskeyChallengeStart(
       sessionId: response.sessionId,
       options: _api.encodeJsonBytes(passkeyChallengeToJson(response.options)),
@@ -250,15 +270,35 @@ class SyncTvAuthDomainService {
     return _loginResponseToAuthResult(response);
   }
 
+  Future<AuthResult> verifyMfaTotp({
+    required String mfaSessionId,
+    required String code,
+  }) async {
+    final response = await _api.auth.verifyMfaTotp(
+      client.VerifyMfaTotpRequest(mfaSessionId: mfaSessionId, code: code),
+    );
+    return _loginResponseToAuthResult(response);
+  }
+
+  Future<AuthResult> verifyMfaRecoveryCode({
+    required String mfaSessionId,
+    required String recoveryCode,
+  }) async {
+    final response = await _api.auth.verifyMfaRecoveryCode(
+      client.VerifyMfaRecoveryCodeRequest(
+        mfaSessionId: mfaSessionId,
+        recoveryCode: recoveryCode,
+      ),
+    );
+    return _loginResponseToAuthResult(response);
+  }
+
   Future<SensitiveOperationVerificationInfo>
   startSensitiveOperationVerification() async {
     final response = await _api.user.startSensitiveOperationVerification(
       client.StartSensitiveOperationVerificationRequest(),
     );
-    return _sensitiveOperationVerificationInfo(
-      verificationId: response.verificationId,
-      challenge: response.challenge,
-    );
+    return _sensitiveOperationVerificationInfo(response);
   }
 
   Future<SensitiveOperationPasskeyStart> startSensitiveOperationPasskey(
@@ -293,6 +333,8 @@ class SyncTvAuthDomainService {
     String emailToken = '',
     String passkeySessionId = '',
     Object? passkeyCredential,
+    String totpCode = '',
+    String recoveryCode = '',
   }) async {
     final request = client.FinishSensitiveOperationVerificationRequest(
       sessionId: sessionId,
@@ -300,6 +342,8 @@ class SyncTvAuthDomainService {
       password: password,
       emailToken: emailToken,
       passkeySessionId: passkeySessionId,
+      totpCode: totpCode,
+      recoveryCode: recoveryCode,
     );
     if (passkeyCredential != null) {
       request.passkeyCredential = passkeyAuthenticationCredentialFromJson(
@@ -309,10 +353,7 @@ class SyncTvAuthDomainService {
     final response = await _api.user.finishSensitiveOperationVerification(
       request,
     );
-    return _sensitiveOperationVerificationInfo(
-      verificationId: response.verificationId,
-      challenge: response.challenge,
-    );
+    return _sensitiveOperationVerificationInfo(response);
   }
 
   Future<String> requestPasswordReset(String email) async {
@@ -357,10 +398,13 @@ class SyncTvAuthDomainService {
     final response = await _api.auth.createGuestToken(
       client.CreateGuestTokenRequest(roomId: roomId),
     );
-    await _sessionStore.activateGuest(
-      accessToken: response.token,
-      roomId: response.roomId,
-      displayName: response.displayName,
+    await _api.runForCurrentEndpointResponse(
+      response,
+      () => _sessionStore.activateGuest(
+        accessToken: response.token,
+        roomId: response.roomId,
+        displayName: response.displayName,
+      ),
     );
     return SyncTvUser(
       id: response.guestId,
@@ -410,7 +454,10 @@ class SyncTvAuthDomainService {
     final response = await _api.oauth2Service.exchangeAuthorizationCode(
       oauth2.ExchangeAuthorizationCodeRequest(code: code, state: state),
     );
-    await _sessionStore.persistTokens();
+    await _api.runForCurrentEndpointResponse(
+      response,
+      _sessionStore.persistTokens,
+    );
     if (response.registrationReviewRequired) {
       return AuthResult(
         registrationReviewRequired: true,
@@ -477,10 +524,13 @@ class SyncTvAuthDomainService {
     required String code,
     required String state,
   }) async {
-    await _api.oauth2Service.exchangeAuthorizationCode(
+    final response = await _api.oauth2Service.exchangeAuthorizationCode(
       oauth2.ExchangeAuthorizationCodeRequest(code: code, state: state),
     );
-    await _sessionStore.persistTokens();
+    await _api.runForCurrentEndpointResponse(
+      response,
+      _sessionStore.persistTokens,
+    );
   }
 
   Future<void> unlinkOAuth2Account(
@@ -503,7 +553,10 @@ class SyncTvAuthDomainService {
     if (response.hasMfa() && response.mfa.required) {
       return AuthResult(mfa: _mfaChallengeFromProto(response.mfa));
     }
-    await _sessionStore.persistTokens();
+    await _api.runForCurrentEndpointResponse(
+      response,
+      _sessionStore.persistTokens,
+    );
     return AuthResult(user: _api.mapUser(response.user));
   }
 
@@ -518,27 +571,49 @@ class SyncTvAuthDomainService {
         registrationReviewId: response.pendingReview.reviewRequestId,
       );
     }
-    await _sessionStore.persistTokens();
+    await _api.runForCurrentEndpointResponse(
+      response,
+      _sessionStore.persistTokens,
+    );
     return AuthResult(user: _api.mapUser(response.user));
   }
 
-  SensitiveOperationVerificationInfo _sensitiveOperationVerificationInfo({
-    required String verificationId,
-    required client.SensitiveOperationVerificationChallenge challenge,
-  }) {
-    return SensitiveOperationVerificationInfo(
-      verificationId: verificationId,
-      challenge: SensitiveOperationVerificationChallengeInfo(
-        sessionId: challenge.sessionId,
-        requiredMethods: challenge.requiredMethods
-            .map((method) => method.value)
-            .toList(),
-        completedMethods: challenge.completedMethods
-            .map((method) => method.value)
-            .toList(),
-        availableMethods: challenge.availableMethods
-            .map((method) => method.value)
-            .toList(),
+  SensitiveOperationVerificationInfo _sensitiveOperationVerificationInfo(
+    client.SensitiveOperationVerificationOutcome outcome,
+  ) {
+    return switch (outcome.whichOutcome()) {
+      client.SensitiveOperationVerificationOutcome_Outcome.verificationId =>
+        SensitiveOperationVerificationComplete(
+          verificationId: outcome.verificationId,
+        ),
+      client.SensitiveOperationVerificationOutcome_Outcome.challenge =>
+        SensitiveOperationVerificationPending(
+          challenge: _sensitiveOperationChallengeInfo(outcome.challenge),
+        ),
+      client.SensitiveOperationVerificationOutcome_Outcome.notSet =>
+        throw const FormatException(
+          'Sensitive verification response is missing its outcome',
+        ),
+    };
+  }
+
+  SensitiveOperationVerificationChallengeInfo _sensitiveOperationChallengeInfo(
+    client.SensitiveOperationVerificationChallenge challenge,
+  ) {
+    return SensitiveOperationVerificationChallengeInfo(
+      sessionId: challenge.sessionId,
+      requiredCount: challenge.requiredCount,
+      requiredMethods: challenge.requiredMethods
+          .map((method) => method.value)
+          .toList(),
+      completedMethods: challenge.completedMethods
+          .map((method) => method.value)
+          .toList(),
+      availableMethods: challenge.availableMethods
+          .map((method) => method.value)
+          .toList(),
+      expiresAt: DateTime.fromMillisecondsSinceEpoch(
+        challenge.expiresAt.toInt() * 1000,
       ),
     );
   }
@@ -550,7 +625,10 @@ class SyncTvAuthDomainService {
           .map((method) => method.value)
           .toList(),
       maskedEmail: mfa.maskedEmail,
-      expiresAt: mfa.expiresAt.toInt(),
+      expiresAt: DateTime.fromMillisecondsSinceEpoch(
+        mfa.expiresAt.toInt() * 1000,
+        isUtc: true,
+      ),
     );
   }
 }

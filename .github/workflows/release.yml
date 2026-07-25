@@ -14,9 +14,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FLUTTER_VERSION: "3.44.7"
+  FLUTTER_VERSION: "3.44.8"
   RUST_VERSION: "1.97.1"
   SYNCTV_BUILT_IN_SERVER_URL: ${{ vars.SYNCTV_BUILT_IN_SERVER_URL }}
+  SYNCTV_PASSKEY_RP_IDS: ${{ vars.SYNCTV_PASSKEY_RP_IDS }}
 
 jobs:
   quality:
@@ -97,11 +98,62 @@ jobs:
           rust-version: ${{ env.RUST_VERSION }}
           rust-targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
 
+      - name: Configure Android release signing
+        id: signing
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SYNCTV_ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.SYNCTV_ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SYNCTV_ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SYNCTV_ANDROID_KEY_PASSWORD }}
+        run: |
+          values=("$KEYSTORE_BASE64" "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD")
+          configured=0
+          for value in "${values[@]}"; do
+            [[ -n "$value" ]] && configured=$((configured + 1))
+          done
+          if [[ "$configured" -eq 0 ]]; then
+            echo "SYNCTV_ANDROID_SIGNING_LABEL=development" >> "$GITHUB_ENV"
+            echo "mode=development" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ "$configured" -ne "${#values[@]}" ]]; then
+            echo "Android release signing secrets are incomplete" >&2
+            exit 1
+          fi
+          keystore="$RUNNER_TEMP/synctv-release.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          {
+            echo "SYNCTV_ANDROID_KEYSTORE_PATH=$keystore"
+            echo "SYNCTV_ANDROID_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "SYNCTV_ANDROID_KEY_ALIAS=$KEY_ALIAS"
+            echo "SYNCTV_ANDROID_KEY_PASSWORD=$KEY_PASSWORD"
+            echo "SYNCTV_ANDROID_SIGNING_LABEL=signed"
+          } >> "$GITHUB_ENV"
+          keytool -list -keystore "$keystore" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+          certificate="$RUNNER_TEMP/synctv-release.cer"
+          keytool -exportcert \
+            -keystore "$keystore" \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -alias "$KEY_ALIAS" \
+            -file "$certificate"
+          certificate_sha256="$(
+            openssl x509 -inform DER -in "$certificate" -noout -fingerprint -sha256 \
+              | sed 's/^[^=]*=//'
+          )"
+          if [[ ! "$certificate_sha256" =~ ^([0-9A-F]{2}:){31}[0-9A-F]{2}$ ]]; then
+            echo "Failed to extract the Android release certificate SHA-256 fingerprint" >&2
+            exit 1
+          fi
+          echo "SYNCTV_ANDROID_CERTIFICATE_SHA256=$certificate_sha256" >> "$GITHUB_ENV"
+          echo "mode=signed" >> "$GITHUB_OUTPUT"
+
       - name: Build split release APKs
         run: |
           flutter build apk \
             --release \
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
+            --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
             --build-name "${{ needs.metadata.outputs.version }}" \
             --build-number "${{ needs.metadata.outputs.build-number }}" \
             --split-debug-info build/symbols/android-all
@@ -109,12 +161,28 @@ jobs:
             --release \
             --split-per-abi \
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
+            --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
             --build-name "${{ needs.metadata.outputs.version }}" \
             --build-number "${{ needs.metadata.outputs.build-number }}" \
             --split-debug-info build/symbols/android-all
 
       - name: Package Android artifacts
         run: bash tool/ci/package_release.sh android all "${{ needs.metadata.outputs.artifact-version }}" dist
+
+      - name: Publish self-hosted Passkey configuration
+        if: steps.signing.outputs.mode == 'signed'
+        shell: bash
+        run: |
+          output="dist/SyncTV-${{ needs.metadata.outputs.artifact-version }}-android-passkey-server-config.yaml"
+          cat > "$output" <<EOF
+          # Public identity of this signed SyncTV Android release.
+          # Merge android_apps into the webauthn section of your server configuration.
+          webauthn:
+            android_apps:
+              - package_name: "org.synctv.app"
+                sha256_cert_fingerprints:
+                  - "$SYNCTV_ANDROID_CERTIFICATE_SHA256"
+          EOF
 
       - name: Upload Android artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -181,6 +249,7 @@ jobs:
           --release
           --target-platform "${{ matrix.flutter-target }}"
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
           --split-debug-info "build/symbols/linux-${{ matrix.architecture }}"
@@ -230,6 +299,7 @@ jobs:
           flutter build windows
           --release
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$env:SYNCTV_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_PASSKEY_RP_IDS=$env:SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
           --split-debug-info build/symbols/windows-x64
@@ -275,11 +345,22 @@ jobs:
           rust-version: ${{ env.RUST_VERSION }}
           rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
 
+      - name: Configure macOS release signing
+        id: signing
+        env:
+          SYNCTV_APPLE_CERTIFICATE_BASE64: ${{ secrets.SYNCTV_APPLE_CERTIFICATE_BASE64 }}
+          SYNCTV_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.SYNCTV_APPLE_CERTIFICATE_PASSWORD }}
+          SYNCTV_APPLE_DEVELOPMENT_TEAM: ${{ vars.SYNCTV_APPLE_DEVELOPMENT_TEAM }}
+          SYNCTV_APPLE_SIGNING_IDENTITY: ${{ vars.SYNCTV_MACOS_SIGNING_IDENTITY }}
+          SYNCTV_APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.SYNCTV_MACOS_PROVISIONING_PROFILE_BASE64 }}
+        run: bash tool/ci/configure_apple_signing.sh macos macos/Flutter/Signing.xcconfig
+
       - name: Build macOS release
         run: >-
           flutter build macos
           --release
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
           --split-debug-info build/symbols/macos-universal
@@ -299,6 +380,56 @@ jobs:
             build/macos/Build/Products/Release/arm64/SyncTV.app arm64
           bash tool/ci/verify_macos_architecture.sh \
             build/macos/Build/Products/Release/x64/SyncTV.app x64
+
+      - name: Verify macOS signatures and Passkey entitlements
+        env:
+          SIGNING_MODE: ${{ steps.signing.outputs.mode }}
+        run: |
+          rp_ids=""
+          if [[ "$SIGNING_MODE" == "signed" ]]; then
+            rp_ids="$SYNCTV_PASSKEY_RP_IDS"
+          fi
+          for app in \
+            build/macos/Build/Products/Release/SyncTV.app \
+            build/macos/Build/Products/Release/arm64/SyncTV.app \
+            build/macos/Build/Products/Release/x64/SyncTV.app; do
+            bash tool/ci/verify_apple_entitlements.sh "$app" "$rp_ids"
+          done
+
+      - name: Notarize and staple macOS apps
+        if: steps.signing.outputs.mode == 'signed'
+        env:
+          NOTARY_APPLE_ID: ${{ secrets.SYNCTV_APPLE_NOTARY_APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.SYNCTV_APPLE_NOTARY_PASSWORD }}
+          NOTARY_TEAM_ID: ${{ vars.SYNCTV_APPLE_NOTARY_TEAM_ID }}
+        run: |
+          values=("$NOTARY_APPLE_ID" "$NOTARY_PASSWORD" "$NOTARY_TEAM_ID")
+          configured=0
+          for value in "${values[@]}"; do
+            [[ -n "$value" ]] && configured=$((configured + 1))
+          done
+          if [[ "$configured" -eq 0 ]]; then
+            echo "Notarization credentials are absent; publishing signed artifacts without a notarization ticket"
+            exit 0
+          fi
+          if [[ "$configured" -ne "${#values[@]}" ]]; then
+            echo "macOS notarization configuration is incomplete" >&2
+            exit 1
+          fi
+          for app in \
+            build/macos/Build/Products/Release/SyncTV.app \
+            build/macos/Build/Products/Release/arm64/SyncTV.app \
+            build/macos/Build/Products/Release/x64/SyncTV.app; do
+            archive="$RUNNER_TEMP/$(basename "$(dirname "$app")")-SyncTV.zip"
+            ditto -c -k --sequesterRsrc --keepParent "$app" "$archive"
+            xcrun notarytool submit "$archive" \
+              --apple-id "$NOTARY_APPLE_ID" \
+              --password "$NOTARY_PASSWORD" \
+              --team-id "$NOTARY_TEAM_ID" \
+              --wait
+            xcrun stapler staple "$app"
+            xcrun stapler validate "$app"
+          done
 
       - name: Package macOS artifacts
         run: |
@@ -337,7 +468,7 @@ jobs:
           compression-level: 0
 
   ios:
-    name: iOS unsigned
+    name: iOS
     needs: metadata
     runs-on: macos-15
     timeout-minutes: 45
@@ -356,23 +487,49 @@ jobs:
           rust-version: ${{ env.RUST_VERSION }}
           rust-targets: aarch64-apple-ios
 
-      - name: Build unsigned iOS release
-        run: >-
-          flutter build ios
-          --release
-          --no-codesign
-          --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
-          --build-name "${{ needs.metadata.outputs.version }}"
-          --build-number "${{ needs.metadata.outputs.build-number }}"
-          --split-debug-info build/symbols/ios-arm64
+      - name: Configure iOS release signing
+        id: signing
+        env:
+          SYNCTV_APPLE_CERTIFICATE_BASE64: ${{ secrets.SYNCTV_APPLE_CERTIFICATE_BASE64 }}
+          SYNCTV_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.SYNCTV_APPLE_CERTIFICATE_PASSWORD }}
+          SYNCTV_APPLE_DEVELOPMENT_TEAM: ${{ vars.SYNCTV_APPLE_DEVELOPMENT_TEAM }}
+          SYNCTV_APPLE_SIGNING_IDENTITY: ${{ vars.SYNCTV_IOS_SIGNING_IDENTITY }}
+          SYNCTV_APPLE_PROVISIONING_PROFILE_BASE64: ${{ secrets.SYNCTV_IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: bash tool/ci/configure_apple_signing.sh ios ios/Flutter/Signing.xcconfig
 
-      - name: Package unsigned iOS artifact
+      - name: Build iOS release
+        env:
+          SIGNING_MODE: ${{ steps.signing.outputs.mode }}
+        run: |
+          signing_args=()
+          if [[ "$SIGNING_MODE" == "unsigned" ]]; then
+            signing_args+=(--no-codesign)
+          fi
+          flutter build ios \
+            --release \
+            "${signing_args[@]}" \
+            --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
+            --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
+            --build-name "${{ needs.metadata.outputs.version }}" \
+            --build-number "${{ needs.metadata.outputs.build-number }}" \
+            --split-debug-info build/symbols/ios-arm64
+
+      - name: Verify iOS signature and Passkey entitlements
+        if: steps.signing.outputs.mode == 'signed'
+        run: >-
+          bash tool/ci/verify_apple_entitlements.sh
+          build/ios/iphoneos/Runner.app
+          "$SYNCTV_PASSKEY_RP_IDS"
+
+      - name: Package iOS artifact
+        env:
+          SYNCTV_IOS_SIGNED: ${{ steps.signing.outputs.mode == 'signed' && '1' || '0' }}
         run: bash tool/ci/package_release.sh ios arm64 "${{ needs.metadata.outputs.artifact-version }}" dist
 
-      - name: Upload unsigned iOS artifact
+      - name: Upload iOS artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: release-ios-unsigned
+          name: release-ios-${{ steps.signing.outputs.mode }}
           path: dist/*
           if-no-files-found: error
           retention-days: 14
@@ -411,10 +568,11 @@ jobs:
           cat > release-notes.md <<'EOF'
           ## Installation notes
 
-          - Android APKs use the repository's current signing configuration. A fresh fork uses the development signing fallback.
-          - macOS, Windows, and iOS artifacts are distributed without platform-vendor notarization or production signing.
-          - The iOS archive is intended for downstream signing and device deployment workflows.
-          - `SHA256SUMS.txt` authenticates every attached binary archive.
+          - Android filenames identify stable `signed` and ephemeral `development` signing modes.
+          - Signed Android releases include a public `android-passkey-server-config.yaml` file for self-hosted servers.
+          - macOS filenames identify `signed` and `ad-hoc` modes. Configured notarization credentials add and staple Apple notarization tickets.
+          - iOS publishes a signed IPA when signing secrets are configured and an unsigned re-signable archive for fork builds.
+          - `SHA256SUMS.txt` authenticates every attached SyncTV artifact.
           EOF
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then

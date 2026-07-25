@@ -15,7 +15,7 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 
@@ -29,7 +29,7 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 
@@ -55,7 +55,7 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 
@@ -69,8 +69,20 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
+  }
+
+  Future<client.StartLoginResponse> startLogin(
+    client.StartLoginRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/auth/login/start',
+      client.StartLoginResponse.create,
+      auth: false,
+      body: request,
+    );
   }
 
   Future<client.CreateGuestTokenResponse> createGuestToken(
@@ -107,7 +119,7 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 
@@ -133,7 +145,7 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 
@@ -159,7 +171,7 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 
@@ -185,7 +197,7 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 
@@ -223,7 +235,7 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 
@@ -249,7 +261,35 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
+    return response;
+  }
+
+  Future<client.LoginResponse> verifyMfaTotp(
+    client.VerifyMfaTotpRequest request,
+  ) async {
+    final response = await _api._send(
+      'POST',
+      '/api/auth/mfa/totp/verify',
+      client.LoginResponse.create,
+      auth: false,
+      body: request,
+    );
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
+    return response;
+  }
+
+  Future<client.LoginResponse> verifyMfaRecoveryCode(
+    client.VerifyMfaRecoveryCodeRequest request,
+  ) async {
+    final response = await _api._send(
+      'POST',
+      '/api/auth/mfa/recovery-code/verify',
+      client.LoginResponse.create,
+      auth: false,
+      body: request,
+    );
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 
@@ -263,8 +303,7 @@ class SyncTvAuthApi {
       auth: false,
       body: request,
     );
-    _api.session.accessToken = response.accessToken;
-    _api.session.refreshToken = response.refreshToken;
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 }
@@ -275,6 +314,7 @@ class SyncTvUserApi {
   final SyncTvApiClient _api;
 
   Future<client.LogoutResponse> logout(client.LogoutRequest request) async {
+    final generation = _api._requestGeneration();
     var response = client.LogoutResponse();
     if (_api.session.hasAccessToken && !_api.session.isGuest) {
       try {
@@ -288,9 +328,7 @@ class SyncTvUserApi {
         debugPrint('Logout request failed before local session clear: $e');
       }
     }
-    _api.session.accessToken = null;
-    _api.session.refreshToken = null;
-    _api.session.isGuest = false;
+    _api._clearSessionForGeneration(generation);
     return response;
   }
 
@@ -428,14 +466,14 @@ class SyncTvUserApi {
     );
   }
 
-  Future<client.StartSensitiveOperationVerificationResponse>
+  Future<client.SensitiveOperationVerificationOutcome>
   startSensitiveOperationVerification(
     client.StartSensitiveOperationVerificationRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/user/sensitive-verification/start',
-      client.StartSensitiveOperationVerificationResponse.create,
+      client.SensitiveOperationVerificationOutcome.create,
       body: request,
     );
   }
@@ -464,14 +502,14 @@ class SyncTvUserApi {
     );
   }
 
-  Future<client.FinishSensitiveOperationVerificationResponse>
+  Future<client.SensitiveOperationVerificationOutcome>
   finishSensitiveOperationVerification(
     client.FinishSensitiveOperationVerificationRequest request,
   ) {
     return _api._send(
       'POST',
       '/api/user/sensitive-verification/finish',
-      client.FinishSensitiveOperationVerificationResponse.create,
+      client.SensitiveOperationVerificationOutcome.create,
       body: request,
     );
   }
@@ -515,8 +553,45 @@ class SyncTvUserApi {
       'DELETE',
       '/api/user/passkeys/${request.credentialId}',
       client.DeletePasskeyResponse.create,
+      body: request,
     );
   }
+
+  Future<client.StartTotpSetupResponse> startTotpSetup(
+    client.StartTotpSetupRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/user/totp/setup/start',
+    client.StartTotpSetupResponse.create,
+    body: request,
+  );
+
+  Future<client.TotpRecoveryCodesResponse> finishTotpSetup(
+    client.FinishTotpSetupRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/user/totp/setup/finish',
+    client.TotpRecoveryCodesResponse.create,
+    body: request,
+  );
+
+  Future<client.TotpRecoveryCodesResponse> regenerateTotpRecoveryCodes(
+    client.RegenerateTotpRecoveryCodesRequest request,
+  ) => _api._send(
+    'POST',
+    '/api/user/totp/recovery-codes/regenerate',
+    client.TotpRecoveryCodesResponse.create,
+    body: request,
+  );
+
+  Future<client.DeleteTotpResponse> deleteTotp(
+    client.DeleteTotpRequest request,
+  ) => _api._send(
+    'DELETE',
+    '/api/user/totp',
+    client.DeleteTotpResponse.create,
+    body: request,
+  );
 
   Future<client.GetUserPreferencesResponse> getUserPreferences(
     client.GetUserPreferencesRequest request,
@@ -539,18 +614,28 @@ class SyncTvUserApi {
     );
   }
 
+  Future<client.GetUserPreferencesResponse> setTwoFactorEnabled(
+    client.SetTwoFactorEnabledRequest request,
+  ) {
+    return _api._send(
+      'PUT',
+      '/api/user/two-factor',
+      client.GetUserPreferencesResponse.create,
+      body: request,
+    );
+  }
+
   Future<client.CloseAccountResponse> closeAccount(
     client.CloseAccountRequest request,
   ) async {
+    final generation = _api._requestGeneration();
     final response = await _api._send(
       'POST',
       '/api/user/account-closure',
       client.CloseAccountResponse.create,
       body: request,
     );
-    _api.session.accessToken = null;
-    _api.session.refreshToken = null;
-    _api.session.isGuest = false;
+    _api._clearSessionForGeneration(generation);
     return response;
   }
 
@@ -2246,7 +2331,7 @@ class SyncTvOAuth2Api {
       auth: _api.session.hasAccessToken,
       body: request,
     );
-    _api._storeLogin(response.accessToken, response.refreshToken);
+    _api._storeLogin(response, response.accessToken, response.refreshToken);
     return response;
   }
 

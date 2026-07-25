@@ -74,7 +74,7 @@ App 会根据 Provider instance 的绑定能力控制账号来源。例如 Twitc
 ## 🚀 快速开始
 
 ### 1. 环境要求
-*   Flutter SDK >= 3.44.7
+*   Flutter SDK >= 3.44.8
 *   Dart SDK >= 3.12.2
 *   `protoc` 与 Dart `protoc_plugin`
 
@@ -113,6 +113,50 @@ flutter build apk --release \
 ```
 
 Release workflow 会读取同名 GitHub repository variable。未配置 `SYNCTV_BUILT_IN_SERVER_URL` 的仓库会生成通用安装包，并在首次启动时进入服务器配置流程。
+
+原生 Passkey 构建使用 `SYNCTV_PASSKEY_RP_IDS` repository variable，多个 RP ID 以分号分隔。Apple 构建会据此生成 `webcredentials:` Associated Domains；Android 会在运行时校验 RP 域名的 `assetlinks.json`。未配置关联关系的服务器会在 App 中隐藏 Passkey。
+
+### Release 签名
+
+Release workflow 支持官方稳定签名与 fork 构建。官方 Android 发布配置以下 repository secrets：
+
+| 名称 | 内容 |
+|:---|:---|
+| `SYNCTV_ANDROID_KEYSTORE_BASE64` | release keystore 的 Base64 内容 |
+| `SYNCTV_ANDROID_KEYSTORE_PASSWORD` | keystore 密码 |
+| `SYNCTV_ANDROID_KEY_ALIAS` | release key alias |
+| `SYNCTV_ANDROID_KEY_PASSWORD` | release key 密码 |
+
+四项配置完整时产物文件名带 `signed`，空配置生成带 `development` 的开发签名 APK。服务端 `webauthn.android_apps[].sha256_cert_fingerprints` 使用 release 证书指纹，可通过以下命令获取：
+
+```bash
+keytool -list -v -keystore release.jks -alias release \
+  | sed -n 's/^[[:space:]]*SHA256: //p'
+```
+
+同一份 release keystore 会在所有版本保持相同的证书指纹。fork 应创建并长期保存自己的 release keystore，将以上四项设置为仓库 Secrets；Release workflow 会为每个正式签名版本附带 `android-passkey-server-config.yaml`。服务端可以在同一个 `package_name` 的 `sha256_cert_fingerprints` 中同时配置官方证书、fork 证书和轮换期证书。development 签名面向临时构建，其 CI runner 生成的身份可能随构建变化。
+
+Apple 签名使用这些 repository variables：
+
+| 名称 | 内容 |
+|:---|:---|
+| `SYNCTV_APPLE_DEVELOPMENT_TEAM` | Apple Team ID |
+| `SYNCTV_MACOS_SIGNING_IDENTITY` | macOS codesign identity，例如 `Developer ID Application: ...` |
+| `SYNCTV_IOS_SIGNING_IDENTITY` | iOS codesign identity，例如 `Apple Distribution: ...` |
+| `SYNCTV_APPLE_NOTARY_TEAM_ID` | 可选的 notarization Team ID |
+
+Apple 签名使用这些 repository secrets：
+
+| 名称 | 内容 |
+|:---|:---|
+| `SYNCTV_APPLE_CERTIFICATE_BASE64` | 含发布私钥的 PKCS#12 证书 Base64 内容 |
+| `SYNCTV_APPLE_CERTIFICATE_PASSWORD` | PKCS#12 密码 |
+| `SYNCTV_MACOS_PROVISIONING_PROFILE_BASE64` | macOS provisioning profile Base64 内容 |
+| `SYNCTV_IOS_PROVISIONING_PROFILE_BASE64` | iOS provisioning profile Base64 内容 |
+| `SYNCTV_APPLE_NOTARY_APPLE_ID` | 可选的 notarization Apple ID |
+| `SYNCTV_APPLE_NOTARY_PASSWORD` | 可选的 app-specific password |
+
+Apple 签名配置完整时，workflow 会校验签名产物包含 `SYNCTV_PASSKEY_RP_IDS` 对应的 `webcredentials:` entitlement。服务端 `webauthn.apple_app_ids` 配置为 `<Team ID>.org.synctv.app`。macOS notarization 三项配置完整时，universal、arm64、x64 三个 App 都会提交 notarization 并 staple ticket。fork 的空配置会生成带 `ad-hoc` 标记的 macOS 压缩包和 unsigned iOS 重签名归档。
 
 ## Provider 使用
 

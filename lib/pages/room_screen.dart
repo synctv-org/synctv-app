@@ -21,6 +21,7 @@ import 'package:synctv_app/models/room_management_models.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/services/realtime_event_log_preferences.dart';
+import 'package:synctv_app/services/server_endpoint_identity.dart';
 import 'package:synctv_app/services/picture_in_picture_service.dart';
 import 'package:synctv_app/services/p2p_media_cache.dart';
 import 'package:synctv_app/services/p2p_media_engine.dart';
@@ -2560,8 +2561,11 @@ class _RoomScreenState extends State<RoomScreen>
   Future<P2pMediaPersistentCache?> _openP2pMediaCache(int maxCacheBytes) async {
     try {
       final root = await getApplicationCacheDirectory();
+      final namespace = ServerEndpointIdentity.storageNamespace(
+        SyncTvService.baseUrl,
+      );
       return P2pMediaPersistentCache(
-        directory: Directory('${root.path}/p2p_media'),
+        directory: Directory('${root.path}/p2p_media/$namespace'),
         maxBytes: maxCacheBytes,
       );
     } catch (error) {

@@ -305,8 +305,20 @@ abstract class AppLocalizations {
   /// No description provided for @serverAutoDiscoverDescription.
   ///
   /// In en, this message translates to:
-  /// **'SyncTV identifies the server automatically. Callback URLs, codes, and server IDs are handled for you.'**
+  /// **'Each address is stored as an independent server. SyncTV keeps its account, session, and cached data isolated by address.'**
   String get serverAutoDiscoverDescription;
+
+  /// No description provided for @serverAddressIdentityDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'The address above identifies this server on this device. The ID below is declared by the server and may be shared or imitated by another address.'**
+  String get serverAddressIdentityDescription;
+
+  /// No description provided for @serverDeclaredId.
+  ///
+  /// In en, this message translates to:
+  /// **'Server-declared ID: {serverId}'**
+  String serverDeclaredId(String serverId);
 
   /// No description provided for @savedServers.
   ///
@@ -1112,6 +1124,12 @@ abstract class AppLocalizations {
   /// **'This account has no available passkey'**
   String get mfaPasskeyUnavailable;
 
+  /// No description provided for @noLoginMethodAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has no sign-in method available on this device'**
+  String get noLoginMethodAvailable;
+
   /// No description provided for @passwordResetSuccess.
   ///
   /// In en, this message translates to:
@@ -1273,6 +1291,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Passkey registration'**
   String get passkeyRegistration;
+
+  /// No description provided for @registrationMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration method'**
+  String get registrationMethod;
 
   /// No description provided for @deviceNameHint.
   ///
@@ -3157,6 +3181,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The login session expired. Verify again before sending an SMS.'**
   String get loginSessionExpired;
+
+  /// No description provided for @authenticationSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'The authentication session expired. Start again.'**
+  String get authenticationSessionExpired;
 
   /// No description provided for @phoneNumber.
   ///
@@ -10715,6 +10745,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Image'**
   String get image;
+
+  /// No description provided for @enterAuthenticatorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit authenticator code'**
+  String get enterAuthenticatorCode;
+
+  /// No description provided for @enterRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a recovery code'**
+  String get enterRecoveryCode;
+
+  /// No description provided for @authenticatorCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator code'**
+  String get authenticatorCode;
+
+  /// No description provided for @verifyWithAuthenticator.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify with authenticator'**
+  String get verifyWithAuthenticator;
+
+  /// No description provided for @verifyWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify with email'**
+  String get verifyWithEmail;
+
+  /// No description provided for @recoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery code'**
+  String get recoveryCode;
+
+  /// No description provided for @useRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a recovery code'**
+  String get useRecoveryCode;
+
+  /// No description provided for @backToVerificationMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to verification methods'**
+  String get backToVerificationMethods;
+
+  /// No description provided for @verifyWithRecoveryCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify with recovery code'**
+  String get verifyWithRecoveryCode;
+
+  /// No description provided for @authenticatorApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator app'**
+  String get authenticatorApp;
+
+  /// No description provided for @setupAuthenticatorFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not set up the authenticator app: {error}'**
+  String setupAuthenticatorFailed(String error);
+
+  /// No description provided for @regenerateRecoveryCodesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not generate new recovery codes: {error}'**
+  String regenerateRecoveryCodesFailed(String error);
+
+  /// No description provided for @removeAuthenticatorApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove authenticator app'**
+  String get removeAuthenticatorApp;
+
+  /// No description provided for @removeAuthenticatorAppConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the authenticator app and all of its recovery codes?'**
+  String get removeAuthenticatorAppConfirmation;
+
+  /// No description provided for @authenticatorAppRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticator app removed'**
+  String get authenticatorAppRemoved;
+
+  /// No description provided for @removeAuthenticatorFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove the authenticator app: {error}'**
+  String removeAuthenticatorFailed(String error);
+
+  /// No description provided for @authenticatorAppDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use time-based codes from a standard authenticator app for multi-factor verification'**
+  String get authenticatorAppDescription;
+
+  /// No description provided for @authenticatorAppConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Configured'**
+  String get authenticatorAppConfigured;
+
+  /// No description provided for @authenticatorAppNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get authenticatorAppNotConfigured;
+
+  /// No description provided for @recoveryCodesRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recovery code remaining} other{{count} recovery codes remaining}}'**
+  String recoveryCodesRemaining(int count);
+
+  /// No description provided for @authenticatorAppSetupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an authenticator app to strengthen account security'**
+  String get authenticatorAppSetupHint;
+
+  /// No description provided for @recoveryCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery codes'**
+  String get recoveryCodes;
+
+  /// No description provided for @setup.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get setup;
+
+  /// No description provided for @setupAuthenticatorApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up authenticator app'**
+  String get setupAuthenticatorApp;
+
+  /// No description provided for @setupAuthenticatorAppDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR code with a standard authenticator app, or enter the setup key manually.'**
+  String get setupAuthenticatorAppDescription;
+
+  /// No description provided for @manualSetupKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual setup key'**
+  String get manualSetupKey;
+
+  /// No description provided for @confirmSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm setup'**
+  String get confirmSetup;
+
+  /// No description provided for @saveRecoveryCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Save recovery codes'**
+  String get saveRecoveryCodes;
+
+  /// No description provided for @recoveryCodesShownOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Each code works once. Store these codes securely; they are shown only on this screen.'**
+  String get recoveryCodesShownOnce;
+
+  /// No description provided for @copyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy all'**
+  String get copyAll;
+
+  /// No description provided for @savedRecoveryCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'I saved the codes'**
+  String get savedRecoveryCodes;
 }
 
 class _AppLocalizationsDelegate

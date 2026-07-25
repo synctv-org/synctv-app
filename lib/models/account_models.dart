@@ -90,28 +90,42 @@ class AuthResult {
       oauth2Operation == oauth2_enum.OAuth2Operation.OAUTH2_OPERATION_BIND;
 }
 
-class SensitiveOperationVerificationInfo {
+sealed class SensitiveOperationVerificationInfo {
+  const SensitiveOperationVerificationInfo();
+}
+
+class SensitiveOperationVerificationComplete
+    extends SensitiveOperationVerificationInfo {
   final String verificationId;
+
+  const SensitiveOperationVerificationComplete({required this.verificationId});
+}
+
+class SensitiveOperationVerificationPending
+    extends SensitiveOperationVerificationInfo {
   final SensitiveOperationVerificationChallengeInfo challenge;
 
-  const SensitiveOperationVerificationInfo({
-    required this.verificationId,
-    required this.challenge,
-  });
+  const SensitiveOperationVerificationPending({required this.challenge});
 }
 
 class SensitiveOperationVerificationChallengeInfo {
   final String sessionId;
+  final int requiredCount;
   final List<int> requiredMethods;
   final List<int> completedMethods;
   final List<int> availableMethods;
+  final DateTime expiresAt;
 
   const SensitiveOperationVerificationChallengeInfo({
     required this.sessionId,
+    required this.requiredCount,
     required this.requiredMethods,
     required this.completedMethods,
     required this.availableMethods,
+    required this.expiresAt,
   });
+
+  bool get isExpired => !DateTime.now().isBefore(expiresAt);
 
   bool get requiresPassword => requiredMethods.contains(
     client_enum
@@ -133,6 +147,45 @@ class SensitiveOperationVerificationChallengeInfo {
         .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL
         .value,
   );
+
+  bool supportsMethodOnDevice(
+    client_enum.SensitiveOperationVerificationMethod method, {
+    required bool passkeyAvailable,
+  }) {
+    if (method ==
+            client_enum
+                .SensitiveOperationVerificationMethod
+                .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN &&
+        !passkeyAvailable) {
+      return false;
+    }
+    return availableMethods.contains(method.value);
+  }
+
+  client_enum.SensitiveOperationVerificationMethod? preferredMethodOnDevice({
+    required bool passkeyAvailable,
+  }) {
+    const preferenceOrder = [
+      client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
+      client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_TOTP,
+      client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD,
+      client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL,
+    ];
+    for (final method in preferenceOrder) {
+      if (supportsMethodOnDevice(method, passkeyAvailable: passkeyAvailable)) {
+        return method;
+      }
+    }
+    return null;
+  }
 }
 
 class SensitiveOperationPasskeyStart {
@@ -159,7 +212,7 @@ class MfaChallengeInfo {
   final String sessionId;
   final List<int> availableMethods;
   final String maskedEmail;
-  final int expiresAt;
+  final DateTime expiresAt;
 
   const MfaChallengeInfo({
     required this.sessionId,
@@ -173,6 +226,13 @@ class MfaChallengeInfo {
 
   bool get supportsPasskey => availableMethods.contains(
     client_enum.MfaMethod.MFA_METHOD_WEBAUTHN.value,
+  );
+
+  bool get supportsTotp =>
+      availableMethods.contains(client_enum.MfaMethod.MFA_METHOD_TOTP.value);
+
+  bool get supportsRecoveryCode => availableMethods.contains(
+    client_enum.MfaMethod.MFA_METHOD_RECOVERY_CODE.value,
   );
 }
 
@@ -194,6 +254,30 @@ class OpaqueLoginStart {
     required this.sessionId,
     required this.credentialResponse,
   });
+}
+
+class LoginStart {
+  final String sessionId;
+  final List<int> availableMethods;
+  final DateTime expiresAt;
+
+  const LoginStart({
+    required this.sessionId,
+    required this.availableMethods,
+    required this.expiresAt,
+  });
+
+  bool get supportsPassword => availableMethods.contains(
+    client_enum.LoginMethod.LOGIN_METHOD_PASSWORD.value,
+  );
+
+  bool get supportsPasskey => availableMethods.contains(
+    client_enum.LoginMethod.LOGIN_METHOD_PASSKEY.value,
+  );
+
+  bool get supportsEmailCode => availableMethods.contains(
+    client_enum.LoginMethod.LOGIN_METHOD_EMAIL_CODE.value,
+  );
 }
 
 class OpaquePasswordUpdateStart {
@@ -316,6 +400,8 @@ class AccountPreferences {
   final bool twoFactorEnabled;
   final bool canUsePassword;
   final bool canUsePasskey;
+  final bool canUseTotp;
+  final int totpRecoveryCodesRemaining;
   final bool canUseEmail;
   final int eligibleFactorCount;
   final NotificationPreferences notifications;
@@ -325,10 +411,26 @@ class AccountPreferences {
     required this.twoFactorEnabled,
     required this.canUsePassword,
     required this.canUsePasskey,
+    required this.canUseTotp,
+    required this.totpRecoveryCodesRemaining,
     required this.canUseEmail,
     required this.eligibleFactorCount,
     required this.notifications,
     this.settings = const {},
+  });
+}
+
+class TotpSetupInfo {
+  final String setupId;
+  final String secret;
+  final String otpauthUri;
+  final int expiresAt;
+
+  const TotpSetupInfo({
+    required this.setupId,
+    required this.secret,
+    required this.otpauthUri,
+    required this.expiresAt,
   });
 }
 

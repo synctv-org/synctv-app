@@ -5,12 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/public_models.dart';
+import 'package:synctv_app/services/device_display_name_service.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/services/opaque_authenticator_service.dart';
 import 'package:synctv_app/services/passkey_authenticator_service.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
+import 'package:synctv_app/widgets/auth_recovery_code_fallback.dart';
+import 'package:synctv_app/widgets/synctv_brand_mark.dart';
 import 'package:synctv_app/widgets/user_agreement_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -30,6 +33,30 @@ class AuthPanel extends StatefulWidget {
 
 enum _LoginMethod { password, emailCode, passkey }
 
+enum _RegistrationMethod { passkey, password, emailVerification }
+
+enum _MfaMethod { passkey, totp, email }
+
+enum _AuthAction {
+  identifyLogin,
+  passwordLogin,
+  requestEmailLogin,
+  emailLogin,
+  passkeyLogin,
+  passwordRegistration,
+  requestEmailRegistration,
+  emailRegistration,
+  passkeyRegistration,
+  guestLogin,
+  oauth2,
+  requestMfaEmail,
+  mfaEmail,
+  mfaPasskey,
+  mfaTotp,
+  mfaRecoveryCode,
+  passwordReset,
+}
+
 class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   final _loginIdentifierController = TextEditingController();
   final _loginPasswordController = TextEditingController();
@@ -42,13 +69,17 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   final _passkeyNameController = TextEditingController();
   final _guestRoomController = TextEditingController();
   final _mfaTokenController = TextEditingController();
+  final _mfaTotpController = TextEditingController();
+  final _mfaRecoveryCodeController = TextEditingController();
   late final TabController _tabController;
   late final OpaqueAuthenticatorService _opaqueAuthenticator;
+  final DeviceDisplayNameService _deviceDisplayNameService =
+      DeviceDisplayNameService();
 
   PublicSettingsInfo? _settings;
   List<OAuth2ProviderOption> _oauth2Providers = const [];
   MfaChallengeInfo? _mfaChallenge;
-  bool _loading = false;
+  _AuthAction? _activeAction;
   bool _loadingPublicSettings = true;
   bool _loadingOAuth2Providers = true;
   bool _loadingPasskeySupport = true;
@@ -57,13 +88,18 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   bool _mfaEmailRequested = false;
   bool _passkeyAvailable = false;
   bool _agreedToTerms = kDebugMode;
-  bool _loginIdentifierConfirmed = false;
   bool _registerIdentifierConfirmed = false;
   bool _registerIncludeEmail = false;
+  bool _mfaRecoveryCodeActive = false;
   bool _showOAuthProviders = false;
   _LoginMethod _loginMethod = _LoginMethod.password;
-  String _confirmedLoginIdentifier = '';
+  _RegistrationMethod _registrationMethod = _RegistrationMethod.password;
+  _MfaMethod _mfaMethod = _MfaMethod.totp;
+  LoginStart? _loginStart;
+  Timer? _loginSessionExpiryTimer;
+  Timer? _mfaSessionExpiryTimer;
   String? _oauthProvider;
+  String _suggestedPasskeyName = '';
   int _oauthAttempt = 0;
 
   @override
@@ -82,6 +118,8 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _loginSessionExpiryTimer?.cancel();
+    _mfaSessionExpiryTimer?.cancel();
     _tabController.removeListener(_handleTabChanged);
     _tabController.dispose();
     _loginIdentifierController.dispose();
@@ -95,6 +133,8 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     _passkeyNameController.dispose();
     _guestRoomController.dispose();
     _mfaTokenController.dispose();
+    _mfaTotpController.dispose();
+    _mfaRecoveryCodeController.dispose();
     super.dispose();
   }
 
@@ -107,10 +147,23 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       _loadingOAuth2Providers ||
       _loadingPasskeySupport;
 
+  bool get _loading => _activeAction != null;
+
+  bool _isLoading(_AuthAction action) => _activeAction == action;
+
   void _loadOptions() {
     unawaited(_loadPublicSettings());
     unawaited(_loadOAuth2Providers());
-    unawaited(_loadPasskeySupport());
+    unawaited(_loadSuggestedPasskeyName());
+  }
+
+  Future<void> _loadSuggestedPasskeyName() async {
+    final name = await _deviceDisplayNameService.suggestedPasskeyName();
+    if (!mounted) return;
+    _suggestedPasskeyName = name;
+    if (_passkeyNameController.text.trim().isEmpty) {
+      _passkeyNameController.text = name;
+    }
   }
 
   Future<void> _loadPublicSettings() async {
@@ -121,9 +174,19 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         _settings = settings;
         _loadingPublicSettings = false;
       });
+      if (kDebugMode) {
+        debugPrint(
+          'Auth capabilities: webauthn=${settings.enableWebauthn}, '
+          'rpId=${settings.webauthnRpId}',
+        );
+      }
+      unawaited(_loadPasskeySupport(settings));
     } catch (e) {
       if (!mounted) return;
-      setState(() => _loadingPublicSettings = false);
+      setState(() {
+        _loadingPublicSettings = false;
+        _loadingPasskeySupport = false;
+      });
       MessageUtils.showError(
         context,
         context.l10n.authConfigLoadFailed(e.toString()),
@@ -146,13 +209,15 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _loadPasskeySupport() async {
+  Future<void> _loadPasskeySupport(PublicSettingsInfo settings) async {
     var available = false;
     try {
-      available = await PasskeyAuthenticatorService.isSupported().timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => false,
-      );
+      if (settings.enableWebauthn) {
+        available = await PasskeyAuthenticatorService.isSupported(
+          serverBaseUrl: SyncTvService.baseUrl,
+          rpId: settings.webauthnRpId,
+        );
+      }
     } catch (error) {
       debugPrint('Failed to detect passkey support: $error');
     }
@@ -163,15 +228,20 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     });
   }
 
-  Future<void> _withLoading(Future<void> Function() action) async {
+  Future<void> _withLoading(
+    _AuthAction action,
+    Future<void> Function() operation,
+  ) async {
     if (_loading) return;
-    setState(() => _loading = true);
+    setState(() => _activeAction = action);
     try {
-      await action();
+      await operation();
     } catch (e) {
       if (mounted) MessageUtils.showError(context, e.toString());
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && _activeAction == action) {
+        setState(() => _activeAction = null);
+      }
     }
   }
 
@@ -184,11 +254,16 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   void _finishAuth(AuthResult result) {
     if (!mounted) return;
     if (result.requiresMfa) {
+      final challenge = result.mfa!;
+      final methods = _availableMfaMethods(challenge);
       setState(() {
-        _mfaChallenge = result.mfa;
-        _mfaEmailRequested = false;
-        _mfaTokenController.clear();
+        _resetLoginDiscovery();
+        _resetMfaCredentials();
+        _mfaChallenge = challenge;
+        _mfaRecoveryCodeActive = false;
+        if (methods.isNotEmpty) _mfaMethod = methods.first;
       });
+      _scheduleMfaSessionExpiry(challenge);
       return;
     }
     if (result.registrationReviewRequired) {
@@ -206,13 +281,16 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _submitPasswordLogin() async {
     if (!_ensureTermsAccepted()) return;
+    final login = _validLoginStart();
+    if (login == null) {
+      setState(_resetLoginDiscovery);
+      MessageUtils.showWarning(context, context.l10n.enterIdentifierFirst);
+      return;
+    }
     _normalizeControllerSelection(_loginPasswordController);
-    final identifier = _effectiveLoginIdentifier();
-    await _withLoading(() async {
-      final isEmail = identifier.contains('@');
-      final result = await SyncTvService.loginWithDirectPassword(
-        username: isEmail ? '' : identifier,
-        email: isEmail ? identifier : '',
+    await _withLoading(_AuthAction.passwordLogin, () async {
+      final result = await _opaqueAuthenticator.login(
+        loginSessionId: login.sessionId,
         password: _loginPasswordController.text,
       );
       _finishAuth(result);
@@ -221,13 +299,14 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _requestEmailToken() async {
     if (!_ensureTermsAccepted()) return;
-    final email = _effectiveLoginIdentifier();
-    if (email.isEmpty) {
-      MessageUtils.showWarning(context, context.l10n.emailRequired);
+    final login = _validLoginStart();
+    if (login == null) {
+      setState(_resetLoginDiscovery);
+      MessageUtils.showWarning(context, context.l10n.enterIdentifierFirst);
       return;
     }
-    await _withLoading(() async {
-      await SyncTvService.requestEmailLogin(email);
+    await _withLoading(_AuthAction.requestEmailLogin, () async {
+      await SyncTvService.requestEmailLogin(login.sessionId);
       if (!mounted) return;
       setState(() => _emailTokenRequested = true);
       MessageUtils.showSuccess(context, context.l10n.verificationCodeSent);
@@ -236,32 +315,41 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Future<void> _submitEmailLogin() async {
     if (!_ensureTermsAccepted()) return;
-    final email = _effectiveLoginIdentifier();
+    final login = _validLoginStart();
     final token = _emailTokenController.text.trim();
-    if (email.isEmpty || token.isEmpty) {
+    if (login == null) {
+      setState(_resetLoginDiscovery);
+      MessageUtils.showWarning(context, context.l10n.enterIdentifierFirst);
+      return;
+    }
+    if (token.isEmpty) {
       MessageUtils.showWarning(context, context.l10n.emailAndCodeRequired);
       return;
     }
-    await _withLoading(() async {
-      final result = await SyncTvService.confirmEmailLoginResult(email, token);
+    await _withLoading(_AuthAction.emailLogin, () async {
+      final result = await SyncTvService.confirmEmailLoginResult(
+        login.sessionId,
+        token,
+      );
       _finishAuth(result);
     });
   }
 
   Future<void> _submitPasskeyLogin() async {
     if (!_ensureTermsAccepted()) return;
-    final identifier = _effectiveLoginIdentifier();
-    if (identifier.isEmpty) {
-      MessageUtils.showWarning(context, context.l10n.emailOrUsernameRequired);
+    final login = _validLoginStart();
+    if (login == null) {
+      setState(_resetLoginDiscovery);
+      MessageUtils.showWarning(context, context.l10n.enterIdentifierFirst);
       return;
     }
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.passkeyLogin, () async {
       final start = await SyncTvService.startPasskeyLogin(
-        email: identifier.contains('@') ? identifier : '',
-        username: identifier.contains('@') ? '' : identifier,
+        loginSessionId: login.sessionId,
       );
       final credential = await PasskeyAuthenticatorService.getCredential(
         start.options,
+        serverBaseUrl: SyncTvService.baseUrl,
       );
       final result = await SyncTvService.finishPasskeyLogin(
         sessionId: start.sessionId,
@@ -289,7 +377,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       MessageUtils.showWarning(context, context.l10n.usernameRequired);
       return;
     }
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.passwordRegistration, () async {
       final result = await _opaqueAuthenticator.register(
         username: username,
         email: email,
@@ -317,7 +405,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       MessageUtils.showWarning(context, context.l10n.usernameAndEmailRequired);
       return;
     }
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.requestEmailRegistration, () async {
       await SyncTvService.requestEmailRegistration(
         username: username,
         email: email,
@@ -335,7 +423,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       MessageUtils.showWarning(context, context.l10n.codeAndPasswordRequired);
       return;
     }
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.emailRegistration, () async {
       final result = await SyncTvService.confirmEmailRegistration(
         emailToken: token,
         password: _registerPasswordController.text,
@@ -362,7 +450,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       MessageUtils.showWarning(context, context.l10n.usernameRequired);
       return;
     }
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.passkeyRegistration, () async {
       final start = await SyncTvService.startPasskeyRegistration(
         username: username,
         email: email,
@@ -370,6 +458,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       );
       final credential = await PasskeyAuthenticatorService.createCredential(
         start.options,
+        serverBaseUrl: SyncTvService.baseUrl,
       );
       final result = await SyncTvService.finishPasskeyRegistration(
         sessionId: start.sessionId,
@@ -386,7 +475,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       MessageUtils.showWarning(context, context.l10n.roomIdRequired);
       return;
     }
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.guestLogin, () async {
       await SyncTvService.createGuestToken(roomId);
       if (mounted) {
         MessageUtils.dismissAll();
@@ -399,7 +488,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     if (!_ensureTermsAccepted()) return;
     final authorizationPageOpenFailed =
         context.l10n.authorizationPageOpenFailed;
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.oauth2, () async {
       final callbackSession = await OAuth2DeepLinkService.createSession();
       final start = await SyncTvService.startOAuth2Login(
         provider.name,
@@ -441,7 +530,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       MessageUtils.showWarning(context, context.l10n.mfaEmailUnsupported);
       return;
     }
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.requestMfaEmail, () async {
       await SyncTvService.requestMfaEmailCode(challenge.sessionId);
       if (!mounted) return;
       setState(() => _mfaEmailRequested = true);
@@ -456,7 +545,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       MessageUtils.showWarning(context, context.l10n.mfaCodeRequired);
       return;
     }
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.mfaEmail, () async {
       await SyncTvService.verifyMfaEmailCode(
         mfaSessionId: challenge.sessionId,
         emailToken: token,
@@ -475,15 +564,54 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       MessageUtils.showWarning(context, context.l10n.mfaPasskeyUnavailable);
       return;
     }
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.mfaPasskey, () async {
       final start = await SyncTvService.startMfaPasskey(challenge.sessionId);
       final credential = await PasskeyAuthenticatorService.getCredential(
         start.options,
+        serverBaseUrl: SyncTvService.baseUrl,
       );
       await SyncTvService.finishMfaPasskey(
         mfaSessionId: challenge.sessionId,
         passkeySessionId: start.passkeySessionId,
         credential: credential,
+      );
+      if (mounted) {
+        MessageUtils.dismissAll();
+        Navigator.pop(context, true);
+      }
+    });
+  }
+
+  Future<void> _submitMfaTotp() async {
+    final challenge = _mfaChallenge;
+    final code = _mfaTotpController.text.trim();
+    if (challenge == null || code.length != 6) {
+      MessageUtils.showWarning(context, context.l10n.enterAuthenticatorCode);
+      return;
+    }
+    await _withLoading(_AuthAction.mfaTotp, () async {
+      await SyncTvService.verifyMfaTotp(
+        mfaSessionId: challenge.sessionId,
+        code: code,
+      );
+      if (mounted) {
+        MessageUtils.dismissAll();
+        Navigator.pop(context, true);
+      }
+    });
+  }
+
+  Future<void> _submitMfaRecoveryCode() async {
+    final challenge = _mfaChallenge;
+    final code = _mfaRecoveryCodeController.text.trim();
+    if (challenge == null || code.isEmpty) {
+      MessageUtils.showWarning(context, context.l10n.enterRecoveryCode);
+      return;
+    }
+    await _withLoading(_AuthAction.mfaRecoveryCode, () async {
+      await SyncTvService.verifyMfaRecoveryCode(
+        mfaSessionId: challenge.sessionId,
+        recoveryCode: code,
       );
       if (mounted) {
         MessageUtils.dismissAll();
@@ -502,7 +630,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           ),
         );
     if (reset == null) return;
-    await _withLoading(() async {
+    await _withLoading(_AuthAction.passwordReset, () async {
       await _opaqueAuthenticator.resetWithEmailToken(
         email: reset.email,
         token: reset.token,
@@ -580,10 +708,9 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                   padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
                   child: Row(
                     children: [
-                      const AppImageThumbnail.asset(
-                        assetName: 'assets/icon/robot_3.png',
-                        width: 38,
-                        height: 38,
+                      SyncTvBrandMark(
+                        semanticLabel: l10n.appTitle,
+                        size: 38,
                         borderRadius: BorderRadius.all(Radius.circular(10)),
                       ),
                       const SizedBox(width: 12),
@@ -693,8 +820,10 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Widget _buildLoginTab(ThemeData theme) {
     final l10n = context.l10n;
-    final identifier = _loginIdentifierController.text.trim();
-    final availableMethods = _availableLoginMethods(identifier);
+    final login = _validLoginStart();
+    final availableMethods = login == null
+        ? const <_LoginMethod>[_LoginMethod.password]
+        : _availableLoginMethods(login);
     final selectedMethod = availableMethods.contains(_loginMethod)
         ? _loginMethod
         : availableMethods.first;
@@ -707,23 +836,16 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           label: l10n.emailOrUsername,
           icon: Icons.person_outline_rounded,
           textInputAction: TextInputAction.done,
-          onChanged: (_) {
-            setState(() {
-              _loginIdentifierConfirmed = false;
-              _confirmedLoginIdentifier = '';
-              _emailTokenRequested = false;
-              _emailTokenController.clear();
-            });
-          },
+          onChanged: (_) => setState(_resetLoginDiscovery),
           onSubmitted: (_) => _confirmLoginIdentifier(),
         ),
         const SizedBox(height: 14),
-        if (!_loginIdentifierConfirmed) ...[
+        if (login == null) ...[
           AppActionButton(
             onPressed: _loading ? null : _confirmLoginIdentifier,
             icon: Icons.arrow_forward_rounded,
             label: l10n.continueAction,
-            loading: _loading,
+            loading: _isLoading(_AuthAction.identifyLogin),
           ),
           if (_oauth2Providers.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -794,24 +916,89 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     );
   }
 
-  void _confirmLoginIdentifier() {
+  Future<void> _confirmLoginIdentifier() async {
     final identifier = _loginIdentifierController.text.trim();
     if (identifier.isEmpty) {
       MessageUtils.showWarning(context, context.l10n.emailOrUsernameRequired);
       return;
     }
-    final methods = _availableLoginMethods(identifier);
-    setState(() {
-      _loginIdentifierConfirmed = true;
-      _confirmedLoginIdentifier = identifier;
-      _loginMethod = methods.first;
+    await _withLoading(_AuthAction.identifyLogin, () async {
+      final login = await SyncTvService.startLogin(identifier);
+      if (!mounted) return;
+      final methods = _availableLoginMethods(login);
+      if (methods.isEmpty) {
+        MessageUtils.showWarning(context, context.l10n.noLoginMethodAvailable);
+        return;
+      }
+      setState(() {
+        _resetLoginCredentials();
+        _loginStart = login;
+        _loginMethod = methods.first;
+      });
+      _scheduleLoginSessionExpiry(login);
     });
   }
 
-  String _effectiveLoginIdentifier() {
-    final current = _loginIdentifierController.text.trim();
-    if (current.isNotEmpty) return current;
-    return _confirmedLoginIdentifier;
+  LoginStart? _validLoginStart() {
+    final login = _loginStart;
+    if (login == null || login.expiresAt.isBefore(DateTime.now().toUtc())) {
+      return null;
+    }
+    return login;
+  }
+
+  void _scheduleLoginSessionExpiry(LoginStart login) {
+    _loginSessionExpiryTimer?.cancel();
+    final delay = login.expiresAt.difference(DateTime.now().toUtc());
+    _loginSessionExpiryTimer = Timer(
+      delay.isNegative ? Duration.zero : delay,
+      () {
+        if (!mounted || _loginStart?.sessionId != login.sessionId) return;
+        setState(_resetLoginDiscovery);
+      },
+    );
+  }
+
+  void _resetLoginDiscovery() {
+    _loginSessionExpiryTimer?.cancel();
+    _loginSessionExpiryTimer = null;
+    _loginStart = null;
+    _resetLoginCredentials();
+  }
+
+  void _resetLoginCredentials() {
+    _loginPasswordController.clear();
+    _emailTokenRequested = false;
+    _emailTokenController.clear();
+  }
+
+  void _scheduleMfaSessionExpiry(MfaChallengeInfo challenge) {
+    _mfaSessionExpiryTimer?.cancel();
+    final delay = challenge.expiresAt.difference(DateTime.now().toUtc());
+    _mfaSessionExpiryTimer = Timer(
+      delay.isNegative ? Duration.zero : delay,
+      () {
+        if (!mounted || _mfaChallenge?.sessionId != challenge.sessionId) {
+          return;
+        }
+        setState(() {
+          _mfaChallenge = null;
+          _resetMfaCredentials();
+        });
+        MessageUtils.showWarning(
+          context,
+          context.l10n.authenticationSessionExpired,
+        );
+      },
+    );
+  }
+
+  void _resetMfaCredentials() {
+    _mfaEmailRequested = false;
+    _mfaRecoveryCodeActive = false;
+    _mfaTokenController.clear();
+    _mfaTotpController.clear();
+    _mfaRecoveryCodeController.clear();
   }
 
   void _confirmRegisterIdentifier() {
@@ -838,8 +1025,11 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
       } else {
         _registerUsernameController.text = '';
       }
+      _registrationMethod = _availableRegistrationMethods().first;
       _registerPasswordController.clear();
-      _passkeyNameController.clear();
+      _registerEmailTokenRequested = false;
+      _registerEmailTokenController.clear();
+      _passkeyNameController.text = _suggestedPasskeyName;
     });
   }
 
@@ -853,15 +1043,55 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         _oauth2Providers.any((provider) => provider.signupEnabled);
   }
 
-  List<_LoginMethod> _availableLoginMethods(String identifier) {
-    final isEmail = identifier.trim().contains('@');
-    final methods = <_LoginMethod>[_LoginMethod.password];
-    if (isEmail && _settings?.enableEmail == true) {
-      methods.add(_LoginMethod.emailCode);
-    }
-    if (_passkeyAvailable && _settings?.enableWebauthn == true) {
+  List<_RegistrationMethod> _availableRegistrationMethods() {
+    return [
+      if (_passkeyAvailable &&
+          _settings?.enableWebauthn == true &&
+          _settings?.enableWebauthnSignup == true)
+        _RegistrationMethod.passkey,
+      if (_settings?.enablePasswordSignup == true) _RegistrationMethod.password,
+      if (_settings?.enableEmail == true &&
+          _settings?.enableEmailSignup == true)
+        _RegistrationMethod.emailVerification,
+    ];
+  }
+
+  void _selectRegistrationMethod(_RegistrationMethod method) {
+    setState(() {
+      _registrationMethod = method;
+      _registerEmailTokenRequested = false;
+      _registerEmailTokenController.clear();
+      _registerPasswordController.clear();
+      if (method == _RegistrationMethod.emailVerification) {
+        _registerIncludeEmail = true;
+      }
+    });
+  }
+
+  String _registrationMethodLabel(_RegistrationMethod method) {
+    return switch (method) {
+      _RegistrationMethod.passkey => context.l10n.passkeyRegistration,
+      _RegistrationMethod.password => context.l10n.password,
+      _RegistrationMethod.emailVerification =>
+        context.l10n.emailCodeRegistration,
+    };
+  }
+
+  IconData _registrationMethodIcon(_RegistrationMethod method) {
+    return switch (method) {
+      _RegistrationMethod.passkey => Icons.fingerprint_rounded,
+      _RegistrationMethod.password => Icons.lock_outline_rounded,
+      _RegistrationMethod.emailVerification => Icons.mark_email_read_outlined,
+    };
+  }
+
+  List<_LoginMethod> _availableLoginMethods(LoginStart login) {
+    final methods = <_LoginMethod>[];
+    if (_passkeyAvailable && login.supportsPasskey) {
       methods.add(_LoginMethod.passkey);
     }
+    if (login.supportsPassword) methods.add(_LoginMethod.password);
+    if (login.supportsEmailCode) methods.add(_LoginMethod.emailCode);
     return methods;
   }
 
@@ -884,7 +1114,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               onPressed: _loading ? null : _submitPasswordLogin,
               icon: Icons.login_rounded,
               label: l10n.login,
-              loading: _loading,
+              loading: _isLoading(_AuthAction.passwordLogin),
             ),
             const SizedBox(height: 8),
             Align(
@@ -918,7 +1148,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                   onPressed: _loading ? null : _requestEmailToken,
                   icon: Icons.send_outlined,
                   label: l10n.send,
-                  loading: _loading,
+                  loading: _isLoading(_AuthAction.requestEmailLogin),
                   style: AppActionButtonStyle.outlined,
                 ),
               ],
@@ -928,7 +1158,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               onPressed: _loading ? null : _submitEmailLogin,
               icon: Icons.mark_email_read_outlined,
               label: l10n.emailCodeLogin,
-              loading: _loading,
+              loading: _isLoading(_AuthAction.emailLogin),
             ),
           ],
         );
@@ -940,7 +1170,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               onPressed: _loading ? null : _submitPasskeyLogin,
               icon: Icons.fingerprint_rounded,
               label: l10n.passkeyLogin,
-              loading: _loading,
+              loading: _isLoading(_AuthAction.passkeyLogin),
             ),
           ],
         );
@@ -1021,22 +1251,20 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
 
   Widget _buildRegisterTab(ThemeData theme) {
     final l10n = context.l10n;
-    final passwordSignupEnabled = _settings?.enablePasswordSignup == true;
     final emailSignupEnabled =
         _settings?.enableEmail == true && _settings?.enableEmailSignup == true;
-    final passkeySignupEnabled =
-        _passkeyAvailable &&
-        _settings?.enableWebauthn == true &&
-        _settings?.enableWebauthnSignup == true;
+    final registrationMethods = _availableRegistrationMethods();
     final oauthSignupProviders = _oauth2Providers
         .where((provider) => provider.signupEnabled)
         .toList(growable: false);
-    final hasLocalRegistrationMethod =
-        passwordSignupEnabled || emailSignupEnabled || passkeySignupEnabled;
+    final hasLocalRegistrationMethod = registrationMethods.isNotEmpty;
     final hasRegistrationMethod =
         hasLocalRegistrationMethod || oauthSignupProviders.isNotEmpty;
     final identifier = _registerIdentifierController.text.trim();
     final registerByEmail = identifier.contains('@');
+    final selectedMethod = registrationMethods.contains(_registrationMethod)
+        ? _registrationMethod
+        : registrationMethods.firstOrNull;
 
     if (!_loadingOptions && !hasRegistrationMethod) {
       return AppEmptyState(
@@ -1097,7 +1325,6 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
               onPressed: _loading ? null : _confirmRegisterIdentifier,
               icon: Icons.arrow_forward_rounded,
               label: l10n.continueAction,
-              loading: _loading,
             )
           else ...[
             if (registerByEmail) ...[
@@ -1108,34 +1335,101 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 12),
-            ] else if (emailSignupEnabled) ...[
+            ],
+            if (selectedMethod != null && registrationMethods.length > 1) ...[
+              _SectionLabel(
+                icon: Icons.how_to_reg_rounded,
+                label: l10n.registrationMethod,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(height: 10),
+              AppSingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: AppSegmentedControl<_RegistrationMethod>(
+                  key: const ValueKey('registration-method-selector'),
+                  segments: [
+                    if (registrationMethods.contains(
+                      _RegistrationMethod.passkey,
+                    ))
+                      const ButtonSegment(
+                        value: _RegistrationMethod.passkey,
+                        icon: Icon(Icons.fingerprint_rounded),
+                        label: Text('Passkey'),
+                      ),
+                    if (registrationMethods.contains(
+                      _RegistrationMethod.password,
+                    ))
+                      ButtonSegment(
+                        value: _RegistrationMethod.password,
+                        icon: const Icon(Icons.lock_outline_rounded),
+                        label: Text(l10n.password),
+                      ),
+                    if (registrationMethods.contains(
+                      _RegistrationMethod.emailVerification,
+                    ))
+                      ButtonSegment(
+                        value: _RegistrationMethod.emailVerification,
+                        icon: const Icon(Icons.mark_email_read_outlined),
+                        label: Text(l10n.emailCodeRegistration),
+                      ),
+                  ],
+                  value: selectedMethod,
+                  onChanged: (method) {
+                    if (_loading) return;
+                    _selectRegistrationMethod(method);
+                  },
+                ),
+              ),
+              const SizedBox(height: 14),
+            ] else if (selectedMethod != null) ...[
+              _SectionLabel(
+                icon: _registrationMethodIcon(selectedMethod),
+                label: _registrationMethodLabel(selectedMethod),
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(height: 10),
+            ],
+            if (!registerByEmail &&
+                emailSignupEnabled &&
+                selectedMethod != _RegistrationMethod.emailVerification) ...[
               AppCheckboxTile(
                 value: _registerIncludeEmail,
                 onChanged: _loading
                     ? null
-                    : (value) => setState(() => _registerIncludeEmail = value),
+                    : (value) => setState(() {
+                        _registerIncludeEmail = value;
+                        if (!value) {
+                          _registerEmailController.clear();
+                          _registerEmailTokenController.clear();
+                          _registerEmailTokenRequested = false;
+                        }
+                      }),
                 title: Text(l10n.includeEmail),
                 subtitle: Text(l10n.includeEmailDescription),
               ),
-              if (_registerIncludeEmail) ...[
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller: _registerEmailController,
-                  label: l10n.email,
-                  icon: Icons.mail_outline_rounded,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  onChanged: (_) => setState(() {
-                    _registerEmailTokenRequested = false;
-                    _registerEmailTokenController.clear();
-                  }),
-                ),
-                _buildEmailWhitelistSelector(_registerEmailController),
-                const SizedBox(height: 12),
-              ],
             ],
-            if (passwordSignupEnabled) ...[
+            if (!registerByEmail &&
+                emailSignupEnabled &&
+                (selectedMethod == _RegistrationMethod.emailVerification ||
+                    _registerIncludeEmail)) ...[
+              const SizedBox(height: 8),
               _buildTextField(
+                controller: _registerEmailController,
+                label: l10n.email,
+                icon: Icons.mail_outline_rounded,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {
+                  _registerEmailTokenRequested = false;
+                  _registerEmailTokenController.clear();
+                }),
+              ),
+              _buildEmailWhitelistSelector(_registerEmailController),
+              const SizedBox(height: 12),
+            ],
+            if (selectedMethod == _RegistrationMethod.password) ...[
+              _buildTextField(
+                key: const ValueKey('password-registration-field'),
                 controller: _registerPasswordController,
                 label: l10n.password,
                 icon: Icons.lock_outline_rounded,
@@ -1146,22 +1440,15 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 onPressed: _loading ? null : _submitPasswordRegistration,
                 icon: Icons.person_add_alt_1_rounded,
                 label: l10n.createAccount,
-                loading: _loading,
+                loading: _isLoading(_AuthAction.passwordRegistration),
               ),
-            ],
-            if (emailSignupEnabled &&
-                (registerByEmail || _registerIncludeEmail)) ...[
-              if (passwordSignupEnabled) const SizedBox(height: 18),
-              _SectionLabel(
-                icon: Icons.mark_email_read_outlined,
-                label: l10n.emailCodeRegistration,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(height: 10),
+            ] else if (selectedMethod ==
+                _RegistrationMethod.emailVerification) ...[
               Row(
                 children: [
                   Expanded(
                     child: _buildTextField(
+                      key: const ValueKey('email-registration-code-field'),
                       controller: _registerEmailTokenController,
                       label: _registerEmailTokenRequested
                           ? l10n.verificationCode
@@ -1174,7 +1461,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                     onPressed: _loading ? null : _requestEmailRegistrationToken,
                     icon: Icons.send_outlined,
                     label: l10n.send,
-                    loading: _loading,
+                    loading: _isLoading(_AuthAction.requestEmailRegistration),
                     style: AppActionButtonStyle.outlined,
                   ),
                 ],
@@ -1191,21 +1478,11 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 onPressed: _loading ? null : _submitEmailRegistration,
                 icon: Icons.mark_email_read_outlined,
                 label: l10n.createAccountWithEmailCode,
-                loading: _loading,
-                style: passwordSignupEnabled
-                    ? AppActionButtonStyle.outlined
-                    : AppActionButtonStyle.filled,
+                loading: _isLoading(_AuthAction.emailRegistration),
               ),
-            ],
-            if (passkeySignupEnabled) ...[
-              const SizedBox(height: 18),
-              _SectionLabel(
-                icon: Icons.fingerprint_rounded,
-                label: l10n.passkeyRegistration,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(height: 10),
+            ] else if (selectedMethod == _RegistrationMethod.passkey) ...[
               _buildTextField(
+                key: const ValueKey('passkey-registration-name-field'),
                 controller: _passkeyNameController,
                 label: l10n.deviceNameHint,
                 icon: Icons.devices_rounded,
@@ -1215,8 +1492,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                 onPressed: _loading ? null : _submitPasskeyRegistration,
                 icon: Icons.fingerprint_rounded,
                 label: l10n.createPasskeyAccount,
-                loading: _loading,
-                style: AppActionButtonStyle.outlined,
+                loading: _isLoading(_AuthAction.passkeyRegistration),
               ),
             ],
             const SizedBox(height: 8),
@@ -1229,6 +1505,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
                         _registerIdentifierConfirmed = false;
                         _registerIncludeEmail = false;
                         _registerEmailTokenRequested = false;
+                        _registerPasswordController.clear();
                         _registerEmailTokenController.clear();
                       }),
                 icon: Icons.edit_outlined,
@@ -1268,7 +1545,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
           onPressed: guestEnabled && !_loading ? _submitGuest : null,
           icon: Icons.door_front_door_outlined,
           label: l10n.enterAsGuest,
-          loading: _loading,
+          loading: _isLoading(_AuthAction.guestLogin),
         ),
       ],
     );
@@ -1277,6 +1554,10 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   Widget _buildMfaPanel(ThemeData theme) {
     final l10n = context.l10n;
     final challenge = _mfaChallenge!;
+    final methods = _availableMfaMethods(challenge);
+    final selectedMethod = methods.contains(_mfaMethod)
+        ? _mfaMethod
+        : methods.firstOrNull;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1287,61 +1568,192 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
         ),
         const SizedBox(height: 8),
         Text(
-          challenge.maskedEmail.isEmpty
-              ? l10n.additionalVerificationRequired
-              : l10n.codeSentTo(challenge.maskedEmail),
+          selectedMethod == _MfaMethod.email &&
+                  _mfaEmailRequested &&
+                  challenge.maskedEmail.isNotEmpty
+              ? l10n.codeSentTo(challenge.maskedEmail)
+              : l10n.additionalVerificationRequired,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _mfaTokenController,
-                label: _mfaEmailRequested
-                    ? l10n.verificationCode
-                    : l10n.getMfaCodeFirst,
-                icon: Icons.pin_outlined,
-                enabled: challenge.supportsEmail && !_loading,
+        if (_mfaRecoveryCodeActive)
+          AuthRecoveryCodeFallback(
+            active: true,
+            recoveryForm: _buildMfaRecoveryCodeForm(),
+            onOpen: null,
+            onBack: _loading
+                ? null
+                : () => setState(() {
+                    _mfaRecoveryCodeActive = false;
+                    _mfaRecoveryCodeController.clear();
+                  }),
+          )
+        else ...[
+          if (methods.length > 1) ...[
+            AppSingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: AppSegmentedControl<_MfaMethod>(
+                segments: [
+                  for (final method in methods)
+                    ButtonSegment(
+                      value: method,
+                      icon: Icon(_mfaMethodIcon(method)),
+                      label: Text(_mfaMethodLabel(method)),
+                    ),
+                ],
+                value: selectedMethod!,
+                onChanged: (method) {
+                  if (_loading) return;
+                  setState(() => _mfaMethod = method);
+                },
               ),
             ),
-            const SizedBox(width: 8),
-            AppActionButton(
-              onPressed: challenge.supportsEmail && !_loading
-                  ? _requestMfaEmailToken
-                  : null,
-              icon: Icons.send_outlined,
-              label: l10n.send,
-              loading: _loading,
-              style: AppActionButtonStyle.outlined,
+            const SizedBox(height: 14),
+          ],
+          if (selectedMethod != null)
+            _buildSelectedMfaMethod(selectedMethod)
+          else if (!challenge.supportsRecoveryCode)
+            Text(
+              l10n.noVerificationMethodsDescription,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            )
+          else
+            const SizedBox.shrink(),
+          if (challenge.supportsRecoveryCode) ...[
+            const SizedBox(height: 8),
+            AuthRecoveryCodeFallback(
+              active: false,
+              recoveryForm: const SizedBox.shrink(),
+              onOpen: _loading
+                  ? null
+                  : () => setState(() => _mfaRecoveryCodeActive = true),
+              onBack: null,
             ),
           ],
-        ),
-        const SizedBox(height: 12),
-        AppActionButton(
-          onPressed: challenge.supportsEmail && !_loading
-              ? _submitMfaEmailToken
-              : null,
-          icon: Icons.verified_user_outlined,
-          label: l10n.completeVerification,
-          loading: _loading,
-        ),
-        if (challenge.supportsPasskey &&
-            _passkeyAvailable &&
-            _settings?.enableWebauthn == true) ...[
-          const SizedBox(height: 10),
-          AppActionButton(
-            onPressed: _loading ? null : _submitMfaPasskey,
-            icon: Icons.fingerprint_rounded,
-            label: l10n.verifyWithPasskey,
-            loading: _loading,
-            style: AppActionButtonStyle.outlined,
-          ),
         ],
       ],
     );
+  }
+
+  List<_MfaMethod> _availableMfaMethods(MfaChallengeInfo challenge) {
+    return [
+      if (challenge.supportsPasskey &&
+          _passkeyAvailable &&
+          _settings?.enableWebauthn == true)
+        _MfaMethod.passkey,
+      if (challenge.supportsTotp) _MfaMethod.totp,
+      if (challenge.supportsEmail) _MfaMethod.email,
+    ];
+  }
+
+  Widget _buildMfaRecoveryCodeForm() {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildTextField(
+          key: const ValueKey('mfa-recovery-code-field'),
+          controller: _mfaRecoveryCodeController,
+          label: l10n.recoveryCode,
+          icon: Icons.key_rounded,
+          enabled: !_loading,
+          onSubmitted: (_) => _submitMfaRecoveryCode(),
+        ),
+        const SizedBox(height: 10),
+        AppActionButton(
+          onPressed: _loading ? null : _submitMfaRecoveryCode,
+          icon: Icons.key_rounded,
+          label: l10n.verifyWithRecoveryCode,
+          loading: _isLoading(_AuthAction.mfaRecoveryCode),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSelectedMfaMethod(_MfaMethod method) {
+    final l10n = context.l10n;
+    return switch (method) {
+      _MfaMethod.passkey => AppActionButton(
+        onPressed: _loading ? null : _submitMfaPasskey,
+        icon: Icons.fingerprint_rounded,
+        label: l10n.verifyWithPasskey,
+        loading: _isLoading(_AuthAction.mfaPasskey),
+      ),
+      _MfaMethod.totp => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildTextField(
+            controller: _mfaTotpController,
+            label: l10n.authenticatorCode,
+            icon: Icons.password_rounded,
+            enabled: !_loading,
+            keyboardType: TextInputType.number,
+            onSubmitted: (_) => _submitMfaTotp(),
+          ),
+          const SizedBox(height: 10),
+          AppActionButton(
+            onPressed: _loading ? null : _submitMfaTotp,
+            icon: Icons.shield_outlined,
+            label: l10n.verifyWithAuthenticator,
+            loading: _isLoading(_AuthAction.mfaTotp),
+          ),
+        ],
+      ),
+      _MfaMethod.email => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  controller: _mfaTokenController,
+                  label: _mfaEmailRequested
+                      ? l10n.verificationCode
+                      : l10n.getMfaCodeFirst,
+                  icon: Icons.pin_outlined,
+                  enabled: !_loading,
+                ),
+              ),
+              const SizedBox(width: 8),
+              AppActionButton(
+                onPressed: _loading ? null : _requestMfaEmailToken,
+                icon: Icons.send_outlined,
+                label: l10n.send,
+                loading: _isLoading(_AuthAction.requestMfaEmail),
+                style: AppActionButtonStyle.outlined,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          AppActionButton(
+            onPressed: _loading ? null : _submitMfaEmailToken,
+            icon: Icons.mark_email_read_outlined,
+            label: l10n.verifyWithEmail,
+            loading: _isLoading(_AuthAction.mfaEmail),
+          ),
+        ],
+      ),
+    };
+  }
+
+  String _mfaMethodLabel(_MfaMethod method) {
+    return switch (method) {
+      _MfaMethod.passkey => 'Passkey',
+      _MfaMethod.totp => context.l10n.authenticatorApp,
+      _MfaMethod.email => context.l10n.email,
+    };
+  }
+
+  IconData _mfaMethodIcon(_MfaMethod method) {
+    return switch (method) {
+      _MfaMethod.passkey => Icons.fingerprint_rounded,
+      _MfaMethod.totp => Icons.shield_outlined,
+      _MfaMethod.email => Icons.mark_email_read_outlined,
+    };
   }
 
   Widget _buildOAuth2Entry(ThemeData theme) {
@@ -1458,6 +1870,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
   }
 
   Widget _buildTextField({
+    Key? key,
     required TextEditingController controller,
     required String label,
     required IconData icon,
@@ -1469,6 +1882,7 @@ class _AuthPanelState extends State<AuthPanel> with TickerProviderStateMixin {
     ValueChanged<String>? onSubmitted,
   }) {
     return AppTextField(
+      key: key ?? ObjectKey(controller),
       controller: controller,
       label: label,
       prefixIcon: icon,

@@ -38,10 +38,15 @@ packages/**/build/
 **/local.properties
 **/Flutter/Generated.xcconfig
 **/Flutter/flutter_export_environment.sh
+**/Flutter/Signing.xcconfig
+*.jks
+*.keystore
 
 # Vendored package development artifacts.
 packages/**/example/
 packages/**/test/
+!packages/passkeys_darwin/test/
+!packages/passkeys_darwin/test/passkeys_darwin_test.dart
 packages/**/integration_test/
 packages/**/test_driver/
 packages/**/pubspec.lock

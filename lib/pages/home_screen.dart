@@ -16,6 +16,7 @@ import 'package:synctv_app/utils/chat_utils.dart';
 import 'package:synctv_app/utils/room_taxonomy.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/widgets/cinema_room_card.dart';
+import 'package:synctv_app/widgets/synctv_brand_mark.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
 import 'package:synctv_app/widgets/join_room_dialog.dart';
 import 'package:synctv_app/widgets/language_selector_dialog.dart';
@@ -870,12 +871,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             semanticLabel: l10n.openServerSettings,
                             child: Row(
                               children: [
-                                AppIconBadge(
-                                  icon: Icons.live_tv_rounded,
-                                  color: theme.colorScheme.primary,
+                                SyncTvBrandMark(
+                                  semanticLabel: l10n.appTitle,
                                   size: 36,
-                                  iconSize: 22,
-                                  backgroundAlpha: 0.12,
                                 ),
                                 if (!extraCompact) ...[
                                   const SizedBox(width: 12),

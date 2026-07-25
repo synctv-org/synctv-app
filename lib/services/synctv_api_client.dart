@@ -10,6 +10,7 @@ import 'package:protobuf/well_known_types/google/protobuf/field_mask.pb.dart'
     as field_mask;
 
 import 'package:synctv_app/src/generated/proto/admin.pb.dart' as admin;
+import 'package:synctv_app/services/server_endpoint_identity.dart';
 import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
@@ -64,8 +65,8 @@ import 'package:synctv_app/models/synctv_models.dart';
 
 part 'synctv_api_facades.dart';
 
-typedef AuthErrorSink = void Function();
-typedef TokenRefreshSink = Future<void> Function();
+typedef AuthErrorSink = void Function(int endpointGeneration);
+typedef TokenRefreshSink = Future<void> Function(int endpointGeneration);
 
 class _FileObjectUploadResult {
   const _FileObjectUploadResult({
@@ -125,6 +126,13 @@ class SyncTvApiException implements Exception {
   }
 }
 
+class SyncTvStaleEndpointException implements Exception {
+  const SyncTvStaleEndpointException();
+
+  @override
+  String toString() => 'The request belongs to a previously active server';
+}
+
 class SyncTvSession {
   String? accessToken;
   String? refreshToken;
@@ -148,7 +156,11 @@ class SyncTvApiClient {
   final AuthErrorSink? onAuthError;
   final TokenRefreshSink? onTokenRefresh;
   Uri _baseUri;
-  Future<bool>? _refreshInFlight;
+  int _endpointGeneration = 0;
+  ({int generation, Future<bool> future})? _refreshInFlight;
+  final Expando<int> _responseGenerations = Expando<int>(
+    'SyncTv response endpoint generation',
+  );
 
   late final SyncTvAuthApi auth = SyncTvAuthApi._(this);
   late final SyncTvUserApi user = SyncTvUserApi._(this);
@@ -212,11 +224,19 @@ class SyncTvApiClient {
   }
 
   static String normalizeBaseUrl(String input) =>
-      _normalizeBaseUri(input).toString();
+      ServerEndpointIdentity.normalize(input);
 
   set baseUrl(String value) {
-    _baseUri = _normalizeBaseUri(value);
+    final normalized = _normalizeBaseUri(value);
+    if (normalized == _baseUri) return;
+    _baseUri = normalized;
+    _endpointGeneration++;
   }
+
+  bool isEndpointGenerationCurrent(int generation) =>
+      generation == _endpointGeneration;
+
+  int get endpointGeneration => _endpointGeneration;
 
   Future<http.Response> uploadRawBytes(
     String uploadUrl,
@@ -224,15 +244,14 @@ class SyncTvApiClient {
     required String contentType,
     Map<String, String> headers = const {},
   }) async {
+    final generation = _endpointGeneration;
     final uri = _resolveUploadUri(uploadUrl);
     final requestHeaders = <String, String>{
       ...headers,
       if (contentType.isNotEmpty) 'content-type': contentType,
     };
     final response = await _http.put(uri, headers: requestHeaders, body: data);
-    if (response.statusCode == 401) {
-      onAuthError?.call();
-    }
+    _ensureCurrentEndpoint(generation);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw _apiException(response, method: 'PUT', uri: uri);
     }
@@ -246,6 +265,7 @@ class SyncTvApiClient {
     String contentType = '',
     client.FileUploadRange? contentRange,
   }) async {
+    final generation = _endpointGeneration;
     final headers = <String, String>{
       'accept': 'application/json',
       'x-synctv-file-upload-token': token,
@@ -255,9 +275,7 @@ class SyncTvApiClient {
     };
     final uri = _uri(path);
     final response = await _http.put(uri, headers: headers, body: data);
-    if (response.statusCode == 401) {
-      onAuthError?.call();
-    }
+    _ensureCurrentEndpoint(generation);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw _apiException(response, method: 'PUT', uri: uri);
     }
@@ -282,13 +300,12 @@ class SyncTvApiClient {
     required String token,
     client.FileRangeRequest? range,
   }) async {
+    final generation = _endpointGeneration;
     final rangeHeader = range == null ? null : _rangeHeader(range);
     final headers = <String, String>{'accept': '*/*', 'range': ?rangeHeader};
     final uri = _uri(path, {'token': token});
     final response = await _http.get(uri, headers: headers);
-    if (response.statusCode == 401) {
-      onAuthError?.call();
-    }
+    _ensureCurrentEndpoint(generation);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw _apiException(response, method: 'GET', uri: uri);
     }
@@ -406,20 +423,8 @@ class SyncTvApiClient {
         .toString();
   }
 
-  static Uri _normalizeBaseUri(String input) {
-    var value = input.trim();
-    if (value.endsWith('/')) {
-      value = value.substring(0, value.length - 1);
-    }
-    if (!value.startsWith('http://') && !value.startsWith('https://')) {
-      value = 'https://$value';
-    }
-    final parsed = Uri.parse(value);
-    final path = parsed.path.endsWith('/api')
-        ? parsed.path.substring(0, parsed.path.length - 4)
-        : parsed.path;
-    return parsed.replace(path: path.isEmpty ? '' : path);
-  }
+  static Uri _normalizeBaseUri(String input) =>
+      Uri.parse(ServerEndpointIdentity.normalize(input));
 
   Uri _uri(String path, [Map<String, Object?> query = const {}]) {
     final basePath = _baseUri.path.endsWith('/')
@@ -459,6 +464,7 @@ class SyncTvApiClient {
     Map<String, Object?> query = const {},
     bool auth = true,
   }) async {
+    final generation = _endpointGeneration;
     final uri = _uri(path, query);
     final encodedBody = _encodeBody(body);
     final response = await _sendHttp(
@@ -467,9 +473,11 @@ class SyncTvApiClient {
       headers: _headers(auth: auth),
       body: encodedBody,
     );
+    _ensureCurrentEndpoint(generation);
 
     if (_shouldRefresh(response, auth: auth, path: path)) {
-      final refreshed = await _tryRefreshToken();
+      final refreshed = await _tryRefreshToken(generation);
+      _ensureCurrentEndpoint(generation);
       if (refreshed) {
         final retry = await _sendHttp(
           method,
@@ -477,11 +485,26 @@ class SyncTvApiClient {
           headers: _headers(auth: auth),
           body: encodedBody,
         );
-        return _decodeResponse(retry, create, method: method, uri: uri);
+        return _decodeCurrentResponse(
+          retry,
+          create,
+          method: method,
+          uri: uri,
+          generation: generation,
+        );
       }
+      _notifyAuthError(generation);
+    } else if (response.statusCode == 401 && auth) {
+      _notifyAuthError(generation);
     }
 
-    return _decodeResponse(response, create, method: method, uri: uri);
+    return _decodeCurrentResponse(
+      response,
+      create,
+      method: method,
+      uri: uri,
+      generation: generation,
+    );
   }
 
   Future<http.Response> _sendHttp(
@@ -513,23 +536,28 @@ class SyncTvApiClient {
         path != '/api/auth/refresh';
   }
 
-  Future<bool> _tryRefreshToken() async {
+  Future<bool> _tryRefreshToken([int? expectedGeneration]) async {
+    final generation = expectedGeneration ?? _endpointGeneration;
+    _ensureCurrentEndpoint(generation);
     final inFlight = _refreshInFlight;
-    if (inFlight != null) return inFlight;
+    if (inFlight != null && inFlight.generation == generation) {
+      return inFlight.future;
+    }
 
-    final refresh = _refreshTokenOnce();
-    _refreshInFlight = refresh;
+    final refresh = _refreshTokenOnce(generation);
+    _refreshInFlight = (generation: generation, future: refresh);
     try {
       return await refresh;
     } finally {
-      if (identical(_refreshInFlight, refresh)) {
+      if (identical(_refreshInFlight?.future, refresh)) {
         _refreshInFlight = null;
       }
     }
   }
 
-  Future<bool> _refreshTokenOnce() async {
+  Future<bool> _refreshTokenOnce(int generation) async {
     try {
+      _ensureCurrentEndpoint(generation);
       final refreshToken = session.refreshToken;
       if (refreshToken == null || refreshToken.isEmpty) {
         return false;
@@ -537,8 +565,12 @@ class SyncTvApiClient {
       await auth.refreshToken(
         client.RefreshTokenRequest(refreshToken: refreshToken),
       );
-      await onTokenRefresh?.call();
+      _ensureCurrentEndpoint(generation);
+      await onTokenRefresh?.call(generation);
+      _ensureCurrentEndpoint(generation);
       return session.hasAccessToken;
+    } on SyncTvStaleEndpointException {
+      rethrow;
     } catch (_) {
       return false;
     }
@@ -554,6 +586,7 @@ class SyncTvApiClient {
     Map<String, String?> query = const {},
     bool auth = true,
   }) async {
+    final generation = _endpointGeneration;
     final uri = _uri(path, query);
     final encodedBody = _encodeBody(body);
     final response = await _sendHttp(
@@ -563,7 +596,13 @@ class SyncTvApiClient {
       body: encodedBody,
     );
 
-    return _decodeResponse(response, create, method: method, uri: uri);
+    return _decodeCurrentResponse(
+      response,
+      create,
+      method: method,
+      uri: uri,
+      generation: generation,
+    );
   }
 
   String? _encodeBody(Object? body) {
@@ -806,9 +845,6 @@ class SyncTvApiClient {
     required String method,
     required Uri uri,
   }) {
-    if (response.statusCode == 401) {
-      onAuthError?.call();
-    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw _apiException(response, method: method, uri: uri);
     }
@@ -824,6 +860,30 @@ class SyncTvApiClient {
       ignoreUnknownFields: true,
     );
     return message;
+  }
+
+  T _decodeCurrentResponse<T extends GeneratedMessage>(
+    http.Response response,
+    T Function() create, {
+    required String method,
+    required Uri uri,
+    required int generation,
+  }) {
+    _ensureCurrentEndpoint(generation);
+    final message = _decodeResponse(response, create, method: method, uri: uri);
+    _ensureCurrentEndpoint(generation);
+    _responseGenerations[message] = generation;
+    return message;
+  }
+
+  void _ensureCurrentEndpoint(int generation) {
+    if (generation != _endpointGeneration) {
+      throw const SyncTvStaleEndpointException();
+    }
+  }
+
+  void _notifyAuthError(int generation) {
+    if (generation == _endpointGeneration) onAuthError?.call(generation);
   }
 
   SyncTvApiException _apiException(
@@ -918,17 +978,27 @@ class SyncTvApiClient {
     T Function() create, {
     Map<String, Object?> query = const {},
   }) async* {
-    var request = _sseRequest(path, query);
+    final generation = _endpointGeneration;
+    var request = _sseRequest(path, query, generation);
     var response = await _http.send(request);
+    _ensureCurrentEndpoint(generation);
+    var refreshedSession = false;
+    var authErrorNotified = false;
     if (_shouldRefresh(response, auth: true, path: path)) {
-      final refreshed = await _tryRefreshToken();
+      final refreshed = await _tryRefreshToken(generation);
+      _ensureCurrentEndpoint(generation);
       if (refreshed) {
-        request = _sseRequest(path, query);
+        refreshedSession = true;
+        request = _sseRequest(path, query, generation);
         response = await _http.send(request);
+        _ensureCurrentEndpoint(generation);
+      } else {
+        _notifyAuthError(generation);
+        authErrorNotified = true;
       }
     }
-    if (response.statusCode == 401) {
-      onAuthError?.call();
+    if (response.statusCode == 401 && !refreshedSession && !authErrorNotified) {
+      _notifyAuthError(generation);
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final body = await response.stream.bytesToString();
@@ -944,10 +1014,15 @@ class SyncTvApiClient {
       );
     }
 
-    yield* _decodeSseStream(response.stream, create);
+    yield* _decodeSseStream(response.stream, create, generation);
   }
 
-  http.Request _sseRequest(String path, Map<String, Object?> query) {
+  http.Request _sseRequest(
+    String path,
+    Map<String, Object?> query,
+    int generation,
+  ) {
+    _ensureCurrentEndpoint(generation);
     final request = http.Request('GET', _uri(path, query));
     request.headers.addAll(_headers());
     request.headers['accept'] = 'text/event-stream';
@@ -957,11 +1032,13 @@ class SyncTvApiClient {
   Stream<T> _decodeSseStream<T extends GeneratedMessage>(
     Stream<List<int>> stream,
     T Function() create,
+    int generation,
   ) async* {
     var eventName = '';
     final dataLines = <String>[];
     await for (final line
         in stream.transform(utf8.decoder).transform(const LineSplitter())) {
+      _ensureCurrentEndpoint(generation);
       if (line.isEmpty) {
         final event = _decodeSseEvent(eventName, dataLines, create);
         eventName = '';
@@ -979,6 +1056,7 @@ class SyncTvApiClient {
       }
     }
 
+    _ensureCurrentEndpoint(generation);
     final event = _decodeSseEvent(eventName, dataLines, create);
     if (event != null) yield event;
   }
@@ -1186,10 +1264,44 @@ class SyncTvApiClient {
     );
   }
 
-  void _storeLogin(String accessToken, String refreshToken) {
+  void _storeLogin(
+    GeneratedMessage response,
+    String accessToken,
+    String refreshToken,
+  ) {
+    final generation = _responseGenerations[response];
+    if (generation == null) {
+      throw StateError(
+        'Authentication response was not created by this API client',
+      );
+    }
+    _ensureCurrentEndpoint(generation);
     if (accessToken.isEmpty && refreshToken.isEmpty) return;
     if (accessToken.isNotEmpty) session.accessToken = accessToken;
     if (refreshToken.isNotEmpty) session.refreshToken = refreshToken;
+    session.isGuest = false;
+  }
+
+  Future<T> runForCurrentEndpointResponse<T>(
+    GeneratedMessage response,
+    Future<T> Function() operation,
+  ) async {
+    final generation = _responseGenerations[response];
+    if (generation == null) {
+      throw StateError('Response was not created by this API client');
+    }
+    _ensureCurrentEndpoint(generation);
+    final result = await operation();
+    _ensureCurrentEndpoint(generation);
+    return result;
+  }
+
+  int _requestGeneration() => _endpointGeneration;
+
+  void _clearSessionForGeneration(int generation) {
+    _ensureCurrentEndpoint(generation);
+    session.accessToken = null;
+    session.refreshToken = null;
     session.isGuest = false;
   }
 }

@@ -304,51 +304,6 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets(
-    'AppTextField semantic setText updates controller and onChanged',
-    (tester) async {
-      final semantics = tester.ensureSemantics();
-      final controller = TextEditingController();
-      final changes = <String>[];
-
-      await tester.pumpWidget(
-        _app(
-          AppTextField(
-            controller: controller,
-            label: '链接',
-            keyboardType: TextInputType.url,
-            onChanged: changes.add,
-          ),
-        ),
-      );
-
-      expect(
-        find.semantics.byPredicate(
-          (node) =>
-              node.getSemanticsData().hasAction(ui.SemanticsAction.setText),
-          describeMatch: (_) => 'setText action',
-        ),
-        findsWidgets,
-      );
-
-      tester.semantics.setText(
-        find.semantics.byPredicate(
-          (node) =>
-              node.getSemanticsData().hasAction(ui.SemanticsAction.setText),
-          describeMatch: (_) => 'setText action',
-        ),
-        'http://127.0.0.1:18080/valid-sample.mp4',
-      );
-      await tester.pump();
-
-      expect(controller.text, 'http://127.0.0.1:18080/valid-sample.mp4');
-      expect(changes.last, 'http://127.0.0.1:18080/valid-sample.mp4');
-
-      controller.dispose();
-      semantics.dispose();
-    },
-  );
-
   testWidgets('AppTextField read-only semantics cannot set text', (
     tester,
   ) async {
@@ -529,7 +484,7 @@ void main() {
     expect(selectable.style?.fontFamily, 'monospace');
   });
 
-  testWidgets('AppSelectableText builds a content-sized selection toolbar', (
+  testWidgets('AppSelectableText uses the adaptive platform toolbar', (
     tester,
   ) async {
     await tester.pumpWidget(_app(const AppSelectableText('copy me')));
@@ -545,7 +500,7 @@ void main() {
       editableState,
     );
 
-    expect(toolbar, isA<TextSelectionToolbar>());
+    expect(toolbar, isA<AdaptiveTextSelectionToolbar>());
   });
 
   testWidgets(

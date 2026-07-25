@@ -127,6 +127,23 @@ final $typed_data.Uint8List registrationStatusDescriptor = $convert.base64Decode
     'AAEiIKHlJFR0lTVFJBVElPTl9TVEFUVVNfUkVHSVNURVJFRBABEiYKIlJFR0lTVFJBVElPTl9T'
     'VEFUVVNfUEVORElOR19SRVZJRVcQAg==');
 
+@$core.Deprecated('Use loginMethodDescriptor instead')
+const LoginMethod$json = {
+  '1': 'LoginMethod',
+  '2': [
+    {'1': 'LOGIN_METHOD_UNSPECIFIED', '2': 0},
+    {'1': 'LOGIN_METHOD_PASSWORD', '2': 1},
+    {'1': 'LOGIN_METHOD_PASSKEY', '2': 2},
+    {'1': 'LOGIN_METHOD_EMAIL_CODE', '2': 3},
+  ],
+};
+
+/// Descriptor for `LoginMethod`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List loginMethodDescriptor = $convert.base64Decode(
+    'CgtMb2dpbk1ldGhvZBIcChhMT0dJTl9NRVRIT0RfVU5TUEVDSUZJRUQQABIZChVMT0dJTl9NRV'
+    'RIT0RfUEFTU1dPUkQQARIYChRMT0dJTl9NRVRIT0RfUEFTU0tFWRACEhsKF0xPR0lOX01FVEhP'
+    'RF9FTUFJTF9DT0RFEAM=');
+
 @$core.Deprecated('Use mfaMethodDescriptor instead')
 const MfaMethod$json = {
   '1': 'MfaMethod',
@@ -135,13 +152,16 @@ const MfaMethod$json = {
     {'1': 'MFA_METHOD_PASSWORD', '2': 1},
     {'1': 'MFA_METHOD_WEBAUTHN', '2': 2},
     {'1': 'MFA_METHOD_EMAIL', '2': 3},
+    {'1': 'MFA_METHOD_TOTP', '2': 4},
+    {'1': 'MFA_METHOD_RECOVERY_CODE', '2': 5},
   ],
 };
 
 /// Descriptor for `MfaMethod`. Decode as a `google.protobuf.EnumDescriptorProto`.
 final $typed_data.Uint8List mfaMethodDescriptor = $convert.base64Decode(
     'CglNZmFNZXRob2QSGgoWTUZBX01FVEhPRF9VTlNQRUNJRklFRBAAEhcKE01GQV9NRVRIT0RfUE'
-    'FTU1dPUkQQARIXChNNRkFfTUVUSE9EX1dFQkFVVEhOEAISFAoQTUZBX01FVEhPRF9FTUFJTBAD');
+    'FTU1dPUkQQARIXChNNRkFfTUVUSE9EX1dFQkFVVEhOEAISFAoQTUZBX01FVEhPRF9FTUFJTBAD'
+    'EhMKD01GQV9NRVRIT0RfVE9UUBAEEhwKGE1GQV9NRVRIT0RfUkVDT1ZFUllfQ09ERRAF');
 
 @$core.Deprecated('Use sensitiveOperationVerificationMethodDescriptor instead')
 const SensitiveOperationVerificationMethod$json = {
@@ -151,17 +171,20 @@ const SensitiveOperationVerificationMethod$json = {
     {'1': 'SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD', '2': 1},
     {'1': 'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN', '2': 2},
     {'1': 'SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL', '2': 3},
+    {'1': 'SENSITIVE_OPERATION_VERIFICATION_METHOD_TOTP', '2': 4},
+    {'1': 'SENSITIVE_OPERATION_VERIFICATION_METHOD_RECOVERY_CODE', '2': 5},
   ],
 };
 
 /// Descriptor for `SensitiveOperationVerificationMethod`. Decode as a `google.protobuf.EnumDescriptorProto`.
-final $typed_data.Uint8List sensitiveOperationVerificationMethodDescriptor =
-    $convert.base64Decode(
-        'CiRTZW5zaXRpdmVPcGVyYXRpb25WZXJpZmljYXRpb25NZXRob2QSNwozU0VOU0lUSVZFX09QRV'
-        'JBVElPTl9WRVJJRklDQVRJT05fTUVUSE9EX1VOU1BFQ0lGSUVEEAASNAowU0VOU0lUSVZFX09Q'
-        'RVJBVElPTl9WRVJJRklDQVRJT05fTUVUSE9EX1BBU1NXT1JEEAESNAowU0VOU0lUSVZFX09QRV'
-        'JBVElPTl9WRVJJRklDQVRJT05fTUVUSE9EX1dFQkFVVEhOEAISMQotU0VOU0lUSVZFX09QRVJB'
-        'VElPTl9WRVJJRklDQVRJT05fTUVUSE9EX0VNQUlMEAM=');
+final $typed_data.Uint8List sensitiveOperationVerificationMethodDescriptor = $convert.base64Decode(
+    'CiRTZW5zaXRpdmVPcGVyYXRpb25WZXJpZmljYXRpb25NZXRob2QSNwozU0VOU0lUSVZFX09QRV'
+    'JBVElPTl9WRVJJRklDQVRJT05fTUVUSE9EX1VOU1BFQ0lGSUVEEAASNAowU0VOU0lUSVZFX09Q'
+    'RVJBVElPTl9WRVJJRklDQVRJT05fTUVUSE9EX1BBU1NXT1JEEAESNAowU0VOU0lUSVZFX09QRV'
+    'JBVElPTl9WRVJJRklDQVRJT05fTUVUSE9EX1dFQkFVVEhOEAISMQotU0VOU0lUSVZFX09QRVJB'
+    'VElPTl9WRVJJRklDQVRJT05fTUVUSE9EX0VNQUlMEAMSMAosU0VOU0lUSVZFX09QRVJBVElPTl'
+    '9WRVJJRklDQVRJT05fTUVUSE9EX1RPVFAQBBI5CjVTRU5TSVRJVkVfT1BFUkFUSU9OX1ZFUklG'
+    'SUNBVElPTl9NRVRIT0RfUkVDT1ZFUllfQ09ERRAF');
 
 @$core
     .Deprecated('Use opaquePasswordUpdateVerificationMethodDescriptor instead')
@@ -2624,29 +2647,23 @@ const LoginWithDirectPasswordRequest$json = {
   '1': 'LoginWithDirectPasswordRequest',
   '2': [
     {
-      '1': 'username',
+      '1': 'login_session_id',
       '3': 1,
       '4': 1,
       '5': 9,
       '8': {},
-      '9': 0,
-      '10': 'username'
+      '10': 'loginSessionId'
     },
-    {'1': 'email', '3': 2, '4': 1, '5': 9, '8': {}, '9': 0, '10': 'email'},
-    {'1': 'password', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'password'},
-  ],
-  '8': [
-    {'1': 'identifier', '2': {}},
+    {'1': 'password', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'password'},
   ],
 };
 
 /// Descriptor for `LoginWithDirectPasswordRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List loginWithDirectPasswordRequestDescriptor =
     $convert.base64Decode(
-        'Ch5Mb2dpbldpdGhEaXJlY3RQYXNzd29yZFJlcXVlc3QSJQoIdXNlcm5hbWUYASABKAlCB7pIBH'
-        'ICGDJIAFIIdXNlcm5hbWUSIAoFZW1haWwYAiABKAlCCLpIBXIDGP4BSABSBWVtYWlsEiYKCHBh'
-        'c3N3b3JkGAMgASgJQgq6SAdyBRABGIAIUghwYXNzd29yZEITCgppZGVudGlmaWVyEgW6SAIIAQ'
-        '==');
+        'Ch5Mb2dpbldpdGhEaXJlY3RQYXNzd29yZFJlcXVlc3QSNAoQbG9naW5fc2Vzc2lvbl9pZBgBIA'
+        'EoCUIKukgHcgUQARiAAVIObG9naW5TZXNzaW9uSWQSJgoIcGFzc3dvcmQYAiABKAlCCrpIB3IF'
+        'EAEYgAhSCHBhc3N3b3Jk');
 
 @$core.Deprecated('Use requestEmailRegistrationRequestDescriptor instead')
 const RequestEmailRegistrationRequest$json = {
@@ -2698,16 +2715,80 @@ final $typed_data.Uint8List confirmEmailRegistrationRequestDescriptor =
 const ConfirmEmailLoginRequest$json = {
   '1': 'ConfirmEmailLoginRequest',
   '2': [
-    {'1': 'email', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'email'},
-    {'1': 'email_token', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'emailToken'},
+    {
+      '1': 'login_session_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'loginSessionId'
+    },
+    {'1': 'email_token', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'emailToken'},
   ],
 };
 
 /// Descriptor for `ConfirmEmailLoginRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List confirmEmailLoginRequestDescriptor =
-    $convert.base64Decode(
-        'ChhDb25maXJtRW1haWxMb2dpblJlcXVlc3QSIAoFZW1haWwYAyABKAlCCrpIB3IFEAEY/gFSBW'
-        'VtYWlsEisKC2VtYWlsX3Rva2VuGAQgASgJQgq6SAdyBRABGP8BUgplbWFpbFRva2Vu');
+final $typed_data.Uint8List confirmEmailLoginRequestDescriptor = $convert.base64Decode(
+    'ChhDb25maXJtRW1haWxMb2dpblJlcXVlc3QSNAoQbG9naW5fc2Vzc2lvbl9pZBgBIAEoCUIKuk'
+    'gHcgUQARiAAVIObG9naW5TZXNzaW9uSWQSKwoLZW1haWxfdG9rZW4YAiABKAlCCrpIB3IFEAEY'
+    '/wFSCmVtYWlsVG9rZW4=');
+
+@$core.Deprecated('Use startLoginRequestDescriptor instead')
+const StartLoginRequest$json = {
+  '1': 'StartLoginRequest',
+  '2': [
+    {
+      '1': 'username',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 0,
+      '10': 'username'
+    },
+    {'1': 'email', '3': 2, '4': 1, '5': 9, '8': {}, '9': 0, '10': 'email'},
+  ],
+  '8': [
+    {'1': 'identifier', '2': {}},
+  ],
+};
+
+/// Descriptor for `StartLoginRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List startLoginRequestDescriptor = $convert.base64Decode(
+    'ChFTdGFydExvZ2luUmVxdWVzdBIlCgh1c2VybmFtZRgBIAEoCUIHukgEcgIYMkgAUgh1c2Vybm'
+    'FtZRIgCgVlbWFpbBgCIAEoCUIIukgFcgMY/gFIAFIFZW1haWxCEwoKaWRlbnRpZmllchIFukgC'
+    'CAE=');
+
+@$core.Deprecated('Use startLoginResponseDescriptor instead')
+const StartLoginResponse$json = {
+  '1': 'StartLoginResponse',
+  '2': [
+    {
+      '1': 'login_session_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'loginSessionId'
+    },
+    {
+      '1': 'available_methods',
+      '3': 2,
+      '4': 3,
+      '5': 14,
+      '6': '.synctv.client.LoginMethod',
+      '10': 'availableMethods'
+    },
+    {'1': 'expires_at', '3': 3, '4': 1, '5': 3, '10': 'expiresAt'},
+  ],
+};
+
+/// Descriptor for `StartLoginResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List startLoginResponseDescriptor = $convert.base64Decode(
+    'ChJTdGFydExvZ2luUmVzcG9uc2USNAoQbG9naW5fc2Vzc2lvbl9pZBgBIAEoCUIKukgHcgUQAR'
+    'iAAVIObG9naW5TZXNzaW9uSWQSRwoRYXZhaWxhYmxlX21ldGhvZHMYAiADKA4yGi5zeW5jdHYu'
+    'Y2xpZW50LkxvZ2luTWV0aG9kUhBhdmFpbGFibGVNZXRob2RzEh0KCmV4cGlyZXNfYXQYAyABKA'
+    'NSCWV4cGlyZXNBdA==');
 
 @$core.Deprecated('Use loginResponseDescriptor instead')
 const LoginResponse$json = {
@@ -2827,10 +2908,9 @@ final $typed_data.Uint8List
     $convert.base64Decode(
         'CipTdGFydFNlbnNpdGl2ZU9wZXJhdGlvblZlcmlmaWNhdGlvblJlcXVlc3Q=');
 
-@$core.Deprecated(
-    'Use startSensitiveOperationVerificationResponseDescriptor instead')
-const StartSensitiveOperationVerificationResponse$json = {
-  '1': 'StartSensitiveOperationVerificationResponse',
+@$core.Deprecated('Use sensitiveOperationVerificationOutcomeDescriptor instead')
+const SensitiveOperationVerificationOutcome$json = {
+  '1': 'SensitiveOperationVerificationOutcome',
   '2': [
     {
       '1': 'challenge',
@@ -2838,20 +2918,31 @@ const StartSensitiveOperationVerificationResponse$json = {
       '4': 1,
       '5': 11,
       '6': '.synctv.client.SensitiveOperationVerificationChallenge',
+      '9': 0,
       '10': 'challenge'
     },
-    {'1': 'verification_id', '3': 2, '4': 1, '5': 9, '10': 'verificationId'},
+    {
+      '1': 'verification_id',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '9': 0,
+      '10': 'verificationId'
+    },
+  ],
+  '8': [
+    {'1': 'outcome'},
   ],
 };
 
-/// Descriptor for `StartSensitiveOperationVerificationResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List
-    startSensitiveOperationVerificationResponseDescriptor =
+/// Descriptor for `SensitiveOperationVerificationOutcome`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sensitiveOperationVerificationOutcomeDescriptor =
     $convert.base64Decode(
-        'CitTdGFydFNlbnNpdGl2ZU9wZXJhdGlvblZlcmlmaWNhdGlvblJlc3BvbnNlElQKCWNoYWxsZW'
-        '5nZRgBIAEoCzI2LnN5bmN0di5jbGllbnQuU2Vuc2l0aXZlT3BlcmF0aW9uVmVyaWZpY2F0aW9u'
-        'Q2hhbGxlbmdlUgljaGFsbGVuZ2USJwoPdmVyaWZpY2F0aW9uX2lkGAIgASgJUg52ZXJpZmljYX'
-        'Rpb25JZA==');
+        'CiVTZW5zaXRpdmVPcGVyYXRpb25WZXJpZmljYXRpb25PdXRjb21lElYKCWNoYWxsZW5nZRgBIA'
+        'EoCzI2LnN5bmN0di5jbGllbnQuU2Vuc2l0aXZlT3BlcmF0aW9uVmVyaWZpY2F0aW9uQ2hhbGxl'
+        'bmdlSABSCWNoYWxsZW5nZRI1Cg92ZXJpZmljYXRpb25faWQYAiABKAlCCrpIB3IFEAEYgAFIAF'
+        'IOdmVyaWZpY2F0aW9uSWRCCQoHb3V0Y29tZQ==');
 
 @$core.Deprecated('Use startSensitiveOperationPasskeyRequestDescriptor instead')
 const StartSensitiveOperationPasskeyRequest$json = {
@@ -2965,6 +3056,15 @@ const FinishSensitiveOperationVerificationRequest$json = {
       '6': '.synctv.client.PasskeyAuthenticationCredential',
       '10': 'passkeyCredential'
     },
+    {'1': 'totp_code', '3': 7, '4': 1, '5': 9, '8': {}, '10': 'totpCode'},
+    {
+      '1': 'recovery_code',
+      '3': 8,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'recoveryCode'
+    },
   ],
 };
 
@@ -2977,68 +3077,37 @@ final $typed_data.Uint8List finishSensitiveOperationVerificationRequestDescripto
     'X3Rva2VuGAQgASgJQgi6SAVyAxj/AVIKZW1haWxUb2tlbhI2ChJwYXNza2V5X3Nlc3Npb25faW'
     'QYBSABKAlCCLpIBXIDGIABUhBwYXNza2V5U2Vzc2lvbklkEl0KEnBhc3NrZXlfY3JlZGVudGlh'
     'bBgGIAEoCzIuLnN5bmN0di5jbGllbnQuUGFzc2tleUF1dGhlbnRpY2F0aW9uQ3JlZGVudGlhbF'
-    'IRcGFzc2tleUNyZWRlbnRpYWw=');
-
-@$core.Deprecated(
-    'Use finishSensitiveOperationVerificationResponseDescriptor instead')
-const FinishSensitiveOperationVerificationResponse$json = {
-  '1': 'FinishSensitiveOperationVerificationResponse',
-  '2': [
-    {'1': 'verification_id', '3': 1, '4': 1, '5': 9, '10': 'verificationId'},
-    {
-      '1': 'challenge',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.client.SensitiveOperationVerificationChallenge',
-      '10': 'challenge'
-    },
-  ],
-};
-
-/// Descriptor for `FinishSensitiveOperationVerificationResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List
-    finishSensitiveOperationVerificationResponseDescriptor =
-    $convert.base64Decode(
-        'CixGaW5pc2hTZW5zaXRpdmVPcGVyYXRpb25WZXJpZmljYXRpb25SZXNwb25zZRInCg92ZXJpZm'
-        'ljYXRpb25faWQYASABKAlSDnZlcmlmaWNhdGlvbklkElQKCWNoYWxsZW5nZRgCIAEoCzI2LnN5'
-        'bmN0di5jbGllbnQuU2Vuc2l0aXZlT3BlcmF0aW9uVmVyaWZpY2F0aW9uQ2hhbGxlbmdlUgljaG'
-        'FsbGVuZ2U=');
+    'IRcGFzc2tleUNyZWRlbnRpYWwSJAoJdG90cF9jb2RlGAcgASgJQge6SARyAhgGUgh0b3RwQ29k'
+    'ZRIsCg1yZWNvdmVyeV9jb2RlGAggASgJQge6SARyAhggUgxyZWNvdmVyeUNvZGU=');
 
 @$core.Deprecated('Use startOpaqueLoginRequestDescriptor instead')
 const StartOpaqueLoginRequest$json = {
   '1': 'StartOpaqueLoginRequest',
   '2': [
     {
-      '1': 'username',
+      '1': 'login_session_id',
       '3': 1,
       '4': 1,
       '5': 9,
       '8': {},
-      '9': 0,
-      '10': 'username'
+      '10': 'loginSessionId'
     },
-    {'1': 'email', '3': 2, '4': 1, '5': 9, '8': {}, '9': 0, '10': 'email'},
     {
       '1': 'credential_request',
-      '3': 3,
+      '3': 2,
       '4': 1,
       '5': 12,
       '8': {},
       '10': 'credentialRequest'
     },
   ],
-  '8': [
-    {'1': 'identifier', '2': {}},
-  ],
 };
 
 /// Descriptor for `StartOpaqueLoginRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List startOpaqueLoginRequestDescriptor = $convert.base64Decode(
-    'ChdTdGFydE9wYXF1ZUxvZ2luUmVxdWVzdBIlCgh1c2VybmFtZRgBIAEoCUIHukgEcgIYMkgAUg'
-    'h1c2VybmFtZRIgCgVlbWFpbBgCIAEoCUIIukgFcgMY/gFIAFIFZW1haWwSOQoSY3JlZGVudGlh'
-    'bF9yZXF1ZXN0GAMgASgMQgq6SAd6BRABGIAgUhFjcmVkZW50aWFsUmVxdWVzdEITCgppZGVudG'
-    'lmaWVyEgW6SAIIAQ==');
+    'ChdTdGFydE9wYXF1ZUxvZ2luUmVxdWVzdBI0ChBsb2dpbl9zZXNzaW9uX2lkGAEgASgJQgq6SA'
+    'dyBRABGIABUg5sb2dpblNlc3Npb25JZBI5ChJjcmVkZW50aWFsX3JlcXVlc3QYAiABKAxCCrpI'
+    'B3oFEAEYgCBSEWNyZWRlbnRpYWxSZXF1ZXN0');
 
 @$core.Deprecated('Use startOpaqueLoginResponseDescriptor instead')
 const StartOpaqueLoginResponse$json = {
@@ -3088,26 +3157,26 @@ const StartPasskeyLoginRequest$json = {
   '1': 'StartPasskeyLoginRequest',
   '2': [
     {
-      '1': 'username',
+      '1': 'login_session_id',
       '3': 1,
       '4': 1,
       '5': 9,
       '8': {},
       '9': 0,
-      '10': 'username'
+      '10': 'loginSessionId',
+      '17': true
     },
-    {'1': 'email', '3': 2, '4': 1, '5': 9, '8': {}, '9': 0, '10': 'email'},
   ],
   '8': [
-    {'1': 'identifier'},
+    {'1': '_login_session_id'},
   ],
 };
 
 /// Descriptor for `StartPasskeyLoginRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List startPasskeyLoginRequestDescriptor = $convert.base64Decode(
-    'ChhTdGFydFBhc3NrZXlMb2dpblJlcXVlc3QSJQoIdXNlcm5hbWUYASABKAlCB7pIBHICGDJIAF'
-    'IIdXNlcm5hbWUSIAoFZW1haWwYAiABKAlCCLpIBXIDGP4BSABSBWVtYWlsQgwKCmlkZW50aWZp'
-    'ZXI=');
+final $typed_data.Uint8List startPasskeyLoginRequestDescriptor =
+    $convert.base64Decode(
+        'ChhTdGFydFBhc3NrZXlMb2dpblJlcXVlc3QSOQoQbG9naW5fc2Vzc2lvbl9pZBgBIAEoCUIKuk'
+        'gHcgUQARiAAUgAUg5sb2dpblNlc3Npb25JZIgBAUITChFfbG9naW5fc2Vzc2lvbl9pZA==');
 
 @$core.Deprecated('Use startPasskeyLoginResponseDescriptor instead')
 const StartPasskeyLoginResponse$json = {
@@ -3379,6 +3448,126 @@ final $typed_data.Uint8List deletePasskeyResponseDescriptor =
     $convert.base64Decode(
         'ChVEZWxldGVQYXNza2V5UmVzcG9uc2USGAoHZGVsZXRlZBgBIAEoCFIHZGVsZXRlZA==');
 
+@$core.Deprecated('Use startTotpSetupRequestDescriptor instead')
+const StartTotpSetupRequest$json = {
+  '1': 'StartTotpSetupRequest',
+  '2': [
+    {
+      '1': 'verification_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'verificationId'
+    },
+  ],
+};
+
+/// Descriptor for `StartTotpSetupRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List startTotpSetupRequestDescriptor = $convert.base64Decode(
+    'ChVTdGFydFRvdHBTZXR1cFJlcXVlc3QSMwoPdmVyaWZpY2F0aW9uX2lkGAEgASgJQgq6SAdyBR'
+    'ABGIABUg52ZXJpZmljYXRpb25JZA==');
+
+@$core.Deprecated('Use startTotpSetupResponseDescriptor instead')
+const StartTotpSetupResponse$json = {
+  '1': 'StartTotpSetupResponse',
+  '2': [
+    {'1': 'setup_id', '3': 1, '4': 1, '5': 9, '10': 'setupId'},
+    {'1': 'secret', '3': 2, '4': 1, '5': 9, '10': 'secret'},
+    {'1': 'otpauth_uri', '3': 3, '4': 1, '5': 9, '10': 'otpauthUri'},
+    {'1': 'expires_at', '3': 4, '4': 1, '5': 3, '10': 'expiresAt'},
+  ],
+};
+
+/// Descriptor for `StartTotpSetupResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List startTotpSetupResponseDescriptor = $convert.base64Decode(
+    'ChZTdGFydFRvdHBTZXR1cFJlc3BvbnNlEhkKCHNldHVwX2lkGAEgASgJUgdzZXR1cElkEhYKBn'
+    'NlY3JldBgCIAEoCVIGc2VjcmV0Eh8KC290cGF1dGhfdXJpGAMgASgJUgpvdHBhdXRoVXJpEh0K'
+    'CmV4cGlyZXNfYXQYBCABKANSCWV4cGlyZXNBdA==');
+
+@$core.Deprecated('Use finishTotpSetupRequestDescriptor instead')
+const FinishTotpSetupRequest$json = {
+  '1': 'FinishTotpSetupRequest',
+  '2': [
+    {'1': 'setup_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'setupId'},
+    {'1': 'code', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'code'},
+  ],
+};
+
+/// Descriptor for `FinishTotpSetupRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List finishTotpSetupRequestDescriptor =
+    $convert.base64Decode(
+        'ChZGaW5pc2hUb3RwU2V0dXBSZXF1ZXN0EiUKCHNldHVwX2lkGAEgASgJQgq6SAdyBRABGIABUg'
+        'dzZXR1cElkEigKBGNvZGUYAiABKAlCFLpIEXIPMgpeWzAtOV17Nn0kmAEGUgRjb2Rl');
+
+@$core.Deprecated('Use totpRecoveryCodesResponseDescriptor instead')
+const TotpRecoveryCodesResponse$json = {
+  '1': 'TotpRecoveryCodesResponse',
+  '2': [
+    {'1': 'recovery_codes', '3': 1, '4': 3, '5': 9, '10': 'recoveryCodes'},
+  ],
+};
+
+/// Descriptor for `TotpRecoveryCodesResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List totpRecoveryCodesResponseDescriptor =
+    $convert.base64Decode(
+        'ChlUb3RwUmVjb3ZlcnlDb2Rlc1Jlc3BvbnNlEiUKDnJlY292ZXJ5X2NvZGVzGAEgAygJUg1yZW'
+        'NvdmVyeUNvZGVz');
+
+@$core.Deprecated('Use regenerateTotpRecoveryCodesRequestDescriptor instead')
+const RegenerateTotpRecoveryCodesRequest$json = {
+  '1': 'RegenerateTotpRecoveryCodesRequest',
+  '2': [
+    {
+      '1': 'verification_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'verificationId'
+    },
+  ],
+};
+
+/// Descriptor for `RegenerateTotpRecoveryCodesRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List regenerateTotpRecoveryCodesRequestDescriptor =
+    $convert.base64Decode(
+        'CiJSZWdlbmVyYXRlVG90cFJlY292ZXJ5Q29kZXNSZXF1ZXN0EjMKD3ZlcmlmaWNhdGlvbl9pZB'
+        'gBIAEoCUIKukgHcgUQARiAAVIOdmVyaWZpY2F0aW9uSWQ=');
+
+@$core.Deprecated('Use deleteTotpRequestDescriptor instead')
+const DeleteTotpRequest$json = {
+  '1': 'DeleteTotpRequest',
+  '2': [
+    {
+      '1': 'verification_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'verificationId'
+    },
+  ],
+};
+
+/// Descriptor for `DeleteTotpRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteTotpRequestDescriptor = $convert.base64Decode(
+    'ChFEZWxldGVUb3RwUmVxdWVzdBIzCg92ZXJpZmljYXRpb25faWQYASABKAlCCrpIB3IFEAEYgA'
+    'FSDnZlcmlmaWNhdGlvbklk');
+
+@$core.Deprecated('Use deleteTotpResponseDescriptor instead')
+const DeleteTotpResponse$json = {
+  '1': 'DeleteTotpResponse',
+  '2': [
+    {'1': 'deleted', '3': 1, '4': 1, '5': 8, '10': 'deleted'},
+  ],
+};
+
+/// Descriptor for `DeleteTotpResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteTotpResponseDescriptor =
+    $convert.base64Decode(
+        'ChJEZWxldGVUb3RwUmVzcG9uc2USGAoHZGVsZXRlZBgBIAEoCFIHZGVsZXRlZA==');
+
 @$core.Deprecated('Use userAuthFactorsDescriptor instead')
 const UserAuthFactors$json = {
   '1': 'UserAuthFactors',
@@ -3387,6 +3576,14 @@ const UserAuthFactors$json = {
     {'1': 'webauthn', '3': 2, '4': 1, '5': 8, '10': 'webauthn'},
     {'1': 'email', '3': 3, '4': 1, '5': 8, '10': 'email'},
     {'1': 'eligible_count', '3': 4, '4': 1, '5': 5, '10': 'eligibleCount'},
+    {'1': 'totp', '3': 5, '4': 1, '5': 8, '10': 'totp'},
+    {
+      '1': 'totp_recovery_codes_remaining',
+      '3': 6,
+      '4': 1,
+      '5': 13,
+      '10': 'totpRecoveryCodesRemaining'
+    },
   ],
 };
 
@@ -3394,7 +3591,8 @@ const UserAuthFactors$json = {
 final $typed_data.Uint8List userAuthFactorsDescriptor = $convert.base64Decode(
     'Cg9Vc2VyQXV0aEZhY3RvcnMSGgoIcGFzc3dvcmQYASABKAhSCHBhc3N3b3JkEhoKCHdlYmF1dG'
     'huGAIgASgIUgh3ZWJhdXRobhIUCgVlbWFpbBgDIAEoCFIFZW1haWwSJQoOZWxpZ2libGVfY291'
-    'bnQYBCABKAVSDWVsaWdpYmxlQ291bnQ=');
+    'bnQYBCABKAVSDWVsaWdpYmxlQ291bnQSEgoEdG90cBgFIAEoCFIEdG90cBJBCh10b3RwX3JlY2'
+    '92ZXJ5X2NvZGVzX3JlbWFpbmluZxgGIAEoDVIadG90cFJlY292ZXJ5Q29kZXNSZW1haW5pbmc=');
 
 @$core.Deprecated('Use userPreferencesDescriptor instead')
 const UserPreferences$json = {
@@ -3524,15 +3722,6 @@ const UpdateUserPreferencesRequest$json = {
   '1': 'UpdateUserPreferencesRequest',
   '2': [
     {
-      '1': 'two_factor_enabled',
-      '3': 1,
-      '4': 1,
-      '5': 8,
-      '9': 0,
-      '10': 'twoFactorEnabled',
-      '17': true
-    },
-    {
       '1': 'notifications',
       '3': 3,
       '4': 1,
@@ -3541,17 +3730,14 @@ const UpdateUserPreferencesRequest$json = {
       '10': 'notifications'
     },
   ],
-  '8': [
-    {'1': '_two_factor_enabled'},
-  ],
 };
 
 /// Descriptor for `UpdateUserPreferencesRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updateUserPreferencesRequestDescriptor = $convert.base64Decode(
-    'ChxVcGRhdGVVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0EjEKEnR3b19mYWN0b3JfZW5hYmxlZBgBIA'
-    'EoCEgAUhB0d29GYWN0b3JFbmFibGVkiAEBElAKDW5vdGlmaWNhdGlvbnMYAyABKAsyKi5zeW5j'
-    'dHYuY2xpZW50LlVzZXJOb3RpZmljYXRpb25QcmVmZXJlbmNlc1INbm90aWZpY2F0aW9uc0IVCh'
-    'NfdHdvX2ZhY3Rvcl9lbmFibGVk');
+final $typed_data.Uint8List updateUserPreferencesRequestDescriptor =
+    $convert.base64Decode(
+        'ChxVcGRhdGVVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0ElAKDW5vdGlmaWNhdGlvbnMYAyABKAsyKi'
+        '5zeW5jdHYuY2xpZW50LlVzZXJOb3RpZmljYXRpb25QcmVmZXJlbmNlc1INbm90aWZpY2F0aW9u'
+        'cw==');
 
 @$core.Deprecated('Use updateUserPreferencesResponseDescriptor instead')
 const UpdateUserPreferencesResponse$json = {
@@ -3582,18 +3768,48 @@ final $typed_data.Uint8List updateUserPreferencesResponseDescriptor = $convert.b
     'N5bmN0di5jbGllbnQuVXNlclByZWZlcmVuY2VzUgtwcmVmZXJlbmNlcxJBCgxhdXRoX2ZhY3Rv'
     'cnMYAiABKAsyHi5zeW5jdHYuY2xpZW50LlVzZXJBdXRoRmFjdG9yc1ILYXV0aEZhY3RvcnM=');
 
+@$core.Deprecated('Use setTwoFactorEnabledRequestDescriptor instead')
+const SetTwoFactorEnabledRequest$json = {
+  '1': 'SetTwoFactorEnabledRequest',
+  '2': [
+    {'1': 'enabled', '3': 1, '4': 1, '5': 8, '10': 'enabled'},
+    {
+      '1': 'verification_id',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'verificationId'
+    },
+  ],
+};
+
+/// Descriptor for `SetTwoFactorEnabledRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List setTwoFactorEnabledRequestDescriptor =
+    $convert.base64Decode(
+        'ChpTZXRUd29GYWN0b3JFbmFibGVkUmVxdWVzdBIYCgdlbmFibGVkGAEgASgIUgdlbmFibGVkEj'
+        'MKD3ZlcmlmaWNhdGlvbl9pZBgCIAEoCUIKukgHcgUQARiAAVIOdmVyaWZpY2F0aW9uSWQ=');
+
 @$core.Deprecated('Use requestEmailLoginRequestDescriptor instead')
 const RequestEmailLoginRequest$json = {
   '1': 'RequestEmailLoginRequest',
   '2': [
-    {'1': 'email', '3': 1, '4': 1, '5': 9, '10': 'email'},
+    {
+      '1': 'login_session_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'loginSessionId'
+    },
   ],
 };
 
 /// Descriptor for `RequestEmailLoginRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List requestEmailLoginRequestDescriptor =
     $convert.base64Decode(
-        'ChhSZXF1ZXN0RW1haWxMb2dpblJlcXVlc3QSFAoFZW1haWwYASABKAlSBWVtYWls');
+        'ChhSZXF1ZXN0RW1haWxMb2dpblJlcXVlc3QSNAoQbG9naW5fc2Vzc2lvbl9pZBgBIAEoCUIKuk'
+        'gHcgUQARiAAVIObG9naW5TZXNzaW9uSWQ=');
 
 @$core.Deprecated('Use requestEmailLoginResponseDescriptor instead')
 const RequestEmailLoginResponse$json = {
@@ -3755,6 +3971,58 @@ final $typed_data.Uint8List finishMfaPasskeyRequestDescriptor = $convert.base64D
     'UQARiAAVIMbWZhU2Vzc2lvbklkEjgKEnBhc3NrZXlfc2Vzc2lvbl9pZBgCIAEoCUIKukgHcgUQ'
     'ARiAAVIQcGFzc2tleVNlc3Npb25JZBJWCgpjcmVkZW50aWFsGAMgASgLMi4uc3luY3R2LmNsaW'
     'VudC5QYXNza2V5QXV0aGVudGljYXRpb25DcmVkZW50aWFsQga6SAPIAQFSCmNyZWRlbnRpYWw=');
+
+@$core.Deprecated('Use verifyMfaTotpRequestDescriptor instead')
+const VerifyMfaTotpRequest$json = {
+  '1': 'VerifyMfaTotpRequest',
+  '2': [
+    {
+      '1': 'mfa_session_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'mfaSessionId'
+    },
+    {'1': 'code', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'code'},
+  ],
+};
+
+/// Descriptor for `VerifyMfaTotpRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List verifyMfaTotpRequestDescriptor = $convert.base64Decode(
+    'ChRWZXJpZnlNZmFUb3RwUmVxdWVzdBIwCg5tZmFfc2Vzc2lvbl9pZBgBIAEoCUIKukgHcgUQAR'
+    'iAAVIMbWZhU2Vzc2lvbklkEigKBGNvZGUYAiABKAlCFLpIEXIPMgpeWzAtOV17Nn0kmAEGUgRj'
+    'b2Rl');
+
+@$core.Deprecated('Use verifyMfaRecoveryCodeRequestDescriptor instead')
+const VerifyMfaRecoveryCodeRequest$json = {
+  '1': 'VerifyMfaRecoveryCodeRequest',
+  '2': [
+    {
+      '1': 'mfa_session_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'mfaSessionId'
+    },
+    {
+      '1': 'recovery_code',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'recoveryCode'
+    },
+  ],
+};
+
+/// Descriptor for `VerifyMfaRecoveryCodeRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List verifyMfaRecoveryCodeRequestDescriptor =
+    $convert.base64Decode(
+        'ChxWZXJpZnlNZmFSZWNvdmVyeUNvZGVSZXF1ZXN0EjAKDm1mYV9zZXNzaW9uX2lkGAEgASgJQg'
+        'q6SAdyBRABGIABUgxtZmFTZXNzaW9uSWQSLgoNcmVjb3ZlcnlfY29kZRgCIAEoCUIJukgGcgQQ'
+        'DBggUgxyZWNvdmVyeUNvZGU=');
 
 @$core.Deprecated('Use refreshTokenRequestDescriptor instead')
 const RefreshTokenRequest$json = {
@@ -16852,6 +17120,7 @@ const GetPublicSettingsResponse$json = {
     },
     {'1': 'enable_email', '3': 24, '4': 1, '5': 8, '10': 'enableEmail'},
     {'1': 'enable_webauthn', '3': 25, '4': 1, '5': 8, '10': 'enableWebauthn'},
+    {'1': 'webauthn_rp_id', '3': 29, '4': 1, '5': 9, '10': 'webauthnRpId'},
     {
       '1': 'enable_webauthn_signup',
       '3': 22,
@@ -16924,16 +17193,17 @@ final $typed_data.Uint8List getPublicSettingsResponseDescriptor = $convert.base6
     'LgoTZW5hYmxlX2VtYWlsX3NpZ251cBgRIAEoCFIRZW5hYmxlRW1haWxTaWdudXASIQoMZW5hYm'
     'xlX2d1ZXN0GBIgASgIUgtlbmFibGVHdWVzdBI3ChhlbWFpbF9zaWdudXBfbmVlZF9yZXZpZXcY'
     'EyABKAhSFWVtYWlsU2lnbnVwTmVlZFJldmlldxIhCgxlbmFibGVfZW1haWwYGCABKAhSC2VuYW'
-    'JsZUVtYWlsEicKD2VuYWJsZV93ZWJhdXRobhgZIAEoCFIOZW5hYmxlV2ViYXV0aG4SNAoWZW5h'
-    'YmxlX3dlYmF1dGhuX3NpZ251cBgWIAEoCFIUZW5hYmxlV2ViYXV0aG5TaWdudXASPQobd2ViYX'
-    'V0aG5fc2lnbnVwX25lZWRfcmV2aWV3GBcgASgIUhh3ZWJhdXRoblNpZ251cE5lZWRSZXZpZXcS'
-    'RwohbWF4X3Bpbm5lZF9jaGF0X21lc3NhZ2VzX3Blcl9yb29tGBsgASgEUhxtYXhQaW5uZWRDaG'
-    'F0TWVzc2FnZXNQZXJSb29tEh8KC21vdmllX3Byb3h5GAsgASgIUgptb3ZpZVByb3h5Eh0KCmxp'
-    'dmVfcHJveHkYDCABKAhSCWxpdmVQcm94eRItChN0c19kaXNndWlzZWRfYXNfcG5nGA0gASgIUh'
-    'B0c0Rpc2d1aXNlZEFzUG5nEjMKE2N1c3RvbV9wdWJsaXNoX2hvc3QYDiABKAlIAFIRY3VzdG9t'
-    'UHVibGlzaEhvc3SIAQESNgoXZW1haWxfd2hpdGVsaXN0X2VuYWJsZWQYDyABKAhSFWVtYWlsV2'
-    'hpdGVsaXN0RW5hYmxlZBI2ChdlbWFpbF93aGl0ZWxpc3RfZG9tYWlucxgaIAMoCVIVZW1haWxX'
-    'aGl0ZWxpc3REb21haW5zQhYKFF9jdXN0b21fcHVibGlzaF9ob3N0');
+    'JsZUVtYWlsEicKD2VuYWJsZV93ZWJhdXRobhgZIAEoCFIOZW5hYmxlV2ViYXV0aG4SJAoOd2Vi'
+    'YXV0aG5fcnBfaWQYHSABKAlSDHdlYmF1dGhuUnBJZBI0ChZlbmFibGVfd2ViYXV0aG5fc2lnbn'
+    'VwGBYgASgIUhRlbmFibGVXZWJhdXRoblNpZ251cBI9Cht3ZWJhdXRobl9zaWdudXBfbmVlZF9y'
+    'ZXZpZXcYFyABKAhSGHdlYmF1dGhuU2lnbnVwTmVlZFJldmlldxJHCiFtYXhfcGlubmVkX2NoYX'
+    'RfbWVzc2FnZXNfcGVyX3Jvb20YGyABKARSHG1heFBpbm5lZENoYXRNZXNzYWdlc1BlclJvb20S'
+    'HwoLbW92aWVfcHJveHkYCyABKAhSCm1vdmllUHJveHkSHQoKbGl2ZV9wcm94eRgMIAEoCFIJbG'
+    'l2ZVByb3h5Ei0KE3RzX2Rpc2d1aXNlZF9hc19wbmcYDSABKAhSEHRzRGlzZ3Vpc2VkQXNQbmcS'
+    'MwoTY3VzdG9tX3B1Ymxpc2hfaG9zdBgOIAEoCUgAUhFjdXN0b21QdWJsaXNoSG9zdIgBARI2Ch'
+    'dlbWFpbF93aGl0ZWxpc3RfZW5hYmxlZBgPIAEoCFIVZW1haWxXaGl0ZWxpc3RFbmFibGVkEjYK'
+    'F2VtYWlsX3doaXRlbGlzdF9kb21haW5zGBogAygJUhVlbWFpbFdoaXRlbGlzdERvbWFpbnNCFg'
+    'oUX2N1c3RvbV9wdWJsaXNoX2hvc3Q=');
 
 @$core.Deprecated('Use getServerInfoRequestDescriptor instead')
 const GetServerInfoRequest$json = {
@@ -18222,6 +18492,11 @@ const $core.Map<$core.String, $core.dynamic> AuthServiceBase$json = {
       '3': '.synctv.client.LoginResponse'
     },
     {
+      '1': 'StartLogin',
+      '2': '.synctv.client.StartLoginRequest',
+      '3': '.synctv.client.StartLoginResponse'
+    },
+    {
       '1': 'CreateGuestToken',
       '2': '.synctv.client.CreateGuestTokenRequest',
       '3': '.synctv.client.CreateGuestTokenResponse'
@@ -18307,6 +18582,16 @@ const $core.Map<$core.String, $core.dynamic> AuthServiceBase$json = {
       '3': '.synctv.client.LoginResponse'
     },
     {
+      '1': 'VerifyMfaTotp',
+      '2': '.synctv.client.VerifyMfaTotpRequest',
+      '3': '.synctv.client.LoginResponse'
+    },
+    {
+      '1': 'VerifyMfaRecoveryCode',
+      '2': '.synctv.client.VerifyMfaRecoveryCodeRequest',
+      '3': '.synctv.client.LoginResponse'
+    },
+    {
       '1': 'RefreshToken',
       '2': '.synctv.client.RefreshTokenRequest',
       '3': '.synctv.client.RefreshTokenResponse'
@@ -18327,6 +18612,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.FileObjectVariant': FileObjectVariant$json,
   '.synctv.client.FileObjectAccess': FileObjectAccess$json,
   '.synctv.client.MfaChallenge': MfaChallenge$json,
+  '.synctv.client.StartLoginRequest': StartLoginRequest$json,
+  '.synctv.client.StartLoginResponse': StartLoginResponse$json,
   '.synctv.client.CreateGuestTokenRequest': CreateGuestTokenRequest$json,
   '.synctv.client.CreateGuestTokenResponse': CreateGuestTokenResponse$json,
   '.synctv.client.RegisterWithDirectPasswordRequest':
@@ -18400,6 +18687,9 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.StartMfaPasskeyRequest': StartMfaPasskeyRequest$json,
   '.synctv.client.StartMfaPasskeyResponse': StartMfaPasskeyResponse$json,
   '.synctv.client.FinishMfaPasskeyRequest': FinishMfaPasskeyRequest$json,
+  '.synctv.client.VerifyMfaTotpRequest': VerifyMfaTotpRequest$json,
+  '.synctv.client.VerifyMfaRecoveryCodeRequest':
+      VerifyMfaRecoveryCodeRequest$json,
   '.synctv.client.RefreshTokenRequest': RefreshTokenRequest$json,
   '.synctv.client.RefreshTokenResponse': RefreshTokenResponse$json,
 };
@@ -18409,41 +18699,46 @@ final $typed_data.Uint8List authServiceDescriptor = $convert.base64Decode(
     'CgtBdXRoU2VydmljZRJmChFSZXF1ZXN0RW1haWxMb2dpbhInLnN5bmN0di5jbGllbnQuUmVxdW'
     'VzdEVtYWlsTG9naW5SZXF1ZXN0Giguc3luY3R2LmNsaWVudC5SZXF1ZXN0RW1haWxMb2dpblJl'
     'c3BvbnNlEloKEUNvbmZpcm1FbWFpbExvZ2luEicuc3luY3R2LmNsaWVudC5Db25maXJtRW1haW'
-    'xMb2dpblJlcXVlc3QaHC5zeW5jdHYuY2xpZW50LkxvZ2luUmVzcG9uc2USYwoQQ3JlYXRlR3Vl'
-    'c3RUb2tlbhImLnN5bmN0di5jbGllbnQuQ3JlYXRlR3Vlc3RUb2tlblJlcXVlc3QaJy5zeW5jdH'
-    'YuY2xpZW50LkNyZWF0ZUd1ZXN0VG9rZW5SZXNwb25zZRJvChpSZWdpc3RlcldpdGhEaXJlY3RQ'
-    'YXNzd29yZBIwLnN5bmN0di5jbGllbnQuUmVnaXN0ZXJXaXRoRGlyZWN0UGFzc3dvcmRSZXF1ZX'
-    'N0Gh8uc3luY3R2LmNsaWVudC5SZWdpc3RlclJlc3BvbnNlEmYKF0xvZ2luV2l0aERpcmVjdFBh'
-    'c3N3b3JkEi0uc3luY3R2LmNsaWVudC5Mb2dpbldpdGhEaXJlY3RQYXNzd29yZFJlcXVlc3QaHC'
-    '5zeW5jdHYuY2xpZW50LkxvZ2luUmVzcG9uc2USewoYUmVxdWVzdEVtYWlsUmVnaXN0cmF0aW9u'
-    'Ei4uc3luY3R2LmNsaWVudC5SZXF1ZXN0RW1haWxSZWdpc3RyYXRpb25SZXF1ZXN0Gi8uc3luY3'
-    'R2LmNsaWVudC5SZXF1ZXN0RW1haWxSZWdpc3RyYXRpb25SZXNwb25zZRJrChhDb25maXJtRW1h'
-    'aWxSZWdpc3RyYXRpb24SLi5zeW5jdHYuY2xpZW50LkNvbmZpcm1FbWFpbFJlZ2lzdHJhdGlvbl'
-    'JlcXVlc3QaHy5zeW5jdHYuY2xpZW50LlJlZ2lzdGVyUmVzcG9uc2USeAoXU3RhcnRPcGFxdWVS'
-    'ZWdpc3RyYXRpb24SLS5zeW5jdHYuY2xpZW50LlN0YXJ0T3BhcXVlUmVnaXN0cmF0aW9uUmVxdW'
-    'VzdBouLnN5bmN0di5jbGllbnQuU3RhcnRPcGFxdWVSZWdpc3RyYXRpb25SZXNwb25zZRJrChhG'
-    'aW5pc2hPcGFxdWVSZWdpc3RyYXRpb24SLi5zeW5jdHYuY2xpZW50LkZpbmlzaE9wYXF1ZVJlZ2'
-    'lzdHJhdGlvblJlcXVlc3QaHy5zeW5jdHYuY2xpZW50LlJlZ2lzdGVyUmVzcG9uc2USYwoQU3Rh'
-    'cnRPcGFxdWVMb2dpbhImLnN5bmN0di5jbGllbnQuU3RhcnRPcGFxdWVMb2dpblJlcXVlc3QaJy'
-    '5zeW5jdHYuY2xpZW50LlN0YXJ0T3BhcXVlTG9naW5SZXNwb25zZRJaChFGaW5pc2hPcGFxdWVM'
-    'b2dpbhInLnN5bmN0di5jbGllbnQuRmluaXNoT3BhcXVlTG9naW5SZXF1ZXN0Ghwuc3luY3R2Lm'
-    'NsaWVudC5Mb2dpblJlc3BvbnNlEnsKGFN0YXJ0UGFzc2tleVJlZ2lzdHJhdGlvbhIuLnN5bmN0'
-    'di5jbGllbnQuU3RhcnRQYXNza2V5UmVnaXN0cmF0aW9uUmVxdWVzdBovLnN5bmN0di5jbGllbn'
-    'QuU3RhcnRQYXNza2V5UmVnaXN0cmF0aW9uUmVzcG9uc2USbQoZRmluaXNoUGFzc2tleVJlZ2lz'
-    'dHJhdGlvbhIvLnN5bmN0di5jbGllbnQuRmluaXNoUGFzc2tleVJlZ2lzdHJhdGlvblJlcXVlc3'
-    'QaHy5zeW5jdHYuY2xpZW50LlJlZ2lzdGVyUmVzcG9uc2USZgoRU3RhcnRQYXNza2V5TG9naW4S'
-    'Jy5zeW5jdHYuY2xpZW50LlN0YXJ0UGFzc2tleUxvZ2luUmVxdWVzdBooLnN5bmN0di5jbGllbn'
-    'QuU3RhcnRQYXNza2V5TG9naW5SZXNwb25zZRJcChJGaW5pc2hQYXNza2V5TG9naW4SKC5zeW5j'
-    'dHYuY2xpZW50LkZpbmlzaFBhc3NrZXlMb2dpblJlcXVlc3QaHC5zeW5jdHYuY2xpZW50LkxvZ2'
-    'luUmVzcG9uc2USbAoTUmVxdWVzdE1mYUVtYWlsQ29kZRIpLnN5bmN0di5jbGllbnQuUmVxdWVz'
-    'dE1mYUVtYWlsQ29kZVJlcXVlc3QaKi5zeW5jdHYuY2xpZW50LlJlcXVlc3RNZmFFbWFpbENvZG'
-    'VSZXNwb25zZRJcChJWZXJpZnlNZmFFbWFpbENvZGUSKC5zeW5jdHYuY2xpZW50LlZlcmlmeU1m'
-    'YUVtYWlsQ29kZVJlcXVlc3QaHC5zeW5jdHYuY2xpZW50LkxvZ2luUmVzcG9uc2USYAoPU3Rhcn'
-    'RNZmFQYXNza2V5EiUuc3luY3R2LmNsaWVudC5TdGFydE1mYVBhc3NrZXlSZXF1ZXN0GiYuc3lu'
-    'Y3R2LmNsaWVudC5TdGFydE1mYVBhc3NrZXlSZXNwb25zZRJYChBGaW5pc2hNZmFQYXNza2V5Ei'
-    'Yuc3luY3R2LmNsaWVudC5GaW5pc2hNZmFQYXNza2V5UmVxdWVzdBocLnN5bmN0di5jbGllbnQu'
-    'TG9naW5SZXNwb25zZRJXCgxSZWZyZXNoVG9rZW4SIi5zeW5jdHYuY2xpZW50LlJlZnJlc2hUb2'
-    'tlblJlcXVlc3QaIy5zeW5jdHYuY2xpZW50LlJlZnJlc2hUb2tlblJlc3BvbnNl');
+    'xMb2dpblJlcXVlc3QaHC5zeW5jdHYuY2xpZW50LkxvZ2luUmVzcG9uc2USUQoKU3RhcnRMb2dp'
+    'bhIgLnN5bmN0di5jbGllbnQuU3RhcnRMb2dpblJlcXVlc3QaIS5zeW5jdHYuY2xpZW50LlN0YX'
+    'J0TG9naW5SZXNwb25zZRJjChBDcmVhdGVHdWVzdFRva2VuEiYuc3luY3R2LmNsaWVudC5DcmVh'
+    'dGVHdWVzdFRva2VuUmVxdWVzdBonLnN5bmN0di5jbGllbnQuQ3JlYXRlR3Vlc3RUb2tlblJlc3'
+    'BvbnNlEm8KGlJlZ2lzdGVyV2l0aERpcmVjdFBhc3N3b3JkEjAuc3luY3R2LmNsaWVudC5SZWdp'
+    'c3RlcldpdGhEaXJlY3RQYXNzd29yZFJlcXVlc3QaHy5zeW5jdHYuY2xpZW50LlJlZ2lzdGVyUm'
+    'VzcG9uc2USZgoXTG9naW5XaXRoRGlyZWN0UGFzc3dvcmQSLS5zeW5jdHYuY2xpZW50LkxvZ2lu'
+    'V2l0aERpcmVjdFBhc3N3b3JkUmVxdWVzdBocLnN5bmN0di5jbGllbnQuTG9naW5SZXNwb25zZR'
+    'J7ChhSZXF1ZXN0RW1haWxSZWdpc3RyYXRpb24SLi5zeW5jdHYuY2xpZW50LlJlcXVlc3RFbWFp'
+    'bFJlZ2lzdHJhdGlvblJlcXVlc3QaLy5zeW5jdHYuY2xpZW50LlJlcXVlc3RFbWFpbFJlZ2lzdH'
+    'JhdGlvblJlc3BvbnNlEmsKGENvbmZpcm1FbWFpbFJlZ2lzdHJhdGlvbhIuLnN5bmN0di5jbGll'
+    'bnQuQ29uZmlybUVtYWlsUmVnaXN0cmF0aW9uUmVxdWVzdBofLnN5bmN0di5jbGllbnQuUmVnaX'
+    'N0ZXJSZXNwb25zZRJ4ChdTdGFydE9wYXF1ZVJlZ2lzdHJhdGlvbhItLnN5bmN0di5jbGllbnQu'
+    'U3RhcnRPcGFxdWVSZWdpc3RyYXRpb25SZXF1ZXN0Gi4uc3luY3R2LmNsaWVudC5TdGFydE9wYX'
+    'F1ZVJlZ2lzdHJhdGlvblJlc3BvbnNlEmsKGEZpbmlzaE9wYXF1ZVJlZ2lzdHJhdGlvbhIuLnN5'
+    'bmN0di5jbGllbnQuRmluaXNoT3BhcXVlUmVnaXN0cmF0aW9uUmVxdWVzdBofLnN5bmN0di5jbG'
+    'llbnQuUmVnaXN0ZXJSZXNwb25zZRJjChBTdGFydE9wYXF1ZUxvZ2luEiYuc3luY3R2LmNsaWVu'
+    'dC5TdGFydE9wYXF1ZUxvZ2luUmVxdWVzdBonLnN5bmN0di5jbGllbnQuU3RhcnRPcGFxdWVMb2'
+    'dpblJlc3BvbnNlEloKEUZpbmlzaE9wYXF1ZUxvZ2luEicuc3luY3R2LmNsaWVudC5GaW5pc2hP'
+    'cGFxdWVMb2dpblJlcXVlc3QaHC5zeW5jdHYuY2xpZW50LkxvZ2luUmVzcG9uc2USewoYU3Rhcn'
+    'RQYXNza2V5UmVnaXN0cmF0aW9uEi4uc3luY3R2LmNsaWVudC5TdGFydFBhc3NrZXlSZWdpc3Ry'
+    'YXRpb25SZXF1ZXN0Gi8uc3luY3R2LmNsaWVudC5TdGFydFBhc3NrZXlSZWdpc3RyYXRpb25SZX'
+    'Nwb25zZRJtChlGaW5pc2hQYXNza2V5UmVnaXN0cmF0aW9uEi8uc3luY3R2LmNsaWVudC5GaW5p'
+    'c2hQYXNza2V5UmVnaXN0cmF0aW9uUmVxdWVzdBofLnN5bmN0di5jbGllbnQuUmVnaXN0ZXJSZX'
+    'Nwb25zZRJmChFTdGFydFBhc3NrZXlMb2dpbhInLnN5bmN0di5jbGllbnQuU3RhcnRQYXNza2V5'
+    'TG9naW5SZXF1ZXN0Giguc3luY3R2LmNsaWVudC5TdGFydFBhc3NrZXlMb2dpblJlc3BvbnNlEl'
+    'wKEkZpbmlzaFBhc3NrZXlMb2dpbhIoLnN5bmN0di5jbGllbnQuRmluaXNoUGFzc2tleUxvZ2lu'
+    'UmVxdWVzdBocLnN5bmN0di5jbGllbnQuTG9naW5SZXNwb25zZRJsChNSZXF1ZXN0TWZhRW1haW'
+    'xDb2RlEikuc3luY3R2LmNsaWVudC5SZXF1ZXN0TWZhRW1haWxDb2RlUmVxdWVzdBoqLnN5bmN0'
+    'di5jbGllbnQuUmVxdWVzdE1mYUVtYWlsQ29kZVJlc3BvbnNlElwKElZlcmlmeU1mYUVtYWlsQ2'
+    '9kZRIoLnN5bmN0di5jbGllbnQuVmVyaWZ5TWZhRW1haWxDb2RlUmVxdWVzdBocLnN5bmN0di5j'
+    'bGllbnQuTG9naW5SZXNwb25zZRJgCg9TdGFydE1mYVBhc3NrZXkSJS5zeW5jdHYuY2xpZW50Ll'
+    'N0YXJ0TWZhUGFzc2tleVJlcXVlc3QaJi5zeW5jdHYuY2xpZW50LlN0YXJ0TWZhUGFzc2tleVJl'
+    'c3BvbnNlElgKEEZpbmlzaE1mYVBhc3NrZXkSJi5zeW5jdHYuY2xpZW50LkZpbmlzaE1mYVBhc3'
+    'NrZXlSZXF1ZXN0Ghwuc3luY3R2LmNsaWVudC5Mb2dpblJlc3BvbnNlElIKDVZlcmlmeU1mYVRv'
+    'dHASIy5zeW5jdHYuY2xpZW50LlZlcmlmeU1mYVRvdHBSZXF1ZXN0Ghwuc3luY3R2LmNsaWVudC'
+    '5Mb2dpblJlc3BvbnNlEmIKFVZlcmlmeU1mYVJlY292ZXJ5Q29kZRIrLnN5bmN0di5jbGllbnQu'
+    'VmVyaWZ5TWZhUmVjb3ZlcnlDb2RlUmVxdWVzdBocLnN5bmN0di5jbGllbnQuTG9naW5SZXNwb2'
+    '5zZRJXCgxSZWZyZXNoVG9rZW4SIi5zeW5jdHYuY2xpZW50LlJlZnJlc2hUb2tlblJlcXVlc3Qa'
+    'Iy5zeW5jdHYuY2xpZW50LlJlZnJlc2hUb2tlblJlc3BvbnNl');
 
 const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
   '1': 'UserService',
@@ -18497,7 +18792,7 @@ const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
     {
       '1': 'StartSensitiveOperationVerification',
       '2': '.synctv.client.StartSensitiveOperationVerificationRequest',
-      '3': '.synctv.client.StartSensitiveOperationVerificationResponse'
+      '3': '.synctv.client.SensitiveOperationVerificationOutcome'
     },
     {
       '1': 'StartSensitiveOperationPasskey',
@@ -18512,7 +18807,7 @@ const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
     {
       '1': 'FinishSensitiveOperationVerification',
       '2': '.synctv.client.FinishSensitiveOperationVerificationRequest',
-      '3': '.synctv.client.FinishSensitiveOperationVerificationResponse'
+      '3': '.synctv.client.SensitiveOperationVerificationOutcome'
     },
     {
       '1': 'StartEmailBind',
@@ -18560,6 +18855,26 @@ const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
       '3': '.synctv.client.DeletePasskeyResponse'
     },
     {
+      '1': 'StartTotpSetup',
+      '2': '.synctv.client.StartTotpSetupRequest',
+      '3': '.synctv.client.StartTotpSetupResponse'
+    },
+    {
+      '1': 'FinishTotpSetup',
+      '2': '.synctv.client.FinishTotpSetupRequest',
+      '3': '.synctv.client.TotpRecoveryCodesResponse'
+    },
+    {
+      '1': 'RegenerateTotpRecoveryCodes',
+      '2': '.synctv.client.RegenerateTotpRecoveryCodesRequest',
+      '3': '.synctv.client.TotpRecoveryCodesResponse'
+    },
+    {
+      '1': 'DeleteTotp',
+      '2': '.synctv.client.DeleteTotpRequest',
+      '3': '.synctv.client.DeleteTotpResponse'
+    },
+    {
       '1': 'GetUserPreferences',
       '2': '.synctv.client.GetUserPreferencesRequest',
       '3': '.synctv.client.GetUserPreferencesResponse'
@@ -18568,6 +18883,11 @@ const $core.Map<$core.String, $core.dynamic> UserServiceBase$json = {
       '1': 'UpdateUserPreferences',
       '2': '.synctv.client.UpdateUserPreferencesRequest',
       '3': '.synctv.client.UpdateUserPreferencesResponse'
+    },
+    {
+      '1': 'SetTwoFactorEnabled',
+      '2': '.synctv.client.SetTwoFactorEnabledRequest',
+      '3': '.synctv.client.GetUserPreferencesResponse'
     },
     {
       '1': 'CloseAccount',
@@ -18678,8 +18998,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ClearUserAvatarRequest': ClearUserAvatarRequest$json,
   '.synctv.client.StartSensitiveOperationVerificationRequest':
       StartSensitiveOperationVerificationRequest$json,
-  '.synctv.client.StartSensitiveOperationVerificationResponse':
-      StartSensitiveOperationVerificationResponse$json,
+  '.synctv.client.SensitiveOperationVerificationOutcome':
+      SensitiveOperationVerificationOutcome$json,
   '.synctv.client.SensitiveOperationVerificationChallenge':
       SensitiveOperationVerificationChallenge$json,
   '.synctv.client.StartSensitiveOperationPasskeyRequest':
@@ -18706,8 +19026,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       $2.PasskeyAuthenticatorAssertionResponse$json,
   '.synctv.client.PasskeyAuthenticationExtensionsClientOutputs':
       $2.PasskeyAuthenticationExtensionsClientOutputs$json,
-  '.synctv.client.FinishSensitiveOperationVerificationResponse':
-      FinishSensitiveOperationVerificationResponse$json,
   '.synctv.client.StartEmailBindRequest': StartEmailBindRequest$json,
   '.synctv.client.StartEmailBindResponse': StartEmailBindResponse$json,
   '.synctv.client.ConfirmEmailBindRequest': ConfirmEmailBindRequest$json,
@@ -18746,6 +19064,14 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.client.ListPasskeysResponse': ListPasskeysResponse$json,
   '.synctv.client.DeletePasskeyRequest': DeletePasskeyRequest$json,
   '.synctv.client.DeletePasskeyResponse': DeletePasskeyResponse$json,
+  '.synctv.client.StartTotpSetupRequest': StartTotpSetupRequest$json,
+  '.synctv.client.StartTotpSetupResponse': StartTotpSetupResponse$json,
+  '.synctv.client.FinishTotpSetupRequest': FinishTotpSetupRequest$json,
+  '.synctv.client.TotpRecoveryCodesResponse': TotpRecoveryCodesResponse$json,
+  '.synctv.client.RegenerateTotpRecoveryCodesRequest':
+      RegenerateTotpRecoveryCodesRequest$json,
+  '.synctv.client.DeleteTotpRequest': DeleteTotpRequest$json,
+  '.synctv.client.DeleteTotpResponse': DeleteTotpResponse$json,
   '.synctv.client.GetUserPreferencesRequest': GetUserPreferencesRequest$json,
   '.synctv.client.GetUserPreferencesResponse': GetUserPreferencesResponse$json,
   '.synctv.client.UserPreferences': UserPreferences$json,
@@ -18758,6 +19084,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       UpdateUserPreferencesRequest$json,
   '.synctv.client.UpdateUserPreferencesResponse':
       UpdateUserPreferencesResponse$json,
+  '.synctv.client.SetTwoFactorEnabledRequest': SetTwoFactorEnabledRequest$json,
   '.synctv.client.CloseAccountRequest': CloseAccountRequest$json,
   '.synctv.client.CloseAccountResponse': CloseAccountResponse$json,
   '.synctv.client.CreateRoomRequest': CreateRoomRequest$json,
@@ -18840,57 +19167,66 @@ final $typed_data.Uint8List userServiceDescriptor = $convert.base64Decode(
     'Rhck9iamVjdFJlc3BvbnNlMAESTwoQVXBkYXRlVXNlckF2YXRhchImLnN5bmN0di5jbGllbnQu'
     'VXBkYXRlVXNlckF2YXRhclJlcXVlc3QaEy5zeW5jdHYuY2xpZW50LlVzZXISTQoPQ2xlYXJVc2'
     'VyQXZhdGFyEiUuc3luY3R2LmNsaWVudC5DbGVhclVzZXJBdmF0YXJSZXF1ZXN0GhMuc3luY3R2'
-    'LmNsaWVudC5Vc2VyEpwBCiNTdGFydFNlbnNpdGl2ZU9wZXJhdGlvblZlcmlmaWNhdGlvbhI5Ln'
+    'LmNsaWVudC5Vc2VyEpYBCiNTdGFydFNlbnNpdGl2ZU9wZXJhdGlvblZlcmlmaWNhdGlvbhI5Ln'
     'N5bmN0di5jbGllbnQuU3RhcnRTZW5zaXRpdmVPcGVyYXRpb25WZXJpZmljYXRpb25SZXF1ZXN0'
-    'Gjouc3luY3R2LmNsaWVudC5TdGFydFNlbnNpdGl2ZU9wZXJhdGlvblZlcmlmaWNhdGlvblJlc3'
-    'BvbnNlEo0BCh5TdGFydFNlbnNpdGl2ZU9wZXJhdGlvblBhc3NrZXkSNC5zeW5jdHYuY2xpZW50'
-    'LlN0YXJ0U2Vuc2l0aXZlT3BlcmF0aW9uUGFzc2tleVJlcXVlc3QaNS5zeW5jdHYuY2xpZW50Ll'
-    'N0YXJ0U2Vuc2l0aXZlT3BlcmF0aW9uUGFzc2tleVJlc3BvbnNlEpkBCiJSZXF1ZXN0U2Vuc2l0'
-    'aXZlT3BlcmF0aW9uRW1haWxDb2RlEjguc3luY3R2LmNsaWVudC5SZXF1ZXN0U2Vuc2l0aXZlT3'
-    'BlcmF0aW9uRW1haWxDb2RlUmVxdWVzdBo5LnN5bmN0di5jbGllbnQuUmVxdWVzdFNlbnNpdGl2'
-    'ZU9wZXJhdGlvbkVtYWlsQ29kZVJlc3BvbnNlEp8BCiRGaW5pc2hTZW5zaXRpdmVPcGVyYXRpb2'
-    '5WZXJpZmljYXRpb24SOi5zeW5jdHYuY2xpZW50LkZpbmlzaFNlbnNpdGl2ZU9wZXJhdGlvblZl'
-    'cmlmaWNhdGlvblJlcXVlc3QaOy5zeW5jdHYuY2xpZW50LkZpbmlzaFNlbnNpdGl2ZU9wZXJhdG'
-    'lvblZlcmlmaWNhdGlvblJlc3BvbnNlEl0KDlN0YXJ0RW1haWxCaW5kEiQuc3luY3R2LmNsaWVu'
-    'dC5TdGFydEVtYWlsQmluZFJlcXVlc3QaJS5zeW5jdHYuY2xpZW50LlN0YXJ0RW1haWxCaW5kUm'
-    'VzcG9uc2USTwoQQ29uZmlybUVtYWlsQmluZBImLnN5bmN0di5jbGllbnQuQ29uZmlybUVtYWls'
-    'QmluZFJlcXVlc3QaEy5zeW5jdHYuY2xpZW50LlVzZXISRQoLVW5iaW5kRW1haWwSIS5zeW5jdH'
-    'YuY2xpZW50LlVuYmluZEVtYWlsUmVxdWVzdBoTLnN5bmN0di5jbGllbnQuVXNlchJ+ChlTdGFy'
-    'dE9wYXF1ZVBhc3N3b3JkVXBkYXRlEi8uc3luY3R2LmNsaWVudC5TdGFydE9wYXF1ZVBhc3N3b3'
-    'JkVXBkYXRlUmVxdWVzdBowLnN5bmN0di5jbGllbnQuU3RhcnRPcGFxdWVQYXNzd29yZFVwZGF0'
-    'ZVJlc3BvbnNlEmMKGkZpbmlzaE9wYXF1ZVBhc3N3b3JkVXBkYXRlEjAuc3luY3R2LmNsaWVudC'
-    '5GaW5pc2hPcGFxdWVQYXNzd29yZFVwZGF0ZVJlcXVlc3QaEy5zeW5jdHYuY2xpZW50LlVzZXIS'
-    'YwoQU3RhcnRQYXNza2V5QmluZBImLnN5bmN0di5jbGllbnQuU3RhcnRQYXNza2V5QmluZFJlcX'
-    'Vlc3QaJy5zeW5jdHYuY2xpZW50LlN0YXJ0UGFzc2tleUJpbmRSZXNwb25zZRJeChFGaW5pc2hQ'
-    'YXNza2V5QmluZBInLnN5bmN0di5jbGllbnQuRmluaXNoUGFzc2tleUJpbmRSZXF1ZXN0GiAuc3'
-    'luY3R2LmNsaWVudC5QYXNza2V5Q3JlZGVudGlhbBJXCgxMaXN0UGFzc2tleXMSIi5zeW5jdHYu'
-    'Y2xpZW50Lkxpc3RQYXNza2V5c1JlcXVlc3QaIy5zeW5jdHYuY2xpZW50Lkxpc3RQYXNza2V5c1'
-    'Jlc3BvbnNlEloKDURlbGV0ZVBhc3NrZXkSIy5zeW5jdHYuY2xpZW50LkRlbGV0ZVBhc3NrZXlS'
-    'ZXF1ZXN0GiQuc3luY3R2LmNsaWVudC5EZWxldGVQYXNza2V5UmVzcG9uc2USaQoSR2V0VXNlcl'
-    'ByZWZlcmVuY2VzEiguc3luY3R2LmNsaWVudC5HZXRVc2VyUHJlZmVyZW5jZXNSZXF1ZXN0Giku'
-    'c3luY3R2LmNsaWVudC5HZXRVc2VyUHJlZmVyZW5jZXNSZXNwb25zZRJyChVVcGRhdGVVc2VyUH'
-    'JlZmVyZW5jZXMSKy5zeW5jdHYuY2xpZW50LlVwZGF0ZVVzZXJQcmVmZXJlbmNlc1JlcXVlc3Qa'
-    'LC5zeW5jdHYuY2xpZW50LlVwZGF0ZVVzZXJQcmVmZXJlbmNlc1Jlc3BvbnNlElcKDENsb3NlQW'
-    'Njb3VudBIiLnN5bmN0di5jbGllbnQuQ2xvc2VBY2NvdW50UmVxdWVzdBojLnN5bmN0di5jbGll'
-    'bnQuQ2xvc2VBY2NvdW50UmVzcG9uc2USQwoKQ3JlYXRlUm9vbRIgLnN5bmN0di5jbGllbnQuQ3'
-    'JlYXRlUm9vbVJlcXVlc3QaEy5zeW5jdHYuY2xpZW50LlJvb20SSAoHR2V0Um9vbRIdLnN5bmN0'
-    'di5jbGllbnQuR2V0Um9vbVJlcXVlc3QaHi5zeW5jdHYuY2xpZW50LkdldFJvb21SZXNwb25zZR'
-    'JLCghKb2luUm9vbRIeLnN5bmN0di5jbGllbnQuSm9pblJvb21SZXF1ZXN0Gh8uc3luY3R2LmNs'
-    'aWVudC5Kb2luUm9vbVJlc3BvbnNlEnUKFlN0YXJ0Um9vbVBhc3N3b3JkTG9naW4SLC5zeW5jdH'
-    'YuY2xpZW50LlN0YXJ0Um9vbVBhc3N3b3JkTG9naW5SZXF1ZXN0Gi0uc3luY3R2LmNsaWVudC5T'
-    'dGFydFJvb21QYXNzd29yZExvZ2luUmVzcG9uc2USaQoXRmluaXNoUm9vbVBhc3N3b3JkTG9naW'
-    '4SLS5zeW5jdHYuY2xpZW50LkZpbmlzaFJvb21QYXNzd29yZExvZ2luUmVxdWVzdBofLnN5bmN0'
-    'di5jbGllbnQuSm9pblJvb21SZXNwb25zZRJcChBHZXRSb29tRGlzY292ZXJ5EiYuc3luY3R2Lm'
-    'NsaWVudC5HZXRSb29tRGlzY292ZXJ5UmVxdWVzdBogLnN5bmN0di5jbGllbnQuUm9vbURpc2Nv'
-    'dmVyeUl0ZW0SWgoNRGlzY292ZXJSb29tcxIjLnN5bmN0di5jbGllbnQuRGlzY292ZXJSb29tc1'
-    'JlcXVlc3QaJC5zeW5jdHYuY2xpZW50LkRpc2NvdmVyUm9vbXNSZXNwb25zZRJUCgtMaXN0TXlS'
-    'b29tcxIhLnN5bmN0di5jbGllbnQuTGlzdE15Um9vbXNSZXF1ZXN0GiIuc3luY3R2LmNsaWVudC'
-    '5MaXN0TXlSb29tc1Jlc3BvbnNlElcKDEZhdm9yaXRlUm9vbRIiLnN5bmN0di5jbGllbnQuRmF2'
-    'b3JpdGVSb29tUmVxdWVzdBojLnN5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVzcG9uc2USXQ'
-    'oOVW5mYXZvcml0ZVJvb20SJC5zeW5jdHYuY2xpZW50LlVuZmF2b3JpdGVSb29tUmVxdWVzdBol'
-    'LnN5bmN0di5jbGllbnQuVW5mYXZvcml0ZVJvb21SZXNwb25zZRJmChFMaXN0RmF2b3JpdGVSb2'
-    '9tcxInLnN5bmN0di5jbGllbnQuTGlzdEZhdm9yaXRlUm9vbXNSZXF1ZXN0Giguc3luY3R2LmNs'
-    'aWVudC5MaXN0RmF2b3JpdGVSb29tc1Jlc3BvbnNl');
+    'GjQuc3luY3R2LmNsaWVudC5TZW5zaXRpdmVPcGVyYXRpb25WZXJpZmljYXRpb25PdXRjb21lEo'
+    '0BCh5TdGFydFNlbnNpdGl2ZU9wZXJhdGlvblBhc3NrZXkSNC5zeW5jdHYuY2xpZW50LlN0YXJ0'
+    'U2Vuc2l0aXZlT3BlcmF0aW9uUGFzc2tleVJlcXVlc3QaNS5zeW5jdHYuY2xpZW50LlN0YXJ0U2'
+    'Vuc2l0aXZlT3BlcmF0aW9uUGFzc2tleVJlc3BvbnNlEpkBCiJSZXF1ZXN0U2Vuc2l0aXZlT3Bl'
+    'cmF0aW9uRW1haWxDb2RlEjguc3luY3R2LmNsaWVudC5SZXF1ZXN0U2Vuc2l0aXZlT3BlcmF0aW'
+    '9uRW1haWxDb2RlUmVxdWVzdBo5LnN5bmN0di5jbGllbnQuUmVxdWVzdFNlbnNpdGl2ZU9wZXJh'
+    'dGlvbkVtYWlsQ29kZVJlc3BvbnNlEpgBCiRGaW5pc2hTZW5zaXRpdmVPcGVyYXRpb25WZXJpZm'
+    'ljYXRpb24SOi5zeW5jdHYuY2xpZW50LkZpbmlzaFNlbnNpdGl2ZU9wZXJhdGlvblZlcmlmaWNh'
+    'dGlvblJlcXVlc3QaNC5zeW5jdHYuY2xpZW50LlNlbnNpdGl2ZU9wZXJhdGlvblZlcmlmaWNhdG'
+    'lvbk91dGNvbWUSXQoOU3RhcnRFbWFpbEJpbmQSJC5zeW5jdHYuY2xpZW50LlN0YXJ0RW1haWxC'
+    'aW5kUmVxdWVzdBolLnN5bmN0di5jbGllbnQuU3RhcnRFbWFpbEJpbmRSZXNwb25zZRJPChBDb2'
+    '5maXJtRW1haWxCaW5kEiYuc3luY3R2LmNsaWVudC5Db25maXJtRW1haWxCaW5kUmVxdWVzdBoT'
+    'LnN5bmN0di5jbGllbnQuVXNlchJFCgtVbmJpbmRFbWFpbBIhLnN5bmN0di5jbGllbnQuVW5iaW'
+    '5kRW1haWxSZXF1ZXN0GhMuc3luY3R2LmNsaWVudC5Vc2VyEn4KGVN0YXJ0T3BhcXVlUGFzc3dv'
+    'cmRVcGRhdGUSLy5zeW5jdHYuY2xpZW50LlN0YXJ0T3BhcXVlUGFzc3dvcmRVcGRhdGVSZXF1ZX'
+    'N0GjAuc3luY3R2LmNsaWVudC5TdGFydE9wYXF1ZVBhc3N3b3JkVXBkYXRlUmVzcG9uc2USYwoa'
+    'RmluaXNoT3BhcXVlUGFzc3dvcmRVcGRhdGUSMC5zeW5jdHYuY2xpZW50LkZpbmlzaE9wYXF1ZV'
+    'Bhc3N3b3JkVXBkYXRlUmVxdWVzdBoTLnN5bmN0di5jbGllbnQuVXNlchJjChBTdGFydFBhc3Nr'
+    'ZXlCaW5kEiYuc3luY3R2LmNsaWVudC5TdGFydFBhc3NrZXlCaW5kUmVxdWVzdBonLnN5bmN0di'
+    '5jbGllbnQuU3RhcnRQYXNza2V5QmluZFJlc3BvbnNlEl4KEUZpbmlzaFBhc3NrZXlCaW5kEicu'
+    'c3luY3R2LmNsaWVudC5GaW5pc2hQYXNza2V5QmluZFJlcXVlc3QaIC5zeW5jdHYuY2xpZW50Ll'
+    'Bhc3NrZXlDcmVkZW50aWFsElcKDExpc3RQYXNza2V5cxIiLnN5bmN0di5jbGllbnQuTGlzdFBh'
+    'c3NrZXlzUmVxdWVzdBojLnN5bmN0di5jbGllbnQuTGlzdFBhc3NrZXlzUmVzcG9uc2USWgoNRG'
+    'VsZXRlUGFzc2tleRIjLnN5bmN0di5jbGllbnQuRGVsZXRlUGFzc2tleVJlcXVlc3QaJC5zeW5j'
+    'dHYuY2xpZW50LkRlbGV0ZVBhc3NrZXlSZXNwb25zZRJdCg5TdGFydFRvdHBTZXR1cBIkLnN5bm'
+    'N0di5jbGllbnQuU3RhcnRUb3RwU2V0dXBSZXF1ZXN0GiUuc3luY3R2LmNsaWVudC5TdGFydFRv'
+    'dHBTZXR1cFJlc3BvbnNlEmIKD0ZpbmlzaFRvdHBTZXR1cBIlLnN5bmN0di5jbGllbnQuRmluaX'
+    'NoVG90cFNldHVwUmVxdWVzdBooLnN5bmN0di5jbGllbnQuVG90cFJlY292ZXJ5Q29kZXNSZXNw'
+    'b25zZRJ6ChtSZWdlbmVyYXRlVG90cFJlY292ZXJ5Q29kZXMSMS5zeW5jdHYuY2xpZW50LlJlZ2'
+    'VuZXJhdGVUb3RwUmVjb3ZlcnlDb2Rlc1JlcXVlc3QaKC5zeW5jdHYuY2xpZW50LlRvdHBSZWNv'
+    'dmVyeUNvZGVzUmVzcG9uc2USUQoKRGVsZXRlVG90cBIgLnN5bmN0di5jbGllbnQuRGVsZXRlVG'
+    '90cFJlcXVlc3QaIS5zeW5jdHYuY2xpZW50LkRlbGV0ZVRvdHBSZXNwb25zZRJpChJHZXRVc2Vy'
+    'UHJlZmVyZW5jZXMSKC5zeW5jdHYuY2xpZW50LkdldFVzZXJQcmVmZXJlbmNlc1JlcXVlc3QaKS'
+    '5zeW5jdHYuY2xpZW50LkdldFVzZXJQcmVmZXJlbmNlc1Jlc3BvbnNlEnIKFVVwZGF0ZVVzZXJQ'
+    'cmVmZXJlbmNlcxIrLnN5bmN0di5jbGllbnQuVXBkYXRlVXNlclByZWZlcmVuY2VzUmVxdWVzdB'
+    'osLnN5bmN0di5jbGllbnQuVXBkYXRlVXNlclByZWZlcmVuY2VzUmVzcG9uc2USawoTU2V0VHdv'
+    'RmFjdG9yRW5hYmxlZBIpLnN5bmN0di5jbGllbnQuU2V0VHdvRmFjdG9yRW5hYmxlZFJlcXVlc3'
+    'QaKS5zeW5jdHYuY2xpZW50LkdldFVzZXJQcmVmZXJlbmNlc1Jlc3BvbnNlElcKDENsb3NlQWNj'
+    'b3VudBIiLnN5bmN0di5jbGllbnQuQ2xvc2VBY2NvdW50UmVxdWVzdBojLnN5bmN0di5jbGllbn'
+    'QuQ2xvc2VBY2NvdW50UmVzcG9uc2USQwoKQ3JlYXRlUm9vbRIgLnN5bmN0di5jbGllbnQuQ3Jl'
+    'YXRlUm9vbVJlcXVlc3QaEy5zeW5jdHYuY2xpZW50LlJvb20SSAoHR2V0Um9vbRIdLnN5bmN0di'
+    '5jbGllbnQuR2V0Um9vbVJlcXVlc3QaHi5zeW5jdHYuY2xpZW50LkdldFJvb21SZXNwb25zZRJL'
+    'CghKb2luUm9vbRIeLnN5bmN0di5jbGllbnQuSm9pblJvb21SZXF1ZXN0Gh8uc3luY3R2LmNsaW'
+    'VudC5Kb2luUm9vbVJlc3BvbnNlEnUKFlN0YXJ0Um9vbVBhc3N3b3JkTG9naW4SLC5zeW5jdHYu'
+    'Y2xpZW50LlN0YXJ0Um9vbVBhc3N3b3JkTG9naW5SZXF1ZXN0Gi0uc3luY3R2LmNsaWVudC5TdG'
+    'FydFJvb21QYXNzd29yZExvZ2luUmVzcG9uc2USaQoXRmluaXNoUm9vbVBhc3N3b3JkTG9naW4S'
+    'LS5zeW5jdHYuY2xpZW50LkZpbmlzaFJvb21QYXNzd29yZExvZ2luUmVxdWVzdBofLnN5bmN0di'
+    '5jbGllbnQuSm9pblJvb21SZXNwb25zZRJcChBHZXRSb29tRGlzY292ZXJ5EiYuc3luY3R2LmNs'
+    'aWVudC5HZXRSb29tRGlzY292ZXJ5UmVxdWVzdBogLnN5bmN0di5jbGllbnQuUm9vbURpc2Nvdm'
+    'VyeUl0ZW0SWgoNRGlzY292ZXJSb29tcxIjLnN5bmN0di5jbGllbnQuRGlzY292ZXJSb29tc1Jl'
+    'cXVlc3QaJC5zeW5jdHYuY2xpZW50LkRpc2NvdmVyUm9vbXNSZXNwb25zZRJUCgtMaXN0TXlSb2'
+    '9tcxIhLnN5bmN0di5jbGllbnQuTGlzdE15Um9vbXNSZXF1ZXN0GiIuc3luY3R2LmNsaWVudC5M'
+    'aXN0TXlSb29tc1Jlc3BvbnNlElcKDEZhdm9yaXRlUm9vbRIiLnN5bmN0di5jbGllbnQuRmF2b3'
+    'JpdGVSb29tUmVxdWVzdBojLnN5bmN0di5jbGllbnQuRmF2b3JpdGVSb29tUmVzcG9uc2USXQoO'
+    'VW5mYXZvcml0ZVJvb20SJC5zeW5jdHYuY2xpZW50LlVuZmF2b3JpdGVSb29tUmVxdWVzdBolLn'
+    'N5bmN0di5jbGllbnQuVW5mYXZvcml0ZVJvb21SZXNwb25zZRJmChFMaXN0RmF2b3JpdGVSb29t'
+    'cxInLnN5bmN0di5jbGllbnQuTGlzdEZhdm9yaXRlUm9vbXNSZXF1ZXN0Giguc3luY3R2LmNsaW'
+    'VudC5MaXN0RmF2b3JpdGVSb29tc1Jlc3BvbnNl');
 
 const $core.Map<$core.String, $core.dynamic> RoomServiceBase$json = {
   '1': 'RoomService',

@@ -89,12 +89,12 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.sync.app" "\0"
+            VALUE "CompanyName", "SyncTV" "\0"
             VALUE "FileDescription", "SyncTV" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "synctv-app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.sync.app. All rights reserved." "\0"
-            VALUE "OriginalFilename", "synctv-app.exe" "\0"
+            VALUE "InternalName", "SyncTV" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 SyncTV. All rights reserved." "\0"
+            VALUE "OriginalFilename", "SyncTV.exe" "\0"
             VALUE "ProductName", "SyncTV" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END

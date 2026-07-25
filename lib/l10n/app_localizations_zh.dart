@@ -122,7 +122,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get serverAutoDiscoverDescription =>
-      '添加地址后会自动识别服务器，回调地址、Code 和 server_id 均由 SyncTV 处理。';
+      '每个地址都会保存为独立服务器，账号、会话和缓存数据均按地址隔离。';
+
+  @override
+  String get serverAddressIdentityDescription =>
+      '上方地址是本设备识别该服务器的身份；下方 ID 由服务器自行声明，其他地址也可能声明相同 ID。';
+
+  @override
+  String serverDeclaredId(String serverId) {
+    return '服务器声明 ID：$serverId';
+  }
 
   @override
   String get savedServers => '已保存服务器';
@@ -559,6 +568,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mfaPasskeyUnavailable => '当前账号没有可用的 Passkey';
 
   @override
+  String get noLoginMethodAvailable => '当前账号在此设备上没有可用的登录方式';
+
+  @override
   String get passwordResetSuccess => '密码已重置，请使用新密码登录';
 
   @override
@@ -640,6 +652,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get passkeyRegistration => 'Passkey 注册';
+
+  @override
+  String get registrationMethod => '注册方式';
 
   @override
   String get deviceNameHint => '设备名称，例如 MacBook 或手机';
@@ -1692,6 +1707,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loginSessionExpired => '登录会话已失效，请重新验证后发送短信';
+
+  @override
+  String get authenticationSessionExpired => '认证会话已失效，请重新开始。';
 
   @override
   String get phoneNumber => '手机号';
@@ -5985,4 +6003,105 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get image => '图片';
+
+  @override
+  String get enterAuthenticatorCode => '请输入认证器中的 6 位验证码';
+
+  @override
+  String get enterRecoveryCode => '请输入恢复码';
+
+  @override
+  String get authenticatorCode => '认证器验证码';
+
+  @override
+  String get verifyWithAuthenticator => '使用认证器验证';
+
+  @override
+  String get verifyWithEmail => '使用邮箱验证';
+
+  @override
+  String get recoveryCode => '恢复码';
+
+  @override
+  String get useRecoveryCode => '使用恢复码';
+
+  @override
+  String get backToVerificationMethods => '返回验证方式';
+
+  @override
+  String get verifyWithRecoveryCode => '使用恢复码验证';
+
+  @override
+  String get authenticatorApp => '认证器 App';
+
+  @override
+  String setupAuthenticatorFailed(String error) {
+    return '设置认证器失败：$error';
+  }
+
+  @override
+  String regenerateRecoveryCodesFailed(String error) {
+    return '重新生成恢复码失败：$error';
+  }
+
+  @override
+  String get removeAuthenticatorApp => '移除认证器 App';
+
+  @override
+  String get removeAuthenticatorAppConfirmation => '移除认证器 App 及其全部恢复码？';
+
+  @override
+  String get authenticatorAppRemoved => '认证器 App 已移除';
+
+  @override
+  String removeAuthenticatorFailed(String error) {
+    return '移除认证器失败：$error';
+  }
+
+  @override
+  String get authenticatorAppDescription => '使用标准认证器 App 生成的动态验证码完成多因素验证';
+
+  @override
+  String get authenticatorAppConfigured => '已配置';
+
+  @override
+  String get authenticatorAppNotConfigured => '未配置';
+
+  @override
+  String recoveryCodesRemaining(int count) {
+    return '剩余 $count 个恢复码';
+  }
+
+  @override
+  String get authenticatorAppSetupHint => '添加认证器 App 以增强账户安全';
+
+  @override
+  String get recoveryCodes => '恢复码';
+
+  @override
+  String get setup => '设置';
+
+  @override
+  String get setupAuthenticatorApp => '设置认证器 App';
+
+  @override
+  String get setupAuthenticatorAppDescription => '使用标准认证器 App 扫描二维码，或手动输入设置密钥。';
+
+  @override
+  String get manualSetupKey => '手动设置密钥';
+
+  @override
+  String get confirmSetup => '确认设置';
+
+  @override
+  String get saveRecoveryCodes => '保存恢复码';
+
+  @override
+  String get recoveryCodesShownOnce => '每个恢复码只能使用一次。请安全保存，本页面关闭后将无法再次查看。';
+
+  @override
+  String get copyAll => '全部复制';
+
+  @override
+  String get savedRecoveryCodes => '我已保存恢复码';
 }

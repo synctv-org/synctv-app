@@ -181,6 +181,31 @@ class RegistrationStatus extends $pb.ProtobufEnum {
   const RegistrationStatus._(super.value, super.name);
 }
 
+class LoginMethod extends $pb.ProtobufEnum {
+  static const LoginMethod LOGIN_METHOD_UNSPECIFIED =
+      LoginMethod._(0, _omitEnumNames ? '' : 'LOGIN_METHOD_UNSPECIFIED');
+  static const LoginMethod LOGIN_METHOD_PASSWORD =
+      LoginMethod._(1, _omitEnumNames ? '' : 'LOGIN_METHOD_PASSWORD');
+  static const LoginMethod LOGIN_METHOD_PASSKEY =
+      LoginMethod._(2, _omitEnumNames ? '' : 'LOGIN_METHOD_PASSKEY');
+  static const LoginMethod LOGIN_METHOD_EMAIL_CODE =
+      LoginMethod._(3, _omitEnumNames ? '' : 'LOGIN_METHOD_EMAIL_CODE');
+
+  static const $core.List<LoginMethod> values = <LoginMethod>[
+    LOGIN_METHOD_UNSPECIFIED,
+    LOGIN_METHOD_PASSWORD,
+    LOGIN_METHOD_PASSKEY,
+    LOGIN_METHOD_EMAIL_CODE,
+  ];
+
+  static final $core.List<LoginMethod?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static LoginMethod? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const LoginMethod._(super.value, super.name);
+}
+
 class MfaMethod extends $pb.ProtobufEnum {
   static const MfaMethod MFA_METHOD_UNSPECIFIED =
       MfaMethod._(0, _omitEnumNames ? '' : 'MFA_METHOD_UNSPECIFIED');
@@ -190,16 +215,22 @@ class MfaMethod extends $pb.ProtobufEnum {
       MfaMethod._(2, _omitEnumNames ? '' : 'MFA_METHOD_WEBAUTHN');
   static const MfaMethod MFA_METHOD_EMAIL =
       MfaMethod._(3, _omitEnumNames ? '' : 'MFA_METHOD_EMAIL');
+  static const MfaMethod MFA_METHOD_TOTP =
+      MfaMethod._(4, _omitEnumNames ? '' : 'MFA_METHOD_TOTP');
+  static const MfaMethod MFA_METHOD_RECOVERY_CODE =
+      MfaMethod._(5, _omitEnumNames ? '' : 'MFA_METHOD_RECOVERY_CODE');
 
   static const $core.List<MfaMethod> values = <MfaMethod>[
     MFA_METHOD_UNSPECIFIED,
     MFA_METHOD_PASSWORD,
     MFA_METHOD_WEBAUTHN,
     MFA_METHOD_EMAIL,
+    MFA_METHOD_TOTP,
+    MFA_METHOD_RECOVERY_CODE,
   ];
 
   static final $core.List<MfaMethod?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 3);
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
   static MfaMethod? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
@@ -235,6 +266,17 @@ class SensitiveOperationVerificationMethod extends $pb.ProtobufEnum {
           _omitEnumNames
               ? ''
               : 'SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL');
+  static const SensitiveOperationVerificationMethod
+      SENSITIVE_OPERATION_VERIFICATION_METHOD_TOTP =
+      SensitiveOperationVerificationMethod._(4,
+          _omitEnumNames ? '' : 'SENSITIVE_OPERATION_VERIFICATION_METHOD_TOTP');
+  static const SensitiveOperationVerificationMethod
+      SENSITIVE_OPERATION_VERIFICATION_METHOD_RECOVERY_CODE =
+      SensitiveOperationVerificationMethod._(
+          5,
+          _omitEnumNames
+              ? ''
+              : 'SENSITIVE_OPERATION_VERIFICATION_METHOD_RECOVERY_CODE');
 
   static const $core.List<SensitiveOperationVerificationMethod> values =
       <SensitiveOperationVerificationMethod>[
@@ -242,10 +284,12 @@ class SensitiveOperationVerificationMethod extends $pb.ProtobufEnum {
     SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD,
     SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
     SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL,
+    SENSITIVE_OPERATION_VERIFICATION_METHOD_TOTP,
+    SENSITIVE_OPERATION_VERIFICATION_METHOD_RECOVERY_CODE,
   ];
 
   static final $core.List<SensitiveOperationVerificationMethod?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 3);
+      $pb.ProtobufEnum.$_initByValueList(values, 5);
   static SensitiveOperationVerificationMethod? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

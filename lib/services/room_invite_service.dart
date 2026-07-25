@@ -4,10 +4,10 @@ import 'package:synctv_app/services/synctv_session_store.dart';
 import 'package:synctv_app/services/synctv_service.dart';
 
 class RoomInvite {
-  const RoomInvite({required this.roomId, this.serverId});
+  const RoomInvite({required this.roomId, this.serverEndpoint});
 
   final String roomId;
-  final String? serverId;
+  final String? serverEndpoint;
 }
 
 class RoomInviteService {
@@ -20,12 +20,16 @@ class RoomInviteService {
     if (activeServer == null) {
       throw SyncTvApiException('请先添加并连接服务器', statusCode: 400);
     }
-    final uri = Uri.parse(activeServer.activeEndpoint);
-    final query = <String, String>{
-      'room_id': room.roomId,
-      if (!activeServer.isPending) 'server_id': activeServer.serverId,
-    };
-    return uri.replace(path: linkPath, queryParameters: query).toString();
+    final uri = Uri.parse(activeServer.endpoint);
+    final basePath = uri.path.endsWith('/')
+        ? uri.path.substring(0, uri.path.length - 1)
+        : uri.path;
+    return uri
+        .replace(
+          path: '$basePath$linkPath',
+          queryParameters: {'room_id': room.roomId},
+        )
+        .toString();
   }
 
   static RoomInvite parse(String input) {
@@ -43,11 +47,7 @@ class RoomInviteService {
       if (roomId != null && roomId.trim().isNotEmpty) {
         return RoomInvite(
           roomId: roomId.trim(),
-          serverId: _clean(
-            uri.queryParameters['server_id'] ??
-                uri.queryParameters['serverId'] ??
-                uri.queryParameters['s'],
-          ),
+          serverEndpoint: _serverEndpointFromInviteUri(uri),
         );
       }
 
@@ -55,11 +55,7 @@ class RoomInviteService {
       if (segments.length >= 2 && segments[0] == 'rooms') {
         return RoomInvite(
           roomId: segments.last,
-          serverId: _clean(
-            uri.queryParameters['server_id'] ??
-                uri.queryParameters['serverId'] ??
-                uri.queryParameters['s'],
-          ),
+          serverEndpoint: _serverEndpointFromInviteUri(uri),
         );
       }
     }
@@ -67,16 +63,26 @@ class RoomInviteService {
     return RoomInvite(roomId: value);
   }
 
-  static List<SyncTvServerProfile> matchingServers(String? serverId) {
-    final id = serverId?.trim();
-    if (id == null || id.isEmpty) return const [];
+  static List<SyncTvServerProfile> matchingServers(String? endpoint) {
+    final value = endpoint?.trim();
+    if (value == null || value.isEmpty) return const [];
+    final normalized = SyncTvApiClient.normalizeBaseUrl(value);
     return SyncTvService.servers
-        .where((server) => server.serverId == id)
+        .where((server) => server.endpoint == normalized)
         .toList(growable: false);
   }
 
-  static String? _clean(String? value) {
-    final trimmed = value?.trim();
-    return trimmed == null || trimmed.isEmpty ? null : trimmed;
+  static String _serverEndpointFromInviteUri(Uri uri) {
+    final marker = linkPath;
+    final markerIndex = uri.path.lastIndexOf(marker);
+    final basePath = markerIndex < 0 ? '' : uri.path.substring(0, markerIndex);
+    return SyncTvApiClient.normalizeBaseUrl(
+      Uri(
+        scheme: uri.scheme,
+        host: uri.host,
+        port: uri.hasPort ? uri.port : null,
+        path: basePath,
+      ).toString(),
+    );
   }
 }

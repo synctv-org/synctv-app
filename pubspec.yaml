@@ -20,7 +20,7 @@ version: 1.1.0+4
 
 environment:
   sdk: ^3.12.2
-  flutter: ">=3.44.7"
+  flutter: ">=3.44.8"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -69,7 +69,6 @@ dependencies:
   desktop_webview_window: ^0.3.0
   media_kit_libs_macos_video: ^1.1.4
   # 3.2.2+ assumes FlutterEngine is optional and fails against Flutter 3.44 on iOS.
-  # 3.2.2+ assumes FlutterEngine is optional and fails against Flutter 3.44 on iOS.
   fl_pip: 3.2.1
   window_manager: ^0.5.2
   forui: ^0.24.3
@@ -79,6 +78,7 @@ dependencies:
   accessibility_tools: ^2.8.0
   crop_your_image: ^2.0.0
   uuid: ^4.6.0
+  device_info_plus: ^12.4.0
 dev_dependencies:
   fake_async: ^1.3.3
   flutter_test:
@@ -86,6 +86,13 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+
+dependency_overrides:
+  # SyncTV carries a temporary Darwin fork for upstream passkeys defects.
+  # Rationale, upstream baseline, and removal checklist:
+  # packages/passkeys_darwin/README.md
+  passkeys_darwin:
+    path: packages/passkeys_darwin
 
 flutter_launcher_icons:
   android: "launcher_icon"

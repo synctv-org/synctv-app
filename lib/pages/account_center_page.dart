@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/models/account_models.dart';
 import 'package:synctv_app/models/public_models.dart';
@@ -10,6 +13,7 @@ import 'package:synctv_app/models/room_realtime_codec.dart';
 import 'package:synctv_app/models/synctv_models.dart';
 import 'package:synctv_app/pages/mobile/room_settings_page.dart';
 import 'package:synctv_app/pages/room_screen.dart';
+import 'package:synctv_app/services/device_display_name_service.dart';
 import 'package:synctv_app/services/oauth2_deep_link_service.dart';
 import 'package:synctv_app/services/opaque_authenticator_service.dart';
 import 'package:synctv_app/services/passkey_authenticator_service.dart';
@@ -24,6 +28,7 @@ import 'package:synctv_app/utils/local_image_picker.dart';
 import 'package:synctv_app/utils/message_utils.dart';
 import 'package:synctv_app/widgets/app_form_controls.dart';
 import 'package:synctv_app/widgets/app_responsive_layout.dart';
+import 'package:synctv_app/widgets/auth_recovery_code_fallback.dart';
 import 'package:synctv_app/widgets/create_room_dialog.dart';
 import 'package:synctv_app/widgets/platform_binding_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -76,6 +81,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   static const String _moduleAccountPreferences = 'account_preferences';
   static const String _moduleNotifications = 'notifications';
   static const String _moduleRooms = 'rooms';
+  final DeviceDisplayNameService _deviceDisplayNameService =
+      DeviceDisplayNameService();
   static const String _moduleOAuthProviders = 'oauth_providers';
   static const String _moduleOAuthLinks = 'oauth_links';
   static const String _modulePasskeys = 'passkeys';
@@ -279,7 +286,10 @@ class _AccountCenterPageState extends State<AccountCenterPage>
           _loadOptional(
             errors,
             _moduleLocalPasskey,
-            PasskeyAuthenticatorService.isSupported,
+            () => PasskeyAuthenticatorService.isSupported(
+              serverBaseUrl: SyncTvService.baseUrl,
+              rpId: publicSettings!.webauthnRpId,
+            ),
           )
         else
           Future<bool?>.value(false),
@@ -427,8 +437,11 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<void> _toggleTwoFactor(bool value) async {
     setState(() => _savingPreferences = true);
     try {
-      final updated = await SyncTvService.updateAccountPreferences(
-        twoFactorEnabled: value,
+      final verificationId = await _verifySensitiveOperation();
+      if (verificationId == null || verificationId.isEmpty) return;
+      final updated = await SyncTvService.setTwoFactorEnabled(
+        enabled: value,
+        verificationId: verificationId,
       );
       if (!mounted) return;
       setState(() => _preferences = updated);
@@ -507,7 +520,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   Future<String?> _verifySensitiveOperation() {
     return showAppDialog<String>(
       context: context,
-      builder: (context) => const _SensitiveOperationDialog(),
+      builder: (context) =>
+          _SensitiveOperationDialog(passkeyAvailable: _passkeyAvailable),
     );
   }
 
@@ -618,8 +632,13 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       ],
     );
     if (confirmed != true) return;
+    final verificationId = await _verifySensitiveOperation();
+    if (verificationId == null || verificationId.isEmpty) return;
     try {
-      await SyncTvService.deletePasskey(credential.credentialId);
+      await SyncTvService.deletePasskey(
+        credential.credentialId,
+        verificationId: verificationId,
+      );
       final passkeys = await SyncTvService.listPasskeys(refresh: true);
       final preferences = await SyncTvService.getAccountPreferences(
         refresh: true,
@@ -638,6 +657,9 @@ class _AccountCenterPageState extends State<AccountCenterPage>
   }
 
   Future<void> _bindPasskey() async {
+    final suggestedName = await _deviceDisplayNameService
+        .suggestedPasskeyName();
+    if (!mounted) return;
     final name = await showAppDialog<String>(
       context: context,
       builder: (_) => _SingleTextInputDialog(
@@ -646,20 +668,26 @@ class _AccountCenterPageState extends State<AccountCenterPage>
         icon: Icons.fingerprint_rounded,
         label: context.l10n.deviceName,
         hintText: context.l10n.deviceNameExample,
+        initialValue: suggestedName,
         primaryLabel: context.l10n.continueAction,
       ),
     );
     if (name == null) return;
+
+    final verificationId = await _verifySensitiveOperation();
+    if (verificationId == null || verificationId.isEmpty) return;
 
     setState(() => _bindingPasskey = true);
     try {
       final start = await SyncTvService.startPasskeyBind(name: name);
       final credential = await PasskeyAuthenticatorService.createCredential(
         start.options,
+        serverBaseUrl: SyncTvService.baseUrl,
       );
       await SyncTvService.finishPasskeyBind(
         sessionId: start.sessionId,
         credential: credential,
+        verificationId: verificationId,
       );
       if (!mounted) return;
       final passkeys = await SyncTvService.listPasskeys();
@@ -676,6 +704,108 @@ class _AccountCenterPageState extends State<AccountCenterPage>
       }
     } finally {
       if (mounted) setState(() => _bindingPasskey = false);
+    }
+  }
+
+  Future<void> _setupTotp() async {
+    final verificationId = await _verifySensitiveOperation();
+    if (verificationId == null || verificationId.isEmpty) return;
+    try {
+      final setup = await SyncTvService.startTotpSetup(
+        verificationId: verificationId,
+      );
+      if (!mounted) return;
+      final code = await showAppDialog<String>(
+        context: context,
+        builder: (context) => _TotpSetupDialog(setup: setup),
+      );
+      if (code == null || code.isEmpty) return;
+      final recoveryCodes = await SyncTvService.finishTotpSetup(
+        setupId: setup.setupId,
+        code: code,
+      );
+      final preferences = await SyncTvService.getAccountPreferences(
+        refresh: true,
+      );
+      if (!mounted) return;
+      setState(() => _preferences = preferences);
+      await showAppDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => _TotpRecoveryCodesDialog(codes: recoveryCodes),
+      );
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.setupAuthenticatorFailed('$error'),
+        );
+      }
+    }
+  }
+
+  Future<void> _regenerateTotpRecoveryCodes() async {
+    final verificationId = await _verifySensitiveOperation();
+    if (verificationId == null || verificationId.isEmpty) return;
+    try {
+      final codes = await SyncTvService.regenerateTotpRecoveryCodes(
+        verificationId: verificationId,
+      );
+      final preferences = await SyncTvService.getAccountPreferences(
+        refresh: true,
+      );
+      if (!mounted) return;
+      setState(() => _preferences = preferences);
+      await showAppDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => _TotpRecoveryCodesDialog(codes: codes),
+      );
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.regenerateRecoveryCodesFailed('$error'),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteTotp() async {
+    final confirmed = await ChatUtils.showStyledDialog<bool>(
+      context: context,
+      title: context.l10n.removeAuthenticatorApp,
+      icon: const Icon(Icons.shield_outlined),
+      iconColor: Theme.of(context).colorScheme.error,
+      content: Text(context.l10n.removeAuthenticatorAppConfirmation),
+      actions: [
+        ChatUtils.createCancelButton(context),
+        AppActionButton(
+          onPressed: () => Navigator.pop(context, true),
+          icon: Icons.delete_outline_rounded,
+          label: context.l10n.remove,
+          style: AppActionButtonStyle.destructive,
+        ),
+      ],
+    );
+    if (confirmed != true) return;
+    final verificationId = await _verifySensitiveOperation();
+    if (verificationId == null || verificationId.isEmpty) return;
+    try {
+      await SyncTvService.deleteTotp(verificationId: verificationId);
+      final preferences = await SyncTvService.getAccountPreferences(
+        refresh: true,
+      );
+      if (!mounted) return;
+      setState(() => _preferences = preferences);
+      MessageUtils.showSuccess(context, context.l10n.authenticatorAppRemoved);
+    } catch (error) {
+      if (mounted) {
+        MessageUtils.showError(
+          context,
+          context.l10n.removeAuthenticatorFailed('$error'),
+        );
+      }
     }
   }
 
@@ -1438,6 +1568,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             preferences.canUsePassword,
             preferences.canUseEmail && _user.hasEmail,
             preferences.canUsePasskey && _passkeyEnabled,
+            preferences.canUseTotp,
           ].where((value) => value).length;
 
     return _responsiveList(
@@ -2081,6 +2212,60 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             onRetry: () => _load(refresh: true),
           ),
         const SizedBox(height: 12),
+        if (preferences != null) ...[
+          _Section(
+            title: context.l10n.authenticatorApp,
+            subtitle: context.l10n.authenticatorAppDescription,
+            child: AppTile(
+              contentPadding: EdgeInsets.zero,
+              prefix: Icon(
+                preferences.canUseTotp
+                    ? Icons.verified_user_rounded
+                    : Icons.shield_outlined,
+                color: preferences.canUseTotp
+                    ? const Color(0xFF0F766E)
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+              title: Text(
+                preferences.canUseTotp
+                    ? context.l10n.authenticatorAppConfigured
+                    : context.l10n.authenticatorAppNotConfigured,
+              ),
+              subtitle: Text(
+                preferences.canUseTotp
+                    ? context.l10n.recoveryCodesRemaining(
+                        preferences.totpRecoveryCodesRemaining,
+                      )
+                    : context.l10n.authenticatorAppSetupHint,
+              ),
+              suffix: preferences.canUseTotp
+                  ? Wrap(
+                      spacing: 8,
+                      children: [
+                        AppActionButton(
+                          onPressed: _regenerateTotpRecoveryCodes,
+                          icon: Icons.refresh_rounded,
+                          label: context.l10n.recoveryCodes,
+                          style: AppActionButtonStyle.outlined,
+                        ),
+                        AppIconButton(
+                          onPressed: _deleteTotp,
+                          icon: Icons.delete_outline_rounded,
+                          tooltip: context.l10n.removeAuthenticatorApp,
+                          style: AppIconButtonStyle.destructive,
+                        ),
+                      ],
+                    )
+                  : AppActionButton(
+                      onPressed: _setupTotp,
+                      icon: Icons.add_rounded,
+                      label: context.l10n.setup,
+                      style: AppActionButtonStyle.tonal,
+                    ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         if (_publicSettings?.enableWebauthn == true) ...[
           _Section(
             title: 'Passkey',
@@ -3003,6 +3188,7 @@ class _AccountCenterPageState extends State<AccountCenterPage>
     final labels = <String>[];
     if (preferences.canUsePassword) labels.add(context.l10n.password);
     if (preferences.canUsePasskey && _passkeyEnabled) labels.add('Passkey');
+    if (preferences.canUseTotp) labels.add(context.l10n.authenticatorApp);
     if (preferences.canUseEmail && _user.hasEmail) {
       labels.add(context.l10n.email);
     }
@@ -3038,7 +3224,180 @@ enum _NotificationDetailAction { markRead, delete }
 
 enum _PasswordUpdateMethod { currentPassword, emailToken, passkey }
 
-enum _SensitiveOperationMethod { password, email, passkey }
+class _TotpSetupDialog extends StatefulWidget {
+  const _TotpSetupDialog({required this.setup});
+
+  final TotpSetupInfo setup;
+
+  @override
+  State<_TotpSetupDialog> createState() => _TotpSetupDialogState();
+}
+
+class _TotpSetupDialogState extends State<_TotpSetupDialog> {
+  final _codeController = TextEditingController();
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final code = _codeController.text.trim();
+    if (code.length != 6 || int.tryParse(code) == null) {
+      MessageUtils.showWarning(context, context.l10n.enterAuthenticatorCode);
+      return;
+    }
+    Navigator.pop(context, code);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _AccountActionDialog(
+      icon: Icons.shield_outlined,
+      title: context.l10n.setupAuthenticatorApp,
+      subtitle: context.l10n.setupAuthenticatorAppDescription,
+      maxWidth: 540,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: AppPanelSurface(
+              padding: const EdgeInsets.all(12),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              child: QrImageView(
+                data: widget.setup.otpauthUri,
+                size: 220,
+                backgroundColor: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _DialogFieldGroup(
+            title: context.l10n.manualSetupKey,
+            child: Row(
+              children: [
+                Expanded(child: AppSelectableText(widget.setup.secret)),
+                AppIconButton(
+                  onPressed: () async {
+                    await Clipboard.setData(
+                      ClipboardData(text: widget.setup.secret),
+                    );
+                    if (!mounted) return;
+                    MessageUtils.showSuccess(
+                      this.context,
+                      this.context.l10n.copied,
+                    );
+                  },
+                  icon: Icons.copy_rounded,
+                  tooltip: context.l10n.copy,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _DialogTextField(
+            controller: _codeController,
+            autofocus: true,
+            label: context.l10n.authenticatorCode,
+            icon: Icons.password_rounded,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
+      ),
+      primaryLabel: context.l10n.confirmSetup,
+      onPrimary: _submit,
+    );
+  }
+}
+
+class _TotpRecoveryCodesDialog extends StatelessWidget {
+  const _TotpRecoveryCodesDialog({required this.codes});
+
+  final List<String> codes;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return PopScope(
+      canPop: false,
+      child: AppDialogFrame(
+        maxWidth: 520,
+        child: AppInkSurface(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  context.l10n.saveRecoveryCodes,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  context.l10n.recoveryCodesShownOnce,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                AppPanelSurface(
+                  padding: const EdgeInsets.all(16),
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                  child: AppSelectableText(
+                    codes.join('\n'),
+                    monospace: true,
+                    style: const TextStyle(height: 1.6),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    AppActionButton(
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(text: codes.join('\n')),
+                        );
+                        if (context.mounted) {
+                          MessageUtils.showSuccess(
+                            context,
+                            context.l10n.copied,
+                          );
+                        }
+                      },
+                      icon: Icons.copy_all_rounded,
+                      label: context.l10n.copyAll,
+                      style: AppActionButtonStyle.outlined,
+                    ),
+                    const Spacer(),
+                    AppActionButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icons.check_rounded,
+                      label: context.l10n.savedRecoveryCodes,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _SensitiveOperationMethod { password, email, passkey, totp, recoveryCode }
 
 class _PasswordUpdateInput {
   final _PasswordUpdateMethod method;
@@ -3174,19 +3533,21 @@ class _PasswordUpdateDialogState extends State<_PasswordUpdateDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _DialogFieldGroup(
-            title: context.l10n.verificationMethod,
-            subtitle: methodDescriptions[_method] ?? '',
-            child: AppSingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: AppSegmentedControl<_PasswordUpdateMethod>(
-                segments: methods,
-                value: _method,
-                onChanged: (selected) => setState(() => _method = selected),
+          if (methods.length > 1) ...[
+            _DialogFieldGroup(
+              title: context.l10n.verificationMethod,
+              subtitle: methodDescriptions[_method] ?? '',
+              child: AppSingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: AppSegmentedControl<_PasswordUpdateMethod>(
+                  segments: methods,
+                  value: _method,
+                  onChanged: (selected) => setState(() => _method = selected),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
           _DialogFieldGroup(
             title: context.l10n.identityVerification,
             children: [
@@ -3553,7 +3914,9 @@ class _EmailBindDialogState extends State<_EmailBindDialog> {
 }
 
 class _SensitiveOperationDialog extends StatefulWidget {
-  const _SensitiveOperationDialog();
+  final bool passkeyAvailable;
+
+  const _SensitiveOperationDialog({required this.passkeyAvailable});
 
   @override
   State<_SensitiveOperationDialog> createState() =>
@@ -3563,12 +3926,15 @@ class _SensitiveOperationDialog extends StatefulWidget {
 class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
   final _passwordController = TextEditingController();
   final _emailTokenController = TextEditingController();
-  SensitiveOperationVerificationInfo? _verification;
+  final _totpController = TextEditingController();
+  final _recoveryCodeController = TextEditingController();
+  SensitiveOperationVerificationChallengeInfo? _challenge;
   SensitiveOperationEmailCodeInfo? _emailCode;
   _SensitiveOperationMethod? _method;
   bool _loading = true;
   bool _requestingEmail = false;
   bool _submitting = false;
+  Timer? _expirationTimer;
 
   @override
   void initState() {
@@ -3578,8 +3944,11 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
 
   @override
   void dispose() {
+    _expirationTimer?.cancel();
     _passwordController.dispose();
     _emailTokenController.dispose();
+    _totpController.dispose();
+    _recoveryCodeController.dispose();
     super.dispose();
   }
 
@@ -3589,12 +3958,22 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
       final verification =
           await SyncTvService.startSensitiveOperationVerification();
       if (!mounted) return;
-      final method = _defaultMethod(verification.challenge);
-      setState(() {
-        _verification = verification;
-        _method = method;
-        _loading = false;
-      });
+      switch (verification) {
+        case SensitiveOperationVerificationComplete(:final verificationId):
+          Navigator.pop(context, verificationId);
+        case SensitiveOperationVerificationPending(:final challenge):
+          if (challenge.isExpired) {
+            await _start();
+            return;
+          }
+          final method = _defaultMethod(challenge);
+          setState(() {
+            _challenge = challenge;
+            _method = method;
+            _loading = false;
+          });
+          _scheduleExpiration(challenge);
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _loading = false);
@@ -3606,29 +3985,74 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
     }
   }
 
+  void _scheduleExpiration(
+    SensitiveOperationVerificationChallengeInfo challenge,
+  ) {
+    _expirationTimer?.cancel();
+    _expirationTimer = Timer(
+      challenge.expiresAt.difference(DateTime.now()),
+      _restartExpiredVerification,
+    );
+  }
+
+  void _restartExpiredVerification() {
+    if (!mounted) return;
+    if (_submitting || _requestingEmail) {
+      _expirationTimer = Timer(
+        const Duration(seconds: 1),
+        _restartExpiredVerification,
+      );
+      return;
+    }
+    _emailCode = null;
+    _challenge = null;
+    _method = null;
+    _passwordController.clear();
+    _emailTokenController.clear();
+    _totpController.clear();
+    _recoveryCodeController.clear();
+    _start();
+  }
+
   _SensitiveOperationMethod? _defaultMethod(
     SensitiveOperationVerificationChallengeInfo challenge,
   ) {
-    if (_method != null && _methodAvailable(challenge, _method!)) {
+    if (_method != null &&
+        _method != _SensitiveOperationMethod.recoveryCode &&
+        _methodAvailable(challenge, _method!)) {
       return _method;
     }
-    if (_methodAvailable(challenge, _SensitiveOperationMethod.password)) {
-      return _SensitiveOperationMethod.password;
-    }
-    if (_methodAvailable(challenge, _SensitiveOperationMethod.passkey)) {
-      return _SensitiveOperationMethod.passkey;
-    }
-    if (_methodAvailable(challenge, _SensitiveOperationMethod.email)) {
-      return _SensitiveOperationMethod.email;
-    }
-    return null;
+    return switch (challenge.preferredMethodOnDevice(
+      passkeyAvailable: widget.passkeyAvailable,
+    )) {
+      client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN =>
+        _SensitiveOperationMethod.passkey,
+      client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_TOTP =>
+        _SensitiveOperationMethod.totp,
+      client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_PASSWORD =>
+        _SensitiveOperationMethod.password,
+      client_enum
+          .SensitiveOperationVerificationMethod
+          .SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL =>
+        _SensitiveOperationMethod.email,
+      _ => null,
+    };
   }
 
   bool _methodAvailable(
     SensitiveOperationVerificationChallengeInfo challenge,
     _SensitiveOperationMethod method,
   ) {
-    return challenge.availableMethods.contains(_methodProto(method).value);
+    return challenge.supportsMethodOnDevice(
+      _methodProto(method),
+      passkeyAvailable: widget.passkeyAvailable,
+    );
   }
 
   client_enum.SensitiveOperationVerificationMethod _methodProto(
@@ -3647,6 +4071,14 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
         client_enum
             .SensitiveOperationVerificationMethod
             .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
+      _SensitiveOperationMethod.totp =>
+        client_enum
+            .SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_TOTP,
+      _SensitiveOperationMethod.recoveryCode =>
+        client_enum
+            .SensitiveOperationVerificationMethod
+            .SENSITIVE_OPERATION_VERIFICATION_METHOD_RECOVERY_CODE,
     };
   }
 
@@ -3666,6 +4098,12 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
           icon: Icon(Icons.fingerprint_rounded),
           label: Text('Passkey'),
         ),
+      if (_methodAvailable(challenge, _SensitiveOperationMethod.totp))
+        ButtonSegment(
+          value: _SensitiveOperationMethod.totp,
+          icon: const Icon(Icons.shield_outlined),
+          label: Text(context.l10n.authenticatorApp),
+        ),
       if (_methodAvailable(challenge, _SensitiveOperationMethod.email))
         ButtonSegment(
           value: _SensitiveOperationMethod.email,
@@ -3676,12 +4114,16 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
   }
 
   Future<void> _requestEmailCode() async {
-    final verification = _verification;
-    if (verification == null || _requestingEmail) return;
+    final challenge = _challenge;
+    if (challenge == null || _requestingEmail) return;
+    if (challenge.isExpired) {
+      _restartExpiredVerification();
+      return;
+    }
     setState(() => _requestingEmail = true);
     try {
       final info = await SyncTvService.requestSensitiveOperationEmailCode(
-        verification.challenge.sessionId,
+        challenge.sessionId,
       );
       if (!mounted) return;
       setState(() => _emailCode = info);
@@ -3699,9 +4141,13 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
   }
 
   Future<void> _submit() async {
-    final verification = _verification;
+    final challenge = _challenge;
     final method = _method;
-    if (verification == null || method == null || _submitting) return;
+    if (challenge == null || method == null || _submitting) return;
+    if (challenge.isExpired) {
+      _restartExpiredVerification();
+      return;
+    }
     if (method == _SensitiveOperationMethod.password &&
         _passwordController.text.isEmpty) {
       MessageUtils.showWarning(context, context.l10n.enterCurrentPassword);
@@ -3712,6 +4158,16 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
       MessageUtils.showWarning(context, context.l10n.enterEmailCode);
       return;
     }
+    if (method == _SensitiveOperationMethod.totp &&
+        _totpController.text.trim().length != 6) {
+      MessageUtils.showWarning(context, context.l10n.enterAuthenticatorCode);
+      return;
+    }
+    if (method == _SensitiveOperationMethod.recoveryCode &&
+        _recoveryCodeController.text.trim().isEmpty) {
+      MessageUtils.showWarning(context, context.l10n.enterRecoveryCode);
+      return;
+    }
     final l10n = context.l10n;
     setState(() => _submitting = true);
     try {
@@ -3719,7 +4175,7 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
       Object? passkeyCredential;
       if (method == _SensitiveOperationMethod.passkey) {
         final passkey = await SyncTvService.startSensitiveOperationPasskey(
-          verification.challenge.sessionId,
+          challenge.sessionId,
         );
         if (passkey.passkeySessionId.isEmpty || passkey.options.isEmpty) {
           throw FormatException(l10n.passkeyChallengeMissing);
@@ -3727,18 +4183,36 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
         passkeySessionId = passkey.passkeySessionId;
         passkeyCredential = await PasskeyAuthenticatorService.getCredential(
           passkey.options,
+          serverBaseUrl: SyncTvService.baseUrl,
         );
       }
       final finished = await SyncTvService.finishSensitiveOperationVerification(
-        sessionId: verification.challenge.sessionId,
+        sessionId: challenge.sessionId,
         method: _methodProto(method),
         password: _passwordController.text,
         emailToken: _emailTokenController.text.trim(),
         passkeySessionId: passkeySessionId,
         passkeyCredential: passkeyCredential,
+        totpCode: _totpController.text.trim(),
+        recoveryCode: _recoveryCodeController.text.trim(),
       );
       if (!mounted) return;
-      Navigator.pop(context, finished.verificationId);
+      switch (finished) {
+        case SensitiveOperationVerificationComplete(:final verificationId):
+          _expirationTimer?.cancel();
+          Navigator.pop(context, verificationId);
+        case SensitiveOperationVerificationPending(:final challenge):
+          setState(() {
+            _challenge = challenge;
+            _method = _defaultMethod(challenge);
+            _emailCode = null;
+            _passwordController.clear();
+            _emailTokenController.clear();
+            _totpController.clear();
+            _recoveryCodeController.clear();
+          });
+          _scheduleExpiration(challenge);
+      }
     } catch (e) {
       if (mounted) {
         MessageUtils.showError(
@@ -3753,12 +4227,15 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final verification = _verification;
-    final challenge = verification?.challenge;
+    final challenge = _challenge;
     final method = _method;
     final segments = challenge == null
         ? const <ButtonSegment<_SensitiveOperationMethod>>[]
         : _methodSegments(challenge);
+    final recoveryAvailable =
+        challenge != null &&
+        _methodAvailable(challenge, _SensitiveOperationMethod.recoveryCode);
+    final usingRecoveryCode = method == _SensitiveOperationMethod.recoveryCode;
     return _AccountActionDialog(
       icon: Icons.verified_user_rounded,
       title: context.l10n.identityVerification,
@@ -3769,7 +4246,9 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
               height: 72,
               child: Center(child: AppLoadingIndicator()),
             )
-          : challenge == null || method == null || segments.isEmpty
+          : challenge == null ||
+                (method == null && !recoveryAvailable) ||
+                (segments.isEmpty && !recoveryAvailable)
           ? _DialogNotice(
               icon: Icons.error_outline_rounded,
               title: context.l10n.noVerificationMethods,
@@ -3779,95 +4258,147 @@ class _SensitiveOperationDialogState extends State<_SensitiveOperationDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _DialogFieldGroup(
-                  title: context.l10n.verificationMethod,
-                  child: AppSingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: AppSegmentedControl<_SensitiveOperationMethod>(
-                      segments: segments,
-                      value: method,
-                      onChanged: (selected) =>
-                          setState(() => _method = selected),
+                if (!usingRecoveryCode && segments.length > 1) ...[
+                  _DialogFieldGroup(
+                    title: context.l10n.verificationMethod,
+                    child: AppSingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: AppSegmentedControl<_SensitiveOperationMethod>(
+                        segments: segments,
+                        value: method!,
+                        onChanged: (selected) =>
+                            setState(() => _method = selected),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                _DialogFieldGroup(
-                  title: context.l10n.verificationInformation,
-                  children: [
-                    if (method == _SensitiveOperationMethod.password)
-                      _DialogTextField(
-                        controller: _passwordController,
+                  const SizedBox(height: 16),
+                ],
+                if (usingRecoveryCode)
+                  AuthRecoveryCodeFallback(
+                    active: true,
+                    recoveryForm: _DialogFieldGroup(
+                      title: context.l10n.verificationInformation,
+                      child: _DialogTextField(
+                        controller: _recoveryCodeController,
                         autofocus: true,
-                        obscureText: true,
-                        label: context.l10n.currentPassword,
-                        icon: Icons.lock_outline_rounded,
+                        label: context.l10n.recoveryCode,
+                        icon: Icons.key_rounded,
                         textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _submit(),
                       ),
-                    if (method == _SensitiveOperationMethod.passkey)
-                      _DialogNotice(
-                        icon: Icons.fingerprint_rounded,
-                        title: context.l10n.passkeyVerification,
-                        message: context.l10n.passkeyVerificationDescription,
-                      ),
-                    if (method == _SensitiveOperationMethod.email)
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final compact = constraints.maxWidth < 420;
-                          final field = _DialogTextField(
-                            controller: _emailTokenController,
+                    ),
+                    onOpen: null,
+                    onBack: _submitting
+                        ? null
+                        : () => setState(() {
+                            _recoveryCodeController.clear();
+                            _method = _defaultMethod(challenge);
+                          }),
+                  )
+                else ...[
+                  if (method != null)
+                    _DialogFieldGroup(
+                      title: context.l10n.verificationInformation,
+                      children: [
+                        if (method == _SensitiveOperationMethod.password)
+                          _DialogTextField(
+                            controller: _passwordController,
                             autofocus: true,
-                            label: context.l10n.emailVerificationCode,
-                            icon: Icons.mark_email_read_outlined,
+                            obscureText: true,
+                            label: context.l10n.currentPassword,
+                            icon: Icons.lock_outline_rounded,
                             textInputAction: TextInputAction.done,
                             onSubmitted: (_) => _submit(),
-                          );
-                          final sendButton = AppActionButton(
-                            onPressed: _requestingEmail
-                                ? null
-                                : _requestEmailCode,
-                            loading: _requestingEmail,
-                            icon: Icons.send_rounded,
-                            label: _emailCode == null
-                                ? context.l10n.sendVerificationCode
-                                : context.l10n.resend,
-                            style: AppActionButtonStyle.outlined,
-                          );
-                          final maskedEmail = _emailCode?.maskedEmail ?? '';
-                          final children = [
-                            Expanded(child: field),
-                            const SizedBox(width: 10),
-                            SizedBox(height: 48, child: sendButton),
-                          ];
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              if (compact) ...[
-                                field,
-                                const SizedBox(height: 10),
-                                sendButton,
-                              ] else
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: children,
-                                ),
-                              if (maskedEmail.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  context.l10n.codeSentTo(maskedEmail),
-                                  style: TextStyle(
-                                    color: Theme.of(context).hintColor,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          );
-                        },
-                      ),
+                          ),
+                        if (method == _SensitiveOperationMethod.passkey)
+                          _DialogNotice(
+                            icon: Icons.fingerprint_rounded,
+                            title: context.l10n.passkeyVerification,
+                            message:
+                                context.l10n.passkeyVerificationDescription,
+                          ),
+                        if (method == _SensitiveOperationMethod.totp)
+                          _DialogTextField(
+                            controller: _totpController,
+                            autofocus: true,
+                            label: context.l10n.authenticatorCode,
+                            icon: Icons.shield_outlined,
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _submit(),
+                          ),
+                        if (method == _SensitiveOperationMethod.email)
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final compact = constraints.maxWidth < 420;
+                              final field = _DialogTextField(
+                                controller: _emailTokenController,
+                                autofocus: true,
+                                label: context.l10n.emailVerificationCode,
+                                icon: Icons.mark_email_read_outlined,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => _submit(),
+                              );
+                              final sendButton = AppActionButton(
+                                onPressed: _requestingEmail
+                                    ? null
+                                    : _requestEmailCode,
+                                loading: _requestingEmail,
+                                icon: Icons.send_rounded,
+                                label: _emailCode == null
+                                    ? context.l10n.sendVerificationCode
+                                    : context.l10n.resend,
+                                style: AppActionButtonStyle.outlined,
+                              );
+                              final maskedEmail = _emailCode?.maskedEmail ?? '';
+                              final children = [
+                                Expanded(child: field),
+                                const SizedBox(width: 10),
+                                SizedBox(height: 48, child: sendButton),
+                              ];
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (compact) ...[
+                                    field,
+                                    const SizedBox(height: 10),
+                                    sendButton,
+                                  ] else
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: children,
+                                    ),
+                                  if (maskedEmail.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      context.l10n.codeSentTo(maskedEmail),
+                                      style: TextStyle(
+                                        color: Theme.of(context).hintColor,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              );
+                            },
+                          ),
+                      ],
+                    ),
+                  if (recoveryAvailable) ...[
+                    const SizedBox(height: 8),
+                    AuthRecoveryCodeFallback(
+                      active: false,
+                      recoveryForm: const SizedBox.shrink(),
+                      onOpen: _submitting
+                          ? null
+                          : () => setState(() {
+                              _method = _SensitiveOperationMethod.recoveryCode;
+                            }),
+                      onBack: null,
+                    ),
                   ],
-                ),
+                ],
               ],
             ),
       primaryLabel: context.l10n.verify,

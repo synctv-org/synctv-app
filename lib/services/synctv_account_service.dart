@@ -110,18 +110,36 @@ class SyncTvAccountDomainService {
   }
 
   Future<AccountPreferences> updateAccountPreferences({
-    bool? twoFactorEnabled,
     NotificationPreferences? notifications,
   }) async {
     final request = client.UpdateUserPreferencesRequest();
-    if (twoFactorEnabled != null) {
-      request.twoFactorEnabled = twoFactorEnabled;
-    }
     final notificationPreferences = notifications?.toProto();
     if (notificationPreferences != null) {
       request.notifications = notificationPreferences;
     }
     final response = await _api.user.updateUserPreferences(request);
+    final preferences = accountPreferencesFromProto(
+      response.preferences,
+      response.authFactors,
+    );
+    _cache.put(
+      'account:preferences',
+      preferences,
+      ttl: const Duration(minutes: 2),
+    );
+    return preferences;
+  }
+
+  Future<AccountPreferences> setTwoFactorEnabled({
+    required bool enabled,
+    required String verificationId,
+  }) async {
+    final response = await _api.user.setTwoFactorEnabled(
+      client.SetTwoFactorEnabledRequest(
+        enabled: enabled,
+        verificationId: verificationId,
+      ),
+    );
     final preferences = accountPreferencesFromProto(
       response.preferences,
       response.authFactors,
@@ -150,9 +168,15 @@ class SyncTvAccountDomainService {
     return response.credentials.map(passkeyFromProto).toList(growable: false);
   }
 
-  Future<void> deletePasskey(String credentialId) async {
+  Future<void> deletePasskey(
+    String credentialId, {
+    required String verificationId,
+  }) async {
     await _api.user.deletePasskey(
-      client.DeletePasskeyRequest(credentialId: credentialId),
+      client.DeletePasskeyRequest(
+        credentialId: credentialId,
+        verificationId: verificationId,
+      ),
     );
     _cache.invalidate('account:passkeys');
     _cache.invalidate('account:preferences');
@@ -219,17 +243,59 @@ class SyncTvAccountDomainService {
   Future<PasskeyCredentialInfo> finishPasskeyBind({
     required String sessionId,
     required Object credential,
+    required String verificationId,
   }) async {
     final response = await _api.user.finishPasskeyBind(
       client.FinishPasskeyBindRequest(
         sessionId: sessionId,
         credential: passkeyRegistrationCredentialFromJson(credential),
+        verificationId: verificationId,
       ),
     );
     final passkey = passkeyFromProto(response);
     _cache.invalidate('account:passkeys');
     _cache.invalidate('account:preferences');
     return passkey;
+  }
+
+  Future<TotpSetupInfo> startTotpSetup({required String verificationId}) async {
+    final response = await _api.user.startTotpSetup(
+      client.StartTotpSetupRequest(verificationId: verificationId),
+    );
+    return TotpSetupInfo(
+      setupId: response.setupId,
+      secret: response.secret,
+      otpauthUri: response.otpauthUri,
+      expiresAt: response.expiresAt.toInt(),
+    );
+  }
+
+  Future<List<String>> finishTotpSetup({
+    required String setupId,
+    required String code,
+  }) async {
+    final response = await _api.user.finishTotpSetup(
+      client.FinishTotpSetupRequest(setupId: setupId, code: code),
+    );
+    _cache.invalidate('account:preferences');
+    return List.unmodifiable(response.recoveryCodes);
+  }
+
+  Future<List<String>> regenerateTotpRecoveryCodes({
+    required String verificationId,
+  }) async {
+    final response = await _api.user.regenerateTotpRecoveryCodes(
+      client.RegenerateTotpRecoveryCodesRequest(verificationId: verificationId),
+    );
+    _cache.invalidate('account:preferences');
+    return List.unmodifiable(response.recoveryCodes);
+  }
+
+  Future<void> deleteTotp({required String verificationId}) async {
+    await _api.user.deleteTotp(
+      client.DeleteTotpRequest(verificationId: verificationId),
+    );
+    _cache.invalidate('account:preferences');
   }
 
   client_enum.OpaquePasswordUpdateVerificationMethod
@@ -395,6 +461,8 @@ AccountPreferences accountPreferencesFromProto(
     twoFactorEnabled: preferences.twoFactorEnabled,
     canUsePassword: authFactors.password,
     canUsePasskey: authFactors.webauthn,
+    canUseTotp: authFactors.totp,
+    totpRecoveryCodesRemaining: authFactors.totpRecoveryCodesRemaining,
     canUseEmail: authFactors.email,
     eligibleFactorCount: authFactors.eligibleCount,
     notifications: NotificationPreferences.fromProto(preferences.notifications),

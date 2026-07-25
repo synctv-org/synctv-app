@@ -194,7 +194,6 @@
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
 				726F82CAA09622BF8758B939 /* [CP] Check Pods Manifest.lock */,
-				6F7A4C2D2C5A4F0F9D3B1010 /* SyncTV OAuth2 Entitlements */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
@@ -327,23 +326,6 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
-		};
-		6F7A4C2D2C5A4F0F9D3B1010 /* SyncTV OAuth2 Entitlements */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${SRCROOT}/Flutter/synctv_oauth2_entitlements.sh",
-			);
-			name = "SyncTV OAuth2 Entitlements";
-			outputPaths = (
-				"${SRCROOT}/Flutter/GeneratedOAuth2.entitlements",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$SRCROOT/Flutter/synctv_oauth2_entitlements.sh\"";
 		};
 		726F82CAA09622BF8758B939 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -490,7 +472,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = "$(SYNC_TV_OAUTH2_ENTITLEMENTS)";
+				CODE_SIGN_ENTITLEMENTS = "$(SYNC_TV_ENTITLEMENTS)";
+				CODE_SIGN_STYLE = "$(SYNC_TV_CODE_SIGN_STYLE)";
+				DEVELOPMENT_TEAM = "$(SYNC_TV_DEVELOPMENT_TEAM)";
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -498,7 +482,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sync.app;
+				PRODUCT_BUNDLE_IDENTIFIER = org.synctv.app;
+				PROVISIONING_PROFILE_SPECIFIER = "$(SYNC_TV_PROVISIONING_PROFILE_SPECIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -515,7 +500,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.sync.app.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.synctv.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -533,7 +518,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.sync.app.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.synctv.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -549,7 +534,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.synctvApp.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = org.synctv.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -673,7 +658,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = "$(SYNC_TV_OAUTH2_ENTITLEMENTS)";
+				CODE_SIGN_ENTITLEMENTS = "$(SYNC_TV_ENTITLEMENTS)";
+				CODE_SIGN_STYLE = "$(SYNC_TV_CODE_SIGN_STYLE)";
+				DEVELOPMENT_TEAM = "$(SYNC_TV_DEVELOPMENT_TEAM)";
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -681,7 +668,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sync.app;
+				PRODUCT_BUNDLE_IDENTIFIER = org.synctv.app;
+				PROVISIONING_PROFILE_SPECIFIER = "$(SYNC_TV_PROVISIONING_PROFILE_SPECIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -696,7 +684,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = "$(SYNC_TV_OAUTH2_ENTITLEMENTS)";
+				CODE_SIGN_ENTITLEMENTS = "$(SYNC_TV_ENTITLEMENTS)";
+				CODE_SIGN_STYLE = "$(SYNC_TV_CODE_SIGN_STYLE)";
+				DEVELOPMENT_TEAM = "$(SYNC_TV_DEVELOPMENT_TEAM)";
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -704,7 +694,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sync.app;
+				PRODUCT_BUNDLE_IDENTIFIER = org.synctv.app;
+				PROVISIONING_PROFILE_SPECIFIER = "$(SYNC_TV_PROVISIONING_PROFILE_SPECIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

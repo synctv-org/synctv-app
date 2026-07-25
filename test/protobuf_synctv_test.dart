@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 import 'dart:typed_data';
@@ -40,6 +41,8 @@ import 'package:synctv_app/src/generated/proto/common.pb.dart' as common_pb;
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart' as common;
 import 'package:synctv_app/src/generated/proto/oauth2.pb.dart' as oauth2;
 import 'package:synctv_app/src/generated/proto/passkey.pb.dart' as passkey;
+import 'package:synctv_app/src/generated/proto/passkey.pbenum.dart'
+    as passkey_enum;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/src/generated/proto/providers/alist.pb.dart'
@@ -80,10 +83,9 @@ Map<String, Object> testActiveServerPreferences({
   return {
     SyncTvSessionStore.serversKey: jsonEncode([
       {
-        'server_id': 'srv_test',
+        'declared_server_id': 'srv_test',
         'name': 'Test Server',
-        'endpoints': [baseUrl],
-        'active_endpoint': baseUrl,
+        'endpoint': baseUrl,
         'session': {
           if (accessToken.isNotEmpty) 'access_token': accessToken,
           if (refreshToken.isNotEmpty) 'refresh_token': refreshToken,
@@ -91,7 +93,7 @@ Map<String, Object> testActiveServerPreferences({
         },
       },
     ]),
-    SyncTvSessionStore.activeServerKey: 'srv_test',
+    SyncTvSessionStore.activeServerKey: baseUrl,
   };
 }
 
@@ -108,6 +110,9 @@ Map<String, dynamic> testPasskeyRequestOptions({
     },
   };
 }
+
+String testBytesBase64Url(String value) =>
+    base64UrlEncode(utf8.encode(value)).replaceAll('=', '');
 
 Map<String, dynamic> testPasskeyCreationOptions({
   required String challenge,
@@ -127,13 +132,15 @@ passkey.PasskeyAuthenticationCredential testPasskeyAuthenticationCredential(
 ) {
   return passkeyAuthenticationCredentialFromJson({
     'id': id,
-    'rawId': testBytesJson(id),
-    'type': 1,
+    'rawId': testBytesBase64Url(id),
+    'type': 'public-key',
     'response': {
-      'authenticatorData': testBytesJson('auth-data'),
-      'clientDataJSON': testBytesJson('{}'),
-      'signature': testBytesJson('sig'),
+      'authenticatorData': testBytesBase64Url('auth-data'),
+      'clientDataJSON': testBytesBase64Url('{}'),
+      'signature': testBytesBase64Url('sig'),
+      'userHandle': testBytesBase64Url('usr_1'),
     },
+    'clientExtensionResults': <String, dynamic>{},
   });
 }
 
@@ -142,16 +149,150 @@ passkey.PasskeyRegistrationCredential testPasskeyRegistrationCredential(
 ) {
   return passkeyRegistrationCredentialFromJson({
     'id': id,
-    'rawId': testBytesJson(id),
-    'type': 1,
+    'rawId': testBytesBase64Url(id),
+    'type': 'public-key',
     'response': {
-      'attestationObject': testBytesJson('attestation'),
-      'clientDataJSON': testBytesJson('{}'),
+      'attestationObject': testBytesBase64Url('attestation'),
+      'clientDataJSON': testBytesBase64Url('{}'),
+      'transports': ['internal'],
     },
+    'clientExtensionResults': <String, dynamic>{},
   });
 }
 
 void main() {
+  test('TOTP MFA facades send protobuf JSON and store login tokens', () async {
+    final requests = <http.Request>[];
+    final session = SyncTvSession();
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test',
+      session: session,
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          jsonEncode({
+            'accessToken': 'access-${requests.length}',
+            'refreshToken': 'refresh-${requests.length}',
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+
+    await api.auth.verifyMfaTotp(
+      client.VerifyMfaTotpRequest(mfaSessionId: 'mfa-session', code: '123456'),
+    );
+    await api.auth.verifyMfaRecoveryCode(
+      client.VerifyMfaRecoveryCodeRequest(
+        mfaSessionId: 'mfa-session-2',
+        recoveryCode: 'ABCD-EFGH-JKLM',
+      ),
+    );
+
+    expect(requests.map((request) => request.method), ['POST', 'POST']);
+    expect(requests.map((request) => request.url.path), [
+      '/api/auth/mfa/totp/verify',
+      '/api/auth/mfa/recovery-code/verify',
+    ]);
+    expect(jsonDecode(requests[0].body), {
+      'mfaSessionId': 'mfa-session',
+      'code': '123456',
+    });
+    expect(jsonDecode(requests[1].body), {
+      'mfaSessionId': 'mfa-session-2',
+      'recoveryCode': 'ABCD-EFGH-JKLM',
+    });
+    expect(session.accessToken, 'access-2');
+    expect(session.refreshToken, 'refresh-2');
+  });
+
+  test(
+    'TOTP account facades cover setup recovery codes and deletion',
+    () async {
+      final requests = <http.Request>[];
+      final session = SyncTvSession()..accessToken = 'account-token';
+      final api = SyncTvApiClient(
+        baseUrl: 'https://example.test',
+        session: session,
+        httpClient: MockClient((request) async {
+          requests.add(request);
+          final response = switch (request.url.path) {
+            '/api/user/totp/setup/start' => {
+              'setupId': 'setup-id',
+              'secret': 'JBSWY3DPEHPK3PXP',
+              'otpauthUri': 'otpauth://totp/SyncTV:test',
+              'expiresAt': '1700000000',
+            },
+            '/api/user/totp/setup/finish' => {
+              'recoveryCodes': ['CODE-ONE1-TEST'],
+            },
+            '/api/user/totp/recovery-codes/regenerate' => {
+              'recoveryCodes': ['CODE-TWO2-TEST'],
+            },
+            '/api/user/totp' => {'deleted': true},
+            _ => throw StateError('Unexpected TOTP path ${request.url.path}'),
+          };
+          return http.Response(
+            jsonEncode(response),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+      );
+
+      final setup = await api.user.startTotpSetup(
+        client.StartTotpSetupRequest(verificationId: 'verification-1'),
+      );
+      final confirmed = await api.user.finishTotpSetup(
+        client.FinishTotpSetupRequest(setupId: setup.setupId, code: '123456'),
+      );
+      final regenerated = await api.user.regenerateTotpRecoveryCodes(
+        client.RegenerateTotpRecoveryCodesRequest(
+          verificationId: 'verification-2',
+        ),
+      );
+      final deleted = await api.user.deleteTotp(
+        client.DeleteTotpRequest(verificationId: 'verification-3'),
+      );
+
+      expect(setup.secret, 'JBSWY3DPEHPK3PXP');
+      expect(setup.expiresAt.toInt(), 1700000000);
+      expect(confirmed.recoveryCodes, ['CODE-ONE1-TEST']);
+      expect(regenerated.recoveryCodes, ['CODE-TWO2-TEST']);
+      expect(deleted.deleted, isTrue);
+      expect(
+        requests.map((request) => '${request.method} ${request.url.path}'),
+        [
+          'POST /api/user/totp/setup/start',
+          'POST /api/user/totp/setup/finish',
+          'POST /api/user/totp/recovery-codes/regenerate',
+          'DELETE /api/user/totp',
+        ],
+      );
+      expect(
+        requests.every(
+          (request) =>
+              request.headers['authorization'] == 'Bearer account-token',
+        ),
+        isTrue,
+      );
+      expect(jsonDecode(requests[0].body), {
+        'verificationId': 'verification-1',
+      });
+      expect(jsonDecode(requests[1].body), {
+        'setupId': 'setup-id',
+        'code': '123456',
+      });
+      expect(jsonDecode(requests[2].body), {
+        'verificationId': 'verification-2',
+      });
+      expect(jsonDecode(requests[3].body), {
+        'verificationId': 'verification-3',
+      });
+    },
+  );
+
   test('empty HTTP error responses retain their status code', () async {
     final api = SyncTvApiClient(
       baseUrl: 'https://example.test',
@@ -162,7 +303,7 @@ void main() {
     await expectLater(
       api.auth.loginWithDirectPassword(
         client.LoginWithDirectPasswordRequest(
-          username: 'user',
+          loginSessionId: 'login-session',
           password: 'password',
         ),
       ),
@@ -468,6 +609,7 @@ void main() {
         enableGuest: false,
         emailSignupNeedReview: true,
         enableWebauthn: true,
+        webauthnRpId: 'example.com',
         enableWebauthnSignup: true,
         webauthnSignupNeedReview: true,
         movieProxy: false,
@@ -2991,8 +3133,8 @@ void main() {
       final api = SyncTvApiClient(
         baseUrl: 'https://example.test/api',
         session: session,
-        onAuthError: () => authErrors++,
-        onTokenRefresh: () async => persistedRefresh = true,
+        onAuthError: (_) => authErrors++,
+        onTokenRefresh: (_) async => persistedRefresh = true,
         httpClient: MockClient((request) async {
           requests.add(request);
           if (request.url.path == '/api/user') {
@@ -3040,6 +3182,272 @@ void main() {
       ]);
     },
   );
+
+  test('signed upload 401 does not invalidate the user session', () async {
+    var authErrors = 0;
+    final session = SyncTvSession()
+      ..accessToken = 'user-access'
+      ..refreshToken = 'user-refresh';
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test',
+      session: session,
+      onAuthError: (_) => authErrors++,
+      httpClient: MockClient(
+        (_) async => http.Response(
+          jsonEncode({'message': 'Upload token expired'}),
+          401,
+          headers: {'content-type': 'application/json'},
+        ),
+      ),
+    );
+
+    await expectLater(
+      api.uploadRawBytes('/api/files/upload-object', const [
+        1,
+        2,
+        3,
+      ], contentType: 'application/octet-stream'),
+      throwsA(
+        isA<SyncTvApiException>().having(
+          (error) => error.statusCode,
+          'statusCode',
+          401,
+        ),
+      ),
+    );
+    expect(authErrors, 0);
+    expect(session.accessToken, 'user-access');
+    expect(session.refreshToken, 'user-refresh');
+  });
+
+  test(
+    'API client keeps the refreshed session when retry returns a business 401',
+    () async {
+      final requests = <http.Request>[];
+      var authErrors = 0;
+      final session = SyncTvSession()
+        ..accessToken = 'access-token'
+        ..refreshToken = 'refresh-token';
+      final api = SyncTvApiClient(
+        baseUrl: 'https://example.test/api',
+        session: session,
+        onAuthError: (_) => authErrors++,
+        httpClient: MockClient((request) async {
+          requests.add(request);
+          if (request.url.path == '/api/auth/refresh') {
+            return http.Response(
+              jsonEncode({
+                'accessToken': 'fresh-access',
+                'refreshToken': 'fresh-refresh',
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            );
+          }
+          if (request.url.path == '/api/user') {
+            return http.Response(
+              jsonEncode({'message': 'Authentication failed'}),
+              401,
+              headers: {'content-type': 'application/json'},
+            );
+          }
+          return http.Response('not found', 404);
+        }),
+      );
+
+      await expectLater(
+        api.user.getProfile(client.GetProfileRequest()),
+        throwsA(
+          isA<SyncTvApiException>().having(
+            (error) => error.statusCode,
+            'statusCode',
+            401,
+          ),
+        ),
+      );
+
+      expect(session.accessToken, 'fresh-access');
+      expect(session.refreshToken, 'fresh-refresh');
+      expect(authErrors, 0);
+      expect(requests.map((request) => request.url.path), [
+        '/api/user',
+        '/api/auth/refresh',
+        '/api/user',
+      ]);
+    },
+  );
+
+  test(
+    'late login response cannot overwrite the newly active server',
+    () async {
+      final responseCompleter = Completer<http.Response>();
+      final requestStarted = Completer<void>();
+      final session = SyncTvSession();
+      final api = SyncTvApiClient(
+        baseUrl: 'https://server-a.test',
+        session: session,
+        httpClient: MockClient((request) {
+          requestStarted.complete();
+          return responseCompleter.future;
+        }),
+      );
+
+      final login = api.auth.loginWithDirectPassword(
+        client.LoginWithDirectPasswordRequest(
+          loginSessionId: 'login-a',
+          password: 'password-a',
+        ),
+      );
+      await requestStarted.future;
+      api.baseUrl = 'https://server-b.test';
+      session
+        ..accessToken = 'server-b-access'
+        ..refreshToken = 'server-b-refresh';
+      responseCompleter.complete(
+        http.Response(
+          jsonEncode({
+            'accessToken': 'server-a-access',
+            'refreshToken': 'server-a-refresh',
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        ),
+      );
+
+      await expectLater(login, throwsA(isA<SyncTvStaleEndpointException>()));
+      expect(session.accessToken, 'server-b-access');
+      expect(session.refreshToken, 'server-b-refresh');
+    },
+  );
+
+  test('late unauthorized response cannot clear the active server', () async {
+    final responseCompleter = Completer<http.Response>();
+    final requestStarted = Completer<void>();
+    var authErrors = 0;
+    final session = SyncTvSession()..accessToken = 'server-a-access';
+    final api = SyncTvApiClient(
+      baseUrl: 'https://server-a.test',
+      session: session,
+      onAuthError: (_) => authErrors++,
+      httpClient: MockClient((request) {
+        requestStarted.complete();
+        return responseCompleter.future;
+      }),
+    );
+
+    final profile = api.user.getProfile(client.GetProfileRequest());
+    await requestStarted.future;
+    api.baseUrl = 'https://server-b.test';
+    session.accessToken = 'server-b-access';
+    responseCompleter.complete(
+      http.Response(
+        jsonEncode({'message': 'expired server-a token'}),
+        401,
+        headers: {'content-type': 'application/json'},
+      ),
+    );
+
+    await expectLater(profile, throwsA(isA<SyncTvStaleEndpointException>()));
+    expect(authErrors, 0);
+    expect(session.accessToken, 'server-b-access');
+  });
+
+  test('token refresh is isolated by endpoint generation', () async {
+    final serverARefresh = Completer<http.Response>();
+    final serverARefreshStarted = Completer<void>();
+    var serverBProfileRequests = 0;
+    var serverBRefreshRequests = 0;
+    final session = SyncTvSession()
+      ..accessToken = 'server-a-expired'
+      ..refreshToken = 'server-a-refresh';
+    final api = SyncTvApiClient(
+      baseUrl: 'https://server-a.test',
+      session: session,
+      httpClient: MockClient((request) {
+        if (request.url.host == 'server-a.test' &&
+            request.url.path == '/api/user') {
+          return Future.value(
+            http.Response(
+              jsonEncode({'message': 'expired'}),
+              401,
+              headers: {'content-type': 'application/json'},
+            ),
+          );
+        }
+        if (request.url.host == 'server-a.test' &&
+            request.url.path == '/api/auth/refresh') {
+          serverARefreshStarted.complete();
+          return serverARefresh.future;
+        }
+        if (request.url.host == 'server-b.test' &&
+            request.url.path == '/api/user') {
+          serverBProfileRequests++;
+          if (serverBProfileRequests == 1) {
+            return Future.value(
+              http.Response(
+                jsonEncode({'message': 'expired'}),
+                401,
+                headers: {'content-type': 'application/json'},
+              ),
+            );
+          }
+          return Future.value(
+            http.Response(
+              jsonEncode({'id': 'user-b', 'username': 'server-b-user'}),
+              200,
+              headers: {'content-type': 'application/json'},
+            ),
+          );
+        }
+        if (request.url.host == 'server-b.test' &&
+            request.url.path == '/api/auth/refresh') {
+          serverBRefreshRequests++;
+          return Future.value(
+            http.Response(
+              jsonEncode({
+                'accessToken': 'server-b-fresh',
+                'refreshToken': 'server-b-fresh-refresh',
+              }),
+              200,
+              headers: {'content-type': 'application/json'},
+            ),
+          );
+        }
+        return Future.value(http.Response('not found', 404));
+      }),
+    );
+
+    final serverAProfile = api.user.getProfile(client.GetProfileRequest());
+    await serverARefreshStarted.future;
+    api.baseUrl = 'https://server-b.test';
+    session
+      ..accessToken = 'server-b-expired'
+      ..refreshToken = 'server-b-refresh';
+
+    final serverBProfile = await api.user.getProfile(
+      client.GetProfileRequest(),
+    );
+    expect(serverBProfile.id, 'user-b');
+    expect(serverBRefreshRequests, 1);
+    expect(session.accessToken, 'server-b-fresh');
+
+    serverARefresh.complete(
+      http.Response(
+        jsonEncode({
+          'accessToken': 'server-a-fresh',
+          'refreshToken': 'server-a-fresh-refresh',
+        }),
+        200,
+        headers: {'content-type': 'application/json'},
+      ),
+    );
+    await expectLater(
+      serverAProfile,
+      throwsA(isA<SyncTvStaleEndpointException>()),
+    );
+    expect(session.accessToken, 'server-b-fresh');
+    expect(session.refreshToken, 'server-b-fresh-refresh');
+  });
 
   test(
     'service fetches a single media record from protobuf endpoint',
@@ -3608,8 +4016,8 @@ void main() {
     final api = SyncTvApiClient(
       baseUrl: 'https://example.test/api',
       session: session,
-      onAuthError: () => authErrors++,
-      onTokenRefresh: () async => persistedRefresh = true,
+      onAuthError: (_) => authErrors++,
+      onTokenRefresh: (_) async => persistedRefresh = true,
       httpClient: MockClient((request) async {
         requests.add(request);
         if (request.url.path == '/api/rooms/room_1/watch/room-members') {
@@ -9798,29 +10206,32 @@ void main() {
     },
   );
 
-  test('server profiles merge endpoints for one server id', () async {
+  test('server profiles isolate addresses that declare the same id', () async {
     SharedPreferences.setMockInitialValues({});
     final session = SyncTvSession();
-    final store = SyncTvSessionStore(session);
+    final store = SyncTvSessionStore(session, builtInServerUrl: '');
 
     await store.load();
     await store.addOrUpdateServer(
-      serverId: 'srv_same',
+      declaredServerId: 'srv_same',
       name: 'Main',
       endpoint: 'https://one.example.test',
     );
     await store.addOrUpdateServer(
-      serverId: 'srv_same',
+      declaredServerId: 'srv_same',
       name: 'Main',
       endpoint: 'https://two.example.test/',
     );
 
-    expect(store.servers, hasLength(1));
-    expect(store.activeServerId, 'srv_same');
-    expect(store.activeServer!.endpoints, [
-      'https://one.example.test',
-      'https://two.example.test',
-    ]);
+    expect(store.servers, hasLength(2));
+    expect(store.activeServerEndpoint, 'https://two.example.test');
+    expect(
+      store.servers.map((server) => server.endpoint),
+      containsAll(['https://one.example.test', 'https://two.example.test']),
+    );
+    expect(store.servers.map((server) => server.declaredServerId).toSet(), {
+      'srv_same',
+    });
     expect(store.baseUrl, 'https://two.example.test');
   });
 
@@ -9831,7 +10242,7 @@ void main() {
 
     await store.load();
     await store.addOrUpdateServer(
-      serverId: 'srv_a',
+      declaredServerId: 'srv_a',
       name: 'A',
       endpoint: 'https://a.example.test',
     );
@@ -9840,7 +10251,7 @@ void main() {
     await store.persistTokens();
 
     await store.addOrUpdateServer(
-      serverId: 'srv_b',
+      declaredServerId: 'srv_b',
       name: 'B',
       endpoint: 'https://b.example.test',
     );
@@ -9848,12 +10259,12 @@ void main() {
     session.accessToken = 'token-b';
     await store.persistTokens();
 
-    await store.activateServer('srv_a');
+    await store.activateServer('https://a.example.test');
     expect(store.baseUrl, 'https://a.example.test');
     expect(session.accessToken, 'token-a');
     expect(session.refreshToken, 'refresh-a');
 
-    await store.activateServer('srv_b');
+    await store.activateServer('https://b.example.test');
     expect(store.baseUrl, 'https://b.example.test');
     expect(session.accessToken, 'token-b');
     expect(session.refreshToken, isNull);
@@ -9884,7 +10295,10 @@ void main() {
 
       expect(Uri.parse(link).path, '/rooms/join');
       expect(parsed.roomId, 'room_123');
-      expect(parsed.serverId, 'srv_share');
+      expect(
+        parsed.serverEndpoint,
+        'http://${server.address.host}:${server.port}',
+      );
       expect(RoomInviteService.parse('room_plain').roomId, 'room_plain');
     } finally {
       await subscription.cancel();
@@ -10322,7 +10736,7 @@ void main() {
 
     final response = await api.auth.confirmEmailLogin(
       client.ConfirmEmailLoginRequest(
-        email: 'alice@example.test',
+        loginSessionId: 'login-session',
         emailToken: emailLoginToken,
       ),
     );
@@ -10331,7 +10745,7 @@ void main() {
     expect(capturedRequest, isNotNull);
     expect(capturedRequest!.url.path, '/api/auth/email/confirm');
     expect(jsonDecode(capturedRequest!.body), {
-      'email': 'alice@example.test',
+      'loginSessionId': 'login-session',
       'emailToken': emailLoginToken,
     });
     expect(session.accessToken, 'access-token');
@@ -10411,7 +10825,7 @@ void main() {
       );
       await api.auth.loginWithDirectPassword(
         client.LoginWithDirectPasswordRequest(
-          email: 'alice@example.test',
+          loginSessionId: 'login-session',
           password: 'plain-password',
         ),
       );
@@ -10440,7 +10854,7 @@ void main() {
         'password': 'plain-password',
       });
       expect(jsonDecode(requests[1].body), {
-        'email': 'alice@example.test',
+        'loginSessionId': 'login-session',
         'password': 'plain-password',
       });
       expect(jsonDecode(requests[2].body), {
@@ -10661,56 +11075,332 @@ void main() {
     },
   );
 
-  test(
-    'direct password domain selects one populated login identifier',
-    () async {
-      SharedPreferences.setMockInitialValues({});
-      final requests = <http.Request>[];
-      final session = SyncTvSession();
-      final api = SyncTvApiClient(
-        baseUrl: 'https://example.test/api',
-        session: session,
-        httpClient: MockClient((request) async {
-          requests.add(request);
-          return http.Response(
-            jsonEncode({
-              'user': {
-                'id': 'usr_1',
-                'username': 'alice',
-                'email': 'alice@example.test',
-              },
-              'accessToken': 'access',
-              'refreshToken': 'refresh',
-            }),
-            200,
-            headers: {'content-type': 'application/json'},
-          );
-        }),
-      );
-      final service = SyncTvAuthDomainService(
-        api: api,
-        sessionStore: SyncTvSessionStore(session),
-      );
+  test('login discovery is server-driven and preserves method order', () async {
+    final requests = <http.Request>[];
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: SyncTvSession(),
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          jsonEncode({
+            'loginSessionId': 'login-session',
+            'availableMethods': [
+              'LOGIN_METHOD_PASSKEY',
+              'LOGIN_METHOD_PASSWORD',
+              'LOGIN_METHOD_EMAIL_CODE',
+            ],
+            'expiresAt': '2000000000',
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final service = SyncTvAuthDomainService(
+      api: api,
+      sessionStore: SyncTvSessionStore(SyncTvSession()),
+    );
 
-      await service.loginWithDirectPassword(
-        username: 'alice',
-        email: '',
-        password: 'plain-password',
-      );
-      await service.loginWithDirectPassword(
-        username: 'alice',
-        email: 'alice@example.test',
-        password: 'plain-password',
-      );
+    final login = await service.startLogin('alice@example.test');
 
-      expect(requests.map((request) => jsonDecode(request.body)), [
-        {'username': 'alice', 'password': 'plain-password'},
-        {'email': 'alice@example.test', 'password': 'plain-password'},
-      ]);
-      expect(session.accessToken, 'access');
-      expect(session.refreshToken, 'refresh');
-    },
-  );
+    expect(requests.single.url.path, '/api/auth/login/start');
+    expect(jsonDecode(requests.single.body), {'email': 'alice@example.test'});
+    expect(login.sessionId, 'login-session');
+    expect(login.supportsPasskey, isTrue);
+    expect(login.supportsPassword, isTrue);
+    expect(login.supportsEmailCode, isTrue);
+    expect(
+      login.expiresAt,
+      DateTime.fromMillisecondsSinceEpoch(2000000000000, isUtc: true),
+    );
+  });
+
+  test('Passkey option mapping preserves WebAuthn hints and extensions', () {
+    final creation = passkey.PasskeyCreationChallenge(
+      publicKey: passkey.PasskeyPublicKeyCredentialCreationOptions(
+        rp: passkey.PasskeyRelyingParty(id: 'example.test', name: 'SyncTV'),
+        user: passkey.PasskeyUserEntity(
+          id: utf8.encode('user-1'),
+          name: 'alice',
+          displayName: 'Alice',
+        ),
+        challenge: utf8.encode('register-challenge'),
+        pubKeyCredParams: [
+          passkey.PasskeyPubKeyCredentialParam(
+            type: passkey_enum
+                .PasskeyPublicKeyCredentialType
+                .PASSKEY_PUBLIC_KEY_CREDENTIAL_TYPE_PUBLIC_KEY,
+            alg: Int64(-7),
+          ),
+        ],
+        hints: [
+          passkey_enum
+              .PasskeyPublicKeyCredentialHint
+              .PASSKEY_PUBLIC_KEY_CREDENTIAL_HINT_CLIENT_DEVICE,
+          passkey_enum
+              .PasskeyPublicKeyCredentialHint
+              .PASSKEY_PUBLIC_KEY_CREDENTIAL_HINT_SECURITY_KEY,
+        ],
+        attestation: passkey_enum
+            .PasskeyAttestationConveyancePreference
+            .PASSKEY_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT,
+        attestationFormats: [
+          passkey_enum
+              .PasskeyAttestationFormat
+              .PASSKEY_ATTESTATION_FORMAT_PACKED,
+          passkey_enum
+              .PasskeyAttestationFormat
+              .PASSKEY_ATTESTATION_FORMAT_APPLE,
+        ],
+        extensions: passkey.PasskeyRegistrationExtensionsInput(
+          credProtect: passkey.PasskeyCredProtectInput(
+            credentialProtectionPolicy: passkey_enum
+                .PasskeyCredentialProtectionPolicy
+                .PASSKEY_CREDENTIAL_PROTECTION_POLICY_USER_VERIFICATION_REQUIRED,
+            enforceCredentialProtectionPolicy: false,
+          ),
+          uvm: true,
+          credProps: true,
+          minPinLength: true,
+          hmacCreateSecret: true,
+        ),
+      ),
+    );
+    final authentication = passkey.PasskeyRequestChallenge(
+      mediation: passkey_enum
+          .PasskeyMediationRequirement
+          .PASSKEY_MEDIATION_REQUIREMENT_CONDITIONAL,
+      publicKey: passkey.PasskeyPublicKeyCredentialRequestOptions(
+        challenge: utf8.encode('login-challenge'),
+        rpId: 'example.test',
+        userVerification: passkey_enum
+            .PasskeyUserVerificationRequirement
+            .PASSKEY_USER_VERIFICATION_REQUIREMENT_REQUIRED,
+        hints: [
+          passkey_enum
+              .PasskeyPublicKeyCredentialHint
+              .PASSKEY_PUBLIC_KEY_CREDENTIAL_HINT_HYBRID,
+        ],
+        extensions: passkey.PasskeyAuthenticationExtensionsInput(
+          appid: 'https://example.test/app-id.json',
+          uvm: true,
+          hmacGetSecret: passkey.PasskeyHmacGetSecretInput(
+            output1: utf8.encode('salt-1'),
+            output2: utf8.encode('salt-2'),
+          ),
+        ),
+      ),
+    );
+
+    expect(passkeyChallengeToJson(creation), {
+      'rp': {'id': 'example.test', 'name': 'SyncTV'},
+      'user': {
+        'id': testBytesBase64Url('user-1'),
+        'name': 'alice',
+        'displayName': 'Alice',
+      },
+      'challenge': testBytesBase64Url('register-challenge'),
+      'pubKeyCredParams': [
+        {'type': 'public-key', 'alg': -7},
+      ],
+      'hints': ['client-device', 'security-key'],
+      'attestation': 'direct',
+      'attestationFormats': ['packed', 'apple'],
+      'extensions': {
+        'credProtect': {
+          'credentialProtectionPolicy': 'userVerificationRequired',
+          'enforceCredentialProtectionPolicy': false,
+        },
+        'uvm': true,
+        'credProps': true,
+        'minPinLength': true,
+        'hmacCreateSecret': true,
+      },
+    });
+    expect(passkeyChallengeToJson(authentication), {
+      'challenge': testBytesBase64Url('login-challenge'),
+      'rpId': 'example.test',
+      'userVerification': 'required',
+      'hints': ['hybrid'],
+      'extensions': {
+        'appid': 'https://example.test/app-id.json',
+        'uvm': true,
+        'hmacGetSecret': {
+          'output1': testBytesBase64Url('salt-1'),
+          'output2': testBytesBase64Url('salt-2'),
+        },
+      },
+      'mediation': 'conditional',
+    });
+  });
+
+  test('Passkey credential mapping preserves extension results', () {
+    final registration = passkeyRegistrationCredentialFromJson({
+      'id': 'registration-id',
+      'rawId': testBytesBase64Url('registration-id'),
+      'type': 'public-key',
+      'response': {
+        'attestationObject': testBytesBase64Url('attestation'),
+        'clientDataJSON': testBytesBase64Url('{}'),
+        'transports': ['internal'],
+      },
+      'clientExtensionResults': {
+        'appid': false,
+        'credProps': {'rk': true},
+        'hmacSecret': true,
+        'credProtect': 'userVerificationRequired',
+        'minPinLength': 6,
+      },
+    });
+    final authentication = passkeyAuthenticationCredentialFromJson({
+      'id': 'authentication-id',
+      'rawId': testBytesBase64Url('authentication-id'),
+      'type': 'public-key',
+      'response': {
+        'authenticatorData': testBytesBase64Url('authenticator-data'),
+        'clientDataJSON': testBytesBase64Url('{}'),
+        'signature': testBytesBase64Url('signature'),
+      },
+      'clientExtensionResults': {
+        'appid': true,
+        'hmacGetSecret': {
+          'output1': testBytesBase64Url('secret-1'),
+          'output2': testBytesBase64Url('secret-2'),
+        },
+      },
+    });
+
+    expect(registration.hasExtensions(), isTrue);
+    expect(registration.extensions.appid, isFalse);
+    expect(registration.extensions.credProps.rk, isTrue);
+    expect(registration.extensions.hmacSecret, isTrue);
+    expect(
+      registration.extensions.credProtect,
+      passkey_enum
+          .PasskeyCredentialProtectionPolicy
+          .PASSKEY_CREDENTIAL_PROTECTION_POLICY_USER_VERIFICATION_REQUIRED,
+    );
+    expect(registration.extensions.minPinLength, 6);
+    expect(authentication.hasExtensions(), isTrue);
+    expect(authentication.extensions.appid, isTrue);
+    expect(
+      authentication.extensions.hmacGetSecret.output1,
+      utf8.encode('secret-1'),
+    );
+    expect(
+      authentication.extensions.hmacGetSecret.output2,
+      utf8.encode('secret-2'),
+    );
+  });
+
+  test('Passkey registration accepts an omitted transport list', () {
+    final credential = passkeyRegistrationCredentialFromJson({
+      'id': 'registration-id',
+      'rawId': testBytesBase64Url('registration-id'),
+      'type': 'public-key',
+      'response': {
+        'attestationObject': testBytesBase64Url('attestation'),
+        'clientDataJSON': testBytesBase64Url('{}'),
+      },
+      'clientExtensionResults': <String, dynamic>{},
+    });
+
+    expect(credential.response.transports, isEmpty);
+  });
+
+  test('direct password domain sends the selected login session', () async {
+    SharedPreferences.setMockInitialValues({});
+    final requests = <http.Request>[];
+    final session = SyncTvSession();
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: session,
+      httpClient: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          jsonEncode({
+            'user': {
+              'id': 'usr_1',
+              'username': 'alice',
+              'email': 'alice@example.test',
+            },
+            'accessToken': 'access',
+            'refreshToken': 'refresh',
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+    final service = SyncTvAuthDomainService(
+      api: api,
+      sessionStore: SyncTvSessionStore(session),
+    );
+
+    await service.loginWithDirectPassword(
+      loginSessionId: 'login-session-1',
+      password: 'plain-password',
+    );
+    await service.loginWithDirectPassword(
+      loginSessionId: 'login-session-2',
+      password: 'plain-password',
+    );
+
+    expect(requests.map((request) => jsonDecode(request.body)), [
+      {'loginSessionId': 'login-session-1', 'password': 'plain-password'},
+      {'loginSessionId': 'login-session-2', 'password': 'plain-password'},
+    ]);
+    expect(session.accessToken, 'access');
+    expect(session.refreshToken, 'refresh');
+  });
+
+  test('MFA challenge preserves methods and UTC expiry', () async {
+    final session = SyncTvSession();
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test/api',
+      session: session,
+      httpClient: MockClient(
+        (_) async => http.Response(
+          jsonEncode({
+            'mfa': {
+              'required': true,
+              'sessionId': 'mfa-session',
+              'availableMethods': [
+                'MFA_METHOD_TOTP',
+                'MFA_METHOD_RECOVERY_CODE',
+              ],
+              'maskedEmail': 'a***@example.test',
+              'expiresAt': '2000000300',
+            },
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        ),
+      ),
+    );
+    final service = SyncTvAuthDomainService(
+      api: api,
+      sessionStore: SyncTvSessionStore(session),
+    );
+
+    final result = await service.loginWithDirectPassword(
+      loginSessionId: 'login-session',
+      password: 'plain-password',
+    );
+
+    expect(result.requiresMfa, isTrue);
+    expect(result.mfa?.supportsTotp, isTrue);
+    expect(result.mfa?.supportsRecoveryCode, isTrue);
+    expect(result.mfa?.supportsPasskey, isFalse);
+    expect(result.mfa?.maskedEmail, 'a***@example.test');
+    expect(
+      result.mfa?.expiresAt,
+      DateTime.fromMillisecondsSinceEpoch(2000000300000, isUtc: true),
+    );
+    expect(session.accessToken, isNull);
+    expect(session.refreshToken, isNull);
+  });
 
   test(
     'passkey endpoints translate WebAuthn JSON through protobuf bytes',
@@ -10808,7 +11498,7 @@ void main() {
       );
 
       final loginStart = await api.auth.startPasskeyLogin(
-        client.StartPasskeyLoginRequest(username: 'alice'),
+        client.StartPasskeyLoginRequest(loginSessionId: 'login-context'),
       );
       await api.auth.finishPasskeyLogin(
         client.FinishPasskeyLoginRequest(
@@ -10836,40 +11526,38 @@ void main() {
         ),
       );
 
-      expect(
-        passkeyChallengeToJson(loginStart.options),
-        testPasskeyRequestOptions(
-          challenge: 'login-challenge',
-          rpId: 'example.test',
-        ),
-      );
-      expect(
-        passkeyChallengeToJson(mfaStart.options),
-        testPasskeyRequestOptions(
-          challenge: 'mfa-challenge',
-          allowCredentials: [
-            {
-              'id': testBytesJson('cred-1'),
-              'type': 'PASSKEY_PUBLIC_KEY_CREDENTIAL_TYPE_PUBLIC_KEY',
-            },
-          ],
-        ),
-      );
-      expect(
-        passkeyChallengeToJson(bindStart.options),
-        testPasskeyCreationOptions(
-          challenge: 'bind-challenge',
-          userId: 'usr_1',
-          username: 'alice',
-        ),
-      );
+      expect(passkeyChallengeToJson(loginStart.options), {
+        'challenge': testBytesBase64Url('login-challenge'),
+        'rpId': 'example.test',
+      });
+      expect(passkeyChallengeToJson(mfaStart.options), {
+        'challenge': testBytesBase64Url('mfa-challenge'),
+        'rpId': '',
+        'allowCredentials': [
+          {
+            'id': testBytesBase64Url('cred-1'),
+            'type': 'public-key',
+            'transports': <String>[],
+          },
+        ],
+      });
+      expect(passkeyChallengeToJson(bindStart.options), {
+        'rp': {'id': '', 'name': ''},
+        'user': {
+          'id': testBytesBase64Url('usr_1'),
+          'name': 'alice',
+          'displayName': '',
+        },
+        'challenge': testBytesBase64Url('bind-challenge'),
+        'pubKeyCredParams': <Map<String, dynamic>>[],
+      });
       expect(session.accessToken, 'mfa-access');
       expect(session.refreshToken, 'mfa-refresh');
 
       final bodies = requests
           .map((request) => jsonDecode(request.body) as Map<String, dynamic>)
           .toList();
-      expect(bodies[0], {'username': 'alice'});
+      expect(bodies[0], {'loginSessionId': 'login-context'});
       expect(bodies[1], {
         'sessionId': 'login_passkey_session',
         'credential': {
@@ -10879,6 +11567,7 @@ void main() {
             'authenticatorData': testBytesJson('auth-data'),
             'clientDataJSON': testBytesJson('{}'),
             'signature': testBytesJson('sig'),
+            'userHandle': testBytesJson('usr_1'),
           },
           'type': 1,
         },
@@ -10894,6 +11583,7 @@ void main() {
             'authenticatorData': testBytesJson('auth-data'),
             'clientDataJSON': testBytesJson('{}'),
             'signature': testBytesJson('sig'),
+            'userHandle': testBytesJson('usr_1'),
           },
           'type': 1,
         },
@@ -10907,6 +11597,7 @@ void main() {
           'response': {
             'attestationObject': testBytesJson('attestation'),
             'clientDataJSON': testBytesJson('{}'),
+            'transports': [4],
           },
           'type': 1,
         },
@@ -10927,9 +11618,9 @@ void main() {
             case '/api/user/sensitive-verification/start':
               return http.Response(
                 jsonEncode({
-                  'verificationId': 'verification_1',
                   'challenge': {
                     'sessionId': 'sensitive_session',
+                    'requiredCount': 2,
                     'requiredMethods': [
                       'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN',
                     ],
@@ -10939,6 +11630,7 @@ void main() {
                       'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN',
                       'SENSITIVE_OPERATION_VERIFICATION_METHOD_EMAIL',
                     ],
+                    'expiresAt': '2000000000',
                   },
                 }),
                 200,
@@ -10966,21 +11658,7 @@ void main() {
               );
             case '/api/user/sensitive-verification/finish':
               return http.Response(
-                jsonEncode({
-                  'verificationId': 'verification_1',
-                  'challenge': {
-                    'sessionId': 'sensitive_session',
-                    'requiredMethods': [
-                      'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN',
-                    ],
-                    'completedMethods': [
-                      'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN',
-                    ],
-                    'availableMethods': [
-                      'SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN',
-                    ],
-                  },
-                }),
+                jsonEncode({'verificationId': 'verification_1'}),
                 200,
                 headers: {'content-type': 'application/json'},
               );
@@ -10994,34 +11672,51 @@ void main() {
       );
 
       final start = await service.startSensitiveOperationVerification();
+      expect(start, isA<SensitiveOperationVerificationPending>());
+      final startChallenge =
+          (start as SensitiveOperationVerificationPending).challenge;
       final passkey = await service.startSensitiveOperationPasskey(
-        start.challenge.sessionId,
+        startChallenge.sessionId,
       );
       final emailCode = await service.requestSensitiveOperationEmailCode(
-        start.challenge.sessionId,
+        startChallenge.sessionId,
       );
       final finish = await service.finishSensitiveOperationVerification(
-        sessionId: start.challenge.sessionId,
+        sessionId: startChallenge.sessionId,
         method: client
             .SensitiveOperationVerificationMethod
             .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN,
         passkeySessionId: passkey.passkeySessionId,
-        passkeyCredential: {'id': 'cred-sensitive', 'type': 'public-key'},
+        passkeyCredential: {
+          'id': 'cred-sensitive',
+          'rawId': testBytesBase64Url('cred-sensitive'),
+          'type': 'public-key',
+          'response': {
+            'authenticatorData': testBytesBase64Url('auth-data'),
+            'clientDataJSON': testBytesBase64Url('{}'),
+            'signature': testBytesBase64Url('sig'),
+            'userHandle': testBytesBase64Url('usr_1'),
+          },
+          'clientExtensionResults': <String, dynamic>{},
+        },
       );
 
-      expect(start.verificationId, 'verification_1');
-      expect(start.challenge.requiresPasskey, isTrue);
+      expect(startChallenge.requiresPasskey, isTrue);
+      expect(startChallenge.requiredCount, 2);
       expect(
-        jsonDecode(utf8.decode(passkey.options)),
-        testPasskeyRequestOptions(challenge: 'sensitive-passkey'),
+        startChallenge.expiresAt,
+        DateTime.fromMillisecondsSinceEpoch(2000000000 * 1000),
       );
+      expect(jsonDecode(utf8.decode(passkey.options)), {
+        'challenge': testBytesBase64Url('sensitive-passkey'),
+        'rpId': '',
+      });
       expect(emailCode.maskedEmail, 'a***@example.test');
-      expect(finish.challenge.completedMethods, [
-        client
-            .SensitiveOperationVerificationMethod
-            .SENSITIVE_OPERATION_VERIFICATION_METHOD_WEBAUTHN
-            .value,
-      ]);
+      expect(finish, isA<SensitiveOperationVerificationComplete>());
+      expect(
+        (finish as SensitiveOperationVerificationComplete).verificationId,
+        'verification_1',
+      );
 
       expect(requests.map((request) => request.url.path), [
         '/api/user/sensitive-verification/start',
@@ -11041,10 +11736,60 @@ void main() {
         'password': '',
         'emailToken': '',
         'passkeySessionId': 'passkey_session',
-        'passkeyCredential': {'id': 'cred-sensitive'},
+        'passkeyCredential': {
+          'id': 'cred-sensitive',
+          'rawId': testBytesJson('cred-sensitive'),
+          'response': {
+            'authenticatorData': testBytesJson('auth-data'),
+            'clientDataJSON': testBytesJson('{}'),
+            'signature': testBytesJson('sig'),
+            'userHandle': testBytesJson('usr_1'),
+          },
+          'type': 1,
+        },
+        'totpCode': '',
+        'recoveryCode': '',
       });
     },
   );
+
+  test('two-factor changes use the verified security endpoint', () async {
+    late http.Request captured;
+    final api = SyncTvApiClient(
+      baseUrl: 'https://example.test',
+      session: SyncTvSession()..accessToken = 'access',
+      httpClient: MockClient((request) async {
+        captured = request;
+        return http.Response(
+          jsonEncode({
+            'preferences': {'twoFactorEnabled': true},
+            'authFactors': {
+              'password': true,
+              'email': true,
+              'eligibleCount': 2,
+            },
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+
+    final response = await api.user.setTwoFactorEnabled(
+      client.SetTwoFactorEnabledRequest(
+        enabled: true,
+        verificationId: 'verification-id',
+      ),
+    );
+
+    expect(captured.method, 'PUT');
+    expect(captured.url.path, '/api/user/two-factor');
+    expect(jsonDecode(captured.body), {
+      'enabled': true,
+      'verificationId': 'verification-id',
+    });
+    expect(response.preferences.twoFactorEnabled, isTrue);
+  });
 
   test(
     'opaque auth endpoints send protocol bytes without plaintext password',
@@ -11122,7 +11867,7 @@ void main() {
       );
       await api.auth.startOpaqueLogin(
         client.StartOpaqueLoginRequest(
-          username: 'alice',
+          loginSessionId: 'login-context',
           credentialRequest: [7, 8, 9],
         ),
       );
@@ -11153,7 +11898,7 @@ void main() {
         'registrationUpload': base64Encode([4, 5, 6]),
       });
       expect(bodies[2], {
-        'username': 'alice',
+        'loginSessionId': 'login-context',
         'credentialRequest': base64Encode([7, 8, 9]),
       });
       expect(bodies[3], {

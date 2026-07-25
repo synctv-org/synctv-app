@@ -8,7 +8,19 @@
 PRODUCT_NAME = SyncTV
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.sync.app
+PRODUCT_BUNDLE_IDENTIFIER = org.synctv.app
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.sync.app. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 SyncTV. All rights reserved.
+
+// CI writes the optional file from encrypted repository secrets. These defaults
+// keep local and fork builds ad-hoc signed and fully buildable.
+SYNC_TV_CODE_SIGN_IDENTITY = -
+SYNC_TV_CODE_SIGN_STYLE = Manual
+SYNC_TV_DEVELOPMENT_TEAM =
+SYNC_TV_PROVISIONING_PROFILE_SPECIFIER =
+#include? "../../Flutter/Signing.xcconfig"
+CODE_SIGN_IDENTITY = $(SYNC_TV_CODE_SIGN_IDENTITY)
+CODE_SIGN_STYLE = $(SYNC_TV_CODE_SIGN_STYLE)
+DEVELOPMENT_TEAM = $(SYNC_TV_DEVELOPMENT_TEAM)
+PROVISIONING_PROFILE_SPECIFIER = $(SYNC_TV_PROVISIONING_PROFILE_SPECIFIER)

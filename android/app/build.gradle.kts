@@ -61,8 +61,26 @@ fun validateOauth2AppLinkHost(host: String): String {
     return value
 }
 
+val releaseSigningValues = mapOf(
+    "storeFile" to System.getenv("SYNCTV_ANDROID_KEYSTORE_PATH"),
+    "storePassword" to System.getenv("SYNCTV_ANDROID_KEYSTORE_PASSWORD"),
+    "keyAlias" to System.getenv("SYNCTV_ANDROID_KEY_ALIAS"),
+    "keyPassword" to System.getenv("SYNCTV_ANDROID_KEY_PASSWORD"),
+)
+val configuredReleaseSigningValues = releaseSigningValues.filterValues { !it.isNullOrBlank() }
+if (
+    configuredReleaseSigningValues.isNotEmpty() &&
+    configuredReleaseSigningValues.size != releaseSigningValues.size
+) {
+    throw GradleException(
+        "Android release signing requires keystore path, store password, key alias, and key password"
+    )
+}
+val releaseSigningConfigured =
+    configuredReleaseSigningValues.size == releaseSigningValues.size
+
 android {
-    namespace = "com.sync.app"
+    namespace = "org.synctv.app"
     compileSdk = 36
     ndkVersion = "27.0.12077973"
 
@@ -72,7 +90,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.sync.app"
+        applicationId = "org.synctv.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -80,10 +98,24 @@ android {
         manifestPlaceholders["oauth2AppLinkHost"] = oauth2AppLinkHost()
     }
 
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            create("release") {
+                storeFile = file(releaseSigningValues.getValue("storeFile")!!)
+                storePassword = releaseSigningValues.getValue("storePassword")
+                keyAlias = releaseSigningValues.getValue("keyAlias")
+                keyPassword = releaseSigningValues.getValue("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Local and fork builds remain installable and are labeled as development
+            // artifacts by CI. Official releases inject a stable release keystore.
+            signingConfig = signingConfigs.getByName(
+                if (releaseSigningConfigured) "release" else "debug"
+            )
         }
     }
 }

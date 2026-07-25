@@ -119,30 +119,23 @@ class SyncTvService {
 
   static Future<void> setBaseUrl(String url) async {
     await _runtime.setBaseUrl(url);
-    _domains.cache.clear();
+    _domains = _createDomains();
   }
 
   static Future<SyncTvServerProfile> addServer(String url) async {
     final profile = await _runtime.addServer(url);
-    _domains.cache.clear();
+    _domains = _createDomains();
     return profile;
   }
 
-  static Future<void> activateServer(String serverId) async {
-    await _runtime.activateServer(serverId);
-    _domains.cache.clear();
+  static Future<void> activateServer(String endpoint) async {
+    await _runtime.activateServer(endpoint);
+    _domains = _createDomains();
   }
 
-  static Future<void> activateServerEndpoint(
-    String serverId,
-    String endpoint,
-  ) async {
-    await _runtime.activateServerEndpoint(serverId, endpoint);
-    _domains.cache.clear();
-  }
-
-  static Future<void> removeServer(String serverId) async {
-    await _runtime.removeServer(serverId);
+  static Future<void> removeServer(String endpoint) async {
+    await _runtime.removeServer(endpoint);
+    _domains = _createDomains();
   }
 
   static Future<String?> getToken() => _runtime.getToken();
@@ -182,13 +175,11 @@ class SyncTvService {
   }
 
   static Future<AuthResult> loginWithDirectPassword({
-    String username = '',
-    String email = '',
+    required String loginSessionId,
     required String password,
   }) async {
     return _domains.auth.loginWithDirectPassword(
-      username: username,
-      email: email,
+      loginSessionId: loginSessionId,
       password: password,
     );
   }
@@ -214,14 +205,18 @@ class SyncTvService {
   }
 
   static Future<AuthResult> confirmEmailLoginResult(
-    String email,
+    String loginSessionId,
     String token,
   ) async {
-    return _domains.auth.confirmEmailLoginResult(email, token);
+    return _domains.auth.confirmEmailLoginResult(loginSessionId, token);
   }
 
-  static Future<void> requestEmailLogin(String email) async {
-    await _domains.auth.requestEmailLogin(email);
+  static Future<LoginStart> startLogin(String identifier) {
+    return _domains.auth.startLogin(identifier);
+  }
+
+  static Future<void> requestEmailLogin(String loginSessionId) async {
+    await _domains.auth.requestEmailLogin(loginSessionId);
   }
 
   static Future<OpaqueRegistrationStart> startOpaqueRegistration({
@@ -247,13 +242,11 @@ class SyncTvService {
   }
 
   static Future<OpaqueLoginStart> startOpaqueLogin({
-    String username = '',
-    String email = '',
+    required String loginSessionId,
     required List<int> credentialRequest,
   }) async {
     return _domains.auth.startOpaqueLogin(
-      username: username,
-      email: email,
+      loginSessionId: loginSessionId,
       credentialRequest: credentialRequest,
     );
   }
@@ -291,10 +284,9 @@ class SyncTvService {
   }
 
   static Future<PasskeyChallengeStart> startPasskeyLogin({
-    String username = '',
-    String email = '',
+    String? loginSessionId,
   }) async {
-    return _domains.auth.startPasskeyLogin(username: username, email: email);
+    return _domains.auth.startPasskeyLogin(loginSessionId: loginSessionId);
   }
 
   static Future<AuthResult> finishPasskeyLogin({
@@ -339,6 +331,19 @@ class SyncTvService {
     );
   }
 
+  static Future<AuthResult> verifyMfaTotp({
+    required String mfaSessionId,
+    required String code,
+  }) => _domains.auth.verifyMfaTotp(mfaSessionId: mfaSessionId, code: code);
+
+  static Future<AuthResult> verifyMfaRecoveryCode({
+    required String mfaSessionId,
+    required String recoveryCode,
+  }) => _domains.auth.verifyMfaRecoveryCode(
+    mfaSessionId: mfaSessionId,
+    recoveryCode: recoveryCode,
+  );
+
   static Future<SensitiveOperationVerificationInfo>
   startSensitiveOperationVerification() async {
     return _domains.auth.startSensitiveOperationVerification();
@@ -363,6 +368,8 @@ class SyncTvService {
     String emailToken = '',
     String passkeySessionId = '',
     Object? passkeyCredential,
+    String totpCode = '',
+    String recoveryCode = '',
   }) async {
     return _domains.auth.finishSensitiveOperationVerification(
       sessionId: sessionId,
@@ -371,6 +378,8 @@ class SyncTvService {
       emailToken: emailToken,
       passkeySessionId: passkeySessionId,
       passkeyCredential: passkeyCredential,
+      totpCode: totpCode,
+      recoveryCode: recoveryCode,
     );
   }
 
@@ -517,12 +526,20 @@ class SyncTvService {
   }
 
   static Future<AccountPreferences> updateAccountPreferences({
-    bool? twoFactorEnabled,
     NotificationPreferences? notifications,
   }) async {
     return _domains.account.updateAccountPreferences(
-      twoFactorEnabled: twoFactorEnabled,
       notifications: notifications,
+    );
+  }
+
+  static Future<AccountPreferences> setTwoFactorEnabled({
+    required bool enabled,
+    required String verificationId,
+  }) async {
+    return _domains.account.setTwoFactorEnabled(
+      enabled: enabled,
+      verificationId: verificationId,
     );
   }
 
@@ -582,8 +599,14 @@ class SyncTvService {
     return _domains.account.listPasskeys(refresh: refresh);
   }
 
-  static Future<void> deletePasskey(String credentialId) async {
-    await _domains.account.deletePasskey(credentialId);
+  static Future<void> deletePasskey(
+    String credentialId, {
+    required String verificationId,
+  }) async {
+    await _domains.account.deletePasskey(
+      credentialId,
+      verificationId: verificationId,
+    );
   }
 
   static Future<OpaquePasswordUpdateStart> startOpaquePasswordUpdate({
@@ -625,12 +648,32 @@ class SyncTvService {
   static Future<PasskeyCredentialInfo> finishPasskeyBind({
     required String sessionId,
     required Object credential,
+    required String verificationId,
   }) async {
     return _domains.account.finishPasskeyBind(
       sessionId: sessionId,
       credential: credential,
+      verificationId: verificationId,
     );
   }
+
+  static Future<TotpSetupInfo> startTotpSetup({
+    required String verificationId,
+  }) => _domains.account.startTotpSetup(verificationId: verificationId);
+
+  static Future<List<String>> finishTotpSetup({
+    required String setupId,
+    required String code,
+  }) => _domains.account.finishTotpSetup(setupId: setupId, code: code);
+
+  static Future<List<String>> regenerateTotpRecoveryCodes({
+    required String verificationId,
+  }) => _domains.account.regenerateTotpRecoveryCodes(
+    verificationId: verificationId,
+  );
+
+  static Future<void> deleteTotp({required String verificationId}) =>
+      _domains.account.deleteTotp(verificationId: verificationId);
 
   static Future<String> requestPasswordReset(String email) async {
     return _domains.auth.requestPasswordReset(email);

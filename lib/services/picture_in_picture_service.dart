@@ -33,7 +33,7 @@ class PictureInPictureService with WindowListener {
 
   static final PictureInPictureService instance = PictureInPictureService._();
   static const MethodChannel _androidChannel = MethodChannel(
-    'com.sync.app/picture_in_picture',
+    'org.synctv.app/picture_in_picture',
   );
 
   final ValueNotifier<bool> active = ValueNotifier(false);

@@ -731,39 +731,566 @@ oauth2_enum.OAuth2ProviderType oauth2ProviderTypeFromString(String value) {
 }
 
 Map<String, dynamic> passkeyChallengeToJson(pb.GeneratedMessage challenge) {
-  return protoMessageToJsonMap(challenge);
+  return switch (challenge) {
+    passkey.PasskeyCreationChallenge() => _passkeyCreationOptionsToJson(
+      challenge.publicKey,
+    ),
+    passkey.PasskeyRequestChallenge() => {
+      ..._passkeyRequestOptionsToJson(challenge.publicKey),
+      'mediation': ?_passkeyMediation(challenge.mediation),
+    },
+    _ => throw ArgumentError.value(
+      challenge,
+      'challenge',
+      'Unsupported Passkey challenge type',
+    ),
+  };
+}
+
+Map<String, dynamic> _passkeyCreationOptionsToJson(
+  passkey.PasskeyPublicKeyCredentialCreationOptions options,
+) {
+  final selection = options.hasAuthenticatorSelection()
+      ? options.authenticatorSelection
+      : null;
+  return {
+    'rp': {'id': options.rp.id, 'name': options.rp.name},
+    'user': {
+      'id': _passkeyBytesToBase64Url(options.user.id),
+      'name': options.user.name,
+      'displayName': options.user.displayName,
+    },
+    'challenge': _passkeyBytesToBase64Url(options.challenge),
+    'pubKeyCredParams': options.pubKeyCredParams
+        .map(
+          (parameter) => {
+            'type': _passkeyCredentialType(parameter.type),
+            'alg': parameter.alg.toInt(),
+          },
+        )
+        .toList(growable: false),
+    if (options.hasTimeout()) 'timeout': options.timeout,
+    if (options.excludeCredentials.isNotEmpty)
+      'excludeCredentials': options.excludeCredentials
+          .map(_passkeyCredentialDescriptorToJson)
+          .toList(growable: false),
+    if (selection != null)
+      'authenticatorSelection': {
+        'authenticatorAttachment': ?_passkeyAuthenticatorAttachment(
+          selection.authenticatorAttachment,
+        ),
+        'residentKey': ?_passkeyResidentKey(selection.residentKey),
+        'requireResidentKey': selection.requireResidentKey,
+        'userVerification': ?_passkeyUserVerification(
+          selection.userVerification,
+        ),
+      },
+    if (options.hints.isNotEmpty)
+      'hints': options.hints
+          .map(_passkeyHint)
+          .whereType<String>()
+          .toList(growable: false),
+    'attestation': ?_passkeyAttestation(options.attestation),
+    if (options.attestationFormats.isNotEmpty)
+      'attestationFormats': options.attestationFormats
+          .map(_passkeyAttestationFormat)
+          .whereType<String>()
+          .toList(growable: false),
+    if (options.hasExtensions())
+      'extensions': _passkeyRegistrationExtensionsToJson(options.extensions),
+  };
+}
+
+Map<String, dynamic> _passkeyRequestOptionsToJson(
+  passkey.PasskeyPublicKeyCredentialRequestOptions options,
+) {
+  return {
+    'challenge': _passkeyBytesToBase64Url(options.challenge),
+    'rpId': options.rpId,
+    if (options.hasTimeout()) 'timeout': options.timeout,
+    if (options.allowCredentials.isNotEmpty)
+      'allowCredentials': options.allowCredentials
+          .map(_passkeyCredentialDescriptorToJson)
+          .toList(growable: false),
+    'userVerification': ?_passkeyUserVerification(options.userVerification),
+    if (options.hints.isNotEmpty)
+      'hints': options.hints
+          .map(_passkeyHint)
+          .whereType<String>()
+          .toList(growable: false),
+    if (options.hasExtensions())
+      'extensions': _passkeyAuthenticationExtensionsToJson(options.extensions),
+  };
+}
+
+Map<String, dynamic> _passkeyRegistrationExtensionsToJson(
+  passkey.PasskeyRegistrationExtensionsInput extensions,
+) {
+  return {
+    if (extensions.hasCredProtect())
+      'credProtect': {
+        'credentialProtectionPolicy': ?_passkeyCredentialProtectionPolicy(
+          extensions.credProtect.credentialProtectionPolicy,
+        ),
+        if (extensions.credProtect.hasEnforceCredentialProtectionPolicy())
+          'enforceCredentialProtectionPolicy':
+              extensions.credProtect.enforceCredentialProtectionPolicy,
+      },
+    if (extensions.hasUvm()) 'uvm': extensions.uvm,
+    if (extensions.hasCredProps()) 'credProps': extensions.credProps,
+    if (extensions.hasMinPinLength()) 'minPinLength': extensions.minPinLength,
+    if (extensions.hasHmacCreateSecret())
+      'hmacCreateSecret': extensions.hmacCreateSecret,
+  };
+}
+
+Map<String, dynamic> _passkeyAuthenticationExtensionsToJson(
+  passkey.PasskeyAuthenticationExtensionsInput extensions,
+) {
+  return {
+    if (extensions.appid.isNotEmpty) 'appid': extensions.appid,
+    if (extensions.hasUvm()) 'uvm': extensions.uvm,
+    if (extensions.hasHmacGetSecret())
+      'hmacGetSecret': {
+        'output1': _passkeyBytesToBase64Url(extensions.hmacGetSecret.output1),
+        if (extensions.hmacGetSecret.output2.isNotEmpty)
+          'output2': _passkeyBytesToBase64Url(extensions.hmacGetSecret.output2),
+      },
+  };
+}
+
+Map<String, dynamic> _passkeyCredentialDescriptorToJson(
+  passkey.PasskeyCredentialDescriptor credential,
+) {
+  return {
+    'type': _passkeyCredentialType(credential.type),
+    'id': _passkeyBytesToBase64Url(credential.id),
+    'transports': credential.transports
+        .map(_passkeyTransport)
+        .whereType<String>()
+        .toList(growable: false),
+  };
+}
+
+String _passkeyBytesToBase64Url(List<int> bytes) =>
+    base64UrlEncode(bytes).replaceAll('=', '');
+
+String _passkeyCredentialType(passkey.PasskeyPublicKeyCredentialType value) {
+  return switch (value) {
+    passkey
+        .PasskeyPublicKeyCredentialType
+        .PASSKEY_PUBLIC_KEY_CREDENTIAL_TYPE_PUBLIC_KEY =>
+      'public-key',
+    _ => throw FormatException('Unsupported Passkey credential type: $value'),
+  };
+}
+
+String? _passkeyTransport(passkey.PasskeyAuthenticatorTransport value) {
+  return switch (value) {
+    passkey.PasskeyAuthenticatorTransport.PASSKEY_AUTHENTICATOR_TRANSPORT_USB =>
+      'usb',
+    passkey.PasskeyAuthenticatorTransport.PASSKEY_AUTHENTICATOR_TRANSPORT_NFC =>
+      'nfc',
+    passkey.PasskeyAuthenticatorTransport.PASSKEY_AUTHENTICATOR_TRANSPORT_BLE =>
+      'ble',
+    passkey
+        .PasskeyAuthenticatorTransport
+        .PASSKEY_AUTHENTICATOR_TRANSPORT_INTERNAL =>
+      'internal',
+    passkey
+        .PasskeyAuthenticatorTransport
+        .PASSKEY_AUTHENTICATOR_TRANSPORT_HYBRID =>
+      'hybrid',
+    passkey
+        .PasskeyAuthenticatorTransport
+        .PASSKEY_AUTHENTICATOR_TRANSPORT_TEST =>
+      'test',
+    passkey
+        .PasskeyAuthenticatorTransport
+        .PASSKEY_AUTHENTICATOR_TRANSPORT_UNKNOWN =>
+      'unknown',
+    _ => null,
+  };
+}
+
+String? _passkeyAuthenticatorAttachment(
+  passkey.PasskeyAuthenticatorAttachment value,
+) {
+  return switch (value) {
+    passkey
+        .PasskeyAuthenticatorAttachment
+        .PASSKEY_AUTHENTICATOR_ATTACHMENT_PLATFORM =>
+      'platform',
+    passkey
+        .PasskeyAuthenticatorAttachment
+        .PASSKEY_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM =>
+      'cross-platform',
+    _ => null,
+  };
+}
+
+String? _passkeyResidentKey(passkey.PasskeyResidentKeyRequirement value) {
+  return switch (value) {
+    passkey
+        .PasskeyResidentKeyRequirement
+        .PASSKEY_RESIDENT_KEY_REQUIREMENT_DISCOURAGED =>
+      'discouraged',
+    passkey
+        .PasskeyResidentKeyRequirement
+        .PASSKEY_RESIDENT_KEY_REQUIREMENT_PREFERRED =>
+      'preferred',
+    passkey
+        .PasskeyResidentKeyRequirement
+        .PASSKEY_RESIDENT_KEY_REQUIREMENT_REQUIRED =>
+      'required',
+    _ => null,
+  };
+}
+
+String? _passkeyUserVerification(
+  passkey.PasskeyUserVerificationRequirement value,
+) {
+  return switch (value) {
+    passkey
+        .PasskeyUserVerificationRequirement
+        .PASSKEY_USER_VERIFICATION_REQUIREMENT_REQUIRED =>
+      'required',
+    passkey
+        .PasskeyUserVerificationRequirement
+        .PASSKEY_USER_VERIFICATION_REQUIREMENT_PREFERRED =>
+      'preferred',
+    passkey
+        .PasskeyUserVerificationRequirement
+        .PASSKEY_USER_VERIFICATION_REQUIREMENT_DISCOURAGED =>
+      'discouraged',
+    _ => null,
+  };
+}
+
+String? _passkeyAttestation(
+  passkey.PasskeyAttestationConveyancePreference value,
+) {
+  return switch (value) {
+    passkey
+        .PasskeyAttestationConveyancePreference
+        .PASSKEY_ATTESTATION_CONVEYANCE_PREFERENCE_NONE =>
+      'none',
+    passkey
+        .PasskeyAttestationConveyancePreference
+        .PASSKEY_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT =>
+      'indirect',
+    passkey
+        .PasskeyAttestationConveyancePreference
+        .PASSKEY_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT =>
+      'direct',
+    _ => null,
+  };
+}
+
+String? _passkeyHint(passkey.PasskeyPublicKeyCredentialHint value) {
+  return switch (value) {
+    passkey
+        .PasskeyPublicKeyCredentialHint
+        .PASSKEY_PUBLIC_KEY_CREDENTIAL_HINT_SECURITY_KEY =>
+      'security-key',
+    passkey
+        .PasskeyPublicKeyCredentialHint
+        .PASSKEY_PUBLIC_KEY_CREDENTIAL_HINT_CLIENT_DEVICE =>
+      'client-device',
+    passkey
+        .PasskeyPublicKeyCredentialHint
+        .PASSKEY_PUBLIC_KEY_CREDENTIAL_HINT_HYBRID =>
+      'hybrid',
+    _ => null,
+  };
+}
+
+String? _passkeyAttestationFormat(passkey.PasskeyAttestationFormat value) {
+  return switch (value) {
+    passkey.PasskeyAttestationFormat.PASSKEY_ATTESTATION_FORMAT_PACKED =>
+      'packed',
+    passkey.PasskeyAttestationFormat.PASSKEY_ATTESTATION_FORMAT_TPM => 'tpm',
+    passkey.PasskeyAttestationFormat.PASSKEY_ATTESTATION_FORMAT_ANDROID_KEY =>
+      'android-key',
+    passkey
+        .PasskeyAttestationFormat
+        .PASSKEY_ATTESTATION_FORMAT_ANDROID_SAFETYNET =>
+      'android-safetynet',
+    passkey.PasskeyAttestationFormat.PASSKEY_ATTESTATION_FORMAT_FIDO_U2F =>
+      'fido-u2f',
+    passkey.PasskeyAttestationFormat.PASSKEY_ATTESTATION_FORMAT_APPLE =>
+      'apple',
+    passkey.PasskeyAttestationFormat.PASSKEY_ATTESTATION_FORMAT_NONE => 'none',
+    _ => null,
+  };
+}
+
+String? _passkeyCredentialProtectionPolicy(
+  passkey.PasskeyCredentialProtectionPolicy value,
+) {
+  return switch (value) {
+    passkey
+        .PasskeyCredentialProtectionPolicy
+        .PASSKEY_CREDENTIAL_PROTECTION_POLICY_USER_VERIFICATION_OPTIONAL =>
+      'userVerificationOptional',
+    passkey
+        .PasskeyCredentialProtectionPolicy
+        .PASSKEY_CREDENTIAL_PROTECTION_POLICY_USER_VERIFICATION_OPTIONAL_WITH_CREDENTIAL_ID_LIST =>
+      'userVerificationOptionalWithCredentialIDList',
+    passkey
+        .PasskeyCredentialProtectionPolicy
+        .PASSKEY_CREDENTIAL_PROTECTION_POLICY_USER_VERIFICATION_REQUIRED =>
+      'userVerificationRequired',
+    _ => null,
+  };
+}
+
+String? _passkeyMediation(passkey.PasskeyMediationRequirement value) {
+  return switch (value) {
+    passkey
+        .PasskeyMediationRequirement
+        .PASSKEY_MEDIATION_REQUIREMENT_CONDITIONAL =>
+      'conditional',
+    _ => null,
+  };
 }
 
 passkey.PasskeyRegistrationCredential passkeyRegistrationCredentialFromJson(
   Object credential,
 ) {
-  return _decodePasskeyCredential(
-    credential,
-    passkey.PasskeyRegistrationCredential(),
+  final decoded = _passkeyCredentialJson(credential);
+  final response = _passkeyCredentialResponse(decoded);
+  return passkey.PasskeyRegistrationCredential(
+    id: _passkeyRequiredString(decoded, 'id'),
+    rawId: _passkeyDecodeBytes(decoded['rawId'], 'rawId'),
+    type: _passkeyCredentialTypeFromJson(decoded['type']),
+    response: passkey.PasskeyAuthenticatorAttestationResponse(
+      attestationObject: _passkeyDecodeBytes(
+        response['attestationObject'],
+        'response.attestationObject',
+      ),
+      clientDataJson: _passkeyDecodeBytes(
+        response['clientDataJSON'],
+        'response.clientDataJSON',
+      ),
+      transports: _passkeyTransportsFromJson(response['transports']),
+    ),
+    extensions: _passkeyRegistrationExtensionOutputsFromJson(
+      decoded['clientExtensionResults'],
+    ),
   );
 }
 
 passkey.PasskeyAuthenticationCredential passkeyAuthenticationCredentialFromJson(
   Object credential,
 ) {
-  return _decodePasskeyCredential(
-    credential,
-    passkey.PasskeyAuthenticationCredential(),
+  final decoded = _passkeyCredentialJson(credential);
+  final response = _passkeyCredentialResponse(decoded);
+  return passkey.PasskeyAuthenticationCredential(
+    id: _passkeyRequiredString(decoded, 'id'),
+    rawId: _passkeyDecodeBytes(decoded['rawId'], 'rawId'),
+    type: _passkeyCredentialTypeFromJson(decoded['type']),
+    response: passkey.PasskeyAuthenticatorAssertionResponse(
+      authenticatorData: _passkeyDecodeBytes(
+        response['authenticatorData'],
+        'response.authenticatorData',
+      ),
+      clientDataJson: _passkeyDecodeBytes(
+        response['clientDataJSON'],
+        'response.clientDataJSON',
+      ),
+      signature: _passkeyDecodeBytes(
+        response['signature'],
+        'response.signature',
+      ),
+      userHandle: _passkeyOptionalBytes(
+        response['userHandle'],
+        'response.userHandle',
+      ),
+    ),
+    extensions: _passkeyAuthenticationExtensionOutputsFromJson(
+      decoded['clientExtensionResults'],
+    ),
   );
 }
 
-T _decodePasskeyCredential<T extends pb.GeneratedMessage>(
-  Object credential,
-  T message,
-) {
-  final decoded = credential is String ? jsonDecode(credential) : credential;
-  message.mergeFromProto3Json(
-    decoded,
-    ignoreUnknownFields: true,
-    supportNamesWithUnderscores: false,
-    permissiveEnums: true,
+passkey.PasskeyRegistrationExtensionsClientOutputs?
+_passkeyRegistrationExtensionOutputsFromJson(Object? value) {
+  final extensions = _passkeyStringMap(value);
+  if (extensions == null || extensions.isEmpty) return null;
+  final credProps = _passkeyStringMap(extensions['credProps']);
+  final appid = extensions['appid'];
+  final hmacSecret = extensions['hmacSecret'];
+  final minPinLength = extensions['minPinLength'];
+  final credProtect = _passkeyCredentialProtectionPolicyFromJson(
+    extensions['credProtect'],
   );
-  return message;
+  final hasKnownOutput =
+      appid is bool ||
+      credProps?['rk'] is bool ||
+      hmacSecret is bool ||
+      minPinLength is int ||
+      credProtect != null;
+  if (!hasKnownOutput) return null;
+  return passkey.PasskeyRegistrationExtensionsClientOutputs(
+    appid: appid is bool ? appid : null,
+    credProps: credProps?['rk'] is bool
+        ? passkey.PasskeyRegistrationCredProps(rk: credProps!['rk'] as bool)
+        : null,
+    hmacSecret: hmacSecret is bool ? hmacSecret : null,
+    credProtect:
+        credProtect ??
+        passkey
+            .PasskeyCredentialProtectionPolicy
+            .PASSKEY_CREDENTIAL_PROTECTION_POLICY_UNSPECIFIED,
+    minPinLength: minPinLength is int ? minPinLength : null,
+  );
+}
+
+passkey.PasskeyAuthenticationExtensionsClientOutputs?
+_passkeyAuthenticationExtensionOutputsFromJson(Object? value) {
+  final extensions = _passkeyStringMap(value);
+  if (extensions == null || extensions.isEmpty) return null;
+  final appid = extensions['appid'];
+  final hmac = _passkeyStringMap(extensions['hmacGetSecret']);
+  final output1 = hmac?['output1'];
+  if (appid is! bool && output1 is! String) return null;
+  return passkey.PasskeyAuthenticationExtensionsClientOutputs(
+    appid: appid is bool ? appid : null,
+    hmacGetSecret: output1 is String
+        ? passkey.PasskeyHmacGetSecretInput(
+            output1: _passkeyDecodeBytes(
+              output1,
+              'clientExtensionResults.hmacGetSecret.output1',
+            ),
+            output2: _passkeyOptionalBytes(
+              hmac?['output2'],
+              'clientExtensionResults.hmacGetSecret.output2',
+            ),
+          )
+        : null,
+  );
+}
+
+Map<String, dynamic>? _passkeyStringMap(Object? value) {
+  if (value case final Map<Object?, Object?> values) {
+    return values.map((key, entry) => MapEntry(key.toString(), entry));
+  }
+  return null;
+}
+
+passkey.PasskeyCredentialProtectionPolicy?
+_passkeyCredentialProtectionPolicyFromJson(Object? value) {
+  return switch (value) {
+    'userVerificationOptional' || 1 =>
+      passkey
+          .PasskeyCredentialProtectionPolicy
+          .PASSKEY_CREDENTIAL_PROTECTION_POLICY_USER_VERIFICATION_OPTIONAL,
+    'userVerificationOptionalWithCredentialIDList' || 2 =>
+      passkey
+          .PasskeyCredentialProtectionPolicy
+          .PASSKEY_CREDENTIAL_PROTECTION_POLICY_USER_VERIFICATION_OPTIONAL_WITH_CREDENTIAL_ID_LIST,
+    'userVerificationRequired' || 3 =>
+      passkey
+          .PasskeyCredentialProtectionPolicy
+          .PASSKEY_CREDENTIAL_PROTECTION_POLICY_USER_VERIFICATION_REQUIRED,
+    _ => null,
+  };
+}
+
+Map<String, dynamic> _passkeyCredentialJson(Object credential) {
+  final decoded = credential is String ? jsonDecode(credential) : credential;
+  if (decoded case final Map<Object?, Object?> values) {
+    return values.map((key, value) => MapEntry(key.toString(), value));
+  }
+  throw const FormatException('Passkey credential is not a JSON object');
+}
+
+Map<String, dynamic> _passkeyCredentialResponse(
+  Map<String, dynamic> credential,
+) {
+  final response = credential['response'];
+  if (response case final Map<Object?, Object?> values) {
+    return values.map((key, value) => MapEntry(key.toString(), value));
+  }
+  throw const FormatException('Passkey credential response is missing');
+}
+
+String _passkeyRequiredString(Map<String, dynamic> values, String field) {
+  final value = values[field];
+  if (value is String && value.isNotEmpty) return value;
+  throw FormatException('Passkey credential $field is missing');
+}
+
+List<int> _passkeyDecodeBytes(Object? value, String field) {
+  if (value is! String || value.isEmpty) {
+    throw FormatException('Passkey credential $field is missing');
+  }
+  try {
+    return base64Url.decode(base64Url.normalize(value));
+  } on FormatException {
+    throw FormatException('Passkey credential $field is not Base64URL');
+  }
+}
+
+List<int> _passkeyOptionalBytes(Object? value, String field) {
+  if (value == null || value == '') return const [];
+  return _passkeyDecodeBytes(value, field);
+}
+
+passkey.PasskeyPublicKeyCredentialType _passkeyCredentialTypeFromJson(
+  Object? value,
+) {
+  if (value == 'public-key' || value == 1) {
+    return passkey
+        .PasskeyPublicKeyCredentialType
+        .PASSKEY_PUBLIC_KEY_CREDENTIAL_TYPE_PUBLIC_KEY;
+  }
+  throw FormatException('Unsupported Passkey credential type: $value');
+}
+
+Iterable<passkey.PasskeyAuthenticatorTransport> _passkeyTransportsFromJson(
+  Object? value,
+) sync* {
+  if (value == null) return;
+  if (value is! List) {
+    throw const FormatException('Passkey credential transports is not a list');
+  }
+  for (final transport in value) {
+    yield switch (transport) {
+      'usb' || 1 =>
+        passkey
+            .PasskeyAuthenticatorTransport
+            .PASSKEY_AUTHENTICATOR_TRANSPORT_USB,
+      'nfc' || 2 =>
+        passkey
+            .PasskeyAuthenticatorTransport
+            .PASSKEY_AUTHENTICATOR_TRANSPORT_NFC,
+      'ble' || 3 =>
+        passkey
+            .PasskeyAuthenticatorTransport
+            .PASSKEY_AUTHENTICATOR_TRANSPORT_BLE,
+      'internal' || 4 =>
+        passkey
+            .PasskeyAuthenticatorTransport
+            .PASSKEY_AUTHENTICATOR_TRANSPORT_INTERNAL,
+      'hybrid' || 5 =>
+        passkey
+            .PasskeyAuthenticatorTransport
+            .PASSKEY_AUTHENTICATOR_TRANSPORT_HYBRID,
+      'test' || 6 =>
+        passkey
+            .PasskeyAuthenticatorTransport
+            .PASSKEY_AUTHENTICATOR_TRANSPORT_TEST,
+      'unknown' || 7 =>
+        passkey
+            .PasskeyAuthenticatorTransport
+            .PASSKEY_AUTHENTICATOR_TRANSPORT_UNKNOWN,
+      _ => throw FormatException(
+        'Unsupported Passkey authenticator transport: $transport',
+      ),
+    };
+  }
 }
 
 int _intValue(Object? value) {

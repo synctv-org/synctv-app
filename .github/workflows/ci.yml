@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: "3.44.7"
+  FLUTTER_VERSION: "3.44.8"
   PROTOC_VERSION: "35.1"
   RUST_VERSION: "1.97.1"
 
@@ -57,6 +57,10 @@ jobs:
         run: dart analyze --fatal-infos
 
       - name: Run Flutter tests
+        run: flutter test
+
+      - name: Run Darwin Passkey package tests
+        working-directory: packages/passkeys_darwin
         run: flutter test
 
       - name: Run OPAQUE native tests

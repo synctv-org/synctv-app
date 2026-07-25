@@ -20,6 +20,7 @@ class PublicSettingsInfo {
   final bool enableGuest;
   final bool emailSignupNeedReview;
   final bool enableWebauthn;
+  final String webauthnRpId;
   final bool enableWebauthnSignup;
   final bool webauthnSignupNeedReview;
   final bool movieProxy;
@@ -42,6 +43,7 @@ class PublicSettingsInfo {
     required this.enableGuest,
     required this.emailSignupNeedReview,
     required this.enableWebauthn,
+    required this.webauthnRpId,
     required this.enableWebauthnSignup,
     required this.webauthnSignupNeedReview,
     required this.movieProxy,

@@ -1,0 +1,202 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:passkeys_darwin/messages.g.dart' as pigeon;
+import 'package:passkeys_darwin/passkeys_darwin.dart';
+import 'package:passkeys_platform_interface/passkeys_platform_interface.dart';
+import 'package:passkeys_platform_interface/types/types.dart';
+
+class _FakePasskeysApi extends pigeon.PasskeysApi {
+  String? registerSalt;
+  String? authenticateSalt;
+  String? registerUserVerification;
+  String? authenticateUserVerification;
+  List<Object?>? signalUnknownCredentialArgs;
+  List<Object?>? signalAllAcceptedCredentialsArgs;
+
+  @override
+  Future<void> signalUnknownCredential(
+    String relyingPartyId,
+    String credentialId,
+  ) async {
+    signalUnknownCredentialArgs = [relyingPartyId, credentialId];
+  }
+
+  @override
+  Future<void> signalAllAcceptedCredentials(
+    String relyingPartyId,
+    String userId,
+    List<String?> allAcceptedCredentialIds,
+  ) async {
+    signalAllAcceptedCredentialsArgs = [
+      relyingPartyId,
+      userId,
+      allAcceptedCredentialIds,
+    ];
+  }
+
+  @override
+  Future<pigeon.RegisterResponse> register(
+    String challenge,
+    pigeon.RelyingParty relyingParty,
+    pigeon.User user,
+    List<pigeon.CredentialType> excludeCredentials,
+    List<int> pubKeyCredValues,
+    bool canBePlatformAuthenticator,
+    bool canBeSecurityKey,
+    String? residentKeyPreference,
+    String? userVerificationPreference,
+    String? attestationPreference,
+    String? salt,
+  ) async {
+    registerSalt = salt;
+    registerUserVerification = userVerificationPreference;
+    return pigeon.RegisterResponse(
+      id: 'id',
+      rawId: 'rawId',
+      clientDataJSON: 'cdj',
+      attestationObject: 'ao',
+      transports: const [],
+      clientExtensionResults: const {
+        'prf': {
+          'results': {'first': 'prf-output'},
+        },
+      },
+    );
+  }
+
+  @override
+  Future<pigeon.AuthenticateResponse> authenticate(
+    String relyingPartyId,
+    String challenge,
+    bool conditionalUI,
+    List<pigeon.CredentialType> allowedCredentials,
+    bool preferImmediatelyAvailableCredentials,
+    String? userVerificationPreference,
+    String? salt,
+  ) async {
+    authenticateSalt = salt;
+    authenticateUserVerification = userVerificationPreference;
+    return pigeon.AuthenticateResponse(
+      id: 'id',
+      rawId: 'rawId',
+      clientDataJSON: 'cdj',
+      authenticatorData: 'ad',
+      signature: 'sig',
+      userHandle: 'uh',
+      clientExtensionResults: const {
+        'prf': {
+          'results': {'first': 'prf-output'},
+        },
+      },
+    );
+  }
+}
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('PasskeysDarwin', () {
+    test('can be registered', () {
+      PasskeysDarwin.registerWith();
+      expect(PasskeysPlatform.instance, isA<PasskeysDarwin>());
+    });
+
+    test('register forwards UV policy and PRF salt', () async {
+      final api = _FakePasskeysApi();
+      final platform = PasskeysDarwin(api: api);
+
+      final response = await platform.register(
+        RegisterRequestType(
+          challenge: 'challenge',
+          relyingParty: RelyingPartyType(id: 'example.com', name: 'Example'),
+          user: const UserType(id: 'user', name: 'user', displayName: 'User'),
+          excludeCredentials: const [],
+          authSelectionType: AuthenticatorSelectionType(
+            requireResidentKey: true,
+            residentKey: 'required',
+            userVerification: 'required',
+          ),
+          prf: 'salt-value',
+        ),
+      );
+
+      expect(api.registerSalt, 'salt-value');
+      expect(api.registerUserVerification, 'required');
+      expect(
+        response.clientExtensionResults?['prf'],
+        isA<Map<dynamic, dynamic>>(),
+      );
+    });
+
+    test('register passes a null salt when prf is not set', () async {
+      final api = _FakePasskeysApi();
+      final platform = PasskeysDarwin(api: api);
+
+      await platform.register(
+        RegisterRequestType(
+          challenge: 'challenge',
+          relyingParty: RelyingPartyType(id: 'example.com', name: 'Example'),
+          user: const UserType(id: 'user', name: 'user', displayName: 'User'),
+          excludeCredentials: const [],
+        ),
+      );
+
+      expect(api.registerSalt, isNull);
+    });
+
+    test('authenticate forwards UV policy and PRF salt', () async {
+      final api = _FakePasskeysApi();
+      final platform = PasskeysDarwin(api: api);
+
+      final response = await platform.authenticate(
+        const AuthenticateRequestType(
+          relyingPartyId: 'example.com',
+          challenge: 'challenge',
+          mediation: MediationType.Optional,
+          preferImmediatelyAvailableCredentials: true,
+          userVerification: 'required',
+          prf: 'salt-value',
+        ),
+      );
+
+      expect(api.authenticateSalt, 'salt-value');
+      expect(api.authenticateUserVerification, 'required');
+      expect(
+        response.clientExtensionResults?['prf'],
+        isA<Map<dynamic, dynamic>>(),
+      );
+    });
+
+    test('signalUnknownCredential forwards its arguments', () async {
+      final api = _FakePasskeysApi();
+      final platform = PasskeysDarwin(api: api);
+
+      await platform.signalUnknownCredential(
+        const SignalUnknownCredentialRequestType(
+          relyingPartyId: 'example.com',
+          credentialId: 'credential-id',
+        ),
+      );
+
+      expect(api.signalUnknownCredentialArgs, ['example.com', 'credential-id']);
+    });
+
+    test('signalAllAcceptedCredentials forwards its arguments', () async {
+      final api = _FakePasskeysApi();
+      final platform = PasskeysDarwin(api: api);
+
+      await platform.signalAllAcceptedCredentials(
+        const SignalAllAcceptedCredentialsRequestType(
+          relyingPartyId: 'example.com',
+          userId: 'user-id',
+          allAcceptedCredentialIds: ['cred-1', 'cred-2'],
+        ),
+      );
+
+      expect(api.signalAllAcceptedCredentialsArgs, [
+        'example.com',
+        'user-id',
+        ['cred-1', 'cred-2'],
+      ]);
+    });
+  });
+}

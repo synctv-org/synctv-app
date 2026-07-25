@@ -15,7 +15,8 @@ class SyncTvRuntimeService {
   late SyncTvApiClient _api;
   final StreamController<void> _authErrorController =
       StreamController<void>.broadcast();
-  bool _isHandlingAuthError = false;
+  final Set<({SyncTvApiClient source, int generation})> _authErrorsInFlight =
+      {};
 
   SyncTvApiClient get api => _api;
   Stream<void> get onAuthError => _authErrorController.stream;
@@ -51,32 +52,35 @@ class SyncTvRuntimeService {
     final info = await serverClient.publicService.getServerInfo(
       client.GetServerInfoRequest(),
     );
-    final serverId = info.serverId.trim();
-    if (serverId.isEmpty) {
-      throw SyncTvApiException('服务器未返回 server_id', statusCode: 500);
-    }
+    final declaredServerId = info.serverId.trim();
+    _api.baseUrl = serverClient.baseUrl;
     final profile = await sessionStore.addOrUpdateServer(
-      serverId: serverId,
+      declaredServerId: declaredServerId,
       name: info.serverName,
       endpoint: serverClient.baseUrl,
     );
-    _api.baseUrl = sessionStore.baseUrl;
     return profile;
   }
 
-  Future<void> activateServer(String serverId) async {
-    await sessionStore.activateServer(serverId);
-    _api.baseUrl = sessionStore.baseUrl;
+  Future<void> activateServer(String endpoint) async {
+    final normalized = SyncTvApiClient.normalizeBaseUrl(endpoint);
+    if (!servers.any((server) => server.endpoint == normalized)) {
+      throw ArgumentError.value(endpoint, 'endpoint', 'Unknown server');
+    }
+    _api.baseUrl = normalized;
+    await sessionStore.activateServer(normalized);
   }
 
-  Future<void> activateServerEndpoint(String serverId, String endpoint) async {
-    await sessionStore.activateServerEndpoint(serverId, endpoint);
-    _api.baseUrl = sessionStore.baseUrl;
-  }
-
-  Future<void> removeServer(String serverId) async {
-    await sessionStore.removeServer(serverId);
-    _api.baseUrl = sessionStore.baseUrl;
+  Future<void> removeServer(String endpoint) async {
+    final normalized = SyncTvApiClient.normalizeBaseUrl(endpoint);
+    if (activeServer?.endpoint == normalized) {
+      final next = servers
+          .where((server) => server.endpoint != normalized)
+          .firstOrNull;
+      _api.baseUrl =
+          next?.endpoint ?? SyncTvSessionStore.clientBootstrapBaseUrl;
+    }
+    await sessionStore.removeServer(normalized);
   }
 
   Future<String?> getToken() async => session.accessToken;
@@ -100,7 +104,7 @@ class SyncTvRuntimeService {
       return _api.roomWebSocketUri(roomId, ticket: ticket.ticket);
     } on SyncTvApiException catch (e) {
       if (e.statusCode == 401) {
-        _handleAuthError();
+        _handleCurrentAuthError();
       }
       rethrow;
     }
@@ -112,48 +116,78 @@ class SyncTvRuntimeService {
     if (session.refreshToken != null && session.refreshToken!.isNotEmpty) {
       final refreshed = await _api.refreshAccessTokenIfPossible();
       if (refreshed) {
-        await sessionStore.persistTokens();
         return true;
       }
-      _handleAuthError();
+      _handleCurrentAuthError();
       return false;
     }
-    _handleAuthError();
+    _handleCurrentAuthError();
     return false;
   }
 
   String resolveResourceUrl(String url) => _api.resolveResourceUrl(url);
 
   Future<void> logout() async {
+    final generation = _api.endpointGeneration;
     await _api.user.logout(client.LogoutRequest());
+    if (!_api.isEndpointGenerationCurrent(generation)) {
+      throw const SyncTvStaleEndpointException();
+    }
     await sessionStore.clearGuestContextAndPersist();
   }
 
   Future<void> closeAccount() async {
+    final generation = _api.endpointGeneration;
     await _api.user.closeAccount(client.CloseAccountRequest());
+    if (!_api.isEndpointGenerationCurrent(generation)) {
+      throw const SyncTvStaleEndpointException();
+    }
     await sessionStore.clearGuestContextAndPersist();
   }
 
   SyncTvApiClient _createClient(String baseUrl) {
-    return SyncTvApiClient(
+    late final SyncTvApiClient api;
+    api = SyncTvApiClient(
       baseUrl: baseUrl,
       session: session,
-      onAuthError: _handleAuthError,
-      onTokenRefresh: sessionStore.persistTokens,
+      onAuthError: (generation) => _handleAuthError(api, generation),
+      onTokenRefresh: (generation) async {
+        if (!identical(api, _api) ||
+            !api.isEndpointGenerationCurrent(generation)) {
+          throw const SyncTvStaleEndpointException();
+        }
+        await sessionStore.persistTokens();
+      },
     );
+    return api;
   }
 
-  void _handleAuthError() {
-    if (_isHandlingAuthError) return;
-    _isHandlingAuthError = true;
+  void _handleAuthError(SyncTvApiClient source, int generation) {
+    if (!identical(source, _api) ||
+        !source.isEndpointGenerationCurrent(generation)) {
+      return;
+    }
+    final operation = (source: source, generation: generation);
+    if (!_authErrorsInFlight.add(operation)) return;
     unawaited(() async {
       try {
+        if (!identical(source, _api) ||
+            !source.isEndpointGenerationCurrent(generation)) {
+          return;
+        }
         await sessionStore.clearSessionAndPersist();
-        _authErrorController.add(null);
+        if (identical(source, _api) &&
+            source.isEndpointGenerationCurrent(generation)) {
+          _authErrorController.add(null);
+        }
       } finally {
-        _isHandlingAuthError = false;
+        _authErrorsInFlight.remove(operation);
       }
     }());
+  }
+
+  void _handleCurrentAuthError() {
+    _handleAuthError(_api, _api.endpointGeneration);
   }
 
   Future<void> _promotePendingActiveServer() async {
@@ -163,10 +197,10 @@ class SyncTvRuntimeService {
       final info = await _api.publicService.getServerInfo(
         client.GetServerInfoRequest(),
       );
-      final serverId = info.serverId.trim();
-      if (serverId.isEmpty) return;
+      final declaredServerId = info.serverId.trim();
+      if (declaredServerId.isEmpty) return;
       await sessionStore.addOrUpdateServer(
-        serverId: serverId,
+        declaredServerId: declaredServerId,
         name: info.serverName,
         endpoint: _api.baseUrl,
       );

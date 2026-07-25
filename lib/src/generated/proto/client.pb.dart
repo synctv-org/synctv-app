@@ -5522,17 +5522,13 @@ class RegisterWithDirectPasswordRequest extends $pb.GeneratedMessage {
   void clearPassword() => $_clearField(3);
 }
 
-enum LoginWithDirectPasswordRequest_Identifier { username, email, notSet }
-
 class LoginWithDirectPasswordRequest extends $pb.GeneratedMessage {
   factory LoginWithDirectPasswordRequest({
-    $core.String? username,
-    $core.String? email,
+    $core.String? loginSessionId,
     $core.String? password,
   }) {
     final result = create();
-    if (username != null) result.username = username;
-    if (email != null) result.email = email;
+    if (loginSessionId != null) result.loginSessionId = loginSessionId;
     if (password != null) result.password = password;
     return result;
   }
@@ -5546,20 +5542,12 @@ class LoginWithDirectPasswordRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, LoginWithDirectPasswordRequest_Identifier>
-      _LoginWithDirectPasswordRequest_IdentifierByTag = {
-    1: LoginWithDirectPasswordRequest_Identifier.username,
-    2: LoginWithDirectPasswordRequest_Identifier.email,
-    0: LoginWithDirectPasswordRequest_Identifier.notSet
-  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'LoginWithDirectPasswordRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2])
-    ..aOS(1, _omitFieldNames ? '' : 'username')
-    ..aOS(2, _omitFieldNames ? '' : 'email')
-    ..aOS(3, _omitFieldNames ? '' : 'password')
+    ..aOS(1, _omitFieldNames ? '' : 'loginSessionId')
+    ..aOS(2, _omitFieldNames ? '' : 'password')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -5584,40 +5572,25 @@ class LoginWithDirectPasswordRequest extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<LoginWithDirectPasswordRequest>(create);
   static LoginWithDirectPasswordRequest? _defaultInstance;
 
+  /// Login with direct password transport over TLS.
+  /// Verification uses the stored OPAQUE credential record.
   @$pb.TagNumber(1)
-  @$pb.TagNumber(2)
-  LoginWithDirectPasswordRequest_Identifier whichIdentifier() =>
-      _LoginWithDirectPasswordRequest_IdentifierByTag[$_whichOneof(0)]!;
+  $core.String get loginSessionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  @$pb.TagNumber(2)
-  void clearIdentifier() => $_clearField($_whichOneof(0));
-
+  set loginSessionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.String get username => $_getSZ(0);
+  $core.bool hasLoginSessionId() => $_has(0);
   @$pb.TagNumber(1)
-  set username($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUsername() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUsername() => $_clearField(1);
+  void clearLoginSessionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get email => $_getSZ(1);
+  $core.String get password => $_getSZ(1);
   @$pb.TagNumber(2)
-  set email($core.String value) => $_setString(1, value);
+  set password($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasEmail() => $_has(1);
+  $core.bool hasPassword() => $_has(1);
   @$pb.TagNumber(2)
-  void clearEmail() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.String get password => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set password($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasPassword() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearPassword() => $_clearField(3);
+  void clearPassword() => $_clearField(2);
 }
 
 class RequestEmailRegistrationRequest extends $pb.GeneratedMessage {
@@ -5824,11 +5797,11 @@ class ConfirmEmailRegistrationRequest extends $pb.GeneratedMessage {
 /// Confirm a passwordless email login token.
 class ConfirmEmailLoginRequest extends $pb.GeneratedMessage {
   factory ConfirmEmailLoginRequest({
-    $core.String? email,
+    $core.String? loginSessionId,
     $core.String? emailToken,
   }) {
     final result = create();
-    if (email != null) result.email = email;
+    if (loginSessionId != null) result.loginSessionId = loginSessionId;
     if (emailToken != null) result.emailToken = emailToken;
     return result;
   }
@@ -5846,8 +5819,8 @@ class ConfirmEmailLoginRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'ConfirmEmailLoginRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(3, _omitFieldNames ? '' : 'email')
-    ..aOS(4, _omitFieldNames ? '' : 'emailToken')
+    ..aOS(1, _omitFieldNames ? '' : 'loginSessionId')
+    ..aOS(2, _omitFieldNames ? '' : 'emailToken')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -5870,23 +5843,186 @@ class ConfirmEmailLoginRequest extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<ConfirmEmailLoginRequest>(create);
   static ConfirmEmailLoginRequest? _defaultInstance;
 
-  @$pb.TagNumber(3)
-  $core.String get email => $_getSZ(0);
-  @$pb.TagNumber(3)
-  set email($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(3)
-  $core.bool hasEmail() => $_has(0);
-  @$pb.TagNumber(3)
-  void clearEmail() => $_clearField(3);
+  @$pb.TagNumber(1)
+  $core.String get loginSessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set loginSessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLoginSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLoginSessionId() => $_clearField(1);
 
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(2)
   $core.String get emailToken => $_getSZ(1);
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(2)
   set emailToken($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(2)
   $core.bool hasEmailToken() => $_has(1);
-  @$pb.TagNumber(4)
-  void clearEmailToken() => $_clearField(4);
+  @$pb.TagNumber(2)
+  void clearEmailToken() => $_clearField(2);
+}
+
+enum StartLoginRequest_Identifier { username, email, notSet }
+
+/// Identify the account and create a short-lived server-side authentication
+/// context. The returned methods describe the primary credentials currently
+/// usable by this account and server.
+class StartLoginRequest extends $pb.GeneratedMessage {
+  factory StartLoginRequest({
+    $core.String? username,
+    $core.String? email,
+  }) {
+    final result = create();
+    if (username != null) result.username = username;
+    if (email != null) result.email = email;
+    return result;
+  }
+
+  StartLoginRequest._();
+
+  factory StartLoginRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartLoginRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, StartLoginRequest_Identifier>
+      _StartLoginRequest_IdentifierByTag = {
+    1: StartLoginRequest_Identifier.username,
+    2: StartLoginRequest_Identifier.email,
+    0: StartLoginRequest_Identifier.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartLoginRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2])
+    ..aOS(1, _omitFieldNames ? '' : 'username')
+    ..aOS(2, _omitFieldNames ? '' : 'email')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartLoginRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartLoginRequest copyWith(void Function(StartLoginRequest) updates) =>
+      super.copyWith((message) => updates(message as StartLoginRequest))
+          as StartLoginRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartLoginRequest create() => StartLoginRequest._();
+  @$core.override
+  StartLoginRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartLoginRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StartLoginRequest>(create);
+  static StartLoginRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  StartLoginRequest_Identifier whichIdentifier() =>
+      _StartLoginRequest_IdentifierByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearIdentifier() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.String get username => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set username($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUsername() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUsername() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get email => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set email($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasEmail() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEmail() => $_clearField(2);
+}
+
+class StartLoginResponse extends $pb.GeneratedMessage {
+  factory StartLoginResponse({
+    $core.String? loginSessionId,
+    $core.Iterable<LoginMethod>? availableMethods,
+    $fixnum.Int64? expiresAt,
+  }) {
+    final result = create();
+    if (loginSessionId != null) result.loginSessionId = loginSessionId;
+    if (availableMethods != null)
+      result.availableMethods.addAll(availableMethods);
+    if (expiresAt != null) result.expiresAt = expiresAt;
+    return result;
+  }
+
+  StartLoginResponse._();
+
+  factory StartLoginResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartLoginResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartLoginResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'loginSessionId')
+    ..pc<LoginMethod>(
+        2, _omitFieldNames ? '' : 'availableMethods', $pb.PbFieldType.KE,
+        valueOf: LoginMethod.valueOf,
+        enumValues: LoginMethod.values,
+        defaultEnumValue: LoginMethod.LOGIN_METHOD_UNSPECIFIED)
+    ..aInt64(3, _omitFieldNames ? '' : 'expiresAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartLoginResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartLoginResponse copyWith(void Function(StartLoginResponse) updates) =>
+      super.copyWith((message) => updates(message as StartLoginResponse))
+          as StartLoginResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartLoginResponse create() => StartLoginResponse._();
+  @$core.override
+  StartLoginResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartLoginResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StartLoginResponse>(create);
+  static StartLoginResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get loginSessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set loginSessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLoginSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLoginSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<LoginMethod> get availableMethods => $_getList(1);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get expiresAt => $_getI64(2);
+  @$pb.TagNumber(3)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasExpiresAt() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearExpiresAt() => $_clearField(3);
 }
 
 class LoginResponse extends $pb.GeneratedMessage {
@@ -6261,8 +6397,14 @@ class StartSensitiveOperationVerificationRequest extends $pb.GeneratedMessage {
   static StartSensitiveOperationVerificationRequest? _defaultInstance;
 }
 
-class StartSensitiveOperationVerificationResponse extends $pb.GeneratedMessage {
-  factory StartSensitiveOperationVerificationResponse({
+enum SensitiveOperationVerificationOutcome_Outcome {
+  challenge,
+  verificationId,
+  notSet
+}
+
+class SensitiveOperationVerificationOutcome extends $pb.GeneratedMessage {
+  factory SensitiveOperationVerificationOutcome({
     SensitiveOperationVerificationChallenge? challenge,
     $core.String? verificationId,
   }) {
@@ -6272,21 +6414,28 @@ class StartSensitiveOperationVerificationResponse extends $pb.GeneratedMessage {
     return result;
   }
 
-  StartSensitiveOperationVerificationResponse._();
+  SensitiveOperationVerificationOutcome._();
 
-  factory StartSensitiveOperationVerificationResponse.fromBuffer(
+  factory SensitiveOperationVerificationOutcome.fromBuffer(
           $core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory StartSensitiveOperationVerificationResponse.fromJson(
-          $core.String json,
+  factory SensitiveOperationVerificationOutcome.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
+  static const $core
+      .Map<$core.int, SensitiveOperationVerificationOutcome_Outcome>
+      _SensitiveOperationVerificationOutcome_OutcomeByTag = {
+    1: SensitiveOperationVerificationOutcome_Outcome.challenge,
+    2: SensitiveOperationVerificationOutcome_Outcome.verificationId,
+    0: SensitiveOperationVerificationOutcome_Outcome.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'StartSensitiveOperationVerificationResponse',
+      _omitMessageNames ? '' : 'SensitiveOperationVerificationOutcome',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..oo(0, [1, 2])
     ..aOM<SensitiveOperationVerificationChallenge>(
         1, _omitFieldNames ? '' : 'challenge',
         subBuilder: SensitiveOperationVerificationChallenge.create)
@@ -6294,27 +6443,35 @@ class StartSensitiveOperationVerificationResponse extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  StartSensitiveOperationVerificationResponse clone() => deepCopy();
+  SensitiveOperationVerificationOutcome clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  StartSensitiveOperationVerificationResponse copyWith(
-          void Function(StartSensitiveOperationVerificationResponse) updates) =>
+  SensitiveOperationVerificationOutcome copyWith(
+          void Function(SensitiveOperationVerificationOutcome) updates) =>
       super.copyWith((message) =>
-              updates(message as StartSensitiveOperationVerificationResponse))
-          as StartSensitiveOperationVerificationResponse;
+              updates(message as SensitiveOperationVerificationOutcome))
+          as SensitiveOperationVerificationOutcome;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static StartSensitiveOperationVerificationResponse create() =>
-      StartSensitiveOperationVerificationResponse._();
+  static SensitiveOperationVerificationOutcome create() =>
+      SensitiveOperationVerificationOutcome._();
   @$core.override
-  StartSensitiveOperationVerificationResponse createEmptyInstance() => create();
+  SensitiveOperationVerificationOutcome createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static StartSensitiveOperationVerificationResponse getDefault() =>
+  static SensitiveOperationVerificationOutcome getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          StartSensitiveOperationVerificationResponse>(create);
-  static StartSensitiveOperationVerificationResponse? _defaultInstance;
+          SensitiveOperationVerificationOutcome>(create);
+  static SensitiveOperationVerificationOutcome? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  SensitiveOperationVerificationOutcome_Outcome whichOutcome() =>
+      _SensitiveOperationVerificationOutcome_OutcomeByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  void clearOutcome() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   SensitiveOperationVerificationChallenge get challenge => $_getN(0);
@@ -6609,6 +6766,8 @@ class FinishSensitiveOperationVerificationRequest extends $pb.GeneratedMessage {
     $core.String? emailToken,
     $core.String? passkeySessionId,
     $2.PasskeyAuthenticationCredential? passkeyCredential,
+    $core.String? totpCode,
+    $core.String? recoveryCode,
   }) {
     final result = create();
     if (sessionId != null) result.sessionId = sessionId;
@@ -6617,6 +6776,8 @@ class FinishSensitiveOperationVerificationRequest extends $pb.GeneratedMessage {
     if (emailToken != null) result.emailToken = emailToken;
     if (passkeySessionId != null) result.passkeySessionId = passkeySessionId;
     if (passkeyCredential != null) result.passkeyCredential = passkeyCredential;
+    if (totpCode != null) result.totpCode = totpCode;
+    if (recoveryCode != null) result.recoveryCode = recoveryCode;
     return result;
   }
 
@@ -6645,6 +6806,8 @@ class FinishSensitiveOperationVerificationRequest extends $pb.GeneratedMessage {
     ..aOM<$2.PasskeyAuthenticationCredential>(
         6, _omitFieldNames ? '' : 'passkeyCredential',
         subBuilder: $2.PasskeyAuthenticationCredential.create)
+    ..aOS(7, _omitFieldNames ? '' : 'totpCode')
+    ..aOS(8, _omitFieldNames ? '' : 'recoveryCode')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6727,102 +6890,36 @@ class FinishSensitiveOperationVerificationRequest extends $pb.GeneratedMessage {
   void clearPasskeyCredential() => $_clearField(6);
   @$pb.TagNumber(6)
   $2.PasskeyAuthenticationCredential ensurePasskeyCredential() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  $core.String get totpCode => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set totpCode($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasTotpCode() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearTotpCode() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.String get recoveryCode => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set recoveryCode($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasRecoveryCode() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearRecoveryCode() => $_clearField(8);
 }
-
-class FinishSensitiveOperationVerificationResponse
-    extends $pb.GeneratedMessage {
-  factory FinishSensitiveOperationVerificationResponse({
-    $core.String? verificationId,
-    SensitiveOperationVerificationChallenge? challenge,
-  }) {
-    final result = create();
-    if (verificationId != null) result.verificationId = verificationId;
-    if (challenge != null) result.challenge = challenge;
-    return result;
-  }
-
-  FinishSensitiveOperationVerificationResponse._();
-
-  factory FinishSensitiveOperationVerificationResponse.fromBuffer(
-          $core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory FinishSensitiveOperationVerificationResponse.fromJson(
-          $core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'FinishSensitiveOperationVerificationResponse',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
-      createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'verificationId')
-    ..aOM<SensitiveOperationVerificationChallenge>(
-        2, _omitFieldNames ? '' : 'challenge',
-        subBuilder: SensitiveOperationVerificationChallenge.create)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  FinishSensitiveOperationVerificationResponse clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  FinishSensitiveOperationVerificationResponse copyWith(
-          void Function(FinishSensitiveOperationVerificationResponse)
-              updates) =>
-      super.copyWith((message) =>
-              updates(message as FinishSensitiveOperationVerificationResponse))
-          as FinishSensitiveOperationVerificationResponse;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static FinishSensitiveOperationVerificationResponse create() =>
-      FinishSensitiveOperationVerificationResponse._();
-  @$core.override
-  FinishSensitiveOperationVerificationResponse createEmptyInstance() =>
-      create();
-  @$core.pragma('dart2js:noInline')
-  static FinishSensitiveOperationVerificationResponse getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          FinishSensitiveOperationVerificationResponse>(create);
-  static FinishSensitiveOperationVerificationResponse? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get verificationId => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set verificationId($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasVerificationId() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearVerificationId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  SensitiveOperationVerificationChallenge get challenge => $_getN(1);
-  @$pb.TagNumber(2)
-  set challenge(SensitiveOperationVerificationChallenge value) =>
-      $_setField(2, value);
-  @$pb.TagNumber(2)
-  $core.bool hasChallenge() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearChallenge() => $_clearField(2);
-  @$pb.TagNumber(2)
-  SensitiveOperationVerificationChallenge ensureChallenge() => $_ensure(1);
-}
-
-enum StartOpaqueLoginRequest_Identifier { username, email, notSet }
 
 /// Start an OPAQUE password login. Public clients should prefer this flow because
 /// the server receives an OPAQUE credential request instead of the plaintext
-/// password. Provide exactly one login identifier: `username` or `email`.
+/// password. StartLogin binds this request to the selected account.
 class StartOpaqueLoginRequest extends $pb.GeneratedMessage {
   factory StartOpaqueLoginRequest({
-    $core.String? username,
-    $core.String? email,
+    $core.String? loginSessionId,
     $core.List<$core.int>? credentialRequest,
   }) {
     final result = create();
-    if (username != null) result.username = username;
-    if (email != null) result.email = email;
+    if (loginSessionId != null) result.loginSessionId = loginSessionId;
     if (credentialRequest != null) result.credentialRequest = credentialRequest;
     return result;
   }
@@ -6836,21 +6933,13 @@ class StartOpaqueLoginRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, StartOpaqueLoginRequest_Identifier>
-      _StartOpaqueLoginRequest_IdentifierByTag = {
-    1: StartOpaqueLoginRequest_Identifier.username,
-    2: StartOpaqueLoginRequest_Identifier.email,
-    0: StartOpaqueLoginRequest_Identifier.notSet
-  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'StartOpaqueLoginRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2])
-    ..aOS(1, _omitFieldNames ? '' : 'username')
-    ..aOS(2, _omitFieldNames ? '' : 'email')
+    ..aOS(1, _omitFieldNames ? '' : 'loginSessionId')
     ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'credentialRequest', $pb.PbFieldType.OY)
+        2, _omitFieldNames ? '' : 'credentialRequest', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -6874,39 +6963,22 @@ class StartOpaqueLoginRequest extends $pb.GeneratedMessage {
   static StartOpaqueLoginRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  @$pb.TagNumber(2)
-  StartOpaqueLoginRequest_Identifier whichIdentifier() =>
-      _StartOpaqueLoginRequest_IdentifierByTag[$_whichOneof(0)]!;
+  $core.String get loginSessionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  @$pb.TagNumber(2)
-  void clearIdentifier() => $_clearField($_whichOneof(0));
-
+  set loginSessionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.String get username => $_getSZ(0);
+  $core.bool hasLoginSessionId() => $_has(0);
   @$pb.TagNumber(1)
-  set username($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUsername() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUsername() => $_clearField(1);
+  void clearLoginSessionId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get email => $_getSZ(1);
+  $core.List<$core.int> get credentialRequest => $_getN(1);
   @$pb.TagNumber(2)
-  set email($core.String value) => $_setString(1, value);
+  set credentialRequest($core.List<$core.int> value) => $_setBytes(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasEmail() => $_has(1);
+  $core.bool hasCredentialRequest() => $_has(1);
   @$pb.TagNumber(2)
-  void clearEmail() => $_clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.List<$core.int> get credentialRequest => $_getN(2);
-  @$pb.TagNumber(3)
-  set credentialRequest($core.List<$core.int> value) => $_setBytes(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasCredentialRequest() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearCredentialRequest() => $_clearField(3);
+  void clearCredentialRequest() => $_clearField(2);
 }
 
 class StartOpaqueLoginResponse extends $pb.GeneratedMessage {
@@ -7048,19 +7120,14 @@ class FinishOpaqueLoginRequest extends $pb.GeneratedMessage {
   void clearCredentialFinalization() => $_clearField(2);
 }
 
-enum StartPasskeyLoginRequest_Identifier { username, email, notSet }
-
-/// Start a passkey login. If username or email is provided, the challenge is
-/// bound to that account's passkeys. If both are empty, the challenge uses
-/// discoverable credentials with conditional mediation.
+/// Start a passkey login. A login session binds the challenge to the selected
+/// account. Omitting it starts account-independent discoverable authentication.
 class StartPasskeyLoginRequest extends $pb.GeneratedMessage {
   factory StartPasskeyLoginRequest({
-    $core.String? username,
-    $core.String? email,
+    $core.String? loginSessionId,
   }) {
     final result = create();
-    if (username != null) result.username = username;
-    if (email != null) result.email = email;
+    if (loginSessionId != null) result.loginSessionId = loginSessionId;
     return result;
   }
 
@@ -7073,19 +7140,11 @@ class StartPasskeyLoginRequest extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
-  static const $core.Map<$core.int, StartPasskeyLoginRequest_Identifier>
-      _StartPasskeyLoginRequest_IdentifierByTag = {
-    1: StartPasskeyLoginRequest_Identifier.username,
-    2: StartPasskeyLoginRequest_Identifier.email,
-    0: StartPasskeyLoginRequest_Identifier.notSet
-  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'StartPasskeyLoginRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..oo(0, [1, 2])
-    ..aOS(1, _omitFieldNames ? '' : 'username')
-    ..aOS(2, _omitFieldNames ? '' : 'email')
+    ..aOS(1, _omitFieldNames ? '' : 'loginSessionId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -7109,30 +7168,13 @@ class StartPasskeyLoginRequest extends $pb.GeneratedMessage {
   static StartPasskeyLoginRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  @$pb.TagNumber(2)
-  StartPasskeyLoginRequest_Identifier whichIdentifier() =>
-      _StartPasskeyLoginRequest_IdentifierByTag[$_whichOneof(0)]!;
+  $core.String get loginSessionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  @$pb.TagNumber(2)
-  void clearIdentifier() => $_clearField($_whichOneof(0));
-
+  set loginSessionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.String get username => $_getSZ(0);
+  $core.bool hasLoginSessionId() => $_has(0);
   @$pb.TagNumber(1)
-  set username($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasUsername() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUsername() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get email => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set email($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasEmail() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearEmail() => $_clearField(2);
+  void clearLoginSessionId() => $_clearField(1);
 }
 
 class StartPasskeyLoginResponse extends $pb.GeneratedMessage {
@@ -8040,18 +8082,452 @@ class DeletePasskeyResponse extends $pb.GeneratedMessage {
   void clearDeleted() => $_clearField(1);
 }
 
+class StartTotpSetupRequest extends $pb.GeneratedMessage {
+  factory StartTotpSetupRequest({
+    $core.String? verificationId,
+  }) {
+    final result = create();
+    if (verificationId != null) result.verificationId = verificationId;
+    return result;
+  }
+
+  StartTotpSetupRequest._();
+
+  factory StartTotpSetupRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartTotpSetupRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartTotpSetupRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'verificationId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartTotpSetupRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartTotpSetupRequest copyWith(
+          void Function(StartTotpSetupRequest) updates) =>
+      super.copyWith((message) => updates(message as StartTotpSetupRequest))
+          as StartTotpSetupRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartTotpSetupRequest create() => StartTotpSetupRequest._();
+  @$core.override
+  StartTotpSetupRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartTotpSetupRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StartTotpSetupRequest>(create);
+  static StartTotpSetupRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get verificationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set verificationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVerificationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVerificationId() => $_clearField(1);
+}
+
+class StartTotpSetupResponse extends $pb.GeneratedMessage {
+  factory StartTotpSetupResponse({
+    $core.String? setupId,
+    $core.String? secret,
+    $core.String? otpauthUri,
+    $fixnum.Int64? expiresAt,
+  }) {
+    final result = create();
+    if (setupId != null) result.setupId = setupId;
+    if (secret != null) result.secret = secret;
+    if (otpauthUri != null) result.otpauthUri = otpauthUri;
+    if (expiresAt != null) result.expiresAt = expiresAt;
+    return result;
+  }
+
+  StartTotpSetupResponse._();
+
+  factory StartTotpSetupResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory StartTotpSetupResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'StartTotpSetupResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'setupId')
+    ..aOS(2, _omitFieldNames ? '' : 'secret')
+    ..aOS(3, _omitFieldNames ? '' : 'otpauthUri')
+    ..aInt64(4, _omitFieldNames ? '' : 'expiresAt')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartTotpSetupResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  StartTotpSetupResponse copyWith(
+          void Function(StartTotpSetupResponse) updates) =>
+      super.copyWith((message) => updates(message as StartTotpSetupResponse))
+          as StartTotpSetupResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static StartTotpSetupResponse create() => StartTotpSetupResponse._();
+  @$core.override
+  StartTotpSetupResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static StartTotpSetupResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<StartTotpSetupResponse>(create);
+  static StartTotpSetupResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get setupId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set setupId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSetupId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSetupId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get secret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set secret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSecret() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get otpauthUri => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set otpauthUri($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasOtpauthUri() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearOtpauthUri() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get expiresAt => $_getI64(3);
+  @$pb.TagNumber(4)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasExpiresAt() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearExpiresAt() => $_clearField(4);
+}
+
+class FinishTotpSetupRequest extends $pb.GeneratedMessage {
+  factory FinishTotpSetupRequest({
+    $core.String? setupId,
+    $core.String? code,
+  }) {
+    final result = create();
+    if (setupId != null) result.setupId = setupId;
+    if (code != null) result.code = code;
+    return result;
+  }
+
+  FinishTotpSetupRequest._();
+
+  factory FinishTotpSetupRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory FinishTotpSetupRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FinishTotpSetupRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'setupId')
+    ..aOS(2, _omitFieldNames ? '' : 'code')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishTotpSetupRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FinishTotpSetupRequest copyWith(
+          void Function(FinishTotpSetupRequest) updates) =>
+      super.copyWith((message) => updates(message as FinishTotpSetupRequest))
+          as FinishTotpSetupRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static FinishTotpSetupRequest create() => FinishTotpSetupRequest._();
+  @$core.override
+  FinishTotpSetupRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FinishTotpSetupRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FinishTotpSetupRequest>(create);
+  static FinishTotpSetupRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get setupId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set setupId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSetupId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSetupId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get code => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set code($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCode() => $_clearField(2);
+}
+
+class TotpRecoveryCodesResponse extends $pb.GeneratedMessage {
+  factory TotpRecoveryCodesResponse({
+    $core.Iterable<$core.String>? recoveryCodes,
+  }) {
+    final result = create();
+    if (recoveryCodes != null) result.recoveryCodes.addAll(recoveryCodes);
+    return result;
+  }
+
+  TotpRecoveryCodesResponse._();
+
+  factory TotpRecoveryCodesResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory TotpRecoveryCodesResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'TotpRecoveryCodesResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..pPS(1, _omitFieldNames ? '' : 'recoveryCodes')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TotpRecoveryCodesResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  TotpRecoveryCodesResponse copyWith(
+          void Function(TotpRecoveryCodesResponse) updates) =>
+      super.copyWith((message) => updates(message as TotpRecoveryCodesResponse))
+          as TotpRecoveryCodesResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static TotpRecoveryCodesResponse create() => TotpRecoveryCodesResponse._();
+  @$core.override
+  TotpRecoveryCodesResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static TotpRecoveryCodesResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<TotpRecoveryCodesResponse>(create);
+  static TotpRecoveryCodesResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<$core.String> get recoveryCodes => $_getList(0);
+}
+
+class RegenerateTotpRecoveryCodesRequest extends $pb.GeneratedMessage {
+  factory RegenerateTotpRecoveryCodesRequest({
+    $core.String? verificationId,
+  }) {
+    final result = create();
+    if (verificationId != null) result.verificationId = verificationId;
+    return result;
+  }
+
+  RegenerateTotpRecoveryCodesRequest._();
+
+  factory RegenerateTotpRecoveryCodesRequest.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RegenerateTotpRecoveryCodesRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RegenerateTotpRecoveryCodesRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'verificationId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RegenerateTotpRecoveryCodesRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RegenerateTotpRecoveryCodesRequest copyWith(
+          void Function(RegenerateTotpRecoveryCodesRequest) updates) =>
+      super.copyWith((message) =>
+              updates(message as RegenerateTotpRecoveryCodesRequest))
+          as RegenerateTotpRecoveryCodesRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RegenerateTotpRecoveryCodesRequest create() =>
+      RegenerateTotpRecoveryCodesRequest._();
+  @$core.override
+  RegenerateTotpRecoveryCodesRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RegenerateTotpRecoveryCodesRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RegenerateTotpRecoveryCodesRequest>(
+          create);
+  static RegenerateTotpRecoveryCodesRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get verificationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set verificationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVerificationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVerificationId() => $_clearField(1);
+}
+
+class DeleteTotpRequest extends $pb.GeneratedMessage {
+  factory DeleteTotpRequest({
+    $core.String? verificationId,
+  }) {
+    final result = create();
+    if (verificationId != null) result.verificationId = verificationId;
+    return result;
+  }
+
+  DeleteTotpRequest._();
+
+  factory DeleteTotpRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeleteTotpRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeleteTotpRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'verificationId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteTotpRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteTotpRequest copyWith(void Function(DeleteTotpRequest) updates) =>
+      super.copyWith((message) => updates(message as DeleteTotpRequest))
+          as DeleteTotpRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeleteTotpRequest create() => DeleteTotpRequest._();
+  @$core.override
+  DeleteTotpRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeleteTotpRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeleteTotpRequest>(create);
+  static DeleteTotpRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get verificationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set verificationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVerificationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVerificationId() => $_clearField(1);
+}
+
+class DeleteTotpResponse extends $pb.GeneratedMessage {
+  factory DeleteTotpResponse({
+    $core.bool? deleted,
+  }) {
+    final result = create();
+    if (deleted != null) result.deleted = deleted;
+    return result;
+  }
+
+  DeleteTotpResponse._();
+
+  factory DeleteTotpResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeleteTotpResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeleteTotpResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'deleted')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteTotpResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteTotpResponse copyWith(void Function(DeleteTotpResponse) updates) =>
+      super.copyWith((message) => updates(message as DeleteTotpResponse))
+          as DeleteTotpResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeleteTotpResponse create() => DeleteTotpResponse._();
+  @$core.override
+  DeleteTotpResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeleteTotpResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeleteTotpResponse>(create);
+  static DeleteTotpResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get deleted => $_getBF(0);
+  @$pb.TagNumber(1)
+  set deleted($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDeleted() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDeleted() => $_clearField(1);
+}
+
 class UserAuthFactors extends $pb.GeneratedMessage {
   factory UserAuthFactors({
     $core.bool? password,
     $core.bool? webauthn,
     $core.bool? email,
     $core.int? eligibleCount,
+    $core.bool? totp,
+    $core.int? totpRecoveryCodesRemaining,
   }) {
     final result = create();
     if (password != null) result.password = password;
     if (webauthn != null) result.webauthn = webauthn;
     if (email != null) result.email = email;
     if (eligibleCount != null) result.eligibleCount = eligibleCount;
+    if (totp != null) result.totp = totp;
+    if (totpRecoveryCodesRemaining != null)
+      result.totpRecoveryCodesRemaining = totpRecoveryCodesRemaining;
     return result;
   }
 
@@ -8072,6 +8548,9 @@ class UserAuthFactors extends $pb.GeneratedMessage {
     ..aOB(2, _omitFieldNames ? '' : 'webauthn')
     ..aOB(3, _omitFieldNames ? '' : 'email')
     ..aI(4, _omitFieldNames ? '' : 'eligibleCount')
+    ..aOB(5, _omitFieldNames ? '' : 'totp')
+    ..aI(6, _omitFieldNames ? '' : 'totpRecoveryCodesRemaining',
+        fieldType: $pb.PbFieldType.OU3)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8128,6 +8607,25 @@ class UserAuthFactors extends $pb.GeneratedMessage {
   $core.bool hasEligibleCount() => $_has(3);
   @$pb.TagNumber(4)
   void clearEligibleCount() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get totp => $_getBF(4);
+  @$pb.TagNumber(5)
+  set totp($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasTotp() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearTotp() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.int get totpRecoveryCodesRemaining => $_getIZ(5);
+  @$pb.TagNumber(6)
+  set totpRecoveryCodesRemaining($core.int value) =>
+      $_setUnsignedInt32(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasTotpRecoveryCodesRemaining() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearTotpRecoveryCodesRemaining() => $_clearField(6);
 }
 
 class UserPreferences extends $pb.GeneratedMessage {
@@ -8452,11 +8950,9 @@ class GetUserPreferencesResponse extends $pb.GeneratedMessage {
 
 class UpdateUserPreferencesRequest extends $pb.GeneratedMessage {
   factory UpdateUserPreferencesRequest({
-    $core.bool? twoFactorEnabled,
     UserNotificationPreferences? notifications,
   }) {
     final result = create();
-    if (twoFactorEnabled != null) result.twoFactorEnabled = twoFactorEnabled;
     if (notifications != null) result.notifications = notifications;
     return result;
   }
@@ -8474,7 +8970,6 @@ class UpdateUserPreferencesRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'UpdateUserPreferencesRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'twoFactorEnabled')
     ..aOM<UserNotificationPreferences>(
         3, _omitFieldNames ? '' : 'notifications',
         subBuilder: UserNotificationPreferences.create)
@@ -8502,25 +8997,16 @@ class UpdateUserPreferencesRequest extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<UpdateUserPreferencesRequest>(create);
   static UpdateUserPreferencesRequest? _defaultInstance;
 
-  @$pb.TagNumber(1)
-  $core.bool get twoFactorEnabled => $_getBF(0);
-  @$pb.TagNumber(1)
-  set twoFactorEnabled($core.bool value) => $_setBool(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasTwoFactorEnabled() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearTwoFactorEnabled() => $_clearField(1);
-
   @$pb.TagNumber(3)
-  UserNotificationPreferences get notifications => $_getN(1);
+  UserNotificationPreferences get notifications => $_getN(0);
   @$pb.TagNumber(3)
   set notifications(UserNotificationPreferences value) => $_setField(3, value);
   @$pb.TagNumber(3)
-  $core.bool hasNotifications() => $_has(1);
+  $core.bool hasNotifications() => $_has(0);
   @$pb.TagNumber(3)
   void clearNotifications() => $_clearField(3);
   @$pb.TagNumber(3)
-  UserNotificationPreferences ensureNotifications() => $_ensure(1);
+  UserNotificationPreferences ensureNotifications() => $_ensure(0);
 }
 
 class UpdateUserPreferencesResponse extends $pb.GeneratedMessage {
@@ -8598,12 +9084,80 @@ class UpdateUserPreferencesResponse extends $pb.GeneratedMessage {
   UserAuthFactors ensureAuthFactors() => $_ensure(1);
 }
 
-class RequestEmailLoginRequest extends $pb.GeneratedMessage {
-  factory RequestEmailLoginRequest({
-    $core.String? email,
+class SetTwoFactorEnabledRequest extends $pb.GeneratedMessage {
+  factory SetTwoFactorEnabledRequest({
+    $core.bool? enabled,
+    $core.String? verificationId,
   }) {
     final result = create();
-    if (email != null) result.email = email;
+    if (enabled != null) result.enabled = enabled;
+    if (verificationId != null) result.verificationId = verificationId;
+    return result;
+  }
+
+  SetTwoFactorEnabledRequest._();
+
+  factory SetTwoFactorEnabledRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SetTwoFactorEnabledRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SetTwoFactorEnabledRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'enabled')
+    ..aOS(2, _omitFieldNames ? '' : 'verificationId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetTwoFactorEnabledRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SetTwoFactorEnabledRequest copyWith(
+          void Function(SetTwoFactorEnabledRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as SetTwoFactorEnabledRequest))
+          as SetTwoFactorEnabledRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SetTwoFactorEnabledRequest create() => SetTwoFactorEnabledRequest._();
+  @$core.override
+  SetTwoFactorEnabledRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SetTwoFactorEnabledRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SetTwoFactorEnabledRequest>(create);
+  static SetTwoFactorEnabledRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get enabled => $_getBF(0);
+  @$pb.TagNumber(1)
+  set enabled($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasEnabled() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEnabled() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get verificationId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set verificationId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasVerificationId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearVerificationId() => $_clearField(2);
+}
+
+class RequestEmailLoginRequest extends $pb.GeneratedMessage {
+  factory RequestEmailLoginRequest({
+    $core.String? loginSessionId,
+  }) {
+    final result = create();
+    if (loginSessionId != null) result.loginSessionId = loginSessionId;
     return result;
   }
 
@@ -8620,7 +9174,7 @@ class RequestEmailLoginRequest extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'RequestEmailLoginRequest',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'email')
+    ..aOS(1, _omitFieldNames ? '' : 'loginSessionId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -8644,13 +9198,13 @@ class RequestEmailLoginRequest extends $pb.GeneratedMessage {
   static RequestEmailLoginRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get email => $_getSZ(0);
+  $core.String get loginSessionId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set email($core.String value) => $_setString(0, value);
+  set loginSessionId($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasEmail() => $_has(0);
+  $core.bool hasLoginSessionId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearEmail() => $_clearField(1);
+  void clearLoginSessionId() => $_clearField(1);
 }
 
 class RequestEmailLoginResponse extends $pb.GeneratedMessage {
@@ -9107,6 +9661,141 @@ class FinishMfaPasskeyRequest extends $pb.GeneratedMessage {
   void clearCredential() => $_clearField(3);
   @$pb.TagNumber(3)
   $2.PasskeyAuthenticationCredential ensureCredential() => $_ensure(2);
+}
+
+class VerifyMfaTotpRequest extends $pb.GeneratedMessage {
+  factory VerifyMfaTotpRequest({
+    $core.String? mfaSessionId,
+    $core.String? code,
+  }) {
+    final result = create();
+    if (mfaSessionId != null) result.mfaSessionId = mfaSessionId;
+    if (code != null) result.code = code;
+    return result;
+  }
+
+  VerifyMfaTotpRequest._();
+
+  factory VerifyMfaTotpRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory VerifyMfaTotpRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'VerifyMfaTotpRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'mfaSessionId')
+    ..aOS(2, _omitFieldNames ? '' : 'code')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VerifyMfaTotpRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VerifyMfaTotpRequest copyWith(void Function(VerifyMfaTotpRequest) updates) =>
+      super.copyWith((message) => updates(message as VerifyMfaTotpRequest))
+          as VerifyMfaTotpRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static VerifyMfaTotpRequest create() => VerifyMfaTotpRequest._();
+  @$core.override
+  VerifyMfaTotpRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static VerifyMfaTotpRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<VerifyMfaTotpRequest>(create);
+  static VerifyMfaTotpRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get mfaSessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mfaSessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMfaSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMfaSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get code => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set code($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasCode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearCode() => $_clearField(2);
+}
+
+class VerifyMfaRecoveryCodeRequest extends $pb.GeneratedMessage {
+  factory VerifyMfaRecoveryCodeRequest({
+    $core.String? mfaSessionId,
+    $core.String? recoveryCode,
+  }) {
+    final result = create();
+    if (mfaSessionId != null) result.mfaSessionId = mfaSessionId;
+    if (recoveryCode != null) result.recoveryCode = recoveryCode;
+    return result;
+  }
+
+  VerifyMfaRecoveryCodeRequest._();
+
+  factory VerifyMfaRecoveryCodeRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory VerifyMfaRecoveryCodeRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'VerifyMfaRecoveryCodeRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'mfaSessionId')
+    ..aOS(2, _omitFieldNames ? '' : 'recoveryCode')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VerifyMfaRecoveryCodeRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  VerifyMfaRecoveryCodeRequest copyWith(
+          void Function(VerifyMfaRecoveryCodeRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as VerifyMfaRecoveryCodeRequest))
+          as VerifyMfaRecoveryCodeRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static VerifyMfaRecoveryCodeRequest create() =>
+      VerifyMfaRecoveryCodeRequest._();
+  @$core.override
+  VerifyMfaRecoveryCodeRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static VerifyMfaRecoveryCodeRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<VerifyMfaRecoveryCodeRequest>(create);
+  static VerifyMfaRecoveryCodeRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get mfaSessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set mfaSessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMfaSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMfaSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get recoveryCode => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set recoveryCode($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRecoveryCode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRecoveryCode() => $_clearField(2);
 }
 
 class RefreshTokenRequest extends $pb.GeneratedMessage {
@@ -43945,6 +44634,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     $core.Iterable<$core.String>? emailWhitelistDomains,
     $fixnum.Int64? maxPinnedChatMessagesPerRoom,
     $core.String? serverName,
+    $core.String? webauthnRpId,
   }) {
     final result = create();
     if (roomCreationEnabled != null)
@@ -43980,6 +44670,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
     if (maxPinnedChatMessagesPerRoom != null)
       result.maxPinnedChatMessagesPerRoom = maxPinnedChatMessagesPerRoom;
     if (serverName != null) result.serverName = serverName;
+    if (webauthnRpId != null) result.webauthnRpId = webauthnRpId;
     return result;
   }
 
@@ -44022,6 +44713,7 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
         $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOS(28, _omitFieldNames ? '' : 'serverName')
+    ..aOS(29, _omitFieldNames ? '' : 'webauthnRpId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -44241,6 +44933,15 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   $core.bool hasServerName() => $_has(21);
   @$pb.TagNumber(28)
   void clearServerName() => $_clearField(28);
+
+  @$pb.TagNumber(29)
+  $core.String get webauthnRpId => $_getSZ(22);
+  @$pb.TagNumber(29)
+  set webauthnRpId($core.String value) => $_setString(22, value);
+  @$pb.TagNumber(29)
+  $core.bool hasWebauthnRpId() => $_has(22);
+  @$pb.TagNumber(29)
+  void clearWebauthnRpId() => $_clearField(29);
 }
 
 class GetServerInfoRequest extends $pb.GeneratedMessage {
@@ -48234,6 +48935,10 @@ class AuthServiceApi {
           $pb.ClientContext? ctx, ConfirmEmailLoginRequest request) =>
       _client.invoke<LoginResponse>(
           ctx, 'AuthService', 'ConfirmEmailLogin', request, LoginResponse());
+  $async.Future<StartLoginResponse> startLogin(
+          $pb.ClientContext? ctx, StartLoginRequest request) =>
+      _client.invoke<StartLoginResponse>(
+          ctx, 'AuthService', 'StartLogin', request, StartLoginResponse());
   $async.Future<CreateGuestTokenResponse> createGuestToken(
           $pb.ClientContext? ctx, CreateGuestTokenRequest request) =>
       _client.invoke<CreateGuestTokenResponse>(ctx, 'AuthService',
@@ -48314,6 +49019,14 @@ class AuthServiceApi {
           $pb.ClientContext? ctx, FinishMfaPasskeyRequest request) =>
       _client.invoke<LoginResponse>(
           ctx, 'AuthService', 'FinishMfaPasskey', request, LoginResponse());
+  $async.Future<LoginResponse> verifyMfaTotp(
+          $pb.ClientContext? ctx, VerifyMfaTotpRequest request) =>
+      _client.invoke<LoginResponse>(
+          ctx, 'AuthService', 'VerifyMfaTotp', request, LoginResponse());
+  $async.Future<LoginResponse> verifyMfaRecoveryCode(
+          $pb.ClientContext? ctx, VerifyMfaRecoveryCodeRequest request) =>
+      _client.invoke<LoginResponse>(ctx, 'AuthService', 'VerifyMfaRecoveryCode',
+          request, LoginResponse());
   $async.Future<RefreshTokenResponse> refreshToken(
           $pb.ClientContext? ctx, RefreshTokenRequest request) =>
       _client.invoke<RefreshTokenResponse>(
@@ -48373,15 +49086,15 @@ class UserServiceApi {
           $pb.ClientContext? ctx, ClearUserAvatarRequest request) =>
       _client.invoke<User>(
           ctx, 'UserService', 'ClearUserAvatar', request, User());
-  $async.Future<StartSensitiveOperationVerificationResponse>
+  $async.Future<SensitiveOperationVerificationOutcome>
       startSensitiveOperationVerification($pb.ClientContext? ctx,
               StartSensitiveOperationVerificationRequest request) =>
-          _client.invoke<StartSensitiveOperationVerificationResponse>(
+          _client.invoke<SensitiveOperationVerificationOutcome>(
               ctx,
               'UserService',
               'StartSensitiveOperationVerification',
               request,
-              StartSensitiveOperationVerificationResponse());
+              SensitiveOperationVerificationOutcome());
   $async.Future<StartSensitiveOperationPasskeyResponse>
       startSensitiveOperationPasskey($pb.ClientContext? ctx,
               StartSensitiveOperationPasskeyRequest request) =>
@@ -48400,15 +49113,15 @@ class UserServiceApi {
               'RequestSensitiveOperationEmailCode',
               request,
               RequestSensitiveOperationEmailCodeResponse());
-  $async.Future<FinishSensitiveOperationVerificationResponse>
+  $async.Future<SensitiveOperationVerificationOutcome>
       finishSensitiveOperationVerification($pb.ClientContext? ctx,
               FinishSensitiveOperationVerificationRequest request) =>
-          _client.invoke<FinishSensitiveOperationVerificationResponse>(
+          _client.invoke<SensitiveOperationVerificationOutcome>(
               ctx,
               'UserService',
               'FinishSensitiveOperationVerification',
               request,
-              FinishSensitiveOperationVerificationResponse());
+              SensitiveOperationVerificationOutcome());
   $async.Future<StartEmailBindResponse> startEmailBind(
           $pb.ClientContext? ctx, StartEmailBindRequest request) =>
       _client.invoke<StartEmailBindResponse>(ctx, 'UserService',
@@ -48448,6 +49161,22 @@ class UserServiceApi {
           $pb.ClientContext? ctx, DeletePasskeyRequest request) =>
       _client.invoke<DeletePasskeyResponse>(ctx, 'UserService', 'DeletePasskey',
           request, DeletePasskeyResponse());
+  $async.Future<StartTotpSetupResponse> startTotpSetup(
+          $pb.ClientContext? ctx, StartTotpSetupRequest request) =>
+      _client.invoke<StartTotpSetupResponse>(ctx, 'UserService',
+          'StartTotpSetup', request, StartTotpSetupResponse());
+  $async.Future<TotpRecoveryCodesResponse> finishTotpSetup(
+          $pb.ClientContext? ctx, FinishTotpSetupRequest request) =>
+      _client.invoke<TotpRecoveryCodesResponse>(ctx, 'UserService',
+          'FinishTotpSetup', request, TotpRecoveryCodesResponse());
+  $async.Future<TotpRecoveryCodesResponse> regenerateTotpRecoveryCodes(
+          $pb.ClientContext? ctx, RegenerateTotpRecoveryCodesRequest request) =>
+      _client.invoke<TotpRecoveryCodesResponse>(ctx, 'UserService',
+          'RegenerateTotpRecoveryCodes', request, TotpRecoveryCodesResponse());
+  $async.Future<DeleteTotpResponse> deleteTotp(
+          $pb.ClientContext? ctx, DeleteTotpRequest request) =>
+      _client.invoke<DeleteTotpResponse>(
+          ctx, 'UserService', 'DeleteTotp', request, DeleteTotpResponse());
   $async.Future<GetUserPreferencesResponse> getUserPreferences(
           $pb.ClientContext? ctx, GetUserPreferencesRequest request) =>
       _client.invoke<GetUserPreferencesResponse>(ctx, 'UserService',
@@ -48456,6 +49185,10 @@ class UserServiceApi {
           $pb.ClientContext? ctx, UpdateUserPreferencesRequest request) =>
       _client.invoke<UpdateUserPreferencesResponse>(ctx, 'UserService',
           'UpdateUserPreferences', request, UpdateUserPreferencesResponse());
+  $async.Future<GetUserPreferencesResponse> setTwoFactorEnabled(
+          $pb.ClientContext? ctx, SetTwoFactorEnabledRequest request) =>
+      _client.invoke<GetUserPreferencesResponse>(ctx, 'UserService',
+          'SetTwoFactorEnabled', request, GetUserPreferencesResponse());
   $async.Future<CloseAccountResponse> closeAccount(
           $pb.ClientContext? ctx, CloseAccountRequest request) =>
       _client.invoke<CloseAccountResponse>(

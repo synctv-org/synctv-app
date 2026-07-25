@@ -11,10 +11,9 @@ SyncTvServerProfile _profile({
   bool isBuiltIn = false,
 }) {
   return SyncTvServerProfile(
-    serverId: id,
+    endpoint: endpoint,
+    declaredServerId: id,
     name: id,
-    endpoints: [endpoint],
-    activeEndpoint: endpoint,
     isBuiltIn: isBuiltIn,
   );
 }
@@ -90,16 +89,19 @@ void main() {
         endpoint: 'https://regular.example.com',
       );
       store.servers = [builtInServer, regularServer];
-      store.activeServerId = builtInServer.serverId;
-      store.baseUrl = builtInServer.activeEndpoint;
+      store.activeServerEndpoint = builtInServer.endpoint;
+      store.baseUrl = builtInServer.endpoint;
 
-      await store.removeServer(builtInServer.serverId);
+      await store.removeServer(builtInServer.endpoint);
 
       expect(store.servers, contains(builtInServer));
-      expect(store.activeServerId, builtInServer.serverId);
-      await store.removeServer(regularServer.serverId);
+      expect(store.activeServerEndpoint, builtInServer.endpoint);
+      await store.removeServer(regularServer.endpoint);
       expect(store.servers, hasLength(1));
-      expect(store.servers.single.serverId, builtInServer.serverId);
+      expect(
+        store.servers.single.declaredServerId,
+        builtInServer.declaredServerId,
+      );
       expect(store.servers.single.isBuiltIn, isTrue);
     },
   );
@@ -111,7 +113,7 @@ void main() {
     );
     SharedPreferences.setMockInitialValues({
       SyncTvSessionStore.serversKey: jsonEncode([regularServer.toJson()]),
-      SyncTvSessionStore.activeServerKey: regularServer.serverId,
+      SyncTvSessionStore.activeServerKey: regularServer.endpoint,
     });
     final store = SyncTvSessionStore(
       SyncTvSession(),
@@ -122,10 +124,10 @@ void main() {
 
     expect(store.servers.where((server) => server.isBuiltIn), hasLength(1));
     expect(
-      store.servers.singleWhere((server) => server.isBuiltIn).activeEndpoint,
+      store.servers.singleWhere((server) => server.isBuiltIn).endpoint,
       'https://built-in.example.com',
     );
-    expect(store.activeServerId, regularServer.serverId);
+    expect(store.activeServerEndpoint, regularServer.endpoint);
   });
 
   test('setting another base URL preserves the built-in server', () async {
@@ -142,9 +144,69 @@ void main() {
     expect(store.servers, hasLength(2));
     expect(store.servers.where((server) => server.isBuiltIn), hasLength(1));
     expect(
-      store.servers.singleWhere((server) => server.isBuiltIn).activeEndpoint,
+      store.servers.singleWhere((server) => server.isBuiltIn).endpoint,
       'https://built-in.example.com',
     );
-    expect(store.activeServer?.activeEndpoint, 'https://other.example.com');
+    expect(store.activeServer?.endpoint, 'https://other.example.com');
+  });
+
+  test('same declared id keeps sessions isolated by endpoint', () async {
+    final session = SyncTvSession();
+    final store = SyncTvSessionStore(session, builtInServerUrl: '');
+    await store.load();
+
+    await store.addOrUpdateServer(
+      declaredServerId: 'srv_claimed',
+      name: 'First',
+      endpoint: 'https://first.example.com',
+    );
+    session
+      ..accessToken = 'first-access'
+      ..refreshToken = 'first-refresh';
+    await store.persistTokens();
+
+    await store.addOrUpdateServer(
+      declaredServerId: 'srv_claimed',
+      name: 'Imitator',
+      endpoint: 'https://imitator.example.com',
+    );
+    expect(session.accessToken, isNull);
+    expect(session.refreshToken, isNull);
+    session.accessToken = 'imitator-access';
+    await store.persistTokens();
+
+    await store.activateServer('https://first.example.com');
+    expect(session.accessToken, 'first-access');
+    expect(session.refreshToken, 'first-refresh');
+
+    await store.activateServer('https://imitator.example.com');
+    expect(session.accessToken, 'imitator-access');
+    expect(session.refreshToken, isNull);
+    expect(store.servers, hasLength(2));
+  });
+
+  test('persisted active server is restored by endpoint', () async {
+    final session = SyncTvSession();
+    final store = SyncTvSessionStore(session, builtInServerUrl: '');
+    await store.load();
+    await store.addOrUpdateServer(
+      declaredServerId: 'same',
+      name: 'First',
+      endpoint: 'https://first.example.com',
+    );
+    await store.addOrUpdateServer(
+      declaredServerId: 'same',
+      name: 'Second',
+      endpoint: 'https://second.example.com',
+    );
+    session.accessToken = 'second-token';
+    await store.persistTokens();
+
+    final restoredSession = SyncTvSession();
+    final restored = SyncTvSessionStore(restoredSession, builtInServerUrl: '');
+    await restored.load();
+
+    expect(restored.activeServerEndpoint, 'https://second.example.com');
+    expect(restoredSession.accessToken, 'second-token');
   });
 }

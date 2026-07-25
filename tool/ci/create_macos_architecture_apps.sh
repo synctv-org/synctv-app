@@ -59,8 +59,16 @@ create_app() {
   fi
   cp "$source_symbol" "$destination_symbols/$symbol_name"
 
-  codesign --force --deep --sign - --timestamp=none \
-    --preserve-metadata=entitlements,requirements,flags,runtime \
+  local signing_identity="${SYNCTV_MACOS_SIGNING_IDENTITY:--}"
+  local timestamp_argument="--timestamp=none"
+  local runtime_arguments=()
+  if [[ "$signing_identity" != "-" ]]; then
+    timestamp_argument="--timestamp"
+    runtime_arguments=(--options runtime)
+  fi
+  codesign --force --deep --sign "$signing_identity" "$timestamp_argument" \
+    "${runtime_arguments[@]}" \
+    --preserve-metadata=entitlements,requirements,flags \
     "$destination_app"
   codesign --verify --deep --strict "$destination_app"
   echo "Created $architecture macOS app with $checked Mach-O binaries"

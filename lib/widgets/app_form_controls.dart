@@ -764,41 +764,11 @@ class AppSelectableText extends StatelessWidget {
             textWidthBasis: textWidthBasis,
             textHeightBehavior: textHeightBehavior,
             onSelectionChanged: onSelectionChanged,
-            contextMenuBuilder: _buildCompactTextSelectionToolbar,
           ),
         ),
       ),
     );
   }
-}
-
-Widget _buildCompactTextSelectionToolbar(
-  BuildContext context,
-  EditableTextState editableTextState,
-) {
-  final buttonItems = editableTextState.contextMenuButtonItems;
-  if (buttonItems.isEmpty) return const SizedBox.shrink();
-  final anchors = editableTextState.contextMenuAnchors;
-  return TextSelectionToolbar(
-    anchorAbove: anchors.primaryAnchor,
-    anchorBelow: anchors.secondaryAnchor ?? anchors.primaryAnchor,
-    children: [
-      for (var index = 0; index < buttonItems.length; index++)
-        TextSelectionToolbarTextButton(
-          padding: TextSelectionToolbarTextButton.getPadding(
-            index,
-            buttonItems.length,
-          ),
-          onPressed: buttonItems[index].onPressed,
-          child: Text(
-            AdaptiveTextSelectionToolbar.getButtonLabel(
-              context,
-              buttonItems[index],
-            ),
-          ),
-        ),
-    ],
-  );
 }
 
 class AppTextField extends StatefulWidget {
@@ -988,80 +958,63 @@ class _AppTextFieldState extends State<AppTextField> {
           )
         : null;
 
-    final textField = ExcludeSemantics(
-      child: TextFormField(
-        controller: widget.controller,
-        focusNode: _effectiveFocusNode,
-        enabled: widget.enabled,
-        readOnly: widget.readOnly,
-        autofocus: widget.autofocus,
-        obscureText: _obscure,
-        enableInteractiveSelection: true,
-        enableSuggestions: widget.obscureText
-            ? false
-            : widget.enableSuggestions,
-        autocorrect: widget.obscureText ? false : widget.autocorrect,
-        minLines: widget.obscureText ? null : widget.minLines,
-        maxLines: maxLines,
-        maxLength: widget.maxLength,
-        keyboardType: widget.keyboardType,
-        textInputAction: widget.textInputAction,
-        inputFormatters: widget.inputFormatters,
-        autofillHints: widget.autofillHints,
-        smartDashesType: widget.smartDashesType,
-        smartQuotesType: widget.smartQuotesType,
-        onTap: widget.onTap,
-        onChanged: widget.onChanged,
-        onFieldSubmitted: widget.onSubmitted,
-        validator: widget.validator,
-        autovalidateMode: widget.autovalidateMode,
-        selectAllOnFocus: widget.selectAllOnFocus,
-        undoController: widget.undoController,
-        spellCheckConfiguration: widget.spellCheckConfiguration,
-        contentInsertionConfiguration: widget.contentInsertionConfiguration,
-        onTapOutside: (_) => FocusScope.of(context).unfocus(),
-        style: widget.style ?? theme.textTheme.bodyMedium,
-        decoration: InputDecoration(
-          isDense: dense,
-          labelText: widget.showLabel ? widget.label : null,
-          hintText: widget.hintText,
-          helperText: widget.helperText,
-          errorText: widget.errorText,
-          counterText: widget.counterText,
-          filled: widget.filled || widget.fillColor != null,
-          fillColor: widget.fillColor ?? scheme.surfaceContainerHighest,
-          prefixIcon: widget.prefixIcon == null
-              ? null
-              : Icon(widget.prefixIcon, size: 18),
-          suffixIcon: suffix,
-          contentPadding:
-              widget.contentPadding ??
-              EdgeInsets.symmetric(horizontal: 12, vertical: dense ? 10 : 13),
-          border: enabledBorder,
-          enabledBorder: enabledBorder,
-          focusedBorder: focusedBorder,
-          disabledBorder: disabledBorder,
-          errorBorder: enabledBorder.copyWith(
-            borderSide: BorderSide(color: scheme.error),
-          ),
-          focusedErrorBorder: focusedBorder.copyWith(
-            borderSide: BorderSide(color: scheme.error, width: 1.4),
-          ),
+    return TextFormField(
+      controller: widget.controller,
+      focusNode: _effectiveFocusNode,
+      enabled: widget.enabled,
+      readOnly: widget.readOnly,
+      autofocus: widget.autofocus,
+      obscureText: _obscure,
+      enableInteractiveSelection: true,
+      enableSuggestions: widget.obscureText ? false : widget.enableSuggestions,
+      autocorrect: widget.obscureText ? false : widget.autocorrect,
+      minLines: widget.obscureText ? null : widget.minLines,
+      maxLines: maxLines,
+      maxLength: widget.maxLength,
+      keyboardType: widget.keyboardType,
+      textInputAction: widget.textInputAction,
+      inputFormatters: widget.inputFormatters,
+      autofillHints: widget.autofillHints,
+      smartDashesType: widget.smartDashesType,
+      smartQuotesType: widget.smartQuotesType,
+      onTap: widget.onTap,
+      onChanged: widget.onChanged,
+      onFieldSubmitted: widget.onSubmitted,
+      validator: widget.validator,
+      autovalidateMode: widget.autovalidateMode,
+      selectAllOnFocus: widget.selectAllOnFocus,
+      undoController: widget.undoController,
+      spellCheckConfiguration: widget.spellCheckConfiguration,
+      contentInsertionConfiguration: widget.contentInsertionConfiguration,
+      onTapOutside: (_) => FocusScope.of(context).unfocus(),
+      style: widget.style ?? theme.textTheme.bodyMedium,
+      decoration: InputDecoration(
+        isDense: dense,
+        labelText: widget.showLabel ? widget.label : null,
+        hintText: widget.hintText,
+        helperText: widget.helperText,
+        errorText: widget.errorText,
+        counterText: widget.counterText,
+        filled: widget.filled || widget.fillColor != null,
+        fillColor: widget.fillColor ?? scheme.surfaceContainerHighest,
+        prefixIcon: widget.prefixIcon == null
+            ? null
+            : Icon(widget.prefixIcon, size: 18),
+        suffixIcon: suffix,
+        contentPadding:
+            widget.contentPadding ??
+            EdgeInsets.symmetric(horizontal: 12, vertical: dense ? 10 : 13),
+        border: enabledBorder,
+        enabledBorder: enabledBorder,
+        focusedBorder: focusedBorder,
+        disabledBorder: disabledBorder,
+        errorBorder: enabledBorder.copyWith(
+          borderSide: BorderSide(color: scheme.error),
+        ),
+        focusedErrorBorder: focusedBorder.copyWith(
+          borderSide: BorderSide(color: scheme.error, width: 1.4),
         ),
       ),
-    );
-    return _withSetTextSemantics(textField);
-  }
-
-  Widget _withSetTextSemantics(Widget child) {
-    return Semantics(
-      textField: true,
-      readOnly: widget.readOnly,
-      enabled: widget.enabled,
-      label: widget.label,
-      value: widget.controller.text,
-      onSetText: _enabled ? _setText : null,
-      child: child,
     );
   }
 
