@@ -3,20 +3,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synctv_app/services/synctv_service.dart';
-import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
-    as common_enum;
 
 void main() {
   test(
-    'create local UI test administrator and room',
+    'create local UI test user and room',
     () async {
       const baseUrl = String.fromEnvironment(
         'SYNCTV_SMOKE_BASE_URL',
         defaultValue: 'http://127.0.0.1:8080',
-      );
-      const rootPassword = String.fromEnvironment(
-        'SYNCTV_SMOKE_ROOT_PASSWORD',
-        defaultValue: 'LocalDevRootPass2026!',
       );
       final stamp = DateTime.now().microsecondsSinceEpoch;
       final username = 'uiadmin$stamp';
@@ -25,18 +19,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       await SyncTvService.init();
       await SyncTvService.setBaseUrl(baseUrl);
-      await SyncTvService.loginWithDirectPassword(
-        username: 'root',
-        password: rootPassword,
-      );
-      await SyncTvService.adminAddUser(
-        username,
-        password,
-        common_enum.UserRole.USER_ROLE_ADMIN.value,
-      );
-
-      await SyncTvService.logout();
-      await SyncTvService.loginWithDirectPassword(
+      await SyncTvService.registerWithDirectPassword(
         username: username,
         password: password,
       );

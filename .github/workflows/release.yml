@@ -552,6 +552,9 @@ jobs:
           rust-version: ${{ env.RUST_VERSION }}
           rust-targets: aarch64-apple-ios
 
+      - name: Verify iOS App Store icons
+        run: bash tool/ci/verify_ios_app_icons.sh
+
       - name: Configure iOS release signing
         id: signing
         env:
@@ -837,6 +840,9 @@ jobs:
             local details="$4"
             local matches=()
             while IFS= read -r match; do
+              if [[ "$match" == *-symbols.* ]]; then
+                continue
+              fi
               matches+=("$match")
             done < <(compgen -G "dist/$pattern" || true)
             if [[ ${#matches[@]} -eq 0 ]]; then
@@ -918,6 +924,18 @@ jobs:
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" dist/* --clobber
+            while IFS= read -r existing_asset; do
+              if [[ "$existing_asset" != "SHA256SUMS.txt" &&
+                    "$existing_asset" != SyncTV-* ]]; then
+                continue
+              fi
+              if [[ -f "dist/$existing_asset" ]]; then
+                continue
+              fi
+              gh release delete-asset "$RELEASE_TAG" "$existing_asset" --yes
+            done < <(gh release view "$RELEASE_TAG" \
+              --json assets \
+              --jq '.assets[].name')
             gh release edit "$RELEASE_TAG" \
               --target "$GITHUB_SHA" \
               --title "$RELEASE_TAG" \
