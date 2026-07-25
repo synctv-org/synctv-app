@@ -1,4 +1,6 @@
 # SyncTV 的一个前端项目，支持全平台。
+
+[隐私政策 / Privacy Policy](PRIVACY.md)
 <p align="center">
   <a href="https://github.com/synctv-org/SyncTV_APP/releases/latest">
     <img src="https://img.shields.io/github/v/release/synctv-org/SyncTV_APP?style=flat-square&logo=github&color=blue" alt="Release"/>
