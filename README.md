@@ -160,7 +160,9 @@ Apple 签名使用这些 repository secrets：
 | `SYNCTV_APP_STORE_CONNECT_ISSUER_ID` | App Store Connect Issuer ID |
 | `SYNCTV_APP_STORE_CONNECT_PRIVATE_KEY_BASE64` | `.p8` 私钥文件的 Base64 内容 |
 
-Apple 签名配置完整时，workflow 会校验签名产物包含 `SYNCTV_PASSKEY_RP_IDS` 对应的 `webcredentials:` entitlement。服务端 `webauthn.apple_app_ids` 配置为 `<Team ID>.org.synctv.app`。正式签名的 universal、arm64、x64 三个 macOS App 都会通过 App Store Connect API 提交 notarization 并 staple ticket；缺少公证凭据时构建会失败。fork 的空签名配置会生成带 `ad-hoc` 标记的 macOS 压缩包和 unsigned iOS 重签名归档。
+Apple 签名配置完整时，workflow 会校验签名产物包含 `SYNCTV_PASSKEY_RP_IDS` 对应的 `webcredentials:` entitlement。服务端 `webauthn.apple_app_ids` 配置为 `<Team ID>.org.synctv.app`。正式签名的 universal、arm64、x64 三个 macOS App 与最终 DMG 安装器都会通过 App Store Connect API 提交 notarization 并 staple ticket。fork 的空签名配置会生成带 `ad-hoc` 标记的 DMG、便携 ZIP 和 unsigned iOS 重签名归档。
+
+GitHub Release 为 Windows 提供带现代安装向导的 EXE 和便携 ZIP，为 macOS 提供 Universal、Apple silicon、Intel 三种 DMG 与便携 ZIP。Release Notes 顶部根据实际生成的产物构建快速下载矩阵，主入口使用平台下载徽章，并保留架构说明、替代包和 SHA-256 校验入口。
 
 ### 应用商店发布
 

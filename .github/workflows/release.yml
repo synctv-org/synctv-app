@@ -376,6 +376,7 @@ jobs:
           -Version "${{ needs.metadata.outputs.artifact-version }}"
           -Architecture x64
           -OutputDirectory dist
+          -RepositoryUrl "${{ github.server_url }}/${{ github.repository }}"
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -390,7 +391,7 @@ jobs:
     name: macOS universal
     needs: metadata
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Check out source
@@ -504,6 +505,33 @@ jobs:
             "${{ needs.metadata.outputs.artifact-version }}" dist/arm64
           bash tool/ci/package_release.sh macos x64 \
             "${{ needs.metadata.outputs.artifact-version }}" dist/x64
+
+      - name: Notarize and staple macOS disk images
+        if: steps.signing.outputs.mode == 'signed'
+        env:
+          NOTARY_KEY_ID: ${{ secrets.SYNCTV_APP_STORE_CONNECT_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.SYNCTV_APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          notary_key="$RUNNER_TEMP/AuthKey_$NOTARY_KEY_ID.p8"
+          if [[ ! -f "$notary_key" ]]; then
+            echo "App Store Connect API key was not prepared" >&2
+            exit 1
+          fi
+          dmg_count=0
+          while IFS= read -r dmg; do
+            dmg_count=$((dmg_count + 1))
+            xcrun notarytool submit "$dmg" \
+              --key "$notary_key" \
+              --key-id "$NOTARY_KEY_ID" \
+              --issuer "$NOTARY_ISSUER_ID" \
+              --wait
+            xcrun stapler staple "$dmg"
+            xcrun stapler validate "$dmg"
+          done < <(find dist -type f -name '*.dmg' -print)
+          if [[ "$dmg_count" -ne 3 ]]; then
+            echo "Expected 3 macOS disk images, found $dmg_count" >&2
+            exit 1
+          fi
 
       - name: Upload universal macOS artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -823,104 +851,7 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
           ARTIFACT_VERSION: ${{ needs.metadata.outputs.artifact-version }}
         run: |
-          shopt -s nullglob
-          asset_base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG"
-
-          cat > release-notes.md <<'EOF'
-          ## Quick downloads
-
-          | Platform | Architecture | Download | Details |
-          |:---|:---|:---|:---|
-          EOF
-
-          append_download() {
-            local platform="$1"
-            local architecture="$2"
-            local pattern="$3"
-            local details="$4"
-            local matches=()
-            while IFS= read -r match; do
-              if [[ "$match" == *-symbols.* ]]; then
-                continue
-              fi
-              matches+=("$match")
-            done < <(compgen -G "dist/$pattern" || true)
-            if [[ ${#matches[@]} -eq 0 ]]; then
-              return
-            fi
-            local asset_name="${matches[0]#dist/}"
-            printf "| %s | %s | [\`%s\`](%s/%s) | %s |\\n" \
-              "$platform" \
-              "$architecture" \
-              "$asset_name" \
-              "$asset_base" \
-              "$asset_name" \
-              "$details" >> release-notes.md
-          }
-
-          append_download "Android" "Universal" \
-            "SyncTV-$ARTIFACT_VERSION-android-universal-*.apk" \
-            "Recommended Android installer"
-          append_download "Android" "arm64" \
-            "SyncTV-$ARTIFACT_VERSION-android-arm64-*.apk" \
-            "Most current Android phones and tablets"
-          append_download "Android" "armv7" \
-            "SyncTV-$ARTIFACT_VERSION-android-armv7-*.apk" \
-            "32-bit Android devices"
-          append_download "Android" "x64" \
-            "SyncTV-$ARTIFACT_VERSION-android-x64-*.apk" \
-            "x86_64 devices and emulators"
-          append_download "Android" "Universal" \
-            "SyncTV-$ARTIFACT_VERSION-android-universal-*.aab" \
-            "Google Play publishing bundle"
-          append_download "iOS" "arm64" \
-            "SyncTV-$ARTIFACT_VERSION-ios-signed.ipa" \
-            "App Store distribution archive"
-          append_download "iOS" "arm64" \
-            "SyncTV-$ARTIFACT_VERSION-ios-unsigned.zip" \
-            "Re-signable archive for fork builds"
-          append_download "macOS" "Universal" \
-            "SyncTV-$ARTIFACT_VERSION-macos-universal-*.zip" \
-            "Recommended macOS package"
-          append_download "macOS" "Apple silicon" \
-            "SyncTV-$ARTIFACT_VERSION-macos-arm64-*.zip" \
-            "Apple silicon Macs"
-          append_download "macOS" "Intel" \
-            "SyncTV-$ARTIFACT_VERSION-macos-x64-*.zip" \
-            "Intel Macs"
-          append_download "Windows" "x64" \
-            "SyncTV-$ARTIFACT_VERSION-windows-x64.zip" \
-            "64-bit Windows"
-          append_download "Linux" "x64" \
-            "SyncTV-$ARTIFACT_VERSION-linux-x64.tar.gz" \
-            "64-bit Intel and AMD systems"
-          append_download "Linux" "arm64" \
-            "SyncTV-$ARTIFACT_VERSION-linux-arm64.tar.gz" \
-            "64-bit ARM systems"
-
-          printf "| Verification | All | [\`SHA256SUMS.txt\`](%s/SHA256SUMS.txt) | SHA-256 checksums for every asset |\\n" \
-            "$asset_base" >> release-notes.md
-
-          cat >> release-notes.md <<'EOF'
-
-          ## Installation notes
-
-          - Android filenames identify stable `signed` and ephemeral `development` signing modes.
-          - Signed Android releases include a public `android-passkey-server-config.yaml` file for self-hosted servers.
-          - macOS filenames identify `signed` and `ad-hoc` modes. Configured notarization credentials add and staple Apple notarization tickets.
-          - iOS publishes a signed IPA when signing secrets are configured and an unsigned re-signable archive for fork builds.
-          - `SHA256SUMS.txt` authenticates every attached SyncTV artifact.
-          EOF
-
-          generated_notes="$(gh api \
-            --method POST \
-            "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
-            -f tag_name="$RELEASE_TAG" \
-            -f target_commitish="$GITHUB_SHA" \
-            --jq .body)"
-          if [[ -n "$generated_notes" ]]; then
-            printf '\n%s\n' "$generated_notes" >> release-notes.md
-          fi
+          bash tool/ci/generate_release_notes.sh dist release-notes.md
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" dist/* --clobber

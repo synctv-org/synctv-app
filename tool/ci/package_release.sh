@@ -61,6 +61,19 @@ case "$platform" in
     fi
     ditto -c -k --sequesterRsrc --keepParent "$app_path" \
       "$output_directory/SyncTV-$version-macos-$architecture-$signing_label.zip"
+    dmg_staging="$(mktemp -d)"
+    trap 'rm -rf "${dmg_staging:-}"' EXIT
+    ditto "$app_path" "$dmg_staging/SyncTV.app"
+    ln -s /Applications "$dmg_staging/Applications"
+    hdiutil create \
+      -volname "SyncTV" \
+      -srcfolder "$dmg_staging" \
+      -ov \
+      -format UDZO \
+      -imagekey zlib-level=9 \
+      "$output_directory/SyncTV-$version-macos-$architecture-$signing_label.dmg"
+    rm -rf "$dmg_staging"
+    trap - EXIT
     ;;
   ios)
     if [[ "${SYNCTV_IOS_SIGNED:-0}" == "1" ]]; then

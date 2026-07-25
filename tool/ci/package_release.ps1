@@ -7,7 +7,11 @@ param(
   [string]$Architecture,
 
   [Parameter(Mandatory = $true)]
-  [string]$OutputDirectory
+  [string]$OutputDirectory,
+
+  [Parameter(Mandatory = $true)]
+  [ValidatePattern('^https://')]
+  [string]$RepositoryUrl
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,8 +24,33 @@ if ($null -eq $bundle) {
 }
 
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
+$resolvedOutputDirectory = (Resolve-Path -Path $OutputDirectory).Path
 $archive = Join-Path $OutputDirectory "SyncTV-$Version-windows-$Architecture.zip"
 Compress-Archive -Path (Join-Path $bundle.FullName '*') -DestinationPath $archive -Force
+
+$innoCompiler = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+if (-not (Test-Path -Path $innoCompiler -PathType Leaf)) {
+  throw "Inno Setup compiler was not found: $innoCompiler"
+}
+$installerScript = Join-Path $PSScriptRoot 'windows_installer.iss'
+if (-not (Test-Path -Path $installerScript -PathType Leaf)) {
+  throw "Windows installer definition was not found: $installerScript"
+}
+$installerName = "SyncTV-$Version-windows-$Architecture-setup"
+& $innoCompiler `
+  "/DAppVersion=$Version" `
+  "/DSourceDirectory=$($bundle.FullName)" `
+  "/DOutputDirectory=$resolvedOutputDirectory" `
+  "/DOutputBaseFilename=$installerName" `
+  "/DAppUrl=$RepositoryUrl" `
+  $installerScript
+if ($LASTEXITCODE -ne 0) {
+  throw "Inno Setup failed with exit code $LASTEXITCODE."
+}
+$installer = Join-Path $resolvedOutputDirectory "$installerName.exe"
+if (-not (Test-Path -Path $installer -PathType Leaf)) {
+  throw "Windows installer was not generated: $installer"
+}
 
 $symbolsDirectory = "build/symbols/windows-$Architecture"
 if (-not (Test-Path -Path $symbolsDirectory -PathType Container)) {
