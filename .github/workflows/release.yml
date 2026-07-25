@@ -818,8 +818,85 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
+          ARTIFACT_VERSION: ${{ needs.metadata.outputs.artifact-version }}
         run: |
+          shopt -s nullglob
+          asset_base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG"
+
           cat > release-notes.md <<'EOF'
+          ## Quick downloads
+
+          | Platform | Architecture | Download | Details |
+          |:---|:---|:---|:---|
+          EOF
+
+          append_download() {
+            local platform="$1"
+            local architecture="$2"
+            local pattern="$3"
+            local details="$4"
+            local matches=()
+            while IFS= read -r match; do
+              matches+=("$match")
+            done < <(compgen -G "dist/$pattern" || true)
+            if [[ ${#matches[@]} -eq 0 ]]; then
+              return
+            fi
+            local asset_name="${matches[0]#dist/}"
+            printf "| %s | %s | [\`%s\`](%s/%s) | %s |\\n" \
+              "$platform" \
+              "$architecture" \
+              "$asset_name" \
+              "$asset_base" \
+              "$asset_name" \
+              "$details" >> release-notes.md
+          }
+
+          append_download "Android" "Universal" \
+            "SyncTV-$ARTIFACT_VERSION-android-universal-*.apk" \
+            "Recommended Android installer"
+          append_download "Android" "arm64" \
+            "SyncTV-$ARTIFACT_VERSION-android-arm64-*.apk" \
+            "Most current Android phones and tablets"
+          append_download "Android" "armv7" \
+            "SyncTV-$ARTIFACT_VERSION-android-armv7-*.apk" \
+            "32-bit Android devices"
+          append_download "Android" "x64" \
+            "SyncTV-$ARTIFACT_VERSION-android-x64-*.apk" \
+            "x86_64 devices and emulators"
+          append_download "Android" "Universal" \
+            "SyncTV-$ARTIFACT_VERSION-android-universal-*.aab" \
+            "Google Play publishing bundle"
+          append_download "iOS" "arm64" \
+            "SyncTV-$ARTIFACT_VERSION-ios-signed.ipa" \
+            "App Store distribution archive"
+          append_download "iOS" "arm64" \
+            "SyncTV-$ARTIFACT_VERSION-ios-unsigned.zip" \
+            "Re-signable archive for fork builds"
+          append_download "macOS" "Universal" \
+            "SyncTV-$ARTIFACT_VERSION-macos-universal-*.zip" \
+            "Recommended macOS package"
+          append_download "macOS" "Apple silicon" \
+            "SyncTV-$ARTIFACT_VERSION-macos-arm64-*.zip" \
+            "Apple silicon Macs"
+          append_download "macOS" "Intel" \
+            "SyncTV-$ARTIFACT_VERSION-macos-x64-*.zip" \
+            "Intel Macs"
+          append_download "Windows" "x64" \
+            "SyncTV-$ARTIFACT_VERSION-windows-x64.zip" \
+            "64-bit Windows"
+          append_download "Linux" "x64" \
+            "SyncTV-$ARTIFACT_VERSION-linux-x64.tar.gz" \
+            "64-bit Intel and AMD systems"
+          append_download "Linux" "arm64" \
+            "SyncTV-$ARTIFACT_VERSION-linux-arm64.tar.gz" \
+            "64-bit ARM systems"
+
+          printf "| Verification | All | [\`SHA256SUMS.txt\`](%s/SHA256SUMS.txt) | SHA-256 checksums for every asset |\\n" \
+            "$asset_base" >> release-notes.md
+
+          cat >> release-notes.md <<'EOF'
+
           ## Installation notes
 
           - Android filenames identify stable `signed` and ephemeral `development` signing modes.
@@ -829,8 +906,22 @@ jobs:
           - `SHA256SUMS.txt` authenticates every attached SyncTV artifact.
           EOF
 
+          generated_notes="$(gh api \
+            --method POST \
+            "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+            -f tag_name="$RELEASE_TAG" \
+            -f target_commitish="$GITHUB_SHA" \
+            --jq .body)"
+          if [[ -n "$generated_notes" ]]; then
+            printf '\n%s\n' "$generated_notes" >> release-notes.md
+          fi
+
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" dist/* --clobber
+            gh release edit "$RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "$RELEASE_TAG" \
+              --notes-file release-notes.md
             exit 0
           fi
 
@@ -839,7 +930,6 @@ jobs:
             dist/*
             --target "$GITHUB_SHA"
             --title "$RELEASE_TAG"
-            --generate-notes
             --notes-file release-notes.md
           )
           if [[ "$RELEASE_TAG" == *-* ]]; then
