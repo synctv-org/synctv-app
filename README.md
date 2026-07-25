@@ -164,7 +164,7 @@ Apple 签名配置完整时，workflow 会校验签名产物包含 `SYNCTV_PASSK
 
 ### 应用商店发布
 
-Release workflow 的手动运行入口支持从版本 Tag 发布 Google Play 和 App Store Connect。商店发布只能从 Tag 触发，GitHub Release 的普通 Tag 构建继续独立运行。建议为 `google-play` 和 `app-store` GitHub Environments 配置审批保护。
+Release workflow 会在 `v*` Tag 构建 GitHub Release。仓库变量 `SYNCTV_PUBLISH_APP_STORE_ON_TAG` 设置为 `true` 时，同一次 Tag 运行会将 iOS 和 macOS 构建上传到 App Store Connect；`app-store` GitHub Environment 负责上传前审批。手动运行入口支持从版本 Tag 独立选择 Google Play、iOS App Store 和 Mac App Store。建议为 `google-play` 和 `app-store` GitHub Environments 配置审批保护。
 
 Google Play 使用 `google-play` Environment Secret：
 
@@ -183,6 +183,12 @@ App Store Connect 使用 `app-store` Environment Secrets：
 | `SYNCTV_APP_STORE_CONNECT_KEY_ID` | App Store Connect API Key ID |
 | `SYNCTV_APP_STORE_CONNECT_ISSUER_ID` | App Store Connect Issuer ID |
 | `SYNCTV_APP_STORE_CONNECT_PRIVATE_KEY_BASE64` | `.p8` 私钥文件的 Base64 内容 |
+
+Apple Tag 发布使用 repository variable：
+
+| 名称 | 内容 |
+|:---|:---|
+| `SYNCTV_PUBLISH_APP_STORE_ON_TAG` | 设置为 `true` 后，`v*` Tag 自动进入 iOS 与 macOS 商店上传审批；其他值让 fork 专注生成 GitHub Release 产物 |
 
 Mac App Store 额外使用：
 

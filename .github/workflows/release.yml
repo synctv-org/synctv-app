@@ -644,7 +644,11 @@ jobs:
 
   app-store:
     name: Publish iOS App Store
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store
+    if: >-
+      (github.event_name == 'push' &&
+      github.ref_type == 'tag' &&
+      vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store)
     needs: [metadata, ios]
     runs-on: macos-15
     timeout-minutes: 30
@@ -685,7 +689,11 @@ jobs:
 
   mac-app-store:
     name: Publish Mac App Store
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_macos_app_store
+    if: >-
+      (github.event_name == 'push' &&
+      github.ref_type == 'tag' &&
+      vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish_macos_app_store)
     needs: metadata
     runs-on: macos-15
     timeout-minutes: 50
