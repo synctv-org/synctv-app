@@ -36,3 +36,11 @@ updates:
       gradle-minor-and-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+
+  - package-ecosystem: bundler
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      fastlane:
+        patterns: ["*"]

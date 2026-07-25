@@ -1,0 +1,2 @@
+app_identifier("org.synctv.app")
+package_name("org.synctv.app")

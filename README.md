@@ -143,20 +143,60 @@ Apple 签名使用这些 repository variables：
 | `SYNCTV_APPLE_DEVELOPMENT_TEAM` | Apple Team ID |
 | `SYNCTV_MACOS_SIGNING_IDENTITY` | macOS codesign identity，例如 `Developer ID Application: ...` |
 | `SYNCTV_IOS_SIGNING_IDENTITY` | iOS codesign identity，例如 `Apple Distribution: ...` |
-| `SYNCTV_APPLE_NOTARY_TEAM_ID` | 可选的 notarization Team ID |
 
 Apple 签名使用这些 repository secrets：
 
 | 名称 | 内容 |
 |:---|:---|
-| `SYNCTV_APPLE_CERTIFICATE_BASE64` | 含发布私钥的 PKCS#12 证书 Base64 内容 |
-| `SYNCTV_APPLE_CERTIFICATE_PASSWORD` | PKCS#12 密码 |
-| `SYNCTV_MACOS_PROVISIONING_PROFILE_BASE64` | macOS provisioning profile Base64 内容 |
-| `SYNCTV_IOS_PROVISIONING_PROFILE_BASE64` | iOS provisioning profile Base64 内容 |
-| `SYNCTV_APPLE_NOTARY_APPLE_ID` | 可选的 notarization Apple ID |
-| `SYNCTV_APPLE_NOTARY_PASSWORD` | 可选的 app-specific password |
+| `SYNCTV_MACOS_DEVELOPER_ID_CERTIFICATE_BASE64` | 含 Developer ID Application 私钥的 PKCS#12 Base64 内容 |
+| `SYNCTV_MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD` | Developer ID PKCS#12 密码 |
+| `SYNCTV_MACOS_DEVELOPER_ID_PROVISIONING_PROFILE_BASE64` | Developer ID provisioning profile Base64 内容 |
+| `SYNCTV_APPLE_DISTRIBUTION_CERTIFICATE_BASE64` | 含 Apple Distribution 私钥的 PKCS#12 Base64 内容 |
+| `SYNCTV_APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD` | Apple Distribution PKCS#12 密码 |
+| `SYNCTV_IOS_APP_STORE_PROVISIONING_PROFILE_BASE64` | iOS App Store provisioning profile Base64 内容 |
+| `SYNCTV_APP_STORE_CONNECT_KEY_ID` | App Store Connect API Key ID，用于 macOS notarization |
+| `SYNCTV_APP_STORE_CONNECT_ISSUER_ID` | App Store Connect Issuer ID |
+| `SYNCTV_APP_STORE_CONNECT_PRIVATE_KEY_BASE64` | `.p8` 私钥文件的 Base64 内容 |
 
-Apple 签名配置完整时，workflow 会校验签名产物包含 `SYNCTV_PASSKEY_RP_IDS` 对应的 `webcredentials:` entitlement。服务端 `webauthn.apple_app_ids` 配置为 `<Team ID>.org.synctv.app`。macOS notarization 三项配置完整时，universal、arm64、x64 三个 App 都会提交 notarization 并 staple ticket。fork 的空配置会生成带 `ad-hoc` 标记的 macOS 压缩包和 unsigned iOS 重签名归档。
+Apple 签名配置完整时，workflow 会校验签名产物包含 `SYNCTV_PASSKEY_RP_IDS` 对应的 `webcredentials:` entitlement。服务端 `webauthn.apple_app_ids` 配置为 `<Team ID>.org.synctv.app`。正式签名的 universal、arm64、x64 三个 macOS App 都会通过 App Store Connect API 提交 notarization 并 staple ticket；缺少公证凭据时构建会失败。fork 的空签名配置会生成带 `ad-hoc` 标记的 macOS 压缩包和 unsigned iOS 重签名归档。
+
+### 应用商店发布
+
+Release workflow 的手动运行入口支持从版本 Tag 发布 Google Play 和 App Store Connect。商店发布只能从 Tag 触发，GitHub Release 的普通 Tag 构建继续独立运行。建议为 `google-play` 和 `app-store` GitHub Environments 配置审批保护。
+
+Google Play 使用 `google-play` Environment Secret：
+
+| 名称 | 内容 |
+|:---|:---|
+| `SYNCTV_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | 已获得目标应用发布权限的 Google Play service account JSON |
+
+Android 构建会同时生成 APK 和 AAB。手动 workflow 可以选择 `internal`、`alpha`、`beta` 或 `production` track，以及 `draft`、`completed`、`inProgress` 或 `halted` 状态。首次使用 API 前，需要在 Play Console 创建 `org.synctv.app` 应用、接受协议、完成商店资料，并授予 service account 对该应用的发布权限。
+
+启用 Play App Signing 后，从 Play Console 的 **App integrity** 页面复制 App signing certificate SHA-256，写入 repository variable `SYNCTV_GOOGLE_PLAY_APP_SIGNING_SHA256`。多个证书用分号分隔。Release 附带的 Passkey 服务器配置会同时包含 GitHub APK 证书和 Play 安装包证书。
+
+App Store Connect 使用 `app-store` Environment Secrets：
+
+| 名称 | 内容 |
+|:---|:---|
+| `SYNCTV_APP_STORE_CONNECT_KEY_ID` | App Store Connect API Key ID |
+| `SYNCTV_APP_STORE_CONNECT_ISSUER_ID` | App Store Connect Issuer ID |
+| `SYNCTV_APP_STORE_CONNECT_PRIVATE_KEY_BASE64` | `.p8` 私钥文件的 Base64 内容 |
+
+Mac App Store 额外使用：
+
+| 类型 | 名称 | 内容 |
+|:---|:---|:---|
+| Secret | `SYNCTV_MACOS_INSTALLER_CERTIFICATE_BASE64` | 含 Mac Installer Distribution 私钥的 PKCS#12 Base64 |
+| Secret | `SYNCTV_MACOS_INSTALLER_CERTIFICATE_PASSWORD` | Installer PKCS#12 密码 |
+| Secret | `SYNCTV_MACOS_APP_STORE_PROVISIONING_PROFILE_BASE64` | Mac App Store provisioning profile Base64 |
+| Variable | `SYNCTV_MACOS_APP_STORE_SIGNING_IDENTITY` | Mac App Store 应用签名 identity |
+| Variable | `SYNCTV_MACOS_INSTALLER_SIGNING_IDENTITY` | Mac App Store installer signing identity |
+
+API Key 需要对 `org.synctv.app` 拥有 App Manager 或更高权限。iOS 正式签名构建使用 Xcode archive 和 `app-store-connect` export method 生成标准 IPA。Mac App Store 使用独立的沙盒 App 签名和 Installer `.pkg`，现有 Developer ID + notarization 产物继续用于站外分发。手动 workflow 可以分别上传 iOS、macOS，也可以在商店资料完整时提交 App Review；审核通过后的发布保持为 App Store Connect 手动控制。
+
+应用价格在 App Store Connect 网页的 **Pricing and Availability** 中配置。SyncTV 的美国基础价格设置为约 1 美元对应的价格点，具体显示金额由 Apple 当前价格点和税务规则决定。CI、Fastlane 配置和仓库变量不写入应用价格。
+
+两个商店首次发布还需要在官方后台完成隐私政策 URL、数据安全/隐私问卷、内容分级、截图、支持 URL、出口合规、销售地区和税务协议。后续版本的签名、上传和可选送审由 workflow 处理。
 
 ## Provider 使用
 

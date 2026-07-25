@@ -72,6 +72,23 @@ security import "$certificate_path" \
   -t cert \
   -f pkcs12 \
   -k "$keychain_path"
+
+additional_certificate_base64="${SYNCTV_APPLE_ADDITIONAL_CERTIFICATE_BASE64:-}"
+additional_certificate_password="${SYNCTV_APPLE_ADDITIONAL_CERTIFICATE_PASSWORD:-}"
+if [[ -n "$additional_certificate_base64" || -n "$additional_certificate_password" ]]; then
+  if [[ -z "$additional_certificate_base64" || -z "$additional_certificate_password" ]]; then
+    echo "Additional Apple certificate configuration is incomplete" >&2
+    exit 1
+  fi
+  additional_certificate_path="$RUNNER_TEMP/synctv-additional-signing.p12"
+  decode_base64 "$additional_certificate_base64" "$additional_certificate_path"
+  security import "$additional_certificate_path" \
+    -P "$additional_certificate_password" \
+    -A \
+    -t cert \
+    -f pkcs12 \
+    -k "$keychain_path"
+fi
 security set-key-partition-list \
   -S apple-tool:,apple: \
   -s \
@@ -88,9 +105,20 @@ if [[ "$profile_team" != "$SYNCTV_APPLE_DEVELOPMENT_TEAM" ]]; then
   echo "Provisioning profile team does not match SYNCTV_APPLE_DEVELOPMENT_TEAM" >&2
   exit 1
 fi
-mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-cp "$profile_path" \
-  "$HOME/Library/MobileDevice/Provisioning Profiles/$profile_uuid.provisionprofile"
+case "$platform" in
+  ios) profile_extension="mobileprovision" ;;
+  macos) profile_extension="provisionprofile" ;;
+esac
+
+profile_directories=(
+  "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+  "$HOME/Library/MobileDevice/Provisioning Profiles"
+)
+for profile_directory in "${profile_directories[@]}"; do
+  mkdir -p "$profile_directory"
+  cp "$profile_path" \
+    "$profile_directory/$profile_uuid.$profile_extension"
+done
 
 mkdir -p "$(dirname "$output")"
 {
@@ -98,6 +126,11 @@ mkdir -p "$(dirname "$output")"
   printf 'SYNC_TV_CODE_SIGN_STYLE = Manual\n'
   printf 'SYNC_TV_DEVELOPMENT_TEAM = %s\n' "$SYNCTV_APPLE_DEVELOPMENT_TEAM"
   printf 'SYNC_TV_PROVISIONING_PROFILE_SPECIFIER = %s\n' "$profile_uuid"
+  if [[ "$platform" == "macos" ]]; then
+    printf 'SYNC_TV_ENABLE_HARDENED_RUNTIME = YES\n'
+    printf 'SYNC_TV_CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO\n'
+    printf 'SYNC_TV_OTHER_CODE_SIGN_FLAGS = --timestamp\n'
+  fi
 } > "$output"
 
 {
@@ -107,4 +140,20 @@ mkdir -p "$(dirname "$output")"
     echo "SYNCTV_MACOS_SIGNING_LABEL=signed"
   fi
 } >> "${GITHUB_ENV:?GITHUB_ENV is required}"
+
+if [[ "$platform" == "ios" ]]; then
+  export_options="$RUNNER_TEMP/synctv-ios-export-options.plist"
+  plutil -create xml1 "$export_options"
+  plutil -insert method -string app-store-connect "$export_options"
+  plutil -insert destination -string export "$export_options"
+  plutil -insert signingStyle -string manual "$export_options"
+  plutil -insert signingCertificate -string "$SYNCTV_APPLE_SIGNING_IDENTITY" "$export_options"
+  plutil -insert teamID -string "$SYNCTV_APPLE_DEVELOPMENT_TEAM" "$export_options"
+  plutil -insert manageAppVersionAndBuildNumber -bool false "$export_options"
+  plutil -insert stripSwiftSymbols -bool true "$export_options"
+  plutil -insert provisioningProfiles -dictionary "$export_options"
+  plutil -insert 'provisioningProfiles.org\.synctv\.app' -string "$profile_uuid" "$export_options"
+  echo "SYNCTV_IOS_EXPORT_OPTIONS_PLIST=$export_options" >> "${GITHUB_ENV:?GITHUB_ENV is required}"
+fi
+
 echo "mode=signed" >> "$GITHUB_OUTPUT"

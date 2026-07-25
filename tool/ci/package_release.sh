@@ -31,6 +31,13 @@ case "$platform" in
       cp "$source_file" \
         "$output_directory/SyncTV-$version-android-${architectures[$file_name]}-$signing_label.apk"
     done
+    app_bundle="build/app/outputs/bundle/release/app-release.aab"
+    if [[ ! -f "$app_bundle" ]]; then
+      echo "missing Android App Bundle: $app_bundle" >&2
+      exit 1
+    fi
+    cp "$app_bundle" \
+      "$output_directory/SyncTV-$version-android-universal-$signing_label.aab"
     ;;
   linux)
     bundle_directory="$(find build/linux -type d -path '*/release/bundle' -print -quit)"
@@ -56,21 +63,19 @@ case "$platform" in
       "$output_directory/SyncTV-$version-macos-$architecture-$signing_label.zip"
     ;;
   ios)
-    app_path="build/ios/iphoneos/Runner.app"
-    if [[ ! -d "$app_path" ]]; then
-      echo "iOS release app was not found: $app_path" >&2
-      exit 1
-    fi
     if [[ "${SYNCTV_IOS_SIGNED:-0}" == "1" ]]; then
-      payload_directory="$(mktemp -d)"
-      mkdir -p "$payload_directory/Payload"
-      ditto "$app_path" "$payload_directory/Payload/Runner.app"
-      (
-        cd "$payload_directory"
-        zip -qry "$output_directory/SyncTV-$version-ios-signed.ipa" Payload
-      )
-      rm -rf "$payload_directory"
+      exported_ipa="$(find build/ios/ipa -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+      if [[ -z "$exported_ipa" ]]; then
+        echo "signed App Store IPA was not found" >&2
+        exit 1
+      fi
+      cp "$exported_ipa" "$output_directory/SyncTV-$version-ios-signed.ipa"
     else
+      app_path="build/ios/iphoneos/Runner.app"
+      if [[ ! -d "$app_path" ]]; then
+        echo "iOS release app was not found: $app_path" >&2
+        exit 1
+      fi
       ditto -c -k --sequesterRsrc --keepParent "$app_path" \
         "$output_directory/SyncTV-$version-ios-unsigned.zip"
     fi

@@ -1,0 +1,87 @@
+opt_out_usage
+
+def required_environment(name)
+  value = ENV.fetch(name, "").strip
+  UI.user_error!("#{name} is required") if value.empty?
+  value
+end
+
+def environment_boolean(name)
+  ENV.fetch(name, "false").casecmp("true").zero?
+end
+
+platform :android do
+  desc "Upload a signed Android App Bundle to Google Play"
+  lane :google_play do |options|
+    upload_to_play_store(
+      package_name: "org.synctv.app",
+      aab: File.expand_path(options.fetch(:aab)),
+      json_key_data: required_environment("SYNCTV_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"),
+      track: required_environment("SYNCTV_GOOGLE_PLAY_TRACK"),
+      release_status: required_environment("SYNCTV_GOOGLE_PLAY_RELEASE_STATUS"),
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
+
+platform :ios do
+  desc "Upload a signed IPA to App Store Connect"
+  lane :app_store do |options|
+    api_key = app_store_connect_api_key(
+      key_id: required_environment("SYNCTV_APP_STORE_CONNECT_KEY_ID"),
+      issuer_id: required_environment("SYNCTV_APP_STORE_CONNECT_ISSUER_ID"),
+      key_content: required_environment("SYNCTV_APP_STORE_CONNECT_PRIVATE_KEY_BASE64"),
+      is_key_content_base64: true,
+      duration: 1_200,
+      in_house: false
+    )
+
+    upload_to_app_store(
+      api_key: api_key,
+      app_identifier: "org.synctv.app",
+      app_version: required_environment("SYNCTV_RELEASE_VERSION"),
+      ipa: File.expand_path(options.fetch(:ipa)),
+      submit_for_review: environment_boolean("SYNCTV_APP_STORE_SUBMIT_FOR_REVIEW"),
+      automatic_release: false,
+      phased_release: false,
+      skip_metadata: true,
+      skip_screenshots: true,
+      force: true,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false
+    )
+  end
+end
+
+platform :mac do
+  desc "Upload a signed installer package to the Mac App Store"
+  lane :mac_app_store do |options|
+    api_key = app_store_connect_api_key(
+      key_id: required_environment("SYNCTV_APP_STORE_CONNECT_KEY_ID"),
+      issuer_id: required_environment("SYNCTV_APP_STORE_CONNECT_ISSUER_ID"),
+      key_content: required_environment("SYNCTV_APP_STORE_CONNECT_PRIVATE_KEY_BASE64"),
+      is_key_content_base64: true,
+      duration: 1_200,
+      in_house: false
+    )
+
+    upload_to_app_store(
+      api_key: api_key,
+      app_identifier: "org.synctv.app",
+      app_version: required_environment("SYNCTV_RELEASE_VERSION"),
+      platform: "osx",
+      pkg: File.expand_path(options.fetch(:pkg)),
+      submit_for_review: environment_boolean("SYNCTV_APP_STORE_SUBMIT_FOR_REVIEW"),
+      automatic_release: false,
+      phased_release: false,
+      skip_metadata: true,
+      skip_screenshots: true,
+      force: true,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false
+    )
+  end
+end
