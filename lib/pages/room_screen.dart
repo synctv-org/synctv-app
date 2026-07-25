@@ -3002,7 +3002,7 @@ class _RoomScreenState extends State<RoomScreen>
       body: Padding(
         padding: AppMetrics.pagePadding(context),
         child: AppAdaptiveSplitView(
-          minPrimaryWidth: 520,
+          minPrimaryWidth: 680,
           minSecondaryWidth: 320,
           maxSecondaryWidth: 420,
           spacing: AppMetrics.usesDenseLayout(context) ? 12 : 14,

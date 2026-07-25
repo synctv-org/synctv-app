@@ -4191,7 +4191,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomSettings => 'Room settings';
 
   @override
-  String get roomSettingsShort => 'Setting';
+  String get roomSettingsShort => 'Settings';
 
   @override
   String get watchingSettingChanges => 'Watching setting changes';

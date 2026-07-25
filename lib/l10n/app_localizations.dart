@@ -7037,7 +7037,7 @@ abstract class AppLocalizations {
   /// No description provided for @roomSettingsShort.
   ///
   /// In en, this message translates to:
-  /// **'Setting'**
+  /// **'Settings'**
   String get roomSettingsShort;
 
   /// No description provided for @watchingSettingChanges.

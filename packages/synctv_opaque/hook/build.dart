@@ -219,14 +219,28 @@ List<int> _versionComponents(Directory directory) => directory.path
 String _joinPath(List<String> components) =>
     components.join(Platform.pathSeparator);
 
-String _rustTarget(CodeConfig code) {
-  switch ((code.targetOS, code.targetArchitecture)) {
+String _rustTarget(CodeConfig code) => rustTargetFor(
+  code.targetOS,
+  code.targetArchitecture,
+  targetIOSSdk: code.targetOS == OS.iOS ? code.iOS.targetSdk : null,
+);
+
+String rustTargetFor(
+  OS targetOS,
+  Architecture targetArchitecture, {
+  IOSSdk? targetIOSSdk,
+}) {
+  switch ((targetOS, targetArchitecture)) {
     case (OS.macOS, Architecture.arm64):
       return 'aarch64-apple-darwin';
     case (OS.macOS, Architecture.x64):
       return 'x86_64-apple-darwin';
     case (OS.iOS, Architecture.arm64):
-      return 'aarch64-apple-ios';
+      return targetIOSSdk == IOSSdk.iPhoneSimulator
+          ? 'aarch64-apple-ios-sim'
+          : 'aarch64-apple-ios';
+    case (OS.iOS, Architecture.x64) when targetIOSSdk == IOSSdk.iPhoneSimulator:
+      return 'x86_64-apple-ios';
     case (OS.linux, Architecture.x64):
       return 'x86_64-unknown-linux-gnu';
     case (OS.linux, Architecture.arm64):
@@ -245,7 +259,7 @@ String _rustTarget(CodeConfig code) {
       return 'i686-linux-android';
     default:
       throw UnsupportedError(
-        'Unsupported synctv_opaque target: ${code.targetOS} ${code.targetArchitecture}',
+        'Unsupported synctv_opaque target: $targetOS $targetArchitecture',
       );
   }
 }

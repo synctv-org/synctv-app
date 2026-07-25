@@ -15,10 +15,12 @@
 
 <p align="center">
   <a href="./README.md">English</a> ·
+  <a href="https://syncs.tv">官方网站</a> ·
+  <a href="https://docs.syncs.tv">文档</a> ·
   <a href="../../releases/latest">下载</a> ·
   <a href="https://github.com/synctv-org/synctv">服务端</a> ·
   <a href="./PRIVACY.md">隐私政策</a> ·
-  <a href="https://t.me/synctv">社区</a>
+  <a href="https://t.me/synctv">讨论</a>
 </p>
 
 <p align="center">
@@ -41,9 +43,9 @@
 ## 产品预览
 
 <p align="center">
-  <img src="./docs/img/home.jpg" alt="房间发现" width="300">
+  <img src="./fastlane/screenshots/01-home-ipad-13.png" alt="房间发现" width="420">
   &nbsp;&nbsp;&nbsp;
-  <img src="./docs/img/play.jpg" alt="房间同步播放" width="300">
+  <img src="./fastlane/screenshots/02-room-ipad-13.png" alt="房间同步播放" width="420">
 </p>
 
 ## 媒体生态
@@ -55,7 +57,7 @@
 | NAS 与私有云 | FNOS、QNAP、Synology、Nextcloud、Seafile 和 TrueNAS。支持文件浏览、搜索、预览、媒体库、转码、收藏和播放进度等平台能力。 |
 | 通用来源 | Direct URL、RTMP 和 Live Proxy，支持自定义 Header、Range 请求、HLS、DASH、HTTP-FLV 和房间直播。 |
 
-Provider 能力和凭据策略由服务端决定。App 使用 typed protobuf source config，并允许用户选择单个条目、部分条目或动态播放列表。详细说明见服务端的 [Provider 使用手册](https://github.com/synctv-org/synctv/blob/main/docs/src/content/docs/use/provider-guide.mdx) 和 [Provider 开发指南](https://github.com/synctv-org/synctv/blob/main/docs/src/content/docs/develop/provider-development.mdx)。
+Provider 能力和凭据策略由服务端决定。App 使用 typed protobuf source config，并允许用户选择单个条目、部分条目或动态播放列表。详细说明见服务端的 [Provider 使用手册](https://docs.syncs.tv/use/provider-guide/) 和 [Provider 开发指南](https://docs.syncs.tv/develop/provider-development/)。
 
 ## 架构
 
@@ -139,7 +141,7 @@ Release workflow 读取 `SYNCTV_BUILT_IN_SERVER_URL` repository variable。`SYNC
 - **Apple 平台**会把允许的 RP ID 写入签名 App 的 Associated Domains entitlement。自托管 Apple 构建需要在 `SYNCTV_PASSKEY_RP_IDS` 中加入自身 RP ID，使用 Apple Developer Team 签名，并在服务端 `webauthn.apple_app_ids` 中配置 `<TeamID>.org.synctv.app`。
 - **可用状态由服务端驱动**。平台能力和当前服务器关联关系都有效时，App 才展示原生 Passkey。
 
-完整服务端配置和安全模型见 [WebAuthn 与 Passkey](https://github.com/synctv-org/synctv/blob/main/docs/src/content/docs/configuration/webauthn.mdx)。
+完整服务端配置和安全模型见 [WebAuthn 与 Passkey](https://docs.syncs.tv/configuration/webauthn/)。
 
 ## 持续集成与发布
 
@@ -191,7 +193,7 @@ Apple 签名与上传使用以下 secrets：
 
 Google Play 发布使用 `google-play` Environment 中的 `SYNCTV_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`。`SYNCTV_GOOGLE_PLAY_APP_SIGNING_SHA256` 会把 Play App Signing 证书指纹加入自动生成的自托管配置。
 
-空签名配置会生成 development-signed Android APK、ad-hoc macOS 包、unsigned Windows 包和可重签名 iOS 归档。凭据组只配置一部分时会提前失败。商店价格、销售地区、隐私问卷、截图和审核资料在 App Store Connect 或 Play Console 管理。
+空签名配置会生成 development-signed Android APK、ad-hoc macOS 包、unsigned Windows 包和可重签名 iOS 归档。凭据组只配置一部分时会提前失败。Apple 发布会上传 `fastlane/screenshots` 中的规范截图；商店价格、销售地区、隐私问卷和审核资料在 App Store Connect 或 Play Console 管理。
 
 </details>
 
@@ -209,6 +211,12 @@ Google Play 发布使用 `google-play` Environment 中的 `SYNCTV_GOOGLE_PLAY_SE
 | `android/`、`ios/`、`macos/`、`windows/`、`linux/` | 原生 Runner、权限、打包和平台集成 |
 | `tool/` | 代码生成、本地 Smoke Tool、CI 校验、签名和打包脚本 |
 | `fastlane/` | Google Play、iOS App Store 和 Mac App Store 上传自动化 |
+
+## 讨论与贡献者
+
+加入 [SyncTV Telegram 讨论组](https://t.me/synctv)，与用户和贡献者交流部署、播放、Provider、自托管和开发问题。
+
+![SyncTV App 贡献者](https://contrib.nn.ci/api?repo=synctv-org/synctv-app)
 
 ## 隐私与合理使用
 

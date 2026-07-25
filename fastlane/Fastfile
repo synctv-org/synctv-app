@@ -1,5 +1,8 @@
 opt_out_usage
 
+require "fileutils"
+require "tmpdir"
+
 def required_environment(name)
   value = ENV.fetch(name, "").strip
   UI.user_error!("#{name} is required") if value.empty?
@@ -12,6 +15,47 @@ end
 
 def repository_path(path)
   File.expand_path(path, File.expand_path("..", __dir__))
+end
+
+def app_store_connect_key
+  app_store_connect_api_key(
+    key_id: required_environment("SYNCTV_APP_STORE_CONNECT_KEY_ID"),
+    issuer_id: required_environment("SYNCTV_APP_STORE_CONNECT_ISSUER_ID"),
+    key_content: required_environment("SYNCTV_APP_STORE_CONNECT_PRIVATE_KEY_BASE64"),
+    is_key_content_base64: true,
+    duration: 1_200,
+    in_house: false
+  )
+end
+
+def upload_apple_screenshots(api_key:, platform:, patterns:)
+  Dir.mktmpdir("synctv-app-store-screenshots") do |directory|
+    # App Store Connect reuses the primary localization's screenshots for
+    # localizations without their own media. Keep one canonical screenshot set.
+    locale_directory = File.join(directory, "zh-Hans")
+    FileUtils.mkdir_p(locale_directory)
+    screenshots = patterns.flat_map do |pattern|
+      Dir.glob(repository_path("fastlane/screenshots/#{pattern}"))
+    end.uniq.sort
+    UI.user_error!("No #{platform || 'iOS'} App Store screenshots found") if screenshots.empty?
+    screenshots.each { |screenshot| FileUtils.cp(screenshot, locale_directory) }
+
+    options = {
+      api_key: api_key,
+      app_identifier: "org.synctv.app",
+      app_version: required_environment("SYNCTV_RELEASE_VERSION"),
+      screenshots_path: directory,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      force: true,
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false
+    }
+    options[:platform] = platform unless platform.nil?
+    upload_to_app_store(**options)
+  end
 end
 
 platform :android do
@@ -34,13 +78,11 @@ end
 platform :ios do
   desc "Upload a signed IPA to App Store Connect"
   lane :app_store do |options|
-    api_key = app_store_connect_api_key(
-      key_id: required_environment("SYNCTV_APP_STORE_CONNECT_KEY_ID"),
-      issuer_id: required_environment("SYNCTV_APP_STORE_CONNECT_ISSUER_ID"),
-      key_content: required_environment("SYNCTV_APP_STORE_CONNECT_PRIVATE_KEY_BASE64"),
-      is_key_content_base64: true,
-      duration: 1_200,
-      in_house: false
+    api_key = app_store_connect_key
+    upload_apple_screenshots(
+      api_key: api_key,
+      platform: nil,
+      patterns: ["*-iphone-*.png", "*-ipad-*.png"]
     )
 
     upload_to_app_store(
@@ -58,18 +100,25 @@ platform :ios do
       precheck_include_in_app_purchases: false
     )
   end
+
+  desc "Upload the repository's iPhone and iPad screenshots to App Store Connect"
+  lane :screenshots do
+    upload_apple_screenshots(
+      api_key: app_store_connect_key,
+      platform: nil,
+      patterns: ["*-iphone-*.png", "*-ipad-*.png"]
+    )
+  end
 end
 
 platform :mac do
   desc "Upload a signed installer package to the Mac App Store"
   lane :mac_app_store do |options|
-    api_key = app_store_connect_api_key(
-      key_id: required_environment("SYNCTV_APP_STORE_CONNECT_KEY_ID"),
-      issuer_id: required_environment("SYNCTV_APP_STORE_CONNECT_ISSUER_ID"),
-      key_content: required_environment("SYNCTV_APP_STORE_CONNECT_PRIVATE_KEY_BASE64"),
-      is_key_content_base64: true,
-      duration: 1_200,
-      in_house: false
+    api_key = app_store_connect_key
+    upload_apple_screenshots(
+      api_key: api_key,
+      platform: "osx",
+      patterns: ["*-macos.png"]
     )
 
     upload_to_app_store(
@@ -86,6 +135,15 @@ platform :mac do
       force: true,
       run_precheck_before_submit: false,
       precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Upload the repository's macOS screenshots to App Store Connect"
+  lane :screenshots do
+    upload_apple_screenshots(
+      api_key: app_store_connect_key,
+      platform: "osx",
+      patterns: ["*-macos.png"]
     )
   end
 end

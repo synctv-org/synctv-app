@@ -1389,7 +1389,7 @@
   "events": "Events",
   "watchEventsDescription": "Watch requests and resource events appear here",
   "roomSettings": "Room settings",
-  "roomSettingsShort": "Setting",
+  "roomSettingsShort": "Settings",
   "watchingSettingChanges": "Watching setting changes",
   "memberList": "Member list",
   "refreshingMembers": "Refreshing members",

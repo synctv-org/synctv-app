@@ -844,132 +844,112 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return AppScaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(72),
-        child: AppInkSurface(
-          color: theme.appBarTheme.backgroundColor,
-          elevation: 0,
-          clipBehavior: Clip.none,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 760;
-              final extraCompact = constraints.maxWidth < 560;
-              final horizontalPadding = compact ? 16.0 : 28.0;
-              return Row(
+      appBar: AppPageBar(
+        toolbarHeight: 72,
+        automaticallyImplyLeading: false,
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        elevation: 0,
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 1100;
+            final extraCompact = constraints.maxWidth < 560;
+            final horizontalPadding = compact ? 0.0 : 12.0;
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Row(
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                      ),
-                      child: Row(
-                        children: [
-                          AppInkSurface(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            onLongPress: _showServerSettingsDialog,
-                            semanticLabel: l10n.openServerSettings,
-                            child: Row(
-                              children: [
-                                SyncTvBrandMark(
-                                  semanticLabel: l10n.appTitle,
-                                  size: 36,
-                                ),
-                                if (!extraCompact) ...[
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    l10n.appTitle,
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w800,
-                                      color: isDark
-                                          ? Colors.white
-                                          : const Color(0xFF111827),
-                                    ),
-                                  ),
-                                ],
-                              ],
+                  AppInkSurface(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                    onLongPress: _showServerSettingsDialog,
+                    semanticLabel: l10n.openServerSettings,
+                    child: Row(
+                      children: [
+                        SyncTvBrandMark(semanticLabel: l10n.appTitle, size: 36),
+                        if (!extraCompact) ...[
+                          const SizedBox(width: 12),
+                          Text(
+                            l10n.appTitle,
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF111827),
                             ),
                           ),
-                          const Spacer(),
-                          if (!_isAccountSession && compact)
-                            AppActionButton(
-                              onPressed: _showServerSettingsDialog,
-                              icon: Icons.dns_rounded,
-                              label: l10n.server,
-                              style: AppActionButtonStyle.tonal,
-                            )
-                          else
-                            AppIconButton(
-                              tooltip: l10n.serverSettings,
-                              onPressed: _showServerSettingsDialog,
-                              icon: Icons.dns_rounded,
-                              style: AppIconButtonStyle.tonal,
-                            ),
-                          SizedBox(width: compact ? 8 : 12),
-                          if (!_isAccountSession) ...[
-                            AppIconButton(
-                              tooltip: l10n.language,
-                              onPressed: () =>
-                                  showLanguageSelectorDialog(context),
-                              icon: Icons.language_rounded,
-                              style: AppIconButtonStyle.tonal,
-                            ),
-                            SizedBox(width: compact ? 8 : 12),
-                          ],
-                          if (_isAccountSession) ...[
-                            if (compact)
-                              AppIconButton(
-                                tooltip: l10n.joinRoom,
-                                onPressed: _showJoinRoomDialog,
-                                icon: Icons.login_rounded,
-                                style: AppIconButtonStyle.tonal,
-                              )
-                            else
-                              AppActionButton(
-                                onPressed: _showJoinRoomDialog,
-                                icon: Icons.login_rounded,
-                                label: l10n.joinRoom,
-                                style: AppActionButtonStyle.outlined,
-                              ),
-                            SizedBox(width: compact ? 8 : 10),
-                            if (compact)
-                              AppIconButton(
-                                tooltip: l10n.createRoom,
-                                onPressed: _showCreateRoomDialog,
-                                icon: Icons.add_rounded,
-                                style: AppIconButtonStyle.filled,
-                              )
-                            else
-                              AppActionButton(
-                                onPressed: _showCreateRoomDialog,
-                                icon: Icons.add_rounded,
-                                label: l10n.createRoom,
-                              ),
-                            SizedBox(width: compact ? 8 : 12),
-                            compact
-                                ? _buildCompactAccountMenu(theme, isAdmin)
-                                : _buildAccountMenu(theme, isAdmin, isDark),
-                          ] else if (compact)
-                            AppActionButton(
-                              onPressed: _showLoginDialog,
-                              icon: Icons.login_rounded,
-                              label: l10n.login,
-                            )
-                          else
-                            AppActionButton(
-                              onPressed: _showLoginDialog,
-                              icon: Icons.login_rounded,
-                              label: l10n.login,
-                            ),
                         ],
-                      ),
+                      ],
                     ),
                   ),
+                  const Spacer(),
+                  if (!_isAccountSession && compact)
+                    AppActionButton(
+                      onPressed: _showServerSettingsDialog,
+                      icon: Icons.dns_rounded,
+                      label: l10n.server,
+                      style: AppActionButtonStyle.tonal,
+                    )
+                  else
+                    AppIconButton(
+                      tooltip: l10n.serverSettings,
+                      onPressed: _showServerSettingsDialog,
+                      icon: Icons.dns_rounded,
+                      style: AppIconButtonStyle.tonal,
+                    ),
+                  SizedBox(width: compact ? 8 : 12),
+                  if (!_isAccountSession) ...[
+                    AppIconButton(
+                      tooltip: l10n.language,
+                      onPressed: () => showLanguageSelectorDialog(context),
+                      icon: Icons.language_rounded,
+                      style: AppIconButtonStyle.tonal,
+                    ),
+                    SizedBox(width: compact ? 8 : 12),
+                  ],
+                  if (_isAccountSession) ...[
+                    if (compact)
+                      AppIconButton(
+                        tooltip: l10n.joinRoom,
+                        onPressed: _showJoinRoomDialog,
+                        icon: Icons.login_rounded,
+                        style: AppIconButtonStyle.tonal,
+                      )
+                    else
+                      AppActionButton(
+                        onPressed: _showJoinRoomDialog,
+                        icon: Icons.login_rounded,
+                        label: l10n.joinRoom,
+                        style: AppActionButtonStyle.outlined,
+                      ),
+                    SizedBox(width: compact ? 8 : 10),
+                    if (compact)
+                      AppIconButton(
+                        tooltip: l10n.createRoom,
+                        onPressed: _showCreateRoomDialog,
+                        icon: Icons.add_rounded,
+                        style: AppIconButtonStyle.filled,
+                      )
+                    else
+                      AppActionButton(
+                        onPressed: _showCreateRoomDialog,
+                        icon: Icons.add_rounded,
+                        label: l10n.createRoom,
+                      ),
+                    SizedBox(width: compact ? 8 : 12),
+                    compact
+                        ? _buildCompactAccountMenu(theme, isAdmin)
+                        : _buildAccountMenu(theme, isAdmin, isDark),
+                  ] else
+                    AppActionButton(
+                      onPressed: _showLoginDialog,
+                      icon: Icons.login_rounded,
+                      label: l10n.login,
+                    ),
                 ],
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
       body: _isLoading
@@ -1071,7 +1051,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFeaturedRooms() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 860) {
+        if (constraints.maxWidth < 1100) {
           return _HorizontalRoomRail(
             height: 224,
             itemCount: _featuredRooms.length,

@@ -15,10 +15,12 @@
 
 <p align="center">
   <a href="./README.zh-CN.md">简体中文</a> ·
+  <a href="https://syncs.tv">Website</a> ·
+  <a href="https://docs.syncs.tv">Documentation</a> ·
   <a href="../../releases/latest">Download</a> ·
   <a href="https://github.com/synctv-org/synctv">Server</a> ·
   <a href="./PRIVACY.md">Privacy</a> ·
-  <a href="https://t.me/synctv">Community</a>
+  <a href="https://t.me/synctv">Discussion</a>
 </p>
 
 <p align="center">
@@ -41,9 +43,9 @@
 ## Product Preview
 
 <p align="center">
-  <img src="./docs/img/home.jpg" alt="Room discovery" width="300">
+  <img src="./fastlane/screenshots/01-home-ipad-13.png" alt="Room discovery" width="420">
   &nbsp;&nbsp;&nbsp;
-  <img src="./docs/img/play.jpg" alt="Synchronized room playback" width="300">
+  <img src="./fastlane/screenshots/02-room-ipad-13.png" alt="Synchronized room playback" width="420">
 </p>
 
 ## Media Ecosystem
@@ -55,7 +57,7 @@
 | NAS and private cloud | FNOS, QNAP, Synology, Nextcloud, Seafile, and TrueNAS. File browsing, search, previews, media libraries, transcoding, favorites, and playback progress where supported. |
 | General sources | Direct URL, RTMP, and Live Proxy with custom headers, Range requests, HLS, DASH, HTTP-FLV, and room livestreams. |
 
-Provider capabilities and credentials are decided by the server. The app consumes typed protobuf source configuration and lets users choose individual items, selected items, or dynamic playlists. See the server's [Provider User Guide](https://github.com/synctv-org/synctv/blob/main/docs/src/content/docs/en/use/provider-guide.mdx) and [Provider Development Guide](https://github.com/synctv-org/synctv/blob/main/docs/src/content/docs/en/develop/provider-development.mdx).
+Provider capabilities and credentials are decided by the server. The app consumes typed protobuf source configuration and lets users choose individual items, selected items, or dynamic playlists. See the server's [Provider User Guide](https://docs.syncs.tv/en/use/provider-guide/) and [Provider Development Guide](https://docs.syncs.tv/en/develop/provider-development/).
 
 ## Architecture
 
@@ -139,7 +141,7 @@ Native passkeys rely on an authenticated association between the app identity an
 - **Apple platforms** embed allowed RP IDs in the signed app's Associated Domains entitlement. A self-hosted Apple build must include its RP ID in `SYNCTV_PASSKEY_RP_IDS`, use an Apple Developer Team signature, and register `<TeamID>.org.synctv.app` in the server's `webauthn.apple_app_ids`.
 - **Availability is server-directed**. The app exposes native passkeys only when the platform and the selected server association are valid.
 
-The complete server configuration and security model are documented in [WebAuthn and Passkeys](https://github.com/synctv-org/synctv/blob/main/docs/src/content/docs/en/configuration/webauthn.mdx).
+The complete server configuration and security model are documented in [WebAuthn and Passkeys](https://docs.syncs.tv/en/configuration/webauthn/).
 
 ## Continuous Integration and Releases
 
@@ -191,7 +193,7 @@ Apple signing and upload use these secrets:
 
 Google Play publication uses `SYNCTV_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` in the `google-play` Environment. `SYNCTV_GOOGLE_PLAY_APP_SIGNING_SHA256` adds Play App Signing certificate fingerprints to the generated self-hosting configuration.
 
-An empty signing configuration produces development-signed Android APKs, ad-hoc macOS packages, unsigned Windows packages, and a re-signable iOS archive. A partially configured credential group fails early. Store price, availability, privacy answers, screenshots, and review metadata remain managed in App Store Connect or Play Console.
+An empty signing configuration produces development-signed Android APKs, ad-hoc macOS packages, unsigned Windows packages, and a re-signable iOS archive. A partially configured credential group fails early. Apple publishing uploads the canonical screenshots from `fastlane/screenshots`; store price, availability, privacy answers, and review metadata remain managed in App Store Connect or Play Console.
 
 </details>
 
@@ -209,6 +211,12 @@ The authoritative implementations live in [CI](./.github/workflows/ci.yml), [Rel
 | `android/`, `ios/`, `macos/`, `windows/`, `linux/` | Native runners, permissions, packaging, and platform integration |
 | `tool/` | Code generation, local smoke tooling, CI verification, signing, and packaging scripts |
 | `fastlane/` | Google Play, iOS App Store, and Mac App Store upload automation |
+
+## Discussion and Contributors
+
+Join the [SyncTV Telegram discussion](https://t.me/synctv) to talk with users and contributors about setup, playback, Providers, self-hosting, and development.
+
+![SyncTV App contributors](https://contrib.nn.ci/api?repo=synctv-org/synctv-app)
 
 ## Privacy and Responsible Use
 
