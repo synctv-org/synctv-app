@@ -45,6 +45,10 @@ jobs:
           tool: protoc@3.${{ env.PROTOC_VERSION }}
           fallback: none
 
+      - name: Resolve Darwin Passkey package dependencies
+        working-directory: packages/passkeys_darwin
+        run: flutter pub get
+
       - name: Install Dart Protobuf generator
         run: |
           test "$(protoc --version)" = "libprotoc $PROTOC_VERSION"

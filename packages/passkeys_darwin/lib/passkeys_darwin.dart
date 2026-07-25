@@ -6,9 +6,8 @@ import 'package:passkeys_platform_interface/types/types.dart';
 /// The iOS/macOS implementation of [PasskeysPlatform].
 class PasskeysDarwin extends PasskeysPlatform {
   /// Creates a new plugin implementation instance.
-  PasskeysDarwin({
-    @visibleForTesting PasskeysApi? api,
-  }) : _api = api ?? PasskeysApi();
+  PasskeysDarwin({@visibleForTesting PasskeysApi? api})
+    : _api = api ?? PasskeysApi();
 
   /// Registers this class as the default instance of [PasskeysDarwin].
   static void registerWith() {
