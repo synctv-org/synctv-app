@@ -36,9 +36,7 @@ class PlaybackHistoryList extends StatelessWidget {
         final isCurrent = entry.id == historyCursorId;
         final mediaName = entry.mediaName.trim();
         final playlistName = entry.playlistName.trim();
-        final source = mediaName.isEmpty
-            ? unknownSourceLabel
-            : mediaName;
+        final source = mediaName.isEmpty ? unknownSourceLabel : mediaName;
         final sourceDetails = sourceDetailsBuilder?.call(entry).trim() ?? '';
         final createdAt = DateTime.fromMillisecondsSinceEpoch(
           entry.createdAt.toInt() * 1000,

@@ -367,10 +367,7 @@ Future<void> _exerciseRoomLifecycle(
   await _login(member);
   final passwordCheck = await SyncTvService.getRoomDiscovery(roomId);
   if (passwordCheck.discoveryAccess !=
-      client_enum
-          .RoomDiscoveryAccess
-          .ROOM_DISCOVERY_ACCESS_PASSWORD
-          .value) {
+      client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_PASSWORD.value) {
     throw StateError('room password was not required');
   }
 
