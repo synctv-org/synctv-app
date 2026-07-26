@@ -5,11 +5,44 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:synctv_app/l10n/l10n.dart';
-import 'package:synctv_app/pages/home_screen.dart';
-import 'package:synctv_app/services/app_locale_controller.dart';
-import 'package:synctv_app/services/oauth2_deep_link_service.dart';
-import 'package:synctv_app/services/picture_in_picture_service.dart';
-import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/features/app_shell/presentation/app_shell.dart';
+import 'package:synctv_app/app/app_dependencies.dart';
+import 'package:synctv_app/features/auth/data/synctv_auth_gateway.dart';
+import 'package:synctv_app/features/auth/infrastructure/native_passkey_client.dart';
+import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
+import 'package:synctv_app/features/auth/data/synctv_opaque_auth_gateway.dart';
+import 'package:synctv_app/features/account/data/synctv_account_gateway.dart';
+import 'package:synctv_app/features/admin/data/synctv_admin_gateway.dart';
+import 'package:synctv_app/features/content_reports/data/synctv_content_reports_gateway.dart';
+import 'package:synctv_app/features/server_settings/data/synctv_server_connection_gateway.dart';
+import 'package:synctv_app/features/room/data/synctv_room_creation_gateway.dart';
+import 'package:synctv_app/features/room/data/http_danmaku_source.dart';
+import 'package:synctv_app/features/room/data/http_subtitle_source.dart';
+import 'package:synctv_app/features/room/data/synctv_room_chat_gateway.dart';
+import 'package:synctv_app/features/room/data/synctv_room_playback_gateway.dart';
+import 'package:synctv_app/features/room/application/playback_sync_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/player_volume_preferences_controller.dart';
+import 'package:synctv_app/features/room/application/realtime_event_log_preferences_controller.dart';
+import 'package:synctv_app/features/room/data/shared_preferences_realtime_event_log_store.dart';
+import 'package:synctv_app/features/room/data/protobuf_room_realtime_protocol.dart';
+import 'package:synctv_app/features/room/data/room_realtime_connection.dart';
+import 'package:synctv_app/features/room/data/shared_preferences_playback_sync_store.dart';
+import 'package:synctv_app/features/room/data/shared_preferences_player_volume_store.dart';
+import 'package:synctv_app/features/room/data/synctv_room_session_gateway.dart';
+import 'package:synctv_app/features/room/data/synctv_room_management_gateway.dart';
+import 'package:synctv_app/features/app_shell/data/synctv_resource_url_resolver.dart';
+import 'package:synctv_app/features/home/data/synctv_home_gateway.dart';
+import 'package:synctv_app/features/media_p2p/application/p2p_media_preferences_controller.dart';
+import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_runtime_factory.dart';
+import 'package:synctv_app/features/media_p2p/data/shared_preferences_p2p_media_preferences_store.dart';
+import 'package:synctv_app/features/media_library/data/synctv_media_library_gateway.dart';
+import 'package:synctv_app/features/providers/data/synctv_provider_gateway.dart';
+import 'package:synctv_app/features/providers/infrastructure/desktop_web_verification_client.dart';
+import 'package:synctv_app/core/localization/app_locale_controller.dart';
+import 'package:synctv_app/features/auth/infrastructure/oauth2_deep_link_service.dart';
+import 'package:synctv_app/features/room/infrastructure/picture_in_picture_service.dart';
+import 'package:synctv_app/features/voice/infrastructure/voice_chat_manager.dart';
+import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/theme/app_responsive.dart';
 import 'package:synctv_app/theme/app_theme.dart';
 import 'package:synctv_video_player_media_kit/synctv_video_player_media_kit.dart';
@@ -25,7 +58,28 @@ void main(List<String> args) async {
   if (SyncTvService.activeServer != null) {
     await SyncTvService.syncServerTime();
   }
-  await OAuth2DeepLinkService.initialize();
+  const oauth2Callbacks = NativeOAuth2CallbackClient();
+  await oauth2Callbacks.initialize();
+  final p2pMediaPreferences = P2pMediaPreferencesController(
+    store: const SharedPreferencesP2pMediaPreferencesStore(),
+  );
+  await p2pMediaPreferences.load();
+  final playbackSyncPreferences = PlaybackSyncPreferencesController(
+    store: const SharedPreferencesPlaybackSyncStore(),
+  );
+  await playbackSyncPreferences.load();
+  final playerVolumePreferences = PlayerVolumePreferencesController(
+    store: const SharedPreferencesPlayerVolumeStore(),
+  );
+  await playerVolumePreferences.load();
+  final realtimeEventLogPreferences = RealtimeEventLogPreferencesController(
+    store: const SharedPreferencesRealtimeEventLogStore(),
+  );
+  await realtimeEventLogPreferences.load();
+  final opaqueAuthenticator = OpaqueAuthenticatorService(
+    gateway: const SyncTvOpaqueAuthGateway(),
+  );
+  const roomSessionGateway = SyncTvRoomSessionGateway();
 
   if (!kIsWeb &&
       const {
@@ -58,7 +112,40 @@ void main(List<String> args) async {
   } catch (e) {
     debugPrint('Failed to initialize media playback: $e');
   }
-  runApp(const MyApp());
+  final dependencies = AppDependencies(
+    accountGateway: const SyncTvAccountGateway(),
+    adminGateway: const SyncTvAdminGateway(),
+    authGateway: const SyncTvAuthGateway(),
+    contentReportsGateway: const SyncTvContentReportsGateway(),
+    homeGateway: const SyncTvHomeGateway(),
+    opaqueAuthenticator: opaqueAuthenticator,
+    oauth2Callbacks: oauth2Callbacks,
+    passkeyClient: const NativePasskeyClient(),
+    p2pMediaPreferences: p2pMediaPreferences,
+    p2pMediaRuntimeFactory: const NativeP2pMediaRuntimeFactory(),
+    mediaLibraryGateway: const SyncTvMediaLibraryGateway(),
+    providerGateway: const SyncTvProviderGateway(),
+    desktopWebVerificationClient: const NativeDesktopWebVerificationClient(),
+    resourceUrlResolver: const SyncTvResourceUrlResolver(),
+    roomCreationGateway: const SyncTvRoomCreationGateway(),
+    danmakuSource: const HttpDanmakuSource(),
+    subtitleSource: const HttpSubtitleSource(),
+    pictureInPicture: PictureInPictureService.instance,
+    playerVolumePreferences: playerVolumePreferences,
+    realtimeEventLogPreferences: realtimeEventLogPreferences,
+    roomRealtimeChannelFactory: const IoRoomRealtimeChannelFactory(
+      sessionGateway: roomSessionGateway,
+    ),
+    roomRealtimeProtocol: const ProtobufRoomRealtimeProtocol(),
+    roomChatGateway: const SyncTvRoomChatGateway(),
+    roomPlaybackGateway: const SyncTvRoomPlaybackGateway(),
+    playbackSyncPreferences: playbackSyncPreferences,
+    roomSessionGateway: roomSessionGateway,
+    roomManagementGateway: const SyncTvRoomManagementGateway(),
+    serverConnectionGateway: const SyncTvServerConnectionGateway(),
+    voiceChatSessionFactory: const NativeVoiceChatSessionFactory(),
+  );
+  runApp(MyApp(dependencies: dependencies));
 }
 
 const _enableAccessibilityTools = bool.fromEnvironment(
@@ -66,7 +153,9 @@ const _enableAccessibilityTools = bool.fromEnvironment(
 );
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.dependencies});
+
+  final AppDependencies dependencies;
 
   @override
   Widget build(BuildContext context) {
@@ -107,9 +196,11 @@ class MyApp extends StatelessWidget {
             );
           }
 
-          return FTheme(data: foruiTheme, child: appChild);
+          return dependencies.scope(
+            child: FTheme(data: foruiTheme, child: appChild),
+          );
         },
-        home: const HomeScreen(),
+        home: AppShell(dependencies: dependencies.appShell),
       ),
     );
   }

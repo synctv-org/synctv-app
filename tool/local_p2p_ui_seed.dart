@@ -2,10 +2,13 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:synctv_app/models/room_realtime_codec.dart';
-import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
+import 'package:synctv_app/features/room/domain/room_realtime.dart';
+import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
+
+import 'local_backend_test_auth.dart';
 
 void main() {
   test('seed local P2P media coverage', () async {
@@ -23,10 +26,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await SyncTvService.init();
     await SyncTvService.setBaseUrl('http://127.0.0.1:8080');
-    await SyncTvService.loginWithDirectPassword(
-      username: username,
-      password: password,
-    );
+    await loginLocalPasswordUser(username, password);
+    if (const bool.fromEnvironment('SYNCTV_P2P_STOP')) {
+      await SyncTvService.switchMedia(roomId, '', subPath: '');
+      print('P2P_PLAYBACK_STOPPED=true');
+      return;
+    }
     const switchMediaId = String.fromEnvironment('SYNCTV_P2P_SWITCH_MEDIA_ID');
     if (switchMediaId.isNotEmpty) {
       await SyncTvService.switchMediaAndPlay(roomId, switchMediaId);

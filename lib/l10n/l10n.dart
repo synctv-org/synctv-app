@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:synctv_app/l10n/app_localizations.dart';
-import 'package:synctv_app/models/synctv_models.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
 
 export 'package:synctv_app/l10n/app_localizations.dart';
 

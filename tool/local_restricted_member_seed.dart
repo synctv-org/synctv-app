@@ -2,10 +2,12 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:synctv_app/models/synctv_models.dart';
-import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+
+import 'local_backend_test_auth.dart';
 
 void main() {
   test('seed a restricted local room member', () async {
@@ -29,10 +31,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await SyncTvService.init();
     await SyncTvService.setBaseUrl('http://127.0.0.1:8080');
-    await SyncTvService.loginWithDirectPassword(
-      username: 'root',
-      password: rootPassword,
-    );
+    await loginLocalRoot(rootPassword);
     final users = await SyncTvService.adminListUsersPage(search: username);
     if (!users.users.any((user) => user.username == username)) {
       await SyncTvService.adminAddUser(
@@ -43,17 +42,11 @@ void main() {
     }
 
     await SyncTvService.logout();
-    await SyncTvService.loginWithDirectPassword(
-      username: username,
-      password: password,
-    );
+    await loginLocalPasswordUser(username, password);
     final member = await SyncTvService.getMe(refresh: true);
 
     await SyncTvService.logout();
-    await SyncTvService.loginWithDirectPassword(
-      username: 'root',
-      password: rootPassword,
-    );
+    await loginLocalRoot(rootPassword);
     final existing = await SyncTvService.getRoomMemberDetailsPage(
       roomId,
       search: username,

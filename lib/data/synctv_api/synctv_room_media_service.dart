@@ -1,0 +1,1851 @@
+import 'dart:convert';
+
+import 'package:fixnum/fixnum.dart';
+import 'package:synctv_app/contracts/direct_url_source_config.dart';
+import 'package:synctv_app/contracts/chat_message_selection.dart';
+import 'package:synctv_app/contracts/playback_client_profile.dart';
+import 'package:synctv_app/contracts/room_management_models.dart';
+import 'package:synctv_app/contracts/proto_mapping.dart';
+import 'package:synctv_app/contracts/room_media_models.dart';
+import 'package:synctv_app/features/room/domain/room_realtime.dart';
+import 'package:synctv_app/contracts/source_config_codec.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
+import 'package:synctv_app/core/time/synced_clock.dart';
+import 'package:synctv_app/src/generated/proto/client.pb.dart' as client;
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
+import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config;
+import 'package:synctv_app/core/identifiers/client_operation_id.dart';
+
+class SyncTvRoomMediaDomainService {
+  SyncTvRoomMediaDomainService(this._api);
+
+  final SyncTvApiClient _api;
+
+  Future<SyncTvPlaybackStatus> getPlaybackStatus(String roomId) async {
+    final response = await _api.room.getPlayback(
+      roomId,
+      client.GetPlaybackRequest(),
+    );
+    return _api.mapPlayback(response);
+  }
+
+  Future<SyncTvPlaybackStatus> playPrevious(String roomId) async {
+    final state = await _api.room.playPrevious(
+      roomId,
+      client.PlayPreviousRequest(clientOperationId: newClientOperationId()),
+    );
+    return _playbackStatusFromState(state);
+  }
+
+  Future<SyncTvPlaybackStatus> playNext(String roomId) async {
+    final state = await _api.room.playNext(
+      roomId,
+      client.PlayNextRequest(clientOperationId: newClientOperationId()),
+    );
+    return _playbackStatusFromState(state);
+  }
+
+  Future<client.ListPlaybackHistoryResponse> listPlaybackHistory(
+    String roomId, {
+    String beforeEntryId = '',
+    int limit = 50,
+  }) {
+    return _api.room.listPlaybackHistory(
+      roomId,
+      client.ListPlaybackHistoryRequest(
+        beforeEntryId: beforeEntryId.isEmpty ? null : beforeEntryId,
+        limit: limit,
+      ),
+    );
+  }
+
+  Future<SyncTvPlaybackStatus> playHistoryEntry(
+    String roomId,
+    String entryId,
+  ) async {
+    final state = await _api.room.playHistoryEntry(
+      roomId,
+      client.PlayHistoryEntryRequest(
+        entryId: entryId,
+        clientOperationId: newClientOperationId(),
+      ),
+    );
+    return _playbackStatusFromState(state);
+  }
+
+  Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>> watchPlaybackState(
+    String roomId, {
+    String version = '',
+  }) {
+    return _api.room
+        .watchPlaybackState(
+          roomId,
+          client.WatchPlaybackStateRequest(
+            deliveryMode: _watchDeliveryMode,
+            playbackState: client.ObservePlaybackState(
+              eventSequence: _watchSequence(version),
+            ),
+          ),
+        )
+        .map((event) {
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<SyncTvPlaybackStatus>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<SyncTvPlaybackStatus>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<SyncTvPlaybackStatus>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: _playbackStatusFromState(
+              event.resourceEvent.playbackState,
+            ),
+          );
+        });
+  }
+
+  Stream<RoomResourceWatchEvent<SyncTvPlaybackStatus>> watchPlaybackSnapshot(
+    String roomId,
+  ) {
+    return _api.room
+        .watchPlayback(
+          roomId,
+          client.WatchPlaybackRequest(
+            deliveryMode: _watchDeliveryMode,
+            playback: client.ObservePlayback(
+              playbackClientProfile: defaultPlaybackClientProfile(),
+            ),
+          ),
+        )
+        .map((event) {
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<SyncTvPlaybackStatus>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<SyncTvPlaybackStatus>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<SyncTvPlaybackStatus>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: _playbackStatusFromPlayback(event.resourceEvent.playback),
+          );
+        });
+  }
+
+  Stream<RoomResourceWatchEvent<RoomMediaLibraryPage>> watchPlaylistItems(
+    String roomId, {
+    String version = '',
+    String playlistId = '',
+    String? target,
+    int page = 1,
+    int pageSize = 100,
+    String search = '',
+    String sourceProvider = '',
+    String providerInstanceName = '',
+    client_enum.MediaListSortBy sortBy =
+        client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_ASC,
+    client_enum.ResourceAvailabilityFilter availability =
+        client_enum.ResourceAvailabilityFilter.RESOURCE_AVAILABILITY_FILTER_ALL,
+  }) {
+    return _api.room
+        .watchPlaylistItems(
+          roomId,
+          client.WatchPlaylistItemsRequest(
+            deliveryMode: _watchDeliveryMode,
+            playlistItems: client.ObservePlaylistItems(
+              afterEventSequence: _watchSequence(version),
+              request: client.ListPlaylistItemsRequest(
+                playlistId: playlistId,
+                target: providerTargetFromBase64(target),
+                page: client.PagePagination(page: page),
+                pageSize: pageSize,
+                search: search,
+                sourceProvider: SourceConfigCodec.providerFromString(
+                  sourceProvider,
+                ),
+                providerInstanceName: providerInstanceName,
+                sortBy: sortBy,
+                sortDirection: sortDirection,
+                availability: availability,
+              ),
+            ),
+          ),
+        )
+        .map((event) {
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<RoomMediaLibraryPage>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<RoomMediaLibraryPage>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<RoomMediaLibraryPage>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: _mediaLibraryPageFromProto(
+              event.resourceEvent.playlistItems,
+              parentId: playlistId,
+            ),
+          );
+        });
+  }
+
+  Future<RoomMediaLibraryPage> listMediaLibrary(
+    String roomId, {
+    int page = 1,
+    String? cursor,
+    int pageSize = 50,
+    String playlistId = '',
+    String? target,
+    String search = '',
+    String sourceProvider = '',
+    Map<String, dynamic>? previewSourceConfig,
+    source_config.PlaylistSourceConfig? typedPreviewSourceConfig,
+    String providerInstanceName = '',
+    client_enum.MediaListSortBy sortBy =
+        client_enum.MediaListSortBy.MEDIA_LIST_SORT_BY_POSITION,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_ASC,
+    client_enum.ResourceAvailabilityFilter availability =
+        client_enum.ResourceAvailabilityFilter.RESOURCE_AVAILABILITY_FILTER_ALL,
+    bool refresh = false,
+  }) async {
+    final response = await _api.room.listPlaylistItems(
+      roomId,
+      client.ListPlaylistItemsRequest(
+        playlistId: playlistId,
+        target: providerTargetFromBase64(target),
+        page: cursor == null ? client.PagePagination(page: page) : null,
+        cursor: cursor == null ? null : client.CursorPagination(cursor: cursor),
+        pageSize: pageSize,
+        search: search,
+        sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
+        providerInstanceName: providerInstanceName,
+        sortBy: sortBy,
+        sortDirection: sortDirection,
+        availability: availability,
+        refresh: refresh,
+        previewSourceConfig:
+            typedPreviewSourceConfig ??
+            (previewSourceConfig == null
+                ? null
+                : SourceConfigCodec.playlistSourceConfigFromMap(
+                    sourceProvider: sourceProvider,
+                    sourceConfig: previewSourceConfig,
+                  )),
+      ),
+    );
+    return _mediaLibraryPageFromProto(response, parentId: playlistId);
+  }
+
+  Future<PlaylistDetailInfo> getPlaylist(
+    String roomId,
+    String playlistId,
+  ) async {
+    final response = await _api.room.getPlaylist(
+      roomId,
+      client.GetPlaylistRequest(playlistId: playlistId),
+    );
+    return PlaylistDetailInfo(
+      playlist: _api.mapPlaylist(response.playlist),
+      childFolderCount: response.childFolderCount,
+      mediaCount: response.mediaCount,
+    );
+  }
+
+  Future<RoomPlaylistsPage> listPlaylistsPage(
+    String roomId, {
+    String parentId = '',
+    int page = 1,
+    int pageSize = 100,
+    String? search,
+    String sourceProvider = '',
+    String providerInstanceName = '',
+    bool? dynamicOnly,
+    client_enum.PlaylistListSortBy sortBy =
+        client_enum.PlaylistListSortBy.PLAYLIST_LIST_SORT_BY_POSITION,
+    client_enum.SortDirection sortDirection =
+        client_enum.SortDirection.SORT_DIRECTION_ASC,
+    client_enum.ResourceAvailabilityFilter availability =
+        client_enum.ResourceAvailabilityFilter.RESOURCE_AVAILABILITY_FILTER_ALL,
+  }) async {
+    final response = await _api.room.listPlaylists(
+      roomId,
+      client.ListPlaylistsRequest(
+        parentId: parentId,
+        page: page,
+        pageSize: pageSize,
+        search: search,
+        sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
+        providerInstanceName: providerInstanceName,
+        dynamicOnly: dynamicOnly,
+        sortBy: sortBy,
+        sortDirection: sortDirection,
+        availability: availability,
+      ),
+    );
+    return RoomPlaylistsPage(
+      playlists: response.playlists.map(_api.mapPlaylist).toList(),
+      total: response.total,
+      page: page,
+      pageSize: pageSize,
+    );
+  }
+
+  Future<RoomPlaylistItem> createPlaylist(
+    String roomId, {
+    required String name,
+    String parentId = '',
+    String sourceProvider = '',
+    Map<String, dynamic> sourceConfig = const {},
+    String providerInstanceName = '',
+    String description = '',
+  }) async {
+    final response = await _api.room.createPlaylist(
+      roomId,
+      client.CreatePlaylistRequest(
+        name: name,
+        parentId: parentId,
+        sourceProvider: SourceConfigCodec.providerFromString(sourceProvider),
+        sourceConfig: _playlistSourceConfig(
+          sourceProvider: sourceProvider,
+          sourceConfig: sourceConfig,
+        ),
+        providerInstanceName: providerInstanceName,
+        description: description,
+      ),
+    );
+    return _api.mapPlaylist(response);
+  }
+
+  Future<RoomPlaylistItem> createPlaylistFromSourceConfig(
+    String roomId, {
+    required String name,
+    required source_config.PlaylistSourceConfig sourceConfig,
+    String parentId = '',
+    String providerInstanceName = '',
+    String description = '',
+  }) async {
+    final provider = SourceConfigCodec.providerForPlaylistSourceConfig(
+      sourceConfig,
+    );
+    final response = await _api.room.createPlaylist(
+      roomId,
+      client.CreatePlaylistRequest(
+        name: name,
+        parentId: parentId,
+        sourceProvider: SourceConfigCodec.providerFromString(provider),
+        sourceConfig: sourceConfig,
+        providerInstanceName: providerInstanceName,
+        description: description,
+      ),
+    );
+    return _api.mapPlaylist(response);
+  }
+
+  Future<RoomPlaylistItem> updatePlaylist(
+    String roomId,
+    String playlistId, {
+    required String name,
+    String? description,
+  }) async {
+    final response = await _api.room.updatePlaylist(
+      roomId,
+      client.UpdatePlaylistRequest(
+        playlistId: playlistId,
+        name: name,
+        description: description ?? '',
+      ),
+    );
+    return _api.mapPlaylist(response);
+  }
+
+  Future<RoomPlaylistItem> movePlaylist(
+    String roomId,
+    String playlistId, {
+    String? beforePlaylistId,
+    String? afterPlaylistId,
+  }) async {
+    final response = await _api.room.movePlaylist(
+      roomId,
+      client.MovePlaylistRequest(
+        playlistId: playlistId,
+        beforePlaylistId: beforePlaylistId,
+        afterPlaylistId: afterPlaylistId,
+      ),
+    );
+    return _api.mapPlaylist(response);
+  }
+
+  Future<void> deletePlaylist(
+    String roomId,
+    String playlistId, {
+    bool force = false,
+  }) async {
+    await _api.room.deletePlaylist(
+      roomId,
+      client.DeletePlaylistRequest(playlistId: playlistId, force: force),
+    );
+  }
+
+  Future<RoomMediaItem> editMedia(
+    String roomId,
+    String mediaId, {
+    required String name,
+    String? description,
+  }) async {
+    final response = await _api.room.editMedia(
+      roomId,
+      client.EditMediaRequest(
+        mediaId: mediaId,
+        name: name,
+        description: description ?? '',
+      ),
+    );
+    return _api.mapMedia(response);
+  }
+
+  Future<RoomMediaItem> getMedia(String roomId, String mediaId) async {
+    final media = await _api.room.getMedia(
+      roomId,
+      client.GetMediaRequest(mediaId: mediaId),
+    );
+    return _api.mapMedia(media);
+  }
+
+  Future<int> moveMedia(
+    String roomId, {
+    List<String> mediaIds = const [],
+    String? sourcePlaylistId,
+    String? targetPlaylistId,
+    bool allFromScope = false,
+    String? beforeMediaId,
+    String? afterMediaId,
+  }) async {
+    final response = await _api.room.moveMedia(
+      roomId,
+      client.MoveMediaRequest(
+        mediaIds: mediaIds,
+        sourcePlaylistId: allFromScope ? sourcePlaylistId : null,
+        targetPlaylistId: targetPlaylistId,
+        allFromScope: allFromScope,
+        beforeMediaId: beforeMediaId,
+        afterMediaId: afterMediaId,
+      ),
+    );
+    return response.movedCount;
+  }
+
+  Future<ChatHistoryPage> getChatHistory(
+    String roomId, {
+    int limit = 50,
+    String cursor = '',
+    List<client_enum.ChatMessageType> includeMessageTypes =
+        chatTimelineMessageTypes,
+  }) async {
+    final response = await _api.room.getChatHistory(
+      roomId,
+      client.GetChatHistoryRequest(
+        limit: limit,
+        cursor: cursor,
+        includeMessageTypes: includeMessageTypes,
+      ),
+    );
+    return ChatHistoryPage(
+      messages: response.messages.map(_chatMessageFromProto).toList(),
+      nextCursor: response.nextCursor,
+      eventCursor: response.hasEventCursor()
+          ? response.eventCursor.sequence.toInt().toString()
+          : '',
+    );
+  }
+
+  Future<ChatSearchPage> searchChatMessages(
+    String roomId, {
+    required String query,
+    int limit = 50,
+    String cursor = '',
+    bool includeDeleted = false,
+    String userId = '',
+  }) async {
+    final response = await _api.room.searchChatMessages(
+      roomId,
+      client.SearchChatMessagesRequest(
+        query: query,
+        limit: limit,
+        cursor: cursor,
+        includeDeleted: includeDeleted,
+        userId: userId,
+      ),
+    );
+    return ChatSearchPage(
+      messages: response.messages.map(_chatMessageFromProto).toList(),
+      nextCursor: response.nextCursor,
+      eventCursor: response.hasEventCursor()
+          ? response.eventCursor.sequence.toInt().toString()
+          : '',
+    );
+  }
+
+  Future<RoomChatMessageInfo> sendChatMessage(
+    String roomId, {
+    String content = '',
+    List<StoredImageInfo> images = const [],
+    String displayPosition = '',
+    String displayColor = '',
+    String replyToMessageId = '',
+    List<ChatMentionInfo> mentions = const [],
+  }) async {
+    final response = await _api.room.sendChatMessage(
+      roomId,
+      client.SendChatMessageRequest(
+        content: content,
+        clientMessageId: newClientOperationId(),
+        attachments: images.map(chatAttachmentReferenceFromStoredImage),
+        displayPosition: displayPosition,
+        displayColor: displayColor,
+        replyToMessageId: replyToMessageId,
+        mentions: mentions.map(
+          (mention) => client.ChatMentionInput(
+            userId: mention.userId,
+            start: mention.start,
+            length: mention.length,
+          ),
+        ),
+      ),
+    );
+    return _chatMessageFromProto(response.event.message);
+  }
+
+  Future<List<ChatPinnedMessageInfo>> listPinnedChatMessages(
+    String roomId, {
+    int limit = 50,
+  }) async {
+    final response = await _api.room.listPinnedChatMessages(
+      roomId,
+      client.ListPinnedChatMessagesRequest(limit: limit),
+    );
+    return response.messages.map(_chatPinnedMessageFromProto).toList();
+  }
+
+  Future<ChatPinEventInfo> pinChatMessage(
+    String roomId,
+    String messageId, {
+    String note = '',
+  }) async {
+    final response = await _api.room.pinChatMessage(
+      roomId,
+      client.PinChatMessageRequest(
+        messageId: messageId,
+        note: note,
+        clientOperationId: newClientOperationId(),
+      ),
+    );
+    return _chatPinEventFromProto(response.event);
+  }
+
+  Future<ChatPinEventInfo> unpinChatMessage(
+    String roomId,
+    String messageId,
+  ) async {
+    final response = await _api.room.unpinChatMessage(
+      roomId,
+      client.UnpinChatMessageRequest(
+        messageId: messageId,
+        clientOperationId: newClientOperationId(),
+      ),
+    );
+    return _chatPinEventFromProto(response.event);
+  }
+
+  Stream<RoomResourceWatchEvent<ChatPinEventInfo>> watchChatPinEvents(
+    String roomId, {
+    String version = '',
+  }) {
+    return _api.room
+        .watchChatPinEvents(
+          roomId,
+          client.WatchChatPinEventsRequest(
+            deliveryMode: _watchDeliveryMode,
+            chatPinEvents: client.ObserveChatPinEvents(
+              afterEventSequence: _watchSequence(version),
+            ),
+          ),
+        )
+        .map((event) {
+          if (event.hasObserved()) {
+            return RoomResourceWatchEvent<ChatPinEventInfo>.observed(
+              version: _cursorVersion(event.observed.eventCursor),
+              changed: event.observed.changed,
+            );
+          }
+          if (event.hasError()) {
+            return RoomResourceWatchEvent<ChatPinEventInfo>.error(
+              message: event.error.hasError() ? event.error.error.message : '',
+              code: event.error.hasError() ? event.error.error.code : 0,
+            );
+          }
+          return RoomResourceWatchEvent<ChatPinEventInfo>.changed(
+            version: _cursorVersion(event.resourceEvent.eventCursor),
+            snapshot: _chatPinEventFromProto(event.resourceEvent.chatPinEvent),
+          );
+        });
+  }
+
+  Future<RoomChatMessageInfo> editChatMessage(
+    String roomId,
+    String messageId, {
+    required String content,
+    required int expectedVersion,
+  }) async {
+    final response = await _api.room.editChatMessage(
+      roomId,
+      client.EditChatMessageRequest(
+        messageId: messageId,
+        content: content,
+        expectedVersion: Int64(expectedVersion),
+        clientOperationId: newClientOperationId(),
+      ),
+    );
+    return _chatMessageFromProto(response.event.message);
+  }
+
+  Future<RoomChatMessageInfo> deleteChatMessage(
+    String roomId,
+    String messageId, {
+    required int expectedVersion,
+    String reason = '',
+  }) async {
+    final response = await _api.room.deleteChatMessage(
+      roomId,
+      client.DeleteChatMessageRequest(
+        messageId: messageId,
+        expectedVersion: Int64(expectedVersion),
+        reason: reason,
+        clientOperationId: newClientOperationId(),
+      ),
+    );
+    return _chatMessageFromProto(response.event.message);
+  }
+
+  Future<RoomChatMessageInfo> setChatReaction(
+    String roomId,
+    String messageId,
+    String reactionKey, {
+    required bool enabled,
+  }) async {
+    final response = await _api.room.setChatReaction(
+      roomId,
+      client.SetChatReactionRequest(
+        messageId: messageId,
+        reactionKey: reactionKey,
+        enabled: enabled,
+      ),
+    );
+    return _chatMessageFromProto(response.message);
+  }
+
+  Future<String> reportChatMessage(
+    String roomId,
+    String messageId, {
+    required String reasonCode,
+    String reason = '',
+  }) async {
+    final response = await _api.room.reportContent(
+      roomId,
+      client.ReportContentRequest(
+        chatMessage: client.ReportChatMessageTarget(
+          roomId: roomId,
+          messageId: messageId,
+        ),
+        reasonCode: reasonCode,
+        reason: reason,
+      ),
+    );
+    return response.reportId;
+  }
+
+  Future<String> reportRoom(
+    String roomId, {
+    required String reasonCode,
+    String reason = '',
+  }) async {
+    final response = await _api.room.reportContent(
+      roomId,
+      client.ReportContentRequest(
+        room: client.ReportRoomTarget(roomId: roomId),
+        reasonCode: reasonCode,
+        reason: reason,
+      ),
+    );
+    return response.reportId;
+  }
+
+  Future<String> reportUser(
+    String roomId,
+    String userId, {
+    required String reasonCode,
+    String reason = '',
+  }) async {
+    final response = await _api.room.reportContent(
+      roomId,
+      client.ReportContentRequest(
+        user: client.ReportUserTarget(userId: userId),
+        reasonCode: reasonCode,
+        reason: reason,
+      ),
+    );
+    return response.reportId;
+  }
+
+  Future<String> reportRoomMember(
+    String roomId,
+    String userId, {
+    required String reasonCode,
+    String reason = '',
+  }) async {
+    final response = await _api.room.reportContent(
+      roomId,
+      client.ReportContentRequest(
+        roomMember: client.ReportRoomMemberTarget(
+          roomId: roomId,
+          userId: userId,
+        ),
+        reasonCode: reasonCode,
+        reason: reason,
+      ),
+    );
+    return response.reportId;
+  }
+
+  Future<RoomChatMessageInfo> getChatMessage(
+    String roomId,
+    String messageId, {
+    bool includeDeleted = false,
+  }) async {
+    final response = await _api.room.getChatMessage(
+      roomId,
+      client.GetChatMessageRequest(
+        messageId: messageId,
+        includeDeleted: includeDeleted,
+      ),
+    );
+    return _chatMessageFromProto(response);
+  }
+
+  Future<ChatReactionUsersPage> listChatReactionUsers(
+    String roomId,
+    String messageId,
+    String reactionKey, {
+    int limit = 50,
+    String cursor = '',
+  }) async {
+    final response = await _api.room.listChatReactionUsers(
+      roomId,
+      client.ListChatReactionUsersRequest(
+        messageId: messageId,
+        reactionKey: reactionKey,
+        limit: limit,
+        cursor: cursor,
+      ),
+    );
+    return ChatReactionUsersPage(
+      users: response.users.map(_chatReactionUserFromProto).toList(),
+      nextCursor: response.nextCursor,
+      total: response.total.toInt(),
+    );
+  }
+
+  Future<ChatMessageContextInfo> getChatMessageContext(
+    String roomId,
+    String messageId, {
+    int beforeLimit = 20,
+    int afterLimit = 20,
+    bool includeDeleted = false,
+  }) async {
+    final response = await _api.room.getChatMessageContext(
+      roomId,
+      client.GetChatMessageContextRequest(
+        messageId: messageId,
+        beforeLimit: beforeLimit,
+        afterLimit: afterLimit,
+        includeDeleted: includeDeleted,
+      ),
+    );
+    return ChatMessageContextInfo(
+      before: response.before.map(_chatMessageFromProto).toList(),
+      message: _chatMessageFromProto(response.message),
+      after: response.after.map(_chatMessageFromProto).toList(),
+    );
+  }
+
+  Future<List<RoomChatMessageInfo>> getChatPlaybackMessages(
+    String roomId, {
+    String playbackMediaId = '',
+    String playbackPlaylistId = '',
+    List<int> playbackTarget = const [],
+    double positionSeconds = 0,
+    double beforeSeconds = 30,
+    double afterSeconds = 30,
+    int limit = 50,
+    bool includeDeleted = false,
+    List<client_enum.ChatMessageType> includeMessageTypes = const [],
+  }) async {
+    final response = await _api.room.getChatPlaybackMessages(
+      roomId,
+      client.GetChatPlaybackMessagesRequest(
+        playbackMediaId: playbackMediaId,
+        playbackPlaylistId: playbackPlaylistId,
+        playbackTarget: playbackTarget.isEmpty
+            ? client.ProviderTarget()
+            : providerTargetFromJson(
+                Map<String, dynamic>.from(
+                  jsonDecode(utf8.decode(playbackTarget)),
+                ),
+              ),
+        positionSeconds: positionSeconds,
+        beforeSeconds: beforeSeconds,
+        afterSeconds: afterSeconds,
+        limit: limit,
+        includeDeleted: includeDeleted,
+        includeMessageTypes: includeMessageTypes,
+      ),
+    );
+    final allowedTypes = includeMessageTypes.map((type) => type.value).toSet();
+    return response.messages
+        .map(_chatMessageFromProto)
+        .where(
+          (message) =>
+              allowedTypes.isEmpty ||
+              allowedTypes.contains(message.messageType),
+        )
+        .toList();
+  }
+
+  Future<ChatReadStateInfo> markChatRead(
+    String roomId,
+    String messageId,
+  ) async {
+    final response = await _api.room.markChatRead(
+      roomId,
+      client.MarkChatReadRequest(messageId: messageId),
+    );
+    return _chatReadStateFromProto(response);
+  }
+
+  Future<ChatReadStateInfo> getChatReadState(String roomId) async {
+    final response = await _api.room.getChatReadState(
+      roomId,
+      client.GetChatReadStateRequest(),
+    );
+    return _chatReadStateFromProto(response);
+  }
+
+  Future<ChatMessageReadReceiptsInfo> getChatMessageReadReceipts(
+    String roomId,
+    String messageId, {
+    int page = 1,
+    int pageSize = 50,
+  }) async {
+    final response = await _api.room.getChatMessageReadReceipts(
+      roomId,
+      client.GetChatMessageReadReceiptsRequest(
+        messageId: messageId,
+        page: page,
+        pageSize: pageSize,
+      ),
+    );
+    return _chatMessageReadReceiptsFromProto(response);
+  }
+
+  StoredImageInfo storedImageFromChatAttachment(client.ChatAttachment image) {
+    return StoredImageInfo(
+      id: image.id,
+      storageBackend: '',
+      objectKey: '',
+      url: _api.resolveResourceUrl(image.url),
+      mimeType: image.mimeType,
+      sizeBytes: image.sizeBytes.toInt(),
+      width: image.width,
+      height: image.height,
+      metadata: utf8.encode(jsonEncode(fileMetadataToJson(image.metadata))),
+    );
+  }
+
+  client.ChatAttachmentReference chatAttachmentReferenceFromStoredImage(
+    StoredImageInfo image,
+  ) {
+    return client.ChatAttachmentReference(
+      id: image.id,
+      kind: image.uploadReference
+          ? client_enum
+                .ChatAttachmentReferenceKind
+                .CHAT_ATTACHMENT_REFERENCE_KIND_UPLOAD
+          : client_enum
+                .ChatAttachmentReferenceKind
+                .CHAT_ATTACHMENT_REFERENCE_KIND_REUSE,
+    );
+  }
+
+  Future<String> addDirectUrlMedia(
+    String roomId, {
+    String playlistId = '',
+    required String url,
+    Map<String, String> headers = const {},
+    String name = '',
+    bool preferProxy = false,
+    bool proxyOnly = false,
+  }) async {
+    final sourceConfig = DirectUrlSourceConfig.fromUserInput(
+      url: url,
+      headers: headers,
+      preferProxy: preferProxy,
+      proxyOnly: proxyOnly,
+    );
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: DirectUrlSourceConfig.sourceProvider,
+      sourceConfig: sourceConfig.toJson(),
+      name: name,
+    );
+  }
+
+  Future<String> addBilibiliMedia(
+    String roomId, {
+    String playlistId = '',
+    String providerInstanceName = '',
+    required Map<String, dynamic> sourceConfig,
+    String name = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'bilibili',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: sourceConfig,
+      name: name,
+    );
+  }
+
+  Future<String> addMediaFromSourceConfig(
+    String roomId, {
+    String playlistId = '',
+    String providerInstanceName = '',
+    required source_config.MediaSourceConfig sourceConfig,
+    String name = '',
+  }) async {
+    final response = await _api.room.addMedia(
+      roomId,
+      client.AddMediaRequest(
+        playlistId: playlistId.isEmpty ? null : playlistId,
+        providerInstanceName: providerInstanceName,
+        sourceConfig: sourceConfig,
+        name: name,
+      ),
+    );
+    return response.id;
+  }
+
+  Future<String> addAlistMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String password = '',
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    final sourceConfig = <String, dynamic>{'serverId': serverId, 'path': path};
+    if (password.isNotEmpty) sourceConfig['password'] = password;
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'alist',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: sourceConfig,
+      name: name,
+    );
+  }
+
+  Future<String> addEmbyMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String itemId,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'emby',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'itemId': itemId},
+      name: name,
+    );
+  }
+
+  Future<String> addCloudreveMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'cloudreve',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addFnosFileMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'fnos',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'type': 'file', 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addFnosMediaLibraryItem(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String itemGuid,
+    String mediaGuid = '',
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'fnos',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'serverId': serverId,
+        'type': 'libraryItem',
+        'itemGuid': itemGuid,
+        if (mediaGuid.isNotEmpty) 'mediaGuid': mediaGuid,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addQnapMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'qnap',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addNextcloudMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    required int fileId,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'nextcloud',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'path': path, 'fileId': fileId},
+      name: name,
+    );
+  }
+
+  Future<String> addSeafileMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String repositoryId,
+    required String path,
+    required String objectId,
+    required bool hasThumbnail,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'seafile',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'serverId': serverId,
+        'repositoryId': repositoryId,
+        'path': path,
+        'objectId': objectId,
+        'hasThumbnail': hasThumbnail,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addTrueNasMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'truenas',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addSynologyFileMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String path,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'synology',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'serverId': serverId, 'type': 'file', 'path': path},
+      name: name,
+    );
+  }
+
+  Future<String> addSynologyLibraryMedia(
+    String roomId, {
+    String playlistId = '',
+    required String serverId,
+    required String kind,
+    required int itemId,
+    required int fileId,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'synology',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'serverId': serverId,
+        'type': 'libraryItem',
+        'kind': kind,
+        'itemId': itemId,
+        'fileId': fileId,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addTwitchMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    final sourceConfig = <String, dynamic>{
+      'kind': kind,
+      switch (kind) {
+        'live' => 'channel',
+        'video' => 'videoId',
+        'clip' => 'slug',
+        _ => 'id',
+      }: id,
+      if (shared) 'shared': true,
+    };
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'twitch',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: sourceConfig,
+      name: name,
+    );
+  }
+
+  Future<String> addYoutubeMedia(
+    String roomId, {
+    String playlistId = '',
+    required String videoId,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'youtube',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'videoId': videoId, if (shared) 'shared': true},
+      name: name,
+    );
+  }
+
+  Future<String> addDouyinMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'douyin',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'kind': kind,
+        if (kind == 'live') 'webRid': id else 'awemeId': id,
+        if (shared) 'shared': true,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addTikTokMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    bool shared = false,
+    String name = '',
+    String providerInstanceName = '',
+  }) => _addMedia(
+    roomId,
+    playlistId: playlistId,
+    sourceProvider: 'tiktok',
+    providerInstanceName: providerInstanceName,
+    sourceConfig: {
+      'kind': kind,
+      if (kind == 'live') 'uniqueId': id else 'videoId': id,
+      if (shared) 'shared': true,
+    },
+    name: name,
+  );
+
+  Future<String> addHuyaMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'huya',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'kind': kind,
+        if (kind == 'video') 'videoId': id else 'roomId': id,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addDouyuMedia(
+    String roomId, {
+    String playlistId = '',
+    required String room,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'douyu',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'room': room},
+      name: name,
+    );
+  }
+
+  Future<String> addAcFunMedia(
+    String roomId, {
+    String playlistId = '',
+    required String kind,
+    required String id,
+    String? episodeQuery,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'acfun',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {
+        'kind': kind,
+        switch (kind) {
+          'video' => 'videoId',
+          'bangumi' => 'bangumiId',
+          'live' => 'authorId',
+          _ => 'id',
+        }: id,
+        if (episodeQuery != null && episodeQuery.isNotEmpty)
+          'episodeQuery': episodeQuery,
+      },
+      name: name,
+    );
+  }
+
+  Future<String> addCctvMedia(
+    String roomId, {
+    String playlistId = '',
+    required String resource,
+    String name = '',
+    String providerInstanceName = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'cctv',
+      providerInstanceName: providerInstanceName,
+      sourceConfig: {'resource': resource},
+      name: name,
+    );
+  }
+
+  Future<String> addRtmpMedia(
+    String roomId, {
+    String playlistId = '',
+    String name = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'rtmp',
+      sourceConfig: const {},
+      name: name,
+    );
+  }
+
+  Future<String> addLiveProxyMedia(
+    String roomId, {
+    String playlistId = '',
+    required String url,
+    String name = '',
+  }) {
+    return _addMedia(
+      roomId,
+      playlistId: playlistId,
+      sourceProvider: 'liveProxy',
+      sourceConfig: {'url': url},
+      name: name,
+    );
+  }
+
+  Future<RtmpPublishKeyInfo> createRtmpPublishKeyInfo(
+    String roomId,
+    String mediaId,
+  ) async {
+    final response = await _api.rtmpProvider.createPublishKey(
+      rtmp.CreatePublishKeyRequest(roomId: roomId, mediaId: mediaId),
+    );
+    return RtmpPublishKeyInfo(
+      publishKey: response.publishKey,
+      rtmpUrl: response.rtmpUrl,
+      streamKey: response.streamKey,
+      expiresAt: response.expiresAt.toInt(),
+    );
+  }
+
+  Future<RoomStreamEntryInfo> getRtmpStreamInfo({
+    required String roomId,
+    required String mediaId,
+  }) async {
+    final response = await _api.rtmpProvider.getStreamInfo(
+      rtmp.GetStreamInfoRequest(roomId: roomId, mediaId: mediaId),
+    );
+    return RoomStreamEntryInfo(
+      mediaId: mediaId,
+      active: response.active,
+      publisherUserId: response.hasPublisher() ? response.publisher.userId : '',
+      startedAt: response.hasPublisher()
+          ? response.publisher.startedAt.toInt()
+          : 0,
+    );
+  }
+
+  Future<void> addMediaBatch(String roomId, List<Map<String, dynamic>> items) {
+    return _api.room.addMediaBatch(
+      roomId,
+      client.AddMediaBatchRequest(
+        items: items.map((item) {
+          final description = item['description']?.toString().trim() ?? '';
+          final playlistId = item['playlistId']?.toString() ?? '';
+          final sourceProvider = item['sourceProvider']?.toString() ?? '';
+          final request = client.AddMediaRequest(
+            playlistId: playlistId.isEmpty ? null : playlistId,
+            providerInstanceName:
+                item['providerInstanceName']?.toString() ?? '',
+            sourceConfig: SourceConfigCodec.mediaSourceConfigFromMap(
+              sourceProvider: sourceProvider,
+              sourceConfig: _dynamicMap(item['sourceConfig']),
+            ),
+            name: item['name']?.toString() ?? '',
+          );
+          if (description.isNotEmpty) {
+            request.description = description;
+          }
+          return request;
+        }),
+      ),
+    );
+  }
+
+  Future<void> deleteMedia(String roomId, String mediaId) async {
+    await _api.room.deleteMedia(
+      roomId,
+      client.DeleteMediaRequest(mediaId: mediaId, force: true),
+    );
+  }
+
+  Future<void> deleteMediaLibraryEntries(
+    String roomId, {
+    List<String> mediaIds = const [],
+    List<String> playlistIds = const [],
+  }) async {
+    await _api.room.deleteEntries(
+      roomId,
+      client.DeleteEntriesRequest(
+        mediaIds: mediaIds,
+        playlistIds: playlistIds,
+        force: true,
+      ),
+    );
+  }
+
+  Future<void> clearMediaLibrary(String roomId, {String? parentId}) async {
+    await _api.room.clearPlaylist(
+      roomId,
+      client.ClearPlaylistRequest(playlistId: parentId ?? ''),
+    );
+  }
+
+  Future<SyncTvPlaybackStatus> switchMedia(
+    String roomId,
+    String entryId, {
+    String? subPath,
+    String? playlistId,
+  }) async {
+    final clientOperationId = newClientOperationId();
+    if (entryId.isEmpty) {
+      final state = await _api.room.stopPlayback(
+        roomId,
+        client.StopPlaybackRequest(clientOperationId: clientOperationId),
+      );
+      return _playbackStatusFromState(state);
+    }
+    final target = providerTargetFromBase64(subPath);
+    final hasTarget = !providerTargetIsEmpty(target);
+    final dynamicPlaylistId = playlistId ?? '';
+    final isStaticMedia = entryId.startsWith('med_');
+    final isDynamicPlaylist = entryId.startsWith('pl_');
+    if (!hasTarget && !isStaticMedia && !isDynamicPlaylist) {
+      throw ArgumentError.value(
+        entryId,
+        'entryId',
+        'Expected a med_ media ID or pl_ playlist ID',
+      );
+    }
+    if (hasTarget && dynamicPlaylistId.isEmpty) {
+      throw ArgumentError.value(
+        playlistId,
+        'playlistId',
+        'A dynamic provider target requires a pl_ playlist ID',
+      );
+    }
+    await _api.room.startPlayback(
+      roomId,
+      client.StartPlaybackRequest(
+        mediaId: !hasTarget && isStaticMedia ? entryId : '',
+        playlistId: hasTarget
+            ? dynamicPlaylistId
+            : isStaticMedia
+            ? dynamicPlaylistId
+            : isDynamicPlaylist
+            ? entryId
+            : '',
+        target: target,
+        clientOperationId: clientOperationId,
+      ),
+    );
+    final current = await getPlaybackStatus(roomId);
+    return SyncTvPlaybackStatus(
+      entry: current.entry,
+      isPlaying: true,
+      currentTime: 0,
+      playbackRate: current.playbackRate,
+      generatedAtMillis: SyncedClock.nowMillis(),
+      version: current.version,
+      playingMediaId: current.playingMediaId,
+      playingPlaylistId: current.playingPlaylistId,
+      targetHash: current.targetHash,
+    );
+  }
+
+  Future<SyncTvPlaybackStatus> updatePlaybackState(
+    String roomId, {
+    PlaybackControlAction? action,
+    required bool isPlaying,
+    double? position,
+    double speed = 1.0,
+    int? version,
+  }) async {
+    final current = await getPlaybackStatus(roomId);
+    final response = await _api.room.updatePlaybackState(
+      roomId,
+      client.UpdatePlaybackStateRequest(
+        type: _playbackStateUpdateType(action, isPlaying, position),
+        playing: isPlaying,
+        position: position,
+        speed: speed,
+        version: version == null ? null : Int64(version),
+      ),
+    );
+    return _api.mapPlaybackState(response, entry: current.entry);
+  }
+
+  Future<String> _addMedia(
+    String roomId, {
+    String playlistId = '',
+    required String sourceProvider,
+    String providerInstanceName = '',
+    required Map<String, dynamic> sourceConfig,
+    String name = '',
+  }) async {
+    final response = await _api.room.addMedia(
+      roomId,
+      client.AddMediaRequest(
+        playlistId: playlistId.isEmpty ? null : playlistId,
+        providerInstanceName: providerInstanceName,
+        sourceConfig: SourceConfigCodec.mediaSourceConfigFromMap(
+          sourceProvider: sourceProvider,
+          sourceConfig: sourceConfig,
+        ),
+        name: name,
+      ),
+    );
+    return response.id;
+  }
+
+  client_enum.ResourceDeliveryMode get _watchDeliveryMode =>
+      client_enum.ResourceDeliveryMode.RESOURCE_DELIVERY_MODE_PUSH_SNAPSHOT;
+
+  Int64? _watchSequence(String version) {
+    if (version.isEmpty) return null;
+    final parsed = int.tryParse(version);
+    return parsed == null ? null : Int64(parsed);
+  }
+
+  String _cursorVersion(client.EventCursor cursor) {
+    final sequence = cursor.sequence.toInt();
+    return sequence == 0 ? cursor.eventId : sequence.toString();
+  }
+
+  source_config.PlaylistSourceConfig? _playlistSourceConfig({
+    required String sourceProvider,
+    required Object? sourceConfig,
+  }) {
+    return SourceConfigCodec.playlistSourceConfigFromMap(
+      sourceProvider: sourceProvider,
+      sourceConfig: _dynamicMap(sourceConfig),
+    );
+  }
+
+  Map<String, dynamic> _dynamicMap(Object? value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return value.map(
+        (key, entryValue) => MapEntry(key.toString(), entryValue),
+      );
+    }
+    return const {};
+  }
+
+  client_enum.PlaybackUpdateType _playbackStateUpdateType(
+    PlaybackControlAction? action,
+    bool isPlaying,
+    double? position,
+  ) {
+    return switch (action) {
+      PlaybackControlAction.play =>
+        client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PLAY,
+      PlaybackControlAction.pause =>
+        client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PAUSE,
+      PlaybackControlAction.seek =>
+        client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SEEK,
+      PlaybackControlAction.speed =>
+        client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SPEED,
+      null =>
+        position != null
+            ? client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_SEEK
+            : isPlaying
+            ? client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PLAY
+            : client_enum.PlaybackUpdateType.PLAYBACK_UPDATE_TYPE_PAUSE,
+    };
+  }
+
+  RoomMediaLibraryPage _mediaLibraryPageFromProto(
+    client.ListPlaylistItemsResponse response, {
+    String parentId = '',
+  }) {
+    return RoomMediaLibraryPage(
+      playlists: response.playlists.map(_api.mapPlaylist).toList(),
+      media: response.media.map(_api.mapMedia).toList(),
+      dynamicItems: response.dynamicItems
+          .map((item) => _api.mapDynamicItem(item, playlistId: parentId))
+          .toList(),
+      currentPath: response.currentPath.map(_browsePathFromProto).toList(),
+      total: response.hasTotal() ? response.total.toInt() : null,
+      folderCount: response.folderCount.toInt(),
+      fileCount: response.fileCount.toInt(),
+      version: response.version,
+      usesCursor:
+          response.whichPagination() ==
+          client.ListPlaylistItemsResponse_Pagination.cursor,
+      nextCursor: response.hasCursor() ? response.cursor.cursor : '',
+      page: response.hasPage() ? response.page.page : 1,
+    );
+  }
+
+  PlaylistBrowsePathInfo _browsePathFromProto(
+    client.PlaylistBrowsePathNode node,
+  ) {
+    return PlaylistBrowsePathInfo(
+      playlistId: node.playlistId,
+      name: node.name,
+      target: providerTargetToBase64(node.target),
+    );
+  }
+
+  RoomChatMessageInfo _chatMessageFromProto(client.ChatMessageReceive message) {
+    return RoomChatMessageInfo(
+      id: message.id,
+      roomId: message.roomId,
+      userId: message.userId,
+      username: message.hasUsername() ? message.username : null,
+      content: message.content,
+      timestamp: message.timestamp.toInt(),
+      messageType: message.messageType.value,
+      displayPosition: message.displayPosition,
+      displayColor: message.displayColor,
+      version: message.version.toInt(),
+      editedAt: message.editedAt.toInt(),
+      deletedAt: message.deletedAt.toInt(),
+      status: message.status.value,
+      replyToMessageId: message.replyToMessageId,
+      images: message.attachments.map(storedImageFromChatAttachment).toList(),
+      reactions: message.reactions.map(_chatReactionSummaryFromProto).toList(),
+      reactionCount: message.reactionCount,
+      mentions: message.mentions
+          .map(
+            (mention) => ChatMentionInfo(
+              userId: mention.userId,
+              username: mention.username,
+              start: mention.start,
+              length: mention.length,
+            ),
+          )
+          .toList(),
+      pin: message.hasPin() ? _chatPinFromProto(message.pin) : null,
+    );
+  }
+
+  ChatPinnedMessageInfo _chatPinnedMessageFromProto(
+    client.ChatPinnedMessage message,
+  ) {
+    return ChatPinnedMessageInfo(
+      message: _chatMessageFromProto(message.message),
+      pin: ChatPinInfo(
+        pinnedByUserId: message.pinnedByUserId,
+        pinnedByUsername: message.pinnedByUsername,
+        note: message.note,
+        pinnedAt: message.pinnedAt.toInt(),
+      ),
+    );
+  }
+
+  ChatPinEventInfo _chatPinEventFromProto(client.ChatPinEvent event) {
+    return ChatPinEventInfo(
+      eventId: event.eventId,
+      roomId: event.roomId,
+      kind: event.kind.value,
+      message: _chatMessageFromProto(event.message),
+      pin: event.hasPin() ? _chatPinFromProto(event.pin) : null,
+      occurredAt: event.occurredAt.toInt(),
+      sequence: event.sequence.toInt(),
+    );
+  }
+
+  ChatPinInfo _chatPinFromProto(client.ChatMessagePin pin) {
+    return ChatPinInfo(
+      pinnedByUserId: pin.pinnedByUserId,
+      pinnedByUsername: pin.pinnedByUsername,
+      note: pin.note,
+      pinnedAt: pin.pinnedAt.toInt(),
+    );
+  }
+
+  ChatReactionSummaryInfo _chatReactionSummaryFromProto(
+    client.ChatReactionSummary reaction,
+  ) {
+    return ChatReactionSummaryInfo(
+      key: reaction.key,
+      count: reaction.count.toInt(),
+      reactedByMe: reaction.reactedByMe,
+    );
+  }
+
+  ChatReactionUserInfo _chatReactionUserFromProto(
+    client.ChatReactionUser user,
+  ) {
+    return ChatReactionUserInfo(
+      userId: user.userId,
+      username: user.username,
+      reactedAt: user.reactedAt.toInt(),
+    );
+  }
+
+  ChatReadStateInfo _chatReadStateFromProto(
+    client.ChatReadStateResponse response,
+  ) {
+    final state = response.state;
+    return ChatReadStateInfo(
+      roomId: state.roomId,
+      userId: state.userId,
+      lastReadMessageId: state.lastReadMessageId,
+      lastReadEventId: state.lastReadEventId,
+      lastReadEventSequence: state.lastReadEventSequence.toInt(),
+      updatedAt: state.updatedAt.toInt(),
+      unreadCount: response.unreadCount.toInt(),
+    );
+  }
+
+  ChatMessageReadReceiptsInfo _chatMessageReadReceiptsFromProto(
+    client.GetChatMessageReadReceiptsResponse response,
+  ) {
+    return ChatMessageReadReceiptsInfo(
+      readers: response.readers
+          .where((reader) => reader.hasUser())
+          .map(
+            (reader) => ChatReadReceiptUserInfo(
+              user: _api.mapPublicUser(reader.user),
+              readAt: reader.readAt.toInt(),
+            ),
+          )
+          .toList(),
+      unreadMembers: response.unreadMembers
+          .where((member) => member.hasUser())
+          .map((member) => _api.mapPublicUser(member.user))
+          .toList(),
+      readerTotal: response.readerTotal.toInt(),
+      unreadTotal: response.unreadTotal.toInt(),
+    );
+  }
+
+  SyncTvPlaybackStatus _playbackStatusFromState(client.PlaybackState state) {
+    final encodedTarget = providerTargetToBase64(state.target);
+    final entry =
+        state.playingMediaId.isEmpty && state.playingPlaylistId.isEmpty
+        ? null
+        : RoomPlaybackEntry(
+            id: encodedTarget.isNotEmpty
+                ? encodedTarget
+                : state.playingMediaId.isNotEmpty
+                ? state.playingMediaId
+                : state.playingPlaylistId,
+            name: '',
+            url: '',
+            subPath: encodedTarget.isEmpty ? null : encodedTarget,
+            parentId: encodedTarget.isEmpty ? null : state.playingPlaylistId,
+          );
+    return SyncTvPlaybackStatus(
+      entry: entry,
+      isPlaying: state.isPlaying,
+      currentTime: state.position,
+      playbackRate: state.speed == 0 ? 1.0 : state.speed,
+      generatedAtMillis: state.generatedAtMillis.toInt(),
+      version: state.version.toInt(),
+      playingMediaId: state.playingMediaId,
+      playingPlaylistId: state.playingPlaylistId,
+      targetHash: state.targetHash,
+      historyCursorId: state.historyCursorId,
+    );
+  }
+
+  SyncTvPlaybackStatus _playbackStatusFromPlayback(client.Playback playback) {
+    final entry = playback.mediaId.isEmpty && playback.playlistId.isEmpty
+        ? null
+        : RoomMediaEntry.fromPlaybackProto(
+            playback,
+            resolveUrl: _api.resolveResourceUrl,
+          );
+    return SyncTvPlaybackStatus(
+      entry: entry,
+      generatedAtMillis: SyncedClock.nowMillis(),
+    );
+  }
+}

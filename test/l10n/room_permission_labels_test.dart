@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:synctv_app/l10n/app_localizations_en.dart';
 import 'package:synctv_app/l10n/app_localizations_zh.dart';
 import 'package:synctv_app/l10n/l10n.dart';
-import 'package:synctv_app/models/synctv_models.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
 
 void main() {
   test('room permission labels follow the active localization', () {

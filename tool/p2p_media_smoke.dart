@@ -2,8 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:synctv_app/managers/p2p_media_manager.dart';
-import 'package:synctv_app/services/p2p_media_engine.dart';
+import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_manager.dart';
+import 'package:synctv_app/features/media_p2p/infrastructure/p2p_media_engine.dart';
+import 'package:synctv_app/features/media_p2p/application/p2p_media_runtime.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

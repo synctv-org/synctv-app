@@ -131,7 +131,7 @@ fvm flutter build apk --release \
   --dart-define SYNCTV_BUILT_IN_SERVER_URL=https://tv.example.com
 ```
 
-Release workflow 读取 `SYNCTV_BUILT_IN_SERVER_URL` repository variable。`SYNCTV_PASSKEY_RP_IDS` 使用分号分隔多个 RP ID，供原生 Passkey 关联使用。`SYNCTV_OAUTH2_APP_LINK_ORIGIN` 配置原生 OAuth2 Callback 使用的 HTTPS Origin。
+Release workflow 读取两个独立的 repository variable。`SYNCTV_BUILT_IN_SERVER_URL` 配置 GitHub Release 下载包；`SYNCTV_STORE_BUILT_IN_SERVER_URL` 配置 Google Play、iOS App Store 和 Mac App Store 构建，未设置时使用空值。`SYNCTV_PASSKEY_RP_IDS` 使用分号分隔多个 RP ID，供原生 Passkey 关联使用。`SYNCTV_OAUTH2_APP_LINK_ORIGIN` 配置原生 OAuth2 Callback 使用的 HTTPS Origin。
 
 ## 原生 Passkey 与自托管
 

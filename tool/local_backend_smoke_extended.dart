@@ -1,16 +1,15 @@
 // ignore_for_file: avoid_print, invalid_use_of_visible_for_testing_member
 
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:synctv_app/models/public_models.dart';
-import 'package:synctv_app/models/room_media_models.dart';
-import 'package:synctv_app/services/synctv_file_upload_service.dart';
-import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/core/media/local_image_upload.dart';
+import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+
+import 'local_backend_test_auth.dart';
 
 /// Exercises flows not covered by tool/local_backend_smoke.dart:
 /// chat edit/delete/pin/search/context/read-receipts, media & playlist
@@ -40,24 +39,16 @@ Future<void> runExtendedSmoke(String baseUrl, String rootPassword) async {
   await SyncTvService.init();
   await SyncTvService.setBaseUrl(baseUrl);
 
-  final publicSettings = await SyncTvService.getPublicSettings(refresh: true);
-
   // Bootstrap: password signup is usually off in local dev, so create the
   // user through the admin API as root, then log in as that user.
-  await SyncTvService.loginWithDirectPassword(
-    username: 'root',
-    password: rootPassword,
-  );
+  await loginLocalRoot(rootPassword);
   await SyncTvService.adminAddUser(
     username,
     password,
     common_enum.UserRole.USER_ROLE_USER.value,
   );
   await SyncTvService.logout();
-  await SyncTvService.loginWithDirectPassword(
-    username: username,
-    password: password,
-  );
+  await loginLocalPasswordUser(username, password);
   print('extended user=$username');
 
   // ---- File-upload pipeline: avatar ----

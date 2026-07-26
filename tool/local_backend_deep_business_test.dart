@@ -4,13 +4,17 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:synctv_app/models/room_management_models.dart';
-import 'package:synctv_app/models/room_realtime_codec.dart';
-import 'package:synctv_app/models/synctv_models.dart';
-import 'package:synctv_app/services/synctv_api_client.dart';
-import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/contracts/room_management_models.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/data/synctv_api/synctv_api_client.dart';
+import 'package:synctv_app/data/synctv_api/synctv_service.dart';
+import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
+
+import 'local_backend_test_auth.dart';
 
 void main() {
   test(
@@ -33,9 +37,9 @@ void main() {
 
 Future<void> runDeepBusinessTest(String baseUrl, String rootPassword) async {
   final stamp = DateTime.now().microsecondsSinceEpoch;
-  final owner = _UserSeed('deep_owner_$stamp', 'DeepOwner_$stamp!');
-  final member = _UserSeed('deep_member_$stamp', 'DeepMember_$stamp!');
-  final guest = _UserSeed('deep_guest_$stamp', 'DeepGuest_$stamp!');
+  final owner = _UserSeed('deep_owner_$stamp', 'DeepOwnerPass9!');
+  final member = _UserSeed('deep_member_$stamp', 'DeepMemberPass8!');
+  final guest = _UserSeed('deep_guest_$stamp', 'DeepGuestPass7!');
 
   await _init(baseUrl);
   await _rootLogin(rootPassword);
@@ -75,22 +79,13 @@ Future<void> _init(String baseUrl) async {
 
 Future<void> _rootLogin(String rootPassword) async {
   await SyncTvService.logout().catchError((_) {});
-  await _retryRateLimited(
-    () => SyncTvService.loginWithDirectPassword(
-      username: 'root',
-      password: rootPassword,
-    ),
-    'login_root',
-  );
+  await _retryRateLimited(() => loginLocalRoot(rootPassword), 'login_root');
 }
 
 Future<void> _login(_UserSeed seed) async {
   await SyncTvService.logout().catchError((_) {});
   await _retryRateLimited(
-    () => SyncTvService.loginWithDirectPassword(
-      username: seed.username,
-      password: seed.password,
-    ),
+    () => loginLocalPasswordUser(seed.username, seed.password),
     'login_${seed.username}',
   );
 }
@@ -368,19 +363,22 @@ Future<void> _exerciseRoomLifecycle(
     () => SyncTvService.updateRoomPassword(roomId, 'DeepRoomPass_123!'),
     'update_room_password_set',
   );
-  final passwordCheck = await SyncTvService.checkRoom(roomId);
-  if (!passwordCheck.requiresPassword) {
+  print('room_lifecycle_member_join');
+  await _login(member);
+  final passwordCheck = await SyncTvService.getRoomDiscovery(roomId);
+  if (passwordCheck.discoveryAccess !=
+      client_enum
+          .RoomDiscoveryAccess
+          .ROOM_DISCOVERY_ACCESS_PASSWORD
+          .value) {
     throw StateError('room password was not required');
   }
 
-  print('room_lifecycle_member_join');
-  await _login(member);
   await _retryRateLimited(
     () => SyncTvService.joinRoom(roomId, 'DeepRoomPass_123!'),
     'member_join_password_room',
   );
   final memberProfile = await SyncTvService.getMe(refresh: true);
-  await SyncTvService.leaveRoom(roomId);
 
   print('room_lifecycle_update_password_clear');
   await _login(owner);
@@ -388,7 +386,6 @@ Future<void> _exerciseRoomLifecycle(
     () => SyncTvService.updateRoomPassword(roomId, null),
     'update_room_password_clear',
   );
-  await SyncTvService.addRoomMember(roomId, memberProfile.id, role: 3);
   await SyncTvService.setRoomAdmin(roomId, memberProfile.id);
   await SyncTvService.removeRoomAdmin(roomId, memberProfile.id);
   await SyncTvService.updateRoomMemberPermissionOverrides(
@@ -437,6 +434,7 @@ Future<void> _exerciseRoomLifecycle(
     throw StateError('room ownership transfer failed');
   }
 
+  await Future<void>.delayed(const Duration(seconds: 2));
   await SyncTvService.addRoomMember(roomId, memberProfile.id, role: 3);
   await SyncTvService.transferRoomOwnership(roomId, memberProfile.id);
   await _login(member);
@@ -444,6 +442,8 @@ Future<void> _exerciseRoomLifecycle(
   if (finalRoom.creatorId != memberProfile.id) {
     throw StateError('second ownership transfer failed');
   }
+  await _login(owner);
+  await SyncTvService.leaveRoom(roomId);
   print('room_lifecycle=ok owner=$owner guest=${guest.username}');
 }
 

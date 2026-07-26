@@ -1,0 +1,220 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:synctv_app/l10n/app_localizations.dart';
+import 'package:synctv_app/contracts/provider_models.dart';
+import 'package:synctv_app/src/generated/proto/providers/youtube.pb.dart'
+    as youtube;
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config;
+import 'package:synctv_app/features/media_library/presentation/add_media/youtube_add_media_form.dart';
+import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
+
+void main() {
+  testWidgets('normalizes playlist URL and submits native playlist config', (
+    tester,
+  ) async {
+    YoutubeAddRequest? submitted;
+    await tester.binding.setSurfaceSize(const Size(900, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: YoutubeAddMediaForm(
+            roomId: 'room',
+            playlistId: '',
+            binds: const [
+              YoutubeBindInfo(
+                id: '1',
+                serverId: 'youtube-default',
+                label: 'Browser',
+                hasVisitorData: true,
+                hasPoToken: true,
+                hasCookie: true,
+                createdAt: 1,
+                providerInstanceName: '',
+              ),
+            ],
+            onDraftChanged: (_) {},
+            onSubmit: (request) async => submitted = request,
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('youtube-value')),
+      'dQw4w9WgXcQ',
+    );
+    await _selectMode(tester, 'Playlist');
+    expect(
+      tester
+          .widget<AppTextField>(find.byKey(const Key('youtube-value')))
+          .controller
+          .text,
+      isEmpty,
+    );
+    await tester.enterText(
+      find.byKey(const Key('youtube-value')),
+      'https://www.youtube.com/playlist?list=PL123',
+    );
+    await tester.enterText(find.byKey(const Key('youtube-name')), 'Favorites');
+    await tester.tap(find.byType(Switch));
+    await tester.tap(find.byKey(const Key('youtube-submit')));
+    await tester.pumpAndSettle();
+
+    expect(submitted, isNotNull);
+    expect(submitted!.mode, YoutubeAddMode.playlist);
+    expect(submitted!.value, 'PL123');
+    expect(submitted!.name, 'Favorites');
+    expect(submitted!.shared, isTrue);
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('requires a Cookie capability for personal feeds', (
+    tester,
+  ) async {
+    YoutubeAddRequest? submitted;
+    await tester.binding.setSurfaceSize(const Size(900, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: YoutubeAddMediaForm(
+            roomId: 'room',
+            playlistId: '',
+            binds: const [
+              YoutubeBindInfo(
+                id: '1',
+                serverId: 'visitor-only',
+                label: 'Visitor only',
+                hasVisitorData: true,
+                hasPoToken: false,
+                hasCookie: false,
+                createdAt: 1,
+                providerInstanceName: '',
+              ),
+            ],
+            onDraftChanged: (_) {},
+            onSubmit: (request) async => submitted = request,
+          ),
+        ),
+      ),
+    );
+
+    await _selectMode(tester, 'Subscriptions');
+    final submit = tester.widget<FilledButton>(
+      find.byKey(const Key('youtube-submit')),
+    );
+    expect(submit.onPressed, isNull);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('youtube-submit')));
+    await tester.pumpAndSettle();
+    expect(submitted?.mode, YoutubeAddMode.subscriptions);
+    expect(submitted?.shared, isTrue);
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('submits a specific channel tab', (tester) async {
+    YoutubeAddRequest? submitted;
+    await tester.binding.setSurfaceSize(const Size(900, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: YoutubeAddMediaForm(
+            roomId: 'room',
+            playlistId: '',
+            binds: const [],
+            onDraftChanged: (_) {},
+            onSubmit: (request) async => submitted = request,
+          ),
+        ),
+      ),
+    );
+
+    await _selectMode(tester, 'Channel');
+    await tester.tap(find.text('Shorts'));
+    await tester.pump();
+    await tester.enterText(
+      find.byKey(const Key('youtube-value')),
+      'https://www.youtube.com/channel/UC1234567890123456789012/shorts',
+    );
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('youtube-submit')));
+    await tester.tap(find.byKey(const Key('youtube-submit')));
+    await tester.pumpAndSettle();
+    expect(submitted?.mode, YoutubeAddMode.channel);
+    expect(submitted?.channelMode, YoutubeChannelMode.shorts);
+    expect(submitted?.value, 'UC1234567890123456789012');
+    await tester.pump(const Duration(seconds: 4));
+  });
+
+  testWidgets('previews a video and keeps metadata when scope changes', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(900, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: YoutubeAddMediaForm(
+            roomId: 'room',
+            playlistId: '',
+            binds: const [],
+            onDraftChanged: (_) {},
+            onResolve: (request) async => youtube.ResolveResponse(
+              metadata: youtube.Metadata(
+                videoId: request.value,
+                title: 'YouTube video',
+                channelName: 'Creator',
+                thumbnailUrl: 'https://img.example/video.jpg',
+              ),
+              formats: [youtube.Format(name: '1080p')],
+              subtitles: [youtube.Subtitle(language: 'en')],
+              sourceConfig: source_config.YoutubeMediaSourceConfig(
+                videoId: request.value,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('youtube-value')),
+      'https://youtu.be/abcdefghijk',
+    );
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('youtube-preview')));
+    await tester.tap(find.byKey(const Key('youtube-preview')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('YouTube video'), findsOneWidget);
+    expect(find.textContaining('1 formats'), findsOneWidget);
+    expect(find.textContaining('1 subtitles'), findsOneWidget);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pump();
+    expect(find.text('YouTube video'), findsOneWidget);
+  });
+}
+
+Future<void> _selectMode(WidgetTester tester, String label) async {
+  await tester.tap(find.byKey(const Key('youtube-mode')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}

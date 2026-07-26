@@ -206,6 +206,12 @@ abstract class AppLocalizations {
   /// **'Log out'**
   String get logout;
 
+  /// No description provided for @capsLockOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Caps Lock is on'**
+  String get capsLockOn;
+
   /// No description provided for @done.
   ///
   /// In en, this message translates to:
@@ -607,6 +613,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter the password to join'**
   String get roomPasswordJoinHint;
+
+  /// No description provided for @incorrectRoomPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect room password'**
+  String get incorrectRoomPassword;
 
   /// No description provided for @close.
   ///
@@ -8669,6 +8681,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Room creation'**
   String get roomCreation;
+
+  /// No description provided for @roomDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Room defaults'**
+  String get roomDefaults;
 
   /// No description provided for @joinRequest.
   ///

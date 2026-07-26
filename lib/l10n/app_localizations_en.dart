@@ -64,6 +64,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logout => 'Log out';
 
   @override
+  String get capsLockOn => 'Caps Lock is on';
+
+  @override
   String get done => 'Done';
 
   @override
@@ -309,6 +312,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomPasswordJoinHint => 'Enter the password to join';
+
+  @override
+  String get incorrectRoomPassword => 'Incorrect room password';
 
   @override
   String get close => 'Close';
@@ -5225,6 +5231,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomCreation => 'Room creation';
+
+  @override
+  String get roomDefaults => 'Room defaults';
 
   @override
   String get joinRequest => 'Join request';

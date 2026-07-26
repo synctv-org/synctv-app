@@ -63,6 +63,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logout => '退出登录';
 
   @override
+  String get capsLockOn => '大写锁定已开启';
+
+  @override
   String get done => '完成';
 
   @override
@@ -296,6 +299,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get roomPasswordJoinHint => '输入密码后加入房间';
+
+  @override
+  String get incorrectRoomPassword => '房间密码错误';
 
   @override
   String get close => '关闭';
@@ -4852,6 +4858,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get roomCreation => '建房';
+
+  @override
+  String get roomDefaults => '房间默认设置';
 
   @override
   String get joinRequest => '加入';

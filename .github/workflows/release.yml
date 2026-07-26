@@ -58,6 +58,7 @@ env:
   FLUTTER_VERSION: "3.44.8"
   RUST_VERSION: "1.97.1"
   SYNCTV_BUILT_IN_SERVER_URL: ${{ vars.SYNCTV_BUILT_IN_SERVER_URL }}
+  SYNCTV_STORE_BUILT_IN_SERVER_URL: ${{ vars.SYNCTV_STORE_BUILT_IN_SERVER_URL || '' }}
   SYNCTV_PASSKEY_RP_IDS: ${{ vars.SYNCTV_PASSKEY_RP_IDS }}
   SYNCTV_GOOGLE_PLAY_APP_SIGNING_SHA256: ${{ vars.SYNCTV_GOOGLE_PLAY_APP_SIGNING_SHA256 }}
 
@@ -133,7 +134,7 @@ jobs:
     name: Android APKs
     needs: metadata
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Check out source
@@ -238,6 +239,46 @@ jobs:
 
       - name: Package Android artifacts
         run: bash tool/ci/package_release.sh android all "${{ needs.metadata.outputs.artifact-version }}" dist
+
+      - name: Validate Google Play signing
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_google_play
+        env:
+          SIGNING_MODE: ${{ steps.signing.outputs.mode }}
+        run: |
+          if [[ "$SIGNING_MODE" != "signed" ]]; then
+            echo "Google Play publication requires Android release signing" >&2
+            exit 1
+          fi
+
+      - name: Build Google Play App Bundle
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_google_play
+        run: >-
+          flutter build appbundle
+          --release
+          --no-pub
+          --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_STORE_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
+          --build-name "${{ needs.metadata.outputs.version }}"
+          --build-number "${{ needs.metadata.outputs.build-number }}"
+          --split-debug-info build/symbols/android-google-play
+
+      - name: Package Google Play App Bundle
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_google_play
+        run: |
+          install -d store-dist
+          install -m 0644 \
+            build/app/outputs/bundle/release/app-release.aab \
+            "store-dist/SyncTV-${{ needs.metadata.outputs.artifact-version }}-android-google-play.aab"
+
+      - name: Upload Google Play artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_google_play
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: store-android-google-play
+          path: store-dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
 
       - name: Publish self-hosted Passkey configuration
         if: steps.signing.outputs.mode == 'signed'
@@ -595,7 +636,7 @@ jobs:
     name: iOS
     needs: metadata
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Check out source
@@ -666,6 +707,64 @@ jobs:
           retention-days: 14
           compression-level: 0
 
+      - name: Validate iOS App Store signing
+        if: >-
+          (github.event_name == 'push' &&
+          github.ref_type == 'tag' &&
+          vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
+          (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store)
+        env:
+          SIGNING_MODE: ${{ steps.signing.outputs.mode }}
+        run: |
+          if [[ "$SIGNING_MODE" != "signed" ]]; then
+            echo "iOS App Store publication requires Apple distribution signing" >&2
+            exit 1
+          fi
+
+      - name: Build iOS App Store release
+        if: >-
+          steps.signing.outputs.mode == 'signed' &&
+          ((github.event_name == 'push' &&
+          github.ref_type == 'tag' &&
+          vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
+          (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store))
+        run: |
+          flutter build ipa \
+            --release \
+            --no-pub \
+            --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_STORE_BUILT_IN_SERVER_URL" \
+            --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
+            --build-name "${{ needs.metadata.outputs.version }}" \
+            --build-number "${{ needs.metadata.outputs.build-number }}" \
+            --split-debug-info build/symbols/ios-app-store \
+            --export-options-plist "$SYNCTV_IOS_EXPORT_OPTIONS_PLIST"
+          bash tool/ci/verify_apple_entitlements.sh \
+            build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app \
+            "$SYNCTV_PASSKEY_RP_IDS"
+          ipa="$(find build/ios/ipa -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+          if [[ -z "$ipa" ]]; then
+            echo "The App Store IPA was not generated" >&2
+            exit 1
+          fi
+          install -d store-dist
+          install -m 0644 "$ipa" \
+            "store-dist/SyncTV-${{ needs.metadata.outputs.artifact-version }}-ios-app-store.ipa"
+
+      - name: Upload iOS App Store artifact
+        if: >-
+          steps.signing.outputs.mode == 'signed' &&
+          ((github.event_name == 'push' &&
+          github.ref_type == 'tag' &&
+          vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
+          (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store))
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: store-ios-app-store
+          path: store-dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
   google-play:
     name: Publish Google Play
     if: github.event_name == 'workflow_dispatch' && inputs.publish_google_play
@@ -686,10 +785,10 @@ jobs:
           ruby-version: "3.4"
           bundler-cache: true
 
-      - name: Download signed Android artifacts
+      - name: Download Google Play artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: release-android
+          name: store-android-google-play
           path: dist
 
       - name: Upload Android App Bundle
@@ -698,7 +797,7 @@ jobs:
           SYNCTV_GOOGLE_PLAY_TRACK: ${{ inputs.google_play_track }}
           SYNCTV_GOOGLE_PLAY_RELEASE_STATUS: ${{ inputs.google_play_release_status }}
         run: |
-          aab="$(find dist -maxdepth 1 -type f -name 'SyncTV-*-android-universal-signed.aab' -print -quit)"
+          aab="$(find dist -maxdepth 1 -type f -name 'SyncTV-*-android-google-play.aab' -print -quit)"
           if [[ -z "$aab" ]]; then
             echo "A signed Android App Bundle is required for Google Play" >&2
             exit 1
@@ -729,10 +828,10 @@ jobs:
           ruby-version: "3.4"
           bundler-cache: true
 
-      - name: Download signed iOS artifact
+      - name: Download iOS App Store artifact
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
-          name: release-ios-signed
+          name: store-ios-app-store
           path: dist
 
       - name: Upload iOS app
@@ -743,7 +842,7 @@ jobs:
           SYNCTV_APP_STORE_SUBMIT_FOR_REVIEW: ${{ inputs.submit_app_store_review }}
           SYNCTV_RELEASE_VERSION: ${{ needs.metadata.outputs.version }}
         run: |
-          ipa="$(find dist -maxdepth 1 -type f -name 'SyncTV-*-ios-signed.ipa' -print -quit)"
+          ipa="$(find dist -maxdepth 1 -type f -name 'SyncTV-*-ios-app-store.ipa' -print -quit)"
           if [[ -z "$ipa" ]]; then
             echo "A signed App Store IPA is required for App Store Connect" >&2
             exit 1
@@ -802,7 +901,7 @@ jobs:
           flutter build macos
           --release
           --no-pub
-          --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
+          --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_STORE_BUILT_IN_SERVER_URL"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"

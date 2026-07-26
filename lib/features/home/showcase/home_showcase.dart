@@ -1,0 +1,226 @@
+import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+import 'package:responsive_framework/responsive_framework.dart';
+import 'package:synctv_app/features/home/presentation/home_view.dart';
+import 'package:synctv_app/l10n/l10n.dart';
+import 'package:synctv_app/features/home/domain/home_room_access.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
+    as client_enum;
+import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
+    as common_enum;
+import 'package:synctv_app/theme/app_responsive.dart';
+import 'package:synctv_app/theme/app_theme.dart';
+
+const _categories = [
+  RoomCategoryInfo(
+    id: 'movies',
+    key: 'movies',
+    name: 'Movies',
+    description: 'Feature films and cinema',
+    sortOrder: 10,
+    isEnabled: true,
+  ),
+  RoomCategoryInfo(
+    id: 'animation',
+    key: 'animation',
+    name: 'Animation',
+    description: 'Animation and anime',
+    sortOrder: 20,
+    isEnabled: true,
+  ),
+  RoomCategoryInfo(
+    id: 'documentary',
+    key: 'documentary',
+    name: 'Documentary',
+    description: 'Documentary screenings',
+    sortOrder: 30,
+    isEnabled: true,
+  ),
+  RoomCategoryInfo(
+    id: 'live',
+    key: 'live',
+    name: 'Live',
+    description: 'Live events',
+    sortOrder: 40,
+    isEnabled: true,
+  ),
+];
+
+SyncTvRoom _room({
+  required String id,
+  required String name,
+  required String description,
+  required String creator,
+  required int viewers,
+  required int members,
+  bool joined = false,
+  bool favorite = false,
+  int discoveryAccess = 0,
+}) => SyncTvRoom(
+  roomId: id,
+  roomName: name,
+  description: description,
+  creator: creator,
+  creatorId: 'user-$creator',
+  viewerCount: viewers,
+  memberCount: members,
+  joined: joined,
+  isFavorite: favorite,
+  canJoin: true,
+  discoveryAccess: discoveryAccess,
+);
+
+final homeShowcaseRooms = <SyncTvRoom>[
+  _room(
+    id: 'friday-cinema',
+    name: 'Friday Cinema Club',
+    description: 'A weekly pick for people who love great films.',
+    creator: 'Evelyn',
+    viewers: 128,
+    members: 842,
+    joined: true,
+    favorite: true,
+  ),
+  _room(
+    id: 'animation-after-hours',
+    name: 'Animation After Hours',
+    description: 'New releases, classics, and community favorites.',
+    creator: 'Mika',
+    viewers: 94,
+    members: 531,
+    joined: true,
+  ),
+  _room(
+    id: 'documentary-society',
+    name: 'Documentary Society',
+    description: 'Stories from science, nature, and contemporary life.',
+    creator: 'Noah',
+    viewers: 67,
+    members: 389,
+  ),
+  _room(
+    id: 'late-night-live',
+    name: 'Late Night Live',
+    description: 'Live sessions and performances from independent artists.',
+    creator: 'Sofia',
+    viewers: 215,
+    members: 1204,
+    discoveryAccess:
+        client_enum.RoomDiscoveryAccess.ROOM_DISCOVERY_ACCESS_GUEST.value,
+  ),
+  _room(
+    id: 'classic-film-archive',
+    name: 'Classic Film Archive',
+    description: 'Restored cinema and thoughtful post-film discussion.',
+    creator: 'Arthur',
+    viewers: 52,
+    members: 677,
+  ),
+  _room(
+    id: 'weekend-watch-party',
+    name: 'Weekend Watch Party',
+    description: 'A relaxed room for series premieres and finales.',
+    creator: 'Chloe',
+    viewers: 83,
+    members: 461,
+  ),
+];
+
+HomeViewState homeShowcaseState({
+  List<SyncTvRoom>? rooms,
+  String selectedCategoryId = '',
+}) => HomeViewState(
+  identityKind: HomeIdentityKind.account,
+  hasServer: true,
+  isLoading: false,
+  isLoadingTaxonomy: false,
+  rooms: rooms ?? homeShowcaseRooms,
+  featuredRooms: homeShowcaseRooms.take(5).toList(growable: false),
+  joinedRooms: homeShowcaseRooms
+      .where((room) => room.joined)
+      .toList(growable: false),
+  categories: _categories,
+  totalRooms: rooms?.length ?? homeShowcaseRooms.length,
+  page: 1,
+  pageCount: 1,
+  selectedCategoryId: selectedCategoryId,
+  selectedLabelCount: 0,
+  favoriteRoomIdsInFlight: const {},
+  currentUser: SyncTvUser(
+    id: 'showcase-user',
+    username: 'Alex Morgan',
+    email: 'alex@example.com',
+    role: common_enum.UserRole.USER_ROLE_USER.value,
+  ),
+);
+
+HomeViewCallbacks homeShowcaseCallbacks({
+  ValueChanged<SyncTvRoom>? onOpenRoom,
+  ValueChanged<SyncTvRoom>? onToggleFavorite,
+  ValueChanged<String>? onSearch,
+  ValueChanged<String>? onSelectCategory,
+}) => HomeViewCallbacks(
+  openServerSettings: () {},
+  openLanguageSelector: () {},
+  openLogin: () {},
+  openJoinRoom: () {},
+  openCreateRoom: () {},
+  openAccountCenter: () {},
+  openAdminSettings: () {},
+  logout: () {},
+  refresh: () async {},
+  search: onSearch ?? (_) {},
+  selectCategory: onSelectCategory ?? (_) {},
+  openLabelFilter: () {},
+  clearFilters: () {},
+  openRoom: onOpenRoom ?? (_) {},
+  toggleFavorite: onToggleFavorite ?? (_) {},
+  deleteRoom: (_) {},
+  goToPage: (_) {},
+);
+
+class HomeShowcaseApp extends StatefulWidget {
+  const HomeShowcaseApp({super.key, this.state, this.callbacks});
+
+  final HomeViewState? state;
+  final HomeViewCallbacks? callbacks;
+
+  @override
+  State<HomeShowcaseApp> createState() => _HomeShowcaseAppState();
+}
+
+class _HomeShowcaseAppState extends State<HomeShowcaseApp> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.light,
+    themeMode: ThemeMode.light,
+    locale: const Locale('en'),
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: const [
+      ...AppLocalizations.localizationsDelegates,
+      FLocalizations.delegate,
+    ],
+    builder: (context, child) {
+      final app = ResponsiveBreakpoints.builder(
+        breakpoints: AppBreakpoints.values,
+        child: child!,
+      );
+      return FTheme(data: FTheme.neutral.light.desktop, child: app);
+    },
+    home: HomeView(
+      state: widget.state ?? homeShowcaseState(),
+      callbacks: widget.callbacks ?? homeShowcaseCallbacks(),
+      searchController: _searchController,
+    ),
+  );
+}

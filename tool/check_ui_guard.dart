@@ -10,8 +10,8 @@ final _excludedPathSegments = <String>{
 };
 
 final _excludedFiles = <String>{
-  _normalize('lib/widgets/app_form_controls.dart'),
-  _normalize('lib/widgets/custom_video_player.dart'),
+  _normalize('lib/core/presentation/widgets/app_form_controls.dart'),
+  _normalize('lib/features/room/presentation/widgets/custom_video_player.dart'),
 };
 
 final _guardedPatterns = <_GuardedPattern>[
@@ -109,7 +109,7 @@ int checkUiGuard([List<String> args = const <String>[]]) {
     );
   }
   stderr.writeln(
-    'Use lib/widgets/app_form_controls.dart wrappers or add a narrowly-scoped exclusion for domain-specific widgets.',
+    'Use core presentation controls or add a narrowly scoped exclusion for a domain-specific widget.',
   );
   return 1;
 }

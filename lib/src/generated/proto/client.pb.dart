@@ -3090,12 +3090,16 @@ class ChatPlaybackMetadata extends $pb.GeneratedMessage {
     $core.String? playlistId,
     ProviderTarget? target,
     $core.double? positionSeconds,
+    $core.String? mediaName,
+    $core.String? playlistName,
   }) {
     final result = create();
     if (mediaId != null) result.mediaId = mediaId;
     if (playlistId != null) result.playlistId = playlistId;
     if (target != null) result.target = target;
     if (positionSeconds != null) result.positionSeconds = positionSeconds;
+    if (mediaName != null) result.mediaName = mediaName;
+    if (playlistName != null) result.playlistName = playlistName;
     return result;
   }
 
@@ -3117,6 +3121,8 @@ class ChatPlaybackMetadata extends $pb.GeneratedMessage {
     ..aOM<ProviderTarget>(3, _omitFieldNames ? '' : 'target',
         subBuilder: ProviderTarget.create)
     ..aD(4, _omitFieldNames ? '' : 'positionSeconds')
+    ..aOS(5, _omitFieldNames ? '' : 'mediaName')
+    ..aOS(6, _omitFieldNames ? '' : 'playlistName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3175,6 +3181,24 @@ class ChatPlaybackMetadata extends $pb.GeneratedMessage {
   $core.bool hasPositionSeconds() => $_has(3);
   @$pb.TagNumber(4)
   void clearPositionSeconds() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get mediaName => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set mediaName($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMediaName() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMediaName() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get playlistName => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set playlistName($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasPlaylistName() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearPlaylistName() => $_clearField(6);
 }
 
 class ChatUserMetadata extends $pb.GeneratedMessage {
@@ -15786,6 +15810,10 @@ class PlaybackHistoryEntry extends $pb.GeneratedMessage {
     $core.String? selectedByUserId,
     $fixnum.Int64? createdAt,
     $fixnum.Int64? updatedAt,
+    $core.String? mediaName,
+    $core.String? playlistName,
+    $1.SourceProvider? sourceProvider,
+    $core.String? providerInstanceName,
   }) {
     final result = create();
     if (id != null) result.id = id;
@@ -15796,6 +15824,11 @@ class PlaybackHistoryEntry extends $pb.GeneratedMessage {
     if (selectedByUserId != null) result.selectedByUserId = selectedByUserId;
     if (createdAt != null) result.createdAt = createdAt;
     if (updatedAt != null) result.updatedAt = updatedAt;
+    if (mediaName != null) result.mediaName = mediaName;
+    if (playlistName != null) result.playlistName = playlistName;
+    if (sourceProvider != null) result.sourceProvider = sourceProvider;
+    if (providerInstanceName != null)
+      result.providerInstanceName = providerInstanceName;
     return result;
   }
 
@@ -15821,6 +15854,11 @@ class PlaybackHistoryEntry extends $pb.GeneratedMessage {
     ..aOS(6, _omitFieldNames ? '' : 'selectedByUserId')
     ..aInt64(7, _omitFieldNames ? '' : 'createdAt')
     ..aInt64(8, _omitFieldNames ? '' : 'updatedAt')
+    ..aOS(9, _omitFieldNames ? '' : 'mediaName')
+    ..aOS(10, _omitFieldNames ? '' : 'playlistName')
+    ..aE<$1.SourceProvider>(11, _omitFieldNames ? '' : 'sourceProvider',
+        enumValues: $1.SourceProvider.values)
+    ..aOS(12, _omitFieldNames ? '' : 'providerInstanceName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -15915,6 +15953,42 @@ class PlaybackHistoryEntry extends $pb.GeneratedMessage {
   $core.bool hasUpdatedAt() => $_has(7);
   @$pb.TagNumber(8)
   void clearUpdatedAt() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get mediaName => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set mediaName($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasMediaName() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearMediaName() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.String get playlistName => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set playlistName($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasPlaylistName() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearPlaylistName() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $1.SourceProvider get sourceProvider => $_getN(10);
+  @$pb.TagNumber(11)
+  set sourceProvider($1.SourceProvider value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasSourceProvider() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearSourceProvider() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get providerInstanceName => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set providerInstanceName($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasProviderInstanceName() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearProviderInstanceName() => $_clearField(12);
 }
 
 class ListPlaybackHistoryRequest extends $pb.GeneratedMessage {

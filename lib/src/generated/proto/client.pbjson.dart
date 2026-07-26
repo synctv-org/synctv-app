@@ -1798,6 +1798,8 @@ const ChatPlaybackMetadata$json = {
       '10': 'positionSeconds',
       '17': true
     },
+    {'1': 'media_name', '3': 5, '4': 1, '5': 9, '10': 'mediaName'},
+    {'1': 'playlist_name', '3': 6, '4': 1, '5': 9, '10': 'playlistName'},
   ],
   '8': [
     {'1': '_position_seconds'},
@@ -1809,7 +1811,8 @@ final $typed_data.Uint8List chatPlaybackMetadataDescriptor = $convert.base64Deco
     'ChRDaGF0UGxheWJhY2tNZXRhZGF0YRIZCghtZWRpYV9pZBgBIAEoCVIHbWVkaWFJZBIfCgtwbG'
     'F5bGlzdF9pZBgCIAEoCVIKcGxheWxpc3RJZBI1CgZ0YXJnZXQYAyABKAsyHS5zeW5jdHYuY2xp'
     'ZW50LlByb3ZpZGVyVGFyZ2V0UgZ0YXJnZXQSLgoQcG9zaXRpb25fc2Vjb25kcxgEIAEoAUgAUg'
-    '9wb3NpdGlvblNlY29uZHOIAQFCEwoRX3Bvc2l0aW9uX3NlY29uZHM=');
+    '9wb3NpdGlvblNlY29uZHOIAQESHQoKbWVkaWFfbmFtZRgFIAEoCVIJbWVkaWFOYW1lEiMKDXBs'
+    'YXlsaXN0X25hbWUYBiABKAlSDHBsYXlsaXN0TmFtZUITChFfcG9zaXRpb25fc2Vjb25kcw==');
 
 @$core.Deprecated('Use chatUserMetadataDescriptor instead')
 const ChatUserMetadata$json = {
@@ -6097,6 +6100,23 @@ const PlaybackHistoryEntry$json = {
     },
     {'1': 'created_at', '3': 7, '4': 1, '5': 3, '10': 'createdAt'},
     {'1': 'updated_at', '3': 8, '4': 1, '5': 3, '10': 'updatedAt'},
+    {'1': 'media_name', '3': 9, '4': 1, '5': 9, '10': 'mediaName'},
+    {'1': 'playlist_name', '3': 10, '4': 1, '5': 9, '10': 'playlistName'},
+    {
+      '1': 'source_provider',
+      '3': 11,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.SourceProvider',
+      '10': 'sourceProvider'
+    },
+    {
+      '1': 'provider_instance_name',
+      '3': 12,
+      '4': 1,
+      '5': 9,
+      '10': 'providerInstanceName'
+    },
   ],
 };
 
@@ -6107,7 +6127,11 @@ final $typed_data.Uint8List playbackHistoryEntryDescriptor = $convert.base64Deco
     'ASgLMh0uc3luY3R2LmNsaWVudC5Qcm92aWRlclRhcmdldFIGdGFyZ2V0EikKEHBvc2l0aW9uX3'
     'NlY29uZHMYBSABKAFSD3Bvc2l0aW9uU2Vjb25kcxItChNzZWxlY3RlZF9ieV91c2VyX2lkGAYg'
     'ASgJUhBzZWxlY3RlZEJ5VXNlcklkEh0KCmNyZWF0ZWRfYXQYByABKANSCWNyZWF0ZWRBdBIdCg'
-    'p1cGRhdGVkX2F0GAggASgDUgl1cGRhdGVkQXQ=');
+    'p1cGRhdGVkX2F0GAggASgDUgl1cGRhdGVkQXQSHQoKbWVkaWFfbmFtZRgJIAEoCVIJbWVkaWFO'
+    'YW1lEiMKDXBsYXlsaXN0X25hbWUYCiABKAlSDHBsYXlsaXN0TmFtZRJNCg9zb3VyY2VfcHJvdm'
+    'lkZXIYCyABKA4yJC5zeW5jdHYuc291cmNlX2NvbmZpZy5Tb3VyY2VQcm92aWRlclIOc291cmNl'
+    'UHJvdmlkZXISNAoWcHJvdmlkZXJfaW5zdGFuY2VfbmFtZRgMIAEoCVIUcHJvdmlkZXJJbnN0YW'
+    '5jZU5hbWU=');
 
 @$core.Deprecated('Use listPlaybackHistoryRequestDescriptor instead')
 const ListPlaybackHistoryRequest$json = {

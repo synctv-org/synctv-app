@@ -5,16 +5,20 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:synctv_app/models/synctv_models.dart';
-import 'package:synctv_app/services/opaque_authenticator_service.dart';
-import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/contracts/synctv_models.dart';
+import 'package:synctv_app/core/media/local_image_upload.dart';
+import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
+import 'package:synctv_app/features/auth/data/synctv_opaque_auth_gateway.dart';
+import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
 
 import 'local_showcase_seed_config.dart';
 
 const _password = 'LocalShowcasePass2026!';
-final _opaqueAuthenticator = OpaqueAuthenticatorService();
+final _opaqueAuthenticator = OpaqueAuthenticatorService(
+  gateway: const SyncTvOpaqueAuthGateway(),
+);
 
 const _categorySeeds = <(String, String, String)>[
   (

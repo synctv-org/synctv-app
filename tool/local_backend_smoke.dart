@@ -6,12 +6,15 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:synctv_app/models/public_models.dart';
-import 'package:synctv_app/models/room_realtime_codec.dart';
-import 'package:synctv_app/services/room_realtime_connection.dart';
-import 'package:synctv_app/services/synctv_service.dart';
+import 'package:synctv_app/contracts/public_models.dart';
+import 'package:synctv_app/features/room/data/room_realtime_codec.dart';
+import 'package:synctv_app/features/room/data/room_realtime_connection.dart';
+import 'package:synctv_app/features/room/domain/room_realtime.dart';
+import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+
+import 'local_backend_test_auth.dart';
 
 void main() {
   test('local_backend_smoke', () async {
@@ -149,10 +152,7 @@ Future<void> runSmoke(String baseUrl) async {
   print('provider_binds=${providers.map((items) => items.length).join(',')}');
 
   await SyncTvService.logout();
-  await SyncTvService.loginWithDirectPassword(
-    username: 'root',
-    password: rootPassword,
-  );
+  await loginLocalRoot(rootPassword);
   final stats = await SyncTvService.adminGetServiceState();
   final users = await SyncTvService.adminListUsersPage(pageSize: 5);
   final rooms = await SyncTvService.adminListRoomsPage(pageSize: 5);
@@ -227,7 +227,15 @@ class _RealtimeSmokeProbe {
   static _RealtimeSmokeProbe connect(String roomId) {
     final connection = RoomRealtimeConnection.connect(
       roomId,
-      initialMessages: RoomRealtimeCodec.encodeInitialObservations(),
+      createWebSocketUri: SyncTvService.createRoomWebSocketUri,
+      encodeMessage: SyncTvService.encodeRealtimeMessageJson,
+      decodeMessage: SyncTvService.decodeRealtimeMessageJson,
+      nowMillis: SyncTvService.serverNowMillis,
+      initialMessages: [
+        ...RoomRealtimeCodec.encodeInitialObservations(),
+        RoomRealtimeCodec.encodePlaylistObservation(),
+        RoomRealtimeCodec.encodeChatEventsObservation(),
+      ],
     );
     final messages = <RoomRealtimeMessage>[];
     final errors = <Object>[];
@@ -326,19 +334,13 @@ Future<void> _ensureSmokeUser({
       'the smoke test create its user through the admin API.',
     );
   }
-  await SyncTvService.loginWithDirectPassword(
-    username: 'root',
-    password: rootPassword,
-  );
+  await loginLocalRoot(rootPassword);
   await SyncTvService.adminAddUser(
     username,
     password,
     common_enum.UserRole.USER_ROLE_USER.value,
   );
   await SyncTvService.logout();
-  await SyncTvService.loginWithDirectPassword(
-    username: username,
-    password: password,
-  );
+  await loginLocalPasswordUser(username, password);
   print('created user through admin');
 }
