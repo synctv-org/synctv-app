@@ -25,6 +25,7 @@ output_file="$2"
 asset_base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG"
 
 cat > "$output_file" <<'EOF'
+<!-- synctv-app-downloads:start -->
 ## Quick downloads
 
 > [!TIP]
@@ -160,6 +161,7 @@ cat >> "$output_file" <<'EOF'
 - macOS publishes DMG installers and portable ZIPs for Universal, Apple silicon, and Intel builds. Signed releases carry stapled Apple notarization tickets.
 - iOS publishes a signed IPA when signing secrets are configured and an unsigned re-signable archive for fork builds.
 - `SHA256SUMS.txt` authenticates every attached SyncTV artifact.
+<!-- synctv-app-downloads:end -->
 EOF
 
 generated_notes="$(gh api \
