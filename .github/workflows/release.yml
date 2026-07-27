@@ -78,6 +78,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       build-number: ${{ steps.version.outputs.build-number }}
       artifact-version: ${{ steps.version.outputs.artifact-version }}
+      stable: ${{ steps.version.outputs.stable }}
 
     steps:
       - name: Check out source
@@ -102,6 +103,11 @@ jobs:
 
           version="${raw_version%%+*}"
           build_number="${raw_version##*+}"
+          if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            stable=true
+          else
+            stable=false
+          fi
 
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
             tag_version="${GITHUB_REF_NAME#v}"
@@ -118,7 +124,7 @@ jobs:
               echo "Store publication must be dispatched from a version tag" >&2
               exit 1
             fi
-            if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            if [[ "$stable" != "true" ]]; then
               echo "Store publication requires a stable x.y.z version" >&2
               exit 1
             fi
@@ -128,6 +134,7 @@ jobs:
             echo "version=$version"
             echo "build-number=$build_number"
             echo "artifact-version=$version+$build_number"
+            echo "stable=$stable"
           } >> "$GITHUB_OUTPUT"
 
   android:
@@ -711,6 +718,7 @@ jobs:
         if: >-
           (github.event_name == 'push' &&
           github.ref_type == 'tag' &&
+          needs.metadata.outputs.stable == 'true' &&
           vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
           (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store)
         env:
@@ -726,6 +734,7 @@ jobs:
           steps.signing.outputs.mode == 'signed' &&
           ((github.event_name == 'push' &&
           github.ref_type == 'tag' &&
+          needs.metadata.outputs.stable == 'true' &&
           vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
           (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store))
         run: |
@@ -755,6 +764,7 @@ jobs:
           steps.signing.outputs.mode == 'signed' &&
           ((github.event_name == 'push' &&
           github.ref_type == 'tag' &&
+          needs.metadata.outputs.stable == 'true' &&
           vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
           (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store))
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -809,6 +819,7 @@ jobs:
     if: >-
       (github.event_name == 'push' &&
       github.ref_type == 'tag' &&
+      needs.metadata.outputs.stable == 'true' &&
       vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
       (github.event_name == 'workflow_dispatch' && inputs.publish_ios_app_store)
     needs: [metadata, ios]
@@ -854,6 +865,7 @@ jobs:
     if: >-
       (github.event_name == 'push' &&
       github.ref_type == 'tag' &&
+      needs.metadata.outputs.stable == 'true' &&
       vars.SYNCTV_PUBLISH_APP_STORE_ON_TAG == 'true') ||
       (github.event_name == 'workflow_dispatch' && inputs.publish_macos_app_store)
     needs: metadata
