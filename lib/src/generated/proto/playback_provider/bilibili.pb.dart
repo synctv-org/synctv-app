@@ -429,8 +429,8 @@ class BilibiliHlsManifestResponse extends $pb.GeneratedMessage {
   $0.StreamChunk ensureChunk() => $_ensure(0);
 }
 
-class GetBilibiliHlsSegmentRequest extends $pb.GeneratedMessage {
-  factory GetBilibiliHlsSegmentRequest({
+class GetBilibiliHlsResourceRequest extends $pb.GeneratedMessage {
+  factory GetBilibiliHlsResourceRequest({
     $core.String? version,
     $core.String? targetUrl,
     $core.String? sig,
@@ -439,6 +439,9 @@ class GetBilibiliHlsSegmentRequest extends $pb.GeneratedMessage {
     $fixnum.Int64? exp,
     $core.String? range,
     $core.bool? head,
+    $core.String? modeName,
+    $core.int? mediaIndex,
+    BilibiliHlsResourceKind? resourceKind,
   }) {
     final result = create();
     if (version != null) result.version = version;
@@ -449,20 +452,23 @@ class GetBilibiliHlsSegmentRequest extends $pb.GeneratedMessage {
     if (exp != null) result.exp = exp;
     if (range != null) result.range = range;
     if (head != null) result.head = head;
+    if (modeName != null) result.modeName = modeName;
+    if (mediaIndex != null) result.mediaIndex = mediaIndex;
+    if (resourceKind != null) result.resourceKind = resourceKind;
     return result;
   }
 
-  GetBilibiliHlsSegmentRequest._();
+  GetBilibiliHlsResourceRequest._();
 
-  factory GetBilibiliHlsSegmentRequest.fromBuffer($core.List<$core.int> data,
+  factory GetBilibiliHlsResourceRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetBilibiliHlsSegmentRequest.fromJson($core.String json,
+  factory GetBilibiliHlsResourceRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetBilibiliHlsSegmentRequest',
+      _omitMessageNames ? '' : 'GetBilibiliHlsResourceRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.bilibili'),
       createEmptyInstance: create)
@@ -474,29 +480,34 @@ class GetBilibiliHlsSegmentRequest extends $pb.GeneratedMessage {
     ..aInt64(6, _omitFieldNames ? '' : 'exp')
     ..aOS(7, _omitFieldNames ? '' : 'range')
     ..aOB(8, _omitFieldNames ? '' : 'head')
+    ..aOS(9, _omitFieldNames ? '' : 'modeName')
+    ..aI(10, _omitFieldNames ? '' : 'mediaIndex',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<BilibiliHlsResourceKind>(11, _omitFieldNames ? '' : 'resourceKind',
+        enumValues: BilibiliHlsResourceKind.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetBilibiliHlsSegmentRequest clone() => deepCopy();
+  GetBilibiliHlsResourceRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetBilibiliHlsSegmentRequest copyWith(
-          void Function(GetBilibiliHlsSegmentRequest) updates) =>
+  GetBilibiliHlsResourceRequest copyWith(
+          void Function(GetBilibiliHlsResourceRequest) updates) =>
       super.copyWith(
-              (message) => updates(message as GetBilibiliHlsSegmentRequest))
-          as GetBilibiliHlsSegmentRequest;
+              (message) => updates(message as GetBilibiliHlsResourceRequest))
+          as GetBilibiliHlsResourceRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetBilibiliHlsSegmentRequest create() =>
-      GetBilibiliHlsSegmentRequest._();
+  static GetBilibiliHlsResourceRequest create() =>
+      GetBilibiliHlsResourceRequest._();
   @$core.override
-  GetBilibiliHlsSegmentRequest createEmptyInstance() => create();
+  GetBilibiliHlsResourceRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetBilibiliHlsSegmentRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetBilibiliHlsSegmentRequest>(create);
-  static GetBilibiliHlsSegmentRequest? _defaultInstance;
+  static GetBilibiliHlsResourceRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetBilibiliHlsResourceRequest>(create);
+  static GetBilibiliHlsResourceRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get version => $_getSZ(0);
@@ -569,10 +580,37 @@ class GetBilibiliHlsSegmentRequest extends $pb.GeneratedMessage {
   $core.bool hasHead() => $_has(7);
   @$pb.TagNumber(8)
   void clearHead() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get modeName => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set modeName($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasModeName() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearModeName() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.int get mediaIndex => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set mediaIndex($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMediaIndex() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMediaIndex() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  BilibiliHlsResourceKind get resourceKind => $_getN(10);
+  @$pb.TagNumber(11)
+  set resourceKind(BilibiliHlsResourceKind value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasResourceKind() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearResourceKind() => $_clearField(11);
 }
 
-class BilibiliHlsSegmentResponse extends $pb.GeneratedMessage {
-  factory BilibiliHlsSegmentResponse({
+class BilibiliHlsResourceResponse extends $pb.GeneratedMessage {
+  factory BilibiliHlsResourceResponse({
     $0.StreamChunk? chunk,
   }) {
     final result = create();
@@ -580,17 +618,17 @@ class BilibiliHlsSegmentResponse extends $pb.GeneratedMessage {
     return result;
   }
 
-  BilibiliHlsSegmentResponse._();
+  BilibiliHlsResourceResponse._();
 
-  factory BilibiliHlsSegmentResponse.fromBuffer($core.List<$core.int> data,
+  factory BilibiliHlsResourceResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory BilibiliHlsSegmentResponse.fromJson($core.String json,
+  factory BilibiliHlsResourceResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'BilibiliHlsSegmentResponse',
+      _omitMessageNames ? '' : 'BilibiliHlsResourceResponse',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.bilibili'),
       createEmptyInstance: create)
@@ -599,25 +637,26 @@ class BilibiliHlsSegmentResponse extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BilibiliHlsSegmentResponse clone() => deepCopy();
+  BilibiliHlsResourceResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BilibiliHlsSegmentResponse copyWith(
-          void Function(BilibiliHlsSegmentResponse) updates) =>
+  BilibiliHlsResourceResponse copyWith(
+          void Function(BilibiliHlsResourceResponse) updates) =>
       super.copyWith(
-              (message) => updates(message as BilibiliHlsSegmentResponse))
-          as BilibiliHlsSegmentResponse;
+              (message) => updates(message as BilibiliHlsResourceResponse))
+          as BilibiliHlsResourceResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static BilibiliHlsSegmentResponse create() => BilibiliHlsSegmentResponse._();
+  static BilibiliHlsResourceResponse create() =>
+      BilibiliHlsResourceResponse._();
   @$core.override
-  BilibiliHlsSegmentResponse createEmptyInstance() => create();
+  BilibiliHlsResourceResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BilibiliHlsSegmentResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<BilibiliHlsSegmentResponse>(create);
-  static BilibiliHlsSegmentResponse? _defaultInstance;
+  static BilibiliHlsResourceResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BilibiliHlsResourceResponse>(create);
+  static BilibiliHlsResourceResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $0.StreamChunk get chunk => $_getN(0);
@@ -823,11 +862,14 @@ class BilibiliDashManifestResponse extends $pb.GeneratedMessage {
   $0.StreamChunk ensureChunk() => $_ensure(0);
 }
 
-class GetBilibiliDashSegmentRequest extends $pb.GeneratedMessage {
-  factory GetBilibiliDashSegmentRequest({
+class GetBilibiliDashResourceRequest extends $pb.GeneratedMessage {
+  factory GetBilibiliDashResourceRequest({
     $core.String? version,
     $core.String? modeName,
-    $core.int? urlIndex,
+    $core.String? scopeUrl,
+    $core.String? resourcePath,
+    $core.String? resourceQuery,
+    BilibiliDashResourceKind? resourceKind,
     $core.String? sig,
     $core.String? uid,
     $core.String? rid,
@@ -838,7 +880,10 @@ class GetBilibiliDashSegmentRequest extends $pb.GeneratedMessage {
     final result = create();
     if (version != null) result.version = version;
     if (modeName != null) result.modeName = modeName;
-    if (urlIndex != null) result.urlIndex = urlIndex;
+    if (scopeUrl != null) result.scopeUrl = scopeUrl;
+    if (resourcePath != null) result.resourcePath = resourcePath;
+    if (resourceQuery != null) result.resourceQuery = resourceQuery;
+    if (resourceKind != null) result.resourceKind = resourceKind;
     if (sig != null) result.sig = sig;
     if (uid != null) result.uid = uid;
     if (rid != null) result.rid = rid;
@@ -848,52 +893,56 @@ class GetBilibiliDashSegmentRequest extends $pb.GeneratedMessage {
     return result;
   }
 
-  GetBilibiliDashSegmentRequest._();
+  GetBilibiliDashResourceRequest._();
 
-  factory GetBilibiliDashSegmentRequest.fromBuffer($core.List<$core.int> data,
+  factory GetBilibiliDashResourceRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetBilibiliDashSegmentRequest.fromJson($core.String json,
+  factory GetBilibiliDashResourceRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetBilibiliDashSegmentRequest',
+      _omitMessageNames ? '' : 'GetBilibiliDashResourceRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.bilibili'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'version')
     ..aOS(2, _omitFieldNames ? '' : 'modeName')
-    ..aI(3, _omitFieldNames ? '' : 'urlIndex', fieldType: $pb.PbFieldType.OU3)
-    ..aOS(4, _omitFieldNames ? '' : 'sig')
-    ..aOS(5, _omitFieldNames ? '' : 'uid')
-    ..aOS(6, _omitFieldNames ? '' : 'rid')
-    ..aInt64(7, _omitFieldNames ? '' : 'exp')
-    ..aOS(8, _omitFieldNames ? '' : 'range')
-    ..aOB(9, _omitFieldNames ? '' : 'head')
+    ..aOS(3, _omitFieldNames ? '' : 'scopeUrl')
+    ..aOS(4, _omitFieldNames ? '' : 'resourcePath')
+    ..aOS(5, _omitFieldNames ? '' : 'resourceQuery')
+    ..aE<BilibiliDashResourceKind>(6, _omitFieldNames ? '' : 'resourceKind',
+        enumValues: BilibiliDashResourceKind.values)
+    ..aOS(7, _omitFieldNames ? '' : 'sig')
+    ..aOS(8, _omitFieldNames ? '' : 'uid')
+    ..aOS(9, _omitFieldNames ? '' : 'rid')
+    ..aInt64(10, _omitFieldNames ? '' : 'exp')
+    ..aOS(11, _omitFieldNames ? '' : 'range')
+    ..aOB(12, _omitFieldNames ? '' : 'head')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetBilibiliDashSegmentRequest clone() => deepCopy();
+  GetBilibiliDashResourceRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetBilibiliDashSegmentRequest copyWith(
-          void Function(GetBilibiliDashSegmentRequest) updates) =>
+  GetBilibiliDashResourceRequest copyWith(
+          void Function(GetBilibiliDashResourceRequest) updates) =>
       super.copyWith(
-              (message) => updates(message as GetBilibiliDashSegmentRequest))
-          as GetBilibiliDashSegmentRequest;
+              (message) => updates(message as GetBilibiliDashResourceRequest))
+          as GetBilibiliDashResourceRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetBilibiliDashSegmentRequest create() =>
-      GetBilibiliDashSegmentRequest._();
+  static GetBilibiliDashResourceRequest create() =>
+      GetBilibiliDashResourceRequest._();
   @$core.override
-  GetBilibiliDashSegmentRequest createEmptyInstance() => create();
+  GetBilibiliDashResourceRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetBilibiliDashSegmentRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetBilibiliDashSegmentRequest>(create);
-  static GetBilibiliDashSegmentRequest? _defaultInstance;
+  static GetBilibiliDashResourceRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetBilibiliDashResourceRequest>(create);
+  static GetBilibiliDashResourceRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get version => $_getSZ(0);
@@ -914,71 +963,98 @@ class GetBilibiliDashSegmentRequest extends $pb.GeneratedMessage {
   void clearModeName() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.int get urlIndex => $_getIZ(2);
+  $core.String get scopeUrl => $_getSZ(2);
   @$pb.TagNumber(3)
-  set urlIndex($core.int value) => $_setUnsignedInt32(2, value);
+  set scopeUrl($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasUrlIndex() => $_has(2);
+  $core.bool hasScopeUrl() => $_has(2);
   @$pb.TagNumber(3)
-  void clearUrlIndex() => $_clearField(3);
+  void clearScopeUrl() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get sig => $_getSZ(3);
+  $core.String get resourcePath => $_getSZ(3);
   @$pb.TagNumber(4)
-  set sig($core.String value) => $_setString(3, value);
+  set resourcePath($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasSig() => $_has(3);
+  $core.bool hasResourcePath() => $_has(3);
   @$pb.TagNumber(4)
-  void clearSig() => $_clearField(4);
+  void clearResourcePath() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get uid => $_getSZ(4);
+  $core.String get resourceQuery => $_getSZ(4);
   @$pb.TagNumber(5)
-  set uid($core.String value) => $_setString(4, value);
+  set resourceQuery($core.String value) => $_setString(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasUid() => $_has(4);
+  $core.bool hasResourceQuery() => $_has(4);
   @$pb.TagNumber(5)
-  void clearUid() => $_clearField(5);
+  void clearResourceQuery() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.String get rid => $_getSZ(5);
+  BilibiliDashResourceKind get resourceKind => $_getN(5);
   @$pb.TagNumber(6)
-  set rid($core.String value) => $_setString(5, value);
+  set resourceKind(BilibiliDashResourceKind value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasRid() => $_has(5);
+  $core.bool hasResourceKind() => $_has(5);
   @$pb.TagNumber(6)
-  void clearRid() => $_clearField(6);
+  void clearResourceKind() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $fixnum.Int64 get exp => $_getI64(6);
+  $core.String get sig => $_getSZ(6);
   @$pb.TagNumber(7)
-  set exp($fixnum.Int64 value) => $_setInt64(6, value);
+  set sig($core.String value) => $_setString(6, value);
   @$pb.TagNumber(7)
-  $core.bool hasExp() => $_has(6);
+  $core.bool hasSig() => $_has(6);
   @$pb.TagNumber(7)
-  void clearExp() => $_clearField(7);
+  void clearSig() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $core.String get range => $_getSZ(7);
+  $core.String get uid => $_getSZ(7);
   @$pb.TagNumber(8)
-  set range($core.String value) => $_setString(7, value);
+  set uid($core.String value) => $_setString(7, value);
   @$pb.TagNumber(8)
-  $core.bool hasRange() => $_has(7);
+  $core.bool hasUid() => $_has(7);
   @$pb.TagNumber(8)
-  void clearRange() => $_clearField(8);
+  void clearUid() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  $core.bool get head => $_getBF(8);
+  $core.String get rid => $_getSZ(8);
   @$pb.TagNumber(9)
-  set head($core.bool value) => $_setBool(8, value);
+  set rid($core.String value) => $_setString(8, value);
   @$pb.TagNumber(9)
-  $core.bool hasHead() => $_has(8);
+  $core.bool hasRid() => $_has(8);
   @$pb.TagNumber(9)
-  void clearHead() => $_clearField(9);
+  void clearRid() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get exp => $_getI64(9);
+  @$pb.TagNumber(10)
+  set exp($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasExp() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearExp() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.String get range => $_getSZ(10);
+  @$pb.TagNumber(11)
+  set range($core.String value) => $_setString(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasRange() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearRange() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.bool get head => $_getBF(11);
+  @$pb.TagNumber(12)
+  set head($core.bool value) => $_setBool(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasHead() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearHead() => $_clearField(12);
 }
 
-class BilibiliDashSegmentResponse extends $pb.GeneratedMessage {
-  factory BilibiliDashSegmentResponse({
+class BilibiliDashResourceResponse extends $pb.GeneratedMessage {
+  factory BilibiliDashResourceResponse({
     $0.StreamChunk? chunk,
   }) {
     final result = create();
@@ -986,17 +1062,17 @@ class BilibiliDashSegmentResponse extends $pb.GeneratedMessage {
     return result;
   }
 
-  BilibiliDashSegmentResponse._();
+  BilibiliDashResourceResponse._();
 
-  factory BilibiliDashSegmentResponse.fromBuffer($core.List<$core.int> data,
+  factory BilibiliDashResourceResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory BilibiliDashSegmentResponse.fromJson($core.String json,
+  factory BilibiliDashResourceResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'BilibiliDashSegmentResponse',
+      _omitMessageNames ? '' : 'BilibiliDashResourceResponse',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.bilibili'),
       createEmptyInstance: create)
@@ -1005,26 +1081,26 @@ class BilibiliDashSegmentResponse extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BilibiliDashSegmentResponse clone() => deepCopy();
+  BilibiliDashResourceResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  BilibiliDashSegmentResponse copyWith(
-          void Function(BilibiliDashSegmentResponse) updates) =>
+  BilibiliDashResourceResponse copyWith(
+          void Function(BilibiliDashResourceResponse) updates) =>
       super.copyWith(
-              (message) => updates(message as BilibiliDashSegmentResponse))
-          as BilibiliDashSegmentResponse;
+              (message) => updates(message as BilibiliDashResourceResponse))
+          as BilibiliDashResourceResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static BilibiliDashSegmentResponse create() =>
-      BilibiliDashSegmentResponse._();
+  static BilibiliDashResourceResponse create() =>
+      BilibiliDashResourceResponse._();
   @$core.override
-  BilibiliDashSegmentResponse createEmptyInstance() => create();
+  BilibiliDashResourceResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static BilibiliDashSegmentResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<BilibiliDashSegmentResponse>(create);
-  static BilibiliDashSegmentResponse? _defaultInstance;
+  static BilibiliDashResourceResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<BilibiliDashResourceResponse>(create);
+  static BilibiliDashResourceResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $0.StreamChunk get chunk => $_getN(0);
@@ -1643,14 +1719,14 @@ class BilibiliPlaybackProviderServiceApi {
           'GetHlsManifest',
           request,
           BilibiliHlsManifestResponse());
-  $async.Future<BilibiliHlsSegmentResponse> getHlsSegment(
-          $pb.ClientContext? ctx, GetBilibiliHlsSegmentRequest request) =>
-      _client.invoke<BilibiliHlsSegmentResponse>(
+  $async.Future<BilibiliHlsResourceResponse> getHlsResource(
+          $pb.ClientContext? ctx, GetBilibiliHlsResourceRequest request) =>
+      _client.invoke<BilibiliHlsResourceResponse>(
           ctx,
           'BilibiliPlaybackProviderService',
-          'GetHlsSegment',
+          'GetHlsResource',
           request,
-          BilibiliHlsSegmentResponse());
+          BilibiliHlsResourceResponse());
   $async.Future<BilibiliDashManifestResponse> getDashManifest(
           $pb.ClientContext? ctx, GetBilibiliDashManifestRequest request) =>
       _client.invoke<BilibiliDashManifestResponse>(
@@ -1659,14 +1735,14 @@ class BilibiliPlaybackProviderServiceApi {
           'GetDashManifest',
           request,
           BilibiliDashManifestResponse());
-  $async.Future<BilibiliDashSegmentResponse> getDashSegment(
-          $pb.ClientContext? ctx, GetBilibiliDashSegmentRequest request) =>
-      _client.invoke<BilibiliDashSegmentResponse>(
+  $async.Future<BilibiliDashResourceResponse> getDashResource(
+          $pb.ClientContext? ctx, GetBilibiliDashResourceRequest request) =>
+      _client.invoke<BilibiliDashResourceResponse>(
           ctx,
           'BilibiliPlaybackProviderService',
-          'GetDashSegment',
+          'GetDashResource',
           request,
-          BilibiliDashSegmentResponse());
+          BilibiliDashResourceResponse());
   $async.Future<BilibiliSubtitleResponse> getSubtitle(
           $pb.ClientContext? ctx, GetBilibiliSubtitleRequest request) =>
       _client.invoke<BilibiliSubtitleResponse>(

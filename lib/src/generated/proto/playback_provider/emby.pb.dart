@@ -17,8 +17,11 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'common.pb.dart' as $0;
+import 'emby.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+export 'emby.pbenum.dart';
 
 class GetEmbyMediaStreamRequest extends $pb.GeneratedMessage {
   factory GetEmbyMediaStreamRequest({
@@ -418,8 +421,8 @@ class EmbyHlsManifestResponse extends $pb.GeneratedMessage {
   $0.StreamChunk ensureChunk() => $_ensure(0);
 }
 
-class GetEmbyHlsSegmentRequest extends $pb.GeneratedMessage {
-  factory GetEmbyHlsSegmentRequest({
+class GetEmbyHlsResourceRequest extends $pb.GeneratedMessage {
+  factory GetEmbyHlsResourceRequest({
     $core.String? version,
     $core.String? targetUrl,
     $core.String? sig,
@@ -428,6 +431,9 @@ class GetEmbyHlsSegmentRequest extends $pb.GeneratedMessage {
     $fixnum.Int64? exp,
     $core.String? range,
     $core.bool? head,
+    $core.String? modeName,
+    $core.int? mediaIndex,
+    EmbyHlsResourceKind? resourceKind,
   }) {
     final result = create();
     if (version != null) result.version = version;
@@ -438,20 +444,23 @@ class GetEmbyHlsSegmentRequest extends $pb.GeneratedMessage {
     if (exp != null) result.exp = exp;
     if (range != null) result.range = range;
     if (head != null) result.head = head;
+    if (modeName != null) result.modeName = modeName;
+    if (mediaIndex != null) result.mediaIndex = mediaIndex;
+    if (resourceKind != null) result.resourceKind = resourceKind;
     return result;
   }
 
-  GetEmbyHlsSegmentRequest._();
+  GetEmbyHlsResourceRequest._();
 
-  factory GetEmbyHlsSegmentRequest.fromBuffer($core.List<$core.int> data,
+  factory GetEmbyHlsResourceRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetEmbyHlsSegmentRequest.fromJson($core.String json,
+  factory GetEmbyHlsResourceRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetEmbyHlsSegmentRequest',
+      _omitMessageNames ? '' : 'GetEmbyHlsResourceRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.emby'),
       createEmptyInstance: create)
@@ -463,27 +472,32 @@ class GetEmbyHlsSegmentRequest extends $pb.GeneratedMessage {
     ..aInt64(6, _omitFieldNames ? '' : 'exp')
     ..aOS(7, _omitFieldNames ? '' : 'range')
     ..aOB(8, _omitFieldNames ? '' : 'head')
+    ..aOS(9, _omitFieldNames ? '' : 'modeName')
+    ..aI(10, _omitFieldNames ? '' : 'mediaIndex',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<EmbyHlsResourceKind>(11, _omitFieldNames ? '' : 'resourceKind',
+        enumValues: EmbyHlsResourceKind.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetEmbyHlsSegmentRequest clone() => deepCopy();
+  GetEmbyHlsResourceRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetEmbyHlsSegmentRequest copyWith(
-          void Function(GetEmbyHlsSegmentRequest) updates) =>
-      super.copyWith((message) => updates(message as GetEmbyHlsSegmentRequest))
-          as GetEmbyHlsSegmentRequest;
+  GetEmbyHlsResourceRequest copyWith(
+          void Function(GetEmbyHlsResourceRequest) updates) =>
+      super.copyWith((message) => updates(message as GetEmbyHlsResourceRequest))
+          as GetEmbyHlsResourceRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetEmbyHlsSegmentRequest create() => GetEmbyHlsSegmentRequest._();
+  static GetEmbyHlsResourceRequest create() => GetEmbyHlsResourceRequest._();
   @$core.override
-  GetEmbyHlsSegmentRequest createEmptyInstance() => create();
+  GetEmbyHlsResourceRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetEmbyHlsSegmentRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetEmbyHlsSegmentRequest>(create);
-  static GetEmbyHlsSegmentRequest? _defaultInstance;
+  static GetEmbyHlsResourceRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetEmbyHlsResourceRequest>(create);
+  static GetEmbyHlsResourceRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get version => $_getSZ(0);
@@ -556,10 +570,37 @@ class GetEmbyHlsSegmentRequest extends $pb.GeneratedMessage {
   $core.bool hasHead() => $_has(7);
   @$pb.TagNumber(8)
   void clearHead() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get modeName => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set modeName($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasModeName() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearModeName() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.int get mediaIndex => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set mediaIndex($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMediaIndex() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMediaIndex() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  EmbyHlsResourceKind get resourceKind => $_getN(10);
+  @$pb.TagNumber(11)
+  set resourceKind(EmbyHlsResourceKind value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasResourceKind() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearResourceKind() => $_clearField(11);
 }
 
-class EmbyHlsSegmentResponse extends $pb.GeneratedMessage {
-  factory EmbyHlsSegmentResponse({
+class EmbyHlsResourceResponse extends $pb.GeneratedMessage {
+  factory EmbyHlsResourceResponse({
     $0.StreamChunk? chunk,
   }) {
     final result = create();
@@ -567,17 +608,17 @@ class EmbyHlsSegmentResponse extends $pb.GeneratedMessage {
     return result;
   }
 
-  EmbyHlsSegmentResponse._();
+  EmbyHlsResourceResponse._();
 
-  factory EmbyHlsSegmentResponse.fromBuffer($core.List<$core.int> data,
+  factory EmbyHlsResourceResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory EmbyHlsSegmentResponse.fromJson($core.String json,
+  factory EmbyHlsResourceResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'EmbyHlsSegmentResponse',
+      _omitMessageNames ? '' : 'EmbyHlsResourceResponse',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.emby'),
       createEmptyInstance: create)
@@ -586,24 +627,24 @@ class EmbyHlsSegmentResponse extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EmbyHlsSegmentResponse clone() => deepCopy();
+  EmbyHlsResourceResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  EmbyHlsSegmentResponse copyWith(
-          void Function(EmbyHlsSegmentResponse) updates) =>
-      super.copyWith((message) => updates(message as EmbyHlsSegmentResponse))
-          as EmbyHlsSegmentResponse;
+  EmbyHlsResourceResponse copyWith(
+          void Function(EmbyHlsResourceResponse) updates) =>
+      super.copyWith((message) => updates(message as EmbyHlsResourceResponse))
+          as EmbyHlsResourceResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static EmbyHlsSegmentResponse create() => EmbyHlsSegmentResponse._();
+  static EmbyHlsResourceResponse create() => EmbyHlsResourceResponse._();
   @$core.override
-  EmbyHlsSegmentResponse createEmptyInstance() => create();
+  EmbyHlsResourceResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static EmbyHlsSegmentResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<EmbyHlsSegmentResponse>(create);
-  static EmbyHlsSegmentResponse? _defaultInstance;
+  static EmbyHlsResourceResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EmbyHlsResourceResponse>(create);
+  static EmbyHlsResourceResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $0.StreamChunk get chunk => $_getN(0);
@@ -825,10 +866,14 @@ class EmbyPlaybackProviderServiceApi {
           'GetHlsManifest',
           request,
           EmbyHlsManifestResponse());
-  $async.Future<EmbyHlsSegmentResponse> getHlsSegment(
-          $pb.ClientContext? ctx, GetEmbyHlsSegmentRequest request) =>
-      _client.invoke<EmbyHlsSegmentResponse>(ctx, 'EmbyPlaybackProviderService',
-          'GetHlsSegment', request, EmbyHlsSegmentResponse());
+  $async.Future<EmbyHlsResourceResponse> getHlsResource(
+          $pb.ClientContext? ctx, GetEmbyHlsResourceRequest request) =>
+      _client.invoke<EmbyHlsResourceResponse>(
+          ctx,
+          'EmbyPlaybackProviderService',
+          'GetHlsResource',
+          request,
+          EmbyHlsResourceResponse());
   $async.Future<EmbySubtitleResponse> getSubtitle(
           $pb.ClientContext? ctx, GetEmbySubtitleRequest request) =>
       _client.invoke<EmbySubtitleResponse>(ctx, 'EmbyPlaybackProviderService',

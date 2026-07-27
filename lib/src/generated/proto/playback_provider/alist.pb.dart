@@ -16,9 +16,12 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'alist.pbenum.dart';
 import 'common.pb.dart' as $0;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
+
+export 'alist.pbenum.dart';
 
 class GetAlistFileStreamRequest extends $pb.GeneratedMessage {
   factory GetAlistFileStreamRequest({
@@ -426,8 +429,8 @@ class AlistTranscodedHlsManifestResponse extends $pb.GeneratedMessage {
   $0.StreamChunk ensureChunk() => $_ensure(0);
 }
 
-class GetAlistTranscodedHlsSegmentRequest extends $pb.GeneratedMessage {
-  factory GetAlistTranscodedHlsSegmentRequest({
+class GetAlistTranscodedHlsResourceRequest extends $pb.GeneratedMessage {
+  factory GetAlistTranscodedHlsResourceRequest({
     $core.String? version,
     $core.String? targetUrl,
     $core.String? sig,
@@ -436,6 +439,9 @@ class GetAlistTranscodedHlsSegmentRequest extends $pb.GeneratedMessage {
     $fixnum.Int64? exp,
     $core.String? range,
     $core.bool? head,
+    $core.String? modeName,
+    $core.int? mediaIndex,
+    AlistHlsResourceKind? resourceKind,
   }) {
     final result = create();
     if (version != null) result.version = version;
@@ -446,21 +452,24 @@ class GetAlistTranscodedHlsSegmentRequest extends $pb.GeneratedMessage {
     if (exp != null) result.exp = exp;
     if (range != null) result.range = range;
     if (head != null) result.head = head;
+    if (modeName != null) result.modeName = modeName;
+    if (mediaIndex != null) result.mediaIndex = mediaIndex;
+    if (resourceKind != null) result.resourceKind = resourceKind;
     return result;
   }
 
-  GetAlistTranscodedHlsSegmentRequest._();
+  GetAlistTranscodedHlsResourceRequest._();
 
-  factory GetAlistTranscodedHlsSegmentRequest.fromBuffer(
+  factory GetAlistTranscodedHlsResourceRequest.fromBuffer(
           $core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetAlistTranscodedHlsSegmentRequest.fromJson($core.String json,
+  factory GetAlistTranscodedHlsResourceRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetAlistTranscodedHlsSegmentRequest',
+      _omitMessageNames ? '' : 'GetAlistTranscodedHlsResourceRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.alist'),
       createEmptyInstance: create)
@@ -472,30 +481,35 @@ class GetAlistTranscodedHlsSegmentRequest extends $pb.GeneratedMessage {
     ..aInt64(6, _omitFieldNames ? '' : 'exp')
     ..aOS(7, _omitFieldNames ? '' : 'range')
     ..aOB(8, _omitFieldNames ? '' : 'head')
+    ..aOS(9, _omitFieldNames ? '' : 'modeName')
+    ..aI(10, _omitFieldNames ? '' : 'mediaIndex',
+        fieldType: $pb.PbFieldType.OU3)
+    ..aE<AlistHlsResourceKind>(11, _omitFieldNames ? '' : 'resourceKind',
+        enumValues: AlistHlsResourceKind.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAlistTranscodedHlsSegmentRequest clone() => deepCopy();
+  GetAlistTranscodedHlsResourceRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetAlistTranscodedHlsSegmentRequest copyWith(
-          void Function(GetAlistTranscodedHlsSegmentRequest) updates) =>
+  GetAlistTranscodedHlsResourceRequest copyWith(
+          void Function(GetAlistTranscodedHlsResourceRequest) updates) =>
       super.copyWith((message) =>
-              updates(message as GetAlistTranscodedHlsSegmentRequest))
-          as GetAlistTranscodedHlsSegmentRequest;
+              updates(message as GetAlistTranscodedHlsResourceRequest))
+          as GetAlistTranscodedHlsResourceRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetAlistTranscodedHlsSegmentRequest create() =>
-      GetAlistTranscodedHlsSegmentRequest._();
+  static GetAlistTranscodedHlsResourceRequest create() =>
+      GetAlistTranscodedHlsResourceRequest._();
   @$core.override
-  GetAlistTranscodedHlsSegmentRequest createEmptyInstance() => create();
+  GetAlistTranscodedHlsResourceRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetAlistTranscodedHlsSegmentRequest getDefault() =>
+  static GetAlistTranscodedHlsResourceRequest getDefault() =>
       _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          GetAlistTranscodedHlsSegmentRequest>(create);
-  static GetAlistTranscodedHlsSegmentRequest? _defaultInstance;
+          GetAlistTranscodedHlsResourceRequest>(create);
+  static GetAlistTranscodedHlsResourceRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get version => $_getSZ(0);
@@ -568,10 +582,37 @@ class GetAlistTranscodedHlsSegmentRequest extends $pb.GeneratedMessage {
   $core.bool hasHead() => $_has(7);
   @$pb.TagNumber(8)
   void clearHead() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get modeName => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set modeName($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasModeName() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearModeName() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.int get mediaIndex => $_getIZ(9);
+  @$pb.TagNumber(10)
+  set mediaIndex($core.int value) => $_setUnsignedInt32(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMediaIndex() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMediaIndex() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  AlistHlsResourceKind get resourceKind => $_getN(10);
+  @$pb.TagNumber(11)
+  set resourceKind(AlistHlsResourceKind value) => $_setField(11, value);
+  @$pb.TagNumber(11)
+  $core.bool hasResourceKind() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearResourceKind() => $_clearField(11);
 }
 
-class AlistTranscodedHlsSegmentResponse extends $pb.GeneratedMessage {
-  factory AlistTranscodedHlsSegmentResponse({
+class AlistTranscodedHlsResourceResponse extends $pb.GeneratedMessage {
+  factory AlistTranscodedHlsResourceResponse({
     $0.StreamChunk? chunk,
   }) {
     final result = create();
@@ -579,18 +620,18 @@ class AlistTranscodedHlsSegmentResponse extends $pb.GeneratedMessage {
     return result;
   }
 
-  AlistTranscodedHlsSegmentResponse._();
+  AlistTranscodedHlsResourceResponse._();
 
-  factory AlistTranscodedHlsSegmentResponse.fromBuffer(
+  factory AlistTranscodedHlsResourceResponse.fromBuffer(
           $core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory AlistTranscodedHlsSegmentResponse.fromJson($core.String json,
+  factory AlistTranscodedHlsResourceResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'AlistTranscodedHlsSegmentResponse',
+      _omitMessageNames ? '' : 'AlistTranscodedHlsResourceResponse',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.alist'),
       createEmptyInstance: create)
@@ -599,27 +640,27 @@ class AlistTranscodedHlsSegmentResponse extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AlistTranscodedHlsSegmentResponse clone() => deepCopy();
+  AlistTranscodedHlsResourceResponse clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  AlistTranscodedHlsSegmentResponse copyWith(
-          void Function(AlistTranscodedHlsSegmentResponse) updates) =>
+  AlistTranscodedHlsResourceResponse copyWith(
+          void Function(AlistTranscodedHlsResourceResponse) updates) =>
       super.copyWith((message) =>
-              updates(message as AlistTranscodedHlsSegmentResponse))
-          as AlistTranscodedHlsSegmentResponse;
+              updates(message as AlistTranscodedHlsResourceResponse))
+          as AlistTranscodedHlsResourceResponse;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static AlistTranscodedHlsSegmentResponse create() =>
-      AlistTranscodedHlsSegmentResponse._();
+  static AlistTranscodedHlsResourceResponse create() =>
+      AlistTranscodedHlsResourceResponse._();
   @$core.override
-  AlistTranscodedHlsSegmentResponse createEmptyInstance() => create();
+  AlistTranscodedHlsResourceResponse createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static AlistTranscodedHlsSegmentResponse getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<AlistTranscodedHlsSegmentResponse>(
+  static AlistTranscodedHlsResourceResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<AlistTranscodedHlsResourceResponse>(
           create);
-  static AlistTranscodedHlsSegmentResponse? _defaultInstance;
+  static AlistTranscodedHlsResourceResponse? _defaultInstance;
 
   @$pb.TagNumber(1)
   $0.StreamChunk get chunk => $_getN(0);
@@ -1006,15 +1047,15 @@ class AlistPlaybackProviderServiceApi {
           'GetTranscodedHlsManifest',
           request,
           AlistTranscodedHlsManifestResponse());
-  $async.Future<AlistTranscodedHlsSegmentResponse> getTranscodedHlsSegment(
+  $async.Future<AlistTranscodedHlsResourceResponse> getTranscodedHlsResource(
           $pb.ClientContext? ctx,
-          GetAlistTranscodedHlsSegmentRequest request) =>
-      _client.invoke<AlistTranscodedHlsSegmentResponse>(
+          GetAlistTranscodedHlsResourceRequest request) =>
+      _client.invoke<AlistTranscodedHlsResourceResponse>(
           ctx,
           'AlistPlaybackProviderService',
-          'GetTranscodedHlsSegment',
+          'GetTranscodedHlsResource',
           request,
-          AlistTranscodedHlsSegmentResponse());
+          AlistTranscodedHlsResourceResponse());
   $async.Future<AlistSubtitleResponse> getSubtitle(
           $pb.ClientContext? ctx, GetAlistSubtitleRequest request) =>
       _client.invoke<AlistSubtitleResponse>(ctx, 'AlistPlaybackProviderService',

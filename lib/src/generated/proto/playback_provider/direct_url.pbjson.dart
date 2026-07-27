@@ -17,6 +17,23 @@ import 'dart:typed_data' as $typed_data;
 
 import 'common.pbjson.dart' as $0;
 
+@$core.Deprecated('Use directUrlManifestResourceKindDescriptor instead')
+const DirectUrlManifestResourceKind$json = {
+  '1': 'DirectUrlManifestResourceKind',
+  '2': [
+    {'1': 'DIRECT_URL_MANIFEST_RESOURCE_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'DIRECT_URL_MANIFEST_RESOURCE_KIND_MEDIA', '2': 1},
+    {'1': 'DIRECT_URL_MANIFEST_RESOURCE_KIND_MANIFEST', '2': 2},
+  ],
+};
+
+/// Descriptor for `DirectUrlManifestResourceKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List directUrlManifestResourceKindDescriptor = $convert.base64Decode(
+    'Ch1EaXJlY3RVcmxNYW5pZmVzdFJlc291cmNlS2luZBIxCi1ESVJFQ1RfVVJMX01BTklGRVNUX1'
+    'JFU09VUkNFX0tJTkRfVU5TUEVDSUZJRUQQABIrCidESVJFQ1RfVVJMX01BTklGRVNUX1JFU09V'
+    'UkNFX0tJTkRfTUVESUEQARIuCipESVJFQ1RfVVJMX01BTklGRVNUX1JFU09VUkNFX0tJTkRfTU'
+    'FOSUZFU1QQAg==');
+
 @$core.Deprecated('Use getDirectUrlStreamRequestDescriptor instead')
 const GetDirectUrlStreamRequest$json = {
   '1': 'GetDirectUrlStreamRequest',
@@ -109,9 +126,9 @@ final $typed_data.Uint8List directUrlHlsManifestResponseDescriptor =
         'ChxEaXJlY3RVcmxIbHNNYW5pZmVzdFJlc3BvbnNlEkIKBWNodW5rGAEgASgLMiwuc3luY3R2Ln'
         'BsYXliYWNrX3Byb3ZpZGVyLmNvbW1vbi5TdHJlYW1DaHVua1IFY2h1bms=');
 
-@$core.Deprecated('Use getDirectUrlHlsSegmentRequestDescriptor instead')
-const GetDirectUrlHlsSegmentRequest$json = {
-  '1': 'GetDirectUrlHlsSegmentRequest',
+@$core.Deprecated('Use getDirectUrlHlsResourceRequestDescriptor instead')
+const GetDirectUrlHlsResourceRequest$json = {
+  '1': 'GetDirectUrlHlsResourceRequest',
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
     {'1': 'target_url', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'targetUrl'},
@@ -121,23 +138,38 @@ const GetDirectUrlHlsSegmentRequest$json = {
     {'1': 'exp', '3': 6, '4': 1, '5': 3, '10': 'exp'},
     {'1': 'range', '3': 7, '4': 1, '5': 9, '9': 0, '10': 'range', '17': true},
     {'1': 'head', '3': 8, '4': 1, '5': 8, '10': 'head'},
+    {'1': 'mode_name', '3': 9, '4': 1, '5': 9, '8': {}, '10': 'modeName'},
+    {'1': 'url_index', '3': 10, '4': 1, '5': 13, '10': 'urlIndex'},
+    {
+      '1': 'resource_kind',
+      '3': 11,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.playback_provider.direct_url.DirectUrlManifestResourceKind',
+      '8': {},
+      '10': 'resourceKind'
+    },
   ],
   '8': [
     {'1': '_range'},
   ],
 };
 
-/// Descriptor for `GetDirectUrlHlsSegmentRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getDirectUrlHlsSegmentRequestDescriptor = $convert.base64Decode(
-    'Ch1HZXREaXJlY3RVcmxIbHNTZWdtZW50UmVxdWVzdBIhCgd2ZXJzaW9uGAEgASgJQge6SARyAh'
-    'ABUgd2ZXJzaW9uEiYKCnRhcmdldF91cmwYAiABKAlCB7pIBHICEAFSCXRhcmdldFVybBIZCgNz'
-    'aWcYAyABKAlCB7pIBHICEAFSA3NpZxIZCgN1aWQYBCABKAlCB7pIBHICEAFSA3VpZBIZCgNyaW'
-    'QYBSABKAlCB7pIBHICEAFSA3JpZBIQCgNleHAYBiABKANSA2V4cBIZCgVyYW5nZRgHIAEoCUgA'
-    'UgVyYW5nZYgBARISCgRoZWFkGAggASgIUgRoZWFkQggKBl9yYW5nZQ==');
+/// Descriptor for `GetDirectUrlHlsResourceRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getDirectUrlHlsResourceRequestDescriptor = $convert.base64Decode(
+    'Ch5HZXREaXJlY3RVcmxIbHNSZXNvdXJjZVJlcXVlc3QSIQoHdmVyc2lvbhgBIAEoCUIHukgEcg'
+    'IQAVIHdmVyc2lvbhImCgp0YXJnZXRfdXJsGAIgASgJQge6SARyAhABUgl0YXJnZXRVcmwSGQoD'
+    'c2lnGAMgASgJQge6SARyAhABUgNzaWcSGQoDdWlkGAQgASgJQge6SARyAhABUgN1aWQSGQoDcm'
+    'lkGAUgASgJQge6SARyAhABUgNyaWQSEAoDZXhwGAYgASgDUgNleHASGQoFcmFuZ2UYByABKAlI'
+    'AFIFcmFuZ2WIAQESEgoEaGVhZBgIIAEoCFIEaGVhZBIkCgltb2RlX25hbWUYCSABKAlCB7pIBH'
+    'ICEAFSCG1vZGVOYW1lEhsKCXVybF9pbmRleBgKIAEoDVIIdXJsSW5kZXgScQoNcmVzb3VyY2Vf'
+    'a2luZBgLIAEoDjJCLnN5bmN0di5wbGF5YmFja19wcm92aWRlci5kaXJlY3RfdXJsLkRpcmVjdF'
+    'VybE1hbmlmZXN0UmVzb3VyY2VLaW5kQgi6SAWCAQIQAVIMcmVzb3VyY2VLaW5kQggKBl9yYW5n'
+    'ZQ==');
 
-@$core.Deprecated('Use directUrlHlsSegmentResponseDescriptor instead')
-const DirectUrlHlsSegmentResponse$json = {
-  '1': 'DirectUrlHlsSegmentResponse',
+@$core.Deprecated('Use directUrlHlsResourceResponseDescriptor instead')
+const DirectUrlHlsResourceResponse$json = {
+  '1': 'DirectUrlHlsResourceResponse',
   '2': [
     {
       '1': 'chunk',
@@ -150,11 +182,128 @@ const DirectUrlHlsSegmentResponse$json = {
   ],
 };
 
-/// Descriptor for `DirectUrlHlsSegmentResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List directUrlHlsSegmentResponseDescriptor =
+/// Descriptor for `DirectUrlHlsResourceResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List directUrlHlsResourceResponseDescriptor =
     $convert.base64Decode(
-        'ChtEaXJlY3RVcmxIbHNTZWdtZW50UmVzcG9uc2USQgoFY2h1bmsYASABKAsyLC5zeW5jdHYucG'
-        'xheWJhY2tfcHJvdmlkZXIuY29tbW9uLlN0cmVhbUNodW5rUgVjaHVuaw==');
+        'ChxEaXJlY3RVcmxIbHNSZXNvdXJjZVJlc3BvbnNlEkIKBWNodW5rGAEgASgLMiwuc3luY3R2Ln'
+        'BsYXliYWNrX3Byb3ZpZGVyLmNvbW1vbi5TdHJlYW1DaHVua1IFY2h1bms=');
+
+@$core.Deprecated('Use getDirectUrlDashManifestRequestDescriptor instead')
+const GetDirectUrlDashManifestRequest$json = {
+  '1': 'GetDirectUrlDashManifestRequest',
+  '2': [
+    {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
+    {'1': 'mode_name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'modeName'},
+    {'1': 'url_index', '3': 3, '4': 1, '5': 13, '10': 'urlIndex'},
+    {'1': 'sig', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'sig'},
+    {'1': 'uid', '3': 5, '4': 1, '5': 9, '8': {}, '10': 'uid'},
+    {'1': 'rid', '3': 6, '4': 1, '5': 9, '8': {}, '10': 'rid'},
+    {'1': 'exp', '3': 7, '4': 1, '5': 3, '10': 'exp'},
+  ],
+};
+
+/// Descriptor for `GetDirectUrlDashManifestRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getDirectUrlDashManifestRequestDescriptor = $convert.base64Decode(
+    'Ch9HZXREaXJlY3RVcmxEYXNoTWFuaWZlc3RSZXF1ZXN0EiEKB3ZlcnNpb24YASABKAlCB7pIBH'
+    'ICEAFSB3ZlcnNpb24SJAoJbW9kZV9uYW1lGAIgASgJQge6SARyAhABUghtb2RlTmFtZRIbCgl1'
+    'cmxfaW5kZXgYAyABKA1SCHVybEluZGV4EhkKA3NpZxgEIAEoCUIHukgEcgIQAVIDc2lnEhkKA3'
+    'VpZBgFIAEoCUIHukgEcgIQAVIDdWlkEhkKA3JpZBgGIAEoCUIHukgEcgIQAVIDcmlkEhAKA2V4'
+    'cBgHIAEoA1IDZXhw');
+
+@$core.Deprecated('Use directUrlDashManifestResponseDescriptor instead')
+const DirectUrlDashManifestResponse$json = {
+  '1': 'DirectUrlDashManifestResponse',
+  '2': [
+    {
+      '1': 'chunk',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.playback_provider.common.StreamChunk',
+      '10': 'chunk'
+    },
+  ],
+};
+
+/// Descriptor for `DirectUrlDashManifestResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List directUrlDashManifestResponseDescriptor =
+    $convert.base64Decode(
+        'Ch1EaXJlY3RVcmxEYXNoTWFuaWZlc3RSZXNwb25zZRJCCgVjaHVuaxgBIAEoCzIsLnN5bmN0di'
+        '5wbGF5YmFja19wcm92aWRlci5jb21tb24uU3RyZWFtQ2h1bmtSBWNodW5r');
+
+@$core.Deprecated('Use getDirectUrlDashResourceRequestDescriptor instead')
+const GetDirectUrlDashResourceRequest$json = {
+  '1': 'GetDirectUrlDashResourceRequest',
+  '2': [
+    {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
+    {'1': 'mode_name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'modeName'},
+    {'1': 'url_index', '3': 3, '4': 1, '5': 13, '10': 'urlIndex'},
+    {'1': 'scope_url', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'scopeUrl'},
+    {'1': 'resource_path', '3': 5, '4': 1, '5': 9, '10': 'resourcePath'},
+    {
+      '1': 'resource_query',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'resourceQuery',
+      '17': true
+    },
+    {
+      '1': 'resource_kind',
+      '3': 7,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.playback_provider.direct_url.DirectUrlManifestResourceKind',
+      '8': {},
+      '10': 'resourceKind'
+    },
+    {'1': 'sig', '3': 8, '4': 1, '5': 9, '8': {}, '10': 'sig'},
+    {'1': 'uid', '3': 9, '4': 1, '5': 9, '8': {}, '10': 'uid'},
+    {'1': 'rid', '3': 10, '4': 1, '5': 9, '8': {}, '10': 'rid'},
+    {'1': 'exp', '3': 11, '4': 1, '5': 3, '10': 'exp'},
+    {'1': 'range', '3': 12, '4': 1, '5': 9, '9': 1, '10': 'range', '17': true},
+    {'1': 'head', '3': 13, '4': 1, '5': 8, '10': 'head'},
+  ],
+  '8': [
+    {'1': '_resource_query'},
+    {'1': '_range'},
+  ],
+};
+
+/// Descriptor for `GetDirectUrlDashResourceRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getDirectUrlDashResourceRequestDescriptor = $convert.base64Decode(
+    'Ch9HZXREaXJlY3RVcmxEYXNoUmVzb3VyY2VSZXF1ZXN0EiEKB3ZlcnNpb24YASABKAlCB7pIBH'
+    'ICEAFSB3ZlcnNpb24SJAoJbW9kZV9uYW1lGAIgASgJQge6SARyAhABUghtb2RlTmFtZRIbCgl1'
+    'cmxfaW5kZXgYAyABKA1SCHVybEluZGV4EiQKCXNjb3BlX3VybBgEIAEoCUIHukgEcgIQAVIIc2'
+    'NvcGVVcmwSIwoNcmVzb3VyY2VfcGF0aBgFIAEoCVIMcmVzb3VyY2VQYXRoEioKDnJlc291cmNl'
+    'X3F1ZXJ5GAYgASgJSABSDXJlc291cmNlUXVlcnmIAQEScQoNcmVzb3VyY2Vfa2luZBgHIAEoDj'
+    'JCLnN5bmN0di5wbGF5YmFja19wcm92aWRlci5kaXJlY3RfdXJsLkRpcmVjdFVybE1hbmlmZXN0'
+    'UmVzb3VyY2VLaW5kQgi6SAWCAQIQAVIMcmVzb3VyY2VLaW5kEhkKA3NpZxgIIAEoCUIHukgEcg'
+    'IQAVIDc2lnEhkKA3VpZBgJIAEoCUIHukgEcgIQAVIDdWlkEhkKA3JpZBgKIAEoCUIHukgEcgIQ'
+    'AVIDcmlkEhAKA2V4cBgLIAEoA1IDZXhwEhkKBXJhbmdlGAwgASgJSAFSBXJhbmdliAEBEhIKBG'
+    'hlYWQYDSABKAhSBGhlYWRCEQoPX3Jlc291cmNlX3F1ZXJ5QggKBl9yYW5nZQ==');
+
+@$core.Deprecated('Use directUrlDashResourceResponseDescriptor instead')
+const DirectUrlDashResourceResponse$json = {
+  '1': 'DirectUrlDashResourceResponse',
+  '2': [
+    {
+      '1': 'chunk',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.playback_provider.common.StreamChunk',
+      '10': 'chunk'
+    },
+  ],
+};
+
+/// Descriptor for `DirectUrlDashResourceResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List directUrlDashResourceResponseDescriptor =
+    $convert.base64Decode(
+        'Ch1EaXJlY3RVcmxEYXNoUmVzb3VyY2VSZXNwb25zZRJCCgVjaHVuaxgBIAEoCzIsLnN5bmN0di'
+        '5wbGF5YmFja19wcm92aWRlci5jb21tb24uU3RyZWFtQ2h1bmtSBWNodW5r');
 
 @$core.Deprecated('Use getDirectUrlSubtitleRequestDescriptor instead')
 const GetDirectUrlSubtitleRequest$json = {
@@ -217,9 +366,24 @@ const $core.Map<$core.String, $core.dynamic>
       '6': true
     },
     {
-      '1': 'GetHlsSegment',
-      '2': '.synctv.playback_provider.direct_url.GetDirectUrlHlsSegmentRequest',
-      '3': '.synctv.playback_provider.direct_url.DirectUrlHlsSegmentResponse',
+      '1': 'GetHlsResource',
+      '2':
+          '.synctv.playback_provider.direct_url.GetDirectUrlHlsResourceRequest',
+      '3': '.synctv.playback_provider.direct_url.DirectUrlHlsResourceResponse',
+      '6': true
+    },
+    {
+      '1': 'GetDashManifest',
+      '2':
+          '.synctv.playback_provider.direct_url.GetDirectUrlDashManifestRequest',
+      '3': '.synctv.playback_provider.direct_url.DirectUrlDashManifestResponse',
+      '6': true
+    },
+    {
+      '1': 'GetDashResource',
+      '2':
+          '.synctv.playback_provider.direct_url.GetDirectUrlDashResourceRequest',
+      '3': '.synctv.playback_provider.direct_url.DirectUrlDashResourceResponse',
       '6': true
     },
     {
@@ -243,10 +407,18 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       GetDirectUrlHlsManifestRequest$json,
   '.synctv.playback_provider.direct_url.DirectUrlHlsManifestResponse':
       DirectUrlHlsManifestResponse$json,
-  '.synctv.playback_provider.direct_url.GetDirectUrlHlsSegmentRequest':
-      GetDirectUrlHlsSegmentRequest$json,
-  '.synctv.playback_provider.direct_url.DirectUrlHlsSegmentResponse':
-      DirectUrlHlsSegmentResponse$json,
+  '.synctv.playback_provider.direct_url.GetDirectUrlHlsResourceRequest':
+      GetDirectUrlHlsResourceRequest$json,
+  '.synctv.playback_provider.direct_url.DirectUrlHlsResourceResponse':
+      DirectUrlHlsResourceResponse$json,
+  '.synctv.playback_provider.direct_url.GetDirectUrlDashManifestRequest':
+      GetDirectUrlDashManifestRequest$json,
+  '.synctv.playback_provider.direct_url.DirectUrlDashManifestResponse':
+      DirectUrlDashManifestResponse$json,
+  '.synctv.playback_provider.direct_url.GetDirectUrlDashResourceRequest':
+      GetDirectUrlDashResourceRequest$json,
+  '.synctv.playback_provider.direct_url.DirectUrlDashResourceResponse':
+      DirectUrlDashResourceResponse$json,
   '.synctv.playback_provider.direct_url.GetDirectUrlSubtitleRequest':
       GetDirectUrlSubtitleRequest$json,
   '.synctv.playback_provider.direct_url.DirectUrlSubtitleResponse':
@@ -261,9 +433,15 @@ final $typed_data.Uint8List directUrlPlaybackProviderServiceDescriptor = $conver
     'Jlc3BvbnNlMAESmgEKDkdldEhsc01hbmlmZXN0EkMuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVy'
     'LmRpcmVjdF91cmwuR2V0RGlyZWN0VXJsSGxzTWFuaWZlc3RSZXF1ZXN0GkEuc3luY3R2LnBsYX'
     'liYWNrX3Byb3ZpZGVyLmRpcmVjdF91cmwuRGlyZWN0VXJsSGxzTWFuaWZlc3RSZXNwb25zZTAB'
-    'EpcBCg1HZXRIbHNTZWdtZW50EkIuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmRpcmVjdF91cm'
-    'wuR2V0RGlyZWN0VXJsSGxzU2VnbWVudFJlcXVlc3QaQC5zeW5jdHYucGxheWJhY2tfcHJvdmlk'
-    'ZXIuZGlyZWN0X3VybC5EaXJlY3RVcmxIbHNTZWdtZW50UmVzcG9uc2UwARKRAQoLR2V0U3VidG'
-    'l0bGUSQC5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuZGlyZWN0X3VybC5HZXREaXJlY3RVcmxT'
-    'dWJ0aXRsZVJlcXVlc3QaPi5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuZGlyZWN0X3VybC5EaX'
-    'JlY3RVcmxTdWJ0aXRsZVJlc3BvbnNlMAE=');
+    'EpoBCg5HZXRIbHNSZXNvdXJjZRJDLnN5bmN0di5wbGF5YmFja19wcm92aWRlci5kaXJlY3RfdX'
+    'JsLkdldERpcmVjdFVybEhsc1Jlc291cmNlUmVxdWVzdBpBLnN5bmN0di5wbGF5YmFja19wcm92'
+    'aWRlci5kaXJlY3RfdXJsLkRpcmVjdFVybEhsc1Jlc291cmNlUmVzcG9uc2UwARKdAQoPR2V0RG'
+    'FzaE1hbmlmZXN0EkQuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmRpcmVjdF91cmwuR2V0RGly'
+    'ZWN0VXJsRGFzaE1hbmlmZXN0UmVxdWVzdBpCLnN5bmN0di5wbGF5YmFja19wcm92aWRlci5kaX'
+    'JlY3RfdXJsLkRpcmVjdFVybERhc2hNYW5pZmVzdFJlc3BvbnNlMAESnQEKD0dldERhc2hSZXNv'
+    'dXJjZRJELnN5bmN0di5wbGF5YmFja19wcm92aWRlci5kaXJlY3RfdXJsLkdldERpcmVjdFVybE'
+    'Rhc2hSZXNvdXJjZVJlcXVlc3QaQi5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuZGlyZWN0X3Vy'
+    'bC5EaXJlY3RVcmxEYXNoUmVzb3VyY2VSZXNwb25zZTABEpEBCgtHZXRTdWJ0aXRsZRJALnN5bm'
+    'N0di5wbGF5YmFja19wcm92aWRlci5kaXJlY3RfdXJsLkdldERpcmVjdFVybFN1YnRpdGxlUmVx'
+    'dWVzdBo+LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5kaXJlY3RfdXJsLkRpcmVjdFVybFN1Yn'
+    'RpdGxlUmVzcG9uc2UwAQ==');

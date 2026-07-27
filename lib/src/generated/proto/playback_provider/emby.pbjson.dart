@@ -17,6 +17,22 @@ import 'dart:typed_data' as $typed_data;
 
 import 'common.pbjson.dart' as $0;
 
+@$core.Deprecated('Use embyHlsResourceKindDescriptor instead')
+const EmbyHlsResourceKind$json = {
+  '1': 'EmbyHlsResourceKind',
+  '2': [
+    {'1': 'EMBY_HLS_RESOURCE_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'EMBY_HLS_RESOURCE_KIND_MEDIA', '2': 1},
+    {'1': 'EMBY_HLS_RESOURCE_KIND_MANIFEST', '2': 2},
+  ],
+};
+
+/// Descriptor for `EmbyHlsResourceKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List embyHlsResourceKindDescriptor = $convert.base64Decode(
+    'ChNFbWJ5SGxzUmVzb3VyY2VLaW5kEiYKIkVNQllfSExTX1JFU09VUkNFX0tJTkRfVU5TUEVDSU'
+    'ZJRUQQABIgChxFTUJZX0hMU19SRVNPVVJDRV9LSU5EX01FRElBEAESIwofRU1CWV9ITFNfUkVT'
+    'T1VSQ0VfS0lORF9NQU5JRkVTVBAC');
+
 @$core.Deprecated('Use getEmbyMediaStreamRequestDescriptor instead')
 const GetEmbyMediaStreamRequest$json = {
   '1': 'GetEmbyMediaStreamRequest',
@@ -109,9 +125,9 @@ final $typed_data.Uint8List embyHlsManifestResponseDescriptor =
         'ChdFbWJ5SGxzTWFuaWZlc3RSZXNwb25zZRJCCgVjaHVuaxgBIAEoCzIsLnN5bmN0di5wbGF5Ym'
         'Fja19wcm92aWRlci5jb21tb24uU3RyZWFtQ2h1bmtSBWNodW5r');
 
-@$core.Deprecated('Use getEmbyHlsSegmentRequestDescriptor instead')
-const GetEmbyHlsSegmentRequest$json = {
-  '1': 'GetEmbyHlsSegmentRequest',
+@$core.Deprecated('Use getEmbyHlsResourceRequestDescriptor instead')
+const GetEmbyHlsResourceRequest$json = {
+  '1': 'GetEmbyHlsResourceRequest',
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
     {'1': 'target_url', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'targetUrl'},
@@ -121,23 +137,37 @@ const GetEmbyHlsSegmentRequest$json = {
     {'1': 'exp', '3': 6, '4': 1, '5': 3, '10': 'exp'},
     {'1': 'range', '3': 7, '4': 1, '5': 9, '9': 0, '10': 'range', '17': true},
     {'1': 'head', '3': 8, '4': 1, '5': 8, '10': 'head'},
+    {'1': 'mode_name', '3': 9, '4': 1, '5': 9, '8': {}, '10': 'modeName'},
+    {'1': 'media_index', '3': 10, '4': 1, '5': 13, '10': 'mediaIndex'},
+    {
+      '1': 'resource_kind',
+      '3': 11,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.playback_provider.emby.EmbyHlsResourceKind',
+      '8': {},
+      '10': 'resourceKind'
+    },
   ],
   '8': [
     {'1': '_range'},
   ],
 };
 
-/// Descriptor for `GetEmbyHlsSegmentRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getEmbyHlsSegmentRequestDescriptor = $convert.base64Decode(
-    'ChhHZXRFbWJ5SGxzU2VnbWVudFJlcXVlc3QSIQoHdmVyc2lvbhgBIAEoCUIHukgEcgIQAVIHdm'
-    'Vyc2lvbhImCgp0YXJnZXRfdXJsGAIgASgJQge6SARyAhABUgl0YXJnZXRVcmwSGQoDc2lnGAMg'
-    'ASgJQge6SARyAhABUgNzaWcSGQoDdWlkGAQgASgJQge6SARyAhABUgN1aWQSGQoDcmlkGAUgAS'
-    'gJQge6SARyAhABUgNyaWQSEAoDZXhwGAYgASgDUgNleHASGQoFcmFuZ2UYByABKAlIAFIFcmFu'
-    'Z2WIAQESEgoEaGVhZBgIIAEoCFIEaGVhZEIICgZfcmFuZ2U=');
+/// Descriptor for `GetEmbyHlsResourceRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getEmbyHlsResourceRequestDescriptor = $convert.base64Decode(
+    'ChlHZXRFbWJ5SGxzUmVzb3VyY2VSZXF1ZXN0EiEKB3ZlcnNpb24YASABKAlCB7pIBHICEAFSB3'
+    'ZlcnNpb24SJgoKdGFyZ2V0X3VybBgCIAEoCUIHukgEcgIQAVIJdGFyZ2V0VXJsEhkKA3NpZxgD'
+    'IAEoCUIHukgEcgIQAVIDc2lnEhkKA3VpZBgEIAEoCUIHukgEcgIQAVIDdWlkEhkKA3JpZBgFIA'
+    'EoCUIHukgEcgIQAVIDcmlkEhAKA2V4cBgGIAEoA1IDZXhwEhkKBXJhbmdlGAcgASgJSABSBXJh'
+    'bmdliAEBEhIKBGhlYWQYCCABKAhSBGhlYWQSJAoJbW9kZV9uYW1lGAkgASgJQge6SARyAhABUg'
+    'htb2RlTmFtZRIfCgttZWRpYV9pbmRleBgKIAEoDVIKbWVkaWFJbmRleBJhCg1yZXNvdXJjZV9r'
+    'aW5kGAsgASgOMjIuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmVtYnkuRW1ieUhsc1Jlc291cm'
+    'NlS2luZEIIukgFggECEAFSDHJlc291cmNlS2luZEIICgZfcmFuZ2U=');
 
-@$core.Deprecated('Use embyHlsSegmentResponseDescriptor instead')
-const EmbyHlsSegmentResponse$json = {
-  '1': 'EmbyHlsSegmentResponse',
+@$core.Deprecated('Use embyHlsResourceResponseDescriptor instead')
+const EmbyHlsResourceResponse$json = {
+  '1': 'EmbyHlsResourceResponse',
   '2': [
     {
       '1': 'chunk',
@@ -150,11 +180,11 @@ const EmbyHlsSegmentResponse$json = {
   ],
 };
 
-/// Descriptor for `EmbyHlsSegmentResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List embyHlsSegmentResponseDescriptor =
+/// Descriptor for `EmbyHlsResourceResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List embyHlsResourceResponseDescriptor =
     $convert.base64Decode(
-        'ChZFbWJ5SGxzU2VnbWVudFJlc3BvbnNlEkIKBWNodW5rGAEgASgLMiwuc3luY3R2LnBsYXliYW'
-        'NrX3Byb3ZpZGVyLmNvbW1vbi5TdHJlYW1DaHVua1IFY2h1bms=');
+        'ChdFbWJ5SGxzUmVzb3VyY2VSZXNwb25zZRJCCgVjaHVuaxgBIAEoCzIsLnN5bmN0di5wbGF5Ym'
+        'Fja19wcm92aWRlci5jb21tb24uU3RyZWFtQ2h1bmtSBWNodW5r');
 
 @$core.Deprecated('Use getEmbySubtitleRequestDescriptor instead')
 const GetEmbySubtitleRequest$json = {
@@ -215,9 +245,9 @@ const $core.Map<$core.String, $core.dynamic>
       '6': true
     },
     {
-      '1': 'GetHlsSegment',
-      '2': '.synctv.playback_provider.emby.GetEmbyHlsSegmentRequest',
-      '3': '.synctv.playback_provider.emby.EmbyHlsSegmentResponse',
+      '1': 'GetHlsResource',
+      '2': '.synctv.playback_provider.emby.GetEmbyHlsResourceRequest',
+      '3': '.synctv.playback_provider.emby.EmbyHlsResourceResponse',
       '6': true
     },
     {
@@ -241,10 +271,10 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       GetEmbyHlsManifestRequest$json,
   '.synctv.playback_provider.emby.EmbyHlsManifestResponse':
       EmbyHlsManifestResponse$json,
-  '.synctv.playback_provider.emby.GetEmbyHlsSegmentRequest':
-      GetEmbyHlsSegmentRequest$json,
-  '.synctv.playback_provider.emby.EmbyHlsSegmentResponse':
-      EmbyHlsSegmentResponse$json,
+  '.synctv.playback_provider.emby.GetEmbyHlsResourceRequest':
+      GetEmbyHlsResourceRequest$json,
+  '.synctv.playback_provider.emby.EmbyHlsResourceResponse':
+      EmbyHlsResourceResponse$json,
   '.synctv.playback_provider.emby.GetEmbySubtitleRequest':
       GetEmbySubtitleRequest$json,
   '.synctv.playback_provider.emby.EmbySubtitleResponse':
@@ -258,9 +288,9 @@ final $typed_data.Uint8List embyPlaybackProviderServiceDescriptor = $convert.bas
     'bmN0di5wbGF5YmFja19wcm92aWRlci5lbWJ5LkVtYnlNZWRpYVN0cmVhbVJlc3BvbnNlMAEShA'
     'EKDkdldEhsc01hbmlmZXN0Ejguc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmVtYnkuR2V0RW1i'
     'eUhsc01hbmlmZXN0UmVxdWVzdBo2LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5lbWJ5LkVtYn'
-    'lIbHNNYW5pZmVzdFJlc3BvbnNlMAESgQEKDUdldEhsc1NlZ21lbnQSNy5zeW5jdHYucGxheWJh'
-    'Y2tfcHJvdmlkZXIuZW1ieS5HZXRFbWJ5SGxzU2VnbWVudFJlcXVlc3QaNS5zeW5jdHYucGxheW'
-    'JhY2tfcHJvdmlkZXIuZW1ieS5FbWJ5SGxzU2VnbWVudFJlc3BvbnNlMAESewoLR2V0U3VidGl0'
-    'bGUSNS5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuZW1ieS5HZXRFbWJ5U3VidGl0bGVSZXF1ZX'
-    'N0GjMuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmVtYnkuRW1ieVN1YnRpdGxlUmVzcG9uc2Uw'
-    'AQ==');
+    'lIbHNNYW5pZmVzdFJlc3BvbnNlMAEShAEKDkdldEhsc1Jlc291cmNlEjguc3luY3R2LnBsYXli'
+    'YWNrX3Byb3ZpZGVyLmVtYnkuR2V0RW1ieUhsc1Jlc291cmNlUmVxdWVzdBo2LnN5bmN0di5wbG'
+    'F5YmFja19wcm92aWRlci5lbWJ5LkVtYnlIbHNSZXNvdXJjZVJlc3BvbnNlMAESewoLR2V0U3Vi'
+    'dGl0bGUSNS5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuZW1ieS5HZXRFbWJ5U3VidGl0bGVSZX'
+    'F1ZXN0GjMuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmVtYnkuRW1ieVN1YnRpdGxlUmVzcG9u'
+    'c2UwAQ==');

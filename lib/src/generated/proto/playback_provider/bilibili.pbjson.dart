@@ -33,6 +33,38 @@ final $typed_data.Uint8List bilibiliDashManifestModeDescriptor = $convert.base64
     'RFX1VOU1BFQ0lGSUVEEAASJgoiQklMSUJJTElfREFTSF9NQU5JRkVTVF9NT0RFX0RJUkVDVBAB'
     'EiUKIUJJTElCSUxJX0RBU0hfTUFOSUZFU1RfTU9ERV9QUk9YWRAC');
 
+@$core.Deprecated('Use bilibiliHlsResourceKindDescriptor instead')
+const BilibiliHlsResourceKind$json = {
+  '1': 'BilibiliHlsResourceKind',
+  '2': [
+    {'1': 'BILIBILI_HLS_RESOURCE_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'BILIBILI_HLS_RESOURCE_KIND_MEDIA', '2': 1},
+    {'1': 'BILIBILI_HLS_RESOURCE_KIND_MANIFEST', '2': 2},
+  ],
+};
+
+/// Descriptor for `BilibiliHlsResourceKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List bilibiliHlsResourceKindDescriptor = $convert.base64Decode(
+    'ChdCaWxpYmlsaUhsc1Jlc291cmNlS2luZBIqCiZCSUxJQklMSV9ITFNfUkVTT1VSQ0VfS0lORF'
+    '9VTlNQRUNJRklFRBAAEiQKIEJJTElCSUxJX0hMU19SRVNPVVJDRV9LSU5EX01FRElBEAESJwoj'
+    'QklMSUJJTElfSExTX1JFU09VUkNFX0tJTkRfTUFOSUZFU1QQAg==');
+
+@$core.Deprecated('Use bilibiliDashResourceKindDescriptor instead')
+const BilibiliDashResourceKind$json = {
+  '1': 'BilibiliDashResourceKind',
+  '2': [
+    {'1': 'BILIBILI_DASH_RESOURCE_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'BILIBILI_DASH_RESOURCE_KIND_MEDIA', '2': 1},
+    {'1': 'BILIBILI_DASH_RESOURCE_KIND_MANIFEST', '2': 2},
+  ],
+};
+
+/// Descriptor for `BilibiliDashResourceKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List bilibiliDashResourceKindDescriptor = $convert.base64Decode(
+    'ChhCaWxpYmlsaURhc2hSZXNvdXJjZUtpbmQSKwonQklMSUJJTElfREFTSF9SRVNPVVJDRV9LSU'
+    '5EX1VOU1BFQ0lGSUVEEAASJQohQklMSUJJTElfREFTSF9SRVNPVVJDRV9LSU5EX01FRElBEAES'
+    'KAokQklMSUJJTElfREFTSF9SRVNPVVJDRV9LSU5EX01BTklGRVNUEAI=');
+
 @$core.Deprecated('Use bilibiliLiveDanmakuEventTypeDescriptor instead')
 const BilibiliLiveDanmakuEventType$json = {
   '1': 'BilibiliLiveDanmakuEventType',
@@ -147,9 +179,9 @@ final $typed_data.Uint8List bilibiliHlsManifestResponseDescriptor =
         'ChtCaWxpYmlsaUhsc01hbmlmZXN0UmVzcG9uc2USQgoFY2h1bmsYASABKAsyLC5zeW5jdHYucG'
         'xheWJhY2tfcHJvdmlkZXIuY29tbW9uLlN0cmVhbUNodW5rUgVjaHVuaw==');
 
-@$core.Deprecated('Use getBilibiliHlsSegmentRequestDescriptor instead')
-const GetBilibiliHlsSegmentRequest$json = {
-  '1': 'GetBilibiliHlsSegmentRequest',
+@$core.Deprecated('Use getBilibiliHlsResourceRequestDescriptor instead')
+const GetBilibiliHlsResourceRequest$json = {
+  '1': 'GetBilibiliHlsResourceRequest',
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
     {'1': 'target_url', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'targetUrl'},
@@ -159,23 +191,37 @@ const GetBilibiliHlsSegmentRequest$json = {
     {'1': 'exp', '3': 6, '4': 1, '5': 3, '10': 'exp'},
     {'1': 'range', '3': 7, '4': 1, '5': 9, '9': 0, '10': 'range', '17': true},
     {'1': 'head', '3': 8, '4': 1, '5': 8, '10': 'head'},
+    {'1': 'mode_name', '3': 9, '4': 1, '5': 9, '8': {}, '10': 'modeName'},
+    {'1': 'media_index', '3': 10, '4': 1, '5': 13, '10': 'mediaIndex'},
+    {
+      '1': 'resource_kind',
+      '3': 11,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.playback_provider.bilibili.BilibiliHlsResourceKind',
+      '8': {},
+      '10': 'resourceKind'
+    },
   ],
   '8': [
     {'1': '_range'},
   ],
 };
 
-/// Descriptor for `GetBilibiliHlsSegmentRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getBilibiliHlsSegmentRequestDescriptor = $convert.base64Decode(
-    'ChxHZXRCaWxpYmlsaUhsc1NlZ21lbnRSZXF1ZXN0EiEKB3ZlcnNpb24YASABKAlCB7pIBHICEA'
-    'FSB3ZlcnNpb24SJgoKdGFyZ2V0X3VybBgCIAEoCUIHukgEcgIQAVIJdGFyZ2V0VXJsEhkKA3Np'
-    'ZxgDIAEoCUIHukgEcgIQAVIDc2lnEhkKA3VpZBgEIAEoCUIHukgEcgIQAVIDdWlkEhkKA3JpZB'
-    'gFIAEoCUIHukgEcgIQAVIDcmlkEhAKA2V4cBgGIAEoA1IDZXhwEhkKBXJhbmdlGAcgASgJSABS'
-    'BXJhbmdliAEBEhIKBGhlYWQYCCABKAhSBGhlYWRCCAoGX3Jhbmdl');
+/// Descriptor for `GetBilibiliHlsResourceRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getBilibiliHlsResourceRequestDescriptor = $convert.base64Decode(
+    'Ch1HZXRCaWxpYmlsaUhsc1Jlc291cmNlUmVxdWVzdBIhCgd2ZXJzaW9uGAEgASgJQge6SARyAh'
+    'ABUgd2ZXJzaW9uEiYKCnRhcmdldF91cmwYAiABKAlCB7pIBHICEAFSCXRhcmdldFVybBIZCgNz'
+    'aWcYAyABKAlCB7pIBHICEAFSA3NpZxIZCgN1aWQYBCABKAlCB7pIBHICEAFSA3VpZBIZCgNyaW'
+    'QYBSABKAlCB7pIBHICEAFSA3JpZBIQCgNleHAYBiABKANSA2V4cBIZCgVyYW5nZRgHIAEoCUgA'
+    'UgVyYW5nZYgBARISCgRoZWFkGAggASgIUgRoZWFkEiQKCW1vZGVfbmFtZRgJIAEoCUIHukgEcg'
+    'IQAVIIbW9kZU5hbWUSHwoLbWVkaWFfaW5kZXgYCiABKA1SCm1lZGlhSW5kZXgSaQoNcmVzb3Vy'
+    'Y2Vfa2luZBgLIAEoDjI6LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5iaWxpYmlsaS5CaWxpYm'
+    'lsaUhsc1Jlc291cmNlS2luZEIIukgFggECEAFSDHJlc291cmNlS2luZEIICgZfcmFuZ2U=');
 
-@$core.Deprecated('Use bilibiliHlsSegmentResponseDescriptor instead')
-const BilibiliHlsSegmentResponse$json = {
-  '1': 'BilibiliHlsSegmentResponse',
+@$core.Deprecated('Use bilibiliHlsResourceResponseDescriptor instead')
+const BilibiliHlsResourceResponse$json = {
+  '1': 'BilibiliHlsResourceResponse',
   '2': [
     {
       '1': 'chunk',
@@ -188,11 +234,11 @@ const BilibiliHlsSegmentResponse$json = {
   ],
 };
 
-/// Descriptor for `BilibiliHlsSegmentResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List bilibiliHlsSegmentResponseDescriptor =
+/// Descriptor for `BilibiliHlsResourceResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bilibiliHlsResourceResponseDescriptor =
     $convert.base64Decode(
-        'ChpCaWxpYmlsaUhsc1NlZ21lbnRSZXNwb25zZRJCCgVjaHVuaxgBIAEoCzIsLnN5bmN0di5wbG'
-        'F5YmFja19wcm92aWRlci5jb21tb24uU3RyZWFtQ2h1bmtSBWNodW5r');
+        'ChtCaWxpYmlsaUhsc1Jlc291cmNlUmVzcG9uc2USQgoFY2h1bmsYASABKAsyLC5zeW5jdHYucG'
+        'xheWJhY2tfcHJvdmlkZXIuY29tbW9uLlN0cmVhbUNodW5rUgVjaHVuaw==');
 
 @$core.Deprecated('Use getBilibiliDashManifestRequestDescriptor instead')
 const GetBilibiliDashManifestRequest$json = {
@@ -246,37 +292,61 @@ final $typed_data.Uint8List bilibiliDashManifestResponseDescriptor =
         'ChxCaWxpYmlsaURhc2hNYW5pZmVzdFJlc3BvbnNlEkIKBWNodW5rGAEgASgLMiwuc3luY3R2Ln'
         'BsYXliYWNrX3Byb3ZpZGVyLmNvbW1vbi5TdHJlYW1DaHVua1IFY2h1bms=');
 
-@$core.Deprecated('Use getBilibiliDashSegmentRequestDescriptor instead')
-const GetBilibiliDashSegmentRequest$json = {
-  '1': 'GetBilibiliDashSegmentRequest',
+@$core.Deprecated('Use getBilibiliDashResourceRequestDescriptor instead')
+const GetBilibiliDashResourceRequest$json = {
+  '1': 'GetBilibiliDashResourceRequest',
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
     {'1': 'mode_name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'modeName'},
-    {'1': 'url_index', '3': 3, '4': 1, '5': 13, '10': 'urlIndex'},
-    {'1': 'sig', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'sig'},
-    {'1': 'uid', '3': 5, '4': 1, '5': 9, '8': {}, '10': 'uid'},
-    {'1': 'rid', '3': 6, '4': 1, '5': 9, '8': {}, '10': 'rid'},
-    {'1': 'exp', '3': 7, '4': 1, '5': 3, '10': 'exp'},
-    {'1': 'range', '3': 8, '4': 1, '5': 9, '9': 0, '10': 'range', '17': true},
-    {'1': 'head', '3': 9, '4': 1, '5': 8, '10': 'head'},
+    {'1': 'scope_url', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'scopeUrl'},
+    {'1': 'resource_path', '3': 4, '4': 1, '5': 9, '10': 'resourcePath'},
+    {
+      '1': 'resource_query',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'resourceQuery',
+      '17': true
+    },
+    {
+      '1': 'resource_kind',
+      '3': 6,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.playback_provider.bilibili.BilibiliDashResourceKind',
+      '8': {},
+      '10': 'resourceKind'
+    },
+    {'1': 'sig', '3': 7, '4': 1, '5': 9, '8': {}, '10': 'sig'},
+    {'1': 'uid', '3': 8, '4': 1, '5': 9, '8': {}, '10': 'uid'},
+    {'1': 'rid', '3': 9, '4': 1, '5': 9, '8': {}, '10': 'rid'},
+    {'1': 'exp', '3': 10, '4': 1, '5': 3, '10': 'exp'},
+    {'1': 'range', '3': 11, '4': 1, '5': 9, '9': 1, '10': 'range', '17': true},
+    {'1': 'head', '3': 12, '4': 1, '5': 8, '10': 'head'},
   ],
   '8': [
+    {'1': '_resource_query'},
     {'1': '_range'},
   ],
 };
 
-/// Descriptor for `GetBilibiliDashSegmentRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getBilibiliDashSegmentRequestDescriptor = $convert.base64Decode(
-    'Ch1HZXRCaWxpYmlsaURhc2hTZWdtZW50UmVxdWVzdBIhCgd2ZXJzaW9uGAEgASgJQge6SARyAh'
-    'ABUgd2ZXJzaW9uEiQKCW1vZGVfbmFtZRgCIAEoCUIHukgEcgIQAVIIbW9kZU5hbWUSGwoJdXJs'
-    'X2luZGV4GAMgASgNUgh1cmxJbmRleBIZCgNzaWcYBCABKAlCB7pIBHICEAFSA3NpZxIZCgN1aW'
-    'QYBSABKAlCB7pIBHICEAFSA3VpZBIZCgNyaWQYBiABKAlCB7pIBHICEAFSA3JpZBIQCgNleHAY'
-    'ByABKANSA2V4cBIZCgVyYW5nZRgIIAEoCUgAUgVyYW5nZYgBARISCgRoZWFkGAkgASgIUgRoZW'
-    'FkQggKBl9yYW5nZQ==');
+/// Descriptor for `GetBilibiliDashResourceRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getBilibiliDashResourceRequestDescriptor = $convert.base64Decode(
+    'Ch5HZXRCaWxpYmlsaURhc2hSZXNvdXJjZVJlcXVlc3QSIQoHdmVyc2lvbhgBIAEoCUIHukgEcg'
+    'IQAVIHdmVyc2lvbhIkCgltb2RlX25hbWUYAiABKAlCB7pIBHICEAFSCG1vZGVOYW1lEiQKCXNj'
+    'b3BlX3VybBgDIAEoCUIHukgEcgIQAVIIc2NvcGVVcmwSIwoNcmVzb3VyY2VfcGF0aBgEIAEoCV'
+    'IMcmVzb3VyY2VQYXRoEioKDnJlc291cmNlX3F1ZXJ5GAUgASgJSABSDXJlc291cmNlUXVlcnmI'
+    'AQESagoNcmVzb3VyY2Vfa2luZBgGIAEoDjI7LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5iaW'
+    'xpYmlsaS5CaWxpYmlsaURhc2hSZXNvdXJjZUtpbmRCCLpIBYIBAhABUgxyZXNvdXJjZUtpbmQS'
+    'GQoDc2lnGAcgASgJQge6SARyAhABUgNzaWcSGQoDdWlkGAggASgJQge6SARyAhABUgN1aWQSGQ'
+    'oDcmlkGAkgASgJQge6SARyAhABUgNyaWQSEAoDZXhwGAogASgDUgNleHASGQoFcmFuZ2UYCyAB'
+    'KAlIAVIFcmFuZ2WIAQESEgoEaGVhZBgMIAEoCFIEaGVhZEIRCg9fcmVzb3VyY2VfcXVlcnlCCA'
+    'oGX3Jhbmdl');
 
-@$core.Deprecated('Use bilibiliDashSegmentResponseDescriptor instead')
-const BilibiliDashSegmentResponse$json = {
-  '1': 'BilibiliDashSegmentResponse',
+@$core.Deprecated('Use bilibiliDashResourceResponseDescriptor instead')
+const BilibiliDashResourceResponse$json = {
+  '1': 'BilibiliDashResourceResponse',
   '2': [
     {
       '1': 'chunk',
@@ -289,11 +359,11 @@ const BilibiliDashSegmentResponse$json = {
   ],
 };
 
-/// Descriptor for `BilibiliDashSegmentResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List bilibiliDashSegmentResponseDescriptor =
+/// Descriptor for `BilibiliDashResourceResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List bilibiliDashResourceResponseDescriptor =
     $convert.base64Decode(
-        'ChtCaWxpYmlsaURhc2hTZWdtZW50UmVzcG9uc2USQgoFY2h1bmsYASABKAsyLC5zeW5jdHYucG'
-        'xheWJhY2tfcHJvdmlkZXIuY29tbW9uLlN0cmVhbUNodW5rUgVjaHVuaw==');
+        'ChxCaWxpYmlsaURhc2hSZXNvdXJjZVJlc3BvbnNlEkIKBWNodW5rGAEgASgLMiwuc3luY3R2Ln'
+        'BsYXliYWNrX3Byb3ZpZGVyLmNvbW1vbi5TdHJlYW1DaHVua1IFY2h1bms=');
 
 @$core.Deprecated('Use getBilibiliSubtitleRequestDescriptor instead')
 const GetBilibiliSubtitleRequest$json = {
@@ -443,9 +513,9 @@ const $core.Map<$core.String, $core.dynamic>
       '6': true
     },
     {
-      '1': 'GetHlsSegment',
-      '2': '.synctv.playback_provider.bilibili.GetBilibiliHlsSegmentRequest',
-      '3': '.synctv.playback_provider.bilibili.BilibiliHlsSegmentResponse',
+      '1': 'GetHlsResource',
+      '2': '.synctv.playback_provider.bilibili.GetBilibiliHlsResourceRequest',
+      '3': '.synctv.playback_provider.bilibili.BilibiliHlsResourceResponse',
       '6': true
     },
     {
@@ -455,9 +525,9 @@ const $core.Map<$core.String, $core.dynamic>
       '6': true
     },
     {
-      '1': 'GetDashSegment',
-      '2': '.synctv.playback_provider.bilibili.GetBilibiliDashSegmentRequest',
-      '3': '.synctv.playback_provider.bilibili.BilibiliDashSegmentResponse',
+      '1': 'GetDashResource',
+      '2': '.synctv.playback_provider.bilibili.GetBilibiliDashResourceRequest',
+      '3': '.synctv.playback_provider.bilibili.BilibiliDashResourceResponse',
       '6': true
     },
     {
@@ -493,18 +563,18 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
       GetBilibiliHlsManifestRequest$json,
   '.synctv.playback_provider.bilibili.BilibiliHlsManifestResponse':
       BilibiliHlsManifestResponse$json,
-  '.synctv.playback_provider.bilibili.GetBilibiliHlsSegmentRequest':
-      GetBilibiliHlsSegmentRequest$json,
-  '.synctv.playback_provider.bilibili.BilibiliHlsSegmentResponse':
-      BilibiliHlsSegmentResponse$json,
+  '.synctv.playback_provider.bilibili.GetBilibiliHlsResourceRequest':
+      GetBilibiliHlsResourceRequest$json,
+  '.synctv.playback_provider.bilibili.BilibiliHlsResourceResponse':
+      BilibiliHlsResourceResponse$json,
   '.synctv.playback_provider.bilibili.GetBilibiliDashManifestRequest':
       GetBilibiliDashManifestRequest$json,
   '.synctv.playback_provider.bilibili.BilibiliDashManifestResponse':
       BilibiliDashManifestResponse$json,
-  '.synctv.playback_provider.bilibili.GetBilibiliDashSegmentRequest':
-      GetBilibiliDashSegmentRequest$json,
-  '.synctv.playback_provider.bilibili.BilibiliDashSegmentResponse':
-      BilibiliDashSegmentResponse$json,
+  '.synctv.playback_provider.bilibili.GetBilibiliDashResourceRequest':
+      GetBilibiliDashResourceRequest$json,
+  '.synctv.playback_provider.bilibili.BilibiliDashResourceResponse':
+      BilibiliDashResourceResponse$json,
   '.synctv.playback_provider.bilibili.GetBilibiliSubtitleRequest':
       GetBilibiliSubtitleRequest$json,
   '.synctv.playback_provider.bilibili.BilibiliSubtitleResponse':
@@ -527,20 +597,20 @@ final $typed_data.Uint8List bilibiliPlaybackProviderServiceDescriptor = $convert
     'lhU3RyZWFtUmVzcG9uc2UwARKUAQoOR2V0SGxzTWFuaWZlc3QSQC5zeW5jdHYucGxheWJhY2tf'
     'cHJvdmlkZXIuYmlsaWJpbGkuR2V0QmlsaWJpbGlIbHNNYW5pZmVzdFJlcXVlc3QaPi5zeW5jdH'
     'YucGxheWJhY2tfcHJvdmlkZXIuYmlsaWJpbGkuQmlsaWJpbGlIbHNNYW5pZmVzdFJlc3BvbnNl'
-    'MAESkQEKDUdldEhsc1NlZ21lbnQSPy5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuYmlsaWJpbG'
-    'kuR2V0QmlsaWJpbGlIbHNTZWdtZW50UmVxdWVzdBo9LnN5bmN0di5wbGF5YmFja19wcm92aWRl'
-    'ci5iaWxpYmlsaS5CaWxpYmlsaUhsc1NlZ21lbnRSZXNwb25zZTABEpcBCg9HZXREYXNoTWFuaW'
-    'Zlc3QSQS5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuYmlsaWJpbGkuR2V0QmlsaWJpbGlEYXNo'
-    'TWFuaWZlc3RSZXF1ZXN0Gj8uc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmJpbGliaWxpLkJpbG'
-    'liaWxpRGFzaE1hbmlmZXN0UmVzcG9uc2UwARKUAQoOR2V0RGFzaFNlZ21lbnQSQC5zeW5jdHYu'
-    'cGxheWJhY2tfcHJvdmlkZXIuYmlsaWJpbGkuR2V0QmlsaWJpbGlEYXNoU2VnbWVudFJlcXVlc3'
-    'QaPi5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuYmlsaWJpbGkuQmlsaWJpbGlEYXNoU2VnbWVu'
-    'dFJlc3BvbnNlMAESiwEKC0dldFN1YnRpdGxlEj0uc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLm'
-    'JpbGliaWxpLkdldEJpbGliaWxpU3VidGl0bGVSZXF1ZXN0Gjsuc3luY3R2LnBsYXliYWNrX3By'
-    'b3ZpZGVyLmJpbGliaWxpLkJpbGliaWxpU3VidGl0bGVSZXNwb25zZTABEpQBCg5HZXREYW5tYW'
-    't1RmlsZRJALnN5bmN0di5wbGF5YmFja19wcm92aWRlci5iaWxpYmlsaS5HZXRCaWxpYmlsaURh'
-    'bm1ha3VGaWxlUmVxdWVzdBo+LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5iaWxpYmlsaS5CaW'
-    'xpYmlsaURhbm1ha3VGaWxlUmVzcG9uc2UwARKVAQoQV2F0Y2hMaXZlRGFubWFrdRJCLnN5bmN0'
-    'di5wbGF5YmFja19wcm92aWRlci5iaWxpYmlsaS5XYXRjaEJpbGliaWxpTGl2ZURhbm1ha3VSZX'
-    'F1ZXN0Gjsuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmJpbGliaWxpLkJpbGliaWxpTGl2ZURh'
-    'bm1ha3VFdmVudDAB');
+    'MAESlAEKDkdldEhsc1Jlc291cmNlEkAuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmJpbGliaW'
+    'xpLkdldEJpbGliaWxpSGxzUmVzb3VyY2VSZXF1ZXN0Gj4uc3luY3R2LnBsYXliYWNrX3Byb3Zp'
+    'ZGVyLmJpbGliaWxpLkJpbGliaWxpSGxzUmVzb3VyY2VSZXNwb25zZTABEpcBCg9HZXREYXNoTW'
+    'FuaWZlc3QSQS5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIuYmlsaWJpbGkuR2V0QmlsaWJpbGlE'
+    'YXNoTWFuaWZlc3RSZXF1ZXN0Gj8uc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmJpbGliaWxpLk'
+    'JpbGliaWxpRGFzaE1hbmlmZXN0UmVzcG9uc2UwARKXAQoPR2V0RGFzaFJlc291cmNlEkEuc3lu'
+    'Y3R2LnBsYXliYWNrX3Byb3ZpZGVyLmJpbGliaWxpLkdldEJpbGliaWxpRGFzaFJlc291cmNlUm'
+    'VxdWVzdBo/LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5iaWxpYmlsaS5CaWxpYmlsaURhc2hS'
+    'ZXNvdXJjZVJlc3BvbnNlMAESiwEKC0dldFN1YnRpdGxlEj0uc3luY3R2LnBsYXliYWNrX3Byb3'
+    'ZpZGVyLmJpbGliaWxpLkdldEJpbGliaWxpU3VidGl0bGVSZXF1ZXN0Gjsuc3luY3R2LnBsYXli'
+    'YWNrX3Byb3ZpZGVyLmJpbGliaWxpLkJpbGliaWxpU3VidGl0bGVSZXNwb25zZTABEpQBCg5HZX'
+    'REYW5tYWt1RmlsZRJALnN5bmN0di5wbGF5YmFja19wcm92aWRlci5iaWxpYmlsaS5HZXRCaWxp'
+    'YmlsaURhbm1ha3VGaWxlUmVxdWVzdBo+LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5iaWxpYm'
+    'lsaS5CaWxpYmlsaURhbm1ha3VGaWxlUmVzcG9uc2UwARKVAQoQV2F0Y2hMaXZlRGFubWFrdRJC'
+    'LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5iaWxpYmlsaS5XYXRjaEJpbGliaWxpTGl2ZURhbm'
+    '1ha3VSZXF1ZXN0Gjsuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLmJpbGliaWxpLkJpbGliaWxp'
+    'TGl2ZURhbm1ha3VFdmVudDAB');
