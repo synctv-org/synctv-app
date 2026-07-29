@@ -1167,9 +1167,12 @@ class UserSettings extends $pb.GeneratedMessage {
 class OAuth2Settings extends $pb.GeneratedMessage {
   factory OAuth2Settings({
     $core.Iterable<OAuth2ProviderSettings>? providers,
+    $core.Iterable<$core.String>? allowedRedirectUrls,
   }) {
     final result = create();
     if (providers != null) result.providers.addAll(providers);
+    if (allowedRedirectUrls != null)
+      result.allowedRedirectUrls.addAll(allowedRedirectUrls);
     return result;
   }
 
@@ -1188,6 +1191,7 @@ class OAuth2Settings extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..pPM<OAuth2ProviderSettings>(1, _omitFieldNames ? '' : 'providers',
         subBuilder: OAuth2ProviderSettings.create)
+    ..pPS(2, _omitFieldNames ? '' : 'allowedRedirectUrls')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1211,6 +1215,9 @@ class OAuth2Settings extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<OAuth2ProviderSettings> get providers => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<$core.String> get allowedRedirectUrls => $_getList(1);
 }
 
 enum OAuth2ProviderSettings_Config {
@@ -3480,9 +3487,12 @@ class UserSettingsPatch extends $pb.GeneratedMessage {
 class OAuth2SettingsPatch extends $pb.GeneratedMessage {
   factory OAuth2SettingsPatch({
     $core.Iterable<OAuth2ProviderSettings>? providers,
+    $core.Iterable<$core.String>? allowedRedirectUrls,
   }) {
     final result = create();
     if (providers != null) result.providers.addAll(providers);
+    if (allowedRedirectUrls != null)
+      result.allowedRedirectUrls.addAll(allowedRedirectUrls);
     return result;
   }
 
@@ -3501,6 +3511,7 @@ class OAuth2SettingsPatch extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..pPM<OAuth2ProviderSettings>(1, _omitFieldNames ? '' : 'providers',
         subBuilder: OAuth2ProviderSettings.create)
+    ..pPS(2, _omitFieldNames ? '' : 'allowedRedirectUrls')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3524,6 +3535,9 @@ class OAuth2SettingsPatch extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<OAuth2ProviderSettings> get providers => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $pb.PbList<$core.String> get allowedRedirectUrls => $_getList(1);
 }
 
 class ProxySettingsPatch extends $pb.GeneratedMessage {

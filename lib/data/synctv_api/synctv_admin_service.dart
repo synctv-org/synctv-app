@@ -1312,7 +1312,7 @@ class SyncTvAdminDomainService {
         settings.user = optionalPatchSection(admin.UserSettingsPatch());
         break;
       case 'oauth2':
-        if (key != 'providers') {
+        if (key != 'providers' && key != 'allowedRedirectUrls') {
           throw ArgumentError.value(key, 'key', 'unsupported oauth2 setting');
         }
         settings.oauth2 = optionalPatchSection(admin.OAuth2SettingsPatch());

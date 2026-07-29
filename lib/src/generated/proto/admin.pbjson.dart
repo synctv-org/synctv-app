@@ -689,13 +689,21 @@ const OAuth2Settings$json = {
       '6': '.synctv.admin.OAuth2ProviderSettings',
       '10': 'providers'
     },
+    {
+      '1': 'allowed_redirect_urls',
+      '3': 2,
+      '4': 3,
+      '5': 9,
+      '10': 'allowedRedirectUrls'
+    },
   ],
 };
 
 /// Descriptor for `OAuth2Settings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2SettingsDescriptor = $convert.base64Decode(
     'Cg5PQXV0aDJTZXR0aW5ncxJCCglwcm92aWRlcnMYASADKAsyJC5zeW5jdHYuYWRtaW4uT0F1dG'
-    'gyUHJvdmlkZXJTZXR0aW5nc1IJcHJvdmlkZXJz');
+    'gyUHJvdmlkZXJTZXR0aW5nc1IJcHJvdmlkZXJzEjIKFWFsbG93ZWRfcmVkaXJlY3RfdXJscxgC'
+    'IAMoCVITYWxsb3dlZFJlZGlyZWN0VXJscw==');
 
 @$core.Deprecated('Use oAuth2ProviderSettingsDescriptor instead')
 const OAuth2ProviderSettings$json = {
@@ -1677,13 +1685,21 @@ const OAuth2SettingsPatch$json = {
       '6': '.synctv.admin.OAuth2ProviderSettings',
       '10': 'providers'
     },
+    {
+      '1': 'allowed_redirect_urls',
+      '3': 2,
+      '4': 3,
+      '5': 9,
+      '10': 'allowedRedirectUrls'
+    },
   ],
 };
 
 /// Descriptor for `OAuth2SettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2SettingsPatchDescriptor = $convert.base64Decode(
     'ChNPQXV0aDJTZXR0aW5nc1BhdGNoEkIKCXByb3ZpZGVycxgBIAMoCzIkLnN5bmN0di5hZG1pbi'
-    '5PQXV0aDJQcm92aWRlclNldHRpbmdzUglwcm92aWRlcnM=');
+    '5PQXV0aDJQcm92aWRlclNldHRpbmdzUglwcm92aWRlcnMSMgoVYWxsb3dlZF9yZWRpcmVjdF91'
+    'cmxzGAIgAygJUhNhbGxvd2VkUmVkaXJlY3RVcmxz');
 
 @$core.Deprecated('Use proxySettingsPatchDescriptor instead')
 const ProxySettingsPatch$json = {

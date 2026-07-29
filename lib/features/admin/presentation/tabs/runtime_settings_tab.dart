@@ -354,6 +354,31 @@ class _RuntimeSettingsSectionsTabState
                 onDelete: (name) =>
                     _deleteOAuth2Provider(selected, oauth2Providers, name),
               ),
+              if (selected.settings.containsKey('allowedRedirectUrls'))
+                _AdminPanelCard(
+                  isDark: isDark,
+                  child: _SettingTile(
+                    descriptor: _settingDescriptor(
+                      context.l10n,
+                      selected.name,
+                      'allowedRedirectUrls',
+                      selected.settings['allowedRedirectUrls'],
+                    ),
+                    value: _normalizedSettingValue(
+                      selected.name,
+                      'allowedRedirectUrls',
+                      selected.settings['allowedRedirectUrls'],
+                    ),
+                    saving: _savingSettings.contains(
+                      'oauth2.allowedRedirectUrls',
+                    ),
+                    onEdit: () => _editSetting(
+                      selected,
+                      'allowedRedirectUrls',
+                      selected.settings['allowedRedirectUrls'],
+                    ),
+                  ),
+                ),
             ],
           )
         : AppListView.builder(
@@ -793,6 +818,14 @@ _SettingDescriptor _settingDescriptor(
       icon: Icons.account_tree_outlined,
       kind: _SettingEditorKind.oauth2Providers,
       warning: l10n.externalLoginWarning,
+    ),
+    'oauth2.allowedRedirectUrls': _SettingDescriptor(
+      group: 'oauth2',
+      key: 'allowedRedirectUrls',
+      title: l10n.callbackUrl,
+      description: l10n.externalLoginDescription,
+      icon: Icons.link_rounded,
+      kind: _SettingEditorKind.stringList,
     ),
     'proxy.entryProxy': _SettingDescriptor(
       group: 'proxy',
