@@ -18,8 +18,8 @@ if [[ -n "${DART_DEFINES:-}" ]]; then
   for encoded in "${encoded_defines[@]}"; do
     decoded="$(decode_define "$encoded" || true)"
     case "$decoded" in
-      SYNCTV_OAUTH2_APP_LINK_ORIGIN=*)
-        OAUTH2_ORIGIN="${decoded#SYNCTV_OAUTH2_APP_LINK_ORIGIN=}"
+      SYNC_TV_OAUTH2_APP_LINK_ORIGIN=*)
+        OAUTH2_ORIGIN="${decoded#SYNC_TV_OAUTH2_APP_LINK_ORIGIN=}"
         ;;
       SYNCTV_PASSKEY_RP_IDS=*)
         PASSKEY_RP_IDS="${decoded#SYNCTV_PASSKEY_RP_IDS=}"
@@ -32,7 +32,7 @@ oauth2_host=""
 if [[ -n "$OAUTH2_ORIGIN" && -n "$SIGNING_TEAM" ]]; then
   oauth2_host="$(printf '%s\n' "$OAUTH2_ORIGIN" | sed -nE 's#^https://([^/:?#]+)(/[^?#]*)?$#\1#p')"
   if [[ -z "$oauth2_host" ]]; then
-    echo "SYNCTV_OAUTH2_APP_LINK_ORIGIN must be an HTTPS origin without a port, query, or fragment" >&2
+    echo "SYNC_TV_OAUTH2_APP_LINK_ORIGIN must be an HTTPS origin without a port, query, or fragment" >&2
     exit 1
   fi
 fi

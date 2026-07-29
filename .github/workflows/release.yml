@@ -753,7 +753,8 @@ jobs:
             --export-options-plist "$SYNCTV_IOS_EXPORT_OPTIONS_PLIST"
           bash tool/ci/verify_apple_entitlements.sh \
             build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app \
-            "$SYNCTV_PASSKEY_RP_IDS"
+            "$SYNCTV_PASSKEY_RP_IDS" \
+            "$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
           ipa="$(find build/ios/ipa -maxdepth 1 -type f -name '*.ipa' -print -quit)"
           if [[ -z "$ipa" ]]; then
             echo "The App Store IPA was not generated" >&2
@@ -931,7 +932,10 @@ jobs:
         run: |
           app="build/macos/Build/Products/Release/SyncTV.app"
           bash tool/ci/verify_macos_architecture.sh "$app" universal
-          bash tool/ci/verify_apple_entitlements.sh "$app" "$SYNCTV_PASSKEY_RP_IDS"
+          bash tool/ci/verify_apple_entitlements.sh \
+            "$app" \
+            "$SYNCTV_PASSKEY_RP_IDS" \
+            "$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
           bash tool/ci/verify_macos_distribution_signature.sh "$app"
           if [[ -z "$INSTALLER_SIGNING_IDENTITY" ]]; then
             echo "SYNCTV_MACOS_INSTALLER_SIGNING_IDENTITY is required" >&2
