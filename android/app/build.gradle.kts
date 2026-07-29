@@ -27,7 +27,7 @@ fun oauth2AppLinkHost(): String {
     providers.gradleProperty("syncTvOauth2AppLinkHost").orNull?.let { value ->
         if (value.isNotBlank()) return validateOauth2AppLinkHost(value)
     }
-    flutterDartDefine("SYNC_TV_OAUTH2_APP_LINK_ORIGIN")?.let { value ->
+    flutterDartDefine("SYNCTV_OAUTH2_APP_LINK_ORIGIN")?.let { value ->
         val uri = URI(value)
         if (
             uri.scheme != "https" ||
@@ -37,7 +37,7 @@ fun oauth2AppLinkHost(): String {
             !uri.fragment.isNullOrBlank()
         ) {
             throw GradleException(
-                "SYNC_TV_OAUTH2_APP_LINK_ORIGIN must be an https origin without port, query, or fragment"
+                "SYNCTV_OAUTH2_APP_LINK_ORIGIN must be an https origin without port, query, or fragment"
             )
         }
         return uri.host

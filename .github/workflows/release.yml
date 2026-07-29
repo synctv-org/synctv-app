@@ -745,7 +745,7 @@ jobs:
             --no-pub \
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_STORE_BUILT_IN_SERVER_URL" \
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
-            --dart-define "SYNC_TV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN" \
+            --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN" \
             --dart-define "SYNCTV_INCLUDE_THIRD_PARTY_PROVIDERS=false" \
             --build-name "${{ needs.metadata.outputs.version }}" \
             --build-number "${{ needs.metadata.outputs.build-number }}" \
@@ -920,7 +920,7 @@ jobs:
           --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_STORE_BUILT_IN_SERVER_URL"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
-          --dart-define "SYNC_TV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
+          --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
           --dart-define "SYNCTV_INCLUDE_THIRD_PARTY_PROVIDERS=false"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
