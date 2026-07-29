@@ -9581,7 +9581,6 @@ void main() {
                 'oauth2ProviderUserId': 'sub-123',
                 'oauth2ProviderUsername': 'alice-oidc',
                 'oauth2AvatarUrl': 'https://issuer.example.test/a.png',
-                'oauth2EmailTrusted': true,
                 'oauth2ProviderInstanceName': 'logto-main',
                 'oauth2ProviderIssuer': 'https://issuer.example.test',
               },
@@ -9609,11 +9608,9 @@ void main() {
       expect(review.oauth2ProviderUsername, 'alice-oidc');
       expect(review.oauth2ProviderIssuer, 'https://issuer.example.test');
       expect(review.oauth2AvatarUrl, 'https://issuer.example.test/a.png');
-      expect(review.oauth2EmailTrusted, isTrue);
       expect(review.details, contains('注册方式 OAuth2'));
       expect(review.details, contains('实例 logto-main'));
       expect(review.details, contains('Provider ID sub-123'));
-      expect(review.details, contains('OAuth2 邮箱可信'));
     } finally {
       await requests.cancel();
       await server.close(force: true);

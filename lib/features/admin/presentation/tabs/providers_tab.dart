@@ -291,23 +291,10 @@ class _AdminProviderTabState extends State<AdminProviderTab> {
                         value: _providerType,
                         options: {
                           context.l10n.allTypes: '',
-                          'Direct URL': 'directUrl',
-                          'AList': 'alist',
-                          'Emby': 'emby',
-                          'Bilibili': 'bilibili',
-                          'RTMP': 'rtmp',
-                          'Cloudreve': 'cloudreve',
-                          'Twitch': 'twitch',
-                          'YouTube': 'youtube',
-                          'Douyin': 'douyin',
-                          'TikTok': 'tiktok',
-                          'Huya': 'huya',
-                          'Douyu': 'douyu',
-                          'AcFun': 'acfun',
-                          'CCTV': 'cctv',
-                          'FNOS': 'fnos',
-                          'QNAP': 'qnap',
-                          'Live Proxy': 'liveProxy',
+                          for (final type in _providerTypeOptions(
+                            selectedFilter: _providerType,
+                          ))
+                            _providerTypeLabel(type): type,
                         },
                         onChanged: (value) {
                           if (value == null) return;

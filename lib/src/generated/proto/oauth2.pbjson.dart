@@ -30,6 +30,7 @@ const OAuth2ProviderType$json = {
     {'1': 'OAUTH2_PROVIDER_TYPE_OIDC', '2': 8},
     {'1': 'OAUTH2_PROVIDER_TYPE_FEISHU', '2': 9},
     {'1': 'OAUTH2_PROVIDER_TYPE_GITEE', '2': 10},
+    {'1': 'OAUTH2_PROVIDER_TYPE_APPLE', '2': 11},
   ],
 };
 
@@ -41,7 +42,8 @@ final $typed_data.Uint8List oAuth2ProviderTypeDescriptor = $convert.base64Decode
     '9WSURFUl9UWVBFX01JQ1JPU09GVBAEEiAKHE9BVVRIMl9QUk9WSURFUl9UWVBFX0RJU0NPUkQQ'
     'BRIgChxPQVVUSDJfUFJPVklERVJfVFlQRV9DQVNET09SEAYSHgoaT0FVVEgyX1BST1ZJREVSX1'
     'RZUEVfTE9HVE8QBxIdChlPQVVUSDJfUFJPVklERVJfVFlQRV9PSURDEAgSHwobT0FVVEgyX1BS'
-    'T1ZJREVSX1RZUEVfRkVJU0hVEAkSHgoaT0FVVEgyX1BST1ZJREVSX1RZUEVfR0lURUUQCg==');
+    'T1ZJREVSX1RZUEVfRkVJU0hVEAkSHgoaT0FVVEgyX1BST1ZJREVSX1RZUEVfR0lURUUQChIeCh'
+    'pPQVVUSDJfUFJPVklERVJfVFlQRV9BUFBMRRAL');
 
 @$core.Deprecated('Use oAuth2OperationDescriptor instead')
 const OAuth2Operation$json = {
@@ -526,11 +528,10 @@ const OAuth2UserInfo$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 9, '10': 'userId'},
     {'1': 'username', '3': 2, '4': 1, '5': 9, '10': 'username'},
-    {'1': 'email', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'email', '17': true},
-    {'1': 'avatar', '3': 4, '4': 1, '5': 9, '9': 1, '10': 'avatar', '17': true},
+    {'1': 'avatar', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'avatar', '17': true},
     {
       '1': 'role',
-      '3': 5,
+      '3': 4,
       '4': 1,
       '5': 14,
       '6': '.synctv.common.UserRole',
@@ -538,16 +539,15 @@ const OAuth2UserInfo$json = {
     },
     {
       '1': 'status',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 14,
       '6': '.synctv.common.UserStatus',
       '10': 'status'
     },
-    {'1': 'created_at', '3': 7, '4': 1, '5': 3, '10': 'createdAt'},
+    {'1': 'created_at', '3': 6, '4': 1, '5': 3, '10': 'createdAt'},
   ],
   '8': [
-    {'1': '_email'},
     {'1': '_avatar'},
   ],
 };
@@ -555,10 +555,10 @@ const OAuth2UserInfo$json = {
 /// Descriptor for `OAuth2UserInfo`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List oAuth2UserInfoDescriptor = $convert.base64Decode(
     'Cg5PQXV0aDJVc2VySW5mbxIXCgd1c2VyX2lkGAEgASgJUgZ1c2VySWQSGgoIdXNlcm5hbWUYAi'
-    'ABKAlSCHVzZXJuYW1lEhkKBWVtYWlsGAMgASgJSABSBWVtYWlsiAEBEhsKBmF2YXRhchgEIAEo'
-    'CUgBUgZhdmF0YXKIAQESKwoEcm9sZRgFIAEoDjIXLnN5bmN0di5jb21tb24uVXNlclJvbGVSBH'
-    'JvbGUSMQoGc3RhdHVzGAYgASgOMhkuc3luY3R2LmNvbW1vbi5Vc2VyU3RhdHVzUgZzdGF0dXMS'
-    'HQoKY3JlYXRlZF9hdBgHIAEoA1IJY3JlYXRlZEF0QggKBl9lbWFpbEIJCgdfYXZhdGFy');
+    'ABKAlSCHVzZXJuYW1lEhsKBmF2YXRhchgDIAEoCUgAUgZhdmF0YXKIAQESKwoEcm9sZRgEIAEo'
+    'DjIXLnN5bmN0di5jb21tb24uVXNlclJvbGVSBHJvbGUSMQoGc3RhdHVzGAUgASgOMhkuc3luY3'
+    'R2LmNvbW1vbi5Vc2VyU3RhdHVzUgZzdGF0dXMSHQoKY3JlYXRlZF9hdBgGIAEoA1IJY3JlYXRl'
+    'ZEF0QgkKB19hdmF0YXI=');
 
 const $core.Map<$core.String, $core.dynamic> OAuth2ServiceBase$json = {
   '1': 'OAuth2Service',

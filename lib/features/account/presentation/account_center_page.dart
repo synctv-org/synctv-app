@@ -14,6 +14,7 @@ import 'package:synctv_app/contracts/public_models.dart';
 import 'package:synctv_app/contracts/synctv_models.dart';
 import 'package:synctv_app/core/platform/device_display_name_service.dart';
 import 'package:synctv_app/features/auth/application/oauth2_callback_client.dart';
+import 'package:synctv_app/core/config/distribution_profile.dart';
 import 'package:synctv_app/features/auth/application/opaque_authenticator.dart';
 import 'package:synctv_app/features/auth/application/passkey_client.dart';
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
@@ -77,7 +78,7 @@ class AccountCenterPage extends StatefulWidget {
   final Future<void> Function(SyncTvRoom room) onOpenRoom;
   final Future<void> Function() onCreateRoom;
   final Future<void> Function(SyncTvRoom room) onManageRoom;
-  final Future<void> Function(int providerIndex) onOpenProviderBinding;
+  final Future<void> Function(String providerType) onOpenProviderBinding;
 
   const AccountCenterPage({
     super.key,
@@ -288,16 +289,22 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             sortBy: _roomSortBy,
           ),
         ),
-        _loadOptional(
-          errors,
-          _moduleOAuthProviders,
-          _gateway.listOAuth2Providers,
-        ),
-        _loadOptional(
-          errors,
-          _moduleOAuthLinks,
-          _gateway.getLinkedOAuth2Accounts,
-        ),
+        if (ProviderDistributionPolicy.current.allowsOAuth2)
+          _loadOptional(
+            errors,
+            _moduleOAuthProviders,
+            _gateway.listOAuth2Providers,
+          )
+        else
+          Future<List<OAuth2ProviderOption>?>.value(const []),
+        if (ProviderDistributionPolicy.current.allowsOAuth2)
+          _loadOptional(
+            errors,
+            _moduleOAuthLinks,
+            _gateway.getLinkedOAuth2Accounts,
+          )
+        else
+          Future<List<OAuth2LinkedAccount>?>.value(const []),
         if (serverPasskeyEnabled)
           _loadOptional(
             errors,
@@ -2752,99 +2759,108 @@ class _AccountCenterPageState extends State<AccountCenterPage>
                   description: context.l10n.alistAccountDescription,
                   icon: Icons.cloud_circle_rounded,
                   color: Colors.amber,
-                  onTap: () => widget.onOpenProviderBinding(0),
+                  onTap: () => widget.onOpenProviderBinding('alist'),
                 ),
                 _MediaProviderBindCard(
                   label: 'Cloudreve',
                   description: context.l10n.cloudreveAccountDescription,
                   icon: Icons.cloud_rounded,
                   color: Colors.teal,
-                  onTap: () => widget.onOpenProviderBinding(1),
+                  onTap: () => widget.onOpenProviderBinding('cloudreve'),
                 ),
                 _MediaProviderBindCard(
                   label: 'Emby',
                   description: context.l10n.embyAccountDescription,
                   icon: Icons.video_library_rounded,
                   color: Colors.green,
-                  onTap: () => widget.onOpenProviderBinding(2),
+                  onTap: () => widget.onOpenProviderBinding('emby'),
                 ),
-                _MediaProviderBindCard(
-                  label: 'Bilibili',
-                  description: context.l10n.bilibiliAccountDescription,
-                  icon: Icons.tv_rounded,
-                  color: const Color(0xFFFB7299),
-                  onTap: () => widget.onOpenProviderBinding(3),
-                ),
-                _MediaProviderBindCard(
-                  label: 'Twitch',
-                  description: context.l10n.twitchAccountDescription,
-                  icon: Icons.live_tv_rounded,
-                  color: const Color(0xFF9146FF),
-                  onTap: () => widget.onOpenProviderBinding(4),
-                ),
+                if (ProviderDistributionPolicy.current.allowsProvider(
+                  'bilibili',
+                ))
+                  _MediaProviderBindCard(
+                    label: 'Bilibili',
+                    description: context.l10n.bilibiliAccountDescription,
+                    icon: Icons.tv_rounded,
+                    color: const Color(0xFFFB7299),
+                    onTap: () => widget.onOpenProviderBinding('bilibili'),
+                  ),
+                if (ProviderDistributionPolicy.current.allowsProvider('twitch'))
+                  _MediaProviderBindCard(
+                    label: 'Twitch',
+                    description: context.l10n.twitchAccountDescription,
+                    icon: Icons.live_tv_rounded,
+                    color: const Color(0xFF9146FF),
+                    onTap: () => widget.onOpenProviderBinding('twitch'),
+                  ),
                 _MediaProviderBindCard(
                   label: 'FNOS',
                   description: context.l10n.fnosAccountDescription,
                   icon: Icons.storage_rounded,
                   color: const Color(0xFF087F5B),
-                  onTap: () => widget.onOpenProviderBinding(5),
+                  onTap: () => widget.onOpenProviderBinding('fnos'),
                 ),
                 _MediaProviderBindCard(
                   label: 'QNAP',
                   description: context.l10n.qnapAccountDescription,
                   icon: Icons.storage_rounded,
                   color: const Color(0xFF0076A8),
-                  onTap: () => widget.onOpenProviderBinding(6),
+                  onTap: () => widget.onOpenProviderBinding('qnap'),
                 ),
                 _MediaProviderBindCard(
                   label: 'Synology DSM',
                   description: context.l10n.synologyAccountDescription,
                   icon: Icons.video_library_rounded,
                   color: const Color(0xFF1578D3),
-                  onTap: () => widget.onOpenProviderBinding(7),
+                  onTap: () => widget.onOpenProviderBinding('synology'),
                 ),
                 _MediaProviderBindCard(
                   label: 'Nextcloud',
                   description: context.l10n.nextcloudAccountDescription,
                   icon: Icons.cloud_outlined,
                   color: const Color(0xFF0082C9),
-                  onTap: () => widget.onOpenProviderBinding(8),
+                  onTap: () => widget.onOpenProviderBinding('nextcloud'),
                 ),
                 _MediaProviderBindCard(
                   label: 'Seafile',
                   description: context.l10n.seafileAccountDescription,
                   icon: Icons.cloud_queue_rounded,
                   color: const Color(0xFFED7109),
-                  onTap: () => widget.onOpenProviderBinding(9),
+                  onTap: () => widget.onOpenProviderBinding('seafile'),
                 ),
                 _MediaProviderBindCard(
                   label: 'TrueNAS',
                   description: context.l10n.truenasAccountDescription,
                   icon: Icons.dns_rounded,
                   color: const Color(0xFF0095D5),
-                  onTap: () => widget.onOpenProviderBinding(10),
+                  onTap: () => widget.onOpenProviderBinding('truenas'),
                 ),
-                _MediaProviderBindCard(
-                  label: 'YouTube',
-                  description: context.l10n.youtubeAccountDescription,
-                  icon: Icons.smart_display_rounded,
-                  color: const Color(0xFFFF0033),
-                  onTap: () => widget.onOpenProviderBinding(11),
-                ),
-                _MediaProviderBindCard(
-                  label: 'Douyin',
-                  description: context.l10n.douyinAccountDescription,
-                  icon: Icons.music_video_rounded,
-                  color: const Color(0xFF00AFA7),
-                  onTap: () => widget.onOpenProviderBinding(12),
-                ),
-                _MediaProviderBindCard(
-                  label: 'TikTok',
-                  description: context.l10n.tiktokAccountDescription,
-                  icon: Icons.music_video_rounded,
-                  color: const Color(0xFFFE2C55),
-                  onTap: () => widget.onOpenProviderBinding(13),
-                ),
+                if (ProviderDistributionPolicy.current.allowsProvider(
+                  'youtube',
+                ))
+                  _MediaProviderBindCard(
+                    label: 'YouTube',
+                    description: context.l10n.youtubeAccountDescription,
+                    icon: Icons.smart_display_rounded,
+                    color: const Color(0xFFFF0033),
+                    onTap: () => widget.onOpenProviderBinding('youtube'),
+                  ),
+                if (ProviderDistributionPolicy.current.allowsProvider('douyin'))
+                  _MediaProviderBindCard(
+                    label: 'Douyin',
+                    description: context.l10n.douyinAccountDescription,
+                    icon: Icons.music_video_rounded,
+                    color: const Color(0xFF00AFA7),
+                    onTap: () => widget.onOpenProviderBinding('douyin'),
+                  ),
+                if (ProviderDistributionPolicy.current.allowsProvider('tiktok'))
+                  _MediaProviderBindCard(
+                    label: 'TikTok',
+                    description: context.l10n.tiktokAccountDescription,
+                    icon: Icons.music_video_rounded,
+                    color: const Color(0xFFFE2C55),
+                    onTap: () => widget.onOpenProviderBinding('tiktok'),
+                  ),
               ];
               if (compact) {
                 return Column(
@@ -2868,7 +2884,8 @@ class _AccountCenterPageState extends State<AccountCenterPage>
             },
           ),
         ),
-        if (showOAuth2Bindings) ...[
+        if (ProviderDistributionPolicy.current.allowsOAuth2 &&
+            showOAuth2Bindings) ...[
           const SizedBox(height: 12),
           if (showLinkedOAuth2) ...[
             _Section(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:synctv_app/core/config/distribution_profile.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/features/admin/presentation/admin_gateway_scope.dart';
@@ -171,10 +172,19 @@ List<String> _providerTypeOptions({
   Iterable<String> selectedProviders = const [],
 }) {
   final values = <String>{
-    ..._providerTypeLabels.keys,
-    ...selectedProviders.where((value) => value.isNotEmpty),
+    ..._providerTypeLabels.keys.where(
+      ProviderDistributionPolicy.current.allowsProvider,
+    ),
+    ...selectedProviders.where(
+      (value) =>
+          value.isNotEmpty &&
+          ProviderDistributionPolicy.current.allowsProvider(value),
+    ),
   };
-  if (selectedFilter.isNotEmpty) values.add(selectedFilter);
+  if (selectedFilter.isNotEmpty &&
+      ProviderDistributionPolicy.current.allowsProvider(selectedFilter)) {
+    values.add(selectedFilter);
+  }
   return values.toList(growable: false)..sort();
 }
 

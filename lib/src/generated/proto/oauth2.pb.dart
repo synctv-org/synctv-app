@@ -1278,7 +1278,6 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
   factory OAuth2UserInfo({
     $core.String? userId,
     $core.String? username,
-    $core.String? email,
     $core.String? avatar,
     $0.UserRole? role,
     $0.UserStatus? status,
@@ -1287,7 +1286,6 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
     final result = create();
     if (userId != null) result.userId = userId;
     if (username != null) result.username = username;
-    if (email != null) result.email = email;
     if (avatar != null) result.avatar = avatar;
     if (role != null) result.role = role;
     if (status != null) result.status = status;
@@ -1310,13 +1308,12 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'userId')
     ..aOS(2, _omitFieldNames ? '' : 'username')
-    ..aOS(3, _omitFieldNames ? '' : 'email')
-    ..aOS(4, _omitFieldNames ? '' : 'avatar')
-    ..aE<$0.UserRole>(5, _omitFieldNames ? '' : 'role',
+    ..aOS(3, _omitFieldNames ? '' : 'avatar')
+    ..aE<$0.UserRole>(4, _omitFieldNames ? '' : 'role',
         enumValues: $0.UserRole.values)
-    ..aE<$0.UserStatus>(6, _omitFieldNames ? '' : 'status',
+    ..aE<$0.UserStatus>(5, _omitFieldNames ? '' : 'status',
         enumValues: $0.UserStatus.values)
-    ..aInt64(7, _omitFieldNames ? '' : 'createdAt')
+    ..aInt64(6, _omitFieldNames ? '' : 'createdAt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1358,56 +1355,46 @@ class OAuth2UserInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearUsername() => $_clearField(2);
 
-  /// Email, when the provider or account record exposes one.
-  @$pb.TagNumber(3)
-  $core.String get email => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set email($core.String value) => $_setString(2, value);
-  @$pb.TagNumber(3)
-  $core.bool hasEmail() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearEmail() => $_clearField(3);
-
   /// Avatar URL, when available.
-  @$pb.TagNumber(4)
-  $core.String get avatar => $_getSZ(3);
-  @$pb.TagNumber(4)
-  set avatar($core.String value) => $_setString(3, value);
-  @$pb.TagNumber(4)
-  $core.bool hasAvatar() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearAvatar() => $_clearField(4);
+  @$pb.TagNumber(3)
+  $core.String get avatar => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set avatar($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAvatar() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAvatar() => $_clearField(3);
 
   /// User role
-  @$pb.TagNumber(5)
-  $0.UserRole get role => $_getN(4);
-  @$pb.TagNumber(5)
-  set role($0.UserRole value) => $_setField(5, value);
-  @$pb.TagNumber(5)
-  $core.bool hasRole() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearRole() => $_clearField(5);
+  @$pb.TagNumber(4)
+  $0.UserRole get role => $_getN(3);
+  @$pb.TagNumber(4)
+  set role($0.UserRole value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRole() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRole() => $_clearField(4);
 
   /// Account status
-  @$pb.TagNumber(6)
-  $0.UserStatus get status => $_getN(5);
-  @$pb.TagNumber(6)
-  set status($0.UserStatus value) => $_setField(6, value);
-  @$pb.TagNumber(6)
-  $core.bool hasStatus() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearStatus() => $_clearField(6);
+  @$pb.TagNumber(5)
+  $0.UserStatus get status => $_getN(4);
+  @$pb.TagNumber(5)
+  set status($0.UserStatus value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasStatus() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearStatus() => $_clearField(5);
 
   /// When the account was created (Unix timestamp, seconds)
   /// NOTE: Changed from string to int64 for consistency with all other timestamp fields.
-  @$pb.TagNumber(7)
-  $fixnum.Int64 get createdAt => $_getI64(6);
-  @$pb.TagNumber(7)
-  set createdAt($fixnum.Int64 value) => $_setInt64(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasCreatedAt() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearCreatedAt() => $_clearField(7);
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get createdAt => $_getI64(5);
+  @$pb.TagNumber(6)
+  set createdAt($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasCreatedAt() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearCreatedAt() => $_clearField(6);
 }
 
 /// ==================== OAuth2 Service ====================

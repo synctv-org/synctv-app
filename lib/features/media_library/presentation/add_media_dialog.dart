@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:synctv_app/contracts/synctv_api_types.dart';
+import 'package:synctv_app/core/config/distribution_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
@@ -33,8 +34,14 @@ import 'package:synctv_app/features/providers/presentation/binding/platform_bind
 class AddMediaDialog extends StatefulWidget {
   final String roomId;
   final String? parentId;
+  final ProviderDistributionPolicy distributionPolicy;
 
-  const AddMediaDialog({super.key, required this.roomId, this.parentId});
+  const AddMediaDialog({
+    super.key,
+    required this.roomId,
+    this.parentId,
+    this.distributionPolicy = ProviderDistributionPolicy.current,
+  });
 
   static Future<void> show(
     BuildContext context,
@@ -275,6 +282,10 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Future<void> _checkVendors() async {
+    if (!widget.distributionPolicy.includesThirdPartyProviders) {
+      await _checkUserOwnedVendors();
+      return;
+    }
     try {
       final results = await Future.wait([
         providerGateway.getAllAlistBindInfos(),
@@ -352,6 +363,66 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           if (youtubeBinds.isNotEmpty) 'youtube',
           if (douyinBinds.isNotEmpty) 'douyin',
           if (tiktokBinds.isNotEmpty) 'tiktok',
+        ];
+        _applyDefaultProviderBindings();
+        _checkingVendors = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _checkingVendors = false);
+      AppNotifications.showError(
+        context,
+        context.l10n.loadMediaBindingsFailed('$e'),
+      );
+    }
+  }
+
+  Future<void> _checkUserOwnedVendors() async {
+    try {
+      final results = await Future.wait([
+        providerGateway.getAllAlistBindInfos(),
+        providerGateway.getAllEmbyBindInfos(),
+        providerGateway.getAllCloudreveBindInfos(),
+        providerGateway.getAllFnosBindInfos(),
+        providerGateway.getAllQnapBindInfos(),
+        providerGateway.getPublicSettings(),
+        providerGateway.getAllSynologyBindInfos(),
+        providerGateway.getAllNextcloudBindInfos(),
+        providerGateway.getAllSeafileBindInfos(),
+        providerGateway.getAllTrueNasBindInfos(),
+      ]);
+      final alistBinds = results[0] as List<AlistBindInfo>;
+      final embyBinds = results[1] as List<EmbyBindInfo>;
+      final cloudreveBinds = results[2] as List<CloudreveBindInfo>;
+      final fnosBinds = results[3] as List<FnosBindInfo>;
+      final qnapBinds = results[4] as List<QnapBindInfo>;
+      final publicSettings = results[5] as PublicSettingsInfo;
+      final synologyBinds = results[6] as List<SynologyBindInfo>;
+      final nextcloudBinds = results[7] as List<NextcloudBindInfo>;
+      final seafileBinds = results[8] as List<SeafileBindInfo>;
+      final trueNasBinds = results[9] as List<TrueNasBindInfo>;
+      if (!mounted) return;
+      setState(() {
+        _alistBinds = alistBinds;
+        _embyBinds = embyBinds;
+        _cloudreveBinds = cloudreveBinds;
+        _fnosBinds = fnosBinds;
+        _qnapBinds = qnapBinds;
+        _synologyBinds = synologyBinds;
+        _nextcloudBinds = nextcloudBinds;
+        _seafileBinds = seafileBinds;
+        _trueNasBinds = trueNasBinds;
+        _publicSettings = publicSettings;
+        _boundVendors = [
+          if (alistBinds.isNotEmpty) 'alist',
+          if (embyBinds.isNotEmpty) 'emby',
+          if (cloudreveBinds.isNotEmpty) 'cloudreve',
+          if (fnosBinds.isNotEmpty) 'fnos',
+          if (qnapBinds.isNotEmpty) 'qnap',
+          if (synologyBinds.isNotEmpty) 'synology',
+          if (nextcloudBinds.isNotEmpty) 'nextcloud',
+          if (seafileBinds.isNotEmpty) 'seafile',
+          if (trueNasBinds.isNotEmpty) 'truenas',
         ];
         _applyDefaultProviderBindings();
         _checkingVendors = false;
@@ -477,157 +548,169 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  List<_MediaSourceSpec> get _sourceSpecs => [
-    _MediaSourceSpec(
-      index: 0,
-      title: context.l10n.directLink,
-      subtitle: 'HTTP / HTTPS / HLS',
-      icon: Icons.link_rounded,
-      color: const Color(0xFF5D5FEF),
-    ),
-    _MediaSourceSpec(
-      index: 1,
-      title: context.l10n.rtmpPublishing,
-      subtitle: context.l10n.generatePublishingAddress,
-      icon: Icons.upload_rounded,
-      color: Colors.deepOrange.shade600,
-    ),
-    _MediaSourceSpec(
-      index: 2,
-      title: context.l10n.livePull,
-      subtitle: 'RTMP / HTTP-FLV',
-      icon: Icons.sensors_rounded,
-      color: Colors.teal.shade600,
-    ),
-    _MediaSourceSpec(
-      index: 3,
-      title: 'Bilibili',
-      subtitle: context.l10n.bilibiliLinkParsing,
-      icon: Icons.tv_rounded,
-      color: const Color(0xFFFB7299),
-    ),
-    _MediaSourceSpec(
-      index: 4,
-      title: context.l10n.alistStorage,
-      subtitle: context.l10n.mountedDirectoryResources,
-      icon: Icons.cloud_circle_rounded,
-      color: Colors.amber.shade700,
-    ),
-    _MediaSourceSpec(
-      index: 5,
-      title: context.l10n.embyLibrary,
-      subtitle: context.l10n.personalMediaServer,
-      icon: Icons.video_library_rounded,
-      color: Colors.green.shade600,
-    ),
-    _MediaSourceSpec(
-      index: 6,
-      title: 'Cloudreve',
-      subtitle: 'Cloudreve v4',
-      icon: Icons.cloud_rounded,
-      color: Colors.teal.shade600,
-    ),
-    const _MediaSourceSpec(
-      index: 7,
-      title: 'Twitch',
-      subtitle: 'Live / VOD / Clip',
-      icon: Icons.live_tv_rounded,
-      color: Color(0xFF9146FF),
-    ),
-    const _MediaSourceSpec(
-      index: 8,
-      title: 'Huya',
-      subtitle: 'Live / Video',
-      icon: Icons.sports_esports_rounded,
-      color: Color(0xFFFF7A00),
-    ),
-    const _MediaSourceSpec(
-      index: 9,
-      title: 'Douyu',
-      subtitle: 'Live / HEVC / Audio',
-      icon: Icons.live_tv_rounded,
-      color: Color(0xFFFF5D23),
-    ),
-    const _MediaSourceSpec(
-      index: 10,
-      title: 'AcFun',
-      subtitle: 'acfun.cn',
-      icon: Icons.ondemand_video_rounded,
-      color: Color(0xFFFD4C5B),
-    ),
-    const _MediaSourceSpec(
-      index: 11,
-      title: 'CCTV',
-      subtitle: 'cctv.com / cntv.cn',
-      icon: Icons.tv_rounded,
-      color: Color(0xFFC62828),
-    ),
-    const _MediaSourceSpec(
-      index: 12,
-      title: 'FNOS',
-      subtitle: 'Files / Media Library',
-      icon: Icons.storage_rounded,
-      color: Color(0xFF087F5B),
-    ),
-    const _MediaSourceSpec(
-      index: 13,
-      title: 'QNAP',
-      subtitle: 'QTS / QuTS hero',
-      icon: Icons.storage_rounded,
-      color: Color(0xFF0076A8),
-    ),
-    const _MediaSourceSpec(
-      index: 14,
-      title: 'Synology DSM',
-      subtitle: 'File Station / Video Station',
-      icon: Icons.video_library_rounded,
-      color: Color(0xFF1578D3),
-    ),
-    const _MediaSourceSpec(
-      index: 15,
-      title: 'Nextcloud',
-      subtitle: 'Files / Favorites / Search',
-      icon: Icons.cloud_outlined,
-      color: Color(0xFF0082C9),
-    ),
-    const _MediaSourceSpec(
-      index: 16,
-      title: 'Seafile',
-      subtitle: 'Libraries / Starred / Search',
-      icon: Icons.cloud_queue_rounded,
-      color: Color(0xFFED7109),
-    ),
-    const _MediaSourceSpec(
-      index: 17,
-      title: 'TrueNAS',
-      subtitle: 'ZFS / Filesystem',
-      icon: Icons.dns_rounded,
-      color: Color(0xFF0095D5),
-    ),
-    const _MediaSourceSpec(
-      index: 18,
-      title: 'YouTube',
-      subtitle: 'Video / Playlist / Channel / Search',
-      icon: Icons.smart_display_rounded,
-      color: Color(0xFFFF0033),
-    ),
-    const _MediaSourceSpec(
-      index: 19,
-      title: 'Douyin',
-      subtitle: 'Video / Live / User Posts',
-      icon: Icons.music_video_rounded,
-      color: Color(0xFF00AFA7),
-    ),
-    const _MediaSourceSpec(
-      index: 20,
-      title: 'TikTok',
-      subtitle: 'Video / Live / User Posts',
-      icon: Icons.music_video_rounded,
-      color: Color(0xFFFE2C55),
-    ),
-  ];
+  List<_MediaSourceSpec> get _sourceSpecs =>
+      <_MediaSourceSpec>[
+            _MediaSourceSpec(
+              index: 0,
+              title: context.l10n.directLink,
+              subtitle: 'HTTP / HTTPS / HLS',
+              icon: Icons.link_rounded,
+              color: const Color(0xFF5D5FEF),
+            ),
+            _MediaSourceSpec(
+              index: 1,
+              title: context.l10n.rtmpPublishing,
+              subtitle: context.l10n.generatePublishingAddress,
+              icon: Icons.upload_rounded,
+              color: Colors.deepOrange.shade600,
+            ),
+            _MediaSourceSpec(
+              index: 2,
+              title: context.l10n.livePull,
+              subtitle: 'RTMP / HTTP-FLV',
+              icon: Icons.sensors_rounded,
+              color: Colors.teal.shade600,
+            ),
+            _MediaSourceSpec(
+              index: 3,
+              title: 'Bilibili',
+              subtitle: context.l10n.bilibiliLinkParsing,
+              icon: Icons.tv_rounded,
+              color: const Color(0xFFFB7299),
+            ),
+            _MediaSourceSpec(
+              index: 4,
+              title: context.l10n.alistStorage,
+              subtitle: context.l10n.mountedDirectoryResources,
+              icon: Icons.cloud_circle_rounded,
+              color: Colors.amber.shade700,
+            ),
+            _MediaSourceSpec(
+              index: 5,
+              title: context.l10n.embyLibrary,
+              subtitle: context.l10n.personalMediaServer,
+              icon: Icons.video_library_rounded,
+              color: Colors.green.shade600,
+            ),
+            _MediaSourceSpec(
+              index: 6,
+              title: 'Cloudreve',
+              subtitle: 'Cloudreve v4',
+              icon: Icons.cloud_rounded,
+              color: Colors.teal.shade600,
+            ),
+            const _MediaSourceSpec(
+              index: 7,
+              title: 'Twitch',
+              subtitle: 'Live / VOD / Clip',
+              icon: Icons.live_tv_rounded,
+              color: Color(0xFF9146FF),
+            ),
+            const _MediaSourceSpec(
+              index: 8,
+              title: 'Huya',
+              subtitle: 'Live / Video',
+              icon: Icons.sports_esports_rounded,
+              color: Color(0xFFFF7A00),
+            ),
+            const _MediaSourceSpec(
+              index: 9,
+              title: 'Douyu',
+              subtitle: 'Live / HEVC / Audio',
+              icon: Icons.live_tv_rounded,
+              color: Color(0xFFFF5D23),
+            ),
+            const _MediaSourceSpec(
+              index: 10,
+              title: 'AcFun',
+              subtitle: 'acfun.cn',
+              icon: Icons.ondemand_video_rounded,
+              color: Color(0xFFFD4C5B),
+            ),
+            const _MediaSourceSpec(
+              index: 11,
+              title: 'CCTV',
+              subtitle: 'cctv.com / cntv.cn',
+              icon: Icons.tv_rounded,
+              color: Color(0xFFC62828),
+            ),
+            const _MediaSourceSpec(
+              index: 12,
+              title: 'FNOS',
+              subtitle: 'Files / Media Library',
+              icon: Icons.storage_rounded,
+              color: Color(0xFF087F5B),
+            ),
+            const _MediaSourceSpec(
+              index: 13,
+              title: 'QNAP',
+              subtitle: 'QTS / QuTS hero',
+              icon: Icons.storage_rounded,
+              color: Color(0xFF0076A8),
+            ),
+            const _MediaSourceSpec(
+              index: 14,
+              title: 'Synology DSM',
+              subtitle: 'File Station / Video Station',
+              icon: Icons.video_library_rounded,
+              color: Color(0xFF1578D3),
+            ),
+            const _MediaSourceSpec(
+              index: 15,
+              title: 'Nextcloud',
+              subtitle: 'Files / Favorites / Search',
+              icon: Icons.cloud_outlined,
+              color: Color(0xFF0082C9),
+            ),
+            const _MediaSourceSpec(
+              index: 16,
+              title: 'Seafile',
+              subtitle: 'Libraries / Starred / Search',
+              icon: Icons.cloud_queue_rounded,
+              color: Color(0xFFED7109),
+            ),
+            const _MediaSourceSpec(
+              index: 17,
+              title: 'TrueNAS',
+              subtitle: 'ZFS / Filesystem',
+              icon: Icons.dns_rounded,
+              color: Color(0xFF0095D5),
+            ),
+            const _MediaSourceSpec(
+              index: 18,
+              title: 'YouTube',
+              subtitle: 'Video / Playlist / Channel / Search',
+              icon: Icons.smart_display_rounded,
+              color: Color(0xFFFF0033),
+            ),
+            const _MediaSourceSpec(
+              index: 19,
+              title: 'Douyin',
+              subtitle: 'Video / Live / User Posts',
+              icon: Icons.music_video_rounded,
+              color: Color(0xFF00AFA7),
+            ),
+            const _MediaSourceSpec(
+              index: 20,
+              title: 'TikTok',
+              subtitle: 'Video / Live / User Posts',
+              icon: Icons.music_video_rounded,
+              color: Color(0xFFFE2C55),
+            ),
+          ]
+          .where((spec) {
+            final providerType = _providerTypeForSourceIndex(spec.index);
+            return providerType == null ||
+                widget.distributionPolicy.allowsProvider(providerType);
+          })
+          .toList(growable: false);
 
   void _selectSource(int index) {
+    final providerType = _providerTypeForSourceIndex(index);
+    if (providerType != null &&
+        !widget.distributionPolicy.allowsProvider(providerType)) {
+      return;
+    }
     setState(() {
       _selectedIndex = index;
     });
@@ -821,12 +904,12 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   ),
                 ),
               ),
-              if (_providerBindingIndex(_selectedIndex) != null)
+              if (_providerBindingType(_selectedIndex) != null)
                 AppActionButton(
                   onPressed: () async {
                     await PlatformBindingDialog.show(
                       context,
-                      initialIndex: _providerBindingIndex(_selectedIndex)!,
+                      initialProviderType: _providerBindingType(_selectedIndex),
                     );
                     await _checkVendors();
                     if (!mounted) return;
@@ -2264,7 +2347,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             onPressed: () async {
               await PlatformBindingDialog.show(
                 context,
-                initialIndex: _providerBindingIndexByName(name),
+                initialProviderType: name.toLowerCase(),
               );
               _checkVendors();
             },
@@ -2276,42 +2359,50 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
-  int? _providerBindingIndex(int selectedIndex) {
+  String? _providerBindingType(int selectedIndex) {
     return switch (selectedIndex) {
-      3 => 3,
-      4 => 0,
-      5 => 2,
-      6 => 1,
-      7 => 4,
-      12 => 5,
-      13 => 6,
-      14 => 7,
-      15 => 8,
-      16 => 9,
-      17 => 10,
-      18 => 11,
-      19 => 12,
-      20 => 13,
+      3 => 'bilibili',
+      4 => 'alist',
+      5 => 'emby',
+      6 => 'cloudreve',
+      7 => 'twitch',
+      12 => 'fnos',
+      13 => 'qnap',
+      14 => 'synology',
+      15 => 'nextcloud',
+      16 => 'seafile',
+      17 => 'truenas',
+      18 => 'youtube',
+      19 => 'douyin',
+      20 => 'tiktok',
       _ => null,
     };
   }
 
-  int _providerBindingIndexByName(String name) {
-    return switch (name.toLowerCase()) {
-      'bilibili' => 3,
-      'cloudreve' => 1,
-      'emby' => 2,
-      'twitch' => 4,
-      'fnos' => 5,
-      'qnap' => 6,
-      'synology' => 7,
-      'nextcloud' => 8,
-      'seafile' => 9,
-      'truenas' => 10,
-      'youtube' => 11,
-      'douyin' => 12,
-      'tiktok' => 13,
-      _ => 0,
+  String? _providerTypeForSourceIndex(int index) {
+    return switch (index) {
+      0 => 'directUrl',
+      1 => 'rtmp',
+      2 => 'liveProxy',
+      3 => 'bilibili',
+      4 => 'alist',
+      5 => 'emby',
+      6 => 'cloudreve',
+      7 => 'twitch',
+      8 => 'huya',
+      9 => 'douyu',
+      10 => 'acfun',
+      11 => 'cctv',
+      12 => 'fnos',
+      13 => 'qnap',
+      14 => 'synology',
+      15 => 'nextcloud',
+      16 => 'seafile',
+      17 => 'truenas',
+      18 => 'youtube',
+      19 => 'douyin',
+      20 => 'tiktok',
+      _ => null,
     };
   }
 

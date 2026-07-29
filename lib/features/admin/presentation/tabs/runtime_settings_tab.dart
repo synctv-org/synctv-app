@@ -39,9 +39,16 @@ class _RuntimeSettingsSectionsTabState
       if (!mounted) return;
       setState(() {
         _settings = settings;
+        final visibleSections = settings.sections
+            .where(
+              (section) =>
+                  ProviderDistributionPolicy.current.allowsOAuth2 ||
+                  section.name != 'oauth2',
+            )
+            .toList(growable: false);
         _selectedSection =
             _selectedSection ??
-            (settings.sections.isEmpty ? null : settings.sections.first.name);
+            (visibleSections.isEmpty ? null : visibleSections.first.name);
         _isLoading = false;
         _isLoadingSection = false;
       });
@@ -284,7 +291,13 @@ class _RuntimeSettingsSectionsTabState
     final isDark = theme.brightness == Brightness.dark;
     if (_isLoading) return const AppLoadingIndicator();
 
-    final sections = _settings?.sections ?? const <RuntimeSettingsSection>[];
+    final sections = (_settings?.sections ?? const <RuntimeSettingsSection>[])
+        .where(
+          (section) =>
+              ProviderDistributionPolicy.current.allowsOAuth2 ||
+              section.name != 'oauth2',
+        )
+        .toList(growable: false);
     final selected = sections
         .where((section) => section.name == _selectedSection)
         .firstOrNull;

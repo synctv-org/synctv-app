@@ -627,8 +627,8 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  Future<void> _openProviderBinding(int providerIndex) =>
-      PlatformBindingDialog.show(context, initialIndex: providerIndex);
+  Future<void> _openProviderBinding(String providerType) =>
+      PlatformBindingDialog.show(context, initialProviderType: providerType);
 
   void _showServerSettingsDialog({bool requireServer = false}) {
     if (_modalOpen) return;

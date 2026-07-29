@@ -755,6 +755,15 @@ const OAuth2ProviderSettings$json = {
       '9': 0,
       '10': 'casdoor'
     },
+    {
+      '1': 'apple',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.admin.OAuth2AppleProviderConfig',
+      '9': 0,
+      '10': 'apple'
+    },
   ],
   '8': [
     {'1': 'config', '2': {}},
@@ -771,8 +780,9 @@ final $typed_data.Uint8List oAuth2ProviderSettingsDescriptor = $convert.base64De
     '9uZmlnSABSBmdvb2dsZRI/CgVsb2d0bxgGIAEoCzInLnN5bmN0di5hZG1pbi5PQXV0aDJMb2d0'
     'b1Byb3ZpZGVyQ29uZmlnSABSBWxvZ3RvEjwKBG9pZGMYByABKAsyJi5zeW5jdHYuYWRtaW4uT0'
     'F1dGgyT2lkY1Byb3ZpZGVyQ29uZmlnSABSBG9pZGMSRQoHY2FzZG9vchgIIAEoCzIpLnN5bmN0'
-    'di5hZG1pbi5PQXV0aDJDYXNkb29yUHJvdmlkZXJDb25maWdIAFIHY2FzZG9vckIPCgZjb25maW'
-    'cSBbpIAggB');
+    'di5hZG1pbi5PQXV0aDJDYXNkb29yUHJvdmlkZXJDb25maWdIAFIHY2FzZG9vchI/CgVhcHBsZR'
+    'gJIAEoCzInLnN5bmN0di5hZG1pbi5PQXV0aDJBcHBsZVByb3ZpZGVyQ29uZmlnSABSBWFwcGxl'
+    'Qg8KBmNvbmZpZxIFukgCCAE=');
 
 @$core.Deprecated('Use oAuth2GithubProviderConfigDescriptor instead')
 const OAuth2GithubProviderConfig$json = {
@@ -869,6 +879,7 @@ const OAuth2OidcProviderConfig$json = {
       '10': 'jwksUrl',
       '17': true
     },
+    {'1': 'scopes', '3': 9, '4': 3, '5': 9, '10': 'scopes'},
   ],
   '8': [
     {'1': '_auth_url'},
@@ -885,8 +896,24 @@ final $typed_data.Uint8List oAuth2OidcProviderConfigDescriptor = $convert.base64
     'ASgJUgtyZWRpcmVjdFVybBIWCgZpc3N1ZXIYBCABKAlSBmlzc3VlchIeCghhdXRoX3VybBgFIA'
     'EoCUgAUgdhdXRoVXJsiAEBEiAKCXRva2VuX3VybBgGIAEoCUgBUgh0b2tlblVybIgBARImCgx1'
     'c2VyaW5mb191cmwYByABKAlIAlILdXNlcmluZm9VcmyIAQESHgoIandrc191cmwYCCABKAlIA1'
-    'IHandrc1VybIgBAUILCglfYXV0aF91cmxCDAoKX3Rva2VuX3VybEIPCg1fdXNlcmluZm9fdXJs'
-    'QgsKCV9qd2tzX3VybA==');
+    'IHandrc1VybIgBARIWCgZzY29wZXMYCSADKAlSBnNjb3Blc0ILCglfYXV0aF91cmxCDAoKX3Rv'
+    'a2VuX3VybEIPCg1fdXNlcmluZm9fdXJsQgsKCV9qd2tzX3VybA==');
+
+@$core.Deprecated('Use oAuth2AppleProviderConfigDescriptor instead')
+const OAuth2AppleProviderConfig$json = {
+  '1': 'OAuth2AppleProviderConfig',
+  '2': [
+    {'1': 'client_id', '3': 1, '4': 1, '5': 9, '10': 'clientId'},
+    {'1': 'client_secret', '3': 2, '4': 1, '5': 9, '10': 'clientSecret'},
+    {'1': 'redirect_url', '3': 3, '4': 1, '5': 9, '10': 'redirectUrl'},
+  ],
+};
+
+/// Descriptor for `OAuth2AppleProviderConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List oAuth2AppleProviderConfigDescriptor = $convert.base64Decode(
+    'ChlPQXV0aDJBcHBsZVByb3ZpZGVyQ29uZmlnEhsKCWNsaWVudF9pZBgBIAEoCVIIY2xpZW50SW'
+    'QSIwoNY2xpZW50X3NlY3JldBgCIAEoCVIMY2xpZW50U2VjcmV0EiEKDHJlZGlyZWN0X3VybBgD'
+    'IAEoCVILcmVkaXJlY3RVcmw=');
 
 @$core.Deprecated('Use oAuth2CasdoorProviderConfigDescriptor instead')
 const OAuth2CasdoorProviderConfig$json = {
@@ -2049,15 +2076,8 @@ const UserRegistrationReview$json = {
       '17': true
     },
     {
-      '1': 'oauth2_email_trusted',
-      '3': 14,
-      '4': 1,
-      '5': 8,
-      '10': 'oauth2EmailTrusted'
-    },
-    {
       '1': 'oauth2_provider_instance_name',
-      '3': 15,
+      '3': 14,
       '4': 1,
       '5': 9,
       '9': 6,
@@ -2066,7 +2086,7 @@ const UserRegistrationReview$json = {
     },
     {
       '1': 'oauth2_provider_issuer',
-      '3': 16,
+      '3': 15,
       '4': 1,
       '5': 9,
       '9': 7,
@@ -2075,7 +2095,7 @@ const UserRegistrationReview$json = {
     },
     {
       '1': 'webauthn_credential_id',
-      '3': 17,
+      '3': 16,
       '4': 1,
       '5': 9,
       '9': 8,
@@ -2084,7 +2104,7 @@ const UserRegistrationReview$json = {
     },
     {
       '1': 'webauthn_credential_name',
-      '3': 18,
+      '3': 17,
       '4': 1,
       '5': 9,
       '9': 9,
@@ -2118,17 +2138,16 @@ final $typed_data.Uint8List userRegistrationReviewDescriptor = $convert.base64De
     'VyVHlwZUgCUg5vYXV0aDJQcm92aWRlcogBARI6ChdvYXV0aDJfcHJvdmlkZXJfdXNlcl9pZBgL'
     'IAEoCUgDUhRvYXV0aDJQcm92aWRlclVzZXJJZIgBARI9ChhvYXV0aDJfcHJvdmlkZXJfdXNlcm'
     '5hbWUYDCABKAlIBFIWb2F1dGgyUHJvdmlkZXJVc2VybmFtZYgBARIvChFvYXV0aDJfYXZhdGFy'
-    'X3VybBgNIAEoCUgFUg9vYXV0aDJBdmF0YXJVcmyIAQESMAoUb2F1dGgyX2VtYWlsX3RydXN0ZW'
-    'QYDiABKAhSEm9hdXRoMkVtYWlsVHJ1c3RlZBJGCh1vYXV0aDJfcHJvdmlkZXJfaW5zdGFuY2Vf'
-    'bmFtZRgPIAEoCUgGUhpvYXV0aDJQcm92aWRlckluc3RhbmNlTmFtZYgBARI5ChZvYXV0aDJfcH'
-    'JvdmlkZXJfaXNzdWVyGBAgASgJSAdSFG9hdXRoMlByb3ZpZGVySXNzdWVyiAEBEjkKFndlYmF1'
-    'dGhuX2NyZWRlbnRpYWxfaWQYESABKAlICFIUd2ViYXV0aG5DcmVkZW50aWFsSWSIAQESPQoYd2'
-    'ViYXV0aG5fY3JlZGVudGlhbF9uYW1lGBIgASgJSAlSFndlYmF1dGhuQ3JlZGVudGlhbE5hbWWI'
-    'AQFCDgoMX3Jldmlld2VkX2J5QhMKEV9yZWplY3Rpb25fcmVhc29uQhIKEF9vYXV0aDJfcHJvdm'
-    'lkZXJCGgoYX29hdXRoMl9wcm92aWRlcl91c2VyX2lkQhsKGV9vYXV0aDJfcHJvdmlkZXJfdXNl'
-    'cm5hbWVCFAoSX29hdXRoMl9hdmF0YXJfdXJsQiAKHl9vYXV0aDJfcHJvdmlkZXJfaW5zdGFuY2'
-    'VfbmFtZUIZChdfb2F1dGgyX3Byb3ZpZGVyX2lzc3VlckIZChdfd2ViYXV0aG5fY3JlZGVudGlh'
-    'bF9pZEIbChlfd2ViYXV0aG5fY3JlZGVudGlhbF9uYW1l');
+    'X3VybBgNIAEoCUgFUg9vYXV0aDJBdmF0YXJVcmyIAQESRgodb2F1dGgyX3Byb3ZpZGVyX2luc3'
+    'RhbmNlX25hbWUYDiABKAlIBlIab2F1dGgyUHJvdmlkZXJJbnN0YW5jZU5hbWWIAQESOQoWb2F1'
+    'dGgyX3Byb3ZpZGVyX2lzc3VlchgPIAEoCUgHUhRvYXV0aDJQcm92aWRlcklzc3VlcogBARI5Ch'
+    'Z3ZWJhdXRobl9jcmVkZW50aWFsX2lkGBAgASgJSAhSFHdlYmF1dGhuQ3JlZGVudGlhbElkiAEB'
+    'Ej0KGHdlYmF1dGhuX2NyZWRlbnRpYWxfbmFtZRgRIAEoCUgJUhZ3ZWJhdXRobkNyZWRlbnRpYW'
+    'xOYW1liAEBQg4KDF9yZXZpZXdlZF9ieUITChFfcmVqZWN0aW9uX3JlYXNvbkISChBfb2F1dGgy'
+    'X3Byb3ZpZGVyQhoKGF9vYXV0aDJfcHJvdmlkZXJfdXNlcl9pZEIbChlfb2F1dGgyX3Byb3ZpZG'
+    'VyX3VzZXJuYW1lQhQKEl9vYXV0aDJfYXZhdGFyX3VybEIgCh5fb2F1dGgyX3Byb3ZpZGVyX2lu'
+    'c3RhbmNlX25hbWVCGQoXX29hdXRoMl9wcm92aWRlcl9pc3N1ZXJCGQoXX3dlYmF1dGhuX2NyZW'
+    'RlbnRpYWxfaWRCGwoZX3dlYmF1dGhuX2NyZWRlbnRpYWxfbmFtZQ==');
 
 @$core.Deprecated('Use roomCreationReviewDescriptor instead')
 const RoomCreationReview$json = {
@@ -5470,6 +5489,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.OAuth2LogtoProviderConfig': OAuth2LogtoProviderConfig$json,
   '.synctv.admin.OAuth2OidcProviderConfig': OAuth2OidcProviderConfig$json,
   '.synctv.admin.OAuth2CasdoorProviderConfig': OAuth2CasdoorProviderConfig$json,
+  '.synctv.admin.OAuth2AppleProviderConfig': OAuth2AppleProviderConfig$json,
   '.synctv.admin.ProxySettings': ProxySettings$json,
   '.synctv.admin.RtmpSettings': RtmpSettings$json,
   '.synctv.admin.EmailSettings': EmailSettings$json,

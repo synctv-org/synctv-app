@@ -1219,6 +1219,7 @@ enum OAuth2ProviderSettings_Config {
   logto,
   oidc,
   casdoor,
+  apple,
   notSet
 }
 
@@ -1232,6 +1233,7 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
     OAuth2LogtoProviderConfig? logto,
     OAuth2OidcProviderConfig? oidc,
     OAuth2CasdoorProviderConfig? casdoor,
+    OAuth2AppleProviderConfig? apple,
   }) {
     final result = create();
     if (name != null) result.name = name;
@@ -1242,6 +1244,7 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
     if (logto != null) result.logto = logto;
     if (oidc != null) result.oidc = oidc;
     if (casdoor != null) result.casdoor = casdoor;
+    if (apple != null) result.apple = apple;
     return result;
   }
 
@@ -1261,13 +1264,14 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
     6: OAuth2ProviderSettings_Config.logto,
     7: OAuth2ProviderSettings_Config.oidc,
     8: OAuth2ProviderSettings_Config.casdoor,
+    9: OAuth2ProviderSettings_Config.apple,
     0: OAuth2ProviderSettings_Config.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'OAuth2ProviderSettings',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
       createEmptyInstance: create)
-    ..oo(0, [4, 5, 6, 7, 8])
+    ..oo(0, [4, 5, 6, 7, 8, 9])
     ..aOS(1, _omitFieldNames ? '' : 'name')
     ..aOB(2, _omitFieldNames ? '' : 'enableSignup')
     ..aOB(3, _omitFieldNames ? '' : 'signupNeedReview')
@@ -1281,6 +1285,8 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
         subBuilder: OAuth2OidcProviderConfig.create)
     ..aOM<OAuth2CasdoorProviderConfig>(8, _omitFieldNames ? '' : 'casdoor',
         subBuilder: OAuth2CasdoorProviderConfig.create)
+    ..aOM<OAuth2AppleProviderConfig>(9, _omitFieldNames ? '' : 'apple',
+        subBuilder: OAuth2AppleProviderConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1308,6 +1314,7 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
   OAuth2ProviderSettings_Config whichConfig() =>
       _OAuth2ProviderSettings_ConfigByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(4)
@@ -1315,6 +1322,7 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
   @$pb.TagNumber(8)
+  @$pb.TagNumber(9)
   void clearConfig() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
@@ -1398,6 +1406,17 @@ class OAuth2ProviderSettings extends $pb.GeneratedMessage {
   void clearCasdoor() => $_clearField(8);
   @$pb.TagNumber(8)
   OAuth2CasdoorProviderConfig ensureCasdoor() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  OAuth2AppleProviderConfig get apple => $_getN(8);
+  @$pb.TagNumber(9)
+  set apple(OAuth2AppleProviderConfig value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasApple() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearApple() => $_clearField(9);
+  @$pb.TagNumber(9)
+  OAuth2AppleProviderConfig ensureApple() => $_ensure(8);
 }
 
 class OAuth2GithubProviderConfig extends $pb.GeneratedMessage {
@@ -1661,6 +1680,7 @@ class OAuth2OidcProviderConfig extends $pb.GeneratedMessage {
     $core.String? tokenUrl,
     $core.String? userinfoUrl,
     $core.String? jwksUrl,
+    $core.Iterable<$core.String>? scopes,
   }) {
     final result = create();
     if (clientId != null) result.clientId = clientId;
@@ -1671,6 +1691,7 @@ class OAuth2OidcProviderConfig extends $pb.GeneratedMessage {
     if (tokenUrl != null) result.tokenUrl = tokenUrl;
     if (userinfoUrl != null) result.userinfoUrl = userinfoUrl;
     if (jwksUrl != null) result.jwksUrl = jwksUrl;
+    if (scopes != null) result.scopes.addAll(scopes);
     return result;
   }
 
@@ -1695,6 +1716,7 @@ class OAuth2OidcProviderConfig extends $pb.GeneratedMessage {
     ..aOS(6, _omitFieldNames ? '' : 'tokenUrl')
     ..aOS(7, _omitFieldNames ? '' : 'userinfoUrl')
     ..aOS(8, _omitFieldNames ? '' : 'jwksUrl')
+    ..pPS(9, _omitFieldNames ? '' : 'scopes')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1788,6 +1810,88 @@ class OAuth2OidcProviderConfig extends $pb.GeneratedMessage {
   $core.bool hasJwksUrl() => $_has(7);
   @$pb.TagNumber(8)
   void clearJwksUrl() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $pb.PbList<$core.String> get scopes => $_getList(8);
+}
+
+class OAuth2AppleProviderConfig extends $pb.GeneratedMessage {
+  factory OAuth2AppleProviderConfig({
+    $core.String? clientId,
+    $core.String? clientSecret,
+    $core.String? redirectUrl,
+  }) {
+    final result = create();
+    if (clientId != null) result.clientId = clientId;
+    if (clientSecret != null) result.clientSecret = clientSecret;
+    if (redirectUrl != null) result.redirectUrl = redirectUrl;
+    return result;
+  }
+
+  OAuth2AppleProviderConfig._();
+
+  factory OAuth2AppleProviderConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory OAuth2AppleProviderConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'OAuth2AppleProviderConfig',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'clientId')
+    ..aOS(2, _omitFieldNames ? '' : 'clientSecret')
+    ..aOS(3, _omitFieldNames ? '' : 'redirectUrl')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2AppleProviderConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  OAuth2AppleProviderConfig copyWith(
+          void Function(OAuth2AppleProviderConfig) updates) =>
+      super.copyWith((message) => updates(message as OAuth2AppleProviderConfig))
+          as OAuth2AppleProviderConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static OAuth2AppleProviderConfig create() => OAuth2AppleProviderConfig._();
+  @$core.override
+  OAuth2AppleProviderConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static OAuth2AppleProviderConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<OAuth2AppleProviderConfig>(create);
+  static OAuth2AppleProviderConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get clientId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set clientId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasClientId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearClientId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get clientSecret => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set clientSecret($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasClientSecret() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearClientSecret() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get redirectUrl => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set redirectUrl($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasRedirectUrl() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearRedirectUrl() => $_clearField(3);
 }
 
 class OAuth2CasdoorProviderConfig extends $pb.GeneratedMessage {
@@ -4000,7 +4104,6 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     $core.String? oauth2ProviderUserId,
     $core.String? oauth2ProviderUsername,
     $core.String? oauth2AvatarUrl,
-    $core.bool? oauth2EmailTrusted,
     $core.String? oauth2ProviderInstanceName,
     $core.String? oauth2ProviderIssuer,
     $core.String? webauthnCredentialId,
@@ -4022,8 +4125,6 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     if (oauth2ProviderUsername != null)
       result.oauth2ProviderUsername = oauth2ProviderUsername;
     if (oauth2AvatarUrl != null) result.oauth2AvatarUrl = oauth2AvatarUrl;
-    if (oauth2EmailTrusted != null)
-      result.oauth2EmailTrusted = oauth2EmailTrusted;
     if (oauth2ProviderInstanceName != null)
       result.oauth2ProviderInstanceName = oauth2ProviderInstanceName;
     if (oauth2ProviderIssuer != null)
@@ -4063,11 +4164,10 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
     ..aOS(11, _omitFieldNames ? '' : 'oauth2ProviderUserId')
     ..aOS(12, _omitFieldNames ? '' : 'oauth2ProviderUsername')
     ..aOS(13, _omitFieldNames ? '' : 'oauth2AvatarUrl')
-    ..aOB(14, _omitFieldNames ? '' : 'oauth2EmailTrusted')
-    ..aOS(15, _omitFieldNames ? '' : 'oauth2ProviderInstanceName')
-    ..aOS(16, _omitFieldNames ? '' : 'oauth2ProviderIssuer')
-    ..aOS(17, _omitFieldNames ? '' : 'webauthnCredentialId')
-    ..aOS(18, _omitFieldNames ? '' : 'webauthnCredentialName')
+    ..aOS(14, _omitFieldNames ? '' : 'oauth2ProviderInstanceName')
+    ..aOS(15, _omitFieldNames ? '' : 'oauth2ProviderIssuer')
+    ..aOS(16, _omitFieldNames ? '' : 'webauthnCredentialId')
+    ..aOS(17, _omitFieldNames ? '' : 'webauthnCredentialName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -4208,49 +4308,40 @@ class UserRegistrationReview extends $pb.GeneratedMessage {
   void clearOauth2AvatarUrl() => $_clearField(13);
 
   @$pb.TagNumber(14)
-  $core.bool get oauth2EmailTrusted => $_getBF(13);
+  $core.String get oauth2ProviderInstanceName => $_getSZ(13);
   @$pb.TagNumber(14)
-  set oauth2EmailTrusted($core.bool value) => $_setBool(13, value);
+  set oauth2ProviderInstanceName($core.String value) => $_setString(13, value);
   @$pb.TagNumber(14)
-  $core.bool hasOauth2EmailTrusted() => $_has(13);
+  $core.bool hasOauth2ProviderInstanceName() => $_has(13);
   @$pb.TagNumber(14)
-  void clearOauth2EmailTrusted() => $_clearField(14);
+  void clearOauth2ProviderInstanceName() => $_clearField(14);
 
   @$pb.TagNumber(15)
-  $core.String get oauth2ProviderInstanceName => $_getSZ(14);
+  $core.String get oauth2ProviderIssuer => $_getSZ(14);
   @$pb.TagNumber(15)
-  set oauth2ProviderInstanceName($core.String value) => $_setString(14, value);
+  set oauth2ProviderIssuer($core.String value) => $_setString(14, value);
   @$pb.TagNumber(15)
-  $core.bool hasOauth2ProviderInstanceName() => $_has(14);
+  $core.bool hasOauth2ProviderIssuer() => $_has(14);
   @$pb.TagNumber(15)
-  void clearOauth2ProviderInstanceName() => $_clearField(15);
+  void clearOauth2ProviderIssuer() => $_clearField(15);
 
   @$pb.TagNumber(16)
-  $core.String get oauth2ProviderIssuer => $_getSZ(15);
+  $core.String get webauthnCredentialId => $_getSZ(15);
   @$pb.TagNumber(16)
-  set oauth2ProviderIssuer($core.String value) => $_setString(15, value);
+  set webauthnCredentialId($core.String value) => $_setString(15, value);
   @$pb.TagNumber(16)
-  $core.bool hasOauth2ProviderIssuer() => $_has(15);
+  $core.bool hasWebauthnCredentialId() => $_has(15);
   @$pb.TagNumber(16)
-  void clearOauth2ProviderIssuer() => $_clearField(16);
+  void clearWebauthnCredentialId() => $_clearField(16);
 
   @$pb.TagNumber(17)
-  $core.String get webauthnCredentialId => $_getSZ(16);
+  $core.String get webauthnCredentialName => $_getSZ(16);
   @$pb.TagNumber(17)
-  set webauthnCredentialId($core.String value) => $_setString(16, value);
+  set webauthnCredentialName($core.String value) => $_setString(16, value);
   @$pb.TagNumber(17)
-  $core.bool hasWebauthnCredentialId() => $_has(16);
+  $core.bool hasWebauthnCredentialName() => $_has(16);
   @$pb.TagNumber(17)
-  void clearWebauthnCredentialId() => $_clearField(17);
-
-  @$pb.TagNumber(18)
-  $core.String get webauthnCredentialName => $_getSZ(17);
-  @$pb.TagNumber(18)
-  set webauthnCredentialName($core.String value) => $_setString(17, value);
-  @$pb.TagNumber(18)
-  $core.bool hasWebauthnCredentialName() => $_has(17);
-  @$pb.TagNumber(18)
-  void clearWebauthnCredentialName() => $_clearField(18);
+  void clearWebauthnCredentialName() => $_clearField(17);
 }
 
 class RoomCreationReview extends $pb.GeneratedMessage {

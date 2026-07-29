@@ -33,6 +33,8 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>SyncTV uses the microphone for room voice chat.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>SyncTV uses the local network for media peer-to-peer connections.</string>
 	<key>NSAppTransportSecurity</key>

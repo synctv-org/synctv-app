@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 import 'package:synctv_app/contracts/synctv_api_types.dart';
+import 'package:synctv_app/core/config/distribution_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:synctv_app/l10n/l10n.dart';
@@ -39,6 +40,25 @@ enum _ProviderKind {
   tiktok,
 }
 
+String _providerKindType(_ProviderKind kind) {
+  return switch (kind) {
+    _ProviderKind.alist => 'alist',
+    _ProviderKind.emby => 'emby',
+    _ProviderKind.cloudreve => 'cloudreve',
+    _ProviderKind.bilibili => 'bilibili',
+    _ProviderKind.twitch => 'twitch',
+    _ProviderKind.fnos => 'fnos',
+    _ProviderKind.qnap => 'qnap',
+    _ProviderKind.synology => 'synology',
+    _ProviderKind.nextcloud => 'nextcloud',
+    _ProviderKind.seafile => 'seafile',
+    _ProviderKind.truenas => 'truenas',
+    _ProviderKind.youtube => 'youtube',
+    _ProviderKind.douyin => 'douyin',
+    _ProviderKind.tiktok => 'tiktok',
+  };
+}
+
 List<String> _mergeInstanceNames(List<String> remoteInstances) {
   final names = <String>[''];
   for (final instance in remoteInstances) {
@@ -61,10 +81,21 @@ String _hashAlistPassword(String password) {
 
 class PlatformBindingDialog extends StatefulWidget {
   final int initialIndex;
+  final String? initialProviderType;
+  final ProviderDistributionPolicy distributionPolicy;
 
-  const PlatformBindingDialog({super.key, this.initialIndex = 0});
+  const PlatformBindingDialog({
+    super.key,
+    this.initialIndex = 0,
+    this.initialProviderType,
+    this.distributionPolicy = ProviderDistributionPolicy.current,
+  });
 
-  static Future<void> show(BuildContext context, {int initialIndex = 0}) {
+  static Future<void> show(
+    BuildContext context, {
+    int initialIndex = 0,
+    String? initialProviderType,
+  }) {
     return showAppDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -84,7 +115,10 @@ class PlatformBindingDialog extends StatefulWidget {
               Flexible(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
-                  child: PlatformBindingDialog(initialIndex: initialIndex),
+                  child: PlatformBindingDialog(
+                    initialIndex: initialIndex,
+                    initialProviderType: initialProviderType,
+                  ),
                 ),
               ),
             ],
@@ -100,7 +134,7 @@ class PlatformBindingDialog extends StatefulWidget {
 
 class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     with SingleTickerProviderStateMixin {
-  static const _providers = [
+  static const _allProviders = [
     _ProviderSpec(
       kind: _ProviderKind.alist,
       label: 'AList',
@@ -215,6 +249,14 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     ),
   ];
 
+  List<_ProviderSpec> get _providers => _allProviders
+      .where(
+        (provider) => widget.distributionPolicy.allowsProvider(
+          _providerKindType(provider.kind),
+        ),
+      )
+      .toList(growable: false);
+
   late TabController _tabController;
   final Map<_ProviderKind, List<_ProviderBindItem>> _binds = {
     for (final provider in _ProviderKind.values) provider: [],
@@ -226,10 +268,17 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
   @override
   void initState() {
     super.initState();
+    final requestedProviderIndex = widget.initialProviderType == null
+        ? widget.initialIndex
+        : _providers.indexWhere(
+            (provider) =>
+                _providerKindType(provider.kind) == widget.initialProviderType,
+          );
     _tabController = TabController(
       length: _providers.length,
       vsync: this,
-      initialIndex: widget.initialIndex.clamp(0, _providers.length - 1),
+      initialIndex: (requestedProviderIndex < 0 ? 0 : requestedProviderIndex)
+          .clamp(0, _providers.length - 1),
     );
     for (final provider in _providers) {
       _loadBinds(provider.kind);
@@ -1026,22 +1075,7 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
   }
 
   String _providerType(_ProviderKind kind) {
-    return switch (kind) {
-      _ProviderKind.alist => 'alist',
-      _ProviderKind.emby => 'emby',
-      _ProviderKind.cloudreve => 'cloudreve',
-      _ProviderKind.bilibili => 'bilibili',
-      _ProviderKind.twitch => 'twitch',
-      _ProviderKind.fnos => 'fnos',
-      _ProviderKind.qnap => 'qnap',
-      _ProviderKind.synology => 'synology',
-      _ProviderKind.nextcloud => 'nextcloud',
-      _ProviderKind.seafile => 'seafile',
-      _ProviderKind.truenas => 'truenas',
-      _ProviderKind.youtube => 'youtube',
-      _ProviderKind.douyin => 'douyin',
-      _ProviderKind.tiktok => 'tiktok',
-    };
+    return _providerKindType(kind);
   }
 
   _ProviderSpec _spec(_ProviderKind kind) {

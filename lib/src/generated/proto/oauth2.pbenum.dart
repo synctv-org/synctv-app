@@ -47,6 +47,9 @@ class OAuth2ProviderType extends $pb.ProtobufEnum {
   static const OAuth2ProviderType OAUTH2_PROVIDER_TYPE_GITEE =
       OAuth2ProviderType._(
           10, _omitEnumNames ? '' : 'OAUTH2_PROVIDER_TYPE_GITEE');
+  static const OAuth2ProviderType OAUTH2_PROVIDER_TYPE_APPLE =
+      OAuth2ProviderType._(
+          11, _omitEnumNames ? '' : 'OAUTH2_PROVIDER_TYPE_APPLE');
 
   static const $core.List<OAuth2ProviderType> values = <OAuth2ProviderType>[
     OAUTH2_PROVIDER_TYPE_UNSPECIFIED,
@@ -60,10 +63,11 @@ class OAuth2ProviderType extends $pb.ProtobufEnum {
     OAUTH2_PROVIDER_TYPE_OIDC,
     OAUTH2_PROVIDER_TYPE_FEISHU,
     OAUTH2_PROVIDER_TYPE_GITEE,
+    OAUTH2_PROVIDER_TYPE_APPLE,
   ];
 
   static final $core.List<OAuth2ProviderType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 10);
+      $pb.ProtobufEnum.$_initByValueList(values, 11);
   static OAuth2ProviderType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

@@ -471,7 +471,7 @@ class SyncTvAuthDomainService {
       user: SyncTvUser(
         id: response.userInfo.userId,
         username: response.userInfo.username,
-        email: response.userInfo.email.isEmpty ? null : response.userInfo.email,
+        email: null,
         role: response.userInfo.role.value,
         createdAt: response.userInfo.createdAt.toInt(),
         status: response.userInfo.status.value,
