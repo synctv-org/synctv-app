@@ -122,14 +122,14 @@ done
 
 mkdir -p "$(dirname "$output")"
 {
-  printf 'SYNC_TV_CODE_SIGN_IDENTITY = %s\n' "$SYNCTV_APPLE_SIGNING_IDENTITY"
-  printf 'SYNC_TV_CODE_SIGN_STYLE = Manual\n'
-  printf 'SYNC_TV_DEVELOPMENT_TEAM = %s\n' "$SYNCTV_APPLE_DEVELOPMENT_TEAM"
-  printf 'SYNC_TV_PROVISIONING_PROFILE_SPECIFIER = %s\n' "$profile_uuid"
+  printf 'SYNCTV_CODE_SIGN_IDENTITY = %s\n' "$SYNCTV_APPLE_SIGNING_IDENTITY"
+  printf 'SYNCTV_CODE_SIGN_STYLE = Manual\n'
+  printf 'SYNCTV_DEVELOPMENT_TEAM = %s\n' "$SYNCTV_APPLE_DEVELOPMENT_TEAM"
+  printf 'SYNCTV_PROVISIONING_PROFILE_SPECIFIER = %s\n' "$profile_uuid"
   if [[ "$platform" == "macos" ]]; then
-    printf 'SYNC_TV_ENABLE_HARDENED_RUNTIME = YES\n'
-    printf 'SYNC_TV_CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO\n'
-    printf 'SYNC_TV_OTHER_CODE_SIGN_FLAGS = --timestamp\n'
+    printf 'SYNCTV_ENABLE_HARDENED_RUNTIME = YES\n'
+    printf 'SYNCTV_CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO\n'
+    printf 'SYNCTV_OTHER_CODE_SIGN_FLAGS = --timestamp\n'
   fi
 } > "$output"
 

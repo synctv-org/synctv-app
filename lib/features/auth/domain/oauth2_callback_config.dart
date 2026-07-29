@@ -1,6 +1,6 @@
 class OAuth2CallbackConfig {
   static const String mobileOrigin = String.fromEnvironment(
-    'SYNC_TV_OAUTH2_APP_LINK_ORIGIN',
+    'SYNCTV_OAUTH2_APP_LINK_ORIGIN',
     defaultValue: '',
   );
 
@@ -9,7 +9,7 @@ class OAuth2CallbackConfig {
   static Uri get mobileOriginUri {
     if (!hasMobileOrigin) {
       throw StateError(
-        'SYNC_TV_OAUTH2_APP_LINK_ORIGIN must be configured for mobile OAuth2 callbacks',
+        'SYNCTV_OAUTH2_APP_LINK_ORIGIN must be configured for mobile OAuth2 callbacks',
       );
     }
     return parseMobileOrigin(mobileOrigin);
@@ -24,7 +24,7 @@ class OAuth2CallbackConfig {
         uri.hasQuery ||
         uri.hasFragment) {
       throw StateError(
-        'SYNC_TV_OAUTH2_APP_LINK_ORIGIN must be an https origin without port, query, or fragment',
+        'SYNCTV_OAUTH2_APP_LINK_ORIGIN must be an https origin without port, query, or fragment',
       );
     }
     return uri.replace(path: '', query: null, fragment: null);

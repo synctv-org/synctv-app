@@ -20,11 +20,11 @@ https://{verified-domain}/oauth2/callback
 Build mobile apps with a real verified domain:
 
 ```sh
-flutter build apk --dart-define=SYNC_TV_OAUTH2_APP_LINK_ORIGIN=https://app.example.com
-flutter build ios --dart-define=SYNC_TV_OAUTH2_APP_LINK_ORIGIN=https://app.example.com
+flutter build apk --dart-define=SYNCTV_OAUTH2_APP_LINK_ORIGIN=https://app.example.com
+flutter build ios --dart-define=SYNCTV_OAUTH2_APP_LINK_ORIGIN=https://app.example.com
 ```
 
-Android reads the host from `SYNC_TV_OAUTH2_APP_LINK_ORIGIN` and places it in
+Android reads the host from `SYNCTV_OAUTH2_APP_LINK_ORIGIN` and places it in
 the manifest App Link filter. Values with a scheme, path, or port are rejected.
 It can be overridden with:
 
@@ -33,15 +33,12 @@ It can be overridden with:
 ```
 
 iOS generates the signed entitlements from
-`SYNC_TV_OAUTH2_APP_LINK_ORIGIN` during the Xcode build. The resulting
+`SYNCTV_OAUTH2_APP_LINK_ORIGIN` during the Xcode build. The resulting
 associated-domain value is:
 
 ```text
 applinks:app.example.com
 ```
-
-Advanced build setups may override this with the
-`SYNC_TV_OAUTH2_APP_LINK_DOMAIN` Xcode build setting.
 
 The domain must host the platform association files required by Android App
 Links and Apple Universal Links before OAuth2 login or binding will complete on
