@@ -221,6 +221,7 @@ jobs:
             --no-pub \
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
+            --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN" \
             --build-name "${{ needs.metadata.outputs.version }}" \
             --build-number "${{ needs.metadata.outputs.build-number }}" \
             --split-debug-info build/symbols/android-all
@@ -230,6 +231,7 @@ jobs:
             --split-per-abi \
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL" \
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS" \
+            --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN" \
             --build-name "${{ needs.metadata.outputs.version }}" \
             --build-number "${{ needs.metadata.outputs.build-number }}" \
             --split-debug-info build/symbols/android-all
@@ -241,6 +243,7 @@ jobs:
           --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
+          --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
           --split-debug-info build/symbols/android-all
@@ -504,6 +507,7 @@ jobs:
           --no-pub
           --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
           --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
+          --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
           --build-name "${{ needs.metadata.outputs.version }}"
           --build-number "${{ needs.metadata.outputs.build-number }}"
           --split-debug-info build/symbols/macos-universal
@@ -524,19 +528,22 @@ jobs:
           bash tool/ci/verify_macos_architecture.sh \
             build/macos/Build/Products/Release/x64/SyncTV.app x64
 
-      - name: Verify macOS signatures and Passkey entitlements
+      - name: Verify macOS signatures and authentication entitlements
         env:
           SIGNING_MODE: ${{ steps.signing.outputs.mode }}
         run: |
           rp_ids=""
+          oauth2_origin=""
           if [[ "$SIGNING_MODE" == "signed" ]]; then
             rp_ids="$SYNCTV_PASSKEY_RP_IDS"
+            oauth2_origin="$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
           fi
           for app in \
             build/macos/Build/Products/Release/SyncTV.app \
             build/macos/Build/Products/Release/arm64/SyncTV.app \
             build/macos/Build/Products/Release/x64/SyncTV.app; do
-            bash tool/ci/verify_apple_entitlements.sh "$app" "$rp_ids"
+            bash tool/ci/verify_apple_entitlements.sh \
+              "$app" "$rp_ids" "$oauth2_origin"
             if [[ "$SIGNING_MODE" == "signed" ]]; then
               bash tool/ci/verify_macos_distribution_signature.sh "$app"
             fi
@@ -683,6 +690,7 @@ jobs:
             --no-pub
             --dart-define "SYNCTV_BUILT_IN_SERVER_URL=$SYNCTV_BUILT_IN_SERVER_URL"
             --dart-define "SYNCTV_PASSKEY_RP_IDS=$SYNCTV_PASSKEY_RP_IDS"
+            --dart-define "SYNCTV_OAUTH2_APP_LINK_ORIGIN=$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
             --build-name "${{ needs.metadata.outputs.version }}"
             --build-number "${{ needs.metadata.outputs.build-number }}"
             --split-debug-info build/symbols/ios-arm64
@@ -695,12 +703,13 @@ jobs:
             flutter build ios "${build_args[@]}" --no-codesign
           fi
 
-      - name: Verify iOS signature and Passkey entitlements
+      - name: Verify iOS signature and authentication entitlements
         if: steps.signing.outputs.mode == 'signed'
         run: |
           bash tool/ci/verify_apple_entitlements.sh \
             build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app \
-            "$SYNCTV_PASSKEY_RP_IDS"
+            "$SYNCTV_PASSKEY_RP_IDS" \
+            "$SYNCTV_OAUTH2_APP_LINK_ORIGIN"
 
       - name: Package iOS artifact
         env:
