@@ -18,6 +18,8 @@ import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
 import 'package:synctv_app/src/generated/proto/providers/rtmp.pb.dart' as rtmp;
 import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
     as source_config;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 import 'package:synctv_app/core/identifiers/client_operation_id.dart';
 
 class SyncTvRoomMediaDomainService {
@@ -911,6 +913,7 @@ class SyncTvRoomMediaDomainService {
     String roomId, {
     String playlistId = '',
     required String url,
+    required source_enum.PlaybackKind playbackKind,
     Map<String, String> headers = const {},
     String name = '',
     bool preferProxy = false,
@@ -918,6 +921,7 @@ class SyncTvRoomMediaDomainService {
   }) async {
     final sourceConfig = DirectUrlSourceConfig.fromUserInput(
       url: url,
+      playbackKind: playbackKind,
       headers: headers,
       preferProxy: preferProxy,
       proxyOnly: proxyOnly,
@@ -1371,12 +1375,18 @@ class SyncTvRoomMediaDomainService {
     String roomId, {
     String playlistId = '',
     String name = '',
+    source_config.RtmpStreamMode mode =
+        source_config.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
   }) {
     return _addMedia(
       roomId,
       playlistId: playlistId,
       sourceProvider: 'rtmp',
-      sourceConfig: const {},
+      sourceConfig: SourceConfigCodec.mediaSourceConfigToMap(
+        source_config.MediaSourceConfig(
+          rtmp: source_config.RtmpMediaSourceConfig(mode: mode),
+        ),
+      ),
       name: name,
     );
   }
@@ -1384,14 +1394,16 @@ class SyncTvRoomMediaDomainService {
   Future<String> addLiveProxyMedia(
     String roomId, {
     String playlistId = '',
-    required String url,
+    required source_config.LiveProxyMediaSourceConfig sourceConfig,
     String name = '',
   }) {
     return _addMedia(
       roomId,
       playlistId: playlistId,
       sourceProvider: 'liveProxy',
-      sourceConfig: {'url': url},
+      sourceConfig: SourceConfigCodec.mediaSourceConfigToMap(
+        source_config.MediaSourceConfig(liveProxy: sourceConfig),
+      ),
       name: name,
     );
   }

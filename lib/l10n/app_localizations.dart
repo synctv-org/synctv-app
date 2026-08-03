@@ -2186,6 +2186,18 @@ abstract class AppLocalizations {
   /// **'Media source'**
   String get mediaSource;
 
+  /// No description provided for @playbackKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback type'**
+  String get playbackKind;
+
+  /// No description provided for @onDemand.
+  ///
+  /// In en, this message translates to:
+  /// **'On demand'**
+  String get onDemand;
+
   /// No description provided for @videoLinks.
   ///
   /// In en, this message translates to:
@@ -2282,6 +2294,30 @@ abstract class AppLocalizations {
   /// **'For example, Camera or OBS stream'**
   String get liveNameHint;
 
+  /// No description provided for @streamMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Stream mode'**
+  String get streamMode;
+
+  /// No description provided for @audioAndVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio and video'**
+  String get audioAndVideo;
+
+  /// No description provided for @videoOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Video only'**
+  String get videoOnly;
+
+  /// No description provided for @audioOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio only'**
+  String get audioOnly;
+
   /// No description provided for @publishAddressGeneratedDescription.
   ///
   /// In en, this message translates to:
@@ -2309,8 +2345,38 @@ abstract class AppLocalizations {
   /// No description provided for @liveSourceAddressHint.
   ///
   /// In en, this message translates to:
-  /// **'rtmp://example/live/stream or https://example/live.flv'**
+  /// **'Enter an address matching the selected protocol'**
   String get liveSourceAddressHint;
+
+  /// No description provided for @rtspTransport.
+  ///
+  /// In en, this message translates to:
+  /// **'RTSP transport'**
+  String get rtspTransport;
+
+  /// No description provided for @videoTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Video track'**
+  String get videoTrack;
+
+  /// No description provided for @audioTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio track'**
+  String get audioTrack;
+
+  /// No description provided for @firstCompatibleTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'First compatible'**
+  String get firstCompatibleTrack;
+
+  /// No description provided for @trackIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Track index'**
+  String get trackIndex;
 
   /// No description provided for @optionalLiveName.
   ///
@@ -2333,7 +2399,7 @@ abstract class AppLocalizations {
   /// No description provided for @livePullSupportDescription.
   ///
   /// In en, this message translates to:
-  /// **'Supports RTMP and HTTP-FLV. The upstream address is stored only in the media source configuration.'**
+  /// **'Supports RTMP, RTSP, and HTTP-FLV sources.'**
   String get livePullSupportDescription;
 
   /// No description provided for @addLivePull.
@@ -2609,8 +2675,20 @@ abstract class AppLocalizations {
   /// No description provided for @livePullUrlSupport.
   ///
   /// In en, this message translates to:
-  /// **'Live stream pulls support rtmp:// and HTTP-FLV .flv addresses'**
+  /// **'The address must match the selected RTMP, RTSP, or HTTP-FLV protocol'**
   String get livePullUrlSupport;
+
+  /// No description provided for @selectRtspTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable at least one RTSP track'**
+  String get selectRtspTrack;
+
+  /// No description provided for @enterValidTrackIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid track index'**
+  String get enterValidTrackIndex;
 
   /// No description provided for @publishingAddress.
   ///
@@ -9138,42 +9216,6 @@ abstract class AppLocalizations {
   /// **'OAuth2 settings affect login entry points. Invalid callbacks, secrets, or endpoints prevent external login.'**
   String get externalLoginWarning;
 
-  /// No description provided for @movieProxy.
-  ///
-  /// In en, this message translates to:
-  /// **'Movie proxy'**
-  String get movieProxy;
-
-  /// No description provided for @movieProxyDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow the server to proxy movie resource requests.'**
-  String get movieProxyDescription;
-
-  /// No description provided for @movieProxyWarning.
-  ///
-  /// In en, this message translates to:
-  /// **'Proxying can send user credentials to media sites and expose playback resources to room members. Enable it only for trusted members and sources.'**
-  String get movieProxyWarning;
-
-  /// No description provided for @liveProxy.
-  ///
-  /// In en, this message translates to:
-  /// **'Live stream proxy'**
-  String get liveProxy;
-
-  /// No description provided for @liveProxyDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow the server to proxy live stream requests.'**
-  String get liveProxyDescription;
-
-  /// No description provided for @liveProxyWarning.
-  ///
-  /// In en, this message translates to:
-  /// **'Live proxying can forward sensitive headers or cookies and expose them through playback information. Use trusted sources.'**
-  String get liveProxyWarning;
-
   /// No description provided for @rtmpPublishAddress.
   ///
   /// In en, this message translates to:
@@ -10949,6 +10991,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I saved the codes'**
   String get savedRecoveryCodes;
+
+  /// No description provided for @sliceCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Slice cache'**
+  String get sliceCache;
+
+  /// No description provided for @nodeId.
+  ///
+  /// In en, this message translates to:
+  /// **'Node ID'**
+  String get nodeId;
+
+  /// No description provided for @currentNode.
+  ///
+  /// In en, this message translates to:
+  /// **'Current node'**
+  String get currentNode;
+
+  /// No description provided for @allNodes.
+  ///
+  /// In en, this message translates to:
+  /// **'All nodes'**
+  String get allNodes;
+
+  /// No description provided for @loadSliceCacheFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load slice cache statistics: {error}'**
+  String loadSliceCacheFailed(String error);
+
+  /// No description provided for @nodeUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Node unavailable'**
+  String get nodeUnavailable;
+
+  /// No description provided for @noSliceCacheStats.
+  ///
+  /// In en, this message translates to:
+  /// **'No slice cache statistics are available'**
+  String get noSliceCacheStats;
+
+  /// No description provided for @evictExpiredSliceCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Evict expired'**
+  String get evictExpiredSliceCache;
+
+  /// No description provided for @purgeSliceCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Purge cache'**
+  String get purgeSliceCache;
+
+  /// No description provided for @confirmPurgeSliceCache.
+  ///
+  /// In en, this message translates to:
+  /// **'Purge every cached slice for the selected target? Active playback may need to fetch media data again.'**
+  String get confirmPurgeSliceCache;
+
+  /// No description provided for @sliceCacheEvictionCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {count, plural, =1{1 expired cache entry} other{{count} expired cache entries}}'**
+  String sliceCacheEvictionCompleted(int count);
+
+  /// No description provided for @sliceCachePurgeCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {count, plural, =1{1 cache entry} other{{count} cache entries}} and freed {size}'**
+  String sliceCachePurgeCompleted(int count, String size);
+
+  /// No description provided for @sliceCacheNodeOperationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The cache operation failed on this node'**
+  String get sliceCacheNodeOperationFailed;
+
+  /// No description provided for @sliceCacheUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage'**
+  String get sliceCacheUsage;
+
+  /// No description provided for @sliceCacheSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored data'**
+  String get sliceCacheSize;
+
+  /// No description provided for @sliceCacheEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries'**
+  String get sliceCacheEntries;
+
+  /// No description provided for @sliceCacheUpdating.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating'**
+  String get sliceCacheUpdating;
+
+  /// No description provided for @sliceCacheLocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Locks'**
+  String get sliceCacheLocks;
+
+  /// No description provided for @sliceCacheBackend.
+  ///
+  /// In en, this message translates to:
+  /// **'Backend'**
+  String get sliceCacheBackend;
+
+  /// No description provided for @sliceCacheDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory'**
+  String get sliceCacheDirectory;
+
+  /// No description provided for @sliceCacheCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get sliceCacheCapacity;
+
+  /// No description provided for @sliceCacheSliceSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Slice size'**
+  String get sliceCacheSliceSize;
+
+  /// No description provided for @sliceCacheSegmentTtl.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment TTL'**
+  String get sliceCacheSegmentTtl;
+
+  /// No description provided for @sliceCacheStaleMaxAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Stale max age'**
+  String get sliceCacheStaleMaxAge;
+
+  /// No description provided for @sliceCacheEvictionInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Eviction interval'**
+  String get sliceCacheEvictionInterval;
+
+  /// No description provided for @staleWhileRevalidate.
+  ///
+  /// In en, this message translates to:
+  /// **'Stale while revalidate'**
+  String get staleWhileRevalidate;
 }
 
 class _AppLocalizationsDelegate

@@ -552,6 +552,81 @@ class SyncTvAdminDomainService {
     );
   }
 
+  Future<AdminSliceCacheStats> getSliceCacheStats({
+    String nodeId = '',
+    bool allNodes = false,
+  }) async {
+    final response = await _api.adminService.getSliceCacheStats(
+      admin.GetSliceCacheStatsRequest(nodeId: nodeId, allNodes: allNodes),
+    );
+    return AdminSliceCacheStats(
+      nodes: response.nodes.map(_sliceCacheStatsFromProto).toList(),
+      failures: response.failures.map(_sliceCacheFailureFromProto).toList(),
+    );
+  }
+
+  Future<AdminSliceCacheOperationResult> purgeSliceCache({
+    String nodeId = '',
+    bool allNodes = false,
+  }) async {
+    final response = await _api.adminService.purgeSliceCache(
+      admin.PurgeSliceCacheRequest(nodeId: nodeId, allNodes: allNodes),
+    );
+    return AdminSliceCacheOperationResult(
+      success: response.success,
+      removedEntries: response.removedEntries.toInt(),
+      freedBytes: response.freedBytes.toInt(),
+      stats: response.hasStats()
+          ? _sliceCacheStatsFromProto(response.stats)
+          : null,
+      nodes: response.nodes
+          .map(
+            (node) => AdminSliceCacheOperationNode(
+              nodeId: node.nodeId,
+              success: node.success,
+              removedEntries: node.removedEntries.toInt(),
+              freedBytes: node.freedBytes.toInt(),
+              stats: node.hasStats()
+                  ? _sliceCacheStatsFromProto(node.stats)
+                  : null,
+            ),
+          )
+          .toList(),
+      failures: response.failures.map(_sliceCacheFailureFromProto).toList(),
+    );
+  }
+
+  Future<AdminSliceCacheOperationResult> evictExpiredSliceCache({
+    String nodeId = '',
+    bool allNodes = false,
+  }) async {
+    final response = await _api.adminService.evictExpiredSliceCache(
+      admin.EvictExpiredSliceCacheRequest(nodeId: nodeId, allNodes: allNodes),
+    );
+    return AdminSliceCacheOperationResult(
+      success: response.success,
+      removedEntries: response.removedExpiredEntries.toInt(),
+      freedBytes: 0,
+      stats: response.hasStats()
+          ? _sliceCacheStatsFromProto(response.stats)
+          : null,
+      nodes: response.nodes
+          .map(
+            (node) => AdminSliceCacheOperationNode(
+              nodeId: node.nodeId,
+              success: node.success,
+              removedEntries: node.removedExpiredEntries.toInt(),
+              freedBytes: 0,
+              stats: node.hasStats()
+                  ? _sliceCacheStatsFromProto(node.stats)
+                  : null,
+            ),
+          )
+          .toList(),
+      failures: response.failures.map(_sliceCacheFailureFromProto).toList(),
+    );
+  }
+
   Future<AdminsPage> listAdminsPage({
     int page = 1,
     int pageSize = 20,
@@ -1317,9 +1392,6 @@ class SyncTvAdminDomainService {
         }
         settings.oauth2 = optionalPatchSection(admin.OAuth2SettingsPatch());
         break;
-      case 'proxy':
-        settings.proxy = optionalPatchSection(admin.ProxySettingsPatch());
-        break;
       case 'rtmp':
         settings.rtmp = optionalPatchSection(admin.RtmpSettingsPatch());
         break;
@@ -1407,6 +1479,39 @@ class SyncTvAdminDomainService {
       createdAt: instance.createdAt.toInt(),
       updatedAt: instance.updatedAt.toInt(),
     );
+  }
+
+  AdminSliceCacheNodeStats _sliceCacheStatsFromProto(
+    admin.SliceCacheStatsNode stats,
+  ) {
+    final config = stats.config;
+    return AdminSliceCacheNodeStats(
+      nodeId: stats.nodeId,
+      config: AdminSliceCacheConfig(
+        engineEnabled: config.engineEnabled,
+        backend: config.backend,
+        fileCacheDir: config.fileCacheDir,
+        sliceSize: config.sliceSize.toInt(),
+        maxCacheSize: config.maxCacheSize.toInt(),
+        segmentTtlSeconds: config.segmentTtlSecs.toInt(),
+        staleMaxAgeSeconds: config.staleMaxAgeSecs.toInt(),
+        staleWhileRevalidate: config.staleWhileRevalidate,
+        evictionIntervalSeconds: config.evictionIntervalSecs.toInt(),
+        watermarkRatio: config.watermarkRatio,
+      ),
+      currentSizeBytes: stats.currentSizeBytes.toInt(),
+      entryCount: stats.entryCount.toInt(),
+      metadataEntries: stats.metadataEntries.toInt(),
+      updatingEntries: stats.updatingEntries.toInt(),
+      lockCount: stats.lockCount.toInt(),
+      usageRatio: stats.usageRatio,
+    );
+  }
+
+  AdminSliceCacheFailure _sliceCacheFailureFromProto(
+    admin.SliceCacheNodeFailure failure,
+  ) {
+    return AdminSliceCacheFailure(nodeId: failure.nodeId, error: failure.error);
   }
 
   AdminActiveStream _activeStreamFromProto(admin.ActiveStreamInfo stream) {

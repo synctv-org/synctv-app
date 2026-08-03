@@ -123,6 +123,15 @@ final class SyncTvAdminGateway implements AdminGateway {
       SyncTvService.adminDeleteUser(userId);
 
   @override
+  Future<AdminSliceCacheOperationResult> adminEvictExpiredSliceCache({
+    String nodeId = '',
+    bool allNodes = false,
+  }) => SyncTvService.adminEvictExpiredSliceCache(
+    nodeId: nodeId,
+    allNodes: allNodes,
+  );
+
+  @override
   Future<SyncTvRoom> adminGetRoom(String roomId) =>
       SyncTvService.adminGetRoom(roomId);
 
@@ -135,6 +144,13 @@ final class SyncTvAdminGateway implements AdminGateway {
   @override
   Future<AdminServiceState> adminGetServiceState() =>
       SyncTvService.adminGetServiceState();
+
+  @override
+  Future<AdminSliceCacheStats> adminGetSliceCacheStats({
+    String nodeId = '',
+    bool allNodes = false,
+  }) =>
+      SyncTvService.adminGetSliceCacheStats(nodeId: nodeId, allNodes: allNodes);
 
   @override
   Future<SyncTvUser> adminGetUser(String userId) =>
@@ -376,6 +392,12 @@ final class SyncTvAdminGateway implements AdminGateway {
     sortBy: sortBy,
     sortDirection: sortDirection,
   );
+
+  @override
+  Future<AdminSliceCacheOperationResult> adminPurgeSliceCache({
+    String nodeId = '',
+    bool allNodes = false,
+  }) => SyncTvService.adminPurgeSliceCache(nodeId: nodeId, allNodes: allNodes);
 
   @override
   Future<void> adminReconnectProviderInstance(String name) =>

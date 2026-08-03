@@ -190,13 +190,13 @@ class SourceConfigCodec {
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_RTMP =>
         source_config.MediaSourceConfig(
-          rtmp: source_config.RtmpMediaSourceConfig(),
+          rtmp: source_config.RtmpMediaSourceConfig(
+            mode: _rtmpStreamModeFromValue(config['mode']),
+          ),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY =>
         source_config.MediaSourceConfig(
-          liveProxy: source_config.LiveProxyMediaSourceConfig(
-            url: _string(config['url']),
-          ),
+          liveProxy: _liveProxyMediaSourceConfig(config),
         ),
       source_enum.SourceProvider.SOURCE_PROVIDER_CLOUDREVE =>
         source_config.MediaSourceConfig(
@@ -388,10 +388,11 @@ class SourceConfigCodec {
         if (config.emby.serverId.isNotEmpty) 'serverId': config.emby.serverId,
         'itemId': config.emby.itemId,
       },
-      source_config.MediaSourceConfig_Provider.rtmp => <String, dynamic>{},
-      source_config.MediaSourceConfig_Provider.liveProxy => {
-        'url': config.liveProxy.url,
+      source_config.MediaSourceConfig_Provider.rtmp => {
+        'mode': _rtmpStreamModeToString(config.rtmp.mode),
       },
+      source_config.MediaSourceConfig_Provider.liveProxy =>
+        _liveProxyMediaSourceConfigToMap(config.liveProxy),
       source_config.MediaSourceConfig_Provider.cloudreve => {
         if (config.cloudreve.serverId.isNotEmpty)
           'serverId': config.cloudreve.serverId,
@@ -448,7 +449,9 @@ class SourceConfigCodec {
   static bool isLiveMediaSourceConfig(source_config.MediaSourceConfig config) {
     return switch (config.whichProvider()) {
       source_config.MediaSourceConfig_Provider.directUrl =>
-        config.directUrl.hasIsLive() && config.directUrl.isLive,
+        config.directUrl.hasPlaybackKind() &&
+            config.directUrl.playbackKind ==
+                source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
       source_config.MediaSourceConfig_Provider.bilibili =>
         config.bilibili.whichSource() ==
             source_config.BilibiliMediaSourceConfig_Source.live,
@@ -1658,6 +1661,142 @@ class SourceConfigCodec {
     };
   }
 
+  static source_enum.PlaybackKind? _playbackKindFromValue(Object? value) {
+    return switch (_string(value).trim().toLowerCase()) {
+      'regular' ||
+      'playback_kind_regular' ||
+      '1' => source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
+      'live' ||
+      'playback_kind_live' ||
+      '2' => source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
+      _ => null,
+    };
+  }
+
+  static String _playbackKindToString(source_enum.PlaybackKind value) {
+    return switch (value) {
+      source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR => 'regular',
+      source_enum.PlaybackKind.PLAYBACK_KIND_LIVE => 'live',
+      _ => '',
+    };
+  }
+
+  static source_enum.RtmpStreamMode _rtmpStreamModeFromValue(Object? value) {
+    return switch (_string(value).trim().toLowerCase()) {
+      'videoonly' ||
+      'video_only' ||
+      'rtmp_stream_mode_video_only' ||
+      '2' => source_enum.RtmpStreamMode.RTMP_STREAM_MODE_VIDEO_ONLY,
+      'audioonly' ||
+      'audio_only' ||
+      'rtmp_stream_mode_audio_only' ||
+      '3' => source_enum.RtmpStreamMode.RTMP_STREAM_MODE_AUDIO_ONLY,
+      _ => source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
+    };
+  }
+
+  static String _rtmpStreamModeToString(source_enum.RtmpStreamMode value) {
+    return switch (value) {
+      source_enum.RtmpStreamMode.RTMP_STREAM_MODE_VIDEO_ONLY => 'videoOnly',
+      source_enum.RtmpStreamMode.RTMP_STREAM_MODE_AUDIO_ONLY => 'audioOnly',
+      _ => 'default',
+    };
+  }
+
+  static source_config.LiveProxyMediaSourceConfig _liveProxyMediaSourceConfig(
+    Map<String, dynamic> config,
+  ) {
+    final source = _dynamicMap(config['source']);
+    final url = _string(source['url']);
+    return switch (_string(source['protocol']).trim().toLowerCase()) {
+      'rtmp' => source_config.LiveProxyMediaSourceConfig(
+        rtmp: source_config.RtmpPullSourceConfig(
+          url: url,
+          mode: _rtmpStreamModeFromValue(source['mode']),
+        ),
+      ),
+      'rtsp' => source_config.LiveProxyMediaSourceConfig(
+        rtsp: source_config.RtspPullSourceConfig(
+          url: url,
+          transport: _rtspTransportFromValue(source['transport']),
+          videoTrack: _rtspTrackSelectionFromMap(source['videoTrack']),
+          audioTrack: _rtspTrackSelectionFromMap(source['audioTrack']),
+        ),
+      ),
+      'httpflv' ||
+      'http_flv' ||
+      'http-flv' => source_config.LiveProxyMediaSourceConfig(
+        httpFlv: source_config.HttpFlvPullSourceConfig(url: url),
+      ),
+      _ => source_config.LiveProxyMediaSourceConfig(),
+    };
+  }
+
+  static source_enum.RtspTransport _rtspTransportFromValue(Object? value) {
+    return switch (_string(value).trim().toLowerCase()) {
+      'udp' ||
+      'rtsp_transport_udp' ||
+      '2' => source_enum.RtspTransport.RTSP_TRANSPORT_UDP,
+      _ => source_enum.RtspTransport.RTSP_TRANSPORT_TCP,
+    };
+  }
+
+  static source_config.RtspTrackSelection _rtspTrackSelectionFromMap(
+    Object? value,
+  ) {
+    final map = _dynamicMap(value);
+    return switch (_string(map['mode']).trim().toLowerCase()) {
+      'index' => source_config.RtspTrackSelection(
+        index: _optionalInt(map['index']) ?? 0,
+      ),
+      'disabled' => source_config.RtspTrackSelection(disabled: true),
+      _ => source_config.RtspTrackSelection(firstCompatible: true),
+    };
+  }
+
+  static Map<String, dynamic> _liveProxyMediaSourceConfigToMap(
+    source_config.LiveProxyMediaSourceConfig config,
+  ) {
+    final source = switch (config.whichSource()) {
+      source_config.LiveProxyMediaSourceConfig_Source.rtmp => {
+        'protocol': 'rtmp',
+        'url': config.rtmp.url,
+        'mode': _rtmpStreamModeToString(config.rtmp.mode),
+      },
+      source_config.LiveProxyMediaSourceConfig_Source.rtsp => {
+        'protocol': 'rtsp',
+        'url': config.rtsp.url,
+        'transport':
+            config.rtsp.transport ==
+                source_enum.RtspTransport.RTSP_TRANSPORT_UDP
+            ? 'udp'
+            : 'tcp',
+        'videoTrack': _rtspTrackSelectionToMap(config.rtsp.videoTrack),
+        'audioTrack': _rtspTrackSelectionToMap(config.rtsp.audioTrack),
+      },
+      source_config.LiveProxyMediaSourceConfig_Source.httpFlv => {
+        'protocol': 'httpFlv',
+        'url': config.httpFlv.url,
+      },
+      source_config.LiveProxyMediaSourceConfig_Source.notSet =>
+        <String, dynamic>{},
+    };
+    return {'source': source};
+  }
+
+  static Map<String, dynamic> _rtspTrackSelectionToMap(
+    source_config.RtspTrackSelection selection,
+  ) {
+    return switch (selection.whichMode()) {
+      source_config.RtspTrackSelection_Mode.index_ => {
+        'mode': 'index',
+        'index': selection.index,
+      },
+      source_config.RtspTrackSelection_Mode.disabled => {'mode': 'disabled'},
+      _ => {'mode': 'firstCompatible'},
+    };
+  }
+
   static source_config.DirectUrlMediaSourceConfig _directUrlMediaSourceConfig(
     Map<String, dynamic> config,
   ) {
@@ -1683,7 +1822,7 @@ class SourceConfigCodec {
         config['danmakus'],
       ).map(_directUrlDanmakuSourceConfig).toList(),
       defaultDanmakuIndex: _optionalInt(config['defaultDanmakuIndex']),
-      isLive: _optionalBool(config['isLive']),
+      playbackKind: _playbackKindFromValue(config['playbackKind']),
       durationSeconds: _optionalDouble(config['durationSeconds']),
       preferProxy: _optionalBool(config['preferProxy']),
       proxyOnly: _optionalBool(config['proxyOnly']),
@@ -1768,7 +1907,8 @@ class SourceConfigCodec {
         'danmakus': config.danmakus.map(_danmakuToMap).toList(),
       if (config.hasDefaultDanmakuIndex())
         'defaultDanmakuIndex': config.defaultDanmakuIndex,
-      if (config.hasIsLive()) 'isLive': config.isLive,
+      if (config.hasPlaybackKind())
+        'playbackKind': _playbackKindToString(config.playbackKind),
       if (config.hasDurationSeconds())
         'durationSeconds': config.durationSeconds,
       if (config.hasPreferProxy()) 'preferProxy': config.preferProxy,
@@ -1795,7 +1935,7 @@ class SourceConfigCodec {
         config.hasDefaultSubtitleIndex() ||
         config.danmakus.isNotEmpty ||
         config.hasDefaultDanmakuIndex() ||
-        config.hasIsLive() ||
+        config.hasPlaybackKind() ||
         config.hasDurationSeconds() ||
         config.hasPreferProxy();
   }

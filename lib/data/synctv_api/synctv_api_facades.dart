@@ -823,13 +823,6 @@ class SyncTvRoomApi {
     );
   }
 
-  Future<client.SetRoomPasswordResponse> setRoomPassword(
-    String roomId,
-    client.ClearRoomPasswordRequest request,
-  ) {
-    return clearRoomPassword(roomId, request);
-  }
-
   Future<client.SetRoomPasswordResponse> clearRoomPassword(
     String roomId,
     client.ClearRoomPasswordRequest request,
@@ -2818,6 +2811,39 @@ class SyncTvAdminApi {
       'GET',
       '/api/admin/service-state',
       admin.GetServiceStateResponse.create,
+    );
+  }
+
+  Future<admin.GetSliceCacheStatsResponse> getSliceCacheStats(
+    admin.GetSliceCacheStatsRequest request,
+  ) {
+    return _api._send(
+      'GET',
+      '/api/admin/slice-cache',
+      admin.GetSliceCacheStatsResponse.create,
+      query: _api._messageQuery(request),
+    );
+  }
+
+  Future<admin.PurgeSliceCacheResponse> purgeSliceCache(
+    admin.PurgeSliceCacheRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/admin/slice-cache/purge',
+      admin.PurgeSliceCacheResponse.create,
+      body: request,
+    );
+  }
+
+  Future<admin.EvictExpiredSliceCacheResponse> evictExpiredSliceCache(
+    admin.EvictExpiredSliceCacheRequest request,
+  ) {
+    return _api._send(
+      'POST',
+      '/api/admin/slice-cache/evict-expired',
+      admin.EvictExpiredSliceCacheResponse.create,
+      body: request,
     );
   }
 

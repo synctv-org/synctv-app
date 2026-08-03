@@ -8,6 +8,8 @@ import 'package:synctv_app/core/media/local_image_upload.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 import 'local_backend_test_auth.dart';
 
@@ -164,12 +166,14 @@ Future<void> runExtendedSmoke(String baseUrl, String rootPassword) async {
     roomId,
     playlistId: pl1.id,
     url: 'https://example.com/a.mp4',
+    playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
     name: 'A',
   );
   final m2 = await SyncTvService.addDirectUrlMedia(
     roomId,
     playlistId: pl1.id,
     url: 'https://example.com/b.mp4',
+    playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
     name: 'B',
   );
 

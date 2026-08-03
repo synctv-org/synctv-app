@@ -103,6 +103,7 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String roomId, {
     String playlistId = '',
     required String url,
+    required source_enum.PlaybackKind playbackKind,
     Map<String, String> headers = const {},
     String name = '',
     bool preferProxy = false,
@@ -111,6 +112,7 @@ final class SyncTvProviderGateway implements ProviderGateway {
     roomId,
     playlistId: playlistId,
     url: url,
+    playbackKind: playbackKind,
     headers: headers,
     name: name,
     preferProxy: preferProxy,
@@ -206,12 +208,12 @@ final class SyncTvProviderGateway implements ProviderGateway {
   Future<String> addLiveProxyMedia(
     String roomId, {
     String playlistId = '',
-    required String url,
+    required source_config.LiveProxyMediaSourceConfig sourceConfig,
     String name = '',
   }) => SyncTvService.addLiveProxyMedia(
     roomId,
     playlistId: playlistId,
-    url: url,
+    sourceConfig: sourceConfig,
     name: name,
   );
 
@@ -275,7 +277,14 @@ final class SyncTvProviderGateway implements ProviderGateway {
     String roomId, {
     String playlistId = '',
     String name = '',
-  }) => SyncTvService.addRtmpMedia(roomId, playlistId: playlistId, name: name);
+    source_enum.RtmpStreamMode mode =
+        source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
+  }) => SyncTvService.addRtmpMedia(
+    roomId,
+    playlistId: playlistId,
+    name: name,
+    mode: mode,
+  );
 
   @override
   Future<String> addSeafileMedia(
@@ -1147,44 +1156,43 @@ final class SyncTvProviderGateway implements ProviderGateway {
   );
 
   @override
-  Future<void> logoutAList(String serverId, {String instanceName = ''}) =>
-      SyncTvService.logoutAList(serverId, instanceName: instanceName);
+  Future<void> logoutAList(String serverId) =>
+      SyncTvService.logoutAList(serverId);
 
   @override
-  Future<void> logoutBilibili({String instanceName = ''}) =>
-      SyncTvService.logoutBilibili(instanceName: instanceName);
+  Future<void> logoutBilibili() => SyncTvService.logoutBilibili();
 
   @override
-  Future<void> logoutCloudreve(String serverId, {String instanceName = ''}) =>
-      SyncTvService.logoutCloudreve(serverId, instanceName: instanceName);
+  Future<void> logoutCloudreve(String serverId) =>
+      SyncTvService.logoutCloudreve(serverId);
 
   @override
-  Future<void> logoutEmby(String serverId, {String instanceName = ''}) =>
-      SyncTvService.logoutEmby(serverId, instanceName: instanceName);
+  Future<void> logoutEmby(String serverId) =>
+      SyncTvService.logoutEmby(serverId);
 
   @override
-  Future<void> logoutFnos(String serverId, {String instanceName = ''}) =>
-      SyncTvService.logoutFnos(serverId, instanceName: instanceName);
+  Future<void> logoutFnos(String serverId) =>
+      SyncTvService.logoutFnos(serverId);
 
   @override
-  Future<void> logoutNextcloud(String serverId, {String instanceName = ''}) =>
-      SyncTvService.logoutNextcloud(serverId, instanceName: instanceName);
+  Future<void> logoutNextcloud(String serverId) =>
+      SyncTvService.logoutNextcloud(serverId);
 
   @override
-  Future<void> logoutQnap(String serverId, {String instanceName = ''}) =>
-      SyncTvService.logoutQnap(serverId, instanceName: instanceName);
+  Future<void> logoutQnap(String serverId) =>
+      SyncTvService.logoutQnap(serverId);
 
   @override
-  Future<void> logoutSeafile(String serverId, {String instanceName = ''}) =>
-      SyncTvService.logoutSeafile(serverId, instanceName: instanceName);
+  Future<void> logoutSeafile(String serverId) =>
+      SyncTvService.logoutSeafile(serverId);
 
   @override
-  Future<void> logoutSynology(String serverId, {String instanceName = ''}) =>
-      SyncTvService.logoutSynology(serverId, instanceName: instanceName);
+  Future<void> logoutSynology(String serverId) =>
+      SyncTvService.logoutSynology(serverId);
 
   @override
-  Future<void> logoutTrueNas(String serverId, {String instanceName = ''}) =>
-      SyncTvService.logoutTrueNas(serverId, instanceName: instanceName);
+  Future<void> logoutTrueNas(String serverId) =>
+      SyncTvService.logoutTrueNas(serverId);
 
   @override
   Future<BilibiliParseInfo> parseBilibiliInfo(
@@ -1308,20 +1316,20 @@ final class SyncTvProviderGateway implements ProviderGateway {
       SyncTvService.startNextcloudLoginFlow(endpoint);
 
   @override
-  Future<void> unbindDouyin(String serverId, {String instanceName = ''}) =>
-      SyncTvService.unbindDouyin(serverId, instanceName: instanceName);
+  Future<void> unbindDouyin(String serverId) =>
+      SyncTvService.unbindDouyin(serverId);
 
   @override
-  Future<void> unbindTikTok(String serverId, {String instanceName = ''}) =>
-      SyncTvService.unbindTikTok(serverId, instanceName: instanceName);
+  Future<void> unbindTikTok(String serverId) =>
+      SyncTvService.unbindTikTok(serverId);
 
   @override
-  Future<void> unbindTwitch(String serverId, {String instanceName = ''}) =>
-      SyncTvService.unbindTwitch(serverId, instanceName: instanceName);
+  Future<void> unbindTwitch(String serverId) =>
+      SyncTvService.unbindTwitch(serverId);
 
   @override
-  Future<void> unbindYoutube(String serverId, {String instanceName = ''}) =>
-      SyncTvService.unbindYoutube(serverId, instanceName: instanceName);
+  Future<void> unbindYoutube(String serverId) =>
+      SyncTvService.unbindYoutube(serverId);
 
   @override
   Future<void> unlockSeafileLibrary(

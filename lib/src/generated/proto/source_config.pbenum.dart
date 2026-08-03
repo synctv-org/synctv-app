@@ -93,6 +93,75 @@ class SourceProvider extends $pb.ProtobufEnum {
   const SourceProvider._(super.value, super.name);
 }
 
+class PlaybackKind extends $pb.ProtobufEnum {
+  static const PlaybackKind PLAYBACK_KIND_UNSPECIFIED =
+      PlaybackKind._(0, _omitEnumNames ? '' : 'PLAYBACK_KIND_UNSPECIFIED');
+  static const PlaybackKind PLAYBACK_KIND_REGULAR =
+      PlaybackKind._(1, _omitEnumNames ? '' : 'PLAYBACK_KIND_REGULAR');
+  static const PlaybackKind PLAYBACK_KIND_LIVE =
+      PlaybackKind._(2, _omitEnumNames ? '' : 'PLAYBACK_KIND_LIVE');
+
+  static const $core.List<PlaybackKind> values = <PlaybackKind>[
+    PLAYBACK_KIND_UNSPECIFIED,
+    PLAYBACK_KIND_REGULAR,
+    PLAYBACK_KIND_LIVE,
+  ];
+
+  static final $core.List<PlaybackKind?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static PlaybackKind? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const PlaybackKind._(super.value, super.name);
+}
+
+class RtmpStreamMode extends $pb.ProtobufEnum {
+  static const RtmpStreamMode RTMP_STREAM_MODE_UNSPECIFIED =
+      RtmpStreamMode._(0, _omitEnumNames ? '' : 'RTMP_STREAM_MODE_UNSPECIFIED');
+  static const RtmpStreamMode RTMP_STREAM_MODE_DEFAULT =
+      RtmpStreamMode._(1, _omitEnumNames ? '' : 'RTMP_STREAM_MODE_DEFAULT');
+  static const RtmpStreamMode RTMP_STREAM_MODE_VIDEO_ONLY =
+      RtmpStreamMode._(2, _omitEnumNames ? '' : 'RTMP_STREAM_MODE_VIDEO_ONLY');
+  static const RtmpStreamMode RTMP_STREAM_MODE_AUDIO_ONLY =
+      RtmpStreamMode._(3, _omitEnumNames ? '' : 'RTMP_STREAM_MODE_AUDIO_ONLY');
+
+  static const $core.List<RtmpStreamMode> values = <RtmpStreamMode>[
+    RTMP_STREAM_MODE_UNSPECIFIED,
+    RTMP_STREAM_MODE_DEFAULT,
+    RTMP_STREAM_MODE_VIDEO_ONLY,
+    RTMP_STREAM_MODE_AUDIO_ONLY,
+  ];
+
+  static final $core.List<RtmpStreamMode?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static RtmpStreamMode? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RtmpStreamMode._(super.value, super.name);
+}
+
+class RtspTransport extends $pb.ProtobufEnum {
+  static const RtspTransport RTSP_TRANSPORT_UNSPECIFIED =
+      RtspTransport._(0, _omitEnumNames ? '' : 'RTSP_TRANSPORT_UNSPECIFIED');
+  static const RtspTransport RTSP_TRANSPORT_TCP =
+      RtspTransport._(1, _omitEnumNames ? '' : 'RTSP_TRANSPORT_TCP');
+  static const RtspTransport RTSP_TRANSPORT_UDP =
+      RtspTransport._(2, _omitEnumNames ? '' : 'RTSP_TRANSPORT_UDP');
+
+  static const $core.List<RtspTransport> values = <RtspTransport>[
+    RTSP_TRANSPORT_UNSPECIFIED,
+    RTSP_TRANSPORT_TCP,
+    RTSP_TRANSPORT_UDP,
+  ];
+
+  static final $core.List<RtspTransport?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 2);
+  static RtspTransport? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RtspTransport._(super.value, super.name);
+}
+
 class BilibiliHistoryType extends $pb.ProtobufEnum {
   static const BilibiliHistoryType BILIBILI_HISTORY_TYPE_ALL =
       BilibiliHistoryType._(

@@ -1,3 +1,6 @@
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
+
 class DirectUrlSourceConfig {
   static const sourceProvider = 'directUrl';
 
@@ -22,11 +25,13 @@ class DirectUrlSourceConfig {
 
   final String url;
   final Map<String, String> headers;
+  final source_enum.PlaybackKind playbackKind;
   final bool preferProxy;
   final bool proxyOnly;
 
   const DirectUrlSourceConfig({
     required this.url,
+    required this.playbackKind,
     this.headers = const {},
     this.preferProxy = false,
     this.proxyOnly = false,
@@ -34,14 +39,17 @@ class DirectUrlSourceConfig {
 
   factory DirectUrlSourceConfig.fromUserInput({
     required String url,
+    required source_enum.PlaybackKind playbackKind,
     Map<String, String> headers = const {},
     bool preferProxy = false,
     bool proxyOnly = false,
   }) {
     final normalizedUrl = validateUrl(url);
+    validatePlaybackKind(playbackKind);
     validateHeaders(headers);
     return DirectUrlSourceConfig(
       url: normalizedUrl,
+      playbackKind: playbackKind,
       headers: headers,
       preferProxy: preferProxy,
       proxyOnly: proxyOnly,
@@ -52,6 +60,15 @@ class DirectUrlSourceConfig {
     return {
       'url': url,
       'headers': headers,
+      'playbackKind': switch (playbackKind) {
+        source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR => 'regular',
+        source_enum.PlaybackKind.PLAYBACK_KIND_LIVE => 'live',
+        _ => throw ArgumentError.value(
+          playbackKind,
+          'playbackKind',
+          'Direct URL playback kind must be regular or live',
+        ),
+      },
       if (preferProxy) 'preferProxy': true,
       if (proxyOnly) 'proxyOnly': true,
     };
@@ -66,6 +83,17 @@ class DirectUrlSourceConfig {
       throw const DirectUrlSourceConfigException('请输入有效的 http/https 链接');
     }
     return url;
+  }
+
+  static void validatePlaybackKind(source_enum.PlaybackKind playbackKind) {
+    if (playbackKind != source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR &&
+        playbackKind != source_enum.PlaybackKind.PLAYBACK_KIND_LIVE) {
+      throw ArgumentError.value(
+        playbackKind,
+        'playbackKind',
+        'Direct URL playback kind must be regular or live',
+      );
+    }
   }
 
   static String normalizeUrlInput(String value) {

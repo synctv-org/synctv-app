@@ -195,8 +195,8 @@ class RtmpFlvStreamResponse extends $pb.GeneratedMessage {
   $0.StreamChunk ensureChunk() => $_ensure(0);
 }
 
-class GetRtmpHlsPlaylistRequest extends $pb.GeneratedMessage {
-  factory GetRtmpHlsPlaylistRequest({
+class GetRtmpHlsMasterRequest extends $pb.GeneratedMessage {
+  factory GetRtmpHlsMasterRequest({
     $core.String? version,
     $core.String? sig,
     $core.String? uid,
@@ -212,17 +212,17 @@ class GetRtmpHlsPlaylistRequest extends $pb.GeneratedMessage {
     return result;
   }
 
-  GetRtmpHlsPlaylistRequest._();
+  GetRtmpHlsMasterRequest._();
 
-  factory GetRtmpHlsPlaylistRequest.fromBuffer($core.List<$core.int> data,
+  factory GetRtmpHlsMasterRequest.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-  factory GetRtmpHlsPlaylistRequest.fromJson($core.String json,
+  factory GetRtmpHlsMasterRequest.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'GetRtmpHlsPlaylistRequest',
+      _omitMessageNames ? '' : 'GetRtmpHlsMasterRequest',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.playback_provider.rtmp'),
       createEmptyInstance: create)
@@ -234,24 +234,24 @@ class GetRtmpHlsPlaylistRequest extends $pb.GeneratedMessage {
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetRtmpHlsPlaylistRequest clone() => deepCopy();
+  GetRtmpHlsMasterRequest clone() => deepCopy();
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  GetRtmpHlsPlaylistRequest copyWith(
-          void Function(GetRtmpHlsPlaylistRequest) updates) =>
-      super.copyWith((message) => updates(message as GetRtmpHlsPlaylistRequest))
-          as GetRtmpHlsPlaylistRequest;
+  GetRtmpHlsMasterRequest copyWith(
+          void Function(GetRtmpHlsMasterRequest) updates) =>
+      super.copyWith((message) => updates(message as GetRtmpHlsMasterRequest))
+          as GetRtmpHlsMasterRequest;
 
   @$core.override
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static GetRtmpHlsPlaylistRequest create() => GetRtmpHlsPlaylistRequest._();
+  static GetRtmpHlsMasterRequest create() => GetRtmpHlsMasterRequest._();
   @$core.override
-  GetRtmpHlsPlaylistRequest createEmptyInstance() => create();
+  GetRtmpHlsMasterRequest createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static GetRtmpHlsPlaylistRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<GetRtmpHlsPlaylistRequest>(create);
-  static GetRtmpHlsPlaylistRequest? _defaultInstance;
+  static GetRtmpHlsMasterRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetRtmpHlsMasterRequest>(create);
+  static GetRtmpHlsMasterRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get version => $_getSZ(0);
@@ -297,6 +297,181 @@ class GetRtmpHlsPlaylistRequest extends $pb.GeneratedMessage {
   $core.bool hasExp() => $_has(4);
   @$pb.TagNumber(5)
   void clearExp() => $_clearField(5);
+}
+
+class RtmpHlsMasterResponse extends $pb.GeneratedMessage {
+  factory RtmpHlsMasterResponse({
+    $0.StreamChunk? chunk,
+  }) {
+    final result = create();
+    if (chunk != null) result.chunk = chunk;
+    return result;
+  }
+
+  RtmpHlsMasterResponse._();
+
+  factory RtmpHlsMasterResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RtmpHlsMasterResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RtmpHlsMasterResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.playback_provider.rtmp'),
+      createEmptyInstance: create)
+    ..aOM<$0.StreamChunk>(1, _omitFieldNames ? '' : 'chunk',
+        subBuilder: $0.StreamChunk.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtmpHlsMasterResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtmpHlsMasterResponse copyWith(
+          void Function(RtmpHlsMasterResponse) updates) =>
+      super.copyWith((message) => updates(message as RtmpHlsMasterResponse))
+          as RtmpHlsMasterResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RtmpHlsMasterResponse create() => RtmpHlsMasterResponse._();
+  @$core.override
+  RtmpHlsMasterResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RtmpHlsMasterResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RtmpHlsMasterResponse>(create);
+  static RtmpHlsMasterResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $0.StreamChunk get chunk => $_getN(0);
+  @$pb.TagNumber(1)
+  set chunk($0.StreamChunk value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasChunk() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearChunk() => $_clearField(1);
+  @$pb.TagNumber(1)
+  $0.StreamChunk ensureChunk() => $_ensure(0);
+}
+
+class GetRtmpHlsPlaylistRequest extends $pb.GeneratedMessage {
+  factory GetRtmpHlsPlaylistRequest({
+    $core.String? version,
+    $core.String? generationId,
+    $core.String? sig,
+    $core.String? uid,
+    $core.String? rid,
+    $fixnum.Int64? exp,
+  }) {
+    final result = create();
+    if (version != null) result.version = version;
+    if (generationId != null) result.generationId = generationId;
+    if (sig != null) result.sig = sig;
+    if (uid != null) result.uid = uid;
+    if (rid != null) result.rid = rid;
+    if (exp != null) result.exp = exp;
+    return result;
+  }
+
+  GetRtmpHlsPlaylistRequest._();
+
+  factory GetRtmpHlsPlaylistRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetRtmpHlsPlaylistRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetRtmpHlsPlaylistRequest',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.playback_provider.rtmp'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'version')
+    ..aOS(2, _omitFieldNames ? '' : 'generationId')
+    ..aOS(3, _omitFieldNames ? '' : 'sig')
+    ..aOS(4, _omitFieldNames ? '' : 'uid')
+    ..aOS(5, _omitFieldNames ? '' : 'rid')
+    ..aInt64(6, _omitFieldNames ? '' : 'exp')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetRtmpHlsPlaylistRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetRtmpHlsPlaylistRequest copyWith(
+          void Function(GetRtmpHlsPlaylistRequest) updates) =>
+      super.copyWith((message) => updates(message as GetRtmpHlsPlaylistRequest))
+          as GetRtmpHlsPlaylistRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetRtmpHlsPlaylistRequest create() => GetRtmpHlsPlaylistRequest._();
+  @$core.override
+  GetRtmpHlsPlaylistRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetRtmpHlsPlaylistRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetRtmpHlsPlaylistRequest>(create);
+  static GetRtmpHlsPlaylistRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get version => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set version($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasVersion() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearVersion() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get generationId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set generationId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasGenerationId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearGenerationId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get sig => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set sig($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasSig() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSig() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get uid => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set uid($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasUid() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearUid() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get rid => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set rid($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRid() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRid() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $fixnum.Int64 get exp => $_getI64(5);
+  @$pb.TagNumber(6)
+  set exp($fixnum.Int64 value) => $_setInt64(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasExp() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearExp() => $_clearField(6);
 }
 
 class RtmpHlsPlaylistResponse extends $pb.GeneratedMessage {
@@ -361,6 +536,7 @@ class RtmpHlsPlaylistResponse extends $pb.GeneratedMessage {
 class GetRtmpHlsSegmentRequest extends $pb.GeneratedMessage {
   factory GetRtmpHlsSegmentRequest({
     $core.String? version,
+    $core.String? generationId,
     $core.String? segmentName,
     $core.String? sig,
     $core.String? uid,
@@ -371,6 +547,7 @@ class GetRtmpHlsSegmentRequest extends $pb.GeneratedMessage {
   }) {
     final result = create();
     if (version != null) result.version = version;
+    if (generationId != null) result.generationId = generationId;
     if (segmentName != null) result.segmentName = segmentName;
     if (sig != null) result.sig = sig;
     if (uid != null) result.uid = uid;
@@ -396,13 +573,14 @@ class GetRtmpHlsSegmentRequest extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.playback_provider.rtmp'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'version')
-    ..aOS(2, _omitFieldNames ? '' : 'segmentName')
-    ..aOS(3, _omitFieldNames ? '' : 'sig')
-    ..aOS(4, _omitFieldNames ? '' : 'uid')
-    ..aOS(5, _omitFieldNames ? '' : 'rid')
-    ..aInt64(6, _omitFieldNames ? '' : 'exp')
-    ..aOS(7, _omitFieldNames ? '' : 'range')
-    ..aOB(8, _omitFieldNames ? '' : 'head')
+    ..aOS(2, _omitFieldNames ? '' : 'generationId')
+    ..aOS(3, _omitFieldNames ? '' : 'segmentName')
+    ..aOS(4, _omitFieldNames ? '' : 'sig')
+    ..aOS(5, _omitFieldNames ? '' : 'uid')
+    ..aOS(6, _omitFieldNames ? '' : 'rid')
+    ..aInt64(7, _omitFieldNames ? '' : 'exp')
+    ..aOS(8, _omitFieldNames ? '' : 'range')
+    ..aOB(9, _omitFieldNames ? '' : 'head')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -435,67 +613,76 @@ class GetRtmpHlsSegmentRequest extends $pb.GeneratedMessage {
   void clearVersion() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get segmentName => $_getSZ(1);
+  $core.String get generationId => $_getSZ(1);
   @$pb.TagNumber(2)
-  set segmentName($core.String value) => $_setString(1, value);
+  set generationId($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasSegmentName() => $_has(1);
+  $core.bool hasGenerationId() => $_has(1);
   @$pb.TagNumber(2)
-  void clearSegmentName() => $_clearField(2);
+  void clearGenerationId() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get sig => $_getSZ(2);
+  $core.String get segmentName => $_getSZ(2);
   @$pb.TagNumber(3)
-  set sig($core.String value) => $_setString(2, value);
+  set segmentName($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasSig() => $_has(2);
+  $core.bool hasSegmentName() => $_has(2);
   @$pb.TagNumber(3)
-  void clearSig() => $_clearField(3);
+  void clearSegmentName() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get uid => $_getSZ(3);
+  $core.String get sig => $_getSZ(3);
   @$pb.TagNumber(4)
-  set uid($core.String value) => $_setString(3, value);
+  set sig($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasUid() => $_has(3);
+  $core.bool hasSig() => $_has(3);
   @$pb.TagNumber(4)
-  void clearUid() => $_clearField(4);
+  void clearSig() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get rid => $_getSZ(4);
+  $core.String get uid => $_getSZ(4);
   @$pb.TagNumber(5)
-  set rid($core.String value) => $_setString(4, value);
+  set uid($core.String value) => $_setString(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasRid() => $_has(4);
+  $core.bool hasUid() => $_has(4);
   @$pb.TagNumber(5)
-  void clearRid() => $_clearField(5);
+  void clearUid() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $fixnum.Int64 get exp => $_getI64(5);
+  $core.String get rid => $_getSZ(5);
   @$pb.TagNumber(6)
-  set exp($fixnum.Int64 value) => $_setInt64(5, value);
+  set rid($core.String value) => $_setString(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasExp() => $_has(5);
+  $core.bool hasRid() => $_has(5);
   @$pb.TagNumber(6)
-  void clearExp() => $_clearField(6);
+  void clearRid() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $core.String get range => $_getSZ(6);
+  $fixnum.Int64 get exp => $_getI64(6);
   @$pb.TagNumber(7)
-  set range($core.String value) => $_setString(6, value);
+  set exp($fixnum.Int64 value) => $_setInt64(6, value);
   @$pb.TagNumber(7)
-  $core.bool hasRange() => $_has(6);
+  $core.bool hasExp() => $_has(6);
   @$pb.TagNumber(7)
-  void clearRange() => $_clearField(7);
+  void clearExp() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $core.bool get head => $_getBF(7);
+  $core.String get range => $_getSZ(7);
   @$pb.TagNumber(8)
-  set head($core.bool value) => $_setBool(7, value);
+  set range($core.String value) => $_setString(7, value);
   @$pb.TagNumber(8)
-  $core.bool hasHead() => $_has(7);
+  $core.bool hasRange() => $_has(7);
   @$pb.TagNumber(8)
-  void clearHead() => $_clearField(8);
+  void clearRange() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.bool get head => $_getBF(8);
+  @$pb.TagNumber(9)
+  set head($core.bool value) => $_setBool(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasHead() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearHead() => $_clearField(9);
 }
 
 class RtmpHlsSegmentResponse extends $pb.GeneratedMessage {
@@ -566,6 +753,10 @@ class RtmpPlaybackProviderServiceApi {
           $pb.ClientContext? ctx, GetRtmpFlvStreamRequest request) =>
       _client.invoke<RtmpFlvStreamResponse>(ctx, 'RtmpPlaybackProviderService',
           'GetFlvStream', request, RtmpFlvStreamResponse());
+  $async.Future<RtmpHlsMasterResponse> getHlsMaster(
+          $pb.ClientContext? ctx, GetRtmpHlsMasterRequest request) =>
+      _client.invoke<RtmpHlsMasterResponse>(ctx, 'RtmpPlaybackProviderService',
+          'GetHlsMaster', request, RtmpHlsMasterResponse());
   $async.Future<RtmpHlsPlaylistResponse> getHlsPlaylist(
           $pb.ClientContext? ctx, GetRtmpHlsPlaylistRequest request) =>
       _client.invoke<RtmpHlsPlaylistResponse>(

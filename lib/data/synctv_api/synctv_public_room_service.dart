@@ -134,8 +134,6 @@ class SyncTvPublicRoomDomainService {
       webauthnRpId: settings.webauthnRpId,
       enableWebauthnSignup: settings.enableWebauthnSignup,
       webauthnSignupNeedReview: settings.webauthnSignupNeedReview,
-      movieProxy: settings.movieProxy,
-      liveProxy: settings.liveProxy,
       emailWhitelistEnabled: settings.emailWhitelistEnabled,
       emailWhitelistDomains: settings.emailWhitelistDomains.toList(
         growable: false,

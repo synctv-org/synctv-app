@@ -18471,14 +18471,14 @@ class Playback extends $pb.GeneratedMessage {
     $core.String? roomId,
     $core.String? name,
     $core.double? playlistPosition,
+    $1.SourceProvider? provider,
+    $core.String? providerInstanceName,
     $core.Iterable<$core.MapEntry<$core.String, PlaybackInfo>>? playbackInfos,
     $core.String? defaultMode,
     PlaybackMetadata? metadata,
     $fixnum.Int64? expiresAt,
     $core.double? durationSeconds,
-    $1.SourceProvider? provider,
-    $core.String? providerInstanceName,
-    $core.bool? isLive,
+    $1.PlaybackKind? playbackKind,
     ProviderTarget? target,
   }) {
     final result = create();
@@ -18487,15 +18487,15 @@ class Playback extends $pb.GeneratedMessage {
     if (roomId != null) result.roomId = roomId;
     if (name != null) result.name = name;
     if (playlistPosition != null) result.playlistPosition = playlistPosition;
+    if (provider != null) result.provider = provider;
+    if (providerInstanceName != null)
+      result.providerInstanceName = providerInstanceName;
     if (playbackInfos != null) result.playbackInfos.addEntries(playbackInfos);
     if (defaultMode != null) result.defaultMode = defaultMode;
     if (metadata != null) result.metadata = metadata;
     if (expiresAt != null) result.expiresAt = expiresAt;
     if (durationSeconds != null) result.durationSeconds = durationSeconds;
-    if (provider != null) result.provider = provider;
-    if (providerInstanceName != null)
-      result.providerInstanceName = providerInstanceName;
-    if (isLive != null) result.isLive = isLive;
+    if (playbackKind != null) result.playbackKind = playbackKind;
     if (target != null) result.target = target;
     return result;
   }
@@ -18518,23 +18518,24 @@ class Playback extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'roomId')
     ..aOS(4, _omitFieldNames ? '' : 'name')
     ..aD(5, _omitFieldNames ? '' : 'playlistPosition')
-    ..m<$core.String, PlaybackInfo>(6, _omitFieldNames ? '' : 'playbackInfos',
+    ..aE<$1.SourceProvider>(6, _omitFieldNames ? '' : 'provider',
+        enumValues: $1.SourceProvider.values)
+    ..aOS(7, _omitFieldNames ? '' : 'providerInstanceName')
+    ..m<$core.String, PlaybackInfo>(8, _omitFieldNames ? '' : 'playbackInfos',
         entryClassName: 'Playback.PlaybackInfosEntry',
         keyFieldType: $pb.PbFieldType.OS,
         valueFieldType: $pb.PbFieldType.OM,
         valueCreator: PlaybackInfo.create,
         valueDefaultOrMaker: PlaybackInfo.getDefault,
         packageName: const $pb.PackageName('synctv.client'))
-    ..aOS(7, _omitFieldNames ? '' : 'defaultMode')
-    ..aOM<PlaybackMetadata>(8, _omitFieldNames ? '' : 'metadata',
+    ..aOS(9, _omitFieldNames ? '' : 'defaultMode')
+    ..aOM<PlaybackMetadata>(10, _omitFieldNames ? '' : 'metadata',
         subBuilder: PlaybackMetadata.create)
-    ..aInt64(10, _omitFieldNames ? '' : 'expiresAt')
-    ..aD(11, _omitFieldNames ? '' : 'durationSeconds')
-    ..aE<$1.SourceProvider>(12, _omitFieldNames ? '' : 'provider',
-        enumValues: $1.SourceProvider.values)
-    ..aOS(13, _omitFieldNames ? '' : 'providerInstanceName')
-    ..aOB(14, _omitFieldNames ? '' : 'isLive')
-    ..aOM<ProviderTarget>(15, _omitFieldNames ? '' : 'target',
+    ..aInt64(11, _omitFieldNames ? '' : 'expiresAt')
+    ..aD(12, _omitFieldNames ? '' : 'durationSeconds')
+    ..aE<$1.PlaybackKind>(13, _omitFieldNames ? '' : 'playbackKind',
+        enumValues: $1.PlaybackKind.values)
+    ..aOM<ProviderTarget>(14, _omitFieldNames ? '' : 'target',
         subBuilder: ProviderTarget.create)
     ..hasRequiredFields = false;
 
@@ -18601,91 +18602,91 @@ class Playback extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearPlaylistPosition() => $_clearField(5);
 
+  @$pb.TagNumber(6)
+  $1.SourceProvider get provider => $_getN(5);
+  @$pb.TagNumber(6)
+  set provider($1.SourceProvider value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasProvider() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearProvider() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get providerInstanceName => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set providerInstanceName($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasProviderInstanceName() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearProviderInstanceName() => $_clearField(7);
+
   /// Multiple playback modes (e.g., "direct", "proxied", "cdn1", "cdn2")
   /// Provider can define arbitrary mode names
-  @$pb.TagNumber(6)
-  $pb.PbMap<$core.String, PlaybackInfo> get playbackInfos => $_getMap(5);
+  @$pb.TagNumber(8)
+  $pb.PbMap<$core.String, PlaybackInfo> get playbackInfos => $_getMap(7);
 
   /// Default mode name (must be a key in playback_infos)
-  @$pb.TagNumber(7)
-  $core.String get defaultMode => $_getSZ(6);
-  @$pb.TagNumber(7)
-  set defaultMode($core.String value) => $_setString(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasDefaultMode() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearDefaultMode() => $_clearField(7);
+  @$pb.TagNumber(9)
+  $core.String get defaultMode => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set defaultMode($core.String value) => $_setString(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasDefaultMode() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearDefaultMode() => $_clearField(9);
 
   /// Media-level metadata.
-  @$pb.TagNumber(8)
-  PlaybackMetadata get metadata => $_getN(7);
-  @$pb.TagNumber(8)
-  set metadata(PlaybackMetadata value) => $_setField(8, value);
-  @$pb.TagNumber(8)
-  $core.bool hasMetadata() => $_has(7);
-  @$pb.TagNumber(8)
-  void clearMetadata() => $_clearField(8);
-  @$pb.TagNumber(8)
-  PlaybackMetadata ensureMetadata() => $_ensure(7);
+  @$pb.TagNumber(10)
+  PlaybackMetadata get metadata => $_getN(9);
+  @$pb.TagNumber(10)
+  set metadata(PlaybackMetadata value) => $_setField(10, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMetadata() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMetadata() => $_clearField(10);
+  @$pb.TagNumber(10)
+  PlaybackMetadata ensureMetadata() => $_ensure(9);
 
   /// Earliest media expiration across playback media resources, if any.
-  @$pb.TagNumber(10)
-  $fixnum.Int64 get expiresAt => $_getI64(8);
-  @$pb.TagNumber(10)
-  set expiresAt($fixnum.Int64 value) => $_setInt64(8, value);
-  @$pb.TagNumber(10)
-  $core.bool hasExpiresAt() => $_has(8);
-  @$pb.TagNumber(10)
-  void clearExpiresAt() => $_clearField(10);
+  @$pb.TagNumber(11)
+  $fixnum.Int64 get expiresAt => $_getI64(10);
+  @$pb.TagNumber(11)
+  set expiresAt($fixnum.Int64 value) => $_setInt64(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasExpiresAt() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearExpiresAt() => $_clearField(11);
 
   /// Backend-owned source duration in seconds, when available.
-  @$pb.TagNumber(11)
-  $core.double get durationSeconds => $_getN(9);
-  @$pb.TagNumber(11)
-  set durationSeconds($core.double value) => $_setDouble(9, value);
-  @$pb.TagNumber(11)
-  $core.bool hasDurationSeconds() => $_has(9);
-  @$pb.TagNumber(11)
-  void clearDurationSeconds() => $_clearField(11);
+  @$pb.TagNumber(12)
+  $core.double get durationSeconds => $_getN(11);
+  @$pb.TagNumber(12)
+  set durationSeconds($core.double value) => $_setDouble(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasDurationSeconds() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearDurationSeconds() => $_clearField(12);
 
-  @$pb.TagNumber(12)
-  $1.SourceProvider get provider => $_getN(10);
-  @$pb.TagNumber(12)
-  set provider($1.SourceProvider value) => $_setField(12, value);
-  @$pb.TagNumber(12)
-  $core.bool hasProvider() => $_has(10);
-  @$pb.TagNumber(12)
-  void clearProvider() => $_clearField(12);
-
+  /// Behavioral kind of the current playback source.
   @$pb.TagNumber(13)
-  $core.String get providerInstanceName => $_getSZ(11);
+  $1.PlaybackKind get playbackKind => $_getN(12);
   @$pb.TagNumber(13)
-  set providerInstanceName($core.String value) => $_setString(11, value);
+  set playbackKind($1.PlaybackKind value) => $_setField(13, value);
   @$pb.TagNumber(13)
-  $core.bool hasProviderInstanceName() => $_has(11);
+  $core.bool hasPlaybackKind() => $_has(12);
   @$pb.TagNumber(13)
-  void clearProviderInstanceName() => $_clearField(13);
-
-  /// Whether the current playback source is a live stream.
-  @$pb.TagNumber(14)
-  $core.bool get isLive => $_getBF(12);
-  @$pb.TagNumber(14)
-  set isLive($core.bool value) => $_setBool(12, value);
-  @$pb.TagNumber(14)
-  $core.bool hasIsLive() => $_has(12);
-  @$pb.TagNumber(14)
-  void clearIsLive() => $_clearField(14);
+  void clearPlaybackKind() => $_clearField(13);
 
   /// Provider-facing playback target for dynamic playlist playback.
-  @$pb.TagNumber(15)
+  @$pb.TagNumber(14)
   ProviderTarget get target => $_getN(13);
-  @$pb.TagNumber(15)
-  set target(ProviderTarget value) => $_setField(15, value);
-  @$pb.TagNumber(15)
+  @$pb.TagNumber(14)
+  set target(ProviderTarget value) => $_setField(14, value);
+  @$pb.TagNumber(14)
   $core.bool hasTarget() => $_has(13);
-  @$pb.TagNumber(15)
-  void clearTarget() => $_clearField(15);
-  @$pb.TagNumber(15)
+  @$pb.TagNumber(14)
+  void clearTarget() => $_clearField(14);
+  @$pb.TagNumber(14)
   ProviderTarget ensureTarget() => $_ensure(13);
 }
 
@@ -44686,31 +44687,30 @@ class GetPublicSettingsRequest extends $pb.GeneratedMessage {
 
 class GetPublicSettingsResponse extends $pb.GeneratedMessage {
   factory GetPublicSettingsResponse({
+    $core.String? serverName,
     $core.bool? roomCreationEnabled,
     $fixnum.Int64? maxRoomsPerUser,
     $fixnum.Int64? defaultMaxMembers,
     $core.bool? roomCreationApprovalRequired,
     $core.String? roomPasswordPolicy,
     $core.bool? enablePasswordSignup,
-    $core.bool? movieProxy,
-    $core.bool? liveProxy,
-    $core.bool? tsDisguisedAsPng,
-    $core.String? customPublishHost,
-    $core.bool? emailWhitelistEnabled,
     $core.bool? passwordSignupNeedReview,
     $core.bool? enableEmailSignup,
     $core.bool? enableGuest,
     $core.bool? emailSignupNeedReview,
-    $core.bool? enableWebauthnSignup,
-    $core.bool? webauthnSignupNeedReview,
     $core.bool? enableEmail,
     $core.bool? enableWebauthn,
-    $core.Iterable<$core.String>? emailWhitelistDomains,
-    $fixnum.Int64? maxPinnedChatMessagesPerRoom,
-    $core.String? serverName,
     $core.String? webauthnRpId,
+    $core.bool? enableWebauthnSignup,
+    $core.bool? webauthnSignupNeedReview,
+    $fixnum.Int64? maxPinnedChatMessagesPerRoom,
+    $core.bool? tsDisguisedAsPng,
+    $core.String? customPublishHost,
+    $core.bool? emailWhitelistEnabled,
+    $core.Iterable<$core.String>? emailWhitelistDomains,
   }) {
     final result = create();
+    if (serverName != null) result.serverName = serverName;
     if (roomCreationEnabled != null)
       result.roomCreationEnabled = roomCreationEnabled;
     if (maxRoomsPerUser != null) result.maxRoomsPerUser = maxRoomsPerUser;
@@ -44721,30 +44721,27 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
       result.roomPasswordPolicy = roomPasswordPolicy;
     if (enablePasswordSignup != null)
       result.enablePasswordSignup = enablePasswordSignup;
-    if (movieProxy != null) result.movieProxy = movieProxy;
-    if (liveProxy != null) result.liveProxy = liveProxy;
-    if (tsDisguisedAsPng != null) result.tsDisguisedAsPng = tsDisguisedAsPng;
-    if (customPublishHost != null) result.customPublishHost = customPublishHost;
-    if (emailWhitelistEnabled != null)
-      result.emailWhitelistEnabled = emailWhitelistEnabled;
     if (passwordSignupNeedReview != null)
       result.passwordSignupNeedReview = passwordSignupNeedReview;
     if (enableEmailSignup != null) result.enableEmailSignup = enableEmailSignup;
     if (enableGuest != null) result.enableGuest = enableGuest;
     if (emailSignupNeedReview != null)
       result.emailSignupNeedReview = emailSignupNeedReview;
+    if (enableEmail != null) result.enableEmail = enableEmail;
+    if (enableWebauthn != null) result.enableWebauthn = enableWebauthn;
+    if (webauthnRpId != null) result.webauthnRpId = webauthnRpId;
     if (enableWebauthnSignup != null)
       result.enableWebauthnSignup = enableWebauthnSignup;
     if (webauthnSignupNeedReview != null)
       result.webauthnSignupNeedReview = webauthnSignupNeedReview;
-    if (enableEmail != null) result.enableEmail = enableEmail;
-    if (enableWebauthn != null) result.enableWebauthn = enableWebauthn;
-    if (emailWhitelistDomains != null)
-      result.emailWhitelistDomains.addAll(emailWhitelistDomains);
     if (maxPinnedChatMessagesPerRoom != null)
       result.maxPinnedChatMessagesPerRoom = maxPinnedChatMessagesPerRoom;
-    if (serverName != null) result.serverName = serverName;
-    if (webauthnRpId != null) result.webauthnRpId = webauthnRpId;
+    if (tsDisguisedAsPng != null) result.tsDisguisedAsPng = tsDisguisedAsPng;
+    if (customPublishHost != null) result.customPublishHost = customPublishHost;
+    if (emailWhitelistEnabled != null)
+      result.emailWhitelistEnabled = emailWhitelistEnabled;
+    if (emailWhitelistDomains != null)
+      result.emailWhitelistDomains.addAll(emailWhitelistDomains);
     return result;
   }
 
@@ -44761,33 +44758,31 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'GetPublicSettingsResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.client'),
       createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'serverName')
     ..aOB(2, _omitFieldNames ? '' : 'roomCreationEnabled')
     ..aInt64(3, _omitFieldNames ? '' : 'maxRoomsPerUser')
     ..aInt64(4, _omitFieldNames ? '' : 'defaultMaxMembers')
-    ..aOB(6, _omitFieldNames ? '' : 'roomCreationApprovalRequired')
-    ..aOS(8, _omitFieldNames ? '' : 'roomPasswordPolicy')
-    ..aOB(10, _omitFieldNames ? '' : 'enablePasswordSignup')
-    ..aOB(11, _omitFieldNames ? '' : 'movieProxy')
-    ..aOB(12, _omitFieldNames ? '' : 'liveProxy')
-    ..aOB(13, _omitFieldNames ? '' : 'tsDisguisedAsPng')
-    ..aOS(14, _omitFieldNames ? '' : 'customPublishHost')
-    ..aOB(15, _omitFieldNames ? '' : 'emailWhitelistEnabled')
-    ..aOB(16, _omitFieldNames ? '' : 'passwordSignupNeedReview')
-    ..aOB(17, _omitFieldNames ? '' : 'enableEmailSignup')
-    ..aOB(18, _omitFieldNames ? '' : 'enableGuest')
-    ..aOB(19, _omitFieldNames ? '' : 'emailSignupNeedReview')
-    ..aOB(22, _omitFieldNames ? '' : 'enableWebauthnSignup')
-    ..aOB(23, _omitFieldNames ? '' : 'webauthnSignupNeedReview')
-    ..aOB(24, _omitFieldNames ? '' : 'enableEmail')
-    ..aOB(25, _omitFieldNames ? '' : 'enableWebauthn')
-    ..pPS(26, _omitFieldNames ? '' : 'emailWhitelistDomains')
+    ..aOB(5, _omitFieldNames ? '' : 'roomCreationApprovalRequired')
+    ..aOS(6, _omitFieldNames ? '' : 'roomPasswordPolicy')
+    ..aOB(7, _omitFieldNames ? '' : 'enablePasswordSignup')
+    ..aOB(8, _omitFieldNames ? '' : 'passwordSignupNeedReview')
+    ..aOB(9, _omitFieldNames ? '' : 'enableEmailSignup')
+    ..aOB(10, _omitFieldNames ? '' : 'enableGuest')
+    ..aOB(11, _omitFieldNames ? '' : 'emailSignupNeedReview')
+    ..aOB(12, _omitFieldNames ? '' : 'enableEmail')
+    ..aOB(13, _omitFieldNames ? '' : 'enableWebauthn')
+    ..aOS(14, _omitFieldNames ? '' : 'webauthnRpId')
+    ..aOB(15, _omitFieldNames ? '' : 'enableWebauthnSignup')
+    ..aOB(16, _omitFieldNames ? '' : 'webauthnSignupNeedReview')
     ..a<$fixnum.Int64>(
-        27,
+        17,
         _omitFieldNames ? '' : 'maxPinnedChatMessagesPerRoom',
         $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOS(28, _omitFieldNames ? '' : 'serverName')
-    ..aOS(29, _omitFieldNames ? '' : 'webauthnRpId')
+    ..aOB(18, _omitFieldNames ? '' : 'tsDisguisedAsPng')
+    ..aOS(19, _omitFieldNames ? '' : 'customPublishHost')
+    ..aOB(20, _omitFieldNames ? '' : 'emailWhitelistEnabled')
+    ..pPS(21, _omitFieldNames ? '' : 'emailWhitelistDomains')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -44810,212 +44805,193 @@ class GetPublicSettingsResponse extends $pb.GeneratedMessage {
       $pb.GeneratedMessage.$_defaultFor<GetPublicSettingsResponse>(create);
   static GetPublicSettingsResponse? _defaultInstance;
 
+  @$pb.TagNumber(1)
+  $core.String get serverName => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set serverName($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasServerName() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearServerName() => $_clearField(1);
+
   @$pb.TagNumber(2)
-  $core.bool get roomCreationEnabled => $_getBF(0);
+  $core.bool get roomCreationEnabled => $_getBF(1);
   @$pb.TagNumber(2)
-  set roomCreationEnabled($core.bool value) => $_setBool(0, value);
+  set roomCreationEnabled($core.bool value) => $_setBool(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasRoomCreationEnabled() => $_has(0);
+  $core.bool hasRoomCreationEnabled() => $_has(1);
   @$pb.TagNumber(2)
   void clearRoomCreationEnabled() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $fixnum.Int64 get maxRoomsPerUser => $_getI64(1);
+  $fixnum.Int64 get maxRoomsPerUser => $_getI64(2);
   @$pb.TagNumber(3)
-  set maxRoomsPerUser($fixnum.Int64 value) => $_setInt64(1, value);
+  set maxRoomsPerUser($fixnum.Int64 value) => $_setInt64(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasMaxRoomsPerUser() => $_has(1);
+  $core.bool hasMaxRoomsPerUser() => $_has(2);
   @$pb.TagNumber(3)
   void clearMaxRoomsPerUser() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $fixnum.Int64 get defaultMaxMembers => $_getI64(2);
+  $fixnum.Int64 get defaultMaxMembers => $_getI64(3);
   @$pb.TagNumber(4)
-  set defaultMaxMembers($fixnum.Int64 value) => $_setInt64(2, value);
+  set defaultMaxMembers($fixnum.Int64 value) => $_setInt64(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasDefaultMaxMembers() => $_has(2);
+  $core.bool hasDefaultMaxMembers() => $_has(3);
   @$pb.TagNumber(4)
   void clearDefaultMaxMembers() => $_clearField(4);
 
   /// Room settings
-  @$pb.TagNumber(6)
-  $core.bool get roomCreationApprovalRequired => $_getBF(3);
-  @$pb.TagNumber(6)
-  set roomCreationApprovalRequired($core.bool value) => $_setBool(3, value);
-  @$pb.TagNumber(6)
-  $core.bool hasRoomCreationApprovalRequired() => $_has(3);
-  @$pb.TagNumber(6)
-  void clearRoomCreationApprovalRequired() => $_clearField(6);
+  @$pb.TagNumber(5)
+  $core.bool get roomCreationApprovalRequired => $_getBF(4);
+  @$pb.TagNumber(5)
+  set roomCreationApprovalRequired($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasRoomCreationApprovalRequired() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRoomCreationApprovalRequired() => $_clearField(5);
 
-  @$pb.TagNumber(8)
-  $core.String get roomPasswordPolicy => $_getSZ(4);
-  @$pb.TagNumber(8)
-  set roomPasswordPolicy($core.String value) => $_setString(4, value);
-  @$pb.TagNumber(8)
-  $core.bool hasRoomPasswordPolicy() => $_has(4);
-  @$pb.TagNumber(8)
-  void clearRoomPasswordPolicy() => $_clearField(8);
+  @$pb.TagNumber(6)
+  $core.String get roomPasswordPolicy => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set roomPasswordPolicy($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasRoomPasswordPolicy() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearRoomPasswordPolicy() => $_clearField(6);
 
   /// User settings
-  @$pb.TagNumber(10)
-  $core.bool get enablePasswordSignup => $_getBF(5);
-  @$pb.TagNumber(10)
-  set enablePasswordSignup($core.bool value) => $_setBool(5, value);
-  @$pb.TagNumber(10)
-  $core.bool hasEnablePasswordSignup() => $_has(5);
-  @$pb.TagNumber(10)
-  void clearEnablePasswordSignup() => $_clearField(10);
+  @$pb.TagNumber(7)
+  $core.bool get enablePasswordSignup => $_getBF(6);
+  @$pb.TagNumber(7)
+  set enablePasswordSignup($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasEnablePasswordSignup() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearEnablePasswordSignup() => $_clearField(7);
 
-  /// Proxy settings
+  @$pb.TagNumber(8)
+  $core.bool get passwordSignupNeedReview => $_getBF(7);
+  @$pb.TagNumber(8)
+  set passwordSignupNeedReview($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasPasswordSignupNeedReview() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearPasswordSignupNeedReview() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.bool get enableEmailSignup => $_getBF(8);
+  @$pb.TagNumber(9)
+  set enableEmailSignup($core.bool value) => $_setBool(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasEnableEmailSignup() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearEnableEmailSignup() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.bool get enableGuest => $_getBF(9);
+  @$pb.TagNumber(10)
+  set enableGuest($core.bool value) => $_setBool(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasEnableGuest() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearEnableGuest() => $_clearField(10);
+
   @$pb.TagNumber(11)
-  $core.bool get movieProxy => $_getBF(6);
+  $core.bool get emailSignupNeedReview => $_getBF(10);
   @$pb.TagNumber(11)
-  set movieProxy($core.bool value) => $_setBool(6, value);
+  set emailSignupNeedReview($core.bool value) => $_setBool(10, value);
   @$pb.TagNumber(11)
-  $core.bool hasMovieProxy() => $_has(6);
+  $core.bool hasEmailSignupNeedReview() => $_has(10);
   @$pb.TagNumber(11)
-  void clearMovieProxy() => $_clearField(11);
+  void clearEmailSignupNeedReview() => $_clearField(11);
 
   @$pb.TagNumber(12)
-  $core.bool get liveProxy => $_getBF(7);
+  $core.bool get enableEmail => $_getBF(11);
   @$pb.TagNumber(12)
-  set liveProxy($core.bool value) => $_setBool(7, value);
+  set enableEmail($core.bool value) => $_setBool(11, value);
   @$pb.TagNumber(12)
-  $core.bool hasLiveProxy() => $_has(7);
+  $core.bool hasEnableEmail() => $_has(11);
   @$pb.TagNumber(12)
-  void clearLiveProxy() => $_clearField(12);
+  void clearEnableEmail() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.bool get enableWebauthn => $_getBF(12);
+  @$pb.TagNumber(13)
+  set enableWebauthn($core.bool value) => $_setBool(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasEnableWebauthn() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearEnableWebauthn() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.String get webauthnRpId => $_getSZ(13);
+  @$pb.TagNumber(14)
+  set webauthnRpId($core.String value) => $_setString(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasWebauthnRpId() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearWebauthnRpId() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $core.bool get enableWebauthnSignup => $_getBF(14);
+  @$pb.TagNumber(15)
+  set enableWebauthnSignup($core.bool value) => $_setBool(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasEnableWebauthnSignup() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearEnableWebauthnSignup() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $core.bool get webauthnSignupNeedReview => $_getBF(15);
+  @$pb.TagNumber(16)
+  set webauthnSignupNeedReview($core.bool value) => $_setBool(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasWebauthnSignupNeedReview() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearWebauthnSignupNeedReview() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $fixnum.Int64 get maxPinnedChatMessagesPerRoom => $_getI64(16);
+  @$pb.TagNumber(17)
+  set maxPinnedChatMessagesPerRoom($fixnum.Int64 value) =>
+      $_setInt64(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasMaxPinnedChatMessagesPerRoom() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearMaxPinnedChatMessagesPerRoom() => $_clearField(17);
 
   /// RTMP settings
-  @$pb.TagNumber(13)
-  $core.bool get tsDisguisedAsPng => $_getBF(8);
-  @$pb.TagNumber(13)
-  set tsDisguisedAsPng($core.bool value) => $_setBool(8, value);
-  @$pb.TagNumber(13)
-  $core.bool hasTsDisguisedAsPng() => $_has(8);
-  @$pb.TagNumber(13)
-  void clearTsDisguisedAsPng() => $_clearField(13);
+  @$pb.TagNumber(18)
+  $core.bool get tsDisguisedAsPng => $_getBF(17);
+  @$pb.TagNumber(18)
+  set tsDisguisedAsPng($core.bool value) => $_setBool(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasTsDisguisedAsPng() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearTsDisguisedAsPng() => $_clearField(18);
 
-  @$pb.TagNumber(14)
-  $core.String get customPublishHost => $_getSZ(9);
-  @$pb.TagNumber(14)
-  set customPublishHost($core.String value) => $_setString(9, value);
-  @$pb.TagNumber(14)
-  $core.bool hasCustomPublishHost() => $_has(9);
-  @$pb.TagNumber(14)
-  void clearCustomPublishHost() => $_clearField(14);
+  @$pb.TagNumber(19)
+  $core.String get customPublishHost => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set customPublishHost($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasCustomPublishHost() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearCustomPublishHost() => $_clearField(19);
 
   /// Email settings
-  @$pb.TagNumber(15)
-  $core.bool get emailWhitelistEnabled => $_getBF(10);
-  @$pb.TagNumber(15)
-  set emailWhitelistEnabled($core.bool value) => $_setBool(10, value);
-  @$pb.TagNumber(15)
-  $core.bool hasEmailWhitelistEnabled() => $_has(10);
-  @$pb.TagNumber(15)
-  void clearEmailWhitelistEnabled() => $_clearField(15);
+  @$pb.TagNumber(20)
+  $core.bool get emailWhitelistEnabled => $_getBF(19);
+  @$pb.TagNumber(20)
+  set emailWhitelistEnabled($core.bool value) => $_setBool(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasEmailWhitelistEnabled() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearEmailWhitelistEnabled() => $_clearField(20);
 
-  @$pb.TagNumber(16)
-  $core.bool get passwordSignupNeedReview => $_getBF(11);
-  @$pb.TagNumber(16)
-  set passwordSignupNeedReview($core.bool value) => $_setBool(11, value);
-  @$pb.TagNumber(16)
-  $core.bool hasPasswordSignupNeedReview() => $_has(11);
-  @$pb.TagNumber(16)
-  void clearPasswordSignupNeedReview() => $_clearField(16);
-
-  @$pb.TagNumber(17)
-  $core.bool get enableEmailSignup => $_getBF(12);
-  @$pb.TagNumber(17)
-  set enableEmailSignup($core.bool value) => $_setBool(12, value);
-  @$pb.TagNumber(17)
-  $core.bool hasEnableEmailSignup() => $_has(12);
-  @$pb.TagNumber(17)
-  void clearEnableEmailSignup() => $_clearField(17);
-
-  @$pb.TagNumber(18)
-  $core.bool get enableGuest => $_getBF(13);
-  @$pb.TagNumber(18)
-  set enableGuest($core.bool value) => $_setBool(13, value);
-  @$pb.TagNumber(18)
-  $core.bool hasEnableGuest() => $_has(13);
-  @$pb.TagNumber(18)
-  void clearEnableGuest() => $_clearField(18);
-
-  @$pb.TagNumber(19)
-  $core.bool get emailSignupNeedReview => $_getBF(14);
-  @$pb.TagNumber(19)
-  set emailSignupNeedReview($core.bool value) => $_setBool(14, value);
-  @$pb.TagNumber(19)
-  $core.bool hasEmailSignupNeedReview() => $_has(14);
-  @$pb.TagNumber(19)
-  void clearEmailSignupNeedReview() => $_clearField(19);
-
-  @$pb.TagNumber(22)
-  $core.bool get enableWebauthnSignup => $_getBF(15);
-  @$pb.TagNumber(22)
-  set enableWebauthnSignup($core.bool value) => $_setBool(15, value);
-  @$pb.TagNumber(22)
-  $core.bool hasEnableWebauthnSignup() => $_has(15);
-  @$pb.TagNumber(22)
-  void clearEnableWebauthnSignup() => $_clearField(22);
-
-  @$pb.TagNumber(23)
-  $core.bool get webauthnSignupNeedReview => $_getBF(16);
-  @$pb.TagNumber(23)
-  set webauthnSignupNeedReview($core.bool value) => $_setBool(16, value);
-  @$pb.TagNumber(23)
-  $core.bool hasWebauthnSignupNeedReview() => $_has(16);
-  @$pb.TagNumber(23)
-  void clearWebauthnSignupNeedReview() => $_clearField(23);
-
-  @$pb.TagNumber(24)
-  $core.bool get enableEmail => $_getBF(17);
-  @$pb.TagNumber(24)
-  set enableEmail($core.bool value) => $_setBool(17, value);
-  @$pb.TagNumber(24)
-  $core.bool hasEnableEmail() => $_has(17);
-  @$pb.TagNumber(24)
-  void clearEnableEmail() => $_clearField(24);
-
-  @$pb.TagNumber(25)
-  $core.bool get enableWebauthn => $_getBF(18);
-  @$pb.TagNumber(25)
-  set enableWebauthn($core.bool value) => $_setBool(18, value);
-  @$pb.TagNumber(25)
-  $core.bool hasEnableWebauthn() => $_has(18);
-  @$pb.TagNumber(25)
-  void clearEnableWebauthn() => $_clearField(25);
-
-  @$pb.TagNumber(26)
-  $pb.PbList<$core.String> get emailWhitelistDomains => $_getList(19);
-
-  @$pb.TagNumber(27)
-  $fixnum.Int64 get maxPinnedChatMessagesPerRoom => $_getI64(20);
-  @$pb.TagNumber(27)
-  set maxPinnedChatMessagesPerRoom($fixnum.Int64 value) =>
-      $_setInt64(20, value);
-  @$pb.TagNumber(27)
-  $core.bool hasMaxPinnedChatMessagesPerRoom() => $_has(20);
-  @$pb.TagNumber(27)
-  void clearMaxPinnedChatMessagesPerRoom() => $_clearField(27);
-
-  @$pb.TagNumber(28)
-  $core.String get serverName => $_getSZ(21);
-  @$pb.TagNumber(28)
-  set serverName($core.String value) => $_setString(21, value);
-  @$pb.TagNumber(28)
-  $core.bool hasServerName() => $_has(21);
-  @$pb.TagNumber(28)
-  void clearServerName() => $_clearField(28);
-
-  @$pb.TagNumber(29)
-  $core.String get webauthnRpId => $_getSZ(22);
-  @$pb.TagNumber(29)
-  set webauthnRpId($core.String value) => $_setString(22, value);
-  @$pb.TagNumber(29)
-  $core.bool hasWebauthnRpId() => $_has(22);
-  @$pb.TagNumber(29)
-  void clearWebauthnRpId() => $_clearField(29);
+  @$pb.TagNumber(21)
+  $pb.PbList<$core.String> get emailWhitelistDomains => $_getList(20);
 }
 
 class GetServerInfoRequest extends $pb.GeneratedMessage {

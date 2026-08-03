@@ -7200,7 +7200,7 @@ const Playback$json = {
     },
     {
       '1': 'provider',
-      '3': 12,
+      '3': 6,
       '4': 1,
       '5': 14,
       '6': '.synctv.source_config.SourceProvider',
@@ -7208,23 +7208,23 @@ const Playback$json = {
     },
     {
       '1': 'provider_instance_name',
-      '3': 13,
+      '3': 7,
       '4': 1,
       '5': 9,
       '10': 'providerInstanceName'
     },
     {
       '1': 'playback_infos',
-      '3': 6,
+      '3': 8,
       '4': 3,
       '5': 11,
       '6': '.synctv.client.Playback.PlaybackInfosEntry',
       '10': 'playbackInfos'
     },
-    {'1': 'default_mode', '3': 7, '4': 1, '5': 9, '10': 'defaultMode'},
+    {'1': 'default_mode', '3': 9, '4': 1, '5': 9, '10': 'defaultMode'},
     {
       '1': 'metadata',
-      '3': 8,
+      '3': 10,
       '4': 1,
       '5': 11,
       '6': '.synctv.client.PlaybackMetadata',
@@ -7234,7 +7234,7 @@ const Playback$json = {
     },
     {
       '1': 'expires_at',
-      '3': 10,
+      '3': 11,
       '4': 1,
       '5': 3,
       '9': 1,
@@ -7243,17 +7243,25 @@ const Playback$json = {
     },
     {
       '1': 'duration_seconds',
-      '3': 11,
+      '3': 12,
       '4': 1,
       '5': 1,
       '9': 2,
       '10': 'durationSeconds',
       '17': true
     },
-    {'1': 'is_live', '3': 14, '4': 1, '5': 8, '10': 'isLive'},
+    {
+      '1': 'playback_kind',
+      '3': 13,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackKind',
+      '8': {},
+      '10': 'playbackKind'
+    },
     {
       '1': 'target',
-      '3': 15,
+      '3': 14,
       '4': 1,
       '5': 11,
       '6': '.synctv.client.ProviderTarget',
@@ -7290,17 +7298,18 @@ final $typed_data.Uint8List playbackDescriptor = $convert.base64Decode(
     'CghQbGF5YmFjaxIZCghtZWRpYV9pZBgBIAEoCVIHbWVkaWFJZBIfCgtwbGF5bGlzdF9pZBgCIA'
     'EoCVIKcGxheWxpc3RJZBIXCgdyb29tX2lkGAMgASgJUgZyb29tSWQSEgoEbmFtZRgEIAEoCVIE'
     'bmFtZRIrChFwbGF5bGlzdF9wb3NpdGlvbhgFIAEoAVIQcGxheWxpc3RQb3NpdGlvbhJACghwcm'
-    '92aWRlchgMIAEoDjIkLnN5bmN0di5zb3VyY2VfY29uZmlnLlNvdXJjZVByb3ZpZGVyUghwcm92'
-    'aWRlchI0ChZwcm92aWRlcl9pbnN0YW5jZV9uYW1lGA0gASgJUhRwcm92aWRlckluc3RhbmNlTm'
-    'FtZRJRCg5wbGF5YmFja19pbmZvcxgGIAMoCzIqLnN5bmN0di5jbGllbnQuUGxheWJhY2suUGxh'
-    'eWJhY2tJbmZvc0VudHJ5Ug1wbGF5YmFja0luZm9zEiEKDGRlZmF1bHRfbW9kZRgHIAEoCVILZG'
-    'VmYXVsdE1vZGUSQAoIbWV0YWRhdGEYCCABKAsyHy5zeW5jdHYuY2xpZW50LlBsYXliYWNrTWV0'
-    'YWRhdGFIAFIIbWV0YWRhdGGIAQESIgoKZXhwaXJlc19hdBgKIAEoA0gBUglleHBpcmVzQXSIAQ'
-    'ESLgoQZHVyYXRpb25fc2Vjb25kcxgLIAEoAUgCUg9kdXJhdGlvblNlY29uZHOIAQESFwoHaXNf'
-    'bGl2ZRgOIAEoCFIGaXNMaXZlEjUKBnRhcmdldBgPIAEoCzIdLnN5bmN0di5jbGllbnQuUHJvdm'
-    'lkZXJUYXJnZXRSBnRhcmdldBpdChJQbGF5YmFja0luZm9zRW50cnkSEAoDa2V5GAEgASgJUgNr'
-    'ZXkSMQoFdmFsdWUYAiABKAsyGy5zeW5jdHYuY2xpZW50LlBsYXliYWNrSW5mb1IFdmFsdWU6Aj'
-    'gBQgsKCV9tZXRhZGF0YUINCgtfZXhwaXJlc19hdEITChFfZHVyYXRpb25fc2Vjb25kcw==');
+    '92aWRlchgGIAEoDjIkLnN5bmN0di5zb3VyY2VfY29uZmlnLlNvdXJjZVByb3ZpZGVyUghwcm92'
+    'aWRlchI0ChZwcm92aWRlcl9pbnN0YW5jZV9uYW1lGAcgASgJUhRwcm92aWRlckluc3RhbmNlTm'
+    'FtZRJRCg5wbGF5YmFja19pbmZvcxgIIAMoCzIqLnN5bmN0di5jbGllbnQuUGxheWJhY2suUGxh'
+    'eWJhY2tJbmZvc0VudHJ5Ug1wbGF5YmFja0luZm9zEiEKDGRlZmF1bHRfbW9kZRgJIAEoCVILZG'
+    'VmYXVsdE1vZGUSQAoIbWV0YWRhdGEYCiABKAsyHy5zeW5jdHYuY2xpZW50LlBsYXliYWNrTWV0'
+    'YWRhdGFIAFIIbWV0YWRhdGGIAQESIgoKZXhwaXJlc19hdBgLIAEoA0gBUglleHBpcmVzQXSIAQ'
+    'ESLgoQZHVyYXRpb25fc2Vjb25kcxgMIAEoAUgCUg9kdXJhdGlvblNlY29uZHOIAQESUQoNcGxh'
+    'eWJhY2tfa2luZBgNIAEoDjIiLnN5bmN0di5zb3VyY2VfY29uZmlnLlBsYXliYWNrS2luZEIIuk'
+    'gFggECEAFSDHBsYXliYWNrS2luZBI1CgZ0YXJnZXQYDiABKAsyHS5zeW5jdHYuY2xpZW50LlBy'
+    'b3ZpZGVyVGFyZ2V0UgZ0YXJnZXQaXQoSUGxheWJhY2tJbmZvc0VudHJ5EhAKA2tleRgBIAEoCV'
+    'IDa2V5EjEKBXZhbHVlGAIgASgLMhsuc3luY3R2LmNsaWVudC5QbGF5YmFja0luZm9SBXZhbHVl'
+    'OgI4AUILCglfbWV0YWRhdGFCDQoLX2V4cGlyZXNfYXRCEwoRX2R1cmF0aW9uX3NlY29uZHM=');
 
 @$core.Deprecated('Use playbackMetadataDescriptor instead')
 const PlaybackMetadata$json = {
@@ -17077,7 +17086,7 @@ final $typed_data.Uint8List getPublicSettingsRequestDescriptor =
 const GetPublicSettingsResponse$json = {
   '1': 'GetPublicSettingsResponse',
   '2': [
-    {'1': 'server_name', '3': 28, '4': 1, '5': 9, '10': 'serverName'},
+    {'1': 'server_name', '3': 1, '4': 1, '5': 9, '10': 'serverName'},
     {
       '1': 'room_creation_enabled',
       '3': 2,
@@ -17101,83 +17110,81 @@ const GetPublicSettingsResponse$json = {
     },
     {
       '1': 'room_creation_approval_required',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 8,
       '10': 'roomCreationApprovalRequired'
     },
     {
       '1': 'room_password_policy',
-      '3': 8,
+      '3': 6,
       '4': 1,
       '5': 9,
       '10': 'roomPasswordPolicy'
     },
     {
       '1': 'enable_password_signup',
-      '3': 10,
+      '3': 7,
       '4': 1,
       '5': 8,
       '10': 'enablePasswordSignup'
     },
     {
       '1': 'password_signup_need_review',
-      '3': 16,
+      '3': 8,
       '4': 1,
       '5': 8,
       '10': 'passwordSignupNeedReview'
     },
     {
       '1': 'enable_email_signup',
-      '3': 17,
+      '3': 9,
       '4': 1,
       '5': 8,
       '10': 'enableEmailSignup'
     },
-    {'1': 'enable_guest', '3': 18, '4': 1, '5': 8, '10': 'enableGuest'},
+    {'1': 'enable_guest', '3': 10, '4': 1, '5': 8, '10': 'enableGuest'},
     {
       '1': 'email_signup_need_review',
-      '3': 19,
+      '3': 11,
       '4': 1,
       '5': 8,
       '10': 'emailSignupNeedReview'
     },
-    {'1': 'enable_email', '3': 24, '4': 1, '5': 8, '10': 'enableEmail'},
-    {'1': 'enable_webauthn', '3': 25, '4': 1, '5': 8, '10': 'enableWebauthn'},
-    {'1': 'webauthn_rp_id', '3': 29, '4': 1, '5': 9, '10': 'webauthnRpId'},
+    {'1': 'enable_email', '3': 12, '4': 1, '5': 8, '10': 'enableEmail'},
+    {'1': 'enable_webauthn', '3': 13, '4': 1, '5': 8, '10': 'enableWebauthn'},
+    {'1': 'webauthn_rp_id', '3': 14, '4': 1, '5': 9, '10': 'webauthnRpId'},
     {
       '1': 'enable_webauthn_signup',
-      '3': 22,
+      '3': 15,
       '4': 1,
       '5': 8,
       '10': 'enableWebauthnSignup'
     },
     {
       '1': 'webauthn_signup_need_review',
-      '3': 23,
+      '3': 16,
       '4': 1,
       '5': 8,
       '10': 'webauthnSignupNeedReview'
     },
     {
       '1': 'max_pinned_chat_messages_per_room',
-      '3': 27,
+      '3': 17,
       '4': 1,
       '5': 4,
       '10': 'maxPinnedChatMessagesPerRoom'
     },
-    {'1': 'movie_proxy', '3': 11, '4': 1, '5': 8, '10': 'movieProxy'},
-    {'1': 'live_proxy', '3': 12, '4': 1, '5': 8, '10': 'liveProxy'},
     {
       '1': 'ts_disguised_as_png',
-      '3': 13,
+      '3': 18,
       '4': 1,
       '5': 8,
       '10': 'tsDisguisedAsPng'
     },
     {
       '1': 'custom_publish_host',
-      '3': 14,
+      '3': 19,
       '4': 1,
       '5': 9,
       '9': 0,
@@ -17186,14 +17193,14 @@ const GetPublicSettingsResponse$json = {
     },
     {
       '1': 'email_whitelist_enabled',
-      '3': 15,
+      '3': 20,
       '4': 1,
       '5': 8,
       '10': 'emailWhitelistEnabled'
     },
     {
       '1': 'email_whitelist_domains',
-      '3': 26,
+      '3': 21,
       '4': 3,
       '5': 9,
       '10': 'emailWhitelistDomains'
@@ -17206,28 +17213,27 @@ const GetPublicSettingsResponse$json = {
 
 /// Descriptor for `GetPublicSettingsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getPublicSettingsResponseDescriptor = $convert.base64Decode(
-    'ChlHZXRQdWJsaWNTZXR0aW5nc1Jlc3BvbnNlEh8KC3NlcnZlcl9uYW1lGBwgASgJUgpzZXJ2ZX'
+    'ChlHZXRQdWJsaWNTZXR0aW5nc1Jlc3BvbnNlEh8KC3NlcnZlcl9uYW1lGAEgASgJUgpzZXJ2ZX'
     'JOYW1lEjIKFXJvb21fY3JlYXRpb25fZW5hYmxlZBgCIAEoCFITcm9vbUNyZWF0aW9uRW5hYmxl'
     'ZBIrChJtYXhfcm9vbXNfcGVyX3VzZXIYAyABKANSD21heFJvb21zUGVyVXNlchIuChNkZWZhdW'
     'x0X21heF9tZW1iZXJzGAQgASgDUhFkZWZhdWx0TWF4TWVtYmVycxJFCh9yb29tX2NyZWF0aW9u'
-    'X2FwcHJvdmFsX3JlcXVpcmVkGAYgASgIUhxyb29tQ3JlYXRpb25BcHByb3ZhbFJlcXVpcmVkEj'
-    'AKFHJvb21fcGFzc3dvcmRfcG9saWN5GAggASgJUhJyb29tUGFzc3dvcmRQb2xpY3kSNAoWZW5h'
-    'YmxlX3Bhc3N3b3JkX3NpZ251cBgKIAEoCFIUZW5hYmxlUGFzc3dvcmRTaWdudXASPQobcGFzc3'
-    'dvcmRfc2lnbnVwX25lZWRfcmV2aWV3GBAgASgIUhhwYXNzd29yZFNpZ251cE5lZWRSZXZpZXcS'
-    'LgoTZW5hYmxlX2VtYWlsX3NpZ251cBgRIAEoCFIRZW5hYmxlRW1haWxTaWdudXASIQoMZW5hYm'
-    'xlX2d1ZXN0GBIgASgIUgtlbmFibGVHdWVzdBI3ChhlbWFpbF9zaWdudXBfbmVlZF9yZXZpZXcY'
-    'EyABKAhSFWVtYWlsU2lnbnVwTmVlZFJldmlldxIhCgxlbmFibGVfZW1haWwYGCABKAhSC2VuYW'
-    'JsZUVtYWlsEicKD2VuYWJsZV93ZWJhdXRobhgZIAEoCFIOZW5hYmxlV2ViYXV0aG4SJAoOd2Vi'
-    'YXV0aG5fcnBfaWQYHSABKAlSDHdlYmF1dGhuUnBJZBI0ChZlbmFibGVfd2ViYXV0aG5fc2lnbn'
-    'VwGBYgASgIUhRlbmFibGVXZWJhdXRoblNpZ251cBI9Cht3ZWJhdXRobl9zaWdudXBfbmVlZF9y'
-    'ZXZpZXcYFyABKAhSGHdlYmF1dGhuU2lnbnVwTmVlZFJldmlldxJHCiFtYXhfcGlubmVkX2NoYX'
-    'RfbWVzc2FnZXNfcGVyX3Jvb20YGyABKARSHG1heFBpbm5lZENoYXRNZXNzYWdlc1BlclJvb20S'
-    'HwoLbW92aWVfcHJveHkYCyABKAhSCm1vdmllUHJveHkSHQoKbGl2ZV9wcm94eRgMIAEoCFIJbG'
-    'l2ZVByb3h5Ei0KE3RzX2Rpc2d1aXNlZF9hc19wbmcYDSABKAhSEHRzRGlzZ3Vpc2VkQXNQbmcS'
-    'MwoTY3VzdG9tX3B1Ymxpc2hfaG9zdBgOIAEoCUgAUhFjdXN0b21QdWJsaXNoSG9zdIgBARI2Ch'
-    'dlbWFpbF93aGl0ZWxpc3RfZW5hYmxlZBgPIAEoCFIVZW1haWxXaGl0ZWxpc3RFbmFibGVkEjYK'
-    'F2VtYWlsX3doaXRlbGlzdF9kb21haW5zGBogAygJUhVlbWFpbFdoaXRlbGlzdERvbWFpbnNCFg'
-    'oUX2N1c3RvbV9wdWJsaXNoX2hvc3Q=');
+    'X2FwcHJvdmFsX3JlcXVpcmVkGAUgASgIUhxyb29tQ3JlYXRpb25BcHByb3ZhbFJlcXVpcmVkEj'
+    'AKFHJvb21fcGFzc3dvcmRfcG9saWN5GAYgASgJUhJyb29tUGFzc3dvcmRQb2xpY3kSNAoWZW5h'
+    'YmxlX3Bhc3N3b3JkX3NpZ251cBgHIAEoCFIUZW5hYmxlUGFzc3dvcmRTaWdudXASPQobcGFzc3'
+    'dvcmRfc2lnbnVwX25lZWRfcmV2aWV3GAggASgIUhhwYXNzd29yZFNpZ251cE5lZWRSZXZpZXcS'
+    'LgoTZW5hYmxlX2VtYWlsX3NpZ251cBgJIAEoCFIRZW5hYmxlRW1haWxTaWdudXASIQoMZW5hYm'
+    'xlX2d1ZXN0GAogASgIUgtlbmFibGVHdWVzdBI3ChhlbWFpbF9zaWdudXBfbmVlZF9yZXZpZXcY'
+    'CyABKAhSFWVtYWlsU2lnbnVwTmVlZFJldmlldxIhCgxlbmFibGVfZW1haWwYDCABKAhSC2VuYW'
+    'JsZUVtYWlsEicKD2VuYWJsZV93ZWJhdXRobhgNIAEoCFIOZW5hYmxlV2ViYXV0aG4SJAoOd2Vi'
+    'YXV0aG5fcnBfaWQYDiABKAlSDHdlYmF1dGhuUnBJZBI0ChZlbmFibGVfd2ViYXV0aG5fc2lnbn'
+    'VwGA8gASgIUhRlbmFibGVXZWJhdXRoblNpZ251cBI9Cht3ZWJhdXRobl9zaWdudXBfbmVlZF9y'
+    'ZXZpZXcYECABKAhSGHdlYmF1dGhuU2lnbnVwTmVlZFJldmlldxJHCiFtYXhfcGlubmVkX2NoYX'
+    'RfbWVzc2FnZXNfcGVyX3Jvb20YESABKARSHG1heFBpbm5lZENoYXRNZXNzYWdlc1BlclJvb20S'
+    'LQoTdHNfZGlzZ3Vpc2VkX2FzX3BuZxgSIAEoCFIQdHNEaXNndWlzZWRBc1BuZxIzChNjdXN0b2'
+    '1fcHVibGlzaF9ob3N0GBMgASgJSABSEWN1c3RvbVB1Ymxpc2hIb3N0iAEBEjYKF2VtYWlsX3do'
+    'aXRlbGlzdF9lbmFibGVkGBQgASgIUhVlbWFpbFdoaXRlbGlzdEVuYWJsZWQSNgoXZW1haWxfd2'
+    'hpdGVsaXN0X2RvbWFpbnMYFSADKAlSFWVtYWlsV2hpdGVsaXN0RG9tYWluc0IWChRfY3VzdG9t'
+    'X3B1Ymxpc2hfaG9zdA==');
 
 @$core.Deprecated('Use getServerInfoRequestDescriptor instead')
 const GetServerInfoRequest$json = {
@@ -20159,6 +20165,11 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.source_config.RtmpMediaSourceConfig': $1.RtmpMediaSourceConfig$json,
   '.synctv.source_config.LiveProxyMediaSourceConfig':
       $1.LiveProxyMediaSourceConfig$json,
+  '.synctv.source_config.RtmpPullSourceConfig': $1.RtmpPullSourceConfig$json,
+  '.synctv.source_config.RtspPullSourceConfig': $1.RtspPullSourceConfig$json,
+  '.synctv.source_config.RtspTrackSelection': $1.RtspTrackSelection$json,
+  '.synctv.source_config.HttpFlvPullSourceConfig':
+      $1.HttpFlvPullSourceConfig$json,
   '.synctv.source_config.CloudreveMediaSourceConfig':
       $1.CloudreveMediaSourceConfig$json,
   '.synctv.source_config.TwitchMediaSourceConfig':

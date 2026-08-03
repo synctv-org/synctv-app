@@ -1252,6 +1252,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaSource => 'Media source';
 
   @override
+  String get playbackKind => 'Playback type';
+
+  @override
+  String get onDemand => 'On demand';
+
+  @override
   String get videoLinks => 'Video links';
 
   @override
@@ -1303,6 +1309,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveNameHint => 'For example, Camera or OBS stream';
 
   @override
+  String get streamMode => 'Stream mode';
+
+  @override
+  String get audioAndVideo => 'Audio and video';
+
+  @override
+  String get videoOnly => 'Video only';
+
+  @override
+  String get audioOnly => 'Audio only';
+
+  @override
   String get publishAddressGeneratedDescription =>
       'A publishing address and Stream Key will be generated';
 
@@ -1318,7 +1336,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveSourceAddressHint =>
-      'rtmp://example/live/stream or https://example/live.flv';
+      'Enter an address matching the selected protocol';
+
+  @override
+  String get rtspTransport => 'RTSP transport';
+
+  @override
+  String get videoTrack => 'Video track';
+
+  @override
+  String get audioTrack => 'Audio track';
+
+  @override
+  String get firstCompatibleTrack => 'First compatible';
+
+  @override
+  String get trackIndex => 'Track index';
 
   @override
   String get optionalLiveName => 'Live stream name (optional)';
@@ -1333,7 +1366,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get livePullSupportDescription =>
-      'Supports RTMP and HTTP-FLV. The upstream address is stored only in the media source configuration.';
+      'Supports RTMP, RTSP, and HTTP-FLV sources.';
 
   @override
   String get addLivePull => 'Add live stream pull';
@@ -1511,7 +1544,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get livePullUrlSupport =>
-      'Live stream pulls support rtmp:// and HTTP-FLV .flv addresses';
+      'The address must match the selected RTMP, RTSP, or HTTP-FLV protocol';
+
+  @override
+  String get selectRtspTrack => 'Enable at least one RTSP track';
+
+  @override
+  String get enterValidTrackIndex => 'Enter a valid track index';
 
   @override
   String get publishingAddress => 'Publishing address';
@@ -5487,28 +5526,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'OAuth2 settings affect login entry points. Invalid callbacks, secrets, or endpoints prevent external login.';
 
   @override
-  String get movieProxy => 'Movie proxy';
-
-  @override
-  String get movieProxyDescription =>
-      'Allow the server to proxy movie resource requests.';
-
-  @override
-  String get movieProxyWarning =>
-      'Proxying can send user credentials to media sites and expose playback resources to room members. Enable it only for trusted members and sources.';
-
-  @override
-  String get liveProxy => 'Live stream proxy';
-
-  @override
-  String get liveProxyDescription =>
-      'Allow the server to proxy live stream requests.';
-
-  @override
-  String get liveProxyWarning =>
-      'Live proxying can forward sensitive headers or cookies and expose them through playback information. Use trusted sources.';
-
-  @override
   String get rtmpPublishAddress => 'RTMP publish address';
 
   @override
@@ -6590,4 +6607,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedRecoveryCodes => 'I saved the codes';
+
+  @override
+  String get sliceCache => 'Slice cache';
+
+  @override
+  String get nodeId => 'Node ID';
+
+  @override
+  String get currentNode => 'Current node';
+
+  @override
+  String get allNodes => 'All nodes';
+
+  @override
+  String loadSliceCacheFailed(String error) {
+    return 'Could not load slice cache statistics: $error';
+  }
+
+  @override
+  String get nodeUnavailable => 'Node unavailable';
+
+  @override
+  String get noSliceCacheStats => 'No slice cache statistics are available';
+
+  @override
+  String get evictExpiredSliceCache => 'Evict expired';
+
+  @override
+  String get purgeSliceCache => 'Purge cache';
+
+  @override
+  String get confirmPurgeSliceCache =>
+      'Purge every cached slice for the selected target? Active playback may need to fetch media data again.';
+
+  @override
+  String sliceCacheEvictionCompleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expired cache entries',
+      one: '1 expired cache entry',
+    );
+    return 'Removed $_temp0';
+  }
+
+  @override
+  String sliceCachePurgeCompleted(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cache entries',
+      one: '1 cache entry',
+    );
+    return 'Removed $_temp0 and freed $size';
+  }
+
+  @override
+  String get sliceCacheNodeOperationFailed =>
+      'The cache operation failed on this node';
+
+  @override
+  String get sliceCacheUsage => 'Usage';
+
+  @override
+  String get sliceCacheSize => 'Stored data';
+
+  @override
+  String get sliceCacheEntries => 'Entries';
+
+  @override
+  String get sliceCacheUpdating => 'Updating';
+
+  @override
+  String get sliceCacheLocks => 'Locks';
+
+  @override
+  String get sliceCacheBackend => 'Backend';
+
+  @override
+  String get sliceCacheDirectory => 'Directory';
+
+  @override
+  String get sliceCacheCapacity => 'Capacity';
+
+  @override
+  String get sliceCacheSliceSize => 'Slice size';
+
+  @override
+  String get sliceCacheSegmentTtl => 'Segment TTL';
+
+  @override
+  String get sliceCacheStaleMaxAge => 'Stale max age';
+
+  @override
+  String get sliceCacheEvictionInterval => 'Eviction interval';
+
+  @override
+  String get staleWhileRevalidate => 'Stale while revalidate';
 }

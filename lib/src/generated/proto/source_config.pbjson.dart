@@ -59,6 +59,53 @@ final $typed_data.Uint8List sourceProviderDescriptor = $convert.base64Decode(
     'EBISGwoXU09VUkNFX1BST1ZJREVSX1RSVUVOQVMQExIbChdTT1VSQ0VfUFJPVklERVJfWU9VVF'
     'VCRRAUEhoKFlNPVVJDRV9QUk9WSURFUl9USUtUT0sQFQ==');
 
+@$core.Deprecated('Use playbackKindDescriptor instead')
+const PlaybackKind$json = {
+  '1': 'PlaybackKind',
+  '2': [
+    {'1': 'PLAYBACK_KIND_UNSPECIFIED', '2': 0},
+    {'1': 'PLAYBACK_KIND_REGULAR', '2': 1},
+    {'1': 'PLAYBACK_KIND_LIVE', '2': 2},
+  ],
+};
+
+/// Descriptor for `PlaybackKind`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List playbackKindDescriptor = $convert.base64Decode(
+    'CgxQbGF5YmFja0tpbmQSHQoZUExBWUJBQ0tfS0lORF9VTlNQRUNJRklFRBAAEhkKFVBMQVlCQU'
+    'NLX0tJTkRfUkVHVUxBUhABEhYKElBMQVlCQUNLX0tJTkRfTElWRRAC');
+
+@$core.Deprecated('Use rtmpStreamModeDescriptor instead')
+const RtmpStreamMode$json = {
+  '1': 'RtmpStreamMode',
+  '2': [
+    {'1': 'RTMP_STREAM_MODE_UNSPECIFIED', '2': 0},
+    {'1': 'RTMP_STREAM_MODE_DEFAULT', '2': 1},
+    {'1': 'RTMP_STREAM_MODE_VIDEO_ONLY', '2': 2},
+    {'1': 'RTMP_STREAM_MODE_AUDIO_ONLY', '2': 3},
+  ],
+};
+
+/// Descriptor for `RtmpStreamMode`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List rtmpStreamModeDescriptor = $convert.base64Decode(
+    'Cg5SdG1wU3RyZWFtTW9kZRIgChxSVE1QX1NUUkVBTV9NT0RFX1VOU1BFQ0lGSUVEEAASHAoYUl'
+    'RNUF9TVFJFQU1fTU9ERV9ERUZBVUxUEAESHwobUlRNUF9TVFJFQU1fTU9ERV9WSURFT19PTkxZ'
+    'EAISHwobUlRNUF9TVFJFQU1fTU9ERV9BVURJT19PTkxZEAM=');
+
+@$core.Deprecated('Use rtspTransportDescriptor instead')
+const RtspTransport$json = {
+  '1': 'RtspTransport',
+  '2': [
+    {'1': 'RTSP_TRANSPORT_UNSPECIFIED', '2': 0},
+    {'1': 'RTSP_TRANSPORT_TCP', '2': 1},
+    {'1': 'RTSP_TRANSPORT_UDP', '2': 2},
+  ],
+};
+
+/// Descriptor for `RtspTransport`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List rtspTransportDescriptor = $convert.base64Decode(
+    'Cg1SdHNwVHJhbnNwb3J0Eh4KGlJUU1BfVFJBTlNQT1JUX1VOU1BFQ0lGSUVEEAASFgoSUlRTUF'
+    '9UUkFOU1BPUlRfVENQEAESFgoSUlRTUF9UUkFOU1BPUlRfVURQEAI=');
+
 @$core.Deprecated('Use bilibiliHistoryTypeDescriptor instead')
 const BilibiliHistoryType$json = {
   '1': 'BilibiliHistoryType',
@@ -321,12 +368,14 @@ const DirectUrlMediaSourceConfig$json = {
       '17': true
     },
     {
-      '1': 'is_live',
+      '1': 'playback_kind',
       '3': 7,
       '4': 1,
-      '5': 8,
+      '5': 14,
+      '6': '.synctv.source_config.PlaybackKind',
+      '8': {},
       '9': 3,
-      '10': 'isLive',
+      '10': 'playbackKind',
       '17': true
     },
     {
@@ -361,7 +410,7 @@ const DirectUrlMediaSourceConfig$json = {
     {'1': '_default_media_index'},
     {'1': '_default_subtitle_index'},
     {'1': '_default_danmaku_index'},
-    {'1': '_is_live'},
+    {'1': '_playback_kind'},
     {'1': '_duration_seconds'},
     {'1': '_prefer_proxy'},
     {'1': '_proxy_only'},
@@ -377,13 +426,14 @@ final $typed_data.Uint8List directUrlMediaSourceConfigDescriptor = $convert.base
     'ZUNvbmZpZ1IJc3VidGl0bGVzEjkKFmRlZmF1bHRfc3VidGl0bGVfaW5kZXgYBCABKA1IAVIUZG'
     'VmYXVsdFN1YnRpdGxlSW5kZXiIAQESTgoIZGFubWFrdXMYBSADKAsyMi5zeW5jdHYuc291cmNl'
     'X2NvbmZpZy5EaXJlY3RVcmxEYW5tYWt1U291cmNlQ29uZmlnUghkYW5tYWt1cxI3ChVkZWZhdW'
-    'x0X2Rhbm1ha3VfaW5kZXgYBiABKA1IAlITZGVmYXVsdERhbm1ha3VJbmRleIgBARIcCgdpc19s'
-    'aXZlGAcgASgISANSBmlzTGl2ZYgBARIuChBkdXJhdGlvbl9zZWNvbmRzGAggASgBSARSD2R1cm'
-    'F0aW9uU2Vjb25kc4gBARImCgxwcmVmZXJfcHJveHkYCSABKAhIBVILcHJlZmVyUHJveHmIAQES'
-    'IgoKcHJveHlfb25seRgKIAEoCEgGUglwcm94eU9ubHmIAQFCFgoUX2RlZmF1bHRfbWVkaWFfaW'
-    '5kZXhCGQoXX2RlZmF1bHRfc3VidGl0bGVfaW5kZXhCGAoWX2RlZmF1bHRfZGFubWFrdV9pbmRl'
-    'eEIKCghfaXNfbGl2ZUITChFfZHVyYXRpb25fc2Vjb25kc0IPCg1fcHJlZmVyX3Byb3h5Qg0KC1'
-    '9wcm94eV9vbmx5');
+    'x0X2Rhbm1ha3VfaW5kZXgYBiABKA1IAlITZGVmYXVsdERhbm1ha3VJbmRleIgBARJWCg1wbGF5'
+    'YmFja19raW5kGAcgASgOMiIuc3luY3R2LnNvdXJjZV9jb25maWcuUGxheWJhY2tLaW5kQgi6SA'
+    'WCAQIQAUgDUgxwbGF5YmFja0tpbmSIAQESLgoQZHVyYXRpb25fc2Vjb25kcxgIIAEoAUgEUg9k'
+    'dXJhdGlvblNlY29uZHOIAQESJgoMcHJlZmVyX3Byb3h5GAkgASgISAVSC3ByZWZlclByb3h5iA'
+    'EBEiIKCnByb3h5X29ubHkYCiABKAhIBlIJcHJveHlPbmx5iAEBQhYKFF9kZWZhdWx0X21lZGlh'
+    'X2luZGV4QhkKF19kZWZhdWx0X3N1YnRpdGxlX2luZGV4QhgKFl9kZWZhdWx0X2Rhbm1ha3VfaW'
+    '5kZXhCEAoOX3BsYXliYWNrX2tpbmRCEwoRX2R1cmF0aW9uX3NlY29uZHNCDwoNX3ByZWZlcl9w'
+    'cm94eUINCgtfcHJveHlfb25seQ==');
 
 @$core.Deprecated('Use alistMediaSourceConfigDescriptor instead')
 const AlistMediaSourceConfig$json = {
@@ -748,24 +798,167 @@ final $typed_data.Uint8List embyGenreItemsPlaylistSourceDescriptor =
 @$core.Deprecated('Use rtmpMediaSourceConfigDescriptor instead')
 const RtmpMediaSourceConfig$json = {
   '1': 'RtmpMediaSourceConfig',
+  '2': [
+    {
+      '1': 'mode',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.RtmpStreamMode',
+      '10': 'mode'
+    },
+  ],
 };
 
 /// Descriptor for `RtmpMediaSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List rtmpMediaSourceConfigDescriptor =
-    $convert.base64Decode('ChVSdG1wTWVkaWFTb3VyY2VDb25maWc=');
+final $typed_data.Uint8List rtmpMediaSourceConfigDescriptor = $convert.base64Decode(
+    'ChVSdG1wTWVkaWFTb3VyY2VDb25maWcSOAoEbW9kZRgBIAEoDjIkLnN5bmN0di5zb3VyY2VfY2'
+    '9uZmlnLlJ0bXBTdHJlYW1Nb2RlUgRtb2Rl');
 
-@$core.Deprecated('Use liveProxyMediaSourceConfigDescriptor instead')
-const LiveProxyMediaSourceConfig$json = {
-  '1': 'LiveProxyMediaSourceConfig',
+@$core.Deprecated('Use rtspTrackSelectionDescriptor instead')
+const RtspTrackSelection$json = {
+  '1': 'RtspTrackSelection',
+  '2': [
+    {
+      '1': 'first_compatible',
+      '3': 1,
+      '4': 1,
+      '5': 8,
+      '9': 0,
+      '10': 'firstCompatible'
+    },
+    {'1': 'index', '3': 2, '4': 1, '5': 13, '9': 0, '10': 'index'},
+    {'1': 'disabled', '3': 3, '4': 1, '5': 8, '9': 0, '10': 'disabled'},
+  ],
+  '8': [
+    {'1': 'mode'},
+  ],
+};
+
+/// Descriptor for `RtspTrackSelection`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List rtspTrackSelectionDescriptor = $convert.base64Decode(
+    'ChJSdHNwVHJhY2tTZWxlY3Rpb24SKwoQZmlyc3RfY29tcGF0aWJsZRgBIAEoCEgAUg9maXJzdE'
+    'NvbXBhdGlibGUSFgoFaW5kZXgYAiABKA1IAFIFaW5kZXgSHAoIZGlzYWJsZWQYAyABKAhIAFII'
+    'ZGlzYWJsZWRCBgoEbW9kZQ==');
+
+@$core.Deprecated('Use rtmpPullSourceConfigDescriptor instead')
+const RtmpPullSourceConfig$json = {
+  '1': 'RtmpPullSourceConfig',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '10': 'url'},
+    {
+      '1': 'mode',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.RtmpStreamMode',
+      '10': 'mode'
+    },
+  ],
+};
+
+/// Descriptor for `RtmpPullSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List rtmpPullSourceConfigDescriptor = $convert.base64Decode(
+    'ChRSdG1wUHVsbFNvdXJjZUNvbmZpZxIQCgN1cmwYASABKAlSA3VybBI4CgRtb2RlGAIgASgOMi'
+    'Quc3luY3R2LnNvdXJjZV9jb25maWcuUnRtcFN0cmVhbU1vZGVSBG1vZGU=');
+
+@$core.Deprecated('Use rtspPullSourceConfigDescriptor instead')
+const RtspPullSourceConfig$json = {
+  '1': 'RtspPullSourceConfig',
+  '2': [
+    {'1': 'url', '3': 1, '4': 1, '5': 9, '10': 'url'},
+    {
+      '1': 'transport',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.synctv.source_config.RtspTransport',
+      '10': 'transport'
+    },
+    {
+      '1': 'video_track',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.RtspTrackSelection',
+      '10': 'videoTrack'
+    },
+    {
+      '1': 'audio_track',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.RtspTrackSelection',
+      '10': 'audioTrack'
+    },
+  ],
+};
+
+/// Descriptor for `RtspPullSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List rtspPullSourceConfigDescriptor = $convert.base64Decode(
+    'ChRSdHNwUHVsbFNvdXJjZUNvbmZpZxIQCgN1cmwYASABKAlSA3VybBJBCgl0cmFuc3BvcnQYAi'
+    'ABKA4yIy5zeW5jdHYuc291cmNlX2NvbmZpZy5SdHNwVHJhbnNwb3J0Ugl0cmFuc3BvcnQSSQoL'
+    'dmlkZW9fdHJhY2sYAyABKAsyKC5zeW5jdHYuc291cmNlX2NvbmZpZy5SdHNwVHJhY2tTZWxlY3'
+    'Rpb25SCnZpZGVvVHJhY2sSSQoLYXVkaW9fdHJhY2sYBCABKAsyKC5zeW5jdHYuc291cmNlX2Nv'
+    'bmZpZy5SdHNwVHJhY2tTZWxlY3Rpb25SCmF1ZGlvVHJhY2s=');
+
+@$core.Deprecated('Use httpFlvPullSourceConfigDescriptor instead')
+const HttpFlvPullSourceConfig$json = {
+  '1': 'HttpFlvPullSourceConfig',
   '2': [
     {'1': 'url', '3': 1, '4': 1, '5': 9, '10': 'url'},
   ],
 };
 
-/// Descriptor for `LiveProxyMediaSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List liveProxyMediaSourceConfigDescriptor =
+/// Descriptor for `HttpFlvPullSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List httpFlvPullSourceConfigDescriptor =
     $convert.base64Decode(
-        'ChpMaXZlUHJveHlNZWRpYVNvdXJjZUNvbmZpZxIQCgN1cmwYASABKAlSA3VybA==');
+        'ChdIdHRwRmx2UHVsbFNvdXJjZUNvbmZpZxIQCgN1cmwYASABKAlSA3VybA==');
+
+@$core.Deprecated('Use liveProxyMediaSourceConfigDescriptor instead')
+const LiveProxyMediaSourceConfig$json = {
+  '1': 'LiveProxyMediaSourceConfig',
+  '2': [
+    {
+      '1': 'rtmp',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.RtmpPullSourceConfig',
+      '9': 0,
+      '10': 'rtmp'
+    },
+    {
+      '1': 'rtsp',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.RtspPullSourceConfig',
+      '9': 0,
+      '10': 'rtsp'
+    },
+    {
+      '1': 'http_flv',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.source_config.HttpFlvPullSourceConfig',
+      '9': 0,
+      '10': 'httpFlv'
+    },
+  ],
+  '8': [
+    {'1': 'source'},
+  ],
+};
+
+/// Descriptor for `LiveProxyMediaSourceConfig`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List liveProxyMediaSourceConfigDescriptor = $convert.base64Decode(
+    'ChpMaXZlUHJveHlNZWRpYVNvdXJjZUNvbmZpZxJACgRydG1wGAEgASgLMiouc3luY3R2LnNvdX'
+    'JjZV9jb25maWcuUnRtcFB1bGxTb3VyY2VDb25maWdIAFIEcnRtcBJACgRydHNwGAIgASgLMiou'
+    'c3luY3R2LnNvdXJjZV9jb25maWcuUnRzcFB1bGxTb3VyY2VDb25maWdIAFIEcnRzcBJKCghodH'
+    'RwX2ZsdhgDIAEoCzItLnN5bmN0di5zb3VyY2VfY29uZmlnLkh0dHBGbHZQdWxsU291cmNlQ29u'
+    'ZmlnSABSB2h0dHBGbHZCCAoGc291cmNl');
 
 @$core.Deprecated('Use bilibiliVideoSourceConfigDescriptor instead')
 const BilibiliVideoSourceConfig$json = {

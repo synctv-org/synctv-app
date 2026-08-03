@@ -143,14 +143,12 @@ const UnbindRequest$json = {
   '1': 'UnbindRequest',
   '2': [
     {'1': 'server_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'serverId'},
-    {'1': 'instance_name', '3': 2, '4': 1, '5': 9, '10': 'instanceName'},
   ],
 };
 
 /// Descriptor for `UnbindRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List unbindRequestDescriptor = $convert.base64Decode(
-    'Cg1VbmJpbmRSZXF1ZXN0EiQKCXNlcnZlcl9pZBgBIAEoCUIHukgEcgIQAVIIc2VydmVySWQSIw'
-    'oNaW5zdGFuY2VfbmFtZRgCIAEoCVIMaW5zdGFuY2VOYW1l');
+    'Cg1VbmJpbmRSZXF1ZXN0EiQKCXNlcnZlcl9pZBgBIAEoCUIHukgEcgIQAVIIc2VydmVySWQ=');
 
 @$core.Deprecated('Use unbindResponseDescriptor instead')
 const UnbindResponse$json = {

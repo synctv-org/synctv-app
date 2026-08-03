@@ -410,17 +410,8 @@ const RuntimeSettings$json = {
       '10': 'oauth2'
     },
     {
-      '1': 'proxy',
-      '3': 6,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.ProxySettings',
-      '8': {},
-      '10': 'proxy'
-    },
-    {
       '1': 'rtmp',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.RtmpSettings',
@@ -429,7 +420,7 @@ const RuntimeSettings$json = {
     },
     {
       '1': 'email',
-      '3': 8,
+      '3': 7,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.EmailSettings',
@@ -438,7 +429,7 @@ const RuntimeSettings$json = {
     },
     {
       '1': 'webrtc',
-      '3': 9,
+      '3': 8,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.WebRTCSettings',
@@ -447,7 +438,7 @@ const RuntimeSettings$json = {
     },
     {
       '1': 'chat',
-      '3': 10,
+      '3': 9,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.ChatSettings',
@@ -456,7 +447,7 @@ const RuntimeSettings$json = {
     },
     {
       '1': 'cors',
-      '3': 11,
+      '3': 10,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.CorsSettings',
@@ -465,7 +456,7 @@ const RuntimeSettings$json = {
     },
     {
       '1': 'server',
-      '3': 12,
+      '3': 11,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.ServerSettings',
@@ -474,7 +465,7 @@ const RuntimeSettings$json = {
     },
     {
       '1': 'playback_history',
-      '3': 13,
+      '3': 12,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.PlaybackHistorySettings',
@@ -492,16 +483,15 @@ final $typed_data.Uint8List runtimeSettingsDescriptor = $convert.base64Decode(
     '1pc3Npb25zEk8KDXJvb21fY3JlYXRpb24YAyABKAsyIi5zeW5jdHYuYWRtaW4uUm9vbUNyZWF0'
     'aW9uU2V0dGluZ3NCBrpIA8gBAVIMcm9vbUNyZWF0aW9uEjYKBHVzZXIYBCABKAsyGi5zeW5jdH'
     'YuYWRtaW4uVXNlclNldHRpbmdzQga6SAPIAQFSBHVzZXISPAoGb2F1dGgyGAUgASgLMhwuc3lu'
-    'Y3R2LmFkbWluLk9BdXRoMlNldHRpbmdzQga6SAPIAQFSBm9hdXRoMhI5CgVwcm94eRgGIAEoCz'
-    'IbLnN5bmN0di5hZG1pbi5Qcm94eVNldHRpbmdzQga6SAPIAQFSBXByb3h5EjYKBHJ0bXAYByAB'
-    'KAsyGi5zeW5jdHYuYWRtaW4uUnRtcFNldHRpbmdzQga6SAPIAQFSBHJ0bXASOQoFZW1haWwYCC'
-    'ABKAsyGy5zeW5jdHYuYWRtaW4uRW1haWxTZXR0aW5nc0IGukgDyAEBUgVlbWFpbBI8CgZ3ZWJy'
-    'dGMYCSABKAsyHC5zeW5jdHYuYWRtaW4uV2ViUlRDU2V0dGluZ3NCBrpIA8gBAVIGd2VicnRjEj'
-    'YKBGNoYXQYCiABKAsyGi5zeW5jdHYuYWRtaW4uQ2hhdFNldHRpbmdzQga6SAPIAQFSBGNoYXQS'
-    'NgoEY29ycxgLIAEoCzIaLnN5bmN0di5hZG1pbi5Db3JzU2V0dGluZ3NCBrpIA8gBAVIEY29ycx'
-    'I8CgZzZXJ2ZXIYDCABKAsyHC5zeW5jdHYuYWRtaW4uU2VydmVyU2V0dGluZ3NCBrpIA8gBAVIG'
-    'c2VydmVyElgKEHBsYXliYWNrX2hpc3RvcnkYDSABKAsyJS5zeW5jdHYuYWRtaW4uUGxheWJhY2'
-    'tIaXN0b3J5U2V0dGluZ3NCBrpIA8gBAVIPcGxheWJhY2tIaXN0b3J5');
+    'Y3R2LmFkbWluLk9BdXRoMlNldHRpbmdzQga6SAPIAQFSBm9hdXRoMhI2CgRydG1wGAYgASgLMh'
+    'ouc3luY3R2LmFkbWluLlJ0bXBTZXR0aW5nc0IGukgDyAEBUgRydG1wEjkKBWVtYWlsGAcgASgL'
+    'Mhsuc3luY3R2LmFkbWluLkVtYWlsU2V0dGluZ3NCBrpIA8gBAVIFZW1haWwSPAoGd2VicnRjGA'
+    'ggASgLMhwuc3luY3R2LmFkbWluLldlYlJUQ1NldHRpbmdzQga6SAPIAQFSBndlYnJ0YxI2CgRj'
+    'aGF0GAkgASgLMhouc3luY3R2LmFkbWluLkNoYXRTZXR0aW5nc0IGukgDyAEBUgRjaGF0EjYKBG'
+    'NvcnMYCiABKAsyGi5zeW5jdHYuYWRtaW4uQ29yc1NldHRpbmdzQga6SAPIAQFSBGNvcnMSPAoG'
+    'c2VydmVyGAsgASgLMhwuc3luY3R2LmFkbWluLlNlcnZlclNldHRpbmdzQga6SAPIAQFSBnNlcn'
+    'ZlchJYChBwbGF5YmFja19oaXN0b3J5GAwgASgLMiUuc3luY3R2LmFkbWluLlBsYXliYWNrSGlz'
+    'dG9yeVNldHRpbmdzQga6SAPIAQFSD3BsYXliYWNrSGlzdG9yeQ==');
 
 @$core.Deprecated('Use serverSettingsDescriptor instead')
 const ServerSettings$json = {
@@ -986,20 +976,6 @@ final $typed_data.Uint8List oAuth2CasdoorProviderConfigDescriptor = $convert.bas
     'lIA1IHandrc1VybIgBAUILCglfYXV0aF91cmxCDAoKX3Rva2VuX3VybEIPCg1fdXNlcmluZm9f'
     'dXJsQgsKCV9qd2tzX3VybA==');
 
-@$core.Deprecated('Use proxySettingsDescriptor instead')
-const ProxySettings$json = {
-  '1': 'ProxySettings',
-  '2': [
-    {'1': 'movie_proxy', '3': 1, '4': 1, '5': 8, '10': 'movieProxy'},
-    {'1': 'live_proxy', '3': 2, '4': 1, '5': 8, '10': 'liveProxy'},
-  ],
-};
-
-/// Descriptor for `ProxySettings`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List proxySettingsDescriptor = $convert.base64Decode(
-    'Cg1Qcm94eVNldHRpbmdzEh8KC21vdmllX3Byb3h5GAEgASgIUgptb3ZpZVByb3h5Eh0KCmxpdm'
-    'VfcHJveHkYAiABKAhSCWxpdmVQcm94eQ==');
-
 @$core.Deprecated('Use rtmpSettingsDescriptor instead')
 const RtmpSettings$json = {
   '1': 'RtmpSettings',
@@ -1325,16 +1301,8 @@ const RuntimeSettingsPatch$json = {
       '10': 'oauth2'
     },
     {
-      '1': 'proxy',
-      '3': 6,
-      '4': 1,
-      '5': 11,
-      '6': '.synctv.admin.ProxySettingsPatch',
-      '10': 'proxy'
-    },
-    {
       '1': 'rtmp',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.RtmpSettingsPatch',
@@ -1342,7 +1310,7 @@ const RuntimeSettingsPatch$json = {
     },
     {
       '1': 'email',
-      '3': 8,
+      '3': 7,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.EmailSettingsPatch',
@@ -1350,7 +1318,7 @@ const RuntimeSettingsPatch$json = {
     },
     {
       '1': 'webrtc',
-      '3': 9,
+      '3': 8,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.WebRTCSettingsPatch',
@@ -1358,7 +1326,7 @@ const RuntimeSettingsPatch$json = {
     },
     {
       '1': 'chat',
-      '3': 10,
+      '3': 9,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.ChatSettingsPatch',
@@ -1366,7 +1334,7 @@ const RuntimeSettingsPatch$json = {
     },
     {
       '1': 'cors',
-      '3': 11,
+      '3': 10,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.CorsSettingsPatch',
@@ -1374,7 +1342,7 @@ const RuntimeSettingsPatch$json = {
     },
     {
       '1': 'server',
-      '3': 12,
+      '3': 11,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.ServerSettingsPatch',
@@ -1382,7 +1350,7 @@ const RuntimeSettingsPatch$json = {
     },
     {
       '1': 'playback_history',
-      '3': 13,
+      '3': 12,
       '4': 1,
       '5': 11,
       '6': '.synctv.admin.PlaybackHistorySettingsPatch',
@@ -1399,16 +1367,15 @@ final $typed_data.Uint8List runtimeSettingsPatchDescriptor = $convert.base64Deco
     'lzc2lvbnMSTAoNcm9vbV9jcmVhdGlvbhgDIAEoCzInLnN5bmN0di5hZG1pbi5Sb29tQ3JlYXRp'
     'b25TZXR0aW5nc1BhdGNoUgxyb29tQ3JlYXRpb24SMwoEdXNlchgEIAEoCzIfLnN5bmN0di5hZG'
     '1pbi5Vc2VyU2V0dGluZ3NQYXRjaFIEdXNlchI5CgZvYXV0aDIYBSABKAsyIS5zeW5jdHYuYWRt'
-    'aW4uT0F1dGgyU2V0dGluZ3NQYXRjaFIGb2F1dGgyEjYKBXByb3h5GAYgASgLMiAuc3luY3R2Lm'
-    'FkbWluLlByb3h5U2V0dGluZ3NQYXRjaFIFcHJveHkSMwoEcnRtcBgHIAEoCzIfLnN5bmN0di5h'
-    'ZG1pbi5SdG1wU2V0dGluZ3NQYXRjaFIEcnRtcBI2CgVlbWFpbBgIIAEoCzIgLnN5bmN0di5hZG'
-    '1pbi5FbWFpbFNldHRpbmdzUGF0Y2hSBWVtYWlsEjkKBndlYnJ0YxgJIAEoCzIhLnN5bmN0di5h'
-    'ZG1pbi5XZWJSVENTZXR0aW5nc1BhdGNoUgZ3ZWJydGMSMwoEY2hhdBgKIAEoCzIfLnN5bmN0di'
-    '5hZG1pbi5DaGF0U2V0dGluZ3NQYXRjaFIEY2hhdBIzCgRjb3JzGAsgASgLMh8uc3luY3R2LmFk'
-    'bWluLkNvcnNTZXR0aW5nc1BhdGNoUgRjb3JzEjkKBnNlcnZlchgMIAEoCzIhLnN5bmN0di5hZG'
-    '1pbi5TZXJ2ZXJTZXR0aW5nc1BhdGNoUgZzZXJ2ZXISVQoQcGxheWJhY2tfaGlzdG9yeRgNIAEo'
-    'CzIqLnN5bmN0di5hZG1pbi5QbGF5YmFja0hpc3RvcnlTZXR0aW5nc1BhdGNoUg9wbGF5YmFja0'
-    'hpc3Rvcnk=');
+    'aW4uT0F1dGgyU2V0dGluZ3NQYXRjaFIGb2F1dGgyEjMKBHJ0bXAYBiABKAsyHy5zeW5jdHYuYW'
+    'RtaW4uUnRtcFNldHRpbmdzUGF0Y2hSBHJ0bXASNgoFZW1haWwYByABKAsyIC5zeW5jdHYuYWRt'
+    'aW4uRW1haWxTZXR0aW5nc1BhdGNoUgVlbWFpbBI5CgZ3ZWJydGMYCCABKAsyIS5zeW5jdHYuYW'
+    'RtaW4uV2ViUlRDU2V0dGluZ3NQYXRjaFIGd2VicnRjEjMKBGNoYXQYCSABKAsyHy5zeW5jdHYu'
+    'YWRtaW4uQ2hhdFNldHRpbmdzUGF0Y2hSBGNoYXQSMwoEY29ycxgKIAEoCzIfLnN5bmN0di5hZG'
+    '1pbi5Db3JzU2V0dGluZ3NQYXRjaFIEY29ycxI5CgZzZXJ2ZXIYCyABKAsyIS5zeW5jdHYuYWRt'
+    'aW4uU2VydmVyU2V0dGluZ3NQYXRjaFIGc2VydmVyElUKEHBsYXliYWNrX2hpc3RvcnkYDCABKA'
+    'syKi5zeW5jdHYuYWRtaW4uUGxheWJhY2tIaXN0b3J5U2V0dGluZ3NQYXRjaFIPcGxheWJhY2tI'
+    'aXN0b3J5');
 
 @$core.Deprecated('Use serverSettingsPatchDescriptor instead')
 const ServerSettingsPatch$json = {
@@ -1700,41 +1667,6 @@ final $typed_data.Uint8List oAuth2SettingsPatchDescriptor = $convert.base64Decod
     'ChNPQXV0aDJTZXR0aW5nc1BhdGNoEkIKCXByb3ZpZGVycxgBIAMoCzIkLnN5bmN0di5hZG1pbi'
     '5PQXV0aDJQcm92aWRlclNldHRpbmdzUglwcm92aWRlcnMSMgoVYWxsb3dlZF9yZWRpcmVjdF91'
     'cmxzGAIgAygJUhNhbGxvd2VkUmVkaXJlY3RVcmxz');
-
-@$core.Deprecated('Use proxySettingsPatchDescriptor instead')
-const ProxySettingsPatch$json = {
-  '1': 'ProxySettingsPatch',
-  '2': [
-    {
-      '1': 'movie_proxy',
-      '3': 1,
-      '4': 1,
-      '5': 8,
-      '9': 0,
-      '10': 'movieProxy',
-      '17': true
-    },
-    {
-      '1': 'live_proxy',
-      '3': 2,
-      '4': 1,
-      '5': 8,
-      '9': 1,
-      '10': 'liveProxy',
-      '17': true
-    },
-  ],
-  '8': [
-    {'1': '_movie_proxy'},
-    {'1': '_live_proxy'},
-  ],
-};
-
-/// Descriptor for `ProxySettingsPatch`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List proxySettingsPatchDescriptor = $convert.base64Decode(
-    'ChJQcm94eVNldHRpbmdzUGF0Y2gSJAoLbW92aWVfcHJveHkYASABKAhIAFIKbW92aWVQcm94eY'
-    'gBARIiCgpsaXZlX3Byb3h5GAIgASgISAFSCWxpdmVQcm94eYgBAUIOCgxfbW92aWVfcHJveHlC'
-    'DQoLX2xpdmVfcHJveHk=');
 
 @$core.Deprecated('Use rtmpSettingsPatchDescriptor instead')
 const RtmpSettingsPatch$json = {
@@ -5506,7 +5438,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.OAuth2OidcProviderConfig': OAuth2OidcProviderConfig$json,
   '.synctv.admin.OAuth2CasdoorProviderConfig': OAuth2CasdoorProviderConfig$json,
   '.synctv.admin.OAuth2AppleProviderConfig': OAuth2AppleProviderConfig$json,
-  '.synctv.admin.ProxySettings': ProxySettings$json,
   '.synctv.admin.RtmpSettings': RtmpSettings$json,
   '.synctv.admin.EmailSettings': EmailSettings$json,
   '.synctv.admin.SmtpCredentials': SmtpCredentials$json,
@@ -5524,7 +5455,6 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.admin.RoomCreationSettingsPatch': RoomCreationSettingsPatch$json,
   '.synctv.admin.UserSettingsPatch': UserSettingsPatch$json,
   '.synctv.admin.OAuth2SettingsPatch': OAuth2SettingsPatch$json,
-  '.synctv.admin.ProxySettingsPatch': ProxySettingsPatch$json,
   '.synctv.admin.RtmpSettingsPatch': RtmpSettingsPatch$json,
   '.synctv.admin.EmailSettingsPatch': EmailSettingsPatch$json,
   '.synctv.admin.WebRTCSettingsPatch': WebRTCSettingsPatch$json,

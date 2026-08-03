@@ -157,4 +157,70 @@ void main() {
       });
     });
   });
+
+  group('Live source config', () {
+    test('round trips explicit playback kind and RTMP publish mode', () {
+      final direct = SourceConfigCodec.mediaSourceConfigFromMap(
+        sourceProvider: 'directUrl',
+        sourceConfig: {
+          'url': 'https://example.test/live.m3u8',
+          'playbackKind': 'live',
+        },
+      )!;
+      final rtmp = SourceConfigCodec.mediaSourceConfigFromMap(
+        sourceProvider: 'rtmp',
+        sourceConfig: {'mode': 'audioOnly'},
+      )!;
+
+      expect(
+        direct.directUrl.playbackKind,
+        source.PlaybackKind.PLAYBACK_KIND_LIVE,
+      );
+      final directMap = SourceConfigCodec.mediaSourceConfigToMap(direct);
+      expect(directMap['url'], 'https://example.test/live.m3u8');
+      expect(directMap['playbackKind'], 'live');
+      expect(directMap['medias'], [
+        {'url': 'https://example.test/live.m3u8'},
+      ]);
+      expect(rtmp.rtmp.mode, source.RtmpStreamMode.RTMP_STREAM_MODE_AUDIO_ONLY);
+      expect(SourceConfigCodec.mediaSourceConfigToMap(rtmp), {
+        'mode': 'audioOnly',
+      });
+    });
+
+    test('round trips RTMP, RTSP, and HTTP-FLV pull sources', () {
+      final cases = <Map<String, dynamic>>[
+        {
+          'source': {
+            'protocol': 'rtmp',
+            'url': 'rtmp://example.test/live/stream',
+            'mode': 'videoOnly',
+          },
+        },
+        {
+          'source': {
+            'protocol': 'rtsp',
+            'url': 'rtsp://example.test/camera',
+            'transport': 'udp',
+            'videoTrack': {'mode': 'index', 'index': 2},
+            'audioTrack': {'mode': 'disabled'},
+          },
+        },
+        {
+          'source': {
+            'protocol': 'httpFlv',
+            'url': 'https://example.test/live/stream.flv',
+          },
+        },
+      ];
+
+      for (final sourceConfig in cases) {
+        final encoded = SourceConfigCodec.mediaSourceConfigFromMap(
+          sourceProvider: 'liveProxy',
+          sourceConfig: sourceConfig,
+        )!;
+        expect(SourceConfigCodec.mediaSourceConfigToMap(encoded), sourceConfig);
+      }
+    });
+  });
 }

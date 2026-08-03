@@ -19,7 +19,9 @@ void main() {
           (
             source_enum.SourceProvider.SOURCE_PROVIDER_DIRECT_URL,
             source_config.MediaSourceConfig(
-              directUrl: source_config.DirectUrlMediaSourceConfig(isLive: true),
+              directUrl: source_config.DirectUrlMediaSourceConfig(
+                playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
+              ),
             ),
           ),
           (
@@ -40,7 +42,9 @@ void main() {
             source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY,
             source_config.MediaSourceConfig(
               liveProxy: source_config.LiveProxyMediaSourceConfig(
-                url: 'https://example.com/live.flv',
+                httpFlv: source_config.HttpFlvPullSourceConfig(
+                  url: 'https://example.com/live.flv',
+                ),
               ),
             ),
           ),

@@ -894,14 +894,11 @@ final $typed_data.Uint8List userInfoResponseDescriptor = $convert.base64Decode(
 @$core.Deprecated('Use logoutRequestDescriptor instead')
 const LogoutRequest$json = {
   '1': 'LogoutRequest',
-  '2': [
-    {'1': 'instance_name', '3': 1, '4': 1, '5': 9, '10': 'instanceName'},
-  ],
 };
 
 /// Descriptor for `LogoutRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List logoutRequestDescriptor = $convert.base64Decode(
-    'Cg1Mb2dvdXRSZXF1ZXN0EiMKDWluc3RhbmNlX25hbWUYASABKAlSDGluc3RhbmNlTmFtZQ==');
+final $typed_data.Uint8List logoutRequestDescriptor =
+    $convert.base64Decode('Cg1Mb2dvdXRSZXF1ZXN0');
 
 @$core.Deprecated('Use logoutResponseDescriptor instead')
 const LogoutResponse$json = {

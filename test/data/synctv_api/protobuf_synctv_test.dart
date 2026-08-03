@@ -45,6 +45,8 @@ import 'package:synctv_app/src/generated/proto/oauth2.pb.dart' as oauth2;
 import 'package:synctv_app/src/generated/proto/passkey.pb.dart' as passkey;
 import 'package:synctv_app/src/generated/proto/passkey.pbenum.dart'
     as passkey_enum;
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/src/generated/proto/providers/alist.pb.dart'
@@ -614,8 +616,6 @@ void main() {
         webauthnRpId: 'example.com',
         enableWebauthnSignup: true,
         webauthnSignupNeedReview: true,
-        movieProxy: false,
-        liveProxy: true,
         emailWhitelistEnabled: true,
         emailWhitelistDomains: ['example.com'],
         tsDisguisedAsPng: true,
@@ -4423,7 +4423,7 @@ void main() {
         playlistPosition: 3.5,
         provider: source_enum.SourceProvider.SOURCE_PROVIDER_ALIST,
         providerInstanceName: 'alist_main',
-        isLive: true,
+        playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
         expiresAt: Int64(1700000000),
         durationSeconds: 3661.5,
         playbackInfos: [
@@ -4635,7 +4635,7 @@ void main() {
         roomId: 'room_1',
         name: 'Upstream Live',
         provider: source_enum.SourceProvider.SOURCE_PROVIDER_LIVE_PROXY,
-        isLive: true,
+        playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
         playbackInfos: [
           MapEntry(
             'hls',
@@ -5048,6 +5048,7 @@ void main() {
     });
     final config = DirectUrlSourceConfig.fromUserInput(
       url: ' https://media.example.test/feature.mp4 ',
+      playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
       headers: parsed,
       preferProxy: true,
       proxyOnly: true,
@@ -5060,6 +5061,7 @@ void main() {
         'Authorization': 'Bearer token',
         'Cookie': 'session=secret',
       },
+      'playbackKind': 'live',
       'preferProxy': true,
       'proxyOnly': true,
     });
@@ -5080,6 +5082,7 @@ void main() {
     expect(
       () => DirectUrlSourceConfig.fromUserInput(
         url: 'rtmp://media.example.test/live',
+        playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
       ),
       throwsA(isA<DirectUrlSourceConfigException>()),
     );
@@ -5107,6 +5110,7 @@ void main() {
         domain.addDirectUrlMedia(
           'room_1',
           url: 'https://media.example.test/entry.mp4',
+          playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
           headers: const {'Host': 'internal.example.test'},
         ),
         throwsA(isA<DirectUrlSourceConfigException>()),
@@ -6494,6 +6498,7 @@ void main() {
         'room_1',
         playlistId: 'pl_1',
         url: 'https://media.example.test/entry.m3u8',
+        playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
         headers: const {'User-Agent': 'Mozilla/5.0'},
         name: 'Direct HLS',
         preferProxy: true,
@@ -6507,7 +6512,12 @@ void main() {
       final liveProxyId = await domain.addLiveProxyMedia(
         'room_1',
         playlistId: 'pl_1',
-        url: 'rtmp://upstream.example.test/live/room',
+        sourceConfig: source_config.LiveProxyMediaSourceConfig(
+          rtmp: source_config.RtmpPullSourceConfig(
+            url: 'rtmp://upstream.example.test/live/room',
+            mode: source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
+          ),
+        ),
         name: 'Upstream Live',
       );
       final publish = await domain.createRtmpPublishKeyInfo('room_1', rtmpId);
@@ -6530,6 +6540,7 @@ void main() {
               'format': '',
             },
           ],
+          'playbackKind': source_enum.PlaybackKind.PLAYBACK_KIND_LIVE.value,
           'preferProxy': true,
           'proxyOnly': true,
         },
@@ -6538,14 +6549,23 @@ void main() {
       final rtmpBody = jsonDecode(requests[1].body) as Map<String, dynamic>;
       expect(rtmpBody.containsKey('sourceProvider'), isFalse);
       expect(rtmpBody['playlistId'], 'pl_1');
-      expect(rtmpBody['sourceConfig'], {'rtmp': <String, dynamic>{}});
+      expect(rtmpBody['sourceConfig'], {
+        'rtmp': {
+          'mode': source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT.value,
+        },
+      });
 
       final liveProxyBody =
           jsonDecode(requests[2].body) as Map<String, dynamic>;
       expect(liveProxyBody.containsKey('sourceProvider'), isFalse);
       expect(liveProxyBody['playlistId'], 'pl_1');
       expect(liveProxyBody['sourceConfig'], {
-        'liveProxy': {'url': 'rtmp://upstream.example.test/live/room'},
+        'liveProxy': {
+          'rtmp': {
+            'url': 'rtmp://upstream.example.test/live/room',
+            'mode': source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT.value,
+          },
+        },
       });
       expect(
         requests[3].url.path,
@@ -9774,6 +9794,113 @@ void main() {
     });
   });
 
+  test(
+    'admin slice cache service maps stats and maintenance operations',
+    () async {
+      final requests = <http.Request>[];
+      final nodeStats = {
+        'nodeId': 'node_a',
+        'config': {
+          'engineEnabled': true,
+          'backend': 'file',
+          'fileCacheDir': '/var/cache/synctv',
+          'sliceSize': '4194304',
+          'maxCacheSize': '1073741824',
+          'segmentTtlSecs': '600',
+          'staleMaxAgeSecs': '120',
+          'staleWhileRevalidate': true,
+          'evictionIntervalSecs': '30',
+          'watermarkRatio': 0.75,
+        },
+        'currentSizeBytes': '536870912',
+        'entryCount': '18',
+        'metadataEntries': '16',
+        'updatingEntries': '1',
+        'lockCount': '2',
+        'usageRatio': 0.5,
+      };
+      final api = SyncTvApiClient(
+        baseUrl: 'https://example.test',
+        session: SyncTvSession()..accessToken = 'token',
+        httpClient: MockClient((request) async {
+          requests.add(request);
+          final response = switch (request.url.path) {
+            '/api/admin/slice-cache' => {
+              'nodes': [nodeStats],
+              'failures': [
+                {'nodeId': 'node_b', 'error': 'unreachable'},
+              ],
+            },
+            '/api/admin/slice-cache/purge' => {
+              'success': true,
+              'removedEntries': '18',
+              'freedBytes': '536870912',
+              'stats': {
+                ...nodeStats,
+                'currentSizeBytes': '0',
+                'entryCount': '0',
+              },
+            },
+            '/api/admin/slice-cache/evict-expired' => {
+              'success': false,
+              'removedExpiredEntries': '4',
+              'nodes': [
+                {
+                  'nodeId': 'node_a',
+                  'success': true,
+                  'removedExpiredEntries': '4',
+                  'stats': nodeStats,
+                },
+              ],
+              'failures': [
+                {'nodeId': 'node_b', 'error': 'timeout'},
+              ],
+            },
+            _ => throw StateError(
+              'Unexpected slice cache path ${request.url.path}',
+            ),
+          };
+          return http.Response(
+            jsonEncode(response),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+      );
+      final service = SyncTvAdminDomainService(api);
+
+      final stats = await service.getSliceCacheStats(allNodes: true);
+      final purge = await service.purgeSliceCache(nodeId: 'node_a');
+      final eviction = await service.evictExpiredSliceCache(allNodes: true);
+
+      expect(stats.nodes.single.nodeId, 'node_a');
+      expect(stats.nodes.single.currentSizeBytes, 536870912);
+      expect(stats.nodes.single.config.maxCacheSize, 1073741824);
+      expect(stats.nodes.single.config.staleWhileRevalidate, isTrue);
+      expect(stats.failures.single.nodeId, 'node_b');
+      expect(purge.success, isTrue);
+      expect(purge.removedEntries, 18);
+      expect(purge.freedBytes, 536870912);
+      expect(purge.stats?.entryCount, 0);
+      expect(eviction.success, isFalse);
+      expect(eviction.removedEntries, 4);
+      expect(eviction.nodes.single.removedEntries, 4);
+      expect(eviction.failures.single.error, 'timeout');
+
+      expect(requests.map((request) => request.method), [
+        'GET',
+        'POST',
+        'POST',
+      ]);
+      expect(requests[0].url.queryParameters, {'allNodes': 'true'});
+      expect(jsonDecode(requests[1].body), {
+        'nodeId': 'node_a',
+        'allNodes': false,
+      });
+      expect(jsonDecode(requests[2].body), {'nodeId': '', 'allNodes': true});
+    },
+  );
+
   test('admin active stream service preserves total for paging', () async {
     Uri? requestedUri;
     final server = await io.HttpServer.bind(io.InternetAddress.loopbackIPv4, 0);
@@ -9862,8 +9989,6 @@ void main() {
             'enableWebauthn': true,
             'enableWebauthnSignup': true,
             'webauthnSignupNeedReview': false,
-            'movieProxy': true,
-            'liveProxy': false,
             'tsDisguisedAsPng': true,
             'customPublishHost': 'rtmp://publish.example.test/live',
             'emailWhitelistEnabled': true,
@@ -9916,8 +10041,6 @@ void main() {
             'enableWebauthn': false,
             'enableWebauthnSignup': true,
             'webauthnSignupNeedReview': true,
-            'movieProxy': false,
-            'liveProxy': true,
             'tsDisguisedAsPng': true,
             'customPublishHost': 'rtmp://publish.example.test/app',
             'emailWhitelistEnabled': false,
@@ -9933,7 +10056,6 @@ void main() {
         'http://${server.address.host}:${server.port}',
       );
       final settings = await SyncTvService.getPublicSettings();
-      expect(settings.liveProxy, isTrue);
       expect(settings.tsDisguisedAsPng, isTrue);
       expect(settings.customPublishHost, 'rtmp://publish.example.test/app');
       expect(settings.enableEmail, isTrue);

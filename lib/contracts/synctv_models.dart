@@ -744,7 +744,9 @@ class RoomMediaEntry {
           : playback.playlistId,
       name: playback.name,
       url: selectedUrlValue,
-      live: playback.isLive,
+      live:
+          playback.playbackKind ==
+          source_config.PlaybackKind.PLAYBACK_KIND_LIVE,
       headers: selectedUrl?.headers ?? const {},
       type: selectedUrl?.format ?? selectedMode.format,
       roomId: playback.roomId,

@@ -57,9 +57,9 @@ final $typed_data.Uint8List rtmpFlvStreamResponseDescriptor = $convert.base64Dec
     'ChVSdG1wRmx2U3RyZWFtUmVzcG9uc2USQgoFY2h1bmsYASABKAsyLC5zeW5jdHYucGxheWJhY2'
     'tfcHJvdmlkZXIuY29tbW9uLlN0cmVhbUNodW5rUgVjaHVuaw==');
 
-@$core.Deprecated('Use getRtmpHlsPlaylistRequestDescriptor instead')
-const GetRtmpHlsPlaylistRequest$json = {
-  '1': 'GetRtmpHlsPlaylistRequest',
+@$core.Deprecated('Use getRtmpHlsMasterRequestDescriptor instead')
+const GetRtmpHlsMasterRequest$json = {
+  '1': 'GetRtmpHlsMasterRequest',
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
     {'1': 'sig', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'sig'},
@@ -69,11 +69,58 @@ const GetRtmpHlsPlaylistRequest$json = {
   ],
 };
 
+/// Descriptor for `GetRtmpHlsMasterRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getRtmpHlsMasterRequestDescriptor = $convert.base64Decode(
+    'ChdHZXRSdG1wSGxzTWFzdGVyUmVxdWVzdBIhCgd2ZXJzaW9uGAEgASgJQge6SARyAhABUgd2ZX'
+    'JzaW9uEhkKA3NpZxgCIAEoCUIHukgEcgIQAVIDc2lnEhkKA3VpZBgDIAEoCUIHukgEcgIQAVID'
+    'dWlkEhkKA3JpZBgEIAEoCUIHukgEcgIQAVIDcmlkEhAKA2V4cBgFIAEoA1IDZXhw');
+
+@$core.Deprecated('Use rtmpHlsMasterResponseDescriptor instead')
+const RtmpHlsMasterResponse$json = {
+  '1': 'RtmpHlsMasterResponse',
+  '2': [
+    {
+      '1': 'chunk',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.synctv.playback_provider.common.StreamChunk',
+      '10': 'chunk'
+    },
+  ],
+};
+
+/// Descriptor for `RtmpHlsMasterResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List rtmpHlsMasterResponseDescriptor = $convert.base64Decode(
+    'ChVSdG1wSGxzTWFzdGVyUmVzcG9uc2USQgoFY2h1bmsYASABKAsyLC5zeW5jdHYucGxheWJhY2'
+    'tfcHJvdmlkZXIuY29tbW9uLlN0cmVhbUNodW5rUgVjaHVuaw==');
+
+@$core.Deprecated('Use getRtmpHlsPlaylistRequestDescriptor instead')
+const GetRtmpHlsPlaylistRequest$json = {
+  '1': 'GetRtmpHlsPlaylistRequest',
+  '2': [
+    {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
+    {
+      '1': 'generation_id',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'generationId'
+    },
+    {'1': 'sig', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'sig'},
+    {'1': 'uid', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'uid'},
+    {'1': 'rid', '3': 5, '4': 1, '5': 9, '8': {}, '10': 'rid'},
+    {'1': 'exp', '3': 6, '4': 1, '5': 3, '10': 'exp'},
+  ],
+};
+
 /// Descriptor for `GetRtmpHlsPlaylistRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getRtmpHlsPlaylistRequestDescriptor = $convert.base64Decode(
     'ChlHZXRSdG1wSGxzUGxheWxpc3RSZXF1ZXN0EiEKB3ZlcnNpb24YASABKAlCB7pIBHICEAFSB3'
-    'ZlcnNpb24SGQoDc2lnGAIgASgJQge6SARyAhABUgNzaWcSGQoDdWlkGAMgASgJQge6SARyAhAB'
-    'UgN1aWQSGQoDcmlkGAQgASgJQge6SARyAhABUgNyaWQSEAoDZXhwGAUgASgDUgNleHA=');
+    'ZlcnNpb24SLAoNZ2VuZXJhdGlvbl9pZBgCIAEoCUIHukgEcgIQAVIMZ2VuZXJhdGlvbklkEhkK'
+    'A3NpZxgDIAEoCUIHukgEcgIQAVIDc2lnEhkKA3VpZBgEIAEoCUIHukgEcgIQAVIDdWlkEhkKA3'
+    'JpZBgFIAEoCUIHukgEcgIQAVIDcmlkEhAKA2V4cBgGIAEoA1IDZXhw');
 
 @$core.Deprecated('Use rtmpHlsPlaylistResponseDescriptor instead')
 const RtmpHlsPlaylistResponse$json = {
@@ -101,13 +148,21 @@ const GetRtmpHlsSegmentRequest$json = {
   '1': 'GetRtmpHlsSegmentRequest',
   '2': [
     {'1': 'version', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'version'},
-    {'1': 'segment_name', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'segmentName'},
-    {'1': 'sig', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'sig'},
-    {'1': 'uid', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'uid'},
-    {'1': 'rid', '3': 5, '4': 1, '5': 9, '8': {}, '10': 'rid'},
-    {'1': 'exp', '3': 6, '4': 1, '5': 3, '10': 'exp'},
-    {'1': 'range', '3': 7, '4': 1, '5': 9, '9': 0, '10': 'range', '17': true},
-    {'1': 'head', '3': 8, '4': 1, '5': 8, '10': 'head'},
+    {
+      '1': 'generation_id',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '8': {},
+      '10': 'generationId'
+    },
+    {'1': 'segment_name', '3': 3, '4': 1, '5': 9, '8': {}, '10': 'segmentName'},
+    {'1': 'sig', '3': 4, '4': 1, '5': 9, '8': {}, '10': 'sig'},
+    {'1': 'uid', '3': 5, '4': 1, '5': 9, '8': {}, '10': 'uid'},
+    {'1': 'rid', '3': 6, '4': 1, '5': 9, '8': {}, '10': 'rid'},
+    {'1': 'exp', '3': 7, '4': 1, '5': 3, '10': 'exp'},
+    {'1': 'range', '3': 8, '4': 1, '5': 9, '9': 0, '10': 'range', '17': true},
+    {'1': 'head', '3': 9, '4': 1, '5': 8, '10': 'head'},
   ],
   '8': [
     {'1': '_range'},
@@ -117,10 +172,11 @@ const GetRtmpHlsSegmentRequest$json = {
 /// Descriptor for `GetRtmpHlsSegmentRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List getRtmpHlsSegmentRequestDescriptor = $convert.base64Decode(
     'ChhHZXRSdG1wSGxzU2VnbWVudFJlcXVlc3QSIQoHdmVyc2lvbhgBIAEoCUIHukgEcgIQAVIHdm'
-    'Vyc2lvbhIqCgxzZWdtZW50X25hbWUYAiABKAlCB7pIBHICEAFSC3NlZ21lbnROYW1lEhkKA3Np'
-    'ZxgDIAEoCUIHukgEcgIQAVIDc2lnEhkKA3VpZBgEIAEoCUIHukgEcgIQAVIDdWlkEhkKA3JpZB'
-    'gFIAEoCUIHukgEcgIQAVIDcmlkEhAKA2V4cBgGIAEoA1IDZXhwEhkKBXJhbmdlGAcgASgJSABS'
-    'BXJhbmdliAEBEhIKBGhlYWQYCCABKAhSBGhlYWRCCAoGX3Jhbmdl');
+    'Vyc2lvbhIsCg1nZW5lcmF0aW9uX2lkGAIgASgJQge6SARyAhABUgxnZW5lcmF0aW9uSWQSKgoM'
+    'c2VnbWVudF9uYW1lGAMgASgJQge6SARyAhABUgtzZWdtZW50TmFtZRIZCgNzaWcYBCABKAlCB7'
+    'pIBHICEAFSA3NpZxIZCgN1aWQYBSABKAlCB7pIBHICEAFSA3VpZBIZCgNyaWQYBiABKAlCB7pI'
+    'BHICEAFSA3JpZBIQCgNleHAYByABKANSA2V4cBIZCgVyYW5nZRgIIAEoCUgAUgVyYW5nZYgBAR'
+    'ISCgRoZWFkGAkgASgIUgRoZWFkQggKBl9yYW5nZQ==');
 
 @$core.Deprecated('Use rtmpHlsSegmentResponseDescriptor instead')
 const RtmpHlsSegmentResponse$json = {
@@ -154,6 +210,12 @@ const $core.Map<$core.String, $core.dynamic>
       '6': true
     },
     {
+      '1': 'GetHlsMaster',
+      '2': '.synctv.playback_provider.rtmp.GetRtmpHlsMasterRequest',
+      '3': '.synctv.playback_provider.rtmp.RtmpHlsMasterResponse',
+      '6': true
+    },
+    {
       '1': 'GetHlsPlaylist',
       '2': '.synctv.playback_provider.rtmp.GetRtmpHlsPlaylistRequest',
       '3': '.synctv.playback_provider.rtmp.RtmpHlsPlaylistResponse',
@@ -176,6 +238,10 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
   '.synctv.playback_provider.rtmp.RtmpFlvStreamResponse':
       RtmpFlvStreamResponse$json,
   '.synctv.playback_provider.common.StreamChunk': $0.StreamChunk$json,
+  '.synctv.playback_provider.rtmp.GetRtmpHlsMasterRequest':
+      GetRtmpHlsMasterRequest$json,
+  '.synctv.playback_provider.rtmp.RtmpHlsMasterResponse':
+      RtmpHlsMasterResponse$json,
   '.synctv.playback_provider.rtmp.GetRtmpHlsPlaylistRequest':
       GetRtmpHlsPlaylistRequest$json,
   '.synctv.playback_provider.rtmp.RtmpHlsPlaylistResponse':
@@ -190,9 +256,11 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
 final $typed_data.Uint8List rtmpPlaybackProviderServiceDescriptor = $convert.base64Decode(
     'ChtSdG1wUGxheWJhY2tQcm92aWRlclNlcnZpY2USfgoMR2V0Rmx2U3RyZWFtEjYuc3luY3R2Ln'
     'BsYXliYWNrX3Byb3ZpZGVyLnJ0bXAuR2V0UnRtcEZsdlN0cmVhbVJlcXVlc3QaNC5zeW5jdHYu'
-    'cGxheWJhY2tfcHJvdmlkZXIucnRtcC5SdG1wRmx2U3RyZWFtUmVzcG9uc2UwARKEAQoOR2V0SG'
-    'xzUGxheWxpc3QSOC5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIucnRtcC5HZXRSdG1wSGxzUGxh'
-    'eWxpc3RSZXF1ZXN0GjYuc3luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLnJ0bXAuUnRtcEhsc1BsYX'
-    'lsaXN0UmVzcG9uc2UwARKBAQoNR2V0SGxzU2VnbWVudBI3LnN5bmN0di5wbGF5YmFja19wcm92'
-    'aWRlci5ydG1wLkdldFJ0bXBIbHNTZWdtZW50UmVxdWVzdBo1LnN5bmN0di5wbGF5YmFja19wcm'
-    '92aWRlci5ydG1wLlJ0bXBIbHNTZWdtZW50UmVzcG9uc2UwAQ==');
+    'cGxheWJhY2tfcHJvdmlkZXIucnRtcC5SdG1wRmx2U3RyZWFtUmVzcG9uc2UwARJ+CgxHZXRIbH'
+    'NNYXN0ZXISNi5zeW5jdHYucGxheWJhY2tfcHJvdmlkZXIucnRtcC5HZXRSdG1wSGxzTWFzdGVy'
+    'UmVxdWVzdBo0LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5ydG1wLlJ0bXBIbHNNYXN0ZXJSZX'
+    'Nwb25zZTABEoQBCg5HZXRIbHNQbGF5bGlzdBI4LnN5bmN0di5wbGF5YmFja19wcm92aWRlci5y'
+    'dG1wLkdldFJ0bXBIbHNQbGF5bGlzdFJlcXVlc3QaNi5zeW5jdHYucGxheWJhY2tfcHJvdmlkZX'
+    'IucnRtcC5SdG1wSGxzUGxheWxpc3RSZXNwb25zZTABEoEBCg1HZXRIbHNTZWdtZW50Ejcuc3lu'
+    'Y3R2LnBsYXliYWNrX3Byb3ZpZGVyLnJ0bXAuR2V0UnRtcEhsc1NlZ21lbnRSZXF1ZXN0GjUuc3'
+    'luY3R2LnBsYXliYWNrX3Byb3ZpZGVyLnJ0bXAuUnRtcEhsc1NlZ21lbnRSZXNwb25zZTAB');

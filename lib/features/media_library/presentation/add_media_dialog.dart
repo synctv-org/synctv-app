@@ -6,6 +6,8 @@ import 'package:synctv_app/core/config/distribution_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:synctv_app/l10n/l10n.dart';
 import 'package:synctv_app/features/providers/presentation/provider_gateway_scope.dart';
+import 'package:synctv_app/src/generated/proto/source_config.pb.dart'
+    as source_config;
 import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
     as source_enum;
 import 'package:synctv_app/theme/app_responsive.dart';
@@ -160,6 +162,10 @@ class _DirectHeaderDraft {
   }
 }
 
+enum _LivePullProtocol { rtmp, rtsp, httpFlv }
+
+enum _RtspTrackMode { firstCompatible, explicitIndex, disabled }
+
 class _AddMediaDialogState extends State<AddMediaDialog> {
   int _selectedIndex = 0;
 
@@ -168,6 +174,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   final _nameController = TextEditingController();
   final _liveProxyUrlController = TextEditingController();
   final _liveProxyNameController = TextEditingController();
+  final _liveProxyVideoTrackIndexController = TextEditingController(text: '0');
+  final _liveProxyAudioTrackIndexController = TextEditingController(text: '0');
   final _biliUrlController = TextEditingController();
   final _alistSearchController = TextEditingController();
   final _alistPasswordController = TextEditingController();
@@ -176,8 +184,19 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   bool _preferProxy = false;
   bool _proxyOnly = false;
+  source_enum.PlaybackKind _directPlaybackKind =
+      source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR;
   bool _isLoading = false;
   String _directHeaderError = '';
+  source_enum.RtmpStreamMode _rtmpPublishMode =
+      source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT;
+  _LivePullProtocol _liveProxyProtocol = _LivePullProtocol.rtmp;
+  source_enum.RtmpStreamMode _liveProxyRtmpMode =
+      source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT;
+  source_enum.RtspTransport _liveProxyRtspTransport =
+      source_enum.RtspTransport.RTSP_TRANSPORT_TCP;
+  _RtspTrackMode _liveProxyVideoTrackMode = _RtspTrackMode.firstCompatible;
+  _RtspTrackMode _liveProxyAudioTrackMode = _RtspTrackMode.firstCompatible;
 
   BilibiliParseInfo? _biliInfo;
   int _biliSelectedIndex = 0;
@@ -444,6 +463,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     _nameController.dispose();
     _liveProxyUrlController.dispose();
     _liveProxyNameController.dispose();
+    _liveProxyVideoTrackIndexController.dispose();
+    _liveProxyAudioTrackIndexController.dispose();
     for (final header in _directHeaders) {
       header.dispose();
     }
@@ -772,6 +793,9 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   Widget _buildCompactSourceRail(ThemeData theme) {
+    final selectedSpec = _sourceSpecs.firstWhere(
+      (spec) => spec.index == _selectedIndex,
+    );
     return AppPanelSurface(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       color: theme.colorScheme.surfaceContainerLow,
@@ -788,10 +812,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         isExpanded: true,
         decoration: InputDecoration(
           labelText: context.l10n.source,
-          prefixIcon: Icon(
-            _sourceSpecs[_selectedIndex].icon,
-            color: _sourceSpecs[_selectedIndex].color,
-          ),
+          prefixIcon: Icon(selectedSpec.icon, color: selectedSpec.color),
         ),
         menuMaxHeight: 420,
         items: [
@@ -1084,14 +1105,38 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 10),
-          _buildDirectTextField(
-            controller: _nameController,
-            label: context.l10n.optionalVideoName,
-            hintText: context.l10n.defaultsToFileName,
-            prefixIcon: Icons.title_rounded,
-            textInputAction: TextInputAction.next,
-            enabled: !_isLoading,
-            onChanged: (_) => setState(() {}),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final nameField = _buildDirectTextField(
+                controller: _nameController,
+                label: constraints.maxWidth < 520
+                    ? context.l10n.name
+                    : context.l10n.optionalVideoName,
+                hintText: context.l10n.defaultsToFileName,
+                prefixIcon: Icons.title_rounded,
+                textInputAction: TextInputAction.next,
+                enabled: !_isLoading,
+                onChanged: (_) => setState(() {}),
+              );
+              final playbackKindControl = _buildDirectPlaybackKindControl();
+              if (constraints.maxWidth >= 330) {
+                return Row(
+                  children: [
+                    Expanded(child: nameField),
+                    const SizedBox(width: 12),
+                    SizedBox(width: 180, child: playbackKindControl),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  playbackKindControl,
+                  const SizedBox(height: 10),
+                  nameField,
+                ],
+              );
+            },
           ),
           const SizedBox(height: 10),
           _buildDirectHeadersEditor(theme),
@@ -1128,6 +1173,39 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     );
   }
 
+  Widget _buildDirectPlaybackKindControl() {
+    return Semantics(
+      label: context.l10n.playbackKind,
+      child: SegmentedButton<source_enum.PlaybackKind>(
+        style: const ButtonStyle(
+          padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 6)),
+          minimumSize: WidgetStatePropertyAll(Size(0, 40)),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+          textStyle: WidgetStatePropertyAll(
+            TextStyle(fontSize: 13, letterSpacing: 0),
+          ),
+        ),
+        segments: [
+          ButtonSegment(
+            value: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
+            label: Text(context.l10n.onDemand),
+          ),
+          ButtonSegment(
+            value: source_enum.PlaybackKind.PLAYBACK_KIND_LIVE,
+            label: Text(context.l10n.live),
+          ),
+        ],
+        selected: {_directPlaybackKind},
+        onSelectionChanged: _isLoading
+            ? null
+            : (selection) {
+                setState(() => _directPlaybackKind = selection.single);
+              },
+      ),
+    );
+  }
+
   Widget _buildDirectTextField({
     required TextEditingController controller,
     required String label,
@@ -1135,7 +1213,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     required IconData prefixIcon,
     FocusNode? focusNode,
     int? minLines,
-    int? maxLines,
+    int? maxLines = 1,
     TextInputType? keyboardType,
     TextInputAction? textInputAction,
     bool autocorrect = true,
@@ -1332,6 +1410,24 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             context.l10n.liveNameHint,
             Icons.live_tv_rounded,
           ),
+          const SizedBox(height: 12),
+          AppSelect<source_enum.RtmpStreamMode>(
+            value: _rtmpPublishMode,
+            label: context.l10n.streamMode,
+            prefixIcon: Icons.tune_rounded,
+            options: {
+              context.l10n.audioAndVideo:
+                  source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
+              context.l10n.videoOnly:
+                  source_enum.RtmpStreamMode.RTMP_STREAM_MODE_VIDEO_ONLY,
+              context.l10n.audioOnly:
+                  source_enum.RtmpStreamMode.RTMP_STREAM_MODE_AUDIO_ONLY,
+            },
+            enabled: !_isLoading,
+            onChanged: (value) {
+              if (value != null) setState(() => _rtmpPublishMode = value);
+            },
+          ),
           const SizedBox(height: 18),
           if (_publicSettings != null) ...[
             _buildRtmpPublicSettingsPanel(theme, _publicSettings!),
@@ -1362,6 +1458,32 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          SegmentedButton<_LivePullProtocol>(
+            segments: [
+              const ButtonSegment(
+                value: _LivePullProtocol.rtmp,
+                label: Text('RTMP'),
+                icon: Icon(Icons.podcasts_rounded),
+              ),
+              const ButtonSegment(
+                value: _LivePullProtocol.rtsp,
+                label: Text('RTSP'),
+                icon: Icon(Icons.videocam_outlined),
+              ),
+              const ButtonSegment(
+                value: _LivePullProtocol.httpFlv,
+                label: Text('HTTP-FLV'),
+                icon: Icon(Icons.http_rounded),
+              ),
+            ],
+            selected: {_liveProxyProtocol},
+            onSelectionChanged: _isLoading
+                ? null
+                : (selection) {
+                    setState(() => _liveProxyProtocol = selection.single);
+                  },
+          ),
+          const SizedBox(height: 12),
           AppTextField(
             controller: _liveProxyUrlController,
             label: context.l10n.sourceAddress,
@@ -1375,6 +1497,80 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
             enabled: !_isLoading,
             onChanged: (_) => setState(() {}),
           ),
+          if (_liveProxyProtocol == _LivePullProtocol.rtmp) ...[
+            const SizedBox(height: 12),
+            AppSelect<source_enum.RtmpStreamMode>(
+              value: _liveProxyRtmpMode,
+              label: context.l10n.streamMode,
+              prefixIcon: Icons.tune_rounded,
+              options: {
+                context.l10n.audioAndVideo:
+                    source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
+                context.l10n.videoOnly:
+                    source_enum.RtmpStreamMode.RTMP_STREAM_MODE_VIDEO_ONLY,
+                context.l10n.audioOnly:
+                    source_enum.RtmpStreamMode.RTMP_STREAM_MODE_AUDIO_ONLY,
+              },
+              enabled: !_isLoading,
+              onChanged: (value) {
+                if (value != null) setState(() => _liveProxyRtmpMode = value);
+              },
+            ),
+          ],
+          if (_liveProxyProtocol == _LivePullProtocol.rtsp) ...[
+            const SizedBox(height: 12),
+            AppSelect<source_enum.RtspTransport>(
+              value: _liveProxyRtspTransport,
+              label: context.l10n.rtspTransport,
+              prefixIcon: Icons.swap_horiz_rounded,
+              options: {
+                'TCP': source_enum.RtspTransport.RTSP_TRANSPORT_TCP,
+                'UDP': source_enum.RtspTransport.RTSP_TRANSPORT_UDP,
+              },
+              enabled: !_isLoading,
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _liveProxyRtspTransport = value);
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final video = _buildRtspTrackControl(
+                  label: context.l10n.videoTrack,
+                  icon: Icons.videocam_outlined,
+                  mode: _liveProxyVideoTrackMode,
+                  indexController: _liveProxyVideoTrackIndexController,
+                  onChanged: (value) {
+                    setState(() => _liveProxyVideoTrackMode = value);
+                  },
+                );
+                final audio = _buildRtspTrackControl(
+                  label: context.l10n.audioTrack,
+                  icon: Icons.audiotrack_rounded,
+                  mode: _liveProxyAudioTrackMode,
+                  indexController: _liveProxyAudioTrackIndexController,
+                  onChanged: (value) {
+                    setState(() => _liveProxyAudioTrackMode = value);
+                  },
+                );
+                if (constraints.maxWidth < 560) {
+                  return Column(
+                    children: [video, const SizedBox(height: 12), audio],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: video),
+                    const SizedBox(width: 12),
+                    Expanded(child: audio),
+                  ],
+                );
+              },
+            ),
+          ],
           const SizedBox(height: 10),
           AppTextField(
             controller: _liveProxyNameController,
@@ -1402,6 +1598,45 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRtspTrackControl({
+    required String label,
+    required IconData icon,
+    required _RtspTrackMode mode,
+    required TextEditingController indexController,
+    required ValueChanged<_RtspTrackMode> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSelect<_RtspTrackMode>(
+          value: mode,
+          label: label,
+          prefixIcon: icon,
+          options: {
+            context.l10n.firstCompatibleTrack: _RtspTrackMode.firstCompatible,
+            context.l10n.trackIndex: _RtspTrackMode.explicitIndex,
+            context.l10n.disabled: _RtspTrackMode.disabled,
+          },
+          enabled: !_isLoading,
+          onChanged: (value) {
+            if (value != null) onChanged(value);
+          },
+        ),
+        if (mode == _RtspTrackMode.explicitIndex) ...[
+          const SizedBox(height: 10),
+          AppTextField(
+            controller: indexController,
+            label: context.l10n.trackIndex,
+            prefixIcon: Icons.numbers_rounded,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            enabled: !_isLoading,
+          ),
+        ],
+      ],
     );
   }
 
@@ -2558,7 +2793,8 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
   }
 
   bool get _hasUnsavedDraft {
-    if (_urlController.text.trim().isNotEmpty ||
+    if (_directPlaybackKind != source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR ||
+        _urlController.text.trim().isNotEmpty ||
         _nameController.text.trim().isNotEmpty ||
         _liveProxyUrlController.text.trim().isNotEmpty ||
         _liveProxyNameController.text.trim().isNotEmpty ||
@@ -2650,6 +2886,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
           widget.roomId,
           playlistId: widget.parentId ?? '',
           url: urls.single,
+          playbackKind: _directPlaybackKind,
           name: name.isEmpty ? _directUrlDisplayName(urls.single) : name,
           headers: headers,
           preferProxy: _preferProxy,
@@ -2665,6 +2902,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
                   'sourceProvider': DirectUrlSourceConfig.sourceProvider,
                   'sourceConfig': DirectUrlSourceConfig.fromUserInput(
                     url: url,
+                    playbackKind: _directPlaybackKind,
                     headers: headers,
                     preferProxy: _preferProxy,
                     proxyOnly: _proxyOnly,
@@ -2714,6 +2952,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
         widget.roomId,
         playlistId: widget.parentId ?? '',
         name: name.isEmpty ? context.l10n.rtmpLive : name,
+        mode: _rtmpPublishMode,
       );
       final publish = await providerGateway.createRtmpPublishKeyInfo(
         widget.roomId,
@@ -2741,8 +2980,13 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
 
   Future<void> _addLiveProxyMedia() async {
     late final String url;
+    late final source_config.LiveProxyMediaSourceConfig sourceConfig;
     try {
-      url = _validateLiveProxyUrl(_liveProxyUrlController.text.trim());
+      url = _validateLiveProxyUrl(
+        _liveProxyUrlController.text.trim(),
+        _liveProxyProtocol,
+      );
+      sourceConfig = _liveProxySourceConfig(url);
     } on FormatException catch (e) {
       AppNotifications.showWarning(context, e.message);
       return;
@@ -2754,7 +2998,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       await providerGateway.addLiveProxyMedia(
         widget.roomId,
         playlistId: widget.parentId ?? '',
-        url: url,
+        sourceConfig: sourceConfig,
         name: name.isEmpty ? _liveProxyDisplayName(url) : name,
       );
       if (mounted) {
@@ -2773,7 +3017,7 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
     }
   }
 
-  String _validateLiveProxyUrl(String rawUrl) {
+  String _validateLiveProxyUrl(String rawUrl, _LivePullProtocol protocol) {
     if (rawUrl.isEmpty) {
       throw FormatException(context.l10n.enterLiveSourceAddress);
     }
@@ -2782,14 +3026,79 @@ class _AddMediaDialogState extends State<AddMediaDialog> {
       throw FormatException(context.l10n.enterValidLiveSourceAddress);
     }
     final scheme = uri.scheme.toLowerCase();
-    final isRtmp = scheme == 'rtmp';
-    final isFlv =
-        (scheme == 'http' || scheme == 'https') &&
-        uri.path.toLowerCase().endsWith('.flv');
-    if (!isRtmp && !isFlv) {
+    final valid = switch (protocol) {
+      _LivePullProtocol.rtmp => scheme == 'rtmp',
+      _LivePullProtocol.rtsp => scheme == 'rtsp',
+      _LivePullProtocol.httpFlv =>
+        (scheme == 'http' || scheme == 'https') && uri.path.endsWith('.flv'),
+    };
+    if (!valid) {
       throw FormatException(context.l10n.livePullUrlSupport);
     }
     return rawUrl;
+  }
+
+  source_config.LiveProxyMediaSourceConfig _liveProxySourceConfig(String url) {
+    return switch (_liveProxyProtocol) {
+      _LivePullProtocol.rtmp => source_config.LiveProxyMediaSourceConfig(
+        rtmp: source_config.RtmpPullSourceConfig(
+          url: url,
+          mode: _liveProxyRtmpMode,
+        ),
+      ),
+      _LivePullProtocol.rtsp => _rtspLiveProxySourceConfig(url),
+      _LivePullProtocol.httpFlv => source_config.LiveProxyMediaSourceConfig(
+        httpFlv: source_config.HttpFlvPullSourceConfig(url: url),
+      ),
+    };
+  }
+
+  source_config.LiveProxyMediaSourceConfig _rtspLiveProxySourceConfig(
+    String url,
+  ) {
+    if (_liveProxyVideoTrackMode == _RtspTrackMode.disabled &&
+        _liveProxyAudioTrackMode == _RtspTrackMode.disabled) {
+      throw FormatException(context.l10n.selectRtspTrack);
+    }
+    return source_config.LiveProxyMediaSourceConfig(
+      rtsp: source_config.RtspPullSourceConfig(
+        url: url,
+        transport: _liveProxyRtspTransport,
+        videoTrack: _rtspTrackSelection(
+          _liveProxyVideoTrackMode,
+          _liveProxyVideoTrackIndexController,
+        ),
+        audioTrack: _rtspTrackSelection(
+          _liveProxyAudioTrackMode,
+          _liveProxyAudioTrackIndexController,
+        ),
+      ),
+    );
+  }
+
+  source_config.RtspTrackSelection _rtspTrackSelection(
+    _RtspTrackMode mode,
+    TextEditingController indexController,
+  ) {
+    return switch (mode) {
+      _RtspTrackMode.firstCompatible => source_config.RtspTrackSelection(
+        firstCompatible: true,
+      ),
+      _RtspTrackMode.disabled => source_config.RtspTrackSelection(
+        disabled: true,
+      ),
+      _RtspTrackMode.explicitIndex => source_config.RtspTrackSelection(
+        index: _validatedTrackIndex(indexController.text),
+      ),
+    };
+  }
+
+  int _validatedTrackIndex(String value) {
+    final index = int.tryParse(value);
+    if (index == null || index < 0) {
+      throw FormatException(context.l10n.enterValidTrackIndex);
+    }
+    return index;
   }
 
   String _liveProxyDisplayName(String url) {

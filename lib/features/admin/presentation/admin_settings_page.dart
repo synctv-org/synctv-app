@@ -24,6 +24,7 @@ import 'package:synctv_app/core/presentation/widgets/app_form_controls.dart';
 part 'admin_shared_widgets.dart';
 part 'tabs/administrators_tab.dart';
 part 'tabs/ban_records_tab.dart';
+part 'tabs/cache_tab.dart';
 part 'tabs/providers_tab.dart';
 part 'tabs/reviews_tab.dart';
 part 'tabs/rooms_tab.dart';
@@ -200,7 +201,7 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
   late TabController _tabController;
   int _selectedSectionIndex = 0;
   final Set<int> _builtSectionIndexes = <int>{0};
-  static const int _sectionCount = 11;
+  static const int _sectionCount = 12;
 
   List<_AdminSection> get _sections => [
     _AdminSection(
@@ -247,6 +248,11 @@ class _AdminSettingsPageState extends State<AdminSettingsPage>
       label: context.l10n.streaming,
       icon: Icons.podcasts_rounded,
       page: const AdminStreamsTab(),
+    ),
+    _AdminSection(
+      label: context.l10n.sliceCache,
+      icon: Icons.storage_rounded,
+      page: const AdminSliceCacheTab(),
     ),
     _AdminSection(
       label: context.l10n.bans,

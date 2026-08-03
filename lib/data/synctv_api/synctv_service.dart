@@ -1542,6 +1542,7 @@ class SyncTvService {
     String roomId, {
     String playlistId = '',
     required String url,
+    required source_enum.PlaybackKind playbackKind,
     Map<String, String> headers = const {},
     String name = '',
     bool preferProxy = false,
@@ -1551,6 +1552,7 @@ class SyncTvService {
       roomId,
       playlistId: playlistId,
       url: url,
+      playbackKind: playbackKind,
       headers: headers,
       name: name,
       preferProxy: preferProxy,
@@ -1792,24 +1794,27 @@ class SyncTvService {
     String roomId, {
     String playlistId = '',
     String name = '',
+    source_enum.RtmpStreamMode mode =
+        source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
   }) {
     return _domains.roomMedia.addRtmpMedia(
       roomId,
       playlistId: playlistId,
       name: name,
+      mode: mode,
     );
   }
 
   static Future<String> addLiveProxyMedia(
     String roomId, {
     String playlistId = '',
-    required String url,
+    required source_config.LiveProxyMediaSourceConfig sourceConfig,
     String name = '',
   }) {
     return _domains.roomMedia.addLiveProxyMedia(
       roomId,
       playlistId: playlistId,
-      url: url,
+      sourceConfig: sourceConfig,
       name: name,
     );
   }
@@ -1939,8 +1944,8 @@ class SyncTvService {
     );
   }
 
-  static Future<void> logoutAList(String serverId, {String instanceName = ''}) {
-    return _domains.providers.logoutAList(serverId, instanceName: instanceName);
+  static Future<void> logoutAList(String serverId) {
+    return _domains.providers.logoutAList(serverId);
   }
 
   static Future<String> loginCloudreve(
@@ -2087,11 +2092,8 @@ class SyncTvService {
     providerInstanceName: providerInstanceName,
   );
 
-  static Future<void> logoutCloudreve(
-    String serverId, {
-    String instanceName = '',
-  }) =>
-      _domains.providers.logoutCloudreve(serverId, instanceName: instanceName);
+  static Future<void> logoutCloudreve(String serverId) =>
+      _domains.providers.logoutCloudreve(serverId);
 
   static Future<FnosLoginInfo> loginFnos({
     required String endpoint,
@@ -2113,8 +2115,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> logoutFnos(String serverId, {String instanceName = ''}) =>
-      _domains.providers.logoutFnos(serverId, instanceName: instanceName);
+  static Future<void> logoutFnos(String serverId) =>
+      _domains.providers.logoutFnos(serverId);
 
   static Future<List<FnosBindInfo>> getAllFnosBindInfos() =>
       _domains.providers.getAllFnosBindInfos();
@@ -2199,8 +2201,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> logoutQnap(String serverId, {String instanceName = ''}) =>
-      _domains.providers.logoutQnap(serverId, instanceName: instanceName);
+  static Future<void> logoutQnap(String serverId) =>
+      _domains.providers.logoutQnap(serverId);
 
   static Future<List<QnapBindInfo>> getAllQnapBindInfos() =>
       _domains.providers.getAllQnapBindInfos();
@@ -2245,10 +2247,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> logoutSynology(
-    String serverId, {
-    String instanceName = '',
-  }) => _domains.providers.logoutSynology(serverId, instanceName: instanceName);
+  static Future<void> logoutSynology(String serverId) =>
+      _domains.providers.logoutSynology(serverId);
 
   static Future<List<SynologyBindInfo>> getAllSynologyBindInfos() =>
       _domains.providers.getAllSynologyBindInfos();
@@ -2279,11 +2279,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> logoutNextcloud(
-    String serverId, {
-    String instanceName = '',
-  }) =>
-      _domains.providers.logoutNextcloud(serverId, instanceName: instanceName);
+  static Future<void> logoutNextcloud(String serverId) =>
+      _domains.providers.logoutNextcloud(serverId);
 
   static Future<List<NextcloudBindInfo>> getAllNextcloudBindInfos() =>
       _domains.providers.getAllNextcloudBindInfos();
@@ -2340,10 +2337,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> logoutSeafile(
-    String serverId, {
-    String instanceName = '',
-  }) => _domains.providers.logoutSeafile(serverId, instanceName: instanceName);
+  static Future<void> logoutSeafile(String serverId) =>
+      _domains.providers.logoutSeafile(serverId);
 
   static Future<List<SeafileBindInfo>> getAllSeafileBindInfos() =>
       _domains.providers.getAllSeafileBindInfos();
@@ -2400,10 +2395,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> logoutTrueNas(
-    String serverId, {
-    String instanceName = '',
-  }) => _domains.providers.logoutTrueNas(serverId, instanceName: instanceName);
+  static Future<void> logoutTrueNas(String serverId) =>
+      _domains.providers.logoutTrueNas(serverId);
 
   static Future<List<TrueNasBindInfo>> getAllTrueNasBindInfos() =>
       _domains.providers.getAllTrueNasBindInfos();
@@ -2480,10 +2473,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> unbindTwitch(
-    String serverId, {
-    String instanceName = '',
-  }) => _domains.providers.unbindTwitch(serverId, instanceName: instanceName);
+  static Future<void> unbindTwitch(String serverId) =>
+      _domains.providers.unbindTwitch(serverId);
 
   static Future<twitch.ResolveResponse> resolveTwitch(
     String resource, {
@@ -2588,10 +2579,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> unbindYoutube(
-    String serverId, {
-    String instanceName = '',
-  }) => _domains.providers.unbindYoutube(serverId, instanceName: instanceName);
+  static Future<void> unbindYoutube(String serverId) =>
+      _domains.providers.unbindYoutube(serverId);
 
   static Future<youtube.ResolveResponse> resolveYoutube(
     String resource, {
@@ -2608,10 +2597,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> unbindDouyin(
-    String serverId, {
-    String instanceName = '',
-  }) => _domains.providers.unbindDouyin(serverId, instanceName: instanceName);
+  static Future<void> unbindDouyin(String serverId) =>
+      _domains.providers.unbindDouyin(serverId);
 
   static Future<douyin.ResolveResponse> resolveDouyin(
     String resource, {
@@ -2640,10 +2627,8 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> unbindTikTok(
-    String serverId, {
-    String instanceName = '',
-  }) => _domains.providers.unbindTikTok(serverId, instanceName: instanceName);
+  static Future<void> unbindTikTok(String serverId) =>
+      _domains.providers.unbindTikTok(serverId);
 
   static Future<tiktok.ResolveResponse> resolveTikTok(
     String resource, {
@@ -2667,12 +2652,12 @@ class SyncTvService {
     instanceName: instanceName,
   );
 
-  static Future<void> logoutEmby(String serverId, {String instanceName = ''}) {
-    return _domains.providers.logoutEmby(serverId, instanceName: instanceName);
+  static Future<void> logoutEmby(String serverId) {
+    return _domains.providers.logoutEmby(serverId);
   }
 
-  static Future<void> logoutBilibili({String instanceName = ''}) async {
-    await _domains.providers.logoutBilibili(instanceName: instanceName);
+  static Future<void> logoutBilibili() async {
+    await _domains.providers.logoutBilibili();
   }
 
   static Future<BilibiliAccountInfo> getBilibiliAccount({
@@ -3476,6 +3461,33 @@ class SyncTvService {
 
   static Future<AdminServiceState> adminGetServiceState() {
     return _domains.admin.getServiceState();
+  }
+
+  static Future<AdminSliceCacheStats> adminGetSliceCacheStats({
+    String nodeId = '',
+    bool allNodes = false,
+  }) {
+    return _domains.admin.getSliceCacheStats(
+      nodeId: nodeId,
+      allNodes: allNodes,
+    );
+  }
+
+  static Future<AdminSliceCacheOperationResult> adminPurgeSliceCache({
+    String nodeId = '',
+    bool allNodes = false,
+  }) {
+    return _domains.admin.purgeSliceCache(nodeId: nodeId, allNodes: allNodes);
+  }
+
+  static Future<AdminSliceCacheOperationResult> adminEvictExpiredSliceCache({
+    String nodeId = '',
+    bool allNodes = false,
+  }) {
+    return _domains.admin.evictExpiredSliceCache(
+      nodeId: nodeId,
+      allNodes: allNodes,
+    );
   }
 
   static Future<AdminsPage> adminListAdminsPage({

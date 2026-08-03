@@ -60,6 +60,102 @@ class AdminServiceState {
   });
 }
 
+class AdminSliceCacheConfig {
+  final bool engineEnabled;
+  final String backend;
+  final String fileCacheDir;
+  final int sliceSize;
+  final int maxCacheSize;
+  final int segmentTtlSeconds;
+  final int staleMaxAgeSeconds;
+  final bool staleWhileRevalidate;
+  final int evictionIntervalSeconds;
+  final double watermarkRatio;
+
+  const AdminSliceCacheConfig({
+    required this.engineEnabled,
+    required this.backend,
+    required this.fileCacheDir,
+    required this.sliceSize,
+    required this.maxCacheSize,
+    required this.segmentTtlSeconds,
+    required this.staleMaxAgeSeconds,
+    required this.staleWhileRevalidate,
+    required this.evictionIntervalSeconds,
+    required this.watermarkRatio,
+  });
+}
+
+class AdminSliceCacheNodeStats {
+  final String nodeId;
+  final AdminSliceCacheConfig config;
+  final int currentSizeBytes;
+  final int entryCount;
+  final int metadataEntries;
+  final int updatingEntries;
+  final int lockCount;
+  final double usageRatio;
+
+  const AdminSliceCacheNodeStats({
+    required this.nodeId,
+    required this.config,
+    required this.currentSizeBytes,
+    required this.entryCount,
+    required this.metadataEntries,
+    required this.updatingEntries,
+    required this.lockCount,
+    required this.usageRatio,
+  });
+}
+
+class AdminSliceCacheFailure {
+  final String nodeId;
+  final String error;
+
+  const AdminSliceCacheFailure({required this.nodeId, required this.error});
+}
+
+class AdminSliceCacheStats {
+  final List<AdminSliceCacheNodeStats> nodes;
+  final List<AdminSliceCacheFailure> failures;
+
+  const AdminSliceCacheStats({required this.nodes, required this.failures});
+}
+
+class AdminSliceCacheOperationNode {
+  final String nodeId;
+  final bool success;
+  final int removedEntries;
+  final int freedBytes;
+  final AdminSliceCacheNodeStats? stats;
+
+  const AdminSliceCacheOperationNode({
+    required this.nodeId,
+    required this.success,
+    required this.removedEntries,
+    required this.freedBytes,
+    required this.stats,
+  });
+}
+
+class AdminSliceCacheOperationResult {
+  final bool success;
+  final int removedEntries;
+  final int freedBytes;
+  final AdminSliceCacheNodeStats? stats;
+  final List<AdminSliceCacheOperationNode> nodes;
+  final List<AdminSliceCacheFailure> failures;
+
+  const AdminSliceCacheOperationResult({
+    required this.success,
+    required this.removedEntries,
+    required this.freedBytes,
+    required this.stats,
+    required this.nodes,
+    required this.failures,
+  });
+}
+
 class RuntimeSettingsSection {
   final String name;
   final Map<String, dynamic> settings;

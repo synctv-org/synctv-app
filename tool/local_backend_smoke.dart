@@ -13,6 +13,8 @@ import 'package:synctv_app/features/room/domain/room_realtime.dart';
 import 'package:synctv_app/data/synctv_api/synctv_service.dart';
 import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 import 'local_backend_test_auth.dart';
 
@@ -78,6 +80,7 @@ Future<void> runSmoke(String baseUrl) async {
     room.roomId,
     playlistId: playlist.id,
     url: 'https://example.com/smoke.mp4',
+    playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
     name: 'Smoke Direct URL',
   );
   final mediaPage = await SyncTvService.listMediaLibrary(

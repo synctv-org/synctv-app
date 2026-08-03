@@ -65,6 +65,7 @@ abstract interface class ProviderGateway {
     String roomId, {
     String playlistId = '',
     required String url,
+    required source_enum.PlaybackKind playbackKind,
     Map<String, String> headers = const {},
     String name = '',
     bool preferProxy = false,
@@ -119,7 +120,7 @@ abstract interface class ProviderGateway {
   Future<String> addLiveProxyMedia(
     String roomId, {
     String playlistId = '',
-    required String url,
+    required source_config.LiveProxyMediaSourceConfig sourceConfig,
     String name = '',
   });
 
@@ -156,6 +157,8 @@ abstract interface class ProviderGateway {
     String roomId, {
     String playlistId = '',
     String name = '',
+    source_enum.RtmpStreamMode mode =
+        source_enum.RtmpStreamMode.RTMP_STREAM_MODE_DEFAULT,
   });
 
   Future<String> addSeafileMedia(
@@ -640,25 +643,25 @@ abstract interface class ProviderGateway {
     String instanceName = '',
   });
 
-  Future<void> logoutAList(String serverId, {String instanceName = ''});
+  Future<void> logoutAList(String serverId);
 
-  Future<void> logoutBilibili({String instanceName = ''});
+  Future<void> logoutBilibili();
 
-  Future<void> logoutCloudreve(String serverId, {String instanceName = ''});
+  Future<void> logoutCloudreve(String serverId);
 
-  Future<void> logoutEmby(String serverId, {String instanceName = ''});
+  Future<void> logoutEmby(String serverId);
 
-  Future<void> logoutFnos(String serverId, {String instanceName = ''});
+  Future<void> logoutFnos(String serverId);
 
-  Future<void> logoutNextcloud(String serverId, {String instanceName = ''});
+  Future<void> logoutNextcloud(String serverId);
 
-  Future<void> logoutQnap(String serverId, {String instanceName = ''});
+  Future<void> logoutQnap(String serverId);
 
-  Future<void> logoutSeafile(String serverId, {String instanceName = ''});
+  Future<void> logoutSeafile(String serverId);
 
-  Future<void> logoutSynology(String serverId, {String instanceName = ''});
+  Future<void> logoutSynology(String serverId);
 
-  Future<void> logoutTrueNas(String serverId, {String instanceName = ''});
+  Future<void> logoutTrueNas(String serverId);
 
   Future<BilibiliParseInfo> parseBilibiliInfo(
     String url, {
@@ -734,13 +737,13 @@ abstract interface class ProviderGateway {
 
   Future<NextcloudLoginFlowInfo> startNextcloudLoginFlow(String endpoint);
 
-  Future<void> unbindDouyin(String serverId, {String instanceName = ''});
+  Future<void> unbindDouyin(String serverId);
 
-  Future<void> unbindTikTok(String serverId, {String instanceName = ''});
+  Future<void> unbindTikTok(String serverId);
 
-  Future<void> unbindTwitch(String serverId, {String instanceName = ''});
+  Future<void> unbindTwitch(String serverId);
 
-  Future<void> unbindYoutube(String serverId, {String instanceName = ''});
+  Future<void> unbindYoutube(String serverId);
 
   Future<void> unlockSeafileLibrary(
     String serverId,

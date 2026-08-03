@@ -3041,13 +3041,7 @@ class UserInfoResponse extends $pb.GeneratedMessage {
 
 /// Logout request
 class LogoutRequest extends $pb.GeneratedMessage {
-  factory LogoutRequest({
-    $core.String? instanceName,
-  }) {
-    final result = create();
-    if (instanceName != null) result.instanceName = instanceName;
-    return result;
-  }
+  factory LogoutRequest() => create();
 
   LogoutRequest._();
 
@@ -3063,7 +3057,6 @@ class LogoutRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.provider.bilibili'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'instanceName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -3084,15 +3077,6 @@ class LogoutRequest extends $pb.GeneratedMessage {
   static LogoutRequest getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<LogoutRequest>(create);
   static LogoutRequest? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.String get instanceName => $_getSZ(0);
-  @$pb.TagNumber(1)
-  set instanceName($core.String value) => $_setString(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasInstanceName() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearInstanceName() => $_clearField(1);
 }
 
 /// Logout response

@@ -651,10 +651,6 @@ Map<String, dynamic> runtimeSettingsSectionToJson(
       settings.hasOauth2()
           ? protoMessageToJsonMap(settings.oauth2)
           : <String, dynamic>{},
-    'proxy' =>
-      settings.hasProxy()
-          ? protoMessageToJsonMap(settings.proxy)
-          : <String, dynamic>{},
     'rtmp' => _rtmpRuntimeSettingsToJson(settings),
     'email' => _emailRuntimeSettingsToJson(settings),
     'webrtc' =>

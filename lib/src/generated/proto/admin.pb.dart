@@ -502,7 +502,6 @@ class RuntimeSettings extends $pb.GeneratedMessage {
     RoomCreationSettings? roomCreation,
     UserSettings? user,
     OAuth2Settings? oauth2,
-    ProxySettings? proxy,
     RtmpSettings? rtmp,
     EmailSettings? email,
     WebRTCSettings? webrtc,
@@ -517,7 +516,6 @@ class RuntimeSettings extends $pb.GeneratedMessage {
     if (roomCreation != null) result.roomCreation = roomCreation;
     if (user != null) result.user = user;
     if (oauth2 != null) result.oauth2 = oauth2;
-    if (proxy != null) result.proxy = proxy;
     if (rtmp != null) result.rtmp = rtmp;
     if (email != null) result.email = email;
     if (webrtc != null) result.webrtc = webrtc;
@@ -551,21 +549,19 @@ class RuntimeSettings extends $pb.GeneratedMessage {
         subBuilder: UserSettings.create)
     ..aOM<OAuth2Settings>(5, _omitFieldNames ? '' : 'oauth2',
         subBuilder: OAuth2Settings.create)
-    ..aOM<ProxySettings>(6, _omitFieldNames ? '' : 'proxy',
-        subBuilder: ProxySettings.create)
-    ..aOM<RtmpSettings>(7, _omitFieldNames ? '' : 'rtmp',
+    ..aOM<RtmpSettings>(6, _omitFieldNames ? '' : 'rtmp',
         subBuilder: RtmpSettings.create)
-    ..aOM<EmailSettings>(8, _omitFieldNames ? '' : 'email',
+    ..aOM<EmailSettings>(7, _omitFieldNames ? '' : 'email',
         subBuilder: EmailSettings.create)
-    ..aOM<WebRTCSettings>(9, _omitFieldNames ? '' : 'webrtc',
+    ..aOM<WebRTCSettings>(8, _omitFieldNames ? '' : 'webrtc',
         subBuilder: WebRTCSettings.create)
-    ..aOM<ChatSettings>(10, _omitFieldNames ? '' : 'chat',
+    ..aOM<ChatSettings>(9, _omitFieldNames ? '' : 'chat',
         subBuilder: ChatSettings.create)
-    ..aOM<CorsSettings>(11, _omitFieldNames ? '' : 'cors',
+    ..aOM<CorsSettings>(10, _omitFieldNames ? '' : 'cors',
         subBuilder: CorsSettings.create)
-    ..aOM<ServerSettings>(12, _omitFieldNames ? '' : 'server',
+    ..aOM<ServerSettings>(11, _omitFieldNames ? '' : 'server',
         subBuilder: ServerSettings.create)
-    ..aOM<PlaybackHistorySettings>(13, _omitFieldNames ? '' : 'playbackHistory',
+    ..aOM<PlaybackHistorySettings>(12, _omitFieldNames ? '' : 'playbackHistory',
         subBuilder: PlaybackHistorySettings.create)
     ..hasRequiredFields = false;
 
@@ -644,92 +640,81 @@ class RuntimeSettings extends $pb.GeneratedMessage {
   OAuth2Settings ensureOauth2() => $_ensure(4);
 
   @$pb.TagNumber(6)
-  ProxySettings get proxy => $_getN(5);
+  RtmpSettings get rtmp => $_getN(5);
   @$pb.TagNumber(6)
-  set proxy(ProxySettings value) => $_setField(6, value);
+  set rtmp(RtmpSettings value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasProxy() => $_has(5);
+  $core.bool hasRtmp() => $_has(5);
   @$pb.TagNumber(6)
-  void clearProxy() => $_clearField(6);
+  void clearRtmp() => $_clearField(6);
   @$pb.TagNumber(6)
-  ProxySettings ensureProxy() => $_ensure(5);
+  RtmpSettings ensureRtmp() => $_ensure(5);
 
   @$pb.TagNumber(7)
-  RtmpSettings get rtmp => $_getN(6);
+  EmailSettings get email => $_getN(6);
   @$pb.TagNumber(7)
-  set rtmp(RtmpSettings value) => $_setField(7, value);
+  set email(EmailSettings value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasRtmp() => $_has(6);
+  $core.bool hasEmail() => $_has(6);
   @$pb.TagNumber(7)
-  void clearRtmp() => $_clearField(7);
+  void clearEmail() => $_clearField(7);
   @$pb.TagNumber(7)
-  RtmpSettings ensureRtmp() => $_ensure(6);
+  EmailSettings ensureEmail() => $_ensure(6);
 
   @$pb.TagNumber(8)
-  EmailSettings get email => $_getN(7);
+  WebRTCSettings get webrtc => $_getN(7);
   @$pb.TagNumber(8)
-  set email(EmailSettings value) => $_setField(8, value);
+  set webrtc(WebRTCSettings value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasEmail() => $_has(7);
+  $core.bool hasWebrtc() => $_has(7);
   @$pb.TagNumber(8)
-  void clearEmail() => $_clearField(8);
+  void clearWebrtc() => $_clearField(8);
   @$pb.TagNumber(8)
-  EmailSettings ensureEmail() => $_ensure(7);
+  WebRTCSettings ensureWebrtc() => $_ensure(7);
 
   @$pb.TagNumber(9)
-  WebRTCSettings get webrtc => $_getN(8);
+  ChatSettings get chat => $_getN(8);
   @$pb.TagNumber(9)
-  set webrtc(WebRTCSettings value) => $_setField(9, value);
+  set chat(ChatSettings value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasWebrtc() => $_has(8);
+  $core.bool hasChat() => $_has(8);
   @$pb.TagNumber(9)
-  void clearWebrtc() => $_clearField(9);
+  void clearChat() => $_clearField(9);
   @$pb.TagNumber(9)
-  WebRTCSettings ensureWebrtc() => $_ensure(8);
+  ChatSettings ensureChat() => $_ensure(8);
 
   @$pb.TagNumber(10)
-  ChatSettings get chat => $_getN(9);
+  CorsSettings get cors => $_getN(9);
   @$pb.TagNumber(10)
-  set chat(ChatSettings value) => $_setField(10, value);
+  set cors(CorsSettings value) => $_setField(10, value);
   @$pb.TagNumber(10)
-  $core.bool hasChat() => $_has(9);
+  $core.bool hasCors() => $_has(9);
   @$pb.TagNumber(10)
-  void clearChat() => $_clearField(10);
+  void clearCors() => $_clearField(10);
   @$pb.TagNumber(10)
-  ChatSettings ensureChat() => $_ensure(9);
+  CorsSettings ensureCors() => $_ensure(9);
 
   @$pb.TagNumber(11)
-  CorsSettings get cors => $_getN(10);
+  ServerSettings get server => $_getN(10);
   @$pb.TagNumber(11)
-  set cors(CorsSettings value) => $_setField(11, value);
+  set server(ServerSettings value) => $_setField(11, value);
   @$pb.TagNumber(11)
-  $core.bool hasCors() => $_has(10);
+  $core.bool hasServer() => $_has(10);
   @$pb.TagNumber(11)
-  void clearCors() => $_clearField(11);
+  void clearServer() => $_clearField(11);
   @$pb.TagNumber(11)
-  CorsSettings ensureCors() => $_ensure(10);
+  ServerSettings ensureServer() => $_ensure(10);
 
   @$pb.TagNumber(12)
-  ServerSettings get server => $_getN(11);
+  PlaybackHistorySettings get playbackHistory => $_getN(11);
   @$pb.TagNumber(12)
-  set server(ServerSettings value) => $_setField(12, value);
+  set playbackHistory(PlaybackHistorySettings value) => $_setField(12, value);
   @$pb.TagNumber(12)
-  $core.bool hasServer() => $_has(11);
+  $core.bool hasPlaybackHistory() => $_has(11);
   @$pb.TagNumber(12)
-  void clearServer() => $_clearField(12);
+  void clearPlaybackHistory() => $_clearField(12);
   @$pb.TagNumber(12)
-  ServerSettings ensureServer() => $_ensure(11);
-
-  @$pb.TagNumber(13)
-  PlaybackHistorySettings get playbackHistory => $_getN(12);
-  @$pb.TagNumber(13)
-  set playbackHistory(PlaybackHistorySettings value) => $_setField(13, value);
-  @$pb.TagNumber(13)
-  $core.bool hasPlaybackHistory() => $_has(12);
-  @$pb.TagNumber(13)
-  void clearPlaybackHistory() => $_clearField(13);
-  @$pb.TagNumber(13)
-  PlaybackHistorySettings ensurePlaybackHistory() => $_ensure(12);
+  PlaybackHistorySettings ensurePlaybackHistory() => $_ensure(11);
 }
 
 class ServerSettings extends $pb.GeneratedMessage {
@@ -2042,72 +2027,6 @@ class OAuth2CasdoorProviderConfig extends $pb.GeneratedMessage {
   void clearJwksUrl() => $_clearField(8);
 }
 
-class ProxySettings extends $pb.GeneratedMessage {
-  factory ProxySettings({
-    $core.bool? movieProxy,
-    $core.bool? liveProxy,
-  }) {
-    final result = create();
-    if (movieProxy != null) result.movieProxy = movieProxy;
-    if (liveProxy != null) result.liveProxy = liveProxy;
-    return result;
-  }
-
-  ProxySettings._();
-
-  factory ProxySettings.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ProxySettings.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ProxySettings',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'movieProxy')
-    ..aOB(2, _omitFieldNames ? '' : 'liveProxy')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ProxySettings clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ProxySettings copyWith(void Function(ProxySettings) updates) =>
-      super.copyWith((message) => updates(message as ProxySettings))
-          as ProxySettings;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ProxySettings create() => ProxySettings._();
-  @$core.override
-  ProxySettings createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ProxySettings getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ProxySettings>(create);
-  static ProxySettings? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.bool get movieProxy => $_getBF(0);
-  @$pb.TagNumber(1)
-  set movieProxy($core.bool value) => $_setBool(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasMovieProxy() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMovieProxy() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.bool get liveProxy => $_getBF(1);
-  @$pb.TagNumber(2)
-  set liveProxy($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasLiveProxy() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearLiveProxy() => $_clearField(2);
-}
-
 class RtmpSettings extends $pb.GeneratedMessage {
   factory RtmpSettings({
     $core.String? customPublishHost,
@@ -2817,7 +2736,6 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
     RoomCreationSettingsPatch? roomCreation,
     UserSettingsPatch? user,
     OAuth2SettingsPatch? oauth2,
-    ProxySettingsPatch? proxy,
     RtmpSettingsPatch? rtmp,
     EmailSettingsPatch? email,
     WebRTCSettingsPatch? webrtc,
@@ -2832,7 +2750,6 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
     if (roomCreation != null) result.roomCreation = roomCreation;
     if (user != null) result.user = user;
     if (oauth2 != null) result.oauth2 = oauth2;
-    if (proxy != null) result.proxy = proxy;
     if (rtmp != null) result.rtmp = rtmp;
     if (email != null) result.email = email;
     if (webrtc != null) result.webrtc = webrtc;
@@ -2866,22 +2783,20 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
         subBuilder: UserSettingsPatch.create)
     ..aOM<OAuth2SettingsPatch>(5, _omitFieldNames ? '' : 'oauth2',
         subBuilder: OAuth2SettingsPatch.create)
-    ..aOM<ProxySettingsPatch>(6, _omitFieldNames ? '' : 'proxy',
-        subBuilder: ProxySettingsPatch.create)
-    ..aOM<RtmpSettingsPatch>(7, _omitFieldNames ? '' : 'rtmp',
+    ..aOM<RtmpSettingsPatch>(6, _omitFieldNames ? '' : 'rtmp',
         subBuilder: RtmpSettingsPatch.create)
-    ..aOM<EmailSettingsPatch>(8, _omitFieldNames ? '' : 'email',
+    ..aOM<EmailSettingsPatch>(7, _omitFieldNames ? '' : 'email',
         subBuilder: EmailSettingsPatch.create)
-    ..aOM<WebRTCSettingsPatch>(9, _omitFieldNames ? '' : 'webrtc',
+    ..aOM<WebRTCSettingsPatch>(8, _omitFieldNames ? '' : 'webrtc',
         subBuilder: WebRTCSettingsPatch.create)
-    ..aOM<ChatSettingsPatch>(10, _omitFieldNames ? '' : 'chat',
+    ..aOM<ChatSettingsPatch>(9, _omitFieldNames ? '' : 'chat',
         subBuilder: ChatSettingsPatch.create)
-    ..aOM<CorsSettingsPatch>(11, _omitFieldNames ? '' : 'cors',
+    ..aOM<CorsSettingsPatch>(10, _omitFieldNames ? '' : 'cors',
         subBuilder: CorsSettingsPatch.create)
-    ..aOM<ServerSettingsPatch>(12, _omitFieldNames ? '' : 'server',
+    ..aOM<ServerSettingsPatch>(11, _omitFieldNames ? '' : 'server',
         subBuilder: ServerSettingsPatch.create)
     ..aOM<PlaybackHistorySettingsPatch>(
-        13, _omitFieldNames ? '' : 'playbackHistory',
+        12, _omitFieldNames ? '' : 'playbackHistory',
         subBuilder: PlaybackHistorySettingsPatch.create)
     ..hasRequiredFields = false;
 
@@ -2960,93 +2875,82 @@ class RuntimeSettingsPatch extends $pb.GeneratedMessage {
   OAuth2SettingsPatch ensureOauth2() => $_ensure(4);
 
   @$pb.TagNumber(6)
-  ProxySettingsPatch get proxy => $_getN(5);
+  RtmpSettingsPatch get rtmp => $_getN(5);
   @$pb.TagNumber(6)
-  set proxy(ProxySettingsPatch value) => $_setField(6, value);
+  set rtmp(RtmpSettingsPatch value) => $_setField(6, value);
   @$pb.TagNumber(6)
-  $core.bool hasProxy() => $_has(5);
+  $core.bool hasRtmp() => $_has(5);
   @$pb.TagNumber(6)
-  void clearProxy() => $_clearField(6);
+  void clearRtmp() => $_clearField(6);
   @$pb.TagNumber(6)
-  ProxySettingsPatch ensureProxy() => $_ensure(5);
+  RtmpSettingsPatch ensureRtmp() => $_ensure(5);
 
   @$pb.TagNumber(7)
-  RtmpSettingsPatch get rtmp => $_getN(6);
+  EmailSettingsPatch get email => $_getN(6);
   @$pb.TagNumber(7)
-  set rtmp(RtmpSettingsPatch value) => $_setField(7, value);
+  set email(EmailSettingsPatch value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasRtmp() => $_has(6);
+  $core.bool hasEmail() => $_has(6);
   @$pb.TagNumber(7)
-  void clearRtmp() => $_clearField(7);
+  void clearEmail() => $_clearField(7);
   @$pb.TagNumber(7)
-  RtmpSettingsPatch ensureRtmp() => $_ensure(6);
+  EmailSettingsPatch ensureEmail() => $_ensure(6);
 
   @$pb.TagNumber(8)
-  EmailSettingsPatch get email => $_getN(7);
+  WebRTCSettingsPatch get webrtc => $_getN(7);
   @$pb.TagNumber(8)
-  set email(EmailSettingsPatch value) => $_setField(8, value);
+  set webrtc(WebRTCSettingsPatch value) => $_setField(8, value);
   @$pb.TagNumber(8)
-  $core.bool hasEmail() => $_has(7);
+  $core.bool hasWebrtc() => $_has(7);
   @$pb.TagNumber(8)
-  void clearEmail() => $_clearField(8);
+  void clearWebrtc() => $_clearField(8);
   @$pb.TagNumber(8)
-  EmailSettingsPatch ensureEmail() => $_ensure(7);
+  WebRTCSettingsPatch ensureWebrtc() => $_ensure(7);
 
   @$pb.TagNumber(9)
-  WebRTCSettingsPatch get webrtc => $_getN(8);
+  ChatSettingsPatch get chat => $_getN(8);
   @$pb.TagNumber(9)
-  set webrtc(WebRTCSettingsPatch value) => $_setField(9, value);
+  set chat(ChatSettingsPatch value) => $_setField(9, value);
   @$pb.TagNumber(9)
-  $core.bool hasWebrtc() => $_has(8);
+  $core.bool hasChat() => $_has(8);
   @$pb.TagNumber(9)
-  void clearWebrtc() => $_clearField(9);
+  void clearChat() => $_clearField(9);
   @$pb.TagNumber(9)
-  WebRTCSettingsPatch ensureWebrtc() => $_ensure(8);
+  ChatSettingsPatch ensureChat() => $_ensure(8);
 
   @$pb.TagNumber(10)
-  ChatSettingsPatch get chat => $_getN(9);
+  CorsSettingsPatch get cors => $_getN(9);
   @$pb.TagNumber(10)
-  set chat(ChatSettingsPatch value) => $_setField(10, value);
+  set cors(CorsSettingsPatch value) => $_setField(10, value);
   @$pb.TagNumber(10)
-  $core.bool hasChat() => $_has(9);
+  $core.bool hasCors() => $_has(9);
   @$pb.TagNumber(10)
-  void clearChat() => $_clearField(10);
+  void clearCors() => $_clearField(10);
   @$pb.TagNumber(10)
-  ChatSettingsPatch ensureChat() => $_ensure(9);
+  CorsSettingsPatch ensureCors() => $_ensure(9);
 
   @$pb.TagNumber(11)
-  CorsSettingsPatch get cors => $_getN(10);
+  ServerSettingsPatch get server => $_getN(10);
   @$pb.TagNumber(11)
-  set cors(CorsSettingsPatch value) => $_setField(11, value);
+  set server(ServerSettingsPatch value) => $_setField(11, value);
   @$pb.TagNumber(11)
-  $core.bool hasCors() => $_has(10);
+  $core.bool hasServer() => $_has(10);
   @$pb.TagNumber(11)
-  void clearCors() => $_clearField(11);
+  void clearServer() => $_clearField(11);
   @$pb.TagNumber(11)
-  CorsSettingsPatch ensureCors() => $_ensure(10);
+  ServerSettingsPatch ensureServer() => $_ensure(10);
 
   @$pb.TagNumber(12)
-  ServerSettingsPatch get server => $_getN(11);
+  PlaybackHistorySettingsPatch get playbackHistory => $_getN(11);
   @$pb.TagNumber(12)
-  set server(ServerSettingsPatch value) => $_setField(12, value);
-  @$pb.TagNumber(12)
-  $core.bool hasServer() => $_has(11);
-  @$pb.TagNumber(12)
-  void clearServer() => $_clearField(12);
-  @$pb.TagNumber(12)
-  ServerSettingsPatch ensureServer() => $_ensure(11);
-
-  @$pb.TagNumber(13)
-  PlaybackHistorySettingsPatch get playbackHistory => $_getN(12);
-  @$pb.TagNumber(13)
   set playbackHistory(PlaybackHistorySettingsPatch value) =>
-      $_setField(13, value);
-  @$pb.TagNumber(13)
-  $core.bool hasPlaybackHistory() => $_has(12);
-  @$pb.TagNumber(13)
-  void clearPlaybackHistory() => $_clearField(13);
-  @$pb.TagNumber(13)
-  PlaybackHistorySettingsPatch ensurePlaybackHistory() => $_ensure(12);
+      $_setField(12, value);
+  @$pb.TagNumber(12)
+  $core.bool hasPlaybackHistory() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearPlaybackHistory() => $_clearField(12);
+  @$pb.TagNumber(12)
+  PlaybackHistorySettingsPatch ensurePlaybackHistory() => $_ensure(11);
 }
 
 class ServerSettingsPatch extends $pb.GeneratedMessage {
@@ -3538,72 +3442,6 @@ class OAuth2SettingsPatch extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(2)
   $pb.PbList<$core.String> get allowedRedirectUrls => $_getList(1);
-}
-
-class ProxySettingsPatch extends $pb.GeneratedMessage {
-  factory ProxySettingsPatch({
-    $core.bool? movieProxy,
-    $core.bool? liveProxy,
-  }) {
-    final result = create();
-    if (movieProxy != null) result.movieProxy = movieProxy;
-    if (liveProxy != null) result.liveProxy = liveProxy;
-    return result;
-  }
-
-  ProxySettingsPatch._();
-
-  factory ProxySettingsPatch.fromBuffer($core.List<$core.int> data,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
-  factory ProxySettingsPatch.fromJson($core.String json,
-          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ProxySettingsPatch',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'synctv.admin'),
-      createEmptyInstance: create)
-    ..aOB(1, _omitFieldNames ? '' : 'movieProxy')
-    ..aOB(2, _omitFieldNames ? '' : 'liveProxy')
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ProxySettingsPatch clone() => deepCopy();
-  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
-  ProxySettingsPatch copyWith(void Function(ProxySettingsPatch) updates) =>
-      super.copyWith((message) => updates(message as ProxySettingsPatch))
-          as ProxySettingsPatch;
-
-  @$core.override
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ProxySettingsPatch create() => ProxySettingsPatch._();
-  @$core.override
-  ProxySettingsPatch createEmptyInstance() => create();
-  @$core.pragma('dart2js:noInline')
-  static ProxySettingsPatch getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ProxySettingsPatch>(create);
-  static ProxySettingsPatch? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.bool get movieProxy => $_getBF(0);
-  @$pb.TagNumber(1)
-  set movieProxy($core.bool value) => $_setBool(0, value);
-  @$pb.TagNumber(1)
-  $core.bool hasMovieProxy() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearMovieProxy() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.bool get liveProxy => $_getBF(1);
-  @$pb.TagNumber(2)
-  set liveProxy($core.bool value) => $_setBool(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasLiveProxy() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearLiveProxy() => $_clearField(2);
 }
 
 class RtmpSettingsPatch extends $pb.GeneratedMessage {

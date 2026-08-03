@@ -317,7 +317,7 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
     $core.int? defaultSubtitleIndex,
     $core.Iterable<DirectUrlDanmakuSourceConfig>? danmakus,
     $core.int? defaultDanmakuIndex,
-    $core.bool? isLive,
+    PlaybackKind? playbackKind,
     $core.double? durationSeconds,
     $core.bool? preferProxy,
     $core.bool? proxyOnly,
@@ -331,7 +331,7 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
     if (danmakus != null) result.danmakus.addAll(danmakus);
     if (defaultDanmakuIndex != null)
       result.defaultDanmakuIndex = defaultDanmakuIndex;
-    if (isLive != null) result.isLive = isLive;
+    if (playbackKind != null) result.playbackKind = playbackKind;
     if (durationSeconds != null) result.durationSeconds = durationSeconds;
     if (preferProxy != null) result.preferProxy = preferProxy;
     if (proxyOnly != null) result.proxyOnly = proxyOnly;
@@ -364,7 +364,8 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
         subBuilder: DirectUrlDanmakuSourceConfig.create)
     ..aI(6, _omitFieldNames ? '' : 'defaultDanmakuIndex',
         fieldType: $pb.PbFieldType.OU3)
-    ..aOB(7, _omitFieldNames ? '' : 'isLive')
+    ..aE<PlaybackKind>(7, _omitFieldNames ? '' : 'playbackKind',
+        enumValues: PlaybackKind.values)
     ..aD(8, _omitFieldNames ? '' : 'durationSeconds')
     ..aOB(9, _omitFieldNames ? '' : 'preferProxy')
     ..aOB(10, _omitFieldNames ? '' : 'proxyOnly')
@@ -428,13 +429,13 @@ class DirectUrlMediaSourceConfig extends $pb.GeneratedMessage {
   void clearDefaultDanmakuIndex() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $core.bool get isLive => $_getBF(6);
+  PlaybackKind get playbackKind => $_getN(6);
   @$pb.TagNumber(7)
-  set isLive($core.bool value) => $_setBool(6, value);
+  set playbackKind(PlaybackKind value) => $_setField(7, value);
   @$pb.TagNumber(7)
-  $core.bool hasIsLive() => $_has(6);
+  $core.bool hasPlaybackKind() => $_has(6);
   @$pb.TagNumber(7)
-  void clearIsLive() => $_clearField(7);
+  void clearPlaybackKind() => $_clearField(7);
 
   @$pb.TagNumber(8)
   $core.double get durationSeconds => $_getN(7);
@@ -1672,7 +1673,13 @@ class EmbyGenreItemsPlaylistSource extends $pb.GeneratedMessage {
 }
 
 class RtmpMediaSourceConfig extends $pb.GeneratedMessage {
-  factory RtmpMediaSourceConfig() => create();
+  factory RtmpMediaSourceConfig({
+    RtmpStreamMode? mode,
+  }) {
+    final result = create();
+    if (mode != null) result.mode = mode;
+    return result;
+  }
 
   RtmpMediaSourceConfig._();
 
@@ -1688,6 +1695,8 @@ class RtmpMediaSourceConfig extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.source_config'),
       createEmptyInstance: create)
+    ..aE<RtmpStreamMode>(1, _omitFieldNames ? '' : 'mode',
+        enumValues: RtmpStreamMode.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1709,14 +1718,350 @@ class RtmpMediaSourceConfig extends $pb.GeneratedMessage {
   static RtmpMediaSourceConfig getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<RtmpMediaSourceConfig>(create);
   static RtmpMediaSourceConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  RtmpStreamMode get mode => $_getN(0);
+  @$pb.TagNumber(1)
+  set mode(RtmpStreamMode value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMode() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMode() => $_clearField(1);
 }
 
-class LiveProxyMediaSourceConfig extends $pb.GeneratedMessage {
-  factory LiveProxyMediaSourceConfig({
+enum RtspTrackSelection_Mode { firstCompatible, index_, disabled, notSet }
+
+class RtspTrackSelection extends $pb.GeneratedMessage {
+  factory RtspTrackSelection({
+    $core.bool? firstCompatible,
+    $core.int? index,
+    $core.bool? disabled,
+  }) {
+    final result = create();
+    if (firstCompatible != null) result.firstCompatible = firstCompatible;
+    if (index != null) result.index = index;
+    if (disabled != null) result.disabled = disabled;
+    return result;
+  }
+
+  RtspTrackSelection._();
+
+  factory RtspTrackSelection.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RtspTrackSelection.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static const $core.Map<$core.int, RtspTrackSelection_Mode>
+      _RtspTrackSelection_ModeByTag = {
+    1: RtspTrackSelection_Mode.firstCompatible,
+    2: RtspTrackSelection_Mode.index_,
+    3: RtspTrackSelection_Mode.disabled,
+    0: RtspTrackSelection_Mode.notSet
+  };
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RtspTrackSelection',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.source_config'),
+      createEmptyInstance: create)
+    ..oo(0, [1, 2, 3])
+    ..aOB(1, _omitFieldNames ? '' : 'firstCompatible')
+    ..aI(2, _omitFieldNames ? '' : 'index', fieldType: $pb.PbFieldType.OU3)
+    ..aOB(3, _omitFieldNames ? '' : 'disabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtspTrackSelection clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtspTrackSelection copyWith(void Function(RtspTrackSelection) updates) =>
+      super.copyWith((message) => updates(message as RtspTrackSelection))
+          as RtspTrackSelection;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RtspTrackSelection create() => RtspTrackSelection._();
+  @$core.override
+  RtspTrackSelection createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RtspTrackSelection getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RtspTrackSelection>(create);
+  static RtspTrackSelection? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  RtspTrackSelection_Mode whichMode() =>
+      _RtspTrackSelection_ModeByTag[$_whichOneof(0)]!;
+  @$pb.TagNumber(1)
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  void clearMode() => $_clearField($_whichOneof(0));
+
+  @$pb.TagNumber(1)
+  $core.bool get firstCompatible => $_getBF(0);
+  @$pb.TagNumber(1)
+  set firstCompatible($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFirstCompatible() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFirstCompatible() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get index => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set index($core.int value) => $_setUnsignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasIndex() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearIndex() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get disabled => $_getBF(2);
+  @$pb.TagNumber(3)
+  set disabled($core.bool value) => $_setBool(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDisabled() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDisabled() => $_clearField(3);
+}
+
+class RtmpPullSourceConfig extends $pb.GeneratedMessage {
+  factory RtmpPullSourceConfig({
+    $core.String? url,
+    RtmpStreamMode? mode,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    if (mode != null) result.mode = mode;
+    return result;
+  }
+
+  RtmpPullSourceConfig._();
+
+  factory RtmpPullSourceConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RtmpPullSourceConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RtmpPullSourceConfig',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.source_config'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..aE<RtmpStreamMode>(2, _omitFieldNames ? '' : 'mode',
+        enumValues: RtmpStreamMode.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtmpPullSourceConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtmpPullSourceConfig copyWith(void Function(RtmpPullSourceConfig) updates) =>
+      super.copyWith((message) => updates(message as RtmpPullSourceConfig))
+          as RtmpPullSourceConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RtmpPullSourceConfig create() => RtmpPullSourceConfig._();
+  @$core.override
+  RtmpPullSourceConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RtmpPullSourceConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RtmpPullSourceConfig>(create);
+  static RtmpPullSourceConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  RtmpStreamMode get mode => $_getN(1);
+  @$pb.TagNumber(2)
+  set mode(RtmpStreamMode value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMode() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMode() => $_clearField(2);
+}
+
+class RtspPullSourceConfig extends $pb.GeneratedMessage {
+  factory RtspPullSourceConfig({
+    $core.String? url,
+    RtspTransport? transport,
+    RtspTrackSelection? videoTrack,
+    RtspTrackSelection? audioTrack,
+  }) {
+    final result = create();
+    if (url != null) result.url = url;
+    if (transport != null) result.transport = transport;
+    if (videoTrack != null) result.videoTrack = videoTrack;
+    if (audioTrack != null) result.audioTrack = audioTrack;
+    return result;
+  }
+
+  RtspPullSourceConfig._();
+
+  factory RtspPullSourceConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RtspPullSourceConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RtspPullSourceConfig',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.source_config'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..aE<RtspTransport>(2, _omitFieldNames ? '' : 'transport',
+        enumValues: RtspTransport.values)
+    ..aOM<RtspTrackSelection>(3, _omitFieldNames ? '' : 'videoTrack',
+        subBuilder: RtspTrackSelection.create)
+    ..aOM<RtspTrackSelection>(4, _omitFieldNames ? '' : 'audioTrack',
+        subBuilder: RtspTrackSelection.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtspPullSourceConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RtspPullSourceConfig copyWith(void Function(RtspPullSourceConfig) updates) =>
+      super.copyWith((message) => updates(message as RtspPullSourceConfig))
+          as RtspPullSourceConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RtspPullSourceConfig create() => RtspPullSourceConfig._();
+  @$core.override
+  RtspPullSourceConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RtspPullSourceConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<RtspPullSourceConfig>(create);
+  static RtspPullSourceConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  RtspTransport get transport => $_getN(1);
+  @$pb.TagNumber(2)
+  set transport(RtspTransport value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTransport() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTransport() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  RtspTrackSelection get videoTrack => $_getN(2);
+  @$pb.TagNumber(3)
+  set videoTrack(RtspTrackSelection value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasVideoTrack() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVideoTrack() => $_clearField(3);
+  @$pb.TagNumber(3)
+  RtspTrackSelection ensureVideoTrack() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  RtspTrackSelection get audioTrack => $_getN(3);
+  @$pb.TagNumber(4)
+  set audioTrack(RtspTrackSelection value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAudioTrack() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAudioTrack() => $_clearField(4);
+  @$pb.TagNumber(4)
+  RtspTrackSelection ensureAudioTrack() => $_ensure(3);
+}
+
+class HttpFlvPullSourceConfig extends $pb.GeneratedMessage {
+  factory HttpFlvPullSourceConfig({
     $core.String? url,
   }) {
     final result = create();
     if (url != null) result.url = url;
+    return result;
+  }
+
+  HttpFlvPullSourceConfig._();
+
+  factory HttpFlvPullSourceConfig.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory HttpFlvPullSourceConfig.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'HttpFlvPullSourceConfig',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'synctv.source_config'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HttpFlvPullSourceConfig clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HttpFlvPullSourceConfig copyWith(
+          void Function(HttpFlvPullSourceConfig) updates) =>
+      super.copyWith((message) => updates(message as HttpFlvPullSourceConfig))
+          as HttpFlvPullSourceConfig;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static HttpFlvPullSourceConfig create() => HttpFlvPullSourceConfig._();
+  @$core.override
+  HttpFlvPullSourceConfig createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static HttpFlvPullSourceConfig getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<HttpFlvPullSourceConfig>(create);
+  static HttpFlvPullSourceConfig? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUrl() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUrl() => $_clearField(1);
+}
+
+enum LiveProxyMediaSourceConfig_Source { rtmp, rtsp, httpFlv, notSet }
+
+class LiveProxyMediaSourceConfig extends $pb.GeneratedMessage {
+  factory LiveProxyMediaSourceConfig({
+    RtmpPullSourceConfig? rtmp,
+    RtspPullSourceConfig? rtsp,
+    HttpFlvPullSourceConfig? httpFlv,
+  }) {
+    final result = create();
+    if (rtmp != null) result.rtmp = rtmp;
+    if (rtsp != null) result.rtsp = rtsp;
+    if (httpFlv != null) result.httpFlv = httpFlv;
     return result;
   }
 
@@ -1729,12 +2074,25 @@ class LiveProxyMediaSourceConfig extends $pb.GeneratedMessage {
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
 
+  static const $core.Map<$core.int, LiveProxyMediaSourceConfig_Source>
+      _LiveProxyMediaSourceConfig_SourceByTag = {
+    1: LiveProxyMediaSourceConfig_Source.rtmp,
+    2: LiveProxyMediaSourceConfig_Source.rtsp,
+    3: LiveProxyMediaSourceConfig_Source.httpFlv,
+    0: LiveProxyMediaSourceConfig_Source.notSet
+  };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'LiveProxyMediaSourceConfig',
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'synctv.source_config'),
       createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'url')
+    ..oo(0, [1, 2, 3])
+    ..aOM<RtmpPullSourceConfig>(1, _omitFieldNames ? '' : 'rtmp',
+        subBuilder: RtmpPullSourceConfig.create)
+    ..aOM<RtspPullSourceConfig>(2, _omitFieldNames ? '' : 'rtsp',
+        subBuilder: RtspPullSourceConfig.create)
+    ..aOM<HttpFlvPullSourceConfig>(3, _omitFieldNames ? '' : 'httpFlv',
+        subBuilder: HttpFlvPullSourceConfig.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1759,13 +2117,47 @@ class LiveProxyMediaSourceConfig extends $pb.GeneratedMessage {
   static LiveProxyMediaSourceConfig? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get url => $_getSZ(0);
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  LiveProxyMediaSourceConfig_Source whichSource() =>
+      _LiveProxyMediaSourceConfig_SourceByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(1)
-  set url($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(2)
+  @$pb.TagNumber(3)
+  void clearSource() => $_clearField($_whichOneof(0));
+
   @$pb.TagNumber(1)
-  $core.bool hasUrl() => $_has(0);
+  RtmpPullSourceConfig get rtmp => $_getN(0);
   @$pb.TagNumber(1)
-  void clearUrl() => $_clearField(1);
+  set rtmp(RtmpPullSourceConfig value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRtmp() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRtmp() => $_clearField(1);
+  @$pb.TagNumber(1)
+  RtmpPullSourceConfig ensureRtmp() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  RtspPullSourceConfig get rtsp => $_getN(1);
+  @$pb.TagNumber(2)
+  set rtsp(RtspPullSourceConfig value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRtsp() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRtsp() => $_clearField(2);
+  @$pb.TagNumber(2)
+  RtspPullSourceConfig ensureRtsp() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  HttpFlvPullSourceConfig get httpFlv => $_getN(2);
+  @$pb.TagNumber(3)
+  set httpFlv(HttpFlvPullSourceConfig value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasHttpFlv() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearHttpFlv() => $_clearField(3);
+  @$pb.TagNumber(3)
+  HttpFlvPullSourceConfig ensureHttpFlv() => $_ensure(2);
 }
 
 class BilibiliVideoSourceConfig extends $pb.GeneratedMessage {

@@ -29,6 +29,12 @@ enum SourceProvider {
   SOURCE_PROVIDER_TIKTOK = 21;
 }
 
+enum PlaybackKind {
+  PLAYBACK_KIND_UNSPECIFIED = 0;
+  PLAYBACK_KIND_REGULAR = 1;
+  PLAYBACK_KIND_LIVE = 2;
+}
+
 message DirectUrlMediaResourceConfig {
   string name = 1;
   string url = 2;
@@ -58,7 +64,7 @@ message DirectUrlMediaSourceConfig {
   optional uint32 default_subtitle_index = 4;
   repeated DirectUrlDanmakuSourceConfig danmakus = 5;
   optional uint32 default_danmaku_index = 6;
-  optional bool is_live = 7;
+  optional PlaybackKind playback_kind = 7 [(buf.validate.field).enum.defined_only = true];
   optional double duration_seconds = 8;
   optional bool prefer_proxy = 9;
   optional bool proxy_only = 10;
@@ -126,10 +132,53 @@ message EmbyGenreItemsPlaylistSource {
   repeated string item_types = 2;
 }
 
-message RtmpMediaSourceConfig {}
+message RtmpMediaSourceConfig {
+  RtmpStreamMode mode = 1;
+}
+
+enum RtmpStreamMode {
+  RTMP_STREAM_MODE_UNSPECIFIED = 0;
+  RTMP_STREAM_MODE_DEFAULT = 1;
+  RTMP_STREAM_MODE_VIDEO_ONLY = 2;
+  RTMP_STREAM_MODE_AUDIO_ONLY = 3;
+}
+
+enum RtspTransport {
+  RTSP_TRANSPORT_UNSPECIFIED = 0;
+  RTSP_TRANSPORT_TCP = 1;
+  RTSP_TRANSPORT_UDP = 2;
+}
+
+message RtspTrackSelection {
+  oneof mode {
+    bool first_compatible = 1;
+    uint32 index = 2;
+    bool disabled = 3;
+  }
+}
+
+message RtmpPullSourceConfig {
+  string url = 1;
+  RtmpStreamMode mode = 2;
+}
+
+message RtspPullSourceConfig {
+  string url = 1;
+  RtspTransport transport = 2;
+  RtspTrackSelection video_track = 3;
+  RtspTrackSelection audio_track = 4;
+}
+
+message HttpFlvPullSourceConfig {
+  string url = 1;
+}
 
 message LiveProxyMediaSourceConfig {
-  string url = 1;
+  oneof source {
+    RtmpPullSourceConfig rtmp = 1;
+    RtspPullSourceConfig rtsp = 2;
+    HttpFlvPullSourceConfig http_flv = 3;
+  }
 }
 
 message BilibiliVideoSourceConfig {

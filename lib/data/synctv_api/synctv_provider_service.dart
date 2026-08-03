@@ -73,10 +73,8 @@ class SyncTvProviderDomainService {
     return AlistLoginInfo(token: response.token, serverId: response.serverId);
   }
 
-  Future<void> logoutAList(String serverId, {String instanceName = ''}) {
-    return _api.alistProvider.logout(
-      alist.LogoutRequest(serverId: serverId, instanceName: instanceName),
-    );
+  Future<void> logoutAList(String serverId) {
+    return _api.alistProvider.logout(alist.LogoutRequest(serverId: serverId));
   }
 
   Future<String> loginCloudreve(
@@ -96,12 +94,9 @@ class SyncTvProviderDomainService {
     return response.serverId;
   }
 
-  Future<void> logoutCloudreve(
-    String serverId, {
-    String instanceName = '',
-  }) async {
+  Future<void> logoutCloudreve(String serverId) async {
     await _api.cloudreveProvider.logout(
-      cloudreve.LogoutRequest(serverId: serverId, instanceName: instanceName),
+      cloudreve.LogoutRequest(serverId: serverId),
     );
   }
 
@@ -133,10 +128,8 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> unbindTwitch(String serverId, {String instanceName = ''}) async {
-    await _api.twitchProvider.unbind(
-      twitch.UnbindRequest(serverId: serverId, instanceName: instanceName),
-    );
+  Future<void> unbindTwitch(String serverId) async {
+    await _api.twitchProvider.unbind(twitch.UnbindRequest(serverId: serverId));
   }
 
   Future<twitch.ResolveResponse> resolveTwitch(
@@ -275,12 +268,9 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> unbindYoutube(
-    String serverId, {
-    String instanceName = '',
-  }) async {
+  Future<void> unbindYoutube(String serverId) async {
     await _api.youtubeProvider.unbind(
-      youtube.UnbindRequest(serverId: serverId, instanceName: instanceName),
+      youtube.UnbindRequest(serverId: serverId),
     );
   }
 
@@ -316,10 +306,8 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> unbindDouyin(String serverId, {String instanceName = ''}) async {
-    await _api.douyinProvider.unbind(
-      douyin.UnbindRequest(serverId: serverId, instanceName: instanceName),
-    );
+  Future<void> unbindDouyin(String serverId) async {
+    await _api.douyinProvider.unbind(douyin.UnbindRequest(serverId: serverId));
   }
 
   Future<douyin.ResolveResponse> resolveDouyin(
@@ -372,10 +360,8 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> unbindTikTok(String serverId, {String instanceName = ''}) async {
-    await _api.tiktokProvider.unbind(
-      tiktok.UnbindRequest(serverId: serverId, instanceName: instanceName),
-    );
+  Future<void> unbindTikTok(String serverId) async {
+    await _api.tiktokProvider.unbind(tiktok.UnbindRequest(serverId: serverId));
   }
 
   Future<tiktok.ResolveResponse> resolveTikTok(
@@ -452,10 +438,8 @@ class SyncTvProviderDomainService {
     };
   }
 
-  Future<void> logoutFnos(String serverId, {String instanceName = ''}) async {
-    await _api.fnosProvider.logout(
-      fnos.LogoutRequest(serverId: serverId, instanceName: instanceName),
-    );
+  Future<void> logoutFnos(String serverId) async {
+    await _api.fnosProvider.logout(fnos.LogoutRequest(serverId: serverId));
   }
 
   Future<List<FnosBindInfo>> getFnosBindInfos({
@@ -665,10 +649,8 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> logoutQnap(String serverId, {String instanceName = ''}) async {
-    await _api.qnapProvider.logout(
-      qnap.LogoutRequest(serverId: serverId, instanceName: instanceName),
-    );
+  Future<void> logoutQnap(String serverId) async {
+    await _api.qnapProvider.logout(qnap.LogoutRequest(serverId: serverId));
   }
 
   Future<List<QnapBindInfo>> getQnapBindInfos({
@@ -851,12 +833,9 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> logoutNextcloud(
-    String serverId, {
-    String instanceName = '',
-  }) async {
+  Future<void> logoutNextcloud(String serverId) async {
     await _api.nextcloudProvider.logout(
-      nextcloud.LogoutRequest(serverId: serverId, instanceName: instanceName),
+      nextcloud.LogoutRequest(serverId: serverId),
     );
   }
 
@@ -1027,12 +1006,9 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> logoutSeafile(
-    String serverId, {
-    String instanceName = '',
-  }) async {
+  Future<void> logoutSeafile(String serverId) async {
     await _api.seafileProvider.logout(
-      seafile.LogoutRequest(serverId: serverId, instanceName: instanceName),
+      seafile.LogoutRequest(serverId: serverId),
     );
   }
 
@@ -1199,12 +1175,9 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> logoutTrueNas(
-    String serverId, {
-    String instanceName = '',
-  }) async {
+  Future<void> logoutTrueNas(String serverId) async {
     await _api.trueNasProvider.logout(
-      truenas.LogoutRequest(serverId: serverId, instanceName: instanceName),
+      truenas.LogoutRequest(serverId: serverId),
     );
   }
 
@@ -1290,12 +1263,9 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> logoutSynology(
-    String serverId, {
-    String instanceName = '',
-  }) async {
+  Future<void> logoutSynology(String serverId) async {
     await _api.synologyProvider.logout(
-      synology.LogoutRequest(serverId: serverId, instanceName: instanceName),
+      synology.LogoutRequest(serverId: serverId),
     );
   }
 
@@ -1634,16 +1604,12 @@ class SyncTvProviderDomainService {
     );
   }
 
-  Future<void> logoutEmby(String serverId, {String instanceName = ''}) {
-    return _api.embyProvider.logout(
-      emby.LogoutRequest(serverId: serverId, instanceName: instanceName),
-    );
+  Future<void> logoutEmby(String serverId) {
+    return _api.embyProvider.logout(emby.LogoutRequest(serverId: serverId));
   }
 
-  Future<void> logoutBilibili({String instanceName = ''}) async {
-    await _api.bilibiliProvider.logout(
-      bilibili.LogoutRequest(instanceName: instanceName),
-    );
+  Future<void> logoutBilibili() async {
+    await _api.bilibiliProvider.logout(bilibili.LogoutRequest());
   }
 
   Future<BilibiliAccountInfo> getBilibiliAccount({

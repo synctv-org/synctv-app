@@ -23,8 +23,6 @@ class PublicSettingsInfo {
   final String webauthnRpId;
   final bool enableWebauthnSignup;
   final bool webauthnSignupNeedReview;
-  final bool movieProxy;
-  final bool liveProxy;
   final bool emailWhitelistEnabled;
   final List<String> emailWhitelistDomains;
   final bool tsDisguisedAsPng;
@@ -46,8 +44,6 @@ class PublicSettingsInfo {
     required this.webauthnRpId,
     required this.enableWebauthnSignup,
     required this.webauthnSignupNeedReview,
-    required this.movieProxy,
-    required this.liveProxy,
     required this.emailWhitelistEnabled,
     required this.emailWhitelistDomains,
     required this.tsDisguisedAsPng,

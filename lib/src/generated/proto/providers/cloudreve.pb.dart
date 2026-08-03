@@ -952,11 +952,9 @@ class GetMeResponse extends $pb.GeneratedMessage {
 class LogoutRequest extends $pb.GeneratedMessage {
   factory LogoutRequest({
     $core.String? serverId,
-    $core.String? instanceName,
   }) {
     final result = create();
     if (serverId != null) result.serverId = serverId;
-    if (instanceName != null) result.instanceName = instanceName;
     return result;
   }
 
@@ -975,7 +973,6 @@ class LogoutRequest extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'synctv.provider.cloudreve'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'serverId')
-    ..aOS(2, _omitFieldNames ? '' : 'instanceName')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1005,15 +1002,6 @@ class LogoutRequest extends $pb.GeneratedMessage {
   $core.bool hasServerId() => $_has(0);
   @$pb.TagNumber(1)
   void clearServerId() => $_clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.String get instanceName => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set instanceName($core.String value) => $_setString(1, value);
-  @$pb.TagNumber(2)
-  $core.bool hasInstanceName() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearInstanceName() => $_clearField(2);
 }
 
 class LogoutResponse extends $pb.GeneratedMessage {

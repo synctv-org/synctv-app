@@ -13,6 +13,8 @@ import 'package:synctv_app/src/generated/proto/common.pbenum.dart'
     as common_enum;
 import 'package:synctv_app/src/generated/proto/client.pbenum.dart'
     as client_enum;
+import 'package:synctv_app/src/generated/proto/source_config.pbenum.dart'
+    as source_enum;
 
 import 'local_backend_test_auth.dart';
 
@@ -150,6 +152,7 @@ Future<void> _exerciseWatchers(String roomId, int stamp) async {
   final mediaId = await SyncTvService.addDirectUrlMedia(
     roomId,
     url: 'https://example.com/deep-watch-$stamp.mp4',
+    playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
     name: 'watch direct $stamp',
   );
   print('watchers_send_chat');
@@ -271,6 +274,7 @@ Future<void> _exerciseMediaAndRealtime(
     roomId,
     playlistId: nested.id,
     url: 'https://example.com/deep-playback-$stamp.mp4',
+    playbackKind: source_enum.PlaybackKind.PLAYBACK_KIND_REGULAR,
     name: 'playback direct $stamp',
   );
   await SyncTvService.switchMediaAndPlay(roomId, directId);

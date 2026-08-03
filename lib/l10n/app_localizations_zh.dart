@@ -1152,6 +1152,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mediaSource => '媒体源';
 
   @override
+  String get playbackKind => '播放类型';
+
+  @override
+  String get onDemand => '点播';
+
+  @override
   String get videoLinks => '视频链接';
 
   @override
@@ -1200,6 +1206,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get liveNameHint => '例如 摄像机、OBS 推流';
 
   @override
+  String get streamMode => '流模式';
+
+  @override
+  String get audioAndVideo => '音频和视频';
+
+  @override
+  String get videoOnly => '仅视频';
+
+  @override
+  String get audioOnly => '仅音频';
+
+  @override
   String get publishAddressGeneratedDescription => '创建后会生成推流地址和 Stream Key';
 
   @override
@@ -1212,8 +1230,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sourceAddress => '源地址';
 
   @override
-  String get liveSourceAddressHint =>
-      'rtmp://example/live/stream 或 https://example/live.flv';
+  String get liveSourceAddressHint => '请输入与所选协议匹配的地址';
+
+  @override
+  String get rtspTransport => 'RTSP 传输方式';
+
+  @override
+  String get videoTrack => '视频轨道';
+
+  @override
+  String get audioTrack => '音频轨道';
+
+  @override
+  String get firstCompatibleTrack => '首个兼容轨道';
+
+  @override
+  String get trackIndex => '轨道索引';
 
   @override
   String get optionalLiveName => '直播名称（可选）';
@@ -1225,7 +1257,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get serverPullsUpstreamLiveSource => 'SyncTV 服务端会拉取上游直播源';
 
   @override
-  String get livePullSupportDescription => '支持 RTMP 和 HTTP-FLV，上游地址只保存在媒体源配置中。';
+  String get livePullSupportDescription => '支持 RTMP、RTSP 和 HTTP-FLV 直播源。';
 
   @override
   String get addLivePull => '添加直播拉流';
@@ -1383,7 +1415,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get enterValidLiveSourceAddress => '请输入有效的直播源地址';
 
   @override
-  String get livePullUrlSupport => '直播拉流仅支持 rtmp:// 或 HTTP-FLV .flv 地址';
+  String get livePullUrlSupport => '地址需要匹配所选的 RTMP、RTSP 或 HTTP-FLV 协议';
+
+  @override
+  String get selectRtspTrack => '请至少启用一条 RTSP 轨道';
+
+  @override
+  String get enterValidTrackIndex => '请输入有效的轨道索引';
 
   @override
   String get publishingAddress => '推流地址';
@@ -5096,26 +5134,6 @@ class AppLocalizationsZh extends AppLocalizations {
       'OAuth2 配置会影响登录入口，错误的回调地址、密钥或端点会导致第三方登录不可用。';
 
   @override
-  String get movieProxy => '影片代理';
-
-  @override
-  String get movieProxyDescription => '允许服务端代理影片资源请求。';
-
-  @override
-  String get movieProxyWarning =>
-      '代理能力可能把用户认证信息发送给目标媒体站点，并随播放资源发布给房间成员。请仅对可信成员和来源启用。';
-
-  @override
-  String get liveProxy => '直播代理';
-
-  @override
-  String get liveProxyDescription => '允许服务端代理直播流请求。';
-
-  @override
-  String get liveProxyWarning =>
-      '直播代理可能转发敏感请求头或 Cookie，并通过播放信息暴露给房间成员。请使用可信来源。';
-
-  @override
   String get rtmpPublishAddress => '推流发布地址';
 
   @override
@@ -6113,4 +6131,88 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get savedRecoveryCodes => '我已保存恢复码';
+
+  @override
+  String get sliceCache => '切片缓存';
+
+  @override
+  String get nodeId => '节点 ID';
+
+  @override
+  String get currentNode => '当前节点';
+
+  @override
+  String get allNodes => '全部节点';
+
+  @override
+  String loadSliceCacheFailed(String error) {
+    return '加载切片缓存统计失败：$error';
+  }
+
+  @override
+  String get nodeUnavailable => '节点不可用';
+
+  @override
+  String get noSliceCacheStats => '暂无切片缓存统计';
+
+  @override
+  String get evictExpiredSliceCache => '淘汰过期项';
+
+  @override
+  String get purgeSliceCache => '清空缓存';
+
+  @override
+  String get confirmPurgeSliceCache => '清空所选目标的全部切片缓存？正在播放的媒体可能需要重新拉取数据。';
+
+  @override
+  String sliceCacheEvictionCompleted(int count) {
+    return '已移除 $count 个过期缓存项';
+  }
+
+  @override
+  String sliceCachePurgeCompleted(int count, String size) {
+    return '已移除 $count 个缓存项，释放 $size';
+  }
+
+  @override
+  String get sliceCacheNodeOperationFailed => '此节点的缓存操作执行失败';
+
+  @override
+  String get sliceCacheUsage => '使用率';
+
+  @override
+  String get sliceCacheSize => '已存数据';
+
+  @override
+  String get sliceCacheEntries => '缓存项';
+
+  @override
+  String get sliceCacheUpdating => '更新中';
+
+  @override
+  String get sliceCacheLocks => '锁数量';
+
+  @override
+  String get sliceCacheBackend => '后端';
+
+  @override
+  String get sliceCacheDirectory => '目录';
+
+  @override
+  String get sliceCacheCapacity => '容量';
+
+  @override
+  String get sliceCacheSliceSize => '切片大小';
+
+  @override
+  String get sliceCacheSegmentTtl => '分片 TTL';
+
+  @override
+  String get sliceCacheStaleMaxAge => '陈旧数据上限';
+
+  @override
+  String get sliceCacheEvictionInterval => '淘汰间隔';
+
+  @override
+  String get staleWhileRevalidate => '后台刷新陈旧缓存';
 }

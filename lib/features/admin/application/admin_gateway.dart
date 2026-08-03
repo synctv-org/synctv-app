@@ -68,6 +68,11 @@ abstract interface class AdminGateway {
 
   Future<void> adminDeleteUser(String userId);
 
+  Future<AdminSliceCacheOperationResult> adminEvictExpiredSliceCache({
+    String nodeId = '',
+    bool allNodes = false,
+  });
+
   Future<SyncTvRoom> adminGetRoom(String roomId);
 
   Future<SyncTvRoomSettings> adminGetRoomSettings(
@@ -76,6 +81,11 @@ abstract interface class AdminGateway {
   });
 
   Future<AdminServiceState> adminGetServiceState();
+
+  Future<AdminSliceCacheStats> adminGetSliceCacheStats({
+    String nodeId = '',
+    bool allNodes = false,
+  });
 
   Future<SyncTvUser> adminGetUser(String userId);
 
@@ -211,6 +221,11 @@ abstract interface class AdminGateway {
         admin_enum.UserListSortBy.USER_LIST_SORT_BY_CREATED_AT,
     admin_enum.SortDirection sortDirection =
         admin_enum.SortDirection.SORT_DIRECTION_DESC,
+  });
+
+  Future<AdminSliceCacheOperationResult> adminPurgeSliceCache({
+    String nodeId = '',
+    bool allNodes = false,
   });
 
   Future<void> adminReconnectProviderInstance(String name);

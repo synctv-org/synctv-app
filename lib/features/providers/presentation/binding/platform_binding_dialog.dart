@@ -538,72 +538,33 @@ class _PlatformBindingDialogState extends State<PlatformBindingDialog>
     try {
       switch (kind) {
         case _ProviderKind.alist:
-          await providerGateway.logoutAList(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.logoutAList(item.serverId);
         case _ProviderKind.emby:
-          await providerGateway.logoutEmby(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.logoutEmby(item.serverId);
         case _ProviderKind.cloudreve:
-          await providerGateway.logoutCloudreve(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.logoutCloudreve(item.serverId);
         case _ProviderKind.bilibili:
-          await providerGateway.logoutBilibili(instanceName: item.instanceName);
+          await providerGateway.logoutBilibili();
         case _ProviderKind.twitch:
-          await providerGateway.unbindTwitch(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.unbindTwitch(item.serverId);
         case _ProviderKind.fnos:
-          await providerGateway.logoutFnos(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.logoutFnos(item.serverId);
         case _ProviderKind.qnap:
-          await providerGateway.logoutQnap(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.logoutQnap(item.serverId);
         case _ProviderKind.synology:
-          await providerGateway.logoutSynology(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.logoutSynology(item.serverId);
         case _ProviderKind.nextcloud:
-          await providerGateway.logoutNextcloud(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.logoutNextcloud(item.serverId);
         case _ProviderKind.seafile:
-          await providerGateway.logoutSeafile(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.logoutSeafile(item.serverId);
         case _ProviderKind.truenas:
-          await providerGateway.logoutTrueNas(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.logoutTrueNas(item.serverId);
         case _ProviderKind.youtube:
-          await providerGateway.unbindYoutube(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.unbindYoutube(item.serverId);
         case _ProviderKind.douyin:
-          await providerGateway.unbindDouyin(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.unbindDouyin(item.serverId);
         case _ProviderKind.tiktok:
-          await providerGateway.unbindTikTok(
-            item.serverId,
-            instanceName: item.instanceName,
-          );
+          await providerGateway.unbindTikTok(item.serverId);
       }
       if (!mounted) return;
       AppNotifications.showSuccess(context, context.l10n.unboundSuccessfully);
